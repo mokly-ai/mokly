@@ -1,22 +1,30 @@
 # @mokly/ui
 
-`@mokly/ui` holds the presentational components of the Mokly Browse shell and
-their stylesheets. `@mokly/viewer` composes them into the shell that Serve,
-the static build, and React hosts render, and the design mockup catalogue
-under `examples/basic` renders the same components. Depend on this package
-only when you render one of its components yourself; a host that embeds a
-catalogue uses `@mokly/viewer`, which depends on this package at the exact
-shared version.
+Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
+
+`@mokly/ui` holds every element and every stylesheet of the Mokly Browse
+shell: its components, its theme, and its layout. `@mokly/viewer` composes
+them into the shell that Serve, the static build, and React hosts render, and
+the design mockup catalogue under `examples/basic` renders the same
+components. Depend on this package only when you render one of its components
+yourself; a host that embeds a catalogue uses `@mokly/viewer`, which depends
+on this package at the exact shared version.
 
 ## Responsibilities
 
-- The markup, the styles, and the local interaction of each component: props
-  in, callbacks out.
-- One CSS file beside each component, with its rules outside every cascade
-  layer, and `styles.css` with every component's rules.
+- Every element of the shell: the markup, the styles, and the local
+  interaction of each component, with props in and callbacks out. The viewer
+  renders no element of its own.
+- Every style rule of the shell: the theme, the reset class, one CSS file
+  beside each component, the shell layout, and the rules of the embedded root.
+  Every rule stays outside every cascade layer, and `styles.css` holds them
+  all.
+- The highlight mask that marks component instances over a preview, drawn from
+  the boxes that the viewer's frame adapters return.
 - Nothing else. A component reads no store, no context, no catalogue read
-  model type, no network, no history, and no frame. React and React DOM are
-  the only peers.
+  model type, no network, and no history. It renders the `<iframe>` element of
+  a preview but never reads the frame's document. React and React DOM are the
+  only peers.
 
 ## What This Package Does
 
@@ -25,14 +33,19 @@ and `@mokly/ui/styles.css` is the only stylesheet subpath. The package has no
 root entry.
 `styles.css` holds the rules of every component; a component's own stylesheet
 leaves out the components it renders, such as the change mark of the
-appearance selector. The rules read the shell's colour tokens, such as
-`--chrome-surface`, which the `@mokly/viewer` stylesheet declares; a host that
-renders a component without that stylesheet declares them itself, as the
-design catalogue's `examples/basic/design.css` does. The design catalogue's
-stylesheets also declare the segmented-control `.mbk-seg` rules. The viewer
-bundles `styles.css` into its own `shell.css` and `styles.css`, so a delivery
-or a host loads one stylesheet as before. A shell container that needs the
-store stays in `@mokly/viewer` and composes a package component.
+appearance selector. The viewer bundles `styles.css` into its own `shell.css`
+and `styles.css`, so a delivery or a host loads one stylesheet as before. A
+shell container that needs the store stays in `@mokly/viewer` and renders
+package components.
+
+The theme declares the shell's tokens, such as `--chrome-surface`, and the
+Light and Dark palette on the viewer root class and on the standalone stub's
+document class, never through a `:root`, `html`, or `body` selector. Each
+component puts the reset class on its own elements that need a reset. No rule
+reaches the host page or host slot content. A host that renders a component
+outside a viewer root puts it inside an element with the viewer root class, or
+declares the tokens itself, as the design catalogue's
+`examples/basic/design.css` does.
 
 ## Quick Start
 
@@ -62,8 +75,7 @@ select's `aria-describedby` points at while the control is marked.
 `interactive={false}` to draw the other modes as inert text and Refresh as a
 picture of itself. The link or the text of the shown mode is marked as the
 current page. Scroll together stays a native switch in every band. The mode
-group reads the host's segmented control rules (`.mbk-seg`), which the
-`@mokly/viewer` stylesheet declares for the shell; the package stylesheet
+group renders the package's segmented control, and the package stylesheet
 gives a link and inert text the line box and centring of a button.
 
 ## Development
@@ -78,8 +90,8 @@ checks the rule only for the JavaScript and TypeScript files under `src/` and
 `react`, `react-dom`, and the other components of this package by relative path;
 a lint holds that rule too.
 
-The design library under `examples/basic/specs/design/library` imports the
-appearance selector and the comparison toolbar, with their stylesheets, from
+The design library and the design artboards under `examples/basic/specs/design`
+import each package component that they show, with its stylesheets, from
 `src/` by repository path, not from `dist`: the base side of a Changes
 comparison renders from Git, which holds no build output. A change here
 therefore also changes their design mockups, so run the mockup check of
@@ -88,10 +100,19 @@ therefore also changes their design mockups, so run the mockup check of
 A component lives in `src/<name>/`: `<name>.tsx`, and `<name>.css` when it has
 styles. Its subpath in the `exports` map is `./<name>`, with `types` and
 `import` targets in `dist/<name>/`. The build copies
-`<name>.css` beside the JavaScript and adds it to `styles.css` in component
-name order. Each stylesheet keeps its rules outside every cascade layer, so
-neither an element reset nor a host layer overrides a component rule, and a
-host rule competes with them by specificity and order; a test holds the rule.
+`<name>.css` beside the JavaScript. Each stylesheet keeps its rules outside
+every cascade layer, so neither an element reset nor a host layer overrides a
+component rule, and a host rule competes with them by specificity and order; a
+test holds the rule.
+
+`src/styles.css` sets the order of `styles.css`. It lists the component
+stylesheets with one `@import` each, in cascade order: the theme, the shared
+controls, the components, then the layout and its responsive rules. The build
+concatenates the stylesheets in that order. A component stylesheet that the
+list omits joins the end in name order, with a build warning. Add each new
+stylesheet to the list at its place in the cascade. A later rule of equal
+specificity overrides an earlier one, as the narrow-width layout rules
+override the desktop layout rules.
 
 ### Key Code
 

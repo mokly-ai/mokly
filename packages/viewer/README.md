@@ -20,6 +20,8 @@
   <a href="#development">Development</a>
 </p>
 
+Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
+
 `@mokly/viewer` is an open-source React library that renders a Mokly catalogue
 inside another product. It reads the catalogue that `mokly serve` serves or
 `mokly build` writes, and it renders the same Browse shell as the standalone
@@ -176,14 +178,15 @@ configuration.
 
 ## Responsibilities
 
-`@mokly/viewer` owns the readers of the catalogue index and the entry detail,
-the Browse presentation, the selection model, navigation, comparison
-presentation, inspection, instance resolution, the frame adapters, the in-frame
-inspector, and the browser entry. `@mokly/ui` owns the presentational
-components of that presentation and their stylesheets; the viewer composes
-them, supplies their props from the shell state, and bundles their CSS. It makes no analytics or discovery request,
-reads no cookie, and uses no ambient credential. Consumer code never enters the
-browser through the viewer.
+`@mokly/viewer` owns the shell state, the readers of the catalogue index and the
+entry detail, the selection model, navigation, the comparison and inspection
+logic, instance resolution, the preview frames with the frame adapters and the
+in-frame inspector, and the browser entry. `@mokly/ui` owns every element and
+every style rule of the Browse shell. The viewer's containers read the shell
+state and render the package components with props and callbacks, so the
+viewer renders no element of its own. The viewer makes no analytics or
+discovery request, reads no cookie, and uses no ambient credential. Consumer
+code never enters the browser through the viewer.
 
 The embedding application owns catalogue delivery, authentication, its URL and
 route mapping, the surrounding product UI, slot content, markers, and
@@ -196,8 +199,8 @@ catalogue.
 
 The repository is an npm workspace. The Rust core is a Cargo workspace under
 `crates/`. `packages/mokly` holds the `@mokly/mokly` shim, the render sidecar,
-and the authoring API. `packages/ui` holds `@mokly/ui`, the presentational
-components and their CSS files. `packages/viewer` holds this package; its
+and the authoring API. `packages/ui` holds `@mokly/ui`, every element and
+every stylesheet of the shell. `packages/viewer` holds this package; its
 shared shapes are the generated TypeScript types of the Rust model crate. From
 the repository root:
 
@@ -210,10 +213,14 @@ cargo xtask check
 ```
 
 `npm run build` builds the host native target, the shim, the sidecar, the UI
-package, and the viewer. The viewer build bundles the UI package CSS into
-`shell.css` and `styles.css`, and records every browser output in the browser
-module inventory; `mokly build` copies exactly those files, and Serve serves exactly
-them. `npm test -- packages/viewer/tests/<file> --test-name-pattern=<regex>`
+package, and the viewer. The viewer build writes `shell.css` and `styles.css`
+from the `@font-face` rule of the shell font and the UI package's `styles.css`,
+whose rules keep the cascade order that `packages/ui/src/styles.css` lists.
+The embedded `styles.css` needs no `@scope` rule, because no package rule
+reaches the host page or host slot content. The build records every browser
+output in the browser module inventory; `mokly build` copies exactly those
+files, and Serve serves exactly them.
+`npm test -- packages/viewer/tests/<file> --test-name-pattern=<regex>`
 runs one viewer test. `cargo xtask check` is the complete repository gate; it
 runs the viewer typecheck, the viewer's Node tests, and the Playwright Browse
 and Review regressions against `mokly serve` of the example catalogue.

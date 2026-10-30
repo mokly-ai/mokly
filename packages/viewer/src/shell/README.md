@@ -1,5 +1,7 @@
 # Shared Browse shell
 
+Status: In progress under the [shell views plan](../../../../plans/ui-package-shell-views.md).
+
 Serve, the static build, and React hosts render this same tree in the
 browser.
 
@@ -179,29 +181,34 @@ final eligibility, and opens Side by side only for an eligible view. A
 publication keeps the count, so it cannot reopen the comparison, and the mode
 owner never reads the address.
 
-The icons, the change mark, the appearance selector and the comparison
-toolbar are `@mokly/ui` components under `packages/ui/src`: props in,
-callbacks out, no store. The design library under
-`examples/basic/specs/design/library` renders the appearance selector and the
-comparison toolbar from the same sources, so a change to either also changes
-their design mockups. `appearance.tsx` is the viewer's wrapper that reads
-the identifier and workspace contexts and renders
-`@mokly/ui/appearance-selector`; `view_marks.ts` still owns the ids and the
-wording of the change marks, which the shell passes in. The package CSS files
-hold unlayered rules, which `css.ts` places after the tokens and the palette
-and before the shell's own rules, so a shell rule wins over a component rule
-of the same specificity. The package leaves the padding and type of the
-comparison modes to the shell's segmented control, so the rule of the compact
-modes stays in `css_review.ts`.
+Every element of the shell is a `@mokly/ui` component under
+`packages/ui/src`: props in, callbacks out, no store. Each module here that
+renders is a container. It reads the store, the contexts, and the frames, and
+it renders package components with props and callbacks, as `appearance.tsx`
+reads the identifier and workspace contexts and renders
+`@mokly/ui/appearance-selector`. A local ESLint rule rejects every intrinsic
+JSX element in `packages/viewer/src`, so a container renders only package
+components, fragments, providers, and portals. Text that the shell derives
+from catalogue data stays here and reaches the components as props, such as
+the sentences of `entry_wording.ts` and the change-mark ids and wording of
+`view_marks.ts`. The design library and the artboards under
+`examples/basic/specs/design` render the same package sources, so a change to
+a package component also changes its design mockups.
 
-`css.ts` concatenates the shared stylesheet. Split string modules preserve
-its exact bytes. The standalone stylesheet adds one rule to it: a root without
-an appearance mark, the stub before the bundle runs, takes the Auto appearance
-from the system. The package build scopes an embedded stylesheet separately and
-uses packaged relative font URLs; its selector-aware transform maps document
-selectors and shell-root `.mbk` selectors to the embedding scope without
-rewriting class names. The standalone shell keeps the original CSS and font
-paths.
+The shell holds no style rule. `@mokly/ui/styles.css` holds every rule of the
+shell, in the cascade order that `packages/ui/src/styles.css` lists: the
+theme, the shared controls, the components, then the layout and its
+responsive rules. The viewer build writes the standalone `shell.css` and the
+embedded `styles.css` from that stylesheet and the `@font-face` rule of the
+shell font.
+
+The theme gives the stub's document class the Auto appearance before the
+bundle runs. The standalone shell sets its appearance, scheme, and state marks
+on its own root, not on `body` or `<html>`, as an embedded root does. The
+embedded stylesheet uses packaged relative font URLs and keeps the
+fallbacks that let a host's accent value inherit. It needs no `@scope` block,
+because no package rule reaches the host page or host slot content. The
+standalone shell keeps the original font paths.
 
 `catalogue.ts` owns pure display indexing. Its `byPath` index contains current and
 removed entries whose paths are unique across both sets; an explicit snapshot

@@ -562,43 +562,43 @@ State the end state, so that each slice and its review can check the code
 against it. Each touched protocol, architecture, and README page gets the
 repository's status line until milestone 20 removes it.
 
-- [ ] `docs/protocol/mokly-ui-package.md`: the package holds every element
+- [x] `docs/protocol/mokly-ui-package.md`: the package holds every element
       and every style rule of the Browse shell, including the tokens and the
       palette. Every element that the viewer shows comes from a package
       component. Replace the sentences that say the viewer stylesheet
       declares the tokens and the `.mbk-seg` rules. Add the outcomes of
       decisions 3 and 4: where the mask is drawn, and which stylesheet
       carries the page rules.
-- [ ] `docs/protocol/mokly-viewer.md`: the package sentence, and the theming
+- [x] `docs/protocol/mokly-viewer.md`: the package sentence, and the theming
       paragraph. Every rule of `styles.css` comes from the shared UI package,
       unlayered, so a host rule competes with it by specificity and order.
       Keep the decision on unlayered rules.
-- [ ] `docs/protocol/mokly-viewer-appearance.md`: the shared UI package owns
+- [x] `docs/protocol/mokly-viewer-appearance.md`: the shared UI package owns
       the semantic palette. The page stands at 248 of its 250 lines, so the
       change keeps the line count.
-- [ ] `docs/protocol/mokly-design-components.md` and the design library
+- [x] `docs/protocol/mokly-design-components.md` and the design library
       README: decision 2 B. Every artboard part that a package component
       provides renders that component, the scaffolds included.
-- [ ] Decision 3 F: `docs/protocol/mokly-frame-adapter.md`,
+- [x] Decision 3 F: `docs/protocol/mokly-frame-adapter.md`,
       `docs/protocol/mokly-published-inspector.md`, and, when it names the
       overlay, `docs/protocol/mokly-inspector-wire.md`. The shell draws the
       highlight mask from the geometry that the adapters return. An adapter
       keeps its pick listeners and draws nothing, and the in-frame inspector
       draws nothing.
-- [ ] Decision 4 G: the theming paragraph of `docs/protocol/mokly-viewer.md`
+- [x] Decision 4 G: the theming paragraph of `docs/protocol/mokly-viewer.md`
       and the stub and palette sentences of
       `docs/protocol/mokly-viewer-appearance.md`. The tokens live on the
       shell root, components reset their own elements, no package rule
       selects the page, and the embedded stylesheet needs no `@scope`. Check
       `docs/protocol/mokly-shell-delivery.md` for the stub's `<html>` element
       and add the document class where the page names the stub markup.
-- [ ] `docs/architecture/package-boundary.md`: the viewer owns the shell
+- [x] `docs/architecture/package-boundary.md`: the viewer owns the shell
       state, the containers, the data, the frames, and the browser entry. The
       UI package owns every element and every style rule.
-- [ ] `AGENTS.md`, Product section: every element and every stylesheet of the
+- [x] `AGENTS.md`, Product section: every element and every stylesheet of the
       shell lives in `@mokly/ui`, and a viewer file composes package
       components only. Name the lint of decision 1 C.
-- [ ] `packages/ui/README.md`, `packages/viewer/README.md`, and
+- [x] `packages/ui/README.md`, `packages/viewer/README.md`, and
       `packages/viewer/src/shell/README.md`: the responsibilities and the
       stylesheet order. Each slice updates the Key Code entries and the
       paragraphs of the files that it moves.
@@ -877,6 +877,9 @@ inspector reports geometry and picks and draws nothing.
       Keep its pick, Escape, and redraw listeners where the shell needs them.
 - [ ] The in-frame inspector stops drawing: remove `inspector/overlay.ts`
       and its calls. The built inspector stays within its 9,216-byte budget.
+- [ ] Update `packages/viewer/src/client/README.md` and
+      `packages/viewer/src/inspector/README.md`, which still describe the
+      adapter overlay. Found by milestone 1 on 2026-10-30.
 - [ ] Tests: the adapter tests no longer expect a drawn layer, the inspector
       tests no longer expect an overlay, and the shell tests and browser specs
       of highlighting see one mask over same-origin and cross-origin frames.
@@ -920,6 +923,10 @@ the `@font-face` rule of design call 9, and the embedded stylesheet has no
       page marks on the shell root instead of `body` or `<html>`.
 - [ ] Rewrite each rule that selects `body`, `html`, or `:root` with a shell
       mark to select the shell root.
+- [ ] Update the Key Code entry of `src/shell` in `packages/viewer/README.md`,
+      which still says "scoped styles". Name the shell root class and the
+      stub document class in the docs that milestone 1 left unnamed. Found by
+      milestone 1 on 2026-10-30.
 - [ ] Delete `css.ts` and the remaining CSS modules. The viewer build writes
       `shell.css` and `styles.css` from the `@font-face` rule and the package
       stylesheet. Remove the `@scope` transform and its selector mapping, and
@@ -949,6 +956,11 @@ artboards draw its parts with their own scaffolds.
       with the comparison and the findings step of milestone 4.
 - [ ] The design library's sheets import the `theme` and `mbk-reset`
       stylesheets where a package component needs them.
+- [ ] The artboard "Details" draws its own clipped scrim in
+      `specs/design/components/parts/screen_preview.tsx`, and
+      `docs/protocol/mokly-component-design.md` says "Details uses a clipped
+      scrim". When the scrim depicts the highlight mask, render the package
+      mask and align the doc. Found by milestone 1 on 2026-10-30.
 - [ ] Run the mockup check and smoke-test the changed pages.
 
 ## Milestone 20: Last pull request

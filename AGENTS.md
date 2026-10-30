@@ -5,8 +5,8 @@ development browsing, and renders visual comparisons. The Rust core is a
 Cargo workspace under `crates/`. The `@mokly/mokly` package, which holds the
 `mokly` shim, the render sidecar, and the authoring API, is under
 `packages/mokly`. The `@mokly/viewer` React viewer is under
-`packages/viewer`. The `@mokly/ui` shared UI package, the shell's
-presentational components and their CSS, is under `packages/ui`. The example
+`packages/viewer`. The `@mokly/ui` shared UI package, every element and every
+stylesheet of the shell, is under `packages/ui`. The example
 catalogue is under `examples/basic`, the tooling tests and browser specs are
 under `tests/`, the viewer tests are under `packages/viewer/tests`, the UI
 package tests are under `packages/ui/tests`, and the Rust verification task
@@ -121,14 +121,22 @@ the rule. Rules for one application, package, or feature live in the
 
 ## Product
 
-- The product screens are the Browse shell under
-  `packages/viewer/src/shell`. Serve, the static build, and React hosts
-  render this same tree in the browser. Check the shell's components before
-  you create a component.
-- A presentational component and its CSS live in `@mokly/ui` under
-  `packages/ui/src`: props in, callbacks out, no store, no fetch, no history,
-  no frame. A component that needs the store stays in the viewer and composes
-  a package component. It never moves the store down.
+- The product screens are the Browse shell. Serve, the static build, and
+  React hosts render this same tree in the browser. Check the components of
+  `@mokly/ui` under `packages/ui/src` before you create a component.
+- Every element and every stylesheet of the shell lives in `@mokly/ui` under
+  `packages/ui/src`, the theme, the layout, and the highlight mask included.
+  A package component takes props in and sends callbacks out. It has no
+  store, no fetch, and no history, and it never reads a frame's document.
+- A viewer file composes package components only. A container under
+  `packages/viewer/src` reads the store, the contexts, and the frames, and it
+  passes props and callbacks to package components. It never moves the store
+  down.
+- A local ESLint rule under `scripts/eslint/` rejects every intrinsic JSX
+  element, such as `<div>`, in `packages/viewer/src`. The viewer then renders
+  only package components, fragments, providers, and portals. The rule's
+  exemption list names the viewer files whose markup has not moved to the
+  package yet.
 - The design mockups of these screens live in
   `examples/basic/specs/design`. Build them from the shared design
   components in `examples/basic/specs/design/library`. Each shared

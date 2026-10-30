@@ -1,18 +1,26 @@
 # Shared Design Components
 
+Status: In progress under the [shell views plan](../../../../../plans/ui-package-shell-views.md).
+
 ## Scope
 
 These sixteen components render both Mokly's design artboards and
 the independent pages under **Components → Design → Shared components**. The
 footer tabs panel is `inspector/inspector`. This is the consumer's mockup
-library. `chrome/appearance-selector` and `controls/comparison-toolbar`
-render the `@mokly/ui` components that the shipped shell uses: each view
-imports its component, and each component sheet imports the package
-stylesheets of the component and of each package component that it renders,
-each by its repository path under `packages/ui/src`, so each side of a
-comparison renders its own package files. The other components keep their
-own markup and styles here until the package provides them. The Mokly
-browser shell itself remains in the package source.
+library. Each component renders the `@mokly/ui` component that the shipped
+shell uses: each view imports its component, and each component sheet imports
+the package stylesheets of the component and of each package component that
+it renders, each by its repository path under `packages/ui/src`, so each side
+of a comparison renders its own package files. The Mokly browser shell itself
+remains in the package source.
+
+The artboards follow the same rule for every other part that a package
+component provides, such as the shell and workspace scaffolds of
+`../parts/shell.tsx` and `../components/parts/workspace.tsx`, the panels and
+lists of the inspector, and the highlight mask of
+`../components/parts/highlight.tsx`. Each such part renders the package
+component, its sheet imports the package stylesheets by repository path, and
+no artboard keeps a copy of that markup or CSS.
 
 `chrome/appearance-selector` is the standalone catalogue's Auto/Light/Dark
 setting, which changes the chrome and the screens it shows together. `chrome/top-bar`
