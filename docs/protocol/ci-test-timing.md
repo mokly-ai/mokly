@@ -1,6 +1,6 @@
 # CI Test Timing
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+Status: Follow-up work remains in the [viewer clock lint item](../../plans/follow-ups/viewer-clock-lint.md).
 
 Required tests check correctness without depending on machine speed. This
 contract applies to every Node test file that the viewer suite discovers under

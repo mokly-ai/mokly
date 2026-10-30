@@ -38,7 +38,7 @@ call 10 leaves for later, and the design catalogue's own palette in
 outside React live.
 
 No brainstorm ran. The user's message of 2026-10-29 and decision 1 of the
-[shared UI package plan](./ui-package.md) choose the approach, and the
+[shared UI package plan](https://github.com/mokly-ai/mokly/blob/14c6f9ec4c6a328bd90a5cc06481ebf45e409fd9/plans/ui-package.md) choose the approach, and the
 product rule of [`AGENTS.md`](../AGENTS.md) sets the split: a component that
 needs the store stays in the viewer and composes a package component. These
 decisions of the shared UI package plan stay in force: 1, a separate package
