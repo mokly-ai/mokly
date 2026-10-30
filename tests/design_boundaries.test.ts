@@ -32,7 +32,7 @@ function markedFillTokens(tokens: Map<string, string>): string[] {
 
 /** Selectors naming a control primitive, whose boundary is a control edge. */
 const CONTROL_SELECTOR =
-  /\bbutton\b|\binput\b|\bselect\b|\bsummary\b|\btextarea\b|\.ce-action|\.ce-button|\.ce-icon-control|\.mbk-seg|\.mbk-appearance|\.ce-sheet-expand|\.mbk-chip:is\(a\)/u;
+  /\bbutton\b|\binput\b|\bselect\b|\bsummary\b|\btextarea\b|\.ce-action|\.ce-button|\.mbk-icon-(?:button|select)|\.mbk-seg|\.mbk-appearance|\.ce-sheet-expand|\.mbk-chip\.flow:is\(a\)/u;
 
 /** Tokens the palette contract reserves for decoration between surfaces. */
 const HAIRLINE_TOKENS = new Set([
@@ -46,9 +46,6 @@ const HAIRLINE_TOKENS = new Set([
  * exempts it, so a new entry has to state why rather than join a list.
  */
 const DECORATIVE_BOUNDARIES = new Map([
-  [".ce-added", "a label naming its own state in 7.08:1 ink"],
-  [".ce-changed", "a label naming its own state in 5.62:1 ink"],
-  [".ce-removed", "a label naming its own state in 5.73:1 ink"],
   [".ce-control-alert", "a label naming its own state in 5.97:1 ink"],
   [".ce-action:disabled", "WCAG exempts a disabled control"],
 ]);
@@ -92,21 +89,18 @@ const AUDITED_BOUNDARIES = [
   "design-components.css .ce-badge",
   "design-components.css .ce-design a:focus-visible, .ce-design button:focus-visible, .ce-design summary:focus-visible, .ce-design input:focus-visible, .ce-design select:focus-visible",
   "design-components.css .ce-variants a[aria-current]",
-  "design-library/controls/change-status.css .ce-added",
-  "design-library/controls/change-status.css .ce-changed",
-  "design-library/controls/change-status.css .ce-removed",
-  "design-library/controls/tag-chip.css .mbk-chip.tag:is(a).active",
-  "design-library/controls/view-controls.css .ce-icon-control:focus-within",
-  "design-library/controls/view-controls.css .ce-icon-control:hover, .ce-icon-control:has(input:checked)",
   "design-library/inspector/inspector.css .ce-design .mbk-shell--mobile .ce-inspector:has(> details[open])",
   "design-library/inspector/inspector.css .ce-inspector > details[open] > summary",
   "design-library/inspector/inspector.css .ce-sheet-expand:focus-visible",
-  "design-stage.css .mbk-chip:is(a):focus-visible",
+  "design-stage.css .mbk-chip.flow:is(a):focus-visible",
   "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:focus-within",
   "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:hover",
   "packages/ui/src/catalogue-tree/catalogue-tree.css .mbk-nav-variants-toggle:focus-visible",
   "packages/ui/src/comparison-toolbar/comparison-toolbar.css .mbk-diff-sync input:checked + .mbk-diff-sync-track",
   "packages/ui/src/comparison-toolbar/comparison-toolbar.css .mbk-diff-sync input:focus-visible + .mbk-diff-sync-track",
+  "packages/ui/src/icon-control/icon-control.css .mbk-icon-button:focus-visible, .mbk-icon-select:focus-within, .mbk-icon-button:has(> input:focus-visible)",
+  'packages/ui/src/icon-control/icon-control.css .mbk-icon-button[aria-selected="true"], .mbk-icon-button[aria-pressed="true"], .mbk-icon-button:has(> input:checked)',
+  "packages/ui/src/tag-chip/tag-chip.css .mbk-chip.tag:is(a, button).active",
 ];
 
 function isExemptSurface(file: string, selector: string): boolean {
@@ -125,9 +119,16 @@ function describe(reference: ColorReference): string {
   return reference.token ?? reference.literal ?? "?";
 }
 
+/** Whether a palette value is an opaque `#rgb` or `#rrggbb` colour. */
+function isOpaque(color: string): boolean {
+  return /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/iu.test(color.trim());
+}
+
 /**
  * A boundary sits between its own fill and the surface around it, so it only
- * has to reach 3:1 against one of them to read as an edge.
+ * has to reach 3:1 against one of them to read as an edge. A translucent fill,
+ * such as the accent tint of a pressed icon button, shows the surface through
+ * it, so the surface decides.
  */
 function boundaryContrast(
   boundary: ColorReference,
@@ -138,7 +139,7 @@ function boundaryContrast(
   if (!edge) return undefined;
   const behind = fill ? resolve(fill, tokens) : undefined;
   return Math.max(
-    behind ? contrast(edge, behind) : 0,
+    behind && isOpaque(behind) ? contrast(edge, behind) : 0,
     contrast(edge, tokens.get("--chrome-surface")!),
   );
 }

@@ -30,7 +30,7 @@
 .ce-highlight-layer {
   display: none;
 }
-.ce-design:has(.ce-highlight-toggle:checked) .ce-highlight-layer {
+.ce-design:has([data-workspace-highlight]:checked) .ce-highlight-layer {
   display: block;
 }
 .ce-single-action {

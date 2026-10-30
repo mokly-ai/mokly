@@ -9,6 +9,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import {
   IconButton,
   IconSelect,
+  IconSwitch,
   type IconSelectOption,
 } from "../src/icon-control/icon-control.js";
 import { ChevronDownIcon } from "../src/icons/icons.js";
@@ -148,4 +149,59 @@ test("a value that the select does not offer reports nothing", () => {
   const select = screen.getByRole("combobox", { name: "Size" });
   fireEvent.change(select, { target: { value: "huge" } });
   assert.deepEqual(choices, []);
+});
+
+test("a switch lays a native checkbox over its glyph in a label with the button's look", () => {
+  assert.equal(
+    renderToStaticMarkup(
+      <IconSwitch
+        checked
+        description="Inspect component regions."
+        label="Highlight components"
+        mark="data-workspace-highlight"
+        title="Highlight components"
+      >
+        <span data-glyph="" />
+      </IconSwitch>,
+    ),
+    '<label class="mbk-icon-button" title="Highlight components"><input type="checkbox" role="switch" aria-label="Highlight components" aria-description="Inspect component regions." data-workspace-highlight="" checked=""/><span data-glyph=""></span></label>',
+  );
+});
+
+test("a switch starts at its state, then holds the reader's check", () => {
+  render(
+    <IconSwitch
+      checked={false}
+      describedBy="root-mark"
+      label="Dark preview"
+      title="Dark preview"
+    >
+      <span />
+    </IconSwitch>,
+  );
+  const control = screen.getByRole("switch", { name: "Dark preview" });
+  assert.ok(control instanceof HTMLInputElement);
+  assert.equal(control.checked, false);
+  assert.equal(control.getAttribute("aria-describedby"), "root-mark");
+  assert.equal(control.closest("label")?.className, "mbk-icon-button");
+  fireEvent.click(control);
+  assert.equal(control.checked, true);
+});
+
+test("a disabled switch keeps its state", () => {
+  render(
+    <IconSwitch
+      checked={false}
+      disabled
+      label="Highlight components"
+      title="No registered components in this view"
+    >
+      <span />
+    </IconSwitch>,
+  );
+  const control = screen.getByRole("switch", { name: "Highlight components" });
+  assert.ok(control instanceof HTMLInputElement);
+  assert.equal(control.disabled, true);
+  fireEvent.click(control);
+  assert.equal(control.checked, false);
 });
