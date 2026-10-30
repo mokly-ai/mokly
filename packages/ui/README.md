@@ -78,6 +78,15 @@ current page. Scroll together stays a native switch in every band. The mode
 group renders the package's segmented control, and the package stylesheet
 gives a link and inert text the line box and centring of a button.
 
+`CatalogueNavigation` renders the column around `CatalogueTree`, which draws
+plain records that the host builds: sections, folders, entries, and the
+variants and members of an entry's list, each with its keys, label, depth,
+address, and open, hidden, and changed states. Each disclosure choice reaches
+`onDisclosure` with its key and its new open state, and the resize separator
+reports widths through `onWidth` and `onWidthCommit`. `TopBar` takes the tag
+picker and the end control as slots, and `ScreenHeader` takes the view's
+status and controls as slots.
+
 ## Development
 
 From the repository root, `npm run build` builds this package before the
@@ -128,12 +137,29 @@ override the desktop layout rules.
   — `ComparisonToolbar` and its `ComparisonMode`: the mode group, the Scroll
   together switch, and Refresh, as buttons or as the links and inert text of
   a static band
+- [`src/segmented-control/segmented-control.tsx`](./src/segmented-control/segmented-control.tsx)
+  — `SegmentedControl`, the named group of segments that the viewport and
+  scheme switches and the comparison modes render, as buttons or as the links
+  and inert text of a static depiction
+- [`src/top-bar/top-bar.tsx`](./src/top-bar/top-bar.tsx) — `TopBar`: the
+  drawer menu, the brand, and the catalogue search with its compact form and
+  its focus return
+- [`src/catalogue-navigation/catalogue-navigation.tsx`](./src/catalogue-navigation/catalogue-navigation.tsx)
+  — `CatalogueNavigation`: the column, the All and Changes filter, the status
+  line, and the resize separator with its drag and keys
+- [`src/catalogue-tree/catalogue-tree.tsx`](./src/catalogue-tree/catalogue-tree.tsx)
+  — `CatalogueTree`: the sections, folders, entry rows with their changed
+  mark, and entry lists, drawn from the records of `tree-records.ts`
+- [`src/screen-header/screen-header.tsx`](./src/screen-header/screen-header.tsx)
+  — `ScreenHeader`: the breadcrumb trail, the title, and the path chip
 - [`scripts/build.mjs`](./scripts/build.mjs) — compiles the package, copies
   each CSS file beside its JavaScript, and writes `styles.css`
 - [`scripts/styles.mjs`](./scripts/styles.mjs) — finds the component
   stylesheets and orders `styles.css`
 - [`tests/dom.ts`](./tests/dom.ts) — the happy-dom window, the act
   environment, and the cleanup of each DOM test
+- [`tests/navigation-fixture.ts`](./tests/navigation-fixture.ts) — the
+  records and props of the catalogue navigation tests
 - [`tests`](./tests) — Testing Library tests on happy-dom
 
 ### Related Docs

@@ -85,12 +85,21 @@ test("unknown entries are skipped with a warning", () => {
   assert.match(warnings.join(""), /src\/missing\/missing\.css.*skips it/u);
 });
 
-test("the current ordered build keeps the previous output bytes", async () => {
+test("the build writes every component stylesheet once, in the order of src/styles.css", async () => {
   const warnings: string[] = [];
+  const list = await fs.readFile(
+    new URL("../src/styles.css", import.meta.url),
+    "utf8",
+  );
   const ordered = orderedStylesheets(
     componentStylesheets(await sourceFiles()),
-    await fs.readFile(new URL("../src/styles.css", import.meta.url), "utf8"),
+    list,
     (warning) => warnings.push(warning),
+  );
+  // The list names each component stylesheet, so none joins the end.
+  assert.deepEqual(
+    ordered.map(({ file }) => file),
+    [...list.matchAll(/@import "\.\/([^"]+)";/gu)].map((match) => match[1]),
   );
   const components = await Promise.all(
     ordered.map(async ({ name, file }) => ({
@@ -101,12 +110,11 @@ test("the current ordered build keeps the previous output bytes", async () => {
       ),
     })),
   );
-  const previous = [...components].sort((a, b) =>
-    a.name < b.name ? -1 : a.name > b.name ? 1 : 0,
-  );
   const expected =
     "/* @mokly/ui: the rules of every component, in the order of src/styles.css. */\n" +
-    previous.map(({ css }) => (css.endsWith("\n") ? css : `${css}\n`)).join("");
+    components
+      .map(({ css }) => (css.endsWith("\n") ? css : `${css}\n`))
+      .join("");
   assert.equal(packageStylesheet(components), expected);
   assert.equal(
     await fs.readFile(new URL("../dist/styles.css", import.meta.url), "utf8"),

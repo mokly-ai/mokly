@@ -52,13 +52,13 @@ test("viewer containers reject every lower-case HTML and SVG element", async () 
 test("the migration exemption applies only to its exact viewer file", async () => {
   const source = "export const view = <div />;";
   assert.deepEqual(
-    await intrinsicMessages(source, "packages/viewer/src/shell/top_bar.tsx"),
+    await intrinsicMessages(source, "packages/viewer/src/shell/views.tsx"),
     [],
   );
   assert.deepEqual(
     await intrinsicMessages(
       source,
-      "packages/viewer/src/shell/nested/top_bar.tsx",
+      "packages/viewer/src/shell/nested/views.tsx",
     ),
     [rejection("div")],
   );

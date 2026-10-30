@@ -236,6 +236,11 @@ and Review regressions against `mokly serve` of the example catalogue.
   the public handle and its highlight requests, geometry, and cancellation
 - [`src/shell`](./src/shell) — the Browse shell tree and its scoped styles,
   shared by the embedded viewer and the browser entry
+- [`src/shell/top_bar.tsx`](./src/shell/top_bar.tsx),
+  [`src/shell/nav.tsx`](./src/shell/nav.tsx), and
+  [`src/shell/head.tsx`](./src/shell/head.tsx) — the containers of the top
+  bar, the catalogue navigation, and the screen header; `nav_rows.ts` and
+  `nav_leaf_rows.ts` build the navigation's records from the shell state
 - [`src/catalogue`](./src/catalogue) — the readers of the catalogue index and
   the entry detail, and the public catalogue types
 - [`src/data.ts`](./src/data.ts) — the `./data` entry: path functions,

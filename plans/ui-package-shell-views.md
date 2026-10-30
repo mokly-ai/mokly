@@ -470,6 +470,17 @@ Each call is the orchestrator's own, made on 2026-10-29.
     adds the package mask component unused. A later milestone switches the
     shell to it and removes both adapter drawings in one change, so no state
     shows two masks or none.
+15. **Media queries of package rules.** Added on 2026-10-30 by milestone 3.
+    Package rules may use the layout breakpoint, the device breakpoint, and
+    reduced motion. `layout_breakpoint.ts` holds both breakpoints, and the
+    viewer's styles test rejects every other query. Reason: the device
+    chrome contract names both breakpoints, and the slice moved rules that
+    use them.
+16. **Interim selectors.** Added on 2026-10-30 by milestone 3. Until
+    milestone 18, package stylesheets keep the shell's page-mark selectors,
+    such as `body.mbk-nav-resizing`, and embedded-root selectors that the
+    `@scope` transform reads, such as `:scope.mokly-viewer`. Milestone 18
+    rewrites them under decision 4 G.
 
 ## Inventory
 
@@ -481,8 +492,11 @@ them. Files under `src/shell` drop the prefix. `views.tsx` and
 
 - Viewer files: `top_bar`, `nav`, `nav_filter`, `nav_rows`, `nav_leaf_rows`,
   `nav_resize`, and `head`.
-- Package components: `top-bar`, `catalogue-navigation`, `screen-header`, and
-  `segmented-control`.
+- Package components: `top-bar`, `catalogue-navigation`, `catalogue-tree`,
+  `screen-header`, and `segmented-control`. Milestone 3 split the tree from
+  the column, because one navigation stylesheet passed 500 lines, and the
+  viewer's `nav_rows`, `nav_leaf_rows`, `nav_filter`, and `nav_resize` became
+  `.ts` modules that build records or provide hooks.
 - CSS sources: `css_nav_rail`, `css_nav_rows`, `css_nav_search`,
   `css_nav_variants`, `css_nav_changed`, `css_nav_status`, `css_nav_resize`,
   and the header and `.mbk-seg` rules of `css_views_layout` and
@@ -644,28 +658,34 @@ Move the top bar, the catalogue navigation, and the screen header. The
 navigation takes plain section, group, and row records that the viewer
 builds from `nav_tree.ts` and `nav_model.ts`, which stay in the viewer.
 
-- [ ] Create the package components of the chrome slice of the inventory,
+- [x] Create the package components of the chrome slice of the inventory,
       with their CSS, their subpath exports, and their place in
       `src/styles.css`. `ViewportSwitch` and `SchemeSwitch` render the
       package segmented control, and the comparison toolbar's mode group
       renders it too.
-- [ ] The viewer files of the slice become containers that read the store
+- [x] The viewer files of the slice become containers that read the store
       and render the package components. Move their rules out of the CSS
       modules of the slice, and delete each module that the move empties.
-- [ ] Tests in `packages/ui/tests` with Testing Library: the roles and names
+- [x] Tests in `packages/ui/tests` with Testing Library: the roles and names
       that the shell specs query, each callback, the compact search focus, the
       roving focus, the resize handle keys and drag, and the disclosure
       toggles. Move each viewer test that covers only the moved markup, and
       keep every assertion.
-- [ ] Remove the files of the slice from the lint exemption list of
+- [x] Remove the files of the slice from the lint exemption list of
       decision 1.
-- [ ] Check: `npm run build`, the targeted viewer and package tests, the
+- [x] Check: `npm run build`, the targeted viewer and package tests, the
       browser specs of the top bar, the navigation, and the header, the
       computed-style tool with no difference, the order tool with each listed
       pair checked, and the mockup check of `AGENTS.md`. Smoke-test through
       `npm run dev` in Light and Dark, at a desktop and a narrow width, in the
       standalone shell and the embedded fixture. Save screenshots under
       `.context/ui-package-shell-views/chrome/`.
+- [x] Done on 2026-10-30 by the ui implementor and checked: zero
+      computed-style differences across 166 states, 111 browser specs and 800
+      Node tests passed, and two order-tool pairs that cannot match one
+      element. The orchestrator applied design call 15 and deleted the dead
+      `.mbk-basewatch` rules, which no product code, test, mockup, or Rust
+      code renders. Evidence: `.context/ui-package-shell-views/chrome/`.
 
 ## Milestone 4: Chrome mockups
 
@@ -681,6 +701,9 @@ Depends on: 3
 - [ ] Where a mockup draws a static destination or an inert control, the
       package component gains an optional prop, as `ComparisonToolbar` gained
       `modeHref` and `interactive`. The product output does not change.
+- [ ] The comparison toolbar's sheet imports `segmented-control.css`, which
+      the package toolbar now renders, and the `.mbk-seg` copy in the shared
+      design CSS goes where nothing else uses it.
 - [ ] Decision 2 B: the artboard parts of this slice that a package
       component provides render that component in the same way, and their
       copies and CSS go.

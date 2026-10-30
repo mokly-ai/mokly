@@ -1,5 +1,6 @@
 // Each slice of plans/ui-package-shell-views.md removes its migrated files.
-// These 53 files are the intrinsic-inventory.tsv baseline of milestone 2.
+// The list started as the 53 files of the intrinsic-inventory.tsv baseline
+// of milestone 2.
 export const viewerIntrinsicExemptions = [
   "packages/viewer/src/shell/comparison_chrome.tsx",
   "packages/viewer/src/shell/comparison_frame.tsx",
@@ -17,13 +18,7 @@ export const viewerIntrinsicExemptions = [
   "packages/viewer/src/shell/embedded_viewer.tsx",
   "packages/viewer/src/shell/evidence_details.tsx",
   "packages/viewer/src/shell/frames.tsx",
-  "packages/viewer/src/shell/head.tsx",
   "packages/viewer/src/shell/inspector.tsx",
-  "packages/viewer/src/shell/nav.tsx",
-  "packages/viewer/src/shell/nav_filter.tsx",
-  "packages/viewer/src/shell/nav_leaf_rows.tsx",
-  "packages/viewer/src/shell/nav_resize.tsx",
-  "packages/viewer/src/shell/nav_rows.tsx",
   "packages/viewer/src/shell/page_evidence.tsx",
   "packages/viewer/src/shell/preview_frame.tsx",
   "packages/viewer/src/shell/preview_unavailable.tsx",
@@ -35,7 +30,6 @@ export const viewerIntrinsicExemptions = [
   "packages/viewer/src/shell/stages.tsx",
   "packages/viewer/src/shell/status_bar.tsx",
   "packages/viewer/src/shell/tags.tsx",
-  "packages/viewer/src/shell/top_bar.tsx",
   "packages/viewer/src/shell/views.tsx",
   "packages/viewer/src/shell/workspace.tsx",
   "packages/viewer/src/shell/workspace_controls.tsx",
