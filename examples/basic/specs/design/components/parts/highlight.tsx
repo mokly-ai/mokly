@@ -1,10 +1,35 @@
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 
 import { MockLink } from "@mokly/mokly";
 
 import { useCurrentPage } from "../../parts/design_navigation.js";
 
 export type InspectionSelection = "off" | "outer" | "nested";
+
+/**
+ * The highlight of one depicted instance: an outline around it, its label
+ * chip, and the dim of the rest of the preview, which the Highlight components
+ * switch reveals. No artboard depicts the instance selected, so the region is
+ * a picture that opens nothing.
+ */
+export function SingleHighlight({
+  children,
+  label,
+}: {
+  /** The depicted instance. */
+  children: ReactNode;
+  /** The component and the instance, as the label chip names them. */
+  label: string;
+}) {
+  return (
+    <div className="ce-single-action">
+      {children}
+      <span className="ce-single-highlight ce-highlight-layer">
+        <span>{label}</span>
+      </span>
+    </div>
+  );
+}
 
 /** Fixed geometry belongs to this synthetic artboard, not the runtime inspector. */
 export function HighlightMask({

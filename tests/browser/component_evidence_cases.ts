@@ -182,6 +182,7 @@ export function registerComponentEvidence(
           "design/components/inspection/inspection-highlight",
           "design/components/inspection/inspection-nested",
           "design/components/inspection/inspection-consumer",
+          "design/components/pages/toolbar",
         ]) {
           await page.goto(componentDesignUrl(route, viewport));
           await page

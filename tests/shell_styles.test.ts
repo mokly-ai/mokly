@@ -143,19 +143,19 @@ test("tag chips select in the accent and the bar clears the scrim", () => {
   );
   assert.ok(
     css.includes(
-      ".mbk-chip.tag:is(a, button):hover { background: var(--mokly-accent-soft); }",
+      ".mbk-chip.tag:is(a, button):not(.active):hover { background: var(--mokly-accent-soft); }",
     ),
   );
   assert.ok(
     css.includes(
-      ".mbk-chip.tag:is(a, button).active { background: var(--mokly-accent); " +
+      ".mbk-chip.tag.active { background: var(--mokly-accent); " +
         "border-color: var(--mokly-accent); " +
         "color: var(--mokly-accent-contrast); }",
     ),
   );
   assert.ok(
     css.includes(
-      ".mbk-chip.tag:is(a, button).active svg { color: var(--mokly-accent-contrast); }",
+      ".mbk-chip.tag.active svg { color: var(--mokly-accent-contrast); }",
     ),
   );
   assert.ok(

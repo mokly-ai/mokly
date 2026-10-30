@@ -118,7 +118,7 @@ const AUDITED_BOUNDARIES = [
   "packages/ui/src/comparison-toolbar/comparison-toolbar.css .mbk-diff-sync input:focus-visible + .mbk-diff-sync-track",
   "packages/ui/src/icon-control/icon-control.css .mbk-icon-button:focus-visible, .mbk-icon-select:focus-within, .mbk-icon-button:has(> input:focus-visible)",
   'packages/ui/src/icon-control/icon-control.css .mbk-icon-button[aria-selected="true"], .mbk-icon-button[aria-pressed="true"], .mbk-icon-button:has(> input:checked)',
-  "packages/ui/src/tag-chip/tag-chip.css .mbk-chip.tag:is(a, button).active",
+  "packages/ui/src/tag-chip/tag-chip.css .mbk-chip.tag.active",
 ];
 
 function isExemptSurface(file: string, selector: string): boolean {
