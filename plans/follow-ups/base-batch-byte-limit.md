@@ -7,9 +7,8 @@
 - **Location:** `crates/mokly-git/src/checkout_batch.rs:18`,
   `crates/mokly-git/src/extraction.rs:49`, and
   `crates/mokly-compare/src/git_prefetch.rs:50` and line 53.
-- **Reason:** The repeated literals sit in two modules that the batch
-  conversion change did not need to edit, so the review left them for a
-  separate branch.
+- **Reason:** The batch change left these repeated bounds in unchanged
+  callers, so their correction needs a separate branch.
 
 - **Source:** Review.
 - **Category:** Code structure.
@@ -45,11 +44,17 @@
   - **B.** Use `BATCH_BYTES` in `crates/mokly-git/src/extraction.rs`. The
     prefetch in `mokly-compare` keeps its own literal. Effort: Small.
   - **C.** Export `BATCH_BYTES` and a named file count from `mokly-git`. Use
-    both in the extraction and in the prefetch. It changes a few lines, but
-    in two crates. Effort: Large (estimate).
+    both in the extraction and in the prefetch. The `checkout_batch` module
+    is private at `crates/mokly-git/src/lib.rs:30`, and no named file count
+    exists. So C changes four code files: `lib.rs` for the export,
+    `checkout_batch.rs` for the named count, `extraction.rs`, and
+    `crates/mokly-compare/src/git_prefetch.rs`. Four files exceed the Small
+    limit, and two crates exclude Medium. Effort: Large (estimate).
   - **D.** Give `mokly-git` one helper that forms the batches of a file list
     under both bounds. The extraction and the prefetch call it, so the bounds
-    and the grouping rule live in one place. Effort: Large (estimate).
+    and the grouping rule live in one place. It adds the helper and its
+    export to `mokly-git` and changes both callers: at least three code files
+    in two crates. Effort: Large (estimate).
 - **Left out:** A shared configuration value. The bound is an internal
   limit of the conversion, not a user setting.
 - **Wider fix:** D (estimate). One helper owns the grouping rule, so no
