@@ -525,8 +525,12 @@ them. Files under `src/shell` drop the prefix. `views.tsx` and
   `workspace_usage`, `workspace_instances`, `workspace_evidence`,
   `evidence_details`, `workspace_stylesheet_list`, and `page_evidence`.
 - Package components: `inspector`, `details-panel`, `metadata-row`,
-  `prop-field`, `controls-panel`, `props-panel`, `usage-list`,
-  `instance-tree`, and `comparison-evidence`.
+  `prop-field`, `controls-panel`, `edit-status`, `props-panel`,
+  `usage-list`, `instance-tree`, `text-button`, and `comparison-evidence`.
+  Milestone 9 added `edit-status`, which draws over the preview, and
+  `text-button`, which three panels share. `evidence_details` became a `.ts`
+  module, and `workspace_stylesheet_list.tsx` went into the evidence
+  component.
 - CSS sources: `css_details`, `css_inspector_resize`, and the inspector,
   props, field, instance, and evidence rules of `css_workspace`.
 - Design library: `inspector/inspector`, `inspector/metadata-row`, and
@@ -797,16 +801,26 @@ list, the instance tree, and the comparison evidence. The catalogue lookups
 of `details_rows.tsx` and the evidence projections stay in the viewer and
 pass plain records.
 
-- [ ] Create the package components of the inspector slice, with their CSS,
+- [x] Create the package components of the inspector slice, with their CSS,
       exports, and order. Decide under design call 3 whether the sheet and
       divider behaviour of `inspector_resize.ts` moves, and record the call.
-- [ ] The viewer files of the slice become containers. Move their rules and
+- [x] The viewer files of the slice become containers. Move their rules and
       delete each emptied module.
-- [ ] Tests as in milestone 3: the tab keys, Escape and focus return, each
+- [x] Tests as in milestone 3: the tab keys, Escape and focus return, each
       field kind with its label, description, and error ids, Reset, the usage
       links, the instance tree selection, and each evidence block.
-- [ ] Remove the files of the slice from the lint exemption list.
-- [ ] Check as in milestone 3. Save evidence under
+- [x] Remove the files of the slice from the lint exemption list.
+- [x] Check as in milestone 3. Save evidence under
+      `.context/ui-package-shell-views/inspector/`.
+- [x] Done on 2026-10-30 by the ui implementor on
+      `calummoore/mokly-ui-inspector` and checked: identical markup in 1488
+      cases, zero computed-style differences across 166 states, 805 browser
+      tests and 2803 Node tests passed, and 19 new order-tool pairs that
+      cannot change a computed value. Calls under design call 3: the
+      inspector tabs keep their own buttons with the `icon-control`
+      stylesheet, because `IconButton` writes its attributes in another order;
+      `inspector_resize.ts` and the Escape listener on the shell root stay in
+      the viewer, and the listener now has a browser test. Evidence:
       `.context/ui-package-shell-views/inspector/`.
 
 ## Milestone 10: Inspector mockups
@@ -814,6 +828,12 @@ pass plain records.
 Tags: mockup
 
 Depends on: 9
+
+The inventory gives the prop field a `control` slot and the inspector tabs
+that open natively with links, while the package draws typed controls and
+buttons with callbacks. Add optional static props to the package components,
+as `ComparisonToolbar` gained `modeHref` and `interactive`. Found by milestone
+9 on 2026-10-30.
 
 - [ ] Adopt `inspector/inspector`, `inspector/metadata-row`, and
       `inspector/prop-field` as milestone 4 adopts the chrome, including

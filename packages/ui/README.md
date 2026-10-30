@@ -97,6 +97,29 @@ scheme, the highlight state, and the change marks of its controls as props,
 and draws them with the 34px `IconButton` and `IconSelect`. `ChangeStatus`
 shows an entry's change status beside its title.
 
+`Inspector` draws the workspace inspector: its tabs, the open tab's title and
+panel, and Close. The host holds the open state and the open tab, and it
+receives each choice through `onOpenChange`. The inspector keeps the arrow
+keys, Home, and End of its tabs, and Close returns focus to the tab that the
+reader pressed last. The `InspectorHandle` that `ref` receives closes the
+inspector in the same way, such as on Escape anywhere in the host's shell, and
+names its element. The resize separator and the sheet grab keep the
+attributes through which the host sizes the inspector. `DetailsPanel` draws
+the collapsible Details below a page's stage, and `DetailsBody` the body that
+it and the Details tab show. `MetadataRow` draws one labelled value, as a row
+of the metadata column or, in its `props` presentation, as a `dt` and `dd`
+pair, and `MetadataCode`, `MetadataLink`, `MetadataChips`, and `EntryChip`
+draw the values of a row. `PropField` draws one field of the Props tab with
+the native control of its kind; its help and its error take the ids
+`{id}-help` and `{id}-error`. `ControlsPanel` and `SavedPropsPanel` draw the
+edit form and the saved props, and `EditStatus` draws the status of a render
+of edited props over the preview. `PropsPanel`, `UsageList`, and
+`InstanceTree` draw the Props, Usage, and Components tabs from plain records,
+and `ComparisonEvidence` draws the comparison facts of an entry's Details in
+the designs' order. The host supplies each text that it derives from the
+catalogue, and the controls' wording, which the design catalogue shares.
+`TextButton` is the text button of these panels.
+
 ## Development
 
 From the repository root, `npm run build` builds this package before the
@@ -175,6 +198,38 @@ override the desktop layout rules.
   look the inspector tabs share
 - [`src/change-status/change-status.tsx`](./src/change-status/change-status.tsx)
   — `ChangeStatus`: the change status beside an entry's title
+- [`src/inspector/inspector.tsx`](./src/inspector/inspector.tsx) —
+  `Inspector` and `InspectorHandle`: the tabs, whose keys `tab-keys.ts`
+  handles, the panels, Close with its focus return, and the resize separator
+  and sheet grab
+- [`src/details-panel/details-panel.tsx`](./src/details-panel/details-panel.tsx)
+  — `DetailsPanel` and `DetailsBody`: the collapsible Details and the body
+  with the description, the rationale, and the metadata column
+- [`src/metadata-row/metadata-row.tsx`](./src/metadata-row/metadata-row.tsx)
+  — `MetadataRow` in its metadata and props presentations, and the code
+  chips, links, chip groups, and entry chips of a value
+- [`src/prop-field/prop-field.tsx`](./src/prop-field/prop-field.tsx) —
+  `PropField` and `PropFields`: a field with its label, help, error, and
+  optional supply, and the native control of each kind in `prop-input.tsx`
+- [`src/controls-panel/controls-panel.tsx`](./src/controls-panel/controls-panel.tsx)
+  — `ControlsPanel` and `SavedPropsPanel`: the edit form with its alerts and
+  focus targets, and the saved props
+- [`src/edit-status/edit-status.tsx`](./src/edit-status/edit-status.tsx) —
+  `EditStatus`, the status of a render of edited props over the preview
+- [`src/props-panel/props-panel.tsx`](./src/props-panel/props-panel.tsx) —
+  `PropsPanel`, `PropValues`, `PropSlots`, `PropsMessage`, and `PropsStatus`:
+  the supplied props and slots, the line of an empty tab, and its loading
+- [`src/usage-list/usage-list.tsx`](./src/usage-list/usage-list.tsx) —
+  `UsageList` and `UsageStatus`: the Used by and affected consumers, and the
+  tab's loading and unchecked states
+- [`src/instance-tree/instance-tree.tsx`](./src/instance-tree/instance-tree.tsx)
+  — `InstanceTree`: the viewport choice and the instances, whose nested lists
+  keep their open state
+- [`src/comparison-evidence/comparison-evidence.tsx`](./src/comparison-evidence/comparison-evidence.tsx)
+  — `ComparisonEvidence`: the comparison facts of Details in the designs'
+  order, with the heading and the files of `evidence-files.tsx`
+- [`src/text-button/text-button.tsx`](./src/text-button/text-button.tsx) —
+  `TextButton`, the text button of the inspector's panels
 - [`scripts/build.mjs`](./scripts/build.mjs) — compiles the package, copies
   each CSS file beside its JavaScript, and writes `styles.css`
 - [`scripts/styles.mjs`](./scripts/styles.mjs) — finds the component

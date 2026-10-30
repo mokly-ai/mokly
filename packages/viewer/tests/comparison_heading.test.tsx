@@ -1,10 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { renderToStaticMarkup } from "react-dom/server";
-
 import type { CatalogueReadModel } from "../src/catalogue/types.js";
-import { ComparisonHeading } from "../src/shell/evidence_details.js";
 
 import { indexFixture, rawIndexFixture } from "./catalogue_v9_fixture.js";
 import {
@@ -129,16 +126,4 @@ test("an embedded entry names the branch point exactly when its index has a base
     assert.ok(unnamed.startsWith(opening), unnamed);
     assert.doesNotMatch(unnamed, /Compared with the branch point/);
   }
-});
-
-test("the shared heading names only a known branch point", () => {
-  for (const base of ["", " "])
-    assert.equal(
-      renderToStaticMarkup(<ComparisonHeading base={base} />),
-      HEADING,
-    );
-  assert.equal(
-    renderToStaticMarkup(<ComparisonHeading base="origin/main" />),
-    `${HEADING}<p>Compared with the branch point on origin/main.</p>`,
-  );
 });

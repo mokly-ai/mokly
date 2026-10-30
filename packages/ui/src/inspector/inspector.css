@@ -1,0 +1,212 @@
+/* The workspace inspector: the tab strip, which stays in place while the open
+   panel scrolls, and the panels. Its tabs draw with the icon control rules.
+   Below the breakpoint, the inspector is a bottom sheet with a grab handle. */
+.mbk-inspector select {
+  background: var(--chrome-surface);
+  color: var(--chrome-ink);
+  border: 1px solid var(--chrome-border);
+  border-radius: 6px;
+  padding: 6px 28px 6px 8px;
+  font: inherit;
+}
+
+.mbk-inspector {
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 45px;
+  background: var(--chrome-surface);
+  border-top: 1px solid var(--chrome-border);
+  z-index: 5;
+}
+
+.mbk-inspector[data-open="true"] {
+  height: var(--inspector-height, 260px);
+  max-height: calc(100% - 100px);
+}
+
+.mbk-inspector-tabs {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 5px;
+  height: 45px;
+  padding: 5px 16px;
+}
+
+.mbk-inspector-title {
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 6px;
+  flex: 1;
+}
+
+.mbk-inspector-content {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  overscroll-behavior: contain;
+  font-size: 13px;
+}
+
+.mbk-inspector-content > section {
+  padding: 10px 24px 24px;
+}
+
+.mbk-inspector-content .mbk-details-body {
+  padding: 0;
+}
+
+.mbk-inspector-content h3 {
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+
+.mbk-inspector-content h4 {
+  font-size: 12px;
+  margin: 14px 0 8px;
+}
+
+.mbk-inspector-content p {
+  line-height: 1.5;
+}
+
+.mbk-inspector-content a {
+  color: var(--mokly-accent);
+}
+
+.mbk-sheet-grab {
+  display: none;
+}
+
+.mbk-inspector-content .mbk-controls-heading h3 {
+  margin-bottom: 4px;
+}
+
+@media (width < 56.25rem) {
+  .mbk-inspector {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 0;
+    border: 1px solid var(--chrome-border);
+    border-bottom: 0;
+    border-radius: 14px 14px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: var(--chrome-shadow-sheet);
+  }
+
+  .mbk-inspector[data-open="true"] {
+    height: min(42%, 320px);
+    min-height: 190px;
+    max-height: calc(100% - 36px);
+  }
+
+  .mbk-inspector[data-expanded="true"][data-open="true"] {
+    height: 80%;
+  }
+
+  .mbk-inspector-tabs {
+    padding: 4px 10px;
+  }
+
+  .mbk-inspector-content > section {
+    padding: 8px 14px 20px;
+  }
+
+  .mbk-sheet-grab {
+    display: grid;
+    flex: none;
+    place-items: center;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: 14px 14px 0 0;
+    background: transparent;
+    touch-action: none;
+    cursor: ns-resize;
+  }
+
+  .mbk-sheet-grab span {
+    width: 36px;
+    height: 5px;
+    border-radius: 9px;
+    background: var(--chrome-muted);
+    opacity: 0.5;
+  }
+
+  .mbk-inspector:not([data-open="true"]) .mbk-sheet-grab {
+    display: none;
+  }
+}
+
+/* The separator above an open inspector on a desktop, rotated from the
+   catalogue navigation's separator, so that both share one resting, hover,
+   focus, and active look. The offset measures from the inspector's padding
+   box, so it clears the 1px top border as well as half the handle, which
+   leaves the grip centred on that border. The resizing class marks the shell
+   root during a drag, and every element in it follows. */
+.mbk-inspector-resize {
+  position: absolute;
+  z-index: 2;
+  top: -8.5px;
+  right: 0;
+  left: 0;
+  display: none;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: row-resize;
+  outline: none;
+  touch-action: none;
+}
+
+.mbk-inspector[data-open="true"] .mbk-inspector-resize {
+  display: block;
+}
+
+.mbk-inspector-resize::after {
+  content: "";
+  position: absolute;
+  top: 7px;
+  left: calc(50% - 16px);
+  width: 32px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--chrome-border-strong);
+  transition:
+    background 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.mbk-inspector-resize:hover::after,
+.mbk-inspector-resize:focus-visible::after,
+[data-mokly-shell].mbk-inspector-resizing .mbk-inspector-resize::after {
+  background: var(--mokly-accent);
+  box-shadow: 0 0 0 3px var(--mokly-accent-soft);
+}
+
+.mbk-inspector-resize:focus-visible {
+  box-shadow: inset 0 2px 0 var(--mokly-accent);
+}
+
+[data-mokly-shell].mbk-inspector-resizing {
+  cursor: row-resize;
+  user-select: none;
+}
+
+[data-mokly-shell].mbk-inspector-resizing * {
+  cursor: row-resize !important;
+}
+
+[data-mokly-shell].mbk-inspector-resizing iframe {
+  pointer-events: none;
+}
+
+@media (width < 56.25rem) {
+  .mbk-inspector[data-open="true"] .mbk-inspector-resize {
+    display: none;
+  }
+}

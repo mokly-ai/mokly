@@ -1,0 +1,20 @@
+/* The comparison facts in an entry's Details, below a rule. Each paragraph and
+   list keeps a small gap, and a paragraph after a list a larger one. */
+.mbk-comparison-evidence {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--chrome-border);
+}
+
+.mbk-comparison-evidence p,
+.mbk-comparison-evidence ul {
+  margin: 8px 0 0;
+}
+
+.mbk-comparison-evidence li {
+  overflow-wrap: anywhere;
+}
+
+.mbk-comparison-evidence ul + p {
+  margin-top: 14px;
+}

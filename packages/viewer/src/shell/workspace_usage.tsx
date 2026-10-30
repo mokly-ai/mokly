@@ -1,4 +1,10 @@
-/** Recorded component consumers rendered as stable grouped usage links. */
+/**
+ * Recorded component consumers rendered as stable grouped usage links. This
+ * container groups the links into rows, keys them, and builds each consumer's
+ * address. `@mokly/ui/usage-list` renders the sections and their states.
+ */
+
+import { UsageList, UsageStatus, type UsageRow } from "@mokly/ui/usage-list";
 
 import { viewHref } from "../navigation/routes.js";
 
@@ -37,89 +43,40 @@ export function WorkspaceUsage({
 }) {
   if (delivery.status !== "ready")
     return (
-      <section aria-label="Usage status" data-usage-section="status">
-        {delivery.status === "failed" ? (
-          <>
-            <p role="alert">Usage couldn’t be loaded.</p>
-            <button
-              className="mbk-text-button"
-              onClick={delivery.retry}
-              type="button"
-            >
-              Try again
-            </button>
-          </>
-        ) : (
-          <p role="status">Loading usage…</p>
-        )}
-      </section>
+      <UsageStatus
+        onRetry={delivery.status === "failed" ? delivery.retry : undefined}
+        status={delivery.status === "failed" ? "failed" : "loading"}
+      />
     );
-  if (data.usageComplete === false)
-    return (
-      <p data-usage-section="status">
-        Usage is unavailable until the catalogue has been checked.
-      </p>
-    );
+  if (data.usageComplete === false) return <UsageStatus status="unchecked" />;
   return (
-    <>
-      <UsageSection title="Used by" section="used-by" links={data.usedBy} />
-      {data.affected.length ? (
-        <UsageSection
-          title="Affected screens and components"
-          section="affected"
-          links={data.affected}
-        />
-      ) : null}
-    </>
+    <UsageList
+      affected={sectionRows(data.affected, "affected")}
+      usedBy={sectionRows(data.usedBy, "used-by")}
+    />
   );
 }
 
-function UsageSection({
-  links,
-  section,
-  title,
-}: {
-  links: readonly UsageLink[];
-  section: UsageSectionName;
-  title: string;
-}) {
-  const rows = usageRows(links);
-  return (
-    <section data-usage-section={section}>
-      <h3>{title}</h3>
-      {!rows.length ? (
-        <p>No recorded consumers.</p>
-      ) : (
-        <ul className="mbk-usage-list">
-          {rows.map(({ key, links: values }) => {
-            const first = values[0]!;
-            const instances = new Set(values.map((value) => value.instanceKey))
-              .size;
-            const views = new Set(
-              values.map((value) => `${value.viewport}/${value.colorScheme}`),
-            ).size;
-            return (
-              <li
-                data-usage-link={JSON.stringify([first.entryId, first.removed])}
-                key={key}
-              >
-                <a href={usageHref(first, section)}>
-                  {first.title}
-                  {first.removed ? " · Removed" : ""}
-                </a>
-                <small>
-                  {values.some((value) => value.direct)
-                    ? "Direct use"
-                    : "Nested use"}
-                  {` · ${instances} instances · ${views} views`}
-                </small>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </section>
-  );
+/** The rows of one section: each consumer once, with its counts and address. */
+function sectionRows(
+  links: readonly UsageLink[],
+  section: UsageSectionName,
+): UsageRow[] {
+  return usageRows(links).map(({ key, links: values }) => {
+    const first = values[0]!;
+    return {
+      direct: values.some((value) => value.direct),
+      href: usageHref(first, section),
+      id: JSON.stringify([first.entryId, first.removed]),
+      instances: new Set(values.map((value) => value.instanceKey)).size,
+      key,
+      removed: first.removed,
+      title: first.title,
+      views: new Set(
+        values.map((value) => `${value.viewport}/${value.colorScheme}`),
+      ).size,
+    };
+  });
 }
 
 /**

@@ -1,0 +1,109 @@
+/* A field of the Props tab: a row with the name in a label column, then the
+   control, the help, and the error. A control frames its surface, its border,
+   and its invalid state. Below the breakpoint, the label column narrows. */
+.mbk-control-field {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  position: relative;
+  min-width: 0;
+  padding: 9px 0;
+  border-top: 1px solid var(--chrome-border);
+}
+
+.mbk-control-label {
+  padding-top: 8px;
+  color: var(--chrome-ink-2);
+  font-family: var(--mono);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.mbk-control-optional {
+  display: block;
+  margin-top: 3px;
+  color: var(--chrome-muted);
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.mbk-control-value {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.mbk-control-field input:not([type="checkbox"]),
+.mbk-control-field select {
+  min-width: 0;
+  width: 100%;
+  height: 32px;
+  padding: 5px 8px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--chrome-ink);
+  border: 1px solid var(--chrome-control-edge);
+  border-radius: 5px;
+  background: var(--chrome-surface);
+}
+
+.mbk-control-field input[type="checkbox"] {
+  margin: 0;
+  accent-color: var(--mbk-accent-deep);
+  width: 16px;
+  height: 16px;
+}
+
+.mbk-control-value > input[type="checkbox"] {
+  margin: 8px 0;
+}
+
+.mbk-control-field [aria-invalid="true"] {
+  border-color: var(--mbk-danger-ink);
+}
+
+.mbk-control-field input:focus-visible,
+.mbk-control-field select:focus-visible {
+  outline: 2px solid var(--mokly-accent);
+  outline-offset: 2px;
+}
+
+.mbk-control-field :disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.mbk-control-field small {
+  color: var(--chrome-muted);
+  font-size: 10px;
+}
+
+.mbk-control-set,
+.mbk-control-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  font-size: 11px;
+}
+
+.mbk-control-unset {
+  margin: 0;
+  color: var(--chrome-muted);
+  font-size: 11px;
+}
+
+.mbk-control-field .mbk-control-error,
+.mbk-control-error {
+  color: var(--mbk-danger-ink);
+  font-size: 11px;
+}
+
+@media (width < 56.25rem) {
+  .mbk-control-field {
+    grid-template-columns: 100px minmax(0, 1fr);
+  }
+}

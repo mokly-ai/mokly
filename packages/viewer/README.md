@@ -246,6 +246,19 @@ and Review regressions against `mokly serve` of the example catalogue.
   the containers of the tag picker, the tag chips of the details, and the
   view controls; `tag_selection.ts` returns focus to the picker's button
   after a tag of the details, and `view_marks.ts` decides the change marks
+- [`src/shell/inspector.tsx`](./src/shell/inspector.tsx) and
+  [`src/shell/details.tsx`](./src/shell/details.tsx) — the containers of the
+  inspector and the Details: the tabs, Escape anywhere in the shell root, and
+  the metadata rows, whose catalogue lookups live in `details_rows.tsx`;
+  `inspector_resize.ts` sizes the inspector and its mobile sheet
+- [`src/shell/component_controls_panel.tsx`](./src/shell/component_controls_panel.tsx),
+  [`src/shell/workspace_props.tsx`](./src/shell/workspace_props.tsx),
+  [`src/shell/workspace_usage.tsx`](./src/shell/workspace_usage.tsx),
+  [`src/shell/workspace_instances.tsx`](./src/shell/workspace_instances.tsx),
+  and [`src/shell/workspace_evidence.tsx`](./src/shell/workspace_evidence.tsx)
+  — the containers of the inspector's panels, which turn the controls state,
+  the usage links, the instance records, and the comparison evidence into the
+  records and the wording of the package components
 - [`src/catalogue`](./src/catalogue) — the readers of the catalogue index and
   the entry detail, and the public catalogue types
 - [`src/data.ts`](./src/data.ts) — the `./data` entry: path functions,
