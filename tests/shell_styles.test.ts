@@ -177,11 +177,12 @@ test("the tag picker drops from the field and sheets under the bar", () => {
   assert.match(STANDALONE_CSS, /\.mbk-search \{[^}]*position: relative;/);
   assert.match(
     STANDALONE_CSS,
-    /\.mbk-search-tag \{[^}]*width: 20px;[^}]*height: 20px;[^}]*cursor: pointer;/,
+    /\.mbk-search-tag \{[^}]*width: 20px;[^}]*height: 20px;/,
   );
+  assert.ok(css.includes(".mbk-search-tag:is(a, button) { cursor: pointer; }"));
   assert.ok(
     css.includes(
-      ".mbk-search-tag:hover { background: var(--chrome-border); " +
+      ".mbk-search-tag:is(a, button):hover { background: var(--chrome-border); " +
         "color: var(--chrome-ink-2); }",
     ),
   );

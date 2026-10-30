@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from the branch `calummoore/mokly-ui-controls`, review finding 1.
-- **Location:** `examples/basic/specs/design/parts/screen_heads.tsx` and `examples/basic/specs/design/browse/index-entries/screens.tsx`, which pass the highlight state `available`; the previews `MiniWelcome` and `MiniDetails` in `examples/basic/specs/design/parts/mini_screens.tsx` and `MiniProfile` and `MiniSecurity` in `examples/basic/specs/design/parts/mini_account.tsx`; `examples/basic/mokly.config.json`, which gives these pages no highlight stylesheet.
+- **Location:** The headers that pass the highlight state `available` over previews without regions: `examples/basic/specs/design/parts/screen_heads.tsx`, `examples/basic/specs/design/browse/variants/screens.tsx`, `examples/basic/specs/design/browse/views/details-screen.tsx`, `examples/basic/specs/design/review_availability_screens.tsx`, `examples/basic/specs/design/review_outcome_screens.tsx`, `examples/basic/specs/design/publication_screens.tsx`, and `examples/basic/specs/design/changes/impact/styles/matched-excluded/screens.tsx`; the previews `MiniWelcome` and `MiniDetails` in `examples/basic/specs/design/parts/mini_screens.tsx`; `examples/basic/mokly.config.json`, which gives these pages no highlight stylesheet.
 - **Reason:** Every option that draws the highlights changes approved previews or needs a contract exception, so the user must choose.
 
 - **Terms:**
@@ -31,11 +31,13 @@
     switch. They now draw an enabled switch, because the shell offers
     highlighting on the Welcome and Details screens.
   - A build of the design catalogue on 2026-10-30 found an enabled switch
-    without a highlight layer on 26 Browse pages and 8 Changes pages.
-  - The fixtures `MiniWelcome`, `MiniDetails`, `MiniProfile`, and
-    `MiniSecurity` draw no registered component. The real Welcome and
-    Details screens in `examples/basic/specs/catalogue.tsx` render the
-    Action and Toolbar components.
+    without a highlight layer on 22 Browse pages and 8 Changes pages, in 84
+    documents. Five view-controls library samples also draw the switch
+    alone, and they need no layer, because they show the control only.
+  - The fixtures `MiniWelcome` and `MiniDetails` draw no registered
+    component. The real Welcome and Details screens in
+    `examples/basic/specs/catalogue.tsx` render the Action and Toolbar
+    components.
   - `examples/basic/mokly.config.json` gives these pages neither
     `design-component-view.css` nor `design-component-inspection.css`, the
     stylesheets of the explorer's highlight layers.
@@ -43,10 +45,9 @@
     from `examples/basic/specs/design/components/parts/highlight.tsx`.
   - The Toolbar component page drew the same inert switch. The same branch
     fixed it, because its example already depicts the Action.
-  - The Profile and Security artboards pass `available`, but no contract or
-    design panel names a registered component for those screens. Check
-    whether the shell shows "No registered components in this view" for
-    them. Then they need the state `empty` and no drawing.
+  - The Profile and Security artboards pass `empty`, because those screens
+    use no registered component, so their switch is disabled with the
+    shell's empty reason. The same branch fixed them.
 - **Problem:** On these artboards, a reader can check the Highlight
   components switch, and nothing changes.
 - **Impact if no action:** The mockups offer a control that does nothing,

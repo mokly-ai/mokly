@@ -5,15 +5,13 @@
  * resting links and buttons.
  */
 
-import fs from "node:fs/promises";
-
 import { expect } from "@playwright/test";
-import { createElement, Fragment } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+import { createElement } from "react";
 
 import { TagChip } from "@mokly/ui/tag-chip";
 
 import { test } from "./browser_test.js";
+import { renderWithShellStyles } from "./shell_styles_page.js";
 
 /** The Light palette's accent, the ink on it, and its soft hover fill. */
 const ACCENT = "rgb(79, 120, 100)";
@@ -27,32 +25,21 @@ test.use({ colorScheme: "light" });
 test("a selected tag chip fills with the accent as a link, a button, and a picture, and hover never lowers it", async ({
   page,
 }) => {
-  const css = await fs.readFile(
-    new URL("../../packages/viewer/dist/shell.css", import.meta.url),
-    "utf8",
-  );
-  const chips = renderToStaticMarkup(
-    createElement(
-      Fragment,
-      null,
-      createElement(TagChip, { href: "#forms", selected: true, tag: "forms" }),
-      createElement(TagChip, { selected: true, tag: "onboarding" }),
-      createElement(TagChip, {
-        interactive: false,
-        selected: true,
-        tag: "documents",
-      }),
-      createElement(TagChip, { selected: false, tag: "guides" }),
-      createElement(TagChip, {
-        interactive: false,
-        selected: false,
-        tag: "drafts",
-      }),
-    ),
-  );
-  await page.setContent(
-    `<html><head><style>${css}</style></head><body>${chips}</body></html>`,
-  );
+  await renderWithShellStyles(page, [
+    createElement(TagChip, { href: "#forms", selected: true, tag: "forms" }),
+    createElement(TagChip, { selected: true, tag: "onboarding" }),
+    createElement(TagChip, {
+      interactive: false,
+      selected: true,
+      tag: "documents",
+    }),
+    createElement(TagChip, { selected: false, tag: "guides" }),
+    createElement(TagChip, {
+      interactive: false,
+      selected: false,
+      tag: "drafts",
+    }),
+  ]);
   const link = page.getByRole("link", { name: "forms" });
   const button = page.getByRole("button", { name: "onboarding" });
   const picture = page.getByText("documents", { exact: true });
