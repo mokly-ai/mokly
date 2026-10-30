@@ -1,0 +1,65 @@
+/* The workspace's 34px icon controls: a button drawn as one glyph, and a
+   select whose transparent native control lies over a glyph and the 12px down
+   chevron. A pressed toggle and a selected tab fill with the accent. */
+.mbk-icon-button,
+.mbk-icon-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  gap: 5px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--chrome-ink-2);
+  cursor: pointer;
+}
+
+.mbk-icon-button svg,
+.mbk-icon-select svg {
+  display: block;
+  flex: none;
+}
+
+.mbk-icon-select {
+  width: 48px;
+}
+
+.mbk-icon-select svg:last-of-type {
+  width: 12px;
+}
+
+.mbk-icon-select select {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  cursor: pointer;
+}
+
+.mbk-icon-button:hover,
+.mbk-icon-select:hover {
+  background: var(--chrome-bg);
+}
+
+.mbk-icon-button:focus-visible,
+.mbk-icon-select:focus-within {
+  outline: 2px solid var(--mokly-accent);
+  outline-offset: 2px;
+}
+
+.mbk-icon-button[aria-selected="true"],
+.mbk-icon-button[aria-pressed="true"] {
+  color: var(--mokly-accent);
+  background: var(--mokly-accent-soft);
+  border-color: var(--chrome-border);
+}
+
+.mbk-icon-button:disabled {
+  opacity: 0.42;
+  cursor: default;
+}

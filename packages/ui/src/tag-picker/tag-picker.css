@@ -1,0 +1,61 @@
+/* The tag button at the end of the catalogue search and the picker that it
+   drops. The picker draws the package's tag chips. The narrow query is the
+   shell's one layout breakpoint, narrower than 900px. */
+.mbk-search-tag {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-right: -5px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--chrome-muted);
+  cursor: pointer;
+}
+
+.mbk-search-tag:hover {
+  background: var(--chrome-border);
+  color: var(--chrome-ink-2);
+}
+
+.mbk-tag-picker {
+  position: absolute;
+  z-index: 1;
+  top: calc(100% + 7px);
+  right: -1px;
+  left: -1px;
+  padding: 9px 11px 11px;
+  border: 1px solid var(--chrome-border);
+  border-radius: 10px;
+  background: var(--chrome-surface);
+  box-shadow: var(--chrome-shadow);
+}
+
+.mbk-tag-picker-head {
+  margin-bottom: 8px;
+  color: var(--chrome-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mbk-tag-picker .mbk-chips {
+  max-height: 210px;
+  overflow-y: auto;
+}
+
+/* Below the breakpoint the search field no longer positions the picker, so it
+   opens as a sheet under the top bar. */
+@media (width < 56.25rem) {
+  .mbk-tag-picker {
+    top: calc(100% + 1px);
+    right: 0;
+    left: 0;
+    border-top: 0;
+    border-radius: 0 0 12px 12px;
+  }
+}

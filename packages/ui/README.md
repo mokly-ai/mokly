@@ -87,6 +87,16 @@ reports widths through `onWidth` and `onWidthCommit`. `TopBar` takes the tag
 picker and the end control as slots, and `ScreenHeader` takes the view's
 status and controls as slots.
 
+`TagPicker` draws the tag button of the search field and the picker that it
+opens. The host holds the open state and the focused chip. It receives the
+open state, each step of the focus, and each chosen tag through callbacks,
+and the picker keeps the roving focus of its chips, Escape, and the focus
+return to its button. `TagChip` is the toggle chip of one tag, which an
+entry's details also draw. `ViewControls` takes the viewport, the preview
+scheme, the highlight state, and the change marks of its controls as props,
+and draws them with the 34px `IconButton` and `IconSelect`. `ChangeStatus`
+shows an entry's change status beside its title.
+
 ## Development
 
 From the repository root, `npm run build` builds this package before the
@@ -152,6 +162,19 @@ override the desktop layout rules.
   mark, and entry lists, drawn from the records of `tree-records.ts`
 - [`src/screen-header/screen-header.tsx`](./src/screen-header/screen-header.tsx)
   — `ScreenHeader`: the breadcrumb trail, the title, and the path chip
+- [`src/tag-picker/tag-picker.tsx`](./src/tag-picker/tag-picker.tsx) —
+  `TagPicker`: the tag button of the search field and its picker, with the
+  roving focus of the chips, Escape, and the focus return
+- [`src/tag-chip/tag-chip.tsx`](./src/tag-chip/tag-chip.tsx) — `TagChip`, the
+  toggle chip of one tag; its stylesheet holds the rules of every chip
+- [`src/view-controls/view-controls.tsx`](./src/view-controls/view-controls.tsx)
+  — `ViewControls`: the viewport select, the Dark preview toggle, and the
+  Highlight components toggle, with their change marks
+- [`src/icon-control/icon-control.tsx`](./src/icon-control/icon-control.tsx) —
+  `IconButton` and `IconSelect`, the workspace's 34px icon controls, whose
+  look the inspector tabs share
+- [`src/change-status/change-status.tsx`](./src/change-status/change-status.tsx)
+  — `ChangeStatus`: the change status beside an entry's title
 - [`scripts/build.mjs`](./scripts/build.mjs) — compiles the package, copies
   each CSS file beside its JavaScript, and writes `styles.css`
 - [`scripts/styles.mjs`](./scripts/styles.mjs) — finds the component
@@ -160,6 +183,8 @@ override the desktop layout rules.
   environment, and the cleanup of each DOM test
 - [`tests/navigation-fixture.ts`](./tests/navigation-fixture.ts) — the
   records and props of the catalogue navigation tests
+- [`tests/tag-picker-fixture.tsx`](./tests/tag-picker-fixture.tsx) — the tags
+  of the tag picker tests and a host that holds the picker's state
 - [`tests`](./tests) — Testing Library tests on happy-dom
 
 ### Related Docs

@@ -508,8 +508,10 @@ them. Files under `src/shell` drop the prefix. `views.tsx` and
 
 - Viewer files: `tags`, `workspace_controls`, and the status badges of
   `views` and `workspace`.
-- Package components: `tag-picker`, `tag-chip`, `view-controls`, and
-  `change-status`.
+- Package components: `tag-picker`, `tag-chip`, `view-controls`,
+  `icon-control`, and `change-status`. Milestone 6 added `icon-control`,
+  because one stylesheet styles both the view controls and the inspector
+  tabs.
 - CSS sources: the tag picker rules of `css_nav_rail` and `css_nav_search`,
   the chip rules of `css_details`, the icon control and status rules of
   `css_workspace`, and `css_workspace_marks`.
@@ -740,16 +742,24 @@ Depends on: 3, 5
 Move the tag picker, the tag chip, the view controls, and the change status
 badge.
 
-- [ ] Create the package components of the controls slice, with their CSS,
+- [x] Create the package components of the controls slice, with their CSS,
       exports, and order. The top bar takes the tag picker in its search slot,
       and the details rows render the package tag chip.
-- [ ] The viewer files of the slice become containers. Move their rules and
+- [x] The viewer files of the slice become containers. Move their rules and
       delete each emptied module.
-- [ ] Tests as in milestone 3: the picker's roving focus, Escape, and focus
+- [x] Tests as in milestone 3: the picker's roving focus, Escape, and focus
       return, the chip's pressed state, the viewport select and its change
       mark, the highlight toggle, and each status.
-- [ ] Remove the files of the slice from the lint exemption list.
-- [ ] Check as in milestone 3. Save evidence under
+- [x] Remove the files of the slice from the lint exemption list.
+- [x] Check as in milestone 3. Save evidence under
+      `.context/ui-package-shell-views/controls/`.
+- [x] Done on 2026-10-30 by the ui implementor on
+      `calummoore/mokly-ui-controls` and checked: zero computed-style
+      differences across 166 states and the 6 states at 520 pixels, 1168
+      browser tests and 812 Node tests passed, and no new order-tool pair.
+      The orchestrator removed the `afterSelect` parameter of `selectTag`,
+      which no product code passed after the package took the picker's focus
+      return, with the test step that covered only it. Evidence:
       `.context/ui-package-shell-views/controls/`.
 
 ## Milestone 7: Control mockups
