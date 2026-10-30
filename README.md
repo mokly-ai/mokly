@@ -268,7 +268,8 @@ Please maintains the changelog history in the root `CHANGELOG.md`.
 Use the tested Node version in [`.nvmrc`](./.nvmrc). Follow the
 [development guide](./docs/development/README.md) to install the pinned tools.
 Then install dependencies with `npm ci`, build with `npm run build`, and run
-`cargo xtask check` for complete verification.
+`cargo xtask check` for complete verification. `npm run dev` installs and
+builds when needed, then serves the example catalogue with watching.
 
 ### Key code
 
