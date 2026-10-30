@@ -1,6 +1,6 @@
 # The search field shows no focus ring
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate).
+- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-30, from the branch `calummoore/mokly-ui-component-migration`, during the chrome mockup adoption of the shell views plan.
 - **Location:** `packages/ui/src/top-bar/top-bar.css`, the rule that sets `outline: none` on the search field.

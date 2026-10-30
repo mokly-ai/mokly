@@ -1,9 +1,9 @@
 # Embedded viewer styles need CSS @scope
 
-- **Severity:** Medium (estimate). **Effort:** Large (estimate).
+- **Severity:** Medium (estimate). **Effort:** Large (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-30, from the branch `calummoore/mokly-ui-component-migration`, during the research for its page-rules decision.
-- **Location:** `packages/viewer/scripts/styles.mjs:32-56`, `docs/protocol/mokly-viewer.md:129`.
+- **Location:** `packages/viewer/scripts/styles.mjs:32-56`, `docs/protocol/mokly-viewer.md:154-157`, and `docs/protocol/mokly-ui-package.md:67-75`.
 - **Reason:** The problem is older than that branch, which keeps the embedded stylesheet transform unchanged.
 
 - **Terms:**
@@ -25,9 +25,15 @@
     `@scope` to `<input>` and `<textarea>` elements. Safari 26.4 fixes
     this.
   - A browser without `@scope` support drops the whole block.
-  - No protocol doc states which browsers the embedded viewer supports. The
-    theming section of `docs/protocol/mokly-viewer.md` describes the scoped
-    stylesheet but not its browser needs.
+  - No protocol doc states which browsers the embedded viewer supports.
+  - `docs/protocol/mokly-viewer.md:154-157` and
+    `docs/protocol/mokly-ui-package.md:67-75` describe the planned end
+    state. The package rules then exclude the host page and slot content
+    without an `@scope` rule, and the viewer page states the decision "no
+    `@scope` rule". Both pages start with a status line that points to
+    `plans/ui-package-shell-views.md`, because that shell work is not
+    finished. Before PR #249 merged on 2026-10-30, the theming section of
+    the viewer page described the scoped stylesheet.
   - Other embeddable React libraries scope by class names instead. Radix
     Themes declares its tokens on the `.radix-themes` root element and
     resets elements through a `.rt-reset` class that each component adds.
@@ -54,8 +60,12 @@
 - **Left out:** None.
 - **Wider fix:** C.
 - **Previous examples:** None found.
-- **Related:** `plans/ui-package-shell-views.md` keeps the transform and
-  lists its removal as a post-merge task, which C covers.
+- **Related:** `plans/ui-package-shell-views.md` owns the fix. On 2026-10-30
+  the user chose its approach: the tokens on the shell root element, a reset
+  class on each package component's own elements, and no `@scope`
+  transform. That choice is the approach of option C. The plan owns the
+  rewrite of the shell stylesheet, which removes the transform. It deletes
+  this item before its last pull request merges.
 - **Recommendation:** C. It removes the dependency on a new CSS feature and
   scopes the viewer the way other embeddable libraries do. A records the
   limit while C waits.

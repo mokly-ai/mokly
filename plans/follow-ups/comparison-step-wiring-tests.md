@@ -1,6 +1,6 @@
 # Test the wiring of the comparison step labels
 
-- **Severity:** Medium. **Effort:** Small.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from branch `calummoore/loading-status-updates`, review round 1, finding 1 and two problems that its check found.
 - **Location:** `crates/mokly-cli/src/base_dependencies.rs:141`, `crates/mokly-cli/src/changes_runtime.rs:89`, `crates/mokly-cli/src/serve_changes_native.rs:151`, `crates/mokly-cli/tests/changes_names_tests.rs:239`.
