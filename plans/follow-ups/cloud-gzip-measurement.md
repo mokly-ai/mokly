@@ -23,9 +23,10 @@
     entry details changed with each new `deploymentId` and gave 20.8 MB raw
     and 1.3 MB with gzip.
   - PR #224, merged on 2026-10-29, gave entry details content ids. A local
-    build pair then sent 15 new digests and 2,768,084 bytes for one heading
-    edit, against 250 digests and 23,493,689 bytes before. So the repeated
-    publication now sends fewer files than on 2026-10-27.
+    build pair then gave 15 new digests and 2,768,086 bytes for one heading
+    edit, as PR #224 recorded. Before PR #224, the same edit gave 250
+    digests and 23,493,689 bytes. So the repeated publication now sends
+    fewer files than on 2026-10-27.
 - **Task:**
   1. With the released CLI, publish `examples/basic` to a new Mokly Cloud
      project. Record the Blob count, the gzip and raw Blob counts, the
