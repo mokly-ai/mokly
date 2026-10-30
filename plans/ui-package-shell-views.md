@@ -610,26 +610,29 @@ Depends on: none
 Give the package an explicit stylesheet order and build the tools that prove
 each slice changes nothing for a reader. The product does not change.
 
-- [ ] Design call 7: `packages/ui/scripts/build.mjs` and `styles.mjs` read
+- [x] Design call 7: `packages/ui/scripts/build.mjs` and `styles.mjs` read
       `packages/ui/src/styles.css` and concatenate the listed component
       stylesheets in its order. The three current stylesheets keep their
       order. Update `packages/ui/tests/styles.test.ts` and the package README.
-- [ ] Computed-style tool under `.context/ui-package-shell-views/tools/`:
+- [x] Computed-style tool under `.context/ui-package-shell-views/tools/`:
       build the viewer of `origin/main` as a baseline, serve the example
       catalogue, and record the computed style and the element path of every
       shell element. The state matrix covers each entry kind, Changes, each
       comparison mode, each inspector tab, the tag picker, the compact search,
       the drawer, Light and Dark, a desktop and a narrow width, and the
       standalone shell and an embedded root. Save the baseline.
-- [ ] Order tool in the same folder: parse the built `shell.css` and
+- [x] Order tool in the same folder: parse the built `shell.css` and
       `styles.css` of the baseline and the branch with `lightningcss`, and
       list each pair of rules whose order changed, which set the same property
       at the same specificity on selectors that share a subject class.
-- [ ] Decision 1 C: add the rule under `scripts/eslint/` with the exemption
+- [x] Decision 1 C: add the rule under `scripts/eslint/` with the exemption
       list of the 53 files and its cases in the ESLint rule tests. Milestone 1
       writes its sentence in `AGENTS.md`.
-- [ ] Check: `npm run build`, `npm run typecheck`,
+- [x] Check: `npm run build`, `npm run typecheck`,
       `cargo xtask check --suite repository`, and the package tests.
+- [x] Done on 2026-10-30 by the non-ui implementor and checked: zero
+      computed-style differences across 160 states and no reordered rule
+      pair. Evidence: `.context/ui-package-shell-views/reports/m2.md`.
 
 ## Milestone 3: Chrome components
 
