@@ -2,24 +2,53 @@
 
 - **Severity:** Medium. **Effort:** Small.
 - **Kind:** Needs decision.
-- **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan.
-- **Location:** Yarn configuration handling in the base dependency installer.
-- **Reason:** PR #199 merged before this work. The completed plan is now being removed.
+- **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 153, the probe of user decision 145 B.
+- **Location:** `crates/mokly-compare/src/manager_yarnrc.rs:15`,
+  `crates/mokly-compare/src/manager_plan.rs:142`, and
+  `crates/mokly-compare/src/manager.rs:66`.
+- **Reason:** A user rule of 2026-10-21 deferred each new review item of
+  PR #199 until after its merge, for the user's later choice.
 
 - **Source:** Review.
-- **Category:** security.
-- **Background:** Yarn can read TLS certificate, key, and CA files named in `.yarnrc.yml`. Those paths can leave the repository.
-- **Problem:** A base configuration can make the package manager read unconfined host files.
-- **Impact if no action:** Base dependency installation can expose private filesystem content to Yarn.
-- **Root question:** How should Mokly confine Yarn TLS file settings?
+- **Category:** Security.
+- **Terms:**
+  - **Base install:** the private install of the base commit's
+    dependencies that Changes runs when the base lockfile differs from the
+    working tree.
+  - **Dependency tier:** the source of a base side's dependencies. Tier
+    three uses the working tree's dependencies with a warning.
+- **Background:** A base install reads the base commit's `.yarnrc.yml`
+  files. `manager_plan.rs` collects them from the root and its ancestors.
+  `manager_yarnrc::validate` checks only the range settings `catalog`,
+  `catalogs`, and `packageExtensions`. A user decision of 2026-10-21 made
+  each install start from an allowed list of environment variables. The
+  probe for that decision found that Yarn can read TLS files that
+  `httpsCaFilePath`, `httpsKeyFilePath`, and `httpsCertFilePath` name.
+- **Problem:** Mokly checks none of those three settings. A base
+  configuration can point them at any host file, so the package manager
+  reads files outside the repository.
+- **Impact if no action:** A base dependency install can expose private
+  host files, such as a key, to Yarn and to the registry exchange.
+- **Root question:** How should a base install keep Yarn's TLS file reads
+  inside the repository?
 - **Options:**
-  - **A.** Use tier three when a base config sets `httpsCaFilePath`, `httpsKeyFilePath`, or `httpsCertFilePath`. Effort: Small.
-  - **B.** Clear those settings before the install. Effort: Small.
-  - **C.** Allow only TLS files confined to the repository. Effort: Medium.
-- **Left out:** Allowing arbitrary absolute paths breaks the base-input confinement rule.
-- **Wider fix:** C. Path confinement preserves valid repository certificates and blocks host reads.
-- **Previous examples:** The 145 B probe found all three Yarn settings.
-- **Recommendation:** A. It closes the read immediately with the established fallback tier. C best preserves confined use.
-- **Action:** ask the user, because condition 5 holds. The user deferred this item for a later decision.
+  - **A.** Use tier three when a base `.yarnrc.yml` sets
+    `httpsCaFilePath`, `httpsKeyFilePath`, or `httpsCertFilePath`.
+    Effort: Small.
+  - **B.** Clear those settings before the install. Effort: Small
+    (estimate).
+  - **C.** Allow only TLS files that `RepositoryPath::confine` keeps inside
+    the repository. Effort: Medium (estimate).
+- **Left out:** Allowing any absolute path breaks the base-input
+  confinement rule of `docs/protocol/mokly-base-dependencies.md`.
+- **Wider fix:** C. Path confinement keeps valid repository certificates
+  and blocks host reads.
+- **Previous examples:** None found.
+- **Recommendation:** A. It closes the read at once with the existing
+  fallback tier. C best keeps the confined use. The rebuild asked for a
+  decision before the first npm release of the new core.
+- **Action:** ask the user, because condition 5 holds: the user reserved
+  the choice for each open review item of the rebuild. Condition 3 also
+  holds, because each option makes base validation stricter.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6133).
