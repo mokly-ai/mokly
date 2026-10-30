@@ -127,9 +127,12 @@ export function registerDesignLibrary(
     }) => {
       const logo = () =>
         page.locator(".mbk-brand").evaluate((brand) => {
+          // A wordmark that the narrow bar hides reads as absent.
           const color = (selector: string) => {
             const node = brand.querySelector(selector);
-            return node && getComputedStyle(node).color;
+            return node && getComputedStyle(node).display !== "none"
+              ? getComputedStyle(node).color
+              : null;
           };
           return {
             brand: getComputedStyle(brand).color,

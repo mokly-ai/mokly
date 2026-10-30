@@ -103,6 +103,13 @@ button.mbk-crumb-link {
   transform: translateY(1px);
 }
 
+/* The picture of the path chip in a static depiction takes the line box that
+   the chip button has by default, and acts on nothing. */
+span.mbk-pathchip {
+  line-height: normal;
+  cursor: default;
+}
+
 /* Below the breakpoint the scheme switch leaves the top bar for the header. */
 @media (width < 56.25rem) {
   .mbk-screen-head > [data-mokly-schemeswitch] {

@@ -180,7 +180,7 @@ export function registerComponentSurfaces(
         0,
       );
       if (viewport === "mobile") {
-        const menu = page.locator(".mbk-menu-btn");
+        const menu = page.locator(".mbk-menu");
         const svg = menu.locator("svg");
         await expect(svg).toBeVisible();
         const target = (await menu.boundingBox())!;

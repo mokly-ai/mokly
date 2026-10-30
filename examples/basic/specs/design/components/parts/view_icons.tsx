@@ -1,18 +1,10 @@
 import type { ReactNode } from "react";
 
 export type ViewIconKind =
-  | "mobile"
-  | "desktop"
-  | "both"
-  | "light"
-  | "dark"
-  | "highlight"
-  | "chevron"
-  | "menu";
+  "mobile" | "desktop" | "both" | "light" | "dark" | "highlight" | "chevron";
 
 const paths: Record<ViewIconKind, ReactNode> = {
   chevron: <path d="m6 9 6 6 6-6" />,
-  menu: <path d="M4 6h16M4 12h16M4 18h16" />,
   mobile: (
     <>
       <rect x="7" y="2" width="10" height="20" rx="2" />
@@ -48,8 +40,8 @@ const paths: Record<ViewIconKind, ReactNode> = {
 };
 
 /**
- * A toolbar glyph. The menu and the dropdown chevron are SVGs too, centered
- * in fixed control boxes, so no text baseline can offset them.
+ * A toolbar glyph. The dropdown chevron is an SVG too, centered in a fixed
+ * control box, so no text baseline can offset it.
  */
 export function ViewIcon({
   kind,

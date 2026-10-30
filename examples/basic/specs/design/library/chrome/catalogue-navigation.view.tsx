@@ -1,47 +1,45 @@
-import type { Viewport } from "@mokly/mokly";
+import { useId } from "react";
 
-import { DesignLink } from "../../parts/design_navigation.js";
-import { ChevronIcon } from "../../parts/icons.js";
-import { NavResizeHandle } from "../../parts/nav_resize.js";
+import { mockLink, type Viewport } from "@mokly/mokly";
 
-import { NavRow } from "./catalogue-navigation-row.view.js";
-import { navigationSections } from "./catalogue-navigation-sections.js";
+import {
+  CatalogueNavigation,
+  type NavigationStatus,
+} from "../../../../../../packages/ui/src/catalogue-navigation/catalogue-navigation.js";
+import { useCurrentPage } from "../../parts/design_navigation.js";
+
+import {
+  navigationSections,
+  type NavigationRow,
+} from "./catalogue-navigation-sections.js";
 import type { CatalogueNavigationProps } from "./catalogue-navigation.js";
 
+type ChangesStatus = NonNullable<CatalogueNavigationProps["changesStatus"]>;
+
 /**
- * Availability wording shown in place of the Changes rows. A `spinner` entry
- * names the work still running; a `detail` entry adds the secondary line.
+ * The status line under Changes, as the shell words it: the detection at
+ * work or failed, or no changed row. It shows only while Changes is chosen,
+ * and a ready Changes list with rows hides it.
  */
-const CHANGES_MESSAGES = {
-  pending: { title: "Checking for changes…", spinner: "Checking for changes" },
-  preparing: {
-    title: "Preparing comparison",
-    spinner: "Preparing comparison",
-    detail: "This takes a moment. You can keep browsing All while it finishes.",
-  },
-  unavailable: { title: "Changes are unavailable. You can still browse All." },
-} as const;
-
-type ChangesMessage = (typeof CHANGES_MESSAGES)[keyof typeof CHANGES_MESSAGES];
-
-function ChangesStatusBody({ message }: { message: ChangesMessage }) {
-  return (
-    <div className="mbk-nav-status" role="status">
-      {"spinner" in message ? (
-        <span className="mbk-nav-spinner" aria-hidden="true" />
-      ) : null}
-      {"detail" in message ? (
-        <span className="mbk-nav-status-text">
-          <span className="mbk-nav-status-title">{message.title}</span>
-          <span className="mbk-nav-status-detail">{message.detail}</span>
-        </span>
-      ) : (
-        message.title
-      )}
-    </div>
-  );
+function navigationStatus(
+  changesStatus: ChangesStatus,
+  changedOnly: boolean,
+  rows: number,
+): NavigationStatus {
+  return {
+    hidden: !changedOnly || (changesStatus === "ready" && rows > 0),
+    message: changesStatus === "ready" ? "none" : changesStatus,
+  };
 }
 
+/**
+ * The shipped catalogue navigation. A static artboard runs no script, so the
+ * filter links to the artboard that shows the other view, Collapse all and
+ * the separator are pictures, and each section keeps its native disclosure.
+ * Changes that is not ready shows its status line in place of the rows. Its
+ * frame carries the drawer flag that this component's stylesheet draws: the
+ * drawer presentation, and every mobile render, draw the open drawer.
+ */
 export function CatalogueNavigationView({
   activeDestination,
   activeKey,
@@ -56,93 +54,58 @@ export function CatalogueNavigationView({
   changesDestination,
   viewport,
 }: CatalogueNavigationProps & { viewport: Viewport }) {
-  const status =
-    changesStatus === "ready" ? undefined : CHANGES_MESSAGES[changesStatus];
-  const sections = navigationSections(rows);
-  const body = (
-    <>
-      <div className="mbk-nav-head">
-        Catalogue<span>Collapse all</span>
-      </div>
-      {showChanges ? (
-        <div
-          className="mbk-nav-filter"
-          role="group"
-          aria-label="Catalogue filter"
-        >
-          <DesignLink to={changedOnly ? allDestination : undefined}>
-            <span
-              className={
-                changedOnly ? "mbk-nav-filter-opt" : "mbk-nav-filter-opt active"
-              }
-            >
-              All
-            </span>
-          </DesignLink>
-          <DesignLink to={changedOnly ? undefined : changesDestination}>
-            <span
-              className={
-                changedOnly ? "mbk-nav-filter-opt active" : "mbk-nav-filter-opt"
-              }
-            >
-              Changes
-              <span className="mbk-nav-filter-count">
-                {status && "spinner" in status ? (
-                  <span
-                    className="mbk-nav-spinner"
-                    aria-label={status.spinner}
-                    role="status"
-                  />
-                ) : status ? (
-                  "—"
-                ) : (
-                  changedCount
-                )}
-              </span>
-            </span>
-          </DesignLink>
-        </div>
-      ) : null}
-      <div className="mbk-nav-scroll">
-        {changedOnly && status ? (
-          <ChangesStatusBody message={status} />
-        ) : (
-          sections.map((section) => (
-            <details
-              className="mbk-nav-section"
-              data-nav-section={section.id}
-              key={section.id}
-              open
-            >
-              <summary className="mbk-nav-section-head">
-                <span className="mbk-nav-section-chevron" aria-hidden="true">
-                  <ChevronIcon />
-                </span>
-                {section.label}
-              </summary>
-              {section.rows.map((node) => (
-                <NavRow
-                  key={node.key}
-                  activeDestination={activeDestination}
-                  activeKey={activeKey}
-                  activeLabel={activeLabel}
-                  node={node}
-                />
-              ))}
-            </details>
-          ))
-        )}
-      </div>
-    </>
-  );
+  const id = useId();
+  const currentPage = useCurrentPage();
+  const shown = changedOnly && changesStatus !== "ready" ? [] : rows;
+  // The selected row, and a row that opens the artboard itself, are current.
+  const current = (row: NavigationRow) =>
+    (activeKey !== undefined
+      ? row.key === activeKey
+      : activeDestination !== undefined
+        ? row.to === activeDestination
+        : activeLabel !== undefined && row.label === activeLabel) ||
+    (row.to !== undefined && currentPage(row.to) === "page");
   const drawer = presentation === "drawer" || viewport === "mobile";
   return (
-    <nav
-      className={drawer ? "mbk-nav mbk-drawer" : "mbk-nav"}
-      aria-label="Catalogue"
-    >
-      {body}
-      {drawer ? null : <NavResizeHandle />}
-    </nav>
+    <div className="mbk-nav-frame" data-drawer={drawer ? "" : undefined}>
+      <CatalogueNavigation
+        busy={
+          changedOnly &&
+          (changesStatus === "pending" || changesStatus === "preparing")
+        }
+        filter={
+          showChanges
+            ? {
+                count: changedCount,
+                status: changesStatus,
+                view: changedOnly ? "changes" : "all",
+              }
+            : undefined
+        }
+        filterHref={(view) => {
+          const to =
+            view === "all"
+              ? changedOnly
+                ? allDestination
+                : undefined
+              : changedOnly
+                ? undefined
+                : changesDestination;
+          return to === undefined ? undefined : mockLink(to);
+        }}
+        id={id}
+        interactive={false}
+        maximumWidth={480}
+        operable={false}
+        resizable={!drawer}
+        sections={navigationSections(shown, { current, id })}
+        status={
+          showChanges
+            ? navigationStatus(changesStatus, changedOnly, shown.length)
+            : undefined
+        }
+        width={248}
+      />
+    </div>
   );
 }
