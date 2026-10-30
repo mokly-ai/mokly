@@ -381,6 +381,16 @@ root class still reach host slot content without `@scope`.
 - **Action:** ask the user, because condition 1 holds: E replaces the wording
   of shared UI package decision 12, a user decision.
 
+### 5. A standing rule for the later mockups
+
+Decision 5 (2026-10-30, the user): option B. The mockup milestones after
+milestone 7 apply the shipped look by default. They ask the user only when the
+shipped form is broken, such as a wrong state or a missing element, or when
+the user must choose between the product and a contract, and they record each
+other difference in the milestone. Rejected: A, asking about every difference,
+because each round stops the work for answers that follow the user's rule of
+milestones 4 and 7.
+
 ## Design Calls
 
 Each call is the orchestrator's own, made on 2026-10-29.
@@ -815,6 +825,27 @@ badge.
 Tags: mockup
 
 Depends on: 6
+
+The adoption found 9 visible differences, with evidence under the worktree's
+`.context/ui-package-shell-views/controls-mockups/`. Answered on 2026-10-30
+by the user, option C:
+
+- Item 1: the Highlight components toggle. Each artboard passes the highlight
+  state that the shell shows for its view, so a screen where the shell offers
+  highlighting shows an enabled toggle. Rejected: A, a disabled toggle where an
+  artboard gives no state; B, a product header without the toggle.
+- Items 2 and 3: a pressed icon control (a pressed Highlight toggle or a
+  selected inspector tab) and a tag chip keep their shipped hairline. The
+  palette contract names both as exceptions, and the design tests exempt the
+  rules with the reason. Rejected: B, the control edge in the product.
+- Items 4, 5, and 8: the borderless view controls, the fixed viewport glyph,
+  and the tag picker sample with its button keep the shipped form.
+- Item 6: the status badge keeps its shipped shape and weight, and the
+  palette contract's sentence about status edges follows it.
+- Item 7: the chips and controls keep their shipped focus rings, and the
+  follow-up item about the search field's focus ring covers them too.
+- Item 9: a narrow desktop render draws the shipped picker sheet, under the
+  rule of milestone 4 that a desktop render follows the layout breakpoint.
 
 - [ ] Adopt `controls/tag-picker`, `controls/tag-chip`,
       `controls/view-controls`, and `controls/change-status` as milestone 4
