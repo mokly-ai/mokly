@@ -294,7 +294,14 @@ only and can start only after the last slice.
 - **Background:** The standalone stylesheet applies the page rules to the
   stub page that Serve and the static build deliver. The embedded build turns
   `:root`, `html`, and `body` into the embedded root itself. Design call 8
-  moves the tokens and the palette into the package.
+  moves the tokens and the palette into the package. Other React libraries
+  use each form, as research of 2026-10-30 found: Mantine puts its resets in
+  its main stylesheet (A). MUI's `CssBaseline`, Ant Design's `reset.css`, and
+  Tailwind's Preflight are separate imports (E). MUI's `ScopedCssBaseline`,
+  Chakra UI's scoped preflight, and Fluent UI's provider scope them to a root
+  element (F). Radix Themes puts its tokens on its root element and its
+  resets on each component's own elements (D with F). The sources are under
+  `.context/ui-package-shell-views/research/`.
 - **Problem:** In the published `styles.css`, the page rules style the page
   of any host that imports it. A Chrome measurement under a dark system
   preference showed a host page turn `color-scheme: dark` and change its
@@ -333,6 +340,10 @@ only and can start only after the last slice.
   stylesheet in another form.
 - **Wider fix:** F.
 - **Previous examples:** None found.
+- **Related:** The follow-up item
+  [embedded-styles-need-css-scope](./follow-ups/embedded-styles-need-css-scope.md)
+  shares the wider fix: rules authored under the root class need no `@scope`
+  transform.
 - **Recommendation:** E, changed from B by the second options check. E keeps
   every rule in the package, keeps both viewer outputs without a selector
   rewrite, and keeps page rules off a host page. F protects the codebase
