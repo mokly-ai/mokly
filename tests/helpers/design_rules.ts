@@ -3,7 +3,7 @@ import path from "node:path";
 import type { DefaultTreeAdapterMap } from "parse5";
 
 import { ADOPTION, requiredComponents } from "./design_expectations.js";
-import { attribute, textContent, type HtmlElement } from "./html.js";
+import { attribute, type HtmlElement } from "./html.js";
 import {
   viewRoute,
   type ServedCatalogue,
@@ -23,11 +23,50 @@ export function* withAncestors(
     for (const child of node.childNodes) yield* withAncestors(child, own);
 }
 
+/**
+ * Whether the shipped stylesheet lets a catalogue row's changed wording reach
+ * assistive technology: on a changed row that was not removed, and on a row
+ * whose variants changed. Every other row hides the wording.
+ */
+function speaksChanged(row: HtmlElement): boolean {
+  return (
+    (attribute(row, "data-changed") === "true" &&
+      attribute(row, "data-nav-removed") === undefined) ||
+    attribute(row, "data-changed-variants") === "true"
+  );
+}
+
+/** Text that a reader hears, without a row's hidden changed wording. */
+function spokenText(node: HtmlNode, hideChanged: boolean): string {
+  if ("value" in node) return node.value;
+  if (
+    hideChanged &&
+    "tagName" in node &&
+    attribute(node, "data-nav-changed-text") !== undefined
+  )
+    return "";
+  return "childNodes" in node
+    ? node.childNodes.map((child) => spokenText(child, hideChanged)).join("")
+    : "";
+}
+
 /** A link's accessible name: its `aria-label`, or else its collapsed text. */
 export function accessibleName(element: HtmlElement): string {
+  const hideChanged =
+    attribute(element, "data-nav-row") !== undefined && !speaksChanged(element);
   return (
     attribute(element, "aria-label") ??
-    textContent(element).trim().replace(/\s+/gu, " ")
+    spokenText(element, hideChanged).trim().replace(/\s+/gu, " ")
+  );
+}
+
+/** Whether the element or an ancestor carries `hidden`, so no reader reaches it. */
+export function isHidden(
+  element: HtmlElement,
+  ancestors: readonly HtmlElement[],
+): boolean {
+  return [element, ...ancestors].some(
+    (node) => attribute(node, "hidden") !== undefined,
   );
 }
 

@@ -157,7 +157,9 @@ export function registerComponentDesign(
             "Default",
           ]);
           await expect(
-            page.locator(".mbk-nav-scroll .mbk-nav-changed"),
+            page.locator(
+              '.mbk-nav-scroll [data-nav-row][data-changed="true"]:not([data-nav-removed]):visible',
+            ),
           ).toHaveCount(2);
         }
         await page.goto(

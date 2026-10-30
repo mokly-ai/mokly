@@ -1,5 +1,5 @@
 import { links, tagStates } from "./design_expectations.js";
-import { accessibleName, withAncestors } from "./design_rules.js";
+import { accessibleName, isHidden, withAncestors } from "./design_rules.js";
 import { attribute, textContent, type HtmlElement } from "./html.js";
 import type { ServedCatalogue, ServedView } from "./served_design.js";
 
@@ -78,10 +78,17 @@ export function tagViolations(catalogue: ServedCatalogue): string[] {
         if (JSON.stringify(actual) !== JSON.stringify(expected))
           violations.push(`${view.route}: ${label} ${JSON.stringify(actual)}`);
       };
+      // The shipped search field holds the query as its value.
       facts(
         "query",
-        byClass(view, "mbk-search-value")
-          .map((node) => textContent(node))
+        [...withAncestors(view.document)]
+          .map(([element]) => element)
+          .filter(
+            (element) =>
+              element.tagName === "input" &&
+              attribute(element, "data-mokly-search") !== undefined,
+          )
+          .map((element) => attribute(element, "value") ?? "")
           .join(""),
         state.query,
       );
@@ -106,12 +113,18 @@ export function tagViolations(catalogue: ServedCatalogue): string[] {
         facts(`chip ${tag} target`, attribute(chip, "data-mokly-link"), target);
       }
       if (chips.length === 0) violations.push(`${view.route}: no tag chips`);
+      // A closed list holds its rows hidden, as the shell does.
       if (state.rows && view.viewport === "desktop")
         facts(
           "rows",
-          byClass(view, "mbk-nav-row")
-            .filter((node) => node.tagName === "a")
-            .map((node) => accessibleName(node)),
+          [...withAncestors(view.document)]
+            .filter(
+              ([element, ancestors]) =>
+                element.tagName === "a" &&
+                classes(element).includes("mbk-nav-row") &&
+                !isHidden(element, ancestors),
+            )
+            .map(([element]) => accessibleName(element)),
           state.rows,
         );
     }
