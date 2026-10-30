@@ -27,9 +27,14 @@
   - A finding of the first implementation review of PR #223, on
     2026-10-27, was fixed in that pull request. Its text was not kept in
     the repository. The review then recorded this test for its class.
-- **Problem:** Most violations have no test with a document that breaks only
-  that rule. A reader change can then stop rejecting a broken payload, and
-  no test fails.
+- **Problem:** Some rules have no test with a document that breaks them.
+  The tag rule at `crates/mokly-model/src/public_validation.rs:181-192` is
+  one. No test feeds a reader a duplicate or invalid tag. So deleting the
+  duplicate check at line 183 passes every test. Many mutation tables also
+  assert only `is_err()`, for example
+  `crates/mokly-model/src/_tests_/public_reader_tests.rs:83` and
+  `crates/mokly-model/src/_tests_/usage_context_tests.rs:76-81`. A reader
+  that returns the wrong violation then still passes.
 - **Impact if no action:** A host or a receiver can accept a payload that
   the contract rejects, and the error appears only later in a consumer.
 - **Root question:** How does the test suite show that each contract rule
@@ -56,6 +61,7 @@
 - **Action:** ask the user, because condition 6 holds (estimate): the item
   proposes a missing test, and no dated user choice approves an option. D
   also adds a compile-time rejection, which needs the user under
-  condition 3.
+  condition 3. Condition 3 also holds for A, because a table over every
+  variant is a test for the class.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/usage-list-in-parent-detail.md?plain=1#L382).

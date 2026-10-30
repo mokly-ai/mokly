@@ -4,7 +4,7 @@
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 196, the wider class of user item 193.
 - **Location:** `crates/mokly-cli/src/_tests_/serve_trace_tests.rs:87`,
-  `crates/mokly-graph/tests/routing_work_tests.rs:32`, and
+  `crates/mokly-render/src/_tests_/stylesheet_trace_tests.rs:84`, and
   `crates/mokly-sidecar/src/_tests_/trace_capture.rs:15`.
 - **Reason:** A user rule of 2026-10-21 deferred each new review item of
   PR #199 until after its merge, for the user's later choice.
@@ -28,8 +28,13 @@
     `crates/mokly-sidecar/src/_tests_/pool_release_timing_tests.rs` sometimes
     recorded no `sidecar.stop` span. That happened in a Linux integration run,
     and on hosted macOS in PR #200 run 40194214551, attempts 1 and 2.
-- **Problem:** `serve_trace_tests.rs` and `routing_work_tests.rs` still
-  capture spans with scoped subscribers and no guard. While parallel tests
+  - `crates/mokly-graph/tests/routing_work_tests.rs` also captures spans.
+    It is an integration test binary with one test, so its own process
+    isolates its callsites, as its module comment says.
+- **Problem:** `serve_trace_tests.rs` and `stylesheet_trace_tests.rs` capture
+  spans with scoped subscribers and no guard. PR #242 added
+  `stylesheet_trace_tests.rs` on 2026-10-29. Both run in a test binary with
+  many other tests. While parallel tests
   register and drop their subscribers, a thread without a capture can
   register a callsite first and cache `never`. The span then disappears
   from the capture.

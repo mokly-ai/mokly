@@ -59,14 +59,15 @@
   readiness signal.
 - **Previous examples:** Other browser tests that failed once and passed
   on a rerun:
-  [static-cors-console-flake.md](static-cors-console-flake.md),
-  [flaky-same-origin-handoff.md](flaky-same-origin-handoff.md), and
-  [flaky-viewer-selection-navigation.md](flaky-viewer-selection-navigation.md).
+  - During the Rust rebuild, the public embedded viewer test in
+    `tests/browser/static_cors.spec.ts` once failed on a blocked-script
+    notice from a sandboxed `about:blank` frame. A real-browser probe found
+    the location `about:blank` for this notice in 10 of 10 runs. Commit
+    `cc5a3e01` of 2026-10-19 made the shared console rule in
+    `tests/browser/console_notices.ts` accept the notice with that location.
+  - [flaky-same-origin-handoff.md](flaky-same-origin-handoff.md)
+  - [flaky-viewer-selection-navigation.md](flaky-viewer-selection-navigation.md)
 - **Related:**
-  - [static-cors-console-flake.md](static-cors-console-flake.md) is the
-    other one-time browser failure in the same list of browser follow-ups
-    of the Rust rebuild. It has a different test and a different suspected
-    source, so each item needs its own fix.
   - [flaky-same-origin-handoff.md](flaky-same-origin-handoff.md) is a
     separate case of the same recorded class: a browser test that failed
     once and passed on its rerun. Its test in

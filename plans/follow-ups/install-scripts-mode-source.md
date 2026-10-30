@@ -29,6 +29,12 @@
     - a `bool` in `base_render.rs:91` and `dependency_types.rs:113`
   - The plan records only the recommended option. The other options were in
     the review report, which is not in the repository.
+  - The audit of 2026-10-30 found no test that checks the opt-out override.
+    With `review.baseInstallScripts: true` in the working tree,
+    `--no-base-install-scripts` must still keep scripts off.
+    `crates/mokly-cli/src/_tests_/grammar_tests.rs:47` and `:73` only parse
+    the flag. A change that drops the `Some(false)` branch at
+    `grammar.rs:180-181` would run scripts that the user turned off.
 - **Problem:** The same mode is stored in several values as the install
   request moves between layers, so the copies can disagree.
 - **Impact if no action:** A later change can apply the wrong mode on one

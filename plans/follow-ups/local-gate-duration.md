@@ -13,8 +13,8 @@
 - **Category:** Process.
 - **Terms:**
   - **Complete gate:** `cargo xtask check`, the full local verification.
-  - **Detach limit:** the time after which the delegate's local executor
-    stops waiting for a detached gate run.
+  - **Detach limit:** the longest time that an agent's background command
+    may run. The agent's tool then stops the command.
 - **Background:**
   - During the rebuild, a delegate ran the complete gate through a local
     executor with a 120-minute detach limit.
@@ -22,6 +22,14 @@
     took 86 minutes.
   - Neither this repository nor the installed shared skills state the
     120-minute limit today.
+  - On 2026-10-30 the Bash tool of Claude Code stops a background command
+    at its timeout. That timeout is at most 7,200,000 ms, which is 120
+    minutes. A foreground command has at most 1,800,000 ms, which is 30
+    minutes.
+  - The local executor runs the suites one after another in one checkout,
+    as `docs/protocol/remote-verification.md:9` says.
+  - No record gives the time of the complete local gate on the code of
+    2026-10-30.
 - **Problem:** Normal variance can push a healthy gate past the detach
   limit.
 - **Impact if no action:** A complete local verification can stop without a
@@ -30,7 +38,9 @@
   that its runner allows?
 - **Options:**
   - **A.** Raise the detach limit for local gates in the delegate rules to
-    three hours. Effort: Small (estimate).
+    three hours. A rule alone cannot do this, because 120 minutes is the
+    maximum of the agent's tool. A needs a setting of that tool, if the tool
+    has one. Effort: Small (estimate).
   - **B.** Find the slowest suite and reduce its cost below the current
     limit. Effort: Medium (estimate).
 - **Left out:** Remove the detach limit. It loses the guard against a hung

@@ -1,6 +1,6 @@
 # Support a hash character in module paths
 
-- **Severity:** Medium (estimate). **Effort:** Small (estimate).
+- **Severity:** Medium (estimate). **Likelihood:** Rare (estimate). **Effort:** Small (estimate).
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #227 and its completed plan, which put the
   problem outside the scope of its first review.

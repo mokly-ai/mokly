@@ -1,6 +1,6 @@
 # Stop Yarn Classic dependency scripts
 
-- **Severity:** High. **Effort:** Large.
+- **Severity:** High. **Likelihood:** Rare (estimate). **Effort:** Large.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 150, finding 42 of the review of user decision 135 B.
 - **Location:** `crates/mokly-platform/src/unix.rs:59`,

@@ -1,4 +1,4 @@
-# Extend the clock lint to viewer tests
+# Catch three more clock forms in tests
 
 - **Severity:** Low. **Effort:** Small.
 - **Kind:** Needs decision.

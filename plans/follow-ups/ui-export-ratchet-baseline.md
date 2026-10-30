@@ -59,7 +59,5 @@
   - [mokly-package-internal-export-audit.md](./mokly-package-internal-export-audit.md)
     changes the same `SOURCE_ROOTS` and `PACKAGE_ROOTS` lines for
     `packages/mokly`. One branch can do both.
-  - [ui-clean-consumer-smoke.md](./ui-clean-consumer-smoke.md) is the other
-    post-merge task that waited for this release.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/ui-package.md?plain=1#L528).

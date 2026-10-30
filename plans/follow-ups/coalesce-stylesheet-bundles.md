@@ -34,6 +34,10 @@
     preparation, and PR #242 shares module evidence across bundles. They
     merged on 2026-10-28 and 2026-10-29. No measurement of the repeat count
     after both of them was recorded.
+  - Graph preparation bundles every stylesheet root and stores its CSS in
+    the render cache, at `crates/mokly-graph/src/graph.rs:123-139`. The pass
+    bundles a root again only after a render-cache miss and a
+    stylesheet-store miss, at `crates/mokly-graph/src/evaluation.rs:30-33`.
 - **Problem:** Concurrent misses for one stylesheet root can bundle it more
   than once.
 - **Impact if no action:** Each pass can repeat stylesheet bundles and their

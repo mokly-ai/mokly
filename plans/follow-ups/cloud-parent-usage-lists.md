@@ -34,7 +34,8 @@
     path for a current variant. So the embedded viewer calls the host's
     `detail` source with that path.
 - **Task:**
-  1. In `mokly-ai/mokly-cloud`, pin release 0.17.0 of `@mokly/viewer`.
+  1. In `mokly-ai/mokly-cloud`, pin release 0.17.0 or a later release of
+     `@mokly/viewer`.
   2. Make the `detail` source of the embedded viewer answer the parent's
      path when the current route is a component variant.
   3. Publish a catalogue with a component variant. Open the variant in

@@ -38,10 +38,11 @@
     Its changelog says that receivers that read index v7, `review.json`, or
     envelope v2 must upgrade.
 - **Task:**
-  1. In `mokly-ai/mokly-cloud`, pin release 0.17.0.
+  1. In `mokly-ai/mokly-cloud`, pin release 0.17.0 or a later release.
   2. Regenerate the contract fixtures from that release.
-  3. Parse envelope v3 and index v8 from the Plan archive. Take the change
-     counts, the entries, the moves, and the screens from the index.
+  3. Parse envelope v3 and the index version of the pinned release from the
+     Plan archive. Take the change counts, the entries, the moves, and the
+     screens from the index.
   4. Remove the review v6 parser.
   5. Deploy the receiver change.
 - **Impact if no action:** Mokly Cloud cannot read the Changes of a
@@ -49,8 +50,9 @@
   GitHub check, and its screens API then fail for these publications.
 - **Needs:** Release 0.17.0 on npm, and write and deploy access to
   `mokly-ai/mokly-cloud`.
-- **Done when:** Mokly Cloud accepts a 0.17.0 publication with Changes, reads
-  its Changes from the index, and has no review v6 parser left.
+- **Done when:** Mokly Cloud accepts a publication of its pinned release
+  with Changes, reads its Changes from the index, and has no review v6
+  parser left.
 - **Related:**
   - [cloud-gzip-decoder-rollout.md](./cloud-gzip-decoder-rollout.md) and
     [cloud-parent-usage-lists.md](./cloud-parent-usage-lists.md) also pin

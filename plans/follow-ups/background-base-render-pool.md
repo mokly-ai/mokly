@@ -1,6 +1,6 @@
 # Give background base work its own render pool
 
-- **Severity:** Medium (estimate). **Effort:** Small.
+- **Severity:** Medium (estimate). **Likelihood:** Rare (estimate). **Effort:** Small.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #228, decision 9 of the stylesheet bundle
   performance plan, and review finding 1 of step A.
@@ -48,7 +48,8 @@
      foreground render still gets a worker.
 - **Impact if no action:** While a base comparison capture waits at the
   admission gate, a foreground document render can wait for a free worker.
-  A preview request can then stall until the base work moves on.
+  Queued base calls wait until no foreground request is active, so the
+  preview request can stall until the base attempt is cancelled.
 - **Needs:** Nothing. The task needs no deployed change and no credentials.
 - **Done when:** Base comparison capture jobs run on their own pool, and a
   test shows that a foreground render finishes while base jobs wait at the

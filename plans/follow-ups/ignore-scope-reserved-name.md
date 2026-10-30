@@ -1,6 +1,6 @@
 # Check reserved names on saved ignore scopes
 
-- **Severity:** Medium (estimate). **Effort:** Small (estimate).
+- **Severity:** Medium (estimate). **Likelihood:** Rare (estimate). **Effort:** Small (estimate).
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a problem outside the scope of round 2 of the HTML pipeline decision work

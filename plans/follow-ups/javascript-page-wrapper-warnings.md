@@ -1,6 +1,6 @@
 # Report JavaScript page wrapper attribute warnings
 
-- **Severity:** Medium. **Effort:** Large.
+- **Severity:** Medium. **Likelihood:** Rare (estimate). **Effort:** Large.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 138, from the F22 decision.
@@ -30,6 +30,10 @@
     for callback HTML. The render and page results now carry a `warnings`
     list, in `crates/mokly-sidecar/src/results.rs:91` and `:104`, and
     `javascript.rs:106` adds those warnings to the entry.
+  - The core itself parses the callback HTML and filters the wrapper
+    attributes, at `javascript.rs:117-118`. So it can add the
+    `html-ignore-attribute` warning to the entry's warnings, which line 106
+    already extends, without a sidecar wire change.
   - On 2026-10-21 the user chose option A, as work after the merge.
 - **Problem:** Unknown attributes on ignore wrappers that a `renderPage`
   callback returns are removed with no `html-ignore-attribute` warning.

@@ -1,6 +1,6 @@
 # Exclude nested matches from own-preview changes
 
-- **Severity:** High. **Effort:** Large.
+- **Severity:** High. **Likelihood:** Rare (estimate). **Effort:** Large.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 108, from finding 3 of the engine round 4 own review.

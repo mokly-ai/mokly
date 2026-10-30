@@ -23,6 +23,10 @@
     reporter, at `tests/fixtures/browser-errors/playwright.config.ts:7`.
   - At line 33 it parses the whole standard output of the nested run with
     `JSON.parse`.
+  - `docs/protocol/ci-suite-evidence.md:159-169` states the browser error
+    rule: every browser spec fails on an unexpected console error or page
+    error. This test is the only test that shows the rule failing a spec.
+    It checks the test harness and no product code.
 - **Problem:**
   - Failure: the test failed in browser shard 4 of 4 of the CI run of
     PR #242 at `410de45e`. The date of the run was not recorded. PR #242
@@ -48,6 +52,10 @@
     warnings can still reach the standard output. Effort: Small (estimate).
   - **C.** Change nothing until the test fails again. Effort: Small
     (estimate).
+  - **D.** Remove this test and `tests/fixtures/browser-errors/` under
+    removal rule 3 of the `testing` skill, because it tests the test
+    harness. It is the last test of the browser error rule, so the removal
+    needs the user's approval. Effort: Small (estimate).
 - **Left out:** A retry of the nested run. The `deterministic-tests` skill
   forbids retries, because they hide the source.
 - **Wider fix:** A (estimate). A report file keeps every later warning out of

@@ -35,18 +35,21 @@
 - **Options:**
   - **A.** Set `persist-credentials: false` on all six checkout steps.
     Effort: Small (estimate).
-  - **B.** Apply A, and add a policy test that rejects a checkout that
-    persists credentials in any workflow. It adds a gate. Effort: Medium
-    (estimate).
-- **Left out:** Remove the checkout permission. The jobs need to read the
-  source. Fewer than three approaches exist, because the token is either
-  stored or not, and a test can guard the choice.
-- **Wider fix:** B. The policy test stops the setting from coming back.
+- **Left out:**
+  - Remove the checkout permission. The jobs need to read the source.
+  - Former option B: apply A, and add a policy test that rejects a checkout
+    that persists credentials in any workflow. It adds a gate. Effort:
+    Medium (estimate). The `testing` skill of 2026-10-30 lists workflow YAML
+    literals under "What never gets a test", so the options check no longer
+    gives this test.
+  - Fewer than three approaches exist, because the token is either stored
+    or not.
+- **Wider fix:** None. A test of workflow literals is not a wider fix under
+  the `testing` skill. A workflow lint in the gate would be a new gate that
+  needs the user.
 - **Previous examples:** The release, release-check, dependency audit, and
   native bootstrap workflows already set it, and their tests check it.
-- **Recommendation:** A. It removes the stored token at once. B best
-  protects the workflow class, and it needs the user's approval because it
-  adds a gate.
+- **Recommendation:** A. It removes the stored token at once.
 - **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
   user ruled that new review items wait for the user after the merge.
 

@@ -15,8 +15,8 @@
 - **Terms:**
   - **Opaque asset:** a file such as an image or a font that a comparison
     hashes and delivers as bytes, without parsing it.
-  - **Base side:** the Git commit that Changes compares against. Its files
-    are read from Git, not from disk.
+  - **Base side:** the catalogue from the comparison commit that Changes
+    uses as its baseline.
 - **Background:**
   - On the base side, Changes hashes each opaque asset and copies it into
     delivery.
@@ -26,13 +26,21 @@
   - A measured case: 64 assets caused 128 Git commands. A 16.78 MB file
     needed two full payload copies during delivery. Every memory and time
     bound held.
+  - That measurement predates PR #236, merged on 2026-10-28. Since then an
+    attached base extraction answers digests and reads of the files that it
+    holds without Git, at `crates/mokly-compare/src/sources.rs:243-257`.
+  - A base gets an extraction only when it needs the sidecar, at
+    `crates/mokly-cli/src/changes_base.rs:67-85`. So each opaque asset of
+    an HTML-only base still starts its own Git processes. `opaque_stream`
+    still buffers each whole blob.
   - The plan also asked for a measurement first. It counts the Git digest
     commands and the buffered delivery under the large-fixture comparison
     workloads, and it keeps the 64 MiB Git read bound. That measurement
     informs this choice. The earlier evidence file was under `.context/` of
     the rebuild workspace and is not in the repository.
-- **Problem:** Each opaque asset starts its own Git processes, and delivery
-  holds full copies of large blobs.
+- **Problem:** Without an attached extraction, each opaque asset starts its
+  own Git processes. Delivery holds full copies of large blobs in every
+  case.
 - **Impact if no action:** All bounds hold, but large comparisons keep an
   avoidable process and memory cost.
 - **Root question:** How does Changes read many base-side opaque assets

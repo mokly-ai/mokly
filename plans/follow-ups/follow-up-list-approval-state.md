@@ -6,7 +6,7 @@
   round 3.
 - **Location:** None in this repository. The work is in the external
   repository `futex-ai/skills`: `skills/plans/templates/follow-up.md:4`,
-  `skills/plans/references/follow-up-items.md:10-17` and `:68-72`,
+  `skills/plans/references/follow-up-items.md:10-17` and `:69-73`,
   `skills/plans/scripts/follow-ups.sh:19-23` and `:35-39`,
   `skills/plans/SKILL.md:164-171`, and `tests/follow_ups_test.sh:23-27`.
 - **Reason:** The fix changes the shared skill workflow outside Mokly, and
@@ -28,13 +28,15 @@
     open items by severity with their Kind.
 - **Background:**
   - Mokly uses the shared skills of `futex-ai/skills`, as `AGENTS.md:15-19`
-    says. The installed `plans` skill equals that repository at commit
-    `f846559`.
+    says. When this item was added, the installed `plans` skill equalled
+    that repository at commit `f846559`. On 2026-10-30 the installed skills
+    equal that repository at commit `2bfecb3`. Its template still has the
+    same four Kind values.
   - The template's Kind line, `templates/follow-up.md:4`, allows four
     values. Two name an origin: Outside the scope and Post-merge task. Two
     name an approval state: Fix after merge and Needs decision.
   - The review-fix rule gives a problem outside the review scope the full
-    item layout, at `skills/implementation-review/references/review-fix-rule.md:204-205`.
+    item layout, at `skills/implementation-review/references/review-fix-rule.md:219-220`.
     So its Action can be `fix after merge` or `ask the user`.
   - The listing helper reads Severity, Kind, and the title, at lines 27-37.
     It prints `[Kind]` at line 39, and it never reads Action.

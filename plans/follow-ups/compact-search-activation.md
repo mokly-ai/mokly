@@ -1,6 +1,6 @@
 # Close compact search after row activation
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate).
+- **Severity:** Low (estimate). **Likelihood:** Common (estimate). **Effort:** Medium (estimate).
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a problem outside the scope of the F9b re-review of 2026-10-20.

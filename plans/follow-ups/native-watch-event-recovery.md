@@ -1,6 +1,6 @@
 # Recover from native watch event loss
 
-- **Severity:** Medium. **Effort:** Medium (estimate).
+- **Severity:** Medium. **Likelihood:** Rare (estimate). **Effort:** Medium (estimate).
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 134, from the Milestone 11 plan TODO.
@@ -46,11 +46,17 @@
     exact-input stamps on Windows. Effort: Medium (estimate).
   - **B.** Use one recursive watch for each root on both systems. Effort:
     Medium (estimate).
-  - **C.** Keep the current rescan-flag recovery. Add hosted macOS and
-    Windows tests that force a batch and a buffer overflow. Add A or B only
-    for a loss that comes without a rescan flag. Effort: Small (estimate).
-- **Left out:** A periodic rescan on a wall clock. It adds timing behaviour
-  and delays recovery.
+- **Left out:**
+  - A periodic rescan on a wall clock. It adds timing behaviour and delays
+    recovery.
+  - Former option C: Keep the current rescan-flag recovery. Add hosted
+    macOS and Windows tests that force a batch and a buffer overflow. Add A
+    or B only for a loss that comes without a rescan flag. Effort: Small
+    (estimate). Under the `testing` skill of 2026-10-30, the hosted check of
+    the operating system's watcher is a one-time proof. Run it once, and
+    save its output under `.context/`.
+  - Fewer than three approaches remain, because former option C now holds
+    only that one-time check.
 - **Wider fix:** A. Platform-specific recovery handles each known loss mode
   and keeps the current watcher ownership.
 - **Previous examples:** None found.

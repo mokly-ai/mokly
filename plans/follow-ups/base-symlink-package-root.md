@@ -1,6 +1,6 @@
 # Support linked package roots in base trees
 
-- **Severity:** Low. **Effort:** Medium (estimate).
+- **Severity:** Low. **Likelihood:** Rare (estimate). **Effort:** Medium (estimate).
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 174, outside the scope of the W8 work.

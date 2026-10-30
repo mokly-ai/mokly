@@ -41,6 +41,10 @@
     before any server lists `gzip`.
   - On 2026-10-27 the user chose that the `mokly-ai/mokly-cloud` repository
     owns the receiver change, with its own plan and pull request.
+  - On 2026-10-28 PR #76 of `mokly-ai/mokly-cloud` merged the decoder, as
+    `21bb03ac`, with the listing switch `MKC_UPLOAD_BLOB_GZIP` off by
+    default. So step 3 of the Task is done in code. Steps 1, 2, and 4
+    remain.
 - **Task:**
   1. In `mokly-ai/mokly-cloud`, pin release 0.17.0, or a later release that
      holds PR #221.

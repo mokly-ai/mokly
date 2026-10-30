@@ -1,6 +1,6 @@
 # Make pnpm recreation independent of CI
 
-- **Severity:** Medium. **Effort:** Small.
+- **Severity:** Medium. **Likelihood:** Rare (estimate). **Effort:** Small.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 158, pnpm CI fix finding 1.
 - **Location:** `crates/mokly-compare/src/manager_command.rs:21` and
@@ -33,9 +33,10 @@
   same base succeeded under CI, which gave tier two. Because the install
   environment drops the CI variables, the work must first confirm the current
   result in each environment and pnpm version.
-- **Impact if no action:** The dependency tier of a comparison can depend on
-  the environment. Then a local run and a CI run of one commit compare against
-  different dependencies.
+- **Impact if no action:** Such a base falls back to tier three, although
+  a private install that skips the prompt could give tier two. Before the
+  install dropped the CI variables, CI gave tier two and a local run gave
+  tier three. Nobody has measured the current tier in each environment.
 - **Root question:** How should a private pnpm install treat a tracked
   `node_modules` state that needs recreation, the same way in every
   environment?

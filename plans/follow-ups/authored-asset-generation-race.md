@@ -1,6 +1,6 @@
 # Keep authored assets available across generations
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate).
+- **Severity:** Low (estimate). **Likelihood:** Rare (estimate). **Effort:** Medium (estimate).
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #222 and its completed plan. The CI fix
   milestone of that plan put the problem outside the scope.

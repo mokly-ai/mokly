@@ -1,6 +1,6 @@
 # Confine opaque PostCSS inputs
 
-- **Severity:** High. **Effort:** Small.
+- **Severity:** High. **Likelihood:** Rare (estimate). **Effort:** Small.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 114, decided on 2026-10-21.

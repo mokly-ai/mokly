@@ -35,14 +35,17 @@
   1. Share these configuration inputs across the records of a context, like
      the module evidence.
   2. Check their stamp once for each attempt.
-  3. Add a fixture with about 1,000 local plugin files, which shows the
-     problem today, and assert that its records fit in the bound.
+  3. Add the smallest test that fails without the change. For example, two
+     roots whose configuration loads the same local file share one copy of
+     its inputs, charged once. Check the scale once with about 1,000 local
+     plugin files, and save the output under `.context/`.
 - **Impact if no action:** A configuration that loads many such files can
   fill the bound again. The store then clears its records, and every root
   bundles again.
 - **Needs:** Nothing. The task needs no deployed change and no credentials.
-- **Done when:** A fixture whose PostCSS configuration loads about 1,000
-  local files keeps every record of its roots within the 64 MiB bound, and a
-  second preparation with no change bundles nothing.
+- **Done when:** The records of one PostCSS context share one copy of the
+  configuration inputs. A one-time check with about 1,000 local files keeps
+  every record within the 64 MiB bound. A second preparation with no change
+  bundles nothing.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/ee7d8ea739bd103aacd001f8e75e5aa144929348/plans/stylesheet-bundle-performance.md?plain=1#L642).

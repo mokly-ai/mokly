@@ -3,10 +3,12 @@
 - **Severity:** High (estimate). **Effort:** Small (estimate).
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #224.
-- **Location:** `mokly-ai/mokly-cloud`,
-  `crates/mkc-mokly-contract/src/catalogue_index.rs`, outside this
-  repository. In this repository, `docs/protocol/fixtures/catalogue-v9.json`
-  and `docs/protocol/mokly-format-versions.md:80`.
+- **Location:** `mokly-ai/mokly-cloud`, outside this repository. On
+  2026-10-30 its contract crate on `main` has no catalogue index reader. An
+  unmerged branch adds `crates/mkc-mokly-contract/src/catalogue_index.rs`
+  as a version 8 reader. In this repository,
+  `docs/protocol/fixtures/catalogue-v9.json` and
+  `docs/protocol/mokly-format-versions.md:80`.
 - **Reason:** Mokly Cloud pins a released Mokly, so it can move only after the
   release that holds PR #224.
 
@@ -25,7 +27,10 @@
     `@mokly/viewer` reader `readCatalogueIndex` reads version 9 only, and
     `readEntryDetail` reads version 4 only.
   - The receiver of Mokly Cloud reads the index of each publication. On
-    2026-10-29 its parser accepted version 8 only.
+    2026-10-29 its parser accepted version 8 only. That parser is on the
+    unmerged adoption branch `conductor/adopt-mokly-without-reviewjson`. On
+    2026-10-30 the receiver on `main`, at `860b163f`, still reads review
+    version 6 and pins Mokly 0.14.0.
   - `docs/protocol/mokly-format-versions.md:80` says that Mokly Cloud reads
     catalogue version 9.
 - **Task:**

@@ -1,6 +1,6 @@
 # Show the install-scripts hint for render failures
 
-- **Severity:** Medium. **Effort:** Large.
+- **Severity:** Medium. **Likelihood:** Rare (estimate). **Effort:** Large.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 152, the wider part of finding 44 of the 135 B review.
@@ -20,6 +20,10 @@
 - **Background:**
   - On 2026-10-21 the user chose to keep base lifecycle scripts off by
     default, with a configuration field and two flags to turn them on.
+  - `docs/protocol/mokly-terminal-errors.md:150-151` already requires the
+    hint: when a base render fails after a scripts-off tier-two install,
+    the diagnostic names `review.baseInstallScripts` and
+    `--base-install-scripts`. The page's status line names this item.
   - When base preparation fails at the catalogue or graph step with
     scripts off, `changes_base.rs:86-160` wraps the error as
     `Error::BaseInstallScripts`.
@@ -54,5 +58,6 @@
   the recovery action.
 - **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
   user ruled that new review items wait for the user after the merge.
+  Condition 3 also holds, because C is Large.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6127).

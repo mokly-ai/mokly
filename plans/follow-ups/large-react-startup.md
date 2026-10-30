@@ -37,9 +37,20 @@
       8.533 s warm. It passed the 15,000 ms budget. The round date is not
       recorded.
   - The deleted plans record no later large React startup measurement.
-- **Problem:** Large React startup takes about 8.5 to 10.5 seconds, and
-  JavaScript compilation takes most of it. The five-second target is not
-  met for React.
+  - On 2026-10-30, a one-time run of the startup scenario measured commit
+    `cd35ab37`, source tree `92a5c41b`, with no local changes. That commit
+    differs from main commit `f93afcea` only in Markdown files.
+  - The run used the release acceptance build on an eight-CPU, 16.25 GiB
+    machine, with two sidecars, default deadlines, and a 6 GiB memory stop.
+    Its fixture came from `npm run fixture:large -- --variant react`, with
+    1,620 routes and 5,850 documents. The command was
+    `npm run benchmark:large -- --root {fixture} --scenario startup --sidecars 2 --memory-stop-kib 6291456`.
+  - Usable startup took 9,139.757 ms cold and 8,274.408 ms warm. The run
+    passed the 15,000 ms React budget. It missed the five-second target. It
+    reported no split of the time by phase.
+- **Problem:** On 2026-10-30, large React startup took about 9.1 s cold and
+  8.3 s warm. The five-second target is still not met for React. In the run
+  of 2026-10-19, JavaScript compilation took most of the time.
 - **Impact if no action:** Large React catalogues open about twice as slowly
   as the target, and the on-demand page keeps its status line.
 - **Root question:** How does a large React catalogue reach usable startup

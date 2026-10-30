@@ -1,6 +1,6 @@
 # StrictMode runs a host detail source twice
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate).
+- **Severity:** Low (estimate). **Likelihood:** Common (estimate). **Effort:** Small (estimate).
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #224, implementation review 2.
 - **Location:** `packages/viewer/src/shell/data_store.ts:92` to line 96.

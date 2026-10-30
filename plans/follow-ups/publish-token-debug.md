@@ -17,8 +17,11 @@
 - **Background:** The clap grammar type `Publish` in
   `crates/mokly-cli/src/grammar.rs` derives `Debug` and holds the raw
   `--token` value as an optional string. `Environment` in
-  `crates/mokly-cli/src/options.rs` holds the `MOKLY_TOKEN` fallback the same
-  way. After validation, `mokly_publish::settings::Token` holds the token,
+  `crates/mokly-cli/src/options.rs:10-19` holds the `MOKLY_TOKEN` fallback
+  as a raw string, but it derives only `Default`, so it has no `Debug`
+  output. `Cli` and `Verb`, at `grammar.rs:8-31` and `:132-140`, derive
+  `Debug` and contain `Publish`, so a debug print of either also prints the
+  token. After validation, `mokly_publish::settings::Token` holds the token,
   and its `Debug` output is `Token([redacted])`. The review found this older
   than the change it reviewed. No current code formats `Publish` with
   `Debug`.

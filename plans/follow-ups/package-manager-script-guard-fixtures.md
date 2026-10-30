@@ -1,6 +1,6 @@
 # Add fixtures for package-manager script guards
 
-- **Severity:** Medium. **Effort:** Medium.
+- **Severity:** Medium. **Effort:** Small (estimate).
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 121, finding 7 of the pnpm and Yarn review, joined by fix round 2 finding 5.
 - **Location:** `crates/mokly-compare/src/manager_command.rs:25`,
@@ -32,11 +32,15 @@
     and a test asserts that it is absent.
   - At command level, `manager_arguments_tests.rs` pins the pnpm arguments,
     and `manager_command_tests.rs` checks that `YARN_PLUGINS` is not allowed.
+  - `docs/protocol/mokly-base-dependencies.md:183` requires pnpm installs
+    to disable pnpmfile hooks and manager switching. Line 191 says that
+    Yarn path redirection is disabled.
 - **Problem:** No marker fixture proves any hook guard at the process
   boundary. No test asserts `YARN_IGNORE_PATH` or the two pnpmfile variables.
-  A later fix review also found that the lifecycle marker checks of
+  A later fix review also reported that the lifecycle marker checks of
   `tests/static_base_managers.test.ts` and
-  `tests/helpers/base_manager_fixture.ts` look in the wrong place.
+  `tests/helpers/base_manager_fixture.ts` look in the wrong place. Nobody
+  has rerun the marker checks to confirm that report.
 - **Impact if no action:** A manager release or a refactor can run a base
   hook while every command-level test still passes.
 - **Root question:** How should Mokly prove that no base hook runs during a
@@ -44,24 +48,31 @@
 - **Options:**
   - **A.** Assert each guard flag and variable in the manager command tests.
     Effort: Small (estimate).
-  - **B.** Apply A. Also add cold-build fixtures that write a marker file.
-    Use a `.pnpmfile.cjs`, a `.pnpmfile.mjs`, a Berry `yarnPath` script, and a
-    Classic `yarn-path` in an ancestor `.yarnrc`. The test requires each
-    marker to be absent. Correct the marker locations of the existing
-    lifecycle checks. Effort: Medium.
-- **Left out:** One generic marker cannot reach the different hook
-  locations of pnpm and Yarn. Only two distinct approaches exist: check the
-  command, or check the process result. B contains A.
-- **Wider fix:** B. Real marker fixtures prove each guard at the process
-  boundary, whatever the command looks like.
+- **Left out:**
+  - One generic marker cannot reach the different hook locations of pnpm
+    and Yarn.
+  - Only two distinct approaches exist: check the command, or check the
+    process result. Since the `testing` skill of 2026-10-30, the process
+    result is a one-time proof, so A is the only approach for the suite.
+  - Former option B: Apply A. Also add cold-build fixtures that write a
+    marker file. Use a `.pnpmfile.cjs`, a `.pnpmfile.mjs`, a Berry
+    `yarnPath` script, and a Classic `yarn-path` in an ancestor `.yarnrc`.
+    The test requires each marker to be absent. Correct the marker
+    locations of the existing lifecycle checks. Effort: Medium. Under the
+    `testing` skill of 2026-10-30, these fixtures check package-manager
+    behaviour, so they run once as a proof under `.context/`, not in the
+    suite.
+- **Wider fix:** None. The fixtures of former option B check
+  package-manager behaviour, which the `testing` skill keeps out of the
+  suite, so they are not a wider fix.
 - **Previous examples:** The scripts-off cases of
   `tests/static_base_managers.test.ts` already use a lifecycle marker that
   the test requires to be absent.
-- **Related:**
-  [package-manager-opt-in-tests.md](./package-manager-opt-in-tests.md) adds
-  marker cases for the scripts opt-in. Both items extend the same base
-  manager fixtures, so one branch can do both.
-- **Recommendation:** B. It tests both the command and the behaviour.
+- **Recommendation:** A. It asserts each guard that the protocol requires,
+  at the lowest level that fails without it. The recommendation was former
+  option B before the `testing` skill of 2026-10-30, which keeps checks of
+  package-manager behaviour out of the suite. A does not cover the
+  lifecycle checks that the Problem names.
 - **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
   user reserved the choice for each open review item of the rebuild.
   Condition 6 also holds, because the item concerns missing tests.

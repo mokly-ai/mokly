@@ -28,6 +28,10 @@
     0.17.0 steps.
   - The repository rules forbid angle-bracket placeholders in a release pull
     request body, because Release Please parses that body as HTML.
+  - On 2026-10-30 the release branch of Release Please holds release
+    0.18.0. Its `CHANGELOG.md` entry carries the breaking note above,
+    including the rebuild step and the Mokly Cloud step. The release is not
+    published yet.
 - **Task:**
   1. When Release Please opens the next release pull request, check that its
      version is the next minor version, 0.18.0.

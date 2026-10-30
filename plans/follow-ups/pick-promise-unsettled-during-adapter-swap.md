@@ -1,6 +1,6 @@
 # Pick promise stays unsettled during adapter swap
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate).
+- **Severity:** Low (estimate). **Likelihood:** Rare (estimate). **Effort:** Medium (estimate).
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #224, the investigation of CI run 40933916619.
 - **Location:** `packages/viewer/src/viewer/picking.ts:33` and

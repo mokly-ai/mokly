@@ -1,6 +1,6 @@
 # Make JavaScript document keys location-independent
 
-- **Severity:** Medium. **Effort:** Medium.
+- **Severity:** Medium. **Likelihood:** Common (estimate). **Effort:** Medium.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 133, from decision 1 of integration batch 19, widened by batch 21.
@@ -31,12 +31,19 @@
     bindings. Each key keeps the selected installation's directories, the
     resolved runtime package paths, and the resolution files on the
     directory chains of its modules.
+  - On 2026-10-27, for PR #227, the user chose that each `package.json` or
+    `tsconfig.json` on a closure module's directory chain is a render input,
+    as `docs/protocol/mokly-watch.md:70-78` states. So a root manifest edit
+    that moves these keys follows a decided rule. The user also chose that
+    each key keeps the installation directories and the resolved runtime
+    package paths.
   - The generation id still contains the real source root, as the comment at
     `compiled.ts:18-23` says.
   - Nobody measured the two cases above again after PR #227.
 - **Problem:** JavaScript document keys depended on the checkout folder and
-  on unrelated root manifest edits. Parts of that dependence may remain
-  through the installation paths and the manifests on module chains.
+  on unrelated root manifest edits. The manifest part is now a decided
+  render input. The folder part may remain through the installation
+  directories and runtime package paths.
 - **Impact if no action:** Published identity can change without a render
   input change. Cache reuse and deployment identity then depend on where
   the repository is checked out.
@@ -44,10 +51,13 @@
   change a render?
 - **Options:**
   - **A.** Document that absolute roots and all ancestor manifests are
-    render inputs. Effort: Small (estimate).
+    render inputs. The watch contract already states the manifest half.
+    Effort: Small (estimate).
   - **B.** Keep them in the compiled-code cache key. Compute the published
     document keys from folder-independent data: module digests by
-    repository path, class maps, and bindings. Effort: Medium.
+    repository path, class maps, and bindings. Dropping the manifests or the
+    installation paths from published keys changes the user's choices of
+    2026-10-27, which needs the user. Effort: Medium.
   - **C.** Make the bundle identity itself folder-independent. Effort:
     Large.
 - **Left out:** Drop package metadata from every key. It can reuse compiled

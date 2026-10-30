@@ -5,7 +5,8 @@
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of the F18 review of 2026-10-20.
 - **Location:** `packages/viewer/src/shell/layout_breakpoint.ts:4`,
   `packages/viewer/src/shell/README.md:265`,
-  `packages/viewer/src/shell/css_chrome_flow.ts:53`, and
+  `packages/viewer/src/shell/css_chrome_flow.ts:53`,
+  `packages/viewer/src/shell/css_views_responsive.ts:155`, and
   `packages/viewer/src/viewer/styles.ts:33`.
 - **Reason:** A viewer review found the false claim in files that its
   change did not touch, so a separate branch corrects it.
@@ -20,9 +21,13 @@
   says that every shell and viewer rule and script reads this one query.
   The shell README repeats the claim. The `@mokly/ui` stylesheets repeat the
   query, and the viewer's styles test holds them to it.
+  `docs/protocol/mokly-shell-device-chrome.md:97-98` names two
+  breakpoints: the layout breakpoint at 900px and the device breakpoint at
+  760px. So the comment and the README also contradict the protocol.
 - **Problem:** The claim is false. The phone layout uses 760px:
   `narrow_layout.ts` reports a window at most 760px wide, and
-  `css_chrome_flow.ts` and `css_previews.ts` use `@media (max-width: 760px)`.
+  `css_chrome_flow.ts`, `css_previews.ts`, and `css_views_responsive.ts` use
+  `@media (max-width: 760px)`.
   The compact search uses the 560px container query of
   `packages/viewer/src/viewer/styles.ts`.
 - **Impact if no action:** A maintainer who trusts the comment can change
