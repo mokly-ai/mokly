@@ -12,6 +12,14 @@
       "types": "./dist/appearance-selector/appearance-selector.d.ts",
       "import": "./dist/appearance-selector/appearance-selector.js"
     },
+    "./catalogue-navigation": {
+      "types": "./dist/catalogue-navigation/catalogue-navigation.d.ts",
+      "import": "./dist/catalogue-navigation/catalogue-navigation.js"
+    },
+    "./catalogue-tree": {
+      "types": "./dist/catalogue-tree/catalogue-tree.d.ts",
+      "import": "./dist/catalogue-tree/catalogue-tree.js"
+    },
     "./change-mark": {
       "types": "./dist/change-mark/change-mark.d.ts",
       "import": "./dist/change-mark/change-mark.js"
@@ -24,7 +32,19 @@
       "types": "./dist/icons/icons.d.ts",
       "import": "./dist/icons/icons.js"
     },
-    "./styles.css": "./dist/styles.css"
+    "./screen-header": {
+      "types": "./dist/screen-header/screen-header.d.ts",
+      "import": "./dist/screen-header/screen-header.js"
+    },
+    "./segmented-control": {
+      "types": "./dist/segmented-control/segmented-control.d.ts",
+      "import": "./dist/segmented-control/segmented-control.js"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./top-bar": {
+      "types": "./dist/top-bar/top-bar.d.ts",
+      "import": "./dist/top-bar/top-bar.js"
+    }
   },
   "peerDependencies": {
     "react": ">=19.0.0",

@@ -87,7 +87,9 @@ export function registerComparisonDesign(
       await expect(controls).toContainText("Difference");
       if (viewport === "desktop")
         await expect(
-          page.locator(".mbk-nav-row.active .mbk-nav-changed-text"),
+          page.locator(
+            '.mbk-nav-row[aria-current="page"][data-changed="true"] .mbk-nav-changed-text',
+          ),
         ).toHaveText("Changed");
     }
   });

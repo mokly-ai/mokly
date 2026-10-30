@@ -9,7 +9,14 @@ export function componentStylesheets(
   files: readonly string[],
 ): ComponentStylesheet[];
 
-/** `styles.css`: the header, then the rules of every component in name order. */
+/** Listed components first, then omitted components in name order. */
+export function orderedStylesheets(
+  stylesheets: readonly ComponentStylesheet[],
+  imports: string,
+  warn: (message: string) => void,
+): ComponentStylesheet[];
+
+/** `styles.css`: the unchanged header, then the rules in the given order. */
 export function packageStylesheet(
   stylesheets: readonly { name: string; css: string }[],
 ): string;

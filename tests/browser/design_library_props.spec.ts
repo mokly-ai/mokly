@@ -37,12 +37,13 @@ for (const viewport of ["desktop", "mobile"] as const)
       await page.getByRole("button", { name: "Expand inspector" }).click();
     const props = page.getByRole("tabpanel", { name: "Props", exact: true });
     const frame = page.frameLocator(`[data-workspace-frame="${viewport}"]`);
+    const search = frame.getByRole("searchbox", { name: "Search catalogue" });
     const query = props.locator('[data-prop-control="query"]');
     await expect(query).toBeEditable();
-    await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
+    await expect(search).toHaveValue("tag:forms");
 
     await query.fill("New search");
-    await expect(frame.locator(".mbk-search-value")).toHaveText("New search");
+    await expect(search).toHaveValue("New search");
     // The tag picker renders tag chips that the saved variant does not show;
     // the preview brings their styles with them.
     await props.locator('[data-prop-control="pickerOpen"]').check();
@@ -54,15 +55,15 @@ for (const viewport of ["desktop", "mobile"] as const)
     const supplied = props.getByRole("checkbox", { name: "Set Query" });
     await supplied.uncheck();
     await expect(query).toBeHidden();
-    await expect(frame.locator(".mbk-search-value")).toHaveCount(0);
+    await expect(search).toHaveValue("");
     await expect(frame.locator(".mbk-tag-picker")).toBeVisible();
     await supplied.check();
     await expect(query).toHaveValue("New search");
-    await expect(frame.locator(".mbk-search-value")).toHaveText("New search");
+    await expect(search).toHaveValue("New search");
 
     await props.getByRole("button", { name: "Reset to Search" }).click();
     await expect(frame.locator(".mbk-tag-picker")).toHaveCount(0);
-    await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
+    await expect(search).toHaveValue("tag:forms");
     await expect(query).toHaveValue("tag:forms");
     expect(await fs.readFile(SOURCE, "utf8")).toBe(source);
   });

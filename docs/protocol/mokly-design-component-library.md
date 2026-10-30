@@ -56,11 +56,10 @@ paths from the [design-link contract](./mokly-design-links.md), never raw URLs
 or guessed labels. The catalogue's resource and prop limits apply. Controls
 below use text, boolean, number and primitive enum selections only.
 
-1. **Top bar:** query and placeholder strings; menu state `none/open/close`;
-   text or icon menu presentation; available tag records, optional active
-   tag and picker-open flag; explicit navigation destinations; and an
-   `auto/light/dark` interface appearance that falls back to the render
-   context's scheme. Controls: query,
+1. **Top bar:** an optional query string; menu state `none/open/close`;
+   available tag records, optional active tag and picker-open flag; explicit
+   navigation destinations; and an `auto/light/dark` interface appearance that
+   falls back to the render context's scheme. Controls: query,
    picker-open, menu state and appearance. The appearance setting is the
    catalogue's own and is the only scheme control in the design catalogue. This
    component owns it, so every artboard with a top bar draws it; screens do not

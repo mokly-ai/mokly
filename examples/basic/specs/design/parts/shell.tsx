@@ -25,11 +25,9 @@ interface ShellProps {
   /** Draws the depicted Appearance selector holding this setting. */
   appearanceChoice?: AppearanceChoice | undefined;
   changedViews?: readonly ChangedView[] | undefined;
-  searchPlaceholder?: string | undefined;
   activeTag?: string | undefined;
   aside?: ReactNode;
   children: ReactNode;
-  menuPresentation?: "text" | "icon" | undefined;
   nav: ReactNode;
   searchValue?: string | undefined;
   tagPickerOpen?: boolean | undefined;
@@ -44,18 +42,14 @@ export function Shell({
   aside,
   children,
   design,
-  menuPresentation,
   nav,
   searchValue,
-  searchPlaceholder,
   tagPickerOpen,
   viewport,
 }: ShellProps) {
   const scheme = useRenderedAppearance();
   const bar = (
     <TopBar
-      menuPresentation={menuPresentation}
-      searchPlaceholder={searchPlaceholder}
       drawerOpen={design === DESTINATIONS.navigation}
       activeTag={activeTag}
       appearanceChoice={appearanceChoice}

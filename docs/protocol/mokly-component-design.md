@@ -10,8 +10,8 @@ and their owning folders.
 
 Component pages use the top bar, split navigation tree, screen heading,
 comparison band, stage, and comparison controls of the shell designs, plus the
-shared icon inspector and compact view toolbar. Components use a small cube
-icon in the Components section. Both sections are views of one tree, so the
+shared icon inspector and compact view toolbar. Components use the
+stacked-layers icon of the Components panel in the Components section. Both sections are views of one tree, so the
 `Example` folder appears above `Screens` in Specs and above its `Components`
 library in Components, and component crumbs read `Example › Components`. A
 variant's page keeps its parent's title as the heading; the browser title and

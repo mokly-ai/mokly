@@ -116,11 +116,23 @@ test("every Browse design of a changed, added, or removed entry lists its reason
     const design = await page.evaluate(
       (html) => {
         const document = new DOMParser().parseFromString(html, "text/html");
-        const row = document.querySelector(".mbk-nav-row.active");
+        // The shipped row names the current page, carries its changed mark
+        // as an attribute, and keeps the mark's wording beside its label.
+        // When a parent row and its selected variant row both open the shown
+        // artboard, both name the current page, and the selected row is last.
+        const rows = [
+          ...document.querySelectorAll('.mbk-nav-row[aria-current="page"]'),
+        ];
+        const row = rows.at(-1);
+        const label = [...(row?.childNodes ?? [])]
+          .filter((node) => node.nodeType === Node.TEXT_NODE)
+          .map((node) => node.textContent)
+          .join("")
+          .trim();
         return {
           kind: row?.getAttribute("data-entry-kind") ?? "",
-          changed: Boolean(row?.querySelector(".mbk-nav-changed-text")),
-          removed: /· Removed$/u.test(row?.textContent?.trim() ?? ""),
+          changed: row?.getAttribute("data-changed") === "true",
+          removed: /· Removed$/u.test(label),
           badge:
             document
               .querySelector(".mbk-title-row .ce-change-status")

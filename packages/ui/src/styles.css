@@ -1,0 +1,9 @@
+/* The imports below define the cascade order of styles.css. */
+@import "./appearance-selector/appearance-selector.css";
+@import "./change-mark/change-mark.css";
+@import "./comparison-toolbar/comparison-toolbar.css";
+@import "./top-bar/top-bar.css";
+@import "./catalogue-tree/catalogue-tree.css";
+@import "./catalogue-navigation/catalogue-navigation.css";
+@import "./screen-header/screen-header.css";
+@import "./segmented-control/segmented-control.css";

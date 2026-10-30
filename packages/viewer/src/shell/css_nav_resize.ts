@@ -1,56 +1,10 @@
-/** Desktop navigation resize affordance and interaction states. */
+/**
+ * The shell root while the reader drags the navigation separator: the drag
+ * marks the root, or the stub's body, and every element in it follows.
+ */
 
-import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
-
-import { NARROW_SHELL } from "./layout_breakpoint.js";
-
-/** Styles for the navigation split-panel separator. */
+/** Styles for a shell root during a navigation resize. */
 export const SHELL_NAV_RESIZE_CSS = `
-.mbk-nav-resize {
-  position: absolute;
-  z-index: 2;
-  top: 0;
-  right: -4px;
-  bottom: 0;
-  display: none;
-  width: 8px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: col-resize;
-  outline: none;
-  touch-action: none;
-}
-
-[data-mokly-shell] .mbk-nav[data-resize-ready] .mbk-nav-resize,
-:scope.${VIEWER_DIRECTORY} .mbk-nav[data-resize-ready] .mbk-nav-resize {
-  display: block;
-}
-
-.mbk-nav-resize::after {
-  content: "";
-  position: absolute;
-  top: calc(50% - 16px);
-  left: 3px;
-  width: 2px;
-  height: 32px;
-  border-radius: 999px;
-  background: var(--chrome-border-strong);
-  transition: background 120ms ease, box-shadow 120ms ease;
-}
-
-.mbk-nav-resize:hover::after,
-.mbk-nav-resize:focus-visible::after,
-body.mbk-nav-resizing .mbk-nav-resize::after,
-[data-mokly-shell].mbk-nav-resizing .mbk-nav-resize::after {
-  background: var(--mokly-accent);
-  box-shadow: 0 0 0 3px var(--mokly-accent-soft);
-}
-
-.mbk-nav-resize:focus-visible {
-  box-shadow: inset -2px 0 0 var(--mokly-accent);
-}
-
 body.mbk-nav-resizing,
 [data-mokly-shell].mbk-nav-resizing {
   cursor: col-resize;
@@ -65,12 +19,5 @@ body.mbk-nav-resizing *,
 body.mbk-nav-resizing iframe,
 [data-mokly-shell].mbk-nav-resizing iframe {
   pointer-events: none;
-}
-
-@media ${NARROW_SHELL} {
-  [data-mokly-shell] .mbk-nav[data-resize-ready] .mbk-nav-resize,
-  :scope.${VIEWER_DIRECTORY} .mbk-nav[data-resize-ready] .mbk-nav-resize {
-    display: none;
-  }
 }
 `;

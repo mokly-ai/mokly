@@ -9,10 +9,6 @@
 .ce-design .mbk-main:has(> .ce-workspace) {
   overflow: hidden;
 }
-.ce-design .mbk-topbar,
-.ce-design .mbk-screen-head {
-  flex-shrink: 0;
-}
 .ce-workspace {
   container-type: size;
   display: flex;
@@ -83,14 +79,25 @@
   width: 64px;
   z-index: 2;
 }
+/* The inspector divider's grip borrows the navigation separator's class
+   until the inspector slice adopts the shipped divider. It draws itself here,
+   so the shipped navigation's rules, which hide a separator outside a ready
+   shell, leave it alone. */
 .ce-inspector-resize .mbk-nav-resize {
   cursor: row-resize;
+  display: block;
   inset: 0;
+  position: absolute;
   width: 100%;
+  z-index: 2;
 }
 .ce-inspector-resize .mbk-nav-resize::after {
+  background: var(--chrome-control-edge);
+  border-radius: 999px;
+  content: "";
   height: 2px;
   left: 16px;
+  position: absolute;
   top: 7.5px;
   width: 32px;
 }

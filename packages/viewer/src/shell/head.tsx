@@ -3,7 +3,11 @@
 
 import type { ReactNode } from "react";
 
+import { ScreenHeader } from "@mokly/ui/screen-header";
+import { SegmentedControl, type Segment } from "@mokly/ui/segmented-control";
+
 import { viewHref } from "../navigation/routes.js";
+import type { ViewerSelection } from "../viewer/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import {
@@ -15,69 +19,29 @@ import { useOptionalShellStore } from "./store_context.js";
 import type { RouteTarget } from "./target.js";
 import { variantHeading } from "./view_title.js";
 
-/** One crumb: a link to a folder's page, a folder reveal, or plain text. */
-function Crumb(props: { item: CatalogueCrumb }) {
-  const store = useOptionalShellStore();
-  const { folder, href, label } = props.item;
-  if (href !== undefined)
-    return (
-      <a className="mbk-crumb-link" href={href}>
-        {label}
-      </a>
-    );
-  if (folder === undefined) return label;
-  return (
-    <button
-      className="mbk-crumb-link"
-      data-crumb-folder={folder.path}
-      onClick={() => store?.revealFolder(folder.section, folder.path)}
-      type="button"
-    >
-      {label}
-    </button>
-  );
-}
+const VIEWPORTS: readonly Segment<ViewerSelection["viewport"]>[] = [
+  ["mobile", "Mobile"],
+  ["desktop", "Desktop"],
+  ["both", "Both"],
+];
 
-function Crumbs(props: { items: readonly CatalogueCrumb[] }) {
-  return (
-    <p aria-label="Catalogue location" className="mbk-crumbs">
-      {props.items.map((item, index) => (
-        <span key={`${item.label}-${index}`}>
-          {index > 0 ? <span className="sep">›</span> : null}
-          <Crumb item={item} />
-        </span>
-      ))}
-    </p>
-  );
-}
+const SCHEMES: readonly Segment<ViewerSelection["colorScheme"]>[] = [
+  ["light", "Light"],
+  ["dark", "Dark"],
+];
 
 /** Viewport selection shown in the header of a screen route. */
 export function ViewportSwitch() {
   const store = useOptionalShellStore();
-  const options = [
-    ["mobile", "Mobile"],
-    ["desktop", "Desktop"],
-    ["both", "Both"],
-  ] as const;
   return (
-    <span
-      aria-label="Viewport"
-      className="mbk-seg"
-      data-mokly-viewswitch=""
-      role="group"
-    >
-      {options.map(([value, label]) => (
-        <button
-          aria-pressed={(store?.state.selection.viewport ?? "both") === value}
-          data-viewport-option={value}
-          key={value}
-          onClick={() => store?.selectViewport(value)}
-          type="button"
-        >
-          {label}
-        </button>
-      ))}
-    </span>
+    <SegmentedControl
+      attribute="data-viewport-option"
+      label="Viewport"
+      mark="data-mokly-viewswitch"
+      onChange={(value) => store?.selectViewport(value)}
+      segments={VIEWPORTS}
+      value={store?.state.selection.viewport ?? "both"}
+    />
   );
 }
 
@@ -90,35 +54,23 @@ export function ViewportSwitch() {
  */
 export function SchemeSwitch() {
   const store = useOptionalShellStore();
-  const options = [
-    ["light", "Light"],
-    ["dark", "Dark"],
-  ] as const;
   return (
-    <span
-      aria-label="Preview color scheme"
-      className="mbk-seg"
-      data-mokly-schemeswitch=""
-      role="group"
-    >
-      {options.map(([value, label]) => (
-        <button
-          aria-pressed={
-            (store?.state.selection.colorScheme ?? "light") === value
-          }
-          data-color-scheme-option={value}
-          key={value}
-          onClick={() => store?.selectColorScheme(value)}
-          type="button"
-        >
-          {label}
-        </button>
-      ))}
-    </span>
+    <SegmentedControl
+      attribute="data-color-scheme-option"
+      label="Preview color scheme"
+      mark="data-mokly-schemeswitch"
+      onChange={(value) => store?.selectColorScheme(value)}
+      segments={SCHEMES}
+      value={store?.state.selection.colorScheme ?? "light"}
+    />
   );
 }
 
-/** The breadcrumb, title, and optional action rendered above a target view. */
+/**
+ * The breadcrumb, title, and optional action rendered above a target view. A
+ * folder crumb reveals its row in the navigation, and the path chip copies
+ * the path and announces the copy.
+ */
 export function ScreenHead(props: {
   action?: ReactNode;
   status?: ReactNode;
@@ -128,29 +80,17 @@ export function ScreenHead(props: {
 }) {
   const store = useOptionalShellStore();
   return (
-    <div className="mbk-screen-head">
-      <div className="mbk-screen-head-copy">
-        <Crumbs items={props.crumbs} />
-        <div className="mbk-title-row">
-          <h2>{props.heading}</h2>
-          {props.path ? (
-            <button
-              aria-label={`Copy path ${props.path}`}
-              className="mbk-pathchip"
-              data-copy-path={props.path}
-              onClick={() =>
-                store?.copy(props.path ?? "", `Copied path ${props.path}`)
-              }
-              type="button"
-            >
-              {props.path}
-            </button>
-          ) : null}
-          {props.status}
-        </div>
-      </div>
-      {props.action}
-    </div>
+    <ScreenHeader
+      action={props.action}
+      crumbs={props.crumbs}
+      heading={props.heading}
+      onCopyPath={(path) => store?.copy(path, `Copied path ${path}`)}
+      onRevealFolder={({ folder }) => {
+        if (folder) store?.revealFolder(folder.section, folder.path);
+      }}
+      path={props.path}
+      status={props.status}
+    />
   );
 }
 
