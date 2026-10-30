@@ -1,6 +1,6 @@
 # Align strict-mode warning summaries
 
-- **Severity:** Low. **Effort:** Small (estimate).
+- **Severity:** Low. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 186, with more lines from the second delta review.
 - **Location:** `docs/protocol/mokly-build-warnings.md:165`,

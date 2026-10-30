@@ -1,6 +1,6 @@
 # Add source offset maps for template diagnostics
 
-- **Severity:** Low. **Likelihood:** Common (estimate). **Effort:** Large.
+- **Severity:** Low. **Likelihood:** Common (estimate). **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: the wider fix of round 1 finding 1 and round 2 finding 1 of the decision work review.
 - **Location:** `crates/mokly-catalogue/src/templates.rs:71` and

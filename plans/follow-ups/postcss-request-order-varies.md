@@ -1,6 +1,6 @@
 # PostCSS request order varies between runs
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate).
+- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from the step A review round 2 of PR #228 and the
   step B review round 2 of PR #242.

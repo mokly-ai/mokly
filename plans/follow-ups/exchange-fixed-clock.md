@@ -1,6 +1,6 @@
 # Use the fixed clock in exchange integration tests
 
-- **Severity:** Low (estimate). **Effort:** Medium.
+- **Severity:** Low (estimate). **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #221 and its completed plan, the wider fix
   that its first review split off finding 1.

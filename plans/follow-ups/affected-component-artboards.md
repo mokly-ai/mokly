@@ -1,6 +1,6 @@
 # Add the missing affected-component artboards
 
-- **Severity:** Low. **Effort:** Large.
+- **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 104, from decision 6 of the 82 B delegate and finding 1 of the

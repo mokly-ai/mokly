@@ -1,6 +1,6 @@
 # Disable persisted credentials in CI checkouts
 
-- **Severity:** Medium. **Effort:** Small (estimate).
+- **Severity:** Medium. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 164, from finding R3 of the final review.

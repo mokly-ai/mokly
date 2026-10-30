@@ -1,12 +1,12 @@
 # Align shell breakpoint source claims
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate).
+- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of the F18 review of 2026-10-20.
 - **Location:** `packages/viewer/src/shell/layout_breakpoint.ts:4`,
-  `packages/viewer/src/shell/README.md:265`,
+  `packages/viewer/src/shell/README.md:279`,
   `packages/viewer/src/shell/css_chrome_flow.ts:53`,
-  `packages/viewer/src/shell/css_views_responsive.ts:155`, and
+  `packages/viewer/src/shell/css_views_responsive.ts:143`, and
   `packages/viewer/src/viewer/styles.ts:33`.
 - **Reason:** A viewer review found the false claim in files that its
   change did not touch, so a separate branch corrects it.
@@ -16,18 +16,25 @@
 - **Terms:**
   - **`NARROW_SHELL`:** the media query `(width < 56.25rem)` in
     `layout_breakpoint.ts`, the shell's layout breakpoint at 900px.
-- **Background:** Below 900px the catalogue becomes a drawer and the
-  inspector a bottom sheet. The header comment of `layout_breakpoint.ts`
-  says that every shell and viewer rule and script reads this one query.
-  The shell README repeats the claim. The `@mokly/ui` stylesheets repeat the
-  query, and the viewer's styles test holds them to it.
-  `docs/protocol/mokly-shell-device-chrome.md:97-98` names two
-  breakpoints: the layout breakpoint at 900px and the device breakpoint at
-  760px. So the comment and the README also contradict the protocol.
+- **Background:**
+  - Below 900px the catalogue becomes a drawer and the inspector a bottom
+    sheet.
+  - The comment of `NARROW_SHELL` in `layout_breakpoint.ts`, at lines 3-8,
+    says that every shell and viewer rule and script reads this one query.
+    The shell README repeats the claim at lines 279-282.
+  - Since PR #249 of 2026-10-30, `layout_breakpoint.ts` also exports the
+    760px device query as `NARROW_LAYOUT`. The `@mokly/ui` stylesheets
+    repeat both queries, and the viewer's styles test holds them to both.
+    Before, they repeated only `NARROW_SHELL`. The 560px container query
+    has no named constant.
+  - `docs/protocol/mokly-shell-device-chrome.md:97-98` names two
+    breakpoints: the layout breakpoint at 900px and the device breakpoint at
+    760px. So the comment and the README also contradict the protocol.
 - **Problem:** The claim is false. The phone layout uses 760px:
   `narrow_layout.ts` reports a window at most 760px wide, and
   `css_chrome_flow.ts`, `css_previews.ts`, and `css_views_responsive.ts` use
-  `@media (max-width: 760px)`.
+  `@media (max-width: 760px)`. Since PR #249,
+  `packages/ui/src/screen-header/screen-header.css:120` uses it too.
   The compact search uses the 560px container query of
   `packages/viewer/src/viewer/styles.ts`.
 - **Impact if no action:** A maintainer who trusts the comment can change

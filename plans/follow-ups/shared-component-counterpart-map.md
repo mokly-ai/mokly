@@ -1,6 +1,6 @@
 # Share component counterpart mapping
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate).
+- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of a comparison review of the rebuild.
 - **Location:** `crates/mokly-compare/src/projection_context.rs:24` and

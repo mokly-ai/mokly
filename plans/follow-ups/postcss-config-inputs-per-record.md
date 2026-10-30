@@ -1,6 +1,6 @@
 # Share PostCSS configuration inputs across records
 
-- **Severity:** Low (estimate). **Effort:** Medium.
+- **Severity:** Low (estimate). **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #242, found by the step B integration
   fixture of the stylesheet bundle performance plan.

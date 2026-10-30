@@ -1,6 +1,6 @@
 # Start sidecars before the background pass
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate).
+- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #225 and its completed plan, one of the
   three follow-ups of its acceptance decision.

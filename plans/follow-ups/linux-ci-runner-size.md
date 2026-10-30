@@ -1,6 +1,6 @@
 # Return Linux Rust jobs to two vCPUs
 
-- **Severity:** Low. **Effort:** Small (estimate).
+- **Severity:** Low. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan.
 - **Location:** `.github/workflows/ci.yml:64`, `:111`, `:159`, and `:264`,

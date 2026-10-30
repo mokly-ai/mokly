@@ -1,6 +1,6 @@
 # Confine Yarn TLS file settings
 
-- **Severity:** Medium. **Effort:** Small.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 153, the probe of user decision 145 B.
 - **Location:** `crates/mokly-compare/src/manager_yarnrc.rs:15`,

@@ -1,6 +1,6 @@
 # Store the install-scripts mode in one place
 
-- **Severity:** Low. **Effort:** Medium (estimate).
+- **Severity:** Low. **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 155, from finding 51 of the 135 B review.

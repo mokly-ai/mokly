@@ -1,6 +1,6 @@
 # Normalize verbatim cache paths before safety checks
 
-- **Severity:** Low. **Likelihood:** Rare (estimate). **Effort:** Small (estimate).
+- **Severity:** Low. **Likelihood:** Rare (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 179, delta review 4.
 - **Location:** `crates/mokly-compare/src/locations.rs:40`,

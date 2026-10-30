@@ -1,6 +1,6 @@
 # Use Node-compatible canonical paths on Windows
 
-- **Severity:** Low. **Likelihood:** Rare (estimate). **Effort:** Medium (estimate).
+- **Severity:** Low. **Likelihood:** Rare (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 166, native CI round 6.
 - **Location:** `crates/mokly-git/src/disk.rs:62` and

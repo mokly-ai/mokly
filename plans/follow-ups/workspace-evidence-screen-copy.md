@@ -1,6 +1,6 @@
 # Use screen copy for screen evidence
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate).
+- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of the W2 viewer review.
 - **Location:** `packages/viewer/src/shell/workspace_evidence.tsx:135`,

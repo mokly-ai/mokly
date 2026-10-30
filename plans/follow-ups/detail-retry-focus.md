@@ -1,6 +1,6 @@
 # Move focus after a detail retry
 
-- **Severity:** Low. **Likelihood:** Rare (estimate). **Effort:** Medium (estimate).
+- **Severity:** Low. **Likelihood:** Rare (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 160, from finding 1 of the W2 review.

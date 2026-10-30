@@ -1,6 +1,6 @@
 # Bring the shell README under its length target
 
-- **Severity:** Low. **Effort:** Small.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 95, F9b item 7 and decision 23.
 - **Location:** `packages/viewer/src/shell/README.md:1`.
@@ -10,12 +10,13 @@
 - **Source:** Review.
 - **Category:** Repository rule (estimate).
 - **Background:** `packages/viewer/src/shell/README.md` documents the Browse
-  shell, a flat directory of 192 entries. The contributor rules target
-  about 200 lines for a file and ask to split a file that passes 300. The
-  README had 494 lines under one heading on 2026-10-21. On `main` it has 542
-  lines and only two section headings, "Branch name" and "Scope". The
-  repository link check reads only `README.md` files, `docs/`, `plans/`, and
-  `AGENTS.md`.
+  shell, a flat directory of 186 entries since PR #249, and 192 before it.
+  The contributor rules target about 200 lines for a file and ask to split a
+  file that passes 300. The README had 494 lines under one heading on
+  2026-10-21, and 542 lines on `main` at `f93afcea`. Since PR #249 of
+  2026-10-30 it has 557 lines and still only two section headings, "Branch
+  name" and "Scope". The repository link check reads only `README.md` files,
+  `docs/`, `plans/`, and `AGENTS.md`.
 - **Problem:** The page mixes entry points, standalone mechanics, and
   subject details under too few headings, and it passes the 300-line split
   rule.
@@ -39,9 +40,10 @@
 - **Wider fix:** D. Code comments keep each mechanism beside its owner and
   leave a short index.
 - **Previous examples:** The viewer package README was split into pages
-  under `packages/viewer/docs/` and has 294 lines today. An earlier decision
-  kept the browser test guide, `tests/browser/README.md`, as one page with a
-  heading for each subject and a recorded exception.
+  under `packages/viewer/docs/` and has 306 lines since PR #249, and 294
+  before it. An earlier decision kept the browser test guide,
+  `tests/browser/README.md`, as one page with a heading for each subject and
+  a recorded exception.
 - **Recommendation:** A. A split by subject needs doc-only folders in the
   source tree, and module mechanics belong in code comments. D best protects
   long-term ownership.

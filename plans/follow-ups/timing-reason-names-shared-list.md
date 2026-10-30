@@ -1,6 +1,6 @@
 # Share timing reason names with their producers
 
-- **Severity:** Low (estimate). **Effort:** Large (estimate).
+- **Severity:** Low (estimate). **Effort:** Large (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from the step B review round 1 of PR #242.
 - **Location:** `crates/mokly-cli/src/serve_trace.rs:75` and line 78,

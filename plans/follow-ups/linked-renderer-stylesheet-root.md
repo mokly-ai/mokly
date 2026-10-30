@@ -1,6 +1,6 @@
 # Linked renderer path drops its stylesheet root
 
-- **Severity:** High (estimate). **Likelihood:** Rare (estimate). **Effort:** Medium (estimate).
+- **Severity:** High (estimate). **Likelihood:** Rare (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #240 and its completed plan, which put the
   problem outside the scope of its first review.

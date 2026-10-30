@@ -1,6 +1,6 @@
 # Cache unused compiled recipes
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate).
+- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   the deferred option C of F8 decision 59, 2026-10-20.

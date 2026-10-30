@@ -1,6 +1,6 @@
 # Define saved variant slot element checks
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate).
+- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 128, from the F21 decision record.
 - **Location:** `crates/mokly-catalogue/src/template_role.rs:57`,

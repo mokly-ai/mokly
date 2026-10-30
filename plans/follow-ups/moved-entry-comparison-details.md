@@ -1,6 +1,6 @@
 # Show comparison details for a pure move
 
-- **Severity:** Low. **Effort:** Large.
+- **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 136, from the first decision of the viewer-103c work.

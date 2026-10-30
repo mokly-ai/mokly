@@ -1,6 +1,6 @@
 # Decide on a Rust module documentation check
 
-- **Severity:** Low (estimate). **Effort:** Medium.
+- **Severity:** Low (estimate). **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #223 and its completed plan, the wider fix
   that its first implementation review split off finding 7.

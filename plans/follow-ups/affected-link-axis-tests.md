@@ -1,6 +1,6 @@
 # Test every axis of Affected links
 
-- **Severity:** Low. **Effort:** Medium.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 144, from finding 2 of the 103 C review.

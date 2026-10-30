@@ -1,6 +1,6 @@
 # Reduce catalogue-wide owned-proof memory
 
-- **Severity:** Medium. **Effort:** Medium.
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 97, review 2 finding 3 of the defaults-engine work.
 - **Location:** `crates/mokly-compare/src/owned_styles.rs:24`,

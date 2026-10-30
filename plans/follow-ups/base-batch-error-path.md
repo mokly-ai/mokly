@@ -1,6 +1,6 @@
 # Name the failed path in batch conversion errors
 
-- **Severity:** Low (estimate). **Likelihood:** Rare (estimate). **Effort:** Small (estimate).
+- **Severity:** Low (estimate). **Likelihood:** Rare (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from the review of PR #229, the batch conversion
   change, recorded in the completed plan of PR #236.

@@ -1,6 +1,6 @@
 # Align the CSS Modules semicolon boundary
 
-- **Severity:** Low. **Likelihood:** Rare (estimate). **Effort:** Small (estimate).
+- **Severity:** Low. **Likelihood:** Rare (estimate). **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   finding 2 of the review of the `rebuild/port-111c` work.

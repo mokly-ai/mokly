@@ -1,6 +1,6 @@
 # Make JavaScript document keys location-independent
 
-- **Severity:** Medium. **Likelihood:** Common (estimate). **Effort:** Medium.
+- **Severity:** Medium. **Likelihood:** Common (estimate). **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 133, from decision 1 of integration batch 19, widened by batch 21.

@@ -1,6 +1,6 @@
 # CSS differential test uses a fragile stylesheet list
 
-- **Severity:** Low. **Effort:** Small (estimate).
+- **Severity:** Low. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   finding 1 of the final review of `rebuild/port-111c` at `b152d0dc`.
@@ -27,11 +27,17 @@
   - A finding check confirmed it. The review report listed seven options,
     A to G. The plan records only the recommendation, which matches option
     C below.
-  - On 2026-10-30 the list misses five of the 56 tracked stylesheets:
+  - Before PR #249, on 2026-10-30, the list missed five of the 56 tracked
+    stylesheets:
     - From PR #227: `tests/fixtures/render-keys/specs/c.module.css` and
       `tests/fixtures/render-keys/specs/u/u.css`.
     - From PR #243: `appearance-selector.css`, `change-mark.css`, and
       `comparison-toolbar.css`, each in its folder under `packages/ui/src`.
+  - Since PR #249 of 2026-10-30, the list misses 11 of the 62 tracked
+    stylesheets. They are the five above and six that PR #249 added under
+    `packages/ui/src`: `styles.css`, and `catalogue-navigation.css`,
+    `catalogue-tree.css`, `screen-header.css`, `segmented-control.css`, and
+    `top-bar.css`, each in its folder.
   - PR #241 removed the old statement reader from the product on
     2026-10-28. The test file `token_differential_tests.rs` keeps a copy of
     it, `legacy_next` and its helpers, at lines 54-150. So the test checks

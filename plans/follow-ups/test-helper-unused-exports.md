@@ -1,6 +1,6 @@
 # Check test helper trees for unused exports
 
-- **Severity:** Low. **Effort:** Medium.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 109, F18 decision 39, covering F18 review finding 36.
 - **Location:** `scripts/verification/ratchets/internal-exports.mjs:12`.

@@ -1,6 +1,6 @@
 # Make the deployment test observe its step failure
 
-- **Severity:** Low. **Effort:** Small.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 143, from finding 2 of the review of the 89 B and 90 C work.

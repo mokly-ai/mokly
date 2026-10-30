@@ -1,6 +1,6 @@
 # Report JavaScript page wrapper attribute warnings
 
-- **Severity:** Medium. **Likelihood:** Rare (estimate). **Effort:** Large.
+- **Severity:** Medium. **Likelihood:** Rare (estimate). **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 138, from the F22 decision.

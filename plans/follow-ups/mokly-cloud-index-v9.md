@@ -1,6 +1,6 @@
 # Mokly Cloud must accept index version 9
 
-- **Severity:** High (estimate). **Effort:** Small (estimate).
+- **Severity:** High (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #224.
 - **Location:** `mokly-ai/mokly-cloud`, outside this repository. On

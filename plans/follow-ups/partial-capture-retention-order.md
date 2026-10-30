@@ -1,6 +1,6 @@
 # Define partial capture retention order
 
-- **Severity:** Low. **Effort:** Small.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 99, collector review finding 2.
 - **Location:** `crates/mokly-compare/src/capture_collection.rs:32`,

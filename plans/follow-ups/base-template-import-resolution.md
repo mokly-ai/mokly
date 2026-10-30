@@ -1,6 +1,6 @@
 # Resolve base template imports from the base
 
-- **Severity:** Medium (estimate). **Likelihood:** Rare (estimate). **Effort:** Medium (estimate).
+- **Severity:** Medium (estimate). **Likelihood:** Rare (estimate). **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #226 and its completed plan, which put the
   problem outside the scope of its review.

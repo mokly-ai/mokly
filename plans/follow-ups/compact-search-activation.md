@@ -1,10 +1,11 @@
 # Close compact search after row activation
 
-- **Severity:** Low (estimate). **Likelihood:** Common (estimate). **Effort:** Medium (estimate).
+- **Severity:** Low (estimate). **Likelihood:** Common (estimate). **Effort:** Large (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a problem outside the scope of the F9b re-review of 2026-10-20.
-- **Location:** `packages/viewer/src/shell/top_bar.tsx:22-30`,
+- **Location:** `packages/ui/src/top-bar/top-bar.tsx:63-71`, `:107`, and
+  `:120`, its container `packages/viewer/src/shell/top_bar.tsx`,
   `packages/viewer/src/viewer/styles.ts:33-47`, and
   `packages/viewer/src/shell/store_filters.ts:27-64`.
 - **Reason:** The review found the problem outside its change, and the
@@ -21,12 +22,15 @@
   - **Row activation:** a click or Enter on a catalogue row, which opens
     that entry as a new route.
 - **Background:**
-  - `docs/protocol/mokly-viewer.md:121-127` defines the compact search. The
+  - `docs/protocol/mokly-viewer.md:124-130` defines the compact search. The
     open surface covers the row, focuses the input, and keeps both host
     top-bar slots mounted. Close or Escape restores the control and its
     focus. The page says nothing about a row activation.
-  - `top_bar.tsx:22` keeps the open state in local React state. Only Escape,
-    at line 75, and Close, at line 87, set it to closed.
+  - The package component `TopBar` keeps the open state in local React
+    state, at `packages/ui/src/top-bar/top-bar.tsx:63`. Only Escape, at line
+    107, and Close, at line 120, set it to closed. PR #249 moved this state
+    there on 2026-10-30 from `packages/viewer/src/shell/top_bar.tsx:22`,
+    which is now a container that reads the store and renders `TopBar`.
   - `styles.ts:39-42` places the open surface over the row and hides every
     other top bar child, so the menu button is hidden.
   - On each new route, `withRoute` in `store_filters.ts` closes the
@@ -43,13 +47,21 @@
 - **Options:**
   - **A.** Close the compact search when the route changes, and keep the
     query. Do not move focus to the search control, which the effect at
-    `top_bar.tsx:26-30` does after Close or Escape. Effort: Small.
+    `packages/ui/src/top-bar/top-bar.tsx:66-71` does after Close or Escape.
+    Effort: Small.
   - **B.** Keep the search open, but keep the menu button visible on the
     open surface. Effort: Small.
   - **C.** Change nothing. State in `docs/protocol/mokly-viewer.md` that the
     search stays open until Close or Escape. Effort: Small.
   - **D.** Move the open state into the shell store, so that `withRoute`
-    resets it with the drawer and the tag picker. Effort: Medium.
+    resets it with the drawer and the tag picker. Effort: Large (estimate).
+    - Since PR #249 the state lives in the package component `TopBar`. So D
+      changes seven code files, more than the five of a Medium effort, in
+      two packages: `packages/ui/src/top-bar/top-bar.tsx`, its container
+      `packages/viewer/src/shell/top_bar.tsx`, and `store_state.ts`,
+      `store_initial.ts`, `store_host_routes.ts`, `store_actions.ts`, and
+      `store_filters.ts` in `packages/viewer/src/shell`.
+    - Before PR #249 moved the state, this item estimated D as Medium.
 - **Left out:** Close the search on every query change. It closes the
   surface while the user types.
 - **Wider fix:** D. One store reset then closes every temporary top bar
@@ -57,9 +69,11 @@
 - **Previous examples:** `withRoute` already closes the drawer and the tag
   picker on a route change, at `store_filters.ts:57` and line 62.
 - **Related:** [compact-search-focus-test.md](compact-search-focus-test.md)
-  asks for a browser test of Close, Escape, focus, and mounted host slots
-  of the same control. The test from that item can also cover the option
-  chosen here.
+  asks for a browser test that the host slots of the same control stay
+  mounted while it is open, and that Close or Escape shows the control
+  again. A package test already covers the state and the focus return after
+  Close and Escape. The test from that item can also cover the option chosen
+  here.
 - **Recommendation:** D (estimate). It matches the drawer and the tag
   picker, and it covers every route change, not only one row type.
 - **Action:** ask the user, because condition 2 holds (estimate): A, B,

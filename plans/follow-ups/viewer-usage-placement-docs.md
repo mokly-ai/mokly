@@ -1,12 +1,12 @@
 # Align the documented location of Used by
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate).
+- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #223 and its completed plan, which put the
   problem outside the scope of its review.
-- **Location:** `docs/protocol/mokly-viewer.md:101` to line 103 and line 51,
+- **Location:** `docs/protocol/mokly-viewer.md:104` to line 106 and line 54,
   `packages/viewer/docs/concepts/README.md:114` to line 116,
-  `docs/protocol/mokly-component-explorer.md:97`,
+  `docs/protocol/mokly-component-explorer.md:99`,
   `docs/protocol/mokly-component-inspector-design.md:24`,
   `docs/protocol/mokly-component-design.md:56`,
   `examples/basic/specs/design/library/inspector/inspector.tsx:54`, and
@@ -27,7 +27,7 @@
     shows the Used by and Affected lists.
 - **Background:**
   - These sources place the lists in Usage:
-    - `docs/protocol/mokly-component-explorer.md:97`: Usage contains the
+    - `docs/protocol/mokly-component-explorer.md:99`: Usage contains the
       Used by screens and components.
     - `docs/protocol/mokly-component-inspector-design.md:24`: Usage
       contains Used by and, when relevant, Affected screens. The same rule
@@ -44,10 +44,10 @@
       `packages/viewer/src/shell/workspace_usage.tsx:65` renders the Used by
       section, the Affected section, and the loading, error, and unavailable
       states of usage.
-  - `docs/protocol/mokly-viewer.md:51`, in the viewer contract itself,
+  - `docs/protocol/mokly-viewer.md:54`, in the viewer contract itself,
     already names Usage as a panel that waits for all route details.
   - These sources place the lists in Details:
-    - `docs/protocol/mokly-viewer.md:101` to line 103 says that Details
+    - `docs/protocol/mokly-viewer.md:104` to line 106 says that Details
       show the workspace of the entry detail in every delivery. That
       workspace holds Used by, Affected screens, related changed
       components, and input changes.
@@ -89,9 +89,9 @@
     - If Affected moves too, Usage keeps only its loading, error, and
       unavailable states. The user must then choose whether Usage stays or
       goes. Its removal deletes functionality on `origin/main`.
-    - The contracts at `mokly-component-explorer.md:97`,
+    - The contracts at `mokly-component-explorer.md:99`,
       `mokly-component-inspector-design.md:24`, and
-      `mokly-component-design.md:56` change. `mokly-viewer.md:51` changes
+      `mokly-component-design.md:56` change. `mokly-viewer.md:54` changes
       when Usage goes.
     - Effort: Large (estimate), because the shell code and the mockup code
       change in two packages.

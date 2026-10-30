@@ -1,6 +1,6 @@
 # Make the embedded preview-note width pixel-stable
 
-- **Severity:** Low (estimate). **Likelihood:** Rare (estimate). **Effort:** Small (estimate).
+- **Severity:** Low (estimate). **Likelihood:** Rare (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a problem outside the scope of the F18 review of 2026-10-20.
@@ -44,6 +44,8 @@
   shell follow the host page, which is the opposite of the goal.
 - **Wider fix:** D. The README rule stops new shell widths from following
   the host page. The phone navigation drawer also uses `rem`, at
+  `packages/ui/src/catalogue-navigation/catalogue-navigation.css:112`, where
+  PR #249 moved it on 2026-10-30 from
   `packages/viewer/src/shell/css_nav_search.ts:155`. But
   `docs/protocol/mokly-shell-device-chrome.md:102-103` states that width
   as "max 20rem", so the rule keeps it, and a change there needs a decision

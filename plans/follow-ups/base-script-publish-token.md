@@ -1,6 +1,6 @@
 # Keep the publish token from base install scripts
 
-- **Severity:** Medium. **Effort:** Small.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 151, from finding 43 of the 135 B review.

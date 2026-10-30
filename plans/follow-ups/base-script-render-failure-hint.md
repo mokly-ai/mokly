@@ -1,6 +1,6 @@
 # Show the install-scripts hint for render failures
 
-- **Severity:** Medium. **Likelihood:** Rare (estimate). **Effort:** Large.
+- **Severity:** Medium. **Likelihood:** Rare (estimate). **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 152, the wider part of finding 44 of the 135 B review.

@@ -1,6 +1,6 @@
 # Run the Bookfolio catalogue smoke tests
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate).
+- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan.
 - **Location:** None. The work runs in the Bookfolio repository, not in

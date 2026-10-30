@@ -1,6 +1,6 @@
 # Follow-up list hides pending user choices
 
-- **Severity:** Medium (estimate). **Effort:** Small (estimate).
+- **Severity:** Medium (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-30, from PR #247, the check of finding 3 in review
   round 3.

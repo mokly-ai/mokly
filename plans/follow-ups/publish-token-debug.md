@@ -1,6 +1,6 @@
 # Redact publish tokens from Debug output
 
-- **Severity:** Low. **Effort:** Medium (estimate).
+- **Severity:** Low. **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 181, delta review 6.
 - **Location:** `crates/mokly-cli/src/grammar.rs:107`,

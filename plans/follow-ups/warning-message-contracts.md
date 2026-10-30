@@ -1,6 +1,6 @@
 # Define the missing warning messages
 
-- **Severity:** Low. **Effort:** Medium.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 87, CLI defaults hub finding 5.
 - **Location:** `crates/mokly-catalogue/src/templates.rs:51`,

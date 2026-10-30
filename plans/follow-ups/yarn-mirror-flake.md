@@ -1,6 +1,6 @@
 # Diagnose the Yarn Classic mirror fallback
 
-- **Severity:** Low. **Effort:** Small (estimate).
+- **Severity:** Low. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 192.
 - **Location:** `tests/static_base_manager_mirror.test.ts:14`.

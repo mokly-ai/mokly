@@ -1,6 +1,6 @@
 # Bring large React startup under five seconds
 
-- **Severity:** Medium (estimate). **Effort:** Large (estimate).
+- **Severity:** Medium (estimate). **Effort:** Large (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   option A of decision 57, which the user deferred on 2026-10-19.

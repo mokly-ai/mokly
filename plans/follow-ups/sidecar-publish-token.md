@@ -1,6 +1,6 @@
 # Remove the publish token from the sidecar environment
 
-- **Severity:** Low. **Effort:** Small (estimate).
+- **Severity:** Low. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 180, delta review 5.
 - **Location:** `crates/mokly-sidecar/src/process_factory.rs:85`.

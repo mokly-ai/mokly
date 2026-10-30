@@ -1,6 +1,6 @@
 # Run Cargo checks with the locked dependency graph
 
-- **Severity:** Medium (estimate). **Effort:** Small (estimate).
+- **Severity:** Medium (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a problem outside the scope of the F18 re-review of 2026-10-20.

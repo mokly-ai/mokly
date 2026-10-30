@@ -1,6 +1,6 @@
 # Teach Mokly Cloud to request parent usage details
 
-- **Severity:** High (estimate). **Effort:** Medium (estimate).
+- **Severity:** High (estimate). **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #223 and its completed plan, an unchecked
   post-merge task.

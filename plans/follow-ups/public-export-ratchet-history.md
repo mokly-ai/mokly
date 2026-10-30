@@ -1,6 +1,6 @@
 # Public-export ratchet fails with stale release tags
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate).
+- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #222 and its completed plan, which put the
   failure outside the scope in its first review.

@@ -1,6 +1,6 @@
 # Enable gzip Blob uploads in Mokly Cloud
 
-- **Severity:** High (estimate). **Effort:** Medium (estimate).
+- **Severity:** High (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #221 and its completed plan, an unchecked
   post-merge task.

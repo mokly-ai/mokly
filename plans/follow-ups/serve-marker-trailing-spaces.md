@@ -1,6 +1,6 @@
 # Remove trailing spaces from the Serve marker fixture
 
-- **Severity:** Low. **Effort:** Small (estimate).
+- **Severity:** Low. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 163, final review R2.
 - **Location:** `packages/viewer/tests/serve_marker_documents.ts:18`.

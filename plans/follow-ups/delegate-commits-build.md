@@ -1,6 +1,6 @@
 # Keep delegated commits buildable
 
-- **Severity:** Low. **Effort:** Small.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 130, from finding 7 of the F21 review.

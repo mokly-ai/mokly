@@ -1,6 +1,6 @@
 # Separate plain-text link existence from content identity
 
-- **Severity:** Low (estimate). **Effort:** Medium.
+- **Severity:** Low (estimate). **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: option C of finding 2 of the decision work review of 2026-10-26, kept as a possible later change.
 - **Location:** `crates/mokly-graph/src/planning_resources.rs:75`,

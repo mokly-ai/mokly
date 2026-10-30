@@ -1,6 +1,6 @@
 # Add fixtures for package-manager script guards
 
-- **Severity:** Medium. **Effort:** Small (estimate).
+- **Severity:** Medium. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 121, finding 7 of the pnpm and Yarn review, joined by fix round 2 finding 5.
 - **Location:** `crates/mokly-compare/src/manager_command.rs:25`,

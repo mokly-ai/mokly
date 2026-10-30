@@ -1,6 +1,6 @@
 # Accept standard hyphenated SVG and MathML names
 
-- **Severity:** Medium (estimate). **Likelihood:** Rare (estimate). **Effort:** Small (estimate).
+- **Severity:** Medium (estimate). **Likelihood:** Rare (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a problem outside the scope of the HTML pipeline decision work of

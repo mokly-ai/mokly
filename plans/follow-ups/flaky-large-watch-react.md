@@ -1,6 +1,6 @@
 # Stabilize the large React watch test
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate).
+- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #217 and its completed plan, which put the
   failure outside the scope of its review.

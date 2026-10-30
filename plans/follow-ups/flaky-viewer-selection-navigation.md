@@ -1,6 +1,6 @@
 # Viewer selection test races a navigation
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate).
+- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from a local complete gate run of PR #242 at
   `f15728a5`.

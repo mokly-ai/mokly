@@ -1,6 +1,6 @@
 # Add the missing period to the scripts hint
 
-- **Severity:** Low. **Effort:** Small.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 156, from finding 52 of the 135 B review.

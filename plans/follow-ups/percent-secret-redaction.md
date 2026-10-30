@@ -1,6 +1,6 @@
 # Redact literal percent signs in secrets
 
-- **Severity:** Low. **Effort:** Small (estimate).
+- **Severity:** Low. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 177, delta review 2.
 - **Location:** `crates/mokly-publish/src/redaction.rs:85` and

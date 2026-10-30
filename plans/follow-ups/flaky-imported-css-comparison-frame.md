@@ -1,6 +1,6 @@
 # Imported CSS comparison test races a mode switch
 
-- **Severity:** Low. **Effort:** Small.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-30, from the CI run of PR #248 at `cc463669`, job
   "Browser (Node 22.15.0, shard 2/4)".

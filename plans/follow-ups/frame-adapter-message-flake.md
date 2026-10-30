@@ -1,6 +1,6 @@
 # Wait for the frame adapter navigation message
 
-- **Severity:** Low. **Effort:** Small.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a browser follow-up of Milestone 8, recorded in Milestone 15.

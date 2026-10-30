@@ -1,6 +1,6 @@
 # One path rule for a linked repository root
 
-- **Severity:** Medium (estimate). **Likelihood:** Rare (estimate). **Effort:** Medium (estimate).
+- **Severity:** Medium (estimate). **Likelihood:** Rare (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #240 and its completed plan, which put the
   problem outside the scope of its first review.

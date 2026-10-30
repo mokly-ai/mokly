@@ -1,6 +1,6 @@
 # Test the build render-once requirement
 
-- **Severity:** Low. **Effort:** Small.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #220 and its completed plan, finding 1 of
   its first review.

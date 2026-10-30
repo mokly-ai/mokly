@@ -1,6 +1,6 @@
 # Recover from native watch event loss
 
-- **Severity:** Medium. **Likelihood:** Rare (estimate). **Effort:** Medium (estimate).
+- **Severity:** Medium. **Likelihood:** Rare (estimate). **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 134, from the Milestone 11 plan TODO.

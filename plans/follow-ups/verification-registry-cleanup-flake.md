@@ -1,6 +1,6 @@
 # Stabilize verification registry cleanup
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate).
+- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of a verification round of the rebuild.
 - **Location:** `tests/serve_process.test.ts:75` and

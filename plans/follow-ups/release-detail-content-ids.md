@@ -1,6 +1,6 @@
 # Release content-addressed details with a breaking note
 
-- **Severity:** Medium (estimate). **Effort:** Small (estimate).
+- **Severity:** Medium (estimate). **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #224.
 - **Location:** The next release pull request of Release Please,

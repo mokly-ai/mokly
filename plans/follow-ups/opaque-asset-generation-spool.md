@@ -1,6 +1,6 @@
 # Share an opaque-asset spool for each generation
 
-- **Severity:** Medium (estimate). **Effort:** Medium (estimate).
+- **Severity:** Medium (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: the post-merge task of user decision 61 and M14 review 6, finding 5.
 - **Location:** `crates/mokly-server/src/asset_streams.rs:21`,

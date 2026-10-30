@@ -1,6 +1,6 @@
 # Reject unit tests that make no assertion
 
-- **Severity:** Low. **Effort:** Large (estimate).
+- **Severity:** Low. **Effort:** Large (estimate). **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user decision 66 A of 2026-10-21.

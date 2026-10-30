@@ -1,6 +1,6 @@
 # Call variants variants in browser test names
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate).
+- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of the W2 viewer review.
 - **Location:** `tests/browser/react_comparison_evidence.spec.ts:70`,

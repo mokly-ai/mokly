@@ -1,6 +1,6 @@
 # Let the parser choose the plaintext point
 
-- **Severity:** Low. **Effort:** Large.
+- **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 98, engine review 2 finding 2, with user decisions 98 B, 147 B, and the one-tokenizer decision.
 - **Location:** `crates/mokly-html/src/normalization.rs:88`,

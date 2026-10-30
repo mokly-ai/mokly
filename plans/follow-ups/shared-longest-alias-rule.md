@@ -1,6 +1,6 @@
 # Share the longest package alias rule
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate).
+- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #226 and its completed plan, which put the
   problem outside the scope of its review.

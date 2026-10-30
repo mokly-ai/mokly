@@ -1,6 +1,6 @@
 # Give background base work its own render pool
 
-- **Severity:** Medium (estimate). **Likelihood:** Rare (estimate). **Effort:** Small.
+- **Severity:** Medium (estimate). **Likelihood:** Rare (estimate). **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #228, decision 9 of the stylesheet bundle
   performance plan, and review finding 1 of step A.

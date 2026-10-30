@@ -1,6 +1,6 @@
 # Batch Git reads for opaque assets
 
-- **Severity:** Low. **Effort:** Large.
+- **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 64, from finding 8 of the sixth Milestone 14 review, and its

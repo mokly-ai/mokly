@@ -1,6 +1,6 @@
 # Protect tokens in viewer URL hosts
 
-- **Severity:** Low. **Effort:** Small (estimate).
+- **Severity:** Low. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 178, delta review 3.
 - **Location:** `crates/mokly-publish/src/completion.rs:69`.

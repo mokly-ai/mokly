@@ -1,6 +1,6 @@
 # Require the sidecar parent watchdog in package reports
 
-- **Severity:** Medium (estimate). **Effort:** Small (estimate).
+- **Severity:** Medium (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of the 117 C port review.
 - **Location:** `scripts/release/package_reports.mjs:34`,

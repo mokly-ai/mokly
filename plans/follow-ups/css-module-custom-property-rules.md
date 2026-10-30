@@ -1,6 +1,6 @@
 # Align CSS Module checks for custom-property-like rules
 
-- **Severity:** Low. **Likelihood:** Rare (estimate). **Effort:** Small.
+- **Severity:** Low. **Likelihood:** Rare (estimate). **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 113, from item 28 of the Milestone 14 nesting report and the

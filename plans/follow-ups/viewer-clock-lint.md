@@ -1,6 +1,6 @@
 # Catch three more clock forms in tests
 
-- **Severity:** Low. **Effort:** Small.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: the post-merge task of user decision 66 A on the test gates of closed PR #174.
 - **Location:** `eslint.config.js:82`, `tests/test_timing_lint.test.ts:36`,

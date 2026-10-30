@@ -1,6 +1,6 @@
 # Name the slot owner consistently
 
-- **Severity:** Low. **Effort:** Small (estimate).
+- **Severity:** Low. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 161, W2 decision 2.
 - **Location:** `packages/viewer/src/shell/workspace_props.tsx:202` and

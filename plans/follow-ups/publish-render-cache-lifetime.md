@@ -1,6 +1,6 @@
 # Decide the publish render-cache lifetime
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate).
+- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #222 and its completed plan, the residual
   risk of its first review.

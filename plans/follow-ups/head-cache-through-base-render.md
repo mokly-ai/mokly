@@ -1,6 +1,6 @@
 # Keep head render entries while the base renders
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate).
+- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #222 and its completed plan, the
   post-merge follow-up of its eviction decision.

@@ -1,6 +1,6 @@
 # Keep healthy remote Testbox runs alive
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate).
+- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of the CI release checks hub review.
 - **Location:** `.github/workflows/blacksmith-testbox.yml:25`,

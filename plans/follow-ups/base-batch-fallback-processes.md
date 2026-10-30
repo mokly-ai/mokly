@@ -1,6 +1,6 @@
 # Avoid one Git process per failed-batch file
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate).
+- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from the review of PR #229, the batch conversion
   change, recorded in the completed plan of PR #236.

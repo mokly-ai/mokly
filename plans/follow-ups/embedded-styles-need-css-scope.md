@@ -1,6 +1,6 @@
 # Embedded viewer styles need CSS @scope
 
-- **Severity:** Medium (estimate). **Effort:** Large (estimate).
+- **Severity:** Medium (estimate). **Effort:** Large (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-30, from the branch `calummoore/mokly-ui-component-migration`, during the research for its page-rules decision.
 - **Location:** `packages/viewer/scripts/styles.mjs:32-56`, `docs/protocol/mokly-viewer.md:129`.

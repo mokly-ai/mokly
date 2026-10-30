@@ -1,6 +1,6 @@
 # Preserve failures after a CapturedPool mutex poison
 
-- **Severity:** Low. **Effort:** Small (estimate).
+- **Severity:** Low. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: a follow-up line outside the user items.
 - **Location:** `crates/mokly-render/tests/integration/support.rs:48`.

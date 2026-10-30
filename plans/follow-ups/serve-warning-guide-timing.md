@@ -1,6 +1,6 @@
 # Align the Serve warning guide with on-demand views
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate).
+- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #225 and its completed plan, which put the
   problem outside the scope of its review.

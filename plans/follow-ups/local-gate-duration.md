@@ -1,6 +1,6 @@
 # Keep the local gate within its run limit
 
-- **Severity:** Low. **Effort:** Medium (estimate).
+- **Severity:** Low. **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 188.

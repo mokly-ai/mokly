@@ -1,6 +1,6 @@
 # Align saved-slot reserved metadata validation
 
-- **Severity:** Medium (estimate). **Effort:** Medium (estimate).
+- **Severity:** Medium (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of round 2 of the decision work review.
 - **Location:** `crates/mokly-catalogue/src/html_tokens.rs:92`,

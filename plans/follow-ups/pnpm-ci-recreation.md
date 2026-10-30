@@ -1,6 +1,6 @@
 # Make pnpm recreation independent of CI
 
-- **Severity:** Medium. **Likelihood:** Rare (estimate). **Effort:** Small.
+- **Severity:** Medium. **Likelihood:** Rare (estimate). **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 158, pnpm CI fix finding 1.
 - **Location:** `crates/mokly-compare/src/manager_command.rs:21` and

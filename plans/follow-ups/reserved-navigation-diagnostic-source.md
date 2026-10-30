@@ -1,6 +1,6 @@
 # Name authored templates in navigation diagnostics
 
-- **Severity:** Low (estimate). **Likelihood:** Rare (estimate). **Effort:** Small (estimate).
+- **Severity:** Low (estimate). **Likelihood:** Rare (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of the implementation review of 2026-10-28.
 - **Location:** `crates/mokly-html/src/source_checks.rs:15`,

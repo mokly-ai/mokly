@@ -1,6 +1,6 @@
 # Write relatedDocs references into catalogue output
 
-- **Severity:** Medium (estimate). **Likelihood:** Common (estimate). **Effort:** Small (estimate).
+- **Severity:** Medium (estimate). **Likelihood:** Common (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: the status-line sweep of user decision 185 A, finding 6 of the documentation audit.
 - **Location:** `crates/mokly-model/src/projection.rs:94`,

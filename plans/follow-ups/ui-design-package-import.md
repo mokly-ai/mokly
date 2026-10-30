@@ -1,15 +1,22 @@
 # Design mockups import the UI package by path
 
-- **Severity:** Low (estimate). **Effort:** Large.
+- **Severity:** Low (estimate). **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #243 and its completed plan, the follow-up
   of finding 1 of its first review.
-- **Location:**
+- **Location:** the 14 repository-path imports of `@mokly/ui` in 11 files:
   `examples/basic/specs/design/library/chrome/appearance-selector.view.tsx:3`,
+  `examples/basic/specs/design/library/chrome/catalogue-navigation-sections.ts:8`,
+  `examples/basic/specs/design/library/chrome/catalogue-navigation.view.tsx:8`,
+  `examples/basic/specs/design/library/chrome/screen-header.view.tsx:3`,
+  `examples/basic/specs/design/library/chrome/top-bar.view.tsx:5`,
   `examples/basic/specs/design/library/controls/comparison-toolbar.view.tsx:6`,
-  `examples/basic/design-library/chrome/appearance-selector.css:3`,
-  `examples/basic/design-library/controls/comparison-toolbar.css:2`, and
-  `docs/protocol/mokly-design-components.md:56`.
+  `examples/basic/design-library/chrome/appearance-selector.css:3-4`,
+  `examples/basic/design-library/chrome/catalogue-navigation.css:3-4`,
+  `examples/basic/design-library/chrome/screen-header.css:2`,
+  `examples/basic/design-library/chrome/top-bar.css:3`, and
+  `examples/basic/design-library/controls/comparison-toolbar.css:3-4`. The
+  decision in force is at `docs/protocol/mokly-design-components.md:74`.
 - **Reason:** On 2026-10-28 the user chose repository-path imports for now,
   and no choice approves the switch, which needs the core fix for built
   repository packages in Changes.
@@ -26,10 +33,14 @@
     to its `dist` build output, which Git ignores.
 - **Background:**
   - The design library renders the appearance selector and the comparison
-    toolbar through `@mokly/ui`. The views import the package sources by
-    repository path, such as
+    toolbar through `@mokly/ui`. Since PR #249 of 2026-10-30, it also renders
+    the top bar, the screen header, and the catalogue navigation with its
+    tree through the package. The comparison toolbar sheet also imports the
+    CSS of the segmented control, which the toolbar renders. The views
+    import the package sources by repository path, such as
     `../../../../../../packages/ui/src/appearance-selector/appearance-selector.js`.
-    The sheets import the package CSS by repository path too.
+    The sheets import the package CSS by repository path too. These imports
+    grew from 5 lines at `f93afcea` to 14 lines in 11 files.
   - On 2026-10-28 the user chose this repository-path import, option A,
     "for now". A package-name import resolves to `dist`, and the base side
     of a later Changes comparison renders from Git, which has no `dist`. The
@@ -40,7 +51,7 @@
     release manifest check would need an exception.
   - Option D, the core fix for built repository packages in Changes, is a
     separate plan that the user picks up.
-  - `docs/protocol/mokly-design-components.md:56` states the decision in
+  - `docs/protocol/mokly-design-components.md:74` states the decision in
     force: the repository path, not the package name.
 - **Problem:** The mockups reach the package through deep relative paths
   instead of its public name. The Rust design fixtures and the packed

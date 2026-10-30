@@ -1,6 +1,6 @@
 # Use one typed lockfile model
 
-- **Severity:** Low (estimate). **Effort:** Large.
+- **Severity:** Low (estimate). **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 123, the wider fix of findings 3 and 4 of the pnpm and Yarn review.
 - **Location:** `crates/mokly-compare/src/pnpm_lockfile.rs:113` and

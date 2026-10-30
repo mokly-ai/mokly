@@ -1,6 +1,6 @@
 # Make tracing captures safe in parallel tests
 
-- **Severity:** Medium. **Effort:** Small (estimate).
+- **Severity:** Medium. **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 196, the wider class of user item 193.
 - **Location:** `crates/mokly-cli/src/_tests_/serve_trace_tests.rs:87`,
