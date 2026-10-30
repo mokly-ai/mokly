@@ -41,6 +41,17 @@ const COMPARISON_CHANGES: Partial<Record<ComponentPageState, string>> = {
   "style-changed": COMPONENT_STYLE_COPY.stylesChanged,
 };
 
+/**
+ * The states in which the entry's details, which hold its usage and its
+ * props, are loading or failed.
+ */
+const DETAILS_PENDING: ReadonlySet<ComponentPageState> = new Set([
+  "usage-loading",
+  "usage-failed",
+  "props-loading",
+  "props-failed",
+]);
+
 /** The Changes scenario whose navigation each state's artboard depicts. */
 function changeScenario(state: ComponentPageState): ChangeScenario {
   if (state === "removed" || state === "added") return state;
@@ -83,6 +94,7 @@ export function ComponentPage({
   return (
     <ComponentLayout
       design={limit?.design ?? COMPONENT_PAGES[state]}
+      detailsPending={DETAILS_PENDING.has(state)}
       entry={entry}
       navigationKey={navigationKey}
       mode={mode}

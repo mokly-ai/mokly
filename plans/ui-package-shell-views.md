@@ -847,11 +847,27 @@ by the user, option C:
 - Item 9: a narrow desktop render draws the shipped picker sheet, under the
   rule of milestone 4 that a desktop render follows the layout breakpoint.
 
-- [ ] Adopt `controls/tag-picker`, `controls/tag-chip`,
+- [x] Adopt `controls/tag-picker`, `controls/tag-chip`,
       `controls/view-controls`, and `controls/change-status` as milestone 4
       adopts the chrome, including decision 2 and the comparison with the
       earlier renders.
-- [ ] Run the mockup check and smoke-test the changed pages.
+- [x] Run the mockup check and smoke-test the changed pages.
+- [x] Done on 2026-10-30 by the ui implementor and checked, in two passes:
+      the adoption, then the answers. The product did not change: zero
+      computed-style differences across 166 states. The design Node tests,
+      the design browser tests, the Rust design tests, the strict mockup
+      build, and the repository suite passed. Calls: the highlight state is a
+      required prop of the header, so no artboard draws the toggle without
+      the shell's state; the mockups use the shell's exact reason sentences,
+      with a new `failed` reason, under the user's answer to item 1; the
+      design components and component explorer contracts say that every
+      screen and component page draws the toggle. Follow-up item added:
+      `plans/follow-ups/highlight-reason-after-failed-details.md`. Found for
+      milestone 10: the explorer artboard's Components panel says "for this
+      screen" where the shell says "for this view", in
+      `examples/basic/specs/design/components/parts/screen_details.tsx`.
+      Evidence: the worktree's
+      `.context/ui-package-shell-views/controls-mockups/`.
 
 ## Milestone 8: Second pull request
 

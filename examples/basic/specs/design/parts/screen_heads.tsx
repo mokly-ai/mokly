@@ -18,7 +18,7 @@ export function WelcomeHead({
   return (
     <ScreenHead
       {...(changed ? { comparisons: true, status: "changed" as const } : {})}
-      action={<ViewSwitch active={active} />}
+      action={<ViewSwitch active={active} highlight="available" />}
       crumbs={changes ? ["Example", "Screens"] : SCREEN_CRUMBS}
       path={ENTRY_PATHS.welcome}
       title="Welcome"

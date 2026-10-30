@@ -85,6 +85,7 @@ function PreviewLoading({ viewport }: { viewport: ArtboardViewport }) {
       viewport={viewport}
     >
       <AppearanceHead
+        highlight="loading"
         path={ENTRY_PATHS.welcome}
         preview={viewport}
         title="Welcome"

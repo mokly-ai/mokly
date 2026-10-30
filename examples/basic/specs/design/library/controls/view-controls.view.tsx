@@ -4,20 +4,26 @@ import { ViewControls } from "../../../../../../packages/ui/src/view-controls/vi
 
 import type { ViewControlsProps } from "./view-controls.js";
 
+/**
+ * The shell's own sentence for each reason that disables Highlight
+ * components, word for word, so a depicted toggle reads as the shell's does.
+ */
 const reasons = {
-  empty: "No registered components in this view",
-  unavailable: "Component inspection is unavailable",
+  empty: "No registered components are used in this view.",
+  unavailable: "Component inspection is unavailable for this view.",
   loading: "Waiting for the component preview.",
+  failed: "This preview could not be loaded.",
   comparison: "A comparison is selected. Highlighting is available in Current.",
-  removed: "Highlighting is unavailable for removed screens",
+  removed: "This preview is unavailable.",
 } as const;
 
 /**
  * The shipped view controls. A static artboard runs no script, so the
  * viewport select and the Highlight components switch are native controls
  * whose state the design stylesheets read: they change the previews and the
- * highlight in place, even in Browse's sandboxed frames. A changed view in
- * another viewport marks the select.
+ * highlight in place, even in Browse's sandboxed frames. The switch starts in
+ * the state that the shell shows for the depicted view, and a reason disables
+ * it. A changed view in another viewport marks the select.
  */
 export function ViewControlsView({
   selection,
@@ -29,11 +35,7 @@ export function ViewControlsView({
   const reason = unavailable ? reasons[unavailable] : undefined;
   return (
     <ViewControls
-      highlight={
-        highlight === undefined
-          ? undefined
-          : { active: highlight, available: reason === undefined, reason }
-      }
+      highlight={{ active: highlight, available: reason === undefined, reason }}
       interactive={false}
       viewport={selection}
       viewportMark={{

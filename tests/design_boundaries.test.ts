@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { contrast, designPalette } from "./helpers/design_palette.js";
+import { boundaryContrast, designPalette } from "./helpers/design_palette.js";
 import {
   boundaryOf,
   designStyleRules,
   fillOf,
   type ColorReference,
+  type StyleRule,
 } from "./helpers/design_styles.js";
 
 /**
@@ -33,6 +34,13 @@ function markedFillTokens(tokens: Map<string, string>): string[] {
 /** Selectors naming a control primitive, whose boundary is a control edge. */
 const CONTROL_SELECTOR =
   /\bbutton\b|\binput\b|\bselect\b|\bsummary\b|\btextarea\b|\.ce-action|\.ce-button|\.mbk-icon-(?:button|select)|\.mbk-seg|\.mbk-appearance|\.ce-sheet-expand|\.mbk-chip\.flow:is\(a\)/u;
+
+/**
+ * `@mokly/ui` stylesheets that style a control through a base class whose
+ * selector names no control primitive, so each boundary there is a control
+ * edge too: the chip rule draws the resting edge of every tag chip.
+ */
+const CONTROL_SHEETS = new Set(["packages/ui/src/tag-chip/tag-chip.css"]);
 
 /** Tokens the palette contract reserves for decoration between surfaces. */
 const HAIRLINE_TOKENS = new Set([
@@ -66,11 +74,21 @@ const EXEMPT_SURFACES = new Map([
  * Control surfaces that keep a decorative hairline, each named as the audit
  * names a rule, by its sheet and selector, with the reason that exempts it.
  * Each entry must be reached by the control-edge audit, so a future control
- * cannot quietly inherit the exemption.
+ * cannot quietly inherit the exemption. A kept hairline that a state draws,
+ * such as a pressed icon control's, is exempt from the marked-boundary audit
+ * too: the state shows through its fill and its accent glyph.
  */
 const EXEMPT_CONTROL_SURFACES = new Map([
   [
     "packages/ui/src/segmented-control/segmented-control.css .mbk-seg",
+    "the user kept the shipped border on 2026-10-30",
+  ],
+  [
+    'packages/ui/src/icon-control/icon-control.css .mbk-icon-button[aria-selected="true"], .mbk-icon-button[aria-pressed="true"], .mbk-icon-button:has(> input:checked)',
+    "the user kept the shipped border on 2026-10-30",
+  ],
+  [
+    "packages/ui/src/tag-chip/tag-chip.css .mbk-chip",
     "the user kept the shipped border on 2026-10-30",
   ],
 ]);
@@ -107,41 +125,18 @@ function isExemptSurface(file: string, selector: string): boolean {
   return EXEMPT_SURFACES.get(file) === selector;
 }
 
-/** Resolves a reference to the colour it paints in one appearance. */
-function resolve(
-  reference: ColorReference,
-  tokens: Map<string, string>,
-): string | undefined {
-  return reference.token ? tokens.get(reference.token) : reference.literal;
+/** Whether a rule draws a control surface that keeps a decorative hairline. */
+function keepsHairline(rule: StyleRule): boolean {
+  return EXEMPT_CONTROL_SURFACES.has(`${rule.file} ${rule.selector}`);
+}
+
+/** Whether a rule styles a control, by its selector or by its sheet. */
+function isControlRule(rule: StyleRule): boolean {
+  return CONTROL_SELECTOR.test(rule.selector) || CONTROL_SHEETS.has(rule.file);
 }
 
 function describe(reference: ColorReference): string {
   return reference.token ?? reference.literal ?? "?";
-}
-
-/** Whether a palette value is an opaque `#rgb` or `#rrggbb` colour. */
-function isOpaque(color: string): boolean {
-  return /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/iu.test(color.trim());
-}
-
-/**
- * A boundary sits between its own fill and the surface around it, so it only
- * has to reach 3:1 against one of them to read as an edge. A translucent fill,
- * such as the accent tint of a pressed icon button, shows the surface through
- * it, so the surface decides.
- */
-function boundaryContrast(
-  boundary: ColorReference,
-  fill: ColorReference | undefined,
-  tokens: Map<string, string>,
-): number | undefined {
-  const edge = resolve(boundary, tokens);
-  if (!edge) return undefined;
-  const behind = fill ? resolve(fill, tokens) : undefined;
-  return Math.max(
-    behind && isOpaque(behind) ? contrast(edge, behind) : 0,
-    contrast(edge, tokens.get("--chrome-surface")!),
-  );
 }
 
 /**
@@ -193,6 +188,7 @@ test("every marked boundary is visible against an adjacent colour", async () => 
   for (const rule of rules) {
     if (DECORATIVE_BOUNDARIES.has(rule.selector)) continue;
     if (isExemptSurface(rule.file, rule.selector)) continue;
+    if (keepsHairline(rule)) continue;
     for (const appearance of ["light", "dark"] as const) {
       const tokens = palette[appearance];
       const reached = boundaryContrast(rule.boundary, rule.fill, tokens);
@@ -217,16 +213,16 @@ test("every control boundary is a readable control edge", async () => {
       rules.some(
         (rule) =>
           `${rule.file} ${rule.selector}` === surface &&
-          CONTROL_SELECTOR.test(rule.selector) &&
+          isControlRule(rule) &&
           boundaryOf(rule.body) !== undefined,
       ),
       `the exempt control surface ${surface} (${reason}) is not reached by the audit`,
     );
   const failures: string[] = [];
   for (const rule of rules) {
-    if (!CONTROL_SELECTOR.test(rule.selector)) continue;
+    if (!isControlRule(rule)) continue;
     if (DECORATIVE_BOUNDARIES.has(rule.selector)) continue;
-    if (EXEMPT_CONTROL_SURFACES.has(`${rule.file} ${rule.selector}`)) continue;
+    if (keepsHairline(rule)) continue;
     const boundary = boundaryOf(rule.body);
     if (!boundary) continue;
     if (boundary.token && HAIRLINE_TOKENS.has(boundary.token)) {

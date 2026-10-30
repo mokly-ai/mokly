@@ -116,7 +116,14 @@ views other than the shown one, so the details inspector names them. A static
 artboard runs no script, so the viewport select and the Highlight components
 switch are native controls: scoped `:has()` rules in the design stylesheets
 read the select's option and the switch's check, so the previews and the
-highlight change in place, even in Browse's sandboxed frames.
+highlight change in place, even in Browse's sandboxed frames. Every header
+draws the switch in the state that the shell shows for the depicted view, so
+the highlight state is a required prop. `ViewSwitch` in `../parts/shell.tsx`
+takes it from each screen, and the component page layout derives it from the
+comparison mode, the depicted component and its details. The switch is
+enabled where the shell can highlight the view. A comparison, a removed
+screen, a preview that loads or failed, or a view without registered
+components disables it, with the shell's own sentence for that reason.
 
 ## Authoring
 
@@ -243,7 +250,9 @@ colours.
 `tests/design_catalogue.test.ts` serves the example and checks that every
 sample keeps its page and saved variants, has a real screen consumer in each
 viewport, and links only the styles of the components it renders, and that
-each design screen records the shared components of its family.
+each design screen records the shared components of its family. It also checks
+that one artboard of each scaffold and highlight state draws the Highlight
+components switch in the state that the shell shows.
 Open the changed pages through `npm run dev` in both viewports. Check
 saved variants and local edit, unset and reset in Serve, plus read-only
 inspection in the static build. Keep the output directory as an ignored local
