@@ -56,10 +56,12 @@ async function assertFragmentEligibility(
   const componentDesign = entry.path.startsWith("design/components/");
   const changedComponentOrScreen =
     componentDesign &&
-    (await page.locator('[data-change-status="changed"]').count()) > 0;
+    (await page.locator('.mbk-entry-status[data-status="Changed"]').count()) >
+      0;
   const removedComponent =
     componentDesign &&
-    (await page.locator('[data-change-status="removed"]').count()) > 0 &&
+    (await page.locator('.mbk-entry-status[data-status="Removed"]').count()) >
+      0 &&
     (await page.locator(".ce-variants").count()) > 0;
   const expected =
     changedDesigns.has(entry.path) ||

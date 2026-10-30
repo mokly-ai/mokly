@@ -70,6 +70,19 @@
   box-shadow: var(--chrome-shadow-soft);
 }
 
+/* A static depiction draws Collapse all as text and a filter as a link or
+   text. Each takes the line box that a button has by default, and text acts
+   on nothing. */
+span.mbk-nav-collapse,
+.mbk-nav-filter > :is(a, span) {
+  line-height: normal;
+}
+
+span.mbk-nav-collapse,
+span.mbk-nav-filter-opt {
+  cursor: default;
+}
+
 .mbk-nav-filter-count {
   margin-left: 6px;
   border-radius: 999px;

@@ -74,9 +74,9 @@ export function registerComponentWorkspace(
             viewport,
           ),
         );
-        const toolbar = page.getByRole("toolbar", { name: "Preview options" });
+        const toolbar = page.getByRole("group", { name: "View options" });
         const mode = toolbar.getByRole("combobox", {
-          name: "Preview viewport",
+          name: "Viewport",
         });
         const label = page.getByRole("textbox", { name: "label", exact: true });
         await label.fill("Keep this edit");
@@ -248,9 +248,9 @@ export function registerComponentWorkspace(
   }) => {
     await page.goto("/view/design/components/inspection/inspection-details/");
     const frame = page.frameLocator(".mbk-frame-desktop iframe");
-    const toolbar = frame.getByRole("toolbar", { name: "Preview options" });
+    const toolbar = frame.getByRole("group", { name: "View options" });
     await toolbar
-      .getByRole("combobox", { name: "Preview viewport" })
+      .getByRole("combobox", { name: "Viewport" })
       .selectOption("both");
     await toolbar.getByRole("switch", { name: "Highlight components" }).check();
     await expect(

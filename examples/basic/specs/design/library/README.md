@@ -39,8 +39,8 @@ catalogue's appearance; `metadata.ts` exports that set as
 the scheme from its render context instead of pinning them in a fixture, so the
 top bar's samples name the scheme they rendered for and only `auto-appearance`
 sets the value explicitly. Every other sample stays light.
-`view-controls` has no scheme control at all, so every depicted screen header
-carries the viewport dropdown alone. `metadata.ts` owns that
+`view-controls` draws no Dark preview toggle, so every depicted screen header
+carries the viewport select and Highlight components alone. `metadata.ts` owns that
 list, `LibraryHost` stamps the requested scheme on the sample root, and Browse's
 Appearance control switches between the two generated files.
 
@@ -66,18 +66,38 @@ their synthetic Help hint and Badge examples each disclose their depicted
 Default state. Variant rows render one indent step deeper on a
 `mbk-nav-ico variant` wrapper. Screen variants use overlapping screen outlines;
 component variants use equivalent overlapping component outlines. Both stay
-muted. The changed mark is a trailing dot and never an edge or rail. Row rendering lives in
-`chrome/catalogue-navigation-row.view.tsx`, which the component owns beside its main
-view. Selected rows use the same appearance-aware contrast token for their
-labels, variant disclosures and changed marks. The navigation splits one tree
-into **Specs** and **Components** by kind, so a folder holding both appears in
-each. A folder row is a span that only browses; a folder's README is its first
-row, a `document` row with the document icon. A `moved` row appends `· Moved`
-to its label and, like a Removed row, takes no changed mark. Each entry row
-names its kind in `data-entry-kind`, as the product's row does: a flow row is
-`use-case`, a variant row takes its parent's kind, and a folder row has none.
-`tests/browser/design_reasons.spec.ts` reads it to skip pages, documents and
-use cases.
+muted. The changed mark is a trailing dot and never an edge or rail. The
+shipped `@mokly/ui` catalogue tree draws every row:
+`chrome/catalogue-navigation-sections.ts` maps the fixture rows to its
+section, folder and row records, and a closed list keeps its rows hidden, as
+the shell does. Selected rows use the same appearance-aware contrast token for
+their labels, variant disclosures and changed marks. The navigation splits one
+tree into **Specs** and **Components** by kind, so a folder holding both
+appears in each. A folder row is a native disclosure that only browses; a
+folder's README is its first row, a `document` row with the document icon. A
+row without a destination is a picture of the row that opens nothing. A
+`moved` row appends `· Moved` to its label and, like a Removed row, takes no
+changed mark. Each entry row names its kind in `data-entry-kind`, as the
+product's row does: a flow row is `use-case`, a variant row takes its parent's
+kind, and a folder row has none. `tests/browser/design_reasons.spec.ts` reads
+it to skip pages, documents and use cases.
+
+The top bar, the catalogue navigation and the screen header are the shipped
+`@mokly/ui` components. A static artboard runs no script, so their links open
+the artboards that show each state, and each control without a destination is
+a picture of itself: the menu, Collapse all, a filter, the separator and the
+path chip. Their stylesheets follow the shell's breakpoint. A frame around the
+top bar carries a compact flag that draws the narrow bar of a mobile render at
+every width, and a frame around the navigation carries a drawer flag that
+draws the open drawer of the drawer presentation and of every mobile render.
+
+The tag picker, the tag chip, the view controls and the change status are the
+shipped `@mokly/ui` components too. The search field ends with the tag picker:
+its button links to the artboard that shows the picker opened or closed, a
+closed picker draws only its button, and each chip of an open picker is the
+registered tag chip, so Top bar → Tag picker → Tag chip records every chip. A
+chip with a destination links to the artboard that shows its filter, and a
+chip without one is a picture of itself.
 
 Comparison toolbar draws the **Scroll together** switch in every diff mode,
 between the mode group and Refresh: a native checkbox with switch semantics
@@ -92,7 +112,18 @@ too; the shown mode never links.
 View controls saves **Changed views**, where a change confined to other views
 marks the viewport dropdown; the owning screen also marks top-bar Appearance
 when another scheme changed. The mark is evidence about
-views other than the shown one, so the details inspector names them.
+views other than the shown one, so the details inspector names them. A static
+artboard runs no script, so the viewport select and the Highlight components
+switch are native controls: scoped `:has()` rules in the design stylesheets
+read the select's option and the switch's check, so the previews and the
+highlight change in place, even in Browse's sandboxed frames. Every header
+draws the switch in the state that the shell shows for the depicted view, so
+the highlight state is a required prop. `ViewSwitch` in `../parts/shell.tsx`
+takes it from each screen, and the component page layout derives it from the
+comparison mode, the depicted component and its details. The switch is
+enabled where the shell can highlight the view. A comparison, a removed
+screen, a preview that loads or failed, or a view without registered
+components disables it, with the shell's own sentence for that reason.
 
 ## Authoring
 
@@ -117,8 +148,8 @@ Pass actual screen data at the boundary: labels, destinations, query, selection,
 status and counts. Slots hold caller-owned JSX, including previews, inspector
 bodies and native inputs. Resolve scenario navigation in an adapter before
 calling a component; missing destinations stay non-links. Top-bar Appearance owns scheme selection;
-header view controls own the viewport. Use ordinary `MockLink` anchors for inspector-body
-links and tag chips so they can live inside native `details` panels.
+header view controls own the viewport. Inspector-body links and tag chips are
+ordinary anchors, so they can live inside native `details` panels.
 `../parts/nav_data.ts` is the canonical catalogue-navigation fixture for both the
 saved All example and in-screen artboards, so those two views stay aligned;
 `../parts/account_nav_data.ts` adds its Account area, the Profile folder's own
@@ -160,8 +191,8 @@ caption.
 `design-library/{group}/{slug}.css`, relative to the configuration file, and
 `metadata.ts` declares it through `stylesheets`. For a component that
 `@mokly/ui` provides, that sheet only imports the package's source
-stylesheets by their repository paths, plus a mockup-only rule such as the
-appearance selector's compact flag. CSS Changes uses own-page matches
+stylesheets by their repository paths, plus mockup-only rules such as the
+compact and drawer flags. CSS Changes uses own-page matches
 kept after nested-component filtering, not file ownership or source paths.
 Shared helpers and saved fixtures are metadata or rendered-output inputs, not
 independent comparison evidence.
@@ -176,8 +207,8 @@ marker next, then context/layout overrides. Keep this explicit order: equal-spec
 mobile rules must not override bounded workspace scrolling.
 The Rust core writes each document head. It links the declared files at the
 marker of the first matching rule, or after that rule's shared entries when
-the rule has no marker. A hidden picker does not link chip CSS merely because another
-variant uses chips.
+the rule has no marker. A closed picker draws no chip, so it does not link chip
+CSS merely because another variant uses chips.
 
 Keep component selectors in its declared stylesheet. Tokens, resets, mixed
 selectors and cross-component layout/state rules stay in the shared design CSS.
@@ -212,14 +243,16 @@ cargo xtask check
 `build --strict` renders every library sample and every design screen, and
 fails on any error or warning. `tests/design_appearance.test.ts` checks that
 the light and dark palettes theme the same roles and meet their contrast
-pairs, and `tests/design_boundaries.test.ts` checks that marked boundaries
-and control edges stay visible, that only palette sources name colours, and
-that the palette declares every token that an imported `@mokly/ui`
-stylesheet reads.
+pairs, and that the palette declares every token that an imported `@mokly/ui`
+stylesheet reads. `tests/design_boundaries.test.ts` checks that marked
+boundaries and control edges stay visible, and that only palette sources name
+colours.
 `tests/design_catalogue.test.ts` serves the example and checks that every
 sample keeps its page and saved variants, has a real screen consumer in each
 viewport, and links only the styles of the components it renders, and that
-each design screen records the shared components of its family.
+each design screen records the shared components of its family. It also checks
+that one artboard of each scaffold and highlight state draws the Highlight
+components switch in the state that the shell shows.
 Open the changed pages through `npm run dev` in both viewports. Check
 saved variants and local edit, unset and reset in Serve, plus read-only
 inspection in the static build. Keep the output directory as an ignored local

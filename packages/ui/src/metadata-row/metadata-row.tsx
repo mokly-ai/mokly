@@ -90,11 +90,16 @@ export function MetadataChips({ children }: { children: ReactNode }) {
  */
 export type EntryChipKind = "use-case" | "variant" | "component" | "screen";
 
-const GLYPHS: Record<EntryChipKind, ReactNode> = {
-  "use-case": <FlowIcon size={11} />,
-  variant: <VariantIcon size={11} />,
-  component: <WorkspaceIcon name="components" size={11} />,
-  screen: <ScreenIcon size={11} />,
+/**
+ * The glyph of each entry kind, drawn when a chip renders. The module creates
+ * no element while it loads: Playwright's test discovery on Node 22 fails when
+ * the JSX runtime runs during an import.
+ */
+const GLYPHS: Record<EntryChipKind, () => ReactNode> = {
+  "use-case": () => <FlowIcon size={11} />,
+  variant: () => <VariantIcon size={11} />,
+  component: () => <WorkspaceIcon name="components" size={11} />,
+  screen: () => <ScreenIcon size={11} />,
 };
 
 /** A chip that links to a catalogue entry, with the glyph of its kind. */
@@ -113,7 +118,7 @@ export function EntryChip({
       className={`mbk-chip ${kind === "use-case" ? "flow" : "screen"}`}
       href={href}
     >
-      {GLYPHS[kind]}
+      {GLYPHS[kind]()}
       {title}
     </a>
   );

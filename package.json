@@ -31,7 +31,7 @@
     "test:viewer:prepared": "node scripts/verification/run-viewer.mjs --strict",
     "typecheck": "tsc --project packages/mokly/tsconfig.json --noEmit && tsc --project tsconfig.json --noEmit && npm run typecheck --workspace @mokly/ui && npm run typecheck --workspace @mokly/viewer && npm run typecheck:script-declarations",
     "typecheck:script-declarations": "tsc --project tsconfig.scripts-declarations.json --noEmit",
-    "dev": "node packages/mokly/bin/mokly.mjs serve --config examples/basic/mokly.config.json",
+    "dev": "node scripts/dev.mjs serve --config examples/basic/mokly.config.json",
     "fixture:large": "node --import tsx scripts/large/cli.ts generate",
     "benchmark:large": "node --import tsx scripts/large/cli.ts benchmark",
     "test:browser": "npm run -s build && node scripts/verification/browser-developer.mjs",

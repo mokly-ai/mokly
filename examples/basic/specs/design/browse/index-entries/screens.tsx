@@ -88,7 +88,12 @@ function ProfileWorkspace({
 }
 
 function viewSwitch(viewport: ArtboardViewport) {
-  return <ViewSwitch active={viewport === "mobile" ? "mobile" : "both"} />;
+  return (
+    <ViewSwitch
+      active={viewport === "mobile" ? "mobile" : "both"}
+      highlight="available"
+    />
+  );
 }
 
 /**
@@ -207,7 +212,13 @@ function MemberChanges({ viewport }: { viewport: ArtboardViewport }) {
     >
       <ScreenHead
         comparisons
-        action={<ViewSwitch active="mobile" changedViews={SECURITY_VIEWS} />}
+        action={
+          <ViewSwitch
+            active="mobile"
+            changedViews={SECURITY_VIEWS}
+            highlight="available"
+          />
+        }
         comparisonMode="current"
         crumbs={["Account", "Profile"]}
         path={ENTRY_PATHS.profileSecurity}

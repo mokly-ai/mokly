@@ -9,8 +9,6 @@ import type { ArtboardViewport } from "./shell.js";
 import { designTagRecords } from "./tag_filter.js";
 
 interface TopBarProps {
-  menuPresentation?: "text" | "icon" | undefined;
-  searchPlaceholder?: string | undefined;
   activeTag?: string | undefined;
   /** Overrides the depicted setting; defaults to the rendered scheme. */
   appearanceChoice?: AppearanceChoice | undefined;
@@ -27,9 +25,7 @@ export function TopBar({
   appearanceChoice,
   appearanceChanged,
   drawerOpen,
-  menuPresentation,
   searchValue,
-  searchPlaceholder,
   tagPickerOpen,
   viewport,
 }: TopBarProps) {
@@ -40,9 +36,7 @@ export function TopBar({
     <topBar.Component
       moklyInstance={useDesignInstance("top-bar")}
       viewport={viewport}
-      placeholder={searchPlaceholder ?? "Search catalogue…"}
       menu={open ? "close" : "open"}
-      menuPresentation={menuPresentation ?? "text"}
       tags={designTagRecords(navigation.tags)}
       pickerOpen={tagPickerOpen ?? false}
       appearance={appearanceChoice ?? rendered}

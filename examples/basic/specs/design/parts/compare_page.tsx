@@ -72,7 +72,8 @@ export function ComparePage({
     >
       <ScreenHead
         comparisons
-        action={<ViewSwitch active={viewport} />}
+        // A diff mode is a comparison, which cannot highlight.
+        action={<ViewSwitch active={viewport} highlight="comparison" />}
         comparisonMode={mode ?? "side-by-side"}
         crumbs={crumbs ?? ["Example", "Screens"]}
         path={path}

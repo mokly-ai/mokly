@@ -139,15 +139,15 @@ export function registerComponentEvidence(
         for (const [route, reason] of [
           [
             "design/components/states/empty",
-            "No registered components in this view",
+            "No registered components are used in this view.",
           ],
           [
             "design/components/states/unavailable",
-            "Component inspection is unavailable",
+            "Component inspection is unavailable for this view.",
           ],
           [
             "design/components/states/removed-consumer",
-            "Highlighting is unavailable for removed screens",
+            "This preview is unavailable.",
           ],
           [
             "design/components/states/shared-impact/affected-screen",
@@ -160,10 +160,9 @@ export function registerComponentEvidence(
           });
           await expect(toggle).toBeDisabled();
           await expect(toggle).toHaveAccessibleDescription(reason!);
-          await expect(page.locator(".ce-highlight-control")).toHaveAttribute(
-            "title",
-            reason!,
-          );
+          await expect(
+            page.locator(".mbk-icon-button:has([data-workspace-highlight])"),
+          ).toHaveAttribute("title", reason!);
         }
         await page.goto(
           componentDesignUrl(
@@ -229,7 +228,7 @@ export function registerComponentEvidence(
         ]) {
           await page.goto(componentDesignUrl(route!, viewport));
           await expect(
-            page.locator(".mbk-screen-head .ce-change-status"),
+            page.locator(".mbk-screen-head .mbk-entry-status"),
           ).toHaveText(status!);
         }
         const preview = page.locator(".ce-preview-view:visible");
@@ -251,7 +250,9 @@ export function registerComponentEvidence(
             "Default",
           ]);
           await expect(
-            page.locator(".mbk-nav-scroll .mbk-nav-changed"),
+            page.locator(
+              '.mbk-nav-scroll [data-nav-row][data-changed="true"]:not([data-nav-removed]):visible',
+            ),
           ).toHaveCount(2);
         }
       });

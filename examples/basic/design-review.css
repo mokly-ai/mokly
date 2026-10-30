@@ -169,7 +169,8 @@
   top: 32%;
 }
 /* On a narrow layout the modes take the whole first row, so Scroll together
-   starts the second row and Refresh closes it. */
+   starts the second row and Refresh closes it. Each mode keeps its label on
+   one line. */
 .mbk-shell--mobile .mbk-diff-toolbar .mbk-seg {
   display: flex;
   flex: 1 1 100%;
@@ -179,6 +180,7 @@
   font-size: 11px;
   padding: 4px 6px;
   text-align: center;
+  white-space: nowrap;
 }
 .mbk-shell--mobile .mbk-comparison-stage {
   padding: 16px;

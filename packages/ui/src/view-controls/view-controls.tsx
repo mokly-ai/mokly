@@ -2,13 +2,18 @@
  * The view controls of a workspace, in one group at the end of the screen
  * header: the viewport select, the Dark preview toggle of a catalogue with
  * dark previews, and the Highlight components toggle. A control behind which
- * a changed view hides carries a change mark.
+ * a changed view hides carries a change mark. A static depiction that runs no
+ * script draws each toggle as a native switch, which acts in place as the
+ * native viewport select does.
  */
+
+import type { ComponentProps } from "react";
 
 import { ChangeMark } from "../change-mark/change-mark.js";
 import {
   IconButton,
   IconSelect,
+  IconSwitch,
   type IconSelectOption,
 } from "../icon-control/icon-control.js";
 import { WorkspaceIcon } from "../icons/icons.js";
@@ -48,6 +53,7 @@ const VIEWPORTS: readonly IconSelectOption<PreviewViewport>[] = [
 export function ViewControls({
   darkPreview,
   highlight,
+  interactive = true,
   onHighlight,
   onScheme,
   onViewport,
@@ -62,6 +68,12 @@ export function ViewControls({
   darkPreview?: { mark: ViewMark; scheme: PreviewScheme } | undefined;
   /** The Highlight components toggle. Without it, the toggle is disabled. */
   highlight?: ViewHighlight | undefined;
+  /**
+   * Whether each toggle is a button that reports its presses, as it is by
+   * default. A static depiction that runs no script sets `false`, which draws
+   * each toggle as a native switch that starts in the given state.
+   */
+  interactive?: boolean;
   /** Receives each press of Highlight components. */
   onHighlight?: (() => void) | undefined;
   /** Receives the scheme that the Dark preview toggle asks for. */
@@ -93,10 +105,11 @@ export function ViewControls({
         />
       </IconSelect>
       {darkPreview ? (
-        <IconButton
+        <Toggle
           describedBy={
             darkPreview.mark.marked ? darkPreview.mark.id : undefined
           }
+          interactive={interactive}
           label="Dark preview"
           mark="data-workspace-scheme"
           onClick={() =>
@@ -112,14 +125,15 @@ export function ViewControls({
             marked={darkPreview.mark.marked}
             text={darkPreview.mark.text}
           />
-        </IconButton>
+        </Toggle>
       ) : null}
-      <IconButton
+      <Toggle
         description={
           highlight?.reason ??
           "Inspect component regions and their supplied props."
         }
         disabled={!highlight?.available}
+        interactive={interactive}
         label="Highlight components"
         mark="data-workspace-highlight"
         onClick={onHighlight}
@@ -127,7 +141,25 @@ export function ViewControls({
         title={highlight?.reason ?? "Highlight components"}
       >
         <WorkspaceIcon name="highlight" />
-      </IconButton>
+      </Toggle>
     </div>
   );
+}
+
+/**
+ * One toggle of the group: a button that reports its presses, or the native
+ * switch of a static depiction, which starts at the pressed state.
+ */
+function Toggle({
+  interactive,
+  onClick,
+  pressed,
+  ...control
+}: Omit<ComponentProps<typeof IconButton>, "pressed"> & {
+  interactive: boolean;
+  pressed: boolean;
+}) {
+  if (interactive)
+    return <IconButton {...control} onClick={onClick} pressed={pressed} />;
+  return <IconSwitch {...control} checked={pressed} />;
 }

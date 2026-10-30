@@ -9,6 +9,7 @@ use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
 use mokly_cli::static_build::{Phase, Phases};
 use mokly_compare::cache_types::Reporter;
+use mokly_compare::comparison_steps::Step;
 use unimock::{MockFn, Unimock, matching};
 
 use super::CacheReporter;
@@ -43,6 +44,9 @@ impl Phases for Notes {
     }
     fn start(&self, _: Phase) {
         panic!("unexpected phase");
+    }
+    fn step(&self, _: Step) {
+        panic!("unexpected step");
     }
     fn diagnostic(&self, _: &str) {
         panic!("unexpected diagnostic");
