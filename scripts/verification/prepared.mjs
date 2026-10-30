@@ -1,8 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-/** Require the build under test without preparing or modifying it. */
-export async function requirePrepared(
+/** List the outputs of the build under test that are missing. */
+export async function missingPreparedOutputs(
   repositoryRoot,
   { browser = false } = {},
 ) {
@@ -30,6 +30,12 @@ export async function requirePrepared(
       missing.push(name);
     }
   }
+  return missing;
+}
+
+/** Require the build under test without preparing or modifying it. */
+export async function requirePrepared(repositoryRoot, options) {
+  const missing = await missingPreparedOutputs(repositoryRoot, options);
   if (missing.length)
     throw new Error(
       `prepared verification output is missing: ${missing.join(", ")}; run npm run build first`,

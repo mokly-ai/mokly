@@ -56,11 +56,10 @@ paths from the [design-link contract](./mokly-design-links.md), never raw URLs
 or guessed labels. The catalogue's resource and prop limits apply. Controls
 below use text, boolean, number and primitive enum selections only.
 
-1. **Top bar:** query and placeholder strings; menu state `none/open/close`;
-   text or icon menu presentation; available tag records, optional active
-   tag and picker-open flag; explicit navigation destinations; and an
-   `auto/light/dark` interface appearance that falls back to the render
-   context's scheme. Controls: query,
+1. **Top bar:** an optional query string; menu state `none/open/close`;
+   available tag records, optional active tag and picker-open flag; explicit
+   navigation destinations; and an `auto/light/dark` interface appearance that
+   falls back to the render context's scheme. Controls: query,
    picker-open, menu state and appearance. The appearance setting is the
    catalogue's own and is the only scheme control in the design catalogue. This
    component owns it, so every artboard with a top bar draws it; screens do not
@@ -107,19 +106,24 @@ below use text, boolean, number and primitive enum selections only.
    group and Refresh, and `side-by-side-apart` saves it off; Current draws
    neither. The band keeps its opaque background and refresh depiction, and each
    screen family keeps its linked, native, or inactive mode behaviour.
-5. **View controls:** selected preview `mobile/desktop/both`, optional
-   highlight state, unavailable reason `empty/unavailable/comparison/removed`,
-   and optional changed views as viewport/scheme records. Controls: selection,
-   highlight and reason. A changed view marks the viewport dropdown when its
-   viewport is not selected; `both` never marks the dropdown. The top-bar
-   Appearance selector marks changes in another scheme. Both marks describe
-   evidence about other views, and the details inspector names them. The single
-   header icon group contains the viewport dropdown and optional highlight
-   toggle; one Appearance control sets the catalogue scheme.
+5. **View controls:** selected preview `mobile/desktop/both`, the highlight
+   state, optional unavailable reason
+   `empty/unavailable/loading/failed/comparison/removed` in the shell's own
+   words, and optional changed views as viewport/scheme records. Controls:
+   selection, highlight and reason. A changed view marks the viewport dropdown
+   when its viewport is not selected; `both` never marks the dropdown. The
+   top-bar Appearance selector marks changes in another scheme. Both marks
+   describe evidence about other views, and the details inspector names them.
+   The single header icon group contains the viewport dropdown and the
+   highlight toggle, in the state that the shell shows for the depicted view;
+   one Appearance control sets the catalogue scheme.
 6. **Tag picker:** tag records containing stable id, label and optional
-   destination, plus optional active id. Controls: optional active tag, with
-   the forms and onboarding tags as examples. An empty tag list hides the
-   picker; the outer inspector can still inspect the empty variant.
+   destination, plus optional active id, the open flag and an optional toggle
+   destination. Controls: optional active tag, with the forms and onboarding
+   tags as examples. It draws the search field's tag button and, while open,
+   its panel, whose chips are the registered tag chip; a closed picker draws
+   only its button. An empty tag list hides the picker; the outer inspector
+   can still inspect the empty variant.
 7. **Tag chip:** stable tag id, label, selected state and optional destination.
    Controls: label and selected state. Missing destinations stay non-links;
    repeated picker/metadata instances are keyed by tag identity, not label.

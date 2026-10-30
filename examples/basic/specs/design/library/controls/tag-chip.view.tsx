@@ -1,22 +1,21 @@
-import { MockLink } from "@mokly/mokly";
+import { mockLink } from "@mokly/mokly";
 
-import { TagIcon } from "../../parts/icons.js";
+import { TagChip } from "../../../../../../packages/ui/src/tag-chip/tag-chip.js";
 
 import type { TagChipProps } from "./tag-chip.js";
 
+/**
+ * The shipped tag chip. A static artboard runs no script, so a chip with a
+ * destination links to the artboard that shows its filter, and a chip
+ * without one is a picture of itself.
+ */
 export function TagChipView({ label, selected, destination }: TagChipProps) {
-  const className = selected ? "mbk-chip tag active" : "mbk-chip tag";
-  const content = (
-    <>
-      <TagIcon size={11} />
-      {label}
-    </>
-  );
-  return destination ? (
-    <MockLink to={destination} className={className}>
-      {content}
-    </MockLink>
-  ) : (
-    <span className={className}>{content}</span>
+  return (
+    <TagChip
+      href={destination === undefined ? undefined : mockLink(destination)}
+      interactive={false}
+      selected={selected}
+      tag={label}
+    />
   );
 }

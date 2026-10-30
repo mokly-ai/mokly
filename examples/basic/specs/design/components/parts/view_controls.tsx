@@ -1,13 +1,11 @@
-import { optional, useDesignInstance } from "../../library/composition.js";
+import { useDesignInstance } from "../../library/composition.js";
 import { viewControls } from "../../library/controls/view-controls.js";
 import { useRenderedAppearance } from "../../parts/appearance.js";
-import type { ArtboardViewport } from "../../parts/shell.js";
-
-export interface HighlightOption {
-  active: boolean;
-  unavailable:
-    "empty" | "unavailable" | "loading" | "comparison" | "removed" | undefined;
-}
+import {
+  highlightProps,
+  type ArtboardViewport,
+  type HighlightState,
+} from "../../parts/shell.js";
 
 /** Screen adapters supply recorded inputs to the same native view controls. */
 export function ViewControls({
@@ -15,14 +13,14 @@ export function ViewControls({
   highlight,
 }: {
   viewport: ArtboardViewport;
-  highlight?: HighlightOption;
+  /** The Highlight components state that the shell shows for this view. */
+  highlight: HighlightState;
 }) {
   return (
     <viewControls.Component
       moklyInstance={useDesignInstance("view-controls")}
       selection={viewport}
-      {...optional("highlight", highlight?.active)}
-      {...optional("unavailable", highlight?.unavailable)}
+      {...highlightProps(highlight)}
     />
   );
 }

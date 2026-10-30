@@ -5,16 +5,27 @@
  * callback. The button opens and closes the picker, and Escape also closes
  * it. Opening focuses the chip of the first selected tag. The arrow keys,
  * Home, and End move focus between the chips. A close and a chosen tag return
- * focus to the button.
+ * focus to the button. A static depiction that runs no script draws the
+ * button and the chips as links or pictures, and leaves out a closed picker,
+ * which nothing there can open.
  */
 
-import { useEffect, useRef, type KeyboardEvent } from "react";
+import {
+  Fragment,
+  useEffect,
+  useRef,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 
-import { TagIcon } from "../icons/icons.js";
 import { TagChip } from "../tag-chip/tag-chip.js";
+
+import { TagPickerToggle } from "./tag-picker-toggle.js";
 
 /** One tag of the picker, and whether it filters the catalogue. */
 export interface TagPickerTag {
+  /** The address that the tag's chip opens in a static depiction. */
+  href?: string | undefined;
   selected: boolean;
   tag: string;
 }
@@ -36,7 +47,11 @@ function keyIndex(
   return undefined;
 }
 
-export function TagPicker({
+/**
+ * The button and the picker. The tags may carry more fields than a tag needs,
+ * and each tag's own record reaches `renderChip`.
+ */
+export function TagPicker<Tag extends TagPickerTag>({
   focusedIndex,
   id,
   interactive,
@@ -44,7 +59,10 @@ export function TagPicker({
   onOpenChange,
   onSelect,
   open,
+  operable = true,
+  renderChip,
   tags,
+  toggleHref,
 }: {
   /** The index of the chip that holds focus while the picker is open. */
   focusedIndex: number;
@@ -66,8 +84,25 @@ export function TagPicker({
   /** Receives each tag that the reader chooses, with its chip. */
   onSelect?: ((tag: string, chip: HTMLButtonElement) => void) | undefined;
   open: boolean;
+  /**
+   * Whether the button and each chip without an address are controls, as
+   * they are by default. A static depiction that runs no script sets `false`,
+   * which draws each of them as a picture of itself.
+   */
+  operable?: boolean;
+  /**
+   * Draws each chip in place of the package chip, for a host that renders
+   * every chip through its own component, such as a mockup that records each
+   * chip. A host's chip takes no roving tab stop and returns no focus.
+   */
+  renderChip?: ((tag: Tag) => ReactNode) | undefined;
   /** The tags in their order. Without a tag, nothing renders. */
-  tags: readonly TagPickerTag[];
+  tags: readonly Tag[];
+  /**
+   * The address that the button opens, such as another document that shows
+   * the picker opened or closed. A button with an address is a link.
+   */
+  toggleHref?: string | undefined;
 }) {
   const toggle = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
@@ -97,58 +132,65 @@ export function TagPicker({
     event.preventDefault();
     onFocusChange?.(next);
   };
+  // Only the button opens the picker in place. Behind a link or a picture,
+  // nothing opens a closed picker, so a static depiction leaves it out.
+  const button = toggleHref === undefined && operable;
   return (
     <>
-      <button
-        aria-controls={id}
-        aria-expanded={open}
-        aria-label="Filter by tag"
-        className="mbk-search-tag"
-        data-mokly-tag-toggle=""
-        onClick={() => {
+      <TagPickerToggle
+        href={toggleHref}
+        onToggle={() => {
           if (open) close();
           else {
             const selected = tags.findIndex((item) => item.selected);
             onOpenChange?.(true, selected < 0 ? 0 : selected);
           }
         }}
+        open={open}
+        operable={operable}
+        pickerId={id}
         ref={toggle}
-        type="button"
-      >
-        <TagIcon />
-      </button>
-      <div
-        aria-label="Tags"
-        className="mbk-tag-picker"
-        data-mokly-tag-picker=""
-        hidden={!open}
-        id={id}
-        ref={panel}
-        role="group"
-      >
-        <div className="mbk-tag-picker-head">Tags</div>
-        <span
-          aria-label="Tag filters"
-          className="mbk-chips"
-          onKeyDown={onKeyDown}
-          role="toolbar"
+      />
+      {open || button ? (
+        <div
+          aria-label="Tags"
+          className="mbk-tag-picker"
+          data-mokly-tag-picker=""
+          hidden={!open}
+          id={id}
+          ref={panel}
+          role="group"
         >
-          {tags.map((item, index) => (
-            <TagChip
-              key={item.tag}
-              onSelect={(tag, chip) => {
-                onSelect?.(tag, chip);
-                returnFocus();
-              }}
-              selected={item.selected}
-              tabIndex={
-                interactive ? (focusedIndex === index ? 0 : -1) : undefined
-              }
-              tag={item.tag}
-            />
-          ))}
-        </span>
-      </div>
+          <div className="mbk-tag-picker-head">Tags</div>
+          <span
+            aria-label="Tag filters"
+            className="mbk-chips"
+            onKeyDown={onKeyDown}
+            role="toolbar"
+          >
+            {tags.map((item, index) =>
+              renderChip ? (
+                <Fragment key={item.tag}>{renderChip(item)}</Fragment>
+              ) : (
+                <TagChip
+                  href={item.href}
+                  interactive={operable}
+                  key={item.tag}
+                  onSelect={(tag, chip) => {
+                    onSelect?.(tag, chip);
+                    returnFocus();
+                  }}
+                  selected={item.selected}
+                  tabIndex={
+                    interactive ? (focusedIndex === index ? 0 : -1) : undefined
+                  }
+                  tag={item.tag}
+                />
+              ),
+            )}
+          </span>
+        </div>
+      ) : null}
     </>
   );
 }

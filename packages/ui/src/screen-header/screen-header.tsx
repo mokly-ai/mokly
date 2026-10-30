@@ -18,11 +18,16 @@ export interface ScreenHeaderCrumb {
   label: string;
 }
 
-/** One crumb: a link to a folder's page, a folder reveal, or plain text. */
+/**
+ * One crumb: a link to a folder's page, a folder reveal, or plain text. A
+ * header that is not interactive draws a folder reveal as text.
+ */
 function Crumb<Item extends ScreenHeaderCrumb>({
+  interactive,
   item,
   onRevealFolder,
 }: {
+  interactive: boolean;
   item: Item;
   onRevealFolder: ((crumb: Item) => void) | undefined;
 }) {
@@ -33,7 +38,7 @@ function Crumb<Item extends ScreenHeaderCrumb>({
         {label}
       </a>
     );
-  if (folder === undefined) return label;
+  if (folder === undefined || !interactive) return label;
   return (
     <button
       className="mbk-crumb-link"
@@ -56,6 +61,7 @@ export function ScreenHeader<Item extends ScreenHeaderCrumb>({
   action,
   crumbs,
   heading,
+  interactive = true,
   onCopyPath,
   onRevealFolder,
   path,
@@ -64,6 +70,12 @@ export function ScreenHeader<Item extends ScreenHeaderCrumb>({
   action?: ReactNode;
   crumbs: readonly Item[];
   heading: string;
+  /**
+   * Whether the path chip and a folder crumb are buttons, as they are by
+   * default. A static depiction that runs no script sets `false`, which
+   * draws the path chip as a picture of itself and a folder crumb as text.
+   */
+  interactive?: boolean;
   /** Receives the path when the reader presses the path chip. */
   onCopyPath?: ((path: string) => void) | undefined;
   /** Receives the folder crumb that the reader chooses. */
@@ -79,22 +91,32 @@ export function ScreenHeader<Item extends ScreenHeaderCrumb>({
           {crumbs.map((item, index) => (
             <span key={`${item.label}-${index}`}>
               {index > 0 ? <span className="sep">›</span> : null}
-              <Crumb item={item} onRevealFolder={onRevealFolder} />
+              <Crumb
+                interactive={interactive}
+                item={item}
+                onRevealFolder={onRevealFolder}
+              />
             </span>
           ))}
         </p>
         <div className="mbk-title-row">
           <h2>{heading}</h2>
           {path ? (
-            <button
-              aria-label={`Copy path ${path}`}
-              className="mbk-pathchip"
-              data-copy-path={path}
-              onClick={() => onCopyPath?.(path)}
-              type="button"
-            >
-              {path}
-            </button>
+            interactive ? (
+              <button
+                aria-label={`Copy path ${path}`}
+                className="mbk-pathchip"
+                data-copy-path={path}
+                onClick={() => onCopyPath?.(path)}
+                type="button"
+              >
+                {path}
+              </button>
+            ) : (
+              <span className="mbk-pathchip" data-copy-path={path}>
+                {path}
+              </span>
+            )
           ) : null}
           {status}
         </div>

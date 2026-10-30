@@ -78,6 +78,29 @@ current page. Scroll together stays a native switch in every band. The mode
 group renders the package's segmented control, and the package stylesheet
 gives a link and inert text the line box and centring of a button.
 
+`TopBar`, `CatalogueNavigation`, and `ScreenHeader` draw controls that act
+through a script. A static mockup gives `TopBar` a `brandHref` and a
+`menuHref`, which draw the brand and the menu as links, and sets
+`interactive={false}`, which draws a control without an address as a picture
+of itself and leaves out the compact search. It gives `CatalogueNavigation` a
+`filterHref`, which draws each filter that has an address as a link, and sets
+`operable={false}`, which draws Collapse all and the other filters as text and
+the separator as a picture of its grip. The link or the text of the shown
+filter is marked as the current page. A tree row without an address is a
+picture of the row. On `ScreenHeader`, `interactive={false}` draws the path
+chip as a picture of itself and a folder crumb as text.
+
+A static mockup gives `TagChip` an `href`, which draws the chip as a link, and
+sets `interactive={false}`, which draws a chip without an address as a
+picture of itself. It gives `TagPicker` a `toggleHref` and each tag an `href`,
+which draw the button and the chips as links, and sets `operable={false}`,
+which draws the button and each chip without an address as pictures. Behind a
+link or a picture nothing can open a closed picker, so the picker leaves its
+closed panel out. `renderChip` draws each chip through the host's own
+component, so that the design catalogue records each chip. On `ViewControls`,
+`interactive={false}` draws each toggle as `IconSwitch`, a native switch with
+the button's look, which acts in place as the native viewport select does.
+
 `CatalogueNavigation` renders the column around `CatalogueTree`, which draws
 plain records that the host builds: sections, folders, entries, and the
 variants and members of an entry's list, each with its keys, label, depth,
@@ -177,6 +200,8 @@ override the desktop layout rules.
 - [`src/top-bar/top-bar.tsx`](./src/top-bar/top-bar.tsx) — `TopBar`: the
   drawer menu, the brand, and the catalogue search with its compact form and
   its focus return
+- [`src/top-bar/top-bar-links.tsx`](./src/top-bar/top-bar-links.tsx) — the
+  menu and the brand, as controls, links, or pictures of a static depiction
 - [`src/catalogue-navigation/catalogue-navigation.tsx`](./src/catalogue-navigation/catalogue-navigation.tsx)
   — `CatalogueNavigation`: the column, the All and Changes filter, the status
   line, and the resize separator with its drag and keys
@@ -188,6 +213,9 @@ override the desktop layout rules.
 - [`src/tag-picker/tag-picker.tsx`](./src/tag-picker/tag-picker.tsx) —
   `TagPicker`: the tag button of the search field and its picker, with the
   roving focus of the chips, Escape, and the focus return
+- [`src/tag-picker/tag-picker-toggle.tsx`](./src/tag-picker/tag-picker-toggle.tsx)
+  — the picker's button, as a control, a link, or a picture of a static
+  depiction
 - [`src/tag-chip/tag-chip.tsx`](./src/tag-chip/tag-chip.tsx) — `TagChip`, the
   toggle chip of one tag; its stylesheet holds the rules of every chip
 - [`src/view-controls/view-controls.tsx`](./src/view-controls/view-controls.tsx)
@@ -195,7 +223,8 @@ override the desktop layout rules.
   Highlight components toggle, with their change marks
 - [`src/icon-control/icon-control.tsx`](./src/icon-control/icon-control.tsx) —
   `IconButton` and `IconSelect`, the workspace's 34px icon controls, whose
-  look the inspector tabs share
+  look the inspector tabs share, and `IconSwitch`, the native switch of a
+  static depiction
 - [`src/change-status/change-status.tsx`](./src/change-status/change-status.tsx)
   — `ChangeStatus`: the change status beside an entry's title
 - [`src/inspector/inspector.tsx`](./src/inspector/inspector.tsx) —

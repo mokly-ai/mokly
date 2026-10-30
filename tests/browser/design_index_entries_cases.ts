@@ -107,15 +107,15 @@ export function registerDesignIndexEntries(
           ),
         ).href,
       );
-      const control = page.locator(".ce-viewport-control");
-      await expect(
-        page.getByLabel("Preview viewport", { exact: true }),
-      ).toHaveValue("mobile");
+      const control = page.locator(".mbk-icon-select");
+      await expect(page.getByLabel("Viewport", { exact: true })).toHaveValue(
+        "mobile",
+      );
       await expect(page.locator(".ce-preview-view:visible")).toHaveCount(1);
       await expect(
         page.locator('.ce-preview-view[data-preview-viewport="mobile"]'),
       ).toBeVisible();
-      await expect(control.locator(".ce-view-changed")).toBeVisible();
+      await expect(control.locator(".mbk-view-changed")).toBeVisible();
       await expect(
         page.locator(".mbk-appearance .mbk-view-changed"),
       ).toBeHidden();

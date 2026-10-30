@@ -54,6 +54,7 @@ fn static_base_admits_only_a_verified_prepared_generation() {
                 sources: Arc::new(Unimock::new(())),
                 failures: Arc::new(Unimock::new(())),
             },
+            steps: Arc::new(Unimock::new(())),
         });
         if changed {
             assert!(matches!(result, Err(Error::Graph {

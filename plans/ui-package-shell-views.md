@@ -1,8 +1,9 @@
 # Shell Views In The UI Package
 
-Status: Active. On branch `calummoore/mokly-ui-component-migration`, no pull
-request yet. The work lands as a stack of five pull requests, one for each
-slice, as design call 11 says. Each earlier pull request keeps this plan. The
+Status: Active. [PR #249](https://github.com/mokly-ai/mokly/pull/249), with
+milestones 1 to 5, merged on 2026-10-30 as `14c6f9ec`. The second pull request,
+with milestones 6 to 8, is on `calummoore/mokly-ui-controls`. The work lands as a stack of five pull requests, one
+for each slice, as design call 11 says. Each earlier pull request keeps this plan. The
 last one deletes it, as the `plans` skill says.
 
 `@mokly/ui` holds four parts of the Browse shell since
@@ -380,6 +381,16 @@ root class still reach host slot content without `@scope`.
 - **Action:** ask the user, because condition 1 holds: E replaces the wording
   of shared UI package decision 12, a user decision.
 
+### 5. A standing rule for the later mockups
+
+Decision 5 (2026-10-30, the user): option B. The mockup milestones after
+milestone 7 apply the shipped look by default. They ask the user only when the
+shipped form is broken, such as a wrong state or a missing element, or when
+the user must choose between the product and a contract, and they record each
+other difference in the milestone. Rejected: A, asking about every difference,
+because each round stops the work for answers that follow the user's rule of
+milestones 4 and 7.
+
 ## Design Calls
 
 Each call is the orchestrator's own, made on 2026-10-29.
@@ -699,43 +710,90 @@ Tags: mockup
 
 Depends on: 3
 
-- [ ] `chrome/top-bar`, `chrome/catalogue-navigation`, and
+The adoption found 13 visible differences between the old mockup copies and
+the shipped components, with evidence under
+`.context/ui-package-shell-views/chrome-mockups/compare-final/findings/`.
+Answered on 2026-10-30 by the user: option A, the shipped look, for all 13.
+The mockups show the shipped components, and the product does not change:
+
+- Item 1: the segmented control keeps its pale border, and the design
+  control-edge test exempts its rule with the reason. Rejected: B, the
+  control edge in the product.
+- Item 2: desktop renders narrower than 900px show the shipped narrow form.
+  Rejected: a mockup rule that holds the desktop navigation.
+- Item 3: a parent row and its selected variant row both show the current-row
+  highlight, and the tests expect both. Rejected: one current row.
+- Item 4: the menu draws the shipped hamburger, and the top bar's
+  `menuPresentation` prop goes from the registration, its callers, and the
+  inventory contract.
+- Item 5: the narrow top bar keeps its shipped spacing and placeholder, and
+  the top bar's `placeholder` prop goes from the registration, its callers,
+  and the inventory contract.
+- Items 6 to 12: the row ink, the component row glyph, the drawer, the filter
+  and path chip heights, the narrow header gaps, the empty Changes message,
+  and the resize grip keep the shipped form.
+- Item 13: the search field keeps its shipped focus style. A follow-up item
+  records that it shows no focus ring.
+
+- [x] `chrome/top-bar`, `chrome/catalogue-navigation`, and
       `chrome/screen-header` render the package components from their sources
       under `packages/ui/src`. Each sheet imports the package stylesheets by
       repository path and keeps only mockup rules. The hand-written markup and
       CSS go, which shared UI package decision 1 approves.
-- [ ] Where a mockup draws a static destination or an inert control, the
+- [x] Where a mockup draws a static destination or an inert control, the
       package component gains an optional prop, as `ComparisonToolbar` gained
       `modeHref` and `interactive`. The product output does not change.
-- [ ] The comparison toolbar's sheet imports `segmented-control.css`, which
+- [x] The comparison toolbar's sheet imports `segmented-control.css`, which
       the package toolbar now renders, and the `.mbk-seg` copy in the shared
       design CSS goes where nothing else uses it.
-- [ ] Decision 2 B: the artboard parts of this slice that a package
+- [x] Decision 2 B: the artboard parts of this slice that a package
       component provides render that component in the same way, and their
       copies and CSS go.
-- [ ] Compare each changed artboard and component page with its render
+- [x] Compare each changed artboard and component page with its render
       before the change, in both viewports and both schemes. Record each
       difference as a finding with options, ask the user in one message, and
       apply the answers. An answer that keeps the artboard form changes the
       product, as shared UI package finding 1 did.
-- [ ] `tests/design_boundaries.test.ts` and `tests/helpers/design_styles.ts`
+- [x] `tests/design_boundaries.test.ts` and `tests/helpers/design_styles.ts`
       read the package CSS of the adopted components. The design browser specs
       pass.
-- [ ] Run the mockup check of `AGENTS.md`. Smoke-test the changed pages
+- [x] Run the mockup check of `AGENTS.md`. Smoke-test the changed pages
       through `npm run dev`.
+- [x] Done on 2026-10-30 by the ui implementor and checked, in two passes:
+      the adoption, then the 13 answers. The product did not change: zero
+      computed-style differences across 166 states. 732 design browser tests,
+      the design Node and Rust tests, the strict mockup build, and the
+      repository suite passed. Calls of the second pass: the control-edge
+      test lists the exempt segmented control rule with its reason, the Rust
+      checklist test expects both current rows, the inventory's Top bar entry
+      names an optional query string, `docs/protocol/mokly-design-components.md`
+      states that a desktop render follows the layout breakpoint, and
+      `tests/helpers/design_accessibility.ts` splits from `design_rules.ts`
+      under the 300-line cap. The orchestrator aligned
+      `docs/protocol/mokly-viewer-palette.md` (the two kept hairlines) and
+      `docs/protocol/mokly-component-design.md` (the component row icon) with
+      answers 1, 7, and 12. Evidence:
+      `.context/ui-package-shell-views/chrome-mockups/` and the worktree's
+      `.context/m4-finish/`.
 
 ## Milestone 5: First pull request
 
 Depends on: 1, 2, 3, 4
 
-- [ ] Merge `origin/main` with the `git-merge` skill.
-- [ ] Run the complete gate of `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the diff against `origin/main` with the `implementation-review`
+- [x] Merge `origin/main` with the `git-merge` skill.
+- [x] Run the complete gate of `AGENTS.md`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the diff against `origin/main` with the `implementation-review`
       skill. Fix the `fix now` findings, record follow-up items for the rest,
       re-review once, and report.
-- [ ] Open the pull request into `main`. Put its link in the status
+- [x] Open the pull request into `main`. Put its link in the status
       paragraph.
+- [x] Done on 2026-10-30: `origin/main` had not moved, the remote gate passed
+      7 of 7 suites on `73e2f3ea`, and review round 1 found no finding in
+      scope. Its two out-of-scope notes have follow-up items. Reports:
+      `.context/reviews/calummoore/mokly-ui-component-migration/`.
+- [x] Merged `origin/main` at `afc9f58d` in `5db03042` with an empty remerge
+      diff, and the remote gate passed 7 of 7 suites on it.
 
 ## Milestone 6: Control components
 
@@ -772,11 +830,48 @@ Tags: mockup
 
 Depends on: 6
 
-- [ ] Adopt `controls/tag-picker`, `controls/tag-chip`,
+The adoption found 9 visible differences, with evidence under the worktree's
+`.context/ui-package-shell-views/controls-mockups/`. Answered on 2026-10-30
+by the user, option C:
+
+- Item 1: the Highlight components toggle. Each artboard passes the highlight
+  state that the shell shows for its view, so a screen where the shell offers
+  highlighting shows an enabled toggle. Rejected: A, a disabled toggle where an
+  artboard gives no state; B, a product header without the toggle.
+- Items 2 and 3: a pressed icon control (a pressed Highlight toggle or a
+  selected inspector tab) and a tag chip keep their shipped hairline. The
+  palette contract names both as exceptions, and the design tests exempt the
+  rules with the reason. Rejected: B, the control edge in the product.
+- Items 4, 5, and 8: the borderless view controls, the fixed viewport glyph,
+  and the tag picker sample with its button keep the shipped form.
+- Item 6: the status badge keeps its shipped shape and weight, and the
+  palette contract's sentence about status edges follows it.
+- Item 7: the chips and controls keep their shipped focus rings, and the
+  follow-up item about the search field's focus ring covers them too.
+- Item 9: a narrow desktop render draws the shipped picker sheet, under the
+  rule of milestone 4 that a desktop render follows the layout breakpoint.
+
+- [x] Adopt `controls/tag-picker`, `controls/tag-chip`,
       `controls/view-controls`, and `controls/change-status` as milestone 4
       adopts the chrome, including decision 2 and the comparison with the
       earlier renders.
-- [ ] Run the mockup check and smoke-test the changed pages.
+- [x] Run the mockup check and smoke-test the changed pages.
+- [x] Done on 2026-10-30 by the ui implementor and checked, in two passes:
+      the adoption, then the answers. The product did not change: zero
+      computed-style differences across 166 states. The design Node tests,
+      the design browser tests, the Rust design tests, the strict mockup
+      build, and the repository suite passed. Calls: the highlight state is a
+      required prop of the header, so no artboard draws the toggle without
+      the shell's state; the mockups use the shell's exact reason sentences,
+      with a new `failed` reason, under the user's answer to item 1; the
+      design components and component explorer contracts say that every
+      screen and component page draws the toggle. Follow-up item added:
+      `plans/follow-ups/highlight-reason-after-failed-details.md`. Found for
+      milestone 10: the explorer artboard's Components panel says "for this
+      screen" where the shell says "for this view", in
+      `examples/basic/specs/design/components/parts/screen_details.tsx`.
+      Evidence: the worktree's
+      `.context/ui-package-shell-views/controls-mockups/`.
 
 ## Milestone 8: Second pull request
 

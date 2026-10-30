@@ -29,6 +29,7 @@ export type {
 export function CatalogueNavigation({
   busy,
   filter,
+  filterHref,
   id,
   interactive,
   maximumWidth,
@@ -39,6 +40,7 @@ export function CatalogueNavigation({
   onView,
   onWidth,
   onWidthCommit,
+  operable = true,
   ref,
   resizable,
   scrollRef,
@@ -50,6 +52,11 @@ export function CatalogueNavigation({
   busy: boolean;
   /** The All and Changes filter; absent where the catalogue has no Changes. */
   filter?: NavigationFilter | undefined;
+  /**
+   * The address that shows a filter, such as another document that shows it.
+   * A filter with an address is a link; the others follow `operable`.
+   */
+  filterHref?: ((view: "all" | "changes") => string | undefined) | undefined;
   /** The id of the column, unique in the document. */
   id: string;
   /**
@@ -78,6 +85,13 @@ export function CatalogueNavigation({
   onWidth?: ((width: number) => void) | undefined;
   /** Receives the width to keep once a resize ends. */
   onWidthCommit?: ((width: number) => void) | undefined;
+  /**
+   * Whether Collapse all, the filters without an address, and the separator
+   * are controls, as they are by default. A static depiction that runs no
+   * script sets `false`, which draws Collapse all and such a filter as text
+   * and the separator as a picture of its grip.
+   */
+  operable?: boolean;
   /** The column element, for a host that acts around it. */
   ref?: Ref<HTMLElement> | undefined;
   /**
@@ -107,16 +121,29 @@ export function CatalogueNavigation({
     >
       <div className="mbk-nav-head">
         Catalogue
-        <button
-          className="mbk-nav-collapse"
-          data-mokly-collapse=""
-          onClick={() => onCollapseAll?.()}
-          type="button"
-        >
-          Collapse all
-        </button>
+        {operable ? (
+          <button
+            className="mbk-nav-collapse"
+            data-mokly-collapse=""
+            onClick={() => onCollapseAll?.()}
+            type="button"
+          >
+            Collapse all
+          </button>
+        ) : (
+          <span className="mbk-nav-collapse" data-mokly-collapse="">
+            Collapse all
+          </span>
+        )}
       </div>
-      {filter ? <FilterGroup filter={filter} onView={onView} /> : null}
+      {filter ? (
+        <FilterGroup
+          filter={filter}
+          href={filterHref}
+          onView={onView}
+          operable={operable}
+        />
+      ) : null}
       <div
         aria-busy={busy}
         className="mbk-nav-scroll"
@@ -134,6 +161,7 @@ export function CatalogueNavigation({
       <ResizeHandle
         actions={{ onResizing, onWidth, onWidthCommit }}
         maximum={maximumWidth}
+        operable={operable}
         width={width}
       />
     </nav>

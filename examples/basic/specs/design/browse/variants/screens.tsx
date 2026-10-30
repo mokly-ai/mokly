@@ -59,7 +59,10 @@ function SelectedVariant({ viewport }: { viewport: ArtboardViewport }) {
     >
       <ScreenHead
         action={
-          <ViewSwitch active={viewport === "mobile" ? "mobile" : "both"} />
+          <ViewSwitch
+            active={viewport === "mobile" ? "mobile" : "both"}
+            highlight="available"
+          />
         }
         crumbs={[
           EXAMPLE_CRUMB,
@@ -92,7 +95,7 @@ function ChangedVariant({ viewport }: { viewport: ArtboardViewport }) {
     >
       <ScreenHead
         comparisons
-        action={<ViewSwitch active={viewport} />}
+        action={<ViewSwitch active={viewport} highlight="available" />}
         comparisonMode="current"
         crumbs={VARIANT_CRUMBS}
         path={ENTRY_PATHS.welcomeError}
@@ -137,7 +140,7 @@ function RemovedVariant({
       }
     >
       <ScreenHead
-        action={<ViewSwitch active={viewport} />}
+        action={<ViewSwitch active={viewport} highlight="removed" />}
         crumbs={VARIANT_CRUMBS}
         path={ENTRY_PATHS.welcomeError}
         status="removed"
@@ -196,7 +199,13 @@ function ChangedViews({ viewport }: { viewport: ArtboardViewport }) {
       }
     >
       <ScreenHead
-        action={<ViewSwitch active={viewport} changedViews={DARK_VIEWS} />}
+        action={
+          <ViewSwitch
+            active={viewport}
+            changedViews={DARK_VIEWS}
+            highlight="available"
+          />
+        }
         crumbs={["Example", "Screens"]}
         path={ENTRY_PATHS.welcome}
         status="unmodified"

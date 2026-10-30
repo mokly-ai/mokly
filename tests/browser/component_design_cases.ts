@@ -120,7 +120,7 @@ export function registerComponentDesign(
           componentDesignUrl("design/components/overview", viewport),
         );
         const selectedView = page.getByRole("combobox", {
-          name: "Preview viewport",
+          name: "Viewport",
         });
         await selectedView.focus();
         await expect(selectedView).toBeFocused();
@@ -157,7 +157,9 @@ export function registerComponentDesign(
             "Default",
           ]);
           await expect(
-            page.locator(".mbk-nav-scroll .mbk-nav-changed"),
+            page.locator(
+              '.mbk-nav-scroll [data-nav-row][data-changed="true"]:not([data-nav-removed]):visible',
+            ),
           ).toHaveCount(2);
         }
         await page.goto(

@@ -59,6 +59,10 @@ the rule. Rules for one application, package, or feature live in the
 
 - Build: `npm run build`. It builds the host native target, the UI package,
   the viewer, and then the shim and the sidecar, in that order.
+- Dev server: `npm run dev` serves the example catalogue with watching. It
+  runs `npm ci` and `npm run build` first when the install or the build is
+  missing or out of date with `package-lock.json`. It does not rebuild after
+  a source change, so run `npm run build` first.
 - Targeted tests: `npm test -- <file> --test-name-pattern=<regex>` for the
   Node test files under `tests/`, `packages/viewer/tests/`, and
   `packages/ui/tests/`,

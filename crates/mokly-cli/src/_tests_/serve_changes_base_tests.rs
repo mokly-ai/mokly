@@ -56,6 +56,7 @@ fn base_preparation_retains_dependency_warnings_and_never_composes_a_view() {
                 tree: Arc::new(Unimock::new(())),
                 sources: Arc::new(Unimock::new(())),
             },
+            steps: Arc::new(Unimock::new(())),
         });
         assert_eq!(*warnings.lock().unwrap(), [dependency]);
         if active {
@@ -99,6 +100,7 @@ fn failed_graph_preparation_retains_only_its_dependency_warning() {
             tree: Arc::new(Unimock::new(())),
             sources: Arc::new(Unimock::new(())),
         },
+        steps: Arc::new(Unimock::new(())),
     });
     assert!(matches!(result, Err(Error::Graph { .. })));
     assert_eq!(*warnings.lock().unwrap(), [dependency]);

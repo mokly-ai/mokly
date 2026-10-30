@@ -122,6 +122,7 @@ The development server, on-demand rendering, the watcher, live controls, termina
 
 - [CLI Terminal Compatibility And Errors](./mokly-terminal-errors.md)
 - [CLI Terminal Output](./mokly-terminal-output.md)
+- [CLI Comparison Steps](./mokly-terminal-steps.md)
 - [CLI Help And Version Bytes](./mokly-terminal-help.md)
 - [Component Controls](./mokly-component-controls.md)
 - [Mokly Build And Browse Runtime](./mokly-runtime.md)

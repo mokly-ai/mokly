@@ -57,13 +57,7 @@ export function ExplorerShell({
     ...(activeKey === undefined ? {} : { activeKey }),
   };
   return (
-    <Shell
-      menuPresentation="icon"
-      design={design}
-      searchPlaceholder="Search catalogue…"
-      viewport={viewport}
-      nav={<NavTree {...navProps} />}
-    >
+    <Shell design={design} viewport={viewport} nav={<NavTree {...navProps} />}>
       {viewport === "mobile" ? (
         <nav className="ce-mobile-location" aria-label="Catalogue shortcuts">
           <MockLink
