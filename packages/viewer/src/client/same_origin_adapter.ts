@@ -56,7 +56,7 @@ export function localFrameReady(
   );
 }
 
-/** Script-disabled local mounts retain the parent-owned highlight presentation. */
+/** Script-disabled local mounts report geometry and picks without drawing. */
 export function sameOriginAdapter(): FrameAdapter {
   return localAdapter(frameUrl);
 }

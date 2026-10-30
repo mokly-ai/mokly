@@ -1,10 +1,12 @@
-/** React label presentation for adapter-owned workspace highlights. */
+/** React masks and labels for registry-backed workspace highlights. */
 
 import { HighlightLabel, LabelLayer } from "@mokly/ui/highlight-label";
+import { HighlightMask } from "@mokly/ui/highlight-mask";
 
 import { visibleFrameBox } from "../client/component_geometry.js";
 import type { InstanceBoundary } from "../client/frame_adapter.js";
 
+import { frameInspectionMask } from "./frame_inspection_mask.js";
 import type { ShellFrameSession } from "./frame_registry.js";
 import type { WorkspaceData } from "./workspace_data.js";
 
@@ -76,24 +78,39 @@ export function workspaceHighlightLabels(
 /** Keep label buttons declarative while their positions come from frame geometry. */
 export function WorkspaceInspectionOverlay({
   labels,
+  measured,
   onSelect,
 }: {
   labels: readonly WorkspaceHighlightLabel[];
+  measured: readonly {
+    boundaries: readonly InstanceBoundary[];
+    keys: readonly string[];
+    session: ShellFrameSession;
+  }[];
   onSelect(key: string, viewport: "desktop" | "mobile"): void;
 }) {
-  if (!labels.length) return null;
+  const masks = measured.flatMap(({ session, boundaries, keys }) => {
+    const mask = frameInspectionMask(session, boundaries, keys);
+    return mask ? [mask] : [];
+  });
+  if (!labels.length && !masks.length) return null;
   return (
-    <LabelLayer placement="viewport">
-      {labels.map((label) => (
-        <HighlightLabel
-          instanceKey={label.key}
-          key={label.id}
-          left={label.left}
-          onSelect={() => onSelect(label.key, label.viewport)}
-          text={label.text}
-          top={label.top}
-        />
+    <>
+      <LabelLayer placement="viewport">
+        {labels.map((label) => (
+          <HighlightLabel
+            instanceKey={label.key}
+            key={label.id}
+            left={label.left}
+            onSelect={() => onSelect(label.key, label.viewport)}
+            text={label.text}
+            top={label.top}
+          />
+        ))}
+      </LabelLayer>
+      {masks.map(({ generation, ...mask }) => (
+        <HighlightMask key={generation} {...mask} />
       ))}
-    </LabelLayer>
+    </>
   );
 }

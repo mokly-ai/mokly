@@ -37,7 +37,7 @@ test("replacing a local frame preserves the exact query and fragment", () => {
   assert.deepEqual(replacements, [url.href]);
 });
 
-test("local highlighting cancels pending drawing and listeners on disposal", () => {
+test("local highlighting cancels pending measurements and listeners on disposal", () => {
   const signals: AbortSignal[] = [];
   const cancelled: number[] = [];
   let scheduled = 0;

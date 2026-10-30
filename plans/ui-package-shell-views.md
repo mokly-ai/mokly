@@ -953,24 +953,32 @@ boundary geometry that already places the labels, for both adapters. The
 same-origin adapter keeps its pick listeners and draws nothing. The in-frame
 inspector reports geometry and picks and draws nothing.
 
-- [ ] The workspace inspection overlay and the embedded viewer's inspection
+- [x] The workspace inspection overlay and the embedded viewer's inspection
       layer render `highlight-mask` with the boxes of the shown instances.
-- [ ] The same-origin adapter stops drawing: remove the mask layer of
+- [x] The same-origin adapter stops drawing: remove the mask layer of
       `client/same_origin_highlight.ts` and `client/component_overlay.ts`.
       Keep its pick, Escape, and redraw listeners where the shell needs them.
-- [ ] The in-frame inspector stops drawing: remove `inspector/overlay.ts`
+- [x] The in-frame inspector stops drawing: remove `inspector/overlay.ts`
       and its calls. The built inspector stays within its 9,216-byte budget.
-- [ ] Update `packages/viewer/src/client/README.md` and
+- [x] Update `packages/viewer/src/client/README.md` and
       `packages/viewer/src/inspector/README.md`, which still describe the
       adapter overlay. Found by milestone 1 on 2026-10-30.
-- [ ] Tests: the adapter tests no longer expect a drawn layer, the inspector
+- [x] Tests: the adapter tests no longer expect a drawn layer, the inspector
       tests no longer expect an overlay, and the shell tests and browser specs
       of highlighting see one mask over same-origin and cross-origin frames.
-- [ ] Check: `npm run build`, the targeted tests, the highlighting and
+- [x] Check: `npm run build`, the targeted tests, the highlighting and
       embedded browser specs, the inspector budget test, and the
       computed-style tool, which lists the mask as its one intended
       difference. Smoke-test highlighting in Serve and in a published
       catalogue. Save evidence under `.context/ui-package-shell-views/mask/`.
+- [x] Done on 2026-10-30 by the non-ui implementor and checked: the built
+      inspector shrank from 9,168 to 8,208 bytes, 113 Node tests and 297
+      browser tests passed, and the computed-style differences are the mask
+      nodes of the ten highlight states only. Calls: one module,
+      `frame_inspection_mask.ts`, translates and clips the boxes for both
+      inspection containers; `HighlightMask` gained an optional placement;
+      a fully clipped frame keeps a hidden mask. Evidence:
+      `.context/ui-package-shell-views/mask/`.
 
 ## Milestone 17: The stub document class
 

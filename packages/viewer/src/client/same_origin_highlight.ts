@@ -1,15 +1,11 @@
-/** Parent-owned masks and selection listeners; consumer DOM remains unchanged. */
-
-import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
+/** Pick listeners and their measured regions; consumer DOM remains unchanged. */
 import type { ComponentViewRecord } from "../components/manifest_types.js";
 
 import {
   authenticateRanges,
   rangeBounds,
-  visibleFrameBox,
   type ComponentBounds,
 } from "./component_geometry.js";
-import { createOverlay } from "./component_overlay.js";
 
 export interface HighlightFrame {
   frame: HTMLIFrameElement;
@@ -28,52 +24,23 @@ export function installLocalHighlight(
   const controller = new AbortController();
   const cleanups: (() => void)[] = [];
   let pending = 0;
-  const draws: (() => void)[] = [];
+  const measurements: (() => void)[] = [];
   const schedule = () => {
     if (!pending)
       pending = win.requestAnimationFrame(() => {
         pending = 0;
-        for (const draw of draws) draw();
+        for (const measure of measurements) measure();
       });
   };
   for (const entry of frames) {
     const { frame, usage } = entry;
     const authenticated = authenticateRanges(frame, entry.path, usage);
     if (!authenticated) continue;
-    const layer = doc.createElement("div");
-    layer.className = "mbk-highlight-layer";
-    layer.dataset["highlightViewport"] = usage.viewport;
-    (root.matches(`.${VIEWER_DIRECTORY}`) ? root : doc.body).append(layer);
-    cleanups.push(() => layer.remove());
     let bounds: ComponentBounds[] = [];
-    const draw = () => {
-      const visible = visibleFrameBox(frame);
-      layer.hidden = !visible || frame.getClientRects().length === 0;
-      if (layer.hidden || !visible) return;
-      const rect = frame.getBoundingClientRect();
-      const scaleX = rect.width / frame.offsetWidth;
-      const scaleY = rect.height / frame.offsetHeight;
-      Object.assign(layer.style, {
-        left: `${visible.left}px`,
-        top: `${visible.top}px`,
-        width: `${visible.right - visible.left}px`,
-        height: `${visible.bottom - visible.top}px`,
-        zIndex: frame.closest(".browser-frame.is-expanded") ? "951" : "4",
-      });
+    const measure = () => {
       bounds = rangeBounds(frame, authenticated, keys);
-      const width = visible.right - visible.left;
-      const height = visible.bottom - visible.top;
-      const overlay = createOverlay(doc, width, height);
-      for (const box of bounds)
-        overlay.cutout(
-          rect.left + (box.x + frame.clientLeft) * scaleX - visible.left,
-          rect.top + (box.y + frame.clientTop) * scaleY - visible.top,
-          box.width * scaleX,
-          box.height * scaleY,
-        );
-      layer.replaceChildren(overlay.svg);
     };
-    draws.push(draw);
+    measurements.push(measure);
     const activate = (event: MouseEvent) => {
       const match = bounds.find(
         (box) =>

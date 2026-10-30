@@ -15,6 +15,16 @@ export interface HighlightBox {
   height: number;
 }
 
+/** The host's visible frame box, in viewport or shell-root coordinates. */
+export interface HighlightMaskPlacement {
+  left: number;
+  top: number;
+  position: "absolute" | "fixed";
+  expanded: boolean;
+  hidden?: boolean | undefined;
+  viewport?: "desktop" | "mobile" | undefined;
+}
+
 /** A mask id from React's id, without the characters that a URL escapes. */
 function maskId(generated: string): string {
   return `mbk-highlight-mask-${generated.replace(/[^A-Za-z0-9_-]/gu, "")}`;
@@ -24,6 +34,7 @@ export function HighlightMask({
   boxes,
   height,
   id,
+  placement,
   width,
 }: {
   /** The highlighted boxes, in their drawing order. */
@@ -35,12 +46,14 @@ export function HighlightMask({
    * it, the mask takes an id from React's `useId`.
    */
   id?: string | undefined;
+  /** Wrap the mask in a clipped, pointer-transparent frame layer. */
+  placement?: HighlightMaskPlacement | undefined;
   /** The width of the dimmed area, in pixels. */
   width: number;
 }) {
   const generated = maskId(useId());
   const mask = id ?? generated;
-  return (
+  const drawing = (
     <svg
       aria-hidden="true"
       className="mbk-highlight-mask"
@@ -78,5 +91,24 @@ export function HighlightMask({
         />
       ))}
     </svg>
+  );
+  if (!placement) return drawing;
+  return (
+    <div
+      className="mbk-highlight-layer"
+      data-highlight-viewport={placement.viewport}
+      hidden={placement.hidden}
+      style={{
+        pointerEvents: "none",
+        position: placement.position,
+        left: placement.left,
+        top: placement.top,
+        width,
+        height,
+        zIndex: placement.expanded ? 951 : 4,
+      }}
+    >
+      {drawing}
+    </div>
   );
 }

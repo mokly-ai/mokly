@@ -224,7 +224,11 @@ embedded root and its host slots with `@mokly/ui/embedded-layout`, which
 places each slot's content and never reads it. The standalone shell's root
 and the loading, failure, and version states of both roots render
 `@mokly/ui/shell-layout`, and the highlight labels of the workspace and of a
-host's inspection render `@mokly/ui/highlight-label`. A local ESLint rule
+host's inspection render `@mokly/ui/highlight-label`. Both inspection layers
+draw one `@mokly/ui/highlight-mask` over each highlighted frame from the same
+boundary snapshot as their labels, for same-origin and cross-origin frames.
+The mask clips to the visible frame and stays above an expanded frame.
+A local ESLint rule
 rejects every intrinsic JSX element in `packages/viewer/src`, so a container
 renders only package components, fragments, providers, and portals. Text
 that the shell derives from catalogue data stays here and reaches the
@@ -447,7 +451,7 @@ independent embedded viewer. `frame_mount_hook.ts` mounts each frame, and
 step as its last usage-revision check, so usage adopted during mounting always
 reaches the frame. Public-handle inspection and
 `workspace_inspection.tsx` coordinate through the registry's inspection owner.
-Workspace labels and host markers acquire the registry's single geometry
+Workspace masks and labels, public inspection, and host markers acquire the registry's single geometry
 scheduler; a usage revision supersedes any unresolved measurement before fresh
 evidence is read. Navigation and inspector resize drag state stays on the
 owning shell root so independent embedded viewers cannot alter the host page or

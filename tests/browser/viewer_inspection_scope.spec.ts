@@ -15,13 +15,14 @@ test.beforeAll(async () => {
 test.afterAll(async () => fixture?.close());
 
 async function masks(page: Page, cross: boolean, count: number) {
+  await expect(page.locator(".mbk-highlight-layer")).toHaveCount(count);
   if (cross) {
     const frames = page.locator("iframe[data-mokly-fragment-frame]");
     for (let i = 0; i < (await frames.count()); i++)
       await expect(
         frames.nth(i).contentFrame().locator("[data-mokly-overlay]"),
-      ).toHaveCount(i === 0 ? count : 0);
-  } else await expect(page.locator(".mbk-highlight-layer")).toHaveCount(count);
+      ).toHaveCount(0);
+  }
 }
 
 for (const cross of [false, true]) {

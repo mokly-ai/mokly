@@ -1,5 +1,4 @@
-/* The layer over a frame in which the same-origin frame adapter draws its
-   mask: fixed over the frame's visible box, and the mask fills it. */
+/* The shell's layer over a frame's visible box. The mask fills it. */
 .mbk-highlight-layer {
   position: fixed;
   pointer-events: none;
