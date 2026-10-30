@@ -68,18 +68,18 @@ export const CHANGED_REASONS: EntryChangeReason[] = [
 
 /** The exact comparison details the shell renders for {@link CHANGED}. */
 export const CHANGED_SECTION =
-  '<section class="mbk-comparison-evidence" data-page-evidence="">' +
-  "<h3>Comparison details</h3>" +
-  `<p>Compared with the branch point on ${BASE}.</p>` +
-  "<p>Changes to these files may affect this page:</p>" +
-  '<ul class="mbk-evidence-files"><li>mockups/actions.css' +
-  "<p>These changed styles also apply outside the changed components on this page:</p>" +
-  '<ul><li><code class="mbk-code">.action</code></li></ul></li>' +
-  "<li>mockups/handbook.css" +
-  "<p>Changed styles that apply to this page:</p>" +
-  '<ul><li><code class="mbk-code">article h2</code></li></ul>' +
-  "<p>This change can apply anywhere on the page, so the page stays in Changes:</p>" +
-  '<ul><li><code class="mbk-code">:root</code></li></ul></li></ul>' +
+  '<section class="mbk-comparison-evidence mbk-reset" data-page-evidence="">' +
+  '<h3 class="mbk-reset">Comparison details</h3>' +
+  `<p class="mbk-reset">Compared with the branch point on ${BASE}.</p>` +
+  '<p class="mbk-reset">Changes to these files may affect this page:</p>' +
+  '<ul class="mbk-evidence-files mbk-reset"><li class="mbk-reset">mockups/actions.css' +
+  '<p class="mbk-reset">These changed styles also apply outside the changed components on this page:</p>' +
+  '<ul class="mbk-reset"><li class="mbk-reset"><code class="mbk-code mbk-reset">.action</code></li></ul></li>' +
+  '<li class="mbk-reset">mockups/handbook.css' +
+  '<p class="mbk-reset">Changed styles that apply to this page:</p>' +
+  '<ul class="mbk-reset"><li class="mbk-reset"><code class="mbk-code mbk-reset">article h2</code></li></ul>' +
+  '<p class="mbk-reset">This change can apply anywhere on the page, so the page stays in Changes:</p>' +
+  '<ul class="mbk-reset"><li class="mbk-reset"><code class="mbk-code mbk-reset">:root</code></li></ul></li></ul>' +
   "</section>";
 
 /**
@@ -147,12 +147,12 @@ export function renderPage(catalogue: Catalogue): string {
 export const status = (markup: string) =>
   [
     ...markup.matchAll(
-      /<span class="mbk-entry-status" data-status="(\w+)">\1<\/span>/g,
+      /<span class="mbk-entry-status mbk-reset" data-status="(\w+)">\1<\/span>/g,
     ),
   ].map((match) => match[1]);
 
 /** The page's comparison details, or undefined when none render. */
 export const section = (markup: string) =>
-  /<section class="mbk-comparison-evidence" data-page-evidence="">.*?<\/section>/.exec(
+  /<section class="mbk-comparison-evidence mbk-reset" data-page-evidence="">.*?<\/section>/.exec(
     markup,
   )?.[0];

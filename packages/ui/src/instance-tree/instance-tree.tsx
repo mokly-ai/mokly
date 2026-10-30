@@ -52,12 +52,12 @@ function InstanceList({
   selectedKey: string | undefined;
 }) {
   return (
-    <ul className="mbk-instance-tree">
+    <ul className="mbk-instance-tree mbk-reset">
       {instances.map((instance) => (
-        <li key={instance.key}>
+        <li className="mbk-reset" key={instance.key}>
           <button
             aria-pressed={selectedKey === instance.key}
-            className="mbk-instance-select"
+            className="mbk-instance-select mbk-reset"
             data-instance-key={instance.key}
             onClick={() => onSelect?.(instance.key)}
             type="button"
@@ -67,6 +67,7 @@ function InstanceList({
           </button>
           {instance.nested.length ? (
             <details
+              className="mbk-reset"
               onToggle={(event) => {
                 const open = event.currentTarget.open;
                 if (open === expanded.has(instance.key)) return;
@@ -74,7 +75,9 @@ function InstanceList({
               }}
               open={expanded.has(instance.key)}
             >
-              <summary>{instance.nested.length} nested instances</summary>
+              <summary className="mbk-reset">
+                {instance.nested.length} nested instances
+              </summary>
               <InstanceList
                 expanded={expanded}
                 instances={instance.nested}
@@ -124,11 +127,11 @@ export function InstanceTree({
   return (
     <>
       {viewports.length > 1 ? (
-        <div>
+        <div className="mbk-reset">
           {viewports.map((context) => (
             <button
               aria-pressed={context.viewport === viewport}
-              className="mbk-instance-context mbk-chip"
+              className="mbk-instance-context mbk-chip mbk-reset"
               key={context.key}
               onClick={() => onViewport?.(context.viewport)}
               type="button"
@@ -139,14 +142,20 @@ export function InstanceTree({
         </div>
       ) : null}
       {usage.status === "waiting" ? (
-        <p role="status">{usage.text}</p>
+        <p className="mbk-reset" role="status">
+          {usage.text}
+        </p>
       ) : usage.status === "unavailable" ? (
-        <p>Component inspection is unavailable for this view.</p>
+        <p className="mbk-reset">
+          Component inspection is unavailable for this view.
+        </p>
       ) : !usage.total ? (
-        <p>No registered components are used in this view.</p>
+        <p className="mbk-reset">
+          No registered components are used in this view.
+        </p>
       ) : (
         <>
-          <p>
+          <p className="mbk-reset">
             {usage.total}
             {" instances ·"} {usage.components}
             {" components"}

@@ -88,7 +88,7 @@ export function EmbeddedLayout({
 }) {
   return (
     <div
-      className="mbk mokly-viewer"
+      className="mbk mokly-viewer mbk-reset"
       data-drawer={drawerOpen ? "open" : "closed"}
       data-mokly-color-scheme={colorScheme}
       data-mokly-shell=""
@@ -99,18 +99,18 @@ export function EmbeddedLayout({
       data-mokly-theme={theme}
     >
       <SkipLink href={mainHref} />
-      <div className="mokly-top-host">
+      <div className="mokly-top-host mbk-reset">
         <HostSlot name="topBarStart">{slots?.topBarStart}</HostSlot>
         {topBar}
         <HostSlot name="topBarEnd">{slots?.topBarEnd}</HostSlot>
       </div>
       <ShellBody>
-        <div className="mokly-rail-host">
+        <div className="mokly-rail-host mbk-reset">
           <HostSlot name="railStart">{slots?.railStart}</HostSlot>
           {navigation}
           <HostSlot name="railEnd">{slots?.railEnd}</HostSlot>
         </div>
-        <div className="mokly-stage-host">
+        <div className="mokly-stage-host mbk-reset">
           {main}
           <HostSlot hidden={!emptyStateShown} name="emptyState">
             {slots?.emptyState}

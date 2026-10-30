@@ -37,7 +37,7 @@ function FrameLabel({
   viewport: FrameViewport;
 }) {
   return (
-    <p className="mbk-frame-label">
+    <p className="mbk-frame-label mbk-reset">
       {viewport === "mobile" ? "Mobile" : "Desktop"}
       {fallback ? <LightOnlyNote suffix /> : null}
     </p>
@@ -59,7 +59,7 @@ function FrameContent({
     <>
       {children ?? <EmptyLine>This preview is unavailable.</EmptyLine>}
       {error ? (
-        <p className="mbk-frame-error" role="status">
+        <p className="mbk-frame-error mbk-reset" role="status">
           This preview could not be loaded.
         </p>
       ) : null}
@@ -98,7 +98,7 @@ export function PreviewFrame({
 }) {
   return (
     <div
-      className={placementClass(placement)}
+      className={`${placementClass(placement)} mbk-reset`}
       data-color-scheme-fallback={fallback ? "" : undefined}
       data-preview-color-scheme={scheme}
     >
@@ -128,7 +128,7 @@ export function DocumentFrame({
 }) {
   return (
     <div
-      className="mbk-stage-embed"
+      className="mbk-stage-embed mbk-reset"
       data-mokly-scroll="embed"
       data-preview-color-scheme={scheme}
     >
@@ -174,7 +174,7 @@ export function PreviewIframe({
   return (
     <iframe
       aria-busy={busy ? true : undefined}
-      className="mbk-frag"
+      className="mbk-frag mbk-reset"
       {...data}
       ref={ref}
       sandbox="allow-same-origin"

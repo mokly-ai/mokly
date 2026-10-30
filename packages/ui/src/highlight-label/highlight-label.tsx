@@ -41,6 +41,7 @@ export function LabelLayer({
 }) {
   return (
     <div
+      className="mbk-reset"
       data-mokly-label-layer=""
       ref={ref}
       style={placement === undefined ? undefined : PLACEMENT[placement]}
@@ -85,7 +86,7 @@ export function HighlightLabel({
 }) {
   return (
     <button
-      className="mbk-highlight-label"
+      className="mbk-highlight-label mbk-reset"
       data-instance-key={instanceKey}
       data-mokly-label-key={labelKey}
       onClick={() => onSelect()}

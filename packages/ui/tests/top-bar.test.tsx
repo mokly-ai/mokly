@@ -28,7 +28,7 @@ test("the bar names its controls as the shell specs query them", () => {
   );
   const bar = container.querySelector("header");
   assert.ok(bar);
-  assert.equal(bar.className, "mbk-topbar");
+  assert.equal(bar.className, "mbk-topbar mbk-reset");
   assert.equal(bar.getAttribute("data-compact-search"), "closed");
   assert.equal(bar.getAttribute("data-search"), "");
 

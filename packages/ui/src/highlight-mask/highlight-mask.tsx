@@ -56,7 +56,7 @@ export function HighlightMask({
   const drawing = (
     <svg
       aria-hidden="true"
-      className="mbk-highlight-mask"
+      className="mbk-highlight-mask mbk-reset"
       height={height}
       width={width}
     >
@@ -95,7 +95,7 @@ export function HighlightMask({
   if (!placement) return drawing;
   return (
     <div
-      className="mbk-highlight-layer"
+      className="mbk-highlight-layer mbk-reset"
       data-highlight-viewport={placement.viewport}
       hidden={placement.hidden}
       style={{

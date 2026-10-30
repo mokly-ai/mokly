@@ -18,10 +18,10 @@ export interface PropValue {
 /** The one list of supplied props: each name and its value. */
 export function PropValues({ values }: { values: readonly PropValue[] }) {
   return (
-    <dl aria-label="Supplied props" className="mbk-props">
+    <dl aria-label="Supplied props" className="mbk-props mbk-reset">
       {values.map(({ name, value }) => (
         <MetadataRow key={name} label={name} presentation="props">
-          <code>{value}</code>
+          <code className="mbk-reset">{value}</code>
         </MetadataRow>
       ))}
     </dl>
@@ -36,9 +36,11 @@ export function PropSlots({
 }) {
   return slots?.length ? (
     <>
-      <h4>Slots</h4>
+      <h4 className="mbk-reset">Slots</h4>
       {slots.map((slot) => (
-        <p key={slot}>{slot}</p>
+        <p className="mbk-reset" key={slot}>
+          {slot}
+        </p>
       ))}
     </>
   ) : null;
@@ -57,7 +59,7 @@ export function PropsMessage({
 }) {
   return (
     <p
-      className={pending ? undefined : "mbk-empty-copy"}
+      className={pending ? "mbk-reset" : "mbk-empty-copy mbk-reset"}
       role={pending ? "status" : undefined}
     >
       {children}
@@ -91,19 +93,21 @@ export function PropsPanel({
     <>
       {instance ? (
         <>
-          <h3>
+          <h3 className="mbk-reset">
             {instance.title}
             {` · ${instance.id}`}
           </h3>
           {instance.href !== undefined ? (
-            <a href={instance.href}>Open component</a>
+            <a className="mbk-reset" href={instance.href}>
+              Open component
+            </a>
           ) : null}
         </>
       ) : null}
       {values.length ? (
         <PropValues values={values} />
       ) : (
-        <p>No data props supplied.</p>
+        <p className="mbk-reset">No data props supplied.</p>
       )}
       <PropSlots slots={slots} />
     </>
@@ -129,14 +133,22 @@ export function PropsStatus({
   wording: PropsStatusWording;
 }) {
   return (
-    <section aria-label="Props status" data-props-section="status">
+    <section
+      aria-label="Props status"
+      className="mbk-reset"
+      data-props-section="status"
+    >
       {status === "failed" ? (
         <>
-          <p role="alert">{wording.failed}</p>
+          <p className="mbk-reset" role="alert">
+            {wording.failed}
+          </p>
           <TextButton onClick={onRetry}>{wording.retry}</TextButton>
         </>
       ) : (
-        <p role="status">{wording.loading}</p>
+        <p className="mbk-reset" role="status">
+          {wording.loading}
+        </p>
       )}
     </section>
   );

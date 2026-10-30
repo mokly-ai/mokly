@@ -39,8 +39,10 @@ export interface EvidenceExclusions {
 export function ComparisonHeading({ base }: { base: string }) {
   return (
     <>
-      <h3>Comparison details</h3>
-      {base.trim() ? <p>Compared with the branch point on {base}.</p> : null}
+      <h3 className="mbk-reset">Comparison details</h3>
+      {base.trim() ? (
+        <p className="mbk-reset">Compared with the branch point on {base}.</p>
+      ) : null}
     </>
   );
 }
@@ -52,18 +54,18 @@ export function ComparisonHeading({ base }: { base: string }) {
 function FileList({ lead, stylesheets }: EvidenceFiles) {
   return (
     <>
-      <p>{lead}</p>
-      <ul className="mbk-evidence-files">
+      <p className="mbk-reset">{lead}</p>
+      <ul className="mbk-evidence-files mbk-reset">
         {stylesheets.map((stylesheet) => (
-          <li key={stylesheet.path}>
+          <li className="mbk-reset" key={stylesheet.path}>
             {stylesheet.path}
             {stylesheet.outcomes.map((outcome) => (
               <Fragment key={outcome.lead}>
-                <p>{outcome.lead}</p>
+                <p className="mbk-reset">{outcome.lead}</p>
                 {outcome.selectors.length ? (
-                  <ul>
+                  <ul className="mbk-reset">
                     {outcome.selectors.map((selector) => (
-                      <li key={selector}>
+                      <li className="mbk-reset" key={selector}>
                         <MetadataCode>{selector}</MetadataCode>
                       </li>
                     ))}
@@ -93,11 +95,13 @@ export function StylesheetDetails({
       ) : null}
       {excluded?.paths.length ? (
         <>
-          <p>{excluded.sentence}</p>
-          <p>Examined and excluded:</p>
-          <ul>
+          <p className="mbk-reset">{excluded.sentence}</p>
+          <p className="mbk-reset">Examined and excluded:</p>
+          <ul className="mbk-reset">
             {excluded.paths.map((path) => (
-              <li key={path}>{path}</li>
+              <li className="mbk-reset" key={path}>
+                {path}
+              </li>
             ))}
           </ul>
         </>

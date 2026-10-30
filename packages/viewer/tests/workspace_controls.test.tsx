@@ -45,7 +45,7 @@ test("a changed view in the other scheme marks Dark preview with the scoped word
   );
   assert.match(
     markup,
-    /<span class="mbk-view-changed-text" data-view-changed-text="scheme" id="root-mb-view-changed-scheme">Other theme changed<\/span>/,
+    /<span class="mbk-view-changed-text mbk-reset" data-view-changed-text="scheme" id="root-mb-view-changed-scheme">Other theme changed<\/span>/,
   );
   // Both viewports show every viewport, so the viewport select is never marked.
   assert.match(

@@ -41,7 +41,7 @@ function render(colorScheme: "light" | "dark", home = false): string {
 test("standalone Appearance retains hidden-view change evidence", () => {
   const html = render("light");
   const appearance = html.match(
-    /<label class="mbk-appearance"[\s\S]*?<\/label>/,
+    /<label class="mbk-appearance mbk-reset"[\s\S]*?<\/label>/,
   )?.[0];
   assert.ok(appearance);
   assert.match(appearance, /data-view-changed="scheme"(?! hidden)/);
@@ -51,7 +51,7 @@ test("standalone Appearance retains hidden-view change evidence", () => {
 
   for (const unmarked of [render("dark"), render("light", true)]) {
     const control = unmarked.match(
-      /<label class="mbk-appearance"[\s\S]*?<\/label>/,
+      /<label class="mbk-appearance mbk-reset"[\s\S]*?<\/label>/,
     )?.[0];
     assert.ok(control);
     assert.match(control, /data-view-changed="scheme" hidden=""/);

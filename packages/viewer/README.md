@@ -234,8 +234,8 @@ and Review regressions against `mokly serve` of the example catalogue.
 - [`src/viewer/host_bridge.tsx`](./src/viewer/host_bridge.tsx) and
   [`src/viewer/host_bridge_highlight.ts`](./src/viewer/host_bridge_highlight.ts) —
   the public handle and its highlight requests, geometry, and cancellation
-- [`src/shell`](./src/shell) — the Browse shell tree and its scoped styles,
-  shared by the embedded viewer and the browser entry
+- [`src/shell`](./src/shell) — the Browse shell tree, shared by the embedded
+  viewer and the browser entry; it holds no style rule
 - [`src/shell/top_bar.tsx`](./src/shell/top_bar.tsx),
   [`src/shell/nav.tsx`](./src/shell/nav.tsx), and
   [`src/shell/head.tsx`](./src/shell/head.tsx) — the containers of the top
@@ -272,7 +272,9 @@ and Review regressions against `mokly serve` of the example catalogue.
   [`src/shell/embedded_viewer.tsx`](./src/shell/embedded_viewer.tsx), and
   [`src/standalone/shell.tsx`](./src/standalone/shell.tsx) — the containers of
   the shell layout: the main region, the workspace, an embedded root with its
-  host slots, and the standalone root; `src/viewer/component.tsx` shows an
+  host slots, and the standalone root, which carries the appearance, the
+  preview scheme, and the expanded window's mark; `src/viewer/component.tsx`
+  shows an
   embedded root's loading and failure states, and
   `src/viewer/marker_layer.tsx` and `src/viewer/inspection_layer.tsx` place
   the host's markers and inspection labels
@@ -281,6 +283,12 @@ and Review regressions against `mokly serve` of the example catalogue.
   the containers of the comparison sections and panes, which own each
   section's scroll controller and attach the viewport, its spacer, and each
   surface to it through refs
+- [`scripts/styles.mjs`](./scripts/styles.mjs) — writes the standalone
+  `shell.css` and the embedded `styles.css` from the `@font-face` rule of
+  [`src/shell/assets/fonts/inter.css`](./src/shell/assets/fonts/inter.css) and
+  the UI package's `styles.css`: the font's address in each delivery, the
+  embedded font family, and the fallbacks that let a host's accent overrides
+  inherit
 - [`src/catalogue`](./src/catalogue) — the readers of the catalogue index and
   the entry detail, and the public catalogue types
 - [`src/data.ts`](./src/data.ts) — the `./data` entry: path functions,

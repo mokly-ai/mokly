@@ -12,41 +12,48 @@ const [STANDALONE_CSS, EMBEDDED_CSS] = await Promise.all([
   fs.readFile(new URL("../dist/styles.css", import.meta.url), "utf8"),
 ]);
 
-const SOURCE = new URL("../src/", import.meta.url).pathname;
+/** The sources of the viewer, which hold the shell font's rule. */
+const VIEWER_SOURCE = fileURLToPath(new URL("../src/", import.meta.url));
+
+/** The sources of `@mokly/ui`, whose stylesheets hold every other rule. */
+const PACKAGE_SOURCE = fileURLToPath(new URL("../../ui/src/", import.meta.url));
 
 /**
- * The two modules that define a palette, where a literal is the definition:
- * `css_tokens.ts` declares the Light half and the fixed preview and device
- * colours, and `css_theme.ts` declares the Dark half.
+ * The stylesheet that defines the palette, where a literal is the definition:
+ * the theme declares the Light half with the fixed preview and device colours,
+ * and the Dark half.
  */
-const PALETTE_SOURCES = new Set(["css_tokens.ts", "css_theme.ts"]);
+const PALETTE_SOURCES = new Set(["ui/src/theme/theme.css"]);
 
 const LITERAL = /#[0-9a-fA-F]{3,8}\b|\brgba?\([^)]*\)/g;
 
-/** The rules of the installed `@mokly/ui`, which every shell stylesheet carries. */
-const PACKAGE_STYLESHEET = "@mokly/ui/styles.css";
-const PACKAGE_CSS = await fs.readFile(
-  fileURLToPath(import.meta.resolve(PACKAGE_STYLESHEET)),
-  "utf8",
-);
-
-async function styleModules(): Promise<{ file: string; text: string }[]> {
-  const entries = await fs.readdir(SOURCE, {
+/** Every stylesheet below a source directory, named from its package. */
+async function stylesheets(
+  directory: string,
+  name: string,
+): Promise<{ file: string; text: string }[]> {
+  const entries = await fs.readdir(directory, {
     recursive: true,
     withFileTypes: true,
   });
-  const modules: { file: string; text: string }[] = [];
+  const sheets: { file: string; text: string }[] = [];
   for (const entry of entries) {
-    if (!entry.isFile()) continue;
-    const name = entry.name;
-    if (!/^css.*\.ts$/.test(name) && name !== "styles.ts") continue;
-    modules.push({
-      file: name,
-      text: await fs.readFile(path.join(entry.parentPath, name), "utf8"),
+    if (!entry.isFile() || !entry.name.endsWith(".css")) continue;
+    const file = path.join(entry.parentPath, entry.name);
+    sheets.push({
+      file: `${name}/${path.relative(directory, file).split(path.sep).join("/")}`,
+      text: await fs.readFile(file, "utf8"),
     });
   }
-  modules.push({ file: PACKAGE_STYLESHEET, text: PACKAGE_CSS });
-  return modules;
+  return sheets;
+}
+
+/** The viewer's and the package's stylesheets, which make every shell stylesheet. */
+async function styleModules(): Promise<{ file: string; text: string }[]> {
+  return [
+    ...(await stylesheets(VIEWER_SOURCE, "viewer/src")),
+    ...(await stylesheets(PACKAGE_SOURCE, "ui/src")),
+  ];
 }
 
 test("no shell stylesheet names a colour outside a palette source", async () => {
@@ -63,14 +70,18 @@ test("no shell stylesheet names a colour outside a palette source", async () => 
 
 test("the shell stylesheets were actually scanned", async () => {
   const modules = await styleModules();
-  // Every module that the shell stylesheet composes, wherever it lives.
-  const composed = [
+  // Every stylesheet that the package stylesheet lists, and the font rule.
+  const listed = [
     ...(
-      await fs.readFile(new URL("../src/shell/css.ts", import.meta.url), "utf8")
-    ).matchAll(/from "\.\/(css[a-z_]*)\.js"/gu),
-  ].map((match) => `${match[1]}.ts`);
-  assert.ok(composed.length > 0, "the scan found no composed module");
-  for (const source of [...composed, ...PALETTE_SOURCES, PACKAGE_STYLESHEET])
+      await fs.readFile(path.join(PACKAGE_SOURCE, "styles.css"), "utf8")
+    ).matchAll(/@import "\.\/([^"]+)";/gu),
+  ].map((match) => `ui/src/${match[1]}`);
+  assert.ok(listed.length > 40, `only ${listed.length} listed stylesheets`);
+  for (const source of [
+    ...listed,
+    ...PALETTE_SOURCES,
+    "viewer/src/shell/assets/fonts/inter.css",
+  ])
     assert.ok(
       modules.some((module) => module.file === source),
       `${source} is missing`,
@@ -91,8 +102,10 @@ function palette(selector: RegExp): Map<string, string> {
   );
 }
 
-const LIGHT = palette(/:root \{([^}]*)\}/g);
-const DARK = palette(/:root\[data-mokly-theme="dark"\] \{([^}]*)\}/g);
+const LIGHT = palette(/\n\.mbk,\s*\.mbk-document \{([^}]*)\}/g);
+const DARK = palette(
+  /\n\.mbk\[data-mokly-theme="dark"\],\s*\.mbk-document\[data-mokly-theme="dark"\] \{([^}]*)\}/g,
+);
 
 /**
  * The colour a role paints. A role a theme does not restate keeps its Light
@@ -237,25 +250,28 @@ test("a public override foreground only sits on the accent it pairs with", () =>
   // Only a rule painting both in one block can be judged without a cascade
   // model, which is exactly the case an override breaks: the background stays
   // pinned while the foreground follows the consumer's brand.
-  const accentBackgrounds = new Set([
-    "var(--mokly-accent)",
-    "var(--mokly-accent-soft)",
-  ]);
+  // An embedded use carries the default of its appearance as its fallback.
+  const accentBackground =
+    /^var\(--mokly-accent(?:-soft)?(?:, var\(--_mokly-private-accent(?:-soft)?-default\))?\)$/u;
   const failures: string[] = [];
-  for (const css of [STANDALONE_CSS, EMBEDDED_CSS])
+  for (const css of [STANDALONE_CSS, EMBEDDED_CSS]) {
+    let judged = 0;
     for (const [, selector, body] of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
       const color = /(?:^|;|\{)\s*color:\s*([^;]+)/
         .exec(body ?? "")?.[1]
         ?.trim();
-      const token = /var\((--[a-z0-9-]+)\)/.exec(color ?? "")?.[1];
+      const token = /var\((--[a-z0-9-]+)[,)]/.exec(color ?? "")?.[1];
       const background = /(?:^|;|\{)\s*background(?:-color)?:\s*([^;]+)/
         .exec(body ?? "")?.[1]
         ?.trim();
       if (!token || !PUBLIC_OVERRIDES.has(token) || !background) continue;
-      if (accentBackgrounds.has(background)) continue;
+      judged++;
+      if (accentBackground.test(background)) continue;
       failures.push(
         `${selector!.replace(/\s+/g, " ").trim()}: ${token} over ${background}`,
       );
     }
+    assert.ok(judged > 0, "no rule paints a public foreground over a fill");
+  }
   assert.deepEqual(failures, []);
 });

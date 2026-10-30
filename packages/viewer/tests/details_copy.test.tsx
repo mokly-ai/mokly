@@ -23,7 +23,7 @@ function details(path: string, edit: (index: CatalogueReadModel) => void) {
 
 const row = (label: string) =>
   new RegExp(
-    `<span class="mbk-meta-k">${label}</span><span class="mbk-meta-v">([^<]*)</span>`,
+    `<span class="mbk-meta-k mbk-reset">${label}</span><span class="mbk-meta-v mbk-reset">([^<]*)</span>`,
   );
 
 test("the Schemes row names each scheme for the reader", () => {
@@ -51,5 +51,5 @@ test("a removed entry names its folders, and a top-level one has no empty Locati
     index.removedEntries[0]!.folderTitles = [];
   });
   assert.doesNotMatch(top, /Location/);
-  assert.match(top, /<span class="mbk-meta-k">Source<\/span>/);
+  assert.match(top, /<span class="mbk-meta-k mbk-reset">Source<\/span>/);
 });

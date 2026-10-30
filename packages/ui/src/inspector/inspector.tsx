@@ -99,7 +99,7 @@ export function Inspector({
   return (
     <section
       aria-label="Inspector"
-      className="mbk-inspector"
+      className="mbk-inspector mbk-reset"
       data-open={interactive ? String(open) : undefined}
       data-workspace-inspector=""
       onKeyDown={(event) => onTabKeyDown(event, tabs.length)}
@@ -112,7 +112,7 @@ export function Inspector({
         aria-valuemax={600}
         aria-valuemin={160}
         aria-valuenow={260}
-        className="mbk-inspector-resize"
+        className="mbk-inspector-resize mbk-reset"
         data-inspector-resize=""
         role="separator"
         tabIndex={0}
@@ -120,15 +120,15 @@ export function Inspector({
       <button
         aria-expanded="false"
         aria-label="Expand inspector"
-        className="mbk-sheet-grab"
+        className="mbk-sheet-grab mbk-reset"
         data-inspector-size=""
         type="button"
       >
-        <span />
+        <span className="mbk-reset" />
       </button>
       <div
         aria-label="Inspector panels"
-        className="mbk-inspector-tabs"
+        className="mbk-inspector-tabs mbk-reset"
         role="tablist"
       >
         {tabs.map((tab) => (
@@ -136,7 +136,7 @@ export function Inspector({
             aria-controls={tab.panelId}
             aria-label={tab.title}
             aria-selected={open && active === tab.id}
-            className="mbk-icon-button"
+            className="mbk-icon-button mbk-reset"
             data-inspector-tab={tab.id}
             id={tab.tabId}
             key={tab.id}
@@ -148,12 +148,12 @@ export function Inspector({
             <WorkspaceIcon name={tab.id} />
           </button>
         ))}
-        <span className="mbk-inspector-title" data-inspector-title="">
+        <span className="mbk-inspector-title mbk-reset" data-inspector-title="">
           {open ? tabs.find((tab) => tab.id === active)?.title : null}
         </span>
         <button
           aria-label="Close inspector"
-          className="mbk-icon-button"
+          className="mbk-icon-button mbk-reset"
           data-inspector-close=""
           hidden={!open}
           onClick={close}
@@ -164,7 +164,7 @@ export function Inspector({
         </button>
       </div>
       <div
-        className="mbk-inspector-content"
+        className="mbk-inspector-content mbk-reset"
         data-mokly-scroll="inspector"
         hidden={!open}
         id={contentId}
@@ -172,6 +172,7 @@ export function Inspector({
         {tabs.map((tab) => (
           <section
             aria-labelledby={tab.tabId}
+            className="mbk-reset"
             data-inspector-panel={tab.id}
             hidden={!open || active !== tab.id}
             id={tab.panelId}

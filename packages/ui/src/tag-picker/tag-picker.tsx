@@ -103,7 +103,7 @@ export function TagPicker({
         aria-controls={id}
         aria-expanded={open}
         aria-label="Filter by tag"
-        className="mbk-search-tag"
+        className="mbk-search-tag mbk-reset"
         data-mokly-tag-toggle=""
         onClick={() => {
           if (open) close();
@@ -119,17 +119,17 @@ export function TagPicker({
       </button>
       <div
         aria-label="Tags"
-        className="mbk-tag-picker"
+        className="mbk-tag-picker mbk-reset"
         data-mokly-tag-picker=""
         hidden={!open}
         id={id}
         ref={panel}
         role="group"
       >
-        <div className="mbk-tag-picker-head">Tags</div>
+        <div className="mbk-tag-picker-head mbk-reset">Tags</div>
         <span
           aria-label="Tag filters"
-          className="mbk-chips"
+          className="mbk-chips mbk-reset"
           onKeyDown={onKeyDown}
           role="toolbar"
         >

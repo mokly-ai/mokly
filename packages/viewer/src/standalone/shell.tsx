@@ -1,6 +1,7 @@
 /** The standalone Browse shell: index loading, the shell store and its chrome. */
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { RefObject } from "react";
 
 import type { EmptyStateRoot } from "@mokly/ui/empty-state";
 import { RootState, ShellLayout } from "@mokly/ui/shell-layout";
@@ -22,6 +23,7 @@ import { ShellMain } from "../shell/views.js";
 import { deploymentCheck } from "../viewer/sources.js";
 
 import { useStandaloneAppearance } from "./appearance_bridge.js";
+import { standaloneAppearanceHost } from "./appearance_host.js";
 import {
   fetchStandaloneIndex,
   standaloneDataSource,
@@ -38,8 +40,15 @@ type IndexState =
 /** The browser surface of the standalone shell. */
 export type ShellWindow = Window & typeof globalThis & StandaloneWindow;
 
-/** The root that the standalone shell's own states take the place of. */
-const STANDALONE_ROOT: EmptyStateRoot = { kind: "standalone" };
+/**
+ * The root that the standalone shell's own states take the place of, in the
+ * document's appearance. Only the ready shell's controls and routes change the
+ * appearance, so a state reads it when it renders.
+ */
+function standaloneRoot(win: ShellWindow): EmptyStateRoot {
+  const theme = standaloneAppearanceHost(win)?.current().theme ?? "auto";
+  return { kind: "standalone", theme };
+}
 
 /** Fetch the index, then render the shell; a version failure replaces it. */
 export function StandaloneShell({
@@ -69,11 +78,13 @@ export function StandaloneShell({
     );
     return () => controller.abort();
   }, [attempt, win]);
+  const root = standaloneRoot(win);
   if (state.kind === "version")
     return (
       <VersionFailure
         error={state.error}
         reload={() => win.location.reload()}
+        root={root}
       />
     );
   if (state.kind === "failed")
@@ -84,17 +95,13 @@ export function StandaloneShell({
           setState({ kind: "loading" });
           setAttempt((value) => value + 1);
         }}
-        root={STANDALONE_ROOT}
+        root={root}
         state="failed"
       />
     );
   if (state.kind === "loading")
     return (
-      <RootState
-        focusRef={focus.ref("loading")}
-        root={STANDALONE_ROOT}
-        state="loading"
-      />
+      <RootState focusRef={focus.ref("loading")} root={root} state="loading" />
     );
   return (
     <ReadyShell
@@ -165,6 +172,7 @@ export function StandaloneShellContents() {
   const shell = useRef<HTMLDivElement>(null);
   useNavigationBounds(shell);
   useBodyBindings(store);
+  useExpandedMark(shell, Boolean(store.state.expandedFrame));
   const { selection, disclosures } = store.state;
   useEffect(
     () => persistDisclosures(selection, disclosures, true),
@@ -173,6 +181,7 @@ export function StandaloneShellContents() {
   return (
     <ShellLayout
       announcement={store.state.announcement}
+      colorScheme={appearance.scheme}
       drawerOpen={store.state.drawerOpen}
       main={
         <ShellMain
@@ -187,22 +196,21 @@ export function StandaloneShellContents() {
       }
       ref={shell}
       statusId="mb-status"
+      theme={appearance.theme}
       topBar={<TopBar appearance={appearance} catalogue={store.catalogue} />}
     />
   );
 }
 
 /**
- * The stub owns the document body: the shell marks it full-screen and
- * expanded, and handles clicks and Escape that reach it, including the
- * expanded frame's backdrop.
+ * The stub owns the document body: the shell handles clicks and Escape that
+ * reach it, including a click on the expanded frame's backdrop.
  */
 function useBodyBindings(store: ShellStore): void {
   const latest = useRef(store);
   latest.current = store;
   useEffect(() => {
     const body = document.body;
-    body.classList.add("mbk-fs");
     const click = (event: MouseEvent) => latest.current.onShellClick(event);
     const keydown = (event: KeyboardEvent) =>
       latest.current.onShellKeyDown(event);
@@ -213,8 +221,17 @@ function useBodyBindings(store: ShellStore): void {
       body.removeEventListener("keydown", keydown);
     };
   }, []);
-  const expanded = Boolean(store.state.expandedFrame);
+}
+
+/**
+ * Mark the shell root while a browser window is expanded, as an embedded root
+ * is marked, so the root shows the scrim below the window.
+ */
+function useExpandedMark(
+  root: RefObject<HTMLElement | null>,
+  expanded: boolean,
+): void {
   useLayoutEffect(() => {
-    document.body.classList.toggle("frame-expanded", expanded);
-  }, [expanded]);
+    root.current?.classList.toggle("frame-expanded", expanded);
+  }, [expanded, root]);
 }

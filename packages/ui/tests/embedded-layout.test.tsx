@@ -39,13 +39,13 @@ function layout(props: Partial<LayoutProps> = {}) {
 test("an embedded root lays out the shell's parts between its host slots", () => {
   assert.equal(
     renderToString(layout()),
-    '<div class="mbk mokly-viewer" data-drawer="closed" data-mokly-color-scheme="light" data-mokly-shell="" tabindex="-1" data-mokly-theme="auto"><a class="mbk-skip-link" href="#x-mb-main">Skip to content</a><div class="mokly-top-host"><div data-mokly-slot="topBarStart"></div><header>Top bar</header><div data-mokly-slot="topBarEnd"></div></div><div class="mbk-body"><div class="mokly-rail-host"><div data-mokly-slot="railStart"></div><nav aria-label="Catalogue"></nav><div data-mokly-slot="railEnd"></div></div><div class="mokly-stage-host"><main id="x-mb-main">Routed</main><div data-mokly-slot="emptyState" hidden=""></div><div data-mokly-slot="stageOverlay" hidden="" style="pointer-events:none"></div></div><div data-mokly-slot="sidePanel"></div></div><div data-mokly-marker-layer="" data-mokly-slot="markers"></div><div data-mokly-label-layer=""></div><p aria-atomic="true" aria-live="polite" class="mbk-route-status" id="x-mb-status" role="status">Opened Home</p></div>',
+    '<div class="mbk mokly-viewer mbk-reset" data-drawer="closed" data-mokly-color-scheme="light" data-mokly-shell="" tabindex="-1" data-mokly-theme="auto"><a class="mbk-skip-link mbk-reset" href="#x-mb-main">Skip to content</a><div class="mokly-top-host mbk-reset"><div data-mokly-slot="topBarStart"></div><header>Top bar</header><div data-mokly-slot="topBarEnd"></div></div><div class="mbk-body mbk-reset"><div class="mokly-rail-host mbk-reset"><div data-mokly-slot="railStart"></div><nav aria-label="Catalogue"></nav><div data-mokly-slot="railEnd"></div></div><div class="mokly-stage-host mbk-reset"><main id="x-mb-main">Routed</main><div data-mokly-slot="emptyState" hidden=""></div><div data-mokly-slot="stageOverlay" hidden="" style="pointer-events:none"></div></div><div data-mokly-slot="sidePanel"></div></div><div data-mokly-marker-layer="" data-mokly-slot="markers"></div><div class="mbk-reset" data-mokly-label-layer=""></div><p aria-atomic="true" aria-live="polite" class="mbk-route-status mbk-reset" id="x-mb-status" role="status">Opened Home</p></div>',
   );
   assert.match(
     renderToString(
       layout({ colorScheme: "dark", drawerOpen: true, theme: "light" }),
     ),
-    /^<div class="mbk mokly-viewer" data-drawer="open" data-mokly-color-scheme="dark" data-mokly-shell="" tabindex="-1" data-mokly-theme="light">/u,
+    /^<div class="mbk mokly-viewer mbk-reset" data-drawer="open" data-mokly-color-scheme="dark" data-mokly-shell="" tabindex="-1" data-mokly-theme="light">/u,
   );
 });
 

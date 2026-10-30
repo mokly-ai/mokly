@@ -14,7 +14,7 @@ import {
 import { embeddedMarkup } from "./presentation_v7_helpers.js";
 import { standaloneMarkup } from "./shell_markup.js";
 
-const HEADING = "<h3>Comparison details</h3>";
+const HEADING = '<h3 class="mbk-reset">Comparison details</h3>';
 
 /**
  * The published fixture's screen, saved component view and document page,
@@ -26,28 +26,28 @@ const ENTRIES = [
     id: "product/browse/details",
     evidence: "data-workspace-evidence",
     rest:
-      '<p>The previous version is at <code class="mbk-code">product/details</code>, where it was before the move.</p>' +
-      "<p>This stylesheet changed, but none of the changed styles apply to this screen.</p>" +
-      "<p>Examined and excluded:</p><ul><li>mockups/action.css</li></ul>" +
-      "<p>No changes to this screen.</p>",
+      '<p class="mbk-reset">The previous version is at <code class="mbk-code mbk-reset">product/details</code>, where it was before the move.</p>' +
+      '<p class="mbk-reset">This stylesheet changed, but none of the changed styles apply to this screen.</p>' +
+      '<p class="mbk-reset">Examined and excluded:</p><ul class="mbk-reset"><li class="mbk-reset">mockups/action.css</li></ul>' +
+      '<p class="mbk-reset">No changes to this screen.</p>',
   },
   {
     kind: "saved component view",
     id: "components/action/default",
     evidence: "data-workspace-evidence",
     rest:
-      "<p>This stylesheet changed, but none of the changed styles apply to this variant.</p>" +
-      "<p>Examined and excluded:</p><ul><li>mockups/action.css</li></ul>" +
-      "<p>No changes to this variant.</p>",
+      '<p class="mbk-reset">This stylesheet changed, but none of the changed styles apply to this variant.</p>' +
+      '<p class="mbk-reset">Examined and excluded:</p><ul class="mbk-reset"><li class="mbk-reset">mockups/action.css</li></ul>' +
+      '<p class="mbk-reset">No changes to this variant.</p>',
   },
   {
     kind: "document page",
     id: "guide",
     evidence: "data-page-evidence",
     rest:
-      "<p>This stylesheet changed, but none of the changed styles apply to this page.</p>" +
-      "<p>Examined and excluded:</p><ul><li>mockups/page.css</li></ul>" +
-      "<p>No changes to this page.</p>",
+      '<p class="mbk-reset">This stylesheet changed, but none of the changed styles apply to this page.</p>' +
+      '<p class="mbk-reset">Examined and excluded:</p><ul class="mbk-reset"><li class="mbk-reset">mockups/page.css</li></ul>' +
+      '<p class="mbk-reset">No changes to this page.</p>',
   },
 ] as const;
 
@@ -68,7 +68,7 @@ function embedded(index: CatalogueReadModel, screenPath: string): string {
 
 /** The comparison details in Details, or undefined when none render. */
 const section = (markup: string) =>
-  /<section class="mbk-comparison-evidence" data-(?:workspace|page)-evidence="">.*?<\/section>/.exec(
+  /<section class="mbk-comparison-evidence mbk-reset" data-(?:workspace|page)-evidence="">.*?<\/section>/.exec(
     markup,
   )?.[0];
 
@@ -79,13 +79,14 @@ for (const entry of ENTRIES)
     });
     assert.equal(
       section(standaloneMarkup({ index, path: `/view/${entry.id}/` })),
-      `<section class="mbk-comparison-evidence" ${entry.evidence}="">` +
+      `<section class="mbk-comparison-evidence mbk-reset" ${entry.evidence}="">` +
         `${HEADING}${entry.rest}</section>`,
     );
   });
 
 test("a changed page of an index without a base keeps each file and style without the sentence", () => {
-  const sentence = "<p>Compared with the branch point on origin/main.</p>";
+  const sentence =
+    '<p class="mbk-reset">Compared with the branch point on origin/main.</p>';
   assert.ok(CHANGED_SECTION.includes(sentence));
   const html = standaloneMarkup({
     index: publishedIndex(
@@ -104,8 +105,8 @@ for (const entry of ENTRIES)
     assert.ok(details);
     assert.ok(
       details.startsWith(
-        `<section class="mbk-comparison-evidence" ${entry.evidence}="">` +
-          `${HEADING}<p>Compared with the branch point on main.</p>`,
+        `<section class="mbk-comparison-evidence mbk-reset" ${entry.evidence}="">` +
+          `${HEADING}<p class="mbk-reset">Compared with the branch point on main.</p>`,
       ),
       details,
     );
@@ -113,13 +114,13 @@ for (const entry of ENTRIES)
 
 test("an embedded entry names the branch point exactly when its index has a base", () => {
   for (const entry of ENTRIES) {
-    const opening = `<section class="mbk-comparison-evidence" ${entry.evidence}="">${HEADING}`;
+    const opening = `<section class="mbk-comparison-evidence mbk-reset" ${entry.evidence}="">${HEADING}`;
     const named = section(embedded(rawIndexFixture(), entry.id));
     const unnamed = section(embedded(nameless(), entry.id));
     assert.ok(named && unnamed);
     assert.ok(
       named.startsWith(
-        `${opening}<p>Compared with the branch point on main.</p>`,
+        `${opening}<p class="mbk-reset">Compared with the branch point on main.</p>`,
       ),
       named,
     );

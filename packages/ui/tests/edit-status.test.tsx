@@ -13,11 +13,11 @@ import { assertSameElement } from "./dom-assertions.js";
 test("the edit status stays present, and a render in flight shows its dot and text", () => {
   assert.equal(
     renderToStaticMarkup(<EditStatus />),
-    '<p class="mbk-edit-status" role="status"></p>',
+    '<p class="mbk-edit-status mbk-reset" role="status"></p>',
   );
   assert.equal(
     renderToStaticMarkup(<EditStatus status="Updating preview…" />),
-    '<p class="mbk-edit-status" role="status"><span aria-hidden="true" class="mbk-pending-dot"></span>Updating preview…</p>',
+    '<p class="mbk-edit-status mbk-reset" role="status"><span aria-hidden="true" class="mbk-pending-dot mbk-reset"></span>Updating preview…</p>',
   );
 });
 

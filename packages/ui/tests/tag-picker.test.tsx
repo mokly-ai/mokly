@@ -25,10 +25,10 @@ function closedMarkup(tabIndex: (index: number) => number | undefined) {
     ),
   ).join("");
   return (
-    `<button aria-controls="${PICKER_ID}" aria-expanded="false" aria-label="Filter by tag" class="mbk-search-tag" data-mokly-tag-toggle="" type="button">${renderToStaticMarkup(<TagIcon />)}</button>` +
-    `<div aria-label="Tags" class="mbk-tag-picker" data-mokly-tag-picker="" hidden="" id="${PICKER_ID}" role="group">` +
-    `<div class="mbk-tag-picker-head">Tags</div>` +
-    `<span aria-label="Tag filters" class="mbk-chips" role="toolbar">${chipMarkup}</span></div>`
+    `<button aria-controls="${PICKER_ID}" aria-expanded="false" aria-label="Filter by tag" class="mbk-search-tag mbk-reset" data-mokly-tag-toggle="" type="button">${renderToStaticMarkup(<TagIcon />)}</button>` +
+    `<div aria-label="Tags" class="mbk-tag-picker mbk-reset" data-mokly-tag-picker="" hidden="" id="${PICKER_ID}" role="group">` +
+    `<div class="mbk-tag-picker-head mbk-reset">Tags</div>` +
+    `<span aria-label="Tag filters" class="mbk-chips mbk-reset" role="toolbar">${chipMarkup}</span></div>`
   );
 }
 

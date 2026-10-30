@@ -42,13 +42,13 @@ test("the column names its parts as the shell specs query them", () => {
 test("a resizable column carries its width, and a fixed one keeps the stylesheet's", () => {
   assert.match(
     renderToStaticMarkup(<CatalogueNavigation {...column({ width: 300 })} />),
-    /^<nav aria-label="Catalogue" class="mbk-nav" data-mokly-nav="" data-resize-ready="" id="root-mb-nav" style="--mbk-nav-width:300px">/,
+    /^<nav aria-label="Catalogue" class="mbk-nav mbk-reset" data-mokly-nav="" data-resize-ready="" id="root-mb-nav" style="--mbk-nav-width:300px">/,
   );
   assert.match(
     renderToStaticMarkup(
       <CatalogueNavigation {...column({ resizable: false, width: 300 })} />,
     ),
-    /^<nav aria-label="Catalogue" class="mbk-nav" data-mokly-nav="" id="root-mb-nav">/,
+    /^<nav aria-label="Catalogue" class="mbk-nav mbk-reset" data-mokly-nav="" id="root-mb-nav">/,
   );
 });
 
@@ -111,7 +111,7 @@ test("the filter presses its view and fills the count slot for each detection st
   assert.equal(all.getAttribute("aria-pressed"), "true");
   assert.equal(
     count()?.innerHTML,
-    '<span aria-label="Changes unavailable">—</span>',
+    '<span aria-label="Changes unavailable" class="mbk-reset">—</span>',
   );
 
   for (const [status, name] of [
@@ -123,7 +123,7 @@ test("the filter presses its view and fills the count slot for each detection st
     );
     assert.equal(filter.getAttribute("data-changes-status"), status);
     const spinner = within(filter).getByRole("status", { name });
-    assert.equal(spinner.className, "mbk-nav-spinner");
+    assert.equal(spinner.className, "mbk-nav-spinner mbk-reset");
     assertSameElement(spinner.parentElement, count());
   }
 });
@@ -138,23 +138,23 @@ test("the status line words each detection state, and preparing has two lines", 
   assert.equal(line.getAttribute("data-nav-status"), "");
   assert.equal(line.hasAttribute("hidden"), false);
   const text = line.querySelector("[data-nav-status-text]");
-  assert.equal(text?.className, "mbk-nav-status-text");
+  assert.equal(text?.className, "mbk-nav-status-text mbk-reset");
   assert.deepEqual(
     [...(text?.children ?? [])].map((part) => [
       part.className,
       part.textContent,
     ]),
     [
-      ["mbk-nav-status-title", "Preparing comparison"],
+      ["mbk-nav-status-title mbk-reset", "Preparing comparison"],
       [
-        "mbk-nav-status-detail",
+        "mbk-nav-status-detail mbk-reset",
         "This takes a moment. You can keep browsing All while it finishes.",
       ],
     ],
   );
   assert.equal(
     line.firstElementChild?.outerHTML,
-    '<span class="mbk-nav-spinner" aria-hidden="true"></span>',
+    '<span class="mbk-nav-spinner mbk-reset" aria-hidden="true"></span>',
   );
 
   const words: [NavigationStatusMessage, string, boolean][] = [
@@ -176,7 +176,7 @@ test("the status line words each detection state, and preparing has two lines", 
     assert.equal(line.hasAttribute("hidden"), true, message);
     const shown = line.querySelector("[data-nav-status-text]");
     assert.equal(shown?.textContent, wording, message);
-    assert.equal(shown?.hasAttribute("class"), false, message);
+    assert.equal(shown?.getAttribute("class"), "mbk-reset", message);
     assert.equal(
       line.querySelector(".mbk-nav-spinner") !== null,
       spinner,
@@ -213,7 +213,7 @@ test("the scrolling pane holds the status line, then the tree, which reports thr
   );
   assert.deepEqual(
     [...scrollPane(container).children].map((child) => child.className),
-    ["mbk-nav-status", "mbk-nav-section"],
+    ["mbk-nav-status mbk-reset", "mbk-nav-section mbk-reset"],
   );
   fireEvent.click(
     screen.getByRole("button", { name: "Show variants of home" }),

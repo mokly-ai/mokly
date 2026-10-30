@@ -52,7 +52,7 @@ function recorder(found: Map<ControlsFocus, HTMLElement>) {
 test("the saved props' form keeps the shell's markup", () => {
   assert.equal(
     renderToStaticMarkup(form()),
-    '<section class="mbk-component-controls"><div class="mbk-controls-heading"><div><h3 tabindex="-1">Edit props</h3><p>Default · Saved props</p></div><button class="mbk-controls-reset" disabled="" type="button">Reset to Default</button></div><p class="mbk-controls-restored" role="status"></p><fieldset class="mbk-control-fieldset"><input aria-label="label"/></fieldset></section>',
+    '<section class="mbk-component-controls mbk-reset"><div class="mbk-controls-heading mbk-reset"><div class="mbk-reset"><h3 class="mbk-reset" tabindex="-1">Edit props</h3><p class="mbk-reset">Default · Saved props</p></div><button class="mbk-controls-reset mbk-reset" disabled="" type="button">Reset to Default</button></div><p class="mbk-controls-restored mbk-reset" role="status"></p><fieldset class="mbk-control-fieldset mbk-reset"><input aria-label="label"/></fieldset></section>',
   );
 });
 
@@ -63,7 +63,7 @@ test("edits show the Edited props badge and enable Reset, which reports each pre
   assert.equal(heading.nextElementSibling?.textContent, "Default Edited props");
   assert.equal(
     screen.getByText("Edited props").className,
-    "mbk-controls-edited",
+    "mbk-controls-edited mbk-reset",
   );
   const reset = screen.getByRole("button", { name: "Reset to Default" });
   assert.equal(reset.hasAttribute("disabled"), false);
@@ -87,7 +87,7 @@ test("an alert names what failed, and a failed render offers its action", () => 
   );
   assert.equal(
     screen.getByRole("alert").outerHTML,
-    '<p class="mbk-control-alert" role="alert">These values are not valid together.</p>',
+    '<p class="mbk-control-alert mbk-reset" role="alert">These values are not valid together.</p>',
   );
   rerender(
     form(
@@ -195,7 +195,7 @@ test("saved props that cannot be edited name the reason, and a comparison offers
   );
   assert.equal(
     renderToStaticMarkup(panel("Switch to Current")),
-    '<section class="mbk-component-controls"><div class="mbk-controls-heading"><div><h3 tabindex="-1">Saved props</h3><p>Default</p></div></div><p class="mbk-controls-notice">Comparisons show the saved props.</p><button class="mbk-text-button" type="button">Switch to Current</button><dl aria-label="Supplied props"></dl></section>',
+    '<section class="mbk-component-controls mbk-reset"><div class="mbk-controls-heading mbk-reset"><div class="mbk-reset"><h3 class="mbk-reset" tabindex="-1">Saved props</h3><p class="mbk-reset">Default</p></div></div><p class="mbk-controls-notice mbk-reset">Comparisons show the saved props.</p><button class="mbk-text-button mbk-reset" type="button">Switch to Current</button><dl aria-label="Supplied props"></dl></section>',
   );
   const { rerender } = render(panel("Switch to Current"));
   fireEvent.click(screen.getByRole("button", { name: "Switch to Current" }));

@@ -48,7 +48,7 @@ export function TopBar({
   }, [compactSearchOpen]);
   return (
     <header
-      className="mbk-topbar"
+      className="mbk-topbar mbk-reset"
       data-compact-search={compactSearchOpen ? "open" : "closed"}
       data-search=""
     >
@@ -56,7 +56,7 @@ export function TopBar({
         aria-controls={navigationId}
         aria-expanded={drawerOpen}
         aria-label="Open catalogue navigation"
-        className="mbk-menu"
+        className="mbk-menu mbk-reset"
         data-mokly-menu=""
         onClick={() => onDrawer?.(!drawerOpen)}
         type="button"
@@ -65,27 +65,28 @@ export function TopBar({
           <path d="M4 6h16M4 12h16M4 18h16" />
         </IconSvg>
       </button>
-      <a aria-label="Mokly" className="mbk-brand" href="/">
-        <span aria-hidden="true" className="mbk-mark">
+      <a aria-label="Mokly" className="mbk-brand mbk-reset" href="/">
+        <span aria-hidden="true" className="mbk-mark mbk-reset">
           <BrandIcon />
         </span>
-        <span className="mbk-name">mokly.</span>
+        <span className="mbk-name mbk-reset">mokly.</span>
       </a>
       <button
         aria-controls={searchId}
         aria-expanded={compactSearchOpen}
         aria-label="Search catalogue"
-        className="mbk-search-toggle"
+        className="mbk-search-toggle mbk-reset"
         onClick={() => setCompactSearchOpen(true)}
         ref={searchToggle}
         type="button"
       >
         <SearchIcon />
       </button>
-      <div className="mbk-search">
+      <div className="mbk-search mbk-reset">
         <SearchIcon />
         <input
           aria-label="Search catalogue"
+          className="mbk-reset"
           data-mokly-search=""
           id={searchId}
           onChange={(event) => onSearch?.(event.currentTarget.value)}
@@ -101,7 +102,7 @@ export function TopBar({
       </div>
       <button
         aria-label="Close search"
-        className="mbk-search-close"
+        className="mbk-search-close mbk-reset"
         onClick={() => setCompactSearchOpen(false)}
         type="button"
       >

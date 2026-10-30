@@ -29,11 +29,12 @@ export function VariantBar({
   variants: readonly VariantBarItem[];
 }) {
   return (
-    <nav aria-label="Saved variants" className="mbk-selection-bar">
-      <span>Variant</span>
+    <nav aria-label="Saved variants" className="mbk-selection-bar mbk-reset">
+      <span className="mbk-reset">Variant</span>
       {variants.map((variant) => (
         <a
           aria-current={variant.current ? "page" : undefined}
+          className="mbk-reset"
           data-workspace-variant={variant.path}
           href={variant.href}
           key={variant.path}
@@ -43,7 +44,7 @@ export function VariantBar({
         </a>
       ))}
       <span
-        className="mbk-variant-status"
+        className="mbk-variant-status mbk-reset"
         data-workspace-variant-status=""
         hidden={!status}
       >

@@ -184,8 +184,7 @@
 
 /* The resize separator: absent from the drawer and until a script makes the
    column resizable. Its grip turns accent while hovered, focused, or dragged.
-   The resizing class marks the shell root, or the stub's body, during a
-   drag; an embedded root is the scope of its stylesheet. */
+   The resizing class marks the shell root during a drag. */
 .mbk-nav-resize {
   position: absolute;
   z-index: 2;
@@ -202,8 +201,7 @@
   touch-action: none;
 }
 
-[data-mokly-shell] .mbk-nav[data-resize-ready] .mbk-nav-resize,
-:scope.mokly-viewer .mbk-nav[data-resize-ready] .mbk-nav-resize {
+.mbk .mbk-nav[data-resize-ready] .mbk-nav-resize {
   display: block;
 }
 
@@ -223,8 +221,7 @@
 
 .mbk-nav-resize:hover::after,
 .mbk-nav-resize:focus-visible::after,
-body.mbk-nav-resizing .mbk-nav-resize::after,
-[data-mokly-shell].mbk-nav-resizing .mbk-nav-resize::after {
+.mbk.mbk-nav-resizing .mbk-nav-resize::after {
   background: var(--mokly-accent);
   box-shadow: 0 0 0 3px var(--mokly-accent-soft);
 }
@@ -234,8 +231,7 @@ body.mbk-nav-resizing .mbk-nav-resize::after,
 }
 
 @media (width < 56.25rem) {
-  [data-mokly-shell] .mbk-nav[data-resize-ready] .mbk-nav-resize,
-  :scope.mokly-viewer .mbk-nav[data-resize-ready] .mbk-nav-resize {
+  .mbk .mbk-nav[data-resize-ready] .mbk-nav-resize {
     display: none;
   }
 }

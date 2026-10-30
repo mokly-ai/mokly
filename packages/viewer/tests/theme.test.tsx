@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import { test } from "node:test";
 
 import { embeddedMarkup } from "./presentation_v7_helpers.js";
+import { printSelector, styleRules } from "./style_rules.js";
 
 /** The built stylesheets that a delivery and an embedded host receive. */
 const [STANDALONE_CSS, EMBEDDED_CSS] = await Promise.all([
@@ -23,7 +24,9 @@ test("an explicit theme is present in the initial markup", () => {
   for (const theme of ["light", "dark"] as const)
     assert.match(
       render(theme),
-      new RegExp(`class="mbk mokly-viewer"[^>]*data-mokly-theme="${theme}"`),
+      new RegExp(
+        `class="mbk mokly-viewer mbk-reset"[^>]*data-mokly-theme="${theme}"`,
+      ),
       theme,
     );
 });
@@ -46,39 +49,38 @@ test("theme is independent of the preview colour scheme", () => {
 test("Auto resolves through CSS, so no script decides the appearance", () => {
   assert.match(
     EMBEDDED_CSS,
-    /@media \(prefers-color-scheme: dark\) \{\s*:scope\[data-mokly-theme="auto"\]/,
+    /@media \(prefers-color-scheme: dark\) \{\s*\.mbk\[data-mokly-theme="auto"\]/,
     "Auto has no prefers-color-scheme rule",
   );
-  assert.match(EMBEDDED_CSS, /:scope\[data-mokly-theme="dark"\] \{/);
+  assert.match(EMBEDDED_CSS, /\n\.mbk\[data-mokly-theme="dark"\][^{]*\{/);
   assert.doesNotMatch(render("dark"), /<script/);
 });
 
 test("the dark palette is selected by the root, never by the host document", () => {
-  // Every themed rule a host receives is scoped to the viewer root, so the
-  // host page keeps its own appearance and a sibling root is unaffected.
-  const scoped = EMBEDDED_CSS.slice(
-    EMBEDDED_CSS.indexOf("@scope (.mokly-viewer)"),
-  );
-  for (const [, selector] of EMBEDDED_CSS.matchAll(
-    /\n([^{}\n]*data-mokly-theme[^{}\n]*)\{/g,
-  )) {
+  // Every themed rule a host receives selects a shell root that states its
+  // appearance, or the standalone stub's own document, so the host page keeps
+  // its own appearance and a sibling root is unaffected.
+  const themed = styleRules(EMBEDDED_CSS)
+    .selectors.map(printSelector)
+    .filter((selector) => selector.includes("data-mokly-theme"));
+  assert.ok(themed.length >= 5, `only ${themed.length} themed selectors`);
+  for (const selector of themed)
     assert.match(
-      selector!,
-      /:scope\[data-mokly-theme/u,
-      `${selector!.trim()} is not anchored to the viewer root`,
+      selector,
+      /^\.mbk(?:-document)?(?:\[data-mokly-theme="(?:auto|dark)"\]|:not\(\[data-mokly-theme\]\))$/u,
+      `${selector} is not anchored to a shell root`,
     );
-    assert.ok(scoped.includes(selector!), `${selector!.trim()} escapes @scope`);
-  }
   assert.doesNotMatch(EMBEDDED_CSS, /^\s*(html|body)[\s,{]/mu);
 });
 
 test("both appearances define exactly the same shell roles", () => {
   const roles = (source: string): string[] =>
     [...source.matchAll(/(--[a-z0-9-]+):/g)].map((match) => match[1]!).sort();
-  const light = /:root \{([^}]*)\}/.exec(STANDALONE_CSS);
-  const dark = /:root\[data-mokly-theme="dark"\] \{([^}]*)\}/.exec(
-    STANDALONE_CSS,
-  );
+  const light = /\n\.mbk,\s*\.mbk-document \{([^}]*)\}/.exec(STANDALONE_CSS);
+  const dark =
+    /\n\.mbk\[data-mokly-theme="dark"\],\s*\.mbk-document\[data-mokly-theme="dark"\] \{([^}]*)\}/.exec(
+      STANDALONE_CSS,
+    );
   assert.ok(light?.[1] && dark?.[1], "the shell defines both appearances");
   const themed = roles(dark[1]);
   assert.ok(themed.length > 20, `only ${themed.length} dark roles`);
@@ -90,8 +92,8 @@ test("both appearances define exactly the same shell roles", () => {
 });
 
 test("only the three public accent overrides survive from a host", () => {
-  // The scoped shell drops the public accent declarations so a host value on
-  // an ancestor can inherit in. The fallback behind each use must therefore
+  // The embedded stylesheet drops the public accent declarations so a host
+  // value on an ancestor can inherit in. The fallback behind each use must therefore
   // follow the appearance, or a dark root would paint the Light accent.
   assert.deepEqual(
     [
@@ -107,7 +109,7 @@ test("only the three public accent overrides survive from a host", () => {
     assert.doesNotMatch(
       EMBEDDED_CSS,
       new RegExp(`^\\s*${name}: (?!var\\()`, "mu"),
-      `${name} is declared in the scoped shell, shadowing a host override`,
+      `${name} is declared in the embedded shell, shadowing a host override`,
     );
     assert.match(
       EMBEDDED_CSS,
@@ -116,8 +118,11 @@ test("only the three public accent overrides survive from a host", () => {
     );
   }
   for (const [block, accent] of [
-    [/:scope \{([\s\S]*?)\}/, "#4f7864"],
-    [/:scope\[data-mokly-theme="dark"\] \{([\s\S]*?)\}/, "#86b79b"],
+    [/\n\.mbk, \.mbk-document \{([\s\S]*?)\}/, "#4f7864"],
+    [
+      /\n\.mbk\[data-mokly-theme="dark"\], \.mbk-document\[data-mokly-theme="dark"\] \{([\s\S]*?)\}/,
+      "#86b79b",
+    ],
   ] as const) {
     const declarations = block.exec(EMBEDDED_CSS)?.[1];
     assert.ok(declarations, `${block} is missing`);
@@ -153,7 +158,7 @@ test("a comparison canvas takes an opaque base from its preview scheme", () => {
   const css = STANDALONE_CSS.replace(/\s+/g, " ");
   assert.ok(
     css.includes(
-      ".mb-pane-doc { background-color: var(--mbk-screen-bg); " +
+      ".mb-pane-doc:where(.mbk-reset) { background-color: var(--mbk-screen-bg); " +
         "background-image: linear-gradient( var(--mbk-comparison-canvas, transparent), " +
         "var(--mbk-comparison-canvas, transparent) ); }",
     ),
@@ -161,14 +166,14 @@ test("a comparison canvas takes an opaque base from its preview scheme", () => {
   );
   assert.ok(
     css.includes(
-      '[data-preview-color-scheme="dark"] .mb-pane-doc ' +
+      '[data-preview-color-scheme="dark"] .mb-pane-doc:where(.mbk-reset) ' +
         "{ background-color: var(--mbk-dark-screen-bg); }",
     ),
     "a dark comparison canvas keeps the light base",
   );
   assert.ok(
     css.includes(
-      '[data-preview-color-scheme="dark"] .mb-viewport { color-scheme: dark; }',
+      '[data-preview-color-scheme="dark"] .mb-viewport:where(.mbk-reset) { color-scheme: dark; }',
     ),
     "a dark comparison viewport keeps light scrollbars",
   );

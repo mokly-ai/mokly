@@ -14,20 +14,21 @@ import { PhoneStatusBar } from "./phone-status.js";
 /** A 390×844 phone body whose screen hosts a mobile preview. */
 export function PhoneFrame({ children }: { children?: ReactNode }) {
   return (
-    <div className="phone-frame">
-      <div className="phone-notch" aria-hidden="true" />
-      <div className="phone-screen">
+    <div className="phone-frame mbk-reset">
+      <div className="phone-notch mbk-reset" aria-hidden="true" />
+      <div className="phone-screen mbk-reset">
         <PhoneStatusBar />
         {children}
       </div>
-      <div className="phone-home" aria-hidden="true" />
+      <div className="phone-home mbk-reset" aria-hidden="true" />
     </div>
   );
 }
 
 /**
  * A desktop browser window whose viewport hosts a desktop preview. An
- * expanded window covers the page, and the host marks the page meanwhile.
+ * expanded window covers the shell, and the host marks the shell root
+ * meanwhile, which shows the scrim below the window.
  */
 export function BrowserFrame({
   address,
@@ -50,7 +51,7 @@ export function BrowserFrame({
   onExpandedChange?: ((expanded: boolean) => void) | undefined;
 }) {
   return (
-    <div className={`browser-frame${expanded ? " is-expanded" : ""}`}>
+    <div className={`browser-frame${expanded ? " is-expanded" : ""} mbk-reset`}>
       <BrowserBar
         address={address}
         expandable={expandable}
@@ -58,7 +59,7 @@ export function BrowserFrame({
         onCopy={onCopy}
         onExpandedChange={onExpandedChange}
       />
-      <div className="browser-viewport">{children}</div>
+      <div className="browser-viewport mbk-reset">{children}</div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 /* The phone: a dark bezel, the notch, the screen with its status band, and
    the home pill. */
-.phone-frame {
+.phone-frame:where(.mbk-reset) {
   position: relative;
   width: 390px;
   height: 844px;
@@ -11,12 +11,12 @@
 
 /* The decorative notch and home pill let pointers through to the document;
    the screen itself keeps pointer events, so links under the pill work. */
-.phone-notch,
-.phone-home {
+.phone-notch:where(.mbk-reset),
+.phone-home:where(.mbk-reset) {
   pointer-events: none;
 }
 
-.phone-notch {
+.phone-notch:where(.mbk-reset) {
   position: absolute;
   top: 22px;
   left: 50%;
@@ -28,7 +28,7 @@
   background: var(--mbk-device-notch);
 }
 
-.phone-screen {
+.phone-screen:where(.mbk-reset) {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -37,7 +37,7 @@
   border-radius: 36px;
 }
 
-.phone-status {
+.phone-status:where(.mbk-reset) {
   position: relative;
   z-index: 1;
   flex: 0 0 44px;
@@ -51,13 +51,13 @@
   font-feature-settings: "tnum";
 }
 
-.phone-status-icons {
+.phone-status-icons:where(.mbk-reset) {
   display: flex;
   gap: 6px;
   align-items: center;
 }
 
-.phone-home {
+.phone-home:where(.mbk-reset) {
   position: absolute;
   left: 50%;
   bottom: 20px;
@@ -70,7 +70,7 @@
 
 /* The browser window: the bar of `../browser-bar`, then the viewport. An
    expanded window covers the page and marks its toggle. */
-.browser-frame {
+.browser-frame:where(.mbk-reset) {
   width: 100%;
   max-width: 1180px;
   height: 760px;
@@ -80,31 +80,31 @@
   background: var(--chrome-surface);
 }
 
-.browser-viewport {
+.browser-viewport:where(.mbk-reset) {
   height: calc(100% - 40px);
   overflow: hidden;
 }
 
-.browser-frame.is-expanded .browser-expand {
+.browser-frame.is-expanded .browser-expand:where(.mbk-reset) {
   color: var(--chrome-accent);
   border-color: var(--chrome-accent);
 }
 
-.browser-frame.is-expanded .browser-expand .i-expand {
+.browser-frame.is-expanded .browser-expand .i-expand:where(.mbk-reset) {
   display: none;
 }
 
-.browser-frame.is-expanded .browser-expand .i-collapse {
+.browser-frame.is-expanded .browser-expand .i-collapse:where(.mbk-reset) {
   display: inline-flex;
 }
 
-/* An expanded window covers the page above a scrim. The host marks the page
+/* An expanded window covers the shell above a scrim. The shell marks its root
    while a window is expanded. */
-body.frame-expanded {
+.mbk.frame-expanded {
   overflow: hidden;
 }
 
-body.frame-expanded::before {
+.mbk.frame-expanded::before {
   content: "";
   position: fixed;
   inset: 0;
@@ -112,7 +112,7 @@ body.frame-expanded::before {
   background: var(--chrome-scrim);
 }
 
-.browser-frame.is-expanded {
+.browser-frame.is-expanded:where(.mbk-reset) {
   position: fixed;
   inset: 2.5vh 2.5vw;
   z-index: 950;
@@ -123,13 +123,13 @@ body.frame-expanded::before {
 }
 
 @media (max-width: 760px) {
-  .phone-frame {
+  .phone-frame:where(.mbk-reset) {
     width: min(390px, 100%);
     height: auto;
     aspect-ratio: 390 / 844;
   }
 
-  .browser-frame {
+  .browser-frame:where(.mbk-reset) {
     width: 100%;
     min-width: 0;
     height: 560px;
@@ -138,30 +138,30 @@ body.frame-expanded::before {
 
 /* The screen follows the scheme of the shown document, independently of the
    shell's appearance. */
-.phone-screen {
+.phone-screen:where(.mbk-reset) {
   background: var(--mbk-screen-bg);
 }
 
-.phone-status {
+.phone-status:where(.mbk-reset) {
   color: var(--mbk-screen-ink);
 }
 
-.phone-home {
+.phone-home:where(.mbk-reset) {
   background: var(--mbk-device-home);
 }
 
-.browser-viewport {
+.browser-viewport:where(.mbk-reset) {
   background: var(--mbk-screen-bg);
 }
 
-[data-preview-color-scheme="dark"] .phone-screen {
+[data-preview-color-scheme="dark"] .phone-screen:where(.mbk-reset) {
   background: var(--mbk-dark-screen-bg);
 }
 
 /* A dark screen would lose its edge in the near-black phone body. Its 1px
    inset hairline is an overlay above the fragment, so the document cannot
    cover it. */
-[data-preview-color-scheme="dark"] .phone-screen::after {
+[data-preview-color-scheme="dark"] .phone-screen:where(.mbk-reset)::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -175,15 +175,15 @@ body.frame-expanded::before {
   pointer-events: none;
 }
 
-[data-preview-color-scheme="dark"] .phone-status {
+[data-preview-color-scheme="dark"] .phone-status:where(.mbk-reset) {
   color: var(--mbk-dark-screen-ink);
 }
 
-[data-preview-color-scheme="dark"] .phone-home {
+[data-preview-color-scheme="dark"] .phone-home:where(.mbk-reset) {
   background: color-mix(in srgb, var(--mbk-dark-screen-ink) 40%, transparent);
 }
 
-[data-preview-color-scheme="dark"] .browser-viewport {
+[data-preview-color-scheme="dark"] .browser-viewport:where(.mbk-reset) {
   background: var(--mbk-dark-screen-bg);
 }
 
@@ -196,7 +196,7 @@ body.frame-expanded::before {
   border-radius: 0 0 36px 36px;
 }
 
-.phone-screen > .mb-viewport {
+.phone-screen > .mb-viewport:where(.mbk-reset) {
   flex: 1 1 auto;
   height: auto;
   min-height: 0;

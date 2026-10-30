@@ -27,7 +27,7 @@ test("the supplied props are one named list of names and values in code", () => 
   ];
   assert.equal(
     renderToStaticMarkup(<PropValues values={values} />),
-    '<dl aria-label="Supplied props" class="mbk-props"><div><dt>hint</dt><dd><code>Not set</code></dd></div><div><dt>label</dt><dd><code>&quot;Continue&quot;</code></dd></div></dl>',
+    '<dl aria-label="Supplied props" class="mbk-props mbk-reset"><div class="mbk-reset"><dt class="mbk-reset">hint</dt><dd class="mbk-reset"><code class="mbk-reset">Not set</code></dd></div><div class="mbk-reset"><dt class="mbk-reset">label</dt><dd class="mbk-reset"><code class="mbk-reset">&quot;Continue&quot;</code></dd></div></dl>',
   );
   render(<PropValues values={values} />);
   const list = screen.getByLabelText("Supplied props");
@@ -42,7 +42,7 @@ test("the supplied props are one named list of names and values in code", () => 
 test("slots follow under their own heading, and no slot draws nothing", () => {
   assert.equal(
     renderToStaticMarkup(<PropSlots slots={["header", "footer"]} />),
-    "<h4>Slots</h4><p>header</p><p>footer</p>",
+    '<h4 class="mbk-reset">Slots</h4><p class="mbk-reset">header</p><p class="mbk-reset">footer</p>',
   );
   assert.equal(renderToStaticMarkup(<PropSlots slots={[]} />), "");
   assert.equal(renderToStaticMarkup(<PropSlots />), "");
@@ -53,14 +53,14 @@ test("the message says why the tab shows no props, and is a status while its dat
     renderToStaticMarkup(
       <PropsMessage>This entry renders without props.</PropsMessage>,
     ),
-    '<p class="mbk-empty-copy">This entry renders without props.</p>',
+    '<p class="mbk-empty-copy mbk-reset">This entry renders without props.</p>',
   );
   render(
     <PropsMessage pending>Waiting for the component preview.</PropsMessage>,
   );
   const status = screen.getByRole("status");
   assert.equal(status.textContent, "Waiting for the component preview.");
-  assert.equal(status.hasAttribute("class"), false);
+  assert.equal(status.getAttribute("class"), "mbk-reset");
 });
 
 test("an instance's props follow its heading and the link to its component", () => {
@@ -76,7 +76,7 @@ test("an instance's props follow its heading and the link to its component", () 
         values={[{ name: "label", value: '"Go"' }]}
       />,
     ),
-    '<h3>Action · footer</h3><a href="/view/components/action/">Open component</a><dl aria-label="Supplied props" class="mbk-props"><div><dt>label</dt><dd><code>&quot;Go&quot;</code></dd></div></dl><h4>Slots</h4><p>header · Supplied by this page</p>',
+    '<h3 class="mbk-reset">Action · footer</h3><a class="mbk-reset" href="/view/components/action/">Open component</a><dl aria-label="Supplied props" class="mbk-props mbk-reset"><div class="mbk-reset"><dt class="mbk-reset">label</dt><dd class="mbk-reset"><code class="mbk-reset">&quot;Go&quot;</code></dd></div></dl><h4 class="mbk-reset">Slots</h4><p class="mbk-reset">header · Supplied by this page</p>',
   );
   render(
     <PropsPanel
@@ -107,24 +107,24 @@ test("an instance of an unknown component has no link, and props without an inst
         values={[]}
       />,
     ),
-    "<h3>components/unknown · footer</h3><p>No data props supplied.</p>",
+    '<h3 class="mbk-reset">components/unknown · footer</h3><p class="mbk-reset">No data props supplied.</p>',
   );
   assert.equal(
     renderToStaticMarkup(
       <PropsPanel slots={["header"]} values={[{ name: "a", value: "1" }]} />,
     ),
-    '<dl aria-label="Supplied props" class="mbk-props"><div><dt>a</dt><dd><code>1</code></dd></div></dl><h4>Slots</h4><p>header</p>',
+    '<dl aria-label="Supplied props" class="mbk-props mbk-reset"><div class="mbk-reset"><dt class="mbk-reset">a</dt><dd class="mbk-reset"><code class="mbk-reset">1</code></dd></div></dl><h4 class="mbk-reset">Slots</h4><p class="mbk-reset">header</p>',
   );
 });
 
 test("the tab's data loads in a status, and a failed load offers Try again", () => {
   assert.equal(
     renderToStaticMarkup(<PropsStatus status="loading" wording={WORDING} />),
-    '<section aria-label="Props status" data-props-section="status"><p role="status">Loading props…</p></section>',
+    '<section aria-label="Props status" class="mbk-reset" data-props-section="status"><p class="mbk-reset" role="status">Loading props…</p></section>',
   );
   assert.equal(
     renderToStaticMarkup(<PropsStatus status="failed" wording={WORDING} />),
-    '<section aria-label="Props status" data-props-section="status"><p role="alert">Props couldn’t be loaded.</p><button class="mbk-text-button" type="button">Try again</button></section>',
+    '<section aria-label="Props status" class="mbk-reset" data-props-section="status"><p class="mbk-reset" role="alert">Props couldn’t be loaded.</p><button class="mbk-text-button mbk-reset" type="button">Try again</button></section>',
   );
   let retries = 0;
   render(

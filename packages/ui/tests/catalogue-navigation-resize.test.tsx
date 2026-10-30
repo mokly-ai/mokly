@@ -72,7 +72,7 @@ test("the separator names its range and the column's width", () => {
       "aria-valuemin": "192",
       "aria-valuenow": "300",
       "aria-valuetext": "300 pixels",
-      class: "mbk-nav-resize",
+      class: "mbk-nav-resize mbk-reset",
       "data-mokly-nav-resize": "",
       tabindex: "0",
       title: "Drag to resize. Use arrow keys for precise control.",

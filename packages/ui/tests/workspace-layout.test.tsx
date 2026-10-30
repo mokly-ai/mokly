@@ -29,7 +29,7 @@ function workspace(busy?: boolean, ref = createRef<HTMLElement>()) {
 test("the workspace lays out its header, variants, preview, inspector, and overlay", () => {
   assert.equal(
     renderToString(workspace()),
-    '<section class="mbk-workspace" data-workspace=""><h2>Header</h2><nav aria-label="Variants"></nav><div class="mbk-workspace-panes"><div class="mbk-preview-pane" data-workspace-preview=""><div class="mbk-preview-busy"><i>Stage</i></div><p role="status">Rendering</p></div><aside>Inspector</aside></div><b>Labels</b></section>',
+    '<section class="mbk-workspace mbk-reset" data-workspace=""><h2>Header</h2><nav aria-label="Variants"></nav><div class="mbk-workspace-panes mbk-reset"><div class="mbk-preview-pane mbk-reset" data-workspace-preview=""><div class="mbk-preview-busy mbk-reset"><i>Stage</i></div><p role="status">Rendering</p></div><aside>Inspector</aside></div><b>Labels</b></section>',
   );
 });
 

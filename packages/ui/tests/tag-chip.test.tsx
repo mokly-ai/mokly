@@ -16,11 +16,11 @@ const GLYPH = renderToStaticMarkup(<TagIcon size={11} />);
 test("the chip draws the 11px tag glyph, then the tag, as the shell does", () => {
   assert.equal(
     renderToStaticMarkup(<TagChip selected={false} tag="forms" />),
-    `<button aria-pressed="false" class="mbk-chip tag" data-mokly-tag="forms" type="button">${GLYPH}forms</button>`,
+    `<button aria-pressed="false" class="mbk-chip tag mbk-reset" data-mokly-tag="forms" type="button">${GLYPH}forms</button>`,
   );
   assert.equal(
     renderToStaticMarkup(<TagChip selected tabIndex={0} tag="forms" />),
-    `<button aria-pressed="true" class="mbk-chip tag active" data-mokly-tag="forms" tabindex="0" type="button">${GLYPH}forms</button>`,
+    `<button aria-pressed="true" class="mbk-chip tag active mbk-reset" data-mokly-tag="forms" tabindex="0" type="button">${GLYPH}forms</button>`,
   );
   assert.match(
     renderToStaticMarkup(<TagChip selected={false} tabIndex={-1} tag="a" />),

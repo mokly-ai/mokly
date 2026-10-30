@@ -8,12 +8,13 @@
 
 import type { ReactNode, Ref } from "react";
 
+import type { Appearance } from "../appearance-selector/appearance-selector.js";
 import { EmptyState, type EmptyStateRoot } from "../empty-state/empty-state.js";
 
 /** The link that takes a keyboard reader past the chrome to the main region. */
 export function SkipLink({ href }: { href: string }) {
   return (
-    <a className="mbk-skip-link" href={href}>
+    <a className="mbk-skip-link mbk-reset" href={href}>
       Skip to content
     </a>
   );
@@ -21,7 +22,7 @@ export function SkipLink({ href }: { href: string }) {
 
 /** The row below the top bar: the navigation beside the main region. */
 export function ShellBody({ children }: { children?: ReactNode }) {
-  return <div className="mbk-body">{children}</div>;
+  return <div className="mbk-body mbk-reset">{children}</div>;
 }
 
 /** The polite status that announces each navigation to a screen reader. */
@@ -37,7 +38,7 @@ export function RouteStatus({
     <p
       aria-atomic="true"
       aria-live="polite"
-      className="mbk-route-status"
+      className="mbk-route-status mbk-reset"
       id={id}
       role="status"
     >
@@ -62,7 +63,7 @@ export function MainRegion({
 }) {
   return (
     <main
-      className="mbk-main"
+      className="mbk-main mbk-reset"
       data-mokly-view=""
       data-mokly-baseline={baseline}
       id={id}
@@ -73,19 +74,26 @@ export function MainRegion({
   );
 }
 
-/** The root of the standalone shell. */
+/**
+ * The root of the standalone shell. It carries the shell's root class, which
+ * holds the theme, and states its appearance and its preview scheme.
+ */
 export function ShellLayout({
   announcement,
+  colorScheme,
   drawerOpen,
   main,
   mainHref,
   navigation,
   ref,
   statusId,
+  theme,
   topBar,
 }: {
   /** The route status's announcement of the last navigation. */
   announcement: string;
+  /** The scheme of the shown previews, as `data-mokly-color-scheme`. */
+  colorScheme: "dark" | "light";
   /** Whether the navigation drawer of a narrow shell is open. */
   drawerOpen: boolean;
   /** The main region with the routed view. */
@@ -96,13 +104,17 @@ export function ShellLayout({
   /** Receives the shell root. */
   ref?: Ref<HTMLDivElement> | undefined;
   statusId: string;
+  /** The appearance that the root states, as `data-mokly-theme`. */
+  theme: Appearance;
   topBar: ReactNode;
 }) {
   return (
     <div
-      className="mbk"
+      className="mbk mbk-reset"
       data-drawer={drawerOpen ? "open" : "closed"}
+      data-mokly-color-scheme={colorScheme}
       data-mokly-shell=""
+      data-mokly-theme={theme}
       ref={ref}
     >
       <SkipLink href={mainHref} />

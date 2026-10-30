@@ -43,9 +43,10 @@ test("the viewport select draws its glyph, then the package down chevron", () =>
   const markup = renderToStaticMarkup(
     <ViewControls viewport="both" viewportMark={VIEWPORT_MARK} />,
   );
-  const glyphs = /<label class="mbk-icon-select"[^>]*>(.*?)<select/su.exec(
-    markup,
-  )?.[1];
+  const glyphs =
+    /<label class="mbk-icon-select mbk-reset"[^>]*>(.*?)<select/su.exec(
+      markup,
+    )?.[1];
   assert.equal(
     glyphs,
     renderToStaticMarkup(<WorkspaceIcon name="viewport" />) +
@@ -56,7 +57,7 @@ test("the viewport select draws its glyph, then the package down chevron", () =>
 test("the group names its controls as the shell specs query them", () => {
   render(<ViewControls viewport="desktop" viewportMark={VIEWPORT_MARK} />);
   const group = screen.getByRole("group", { name: "View options" });
-  assert.equal(group.className, "mbk-view-tools");
+  assert.equal(group.className, "mbk-view-tools mbk-reset");
   const select = viewportSelect();
   assert.equal(select.value, "desktop");
   assert.equal(select.getAttribute("data-workspace-viewport"), "");

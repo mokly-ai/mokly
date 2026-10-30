@@ -44,12 +44,12 @@ test("a field keeps the shell's markup: the label column, then the value, help, 
         <PropField {...field({ description: "The button text." })} />
       </PropFields>,
     ),
-    '<div class="mbk-control-rows"><div class="mbk-control-field">' +
-      `<label class="mbk-control-label" for="${ID}">label</label>` +
-      '<div class="mbk-control-value">' +
-      `<input aria-describedby="${ID}-help" data-prop-control="label" id="${ID}" type="text" value="Go"/>` +
-      `<small id="${ID}-help">The button text.</small>` +
-      `<small class="mbk-control-error" hidden="" id="${ID}-error"></small>` +
+    '<div class="mbk-control-rows mbk-reset"><div class="mbk-control-field mbk-reset">' +
+      `<label class="mbk-control-label mbk-reset" for="${ID}">label</label>` +
+      '<div class="mbk-control-value mbk-reset">' +
+      `<input aria-describedby="${ID}-help" data-prop-control="label" id="${ID}" type="text" class="mbk-reset" value="Go"/>` +
+      `<small class="mbk-reset" id="${ID}-help">The button text.</small>` +
+      `<small class="mbk-control-error mbk-reset" hidden="" id="${ID}-error"></small>` +
       "</div></div></div>",
   );
 });
@@ -121,7 +121,7 @@ test("a number field carries its HTML bounds and decimal input mode", () => {
     renderToStaticMarkup(
       <PropField {...field({ control: { kind: "number", step: "any" } })} />,
     ),
-    /<input data-prop-control="label" id="[^"]+" inputMode="decimal" step="any" type="number" value="Go"\/>/,
+    /<input data-prop-control="label" id="[^"]+" inputMode="decimal" step="any" type="number" class="mbk-reset" value="Go"\/>/,
   );
 });
 
@@ -208,7 +208,10 @@ test("an optional toggle names its value check box and supplies itself with Set"
   assertSameElement(screen.queryByText("Not set"), null);
 
   rerender(<PropField {...props} supplied={false} />);
-  assert.equal(screen.getByText("Not set").className, "mbk-control-unset");
+  assert.equal(
+    screen.getByText("Not set").className,
+    "mbk-control-unset mbk-reset",
+  );
   assert.equal(value.closest("label")?.hidden, true);
   assert.equal(value.hidden, true);
   fireEvent.click(set);

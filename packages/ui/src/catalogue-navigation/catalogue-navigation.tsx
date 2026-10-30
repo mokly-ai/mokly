@@ -98,17 +98,17 @@ export function CatalogueNavigation({
   return (
     <nav
       aria-label="Catalogue"
-      className="mbk-nav"
+      className="mbk-nav mbk-reset"
       data-mokly-nav=""
       data-resize-ready={resizable ? "" : undefined}
       id={id}
       ref={ref}
       style={style}
     >
-      <div className="mbk-nav-head">
+      <div className="mbk-nav-head mbk-reset">
         Catalogue
         <button
-          className="mbk-nav-collapse"
+          className="mbk-nav-collapse mbk-reset"
           data-mokly-collapse=""
           onClick={() => onCollapseAll?.()}
           type="button"
@@ -119,7 +119,7 @@ export function CatalogueNavigation({
       {filter ? <FilterGroup filter={filter} onView={onView} /> : null}
       <div
         aria-busy={busy}
-        className="mbk-nav-scroll"
+        className="mbk-nav-scroll mbk-reset"
         data-mokly-nav-scroll=""
         onScroll={(event) => onScroll?.(event.currentTarget.scrollTop)}
         ref={scrollRef}

@@ -81,16 +81,16 @@ test("a closed inspector keeps the shell's markup", () => {
         tabs={[tab("details", "Details")]}
       />,
     ),
-    '<section aria-label="Inspector" class="mbk-inspector" data-workspace-inspector="">' +
-      `<div aria-controls="${CONTENT}" aria-label="Resize inspector" aria-orientation="horizontal" aria-valuemax="600" aria-valuemin="160" aria-valuenow="260" class="mbk-inspector-resize" data-inspector-resize="" role="separator" tabindex="0"></div>` +
-      '<button aria-expanded="false" aria-label="Expand inspector" class="mbk-sheet-grab" data-inspector-size="" type="button"><span></span></button>' +
-      '<div aria-label="Inspector panels" class="mbk-inspector-tabs" role="tablist">' +
-      `<button aria-controls="root-mb-panel-details" aria-label="Details" aria-selected="false" class="mbk-icon-button" data-inspector-tab="details" id="root-mb-tab-details" role="tab" title="Details" type="button">${renderToStaticMarkup(<WorkspaceIcon name="details" />)}</button>` +
-      '<span class="mbk-inspector-title" data-inspector-title=""></span>' +
-      `<button aria-label="Close inspector" class="mbk-icon-button" data-inspector-close="" hidden="" title="Close inspector" type="button">${renderToStaticMarkup(<WorkspaceIcon name="close" />)}</button>` +
+    '<section aria-label="Inspector" class="mbk-inspector mbk-reset" data-workspace-inspector="">' +
+      `<div aria-controls="${CONTENT}" aria-label="Resize inspector" aria-orientation="horizontal" aria-valuemax="600" aria-valuemin="160" aria-valuenow="260" class="mbk-inspector-resize mbk-reset" data-inspector-resize="" role="separator" tabindex="0"></div>` +
+      '<button aria-expanded="false" aria-label="Expand inspector" class="mbk-sheet-grab mbk-reset" data-inspector-size="" type="button"><span class="mbk-reset"></span></button>' +
+      '<div aria-label="Inspector panels" class="mbk-inspector-tabs mbk-reset" role="tablist">' +
+      `<button aria-controls="root-mb-panel-details" aria-label="Details" aria-selected="false" class="mbk-icon-button mbk-reset" data-inspector-tab="details" id="root-mb-tab-details" role="tab" title="Details" type="button">${renderToStaticMarkup(<WorkspaceIcon name="details" />)}</button>` +
+      '<span class="mbk-inspector-title mbk-reset" data-inspector-title=""></span>' +
+      `<button aria-label="Close inspector" class="mbk-icon-button mbk-reset" data-inspector-close="" hidden="" title="Close inspector" type="button">${renderToStaticMarkup(<WorkspaceIcon name="close" />)}</button>` +
       "</div>" +
-      `<div class="mbk-inspector-content" data-mokly-scroll="inspector" hidden="" id="${CONTENT}">` +
-      '<section aria-labelledby="root-mb-tab-details" data-inspector-panel="details" hidden="" id="root-mb-panel-details" role="tabpanel"><p>Details panel</p></section>' +
+      `<div class="mbk-inspector-content mbk-reset" data-mokly-scroll="inspector" hidden="" id="${CONTENT}">` +
+      '<section aria-labelledby="root-mb-tab-details" class="mbk-reset" data-inspector-panel="details" hidden="" id="root-mb-panel-details" role="tabpanel"><p>Details panel</p></section>' +
       "</div></section>",
   );
 });

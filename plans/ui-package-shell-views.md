@@ -1009,37 +1009,64 @@ Decision 4 G. After this milestone the viewer holds no style rule apart from
 the `@font-face` rule of design call 9, and the embedded stylesheet has no
 `@scope` block.
 
-- [ ] Create the `theme` stylesheet under design call 8: the tokens and the
+- [x] Create the `theme` stylesheet under design call 8: the tokens and the
       palette on the shell root class and the stub document class, never on
       `:root`, `html`, or `body`.
-- [ ] Create the `mbk-reset` stylesheet under design call 13, and put the
+- [x] Create the `mbk-reset` stylesheet under design call 13, and put the
       class on the elements of each package component that need a reset.
       Record where box sizing lives.
-- [ ] Every viewer root carries the root class. The standalone shell sets its
+- [x] Every viewer root carries the root class. The standalone shell sets its
       page marks on the shell root instead of `body` or `<html>`.
-- [ ] Rewrite each rule that selects `body`, `html`, or `:root` with a shell
+- [x] Rewrite each rule that selects `body`, `html`, or `:root` with a shell
       mark to select the shell root.
-- [ ] The embedded root's loading, failure, and version states are not laid
+- [x] The embedded root's loading, failure, and version states are not laid
       out today, because the `@scope` wrapper does not apply `.mbk-empty` to
       the scope root itself. Check that they are laid out once `@scope` goes,
       and list the change as an intended difference. Found by milestone 15 on
       2026-10-30.
-- [ ] Update the Key Code entry of `src/shell` in `packages/viewer/README.md`,
+- [x] Update the Key Code entry of `src/shell` in `packages/viewer/README.md`,
       which still says "scoped styles". Name the shell root class and the
       stub document class in the docs that milestone 1 left unnamed. Found by
       milestone 1 on 2026-10-30.
-- [ ] Delete `css.ts` and the remaining CSS modules. The viewer build writes
+- [x] Delete `css.ts` and the remaining CSS modules. The viewer build writes
       `shell.css` and `styles.css` from the `@font-face` rule and the package
       stylesheet. Remove the `@scope` transform and its selector mapping, and
       keep the font URL rewrite and the accent fallbacks under design call 10.
-- [ ] Tests: the package and viewer styles tests read the new forms, a test
+- [x] Tests: the package and viewer styles tests read the new forms, a test
       shows that no package rule selects the page or reaches a host slot, and
       every earlier assertion stays.
-- [ ] Check as in milestone 3, with the appearance, embedded viewer, and
+- [x] Check as in milestone 3, with the appearance, embedded viewer, and
       device chrome specs. The computed-style tool lists every intended
       difference. Run a visual check of the standalone shell and an embedded
       host in Light and Dark at both widths, also in Firefox. Save evidence
       under `.context/ui-package-shell-views/theme/`.
+- [x] Done on 2026-10-30 by the ui implementor and checked: the Node suite,
+      the browser suite, the static delivery suite, and the repository suite
+      passed, and the new host content spec passed 10 of 10 runs. The
+      computed-style tool lists these intended differences: every package
+      element carries the reset class; the stub page's elements outside the
+      shell root lose border-box sizing and the reduced-motion durations, and
+      none of them has padding, a border, or a transition; the embedded root
+      takes the reset class; `body` loses `mbk-fs`, and the stub page rules
+      give it the same styles, also while a root state shows; the embedded
+      loading, failure, version, and unavailable states are laid out as the
+      standalone ones; the expanded window's scrim moves from `body::before`
+      to `.mbk::before`; an inspector drag in an embedded root shows the
+      resize cursor and locks the frames, which the `@scope` wrapper
+      prevented. In Firefox the embedded search placeholder takes
+      `--chrome-muted`, because Firefox drew no `::placeholder` rule inside
+      `@scope`. Calls: box sizing and reduced motion sit in the reset class,
+      so every package element and `<svg>` carries it, and an SVG's shapes
+      take it through their `<svg>` (design call 13); a selector that names
+      only generic classes, such as `.address`, carries `:where(.mbk-reset)`,
+      so it never matches a host element; the accent fallbacks stay a build
+      step (design call 10); the package rules may also use
+      `(prefers-color-scheme: dark)`, for the theme's Auto rule (design call
+      15); `ShellLayout` takes `theme` and `colorScheme`, and
+      `EmptyStateRoot` takes `theme`. Follow-up items added:
+      `plans/follow-ups/shell-generic-class-names.md` and
+      `plans/follow-ups/reset-class-coverage-check.md`. Evidence:
+      `.context/ui-package-shell-views/theme/`.
 
 ## Milestone 19: Layout mockups
 

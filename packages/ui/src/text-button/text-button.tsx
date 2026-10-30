@@ -16,7 +16,7 @@ export function TextButton({
 }) {
   return (
     <button
-      className="mbk-text-button"
+      className="mbk-text-button mbk-reset"
       onClick={() => onClick?.()}
       type="button"
     >

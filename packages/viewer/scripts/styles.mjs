@@ -2,128 +2,71 @@ import { transform } from "lightningcss";
 
 import { VIEWER_DIRECTORY } from "@mokly/viewer/data";
 
-/** The container that an embedded root's top host establishes. */
-const TOP_HOST_CONTAINER = "mokly-top-host";
+/** The address of the font in its authored rule, which sits beside the font. */
+const FONT_SOURCE = 'url("./InterVariable.woff2")';
 
-/** The start of a parsed rule, which names a top-level rule of one parse. */
-function start({ loc }) {
-  return `${loc.source_index}:${loc.line}:${loc.column}`;
-}
+/** The family name of the shell font in an embedded root. */
+const EMBEDDED_FAMILY = '"Mokly Inter"';
 
-/** Whether a parsed selector starts with the embedded root class. */
-function startsAtRoot(selector) {
-  const [first] = selector;
-  return first?.type === "class" && first.name === VIEWER_DIRECTORY;
+/**
+ * The three public accent overrides, each with the private default of the
+ * current appearance, which the theme declares on every shell root.
+ */
+const ACCENT_OVERRIDES = new Map([
+  ["--mokly-accent", "--_mokly-private-accent-default"],
+  ["--mokly-accent-contrast", "--_mokly-private-accent-contrast-default"],
+  ["--mokly-accent-soft", "--_mokly-private-accent-soft-default"],
+]);
+
+/** The `@font-face` rule of the shell font, at the address of one delivery. */
+function fontFace(font, address) {
+  const rule = /@font-face\s*\{[^}]*\}/u.exec(font)?.[0];
+  if (!rule?.includes(FONT_SOURCE))
+    throw new Error(`The shell font rule does not read ${FONT_SOURCE}.`);
+  return rule.replace(FONT_SOURCE, `url("${address}")`);
 }
 
 /**
- * Whether a rule belongs to the embedded root, outside the scope that stops at
- * host slots: a style rule whose every selector starts with the root class,
- * an `@scope` from the root class, a `@media` rule that holds only such rules,
- * and a container query of the root's top host.
+ * The standalone stylesheet that Serve and `build` deliver as
+ * `/mokly-viewer/shell.css`: the shell font at its delivery path, then the
+ * package stylesheet unchanged.
  */
-function rootRule(rule) {
-  const { value } = rule;
-  switch (rule.type) {
-    case "style":
-      return value.selectors.every(startsAtRoot);
-    case "scope":
-      return (
-        Boolean(value.scopeStart?.length) &&
-        value.scopeStart.every(startsAtRoot)
-      );
-    case "media":
-      return value.rules.length > 0 && value.rules.every(rootRule);
-    case "container":
-      return value.name === TOP_HOST_CONTAINER;
-    default:
-      return false;
-  }
-}
-
-/** Visit the top-level rules only, and drop each that `keep` rejects. */
-function topLevelRules(keep) {
-  let topLevel = new Set();
-  return {
-    StyleSheet(sheet) {
-      topLevel = new Set(
-        sheet.rules.flatMap((rule) =>
-          rule.value?.loc ? [start(rule.value)] : [],
-        ),
-      );
-    },
-    Rule(rule) {
-      if (!rule.value?.loc || !topLevel.has(start(rule.value)))
-        return undefined;
-      return keep(rule) ? undefined : [];
-    },
-  };
-}
-
-/** The shell rules inside the scope, with document selectors scoped to it. */
-function scopeShellSelectors(styles) {
-  return transform({
-    code: Buffer.from(styles),
-    filename: "shell.css",
-    visitor: {
-      ...topLevelRules((rule) => !rootRule(rule)),
-      Selector(selector) {
-        let changed = false;
-        let scoped = selector.map((component) => {
-          const documentType =
-            component.type === "type" &&
-            (component.name === "html" || component.name === "body");
-          const documentRoot =
-            component.type === "pseudo-class" && component.kind === "root";
-          if (!documentType && !documentRoot) return component;
-          changed = true;
-          return { type: "pseudo-class", kind: "scope" };
-        });
-        if (scoped[0]?.type === "class" && scoped[0].name === "mbk") {
-          scoped = [{ type: "pseudo-class", kind: "scope" }, ...scoped];
-          changed = true;
-        }
-        return changed ? scoped : undefined;
-      },
-    },
-  }).code.toString();
-}
-
-/** The rules of the embedded root, in their order, without the others. */
-function rootRules(styles) {
-  return transform({
-    code: Buffer.from(styles),
-    filename: "shell.css",
-    visitor: topLevelRules(rootRule),
-  }).code.toString();
+export function standaloneStyles(font, packageCss) {
+  const address = `/${VIEWER_DIRECTORY}/fonts/InterVariable.woff2`;
+  return `${fontFace(font, address)}\n${packageCss}`;
 }
 
 /**
- * Scope shell selectors and defaults to an embedding root, excluding host
- * slots. The rules of the root itself follow the scope in their order, so
- * they reach the root, and its host slots keep the host's styles.
+ * Drop each declaration of a public accent override, so that a host's value
+ * on an ancestor inherits into the root, and let each use fall back to the
+ * default that the theme restates for each appearance. A dark root without a
+ * host value therefore keeps its dark accent.
  */
-export function embeddedStyles(shell) {
-  const font = shell
-    .match(/@font-face\s*\{[^}]*\}/)[0]
-    .replaceAll('"Inter"', '"Mokly Inter"')
-    .replace(`/${VIEWER_DIRECTORY}/fonts/`, "./assets/fonts/");
-  const rules = shell
-    .replace(/@font-face\s*\{[^}]*\}/, "")
-    .replaceAll('"Inter"', '"Mokly Inter"');
-  // Dropping the public declarations lets a host value on an ancestor inherit
-  // in. Each use then falls back to the matching default, which the palette
-  // restates per appearance, so an un-overridden dark root is not pinned Light.
-  const overridable = new Map([
-    ["--mokly-accent", "--_mokly-private-accent-default"],
-    ["--mokly-accent-contrast", "--_mokly-private-accent-contrast-default"],
-    ["--mokly-accent-soft", "--_mokly-private-accent-soft-default"],
-  ]);
-  let styles = `@scope (.${VIEWER_DIRECTORY}) to ([data-mokly-slot]) {\n${scopeShellSelectors(rules)}\n}\n${rootRules(rules)}`;
-  for (const [name, fallback] of overridable) {
-    styles = styles
-      .replaceAll(new RegExp(`  ${name}: [^;]+;\\n`, "g"), "")
-      .replaceAll(`var(${name})`, `var(${name}, var(${fallback}))`);
-  }
-  return `${font}\n${styles}`;
+const ACCENT_FALLBACKS = {
+  Declaration: {
+    custom: Object.fromEntries(
+      [...ACCENT_OVERRIDES.keys()].map((name) => [name, () => []]),
+    ),
+  },
+  Variable(variable) {
+    const fallback = ACCENT_OVERRIDES.get(variable.name.ident);
+    if (fallback === undefined || variable.fallback) return undefined;
+    return { raw: `var(${variable.name.ident}, var(${fallback}))` };
+  },
+};
+
+/**
+ * The stylesheet of an embedded root. Its font takes a family name of its
+ * own, so a host's own Inter keeps its file, and reads the packaged assets
+ * next to the stylesheet. The package rules need no scope: none of them
+ * reaches the host page or host slot content.
+ */
+export function embeddedStyles(font, packageCss) {
+  const face = fontFace(font, "./assets/fonts/InterVariable.woff2");
+  const rules = transform({
+    code: Buffer.from(packageCss.replaceAll('"Inter"', EMBEDDED_FAMILY)),
+    filename: "styles.css",
+    visitor: ACCENT_FALLBACKS,
+  }).code.toString();
+  return `${face.replaceAll('"Inter"', EMBEDDED_FAMILY)}\n${rules}`;
 }

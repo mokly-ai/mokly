@@ -63,7 +63,7 @@ export function ResizeHandle({
       aria-valuemin={MINIMUM_WIDTH}
       aria-valuenow={width}
       aria-valuetext={`${width} pixels`}
-      className="mbk-nav-resize"
+      className="mbk-nav-resize mbk-reset"
       data-mokly-nav-resize=""
       onDoubleClick={() => {
         onWidth?.(DEFAULT_WIDTH);

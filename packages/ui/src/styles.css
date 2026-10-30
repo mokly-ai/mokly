@@ -1,4 +1,6 @@
 /* The imports below define the cascade order of styles.css. */
+@import "./theme/theme.css";
+@import "./reset/reset.css";
 @import "./appearance-selector/appearance-selector.css";
 @import "./change-mark/change-mark.css";
 @import "./comparison-toolbar/comparison-toolbar.css";

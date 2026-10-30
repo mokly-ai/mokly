@@ -33,7 +33,7 @@ test("an icon button keeps the shell's attribute order", () => {
         <span data-glyph="" />
       </IconButton>,
     ),
-    '<button type="button" class="mbk-icon-button" aria-label="Dark preview" aria-describedby="root-mark" aria-pressed="false" title="Dark preview" data-workspace-scheme=""><span data-glyph=""></span></button>',
+    '<button type="button" class="mbk-icon-button mbk-reset" aria-label="Dark preview" aria-describedby="root-mark" aria-pressed="false" title="Dark preview" data-workspace-scheme=""><span data-glyph=""></span></button>',
   );
   assert.equal(
     renderToStaticMarkup(
@@ -48,7 +48,7 @@ test("an icon button keeps the shell's attribute order", () => {
         <span data-glyph="" />
       </IconButton>,
     ),
-    '<button type="button" class="mbk-icon-button" aria-label="Highlight components" aria-description="Waiting for the component preview." aria-pressed="true" title="Waiting for the component preview." data-workspace-highlight="" disabled=""><span data-glyph=""></span></button>',
+    '<button type="button" class="mbk-icon-button mbk-reset" aria-label="Highlight components" aria-description="Waiting for the component preview." aria-pressed="true" title="Waiting for the component preview." data-workspace-highlight="" disabled=""><span data-glyph=""></span></button>',
   );
 });
 
@@ -101,7 +101,7 @@ test("an icon select lays its select over the glyph and the 18px down chevron", 
   );
   assert.equal(
     markup,
-    `<label class="mbk-icon-select" title="Size"><span data-glyph=""></span>${renderToStaticMarkup(<ChevronDownIcon size={18} />)}<select aria-label="Size" data-size=""><option value="small">Small</option><option value="large" selected="">Large</option></select><span data-after=""></span></label>`,
+    `<label class="mbk-icon-select mbk-reset" title="Size"><span data-glyph=""></span>${renderToStaticMarkup(<ChevronDownIcon size={18} />)}<select aria-label="Size" data-size="" class="mbk-reset"><option class="mbk-reset" value="small">Small</option><option class="mbk-reset" value="large" selected="">Large</option></select><span data-after=""></span></label>`,
   );
 });
 

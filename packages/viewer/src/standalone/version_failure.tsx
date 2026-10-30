@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 
+import type { EmptyStateRoot } from "@mokly/ui/empty-state";
 import { RootState } from "@mokly/ui/shell-layout";
 
 import {
@@ -16,9 +17,12 @@ import {
 export function VersionFailure({
   error,
   reload,
+  root,
 }: {
   error: MoklyVersionError;
   reload(): void;
+  /** The standalone root, in the document's appearance. */
+  root: EmptyStateRoot;
 }) {
   useEffect(() => {
     console.error(VERSION_ERROR_MESSAGE, error.message);
@@ -27,7 +31,7 @@ export function VersionFailure({
     <RootState
       message={VERSION_ERROR_MESSAGE}
       onReload={reload}
-      root={{ kind: "standalone" }}
+      root={root}
       state="version"
     />
   );

@@ -40,13 +40,13 @@ export function ComparisonStage({
 }) {
   return (
     <section
-      className="mbk-diff-screen"
+      className="mbk-diff-screen mbk-reset"
       data-diff-component={component ? "" : undefined}
       data-diff-screen={entryId}
     >
       {toolbar}
       <div
-        className="mbk-current-screen"
+        className="mbk-current-screen mbk-reset"
         data-current-screen=""
         hidden={!current}
       >
@@ -55,7 +55,7 @@ export function ComparisonStage({
       <div
         aria-busy={busy ? true : undefined}
         aria-live="polite"
-        className="mbk-diff-stage"
+        className="mbk-diff-stage mbk-reset"
         data-diff-stage=""
         hidden={current}
       >
@@ -85,10 +85,10 @@ export function ComparisonSection({
 }) {
   return (
     <section
-      className={`mbk-diff-view mbk-diff-${viewport}`}
+      className={`mbk-diff-view mbk-diff-${viewport} mbk-reset`}
       data-diff-viewport={viewport}
     >
-      <h3>
+      <h3 className="mbk-reset">
         {viewport === "mobile" ? "Mobile" : "Desktop"} · {label}
         {lightOnly ? " · Light only" : ""}
       </h3>
@@ -106,7 +106,7 @@ export function ComparisonPanes({
   mode: "difference" | "overlay" | "side";
 }) {
   return (
-    <div className="mb-panes" data-compare-mode={mode}>
+    <div className="mb-panes mbk-reset" data-compare-mode={mode}>
       {children}
     </div>
   );
@@ -114,7 +114,7 @@ export function ComparisonPanes({
 
 /** The line of a comparison that has no record for the entry. */
 export function ComparisonUnavailable({ message }: { message: string }) {
-  return <p>{message}</p>;
+  return <p className="mbk-reset">{message}</p>;
 }
 
 /** A comparison that could not load: Try again, and the failure's details. */
@@ -129,7 +129,7 @@ export function ComparisonFailure({
 }) {
   return (
     <>
-      <p>
+      <p className="mbk-reset">
         The comparison could not be loaded.{" "}
         <EmptyAction
           action={{
@@ -139,9 +139,9 @@ export function ComparisonFailure({
           }}
         />
       </p>
-      <details data-comparison-failure="">
-        <summary>Comparison details</summary>
-        <p>{details}</p>
+      <details className="mbk-reset" data-comparison-failure="">
+        <summary className="mbk-reset">Comparison details</summary>
+        <p className="mbk-reset">{details}</p>
       </details>
     </>
   );

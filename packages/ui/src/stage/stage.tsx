@@ -34,8 +34,8 @@ export function Stage({
     <div
       className={
         kind === undefined
-          ? "mbk-stage"
-          : `mbk-stage ${kind === "component" ? "mbk-component-stage" : "mbk-live"}`
+          ? "mbk-stage mbk-reset"
+          : `mbk-stage ${kind === "component" ? "mbk-component-stage" : "mbk-live"} mbk-reset`
       }
       data-mokly-scroll={kind === undefined ? undefined : "stage"}
       data-mokly-stage={routed ? "" : undefined}

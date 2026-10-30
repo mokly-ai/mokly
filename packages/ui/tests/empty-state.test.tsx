@@ -19,7 +19,7 @@ import {
 test("the home names the catalogue, how to browse it, and what it holds", () => {
   assert.equal(
     renderToString(<HomeState summary="3 screens · 1 user flow" />),
-    '<div class="mbk-empty"><h2>Mokly</h2><p>Browse the mockup catalogue: expand folders and choose an item from the navigation.</p><p class="mbk-empty-note">3 screens · 1 user flow</p></div>',
+    '<div class="mbk-empty mbk-reset"><h2 class="mbk-reset">Mokly</h2><p class="mbk-reset">Browse the mockup catalogue: expand folders and choose an item from the navigation.</p><p class="mbk-empty-note mbk-reset">3 screens · 1 user flow</p></div>',
   );
   // An empty catalogue has no summary line.
   for (const summary of [undefined, ""])
@@ -32,7 +32,7 @@ test("the home names the catalogue, how to browse it, and what it holds", () => 
 test("a route that matches no entry shows the path and a link home", () => {
   assert.equal(
     renderToString(<MissingRouteState requested="view/missing/" />),
-    '<div class="mbk-empty"><h2>Item not found</h2><p>Nothing in the catalogue matches <code>view/missing/</code></p><a class="mbk-empty-link" href="/">Go to the catalogue home</a></div>',
+    '<div class="mbk-empty mbk-reset"><h2 class="mbk-reset">Item not found</h2><p class="mbk-reset">Nothing in the catalogue matches <code class="mbk-reset">view/missing/</code></p><a class="mbk-empty-link mbk-reset" href="/">Go to the catalogue home</a></div>',
   );
   render(<MissingRouteState requested="view/missing/" />);
   assert.ok(screen.getByRole("heading", { name: "Item not found" }));
@@ -48,7 +48,7 @@ test("a removed entry's stage names its kind, and a variant names itself", () =>
   const removed = (kind: Parameters<typeof RemovedState>[0]["kind"]) =>
     renderToString(<RemovedState kind={kind} />);
   const stage = (title: string, body: string) =>
-    `<div class="mbk-empty" data-mokly-stage="" data-viewport="both"><h2>${title}</h2><p>${body}</p></div>`;
+    `<div class="mbk-empty mbk-reset" data-mokly-stage="" data-viewport="both"><h2 class="mbk-reset">${title}</h2><p class="mbk-reset">${body}</p></div>`;
   assert.equal(
     removed("flow"),
     stage(
@@ -73,14 +73,14 @@ test("a removed entry's stage names its kind, and a variant names itself", () =>
 test("a removed variant that the workspace keeps selected marks its stage", () => {
   assert.equal(
     renderToString(<RemovedVariantState />),
-    '<div class="mbk-empty" data-mokly-stage="" data-viewport="both" data-workspace-empty=""><p>This variant was removed. Select a comparison to see its previous version.</p></div>',
+    '<div class="mbk-empty mbk-reset" data-mokly-stage="" data-viewport="both" data-workspace-empty=""><p class="mbk-reset">This variant was removed. Select a comparison to see its previous version.</p></div>',
   );
 });
 
 test("a busy state announces its body, and an alert names its failure", () => {
   assert.equal(
     renderToStaticMarkup(<EmptyState body="Loading…" busy stage />),
-    '<div aria-busy="true" class="mbk-empty" data-mokly-stage="" data-viewport="both"><p role="status">Loading…</p></div>',
+    '<div aria-busy="true" class="mbk-empty mbk-reset" data-mokly-stage="" data-viewport="both"><p class="mbk-reset" role="status">Loading…</p></div>',
   );
   assert.equal(
     renderToStaticMarkup(
@@ -91,11 +91,11 @@ test("a busy state announces its body, and an alert names its failure", () => {
         title="Failed"
       />,
     ),
-    '<div class="mbk-empty" role="alert"><h2>Failed</h2><p>Still available.</p><button class="mbk-empty-link" type="button">Try again</button></div>',
+    '<div class="mbk-empty mbk-reset" role="alert"><h2 class="mbk-reset">Failed</h2><p class="mbk-reset">Still available.</p><button class="mbk-empty-link mbk-reset" type="button">Try again</button></div>',
   );
   assert.equal(
     renderToStaticMarkup(<EmptyState />),
-    '<div class="mbk-empty"></div>',
+    '<div class="mbk-empty mbk-reset"></div>',
   );
 });
 
@@ -125,14 +125,14 @@ test("the action can stand inline, and a line stands in for content", () => {
         action={{ label: "Try again", mark: "data-diff-refresh" }}
       />,
     ),
-    '<button class="mbk-empty-link" data-diff-refresh="" type="button">Try again</button>',
+    '<button class="mbk-empty-link mbk-reset" data-diff-refresh="" type="button">Try again</button>',
   );
   assert.equal(
     renderToStaticMarkup(<EmptyAction action={{ href: "/a", label: "A" }} />),
-    '<a class="mbk-empty-link" href="/a">A</a>',
+    '<a class="mbk-empty-link mbk-reset" href="/a">A</a>',
   );
   assert.equal(
     renderToStaticMarkup(<EmptyLine>Nothing here.</EmptyLine>),
-    '<p class="mbk-empty">Nothing here.</p>',
+    '<p class="mbk-empty mbk-reset">Nothing here.</p>',
   );
 });

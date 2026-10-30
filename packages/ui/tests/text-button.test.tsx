@@ -11,7 +11,7 @@ import { TextButton } from "../src/text-button/text-button.js";
 test("a text button is a plain button with the shell's attribute order", () => {
   assert.equal(
     renderToStaticMarkup(<TextButton>Try again</TextButton>),
-    '<button class="mbk-text-button" type="button">Try again</button>',
+    '<button class="mbk-text-button mbk-reset" type="button">Try again</button>',
   );
 });
 

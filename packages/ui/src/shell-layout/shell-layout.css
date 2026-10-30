@@ -1,10 +1,3 @@
-/* The stub's page while the standalone shell fills it. */
-.mbk-fs {
-  margin: 0;
-  height: 100vh;
-  overflow: hidden;
-}
-
 /* The shell root: the top bar above the body, in the shell's type. */
 .mbk {
   position: relative;
@@ -15,6 +8,8 @@
   color: var(--chrome-ink);
   font-family: var(--sans);
   font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* The skip link stays above the root until it takes keyboard focus. */
@@ -55,20 +50,19 @@
 }
 
 /* While the reader drags the navigation separator, the drag marks the shell
-   root, or the stub's body, and every element in it follows the drag. */
-body.mbk-nav-resizing,
-[data-mokly-shell].mbk-nav-resizing {
+   root, and every element of the shell follows the drag. Only the package's
+   own elements carry the reset class, so host slot content keeps its own
+   cursor and frames. */
+.mbk.mbk-nav-resizing {
   cursor: col-resize;
   user-select: none;
 }
 
-body.mbk-nav-resizing *,
-[data-mokly-shell].mbk-nav-resizing * {
+.mbk.mbk-nav-resizing .mbk-reset {
   cursor: col-resize !important;
 }
 
-body.mbk-nav-resizing iframe,
-[data-mokly-shell].mbk-nav-resizing iframe {
+.mbk.mbk-nav-resizing iframe.mbk-reset {
   pointer-events: none;
 }
 

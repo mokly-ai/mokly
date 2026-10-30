@@ -74,7 +74,11 @@ export function ViewControls({
   viewportMark: ViewMark;
 }) {
   return (
-    <div className="mbk-view-tools" role="group" aria-label="View options">
+    <div
+      className="mbk-view-tools mbk-reset"
+      role="group"
+      aria-label="View options"
+    >
       <IconSelect
         describedBy={viewportMark.marked ? viewportMark.id : undefined}
         glyph={<WorkspaceIcon name="viewport" />}

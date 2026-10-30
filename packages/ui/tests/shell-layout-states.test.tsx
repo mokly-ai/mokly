@@ -12,7 +12,7 @@ import { RootState } from "../src/shell-layout/shell-layout.js";
 
 import { assertSameElement } from "./dom-assertions.js";
 
-const STANDALONE: EmptyStateRoot = { kind: "standalone" };
+const STANDALONE: EmptyStateRoot = { kind: "standalone", theme: "auto" };
 const EMBEDDED: EmptyStateRoot = { kind: "embedded", theme: "dark" };
 const VERSION = "This catalogue needs a compatible viewer";
 const noop = () => undefined;
@@ -23,13 +23,13 @@ test("a loading root is one busy, focusable status line", () => {
     renderToString(
       <RootState focusRef={focus} root={STANDALONE} state="loading" />,
     ),
-    '<div aria-busy="true" class="mbk mbk-empty" tabindex="-1"><p role="status">Loading catalogue…</p></div>',
+    '<div aria-busy="true" class="mbk mbk-empty mbk-reset" tabindex="-1" data-mokly-theme="auto"><p class="mbk-reset" role="status">Loading catalogue…</p></div>',
   );
   assert.equal(
     renderToString(
       <RootState focusRef={focus} root={EMBEDDED} state="loading" />,
     ),
-    '<div aria-busy="true" class="mokly-viewer mbk-empty" tabindex="-1" data-mokly-theme="dark"><p role="status">Loading catalogue…</p></div>',
+    '<div aria-busy="true" class="mbk mokly-viewer mbk-empty mbk-reset" tabindex="-1" data-mokly-theme="dark"><p class="mbk-reset" role="status">Loading catalogue…</p></div>',
   );
   const state = createRef<HTMLDivElement>();
   render(<RootState focusRef={state} root={STANDALONE} state="loading" />);
@@ -43,11 +43,11 @@ test("a root whose catalogue failed offers Try again under its headline", () => 
     renderToString(
       <RootState onRetry={noop} root={STANDALONE} state="failed" />,
     ),
-    '<div class="mbk mbk-empty" role="alert"><h2>The catalogue could not be loaded</h2><button class="mbk-empty-link" type="button">Try again</button></div>',
+    '<div class="mbk mbk-empty mbk-reset" role="alert" data-mokly-theme="auto"><h2 class="mbk-reset">The catalogue could not be loaded</h2><button class="mbk-empty-link mbk-reset" type="button">Try again</button></div>',
   );
   assert.equal(
     renderToString(<RootState onRetry={noop} root={EMBEDDED} state="failed" />),
-    '<div class="mokly-viewer mbk-empty" role="alert" data-mokly-theme="dark"><h2>The catalogue could not be loaded</h2><button class="mbk-empty-link" type="button">Try again</button></div>',
+    '<div class="mbk mokly-viewer mbk-empty mbk-reset" role="alert" data-mokly-theme="dark"><h2 class="mbk-reset">The catalogue could not be loaded</h2><button class="mbk-empty-link mbk-reset" type="button">Try again</button></div>',
   );
   let retries = 0;
   render(
@@ -78,13 +78,13 @@ test("the standalone version failure offers Reload, and an embedded one only its
         state="version"
       />,
     ),
-    `<div class="mbk mbk-empty" data-mokly-version-error="" role="alert"><h2>${VERSION}</h2><button class="mbk-empty-link" type="button">Reload</button></div>`,
+    `<div class="mbk mbk-empty mbk-reset" data-mokly-version-error="" role="alert" data-mokly-theme="auto"><h2 class="mbk-reset">${VERSION}</h2><button class="mbk-empty-link mbk-reset" type="button">Reload</button></div>`,
   );
   assert.equal(
     renderToString(
       <RootState message={VERSION} root={EMBEDDED} state="version" />,
     ),
-    `<div class="mokly-viewer mbk-empty" role="alert" data-mokly-theme="dark"><h2>${VERSION}</h2></div>`,
+    `<div class="mbk mokly-viewer mbk-empty mbk-reset" role="alert" data-mokly-theme="dark"><h2 class="mbk-reset">${VERSION}</h2></div>`,
   );
   let reloads = 0;
   render(
@@ -104,7 +104,7 @@ test("the standalone version failure offers Reload, and an embedded one only its
 test("an unavailable view is one alert sentence without a paragraph", () => {
   assert.equal(
     renderToString(<RootState root={EMBEDDED} state="unavailable" />),
-    '<div class="mokly-viewer mbk-empty" role="alert" data-mokly-theme="dark">The requested view is unavailable.</div>',
+    '<div class="mbk mokly-viewer mbk-empty mbk-reset" role="alert" data-mokly-theme="dark">The requested view is unavailable.</div>',
   );
   render(
     <RootState

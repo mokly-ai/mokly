@@ -33,12 +33,15 @@ export function WorkspaceLayout({
   variantBar?: ReactNode;
 }) {
   return (
-    <section className="mbk-workspace" data-workspace="" ref={ref}>
+    <section className="mbk-workspace mbk-reset" data-workspace="" ref={ref}>
       {header}
       {variantBar}
-      <div className="mbk-workspace-panes">
-        <div className="mbk-preview-pane" data-workspace-preview="">
-          <div aria-busy={busy ? true : undefined} className="mbk-preview-busy">
+      <div className="mbk-workspace-panes mbk-reset">
+        <div className="mbk-preview-pane mbk-reset" data-workspace-preview="">
+          <div
+            aria-busy={busy ? true : undefined}
+            className="mbk-preview-busy mbk-reset"
+          >
             {preview}
           </div>
           {previewStatus}

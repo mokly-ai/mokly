@@ -12,7 +12,7 @@ import {
 } from "../src/details-panel/details-panel.js";
 import { ChevronIcon } from "../src/icons/icons.js";
 
-const BAR = `<summary class="mbk-details-bar"><span class="chev">${renderToStaticMarkup(<ChevronIcon size={12} />)}</span>Details<span class="mbk-details-hint">Description, rationale, source, related docs, and use cases</span></summary>`;
+const BAR = `<summary class="mbk-details-bar mbk-reset"><span class="chev mbk-reset">${renderToStaticMarkup(<ChevronIcon size={12} />)}</span>Details<span class="mbk-details-hint mbk-reset">Description, rationale, source, related docs, and use cases</span></summary>`;
 
 test("the panel draws its bar, then its content, and is open as the host says", () => {
   assert.equal(
@@ -21,11 +21,11 @@ test("the panel draws its bar, then its content, and is open as the host says", 
         <p>Body</p>
       </DetailsPanel>,
     ),
-    `<details class="mbk-details" data-mokly-details="">${BAR}<p>Body</p></details>`,
+    `<details class="mbk-details mbk-reset" data-mokly-details="">${BAR}<p>Body</p></details>`,
   );
   assert.equal(
     renderToStaticMarkup(<DetailsPanel open />),
-    `<details class="mbk-details" data-mokly-details="" open="">${BAR}</details>`,
+    `<details class="mbk-details mbk-reset" data-mokly-details="" open="">${BAR}</details>`,
   );
 });
 
@@ -74,13 +74,13 @@ test("the body keeps the description, the rationale's four text nodes, and the m
   );
   assert.equal(
     markup,
-    '<div class="mbk-details-body"><div><p class="mbk-details-desc">The home screen.</p><p class="mbk-details-rationale"><span class="k">Why this <!-- -->flow<!-- --> —<!-- --> </span>It shows the tour.</p></div><div class="mbk-meta"><div data-row=""></div></div></div>',
+    '<div class="mbk-details-body mbk-reset"><div class="mbk-reset"><p class="mbk-details-desc mbk-reset">The home screen.</p><p class="mbk-details-rationale mbk-reset"><span class="k mbk-reset">Why this <!-- -->flow<!-- --> —<!-- --> </span>It shows the tour.</p></div><div class="mbk-meta mbk-reset"><div data-row=""></div></div></div>',
   );
 });
 
 test("a body without a rationale has no rationale paragraph and keeps an empty column", () => {
   assert.equal(
     renderToStaticMarkup(<DetailsBody description="" />),
-    '<div class="mbk-details-body"><div><p class="mbk-details-desc"></p></div><div class="mbk-meta"></div></div>',
+    '<div class="mbk-details-body mbk-reset"><div class="mbk-reset"><p class="mbk-details-desc mbk-reset"></p></div><div class="mbk-meta mbk-reset"></div></div>',
   );
 });

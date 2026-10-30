@@ -246,7 +246,9 @@ shell font.
 
 The theme gives the stub's document class the Auto appearance before the
 bundle runs. The standalone shell sets its appearance, scheme, and state marks
-on its own root, not on `body` or `<html>`, as an embedded root does. The
+on its own root, as an embedded root does, and never on `body`. The appearance
+controller also writes the appearance on `<html>`, so the stub page around the
+shell takes the same appearance as the root. The
 embedded stylesheet uses packaged relative font URLs and keeps the
 fallbacks that let a host's accent value inherit. It needs no `@scope` block,
 because no package rule reaches the host page or host slot content. The
@@ -478,8 +480,8 @@ controller of [`../standalone/startup.ts`](../standalone/startup.ts) before the
 first render, so it resolves Auto/Light/Dark from the stored choice or the
 system before the shell paints.
 [`appearance_bridge.ts`](../standalone/appearance_bridge.ts) adopts that theme
-and the body's effective scheme into the live shell, independently asking the
-store for matching preview files. A light-only catalogue can therefore keep
+and the controller's effective scheme into the live shell, marks the shell root
+with both, and independently asks the store for matching preview files. A light-only catalogue can therefore keep
 Light previews under a Dark interface. Embedded roots skip the bridge and
 receive `theme` from their host while retaining independent preview controls.
 Standalone route installation sends scheme pins to that controller; it never

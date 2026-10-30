@@ -14,6 +14,6 @@
   display: none;
 }
 
-body[data-mokly-color-scheme="dark"] .mbk-previous.mbk-scheme-fallback {
+.mbk[data-mokly-color-scheme="dark"] .mbk-previous.mbk-scheme-fallback {
   display: block;
 }

@@ -17,15 +17,15 @@ import { assertSameElement } from "./dom-assertions.js";
 test("a label layer takes its place inline only when the host names one", () => {
   assert.equal(
     renderToString(<LabelLayer />),
-    '<div data-mokly-label-layer=""></div>',
+    '<div class="mbk-reset" data-mokly-label-layer=""></div>',
   );
   assert.equal(
     renderToString(<LabelLayer placement="root" />),
-    '<div data-mokly-label-layer="" style="position:absolute;inset:0;pointer-events:none"></div>',
+    '<div class="mbk-reset" data-mokly-label-layer="" style="position:absolute;inset:0;pointer-events:none"></div>',
   );
   assert.equal(
     renderToString(<LabelLayer placement="viewport" />),
-    '<div data-mokly-label-layer="" style="inset:0;overflow:hidden;pointer-events:none;position:fixed;z-index:952"></div>',
+    '<div class="mbk-reset" data-mokly-label-layer="" style="inset:0;overflow:hidden;pointer-events:none;position:fixed;z-index:952"></div>',
   );
 });
 
@@ -54,7 +54,7 @@ test("a workspace label names its instance and sits where the host measured it",
         top={0}
       />,
     ),
-    '<button class="mbk-highlight-label" data-instance-key="a" style="left:12.5px;top:0" type="button">Button · primary</button>',
+    '<button class="mbk-highlight-label mbk-reset" data-instance-key="a" style="left:12.5px;top:0" type="button">Button · primary</button>',
   );
 });
 
@@ -70,7 +70,7 @@ test("a host inspection's label names its label and states its pointer events", 
         top={40}
       />,
     ),
-    '<button class="mbk-highlight-label" data-mokly-label-key="[1,&quot;b&quot;]" style="left:0;pointer-events:auto;top:40px" type="button">Card · &lt;b&gt;</button>',
+    '<button class="mbk-highlight-label mbk-reset" data-mokly-label-key="[1,&quot;b&quot;]" style="left:0;pointer-events:auto;top:40px" type="button">Card · &lt;b&gt;</button>',
   );
 });
 

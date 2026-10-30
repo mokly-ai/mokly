@@ -1,5 +1,12 @@
 /**
- * Scope shell selectors and defaults to an embedding root, excluding host
- * slots, and keep the root's own rules after the scope.
+ * The standalone stylesheet: the shell font at its delivery path, then the
+ * package stylesheet unchanged.
  */
-export function embeddedStyles(shell: string): string;
+export function standaloneStyles(font: string, packageCss: string): string;
+
+/**
+ * The stylesheet of an embedded root: the shell font under its own family
+ * name at its packaged address, then the package stylesheet with fallbacks
+ * that let a host's accent overrides inherit.
+ */
+export function embeddedStyles(font: string, packageCss: string): string;

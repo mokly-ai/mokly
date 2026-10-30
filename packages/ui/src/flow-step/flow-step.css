@@ -19,17 +19,17 @@
 }
 
 /* The steps, joined by a rail from each number to the next. */
-.flow-track {
+.flow-track:where(.mbk-reset) {
   display: flex;
   flex-direction: column;
   gap: 34px;
 }
 
-.flow-step {
+.flow-step:where(.mbk-reset) {
   position: relative;
 }
 
-.flow-step::before {
+.flow-step:where(.mbk-reset)::before {
   content: "";
   position: absolute;
   left: 15px;
@@ -39,18 +39,18 @@
   background: var(--chrome-border);
 }
 
-.flow-step:last-child::before {
+.flow-step:last-child:where(.mbk-reset)::before {
   display: none;
 }
 
-.flow-step-head {
+.flow-step-head:where(.mbk-reset) {
   display: flex;
   gap: 12px;
   align-items: flex-start;
   margin-bottom: 14px;
 }
 
-.flow-step-num {
+.flow-step-num:where(.mbk-reset) {
   width: 32px;
   height: 32px;
   border-radius: 9px;
@@ -63,20 +63,20 @@
   font-weight: 800;
 }
 
-.flow-step-head h3 {
+.flow-step-head h3:where(.mbk-reset) {
   margin: 2px 0 4px;
   font-size: 18px;
   letter-spacing: -0.005em;
 }
 
-.flow-step-head p {
+.flow-step-head p:where(.mbk-reset) {
   margin: 0;
   color: var(--chrome-muted);
   font-size: 14px;
   line-height: 1.55;
 }
 
-.flow-step-link {
+.flow-step-link:where(.mbk-reset) {
   display: inline-block;
   margin-top: 8px;
   font-size: 13px;
@@ -85,12 +85,12 @@
   text-decoration: none;
 }
 
-.flow-step-link:hover {
+.flow-step-link:hover:where(.mbk-reset) {
   text-decoration: underline;
 }
 
 @media (max-width: 760px) {
-  .flow-step::before {
+  .flow-step:where(.mbk-reset)::before {
     display: none;
   }
 }

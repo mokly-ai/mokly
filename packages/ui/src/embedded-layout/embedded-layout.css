@@ -1,6 +1,6 @@
-/* The embedded root and its host slots. These rules start with the root
-   class, or query its top host, so the embedded stylesheet keeps them after
-   the scope that stops at host slots, and they reach the root itself. */
+/* The embedded root and the containers of its host slots. The root fills the
+   height that its host gives, and it clips the shell. These rules place each
+   slot and never reach into the host content that it holds. */
 .mokly-viewer {
   position: relative;
   isolation: isolate;
@@ -11,12 +11,10 @@
   line-height: 1.5;
 }
 
-@scope (.mokly-viewer) to ([data-mokly-slot]) {
-  :scope.mbk {
-    height: 100%;
-    min-height: 0;
-    overflow: hidden;
-  }
+.mbk.mokly-viewer {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .mokly-viewer > .mbk-body {

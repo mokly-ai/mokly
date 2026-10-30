@@ -12,14 +12,19 @@ import type { Appearance } from "../appearance-selector/appearance-selector.js";
 import type { DataAttribute } from "../segmented-control/segmented-control.js";
 
 /**
- * The viewer root that a state takes the place of: the standalone shell's
- * root, or an embedded root, which states its appearance.
+ * The viewer root that a state takes the place of, the standalone shell's
+ * root or an embedded root, and the appearance that the root states.
  */
-export type EmptyStateRoot =
-  { kind: "standalone" } | { kind: "embedded"; theme: Appearance };
+export interface EmptyStateRoot {
+  kind: "embedded" | "standalone";
+  theme: Appearance;
+}
 
-/** The class that each root carries before the state's own class. */
-const ROOT_CLASS = { embedded: "mokly-viewer", standalone: "mbk" } as const;
+/**
+ * The classes that each root carries before the state's own class: the shell
+ * root class, which carries the theme, and the embedded root class.
+ */
+const ROOT_CLASS = { embedded: "mbk mokly-viewer", standalone: "mbk" } as const;
 
 /** An action that goes to another page. */
 export interface EmptyStateLink {
@@ -51,13 +56,13 @@ function dataMark(mark: DataAttribute | undefined) {
 export function EmptyAction({ action }: { action: EmptyStateAction }) {
   if ("href" in action)
     return (
-      <a className="mbk-empty-link" href={action.href}>
+      <a className="mbk-empty-link mbk-reset" href={action.href}>
         {action.label}
       </a>
     );
   return (
     <button
-      className="mbk-empty-link"
+      className="mbk-empty-link mbk-reset"
       {...dataMark(action.mark)}
       onClick={() => action.onClick?.()}
       type="button"
@@ -118,23 +123,29 @@ export function EmptyState({
     <div
       aria-busy={busy ? "true" : undefined}
       className={
-        root === undefined ? "mbk-empty" : `${ROOT_CLASS[root.kind]} mbk-empty`
+        root === undefined
+          ? "mbk-empty mbk-reset"
+          : `${ROOT_CLASS[root.kind]} mbk-empty mbk-reset`
       }
       {...(stage ? { "data-mokly-stage": "", "data-viewport": "both" } : {})}
       {...dataMark(mark)}
       ref={focusRef}
       role={role}
       tabIndex={focusRef === undefined ? undefined : -1}
-      {...(root?.kind === "embedded" ? { "data-mokly-theme": root.theme } : {})}
+      {...(root === undefined ? {} : { "data-mokly-theme": root.theme })}
     >
-      {title === undefined ? null : <h2>{title}</h2>}
+      {title === undefined ? null : <h2 className="mbk-reset">{title}</h2>}
       {body === undefined && code === undefined ? null : (
-        <p role={busy ? "status" : undefined}>
+        <p className="mbk-reset" role={busy ? "status" : undefined}>
           {code === undefined ? body : `${body ?? ""} `}
-          {code === undefined ? null : <code>{code}</code>}
+          {code === undefined ? null : (
+            <code className="mbk-reset">{code}</code>
+          )}
         </p>
       )}
-      {note === undefined ? null : <p className="mbk-empty-note">{note}</p>}
+      {note === undefined ? null : (
+        <p className="mbk-empty-note mbk-reset">{note}</p>
+      )}
       {action === undefined ? null : <EmptyAction action={action} />}
       {children}
     </div>
@@ -146,7 +157,7 @@ export function EmptyState({
  * document.
  */
 export function EmptyLine({ children }: { children: ReactNode }) {
-  return <p className="mbk-empty">{children}</p>;
+  return <p className="mbk-empty mbk-reset">{children}</p>;
 }
 
 /** The catalogue home: how to browse it, and what it holds. */

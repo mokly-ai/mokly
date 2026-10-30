@@ -15,7 +15,7 @@ test("the flow's stage holds its steps in one column that keeps its scroll", () 
         <i>step</i>
       </FlowStage>,
     ),
-    '<div class="mbk-flow" data-mokly-scroll="flow"><div class="flow-track"><i>step</i></div></div>',
+    '<div class="mbk-flow mbk-reset" data-mokly-scroll="flow"><div class="flow-track mbk-reset"><i>step</i></div></div>',
   );
 });
 
@@ -33,7 +33,7 @@ test("a step names its number, title, description, and screen, then shows the pr
         <i>preview</i>
       </FlowStep>,
     ),
-    '<section class="flow-step"><div class="flow-step-head"><span class="flow-step-num">1</span><div><h3>Start</h3><p>The landing screen.</p><a class="flow-step-link" href="/view/home/">This screen in the catalogue: <!-- -->Home<!-- --> →</a></div></div><i>preview</i></section>',
+    '<section class="flow-step mbk-reset"><div class="flow-step-head mbk-reset"><span class="flow-step-num mbk-reset">1</span><div class="mbk-reset"><h3 class="mbk-reset">Start</h3><p class="mbk-reset">The landing screen.</p><a class="flow-step-link mbk-reset" href="/view/home/">This screen in the catalogue: <!-- -->Home<!-- --> →</a></div></div><i>preview</i></section>',
   );
 });
 
@@ -50,12 +50,12 @@ test("the step's heading and link are what the reader finds", () => {
       .getAttribute("href"),
     "/view/b/",
   );
-  assert.equal(screen.getByText("2").className, "flow-step-num");
+  assert.equal(screen.getByText("2").className, "flow-step-num mbk-reset");
 });
 
 test("a step without a screen has no link, no preview, and an empty description", () => {
   assert.equal(
     renderToStaticMarkup(<FlowStep number={3} title="missing/screen" />),
-    '<section class="flow-step"><div class="flow-step-head"><span class="flow-step-num">3</span><div><h3>missing/screen</h3><p></p></div></div></section>',
+    '<section class="flow-step mbk-reset"><div class="flow-step-head mbk-reset"><span class="flow-step-num mbk-reset">3</span><div class="mbk-reset"><h3 class="mbk-reset">missing/screen</h3><p class="mbk-reset"></p></div></div></section>',
   );
 });

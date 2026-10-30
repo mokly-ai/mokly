@@ -26,7 +26,7 @@ export function TagChip({
   return (
     <button
       aria-pressed={selected}
-      className={`mbk-chip tag${selected ? " active" : ""}`}
+      className={`mbk-chip tag${selected ? " active" : ""} mbk-reset`}
       data-mokly-tag={tag}
       onClick={(event) => onSelect?.(tag, event.currentTarget)}
       tabIndex={tabIndex}

@@ -36,7 +36,7 @@ function others(shown: ComparisonMode) {
 test("without an address or interactive, the band keeps its buttons exactly", () => {
   assert.equal(
     renderToStaticMarkup(<ComparisonToolbar {...props("side")} />),
-    '<div class="mbk-diff-toolbar"><span aria-label="Comparison mode" class="mbk-seg" role="group"><button aria-pressed="false" data-diff-mode="current" type="button">Current</button><button aria-pressed="true" data-diff-mode="side" type="button">Side by side</button><button aria-pressed="false" data-diff-mode="overlay" type="button">Overlay</button><button aria-pressed="false" data-diff-mode="difference" type="button">Difference</button></span><label class="mbk-diff-sync"><input data-diff-scroll-together="" role="switch" type="checkbox" checked=""/><span aria-hidden="true" class="mbk-diff-sync-track"></span>Scroll together</label><button aria-label="Refresh comparison" class="mbk-diff-refresh" data-diff-refresh="" title="Refresh comparison" type="button"><span aria-hidden="true">↻</span></button></div>',
+    '<div class="mbk-diff-toolbar mbk-reset"><span aria-label="Comparison mode" class="mbk-seg mbk-reset" role="group"><button aria-pressed="false" data-diff-mode="current" class="mbk-reset" type="button">Current</button><button aria-pressed="true" data-diff-mode="side" class="mbk-reset" type="button">Side by side</button><button aria-pressed="false" data-diff-mode="overlay" class="mbk-reset" type="button">Overlay</button><button aria-pressed="false" data-diff-mode="difference" class="mbk-reset" type="button">Difference</button></span><label class="mbk-diff-sync mbk-reset"><input class="mbk-reset" data-diff-scroll-together="" role="switch" type="checkbox" checked=""/><span aria-hidden="true" class="mbk-diff-sync-track mbk-reset"></span>Scroll together</label><button aria-label="Refresh comparison" class="mbk-diff-refresh mbk-reset" data-diff-refresh="" title="Refresh comparison" type="button"><span aria-hidden="true" class="mbk-reset">↻</span></button></div>',
   );
 });
 
@@ -110,7 +110,7 @@ test("a band that is not interactive draws its other modes and Refresh as inert 
   fireEvent.click(shown);
   const refresh = screen.getByRole("img", { name: "Refresh comparison" });
   assert.equal(refresh.tagName, "SPAN");
-  assert.equal(refresh.className, "mbk-diff-refresh");
+  assert.equal(refresh.className, "mbk-diff-refresh mbk-reset");
   fireEvent.click(refresh);
   assert.deepEqual(calls, []);
   assert.equal(container.querySelectorAll("[aria-current]").length, 1);

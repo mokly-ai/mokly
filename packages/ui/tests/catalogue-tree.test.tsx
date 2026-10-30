@@ -44,11 +44,11 @@ function activate(element: HTMLElement): boolean {
 test("a section is a native disclosure with its keys, its filter mark, and its label", () => {
   assert.match(
     markup([], { filterOpen: false }),
-    /<details class="mbk-nav-section" data-filter-open="0" data-nav-disclosure="section:specs" data-nav-section="specs" open=""><summary class="mbk-nav-section-head"><span aria-hidden="true" class="mbk-nav-section-chevron"><svg [^>]*><polyline points="9 6 15 12 9 18"><\/polyline><\/svg><\/span>Specs<\/summary><\/details>/,
+    /<details class="mbk-nav-section mbk-reset" data-filter-open="0" data-nav-disclosure="section:specs" data-nav-section="specs" open=""><summary class="mbk-nav-section-head mbk-reset"><span aria-hidden="true" class="mbk-nav-section-chevron mbk-reset"><svg [^>]*><polyline points="9 6 15 12 9 18"><\/polyline><\/svg><\/span>Specs<\/summary><\/details>/,
   );
   assert.match(
     markup([], { filterOpen: true, hidden: true, open: false }),
-    /<details class="mbk-nav-section" data-filter-open="1" data-nav-disclosure="section:specs" data-nav-section="specs" hidden="">/,
+    /<details class="mbk-nav-section mbk-reset" data-filter-open="1" data-nav-disclosure="section:specs" data-nav-section="specs" hidden="">/,
   );
 });
 
@@ -105,7 +105,7 @@ test("a toggle event reports a state that differs from the shown one", () => {
 test("a folder row shows both folder icons, its label, and a count above zero", () => {
   assert.match(
     markup([folder("product", { count: 2, depth: 1, filterOpen: true })]),
-    /<details class="mbk-nav-group" data-filter-open="1" data-nav-folder="folder:product" data-nav-disclosure="folder:specs:product"><summary class="mbk-nav-row" style="[^"]*"><span class="mbk-nav-ico folder"><svg [^>]*><path [^>]*><\/path><\/svg><svg [^>]*><path [^>]*><\/path><\/svg><\/span><span class="mbk-nav-label">product<\/span><span class="mbk-nav-count">2<\/span><\/summary><\/details>/,
+    /<details class="mbk-nav-group mbk-reset" data-filter-open="1" data-nav-folder="folder:product" data-nav-disclosure="folder:specs:product"><summary class="mbk-nav-row mbk-reset" style="[^"]*"><span class="mbk-nav-ico folder mbk-reset"><svg [^>]*><path [^>]*><\/path><\/svg><svg [^>]*><path [^>]*><\/path><\/svg><\/span><span class="mbk-nav-label mbk-reset">product<\/span><span class="mbk-nav-count mbk-reset">2<\/span><\/summary><\/details>/,
   );
   assert.doesNotMatch(markup([folder("empty")]), /mbk-nav-count/);
   assert.match(
@@ -160,11 +160,11 @@ test("a row link carries its entry, its route, its marks, and the changed wordin
   });
   assert.match(
     markup([leaf(row)]),
-    /<a aria-current="page" class="mbk-nav-row" data-changed="true" data-changed-variants="true" data-entry-id="product\/home" data-entry-kind="page" data-nav-index="" data-nav-row="" data-nav-removed="" data-removed-page="" data-removed-variant="" hidden="" data-route="\/product\/home" data-tags="checkout mobile" href="\/view\/product\/home\/\?snapshot=s1" style="[^"]*"><span class="mbk-nav-ico"><svg [^>]*>[^]*?<\/svg><\/span>Home · Removed<span class="mbk-nav-changed-text" data-nav-changed-text="">Changed<\/span><\/a>/,
+    /<a aria-current="page" class="mbk-nav-row mbk-reset" data-changed="true" data-changed-variants="true" data-entry-id="product\/home" data-entry-kind="page" data-nav-index="" data-nav-row="" data-nav-removed="" data-removed-page="" data-removed-variant="" hidden="" data-route="\/product\/home" data-tags="checkout mobile" href="\/view\/product\/home\/\?snapshot=s1" style="[^"]*"><span class="mbk-nav-ico mbk-reset"><svg [^>]*>[^]*?<\/svg><\/span>Home · Removed<span class="mbk-nav-changed-text mbk-reset" data-nav-changed-text="">Changed<\/span><\/a>/,
   );
   assert.match(
     markup([leaf(link("home"))]),
-    /<a class="mbk-nav-row" data-entry-id="home" data-entry-kind="screen" data-nav-row="" data-route="\/home" href="\/view\/home\/" style="[^"]*">/,
+    /<a class="mbk-nav-row mbk-reset" data-entry-id="home" data-entry-kind="screen" data-nav-row="" data-route="\/home" href="\/view\/home\/" style="[^"]*">/,
   );
 });
 
@@ -191,11 +191,11 @@ test("each entry kind and each variant row has its own glyph", () => {
   assert.deepEqual(
     kinds.map(([className]) => className),
     [
-      "mbk-nav-ico",
-      "mbk-nav-ico",
-      "mbk-nav-ico",
-      "mbk-nav-ico",
-      "mbk-nav-ico flow",
+      "mbk-nav-ico mbk-reset",
+      "mbk-nav-ico mbk-reset",
+      "mbk-nav-ico mbk-reset",
+      "mbk-nav-ico mbk-reset",
+      "mbk-nav-ico flow mbk-reset",
     ],
   );
   assert.equal(new Set(kinds.map(([, svg]) => svg)).size, 5);
@@ -209,10 +209,10 @@ test("each entry kind and each variant row has its own glyph", () => {
   assert.deepEqual(
     variants.map(([className]) => className),
     [
-      "mbk-nav-ico",
-      "mbk-nav-ico variant",
-      "mbk-nav-ico",
-      "mbk-nav-ico variant",
+      "mbk-nav-ico mbk-reset",
+      "mbk-nav-ico variant mbk-reset",
+      "mbk-nav-ico mbk-reset",
+      "mbk-nav-ico variant mbk-reset",
     ],
   );
   assert.notEqual(variants[1]?.[1], variants[3]?.[1]);

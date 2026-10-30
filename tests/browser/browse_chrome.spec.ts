@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 
-import { detailsRow } from "./browse_assertions.js";
+import { detailsRow, shellRoot } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
 
 test("path chips copy their path without navigating", async ({ page }) => {
@@ -98,17 +98,18 @@ test("the expand toggle swaps its icon while the frame is expanded", async ({
   await expect(collapseIcon).toBeHidden();
 });
 
+/** The class that marks the shell root while a browser window is expanded. */
+const expandedMark = /(?:^|\s)frame-expanded(?:\s|$)/u;
+
 test("the browser frame expands to an overlay and collapses again", async ({
   page,
 }) => {
   await page.goto("/view/example/screens/welcome/");
   await page.click(".browser-expand");
   await expect(page.locator(".browser-frame.is-expanded")).toBeVisible();
-  expect(
-    await page.evaluate(() =>
-      document.body.classList.contains("frame-expanded"),
-    ),
-  ).toBe(true);
+  // The shell marks its own root, which draws the scrim, and not the page.
+  await expect(page.locator(shellRoot)).toHaveClass(expandedMark);
+  await expect(page.locator("body")).not.toHaveClass(expandedMark);
   await expect(page.locator(".browser-expand")).toHaveAttribute(
     "aria-expanded",
     "true",
@@ -119,11 +120,7 @@ test("the browser frame expands to an overlay and collapses again", async ({
   await expect(page.locator(".browser-frame.is-expanded")).toBeVisible();
   await page.mouse.click(8, 300);
   await expect(page.locator(".browser-frame.is-expanded")).toHaveCount(0);
-  expect(
-    await page.evaluate(() =>
-      document.body.classList.contains("frame-expanded"),
-    ),
-  ).toBe(false);
+  await expect(page.locator(shellRoot)).not.toHaveClass(expandedMark);
   await page.click(detailsRow);
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
 });

@@ -50,23 +50,23 @@ test("a screen's Props tab without own props names why nothing is selected", () 
     );
   assert.equal(
     props(data("screen"), usage(0)),
-    '<p class="mbk-empty-copy">This entry renders without props.</p>',
+    '<p class="mbk-empty-copy mbk-reset">This entry renders without props.</p>',
   );
   assert.equal(
     props(data("screen")),
-    '<p class="mbk-empty-copy">Props are unavailable for this screen.</p>',
+    '<p class="mbk-empty-copy mbk-reset">Props are unavailable for this screen.</p>',
   );
   assert.equal(
     props(data("screen"), usage(2)),
-    '<p class="mbk-empty-copy">Select a component instance to see its supplied props.</p>',
+    '<p class="mbk-empty-copy mbk-reset">Select a component instance to see its supplied props.</p>',
   );
   assert.equal(
     props(data("screen", true)),
-    '<p role="status">Waiting for the component preview.</p>',
+    '<p class="mbk-reset" role="status">Waiting for the component preview.</p>',
   );
   assert.equal(
     props(data("component")),
-    '<p class="mbk-empty-copy">Select a component instance to see its supplied props.</p>',
+    '<p class="mbk-empty-copy mbk-reset">Select a component instance to see its supplied props.</p>',
   );
 });
 
@@ -133,11 +133,11 @@ test("a screen whose props have no controls shows them, with or without instance
     assert.equal(tab(screen, view), "<p>Own props</p>");
   assert.equal(
     tab({ ...screen, props: encodeProps({}) }, usage(2)),
-    '<p class="mbk-empty-copy">Select a component instance to see its supplied props.</p>',
+    '<p class="mbk-empty-copy mbk-reset">Select a component instance to see its supplied props.</p>',
   );
   assert.equal(
     tab({ ...screen, props: encodeProps({}) }, usage(0)),
-    '<p class="mbk-empty-copy">This entry renders without props.</p>',
+    '<p class="mbk-empty-copy mbk-reset">This entry renders without props.</p>',
   );
   const mode = controlsMode(screen, false, "ready");
   assert.equal(mode, "read-only");
@@ -155,7 +155,7 @@ test("a screen whose props have no controls shows them, with or without instance
   );
   assert.match(
     panel,
-    /<h3 tabindex="-1">Saved props<\/h3><p>Home<\/p><\/div><\/div><p class="mbk-controls-notice">These props are read-only\.<\/p><dl aria-label="Supplied props" class="mbk-props"><div><dt>badge<\/dt><dd><code>\{&quot;text&quot;: &quot;Ready&quot;\}<\/code><\/dd><\/div><\/dl>/,
+    /<h3 class="mbk-reset" tabindex="-1">Saved props<\/h3><p class="mbk-reset">Home<\/p><\/div><\/div><p class="mbk-controls-notice mbk-reset">These props are read-only\.<\/p><dl aria-label="Supplied props" class="mbk-props mbk-reset"><div class="mbk-reset"><dt class="mbk-reset">badge<\/dt><dd class="mbk-reset"><code class="mbk-reset">\{&quot;text&quot;: &quot;Ready&quot;\}<\/code><\/dd><\/div><\/dl>/,
   );
 });
 
@@ -187,16 +187,16 @@ test("own props wait for the routed detail, which alone carries their order", ()
     );
   assert.equal(
     tab({ status: "loading" }),
-    '<section aria-label="Props status" data-props-section="status"><p role="status">Loading props…</p></section>',
+    '<section aria-label="Props status" class="mbk-reset" data-props-section="status"><p class="mbk-reset" role="status">Loading props…</p></section>',
   );
   assert.equal(
     tab({ status: "failed", retry: () => (retries += 1) }),
-    '<section aria-label="Props status" data-props-section="status"><p role="alert">Props couldn’t be loaded.</p><button class="mbk-text-button" type="button">Try again</button></section>',
+    '<section aria-label="Props status" class="mbk-reset" data-props-section="status"><p class="mbk-reset" role="alert">Props couldn’t be loaded.</p><button class="mbk-text-button mbk-reset" type="button">Try again</button></section>',
   );
   // A replaced catalogue brings new details, so Props keep waiting, as Usage does.
   assert.equal(
     tab({ status: "replaced" }),
-    '<section aria-label="Props status" data-props-section="status"><p role="status">Loading props…</p></section>',
+    '<section aria-label="Props status" class="mbk-reset" data-props-section="status"><p class="mbk-reset" role="status">Loading props…</p></section>',
   );
   assert.equal(tab({ status: "ready" }), "<p>Own props</p>");
   // A screen without own props never waits: the detail orders no fields.
@@ -207,7 +207,7 @@ test("own props wait for the routed detail, which alone carries their order", ()
   };
   assert.equal(
     tab({ status: "loading" }, bare),
-    '<p class="mbk-empty-copy">Props are unavailable for this screen.</p>',
+    '<p class="mbk-empty-copy mbk-reset">Props are unavailable for this screen.</p>',
   );
   assert.equal(retries, 0);
 });

@@ -58,18 +58,18 @@ function LinkGlyph({
 }) {
   if (variant)
     return (
-      <span className="mbk-nav-ico variant">
+      <span className="mbk-nav-ico variant mbk-reset">
         {kind === "component" ? <ComponentVariantIcon /> : <VariantIcon />}
       </span>
     );
   if (kind === "use-case")
     return (
-      <span className="mbk-nav-ico flow">
+      <span className="mbk-nav-ico flow mbk-reset">
         <FlowIcon />
       </span>
     );
   return (
-    <span className="mbk-nav-ico">
+    <span className="mbk-nav-ico mbk-reset">
       {kind === "component" ? (
         <WorkspaceIcon name="components" />
       ) : kind === "page" ? (
@@ -101,7 +101,7 @@ export function RowLink({
   return (
     <a
       aria-current={link.current ? "page" : undefined}
-      className="mbk-nav-row"
+      className="mbk-nav-row mbk-reset"
       data-changed={link.changed ? "true" : undefined}
       data-changed-variants={link.changedVariants ? "true" : undefined}
       data-entry-id={link.entry}
@@ -119,7 +119,7 @@ export function RowLink({
     >
       <LinkGlyph kind={link.kind} variant={variant} />
       {link.label}
-      <span className="mbk-nav-changed-text" data-nav-changed-text="">
+      <span className="mbk-nav-changed-text mbk-reset" data-nav-changed-text="">
         Changed
       </span>
     </a>

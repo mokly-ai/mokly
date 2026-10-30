@@ -17,7 +17,7 @@ test("the band names the previous version above the stage host", () => {
         <i>state</i>
       </PreviousVersion>,
     ),
-    '<p class="mbk-previous">Showing previous version</p><div aria-live="polite" class="mbk-preview" data-mokly-preview="{&quot;path&quot;:&quot;a&quot;,&quot;kind&quot;:&quot;page&quot;,&quot;title&quot;:&quot;A&quot;}" data-mokly-stage="" data-viewport="both"><i>state</i></div>',
+    '<p class="mbk-previous mbk-reset">Showing previous version</p><div aria-live="polite" class="mbk-preview mbk-reset" data-mokly-preview="{&quot;path&quot;:&quot;a&quot;,&quot;kind&quot;:&quot;page&quot;,&quot;title&quot;:&quot;A&quot;}" data-mokly-stage="" data-viewport="both"><i>state</i></div>',
   );
 });
 
@@ -26,7 +26,7 @@ test("a light-only document adds the note and the fallback mark to the band", ()
     renderToStaticMarkup(
       <PreviousVersion descriptor="{}" lightOnly viewport="mobile" />,
     ),
-    '<p class="mbk-previous" data-color-scheme-fallback="">Showing previous version<span class="mbk-frame-scheme-note"> — Light only</span></p><div aria-live="polite" class="mbk-preview" data-mokly-preview="{}" data-mokly-stage="" data-viewport="mobile"></div>',
+    '<p class="mbk-previous mbk-reset" data-color-scheme-fallback="">Showing previous version<span class="mbk-frame-scheme-note mbk-reset"> — Light only</span></p><div aria-live="polite" class="mbk-preview mbk-reset" data-mokly-preview="{}" data-mokly-stage="" data-viewport="mobile"></div>',
   );
 });
 
