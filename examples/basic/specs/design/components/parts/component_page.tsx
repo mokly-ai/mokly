@@ -14,6 +14,7 @@ import {
 import { ComponentLayout } from "./component_layout.js";
 import { VariantPicker } from "./controls.js";
 import { COMPONENT_PAGES } from "./destinations.js";
+import { toolbarAction } from "./fixtures.js";
 import type { PropsLimit } from "./limit.js";
 import { COMPONENT_ENTRY_BY_STATE } from "./metadata.js";
 import type { ChangeScenario } from "./navigation_tree.js";
@@ -40,6 +41,17 @@ const COMPARISON_MODES: Partial<
 const COMPARISON_CHANGES: Partial<Record<ComponentPageState, string>> = {
   "style-changed": COMPONENT_STYLE_COPY.stylesChanged,
 };
+
+/**
+ * The states in which the entry's details, which hold its usage and its
+ * props, are loading or failed.
+ */
+const DETAILS_PENDING: ReadonlySet<ComponentPageState> = new Set([
+  "usage-loading",
+  "usage-failed",
+  "props-loading",
+  "props-failed",
+]);
 
 /** The Changes scenario whose navigation each state's artboard depicts. */
 function changeScenario(state: ComponentPageState): ChangeScenario {
@@ -83,6 +95,7 @@ export function ComponentPage({
   return (
     <ComponentLayout
       design={limit?.design ?? COMPONENT_PAGES[state]}
+      detailsPending={DETAILS_PENDING.has(state)}
       entry={entry}
       navigationKey={navigationKey}
       mode={mode}
@@ -112,7 +125,7 @@ export function ComponentPage({
         ) : (
           <ComponentCanvas viewport={previewViewport}>
             {state === "toolbar" ? (
-              <ToolbarExample />
+              <ToolbarExample highlightLabel={toolbarAction} />
             ) : state === "hidden" ? (
               <p className="ce-empty-copy">
                 This variant has no visible content.

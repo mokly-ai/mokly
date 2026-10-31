@@ -19,7 +19,7 @@ export function registerDesignLinks(
       ? 'script:not([src="/mokly-viewer/client/inspector.js"])'
       : servedScripts();
   async function tabTo(page: Page, link: Locator): Promise<void> {
-    for (let step = 0; step < 35; step += 1) {
+    for (let step = 0; step < 50; step += 1) {
       await page.keyboard.press("Tab");
       if (await link.evaluate((node) => node === document.activeElement))
         return;

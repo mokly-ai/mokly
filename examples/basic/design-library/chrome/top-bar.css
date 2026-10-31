@@ -1,5 +1,6 @@
-/* The shipped top bar: the @mokly/ui stylesheet, then the mockup's flags and
-   the search field's tag toggle, which the controls slice adopts later. */
+/* The shipped top bar: the @mokly/ui stylesheet, then the mockup's flags. The
+   search field's tag picker is the registered tag picker, which links its own
+   stylesheet. */
 @import "../../../../packages/ui/src/top-bar/top-bar.css";
 
 /* The frame that carries the flags keeps the bar its shell's flex item. */
@@ -26,22 +27,4 @@
 /* A bar without a menu draws none at any width. */
 .mbk-topbar-frame[data-menu="none"] .mbk-menu {
   display: none;
-}
-
-.mbk-search-tag {
-  border-radius: 6px;
-  color: var(--chrome-muted);
-  cursor: pointer;
-  display: inline-grid;
-  flex-shrink: 0;
-  height: 20px;
-  margin-left: auto;
-  margin-right: -5px;
-  place-items: center;
-  width: 20px;
-}
-
-.mbk-search-tag:hover {
-  background: var(--chrome-border);
-  color: var(--chrome-ink-2);
 }

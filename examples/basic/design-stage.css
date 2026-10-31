@@ -329,6 +329,8 @@
   word-break: break-all;
 }
 
+/* The chip rules of the Details body's use-case chip, an artboard copy of the
+   shell's details row. The tag chips draw from their package stylesheet. */
 .mbk-chips {
   display: flex;
   flex-wrap: wrap;
@@ -347,7 +349,7 @@
   padding: 3px 9px;
 }
 
-.mbk-chip:is(a) {
+.mbk-chip.flow:is(a) {
   border-color: var(--chrome-control-edge);
 }
 
@@ -378,10 +380,10 @@
   height: 640px;
 }
 
-.mbk-chip:is(a) {
+.mbk-chip.flow:is(a) {
   text-decoration: none;
 }
-.mbk-chip:is(a):focus-visible {
+.mbk-chip.flow:is(a):focus-visible {
   outline: 2px solid var(--mbk-sage-deep);
   outline-offset: 3px;
 }

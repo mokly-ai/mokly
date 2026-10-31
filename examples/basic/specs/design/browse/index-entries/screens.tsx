@@ -87,8 +87,17 @@ function ProfileWorkspace({
   );
 }
 
+/**
+ * Profile and Security render no registered component, so the shell disables
+ * Highlight components with its empty reason.
+ */
 function viewSwitch(viewport: ArtboardViewport) {
-  return <ViewSwitch active={viewport === "mobile" ? "mobile" : "both"} />;
+  return (
+    <ViewSwitch
+      active={viewport === "mobile" ? "mobile" : "both"}
+      highlight="empty"
+    />
+  );
 }
 
 /**
@@ -207,7 +216,13 @@ function MemberChanges({ viewport }: { viewport: ArtboardViewport }) {
     >
       <ScreenHead
         comparisons
-        action={<ViewSwitch active="mobile" changedViews={SECURITY_VIEWS} />}
+        action={
+          <ViewSwitch
+            active="mobile"
+            changedViews={SECURITY_VIEWS}
+            highlight="empty"
+          />
+        }
         comparisonMode="current"
         crumbs={["Account", "Profile"]}
         path={ENTRY_PATHS.profileSecurity}

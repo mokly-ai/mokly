@@ -135,8 +135,9 @@ test("every Browse design of a changed, added, or removed entry lists its reason
           removed: /· Removed$/u.test(label),
           badge:
             document
-              .querySelector(".mbk-title-row .ce-change-status")
-              ?.getAttribute("data-change-status") ?? "",
+              .querySelector(".mbk-title-row .mbk-entry-status")
+              ?.getAttribute("data-status")
+              ?.toLowerCase() ?? "",
         };
       },
       await designSource(request, route),

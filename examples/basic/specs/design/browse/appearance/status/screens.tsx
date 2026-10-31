@@ -57,6 +57,7 @@ function ErrorAndRetry({ viewport }: { viewport: ArtboardViewport }) {
       viewport={viewport}
     >
       <AppearanceHead
+        highlight="failed"
         path={ENTRY_PATHS.welcome}
         preview={viewport}
         title="Welcome"

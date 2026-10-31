@@ -6,7 +6,12 @@
   failure outside the scope of its review. On 2026-10-30 the duplicate item
   `flaky-same-origin-exact-resource-handoff.md` merged into this item. PR #250
   added it that day from the complete gate of its branch
-  `calummoore/npm-run-dev-automation` at `f38892a7`.
+  `calummoore/npm-run-dev-automation` at `f38892a7`. It failed again on
+  2026-10-30 in browser shard 2 of the remote gate of
+  `calummoore/mokly-ui-controls` at `1d81517f`, which did not change it, with
+  "page.evaluate: TypeError: Cannot read properties of null (reading
+  'dispatchEvent')" at the probe call of line 206, and the shard passed on a
+  rerun.
 - **Location:** `tests/browser/same_origin_identity.spec.ts:126`, with the
   probe call at line 206 and the probe helper at lines 245 to 273.
 - **Reason:** The test failed in the remote gates of PR #226 and of the

@@ -108,13 +108,14 @@ stays in the catalogue. The Details slot holds the descriptions, metadata,
 tags and comparison evidence.
 
 Selected-screen view options appear once in the header: a viewport dropdown
-and highlighting where relevant. The top-bar Appearance selector owns the
-catalogue-wide scheme; there is no second scheme icon in the header and no
-authored light/dark link pair. Unsupported transitions stay disabled. Viewport changes select the actual
-mobile/desktop previews without scrolling the whole page. Simultaneous previews
-reserve their intrinsic minimum width and wrap when needed; full-size phone
-frames must never overlap adjacent desktop content. Comparison mode
-segments stay comparison controls.
+and the Highlight components toggle, which every screen and component page
+draws in the state that the shell shows for its view. The top-bar Appearance
+selector owns the catalogue-wide scheme; there is no second scheme icon in the
+header and no authored light/dark link pair. Unsupported transitions stay
+disabled. Viewport changes select the actual mobile/desktop previews without
+scrolling the whole page. Simultaneous previews reserve their intrinsic minimum
+width and wrap when needed; full-size phone frames must never overlap adjacent
+desktop content. Comparison mode segments stay comparison controls.
 
 Every owning screen has separate desktop and mobile React components. Flows
 compose their owning screen components, with links back to those screens. No

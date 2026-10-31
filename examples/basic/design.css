@@ -33,12 +33,18 @@
   --mbk-sage: #4f7864;
   --mbk-sage-deep: #2f5945;
   --mbk-accent-contrast: #ffffff;
-  /* The @mokly/ui components read the shell's names for five roles. */
+  /* The @mokly/ui components read the shell's names for eleven roles. */
   --mbk-accent-deep: var(--mbk-sage-deep);
   --mokly-accent: var(--mbk-sage);
   --mokly-accent-contrast: var(--mbk-accent-contrast);
   --mokly-accent-soft: var(--mbk-accent-soft);
   --_mokly-private-on-accent-deep: var(--mbk-accent-contrast);
+  --mb-added: var(--mbk-sage-deep);
+  --mb-added-soft: var(--mbk-accent-surface);
+  --mb-changed: var(--mbk-status-changed-ink);
+  --mb-changed-soft: var(--mbk-status-changed-bg);
+  --mb-removed: var(--mbk-status-removed-ink);
+  --mb-removed-soft: var(--mbk-status-removed-bg);
   --mbk-accent-soft: rgba(79, 120, 100, 0.1);
   --mbk-accent-surface: #edf3ef;
   --mbk-accent-edge: #b9cfc2;
@@ -91,12 +97,18 @@
   --mbk-sage: #86b79b;
   --mbk-sage-deep: #b6d8c4;
   --mbk-accent-contrast: #0e1a14;
-  /* The @mokly/ui components read the shell's names for five roles. */
+  /* The @mokly/ui components read the shell's names for eleven roles. */
   --mbk-accent-deep: var(--mbk-sage-deep);
   --mokly-accent: var(--mbk-sage);
   --mokly-accent-contrast: var(--mbk-accent-contrast);
   --mokly-accent-soft: var(--mbk-accent-soft);
   --_mokly-private-on-accent-deep: var(--mbk-accent-contrast);
+  --mb-added: var(--mbk-sage-deep);
+  --mb-added-soft: var(--mbk-accent-surface);
+  --mb-changed: var(--mbk-status-changed-ink);
+  --mb-changed-soft: var(--mbk-status-changed-bg);
+  --mb-removed: var(--mbk-status-removed-ink);
+  --mb-removed-soft: var(--mbk-status-removed-bg);
   --mbk-accent-soft: rgba(134, 183, 155, 0.16);
   --mbk-accent-surface: #24312a;
   --mbk-accent-edge: #3c5648;

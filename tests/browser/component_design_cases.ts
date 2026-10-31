@@ -120,7 +120,7 @@ export function registerComponentDesign(
           componentDesignUrl("design/components/overview", viewport),
         );
         const selectedView = page.getByRole("combobox", {
-          name: "Preview viewport",
+          name: "Viewport",
         });
         await selectedView.focus();
         await expect(selectedView).toBeFocused();

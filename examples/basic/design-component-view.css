@@ -30,7 +30,7 @@
 .ce-highlight-layer {
   display: none;
 }
-.ce-design:has(.ce-highlight-toggle:checked) .ce-highlight-layer {
+.ce-design:has([data-workspace-highlight]:checked) .ce-highlight-layer {
   display: block;
 }
 .ce-single-action {
@@ -44,4 +44,10 @@
   inset: 0;
   pointer-events: auto;
   position: absolute;
+}
+
+/* A component canvas dims only its content, as the shell dims the preview and
+   never the caption above it. */
+.ce-canvas-content:has(.ce-single-highlight) {
+  overflow: hidden;
 }

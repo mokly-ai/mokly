@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { ChangeStatus } from "@mokly/ui/change-status";
+
 import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
 import { comparisonEligibilityKnown } from "./comparison_intent.js";
@@ -212,14 +214,7 @@ export function ComponentWorkspace({
         heading={head.title}
         path={head.path}
         status={
-          <span
-            className="mbk-entry-status"
-            data-status={headStatus}
-            data-workspace-status=""
-            hidden={!headStatus}
-          >
-            {headStatus}
-          </span>
+          <ChangeStatus mark="data-workspace-status" status={headStatus} />
         }
       />
       <WorkspaceVariantBar data={data} {...(variant ? { variant } : {})} />
