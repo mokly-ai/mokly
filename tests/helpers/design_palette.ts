@@ -42,6 +42,22 @@ export async function designPalette(): Promise<
   return { light: readTokens(light[1]), dark: readTokens(dark[1]) };
 }
 
+const PREVIEW_BLOCK = /:root\s*\{([^}]*)\}/;
+
+/**
+ * The preview tokens of the stage stylesheet: the screen, device, and traffic
+ * light colours, which stay independent of the interface appearance.
+ */
+export async function designPreviewTokens(): Promise<Map<string, string>> {
+  const source = await fs.readFile(
+    path.join(repositoryRoot, "examples/basic/design-stage.css"),
+    "utf8",
+  );
+  const block = PREVIEW_BLOCK.exec(source)?.[1];
+  if (!block) throw new Error("design-stage.css is missing its preview tokens");
+  return readTokens(block);
+}
+
 function channel(value: number): number {
   const ratio = value / 255;
   return ratio <= 0.04045 ? ratio / 12.92 : ((ratio + 0.055) / 1.055) ** 2.4;

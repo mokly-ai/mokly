@@ -1,9 +1,13 @@
-/* Component-page artboards in the basic example's owning design catalogue. */
+/* Component-page artboards in the basic example's owning design catalogue.
+   The variant bar is the shipped one, from its @mokly/ui stylesheet. */
+@import "../../packages/ui/src/variant-bar/variant-bar.css";
+
 /* Prose links take the deep sage. The links that @mokly/ui components draw
    keep the look of their package stylesheets, as the shipped shell draws
    them: the brand, the catalogue rows, the crumbs, the menu, the comparison
-   modes, the Usage rows, the selected instance's component link, Reset, and
-   the text buttons. */
+   modes, the Usage rows, the selected instance's component link, Reset, the
+   text buttons, the variants, an empty state's action, and a flow step's
+   screen. */
 .ce-design
   a:where(
     :not(
@@ -15,7 +19,10 @@
       .mbk-usage-list a,
       .ce-selected-instance > a,
       .mbk-controls-reset,
-      .mbk-text-button
+      .mbk-text-button,
+      .mbk-selection-bar > a,
+      .mbk-empty-link,
+      .flow-step-link
     )
   ) {
   color: var(--mbk-sage-deep);
@@ -32,7 +39,10 @@
       .mbk-usage-list a,
       .ce-selected-instance > a,
       .mbk-controls-reset,
-      .mbk-text-button
+      .mbk-text-button,
+      .mbk-selection-bar > a,
+      .mbk-empty-link,
+      .flow-step-link
     )
   ):hover {
   text-decoration: underline;
@@ -52,45 +62,11 @@
 .ce-action {
   font-family: var(--sans);
 }
-.ce-design .mbk-stage {
-  min-height: 225px;
-  padding: 24px;
-}
-.ce-variants {
-  align-items: center;
-  background: white;
-  border-bottom: 1px solid var(--chrome-border);
-  display: flex;
-  flex-shrink: 0;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 10px 24px;
-}
-.ce-variants > span {
-  color: var(--chrome-muted);
-  font-size: 12px;
-  margin-right: 10px;
-}
-.ce-variants a {
-  border: 1px solid transparent;
-  border-radius: 6px;
-  color: var(--chrome-ink-2);
-  padding: 5px 10px;
-}
-.ce-variants a[aria-current] {
-  background: var(--mbk-accent-surface);
-  border-color: var(--mbk-sage-deep);
-  color: var(--mbk-sage-deep);
-  font-weight: 600;
-}
-/* A saved variant that owns no artboard in its story: shown, not linked. */
-.ce-variants > .ce-variant-option {
-  border: 1px solid transparent;
-  border-radius: 6px;
-  color: var(--chrome-ink-2);
-  font-size: inherit;
-  margin-right: 0;
-  padding: 5px 10px;
+/* A mobile render draws the narrow variant bar at every width. Below the
+   layout breakpoint the package stylesheet draws it on its own, as the shell
+   does. */
+.mbk-shell--mobile .mbk-selection-bar {
+  padding: 8px 12px;
 }
 /* One height sizes every depicted component viewport, so a Side by side canvas
    and the stacked frame of Overlay and Difference always match. */
@@ -175,20 +151,17 @@
   font-size: 12px;
   margin: 0 0 12px;
 }
-.ce-component-comparison .mbk-compare[data-compare-mode="side"] {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-}
 /* Overlay and Difference keep one bordered frame: its caption stays above the
    viewport both versions share, the only scroll container in the frame. */
-.ce-canvas > .mbk-stack-viewport {
+.ce-canvas > .mb-viewport {
   height: var(--ce-canvas-height);
 }
-.ce-canvas .mbk-stack-layer {
+.ce-canvas .mb-pane-doc {
   background-color: var(--ce-surface);
 }
 /* The tall Checklist is drawn part-way down, with the frame's scrollbar thumb
    placed and sized to match the shown share of it. */
-.ce-canvas > .mbk-stack-viewport[data-scrolled] > .mbk-stack {
+.ce-canvas .mbk-stack-document[data-scrolled] {
   transform: translateY(-160px);
 }
 .ce-canvas .mbk-stack-thumb {
@@ -244,10 +217,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.ce-component-comparison .mbk-compare-side {
-  min-width: 0;
-}
-.ce-component-comparison .mbk-pane-missing {
+.ce-component-comparison .mb-pane-missing {
   height: 225px;
   min-height: 225px;
 }
@@ -300,15 +270,9 @@
   font-size: 12px;
   padding: 4px 12px;
 }
-.ce-design .mbk-shell--mobile .ce-variants {
-  padding: 10px 16px;
-}
-.ce-design .mbk-shell--mobile .mbk-stage {
-  padding: 18px 14px;
-}
 .ce-preview-view[data-preview-viewport="mobile"]
   .ce-component-comparison
-  .mbk-compare {
+  .mb-panes {
   grid-template-columns: 1fr;
 }
 .ce-preview-view[data-preview-viewport="mobile"] .ce-canvas {

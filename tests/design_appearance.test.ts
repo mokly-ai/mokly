@@ -3,7 +3,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { contrast, designPalette } from "./helpers/design_palette.js";
+import {
+  contrast,
+  designPalette,
+  designPreviewTokens,
+} from "./helpers/design_palette.js";
 import { designStyleRules } from "./helpers/design_styles.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
@@ -152,12 +156,20 @@ const COMPONENT_PARAMETERS = new Map([
   ["--inspector-height", "a resizable inspector sets its own height"],
   ["--inspector-tabs", "a static inspector sets the number of its tabs"],
   ["--inspector-tab", "each tab of a static inspector sets its own column"],
+  [
+    "--mbk-comparison-canvas",
+    "a comparison's host paints the canvas colour of each version",
+  ],
 ]);
 
-test("the design palette declares every token that a @mokly/ui stylesheet reads", async () => {
-  // The root block declares each token, and the same-roles test above holds
-  // the dark block to the same roles.
-  const declared = (await designPalette()).light;
+test("the design palettes declare every token that a @mokly/ui stylesheet reads", async () => {
+  // The root block of the interface palette declares each of its tokens, and
+  // the same-roles test above holds the dark block to the same roles. The
+  // preview tokens of the stage stylesheet declare the device colours.
+  const declared = new Map([
+    ...(await designPalette()).light,
+    ...(await designPreviewTokens()),
+  ]);
   const files = new Set<string>();
   const missing: string[] = [];
   const parameters = new Set<string>();

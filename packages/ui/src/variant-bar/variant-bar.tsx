@@ -1,15 +1,19 @@
 /**
  * The bar of a component's saved variants above its preview: a link to each
  * variant, the shown one marked as the current page, and the change status
- * of the shown variant.
+ * of the shown variant. A static depiction that runs no script draws a
+ * variant without an address as a picture of its link.
  */
 
 /** One saved variant of the component. */
 export interface VariantBarItem {
   /** Whether the variant is the one shown. */
   current: boolean;
-  /** The address of the variant's page. */
-  href: string;
+  /**
+   * The address of the variant's page. A static depiction leaves it out for
+   * a variant that it does not depict, which draws the variant as a picture.
+   */
+  href?: string | undefined;
   /** The variant's path, which its link carries in `data-workspace-variant`. */
   path: string;
   /** Whether the variant is removed on the branch. */
@@ -31,17 +35,33 @@ export function VariantBar({
   return (
     <nav aria-label="Saved variants" className="mbk-selection-bar">
       <span>Variant</span>
-      {variants.map((variant) => (
-        <a
-          aria-current={variant.current ? "page" : undefined}
-          data-workspace-variant={variant.path}
-          href={variant.href}
-          key={variant.path}
-        >
-          {variant.title}
-          {variant.removed ? " · Removed" : ""}
-        </a>
-      ))}
+      {variants.map((variant) => {
+        const label = (
+          <>
+            {variant.title}
+            {variant.removed ? " · Removed" : ""}
+          </>
+        );
+        return variant.href === undefined ? (
+          <span
+            aria-current={variant.current ? "page" : undefined}
+            className="mbk-variant-option"
+            data-workspace-variant={variant.path}
+            key={variant.path}
+          >
+            {label}
+          </span>
+        ) : (
+          <a
+            aria-current={variant.current ? "page" : undefined}
+            data-workspace-variant={variant.path}
+            href={variant.href}
+            key={variant.path}
+          >
+            {label}
+          </a>
+        );
+      })}
       <span
         className="mbk-variant-status"
         data-workspace-variant-status=""

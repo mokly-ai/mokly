@@ -1,5 +1,6 @@
 import { defineScreen } from "@mokly/mokly";
 
+import { FlowStage } from "../../../../../../../packages/ui/src/flow-step/flow-step.js";
 import { PreviewWorkspace } from "../../../components/parts/workspace.js";
 import { appearanceDesignMetadata } from "../../../metadata.js";
 import { useDarkPreview } from "../../../parts/appearance.js";
@@ -128,38 +129,36 @@ function UseCaseFlow({ viewport }: { viewport: ArtboardViewport }) {
         title="Example tour"
         viewport={viewport}
       />
-      <div className="mbk-flow">
-        <div className="flow-track">
-          <FlowStep
-            name="arrival"
-            number={1}
-            title="Welcome"
-            screenTitle="Welcome"
-            description="The tour starts on the landing screen."
-            screenPath={DESTINATIONS.appearance}
-          >
-            <FlowWelcomeShot viewport={viewport} />
-          </FlowStep>
-          <FlowStep
-            name="detail"
-            number={2}
-            title="Details"
-            screenTitle="Details"
-            description="The tour ends on the details screen."
-            screenPath={DESTINATIONS.appearanceLightOnly}
-          >
-            {viewport === "desktop" ? (
-              <BrowserFrame address="example.test/details">
-                <MiniDetails />
-              </BrowserFrame>
-            ) : (
-              <PhoneFrame small>
-                <MiniDetails compact />
-              </PhoneFrame>
-            )}
-          </FlowStep>
-        </div>
-      </div>
+      <FlowStage>
+        <FlowStep
+          name="arrival"
+          number={1}
+          title="Welcome"
+          screenTitle="Welcome"
+          description="The tour starts on the landing screen."
+          screenPath={DESTINATIONS.appearance}
+        >
+          <FlowWelcomeShot viewport={viewport} />
+        </FlowStep>
+        <FlowStep
+          name="detail"
+          number={2}
+          title="Details"
+          screenTitle="Details"
+          description="The tour ends on the details screen."
+          screenPath={DESTINATIONS.appearanceLightOnly}
+        >
+          {viewport === "desktop" ? (
+            <BrowserFrame address="example.test/details">
+              <MiniDetails />
+            </BrowserFrame>
+          ) : (
+            <PhoneFrame small>
+              <MiniDetails compact />
+            </PhoneFrame>
+          )}
+        </FlowStep>
+      </FlowStage>
     </AppearanceShell>
   );
 }

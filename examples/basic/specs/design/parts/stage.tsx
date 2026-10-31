@@ -1,17 +1,21 @@
 import type { ReactNode } from "react";
 
+import { DocumentFrame } from "../../../../../packages/ui/src/preview-frame/preview-frame.js";
+import { Stage as StageView } from "../../../../../packages/ui/src/stage/stage.js";
 import { optional, useDesignInstance } from "../library/composition.js";
 import { deviceFrame } from "../library/preview/device-frame.js";
 
+/** The shipped dotted stage around the previews of a workspace or a state. */
 export function Stage({ children }: { children: ReactNode }) {
-  return <div className="mbk-stage">{children}</div>;
+  return <StageView>{children}</StageView>;
 }
 
 /**
- * The bordered pane a whole document occupies on the dotted stage. A
- * light-only document keeps the light palette while the catalogue is Dark.
+ * A whole document on the shipped document stage, in the bordered pane that
+ * depicts its frame. A light-only document keeps the light palette while the
+ * catalogue is Dark.
  */
-export function DocumentPane({
+export function DocumentStage({
   children,
   lightOnly,
 }: {
@@ -19,12 +23,14 @@ export function DocumentPane({
   lightOnly?: boolean | undefined;
 }) {
   return (
-    <div
-      className="mbk-doc-pane"
-      data-mbk-light-only={lightOnly ? "" : undefined}
-    >
-      {children}
-    </div>
+    <DocumentFrame scheme="light">
+      <div
+        className="mbk-doc-pane"
+        data-mbk-light-only={lightOnly ? "" : undefined}
+      >
+        {children}
+      </div>
+    </DocumentFrame>
   );
 }
 

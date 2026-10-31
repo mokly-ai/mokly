@@ -1,6 +1,6 @@
 import { MockLink } from "@mokly/mokly";
 
-import { CompareGrid, ComparisonStage, Pane } from "../../parts/compare.js";
+import { CompareGrid, ComparisonView, Pane } from "../../parts/compare.js";
 import { FramedShot } from "../../parts/compare_page.js";
 import { useCurrentPage } from "../../parts/design_navigation.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
@@ -73,9 +73,10 @@ export function WelcomeExample({
 }
 
 /**
- * Welcome's loaded side-by-side comparison, which Action's Affected screens
- * open. Welcome's own content is unchanged, so its versions differ only
- * inside the Action it uses, and the heading names the changed components.
+ * One viewport of Welcome's loaded side-by-side comparison, which Action's
+ * Affected screens open. Welcome's own content is unchanged, so its versions
+ * differ only inside the Action it uses, and the heading names the changed
+ * components.
  */
 export function AffectedComparison({
   viewport,
@@ -83,7 +84,7 @@ export function AffectedComparison({
   viewport: ArtboardViewport;
 }) {
   return (
-    <ComparisonStage state="components-changed" viewport={viewport}>
+    <ComparisonView state="components-changed" viewport={viewport}>
       <CompareGrid>
         <Pane label="Before" side="before">
           <FramedShot address="example.test/welcome" viewport={viewport}>
@@ -96,7 +97,7 @@ export function AffectedComparison({
           </FramedShot>
         </Pane>
       </CompareGrid>
-    </ComparisonStage>
+    </ComparisonView>
   );
 }
 

@@ -120,8 +120,8 @@ pub(crate) fn check() {
         let previews = dom::class(&document.tree, "ce-preview-view");
         assert_eq!(previews.len(), 2);
         for preview in previews {
-            let before = dom::class(&preview.children, "mbk-stack-layer--before");
-            let after = dom::class(&preview.children, "mbk-stack-layer--after");
+            let before = dom::class(&preview.children, "mb-pane--before");
+            let after = dom::class(&preview.children, "mb-pane--after");
             assert_eq!((before.len(), after.len()), (1, 1));
             let labels = |nodes: &[Node]| {
                 dom::class(nodes, "ce-checklist-label")

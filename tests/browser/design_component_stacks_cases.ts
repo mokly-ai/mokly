@@ -39,7 +39,7 @@ export function registerDesignComponentStacks(
     );
     await page.goto(componentDesignUrl(route, viewport));
     const scroller = page.locator(
-      `.ce-preview-view[data-preview-viewport="${viewport}"] .mbk-stack-viewport`,
+      `.ce-preview-view[data-preview-viewport="${viewport}"] .mb-viewport`,
     );
     await expect(scroller, route).toHaveCount(1);
     await expect(scroller, route).toBeVisible();
@@ -58,9 +58,11 @@ export function registerDesignComponentStacks(
             return [rect.left, rect.top, rect.width, rect.height];
           };
           const frame = node.closest(".ce-canvas")!;
-          const stack = node.querySelector(".mbk-stack")!;
-          const before = node.querySelector(".mbk-stack-layer--before")!;
-          const after = node.querySelector(".mbk-stack-layer--after")!;
+          const stack = node.querySelector(".mb-viewport-box")!;
+          const before = node.querySelector(".mb-pane--before")!;
+          const after = node.querySelector(".mb-pane--after")!;
+          const surface = (layer: Element) =>
+            layer.querySelector(":scope > .mb-pane-doc")!;
           const blended: string[] = [];
           for (
             let ancestor: Element | null = frame;
@@ -71,20 +73,24 @@ export function registerDesignComponentStacks(
             if (style.mixBlendMode !== "normal" || style.opacity !== "1")
               blended.push(ancestor.className);
           }
+          // A scroll container that has no range cannot move: the shipped
+          // viewport scrolls in the shell, and a static artboard draws it.
           const scrollers = [frame, ...frame.querySelectorAll("*")].filter(
             (element) =>
               /auto|scroll/u.test(
                 `${getComputedStyle(element).overflowX} ${getComputedStyle(element).overflowY}`,
-              ),
+              ) &&
+              (element.scrollHeight > element.clientHeight ||
+                element.scrollWidth > element.clientWidth),
           );
           const caption = frame.querySelector(".ce-canvas-label")!;
           return {
             after: box(after),
-            afterBackground: getComputedStyle(after).backgroundColor,
+            afterBackground: getComputedStyle(surface(after)).backgroundColor,
             afterBlend: getComputedStyle(after).mixBlendMode,
             afterOpacity: getComputedStyle(after).opacity,
             before: box(before),
-            beforeBackground: getComputedStyle(before).backgroundColor,
+            beforeBackground: getComputedStyle(surface(before)).backgroundColor,
             beforeBlend: getComputedStyle(before).mixBlendMode,
             beforeOpacity: getComputedStyle(before).opacity,
             blended,
@@ -94,13 +100,14 @@ export function registerDesignComponentStacks(
             frameHeight: parseFloat(
               getComputedStyle(frame).getPropertyValue("--ce-canvas-height"),
             ),
+            documentHeights: [
+              ...node.querySelectorAll(".mbk-stack-document"),
+            ].map((document) => document.getBoundingClientRect().height),
             isolation: getComputedStyle(stack).isolation,
-            overflow: getComputedStyle(node).overflow,
             scrollerHeight: node.getBoundingClientRect().height,
             scrollerTop: node.getBoundingClientRect().top,
             scrollers: scrollers.map((element) => element.className),
             scrolls: node.scrollTop,
-            stackHeight: stack.getBoundingClientRect().height,
           };
         });
         const where = `${route} ${viewport}`;
@@ -108,13 +115,12 @@ export function registerDesignComponentStacks(
         expect(facts.scrollerHeight, `${where}: canvas height`).toBe(
           facts.frameHeight,
         );
-        expect(facts.stackHeight, where).toBeGreaterThanOrEqual(
-          facts.scrollerHeight,
-        );
+        expect(facts.documentHeights, where).toHaveLength(2);
+        for (const height of facts.documentHeights)
+          expect(height, where).toBeGreaterThanOrEqual(facts.scrollerHeight);
         expect(facts.captionBottom, where).toBeLessThanOrEqual(
           facts.scrollerTop,
         );
-        expect(facts.overflow, where).toBe("hidden");
         expect(facts.scrolls, where).toBe(0);
         expect(facts.scrollers, `${where}: no inner scroll container`).toEqual(
           [],
@@ -148,7 +154,7 @@ export function registerDesignComponentStacks(
         const facts = await scroller.evaluate((node) => {
           const center = (side: string) => {
             const rect = node
-              .querySelector(`.mbk-stack-layer--${side} .ce-action`)!
+              .querySelector(`.mb-pane--${side} .ce-action`)!
               .getBoundingClientRect();
             return [rect.left + rect.width / 2, rect.top + rect.height / 2];
           };
@@ -156,9 +162,9 @@ export function registerDesignComponentStacks(
             after: center("after"),
             before: center("before"),
             scrollbars: node.querySelectorAll(".mbk-stack-scrollbar").length,
-            stackHeight: node
-              .querySelector(".mbk-stack")!
-              .getBoundingClientRect().height,
+            stackHeights: [...node.querySelectorAll(".mbk-stack-document")].map(
+              (document) => document.getBoundingClientRect().height,
+            ),
             viewportHeight: node.getBoundingClientRect().height,
           };
         });
@@ -167,9 +173,10 @@ export function registerDesignComponentStacks(
             0.5,
           ),
         );
-        expect(facts.stackHeight, `${route}: fits its frame`).toBe(
+        expect(facts.stackHeights, `${route}: fits its frame`).toEqual([
           facts.viewportHeight,
-        );
+          facts.viewportHeight,
+        ]);
         expect(facts.scrollbars, route).toBe(0);
       }
     });
@@ -184,11 +191,13 @@ export function registerDesignComponentStacks(
       );
       const facts = await scroller.evaluate((node) => {
         const frame = node.getBoundingClientRect();
-        const stack = node.querySelector(".mbk-stack")!;
+        const stack = node.querySelector(
+          ".mb-pane--before .mbk-stack-document",
+        )!;
         const rows = (side: string) =>
           [
             ...node.querySelectorAll(
-              `.mbk-stack-layer--${side} .ce-checklist-steps > li`,
+              `.mb-pane--${side} .ce-checklist-steps > li`,
             ),
           ].map((row) => {
             const rect = row.getBoundingClientRect();

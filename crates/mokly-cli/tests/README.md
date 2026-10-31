@@ -28,7 +28,7 @@ value must fail its corresponding behaviour check:
 | Value            | Injected defect                                      |
 | ---------------- | ---------------------------------------------------- |
 | `own-props`      | Replace a parent's own destination prop.             |
-| `stack`          | Remove the Current layer's class marker.             |
+| `stack`          | Mark the Current layer as a Before layer.            |
 | `caption`        | Replace a comparison caption with incorrect text.    |
 | `checklist`      | Replace the Checklist's Changes with Action's story. |
 | `stack-swap`     | Swap Before and Current content in stacked previews. |

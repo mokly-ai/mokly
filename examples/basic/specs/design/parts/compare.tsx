@@ -1,5 +1,10 @@
 import type { ReactNode } from "react";
 
+import {
+  ComparisonPanes,
+  ComparisonSection,
+  ComparisonStage as ComparisonStageView,
+} from "../../../../../packages/ui/src/comparison-stage/comparison-stage.js";
 import { useDesignInstance } from "../library/composition.js";
 import { comparisonToolbar } from "../library/controls/comparison-toolbar.js";
 import { comparisonPane } from "../library/preview/comparison-pane.js";
@@ -39,8 +44,26 @@ const STATE_LABELS: Record<ReviewState, string> = {
   "styles-changed": SCREEN_STYLE_COPY.stylesChanged,
 };
 
-/** The scrollable stage of a loaded comparison, headed by its outcome. */
+/**
+ * The shipped stage of a loaded comparison, which scrolls the depicted views
+ * on the dotted surface, for the `wrap` of `PreviewWorkspace`. The screen
+ * header draws the comparison band, so the stage holds only its sections.
+ */
 export function ComparisonStage({
+  children,
+  path,
+}: {
+  children: ReactNode;
+  /** The compared entry's path, which the comparison carries. */
+  path: string;
+}) {
+  return (
+    <ComparisonStageView current={false} entryId={path} stage={children} />
+  );
+}
+
+/** One viewport's shipped section of a comparison, headed by its outcome. */
+export function ComparisonView({
   children,
   state,
   viewport,
@@ -50,25 +73,18 @@ export function ComparisonStage({
   viewport: "mobile" | "desktop";
 }) {
   return (
-    <section className="mbk-comparison-stage">
-      <h3>
-        {viewport === "mobile" ? "Mobile" : "Desktop"} · {STATE_LABELS[state]}
-      </h3>
+    <ComparisonSection label={STATE_LABELS[state]} viewport={viewport}>
       {children}
-    </section>
+    </ComparisonSection>
   );
 }
 
 /**
- * Side by side keeps one device chrome per version in a two-column grid on the
- * dotted stage; Overlay and Difference use `ComparisonStack` instead.
+ * Side by side keeps one device chrome per version in the shipped grid of
+ * panes; Overlay and Difference use `ComparisonStack` instead.
  */
 export function CompareGrid({ children }: { children: ReactNode }) {
-  return (
-    <div className="mbk-compare" data-compare-mode="side">
-      {children}
-    </div>
-  );
+  return <ComparisonPanes mode="side">{children}</ComparisonPanes>;
 }
 
 export function Pane({

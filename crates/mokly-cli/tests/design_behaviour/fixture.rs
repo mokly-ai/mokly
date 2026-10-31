@@ -88,8 +88,8 @@ fn mutate(root: &Path, mutation: &str) {
         ),
         "stack" => (
             "parts/compare_stack.tsx",
-            "className=\"mbk-stack-layer mbk-stack-layer--after\"",
-            "className=\"mbk-stack-layer\"",
+            "<StackedVersion scrolled={scrolled} side=\"after\">",
+            "<StackedVersion scrolled={scrolled} side=\"before\">",
         ),
         "caption" => (
             "components/parts/preview.tsx",

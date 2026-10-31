@@ -4,7 +4,12 @@ import { PreviewWorkspace } from "./components/parts/workspace.js";
 import { changesDesignMetadata } from "./metadata.js";
 import { useDarkPreview } from "./parts/appearance.js";
 import { artboards } from "./parts/artboards.js";
-import { CompareGrid, ComparisonStage, Pane } from "./parts/compare.js";
+import {
+  CompareGrid,
+  ComparisonStage,
+  ComparisonView,
+  Pane,
+} from "./parts/compare.js";
 import { FramedShot } from "./parts/compare_page.js";
 import { ScrolledPage } from "./parts/compare_scroll.js";
 import { ComparisonStack, deviceChrome } from "./parts/compare_stack.js";
@@ -178,14 +183,23 @@ function ChangesScreen({
           state === "current" ? (
             <CurrentPreview viewport={previewViewport} />
           ) : (
-            <ComparisonStage state="changed" viewport={previewViewport}>
+            <ComparisonView state="changed" viewport={previewViewport}>
               {state === "side-by-side-apart" ? (
                 <ApartPreview viewport={previewViewport} />
               ) : (
                 <OverlayPreview state={state} viewport={previewViewport} />
               )}
-            </ComparisonStage>
+            </ComparisonView>
           )
+        }
+        wrap={
+          comparing
+            ? (previews) => (
+                <ComparisonStage path={ENTRY_PATHS.welcome}>
+                  {previews}
+                </ComparisonStage>
+              )
+            : undefined
         }
       />
     </Shell>

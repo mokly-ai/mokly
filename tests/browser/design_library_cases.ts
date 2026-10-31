@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { expect } from "@playwright/test";
+import { expect, type Locator } from "@playwright/test";
 
 import { viewRoute } from "../../packages/viewer/dist/data.js";
 import { repositoryRoot } from "../helpers/fixture.js";
@@ -167,16 +167,13 @@ export function registerDesignLibrary(
       );
       const steps = page.locator(".flow-step");
       await expect(steps).toHaveCount(2);
-      expect(
-        await steps
-          .first()
-          .evaluate((node) => getComputedStyle(node, "::before").display),
-      ).not.toBe("none");
-      expect(
-        await steps
-          .last()
-          .evaluate((node) => getComputedStyle(node, "::before").display),
-      ).toBe("none");
+      const connector = (step: Locator) =>
+        step.evaluate((node) => getComputedStyle(node, "::before").display);
+      // A mobile render draws the shipped narrow flow, which joins no steps.
+      expect(await connector(steps.first())).toBe(
+        viewport === "desktop" ? "block" : "none",
+      );
+      expect(await connector(steps.last())).toBe("none");
     });
 
     test("standalone inline components retain their intrinsic width", async ({

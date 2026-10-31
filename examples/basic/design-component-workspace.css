@@ -73,6 +73,13 @@
   min-height: 100%;
   overflow: visible;
 }
+/* The preview pane lays out the shipped previous version and comparison
+   stage as the shell's preview pane does: a column whose stage fills it and
+   scrolls, below the previous version's band. */
+.ce-preview-pane:has(> :is(.mbk-preview, .mbk-diff-screen)) {
+  display: flex;
+  flex-direction: column;
+}
 /* The dock places and sizes the shipped inspector, which fills it, so the
    inspector neither places itself nor stacks above the preview's sizer. */
 .ce-inspector-dock {
@@ -132,7 +139,7 @@
 .ce-preview-view .ce-canvas--mobile {
   margin-inline: auto;
 }
-.ce-preview-view > .mbk-frame-mobile {
+.ce-preview-view > .mbk-device-frame > .mbk-frame-mobile {
   margin-inline: auto;
 }
 .ce-preview-view .mbk-frame-desktop {

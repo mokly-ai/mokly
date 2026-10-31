@@ -182,6 +182,14 @@ controls panels take `resetHref`, `retryHref`, `startHref`, and `currentHref`,
 which draw Reset while the props differ, the alert's action, a failed start's
 action, and Switch to Current as links.
 
+A static mockup sets `interactive={false}` on `BrowserFrame` or `BrowserBar`,
+which draws the bar as a picture of itself: the address copies nothing, the
+toggle is a picture named by what it would do, and neither takes the pointer
+or the hover look. On `EmptyState`, `interactive={false}` draws an action
+without an `href` as a picture of itself. A `VariantBar` variant without an
+`href` is a picture of its link that keeps the link's look and its current
+mark.
+
 ## Development
 
 From the repository root, `npm run build` builds this package before the
@@ -311,10 +319,12 @@ override the desktop layout rules.
   label, and lines, a whole document's frame, and the `<iframe>` element
 - [`src/device-frame/device-frame.tsx`](./src/device-frame/device-frame.tsx)
   — `PhoneFrame` with the status band of `phone-status.tsx`, and
-  `BrowserFrame`, whose expanded window covers the page
+  `BrowserFrame`, whose expanded window covers the page, or whose bar is a
+  picture in a static depiction
 - [`src/browser-bar/browser-bar.tsx`](./src/browser-bar/browser-bar.tsx) —
   `BrowserBar`: the traffic lights, the address with its "URL copied"
-  message, and the expand toggle of a browser window
+  message, and the expand toggle of a browser window, as controls or as
+  pictures of a static depiction
 - [`src/flow-step/flow-step.tsx`](./src/flow-step/flow-step.tsx) —
   `FlowStage` and `FlowStep`: a user flow's column of numbered steps
 - [`src/previous-version/previous-version.tsx`](./src/previous-version/previous-version.tsx)
@@ -324,8 +334,8 @@ override the desktop layout rules.
 - [`src/scheme-fallback/scheme-fallback.tsx`](./src/scheme-fallback/scheme-fallback.tsx)
   — `LightOnlyNote` and `LightOnlyBand`, which only a Dark shell shows
 - [`src/empty-state/empty-state.tsx`](./src/empty-state/empty-state.tsx) —
-  `EmptyState` with its action, and the home, missing route, and removed
-  states
+  `EmptyState` with its action, as a link, a button, or the picture of a
+  static depiction, and the home, missing route, and removed states
 - [`src/comparison-stage/comparison-stage.tsx`](./src/comparison-stage/comparison-stage.tsx)
   — `ComparisonStage`, `ComparisonSection`, `ComparisonPanes`, and
   `ComparisonFailure`: Current, the comparison stage, and its sections
@@ -333,7 +343,8 @@ override the desktop layout rules.
   — `ComparisonPane`, `ComparisonLayer`, `ComparisonViewport`,
   `ComparisonSurface`, and `ComponentFrame`: one version and its viewport
 - [`src/variant-bar/variant-bar.tsx`](./src/variant-bar/variant-bar.tsx) —
-  `VariantBar`: the links of a component's saved variants and the status
+  `VariantBar`: the links of a component's saved variants, or the pictures
+  of a static depiction, and the status
 - [`scripts/build.mjs`](./scripts/build.mjs) — compiles the package, copies
   each CSS file beside its JavaScript, and writes `styles.css`
 - [`scripts/styles.mjs`](./scripts/styles.mjs) — finds the component

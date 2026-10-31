@@ -143,6 +143,26 @@ link to the artboards that show the outcome. Their stylesheets follow the
 shell's breakpoint, and a mobile render draws the narrow sheet, details body,
 field column and status pill at every width.
 
+The device frame, the comparison pane, the empty state and the flow step are
+the shipped `@mokly/ui` components too. The device frame renders
+`PreviewFrame` around `PhoneFrame` or `BrowserFrame`, in the scheme of the
+depicted screen. On a stage it names its viewport above the chrome, as the
+shell's frames do. In a flow step or a comparison it stands where the shared
+`FrameSettingScope` context of `preview/frame_placement.tsx` places it,
+without a caption. A static artboard runs no script, so the window's bar is a
+picture of itself: the address copies nothing, and the expand toggle expands
+nothing. The compact flag draws a small phone, and the light-only flag shows
+the caption's Light-only note, as a Dark shell shows it. The comparison pane
+names its side, Before or Current, and the empty state's action links to the
+artboard of its outcome. The artboards render the rest of the preview slice
+in the same way: the stages and the document stage, the use-case flows, a
+removed entry's previous version with its states, the comparison stage with
+its sections, panes, viewports and layers, and the component pages' variant
+bar. The previous version and the comparison stage stand in the preview pane,
+as the shell nests them. A static comparison draws each version's document
+on the shipped opaque surface, at a drawn scroll position, with a drawn
+scrollbar where the document is taller than the viewport.
+
 ## Authoring
 
 For each component, `{group}/{slug}.tsx` calls `defineComponent` with a

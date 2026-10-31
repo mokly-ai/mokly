@@ -27,7 +27,8 @@
   margin: 0;
   overflow-wrap: anywhere;
 }
-.ce-design code {
+/* The code that a @mokly/ui empty state draws keeps its package size. */
+.ce-design code:where(:not(.mbk-empty code)) {
   font-family: var(--mono);
   font-size: 11px;
 }

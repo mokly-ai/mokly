@@ -22,25 +22,22 @@ pub(crate) fn check() {
                 assert_eq!(frames.len(), 1, "one bordered frame: {path}");
                 let frame = frames[0];
                 assert_eq!(dom::class(&frame.children, "ce-canvas-label").len(), 1);
-                let viewports = dom::class(&frame.children, "mbk-stack-viewport");
+                let viewports = dom::class(&frame.children, "mb-viewport");
                 assert_eq!(viewports.len(), 1, "one shared viewport: {path}");
                 let viewport = viewports[0];
-                assert_eq!(viewport.get("data-scrolled").is_some(), tall);
-                let stacks = dom::class(&viewport.children, "mbk-stack");
-                assert_eq!(stacks.len(), 1);
-                let layers = dom::class(&stacks[0].children, "mbk-stack-layer");
+                let boxes = dom::class(&viewport.children, "mb-viewport-box");
+                assert_eq!(boxes.len(), 1);
+                let layers = dom::class(&boxes[0].children, "mb-pane");
                 assert_eq!(layers.len(), 2);
+                assert!(layers[0].get("class").unwrap().contains("mb-pane--before"));
+                assert!(layers[1].get("class").unwrap().contains("mb-pane--after"));
+                let documents = dom::class(&boxes[0].children, "mbk-stack-document");
+                assert_eq!(documents.len(), 2, "one depicted document per layer");
                 assert!(
-                    layers[0]
-                        .get("class")
-                        .unwrap()
-                        .contains("mbk-stack-layer--before")
-                );
-                assert!(
-                    layers[1]
-                        .get("class")
-                        .unwrap()
-                        .contains("mbk-stack-layer--after")
+                    documents
+                        .iter()
+                        .all(|document| document.get("data-scrolled").is_some() == tall),
+                    "both documents share one drawn offset: {path}"
                 );
                 if !tall {
                     assert_eq!(
@@ -61,7 +58,7 @@ pub(crate) fn check() {
                     );
                     assert_eq!(dom::class(&layer.children, "ce-canvas-content").len(), 1);
                     assert!(dom::class(&layer.children, "ce-canvas-label").is_empty());
-                    assert!(dom::class(&layer.children, "mbk-stack-viewport").is_empty());
+                    assert!(dom::class(&layer.children, "mb-viewport").is_empty());
                 }
                 assert_eq!(
                     dom::class(&viewport.children, "mbk-stack-scrollbar").len(),
@@ -71,12 +68,12 @@ pub(crate) fn check() {
                     dom::class(&viewport.children, "mbk-stack-thumb").len(),
                     usize::from(tall)
                 );
-                let compare = dom::class(&preview.children, "mbk-compare");
+                let compare = dom::class(&preview.children, "mb-panes");
                 assert_eq!(compare.len(), 1);
                 assert_eq!(compare[0].get("data-compare-mode"), Some(mode));
                 for class in [
-                    "mbk-compare-side",
-                    "mbk-compare-label",
+                    "mb-pane-label",
+                    "mb-pane-missing",
                     "browser-frame",
                     "phone-frame",
                 ] {
@@ -92,7 +89,7 @@ pub(crate) fn check() {
                     .unwrap();
                 let scroll = ordered
                     .iter()
-                    .position(|element| element.get("class") == Some("mbk-stack-viewport"))
+                    .position(|element| element.get("class") == Some("mb-viewport"))
                     .unwrap();
                 assert!(
                     caption < scroll,

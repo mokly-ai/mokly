@@ -8,10 +8,10 @@ import {
 import type { DesignDestination } from "./destinations.js";
 import { DetailsPanel } from "./details.js";
 import { reasonEvidence } from "./reason_sentences.js";
-import { PreviousVersionLabel } from "./removed_preview.js";
+import { PreviousVersionStage } from "./removed_preview.js";
 import { ReviewNav } from "./review.js";
 import { ScreenHead, Shell, ViewSwitch } from "./shell.js";
-import { BrowserFrame, PhoneFrame, Stage } from "./stage.js";
+import { BrowserFrame, PhoneFrame } from "./stage.js";
 import type { ScreenSubject } from "./subjects.js";
 
 /** Rendering target for a removed-screen artboard. */
@@ -40,7 +40,8 @@ interface RemovedScreenProps {
  * A removed screen opens the previous version of its mobile and desktop views.
  * The heading keeps its Removed badge, Light is the only scheme those views
  * were rendered in, and no comparison band, Current selector, refresh control
- * or Props action appears.
+ * or Props action appears. The previous version's band and host hold the
+ * views or the state that stands in for them, inside the preview pane.
  */
 export function RemovedScreen({
   entry,
@@ -50,6 +51,12 @@ export function RemovedScreen({
   subject,
   viewport,
 }: RemovedScreenProps) {
+  const shown = selection ?? viewport;
+  const previous = {
+    kind: "screen",
+    path: entry.path,
+    title: entry.title,
+  } as const;
   const inspector = (
     <DetailsPanel
       subject={subject}
@@ -69,9 +76,7 @@ export function RemovedScreen({
     >
       <ScreenHead
         // A removed screen has no current preview to inspect.
-        action={
-          <ViewSwitch active={selection ?? viewport} highlight="removed" />
-        }
+        action={<ViewSwitch active={shown} highlight="removed" />}
         crumbs={["Example", "Screens"]}
         path={entry.path}
         status="removed"
@@ -79,17 +84,21 @@ export function RemovedScreen({
       />
       {state ? (
         <InspectorWorkspace inspector={inspector}>
-          <Stage>{state}</Stage>
+          <PreviousVersionStage entry={previous} viewport={shown}>
+            {state}
+          </PreviousVersionStage>
         </InspectorWorkspace>
       ) : (
-        <>
-          <PreviousVersionLabel />
-          <PreviewWorkspace
-            inspector={inspector}
-            viewport={selection ?? viewport}
-            render={(previewViewport) => preview?.(previewViewport)}
-          />
-        </>
+        <PreviewWorkspace
+          inspector={inspector}
+          viewport={shown}
+          render={(previewViewport) => preview?.(previewViewport)}
+          wrap={(previews) => (
+            <PreviousVersionStage entry={previous} viewport={shown}>
+              {previews}
+            </PreviousVersionStage>
+          )}
+        />
       )}
     </Shell>
   );
