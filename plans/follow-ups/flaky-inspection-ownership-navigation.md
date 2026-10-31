@@ -1,10 +1,10 @@
 # Inspection ownership test races a navigation
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-31, from the remote gate of `calummoore/mokly-ui-inspector` at `d7a9780e`, "browser-4-of-4", during the shell views plan, which does not change this test or the code it covers.
 - **Location:** `tests/browser/viewer_inspection_ownership.spec.ts:79`, the `page.evaluate` of the generated test "same-origin obsolete labels success preserves request replacement pick".
-- **Reason:** The failure was seen once, and its cause is not confirmed.
+- **Reason:** The failure needs the load of a full shard, and its cause is not confirmed.
 
 - **Terms:**
   - **Execution context:** the JavaScript context of one page document in
@@ -24,6 +24,12 @@
     Error: page.evaluate: Execution context was destroyed, most likely because of a navigation.
     ```
 
+  - It failed again in the next remote gate of the branch, at `9841e203`, in
+    the variant "same-origin obsolete highlight success preserves request
+    replacement pick", with the same error at line 79.
+  - Locally the whole spec passed 170 of 170 runs on Node 24 and 170 of 170
+    on Node 22.15.0, with `--repeat-each=5`. So the failure needs the load of
+    a full remote shard.
   - `plans/follow-ups/flaky-viewer-selection-navigation.md` records the same
     error in another spec, `tests/browser/viewer.spec.ts`.
 - **Problem:** A navigation of the host page can happen while the test's
@@ -46,4 +52,4 @@
 - **Previous examples:** `flaky-viewer-selection-navigation.md`.
 - **Recommendation:** B.
 - **Action:** fix after merge, apply B, because the test is outside the
-  shell views stack and failed once.
+  shell views stack, and a reproduction needs the load of a full shard.
