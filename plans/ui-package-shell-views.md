@@ -395,6 +395,50 @@ other difference in the milestone. Rejected: A, asking about every difference,
 because each round stops the work for answers that follow the user's rule of
 milestones 4 and 7.
 
+### 6. The open items of 2026-10-31
+
+Decision 6 (2026-10-31, the user): "just go with recommendation". Each open
+item takes its recommended option. Items that complete a milestone land in
+it. The wider fixes that span the stack stay follow-up items with the chosen
+option, because the user first called them follow-ups.
+
+- Merges, option D: PR #251 merges now. Each later pull request of the stack
+  merges when its gate passes and its review leaves no open finding.
+- Milestone 19:
+  - The Highlight components switch of the Browse and Changes artboards,
+    option C: their previews depict the Action and Toolbar of the real
+    screens, and the artboards draw the highlights with the package mask.
+  - The artboard highlight state, option C: one record per depicted view
+    holds the state and the preview's regions, and the header and the
+    preview read it.
+- Milestone 10:
+  - An invalid prop field draws its danger border, option A: the package
+    raises the invalid rule.
+  - The inspector resize grip, the sheet grabber, and the entry chips draw
+    `--chrome-control-edge`, option A.
+  - The Components tab renders the shipped tree, and the explorer contract
+    follows it, option B.
+  - The component Props tab renders the shipped controls panel, and the
+    controls contract follows it, option A.
+  - The comparison evidence shows the variant state in the package and the
+    product, option A.
+  - The mobile sheet takes the full workspace width, option A.
+- Milestone 13:
+  - The browser toggle keeps its shipped hairline, and the palette contract
+    names it, option A.
+  - The explorer artboards render the shipped canvas, comparison frame, and
+    heading, and the component design contract follows, option A.
+  - Explorer captions name the viewport only, option A.
+  - The comparison pane names its side, and its `label` goes, option A.
+  - Where a depicted frame stands decides its caption, and the device
+    frame's `label` goes, option A.
+- Follow-up items:
+  - A shared picture marker takes every picture form out of hit testing,
+    option B.
+  - The search field draws a visible focus ring, option B.
+  - Generic shell class names take the `mbk-` prefix, option B.
+  - The package component tests check the reset class, option B.
+
 ## Design Calls
 
 Each call is the orchestrator's own, made on 2026-10-29.
