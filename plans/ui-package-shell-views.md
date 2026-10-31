@@ -3,8 +3,9 @@
 Status: Active. [PR #249](https://github.com/mokly-ai/mokly/pull/249), with
 milestones 1 to 5, merged on 2026-10-30 as `14c6f9ec`. The later slices are
 stacked branches: milestones 6 to 8 on `calummoore/mokly-ui-controls`, where
-[PR #251](https://github.com/mokly-ai/mokly/pull/251) is open, 9 to 11 on
-`calummoore/mokly-ui-inspector`, 12 to 14 on `calummoore/mokly-ui-preview`,
+[PR #251](https://github.com/mokly-ai/mokly/pull/251) merged as `7edabc30`, 9
+to 11 on `calummoore/mokly-ui-inspector`, where
+[PR #253](https://github.com/mokly-ai/mokly/pull/253) is open, 12 to 14 on `calummoore/mokly-ui-preview`,
 and 15 to 20 on `calummoore/mokly-ui-layout-theme`. The work lands as a stack
 of five pull requests, one for each slice, as design call 11 says. Each
 earlier pull request keeps this plan. The last one deletes it, as the `plans`
@@ -1025,8 +1026,15 @@ as `ComparisonToolbar` gained `modeHref` and `interactive`. Found by milestone
 
 Depends on: 9, 10
 
-- [ ] Merge, gate, commit, push, review, and open the pull request on the
+- [x] Merge, gate, commit, push, review, and open the pull request on the
       second one, as milestone 8 says.
+- [x] Done on 2026-10-31: the branch merged the controls branch and
+      `origin/main` at `7edabc30` (#251). Review round 1 found findings 1 to
+      3, and round 2 found 4; the fixes are `40d568a4` and `9841e203`. A
+      frame cleanup race outside the slice, which failed `main`'s CI and two
+      gates of this branch, is fixed in `0a9ae8b4`. On `9841e203` the remote
+      gate passed 6 of 7 suites, and browser shard 4 passed on a rerun after
+      a flaky test. Reports: `.context/reviews/calummoore/mokly-ui-inspector/`.
 
 ## Milestone 12: Preview components
 
