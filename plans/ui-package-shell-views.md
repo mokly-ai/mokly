@@ -1334,15 +1334,23 @@ Depends on: every other milestone
       fixes. Also delete `plans/follow-ups/ui-package-extraction-roadmap.md`,
       whose last slice this pull request completes, and turn the post-merge
       task below into `plans/follow-ups/design-catalogue-package-palette.md`.
-- [ ] Merge, run the complete gate, commit, push, and review as milestone 8
+- [x] Merge, run the complete gate, commit, push, and review as milestone 8
       says.
-- [ ] Delete this plan when the `plans` skill says, under "Deleting the
+- [x] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
-- [ ] Open the pull request on the fourth one. Its description gives the
+- [x] Open the pull request on the fourth one. Its description gives the
       decisions and the design calls of this plan with their dates, a
       permalink to this plan, and the follow-up items that the change adds.
+- [x] Done on 2026-10-31: the branch merged the preview branch and
+      `origin/main` at `8c2bbff2` (#254). Review round 1 found no finding in
+      scope. On `fe3b2320` the remote gate passed 6 of 7 suites; the static
+      delivery suite's strict build exited once without output on its box,
+      and the suite then passed 653 of 653 tests in each mode locally. The
+      next commit deletes this plan. Reports:
+      `.context/reviews/calummoore/mokly-ui-layout-theme/`.
 
 ## Post-merge follow-up (non-blocking)
 
 - [ ] Let the design catalogue import the package theme in place of its own
-      palette in `examples/basic/design.css`.
+      palette in `examples/basic/design.css`. Follow-up item:
+      `plans/follow-ups/design-catalogue-package-palette.md`.

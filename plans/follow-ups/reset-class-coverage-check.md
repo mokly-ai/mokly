@@ -1,7 +1,7 @@
 # No check that elements carry the reset class
 
 - **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-30, from the branch `calummoore/mokly-ui-layout-theme`, during the theme milestone of the shell views plan.
 - **Location:** `packages/ui/src`, every component `.tsx` file; `packages/ui/src/reset/reset.css`.
 - **Reason:** A check for a whole class of defects needs the user's approval, and no element lacks the class today.
@@ -47,5 +47,6 @@
 - **Previous examples:** None found.
 - **Recommendation:** B. It reuses the component tests and checks the
   rendered result, also for a class name that the code builds at run time.
-- **Action:** ask the user, because B and C add a check for a class of
-  defects.
+- **Answer:** On 2026-10-31 the user chose B.
+- **Action:** fix after merge, apply B, because the user called this work a
+  follow-up of the shell views stack.
