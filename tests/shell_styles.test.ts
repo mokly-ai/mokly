@@ -46,11 +46,11 @@ test("shell stylesheet stays aligned with the design contract", () => {
   );
   assert.match(
     STANDALONE_CSS,
-    /\.phone-status \{[\s\S]*flex: 0 0 44px;[\s\S]*padding: 14px 28px 0;/,
+    /\.phone-status:where\(\.mbk-reset\) \{[\s\S]*flex: 0 0 44px;[\s\S]*padding: 14px 28px 0;/,
   );
   assert.match(
     STANDALONE_CSS,
-    /\.phone-screen \{[\s\S]*flex-direction: column;/,
+    /\.phone-screen:where\(\.mbk-reset\) \{[\s\S]*flex-direction: column;/,
   );
   assert.match(
     STANDALONE_CSS,
@@ -90,7 +90,7 @@ test("both split dividers share one grip shape and pointer look, and rest in the
     for (const state of [
       `.mbk-${handle}-resize:hover::after,`,
       `.mbk-${handle}-resize:focus-visible::after,`,
-      `[data-mokly-shell].mbk-${handle}-resizing ` +
+      `.mbk.mbk-${handle}-resizing ` +
         `.mbk-${handle}-resize::after ` +
         "{ background: var(--mokly-accent); " +
         "box-shadow: 0 0 0 3px var(--mokly-accent-soft); }",
@@ -111,14 +111,14 @@ test("both split dividers share one grip shape and pointer look, and rest in the
     const scope = axis === "col" ? "nav" : "inspector";
     assert.ok(
       css.includes(
-        `[data-mokly-shell].mbk-${scope}-resizing * ` +
+        `.mbk.mbk-${scope}-resizing .mbk-reset ` +
           `{ cursor: ${axis}-resize !important; }`,
       ),
       scope,
     );
     assert.ok(
       css.includes(
-        `[data-mokly-shell].mbk-${scope}-resizing iframe ` +
+        `.mbk.mbk-${scope}-resizing iframe.mbk-reset ` +
           "{ pointer-events: none; }",
       ),
       scope,

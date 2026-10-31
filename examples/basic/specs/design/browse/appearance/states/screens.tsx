@@ -28,12 +28,17 @@ function LightOnlyScreen({ viewport }: { viewport: ArtboardViewport }) {
       design={DESTINATIONS.appearanceLightOnly}
       viewport={viewport}
     >
-      <AppearanceHead
-        path={ENTRY_PATHS.details}
-        title="Details"
+      <AppearanceWorkspace
+        header={
+          <AppearanceHead
+            path={ENTRY_PATHS.details}
+            title="Details"
+            viewport={viewport}
+          />
+        }
+        subject="details"
         viewport={viewport}
       />
-      <AppearanceWorkspace subject="details" viewport={viewport} />
     </AppearanceShell>
   );
 }
@@ -46,12 +51,17 @@ function AutoAppearance({ viewport }: { viewport: ArtboardViewport }) {
       design={DESTINATIONS.appearanceAuto}
       viewport={viewport}
     >
-      <AppearanceHead
-        path={ENTRY_PATHS.welcome}
-        title="Welcome"
+      <AppearanceWorkspace
+        header={
+          <AppearanceHead
+            path={ENTRY_PATHS.welcome}
+            title="Welcome"
+            viewport={viewport}
+          />
+        }
+        subject="welcome"
         viewport={viewport}
       />
-      <AppearanceWorkspace subject="welcome" viewport={viewport} />
     </AppearanceShell>
   );
 }

@@ -40,11 +40,11 @@ test("an entry with variants pairs its link with a toggle named after the entry"
   );
   assert.match(
     html,
-    /<div class="mbk-nav-leaf"><a class="mbk-nav-row" data-entry-id="components\/card" [^>]*>[^]*?<\/a><button aria-controls="root-mb-nav-variants-specs-components\/card" aria-expanded="false" aria-label="Show variants of Card" class="mbk-nav-variants-toggle" data-nav-variants-label="Card" data-nav-variants-noun="variants" data-nav-variants-toggle="root-mb-nav-variants-specs-components\/card" type="button"><svg [^>]*width="16"[^>]*>[^]*?<\/svg><\/button><\/div><div class="mbk-nav-variants" data-filter-open="0" data-nav-disclosure="variants:components\/card" data-nav-variants="" hidden="" id="root-mb-nav-variants-specs-components\/card"><a class="mbk-nav-row" data-entry-id="components\/card\/small" [^>]*><span class="mbk-nav-ico variant">/,
+    /<div class="mbk-nav-leaf mbk-reset"><a class="mbk-nav-row mbk-reset" data-entry-id="components\/card" [^>]*>[^]*?<\/a><button aria-controls="root-mb-nav-variants-specs-components\/card" aria-expanded="false" aria-label="Show variants of Card" class="mbk-nav-variants-toggle mbk-reset" data-nav-variants-label="Card" data-nav-variants-noun="variants" data-nav-variants-toggle="root-mb-nav-variants-specs-components\/card" type="button"><svg [^>]*width="16"[^>]*>[^]*?<\/svg><\/button><\/div><div class="mbk-nav-variants mbk-reset" data-filter-open="0" data-nav-disclosure="variants:components\/card" data-nav-variants="" hidden="" id="root-mb-nav-variants-specs-components\/card"><a class="mbk-nav-row mbk-reset" data-entry-id="components\/card\/small" [^>]*><span class="mbk-nav-ico variant mbk-reset">/,
   );
   // The entry's own link is never hidden; its leaf hides it with the toggle.
   assert.doesNotMatch(
-    /<a class="mbk-nav-row" data-entry-id="components\/card" [^>]*>/.exec(
+    /<a class="mbk-nav-row mbk-reset" data-entry-id="components\/card" [^>]*>/.exec(
       html,
     )?.[0] ?? "",
     /hidden/,

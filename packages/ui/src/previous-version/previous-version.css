@@ -12,7 +12,7 @@
 
 /* Under Dark, a band that keeps a light document names the fallback: the
    previous-version label and the Light-only band above a current document. */
-body[data-mokly-color-scheme="dark"]
+.mbk[data-mokly-color-scheme="dark"]
   .mbk-previous[data-color-scheme-fallback]
   .mbk-frame-scheme-note {
   display: inline;

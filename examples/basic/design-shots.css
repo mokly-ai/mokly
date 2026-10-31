@@ -1,0 +1,210 @@
+/* The mini screen sketches that the shipped frames hold on the dotted stage:
+   the example's Welcome and Details, with the Action and the Toolbar that the
+   real screens render, in the preview tokens of design-stage.css. */
+
+.mbk-shot-sections h3 {
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  margin: 16px 0 6px;
+}
+
+/* A long screen's introduction keeps one height in every version, so the
+   sections below it stay in place when the introduction changes. */
+.mbk-shot-hero {
+  min-height: 104px;
+}
+
+.phone-screen .mbk-shot-hero {
+  min-height: 140px;
+}
+
+.mbk-shot {
+  background: var(--mbk-screen-bg);
+  color: var(--mbk-screen-ink);
+  height: 100%;
+  line-height: 1.5;
+  overflow: hidden;
+  position: relative;
+}
+
+.mbk-shot-pad {
+  padding: 18px 20px;
+}
+
+.phone-screen .mbk-shot {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+}
+
+.mbk-shot-nav {
+  border-bottom: 1px solid var(--mbk-screen-border);
+  color: var(--mbk-screen-muted);
+  font-size: 11.5px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+}
+
+.mbk-shot h2 {
+  font-size: 17px;
+  letter-spacing: -0.01em;
+  margin: 0 0 10px;
+}
+
+.mbk-shot p {
+  color: var(--mbk-screen-ink-2);
+  font-size: 12.5px;
+  line-height: 1.55;
+  margin: 0 0 12px;
+}
+
+.mbk-shot-link {
+  color: var(--mbk-screen-link);
+  display: inline-block;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.mbk-shot-error {
+  background: var(--mbk-screen-danger-bg);
+  border: 1px solid var(--mbk-screen-danger-edge);
+  border-radius: 8px;
+  color: var(--mbk-screen-danger-ink);
+  font-size: 12px;
+  margin: 0 0 12px;
+  padding: 8px 10px;
+}
+
+.mbk-shot-field {
+  align-items: center;
+  border: 1px solid var(--chrome-border-strong);
+  border-radius: 8px;
+  color: var(--chrome-muted);
+  display: flex;
+  font-size: 12.5px;
+  margin: 0 0 10px;
+  min-height: 32px;
+  padding: 0 10px;
+}
+
+/* The rows above a screen's instances keep fixed heights, so the instances
+   lie at the boxes of their highlight regions whatever the text wrapping: the
+   save error and Details' text take one line on a desktop and two in a
+   phone. */
+.mbk-shot-error,
+.mbk-shot-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mbk-shot--compact :is(.mbk-shot-error, .mbk-shot-text) {
+  white-space: normal;
+}
+
+.mbk-shot--compact .mbk-shot-error {
+  height: 56.75px;
+}
+
+.mbk-shot--compact .mbk-shot-text {
+  height: 38.75px;
+}
+
+/* A depicted Action, as the screen's own instance and in its Toolbar. */
+.mbk-shot-action {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  height: 26px;
+  line-height: 24px;
+  overflow: hidden;
+  padding: 0 10px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mbk-shot-action--primary {
+  background: var(--mbk-screen-link);
+  color: var(--mbk-screen-bg);
+}
+
+.mbk-shot-action--secondary {
+  border-color: var(--mbk-screen-link);
+  color: var(--mbk-screen-link);
+}
+
+.mbk-shot-action--disabled {
+  background: var(--mbk-screen-border);
+  color: var(--mbk-screen-muted);
+}
+
+.mbk-shot-own-action {
+  display: block;
+  font-size: 12.5px;
+  height: 30px;
+  line-height: 28px;
+  margin-bottom: 10px;
+}
+
+.mbk-shot-link-row {
+  height: 20px;
+  margin-bottom: 12px;
+}
+
+/* A depicted Toolbar: its title, its slot's text, and its two Actions, in a
+   row on a desktop and stacked in a phone. */
+.mbk-shot-toolbar {
+  border: 1px solid var(--mbk-screen-border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  height: 96px;
+  overflow: hidden;
+  padding: 10px 12px;
+}
+
+.mbk-shot-toolbar > strong {
+  font-size: 12.5px;
+}
+
+.mbk-shot-toolbar > span {
+  color: var(--mbk-screen-ink-2);
+  font-size: 12px;
+}
+
+.mbk-shot-toolbar-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.mbk-shot--compact .mbk-shot-toolbar {
+  height: 128px;
+}
+
+.mbk-shot--compact .mbk-shot-toolbar-actions {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.mbk-shot--restyled .mbk-shot-nav {
+  border-bottom-color: var(--mbk-screen-link);
+  color: var(--mbk-screen-ink);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mbk-shot--restyled .mbk-shot-link {
+  color: var(--mbk-screen-link-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+[data-preview-color-scheme="dark"] .mbk-shot {
+  background: transparent;
+}

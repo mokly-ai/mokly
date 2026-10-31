@@ -29,7 +29,7 @@ export function DetailsPanel({
 }) {
   return (
     <details
-      className="mbk-details"
+      className="mbk-details mbk-reset"
       data-mokly-details=""
       onToggle={(event) => {
         if (event.currentTarget.open !== open)
@@ -37,12 +37,12 @@ export function DetailsPanel({
       }}
       open={open}
     >
-      <summary className="mbk-details-bar">
-        <span className="chev">
+      <summary className="mbk-details-bar mbk-reset">
+        <span className="chev mbk-reset">
           <ChevronIcon size={12} />
         </span>
         Details
-        <span className="mbk-details-hint">
+        <span className="mbk-details-hint mbk-reset">
           Description, rationale, source, related docs, and use cases
         </span>
       </summary>
@@ -72,13 +72,13 @@ export function DetailsBody({
   rationale?: DetailsRationale | undefined;
 }) {
   return (
-    <div className="mbk-details-body">
-      <div>
-        <p className="mbk-details-desc">{description}</p>
+    <div className="mbk-details-body mbk-reset">
+      <div className="mbk-reset">
+        <p className="mbk-details-desc mbk-reset">{description}</p>
         {rationale ? (
-          <p className="mbk-details-rationale">
+          <p className="mbk-details-rationale mbk-reset">
             {/* String expressions keep four text nodes that Prettier would join. */}
-            <span className="k">
+            <span className="k mbk-reset">
               Why this {rationale.noun}
               {" —"}{" "}
             </span>
@@ -86,7 +86,7 @@ export function DetailsBody({
           </p>
         ) : null}
       </div>
-      <div className="mbk-meta">{children}</div>
+      <div className="mbk-meta mbk-reset">{children}</div>
     </div>
   );
 }

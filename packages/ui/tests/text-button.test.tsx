@@ -11,7 +11,7 @@ import { TextButton } from "../src/text-button/text-button.js";
 test("a text button is a plain button with the shell's attribute order", () => {
   assert.equal(
     renderToStaticMarkup(<TextButton>Try again</TextButton>),
-    '<button class="mbk-text-button" type="button">Try again</button>',
+    '<button class="mbk-text-button mbk-reset" type="button">Try again</button>',
   );
 });
 
@@ -37,7 +37,7 @@ test("a text button without a callback stays a button that a press leaves alone"
 test("a text button with an address is a link with the button's look, which reports no press", () => {
   assert.equal(
     renderToStaticMarkup(<TextButton href="../pending/">Try again</TextButton>),
-    '<a class="mbk-text-button" href="../pending/">Try again</a>',
+    '<a class="mbk-text-button mbk-reset" href="../pending/">Try again</a>',
   );
   const presses: unknown[] = [];
   render(

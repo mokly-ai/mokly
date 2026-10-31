@@ -1,7 +1,5 @@
 # Published Inspector
 
-Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
-
 ## Publication Boundary
 
 The static build injects the dependency-free inspector IIFE from

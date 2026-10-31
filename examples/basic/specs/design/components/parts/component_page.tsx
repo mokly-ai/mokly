@@ -12,7 +12,6 @@ import { ComponentLayout } from "./component_layout.js";
 import { actionEntryOf } from "./component_props.js";
 import { VariantPicker } from "./controls.js";
 import { COMPONENT_PAGES } from "./destinations.js";
-import { toolbarAction } from "./fixtures.js";
 import type { PropsLimit } from "./limit.js";
 import { COMPONENT_ENTRY_BY_STATE } from "./metadata.js";
 import type { ChangeScenario } from "./navigation_tree.js";
@@ -127,7 +126,7 @@ export function ComponentPage({
         ) : (
           <ComponentCanvas viewport={previewViewport}>
             {state === "toolbar" ? (
-              <ToolbarExample highlightLabel={toolbarAction} />
+              <ToolbarExample />
             ) : state === "hidden" ? (
               <p className="ce-empty-copy">
                 This variant has no visible content.

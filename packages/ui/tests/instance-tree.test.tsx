@@ -12,6 +12,8 @@ import {
   type InstanceNode,
 } from "../src/instance-tree/instance-tree.js";
 
+import { assertSameElement } from "./dom-assertions.js";
+
 function node(key: string, nested: readonly InstanceNode[] = []): InstanceNode {
   return { id: `${key}-id`, key, nested, title: "Action" };
 }
@@ -50,10 +52,10 @@ test("the tree keeps the shell's markup: the viewport choice, the counts, and th
         },
       }),
     ),
-    '<div><button aria-pressed="true" class="mbk-instance-context mbk-chip" type="button">Desktop</button><button aria-pressed="false" class="mbk-instance-context mbk-chip" type="button">Mobile</button></div>' +
-      "<p>3 instances · 1 component</p>" +
-      '<ul class="mbk-instance-tree"><li><button aria-pressed="false" class="mbk-instance-select" data-instance-key="a" type="button">Action · a-id</button><details><summary>1 nested instance</summary><ul class="mbk-instance-tree"><li><button aria-pressed="false" class="mbk-instance-select" data-instance-key="b" type="button">Action · b-id</button></li></ul></details></li>' +
-      '<li><button aria-pressed="true" class="mbk-instance-select" data-instance-key="d" type="button">Action · d-id</button></li></ul>',
+    '<div class="mbk-reset"><button aria-pressed="true" class="mbk-instance-context mbk-chip mbk-reset" type="button">Desktop</button><button aria-pressed="false" class="mbk-instance-context mbk-chip mbk-reset" type="button">Mobile</button></div>' +
+      '<p class="mbk-reset">3 instances · 1 component</p>' +
+      '<ul class="mbk-instance-tree mbk-reset"><li class="mbk-reset"><button aria-pressed="false" class="mbk-instance-select mbk-reset" data-instance-key="a" type="button">Action · a-id</button><details class="mbk-reset"><summary class="mbk-reset">1 nested instance</summary><ul class="mbk-instance-tree mbk-reset"><li class="mbk-reset"><button aria-pressed="false" class="mbk-instance-select mbk-reset" data-instance-key="b" type="button">Action · b-id</button></li></ul></details></li>' +
+      '<li class="mbk-reset"><button aria-pressed="true" class="mbk-instance-select mbk-reset" data-instance-key="d" type="button">Action · d-id</button></li></ul>',
   );
 });
 
@@ -105,8 +107,8 @@ test("a static depiction's instances with addresses are links, the selected one 
         link.className,
       ]),
     [
-      ["Action · a-id", "#a", null, "mbk-instance-select"],
-      ["Action · b-id", "#b", "true", "mbk-instance-select"],
+      ["Action · a-id", "#a", null, "mbk-instance-select mbk-reset"],
+      ["Action · b-id", "#b", "true", "mbk-instance-select mbk-reset"],
     ],
   );
   assert.equal(
@@ -140,7 +142,7 @@ test("a view without records waits, cannot be inspected, or uses no components",
     "Waiting for the component preview.",
   );
   rerender(tree({ usage: { status: "unavailable" } }));
-  assert.equal(screen.queryByRole("status"), null);
+  assertSameElement(screen.queryByRole("status"), null);
   assert.ok(
     screen.getByText("Component inspection is unavailable for this view."),
   );
@@ -152,7 +154,7 @@ test("a view without records waits, cannot be inspected, or uses no components",
   assert.ok(
     screen.getByText("No registered components are used in this view."),
   );
-  assert.equal(screen.queryByRole("list"), null);
+  assertSameElement(screen.queryByRole("list"), null);
 });
 
 test("a reader selects an instance, and the selected instance is pressed", () => {

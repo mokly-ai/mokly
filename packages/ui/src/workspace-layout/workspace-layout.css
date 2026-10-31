@@ -1,0 +1,66 @@
+/* The workspace fills the main region: the header and the variant bar above
+   the panes, and the preview pane beside the inspector. */
+.mbk-workspace {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.mbk-workspace [hidden] {
+  display: none !important;
+}
+
+.mbk-workspace .mbk-screen-head {
+  align-items: center;
+}
+
+.mbk-workspace-panes {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  position: relative;
+  min-height: 0;
+  min-width: 0;
+}
+
+.mbk-preview-pane {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 100px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.mbk-preview-busy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* The stage of a workspace shows the frames of the chosen viewport only. */
+.mbk-workspace [data-mokly-stage][data-viewport="mobile"] .mbk-frame-desktop,
+.mbk-workspace [data-mokly-stage][data-viewport="desktop"] .mbk-frame-mobile {
+  display: none;
+}
+
+@media (width < 56.25rem) {
+  .mbk-workspace .mbk-screen-head {
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .mbk-workspace-panes {
+    padding-bottom: 46px;
+  }
+
+  .mbk-workspace .mbk-previous {
+    padding: 8px 12px;
+  }
+}

@@ -8,7 +8,8 @@ import {
   useSyncExternalStore,
 } from "react";
 
-import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
+import { RootState } from "@mokly/ui/shell-layout";
+
 import type { MoklyVersionError } from "../catalogue/version_error.js";
 import type { ScrollTogetherPreference } from "../shell/comparison_scroll_preference.js";
 import { dataSnapshot } from "../shell/data_commit.js";
@@ -28,7 +29,7 @@ import { viewerView } from "./projection.js";
 import { defaultSelection, normalizeSelection } from "./selection.js";
 import type { LoadedIndex } from "./sources.js";
 import { DeploymentChangedError } from "./sources.js";
-import { themeAttributes } from "./theme.js";
+import { normalizeTheme } from "./theme.js";
 import type { MoklyViewerProps, ViewerSelection } from "./types.js";
 
 type ReadyProps = MoklyViewerProps & {
@@ -78,13 +79,10 @@ export function ReadyViewer(props: ReadyProps) {
   }, [normalized]);
   if (!normalized)
     return (
-      <div
-        className={`${VIEWER_DIRECTORY} mbk-empty`}
-        role="alert"
-        {...themeAttributes(props.theme)}
-      >
-        The requested view is unavailable.
-      </div>
+      <RootState
+        root={{ kind: "embedded", theme: normalizeTheme(props.theme) }}
+        state="unavailable"
+      />
     );
   return <MountedViewer {...props} normalized={normalized} />;
 }

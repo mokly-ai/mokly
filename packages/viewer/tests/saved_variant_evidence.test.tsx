@@ -10,8 +10,10 @@ import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
 
 const { catalogue, model, source, sourceVariant } = componentWorkspaceFixture();
 
-const VARIANT_ROW = "<div><dt>Saved variant</dt><dd>Default</dd></div>";
-const UNCHANGED_ROW = "<div><dt>Saved props</dt><dd>Unchanged</dd></div>";
+const VARIANT_ROW =
+  '<div class="mbk-reset"><dt class="mbk-reset">Saved variant</dt><dd class="mbk-reset">Default</dd></div>';
+const UNCHANGED_ROW =
+  '<div class="mbk-reset"><dt class="mbk-reset">Saved props</dt><dd class="mbk-reset">Unchanged</dd></div>';
 
 test("a saved variant's evidence names it, and a loaded comparison says when its saved props stayed the same", () => {
   const data = publicWorkspace(catalogue, model, sourceVariant);
@@ -21,7 +23,7 @@ test("a saved variant's evidence names it, and a loaded comparison says when its
     <WorkspaceEvidence data={data} variantPath={sourceVariant.path} />,
   );
   assert.ok(
-    current.includes(`<dl class="mbk-props">${VARIANT_ROW}</dl>`),
+    current.includes(`<dl class="mbk-props mbk-reset">${VARIANT_ROW}</dl>`),
     current,
   );
   const loaded = renderToStaticMarkup(
@@ -29,7 +31,7 @@ test("a saved variant's evidence names it, and a loaded comparison says when its
   );
   assert.ok(
     loaded.includes(
-      `<dl class="mbk-props">${VARIANT_ROW}${UNCHANGED_ROW}</dl>`,
+      `<dl class="mbk-props mbk-reset">${VARIANT_ROW}${UNCHANGED_ROW}</dl>`,
     ),
     loaded,
   );

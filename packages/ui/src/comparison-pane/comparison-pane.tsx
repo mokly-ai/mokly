@@ -34,12 +34,12 @@ export function ComparisonPane({
   side: ComparisonSide;
 }) {
   return (
-    <div className={`mb-pane mb-pane--${side}`}>
-      <p className="mb-pane-label">{LABELS[side]}</p>
+    <div className={`mb-pane mb-pane--${side} mbk-reset`}>
+      <p className="mb-pane-label mbk-reset">{LABELS[side]}</p>
       {missing === undefined ? (
         children
       ) : (
-        <p className="mb-pane-missing">{missing}</p>
+        <p className="mb-pane-missing mbk-reset">{missing}</p>
       )}
     </div>
   );
@@ -56,7 +56,7 @@ export function ComparisonLayer({
   children?: ReactNode;
   side: ComparisonSide;
 }) {
-  return <div className={`mb-pane mb-pane--${side}`}>{children}</div>;
+  return <div className={`mb-pane mb-pane--${side} mbk-reset`}>{children}</div>;
 }
 
 /**
@@ -78,11 +78,15 @@ export function ComparisonViewport({
   spacerRef?: Ref<HTMLDivElement> | undefined;
 }) {
   return (
-    <div className="mb-viewport" data-comparison-viewport="" ref={ref}>
-      <div className="mb-viewport-box">{children}</div>
+    <div
+      className="mb-viewport mbk-reset"
+      data-comparison-viewport=""
+      ref={ref}
+    >
+      <div className="mb-viewport-box mbk-reset">{children}</div>
       <div
         aria-hidden="true"
-        className="mb-viewport-spacer"
+        className="mb-viewport-spacer mbk-reset"
         data-comparison-spacer=""
         ref={spacerRef}
       />
@@ -104,7 +108,7 @@ export function ComparisonSurface({
   ref?: Ref<HTMLDivElement> | undefined;
 }) {
   return (
-    <div className="mb-pane-doc" ref={ref}>
+    <div className="mb-pane-doc mbk-reset" ref={ref}>
       {children}
     </div>
   );
@@ -112,5 +116,5 @@ export function ComparisonSurface({
 
 /** The bordered frame of a saved component variant in a comparison. */
 export function ComponentFrame({ children }: { children?: ReactNode }) {
-  return <div className="mb-component-frame">{children}</div>;
+  return <div className="mb-component-frame mbk-reset">{children}</div>;
 }

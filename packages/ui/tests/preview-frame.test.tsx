@@ -14,9 +14,10 @@ import {
   PreviewIframe,
 } from "../src/preview-frame/preview-frame.js";
 
-const UNAVAILABLE = '<p class="mbk-empty">This preview is unavailable.</p>';
+const UNAVAILABLE =
+  '<p class="mbk-empty mbk-reset">This preview is unavailable.</p>';
 const ERROR =
-  '<p class="mbk-frame-error" role="status">This preview could not be loaded.</p>';
+  '<p class="mbk-frame-error mbk-reset" role="status">This preview could not be loaded.</p>';
 
 test("a frame on a stage names its viewport above its content", () => {
   assert.equal(
@@ -28,7 +29,7 @@ test("a frame on a stage names its viewport above its content", () => {
         <i>phone</i>
       </PreviewFrame>,
     ),
-    '<div class="mbk-frame-wrap mbk-frame-mobile" data-preview-color-scheme="dark"><p class="mbk-frame-label">Mobile</p><i>phone</i></div>',
+    '<div class="mbk-frame-wrap mbk-frame-mobile mbk-reset" data-preview-color-scheme="dark"><p class="mbk-frame-label mbk-reset">Mobile</p><i>phone</i></div>',
   );
   assert.equal(
     renderToStaticMarkup(
@@ -40,7 +41,7 @@ test("a frame on a stage names its viewport above its content", () => {
         <i>canvas</i>
       </PreviewFrame>,
     ),
-    '<div class="mbk-component-canvas mbk-frame-desktop" data-color-scheme-fallback="" data-preview-color-scheme="light"><p class="mbk-frame-label">Desktop<span class="mbk-frame-scheme-note"> — Light only</span></p><i>canvas</i></div>',
+    '<div class="mbk-component-canvas mbk-frame-desktop mbk-reset" data-color-scheme-fallback="" data-preview-color-scheme="light"><p class="mbk-frame-label mbk-reset">Desktop<span class="mbk-frame-scheme-note mbk-reset"> — Light only</span></p><i>canvas</i></div>',
   );
 });
 
@@ -51,7 +52,7 @@ test("a flow screen and a comparison pane's chrome have no label", () => {
         <i />
       </PreviewFrame>,
     ),
-    '<div class="mbk-flow-screen" data-color-scheme-fallback="" data-preview-color-scheme="light"><i></i></div>',
+    '<div class="mbk-flow-screen mbk-reset" data-color-scheme-fallback="" data-preview-color-scheme="light"><i></i></div>',
   );
   assert.equal(
     renderToStaticMarkup(
@@ -59,7 +60,7 @@ test("a flow screen and a comparison pane's chrome have no label", () => {
         <i />
       </PreviewFrame>,
     ),
-    '<div class="mb-pane-chrome mbk-frame-wrap" data-preview-color-scheme="dark"><i></i></div>',
+    '<div class="mb-pane-chrome mbk-frame-wrap mbk-reset" data-preview-color-scheme="dark"><i></i></div>',
   );
 });
 
@@ -72,7 +73,7 @@ test("a frame without content is unavailable, and a failed load adds its status"
         scheme="light"
       />,
     ),
-    `<div class="mbk-component-canvas mbk-frame-mobile" data-preview-color-scheme="light"><p class="mbk-frame-label">Mobile</p>${UNAVAILABLE}${ERROR}</div>`,
+    `<div class="mbk-component-canvas mbk-frame-mobile mbk-reset" data-preview-color-scheme="light"><p class="mbk-frame-label mbk-reset">Mobile</p>${UNAVAILABLE}${ERROR}</div>`,
   );
   render(
     <PreviewFrame error placement={{ kind: "flow" }} scheme="light">
@@ -93,11 +94,11 @@ test("a whole document fills the stage, which keeps its scroll as embed", () => 
         <i>document</i>
       </DocumentFrame>,
     ),
-    '<div class="mbk-stage-embed" data-mokly-scroll="embed" data-preview-color-scheme="dark"><i>document</i></div>',
+    '<div class="mbk-stage-embed mbk-reset" data-mokly-scroll="embed" data-preview-color-scheme="dark"><i>document</i></div>',
   );
   assert.equal(
     renderToStaticMarkup(<DocumentFrame error scheme="light" />),
-    `<div class="mbk-stage-embed" data-mokly-scroll="embed" data-preview-color-scheme="light">${UNAVAILABLE}${ERROR}</div>`,
+    `<div class="mbk-stage-embed mbk-reset" data-mokly-scroll="embed" data-preview-color-scheme="light">${UNAVAILABLE}${ERROR}</div>`,
   );
 });
 
@@ -117,7 +118,7 @@ test("a live frame keeps its attributes in order and is sandboxed without script
         title="Home — mobile"
       />,
     ),
-    '<iframe aria-busy="true" class="mbk-frag" data-mokly-fragment-frame="" data-mokly-frame-state="loading" data-fragment-light="/a.html" data-fragment-dark="/a.dark.html" sandbox="allow-same-origin" src="/a.html" title="Home — mobile"></iframe>',
+    '<iframe aria-busy="true" class="mbk-frag mbk-reset" data-mokly-fragment-frame="" data-mokly-frame-state="loading" data-fragment-light="/a.html" data-fragment-dark="/a.dark.html" sandbox="allow-same-origin" src="/a.html" title="Home — mobile"></iframe>',
   );
 });
 
@@ -134,7 +135,7 @@ test("a comparison's snapshot frame takes its document inline and does not scrol
         title="Before — mobile — light"
       />,
     ),
-    '<iframe class="mbk-frag" data-mokly-comparison-frame="" data-mokly-preview-source="https://a.test/before.html" sandbox="allow-same-origin" scrolling="no" srcDoc="&lt;p&gt;before&lt;/p&gt;" title="Before — mobile — light"></iframe>',
+    '<iframe class="mbk-frag mbk-reset" data-mokly-comparison-frame="" data-mokly-preview-source="https://a.test/before.html" sandbox="allow-same-origin" scrolling="no" srcDoc="&lt;p&gt;before&lt;/p&gt;" title="Before — mobile — light"></iframe>',
   );
 });
 
@@ -169,7 +170,7 @@ test("the stylesheet names a light-only frame's fallback only under Dark", async
   const note = await stylesheet("scheme-fallback");
   assert.ok(note.startsWith(".mbk-frame-scheme-note { display: none;"), note);
   const css = await stylesheet("preview-frame");
-  const dark = 'body[data-mokly-color-scheme="dark"]';
+  const dark = '.mbk[data-mokly-color-scheme="dark"]';
   for (const frame of [".mbk-frame-wrap", ".mbk-component-canvas"])
     assert.ok(
       css.includes(

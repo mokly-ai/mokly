@@ -29,10 +29,10 @@
 /* A light-only view under Dark keeps its light frame and names that fallback
    in its frame label. Screen frames and component canvases both carry the
    fallback mark. */
-body[data-mokly-color-scheme="dark"]
+.mbk[data-mokly-color-scheme="dark"]
   .mbk-frame-wrap[data-color-scheme-fallback]
   .mbk-frame-scheme-note,
-body[data-mokly-color-scheme="dark"]
+.mbk[data-mokly-color-scheme="dark"]
   .mbk-component-canvas[data-color-scheme-fallback]
   .mbk-frame-scheme-note {
   display: inline;
@@ -127,6 +127,6 @@ body[data-mokly-color-scheme="dark"]
 }
 
 /* The chrome of a comparison pane fills its column. */
-.mb-pane-chrome {
+.mb-pane-chrome:where(.mbk-reset) {
   width: 100%;
 }

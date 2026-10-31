@@ -16,7 +16,7 @@ import { viewerCatalogue } from "../src/viewer/projection.js";
 import { indexFixture } from "./catalogue_v9_fixture.js";
 
 const BAND =
-  '<p class="mbk-previous mbk-scheme-fallback" data-color-scheme-fallback=""><span class="mbk-frame-scheme-note">Light only</span></p>';
+  '<p class="mbk-previous mbk-scheme-fallback mbk-reset" data-color-scheme-fallback=""><span class="mbk-frame-scheme-note mbk-reset">Light only</span></p>';
 
 function fixtureDocument(colorSchemes: ColorScheme[]) {
   const document = indexFixture().documents[0];
@@ -104,7 +104,7 @@ function removedStage(
 test("a removed document with no dark render adds the note to its label", () => {
   assert.match(
     removedStage(["light", "dark"], ["light"]),
-    /<p class="mbk-previous" data-color-scheme-fallback="">Showing previous version<span class="mbk-frame-scheme-note"> — Light only<\/span><\/p>/u,
+    /<p class="mbk-previous mbk-reset" data-color-scheme-fallback="">Showing previous version<span class="mbk-frame-scheme-note mbk-reset"> — Light only<\/span><\/p>/u,
   );
   for (const [screens, documents] of [
     [
@@ -116,7 +116,7 @@ test("a removed document with no dark render adds the note to its label", () => 
     const html = removedStage(screens, documents);
     assert.match(
       html,
-      /<p class="mbk-previous">Showing previous version<\/p>/u,
+      /<p class="mbk-previous mbk-reset">Showing previous version<\/p>/u,
     );
     assert.doesNotMatch(html, /Light only/u);
   }

@@ -43,9 +43,9 @@ export function StageFailure({
 export function PreviewLoading() {
   return (
     <Stage>
-      <div className="mbk-preview-state">
-        <p className="mbk-preview-status" role="status">
-          <span aria-hidden="true" className="mbk-preview-spinner" />
+      <div className="mbk-preview-state mbk-reset">
+        <p className="mbk-preview-status mbk-reset" role="status">
+          <span aria-hidden="true" className="mbk-preview-spinner mbk-reset" />
           Loading previous version…
         </p>
       </div>
@@ -84,10 +84,12 @@ export function PreviewNotCaptured({
 }) {
   const other = viewport === "desktop" ? "Mobile" : "Desktop";
   return (
-    <div className="mbk-preview-state">
-      <p className="mbk-preview-note" role="status">
+    <div className="mbk-preview-state mbk-reset">
+      <p className="mbk-preview-note mbk-reset" role="status">
         No previous {viewport} version was captured.{" "}
-        <span className="mbk-preview-switch">Switch to {other} to see it.</span>
+        <span className="mbk-preview-switch mbk-reset">
+          Switch to {other} to see it.
+        </span>
       </p>
     </div>
   );

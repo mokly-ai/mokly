@@ -195,28 +195,38 @@ export function registerComponentEvidence(
           await page
             .getByRole("switch", { name: "Highlight components" })
             .check();
-          const regions = page.locator(
-            ".ce-preview-view:visible .ce-region, .ce-preview-view:visible .ce-single-highlight",
-          );
-          expect(await regions.count()).toBeGreaterThan(0);
-          for (const region of await regions.all()) {
-            const outline = (await region.boundingBox())!;
-            const label = (await region
-              .locator(":scope > span")
-              .boundingBox())!;
+          // The shipped mask outlines each region, and the region's label
+          // stands above its outline at the outline's left edge.
+          const preview = page.locator(".ce-preview-view:visible");
+          const outlines = preview.locator(".mbk-highlight-outline");
+          const labels = preview.locator(".mbk-highlight-label");
+          const count = await outlines.count();
+          expect(count).toBeGreaterThan(0);
+          await expect(labels).toHaveCount(count);
+          for (let index = 0; index < count; index++) {
+            const { outline, label, radii } = await outlines
+              .nth(index)
+              .evaluate((rect, order) => {
+                const box = rect.getBoundingClientRect();
+                const edge = parseFloat(getComputedStyle(rect).strokeWidth) / 2;
+                const chip = rect
+                  .closest(".ce-highlight-layer")!
+                  .querySelectorAll(".mbk-highlight-label")[order]!;
+                const style = getComputedStyle(chip);
+                const bounds = chip.getBoundingClientRect();
+                return {
+                  outline: { x: box.x - edge, y: box.y - edge },
+                  label: { x: bounds.x, y: bounds.y, height: bounds.height },
+                  radii: [
+                    style.borderBottomLeftRadius,
+                    style.borderBottomRightRadius,
+                  ],
+                };
+              }, index);
             expect(outline.y - (label.y + label.height)).toBeGreaterThanOrEqual(
-              4,
+              0,
             );
-            expect(label.x).toBeGreaterThanOrEqual(outline.x + 4);
-            const radii = await region
-              .locator(":scope > span")
-              .evaluate((node) => {
-                const style = getComputedStyle(node);
-                return [
-                  style.borderBottomLeftRadius,
-                  style.borderBottomRightRadius,
-                ];
-              });
+            expect(label.x).toBeGreaterThanOrEqual(outline.x);
             expect(radii.every((radius) => parseFloat(radius) > 0)).toBe(true);
           }
         }

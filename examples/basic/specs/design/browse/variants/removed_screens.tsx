@@ -54,14 +54,18 @@ function RemovedVariant({
         ) : null
       }
     >
-      <ScreenHead
-        action={<ViewSwitch active={viewport} highlight="removed" />}
-        crumbs={VARIANT_CRUMBS}
-        path={ENTRY_PATHS.welcomeError}
-        status="removed"
-        title="Save failed"
-      />
       <PreviewWorkspace
+        header={
+          <ScreenHead
+            action={<ViewSwitch active={viewport} />}
+            crumbs={VARIANT_CRUMBS}
+            path={ENTRY_PATHS.welcomeError}
+            status="removed"
+            title="Save failed"
+          />
+        }
+        // A removed screen has no current preview to inspect.
+        view={{ highlight: "removed" }}
         viewport={viewport}
         inspector={
           <DetailsPanel
@@ -86,7 +90,7 @@ function RemovedVariant({
               path: ENTRY_PATHS.welcomeError,
               title: "Save failed",
             }}
-            viewport={viewport}
+            viewport="both"
           >
             {previews}
           </PreviousVersionStage>

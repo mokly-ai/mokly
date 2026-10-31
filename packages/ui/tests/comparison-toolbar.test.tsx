@@ -11,6 +11,8 @@ import {
   type ComparisonMode,
 } from "../src/comparison-toolbar/comparison-toolbar.js";
 
+import { assertSameElement } from "./dom-assertions.js";
+
 /** The props of one band; every callback records into `calls`. */
 function props(
   mode: ComparisonMode,
@@ -37,7 +39,7 @@ function band(
 }
 
 const SWITCH =
-  /<label class="mbk-diff-sync"( hidden="")?><input data-diff-scroll-together="" role="switch" type="checkbox"( checked="")?\/><span aria-hidden="true" class="mbk-diff-sync-track"><\/span>Scroll together<\/label>/;
+  /<label class="mbk-diff-sync mbk-reset"( hidden="")?><input class="mbk-reset" data-diff-scroll-together="" role="switch" type="checkbox"( checked="")?\/><span aria-hidden="true" class="mbk-diff-sync-track mbk-reset"><\/span>Scroll together<\/label>/;
 
 test("Scroll together sits between the modes and Refresh in every diff mode", () => {
   for (const mode of ["side", "overlay", "difference"] as const) {
@@ -62,7 +64,7 @@ test("Scroll together shows off, and stays while a comparison loads", () => {
   assert.equal(SWITCH.exec(loading)![1], undefined);
   assert.match(
     loading,
-    /class="mbk-diff-refresh" data-diff-refresh="" hidden=""/,
+    /class="mbk-diff-refresh mbk-reset" data-diff-refresh="" hidden=""/,
   );
 });
 
@@ -116,15 +118,15 @@ test("a switch that is off reports on", () => {
 test("the props hide the band, the switch, and Refresh", () => {
   const { rerender } = render(<ComparisonToolbar {...props("current")} />);
   assert.ok(screen.getByRole("group", { name: "Comparison mode" }));
-  assert.equal(screen.queryByRole("switch"), null);
-  assert.equal(
+  assertSameElement(screen.queryByRole("switch"), null);
+  assertSameElement(
     screen.queryByRole("button", { name: "Refresh comparison" }),
     null,
   );
 
   rerender(<ComparisonToolbar {...props("side", { loaded: false })} />);
   assert.ok(screen.getByRole("switch", { name: "Scroll together" }));
-  assert.equal(
+  assertSameElement(
     screen.queryByRole("button", { name: "Refresh comparison" }),
     null,
   );
@@ -133,7 +135,10 @@ test("the props hide the band, the switch, and Refresh", () => {
   assert.ok(screen.getByRole("button", { name: "Refresh comparison" }));
 
   rerender(<ComparisonToolbar {...props("side", { eligible: false })} />);
-  assert.equal(screen.queryByRole("group", { name: "Comparison mode" }), null);
-  assert.equal(screen.queryByRole("switch"), null);
-  assert.equal(screen.queryByRole("button"), null);
+  assertSameElement(
+    screen.queryByRole("group", { name: "Comparison mode" }),
+    null,
+  );
+  assertSameElement(screen.queryByRole("switch"), null);
+  assertSameElement(screen.queryByRole("button"), null);
 });

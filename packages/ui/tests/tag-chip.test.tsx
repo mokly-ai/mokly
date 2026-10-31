@@ -9,16 +9,18 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { TagIcon } from "../src/icons/icons.js";
 import { TagChip } from "../src/tag-chip/tag-chip.js";
 
+import { assertSameElement, assertSameList } from "./dom-assertions.js";
+
 const GLYPH = renderToStaticMarkup(<TagIcon size={11} />);
 
 test("the chip draws the 11px tag glyph, then the tag, as the shell does", () => {
   assert.equal(
     renderToStaticMarkup(<TagChip selected={false} tag="forms" />),
-    `<button aria-pressed="false" class="mbk-chip tag" data-mokly-tag="forms" type="button">${GLYPH}forms</button>`,
+    `<button aria-pressed="false" class="mbk-chip tag mbk-reset" data-mokly-tag="forms" type="button">${GLYPH}forms</button>`,
   );
   assert.equal(
     renderToStaticMarkup(<TagChip selected tabIndex={0} tag="forms" />),
-    `<button aria-pressed="true" class="mbk-chip tag active" data-mokly-tag="forms" tabindex="0" type="button">${GLYPH}forms</button>`,
+    `<button aria-pressed="true" class="mbk-chip tag active mbk-reset" data-mokly-tag="forms" tabindex="0" type="button">${GLYPH}forms</button>`,
   );
   assert.match(
     renderToStaticMarkup(<TagChip selected={false} tabIndex={-1} tag="a" />),
@@ -37,7 +39,7 @@ test("a selected chip is pressed and active, and an unselected one is neither", 
   assert.equal(chip.hasAttribute("tabindex"), false);
 
   rerender(<TagChip selected={false} tag="onboarding" />);
-  assert.equal(
+  assertSameElement(
     screen.getByRole("button", { name: "onboarding", pressed: false }),
     chip,
   );
@@ -56,7 +58,7 @@ test("each press reports the tag and the chip", () => {
   const chip = screen.getByRole("button", { name: "landing" });
   fireEvent.click(chip);
   fireEvent.click(chip);
-  assert.deepEqual(presses, [
+  assertSameList(presses, [
     ["landing", chip],
     ["landing", chip],
   ]);

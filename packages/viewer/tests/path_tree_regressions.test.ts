@@ -159,5 +159,5 @@ test("All folder counts exclude hidden children without hiding their Changes anc
   const summary = html
     .slice(html.indexOf('data-nav-folder="folder:product"'))
     .split("</summary>")[0]!;
-  assert.match(summary, /class="mbk-nav-count">1<\/span>/);
+  assert.match(summary, /class="mbk-nav-count mbk-reset">1<\/span>/);
 });

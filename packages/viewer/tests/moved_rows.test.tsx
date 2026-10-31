@@ -205,7 +205,7 @@ test("Details name the path a moved entry came from, after its source", () => {
     assert.match(
       details(path),
       new RegExp(
-        `Source</span>.*?</div><div class="mbk-meta-row"><span class="mbk-meta-k">Moved from</span><span class="mbk-meta-v"><code class="mbk-code">${previous}</code>`,
+        `Source</span>.*?</div><div class="mbk-meta-row mbk-reset"><span class="mbk-meta-k mbk-reset">Moved from</span><span class="mbk-meta-v mbk-reset"><code class="mbk-code mbk-reset">${previous}</code>`,
         "u",
       ),
     );

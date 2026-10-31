@@ -241,10 +241,14 @@ details.mbk-nav-group > summary::-webkit-details-marker {
   display: none;
 }
 
-a[data-nav-row][data-changed="true"]:not([data-nav-removed])::after,
-a[data-nav-row][data-changed-variants="true"]::after,
-span[data-nav-row][data-changed="true"]:not([data-nav-removed])::after,
-span[data-nav-row][data-changed-variants="true"]::after {
+a[data-nav-row][data-changed="true"]:not([data-nav-removed]):where(
+    .mbk-reset
+  )::after,
+a[data-nav-row][data-changed-variants="true"]:where(.mbk-reset)::after,
+span[data-nav-row][data-changed="true"]:not([data-nav-removed]):where(
+    .mbk-reset
+  )::after,
+span[data-nav-row][data-changed-variants="true"]:where(.mbk-reset)::after {
   content: "";
   width: 6px;
   height: 6px;
@@ -254,10 +258,18 @@ span[data-nav-row][data-changed-variants="true"]::after {
   background: var(--mokly-accent);
 }
 
-a[data-nav-row][aria-current="page"][data-changed="true"]::after,
-a[data-nav-row][aria-current="page"][data-changed-variants="true"]::after,
-span[data-nav-row][aria-current="page"][data-changed="true"]::after,
-span[data-nav-row][aria-current="page"][data-changed-variants="true"]::after {
+a[data-nav-row][aria-current="page"][data-changed="true"]:where(
+    .mbk-reset
+  )::after,
+a[data-nav-row][aria-current="page"][data-changed-variants="true"]:where(
+    .mbk-reset
+  )::after,
+span[data-nav-row][aria-current="page"][data-changed="true"]:where(
+    .mbk-reset
+  )::after,
+span[data-nav-row][aria-current="page"][data-changed-variants="true"]:where(
+    .mbk-reset
+  )::after {
   background: var(--mokly-accent-contrast);
 }
 

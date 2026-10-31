@@ -43,15 +43,17 @@ export function MetadataRow({
 }) {
   if (presentation === "props")
     return (
-      <div {...dataMark(mark)} hidden={hidden}>
-        <dt>{label}</dt>
-        <dd {...dataMark(valueMark)}>{children}</dd>
+      <div {...dataMark(mark)} className="mbk-reset" hidden={hidden}>
+        <dt className="mbk-reset">{label}</dt>
+        <dd className="mbk-reset" {...dataMark(valueMark)}>
+          {children}
+        </dd>
       </div>
     );
   return (
-    <div className="mbk-meta-row" {...dataMark(mark)} hidden={hidden}>
-      <span className="mbk-meta-k">{label}</span>
-      <span className="mbk-meta-v" {...dataMark(valueMark)}>
+    <div className="mbk-meta-row mbk-reset" {...dataMark(mark)} hidden={hidden}>
+      <span className="mbk-meta-k mbk-reset">{label}</span>
+      <span className="mbk-meta-v mbk-reset" {...dataMark(valueMark)}>
         {children}
       </span>
     </div>
@@ -60,7 +62,7 @@ export function MetadataRow({
 
 /** A path or a label in a code chip, such as an entry's source path. */
 export function MetadataCode({ children }: { children: ReactNode }) {
-  return <code className="mbk-code">{children}</code>;
+  return <code className="mbk-code mbk-reset">{children}</code>;
 }
 
 /** A link in a metadata value, such as a related document. */
@@ -72,7 +74,7 @@ export function MetadataLink({
   href: string;
 }) {
   return (
-    <a className="mbk-meta-link" href={href}>
+    <a className="mbk-meta-link mbk-reset" href={href}>
       {children}
     </a>
   );
@@ -80,7 +82,7 @@ export function MetadataLink({
 
 /** The group of chips, links, or code chips of one metadata value. */
 export function MetadataChips({ children }: { children: ReactNode }) {
-  return <span className="mbk-chips">{children}</span>;
+  return <span className="mbk-chips mbk-reset">{children}</span>;
 }
 
 /**
@@ -115,7 +117,7 @@ export function EntryChip({
 }) {
   return (
     <a
-      className={`mbk-chip ${kind === "use-case" ? "flow" : "screen"}`}
+      className={`mbk-chip ${kind === "use-case" ? "flow" : "screen"} mbk-reset`}
       href={href}
     >
       {GLYPHS[kind]()}

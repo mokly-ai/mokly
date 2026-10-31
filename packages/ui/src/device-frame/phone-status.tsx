@@ -11,6 +11,7 @@ function CellularGlyph() {
   return (
     <svg
       aria-hidden="true"
+      className="mbk-reset"
       fill="currentColor"
       height={11}
       viewBox="0 0 18 12"
@@ -29,6 +30,7 @@ function WifiGlyph() {
   return (
     <svg
       aria-hidden="true"
+      className="mbk-reset"
       fill="currentColor"
       height={11}
       viewBox="0 0 16 12"
@@ -42,7 +44,13 @@ function WifiGlyph() {
 /** A part-charged battery with its contact nub. */
 function BatteryGlyph() {
   return (
-    <svg aria-hidden="true" height={11} viewBox="0 0 24 12" width={22}>
+    <svg
+      aria-hidden="true"
+      className="mbk-reset"
+      height={11}
+      viewBox="0 0 24 12"
+      width={22}
+    >
       <rect
         fill="none"
         height={10}
@@ -68,9 +76,9 @@ function BatteryGlyph() {
 /** The clock, signal, Wi-Fi, and battery band above a mobile screen. */
 export function PhoneStatusBar() {
   return (
-    <div className="phone-status">
-      <span>9:41</span>
-      <span className="phone-status-icons">
+    <div className="phone-status mbk-reset">
+      <span className="mbk-reset">9:41</span>
+      <span className="phone-status-icons mbk-reset">
         <CellularGlyph />
         <WifiGlyph />
         <BatteryGlyph />

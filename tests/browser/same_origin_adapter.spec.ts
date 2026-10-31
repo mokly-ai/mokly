@@ -151,7 +151,7 @@ test("valid local logical navigation works without instance usage", async ({
   ).toBeVisible();
 });
 
-test("temporary previews authenticate masks and preserve logical navigation", async ({
+test("temporary previews keep pick listeners without drawing and preserve logical navigation", async ({
   page,
 }) => {
   await page.goto(fixture.host.url);
@@ -181,11 +181,7 @@ test("temporary previews authenticate masks and preserve logical navigation", as
     },
   );
 
-  await expect(
-    page.locator(
-      `.mbk-highlight-layer[data-highlight-viewport="${fixture.usage.viewport}"]`,
-    ),
-  ).toBeVisible();
+  await expect(page.locator(".mbk-highlight-layer")).toHaveCount(0);
   await page
     .frameLocator("#frame")
     .getByRole("link", { name: "Open Action" })

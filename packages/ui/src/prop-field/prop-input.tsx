@@ -70,12 +70,15 @@ export function PropInput({
     return (
       <select
         {...accessibility}
+        className="mbk-reset"
         onChange={(event) => onChange(event.currentTarget.value, true)}
         value={String(value)}
       >
-        <option value="">{control.placeholder}</option>
+        <option className="mbk-reset" value="">
+          {control.placeholder}
+        </option>
         {control.options.map((option, index) => (
-          <option key={index} value={index}>
+          <option className="mbk-reset" key={index} value={index}>
             {option}
           </option>
         ))}
@@ -86,6 +89,7 @@ export function PropInput({
       <input
         {...accessibility}
         checked={value === true}
+        className="mbk-reset"
         onChange={(event) => onChange(event.currentTarget.checked, true)}
         type="checkbox"
       />
@@ -93,9 +97,9 @@ export function PropInput({
     return label === undefined ? (
       box
     ) : (
-      <label className="mbk-control-check" hidden={!supplied}>
+      <label className="mbk-control-check mbk-reset" hidden={!supplied}>
         {box}
-        <span>{label}</span>
+        <span className="mbk-reset">{label}</span>
       </label>
     );
   }
@@ -109,6 +113,7 @@ export function PropInput({
             type: "number",
           }
         : { type: "text" })}
+      className="mbk-reset"
       onChange={(event) => onChange(event.currentTarget.value, false)}
       value={String(value)}
     />

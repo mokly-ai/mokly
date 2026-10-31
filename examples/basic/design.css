@@ -1,12 +1,21 @@
 /* Mokly shell design language for the design mockups: the semantic interface
-   palette, the base rules, and the artboard shell's layout. The shell's own
-   parts, such as the top bar, the catalogue navigation, and the screen
-   header, come from the @mokly/ui stylesheets that their component sheets
-   import. Every interface role below has a Light and a Dark value, so an
-   artboard changes appearance by selecting a palette rather than by adding an
-   override sheet. Device-screen colors are preview tokens and live in
+   palette, the base rules, and the artboard shell's render flags. The
+   @mokly/ui theme and reset class come first, as in the package's
+   styles.css: an artboard's root carries the theme's root class, so the
+   package components draw in the shipped palette, and each of their elements
+   carries the reset class. The shell root, its body, and its main region are
+   the shipped ones, from the shell layout stylesheet that
+   design-component-workspace.css imports after the component sheets. The
+   shell's own parts, such as the top bar, the catalogue navigation, and the
+   screen header, come from the @mokly/ui stylesheets that their component
+   sheets import. The design catalogue keeps its own palette below for the
+   artboards' own parts. Every interface role has a Light and a Dark value, so
+   an artboard changes appearance by selecting a palette rather than by adding
+   an override sheet. Device-screen colors are preview tokens and live in
    design-stage.css, independent of the interface appearance. A light-only
    document keeps the Light palette inside a Dark artboard. */
+@import "../../packages/ui/src/theme/theme.css";
+@import "../../packages/ui/src/reset/reset.css";
 
 :root,
 [data-mbk-light-only],
@@ -144,60 +153,28 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-.mbk-shell {
-  background: var(--chrome-bg);
-  color: var(--chrome-ink);
-  font-family: var(--sans);
-  font-size: 13px;
+/* ---- Render flags ----------------------------------------------------- */
+
+/* The frame that carries an artboard's render flag keeps the shell root in
+   the page. The root clips its content, as the shell's page does. */
+.mbk-shell-frame {
+  display: contents;
 }
 
-.mbk-shell--desktop {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
+.mbk-shell-frame > .mbk {
   overflow: hidden;
 }
 
-.mbk-shell--mobile {
+/* A mobile render draws the shell in a phone-wide column at every width, and
+   a collapsed render a desktop window narrower than the layout breakpoint. */
+.mbk-shell--mobile > .mbk,
+.mbk-shell--collapsed > .mbk {
   border-left: 1px solid var(--chrome-border);
   border-right: 1px solid var(--chrome-border);
-  display: flex;
-  flex-direction: column;
   margin: 0 auto;
   max-width: 392px;
-  min-height: 100vh;
-  overflow: hidden;
-  position: relative;
 }
 
-.mbk-shell--collapsed {
-  border-left: 1px solid var(--chrome-border);
-  border-right: 1px solid var(--chrome-border);
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  margin: 0 auto;
+.mbk-shell--collapsed > .mbk {
   max-width: 832px;
-  overflow: hidden;
-  position: relative;
-}
-
-/* ---- Body split ------------------------------------------------------- */
-
-.mbk-body {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-}
-
-.mbk-main {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
-  min-width: 0;
-}
-
-.mbk-shell--mobile .mbk-main {
-  flex: 1;
 }

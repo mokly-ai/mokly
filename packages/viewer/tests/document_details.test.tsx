@@ -41,9 +41,12 @@ test("a related document opens its entry, labelled with its title", () => {
   const html = details("product/browse/details");
   assert.match(
     html,
-    /<a class="mbk-meta-link" href="\/view\/product\/">Product overview<\/a>/u,
+    /<a class="mbk-meta-link mbk-reset" href="\/view\/product\/">Product overview<\/a>/u,
   );
-  assert.match(html, /<code class="mbk-code">docs\/notes\.md<\/code>/u);
+  assert.match(
+    html,
+    /<code class="mbk-code mbk-reset">docs\/notes\.md<\/code>/u,
+  );
   assert.doesNotMatch(html, /mock:product/u);
 });
 
@@ -57,7 +60,7 @@ test("a document's Details show its description, tags, and Markdown source", () 
   assert.match(
     html,
     new RegExp(
-      `Source</span>.*?<code class="mbk-code">${entry.sourcePath}`,
+      `Source</span>.*?<code class="mbk-code mbk-reset">${entry.sourcePath}`,
       "u",
     ),
   );
@@ -99,13 +102,13 @@ test("the served manifest's source path links its current document", () => {
   const current = render("billing");
   assert.match(
     current,
-    /<a class="mbk-meta-link" href="\/view\/guide\/terms\/">Payment terms<\/a><code class="mbk-code">specs\/guide\/old\.md<\/code><code class="mbk-code">x\.md<\/code>/u,
+    /<a class="mbk-meta-link mbk-reset" href="\/view\/guide\/terms\/">Payment terms<\/a><code class="mbk-code mbk-reset">specs\/guide\/old\.md<\/code><code class="mbk-code mbk-reset">x\.md<\/code>/u,
   );
   const removed = render("invoices");
   assert.doesNotMatch(removed, /mbk-meta-link/u);
   assert.match(
     removed,
-    /<code class="mbk-code">specs\/guide\/terms\.md<\/code>/u,
+    /<code class="mbk-code mbk-reset">specs\/guide\/terms\.md<\/code>/u,
   );
 });
 

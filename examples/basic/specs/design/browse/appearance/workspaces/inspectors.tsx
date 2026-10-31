@@ -12,6 +12,7 @@ import { artboards } from "../../../parts/artboards.js";
 import { DESTINATIONS } from "../../../parts/destinations.js";
 import { ENTRY_PATHS } from "../../../parts/entry_paths.js";
 import { MetaRow } from "../../../parts/metadata_row.js";
+import { miniView } from "../../../parts/mini_views.js";
 import type { ArtboardViewport } from "../../../parts/shell.js";
 import {
   AppearanceHead,
@@ -75,12 +76,14 @@ function PropsValidation({ viewport }: { viewport: ArtboardViewport }) {
       design={DESTINATIONS.appearanceProps}
       viewport={viewport}
     >
-      <AppearanceHead
-        path={ENTRY_PATHS.welcome}
-        title="Welcome"
-        viewport={viewport}
-      />
       <PreviewWorkspace
+        header={
+          <AppearanceHead
+            path={ENTRY_PATHS.welcome}
+            title="Welcome"
+            viewport={viewport}
+          />
+        }
         inspector={
           <inspector.Component
             moklyInstance={useDesignInstance("inspector")}
@@ -95,6 +98,7 @@ function PropsValidation({ viewport }: { viewport: ArtboardViewport }) {
           />
         }
         viewport={viewport}
+        view={miniView("welcome")}
         render={(previewViewport) => <WelcomeShot viewport={previewViewport} />}
       />
     </AppearanceShell>
@@ -127,12 +131,14 @@ function SelectedInstance({ viewport }: { viewport: ArtboardViewport }) {
       design={DESTINATIONS.appearanceInstance}
       viewport={viewport}
     >
-      <AppearanceHead
-        path={ENTRY_PATHS.welcome}
-        title="Welcome"
-        viewport={viewport}
-      />
       <PreviewWorkspace
+        header={
+          <AppearanceHead
+            path={ENTRY_PATHS.welcome}
+            title="Welcome"
+            viewport={viewport}
+          />
+        }
         inspector={
           <inspector.Component
             moklyInstance={useDesignInstance("inspector")}
@@ -147,6 +153,7 @@ function SelectedInstance({ viewport }: { viewport: ArtboardViewport }) {
           />
         }
         viewport={viewport}
+        view={miniView("welcome")}
         render={(previewViewport) => <WelcomeShot viewport={previewViewport} />}
       />
     </AppearanceShell>

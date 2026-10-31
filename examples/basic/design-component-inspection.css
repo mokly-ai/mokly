@@ -1,4 +1,5 @@
-/* Inspection artboards: shared consumer examples and a mask with real cutouts. */
+/* Inspection artboards: shared consumer examples whose fixed layouts place
+   each instance at the box of its highlight region. */
 .ce-button {
   align-items: center;
   background: white;
@@ -47,11 +48,6 @@
 .ce-demo-toolbar .ce-toolbar-example {
   height: 82px;
   max-width: none;
-}
-.ce-demo-toolbar .ce-action {
-  flex: 0 0 104px;
-  padding: 0 10px;
-  width: 104px;
 }
 .ce-demo-content {
   left: 24px;
@@ -102,58 +98,24 @@
   color: var(--chrome-ink-2);
   font-size: 13px;
 }
-.ce-highlight-layer {
-  inset: 0;
-  pointer-events: none;
-  position: absolute;
+/* Details draws its single Action at a fixed place below its heading and its
+   text, which takes one line on a desktop and two in a phone, so the Action
+   lies at the box of its highlight region. */
+.ce-consumer-example {
+  position: relative;
 }
-.ce-mask {
-  display: block;
-  position: absolute;
-}
-.ce-toolbar-cutout {
-  width: calc(100% - 48px);
-}
-.ce-nested-cutout {
-  x: calc(100% - 145px);
-}
-.ce-region {
-  border: 2px solid var(--mbk-sage);
-  border-radius: 10px;
-  pointer-events: auto;
-  position: absolute;
-}
-.ce-region > span,
-.ce-single-highlight > span {
-  background: var(--mbk-sage-deep);
-  border-radius: 4px;
-  bottom: calc(100% + 8px);
-  color: white;
-  font-size: 10px;
-  left: 2px;
-  line-height: 20px;
-  padding: 0 6px;
-  position: absolute;
+.ce-consumer-example > p {
+  height: 19.5px;
+  overflow: hidden;
   white-space: nowrap;
 }
-.ce-region--toolbar {
-  height: 82px;
-  left: 24px;
-  right: 24px;
-  top: 76px;
+.ce-preview-view[data-preview-viewport="mobile"] .ce-consumer-example > p {
+  height: 39px;
+  white-space: normal;
 }
-.ce-region--footer {
-  border-radius: 8px;
-  height: 36px;
-  left: 24px;
-  top: 258px;
-  width: 116px;
-}
-.ce-region--nested {
-  border-radius: 8px;
-  height: 36px;
-  right: 41px;
-  top: 99px;
+.ce-consumer-example > .ce-action {
+  display: block;
+  padding: 0 10px;
   width: 104px;
 }
 .ce-design .browser-frame:has(.ce-welcome-example),

@@ -55,12 +55,12 @@ function ControlsHeading({
   title: ReactNode;
 }) {
   return (
-    <div className="mbk-controls-heading">
-      <div>
-        <h3 ref={focus?.("heading")} tabIndex={-1}>
+    <div className="mbk-controls-heading mbk-reset">
+      <div className="mbk-reset">
+        <h3 className="mbk-reset" ref={focus?.("heading")} tabIndex={-1}>
           {heading}
         </h3>
-        <p>{title}</p>
+        <p className="mbk-reset">{title}</p>
       </div>
       {action}
     </div>
@@ -79,14 +79,14 @@ function AlertView({
 }) {
   if ("text" in alert)
     return (
-      <p className="mbk-control-alert" role="alert">
+      <p className="mbk-control-alert mbk-reset" role="alert">
         {alert.text}
       </p>
     );
   return (
-    <div className="mbk-control-alert" role="alert">
-      <strong>{alert.title}</strong>
-      <p>{alert.body}</p>
+    <div className="mbk-control-alert mbk-reset" role="alert">
+      <strong className="mbk-reset">{alert.title}</strong>
+      <p className="mbk-reset">{alert.body}</p>
       <TextButton href={retryHref} onClick={onRetry}>
         {alert.action}
       </TextButton>
@@ -148,16 +148,16 @@ export function ControlsPanel({
   wording: ControlsPanelWording;
 }) {
   return (
-    <section className="mbk-component-controls">
+    <section className="mbk-component-controls mbk-reset">
       <ControlsHeading
         action={
           dirty && resetHref !== undefined ? (
-            <a className="mbk-controls-reset" href={resetHref}>
+            <a className="mbk-controls-reset mbk-reset" href={resetHref}>
               {wording.reset}
             </a>
           ) : (
             <button
-              className="mbk-controls-reset"
+              className="mbk-controls-reset mbk-reset"
               disabled={!dirty}
               onClick={() => onReset?.()}
               type="button"
@@ -174,7 +174,9 @@ export function ControlsPanel({
             {dirty ? (
               <>
                 {/* The space keeps the title and the badge two words. */}{" "}
-                <span className="mbk-controls-edited">{wording.edited}</span>
+                <span className="mbk-controls-edited mbk-reset">
+                  {wording.edited}
+                </span>
               </>
             ) : (
               ` · ${wording.saved}`
@@ -185,12 +187,12 @@ export function ControlsPanel({
       {alert ? (
         <AlertView alert={alert} onRetry={onRetry} retryHref={retryHref} />
       ) : null}
-      <p className="mbk-controls-restored" role="status">
+      <p className="mbk-controls-restored mbk-reset" role="status">
         {restored}
       </p>
       {start?.status === "preparing" ? (
         <p
-          className="mbk-controls-notice"
+          className="mbk-controls-notice mbk-reset"
           ref={focus?.("notice")}
           role="status"
           tabIndex={-1}
@@ -199,7 +201,7 @@ export function ControlsPanel({
         </p>
       ) : null}
       {start?.status === "failed" ? (
-        <p className="mbk-control-alert" role="alert">
+        <p className="mbk-control-alert mbk-reset" role="alert">
           {start.text}{" "}
           <TextButton href={startHref} onClick={onStart}>
             {start.action}
@@ -207,7 +209,7 @@ export function ControlsPanel({
         </p>
       ) : null}
       <fieldset
-        className="mbk-control-fieldset"
+        className="mbk-control-fieldset mbk-reset"
         disabled={start !== undefined}
         ref={focus?.("fields")}
       >
@@ -250,9 +252,9 @@ export function SavedPropsPanel({
   title: string;
 }) {
   return (
-    <section className="mbk-component-controls">
+    <section className="mbk-component-controls mbk-reset">
       <ControlsHeading focus={focus} heading={heading} title={title} />
-      <p className="mbk-controls-notice">{notice}</p>
+      <p className="mbk-controls-notice mbk-reset">{notice}</p>
       {current !== undefined ? (
         <TextButton href={currentHref} onClick={onCurrent}>
           {current}

@@ -17,7 +17,7 @@ test("the phone draws its notch, its status band, the screen content, and the ho
   );
   assert.match(
     markup,
-    /^<div class="phone-frame"><div class="phone-notch" aria-hidden="true"><\/div><div class="phone-screen"><div class="phone-status"><span>9:41<\/span><span class="phone-status-icons">(<svg aria-hidden="true"[^>]*>.*?<\/svg>){3}<\/span><\/div><i>screen<\/i><\/div><div class="phone-home" aria-hidden="true"><\/div><\/div>$/u,
+    /^<div class="phone-frame mbk-reset"><div class="phone-notch mbk-reset" aria-hidden="true"><\/div><div class="phone-screen mbk-reset"><div class="phone-status mbk-reset"><span class="mbk-reset">9:41<\/span><span class="phone-status-icons mbk-reset">(<svg aria-hidden="true"[^>]*>.*?<\/svg>){3}<\/span><\/div><i>screen<\/i><\/div><div class="phone-home mbk-reset" aria-hidden="true"><\/div><\/div>$/u,
   );
   assert.equal(markup.match(/<svg aria-hidden="true"/gu)?.length, 3);
 });
@@ -30,15 +30,15 @@ test("the browser window draws its bar above the viewport that holds the preview
         <i>page</i>
       </BrowserFrame>,
     ),
-    `<div class="browser-frame">${bar}<div class="browser-viewport"><i>page</i></div></div>`,
+    `<div class="browser-frame mbk-reset">${bar}<div class="browser-viewport mbk-reset"><i>page</i></div></div>`,
   );
   assert.equal(
     renderToStaticMarkup(
       <BrowserFrame address="/a" expandable={false} expanded />,
     ),
-    `<div class="browser-frame is-expanded">${renderToStaticMarkup(
+    `<div class="browser-frame is-expanded mbk-reset">${renderToStaticMarkup(
       <BrowserBar address="/a" expandable={false} expanded />,
-    )}<div class="browser-viewport"></div></div>`,
+    )}<div class="browser-viewport mbk-reset"></div></div>`,
   );
 });
 
@@ -55,7 +55,7 @@ test("an expanded window is marked, and its bar reports the host's callbacks", (
   );
   assert.equal(
     container.querySelector(".browser-frame")?.className,
-    "browser-frame is-expanded",
+    "browser-frame is-expanded mbk-reset",
   );
   fireEvent.click(screen.getByRole("button", { name: "Collapse viewport" }));
   assert.deepEqual(requests, [false]);

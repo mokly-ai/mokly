@@ -8,6 +8,7 @@ import {
   MissingRouteState,
   RemovedState,
 } from "@mokly/ui/empty-state";
+import { MainRegion } from "@mokly/ui/shell-layout";
 
 import { canonicalJson } from "../components/data.js";
 import { sha256 } from "../data/sha256.js";
@@ -137,14 +138,9 @@ export function ShellMain(props: {
     ({ entry }) => entry.path === activeId,
   );
   return (
-    <main
-      className="mbk-main"
-      data-mokly-view=""
-      data-mokly-baseline={
-        baseline ? sha256(canonicalJson(baseline)) : undefined
-      }
+    <MainRegion
+      baseline={baseline ? sha256(canonicalJson(baseline)) : undefined}
       id={mainId}
-      tabIndex={-1}
     >
       {props.view.kind === "home" ? (
         <HomeState summary={homeSummary(props.catalogue.manifest.entries)} />
@@ -173,6 +169,6 @@ export function ShellMain(props: {
           />
         )
       ) : null}
-    </main>
+    </MainRegion>
   );
 }

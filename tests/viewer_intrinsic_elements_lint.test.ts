@@ -49,19 +49,21 @@ test("viewer containers reject every lower-case HTML and SVG element", async () 
     );
 });
 
-test("the migration exemption applies only to its exact viewer file", async () => {
+test("the rule reaches the viewer files that the migration exempted", async () => {
   const source = "export const view = <div />;";
-  assert.deepEqual(
-    await intrinsicMessages(source, "packages/viewer/src/shell/views.tsx"),
-    [],
-  );
-  assert.deepEqual(
-    await intrinsicMessages(
-      source,
-      "packages/viewer/src/shell/nested/views.tsx",
-    ),
-    [rejection("div")],
-  );
+  for (const filePath of [
+    "packages/viewer/src/shell/views.tsx",
+    "packages/viewer/src/shell/nested/views.tsx",
+    "packages/viewer/src/standalone/shell.tsx",
+    "packages/viewer/src/viewer/component.tsx",
+  ]) {
+    await requireLintRule(filePath, rule);
+    assert.deepEqual(
+      await intrinsicMessages(source, filePath),
+      [rejection("div")],
+      filePath,
+    );
+  }
 });
 
 test("the intrinsic element rule leaves other packages and viewer tests alone", async () => {

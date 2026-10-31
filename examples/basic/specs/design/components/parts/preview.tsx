@@ -16,7 +16,7 @@ import { COMPONENT_STYLE_COPY } from "../../parts/stylesheet_evidence.js";
 import type { ActionProps } from "./action_props.js";
 import { ChecklistExample } from "./checklist.js";
 import { toolbarPrompt } from "./fixtures.js";
-import { SingleHighlight } from "./highlight.js";
+import { HighlightLayer } from "./highlight.js";
 import type { ComponentId } from "./metadata.js";
 
 /** The same synthetic Action is composed by component and consuming-screen designs. */
@@ -46,27 +46,11 @@ export function ActionExample({
 }
 
 /** The Toolbar's prompt and its Action, as the branch point or the head renders them. */
-export function ToolbarExample({
-  before = false,
-  highlightLabel,
-}: {
-  before?: boolean;
-  /**
-   * The label of the Action's highlight region, for a preview whose Highlight
-   * components switch highlights the Action alone. Without it the Action has
-   * no region of its own.
-   */
-  highlightLabel?: string;
-}) {
-  const action = <ActionExample before={before} />;
+export function ToolbarExample({ before = false }: { before?: boolean }) {
   return (
     <div className="ce-toolbar-example">
       <span>{toolbarPrompt}</span>
-      {highlightLabel === undefined ? (
-        action
-      ) : (
-        <SingleHighlight label={highlightLabel}>{action}</SingleHighlight>
-      )}
+      <ActionExample before={before} />
     </div>
   );
 }
@@ -75,6 +59,7 @@ export function ToolbarExample({
  * The shipped canvas of a component's Current view: `PreviewFrame` names the
  * viewport above the bordered box that depicts the component's document,
  * without device chrome. The explorer depicts its components in Light only.
+ * The depicted view's highlight lies over the document.
  */
 export function ComponentCanvas({
   children,
@@ -85,7 +70,10 @@ export function ComponentCanvas({
 }) {
   return (
     <PreviewFrame placement={{ kind: "canvas", viewport }} scheme="light">
-      <div className="ce-canvas-content">{children}</div>
+      <div className="ce-canvas-content">
+        {children}
+        <HighlightLayer viewport={viewport} />
+      </div>
     </PreviewFrame>
   );
 }

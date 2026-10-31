@@ -4,7 +4,12 @@ import type { RenderInput } from "@mokly/mokly";
 
 import { PreviewWorkspace } from "../components/parts/workspace.js";
 
-/** Standalone samples share tokens and layout constraints, without scenario data. */
+/**
+ * Standalone samples share tokens and layout constraints, without scenario
+ * data. The sample root carries the viewer root class and states the
+ * requested scheme as its appearance, so the package components draw in the
+ * shipped palette, as they do inside a shell.
+ */
 export function LibraryHost({
   input,
   children,
@@ -28,9 +33,10 @@ export function LibraryHost({
     );
   return (
     <div
-      className="ce-design mbk-library"
+      className="ce-design mbk mbk-library"
       data-library-component={slug}
       data-mbk-appearance={input.colorScheme}
+      data-mokly-theme={input.colorScheme}
     >
       <div className={`mbk-library-host mbk-shell--${input.viewport}`}>
         {content}

@@ -30,7 +30,7 @@ export function PreviousVersion({
   return (
     <>
       <p
-        className="mbk-previous"
+        className="mbk-previous mbk-reset"
         data-color-scheme-fallback={lightOnly ? "" : undefined}
       >
         Showing previous version
@@ -38,7 +38,7 @@ export function PreviousVersion({
       </p>
       <div
         aria-live="polite"
-        className="mbk-preview"
+        className="mbk-preview mbk-reset"
         data-mokly-preview={descriptor}
         data-mokly-stage=""
         data-viewport={viewport}

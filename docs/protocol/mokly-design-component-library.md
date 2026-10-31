@@ -170,7 +170,10 @@ below use text, boolean, number and primitive enum selections only.
     missing pane; comparison-grid layout remains caller-owned.
 14. **Empty state:** no required prop: an optional title, body, code, action
     label, destination, and busy flag. The busy flag marks a loading state,
-    sets `aria-busy`, and makes the body a status.
+    sets `aria-busy`, and makes the body a status. Where it stands decides
+    whether it takes the place of the viewer root, as in the shell: on a page
+    that the shell draws before it has a catalogue, it is the root, in the
+    root's appearance.
     Controls: title, body, loading and action label. It keeps the canonical
     recovery links and non-interactive cases and adds no library-specific
     navigation.

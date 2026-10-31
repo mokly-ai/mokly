@@ -70,14 +70,16 @@ function AddedCurrent({ viewport }: { viewport: CompareViewport }) {
       viewport={viewport}
       nav={viewport === "desktop" ? <ReviewNav activeTitle="Details" /> : null}
     >
-      <ScreenHead
-        action={<ViewSwitch active={viewport} highlight="available" />}
-        crumbs={["Example", "Screens"]}
-        path={ENTRY_PATHS.details}
-        status="added"
-        title="Details"
-      />
       <ExampleWorkspace
+        header={
+          <ScreenHead
+            action={<ViewSwitch active={viewport} />}
+            crumbs={["Example", "Screens"]}
+            path={ENTRY_PATHS.details}
+            status="added"
+            title="Details"
+          />
+        }
         subject="details"
         viewport={viewport}
         comparisonEvidence={{ reasons: reasonEvidence(["added"]) }}

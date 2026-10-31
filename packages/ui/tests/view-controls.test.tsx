@@ -14,6 +14,8 @@ import {
   type ViewMark,
 } from "../src/view-controls/view-controls.js";
 
+import { assertSameElement } from "./dom-assertions.js";
+
 const VIEWPORT_MARK: ViewMark = {
   id: "root-mb-view-changed-viewport",
   marked: false,
@@ -41,9 +43,10 @@ test("the viewport select draws its glyph, then the package down chevron", () =>
   const markup = renderToStaticMarkup(
     <ViewControls viewport="both" viewportMark={VIEWPORT_MARK} />,
   );
-  const glyphs = /<label class="mbk-icon-select"[^>]*>(.*?)<select/su.exec(
-    markup,
-  )?.[1];
+  const glyphs =
+    /<label class="mbk-icon-select mbk-reset"[^>]*>(.*?)<select/su.exec(
+      markup,
+    )?.[1];
   assert.equal(
     glyphs,
     renderToStaticMarkup(<WorkspaceIcon name="viewport" />) +
@@ -54,7 +57,7 @@ test("the viewport select draws its glyph, then the package down chevron", () =>
 test("the group names its controls as the shell specs query them", () => {
   render(<ViewControls viewport="desktop" viewportMark={VIEWPORT_MARK} />);
   const group = screen.getByRole("group", { name: "View options" });
-  assert.equal(group.className, "mbk-view-tools");
+  assert.equal(group.className, "mbk-view-tools mbk-reset");
   const select = viewportSelect();
   assert.equal(select.value, "desktop");
   assert.equal(select.getAttribute("data-workspace-viewport"), "");
@@ -71,7 +74,10 @@ test("the group names its controls as the shell specs query them", () => {
   );
   assert.equal(highlightToggle().getAttribute("data-workspace-highlight"), "");
   // Without dark previews the group has no Dark preview toggle.
-  assert.equal(screen.queryByRole("button", { name: "Dark preview" }), null);
+  assertSameElement(
+    screen.queryByRole("button", { name: "Dark preview" }),
+    null,
+  );
   assert.deepEqual(
     [...group.children].map((child) => child.tagName.toLowerCase()),
     ["label", "button"],
@@ -155,7 +161,7 @@ test("Dark preview presses in Dark, asks for the other scheme, and carries its m
   assert.deepEqual(schemes, ["dark", "light"]);
   // The toggle sits between the viewport select and Highlight components.
   assert.equal(toggle.previousElementSibling?.tagName.toLowerCase(), "label");
-  assert.equal(toggle.nextElementSibling, highlightToggle());
+  assertSameElement(toggle.nextElementSibling, highlightToggle());
 });
 
 test("Highlight components describes itself and reports each press while available", () => {

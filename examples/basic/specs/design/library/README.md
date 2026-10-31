@@ -1,7 +1,5 @@
 # Shared Design Components
 
-Status: In progress under the [shell views plan](../../../../../plans/ui-package-shell-views.md).
-
 ## Scope
 
 These sixteen components render both Mokly's design artboards and
@@ -20,7 +18,15 @@ component provides, such as the shell and workspace scaffolds of
 lists of the inspector, and the highlight mask of
 `../components/parts/highlight.tsx`. Each such part renders the package
 component, its sheet imports the package stylesheets by repository path, and
-no artboard keeps a copy of that markup or CSS.
+no artboard keeps a copy of that markup or CSS. The shell scaffold renders
+`ShellLayout` with its `MainRegion` in a frame that carries the artboard's
+render flag, and the workspace scaffold renders `WorkspaceLayout`, which holds
+the header and the variant bar above the preview and the inspector, as the
+shell's workspace does. A startup page's state takes the place of the viewer
+root. Each artboard's root and each sample's root carries the theme's root
+class `mbk` in the rendered appearance, so the package components draw in the
+shipped palette and with the reset class; the design catalogue's own palette
+in `design.css` stays for the artboards' own parts.
 
 `chrome/appearance-selector` is the standalone catalogue's Auto/Light/Dark
 setting, which changes the chrome and the screens it shows together. `chrome/top-bar`
@@ -117,13 +123,22 @@ artboard runs no script, so the viewport select and the Highlight components
 switch are native controls: scoped `:has()` rules in the design stylesheets
 read the select's option and the switch's check, so the previews and the
 highlight change in place, even in Browse's sandboxed frames. Every header
-draws the switch in the state that the shell shows for the depicted view, so
-the highlight state is a required prop. `ViewSwitch` in `../parts/shell.tsx`
-takes it from each screen, and the component page layout derives it from the
-comparison mode, the depicted component and its details. The switch is
-enabled where the shell can highlight the view. A comparison, a removed
-screen, a preview that loads or failed, or a view without registered
-components disables it, with the shell's own sentence for that reason.
+draws the switch in the state that the shell shows for the depicted view. One
+record per depicted view, `DepictedView` of `../parts/depicted_view.tsx`,
+holds that state and the regions that its preview highlights in each
+viewport, and the workspace scaffold gives it to the header's view controls
+and to the preview, so no artboard draws an enabled switch over a preview
+without highlights. The Browse and Changes previews depict the Action and the
+Toolbar that the real Welcome and Details screens render, and
+`../parts/mini_views.tsx` holds their records; the component explorer's
+screen and component pages derive theirs from the comparison mode, the
+depicted state, and the component. The switch is enabled where the shell can
+highlight the view. A comparison, a removed screen, a preview that loads or
+failed, or a view without registered components disables it, with the
+shell's own sentence for that reason. A checked switch reveals the shipped
+mask and labels over the regions; a label opens the artboard of its
+instance's selection, and a label without one is a picture of the shell's
+label.
 
 The inspector, the metadata row and the prop field are the shipped `@mokly/ui`
 components too. A static artboard runs no script, so each inspector tab is a
@@ -158,7 +173,11 @@ nothing, and the expand toggle expands nothing. The compact flag draws a
 small phone, and the light-only flag shows the caption's Light-only note, as a
 Dark shell shows it. The comparison pane
 names its side, Before or Current, and the empty state's action links to the
-artboard of its outcome. The artboards render the rest of the preview slice
+artboard of its outcome. Where it stands decides whether the empty state takes
+the place of the viewer root: on a startup page, the shared
+`RootPlacementScope` context of `preview/root_placement.tsx` makes it the root
+in the rendered appearance, as the shell's startup states are. The artboards
+render the rest of the preview slice
 in the same way: the stages and the document stage, the use-case flows, a
 removed entry's previous version with its states, the comparison stage with
 its sections, panes, viewports and layers, and the component pages' variant

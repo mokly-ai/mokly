@@ -3,7 +3,7 @@
    static depiction is a picture of itself, so its address and its toggle
    keep their resting look: the pointer and the hover rules apply only to the
    bar that acts. */
-.browser-bar {
+.browser-bar:where(.mbk-reset) {
   position: relative;
   height: 40px;
   display: flex;
@@ -14,31 +14,31 @@
   border-bottom: 1px solid var(--chrome-border);
 }
 
-.lights {
+.lights:where(.mbk-reset) {
   display: inline-flex;
   gap: 6px;
 }
 
-.lights i {
+.lights i:where(.mbk-reset) {
   width: 11px;
   height: 11px;
   border-radius: 999px;
   background: var(--chrome-border-strong);
 }
 
-.lights i:first-child {
+.lights i:first-child:where(.mbk-reset) {
   background: var(--mbk-device-light-close);
 }
 
-.lights i:nth-child(2) {
+.lights i:nth-child(2):where(.mbk-reset) {
   background: var(--mbk-device-light-minimise);
 }
 
-.lights i:nth-child(3) {
+.lights i:nth-child(3):where(.mbk-reset) {
   background: var(--mbk-device-light-expand);
 }
 
-.address {
+.address:where(.mbk-reset) {
   flex: 1;
   max-width: 520px;
   height: 26px;
@@ -58,13 +58,13 @@
     color 0.12s ease;
 }
 
-.address-url {
+.address-url:where(.mbk-reset) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.address-copy {
+.address-copy:where(.mbk-reset) {
   display: inline-flex;
   flex-shrink: 0;
   margin-left: auto;
@@ -72,16 +72,19 @@
   color: var(--chrome-muted);
 }
 
-:where(.browser-bar:not([data-browser-static])) .address:hover {
+:where(.browser-bar:not([data-browser-static]))
+  .address:hover:where(.mbk-reset) {
   background: var(--chrome-surface);
   color: var(--chrome-ink);
 }
 
-:where(.browser-bar:not([data-browser-static])) .address:hover .address-copy {
+:where(.browser-bar:not([data-browser-static]))
+  .address:hover
+  .address-copy:where(.mbk-reset) {
   color: var(--chrome-accent);
 }
 
-.address-copied {
+.address-copied:where(.mbk-reset) {
   position: absolute;
   top: calc(100% + 8px);
   left: 50%;
@@ -101,7 +104,7 @@
   animation: addressCopiedIn 0.18s ease-out;
 }
 
-.address-copied::before {
+.address-copied:where(.mbk-reset)::before {
   content: "";
   position: absolute;
   top: -4px;
@@ -124,7 +127,7 @@
   }
 }
 
-.browser-expand {
+.browser-expand:where(.mbk-reset) {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
@@ -144,22 +147,24 @@
     border-color 0.12s ease;
 }
 
-:where(.browser-bar:not([data-browser-static])) .browser-expand:hover {
+:where(.browser-bar:not([data-browser-static]))
+  .browser-expand:hover:where(.mbk-reset) {
   background: var(--chrome-surface);
   color: var(--chrome-accent);
   border-color: var(--chrome-border-strong);
 }
 
 /* The address and the toggle of a static depiction act on nothing. */
-.browser-bar[data-browser-static] :is(.address, .browser-expand) {
+.browser-bar[data-browser-static]
+  :is(.address, .browser-expand):where(.mbk-reset) {
   cursor: default;
 }
 
-.browser-expand .i-expand,
-.browser-expand .i-collapse {
+.browser-expand .i-expand:where(.mbk-reset),
+.browser-expand .i-collapse:where(.mbk-reset) {
   display: inline-flex;
 }
 
-.browser-expand .i-collapse {
+.browser-expand .i-collapse:where(.mbk-reset) {
   display: none;
 }

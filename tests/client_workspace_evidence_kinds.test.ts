@@ -62,9 +62,20 @@ for (const kind of ["screen", "component"] as const) {
       copy.unresolved,
       copy.oneExcluded,
     ])
-      assert.ok(markup.includes(`<p>${sentence}</p>`), sentence);
-    assert.ok(markup.includes(`<li>${SHARED}<p>${copy.matched}</p>`));
-    assert.ok(markup.includes(`<li>${TOKENS}<p>${copy.unresolved}</p>`));
+      assert.ok(
+        markup.includes(`<p class="mbk-reset">${sentence}</p>`),
+        sentence,
+      );
+    assert.ok(
+      markup.includes(
+        `<li class="mbk-reset">${SHARED}<p class="mbk-reset">${copy.matched}</p>`,
+      ),
+    );
+    assert.ok(
+      markup.includes(
+        `<li class="mbk-reset">${TOKENS}<p class="mbk-reset">${copy.unresolved}</p>`,
+      ),
+    );
     if (kind === "component") assert.doesNotMatch(markup, /\bscreen\b/i);
   });
 
@@ -79,10 +90,13 @@ for (const kind of ["screen", "component"] as const) {
       copy.unresolvedWithoutSelectors,
       copy.severalExcluded,
     ])
-      assert.ok(markup.includes(`<p>${sentence}</p>`), sentence);
+      assert.ok(
+        markup.includes(`<p class="mbk-reset">${sentence}</p>`),
+        sentence,
+      );
     assert.ok(
       markup.includes(
-        `<p>${copy.unresolvedWithoutSelectors}</p></li></ul><p>${copy.severalExcluded}</p>`,
+        `<p class="mbk-reset">${copy.unresolvedWithoutSelectors}</p></li></ul><p class="mbk-reset">${copy.severalExcluded}</p>`,
       ),
     );
     if (kind === "component") assert.doesNotMatch(markup, /\bscreen\b/i);
@@ -93,7 +107,11 @@ for (const kind of ["screen", "component"] as const) {
       kind,
       entryRules(kind, SHARED, "matched", [""]),
     );
-    assert.ok(markup.includes(`<p>${copy.matchedWithoutSelectors}</p>`));
+    assert.ok(
+      markup.includes(
+        `<p class="mbk-reset">${copy.matchedWithoutSelectors}</p>`,
+      ),
+    );
     if (kind === "component") assert.doesNotMatch(markup, /\bscreen\b/i);
   });
 }

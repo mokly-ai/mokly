@@ -21,7 +21,7 @@ async function artboard(
 ): Promise<{ appearance: string | null; background: string }> {
   return await page
     .frameLocator(`.mbk-frame-${viewport} iframe`)
-    .locator("[data-mbk-appearance] .mbk-shell")
+    .locator("[data-mbk-appearance] .mbk[data-mokly-shell]")
     .evaluate((node) => ({
       appearance:
         node

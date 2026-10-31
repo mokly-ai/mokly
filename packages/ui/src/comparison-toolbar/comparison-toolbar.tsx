@@ -29,26 +29,30 @@ function Refresh({
     return (
       <span
         aria-label="Refresh comparison"
-        className="mbk-diff-refresh"
+        className="mbk-diff-refresh mbk-reset"
         data-diff-refresh=""
         hidden={hidden}
         role="img"
         title="Refresh comparison"
       >
-        <span aria-hidden="true">↻</span>
+        <span aria-hidden="true" className="mbk-reset">
+          ↻
+        </span>
       </span>
     );
   return (
     <button
       aria-label="Refresh comparison"
-      className="mbk-diff-refresh"
+      className="mbk-diff-refresh mbk-reset"
       data-diff-refresh=""
       hidden={hidden}
       onClick={onRefresh}
       title="Refresh comparison"
       type="button"
     >
-      <span aria-hidden="true">↻</span>
+      <span aria-hidden="true" className="mbk-reset">
+        ↻
+      </span>
     </button>
   );
 }
@@ -96,7 +100,7 @@ export function ComparisonToolbar({
   together: boolean;
 }) {
   return (
-    <div className="mbk-diff-toolbar" hidden={!eligible}>
+    <div className="mbk-diff-toolbar mbk-reset" hidden={!eligible}>
       <SegmentedControl
         attribute="data-diff-mode"
         href={modeHref}
@@ -106,15 +110,16 @@ export function ComparisonToolbar({
         segments={modes}
         value={mode}
       />
-      <label className="mbk-diff-sync" hidden={current}>
+      <label className="mbk-diff-sync mbk-reset" hidden={current}>
         <input
           checked={together}
+          className="mbk-reset"
           data-diff-scroll-together=""
           onChange={(event) => onTogether(event.currentTarget.checked)}
           role="switch"
           type="checkbox"
         />
-        <span aria-hidden="true" className="mbk-diff-sync-track" />
+        <span aria-hidden="true" className="mbk-diff-sync-track mbk-reset" />
         Scroll together
       </label>
       <Refresh

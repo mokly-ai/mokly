@@ -11,6 +11,8 @@ import {
   type ChangeStatusValue,
 } from "../src/change-status/change-status.js";
 
+import { assertSameElement } from "./dom-assertions.js";
+
 const STATUSES: readonly ChangeStatusValue[] = [
   "Added",
   "Changed",
@@ -22,13 +24,13 @@ test("each status keeps the badge markup that the shell's tests read", () => {
   for (const status of STATUSES)
     assert.equal(
       renderToStaticMarkup(<ChangeStatus status={status} />),
-      `<span class="mbk-entry-status" data-status="${status}">${status}</span>`,
+      `<span class="mbk-entry-status mbk-reset" data-status="${status}">${status}</span>`,
     );
   assert.equal(
     renderToStaticMarkup(
       <ChangeStatus mark="data-workspace-status" status="Changed" />,
     ),
-    '<span class="mbk-entry-status" data-status="Changed" data-workspace-status="">Changed</span>',
+    '<span class="mbk-entry-status mbk-reset" data-status="Changed" data-workspace-status="">Changed</span>',
   );
 });
 
@@ -36,7 +38,7 @@ test("each status shows its word and carries it for the stylesheet", () => {
   for (const status of STATUSES) {
     const { unmount } = render(<ChangeStatus status={status} />);
     const badge = screen.getByText(status);
-    assert.equal(badge.className, "mbk-entry-status");
+    assert.equal(badge.className, "mbk-entry-status mbk-reset");
     assert.equal(badge.getAttribute("data-status"), status);
     assert.equal(badge.hidden, false);
     unmount();
@@ -46,7 +48,7 @@ test("each status shows its word and carries it for the stylesheet", () => {
 test("a badge without a status stays in place, hidden and empty", () => {
   assert.equal(
     renderToStaticMarkup(<ChangeStatus mark="data-workspace-status" />),
-    '<span class="mbk-entry-status" data-workspace-status="" hidden=""></span>',
+    '<span class="mbk-entry-status mbk-reset" data-workspace-status="" hidden=""></span>',
   );
   const { container, rerender } = render(
     <ChangeStatus mark="data-workspace-status" />,
@@ -59,7 +61,7 @@ test("a badge without a status stays in place, hidden and empty", () => {
 
   // A status that arrives later shows in the same badge.
   rerender(<ChangeStatus mark="data-workspace-status" status="Added" />);
-  assert.equal(container.querySelector("[data-workspace-status]"), badge);
+  assertSameElement(container.querySelector("[data-workspace-status]"), badge);
   assert.equal(badge.hidden, false);
   assert.equal(badge.textContent, "Added");
   assert.equal(badge.getAttribute("data-status"), "Added");

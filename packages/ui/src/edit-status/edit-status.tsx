@@ -12,10 +12,10 @@ export function EditStatus({
   status?: string | undefined;
 }) {
   return (
-    <p className="mbk-edit-status" role="status">
+    <p className="mbk-edit-status mbk-reset" role="status">
       {status !== undefined ? (
         <>
-          <span aria-hidden="true" className="mbk-pending-dot" />
+          <span aria-hidden="true" className="mbk-pending-dot mbk-reset" />
           {status}
         </>
       ) : null}

@@ -1,29 +1,22 @@
-/* Fixed shell with independently scrolling preview and inspector contents. */
-.ce-design .mbk-shell {
-  height: 100dvh;
-  min-height: 0;
-}
+/* The shipped shell layout and workspace, from their @mokly/ui stylesheets,
+   which follow the component sheets as in the package's styles.css. The
+   workspace holds the header, the variant bar, and the preview pane beside
+   the inspector. A static artboard runs no script, so the mockup rules below
+   size the preview pane with a native sizer, scroll it independently, and
+   dock the inspector. */
+@import "../../packages/ui/src/shell-layout/shell-layout.css";
+@import "../../packages/ui/src/workspace-layout/workspace-layout.css";
+
+/* A document view scrolls in the main region; a workspace scrolls its panes. */
 .ce-design .mbk-main {
   overflow: auto;
 }
-.ce-design .mbk-main:has(> .ce-workspace) {
+.ce-design .mbk-main:has(> .mbk-workspace) {
   overflow: hidden;
 }
-.ce-workspace {
+/* The panes are the container whose height bounds the desktop sizer. */
+.ce-design .mbk-workspace-panes {
   container-type: size;
-  display: flex;
-  flex: 1 1 0;
-  flex-direction: column;
-  min-height: 0;
-  min-width: 0;
-  overflow: hidden;
-  position: relative;
-}
-.ce-preview-region {
-  flex: 1 1 0;
-  min-height: 0;
-  min-width: 0;
-  position: relative;
 }
 .ce-preview-pane {
   inset: 0;
@@ -31,34 +24,51 @@
   overscroll-behavior: contain;
   position: absolute;
 }
-/* The preview keeps the closed inspector's 46px strip clear. */
-.mbk-shell--mobile .ce-preview-pane {
-  padding-bottom: calc(46px + env(safe-area-inset-bottom));
+/* A mobile render reserves the closed inspector's 46px strip at every width.
+   Below the breakpoint the package stylesheet reserves it on its own, as the
+   shell does, and it draws the narrow header. */
+.mbk-shell--mobile .mbk-workspace-panes {
+  padding-bottom: 46px;
+}
+.mbk-shell--mobile .mbk-workspace .mbk-screen-head {
+  gap: 8px;
+  padding: 12px;
+}
+.mbk-shell--mobile .mbk-workspace .mbk-previous {
+  padding: 8px 12px;
+}
+/* A desktop render keeps its dock in the panes' flow at every width, so the
+   closed inspector's strip needs no reserve below the breakpoint. */
+.mbk-shell--desktop .mbk-workspace-panes {
+  padding-bottom: 0;
 }
 .ce-preview-sizer {
   display: none;
 }
+/* While the desktop inspector is open, the native sizer sets the preview
+   pane's height, and its grip reaches below the pane. */
 .mbk-shell--desktop
-  .ce-workspace:has(.mbk-inspector > details[open])
-  .ce-preview-region {
+  .mbk-workspace:has(.mbk-inspector > details[open])
+  .mbk-preview-pane {
   flex: 0 0 auto;
+  overflow: visible;
 }
 .mbk-shell--desktop
-  .ce-workspace:has(.mbk-inspector > details[open])
+  .mbk-workspace:has(.mbk-inspector > details[open])
   .ce-preview-pane {
   bottom: 0;
 }
 /* A narrow native sizing box gives the centered handle a 64px pointer target
    below the inspector's picture of its grip. */
 .mbk-shell--desktop
-  .ce-workspace:has(.mbk-inspector > details[open])
+  .mbk-workspace:has(.mbk-inspector > details[open])
   .ce-preview-sizer {
   cursor: row-resize;
   display: block;
   height: 50cqh;
   margin-inline: auto;
   max-height: calc(100cqh - 120px);
-  min-height: 96px;
+  min-height: 100px;
   opacity: 0;
   overflow: hidden;
   position: relative;

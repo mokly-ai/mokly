@@ -40,7 +40,7 @@ test("the bar links each saved variant and marks the shown one", () => {
   // renders them.
   assert.equal(
     renderToString(<VariantBar status="Gamma · Changed" variants={VARIANTS} />),
-    '<nav aria-label="Saved variants" class="mbk-selection-bar"><span>Variant</span><a data-workspace-variant="c/a" href="/view/c/a/">Alpha</a><a data-workspace-variant="c/b" href="/view/c/b/?snapshot=s1">Beta<!-- --> · Removed</a><a aria-current="page" data-workspace-variant="c/c" href="/view/c/c/">Gamma</a><span class="mbk-variant-status" data-workspace-variant-status="">Gamma · Changed</span></nav>',
+    '<nav aria-label="Saved variants" class="mbk-selection-bar mbk-reset"><span class="mbk-reset">Variant</span><a class="mbk-reset" data-workspace-variant="c/a" href="/view/c/a/">Alpha</a><a class="mbk-reset" data-workspace-variant="c/b" href="/view/c/b/?snapshot=s1">Beta<!-- --> · Removed</a><a aria-current="page" class="mbk-reset" data-workspace-variant="c/c" href="/view/c/c/">Gamma</a><span class="mbk-variant-status mbk-reset" data-workspace-variant-status="">Gamma · Changed</span></nav>',
   );
 });
 
@@ -72,7 +72,7 @@ test("the status stays in place, hidden and empty, while the variant has none", 
   assert.ok(status instanceof HTMLElement);
   assert.equal(status.hidden, true);
   assert.equal(status.textContent, "");
-  assert.equal(status.className, "mbk-variant-status");
+  assert.equal(status.className, "mbk-variant-status mbk-reset");
 });
 
 test("a variant without an address is a picture that keeps its mark", () => {
@@ -83,7 +83,7 @@ test("a variant without an address is a picture that keeps its mark", () => {
   ];
   assert.equal(
     renderToString(<VariantBar variants={variants} />),
-    '<nav aria-label="Saved variants" class="mbk-selection-bar"><span>Variant</span><a aria-current="page" data-workspace-variant="c/a" href="../a/">A</a><span class="mbk-variant-option" data-workspace-variant="c/b">B</span><span class="mbk-variant-option" data-workspace-variant="c/c">C<!-- --> · Removed</span><span class="mbk-variant-status" data-workspace-variant-status="" hidden=""></span></nav>',
+    '<nav aria-label="Saved variants" class="mbk-selection-bar mbk-reset"><span class="mbk-reset">Variant</span><a aria-current="page" class="mbk-reset" data-workspace-variant="c/a" href="../a/">A</a><span class="mbk-variant-option mbk-reset" data-workspace-variant="c/b">B</span><span class="mbk-variant-option mbk-reset" data-workspace-variant="c/c">C<!-- --> · Removed</span><span class="mbk-variant-status mbk-reset" data-workspace-variant-status="" hidden=""></span></nav>',
   );
   render(
     <VariantBar

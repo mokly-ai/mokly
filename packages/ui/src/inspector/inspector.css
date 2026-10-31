@@ -265,7 +265,7 @@
 
 .mbk-inspector-resize:hover::after,
 .mbk-inspector-resize:focus-visible::after,
-[data-mokly-shell].mbk-inspector-resizing .mbk-inspector-resize::after {
+.mbk.mbk-inspector-resizing .mbk-inspector-resize::after {
   background: var(--mokly-accent);
   box-shadow: 0 0 0 3px var(--mokly-accent-soft);
 }
@@ -274,16 +274,20 @@
   box-shadow: inset 0 2px 0 var(--mokly-accent);
 }
 
-[data-mokly-shell].mbk-inspector-resizing {
+/* While the reader drags the inspector's divider, the drag marks the shell
+   root, and every element of the shell follows the drag. Only the package's
+   own elements carry the reset class, so host slot content keeps its own
+   cursor and frames. */
+.mbk.mbk-inspector-resizing {
   cursor: row-resize;
   user-select: none;
 }
 
-[data-mokly-shell].mbk-inspector-resizing * {
+.mbk.mbk-inspector-resizing .mbk-reset {
   cursor: row-resize !important;
 }
 
-[data-mokly-shell].mbk-inspector-resizing iframe {
+.mbk.mbk-inspector-resizing iframe.mbk-reset {
   pointer-events: none;
 }
 

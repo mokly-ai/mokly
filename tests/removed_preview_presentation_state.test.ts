@@ -34,7 +34,10 @@ test("an incomplete ready state renders the retryable unavailable state", () => 
       }),
     );
   });
-  assert.match(html, /<h2>Previous version unavailable<\/h2>/);
+  assert.match(
+    html,
+    /<h2 class="mbk-reset">Previous version unavailable<\/h2>/,
+  );
   assert.match(html, /The previous version could not be loaded\./);
   assert.match(html, /data-mokly-preview-retry=""[^>]*>Retry<\/button>/);
   assert.doesNotMatch(html, /<iframe/);

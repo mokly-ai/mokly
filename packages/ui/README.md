@@ -1,7 +1,5 @@
 # @mokly/ui
 
-Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
-
 `@mokly/ui` holds every element and every stylesheet of the Mokly Browse
 shell: its components, its theme, and its layout. `@mokly/viewer` composes
 them into the shell that Serve, the static build, and React hosts render, and
@@ -15,8 +13,9 @@ on this package at the exact shared version.
 - Every element of the shell: the markup, the styles, and the local
   interaction of each component, with props in and callbacks out. The viewer
   renders no element of its own.
-- Every style rule of the shell: the theme, the reset class, one CSS file
-  beside each component, the shell layout, and the rules of the embedded root.
+- Every style rule of the shell: the theme, the reset class `mbk-reset`, one
+  CSS file beside each component, the shell layout, and the rules of the
+  embedded root.
   Every rule stays outside every cascade layer, and `styles.css` holds them
   all.
 - The highlight mask that marks component instances over a preview, drawn from
@@ -39,13 +38,16 @@ shell container that needs the store stays in `@mokly/viewer` and renders
 package components.
 
 The theme declares the shell's tokens, such as `--chrome-surface`, and the
-Light and Dark palette on the viewer root class and on the standalone stub's
-document class, never through a `:root`, `html`, or `body` selector. Each
-component puts the reset class on its own elements that need a reset. No rule
-reaches the host page or host slot content. A host that renders a component
-outside a viewer root puts it inside an element with the viewer root class, or
-declares the tokens itself, as the design catalogue's
-`examples/basic/design.css` does.
+Light and Dark palette on the viewer root class `mbk` and on the standalone
+stub's document class `mbk-document`, never through a `:root`, `html`, or
+`body` selector. A root states its appearance in `data-mokly-theme`; Auto
+follows the reader's system. Each component puts the reset class `mbk-reset`
+on every element that it renders, apart from the host slots, whose content
+stays the host's. The class gives the element border-box sizing and the
+reader's reduced motion, and resets links and text blocks. No rule reaches the
+host page or host slot content. A host that renders a component outside a
+viewer root puts it inside an element with the viewer root class, or declares
+the tokens itself, as the design catalogue's `examples/basic/design.css` does.
 
 ## Quick Start
 
@@ -169,6 +171,22 @@ host's scroll controller through refs. `VariantBar` draws a component's saved
 variants. The host supplies the wording of its copy modules, such as the
 unavailable previous version and the comparison's state labels.
 
+`ShellLayout` draws the standalone shell's root, which states its appearance
+and its preview scheme: the skip link, the top bar, and the body with the
+navigation and the `MainRegion`, and the `RouteStatus` that announces each
+navigation. `EmbeddedLayout` draws an embedded root with
+the same parts between its host's slots. It places each slot's content
+without reading it, keeps the host's stage overlay over the shown preview,
+and takes the host's `MarkerLayer` and label layer. `WorkspaceLayout` lays out
+a workspace's header, variant bar, preview, and inspector. `RootState` takes
+a root's place while its catalogue loads, cannot be loaded, or needs a
+compatible viewer, or when the requested view is unavailable, as the
+`EmptyState` of the standalone root or of an embedded root, with the root class
+and the root's appearance. `LabelLayer` and
+`HighlightLabel` draw the labels of highlighted instances. `HighlightMask`
+draws the dimmed layer with a cutout and an outline for each box, in the
+colours of the `--mbk-highlight-scrim` and `--mbk-highlight-edge` roles.
+
 A static mockup sets `disclosures` on `Inspector`, which draws each tab as a
 native disclosure of one group, named by `contentId`: a tab opens its panel
 and closes it again without a script, one tab at a time, and Close is part of
@@ -195,13 +213,24 @@ without an `href` as a picture of itself. A `VariantBar` variant without an
 `href` is a picture of its link that keeps the link's look and its current
 mark.
 
+A static mockup cannot measure its preview, so it gives `HighlightMask` its
+width, its height, and its boxes as SVG lengths, such as `100%` or
+`calc(100% - 48px)`, which the drawing resolves against its area, and it gives
+`HighlightLabel` its place as CSS lengths. `HighlightLabel` with an `href` is a
+link with the label's look, which `current` marks as the current page, and
+`interactive={false}` draws a label without an address as a picture of itself
+that keeps the arrow.
+
 ## Development
 
 From the repository root, `npm run build` builds this package before the
 viewer. `npm run typecheck` includes it. Tests live under `tests/` and run with
 `npm test -- packages/ui/tests/<file>`. A test that mounts a component imports
 `tests/dom.ts` first, which registers a happy-dom window for Testing Library.
-File names are kebab-case, such as `top-bar.tsx` exporting `TopBar`. A lint
+Compare DOM nodes with the helpers of `tests/dom-assertions.ts`, not with
+`assert.equal`: a failed comparison formats a happy-dom node, which runs out
+of memory. File names are kebab-case, such as `top-bar.tsx` exporting
+`TopBar`. A lint
 checks the rule only for the JavaScript and TypeScript files under `src/` and
 `tests/` and for the directories that hold them. A component imports only
 `react`, `react-dom`, and the other components of this package by relative path;
@@ -222,9 +251,18 @@ every cascade layer, so neither an element reset nor a host layer overrides a
 component rule, and a host rule competes with them by specificity and order; a
 test holds the rule.
 
+A component's own rules name its `mbk-` classes, so they match only its
+elements. A rule whose selector names only generic class names, such as
+`.address` or `.browser-frame`, adds `:where(.mbk-reset)` to its subject: the
+rule then weighs the same and still never matches a host element that carries
+the same class name. Give each new element the reset class, last in its class
+list, and give no rule a selector of the page or of a bare element; the
+viewer's styles test holds both stylesheets to that.
+
 `src/styles.css` sets the order of `styles.css`. It lists the component
-stylesheets with one `@import` each, in cascade order: the theme, the shared
-controls, the components, then the layout and its responsive rules. The build
+stylesheets with one `@import` each, in cascade order: the theme and the reset
+class, the shared controls, the components, then the layout and its
+responsive rules. The build
 concatenates the stylesheets in that order. A component stylesheet that the
 list omits joins the end in name order, with a build warning. Add each new
 stylesheet to the list at its place in the cascade. A later rule of equal
@@ -233,6 +271,11 @@ override the desktop layout rules.
 
 ### Key Code
 
+- [`src/theme/theme.css`](./src/theme/theme.css) — the tokens and the Light
+  and Dark palette on the root class and the stub's document class, Auto
+  through the system appearance, and the stub page's own rules
+- [`src/reset/reset.css`](./src/reset/reset.css) — the reset class: border-box
+  sizing, the reader's reduced motion, and the link and text block resets
 - [`src/icons/icons.tsx`](./src/icons/icons.tsx) — the shell glyphs and the
   workspace control icons, with `IconSvg` as their frame
 - [`src/change-mark/change-mark.tsx`](./src/change-mark/change-mark.tsx) —
@@ -351,12 +394,32 @@ override the desktop layout rules.
 - [`src/variant-bar/variant-bar.tsx`](./src/variant-bar/variant-bar.tsx) —
   `VariantBar`: the links of a component's saved variants, or the pictures
   of a static depiction, and the status
+- [`src/shell-layout/shell-layout.tsx`](./src/shell-layout/shell-layout.tsx)
+  — `ShellLayout`, the standalone root; `SkipLink`, `ShellBody`,
+  `MainRegion`, and `RouteStatus`, which both roots draw; and `RootState`, the
+  state of a root without a shell
+- [`src/embedded-layout/embedded-layout.tsx`](./src/embedded-layout/embedded-layout.tsx)
+  — `EmbeddedLayout`, an embedded root with the host slots and the stage
+  overlay of `host-slot.tsx`, and `MarkerLayer`, the host's markers
+- [`src/workspace-layout/workspace-layout.tsx`](./src/workspace-layout/workspace-layout.tsx)
+  — `WorkspaceLayout`: the header, the variant bar, and the preview beside the
+  inspector
+- [`src/highlight-label/highlight-label.tsx`](./src/highlight-label/highlight-label.tsx)
+  — `LabelLayer` and `HighlightLabel`: the layer and the labels of
+  highlighted instances, as buttons or as the links and pictures of a static
+  depiction
+- [`src/highlight-mask/highlight-mask.tsx`](./src/highlight-mask/highlight-mask.tsx)
+  — `HighlightMask`: the dimmed layer with a cutout and an outline for each
+  box, as an SVG mask
 - [`scripts/build.mjs`](./scripts/build.mjs) — compiles the package, copies
   each CSS file beside its JavaScript, and writes `styles.css`
 - [`scripts/styles.mjs`](./scripts/styles.mjs) — finds the component
   stylesheets and orders `styles.css`
 - [`tests/dom.ts`](./tests/dom.ts) — the happy-dom window, the act
   environment, and the cleanup of each DOM test
+- [`tests/dom-assertions.ts`](./tests/dom-assertions.ts) —
+  `assertSameElement`, `assertNotSameElement`, and `assertSameList`, which
+  compare DOM nodes by identity and describe them in a few words
 - [`tests/navigation-fixture.ts`](./tests/navigation-fixture.ts) — the
   records and props of the catalogue navigation tests
 - [`tests/tag-picker-fixture.tsx`](./tests/tag-picker-fixture.tsx) — the tags

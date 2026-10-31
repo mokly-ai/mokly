@@ -1,7 +1,5 @@
 # Inspector Handshake And Wire Protocol
 
-Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
-
 This continues the [viewer frame adapter contract](./mokly-frame-adapter.md).
 It defines how `postMessageAdapter` mounts a frame on a separate origin and
 exchanges messages with the in-frame inspector.

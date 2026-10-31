@@ -1,7 +1,5 @@
 # Viewer Frame Adapter
 
-Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
-
 ## Public Interface
 
 The viewer exports these types. `CatalogueUsage` is the generated type of the

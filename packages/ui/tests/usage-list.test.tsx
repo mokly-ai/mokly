@@ -12,6 +12,8 @@ import {
   type UsageRow,
 } from "../src/usage-list/usage-list.js";
 
+import { assertSameElement } from "./dom-assertions.js";
+
 function row(title: string, overrides: Partial<UsageRow> = {}): UsageRow {
   return {
     direct: true,
@@ -43,9 +45,9 @@ test("a section keeps the shell's markup: its heading, then a row for each consu
         ]}
       />,
     ),
-    '<section data-usage-section="used-by"><h3>Used by</h3><ul class="mbk-usage-list">' +
-      '<li data-usage-link="[&quot;home&quot;,false]"><a href="/view/home/?viewport=desktop&amp;scheme=light&amp;instance=a">Home</a><small>Direct use · 1 instance · 2 views</small></li>' +
-      '<li data-usage-link="[&quot;farewell&quot;,true]"><a href="/view/farewell/?viewport=desktop&amp;scheme=light&amp;instance=a">Farewell · Removed</a><small>Nested use · 3 instances · 1 view</small></li>' +
+    '<section class="mbk-reset" data-usage-section="used-by"><h3 class="mbk-reset">Used by</h3><ul class="mbk-usage-list mbk-reset">' +
+      '<li class="mbk-reset" data-usage-link="[&quot;home&quot;,false]"><a class="mbk-reset" href="/view/home/?viewport=desktop&amp;scheme=light&amp;instance=a">Home</a><small class="mbk-reset">Direct use · 1 instance · 2 views</small></li>' +
+      '<li class="mbk-reset" data-usage-link="[&quot;farewell&quot;,true]"><a class="mbk-reset" href="/view/farewell/?viewport=desktop&amp;scheme=light&amp;instance=a">Farewell · Removed</a><small class="mbk-reset">Nested use · 3 instances · 1 view</small></li>' +
       "</ul></section>",
   );
 });
@@ -95,15 +97,15 @@ test("a row keeps its link element, and the focus on it, while its key stays", (
       usedBy={[row("Home", { href: "/view/home/?comparison=side" })]}
     />,
   );
-  assert.equal(screen.getByRole("link", { name: "Home" }), link);
+  assertSameElement(screen.getByRole("link", { name: "Home" }), link);
   assert.equal(link.getAttribute("href"), "/view/home/?comparison=side");
-  assert.equal(document.activeElement, link);
+  assertSameElement(document.activeElement, link);
 });
 
 test("the tab's data loads in a status, and a failed load offers Try again", () => {
   assert.equal(
     renderToStaticMarkup(<UsageStatus status="loading" />),
-    '<section aria-label="Usage status" data-usage-section="status"><p role="status">Loading usage…</p></section>',
+    '<section aria-label="Usage status" class="mbk-reset" data-usage-section="status"><p class="mbk-reset" role="status">Loading usage…</p></section>',
   );
   let retries = 0;
   render(<UsageStatus onRetry={() => (retries += 1)} status="failed" />);
@@ -119,6 +121,6 @@ test("the tab's data loads in a status, and a failed load offers Try again", () 
 test("an unchecked catalogue says that usage is unavailable until it is checked", () => {
   assert.equal(
     renderToStaticMarkup(<UsageStatus status="unchecked" />),
-    '<p data-usage-section="status">Usage is unavailable until the catalogue has been checked.</p>',
+    '<p class="mbk-reset" data-usage-section="status">Usage is unavailable until the catalogue has been checked.</p>',
   );
 });

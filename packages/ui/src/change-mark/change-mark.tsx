@@ -25,12 +25,12 @@ export function ChangeMark({
     <>
       <span
         aria-hidden="true"
-        className="mbk-view-changed"
+        className="mbk-view-changed mbk-reset"
         data-view-changed={kind}
         hidden={!marked}
       />
       <span
-        className="mbk-view-changed-text"
+        className="mbk-view-changed-text mbk-reset"
         data-view-changed-text={kind}
         hidden={!marked}
         id={id}

@@ -109,9 +109,9 @@ test("Current shows no switch; every diff mode shows it on, after the modes", as
     await expect(page.locator(".mbk-diff-refresh")).toBeVisible();
     const facts = await band(page);
     expect(facts.order, mode).toEqual([
-      "mbk-seg",
-      "mbk-diff-sync",
-      "mbk-diff-refresh",
+      "mbk-seg mbk-reset",
+      "mbk-diff-sync mbk-reset",
+      "mbk-diff-refresh mbk-reset",
     ]);
     expect(facts.label, mode).toBe("Scroll together");
     expect(facts.control.left - facts.modes.right, mode).toBeCloseTo(16, 1);

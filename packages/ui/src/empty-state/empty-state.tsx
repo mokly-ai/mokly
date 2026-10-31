@@ -2,13 +2,31 @@
  * The quiet state of a stage that has no preview to show, and the states of
  * the shell that use it: the catalogue home, a route that matches no entry,
  * and a removed entry. A state can be busy while it loads, or an alert after
- * a failure, and its action is a link or a button. A static depiction that
- * runs no script draws an action without an address as a picture of itself.
+ * a failure, and its action is a link or a button. A state can also take the
+ * place of a whole viewer root that has no shell to show. A static depiction
+ * that runs no script draws an action without an address as a picture of
+ * itself.
  */
 
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 
+import type { Appearance } from "../appearance-selector/appearance-selector.js";
 import type { DataAttribute } from "../segmented-control/segmented-control.js";
+
+/**
+ * The viewer root that a state takes the place of, the standalone shell's
+ * root or an embedded root, and the appearance that the root states.
+ */
+export interface EmptyStateRoot {
+  kind: "embedded" | "standalone";
+  theme: Appearance;
+}
+
+/**
+ * The classes that each root carries before the state's own class: the shell
+ * root class, which carries the theme, and the embedded root class.
+ */
+const ROOT_CLASS = { embedded: "mbk mokly-viewer", standalone: "mbk" } as const;
 
 /** An action that goes to another page. */
 export interface EmptyStateLink {
@@ -50,19 +68,19 @@ export function EmptyAction({
 }) {
   if ("href" in action)
     return (
-      <a className="mbk-empty-link" href={action.href}>
+      <a className="mbk-empty-link mbk-reset" href={action.href}>
         {action.label}
       </a>
     );
   if (!interactive)
     return (
-      <span className="mbk-empty-link" {...dataMark(action.mark)}>
+      <span className="mbk-empty-link mbk-reset" {...dataMark(action.mark)}>
         {action.label}
       </span>
     );
   return (
     <button
-      className="mbk-empty-link"
+      className="mbk-empty-link mbk-reset"
       {...dataMark(action.mark)}
       onClick={() => action.onClick?.()}
       type="button"
@@ -80,11 +98,14 @@ export function EmptyState({
   action,
   body,
   busy = false,
+  children,
   code,
+  focusRef,
   interactive = true,
   mark,
   note,
   role,
+  root,
   stage = false,
   title,
 }: {
@@ -93,8 +114,15 @@ export function EmptyState({
   body?: string | undefined;
   /** Whether the state waits for its data, which marks it busy. */
   busy?: boolean;
+  /** A message without a paragraph of its own, after the other lines. */
+  children?: ReactNode;
   /** The code after the body, such as the path that matches no entry. */
   code?: string | undefined;
+  /**
+   * Receives the state's element, which can then take focus, such as a
+   * loading state that the host focuses after Try again.
+   */
+  focusRef?: Ref<HTMLDivElement> | undefined;
   /**
    * Whether an action without an address is a button, as it is by default.
    * A static depiction that runs no script sets `false`, which draws such an
@@ -107,6 +135,8 @@ export function EmptyState({
   note?: string | undefined;
   /** `alert` for a failure that the reader hears at once. */
   role?: "alert" | undefined;
+  /** The viewer root that the state takes the place of, if any. */
+  root?: EmptyStateRoot | undefined;
   /**
    * Whether the state takes the place of the routed stage, which marks it
    * `data-mokly-stage` for both viewports.
@@ -117,22 +147,34 @@ export function EmptyState({
   return (
     <div
       aria-busy={busy ? "true" : undefined}
-      className="mbk-empty"
+      className={
+        root === undefined
+          ? "mbk-empty mbk-reset"
+          : `${ROOT_CLASS[root.kind]} mbk-empty mbk-reset`
+      }
       {...(stage ? { "data-mokly-stage": "", "data-viewport": "both" } : {})}
       {...dataMark(mark)}
+      ref={focusRef}
       role={role}
+      tabIndex={focusRef === undefined ? undefined : -1}
+      {...(root === undefined ? {} : { "data-mokly-theme": root.theme })}
     >
-      {title === undefined ? null : <h2>{title}</h2>}
+      {title === undefined ? null : <h2 className="mbk-reset">{title}</h2>}
       {body === undefined && code === undefined ? null : (
-        <p role={busy ? "status" : undefined}>
+        <p className="mbk-reset" role={busy ? "status" : undefined}>
           {code === undefined ? body : `${body ?? ""} `}
-          {code === undefined ? null : <code>{code}</code>}
+          {code === undefined ? null : (
+            <code className="mbk-reset">{code}</code>
+          )}
         </p>
       )}
-      {note === undefined ? null : <p className="mbk-empty-note">{note}</p>}
+      {note === undefined ? null : (
+        <p className="mbk-empty-note mbk-reset">{note}</p>
+      )}
       {action === undefined ? null : (
         <EmptyAction action={action} interactive={interactive} />
       )}
+      {children}
     </div>
   );
 }
@@ -142,7 +184,7 @@ export function EmptyState({
  * document.
  */
 export function EmptyLine({ children }: { children: ReactNode }) {
-  return <p className="mbk-empty">{children}</p>;
+  return <p className="mbk-empty mbk-reset">{children}</p>;
 }
 
 /** The catalogue home: how to browse it, and what it holds. */

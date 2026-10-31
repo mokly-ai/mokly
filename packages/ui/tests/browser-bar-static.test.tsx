@@ -11,20 +11,20 @@ import { BrowserFrame } from "../src/device-frame/device-frame.js";
 import { CollapseIcon, CopyIcon, ExpandIcon } from "../src/icons/icons.js";
 
 const COPY = renderToStaticMarkup(<CopyIcon />);
-const GLYPHS = `<span aria-hidden="true" class="i-expand">${renderToStaticMarkup(<ExpandIcon />)}</span><span aria-hidden="true" class="i-collapse">${renderToStaticMarkup(<CollapseIcon />)}</span>`;
+const GLYPHS = `<span aria-hidden="true" class="i-expand mbk-reset">${renderToStaticMarkup(<ExpandIcon />)}</span><span aria-hidden="true" class="i-collapse mbk-reset">${renderToStaticMarkup(<CollapseIcon />)}</span>`;
 
 test("a static bar is a picture whose toggle names what it would do", () => {
   assert.equal(
     renderToStaticMarkup(
       <BrowserBar address="example.test/welcome" interactive={false} />,
     ),
-    `<div class="browser-bar" data-browser-static=""><span class="lights"><i></i><i></i><i></i></span><span class="address"><span class="address-url">example.test/welcome</span><span aria-hidden="true" class="address-copy">${COPY}</span></span><span aria-label="Expand to a wider viewport" class="browser-expand" role="img" title="Expand to a wider viewport">${GLYPHS}</span></div>`,
+    `<div class="browser-bar mbk-reset" data-browser-static=""><span class="lights mbk-reset"><i class="mbk-reset"></i><i class="mbk-reset"></i><i class="mbk-reset"></i></span><span class="address mbk-reset"><span class="address-url mbk-reset">example.test/welcome</span><span aria-hidden="true" class="address-copy mbk-reset">${COPY}</span></span><span aria-label="Expand to a wider viewport" class="browser-expand mbk-reset" role="img" title="Expand to a wider viewport">${GLYPHS}</span></div>`,
   );
   assert.equal(
     renderToStaticMarkup(
       <BrowserBar address="/a" expandable={false} interactive={false} />,
     ),
-    `<div class="browser-bar" data-browser-static=""><span class="lights"><i></i><i></i><i></i></span><span class="address"><span class="address-url">/a</span><span aria-hidden="true" class="address-copy">${COPY}</span></span></div>`,
+    `<div class="browser-bar mbk-reset" data-browser-static=""><span class="lights mbk-reset"><i class="mbk-reset"></i><i class="mbk-reset"></i><i class="mbk-reset"></i></span><span class="address mbk-reset"><span class="address-url mbk-reset">/a</span><span aria-hidden="true" class="address-copy mbk-reset">${COPY}</span></span></div>`,
   );
 });
 
@@ -59,11 +59,11 @@ test("a static browser window draws its bar as a picture", () => {
   );
   assert.match(
     markup,
-    /^<div class="browser-frame"><div class="browser-bar" data-browser-static="">/u,
+    /^<div class="browser-frame mbk-reset"><div class="browser-bar mbk-reset" data-browser-static="">/u,
   );
   assert.match(
     markup,
-    /<div class="browser-viewport"><p>Screen<\/p><\/div><\/div>$/u,
+    /<div class="browser-viewport mbk-reset"><p>Screen<\/p><\/div><\/div>$/u,
   );
   assert.doesNotMatch(markup, /<button/u);
 });

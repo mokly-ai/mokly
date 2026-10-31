@@ -1,8 +1,10 @@
-/* The Mokly design stage: the mini screen sketches that the shipped frames
-   hold on the dotted stage, the details inspector, and the preview tokens.
-   The details body, the stage, the document stage, the use-case flow, and a
-   removed entry's previous version and its states are the shipped ones, from
-   their @mokly/ui stylesheets, in the package's order. */
+/* The Mokly design stage: the frames' preview tokens, the details inspector,
+   and the highlight of a depicted view, and the mini screen sketches that the
+   shipped frames hold on the dotted stage, from design-shots.css. The details
+   body, the stage, the document stage, the use-case flow, a removed entry's
+   previous version and its states, and the highlight's labels and mask are
+   the shipped ones, from their @mokly/ui stylesheets, in the package's
+   order. */
 @import "../../packages/ui/src/details-panel/details-panel.css";
 @import "../../packages/ui/src/scheme-fallback/scheme-fallback.css";
 @import "../../packages/ui/src/stage/stage.css";
@@ -10,6 +12,9 @@
 @import "../../packages/ui/src/flow-step/flow-step.css";
 @import "../../packages/ui/src/preview-state/preview-state.css";
 @import "../../packages/ui/src/previous-version/previous-version.css";
+@import "../../packages/ui/src/highlight-label/highlight-label.css";
+@import "../../packages/ui/src/highlight-mask/highlight-mask.css";
+@import "./design-shots.css";
 
 /* A mobile render draws the one-column details body at every width. Below the
    breakpoint the package stylesheet draws it on its own, as the shell does. */
@@ -31,6 +36,9 @@
   --mbk-screen-border: #e3e5e0;
   --mbk-screen-link: #4f7864;
   --mbk-screen-link-strong: #2f5945;
+  --mbk-screen-danger-bg: #fdf1ef;
+  --mbk-screen-danger-edge: #e7c3bb;
+  --mbk-screen-danger-ink: #8a3423;
   --mbk-device-body: #171a18;
   --mbk-device-notch: #0b0d0c;
   --mbk-device-home: rgba(20, 24, 20, 0.4);
@@ -101,131 +109,27 @@
   width: 100%;
 }
 
-/* The design catalogue marks a Dark render on its artboard root, where the
-   shell marks its body: there a band that keeps a light document names its
-   fallback, as the shell's does under a Dark shell. */
-[data-mbk-appearance="dark"] .mbk-previous.mbk-scheme-fallback {
+/* ---- Highlight of a depicted view -------------------------------------- */
+
+/* The shipped mask and labels over a depicted document, which the Highlight
+   components switch reveals without a script. The layer lets the pointer
+   through to the document and keeps the mask and the labels in its own
+   stacking, where the labels lie above the mask, as an embedded root lifts
+   them. */
+.ce-highlight-layer {
+  display: none;
+  inset: 0;
+  isolation: isolate;
+  pointer-events: none;
+  position: absolute;
+}
+
+.ce-design:has([data-workspace-highlight]:checked) .ce-highlight-layer {
   display: block;
 }
 
-[data-mbk-appearance="dark"]
-  .mbk-previous[data-color-scheme-fallback]
-  .mbk-frame-scheme-note {
-  display: inline;
-}
-
-/* ---- Mini screen sketches --------------------------------------------- */
-
-.mbk-shot-sections h3 {
-  font-size: 13px;
-  letter-spacing: -0.01em;
-  margin: 16px 0 6px;
-}
-
-/* A long screen's introduction keeps one height in every version, so the
-   sections below it stay in place when the introduction changes. */
-.mbk-shot-hero {
-  min-height: 104px;
-}
-
-.phone-screen .mbk-shot-hero {
-  min-height: 140px;
-}
-
-.mbk-shot {
-  background: var(--mbk-screen-bg);
-  color: var(--mbk-screen-ink);
-  height: 100%;
-  overflow: hidden;
-}
-
-.mbk-shot-pad {
-  padding: 18px 20px;
-}
-
-.phone-screen .mbk-shot {
-  flex: 1 1 auto;
-  height: auto;
-  min-height: 0;
-}
-
-.mbk-shot-nav {
-  border-bottom: 1px solid var(--mbk-screen-border);
-  color: var(--mbk-screen-muted);
-  font-size: 11.5px;
-  margin-bottom: 14px;
-  padding-bottom: 10px;
-}
-
-.mbk-shot h2 {
-  font-size: 17px;
-  letter-spacing: -0.01em;
-  margin: 0 0 10px;
-}
-
-.mbk-shot p {
-  color: var(--mbk-screen-ink-2);
-  font-size: 12.5px;
-  line-height: 1.55;
-  margin: 0 0 12px;
-}
-
-.mbk-shot-link {
-  color: var(--mbk-screen-link);
-  display: inline-block;
-  font-size: 12.5px;
-  font-weight: 600;
-}
-
-.mbk-shot-error {
-  background: #fdf1ef;
-  border: 1px solid #e7c3bb;
-  border-radius: 8px;
-  color: #8a3423;
-  font-size: 12px;
-  margin: 0 0 12px;
-  padding: 8px 10px;
-}
-
-.mbk-shot-field {
-  align-items: center;
-  border: 1px solid var(--chrome-border-strong);
-  border-radius: 8px;
-  color: var(--chrome-muted);
-  display: flex;
-  font-size: 12.5px;
-  margin: 0 0 10px;
-  min-height: 32px;
-  padding: 0 10px;
-}
-
-.mbk-shot-action {
-  background: var(--chrome-bg);
-  border: 1px solid var(--chrome-border-strong);
-  border-radius: 8px;
-  color: var(--chrome-muted);
-  display: block;
-  font-size: 12.5px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  padding: 7px 12px;
-  width: fit-content;
-}
-
-.mbk-shot--restyled .mbk-shot-nav {
-  border-bottom-color: var(--mbk-screen-link);
-  color: var(--mbk-screen-ink);
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.mbk-shot--restyled .mbk-shot-link {
-  color: var(--mbk-screen-link-strong);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-[data-preview-color-scheme="dark"] .mbk-shot {
-  background: transparent;
+.ce-highlight-labels {
+  inset: 0;
+  position: absolute;
+  z-index: 5;
 }

@@ -112,18 +112,18 @@ export function CatalogueNavigation({
   return (
     <nav
       aria-label="Catalogue"
-      className="mbk-nav"
+      className="mbk-nav mbk-reset"
       data-mokly-nav=""
       data-resize-ready={resizable ? "" : undefined}
       id={id}
       ref={ref}
       style={style}
     >
-      <div className="mbk-nav-head">
+      <div className="mbk-nav-head mbk-reset">
         Catalogue
         {operable ? (
           <button
-            className="mbk-nav-collapse"
+            className="mbk-nav-collapse mbk-reset"
             data-mokly-collapse=""
             onClick={() => onCollapseAll?.()}
             type="button"
@@ -131,7 +131,7 @@ export function CatalogueNavigation({
             Collapse all
           </button>
         ) : (
-          <span className="mbk-nav-collapse" data-mokly-collapse="">
+          <span className="mbk-nav-collapse mbk-reset" data-mokly-collapse="">
             Collapse all
           </span>
         )}
@@ -146,7 +146,7 @@ export function CatalogueNavigation({
       ) : null}
       <div
         aria-busy={busy}
-        className="mbk-nav-scroll"
+        className="mbk-nav-scroll mbk-reset"
         data-mokly-nav-scroll=""
         onScroll={(event) => onScroll?.(event.currentTarget.scrollTop)}
         ref={scrollRef}

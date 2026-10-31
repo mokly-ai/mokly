@@ -24,7 +24,7 @@ export interface PropFieldWording {
 
 /** The rows of the fields, in their order. */
 export function PropFields({ children }: { children?: ReactNode }) {
-  return <div className="mbk-control-rows">{children}</div>;
+  return <div className="mbk-control-rows mbk-reset">{children}</div>;
 }
 
 /**
@@ -185,7 +185,7 @@ function FieldFrame({
       {optional ? (
         <>
           {" "}
-          <span aria-hidden="true" className="mbk-control-optional">
+          <span aria-hidden="true" className="mbk-control-optional mbk-reset">
             {wording.optional}
           </span>
         </>
@@ -194,37 +194,42 @@ function FieldFrame({
   );
   return (
     <div
-      className="mbk-control-field"
+      className="mbk-control-field mbk-reset"
       data-native-supply={native ? "" : undefined}
     >
       {named ? (
-        <span className="mbk-control-label">{heading}</span>
+        <span className="mbk-control-label mbk-reset">{heading}</span>
       ) : (
-        <label className="mbk-control-label" htmlFor={id}>
+        <label className="mbk-control-label mbk-reset" htmlFor={id}>
           {heading}
         </label>
       )}
-      <div className="mbk-control-value">
+      <div className="mbk-control-value mbk-reset">
         {optional ? (
-          <label className="mbk-control-set">
+          <label className="mbk-control-set mbk-reset">
             <input
               checked={supplied}
+              className="mbk-reset"
               disabled={disabled}
               onChange={(event) => onSupply?.(event.currentTarget.checked)}
               type="checkbox"
             />
-            <span>{wording.set}</span>
+            <span className="mbk-reset">{wording.set}</span>
           </label>
         ) : null}
         {children}
         {supplied && !native ? null : (
-          <p className="mbk-control-unset">{wording.notSet}</p>
+          <p className="mbk-control-unset mbk-reset">{wording.notSet}</p>
         )}
-        <small hidden={!description || error !== undefined} id={`${id}-help`}>
+        <small
+          className="mbk-reset"
+          hidden={!description || error !== undefined}
+          id={`${id}-help`}
+        >
           {description}
         </small>
         <small
-          className="mbk-control-error"
+          className="mbk-control-error mbk-reset"
           hidden={error === undefined}
           id={`${id}-error`}
         >

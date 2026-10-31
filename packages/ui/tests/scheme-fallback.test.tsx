@@ -15,18 +15,18 @@ import {
 test("the note names the fallback, with a dash as the suffix of a label", () => {
   assert.equal(
     renderToStaticMarkup(<LightOnlyNote />),
-    '<span class="mbk-frame-scheme-note">Light only</span>',
+    '<span class="mbk-frame-scheme-note mbk-reset">Light only</span>',
   );
   assert.equal(
     renderToStaticMarkup(<LightOnlyNote suffix />),
-    '<span class="mbk-frame-scheme-note"> — Light only</span>',
+    '<span class="mbk-frame-scheme-note mbk-reset"> — Light only</span>',
   );
 });
 
 test("the band above a current document carries the fallback mark and the note", () => {
   assert.equal(
     renderToStaticMarkup(<LightOnlyBand />),
-    '<p class="mbk-previous mbk-scheme-fallback" data-color-scheme-fallback=""><span class="mbk-frame-scheme-note">Light only</span></p>',
+    '<p class="mbk-previous mbk-scheme-fallback mbk-reset" data-color-scheme-fallback=""><span class="mbk-frame-scheme-note mbk-reset">Light only</span></p>',
   );
   render(<LightOnlyBand />);
   assert.equal(screen.getByText("Light only").tagName, "SPAN");
@@ -49,7 +49,7 @@ test("the stylesheet names a document's fallback only under Dark", async () => {
   // The band's rules live with the band, and the rule that reveals the note
   // in any previous-version band lives with that band.
   const css = await stylesheets("scheme-fallback", "previous-version");
-  const dark = 'body[data-mokly-color-scheme="dark"]';
+  const dark = '.mbk[data-mokly-color-scheme="dark"]';
   for (const rule of [
     ".mbk-previous.mbk-scheme-fallback { display: none; }",
     `${dark} .mbk-previous.mbk-scheme-fallback { display: block; }`,

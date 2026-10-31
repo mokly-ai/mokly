@@ -42,7 +42,7 @@
 
 /* Side by side shows two panes; a mobile section keeps each phone's width,
    and the stacked modes show one chrome. */
-.mb-panes {
+.mb-panes:where(.mbk-reset) {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: start;
@@ -53,8 +53,8 @@
   grid-template-columns: repeat(2, 390px);
 }
 
-.mb-panes[data-compare-mode="overlay"],
-.mb-panes[data-compare-mode="difference"] {
+.mb-panes[data-compare-mode="overlay"]:where(.mbk-reset),
+.mb-panes[data-compare-mode="difference"]:where(.mbk-reset) {
   grid-template-columns: minmax(0, 1fr);
 }
 
@@ -62,11 +62,11 @@
   grid-template-columns: 390px;
 }
 
-.mb-panes[data-compare-mode="overlay"] .mb-pane--after {
+.mb-panes[data-compare-mode="overlay"] .mb-pane--after:where(.mbk-reset) {
   opacity: 0.5;
 }
 
-.mb-panes[data-compare-mode="difference"] .mb-pane--after {
+.mb-panes[data-compare-mode="difference"] .mb-pane--after:where(.mbk-reset) {
   mix-blend-mode: difference;
 }
 
@@ -85,7 +85,7 @@
     padding: 16px;
   }
 
-  .mb-panes[data-compare-mode="side"],
+  .mb-panes[data-compare-mode="side"]:where(.mbk-reset),
   .mbk-diff-mobile .mb-panes {
     grid-template-columns: minmax(0, 1fr);
   }

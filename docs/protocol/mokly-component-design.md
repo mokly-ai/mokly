@@ -143,10 +143,8 @@ has an inspection entry and component page, without an invented visible region.
 Toolbar and Help hint usage links lead to their own selected-instance artboards,
 with the correct prompt or visibility props and Open component destination.
 
-Highlight components is a native switch grouped with the viewport dropdown beside the title. It toggles the overlay without navigation. The enabled artboards show a light mask at 78% coverage with cutouts over the visible
-components. Sage outlines and named labels expose the selected regions; a
-nested selection cuts out only the Toolbar action and dims the parent again.
-The same consumer DOM is used with highlighting off and on. Welcome uses an SVG overlay; Details uses a clipped scrim around its single Action. Neither sets ancestor opacity. Each viewport uses its own overlay, with unique SVG mask ids when Both is selected.
+Highlight components is a native switch grouped with the viewport dropdown beside the title. It toggles the highlight without navigation. The enabled artboards draw the shell's highlight mask and labels: the shell's scrim with a cutout and an outline over each highlighted component, and the shell's label of each, which names its component and its instance. A nested selection cuts out only the Toolbar action and dims the parent again.
+The same consumer DOM is used with highlighting off and on. Welcome and Details draw the same mask, and neither sets ancestor opacity. Each viewport uses its own mask, with unique SVG mask ids when Both is selected.
 
 Mask geometry is fixed to the synthetic artboard's layout and matches its
 actual DOM bounds. The runtime owns geometry collection, selection, Escape

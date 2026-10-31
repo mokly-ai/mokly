@@ -11,7 +11,7 @@
  */
 export function LightOnlyNote({ suffix = false }: { suffix?: boolean }) {
   return (
-    <span className="mbk-frame-scheme-note">
+    <span className="mbk-frame-scheme-note mbk-reset">
       {suffix ? " — Light only" : "Light only"}
     </span>
   );
@@ -25,7 +25,7 @@ export function LightOnlyNote({ suffix = false }: { suffix?: boolean }) {
 export function LightOnlyBand() {
   return (
     <p
-      className="mbk-previous mbk-scheme-fallback"
+      className="mbk-previous mbk-scheme-fallback mbk-reset"
       data-color-scheme-fallback=""
     >
       <LightOnlyNote />

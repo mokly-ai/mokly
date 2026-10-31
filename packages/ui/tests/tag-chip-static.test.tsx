@@ -16,13 +16,13 @@ test("a chip with an address is a link that carries its tag and its fill", () =>
     renderToStaticMarkup(
       <TagChip href="../tag-forms/" selected={false} tag="forms" />,
     ),
-    `<a class="mbk-chip tag" data-mokly-tag="forms" href="../tag-forms/">${GLYPH}forms</a>`,
+    `<a class="mbk-chip tag mbk-reset" data-mokly-tag="forms" href="../tag-forms/">${GLYPH}forms</a>`,
   );
   assert.equal(
     renderToStaticMarkup(
       <TagChip href="../" interactive={false} selected tag="forms" />,
     ),
-    `<a class="mbk-chip tag active" data-mokly-tag="forms" href="../">${GLYPH}forms</a>`,
+    `<a class="mbk-chip tag active mbk-reset" data-mokly-tag="forms" href="../">${GLYPH}forms</a>`,
   );
 });
 
@@ -52,7 +52,7 @@ test("a chip that is not interactive and has no address is a picture of itself",
     renderToStaticMarkup(
       <TagChip interactive={false} selected={false} tag="onboarding" />,
     ),
-    `<span class="mbk-chip tag" data-mokly-tag="onboarding">${GLYPH}onboarding</span>`,
+    `<span class="mbk-chip tag mbk-reset" data-mokly-tag="onboarding">${GLYPH}onboarding</span>`,
   );
   const presses: string[] = [];
   render(
@@ -68,7 +68,7 @@ test("a chip that is not interactive and has no address is a picture of itself",
   assert.deepEqual(screen.queryAllByRole("link"), []);
   const chip = screen.getByText("forms");
   assert.equal(chip.tagName, "SPAN");
-  assert.equal(chip.className, "mbk-chip tag active");
+  assert.equal(chip.className, "mbk-chip tag active mbk-reset");
   // A picture takes no tab stop.
   assert.equal(chip.hasAttribute("tabindex"), false);
   fireEvent.click(chip);

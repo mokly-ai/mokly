@@ -41,14 +41,14 @@ test("a static inspector draws each tab as a native disclosure of one group", ()
         tabs={[tab("details", "Details")]}
       />,
     ),
-    '<section aria-label="Inspector" class="mbk-inspector" data-inspector-disclosures="" data-workspace-inspector="" style="--inspector-tabs:1">' +
-      '<div aria-hidden="true" class="mbk-inspector-resize" data-inspector-resize=""></div>' +
-      '<label class="mbk-sheet-grab" data-inspector-size="" title="Expand or collapse inspector"><input aria-label="Expanded inspector" role="switch" type="checkbox"/><span></span></label>' +
-      `<details data-inspector-tab="details" name="${GROUP}" open="" style="--inspector-tab:1">` +
-      `<summary class="mbk-icon-button" id="root-mb-tab-details" title="Details" aria-label="Details" role="button">${glyph("details")}` +
-      `<span aria-hidden="true" class="mbk-icon-button" data-inspector-close="" title="Close inspector">${glyph("close")}</span></summary>` +
-      '<span class="mbk-inspector-title" data-inspector-title="">Details</span>' +
-      '<div class="mbk-inspector-content" data-mokly-scroll="inspector"><section aria-label="Details" data-inspector-panel="details" id="root-mb-panel-details"><p>Details panel</p></section></div>' +
+    '<section aria-label="Inspector" class="mbk-inspector mbk-reset" data-inspector-disclosures="" data-workspace-inspector="" style="--inspector-tabs:1">' +
+      '<div aria-hidden="true" class="mbk-inspector-resize mbk-reset" data-inspector-resize=""></div>' +
+      '<label class="mbk-sheet-grab mbk-reset" data-inspector-size="" title="Expand or collapse inspector"><input aria-label="Expanded inspector" class="mbk-reset" role="switch" type="checkbox"/><span class="mbk-reset"></span></label>' +
+      `<details class="mbk-reset" data-inspector-tab="details" name="${GROUP}" open="" style="--inspector-tab:1">` +
+      `<summary class="mbk-icon-button mbk-reset" id="root-mb-tab-details" title="Details" aria-label="Details" role="button">${glyph("details")}` +
+      `<span aria-hidden="true" class="mbk-icon-button mbk-reset" data-inspector-close="" title="Close inspector">${glyph("close")}</span></summary>` +
+      '<span class="mbk-inspector-title mbk-reset" data-inspector-title="">Details</span>' +
+      '<div class="mbk-inspector-content mbk-reset" data-mokly-scroll="inspector"><section aria-label="Details" class="mbk-reset" data-inspector-panel="details" id="root-mb-panel-details"><p>Details panel</p></section></div>' +
       "</details></section>",
   );
 });
@@ -151,7 +151,7 @@ test("a tab with an address is a link, which is its one keyboard stop", () => {
   );
   const link = screen.getByRole("link", { name: "Details" });
   assert.equal(link.getAttribute("href"), "../details-open/");
-  assert.equal(link.className, "mbk-inspector-link");
+  assert.equal(link.className, "mbk-inspector-link mbk-reset");
   const summary = link.closest("summary");
   assert.equal(summary?.getAttribute("tabindex"), "-1");
   assert.equal(summary?.hasAttribute("role"), false);

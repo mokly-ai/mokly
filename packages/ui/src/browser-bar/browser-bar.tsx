@@ -17,10 +17,10 @@ const COPIED_MESSAGE_MS = 1400;
 function ToggleGlyphs() {
   return (
     <>
-      <span aria-hidden="true" className="i-expand">
+      <span aria-hidden="true" className="i-expand mbk-reset">
         <ExpandIcon />
       </span>
-      <span aria-hidden="true" className="i-collapse">
+      <span aria-hidden="true" className="i-collapse mbk-reset">
         <CollapseIcon />
       </span>
     </>
@@ -61,16 +61,16 @@ export function BrowserBar({
   const toggle = expanded ? "Collapse viewport" : "Expand to a wider viewport";
   return (
     <div
-      className="browser-bar"
+      className="browser-bar mbk-reset"
       data-browser-static={interactive ? undefined : ""}
     >
-      <span className="lights">
-        <i />
-        <i />
-        <i />
+      <span className="lights mbk-reset">
+        <i className="mbk-reset" />
+        <i className="mbk-reset" />
+        <i className="mbk-reset" />
       </span>
       <span
-        className="address"
+        className="address mbk-reset"
         onClick={
           interactive
             ? () => {
@@ -80,17 +80,19 @@ export function BrowserBar({
             : undefined
         }
       >
-        <span className="address-url">{address}</span>
-        <span aria-hidden="true" className="address-copy">
+        <span className="address-url mbk-reset">{address}</span>
+        <span aria-hidden="true" className="address-copy mbk-reset">
           <CopyIcon />
         </span>
       </span>
-      {copied ? <span className="address-copied">URL copied</span> : null}
+      {copied ? (
+        <span className="address-copied mbk-reset">URL copied</span>
+      ) : null}
       {!expandable ? null : interactive ? (
         <button
           aria-expanded={expanded}
           aria-label={toggle}
-          className="browser-expand"
+          className="browser-expand mbk-reset"
           onClick={() => onExpandedChange?.(!expanded)}
           title={toggle}
           type="button"
@@ -100,7 +102,7 @@ export function BrowserBar({
       ) : (
         <span
           aria-label={toggle}
-          className="browser-expand"
+          className="browser-expand mbk-reset"
           role="img"
           title={toggle}
         >

@@ -10,7 +10,7 @@ import { standaloneMarkup } from "./shell_markup.js";
 /** The summary line the home page renders, or undefined without one. */
 function homeNote(index: CatalogueReadModel): string | undefined {
   const html = standaloneMarkup({ index });
-  return /<p class="mbk-empty-note">([^<]*)<\/p>/u.exec(
+  return /<p class="mbk-empty-note mbk-reset">([^<]*)<\/p>/u.exec(
     html.replaceAll("<!-- -->", ""),
   )?.[1];
 }

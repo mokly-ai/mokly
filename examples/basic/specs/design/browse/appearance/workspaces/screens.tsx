@@ -1,10 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { appearanceDesignMetadata } from "../../../metadata.js";
-import {
-  DesignAppearanceScope,
-  useDarkPreview,
-} from "../../../parts/appearance.js";
+import { useDarkPreview } from "../../../parts/appearance.js";
 import { artboards } from "../../../parts/artboards.js";
 import { CompareGrid, Pane } from "../../../parts/compare.js";
 import {
@@ -13,20 +10,13 @@ import {
   type CompareViewport,
 } from "../../../parts/compare_page.js";
 import { ComparisonStack, deviceChrome } from "../../../parts/compare_stack.js";
-import { DesignNavigation } from "../../../parts/design_navigation.js";
 import { DESTINATIONS } from "../../../parts/destinations.js";
 import { ENTRY_PATHS } from "../../../parts/entry_paths.js";
 import { MiniWelcome } from "../../../parts/mini_screens.js";
 import { NavDrawer } from "../../../parts/nav.js";
 import { ReviewNav } from "../../../parts/review.js";
 import { EmptyState } from "../../../parts/stage_content.js";
-import { TopBar } from "../../../parts/top_bar.js";
 import { APPEARANCE_NAV_TREE, AppearanceShell } from "../parts/scaffold.js";
-
-/** The drawer artboard draws the selector holding the scheme it renders for. */
-function DrawerTopBar() {
-  return <TopBar viewport="mobile" drawerOpen />;
-}
 
 function DrawerBody() {
   return (
@@ -39,19 +29,17 @@ function DrawerBody() {
   );
 }
 
+/** The drawer artboard draws the selector holding the scheme it renders for. */
 function NavigationDrawerDesktop() {
   return (
-    <DesignNavigation design={DESTINATIONS.appearanceDrawer}>
-      <DesignAppearanceScope>
-        <div className="mbk-shell mbk-shell--collapsed">
-          <DrawerTopBar />
-          <main className="mbk-main">
-            <DrawerBody />
-          </main>
-          <NavDrawer activeLabel="Welcome" nodes={APPEARANCE_NAV_TREE} />
-        </div>
-      </DesignAppearanceScope>
-    </DesignNavigation>
+    <AppearanceShell
+      aside={<NavDrawer activeLabel="Welcome" nodes={APPEARANCE_NAV_TREE} />}
+      collapsed
+      design={DESTINATIONS.appearanceDrawer}
+      viewport="desktop"
+    >
+      <DrawerBody />
+    </AppearanceShell>
   );
 }
 

@@ -40,19 +40,19 @@ function UsageSection({
   section: keyof typeof SECTIONS;
 }) {
   return (
-    <section data-usage-section={section}>
-      <h3>{SECTIONS[section]}</h3>
+    <section className="mbk-reset" data-usage-section={section}>
+      <h3 className="mbk-reset">{SECTIONS[section]}</h3>
       {!rows.length ? (
-        <p>No recorded consumers.</p>
+        <p className="mbk-reset">No recorded consumers.</p>
       ) : (
-        <ul className="mbk-usage-list">
+        <ul className="mbk-usage-list mbk-reset">
           {rows.map((row) => (
-            <li data-usage-link={row.id} key={row.key}>
-              <a href={row.href}>
+            <li className="mbk-reset" data-usage-link={row.id} key={row.key}>
+              <a className="mbk-reset" href={row.href}>
                 {row.title}
                 {row.removed ? " · Removed" : ""}
               </a>
-              <small>
+              <small className="mbk-reset">
                 {row.direct ? "Direct use" : "Nested use"}
                 {` · ${count(row.instances, "instance")} · ${count(row.views, "view")}`}
               </small>
@@ -99,19 +99,27 @@ export function UsageStatus({
 }) {
   if (status === "unchecked")
     return (
-      <p data-usage-section="status">
+      <p className="mbk-reset" data-usage-section="status">
         Usage is unavailable until the catalogue has been checked.
       </p>
     );
   return (
-    <section aria-label="Usage status" data-usage-section="status">
+    <section
+      aria-label="Usage status"
+      className="mbk-reset"
+      data-usage-section="status"
+    >
       {status === "failed" ? (
         <>
-          <p role="alert">Usage couldn’t be loaded.</p>
+          <p className="mbk-reset" role="alert">
+            Usage couldn’t be loaded.
+          </p>
           <TextButton onClick={onRetry}>Try again</TextButton>
         </>
       ) : (
-        <p role="status">Loading usage…</p>
+        <p className="mbk-reset" role="status">
+          Loading usage…
+        </p>
       )}
     </section>
   );

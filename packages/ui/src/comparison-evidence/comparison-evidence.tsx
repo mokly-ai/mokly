@@ -102,7 +102,7 @@ export function ComparisonEvidence({
 }) {
   return (
     <section
-      className="mbk-comparison-evidence"
+      className="mbk-comparison-evidence mbk-reset"
       {...{ [mark]: "" }}
       hidden={hidden}
     >
@@ -111,17 +111,19 @@ export function ComparisonEvidence({
           <ComparisonHeading base={base} />
           {/* String expressions keep the text nodes that Prettier would join. */}
           {previousPath ? (
-            <p>
+            <p className="mbk-reset">
               {"The previous version is at"}{" "}
               <MetadataCode>{previousPath}</MetadataCode>
               {", where it was before the move."}
             </p>
           ) : null}
           {reasons.map((reason) => (
-            <p key={reason.key}>{reason.text}</p>
+            <p className="mbk-reset" key={reason.key}>
+              {reason.text}
+            </p>
           ))}
           {savedVariant ? (
-            <dl className="mbk-props">
+            <dl className="mbk-props mbk-reset">
               <MetadataRow label="Saved variant" presentation="props">
                 {savedVariant.title}
               </MetadataRow>
@@ -135,36 +137,38 @@ export function ComparisonEvidence({
           <StylesheetDetails excluded={excluded} files={files} />
           {inputChanges.map((change) => (
             <Fragment key={change.key}>
-              <h3>
+              <h3 className="mbk-reset">
                 {change.title} · {change.instanceId} · {change.viewport}
                 {" ·"} {change.colorScheme}
               </h3>
-              <p>Before</p>
-              <pre>{change.before}</pre>
-              <p>Current</p>
-              <pre>{change.after}</pre>
+              <p className="mbk-reset">Before</p>
+              <pre className="mbk-reset">{change.before}</pre>
+              <p className="mbk-reset">Current</p>
+              <pre className="mbk-reset">{change.after}</pre>
             </Fragment>
           ))}
           {changedComponents.map((component) => (
-            <p key={component.key}>
+            <p className="mbk-reset" key={component.key}>
               {"Changed component:"}{" "}
-              <a href={component.href}>{component.title}</a>
+              <a className="mbk-reset" href={component.href}>
+                {component.title}
+              </a>
             </p>
           ))}
           {ignored.length ? (
-            <p>Excluded content: {ignored.join(", ")}.</p>
+            <p className="mbk-reset">Excluded content: {ignored.join(", ")}.</p>
           ) : null}
-          {sharedImpact ? <p>{sharedImpact}</p> : null}
+          {sharedImpact ? <p className="mbk-reset">{sharedImpact}</p> : null}
           {savedProps ? (
             <>
-              <h3>Saved props changed</h3>
-              <p>Before</p>
-              <pre>{savedProps.before}</pre>
-              <p>Current</p>
-              <pre>{savedProps.after}</pre>
+              <h3 className="mbk-reset">Saved props changed</h3>
+              <p className="mbk-reset">Before</p>
+              <pre className="mbk-reset">{savedProps.before}</pre>
+              <p className="mbk-reset">Current</p>
+              <pre className="mbk-reset">{savedProps.after}</pre>
             </>
           ) : null}
-          {noChanges ? <p>{noChanges}</p> : null}
+          {noChanges ? <p className="mbk-reset">{noChanges}</p> : null}
         </>
       ) : null}
     </section>

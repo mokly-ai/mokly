@@ -1,7 +1,5 @@
 # Viewer Markers And Multi-Instance Highlights
 
-Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
-
 ## Purpose And Boundary
 
 `@mokly/viewer` positions host-owned React content on component instances and

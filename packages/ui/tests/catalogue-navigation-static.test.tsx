@@ -38,8 +38,14 @@ test("a filter with an address is a link, and the shown filter's link is the cur
         option.className,
       ]),
     [
-      ["All", "#all", null, "all", "mbk-nav-filter-opt"],
-      ["Changes2", "#changes", "page", "changed", "mbk-nav-filter-opt active"],
+      ["All", "#all", null, "all", "mbk-nav-filter-opt mbk-reset"],
+      [
+        "Changes2",
+        "#changes",
+        "page",
+        "changed",
+        "mbk-nav-filter-opt active mbk-reset",
+      ],
     ],
   );
   assert.deepEqual(within(filter).queryAllByRole("button"), []);
@@ -95,7 +101,7 @@ test("a column that is not operable draws Collapse all, the shown filter, and th
   const changes = filter.querySelector('[data-filter="changed"]');
   assert.equal(changes?.tagName, "SPAN");
   assert.equal(changes?.getAttribute("aria-current"), "page");
-  assert.equal(changes?.className, "mbk-nav-filter-opt active");
+  assert.equal(changes?.className, "mbk-nav-filter-opt active mbk-reset");
   // The count slot keeps the spinner that names the detection at work.
   assert.ok(
     within(filter).getByRole("status", { name: "Checking for changes" }),
@@ -103,7 +109,7 @@ test("a column that is not operable draws Collapse all, the shown filter, and th
 
   const grip = container.querySelector("[data-mokly-nav-resize]");
   assert.ok(grip);
-  assert.equal(grip.className, "mbk-nav-resize");
+  assert.equal(grip.className, "mbk-nav-resize mbk-reset");
   assert.equal(grip.getAttribute("aria-hidden"), "true");
   assert.equal(grip.getAttribute("tabindex"), null);
   assert.equal(grip.getAttribute("role"), null);
@@ -131,8 +137,8 @@ test("a filter without an address in a column that is not operable is text", () 
       option.className,
     ]),
     [
-      ["SPAN", "page", "mbk-nav-filter-opt active"],
-      ["SPAN", null, "mbk-nav-filter-opt"],
+      ["SPAN", "page", "mbk-nav-filter-opt active mbk-reset"],
+      ["SPAN", null, "mbk-nav-filter-opt mbk-reset"],
     ],
   );
 });

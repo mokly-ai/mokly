@@ -29,7 +29,7 @@ function TabFace({ tab }: { tab: InspectorTab }) {
       ) : (
         <a
           aria-label={tab.title}
-          className="mbk-inspector-link"
+          className="mbk-inspector-link mbk-reset"
           href={tab.href}
         >
           <WorkspaceIcon name={tab.id} />
@@ -37,7 +37,7 @@ function TabFace({ tab }: { tab: InspectorTab }) {
       )}
       <span
         aria-hidden="true"
-        className="mbk-icon-button"
+        className="mbk-icon-button mbk-reset"
         data-inspector-close=""
         title="Close inspector"
       >
@@ -67,33 +67,35 @@ export function InspectorDisclosures({
   return (
     <section
       aria-label="Inspector"
-      className="mbk-inspector"
+      className="mbk-inspector mbk-reset"
       data-inspector-disclosures=""
       data-workspace-inspector=""
       style={count}
     >
       <div
         aria-hidden="true"
-        className="mbk-inspector-resize"
+        className="mbk-inspector-resize mbk-reset"
         data-inspector-resize=""
       />
       <label
-        className="mbk-sheet-grab"
+        className="mbk-sheet-grab mbk-reset"
         data-inspector-size=""
         title="Expand or collapse inspector"
       >
         <input
           aria-label="Expanded inspector"
+          className="mbk-reset"
           defaultChecked={expanded}
           role="switch"
           type="checkbox"
         />
-        <span />
+        <span className="mbk-reset" />
       </label>
       {tabs.map((tab, index) => {
         const column: TabColumn = { "--inspector-tab": index + 1 };
         return (
           <details
+            className="mbk-reset"
             data-inspector-tab={tab.id}
             key={tab.id}
             name={contentId}
@@ -101,7 +103,7 @@ export function InspectorDisclosures({
             style={column}
           >
             <summary
-              className="mbk-icon-button"
+              className="mbk-icon-button mbk-reset"
               id={tab.tabId}
               title={tab.title}
               {...(tab.href === undefined
@@ -110,15 +112,19 @@ export function InspectorDisclosures({
             >
               <TabFace tab={tab} />
             </summary>
-            <span className="mbk-inspector-title" data-inspector-title="">
+            <span
+              className="mbk-inspector-title mbk-reset"
+              data-inspector-title=""
+            >
               {tab.title}
             </span>
             <div
-              className="mbk-inspector-content"
+              className="mbk-inspector-content mbk-reset"
               data-mokly-scroll="inspector"
             >
               <section
                 aria-label={tab.title}
+                className="mbk-reset"
                 data-inspector-panel={tab.id}
                 id={tab.panelId}
               >

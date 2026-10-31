@@ -1,7 +1,5 @@
 # Registered Components In Mokly's Design Catalogue
 
-Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
-
 ## Scope
 
 Mokly's shared design UI has its own component pages, saved variants,

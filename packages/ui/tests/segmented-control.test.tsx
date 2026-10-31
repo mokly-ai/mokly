@@ -11,6 +11,8 @@ import {
   type Segment,
 } from "../src/segmented-control/segmented-control.js";
 
+import { assertSameElement, assertSameList } from "./dom-assertions.js";
+
 type Viewport = "mobile" | "desktop" | "both";
 
 const VIEWPORTS: readonly Segment<Viewport>[] = [
@@ -35,7 +37,7 @@ test("the shell's viewport and scheme switches keep their markup exactly", () =>
         value="both"
       />,
     ),
-    '<span aria-label="Viewport" class="mbk-seg" data-mokly-viewswitch="" role="group"><button aria-pressed="false" data-viewport-option="mobile" type="button">Mobile</button><button aria-pressed="false" data-viewport-option="desktop" type="button">Desktop</button><button aria-pressed="true" data-viewport-option="both" type="button">Both</button></span>',
+    '<span aria-label="Viewport" class="mbk-seg mbk-reset" data-mokly-viewswitch="" role="group"><button aria-pressed="false" data-viewport-option="mobile" class="mbk-reset" type="button">Mobile</button><button aria-pressed="false" data-viewport-option="desktop" class="mbk-reset" type="button">Desktop</button><button aria-pressed="true" data-viewport-option="both" class="mbk-reset" type="button">Both</button></span>',
   );
   assert.equal(
     renderToStaticMarkup(
@@ -47,7 +49,7 @@ test("the shell's viewport and scheme switches keep their markup exactly", () =>
         value="dark"
       />,
     ),
-    '<span aria-label="Preview color scheme" class="mbk-seg" data-mokly-schemeswitch="" role="group"><button aria-pressed="false" data-color-scheme-option="light" type="button">Light</button><button aria-pressed="true" data-color-scheme-option="dark" type="button">Dark</button></span>',
+    '<span aria-label="Preview color scheme" class="mbk-seg mbk-reset" data-mokly-schemeswitch="" role="group"><button aria-pressed="false" data-color-scheme-option="light" class="mbk-reset" type="button">Light</button><button aria-pressed="true" data-color-scheme-option="dark" class="mbk-reset" type="button">Dark</button></span>',
   );
 });
 
@@ -61,7 +63,7 @@ test("a group without a mark carries no group attribute", () => {
     />,
   );
   const group = screen.getByRole("group", { name: "Comparison mode" });
-  assert.equal(container.firstElementChild, group);
+  assertSameElement(container.firstElementChild, group);
   assert.deepEqual(
     [...group.attributes].map((attribute) => attribute.name),
     ["aria-label", "class", "role"],
@@ -160,7 +162,7 @@ test("a group that is not interactive draws its segments as inert text", () => {
     />,
   );
   const group = screen.getByRole("group", { name: "Preview color scheme" });
-  assert.deepEqual(within(group).queryAllByRole("button"), []);
+  assertSameList(within(group).queryAllByRole("button"), []);
   assert.deepEqual(
     [...group.children].map((segment) => [
       segment.tagName,

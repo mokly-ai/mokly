@@ -12,6 +12,7 @@ import {
 import { DetailsPanel } from "../../../parts/details.js";
 import { ENTRY_PATHS, EXAMPLE_CRUMB } from "../../../parts/entry_paths.js";
 import { MiniDetails, MiniWelcome } from "../../../parts/mini_screens.js";
+import { miniView } from "../../../parts/mini_views.js";
 import type { ChangesStatus } from "../../../parts/nav.js";
 import { AvailabilityNav } from "../../../parts/review.js";
 import type { ArtboardViewport } from "../../../parts/shell.js";
@@ -57,14 +58,16 @@ function ErrorAndRetry({ viewport }: { viewport: ArtboardViewport }) {
       design={DESTINATIONS.appearanceError}
       viewport={viewport}
     >
-      <AppearanceHead
-        highlight="failed"
-        path={ENTRY_PATHS.welcome}
-        preview={viewport}
-        title="Welcome"
-        viewport={viewport}
-      />
       <PreviewWorkspace
+        view={{ highlight: "failed" }}
+        header={
+          <AppearanceHead
+            path={ENTRY_PATHS.welcome}
+            preview={viewport}
+            title="Welcome"
+            viewport={viewport}
+          />
+        }
         inspector={<DetailsPanel subject="welcome" />}
         viewport={viewport}
         render={() => (
@@ -100,15 +103,18 @@ function AvailabilityScreen({
       nav={<AvailabilityNav status={status} />}
       viewport={viewport}
     >
-      <AppearanceHead
-        crumbs={["Example", "Screens"]}
-        path={ENTRY_PATHS.welcome}
-        title="Welcome"
-        viewport={viewport}
-      />
       <PreviewWorkspace
+        header={
+          <AppearanceHead
+            crumbs={["Example", "Screens"]}
+            path={ENTRY_PATHS.welcome}
+            title="Welcome"
+            viewport={viewport}
+          />
+        }
         inspector={<DetailsPanel subject="welcome" />}
         viewport={viewport}
+        view={miniView("welcome")}
         render={(previewViewport) => <WelcomeShot viewport={previewViewport} />}
       />
     </AppearanceShell>

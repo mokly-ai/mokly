@@ -8,6 +8,11 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { TagPicker } from "../src/tag-picker/tag-picker.js";
 
 import {
+  assertNotSameElement,
+  assertSameElement,
+  assertSameList,
+} from "./dom-assertions.js";
+import {
   chips,
   PICKER_ID,
   PickerHost,
@@ -32,7 +37,7 @@ test("the button opens the picker on the first selected tag and focuses its chip
   assert.deepEqual(reports, [["open", true, 1]]);
   assert.equal(tagButton().getAttribute("aria-expanded"), "true");
   assert.equal(screen.getByRole("group", { name: "Tags" }).hidden, false);
-  assert.equal(focused(), chips()[1]);
+  assertSameElement(focused(), chips()[1]);
   assert.deepEqual(
     chips().map((chip) => chip.getAttribute("tabindex")),
     ["-1", "0", "-1"],
@@ -45,7 +50,7 @@ test("without a selected tag the picker opens on the first chip", () => {
   render(<PickerHost reports={reports} tags={tags} />);
   fireEvent.click(tagButton());
   assert.deepEqual(reports, [["open", true, 0]]);
-  assert.equal(focused(), chips()[0]);
+  assertSameElement(focused(), chips()[0]);
 });
 
 test("the arrow keys step and wrap, Home and End choose the ends, and focus follows", () => {
@@ -63,7 +68,7 @@ test("the arrow keys step and wrap, Home and End choose the ends, and focus foll
   for (const [key, index] of steps) {
     // fireEvent returns false when the picker prevented the default.
     assert.equal(fireEvent.keyDown(focused(), { key }), false, key);
-    assert.equal(focused(), chips()[index], key);
+    assertSameElement(focused(), chips()[index], key);
     assert.equal(chips()[index]?.getAttribute("tabindex"), "0", key);
   }
   assert.deepEqual(reports, [
@@ -79,7 +84,7 @@ test("another key keeps its default and moves nothing", () => {
   const chip = focused();
   for (const key of ["Enter", "a", "ArrowDown", "Tab"])
     assert.equal(fireEvent.keyDown(chip, { key }), true, key);
-  assert.equal(focused(), chip);
+  assertSameElement(focused(), chip);
   assert.deepEqual(reports, [["open", true, 1]]);
 });
 
@@ -102,9 +107,9 @@ test("Escape closes the picker before the shell hears it and returns focus to th
   ]);
   assert.equal(tagButton().getAttribute("aria-expanded"), "false");
   // The focus return waits for the host's change.
-  assert.notEqual(focused(), tagButton());
+  assertNotSameElement(focused(), tagButton());
   await settle();
-  assert.equal(focused(), tagButton());
+  assertSameElement(focused(), tagButton());
 });
 
 test("the button closes an open picker and returns focus to itself", async () => {
@@ -118,7 +123,7 @@ test("the button closes an open picker and returns focus to itself", async () =>
   ]);
   assert.equal(tagButton().getAttribute("aria-expanded"), "false");
   await settle();
-  assert.equal(focused(), tagButton());
+  assertSameElement(focused(), tagButton());
 });
 
 test("a chosen tag reaches the host first, and then focus returns to the button", async () => {
@@ -133,9 +138,9 @@ test("a chosen tag reaches the host first, and then focus returns to the button"
     ["open", true, 1],
     ["select", "forms"],
   ]);
-  assert.deepEqual(choices, [["forms", forms, false]]);
+  assertSameList(choices, [["forms", forms, false]]);
   await settle();
-  assert.equal(focused(), tagButton());
+  assertSameElement(focused(), tagButton());
 });
 
 test("a picker without callbacks keeps the state that its host passes", async () => {
@@ -147,11 +152,11 @@ test("a picker without callbacks keeps the state that its host passes", async ()
   assert.equal(tagButton().getAttribute("aria-expanded"), "true");
   // A key asks to move focus, but only the host moves the focused chip.
   fireEvent.keyDown(focused(), { key: "ArrowRight" });
-  assert.equal(focused(), chips()[0]);
+  assertSameElement(focused(), chips()[0]);
   const landing = chips()[1];
   assert.ok(landing);
   fireEvent.click(landing);
   // The focus return is the picker's own.
   await settle();
-  assert.equal(focused(), tagButton());
+  assertSameElement(focused(), tagButton());
 });

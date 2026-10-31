@@ -1,7 +1,5 @@
 # Shared Browse shell
 
-Status: In progress under the [shell views plan](../../../../plans/ui-package-shell-views.md).
-
 Serve, the static build, and React hosts render this same tree in the
 browser.
 
@@ -217,7 +215,18 @@ is `PreviewIframe` of `@mokly/ui/preview-frame`: a container passes its `ref`,
 its `src` or `srcDoc`, its `key`, and its data attributes, and it keeps the
 mount hooks, the sources, the read-only guard, and the scroll controllers.
 `frames.tsx` holds which browser frame is expanded in the store and copies its
-address, while the package shows "URL copied". A local ESLint rule
+address, while the package shows "URL copied". `views.tsx` renders the main
+region of `@mokly/ui/shell-layout`, `workspace.tsx` lays out the workspace
+with `@mokly/ui/workspace-layout`, and `embedded_viewer.tsx` lays out an
+embedded root and its host slots with `@mokly/ui/embedded-layout`, which
+places each slot's content and never reads it. The standalone shell's root
+and the loading, failure, and version states of both roots render
+`@mokly/ui/shell-layout`, and the highlight labels of the workspace and of a
+host's inspection render `@mokly/ui/highlight-label`. Both inspection layers
+draw one `@mokly/ui/highlight-mask` over each highlighted frame from the same
+boundary snapshot as their labels, for same-origin and cross-origin frames.
+The mask clips to the visible frame and stays above an expanded frame.
+A local ESLint rule
 rejects every intrinsic JSX element in `packages/viewer/src`, so a container
 renders only package components, fragments, providers, and portals. Text
 that the shell derives from catalogue data stays here and reaches the
@@ -235,7 +244,9 @@ shell font.
 
 The theme gives the stub's document class the Auto appearance before the
 bundle runs. The standalone shell sets its appearance, scheme, and state marks
-on its own root, not on `body` or `<html>`, as an embedded root does. The
+on its own root, as an embedded root does, and never on `body`. The appearance
+controller also writes the appearance on `<html>`, so the stub page around the
+shell takes the same appearance as the root. The
 embedded stylesheet uses packaged relative font URLs and keeps the
 fallbacks that let a host's accent value inherit. It needs no `@scope` block,
 because no package rule reaches the host page or host slot content. The
@@ -440,13 +451,14 @@ independent embedded viewer. `frame_mount_hook.ts` mounts each frame, and
 step as its last usage-revision check, so usage adopted during mounting always
 reaches the frame. Public-handle inspection and
 `workspace_inspection.tsx` coordinate through the registry's inspection owner.
-Workspace labels and host markers acquire the registry's single geometry
+Workspace masks and labels, public inspection, and host markers acquire the registry's single geometry
 scheduler; a usage revision supersedes any unresolved measurement before fresh
 evidence is read. Navigation and inspector resize drag state stays on the
 owning shell root so independent embedded viewers cannot alter the host page or
-each other. Embedded roots also own their flex containment and measure host
-stage overlays against the current preview, keeping sibling viewers,
-navigation and the inspector outside an overlay's bounds. Browser transport
+each other. Embedded roots also own their flex containment, and
+`@mokly/ui/embedded-layout` measures host stage overlays against the current
+preview, keeping sibling viewers, navigation and the inspector outside an
+overlay's bounds. Browser transport
 remains behind `useViewerCapabilities`. The
 [rendering boundary of the component controls contract](../../../../docs/protocol/mokly-component-controls.md#rendering-boundary)
 defines route loading, revision fencing, and the absence of the render
@@ -466,8 +478,8 @@ controller of [`../standalone/startup.ts`](../standalone/startup.ts) before the
 first render, so it resolves Auto/Light/Dark from the stored choice or the
 system before the shell paints.
 [`appearance_bridge.ts`](../standalone/appearance_bridge.ts) adopts that theme
-and the body's effective scheme into the live shell, independently asking the
-store for matching preview files. A light-only catalogue can therefore keep
+and the controller's effective scheme into the live shell, marks the shell root
+with both, and independently asks the store for matching preview files. A light-only catalogue can therefore keep
 Light previews under a Dark interface. Embedded roots skip the bridge and
 receive `theme` from their host while retaining independent preview controls.
 Standalone route installation sends scheme pins to that controller; it never

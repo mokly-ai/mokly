@@ -42,7 +42,7 @@ test("a button with an address is a link named for the picker state it shows", (
   const { reports, rerender } = depiction(false, { toggleHref: "../picker/" });
   const open = screen.getByRole("link", { name: "Filter by tag" });
   assert.equal(open.getAttribute("href"), "../picker/");
-  assert.equal(open.className, "mbk-search-tag");
+  assert.equal(open.className, "mbk-search-tag mbk-reset");
   assert.equal(open.getAttribute("data-mokly-tag-toggle"), "");
   // A link reports no expanded state and controls no element of its own.
   assert.equal(open.hasAttribute("aria-expanded"), false);
@@ -71,7 +71,7 @@ test("a closed picker of a static depiction draws its button and leaves out the 
   const { container } = depiction(false);
   const button = screen.getByRole("img", { name: "Filter by tag" });
   assert.equal(button.tagName, "SPAN");
-  assert.equal(button.className, "mbk-search-tag");
+  assert.equal(button.className, "mbk-search-tag mbk-reset");
   assert.equal(button.getAttribute("data-mokly-tag-toggle"), "");
   assert.equal(container.querySelector(".mbk-tag-picker"), null);
   assert.equal(container.querySelector("[data-mokly-tag]"), null);
@@ -113,9 +113,9 @@ test("without addresses, the chips of a static depiction are pictures", () => {
   assert.deepEqual(
     [...toolbar.children].map((chip) => [chip.tagName, chip.className]),
     [
-      ["SPAN", "mbk-chip tag"],
-      ["SPAN", "mbk-chip tag active"],
-      ["SPAN", "mbk-chip tag"],
+      ["SPAN", "mbk-chip tag mbk-reset"],
+      ["SPAN", "mbk-chip tag active mbk-reset"],
+      ["SPAN", "mbk-chip tag mbk-reset"],
     ],
   );
 });

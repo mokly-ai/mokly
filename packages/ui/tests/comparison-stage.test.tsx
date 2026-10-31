@@ -21,7 +21,7 @@ test("Current shows the preview and hides the stage, after the band", () => {
         <i>current</i>
       </ComparisonStage>,
     ),
-    '<section class="mbk-diff-screen" data-diff-screen="screens/a"><i>band</i><div class="mbk-current-screen" data-current-screen=""><i>current</i></div><div aria-live="polite" class="mbk-diff-stage" data-diff-stage="" hidden="">Loading comparison…</div></section>',
+    '<section class="mbk-diff-screen mbk-reset" data-diff-screen="screens/a"><i>band</i><div class="mbk-current-screen mbk-reset" data-current-screen=""><i>current</i></div><div aria-live="polite" class="mbk-diff-stage mbk-reset" data-diff-stage="" hidden="">Loading comparison…</div></section>',
   );
 });
 
@@ -32,7 +32,7 @@ test("a comparison mode shows the stage, which loads until it has content", () =
         <i>current</i>
       </ComparisonStage>,
     ),
-    '<section class="mbk-diff-screen" data-diff-component="" data-diff-screen="c/v"><div class="mbk-current-screen" data-current-screen="" hidden=""><i>current</i></div><div aria-busy="true" aria-live="polite" class="mbk-diff-stage" data-diff-stage="">Loading comparison…</div></section>',
+    '<section class="mbk-diff-screen mbk-reset" data-diff-component="" data-diff-screen="c/v"><div class="mbk-current-screen mbk-reset" data-current-screen="" hidden=""><i>current</i></div><div aria-busy="true" aria-live="polite" class="mbk-diff-stage mbk-reset" data-diff-stage="">Loading comparison…</div></section>',
   );
   const { container } = render(
     <ComparisonStage current={false} entryId="a" stage={<i>sections</i>} />,
@@ -52,7 +52,7 @@ test("a section's heading names the viewport, the state, and a Light-only view",
         <i>panes</i>
       </ComparisonSection>,
     ),
-    '<section class="mbk-diff-view mbk-diff-mobile" data-diff-viewport="mobile"><h3>Mobile<!-- --> · <!-- -->Screen changed<!-- --> · Light only</h3><i>panes</i></section>',
+    '<section class="mbk-diff-view mbk-diff-mobile mbk-reset" data-diff-viewport="mobile"><h3 class="mbk-reset">Mobile<!-- --> · <!-- -->Screen changed<!-- --> · Light only</h3><i>panes</i></section>',
   );
   render(<ComparisonSection label="New screen" viewport="desktop" />);
   assert.equal(
@@ -65,13 +65,13 @@ test("the panes' grid records the comparison mode", () => {
   for (const mode of ["side", "overlay", "difference"] as const)
     assert.equal(
       renderToStaticMarkup(<ComparisonPanes mode={mode} />),
-      `<div class="mb-panes" data-compare-mode="${mode}"></div>`,
+      `<div class="mb-panes mbk-reset" data-compare-mode="${mode}"></div>`,
     );
   assert.equal(
     renderToStaticMarkup(
       <ComparisonUnavailable message="This variant has no comparison available." />,
     ),
-    "<p>This variant has no comparison available.</p>",
+    '<p class="mbk-reset">This variant has no comparison available.</p>',
   );
 });
 
@@ -80,7 +80,7 @@ test("a comparison that could not load offers Try again", () => {
     renderToStaticMarkup(
       <ComparisonFailure details="offline" onRetry={() => undefined} />,
     ),
-    /^<p>The comparison could not be loaded\. <button class="mbk-empty-link" data-diff-refresh="" type="button">Try again<\/button><\/p>/,
+    /^<p class="mbk-reset">The comparison could not be loaded\. <button class="mbk-empty-link mbk-reset" data-diff-refresh="" type="button">Try again<\/button><\/p>/,
   );
 });
 

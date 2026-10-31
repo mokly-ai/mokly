@@ -28,7 +28,7 @@ test("a metadata row draws the label, then the value", () => {
         <MetadataCode>mockups/home.tsx</MetadataCode>
       </MetadataRow>,
     ),
-    '<div class="mbk-meta-row"><span class="mbk-meta-k">Source</span><span class="mbk-meta-v"><code class="mbk-code">mockups/home.tsx</code></span></div>',
+    '<div class="mbk-meta-row mbk-reset"><span class="mbk-meta-k mbk-reset">Source</span><span class="mbk-meta-v mbk-reset"><code class="mbk-code mbk-reset">mockups/home.tsx</code></span></div>',
   );
 });
 
@@ -46,11 +46,11 @@ test("a row with marks carries them, and a hidden row hides", () => {
     );
   assert.equal(
     row(false),
-    '<div class="mbk-meta-row" data-workspace-changed-views=""><span class="mbk-meta-k">Changed views</span><span class="mbk-meta-v" data-workspace-changed-views-value="">Mobile · Dark</span></div>',
+    '<div class="mbk-meta-row mbk-reset" data-workspace-changed-views=""><span class="mbk-meta-k mbk-reset">Changed views</span><span class="mbk-meta-v mbk-reset" data-workspace-changed-views-value="">Mobile · Dark</span></div>',
   );
   assert.equal(
     row(true),
-    '<div class="mbk-meta-row" data-workspace-changed-views="" hidden=""><span class="mbk-meta-k">Changed views</span><span class="mbk-meta-v" data-workspace-changed-views-value=""></span></div>',
+    '<div class="mbk-meta-row mbk-reset" data-workspace-changed-views="" hidden=""><span class="mbk-meta-k mbk-reset">Changed views</span><span class="mbk-meta-v mbk-reset" data-workspace-changed-views-value=""></span></div>',
   );
 });
 
@@ -63,7 +63,7 @@ test("the props presentation draws a term and its description for a list", () =>
         </MetadataRow>
       </dl>,
     ),
-    "<dl><div><dt>label</dt><dd><code>&quot;Continue&quot;</code></dd></div></dl>",
+    '<dl><div class="mbk-reset"><dt class="mbk-reset">label</dt><dd class="mbk-reset"><code>&quot;Continue&quot;</code></dd></div></dl>',
   );
   render(
     <dl>
@@ -84,7 +84,7 @@ test("a value's link, code chip, and chip group keep the shell's classes", () =>
         <MetadataCode>docs/notes.md</MetadataCode>
       </MetadataChips>,
     ),
-    '<span class="mbk-chips"><a class="mbk-meta-link" href="/view/guide/">Guide</a><code class="mbk-code">docs/notes.md</code></span>',
+    '<span class="mbk-chips mbk-reset"><a class="mbk-meta-link mbk-reset" href="/view/guide/">Guide</a><code class="mbk-code mbk-reset">docs/notes.md</code></span>',
   );
   render(<MetadataLink href="/view/guide/">Guide</MetadataLink>);
   assert.equal(
@@ -113,7 +113,7 @@ test("an entry chip links to its entry with the glyph of its kind", () => {
       renderToStaticMarkup(
         <EntryChip href="/view/tour/" kind={kind} title="Tour" />,
       ),
-      `<a class="mbk-chip ${kind === "use-case" ? "flow" : "screen"}" href="/view/tour/">${glyphs[kind]}Tour</a>`,
+      `<a class="mbk-chip ${kind === "use-case" ? "flow" : "screen"} mbk-reset" href="/view/tour/">${glyphs[kind]}Tour</a>`,
       kind,
     );
   render(

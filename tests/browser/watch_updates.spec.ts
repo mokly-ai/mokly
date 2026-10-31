@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 
-import { hasMarker, markPage } from "./browse_assertions.js";
+import { hasMarker, markPage, shellRoot } from "./browse_assertions.js";
 import {
   documentMark,
   folder,
@@ -82,7 +82,7 @@ test("watched authored edits replace the changed document and retain Browse stat
     await expect(screens).toHaveAttribute("open", "");
     await expect(archive).toHaveAttribute("open", "");
     await expect(page.locator(".mbk-frame-desktop")).toBeHidden();
-    await expect(page.locator("body")).toHaveAttribute(
+    await expect(page.locator(shellRoot)).toHaveAttribute(
       "data-mokly-color-scheme",
       "dark",
     );

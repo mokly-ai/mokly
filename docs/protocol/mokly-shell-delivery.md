@@ -1,7 +1,5 @@
 # Shell Delivery And Read Model Routes
 
-Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
-
 ## Purpose And Boundary
 
 The browser renders Browse from a stub, an index, and entry details. The index
@@ -47,7 +45,7 @@ to the public paths of the [viewer namespace](./mokly-viewer-namespace.md#public
 The stub is one HTML document, written once per shell route by `build` and
 returned for every shell route by Serve, with identical bytes for every route
 of one deployment: the document type, an `<html>` element with `lang="en"` and
-the shell's document class, a `<title>` with the catalogue title, the
+the shell's `mbk-document` class, a `<title>` with the catalogue title, the
 `/mokly-viewer/shell.css` stylesheet link, an SVG icon link
 to `/mokly-viewer/client/brand.svg` using the Browse brand mark, one
 `<div data-mokly-shell>` mount element, a `<noscript>` sentence that says the

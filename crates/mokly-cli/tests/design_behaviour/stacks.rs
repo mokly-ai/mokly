@@ -100,7 +100,7 @@ pub(crate) fn check() {
                 assert_eq!(headings.len(), 1, "one section heading: {path}");
                 let frame_at = ordered
                     .iter()
-                    .position(|element| element.get("class") == Some("mb-component-frame"))
+                    .position(|element| std::ptr::eq(*element, frame))
                     .unwrap();
                 assert!(
                     headings[0] < frame_at,

@@ -15,6 +15,8 @@ import {
   type InspectorTabId,
 } from "../src/inspector/inspector.js";
 
+import { assertSameElement } from "./dom-assertions.js";
+
 const CONTENT = "root-mb-inspector-content";
 
 function tab(id: InspectorTabId, title: string): InspectorTab {
@@ -79,16 +81,16 @@ test("a closed inspector keeps the shell's markup", () => {
         tabs={[tab("details", "Details")]}
       />,
     ),
-    '<section aria-label="Inspector" class="mbk-inspector" data-workspace-inspector="">' +
-      `<div aria-controls="${CONTENT}" aria-label="Resize inspector" aria-orientation="horizontal" aria-valuemax="600" aria-valuemin="160" aria-valuenow="260" class="mbk-inspector-resize" data-inspector-resize="" role="separator" tabindex="0"></div>` +
-      '<button aria-expanded="false" aria-label="Expand inspector" class="mbk-sheet-grab" data-inspector-size="" type="button"><span></span></button>' +
-      '<div aria-label="Inspector panels" class="mbk-inspector-tabs" role="tablist">' +
-      `<button aria-controls="root-mb-panel-details" aria-label="Details" aria-selected="false" class="mbk-icon-button" data-inspector-tab="details" id="root-mb-tab-details" role="tab" title="Details" type="button">${renderToStaticMarkup(<WorkspaceIcon name="details" />)}</button>` +
-      '<span class="mbk-inspector-title" data-inspector-title=""></span>' +
-      `<button aria-label="Close inspector" class="mbk-icon-button" data-inspector-close="" hidden="" title="Close inspector" type="button">${renderToStaticMarkup(<WorkspaceIcon name="close" />)}</button>` +
+    '<section aria-label="Inspector" class="mbk-inspector mbk-reset" data-workspace-inspector="">' +
+      `<div aria-controls="${CONTENT}" aria-label="Resize inspector" aria-orientation="horizontal" aria-valuemax="600" aria-valuemin="160" aria-valuenow="260" class="mbk-inspector-resize mbk-reset" data-inspector-resize="" role="separator" tabindex="0"></div>` +
+      '<button aria-expanded="false" aria-label="Expand inspector" class="mbk-sheet-grab mbk-reset" data-inspector-size="" type="button"><span class="mbk-reset"></span></button>' +
+      '<div aria-label="Inspector panels" class="mbk-inspector-tabs mbk-reset" role="tablist">' +
+      `<button aria-controls="root-mb-panel-details" aria-label="Details" aria-selected="false" class="mbk-icon-button mbk-reset" data-inspector-tab="details" id="root-mb-tab-details" role="tab" title="Details" type="button">${renderToStaticMarkup(<WorkspaceIcon name="details" />)}</button>` +
+      '<span class="mbk-inspector-title mbk-reset" data-inspector-title=""></span>' +
+      `<button aria-label="Close inspector" class="mbk-icon-button mbk-reset" data-inspector-close="" hidden="" title="Close inspector" type="button">${renderToStaticMarkup(<WorkspaceIcon name="close" />)}</button>` +
       "</div>" +
-      `<div class="mbk-inspector-content" data-mokly-scroll="inspector" hidden="" id="${CONTENT}">` +
-      '<section aria-labelledby="root-mb-tab-details" data-inspector-panel="details" hidden="" id="root-mb-panel-details" role="tabpanel"><p>Details panel</p></section>' +
+      `<div class="mbk-inspector-content mbk-reset" data-mokly-scroll="inspector" hidden="" id="${CONTENT}">` +
+      '<section aria-labelledby="root-mb-tab-details" class="mbk-reset" data-inspector-panel="details" hidden="" id="root-mb-panel-details" role="tabpanel"><p>Details panel</p></section>' +
       "</div></section>",
   );
 });
@@ -203,7 +205,7 @@ test("Close asks to close and returns focus to the tab that the reader pressed l
   close.focus();
   fireEvent.click(close);
   assert.deepEqual(reports.at(-1), [false, undefined]);
-  assert.equal(document.activeElement, tabButton("Props"));
+  assertSameElement(document.activeElement, tabButton("Props"));
   assert.equal(screen.queryAllByRole("tabpanel").length, 0);
 });
 
@@ -211,7 +213,7 @@ test("the handle names the inspector and closes it with the same focus return", 
   const reports: Report[] = [];
   const handle = createRef<InspectorHandle>();
   render(<Host handle={handle} reports={reports} />);
-  assert.equal(
+  assertSameElement(
     handle.current?.element,
     screen.getByRole("region", { name: "Inspector" }),
   );
@@ -219,7 +221,7 @@ test("the handle names the inspector and closes it with the same focus return", 
   const outside = document.body;
   handle.current?.close();
   assert.deepEqual(reports, [[false, undefined]]);
-  assert.equal(document.activeElement, outside);
+  assertSameElement(document.activeElement, outside);
   fireEvent.click(tabButton("Usage"));
   screen.getByRole("tabpanel", { name: "Usage" }).focus();
   handle.current?.close();
@@ -227,7 +229,7 @@ test("the handle names the inspector and closes it with the same focus return", 
     [true, "usage"],
     [false, undefined],
   ]);
-  assert.equal(document.activeElement, tabButton("Usage"));
+  assertSameElement(document.activeElement, tabButton("Usage"));
 });
 
 test("the arrow keys step and wrap between the tabs, and Home and End choose the ends", () => {
@@ -248,7 +250,11 @@ test("the arrow keys step and wrap between the tabs, and Home and End choose the
     assert.ok(active instanceof HTMLElement);
     // fireEvent returns false when the inspector prevented the default.
     assert.equal(fireEvent.keyDown(active, { key }), false, key);
-    assert.equal(document.activeElement, tabButton(name), `${key} → ${name}`);
+    assertSameElement(
+      document.activeElement,
+      tabButton(name),
+      `${key} → ${name}`,
+    );
   }
 });
 
@@ -259,11 +265,11 @@ test("another key, or a key outside the tabs, keeps its default and moves nothin
   props.focus();
   for (const key of ["Enter", "ArrowDown", "a", "Tab"]) {
     assert.equal(fireEvent.keyDown(props, { key }), true, key);
-    assert.equal(document.activeElement, props, key);
+    assertSameElement(document.activeElement, props, key);
   }
   const panel = screen.getByRole("tabpanel", { name: "Props" });
   panel.tabIndex = -1;
   panel.focus();
   assert.equal(fireEvent.keyDown(panel, { key: "ArrowRight" }), true);
-  assert.equal(document.activeElement, panel);
+  assertSameElement(document.activeElement, panel);
 });

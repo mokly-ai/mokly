@@ -28,7 +28,7 @@ test("with edits, Reset of a static depiction links to the reset, and without th
   );
   const reset = screen.getByRole("link", { name: "Reset to Default" });
   assert.equal(reset.getAttribute("href"), "../reset/");
-  assert.equal(reset.className, "mbk-controls-reset");
+  assert.equal(reset.className, "mbk-controls-reset mbk-reset");
   assert.deepEqual(
     screen.queryAllByRole("button").map((element) => element.textContent),
     [],
@@ -91,5 +91,5 @@ test("Switch to Current of the saved props links to the current artboard", () =>
   );
   const current = screen.getByRole("link", { name: "Switch to Current" });
   assert.equal(current.getAttribute("href"), "../default/");
-  assert.equal(current.className, "mbk-text-button");
+  assert.equal(current.className, "mbk-text-button mbk-reset");
 });

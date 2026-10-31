@@ -37,7 +37,12 @@ export function Menu({
     : "Open catalogue navigation";
   if (href !== undefined)
     return (
-      <a aria-label={name} className="mbk-menu" data-mokly-menu="" href={href}>
+      <a
+        aria-label={name}
+        className="mbk-menu mbk-reset"
+        data-mokly-menu=""
+        href={href}
+      >
         <MenuIcon />
       </a>
     );
@@ -45,7 +50,7 @@ export function Menu({
     return (
       <span
         aria-label={name}
-        className="mbk-menu"
+        className="mbk-menu mbk-reset"
         data-mokly-menu=""
         role="img"
       >
@@ -57,7 +62,7 @@ export function Menu({
       aria-controls={navigationId}
       aria-expanded={drawerOpen}
       aria-label="Open catalogue navigation"
-      className="mbk-menu"
+      className="mbk-menu mbk-reset"
       data-mokly-menu=""
       onClick={() => onDrawer?.(!drawerOpen)}
       type="button"
@@ -71,20 +76,20 @@ export function Menu({
 export function Brand({ href }: { href: string | undefined }) {
   const content = (
     <>
-      <span aria-hidden="true" className="mbk-mark">
+      <span aria-hidden="true" className="mbk-mark mbk-reset">
         <BrandIcon />
       </span>
-      <span className="mbk-name">mokly.</span>
+      <span className="mbk-name mbk-reset">mokly.</span>
     </>
   );
   if (href === undefined)
     return (
-      <span aria-label="Mokly" className="mbk-brand" role="img">
+      <span aria-label="Mokly" className="mbk-brand mbk-reset" role="img">
         {content}
       </span>
     );
   return (
-    <a aria-label="Mokly" className="mbk-brand" href={href}>
+    <a aria-label="Mokly" className="mbk-brand mbk-reset" href={href}>
       {content}
     </a>
   );

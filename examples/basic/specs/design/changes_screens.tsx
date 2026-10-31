@@ -22,6 +22,7 @@ import { DetailsPanel } from "./parts/details.js";
 import { ENTRY_PATHS } from "./parts/entry_paths.js";
 import { MiniWelcomeApp } from "./parts/mini_app_shell.js";
 import { MiniWelcome, MiniWelcomePage } from "./parts/mini_screens.js";
+import { miniView } from "./parts/mini_views.js";
 import { reasonEvidence } from "./parts/reason_sentences.js";
 import { ReviewNav } from "./parts/review.js";
 import {
@@ -155,21 +156,21 @@ function ChangesScreen({
       viewport={viewport}
       nav={<ReviewNav activeTitle="Welcome" />}
     >
-      <ScreenHead
-        comparisons
-        comparisonMode={mode}
-        scrollTogether={state !== "side-by-side-apart"}
-        action={
-          <ViewSwitch
-            active={viewport}
-            highlight={mode === "current" ? "available" : "comparison"}
+      <PreviewWorkspace
+        header={
+          <ScreenHead
+            comparisons
+            comparisonMode={mode}
+            scrollTogether={state !== "side-by-side-apart"}
+            action={<ViewSwitch active={viewport} />}
+            crumbs={["Example", "Screens"]}
+            path={ENTRY_PATHS.welcome}
+            title="Welcome"
           />
         }
-        crumbs={["Example", "Screens"]}
-        path={ENTRY_PATHS.welcome}
-        title="Welcome"
-      />
-      <PreviewWorkspace
+        view={
+          mode === "current" ? miniView("welcome") : { highlight: "comparison" }
+        }
         viewport={viewport}
         stage={!comparing}
         inspector={

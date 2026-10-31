@@ -123,6 +123,19 @@ test("the build writes every component stylesheet once, in the order of src/styl
   assert.deepEqual(warnings, []);
 });
 
+test("the theme and the reset class come first, so every component rule follows them", async () => {
+  const list = await fs.readFile(
+    new URL("../src/styles.css", import.meta.url),
+    "utf8",
+  );
+  const imports = [...list.matchAll(/@import "\.\/([^"]+)";/gu)].map(
+    (match) => match[1],
+  );
+  // A reset rule weighs one class, so a later component rule of equal weight
+  // wins over it, and the tokens are in place before any rule reads them.
+  assert.deepEqual(imports.slice(0, 2), ["theme/theme.css", "reset/reset.css"]);
+});
+
 test("a package without a component still has a stylesheet", () => {
   const styles = packageStylesheet([]);
   assert.match(styles, /^\/\*[^]*\*\/\n$/u);

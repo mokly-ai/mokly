@@ -31,12 +31,12 @@ function frame(props: Partial<FrameProps> = {}): FrameProps {
 test("a static field frames the host's control in the shell's markup", () => {
   assert.equal(
     renderToStaticMarkup(<PropFieldFrame {...frame()} />),
-    '<div class="mbk-control-field">' +
-      `<label class="mbk-control-label" for="${ID}">label</label>` +
-      '<div class="mbk-control-value">' +
+    '<div class="mbk-control-field mbk-reset">' +
+      `<label class="mbk-control-label mbk-reset" for="${ID}">label</label>` +
+      '<div class="mbk-control-value mbk-reset">' +
       `<input id="${ID}" type="text" value="Continue"/>` +
-      `<small hidden="" id="${ID}-help"></small>` +
-      `<small class="mbk-control-error" hidden="" id="${ID}-error"></small>` +
+      `<small class="mbk-reset" hidden="" id="${ID}-help"></small>` +
+      `<small class="mbk-control-error mbk-reset" hidden="" id="${ID}-error"></small>` +
       "</div></div>",
   );
 });
@@ -84,6 +84,9 @@ test("an unset optional field says Optional, offers Set, and says Not set beside
     screen.getByText("Optional").getAttribute("aria-hidden"),
     "true",
   );
-  assert.equal(screen.getByText("Not set").className, "mbk-control-unset");
+  assert.equal(
+    screen.getByText("Not set").className,
+    "mbk-control-unset mbk-reset",
+  );
   assert.equal(screen.getByLabelText("hint Optional").id, "sample-hint");
 });

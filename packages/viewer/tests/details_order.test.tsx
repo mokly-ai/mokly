@@ -54,13 +54,13 @@ test("Details read reasons before the other evidence", () => {
     />,
   );
   const order = [
-    "<p>Compared with the branch point on main.</p>",
-    "<p>The previous version is at ",
-    "<p>Supplied props or slots changed.</p>",
-    "<p>Rendered content changed.</p>",
-    "<p>This stylesheet changed, but none of the changed styles apply to this screen.</p>",
-    "<h3>Action · footer · desktop · light</h3>",
-    "<p>Changed component: <a ",
+    '<p class="mbk-reset">Compared with the branch point on main.</p>',
+    '<p class="mbk-reset">The previous version is at ',
+    '<p class="mbk-reset">Supplied props or slots changed.</p>',
+    '<p class="mbk-reset">Rendered content changed.</p>',
+    '<p class="mbk-reset">This stylesheet changed, but none of the changed styles apply to this screen.</p>',
+    '<h3 class="mbk-reset">Action · footer · desktop · light</h3>',
+    '<p class="mbk-reset">Changed component: <a ',
   ];
   const positions = order.map((fragment) => markup.indexOf(fragment));
   assert.ok(

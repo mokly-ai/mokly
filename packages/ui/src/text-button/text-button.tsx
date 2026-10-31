@@ -23,13 +23,13 @@ export function TextButton({
 }) {
   if (href !== undefined)
     return (
-      <a className="mbk-text-button" href={href}>
+      <a className="mbk-text-button mbk-reset" href={href}>
         {children}
       </a>
     );
   return (
     <button
-      className="mbk-text-button"
+      className="mbk-text-button mbk-reset"
       onClick={() => onClick?.()}
       type="button"
     >
