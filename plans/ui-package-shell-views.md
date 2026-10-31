@@ -1,15 +1,14 @@
 # Shell Views In The UI Package
 
-Status: Active. [PR #249](https://github.com/mokly-ai/mokly/pull/249), with
-milestones 1 to 5, merged on 2026-10-30 as `14c6f9ec`. The later slices are
-stacked branches: milestones 6 to 8 on `calummoore/mokly-ui-controls`, where
-[PR #251](https://github.com/mokly-ai/mokly/pull/251) merged as `7edabc30`, 9
-to 11 on `calummoore/mokly-ui-inspector`, where
-[PR #253](https://github.com/mokly-ai/mokly/pull/253) is open, 12 to 14 on `calummoore/mokly-ui-preview`,
-and 15 to 20 on `calummoore/mokly-ui-layout-theme`. The work lands as a stack
-of five pull requests, one for each slice, as design call 11 says. Each
-earlier pull request keeps this plan. The last one deletes it, as the `plans`
-skill says.
+Status: Active. [PR #249](https://github.com/mokly-ai/mokly/pull/249),
+[PR #251](https://github.com/mokly-ai/mokly/pull/251), and
+[PR #253](https://github.com/mokly-ai/mokly/pull/253), with milestones 1 to
+11, merged on 2026-10-30 and 2026-10-31. Milestones 12 to 14 are on
+`calummoore/mokly-ui-preview`, where
+[PR #254](https://github.com/mokly-ai/mokly/pull/254) is open, and 15 to 20 on
+`calummoore/mokly-ui-layout-theme`. The work lands as a stack of five pull
+requests, one for each slice, as design call 11 says. Each earlier pull
+request keeps this plan. The last one deletes it, as the `plans` skill says.
 
 `@mokly/ui` holds four parts of the Browse shell since
 [PR #243](https://github.com/mokly-ai/mokly/pull/243): the icons, the change
@@ -1105,8 +1104,13 @@ package draws in `PreviewFrame`. Its view renders `PreviewFrame` with
 
 Depends on: 12, 13
 
-- [ ] Merge, gate, commit, push, review, and open the pull request on the
+- [x] Merge, gate, commit, push, review, and open the pull request on the
       third one, as milestone 8 says.
+- [x] Done on 2026-10-31: the branch merged the inspector branch and
+      `origin/main` at `9f68de16` (#253). Review round 1 found no finding in
+      scope. On `a30efb0d` the remote gate passed 5 of 7 suites, and browser
+      shards 1 and 4 passed on reruns after two known flaky tests. Reports:
+      `.context/reviews/calummoore/mokly-ui-preview/`.
 
 ## Milestone 15: Layout components
 
