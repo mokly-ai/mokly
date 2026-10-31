@@ -18,28 +18,30 @@ and the
 [imported styles contract](../docs/protocol/mokly-imported-styles.md#roots-collection-and-deduplication).
 That rule assumes that the package's `exports` name files that Git tracks.
 
-`@mokly/ui` under `packages/ui` is the first built repository package. It is
-on the branch `calummoore/viewer-library-design`. The plan
-`plans/ui-package.md` on that branch gives the evidence in its decision 9
-and its milestone 4. The package's `exports` point every subpath at `dist/`,
+`@mokly/ui` under `packages/ui` is the first built repository package. PR #243
+added it to `main` on 2026-10-29. Its plan, which PR #247 removed from
+`main`, gives the evidence in decision 9 and milestone 4 of
+[`plans/ui-package.md`](https://github.com/mokly-ai/mokly/blob/e9c20225af1b203bea236d29869c48f8c103668b/plans/ui-package.md?plain=1#L330).
+The package's `exports` point every subpath at `dist/`,
 which Git ignores. An entry that imports `@mokly/ui/appearance-selector`
 resolves the built file on the head side. The base side maps that file to
 the base tree, which has `packages/ui/src` and no `dist`. With the working
 tree's installation, the sidecar then reports that the module has no source
 in this side. The bundle fails, and Changes is unavailable for the whole
 catalogue, because one bundle holds every entry and Changes has one status.
-That branch works around the failure: its design mockups import
+The design library works around the failure: its mockups import
 `packages/ui/src/{name}/{name}.tsx` by repository path, and local stylesheets
 import `packages/ui/src/{name}/{name}.css` by relative path.
 
-On `main`, a registration's `stylesheets` field accepts only paths inside
-the configuration directory. A parent segment fails the path check in
-`crates/mokly-render/src/declarations.rs` with "declares invalid
+Before milestone 2, a registration's `stylesheets` field accepted only
+paths inside the configuration directory. A parent segment failed the path
+check in `crates/mokly-render/src/declarations.rs` with "declares invalid
 stylesheet". A path through `node_modules` fails the public policy in
 `crates/mokly-graph/src/public_locations.rs` with "consumer dependency
-tree". A configured stylesheet in `mokly.config.json` may already use `..`
+tree". A configured stylesheet in `mokly.config.json` could already use `..`
 segments that stay inside `repoRoot`, under the
 [configuration contract](../docs/protocol/mokly-configuration.md#validation).
+Milestone 2 gives a declared stylesheet the same rule.
 
 A PostCSS plugin that inlines a bare `@import` resolves it with its own
 resolver. Tailwind looks in the `node_modules` folders above the stylesheet,
@@ -86,7 +88,7 @@ Contract owners:
   [mokly-css README](../crates/mokly-css/README.md), the
   [mokly-render README](../crates/mokly-render/README.md), the
   [design library README](../examples/basic/specs/design/library/README.md),
-  and `packages/ui/README.md` after the shared UI package PR merges.
+  and the [UI package README](../packages/ui/README.md).
 - The [Changes guide](../docs/guides/catalogue/changes.md), the
   [configuration guide](../docs/guides/authoring/config.md), the
   [components guide](../docs/guides/authoring/components.md), and the
@@ -132,7 +134,8 @@ recommendation of decision 1 from D to G. Its report is
   milestones now. Reason: the core work never waits for the other PR, and
   the UI work still lands here when it can. The coordinator named the
   milestones by number. This plan names them by title, because later
-  changes renumbered them.
+  changes renumbered them. That pull request, PR #243, merged on
+  2026-10-29, so the two UI milestones stay in this plan.
 - Delivery in two pull requests (2026-10-29, the coordinator for the user):
   the first pull request holds milestones 1 to 2.1, and the second holds
   milestones 3 to 11. Reason: the user wants work merged as soon as it is
@@ -158,6 +161,16 @@ recommendation of decision 1 from D to G. Its report is
 - My call, 2026-10-28: `#name` imports through a package's `imports` field
   stay out of scope. They keep today's resolution, and no repository
   package uses them.
+- My call, 2026-10-31: milestone 10 stays after the core milestones, also
+  under the rule that mockup work comes first. It changes no screen or
+  flow that a mockup shows. It only changes how the design library
+  imports the shipped package, so it needs the core milestones first. Its
+  `Tags: mockup` line stays, because the `mockups` skill governs example
+  entries.
+- My call, 2026-10-31: open decisions 1, 2, and 4 keep their asked layout
+  and letters until the user answers, although the `decisions-and-findings`
+  skill now adds a root question and a **Left out** line. A new layout
+  while the questions are with the user would change what the user reads.
 
 ### Open decision 1. The base side lacks the package build
 
@@ -282,7 +295,7 @@ recommendation of decision 1 from D to G. Its report is
 - **Severity:** Low. **Effort:** Medium.
 - **Terms:**
   - **Release manifest check:** `scripts/release/manifest.mjs` and
-    `scripts/release/package_reports.mjs` on the shared UI package branch.
+    `scripts/release/package_reports.mjs`, on `main` since PR #243.
     They check each published `exports` target and the files in the
     archive.
 - **Background:** This decision applies when `@mokly/ui` declares targets
@@ -401,6 +414,8 @@ stylesheet.
 
 ## Milestone 1: Documentation for declared stylesheet paths
 
+Depends on: none.
+
 State decision 3 B in the component stylesheet contract and the components
 guide. Milestones 1 and 2 depend on no open decision.
 
@@ -427,6 +442,8 @@ guide. Milestones 1 and 2 depend on no open decision.
   Its report: `.context/built-repository-packages/delegation/m1-report.md`.
 
 ## Milestone 2: Declared stylesheet paths in `mokly-render`
+
+Depends on: milestone 1.
 
 A declared value with `.`, `..`, or empty segments links the stylesheet
 that its normalized path names, under decision 3 B.
@@ -465,6 +482,8 @@ that its normalized path names, under decision 3 B.
 
 ## Milestone 2.1: Verification, review, and the first pull request
 
+Depends on: milestone 2.
+
 Prove milestones 1 and 2 for the first pull request. The coordinator opens
 and merges it.
 
@@ -482,6 +501,8 @@ and merges it.
       records its link and its merge date in the status paragraph.
 
 ## Milestone 3: Documentation for source targets and PostCSS reads
+
+Depends on: milestone 2.1, and the answers to decisions 1 and 2.
 
 Record the merge of the first pull request and the answers to decisions 1,
 2, and 4. Then state the requirements and the decisions in force for
@@ -522,6 +543,8 @@ verification milestone. This milestone waits for decisions 1 and 2.
 
 ## Milestone 4: The repository conditions setting
 
+Depends on: milestone 3.
+
 `moduleResolution.repositoryConditions` reaches both sides. Nothing reads it
 yet, so the product keeps working. This milestone waits for decision 1.
 
@@ -540,6 +563,8 @@ yet, so the product keeps working. This milestone waits for decision 1.
 - [ ] Run the new tests and `cargo xtask check --suite repository`.
 
 ## Milestone 5: Sidecar source targets
+
+Depends on: milestone 4.
 
 The sidecar selects a repository package's repository condition target on
 both sides, for JavaScript imports, CSS imports from JavaScript, runtime
@@ -586,6 +611,8 @@ for decision 1.
 
 ## Milestone 6: `mokly-css` source targets
 
+Depends on: milestone 5.
+
 The Rust stylesheet resolver selects a repository package's repository
 condition target for a CSS `@import` on both sides, with the `exports` rules
 of the sidecar. A third-party package keeps today's conditions. This
@@ -617,6 +644,8 @@ milestone waits for decision 1.
 
 ## Milestone 7: PostCSS reads of the head's copy
 
+Depends on: milestone 3.
+
 The base side fails closed when a PostCSS plugin reported the head's copy
 of a changed repository file, or a folder of the working tree. This
 milestone waits for decision 2.
@@ -639,6 +668,8 @@ milestone waits for decision 2.
 
 ## Milestone 8: Changes against a base without build output
 
+Depends on: milestones 6 and 7.
+
 One build-level test proves the whole path with a real Git base: a base
 commit without `dist` renders a catalogue that imports a built repository
 package. This milestone waits for decisions 1 and 2.
@@ -652,11 +683,14 @@ package. This milestone waits for decisions 1 and 2.
       `widget`, so that the fixture adds nothing to the workspace
       installation. A screen imports `widget/button` and
       `widget/button.css`. A component declares
-      `stylesheets: ["../packages/widget/src/button.css"]`. Commit the base
-      without `dist`, then build `dist` in the head.
+      `stylesheets: ["../packages/widget/src/card.css"]`, a package
+      stylesheet that no module imports, because a declared file must not
+      also be a module import. Commit the base without `dist`, then build
+      `dist` in the head.
   - [ ] Changes is ready, and an unchanged package gives unmodified views.
   - [ ] A text change in `src/button.tsx` changes the screen.
-  - [ ] A rule change in `src/button.css` gives the component a changed
+  - [ ] A rule change in `src/button.css` changes the screen's stylesheet.
+  - [ ] A rule change in `src/card.css` gives the component a changed
         rule.
   - [ ] A change only in the head's `dist` gives no change.
   - [ ] With Tailwind and a plugin-inlined `@import "widget/button.css"`,
@@ -667,12 +701,15 @@ package. This milestone waits for decisions 1 and 2.
 
 ## Milestone 9: UI package source targets
 
+Depends on: milestone 6, and the answer to decision 4.
+
 `@mokly/ui` declares `source` targets, so that the design library can import
 it by name. This milestone waits for decisions 1 and 4, and decision 5 D
 decides whether it stays in this plan.
 
-- [ ] Merge `origin/main` into this branch after the shared UI package PR
-      merges, under the `git-merge` skill.
+- [x] Merge `origin/main` into this branch after the shared UI package PR
+      merges, under the `git-merge` skill. Merge `67bc69e6` brought PR #243
+      into this branch on 2026-10-31.
 - [ ] `packages/ui/package.json`: each component subpath gets
       `"source": "./src/{name}/{name}.tsx"` as its first key. Each CSS
       subpath becomes
@@ -696,6 +733,8 @@ decides whether it stays in this plan.
 ## Milestone 10: Design library package imports
 
 Tags: mockup
+
+Depends on: milestones 8 and 9.
 
 The two design library components that render `@mokly/ui` import it by name
 and declare its stylesheets by repository path. The artboards do not
@@ -741,6 +780,8 @@ milestones, because the mockups render through them. It waits for decision
 
 ## Milestone 11: Verification, review, and the second pull request
 
+Depends on: milestone 10.
+
 - [ ] Remove the status lines that milestone 3 added, because the behaviour
       is implemented.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
@@ -749,8 +790,12 @@ milestones, because the mockups render through them. It waits for decision
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-- [ ] Open the pull request when every other milestone TODO is ticked.
-      Put its link in the status paragraph.
+- [ ] Delete the plan, as "Deleting the plan" in the `plans` skill says:
+      turn each open item into a follow-up item under `plans/follow-ups/`,
+      and give the pull request description the dated record of each
+      decision and design call.
+- [ ] Give the coordinator the title and the description of the second
+      pull request. The coordinator opens and merges it.
 
 ## Post-merge follow-up (non-blocking)
 

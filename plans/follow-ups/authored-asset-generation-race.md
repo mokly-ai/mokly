@@ -32,6 +32,11 @@
     evidence for react" in `tests/browser/large_watch.spec.ts` got two 404
     responses for `/static/assets/mark.svg`. An extra rebuild at startup had
     published a new generation while the page loaded.
+  - On 2026-10-29, the same test failed the same way in browser shard 1 of 4
+    of the remote gate on the branch
+    `conductor/built-repository-packages-in-changes`, with two 404
+    responses for `/static/assets/mark.svg`. A local rerun of the shard
+    passed, with the React journey green.
   - PR #244 fixed the case of unchanged documents on 2026-10-29.
     `ClosureInputs` in `crates/mokly-graph/src/public_inputs.rs` keeps the
     closure records of each document key for all generations. A replacement
