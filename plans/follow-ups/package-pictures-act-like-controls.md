@@ -1,7 +1,7 @@
 # Package pictures look like working controls
 
 - **Severity:** Low. **Likelihood:** Common. **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-30, from the branch `calummoore/mokly-ui-controls`, review finding 4 and two problems outside its scope.
 - **Location:** `packages/ui/src/catalogue-tree/catalogue-tree.css:51` and `:65`, which style the tree row picture of `packages/ui/src/catalogue-tree/tree-link.tsx`; `packages/ui/src/catalogue-navigation/catalogue-navigation.css:213` and `:237`, which style the separator picture of `packages/ui/src/catalogue-navigation/navigation-resize.tsx`; `packages/ui/src/icon-control/icon-control.css:22` and `:61`.
 - **Reason:** The shared rule changes every picture form of the package, which is Large, and the user must accept that a picture loses its tooltip.
@@ -69,5 +69,6 @@
   and tag button fixes of 2026-10-30.
 - **Recommendation:** B. One rule then covers every picture, also the ones
   that later components add.
-- **Action:** ask the user, because B is Large and removes the tooltip of a
-  picture.
+- **Answer:** On 2026-10-31 the user chose B.
+- **Action:** fix after merge, apply B, because the marker spans every
+  picture form of the shell views stack, which lands in five pull requests.

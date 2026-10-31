@@ -1,7 +1,7 @@
 # Browse artboard highlight switches draw nothing
 
 - **Severity:** Medium. **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-30, from the branch `calummoore/mokly-ui-controls`, review finding 1.
 - **Location:** The headers that pass the highlight state `available` over previews without regions: `examples/basic/specs/design/parts/screen_heads.tsx`, `examples/basic/specs/design/browse/variants/screens.tsx`, `examples/basic/specs/design/browse/views/details-screen.tsx`, `examples/basic/specs/design/review_availability_screens.tsx`, `examples/basic/specs/design/review_outcome_screens.tsx`, `examples/basic/specs/design/publication_screens.tsx`, and `examples/basic/specs/design/changes/impact/styles/matched-excluded/screens.tsx`; the previews `MiniWelcome` and `MiniDetails` in `examples/basic/specs/design/parts/mini_screens.tsx`; `examples/basic/mokly.config.json`, which gives these pages no highlight stylesheet.
 - **Reason:** Every option that draws the highlights changes approved previews or needs a contract exception, so the user must choose.
@@ -89,5 +89,9 @@
 - **Previous examples:** None found.
 - **Recommendation:** C. The mockups then show what the shell draws, and
   one package drawing serves the shell and every artboard.
-- **Action:** ask the user, because B and C change approved previews and D
-  changes a contract.
+- **Answer:** On 2026-10-31 the user chose C and E: the artboards draw the
+  highlights with `@mokly/ui/highlight-mask`, and one record per depicted
+  view holds the highlight state and the preview's regions.
+- **Action:** fix after merge, apply C and E, because the package mask lands
+  with the layout slice of the shell views stack, whose milestone 19 applies
+  this answer and deletes this item.
