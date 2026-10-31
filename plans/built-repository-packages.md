@@ -490,10 +490,13 @@ and merges it.
 - [x] Merge `origin/main` under the `git-merge` skill. On 2026-10-29,
       `main` was still at `c9d402cd`, which merge `30db9bfb` already holds.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the diff of the first pull request against `origin/main` with
+- [x] Review the diff of the first pull request against `origin/main` with
       the `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
-      re-review once, and report the rest.
+      re-review once, and report the rest. Two rounds ran on 2026-10-29 and
+      2026-10-31. Findings 1, 2, and 5 are fixed. Findings 3 and 4 wait for
+      the user as follow-up items. The findings file is
+      `.context/reviews/conductor/built-repository-packages-in-changes/findings.md`.
 - [ ] Run the complete gate named in `AGENTS.md` on the final commit, and
       push that commit.
 - [ ] Give the coordinator the pull request title and description. The
@@ -653,9 +656,18 @@ milestone waits for decision 2.
 - [ ] Add failing tests first beside
       `crates/mokly-render/src/_tests_/postcss_read_inventory_tests.rs`: a
       differing file fails the base side with the milestone 3 diagnostic,
-      equal bytes keep the comparison, a reported folder of the working
-      tree fails, a file under `node_modules` is ignored, and a tier-two
-      base copy does not fire.
+      equal bytes keep the comparison, a reported file with no base file
+      fails, a reported folder of the working tree fails, a file under
+      `node_modules` is ignored, and a tier-two base copy does not fire.
+- [ ] Add one integration case beside
+      `crates/mokly-render/tests/integration/base_tests.rs`: a fixture
+      PostCSS plugin on the base side reports the head's copy of a changed
+      repository file, and the base fails with the milestone 3 diagnostic.
+- [ ] Save a one-time proof under `.context/built-repository-packages/`:
+      the `dependency` path that real Tailwind reports for a bare `@import`
+      of a repository package through its `node_modules` link. Use that
+      path form in the equal-bytes unit case. A Tailwind release that
+      changes its reports needs a new proof, not a test.
 - [ ] Add the check where the core takes in the plugin reports,
       `crates/mokly-render/src/postcss_inventory.rs`.
 - [ ] Update the Tailwind section of the
@@ -693,9 +705,6 @@ package. This milestone waits for decisions 1 and 2.
   - [ ] A rule change in `src/card.css` gives the component a changed
         rule.
   - [ ] A change only in the head's `dist` gives no change.
-  - [ ] With Tailwind and a plugin-inlined `@import "widget/button.css"`,
-        a differing package stylesheet makes Changes unavailable with the
-        decision 2 diagnostic, and equal bytes keep Changes ready.
 - [ ] Run `npm test -- tests/static_changes_built_packages.test.ts`. Save
       the output under `.context/built-repository-packages/static/`.
 
