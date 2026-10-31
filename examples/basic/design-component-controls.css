@@ -1,9 +1,6 @@
 /* Typed control fixtures share the component inspector, with native form
-   fields. The Props tab's form, its status over the preview, and the text
-   buttons of its alerts are the shipped ones, from their @mokly/ui
-   stylesheets, in the package's order. */
-@import "../../packages/ui/src/text-button/text-button.css";
-@import "../../packages/ui/src/controls-panel/controls-panel.css";
+   fields. The component details sheet draws the Props tab's form, and the
+   status over the preview is the shipped one, from its @mokly/ui stylesheet. */
 @import "../../packages/ui/src/edit-status/edit-status.css";
 
 /* The preview holds the edit status, which centres at its bottom. */

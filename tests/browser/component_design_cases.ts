@@ -98,7 +98,12 @@ export function registerComponentDesign(
         await expect(
           preview.getByRole("button", { name: "Continue" }),
         ).toBeDisabled();
-        await expect(page.getByLabel("Supplied props")).toContainText("true");
+        // The variant page edits the Disabled variant's own props in place.
+        await expect(
+          page
+            .getByRole("region", { name: "Props", exact: true })
+            .getByRole("checkbox", { name: "disabled", exact: true }),
+        ).toBeChecked();
         await page.getByRole("button", { name: "Usage", exact: true }).click();
         const welcome = page
           .locator('[data-usage-section="used-by"]')

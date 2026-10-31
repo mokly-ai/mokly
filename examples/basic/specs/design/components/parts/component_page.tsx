@@ -5,13 +5,14 @@ import type { ArtboardViewport } from "../../parts/shell.js";
 import { actionEntries } from "./action_props.js";
 import { componentComparison } from "./comparison_fixtures.js";
 import {
-  actionEntryOf,
   ComponentDetails,
   type ComponentPageState,
 } from "./component_details.js";
 import { ComponentLayout } from "./component_layout.js";
+import { actionEntryOf } from "./component_props.js";
 import { VariantPicker } from "./controls.js";
 import { COMPONENT_PAGES } from "./destinations.js";
+import { toolbarAction } from "./fixtures.js";
 import type { PropsLimit } from "./limit.js";
 import { COMPONENT_ENTRY_BY_STATE } from "./metadata.js";
 import type { ChangeScenario } from "./navigation_tree.js";
@@ -126,7 +127,7 @@ export function ComponentPage({
         ) : (
           <ComponentCanvas viewport={previewViewport}>
             {state === "toolbar" ? (
-              <ToolbarExample />
+              <ToolbarExample highlightLabel={toolbarAction} />
             ) : state === "hidden" ? (
               <p className="ce-empty-copy">
                 This variant has no visible content.

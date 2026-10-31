@@ -24,7 +24,15 @@ function ReadOnly({ viewport }: { viewport: ArtboardViewport }) {
     <ComponentPage
       state="unused"
       viewport={viewport}
-      limit={{ design: LIMIT_PAGES["read-only"], panel: <ReadOnlyPanel /> }}
+      limit={{
+        design: LIMIT_PAGES["read-only"],
+        panel: (
+          <ReadOnlyPanel
+            title="Badge"
+            values={[{ name: "label", value: '"New"' }]}
+          />
+        ),
+      }}
     />
   );
 }

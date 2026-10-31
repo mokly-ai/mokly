@@ -66,7 +66,7 @@ test("shell stylesheet stays aligned with the design contract", () => {
   );
 });
 
-test("both split dividers share one grip affordance", () => {
+test("both split dividers share one grip shape and pointer look, and rest in their palette colours", () => {
   const css = flatCss(STANDALONE_CSS);
   for (const grip of [
     '.mbk-nav-resize::after { content: ""; position: absolute; ' +
@@ -75,7 +75,7 @@ test("both split dividers share one grip affordance", () => {
       "transition: background 120ms ease, box-shadow 120ms ease; }",
     '.mbk-inspector-resize::after { content: ""; position: absolute; ' +
       "top: 7px; left: calc(50% - 16px); width: 32px; height: 2px; " +
-      "border-radius: 999px; background: var(--chrome-border-strong); " +
+      "border-radius: 999px; background: var(--chrome-control-edge); " +
       "transition: background 120ms ease, box-shadow 120ms ease; }",
   ])
     assert.ok(css.includes(grip), grip);
@@ -143,19 +143,19 @@ test("tag chips select in the accent and the bar clears the scrim", () => {
   );
   assert.ok(
     css.includes(
-      ".mbk-chip.tag:is(a, button):hover { background: var(--mokly-accent-soft); }",
+      ".mbk-chip.tag:is(a, button):not(.active):hover { background: var(--mokly-accent-soft); }",
     ),
   );
   assert.ok(
     css.includes(
-      ".mbk-chip.tag:is(a, button).active { background: var(--mokly-accent); " +
+      ".mbk-chip.tag.active { background: var(--mokly-accent); " +
         "border-color: var(--mokly-accent); " +
         "color: var(--mokly-accent-contrast); }",
     ),
   );
   assert.ok(
     css.includes(
-      ".mbk-chip.tag:is(a, button).active svg { color: var(--mokly-accent-contrast); }",
+      ".mbk-chip.tag.active svg { color: var(--mokly-accent-contrast); }",
     ),
   );
   assert.ok(
@@ -177,11 +177,12 @@ test("the tag picker drops from the field and sheets under the bar", () => {
   assert.match(STANDALONE_CSS, /\.mbk-search \{[^}]*position: relative;/);
   assert.match(
     STANDALONE_CSS,
-    /\.mbk-search-tag \{[^}]*width: 20px;[^}]*height: 20px;[^}]*cursor: pointer;/,
+    /\.mbk-search-tag \{[^}]*width: 20px;[^}]*height: 20px;/,
   );
+  assert.ok(css.includes(".mbk-search-tag:is(a, button) { cursor: pointer; }"));
   assert.ok(
     css.includes(
-      ".mbk-search-tag:hover { background: var(--chrome-border); " +
+      ".mbk-search-tag:is(a, button):hover { background: var(--chrome-border); " +
         "color: var(--chrome-ink-2); }",
     ),
   );

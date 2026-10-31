@@ -78,6 +78,44 @@ test("the counts take the singular for one component and one nested instance", (
   );
 });
 
+test("a static depiction's instances with addresses are links, the selected one is current, and named lists start open", () => {
+  const linked = (
+    key: string,
+    nested: readonly InstanceNode[] = [],
+  ): InstanceNode => ({ ...node(key, nested), href: `#${key}` });
+  const { container } = render(
+    tree({
+      initiallyExpanded: ["a"],
+      selectedKey: "b",
+      usage: {
+        components: 1,
+        instances: [linked("a", [linked("b")])],
+        status: "ready",
+        total: 2,
+      },
+    }),
+  );
+  assert.deepEqual(
+    screen
+      .queryAllByRole("link")
+      .map((link) => [
+        link.textContent,
+        link.getAttribute("href"),
+        link.getAttribute("aria-current"),
+        link.className,
+      ]),
+    [
+      ["Action · a-id", "#a", null, "mbk-instance-select"],
+      ["Action · b-id", "#b", "true", "mbk-instance-select"],
+    ],
+  );
+  assert.equal(
+    container.querySelectorAll("button.mbk-instance-select").length,
+    0,
+  );
+  assert.equal(container.querySelector("details")?.open, true);
+});
+
 test("one viewport offers no choice, and a choice reports its viewport", () => {
   assert.doesNotMatch(
     renderToStaticMarkup(tree({ viewports: VIEWPORTS.slice(0, 1) })),

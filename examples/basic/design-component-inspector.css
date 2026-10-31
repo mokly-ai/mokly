@@ -3,20 +3,9 @@
 :where(.mbk-inspector-content p) {
   margin-top: 0;
 }
-/* The artboard's own instance lists, selected instance, and comparison
-   details keep their counts, spacing, and width. */
-.mbk-inspector-content h3 > span {
-  color: var(--chrome-muted);
-  font-size: 11px;
-  font-weight: 400;
-  margin-left: 6px;
-}
-:where(.mbk-inspector-content) :is(.ce-selected-instance, .ce-usage-section) p,
-:where(.mbk-inspector-content) .ce-comparison-evidence > p {
+/* The selected instance's own line keeps its spacing. */
+:where(.mbk-inspector-content) .ce-selected-instance p {
   margin: 0 0 12px;
-}
-.ce-instance-tree {
-  max-width: 680px;
 }
 /* Mobile panels float over the preview and retain their own scroll position.
    The sheet sits on the workspace's bottom edge and keeps the safe area
@@ -38,13 +27,4 @@
     .mbk-sheet-grab > input:checked
   ) {
   height: 85cqh;
-}
-/* Interim, until the user chooses between the shipped sheet, inset 8px from
-   each side, and the contracts' full-width sheet: a sheet that no dock
-   places keeps the full width that the artboards drew before. */
-@media (width < 56.25rem) {
-  .mbk-inspector[data-inspector-disclosures] {
-    left: 0;
-    right: 0;
-  }
 }

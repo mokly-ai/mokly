@@ -62,7 +62,7 @@ export function registerComponentEvidence(
         ])[]) {
           await page.goto(componentDesignUrl(route, viewport));
           await expect(
-            page.locator(".ce-preview-pane .ce-comparison-evidence"),
+            page.locator(".ce-preview-pane [data-workspace-evidence]"),
           ).toHaveCount(0);
           await expect(page.locator(".ce-change-context")).toHaveCount(0);
           const details = page.getByRole("region", {
@@ -74,12 +74,14 @@ export function registerComponentEvidence(
               .getByRole("button", { name: "Details", exact: true })
               .click();
           await expect(details).toContainText("Comparison details");
-          await expect(page.locator(".ce-comparison-evidence")).toHaveCount(1);
+          await expect(page.locator("[data-workspace-evidence]")).toHaveCount(
+            1,
+          );
           await expect(
-            page.locator(".ce-comparison-evidence"),
+            page.locator("[data-workspace-evidence]"),
           ).not.toContainText("corners and spacing");
           await expectReasonSentences(
-            page.locator(".ce-comparison-evidence"),
+            page.locator("[data-workspace-evidence]"),
             reasons,
             `${viewport} ${route}`,
           );
@@ -96,7 +98,9 @@ export function registerComponentEvidence(
           "design/components/states/empty",
         ]) {
           await page.goto(componentDesignUrl(route, viewport));
-          await expect(page.locator(".ce-comparison-evidence")).toHaveCount(0);
+          await expect(page.locator("[data-workspace-evidence]")).toHaveCount(
+            0,
+          );
         }
       });
 
@@ -113,10 +117,13 @@ export function registerComponentEvidence(
         await page
           .getByRole("button", { name: "Details", exact: true })
           .click();
-        const evidence = page.locator(".ce-comparison-evidence");
+        const evidence = page.locator("[data-workspace-evidence]");
         await expect(evidence).toContainText("Action · Footer action");
-        await expect(evidence.getByRole("table")).toContainText("Continue");
-        await expect(evidence.getByRole("table")).toContainText("Get started");
+        // Each view pairs the instance's props before and after the change.
+        await expect(evidence.locator("pre")).toContainText([
+          "Continue",
+          "Get started",
+        ]);
         await expect(
           evidence.getByText("Changed component: Action", { exact: true }),
         ).toHaveCount(1);
@@ -182,6 +189,7 @@ export function registerComponentEvidence(
           "design/components/inspection/inspection-highlight",
           "design/components/inspection/inspection-nested",
           "design/components/inspection/inspection-consumer",
+          "design/components/pages/toolbar",
         ]) {
           await page.goto(componentDesignUrl(route, viewport));
           await page

@@ -1,7 +1,7 @@
 # Shell controls lack a consistent focus ring
 
 - **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
-- **Kind:** Outside the scope.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-30, from the branch `calummoore/mokly-ui-component-migration`, during the chrome mockup adoption of the shell views plan. Broadened on 2026-10-30, from the branch `calummoore/mokly-ui-controls`, during the control mockup adoption.
 - **Location:** `packages/ui/src/top-bar/top-bar.css`, the rule that sets `outline: none` on the search field. `packages/ui/src/tag-chip/tag-chip.css` and `packages/ui/src/tag-picker/tag-picker.css`, which give the tag chips and the tag button no focus rule. `packages/ui/src/icon-control/icon-control.css`, the focus rule of the view controls and the inspector tabs.
 - **Reason:** The user chose on 2026-10-30 to keep the shipped look in that plan, and these focus styles are older than the plan.
@@ -59,5 +59,6 @@
 - **Wider fix:** C.
 - **Previous examples:** None found.
 - **Recommendation:** B. One rule restores a visible focus indicator.
-- **Action:** ask the user, because condition 1 holds: B changes the shipped
-  look, which the user chose to keep on 2026-10-30.
+- **Answer:** On 2026-10-31 the user chose B.
+- **Action:** fix after merge, apply B, because the user called this work a
+  follow-up of the shell views stack.

@@ -5,9 +5,9 @@
 /* Prose links take the deep sage. The links that @mokly/ui components draw
    keep the look of their package stylesheets, as the shipped shell draws
    them: the brand, the catalogue rows, the crumbs, the menu, the comparison
-   modes, the Usage rows, the selected instance's component link, Reset, the
-   text buttons, the variants, an empty state's action, and a flow step's
-   screen. */
+   modes, the Usage rows, the instance tree, the selected instance's component
+   link, Reset, the text buttons, the variants, an empty state's action, and a
+   flow step's screen. */
 .ce-design
   a:where(
     :not(
@@ -17,6 +17,7 @@
       .mbk-menu,
       .mbk-seg > a,
       .mbk-usage-list a,
+      .mbk-instance-select,
       .ce-selected-instance > a,
       .mbk-controls-reset,
       .mbk-text-button,
@@ -37,6 +38,7 @@
       .mbk-menu,
       .mbk-seg > a,
       .mbk-usage-list a,
+      .mbk-instance-select,
       .ce-selected-instance > a,
       .mbk-controls-reset,
       .mbk-text-button,
@@ -183,31 +185,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.ce-comparison-evidence {
-  border-top: 1px solid var(--chrome-border);
-  margin-top: 20px;
-  padding-top: 16px;
-}
-/* A sentence after a list or the props table keeps the card's spacing. */
-.ce-comparison-evidence :is(ul, table) + p {
-  margin-top: 14px;
-}
-.ce-comparison-paths li {
-  overflow-wrap: anywhere;
-}
-.ce-prop-comparison {
-  border-collapse: collapse;
-  font-size: 12px;
-  table-layout: fixed;
-  text-align: left;
-  width: 100%;
-}
-.ce-prop-comparison th,
-.ce-prop-comparison td {
-  border-bottom: 1px solid var(--chrome-border);
-  overflow-wrap: anywhere;
-  padding: 8px 4px;
 }
 .ce-mobile-location {
   background: white;

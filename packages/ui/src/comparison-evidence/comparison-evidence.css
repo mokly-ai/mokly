@@ -1,5 +1,6 @@
 /* The comparison facts in an entry's Details, below a rule. Each paragraph and
-   list keeps a small gap, and a paragraph after a list a larger one. */
+   list, the saved variant's rows included, keeps a small gap, and a paragraph
+   after a list a larger one. */
 .mbk-comparison-evidence {
   margin-top: 20px;
   padding-top: 16px;
@@ -7,7 +8,8 @@
 }
 
 .mbk-comparison-evidence p,
-.mbk-comparison-evidence ul {
+.mbk-comparison-evidence ul,
+.mbk-comparison-evidence dl {
   margin: 8px 0 0;
 }
 
@@ -15,6 +17,6 @@
   overflow-wrap: anywhere;
 }
 
-.mbk-comparison-evidence ul + p {
+.mbk-comparison-evidence :is(ul, dl) + p {
   margin-top: 14px;
 }

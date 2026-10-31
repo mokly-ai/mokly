@@ -16,6 +16,7 @@ import { COMPONENT_STYLE_COPY } from "../../parts/stylesheet_evidence.js";
 import type { ActionProps } from "./action_props.js";
 import { ChecklistExample } from "./checklist.js";
 import { toolbarPrompt } from "./fixtures.js";
+import { SingleHighlight } from "./highlight.js";
 import type { ComponentId } from "./metadata.js";
 
 /** The same synthetic Action is composed by component and consuming-screen designs. */
@@ -45,11 +46,27 @@ export function ActionExample({
 }
 
 /** The Toolbar's prompt and its Action, as the branch point or the head renders them. */
-export function ToolbarExample({ before = false }: { before?: boolean }) {
+export function ToolbarExample({
+  before = false,
+  highlightLabel,
+}: {
+  before?: boolean;
+  /**
+   * The label of the Action's highlight region, for a preview whose Highlight
+   * components switch highlights the Action alone. Without it the Action has
+   * no region of its own.
+   */
+  highlightLabel?: string;
+}) {
+  const action = <ActionExample before={before} />;
   return (
     <div className="ce-toolbar-example">
       <span>{toolbarPrompt}</span>
-      <ActionExample before={before} />
+      {highlightLabel === undefined ? (
+        action
+      ) : (
+        <SingleHighlight label={highlightLabel}>{action}</SingleHighlight>
+      )}
     </div>
   );
 }
