@@ -18,8 +18,11 @@
   `{slot} · Supplied by this page` when the selected entry supplied the
   content, and `{slot} · Supplied by a parent component` otherwise. The
   design mockups named the owner by its title, as in "Supplied by
-  Welcome.", until the shell views plan made them render the shipped
-  `PropsPanel` on 2026-10-31. They now show the product's words.
+  Welcome." and "Supplied by Main toolbar.", in
+  [`instance_details.tsx`](https://github.com/mokly-ai/mokly/blob/7edabc306d6983c43824e1425782215e44e0d7f0/examples/basic/specs/design/components/parts/instance_details.tsx?plain=1#L78-L85),
+  until the shell views plan made them render the shipped `PropsPanel` on
+  2026-10-31. No mockup shows a slot line now, because no depicted instance
+  supplies a slot.
 - **Problem:** The product says "this page" for every entry kind, also for
   a screen, and "a parent component" without naming it.
 - **Impact if no action:** A user can misread which entry supplied the
@@ -42,8 +45,8 @@
   [workspace-evidence-screen-copy.md](./workspace-evidence-screen-copy.md)
   has the same class: "Page" in shell copy that also shows on screens. One
   noun source per entry kind would serve both.
-- **Recommendation:** B. It gives the user the specific owner and needs no
-  new design. C best protects the wording class.
+- **Recommendation:** B. It gives the user the specific owner, as the
+  earlier design did. C best protects the wording class.
 - **Action:** ask the user, because condition 5 holds: the user reserved
   the choice for each open review item of the rebuild.
 

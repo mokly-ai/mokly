@@ -17,9 +17,13 @@
     loads the host, starts inspection, and holds one operation in a probe
     while it replaces the frame or the request.
   - On 2026-10-31 the same-origin "labels success, request replacement" test
-    failed with `Error: page.evaluate: Execution context was destroyed, most
-likely because of a navigation.` at line 79. The other 31 tests of the
-    spec passed in the same run.
+    failed at line 79 with this error. The other 31 tests of the spec passed
+    in the same run.
+
+    ```text
+    Error: page.evaluate: Execution context was destroyed, most likely because of a navigation.
+    ```
+
   - `plans/follow-ups/flaky-viewer-selection-navigation.md` records the same
     error in another spec, `tests/browser/viewer.spec.ts`.
 - **Problem:** A navigation of the host page can happen while the test's
