@@ -44,11 +44,11 @@ function CatalogueView({
       />
       <Stage>
         {viewport === "desktop" ? (
-          <BrowserFrame address="example.test/welcome" label="Desktop">
+          <BrowserFrame address="example.test/welcome">
             <MiniWelcome />
           </BrowserFrame>
         ) : (
-          <PhoneFrame small label="Mobile">
+          <PhoneFrame small>
             <MiniWelcome compact />
           </PhoneFrame>
         )}

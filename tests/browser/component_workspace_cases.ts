@@ -94,14 +94,33 @@ export function registerComponentWorkspace(
         await expect(
           toolbar.getByRole("switch", { name: "Dark preview" }),
         ).toHaveCount(0);
-        await expect(page.locator(".ce-canvas:visible .ce-scheme")).toHaveText([
-          "Light",
-          "Light",
-        ]);
-        await expect(page.locator(".ce-canvas:visible").first()).toHaveCSS(
+        await expect(
+          page.locator(".mbk-component-canvas:visible .mbk-frame-label"),
+        ).toHaveText(["Mobile", "Desktop"]);
+        const documents = page.locator(
+          ".mbk-component-canvas:visible .ce-canvas-content",
+        );
+        await expect(documents.first()).toHaveCSS(
           "background-color",
           "rgb(255, 255, 255)",
         );
+        // The component stands where the shell's documents draw it: 24px from
+        // the top left inside the canvas's border.
+        expect(
+          await documents.evaluateAll((boxes) =>
+            boxes.map((box) => {
+              const inner = box.getBoundingClientRect();
+              const component = box.firstElementChild!.getBoundingClientRect();
+              return [
+                component.left - inner.left - box.clientLeft,
+                component.top - inner.top - box.clientTop,
+              ];
+            }),
+          ),
+        ).toEqual([
+          [24, 24],
+          [24, 24],
+        ]);
         await expect(
           page.locator(".mbk-topbar .mbk-seg, .ce-inspection-toolbar"),
         ).toHaveCount(0);

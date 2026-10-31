@@ -3,7 +3,6 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { ComparisonFailure } from "../src/shell/diffs.js";
 import { MoklyViewer } from "../src/viewer/component.js";
 import { loadIndexSource, sourceUrl } from "../src/viewer/sources.js";
 
@@ -246,14 +245,5 @@ test("the embedded viewer is one busy status line while its index loads", () => 
   assert.match(
     html,
     /^<div aria-busy="true" class="mokly-viewer mbk-empty" tabindex="-1"[^>]*><p role="status">Loading catalogue…<\/p><\/div>$/,
-  );
-});
-
-test("a comparison that could not load offers Try again", () => {
-  assert.match(
-    renderToStaticMarkup(
-      <ComparisonFailure details="offline" retry={() => undefined} />,
-    ),
-    /^<p>The comparison could not be loaded\. <button class="mbk-empty-link" data-diff-refresh="" type="button">Try again<\/button><\/p>/,
   );
 });

@@ -1,5 +1,44 @@
-/** Package-owned shell styling; concatenation preserves delivered bytes. */
-export const CSS_CHROME_FLOW = `
+/* The stage of a user flow scrolls its column of steps. */
+.mbk-flow {
+  flex: 1;
+  overflow: auto;
+  padding: 28px 28px 40px;
+}
+
+.mbk-flow .flow-track {
+  gap: 26px;
+}
+
+.mbk-flow .flow-step::before {
+  top: 32px;
+  bottom: -26px;
+}
+
+.mbk-flow .flow-step-head h3 {
+  font-size: 16px;
+}
+
+/* The steps, joined by a rail from each number to the next. */
+.flow-track {
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
+}
+
+.flow-step {
+  position: relative;
+}
+
+.flow-step::before {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 34px;
+  bottom: -34px;
+  width: 2px;
+  background: var(--chrome-border);
+}
+
 .flow-step:last-child::before {
   display: none;
 }
@@ -51,20 +90,7 @@ export const CSS_CHROME_FLOW = `
 }
 
 @media (max-width: 760px) {
-  .phone-frame {
-    width: min(390px, 100%);
-    height: auto;
-    aspect-ratio: 390 / 844;
-  }
-
-  .browser-frame {
-    width: 100%;
-    min-width: 0;
-    height: 560px;
-  }
-
   .flow-step::before {
     display: none;
   }
 }
-`;

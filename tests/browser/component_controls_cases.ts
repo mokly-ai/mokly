@@ -30,13 +30,17 @@ export function registerComponentControls(
       await page.goto(
         componentDesignUrl("design/components/overview", viewport),
       );
-      const saved = await page.locator(".ce-canvas:visible").boundingBox();
+      const saved = await page
+        .locator(".mbk-component-canvas:visible")
+        .boundingBox();
       // The desktop canvas keeps the shell's fixed 1024px layout width.
       if (viewport === "desktop") expect(saved?.width).toBe(1024);
       await page.goto(
         componentDesignUrl("design/components/controls/controls", viewport),
       );
-      const editable = await page.locator(".ce-canvas:visible").boundingBox();
+      const editable = await page
+        .locator(".mbk-component-canvas:visible")
+        .boundingBox();
       expect(editable?.width).toBe(saved?.width);
     });
 
@@ -57,9 +61,11 @@ export function registerComponentControls(
           .getByRole("region", { name: "Props", exact: true })
           .getByRole("checkbox", { name: "disabled", exact: true }),
       ).toBeChecked();
-      await expect(page.locator(".ce-canvas:visible")).toHaveCount(1);
+      await expect(page.locator(".mbk-component-canvas:visible")).toHaveCount(
+        1,
+      );
       await expect(
-        page.locator(".ce-canvas:visible .ce-action"),
+        page.locator(".mbk-component-canvas:visible .ce-action"),
       ).toBeDisabled();
       await page.goto(
         componentDesignUrl(
@@ -95,9 +101,9 @@ export function registerComponentControls(
           viewport,
         ),
       );
-      await expect(page.locator(".ce-canvas:visible .ce-action")).toHaveText(
-        "Get started",
-      );
+      await expect(
+        page.locator(".mbk-component-canvas:visible .ce-action"),
+      ).toHaveText("Get started");
       await expect(
         controls.getByRole("textbox", { name: "label", exact: true }),
       ).toHaveValue("Get started");
@@ -110,10 +116,12 @@ export function registerComponentControls(
           viewport,
         ),
       );
-      await expect(page.locator(".ce-canvas:visible")).toHaveCount(1);
-      await expect(page.locator(".ce-canvas:visible .ce-action")).toHaveText(
-        "Continue",
+      await expect(page.locator(".mbk-component-canvas:visible")).toHaveCount(
+        1,
       );
+      await expect(
+        page.locator(".mbk-component-canvas:visible .ce-action"),
+      ).toHaveText("Continue");
       await expect(
         controls.getByRole("textbox", { name: "label", exact: true }),
       ).toHaveValue("Continue");
@@ -121,9 +129,11 @@ export function registerComponentControls(
         .getByRole("navigation", { name: "Saved variants" })
         .getByRole("link", { name: "Disabled", exact: true })
         .click();
-      await expect(page.locator(".ce-canvas:visible")).toHaveCount(1);
+      await expect(page.locator(".mbk-component-canvas:visible")).toHaveCount(
+        1,
+      );
       await expect(
-        page.locator(".ce-canvas:visible .ce-action"),
+        page.locator(".mbk-component-canvas:visible .ce-action"),
       ).toBeDisabled();
       await expect(
         controls.getByRole("checkbox", { name: "disabled", exact: true }),
@@ -142,10 +152,9 @@ export function registerComponentControls(
       await expect(radius).toHaveAccessibleDescription(
         "Enter a number from 0 to 24.",
       );
-      await expect(page.locator(".ce-canvas:visible .ce-action")).toHaveCSS(
-        "border-radius",
-        "8px",
-      );
+      await expect(
+        page.locator(".mbk-component-canvas:visible .ce-action"),
+      ).toHaveCSS("border-radius", "8px");
       await page.goto(
         componentDesignUrl("design/components/controls/states/error", viewport),
       );
@@ -258,14 +267,16 @@ export function registerComponentControls(
           viewport,
         ),
       );
-      await expect(page.locator(".ce-canvas:visible")).toHaveCount(1);
+      await expect(page.locator(".mbk-component-canvas:visible")).toHaveCount(
+        1,
+      );
       await expect(
         page
           .getByRole("region", { name: "Props", exact: true })
           .locator("input, select"),
       ).toHaveCount(0);
       await expect(
-        page.locator(".ce-canvas:visible .ce-action"),
+        page.locator(".mbk-component-canvas:visible .ce-action"),
       ).toBeDisabled();
     });
   }

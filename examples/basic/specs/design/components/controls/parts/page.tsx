@@ -25,6 +25,13 @@ import {
 } from "./fixtures.js";
 import { ControlsPanel } from "./panel.js";
 
+/** The path of each Action entry that a controls story shows. */
+const ENTRY_PATHS: Record<ActionEntry, string> = {
+  parent: COMPONENT_ENTRIES.action.path,
+  default: COMPONENT_ENTRIES.actionDefault.path,
+  disabled: COMPONENT_ENTRIES.actionDisabled.path,
+};
+
 /**
  * Action's own entry first, then its saved variants. Each option opens that
  * entry's controls in the same context. No artboard depicts the parent's own
@@ -41,7 +48,12 @@ function ControlsVariants({ state }: { state: ControlsState }) {
   ) => {
     const current = fixture.variant === entry;
     const to = current ? CONTROLS_PAGES[state] : published ? readonly : local;
-    return { label, ...(to ? { to } : {}), ...(current ? { current } : {}) };
+    return {
+      label,
+      path: ENTRY_PATHS[entry],
+      ...(to ? { to } : {}),
+      ...(current ? { current } : {}),
+    };
   };
   return (
     <VariantBar
@@ -59,7 +71,7 @@ function ControlsVariants({ state }: { state: ControlsState }) {
           CONTROLS_PAGES.variant,
           CONTROLS_PAGES["readonly-variant"],
         ),
-        { label: "Secondary" },
+        { label: "Secondary", path: "example/components/action/secondary" },
       ]}
     />
   );

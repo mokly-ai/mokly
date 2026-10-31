@@ -243,7 +243,7 @@ export function registerComponentEvidence(
         await expect(
           page.getByRole("group", { name: "Comparison mode" }),
         ).toHaveCount(0);
-        await expect(preview.locator(".mbk-pane-missing")).toHaveCount(0);
+        await expect(preview.locator(".mb-pane-missing")).toHaveCount(0);
         await expect(preview.locator(".ce-badge")).toHaveText("New");
         await expect(
           page.locator(

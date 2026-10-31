@@ -24,7 +24,7 @@ const LIBRARY_ROOTS: readonly (readonly string[])[] = [
   ["phone-frame"],
   ["browser-frame"],
   ["mbk-frame-label"],
-  ["mbk-compare-side"],
+  ["mb-pane"],
   ["mbk-empty"],
   ["flow-step"],
 ];

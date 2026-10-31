@@ -143,6 +143,32 @@ the designs' order. The host supplies each text that it derives from the
 catalogue, and the controls' wording, which the design catalogue shares.
 `TextButton` is the text button of these panels.
 
+`Stage` draws the dotted stage of a preview. `PreviewFrame` draws one frame on
+it: the wrapper that records the scheme of the shown render, the viewport's
+label with the `LightOnlyNote` of `scheme-fallback`, and the lines of a
+preview that is unavailable or that failed to load. `DocumentFrame` hosts a
+whole document, and `PreviewIframe` is the `<iframe>` element itself, always
+sandboxed without scripts. The host passes the frame's `ref`, its `src` or
+`srcDoc`, its `key`, and its data attributes in their order, and it loads and
+reads the frame's document; no component reads it. `PhoneFrame` and
+`BrowserFrame` draw the device chrome, and the window draws its bar with
+`BrowserBar`. A press on the address reaches `onCopy` and shows "URL copied"
+for a moment, and the toggle asks for the expanded state through
+`onExpandedChange`, because the host owns which window is expanded.
+
+`FlowStage` and `FlowStep` draw a user flow's steps, `PreviousVersion` a
+removed entry's band and stage host, and `StageLoading`, `StageFailure`,
+`PreviewLoading`, `PreviewUnavailable`, and `PreviewNotCaptured` the states
+of a preview that has not arrived. `EmptyState` draws the quiet state of a
+stage, and `HomeState`, `MissingRouteState`, `RemovedState`, and
+`RemovedVariantState` the shell's own. `ComparisonStage` draws the comparison
+of an entry around the band that the host renders, with its sections, panes
+grid, and failure. `ComparisonPane` and `ComparisonLayer` draw one version,
+and `ComparisonViewport` and `ComparisonSurface` pass their elements to the
+host's scroll controller through refs. `VariantBar` draws a component's saved
+variants. The host supplies the wording of its copy modules, such as the
+unavailable previous version and the comparison's state labels.
+
 A static mockup sets `disclosures` on `Inspector`, which draws each tab as a
 native disclosure of one group, named by `contentId`: a tab opens its panel
 and closes it again without a script, one tab at a time, and Close is part of
@@ -160,6 +186,14 @@ failed start's action, and Switch to Current as links. `InstanceTree` draws an
 instance with an `href` as a link with the button's look, whose selected one is
 the current page, and starts with the nested lists that `initiallyExpanded`
 names open.
+
+A static mockup sets `interactive={false}` on `BrowserFrame` or `BrowserBar`,
+which draws the bar as a picture of itself: the address copies nothing, the
+toggle is a picture named by what it would do, and neither takes the pointer
+or the hover look. On `EmptyState`, `interactive={false}` draws an action
+without an `href` as a picture of itself. A `VariantBar` variant without an
+`href` is a picture of its link that keeps the link's look and its current
+mark.
 
 ## Development
 
@@ -284,6 +318,39 @@ override the desktop layout rules.
   `evidence-files.tsx`
 - [`src/text-button/text-button.tsx`](./src/text-button/text-button.tsx) —
   `TextButton`, the text button of the inspector's panels
+- [`src/stage/stage.tsx`](./src/stage/stage.tsx) — `Stage`, the dotted
+  surface of live frames, of a component's canvases, or of a state
+- [`src/preview-frame/preview-frame.tsx`](./src/preview-frame/preview-frame.tsx)
+  — `PreviewFrame`, `DocumentFrame`, and `PreviewIframe`: a frame's wrapper,
+  label, and lines, a whole document's frame, and the `<iframe>` element
+- [`src/device-frame/device-frame.tsx`](./src/device-frame/device-frame.tsx)
+  — `PhoneFrame` with the status band of `phone-status.tsx`, and
+  `BrowserFrame`, whose expanded window covers the page, or whose bar is a
+  picture in a static depiction
+- [`src/browser-bar/browser-bar.tsx`](./src/browser-bar/browser-bar.tsx) —
+  `BrowserBar`: the traffic lights, the address with its "URL copied"
+  message, and the expand toggle of a browser window, as controls or as
+  pictures of a static depiction
+- [`src/flow-step/flow-step.tsx`](./src/flow-step/flow-step.tsx) —
+  `FlowStage` and `FlowStep`: a user flow's column of numbered steps
+- [`src/previous-version/previous-version.tsx`](./src/previous-version/previous-version.tsx)
+  — `PreviousVersion`: the band and the stage host of a removed entry
+- [`src/preview-state/preview-state.tsx`](./src/preview-state/preview-state.tsx)
+  — the loading, failed, unavailable, and missing states of a preview
+- [`src/scheme-fallback/scheme-fallback.tsx`](./src/scheme-fallback/scheme-fallback.tsx)
+  — `LightOnlyNote` and `LightOnlyBand`, which only a Dark shell shows
+- [`src/empty-state/empty-state.tsx`](./src/empty-state/empty-state.tsx) —
+  `EmptyState` with its action, as a link, a button, or the picture of a
+  static depiction, and the home, missing route, and removed states
+- [`src/comparison-stage/comparison-stage.tsx`](./src/comparison-stage/comparison-stage.tsx)
+  — `ComparisonStage`, `ComparisonSection`, `ComparisonPanes`, and
+  `ComparisonFailure`: Current, the comparison stage, and its sections
+- [`src/comparison-pane/comparison-pane.tsx`](./src/comparison-pane/comparison-pane.tsx)
+  — `ComparisonPane`, `ComparisonLayer`, `ComparisonViewport`,
+  `ComparisonSurface`, and `ComponentFrame`: one version and its viewport
+- [`src/variant-bar/variant-bar.tsx`](./src/variant-bar/variant-bar.tsx) —
+  `VariantBar`: the links of a component's saved variants, or the pictures
+  of a static depiction, and the status
 - [`scripts/build.mjs`](./scripts/build.mjs) — compiles the package, copies
   each CSS file beside its JavaScript, and writes `styles.css`
 - [`scripts/styles.mjs`](./scripts/styles.mjs) — finds the component

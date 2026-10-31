@@ -1,35 +1,37 @@
-import { DesignLink } from "../../parts/design_navigation.js";
+import { mockLink } from "@mokly/mokly";
+
+import { EmptyState } from "../../../../../../packages/ui/src/empty-state/empty-state.js";
 
 import type { EmptyStateProps } from "./empty-state.js";
 
-/** A loading state is busy and announces its body as a status. */
+/**
+ * The shipped quiet state of a stage. A loading state is busy and announces
+ * its body as a status. The action links to the artboard of its outcome. A
+ * static artboard runs no script, so an action without a destination is a
+ * picture of itself.
+ */
 export function EmptyStateView({
-  title,
-  body,
-  code,
   actionLabel,
-  destination,
+  body,
   busy,
+  code,
+  destination,
+  title,
 }: EmptyStateProps) {
   return (
-    <div className="mbk-empty" aria-busy={busy ? "true" : undefined}>
-      {title ? <h2>{title}</h2> : null}
-      {body || code ? (
-        <p role={busy ? "status" : undefined}>
-          {body}
-          {code ? (
-            <>
-              {" "}
-              <code>{code}</code>
-            </>
-          ) : null}
-        </p>
-      ) : null}
-      {actionLabel ? (
-        <DesignLink to={destination}>
-          <span className="mbk-empty-link">{actionLabel}</span>
-        </DesignLink>
-      ) : null}
-    </div>
+    <EmptyState
+      action={
+        actionLabel === undefined || actionLabel === ""
+          ? undefined
+          : destination === undefined
+            ? { label: actionLabel }
+            : { href: mockLink(destination), label: actionLabel }
+      }
+      body={body || undefined}
+      busy={busy ?? false}
+      code={code || undefined}
+      interactive={false}
+      title={title || undefined}
+    />
   );
 }

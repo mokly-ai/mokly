@@ -1,15 +1,14 @@
 # Shell Views In The UI Package
 
-Status: Active. [PR #249](https://github.com/mokly-ai/mokly/pull/249), with
-milestones 1 to 5, merged on 2026-10-30 as `14c6f9ec`. The later slices are
-stacked branches: milestones 6 to 8 on `calummoore/mokly-ui-controls`, where
-[PR #251](https://github.com/mokly-ai/mokly/pull/251) merged as `7edabc30`, 9
-to 11 on `calummoore/mokly-ui-inspector`, where
-[PR #253](https://github.com/mokly-ai/mokly/pull/253) is open, 12 to 14 on `calummoore/mokly-ui-preview`,
-and 15 to 20 on `calummoore/mokly-ui-layout-theme`. The work lands as a stack
-of five pull requests, one for each slice, as design call 11 says. Each
-earlier pull request keeps this plan. The last one deletes it, as the `plans`
-skill says.
+Status: Active. [PR #249](https://github.com/mokly-ai/mokly/pull/249),
+[PR #251](https://github.com/mokly-ai/mokly/pull/251), and
+[PR #253](https://github.com/mokly-ai/mokly/pull/253), with milestones 1 to
+11, merged on 2026-10-30 and 2026-10-31. Milestones 12 to 14 are on
+`calummoore/mokly-ui-preview`, where
+[PR #254](https://github.com/mokly-ai/mokly/pull/254) is open, and 15 to 20 on
+`calummoore/mokly-ui-layout-theme`. The work lands as a stack of five pull
+requests, one for each slice, as design call 11 says. Each earlier pull
+request keeps this plan. The last one deletes it, as the `plans` skill says.
 
 `@mokly/ui` holds four parts of the Browse shell since
 [PR #243](https://github.com/mokly-ai/mokly/pull/243): the icons, the change
@@ -604,9 +603,13 @@ them. Files under `src/shell` drop the prefix. `views.tsx` and
   `comparison_frame`, `comparison_side`, `comparison_stack`,
   `comparison_viewport`, `comparison_views`, `diffs`, `workspace_stage`,
   `workspace_variant_bar`, and the empty states of `views`.
-- Package components: `device-frame`, `preview-frame`, `flow-step`, `stage`,
-  `preview-state`, `previous-version`, `scheme-fallback`, `comparison-pane`,
-  `comparison-stage`, `empty-state`, and `variant-bar`.
+- Package components: `device-frame`, `browser-bar`, `preview-frame`,
+  `flow-step`, `stage`, `preview-state`, `previous-version`,
+  `scheme-fallback`, `comparison-pane`, `comparison-stage`, `empty-state`,
+  and `variant-bar`. Milestone 12 split `browser-bar` from `device-frame`,
+  because one stylesheet passed 300 lines. `status_bar.tsx` moved into the
+  package, `scheme_fallback` became a `.ts` module, and the viewer's
+  `PreviewFrame` became `SnapshotFrame` beside the package's `PreviewFrame`.
 - CSS sources: `css_chrome_devices`, `css_chrome_expansion`,
   `css_chrome_flow`, `css_preview_scheme`, `css_previews`, `css_review`, and
   the frame, stage, flow, and empty-state rules of `css_views_layout` and
@@ -1047,18 +1050,25 @@ previous-version presentation, the comparison panes and stage, the empty
 states, and the variant bar. The frame hooks, the adapters, the comparison
 scroll controllers, and the snapshot loaders stay in the viewer.
 
-- [ ] Create the package components of the preview slice, with their CSS,
+- [x] Create the package components of the preview slice, with their CSS,
       exports, and order. The package renders each `<iframe>` element under
       design call 4.
-- [ ] The viewer files of the slice become containers. Move their rules and
+- [x] The viewer files of the slice become containers. Move their rules and
       delete each emptied module.
-- [ ] Tests as in milestone 3: the copied address and its message, expand and
+- [x] Tests as in milestone 3: the copied address and its message, expand and
       collapse, each frame label and Light-only note, the loading,
       unavailable, and retry states, each comparison pane state, and each empty
       state.
-- [ ] Remove the files of the slice from the lint exemption list.
-- [ ] Check as in milestone 3, with the comparison and scrolling browser
+- [x] Remove the files of the slice from the lint exemption list.
+- [x] Check as in milestone 3, with the comparison and scrolling browser
       specs. Save evidence under `.context/ui-package-shell-views/preview/`.
+- [x] Done on 2026-10-30 by the ui implementor on
+      `calummoore/mokly-ui-preview` and checked: identical markup in 1105
+      cases, identical built CSS rules, zero computed-style differences across
+      166 states, no new order-tool pair, 1024 browser tests and 2856 Node
+      tests passed. The palette test now checks that its scan holds each
+      module that `css.ts` composes, instead of a module count that each
+      slice lowered. Evidence: `.context/ui-package-shell-views/preview/`.
 
 ## Milestone 13: Preview mockups
 
@@ -1066,17 +1076,41 @@ Tags: mockup
 
 Depends on: 12
 
-- [ ] Adopt `preview/device-frame`, `preview/comparison-pane`,
+The inventory's `preview/device-frame` includes the frame caption, which the
+package draws in `PreviewFrame`. Its view renders `PreviewFrame` with
+`PhoneFrame` or `BrowserFrame`. Found by milestone 12 on 2026-10-30.
+
+- [x] Adopt `preview/device-frame`, `preview/comparison-pane`,
       `preview/empty-state`, and `preview/flow-step` as milestone 4 adopts the
       chrome, including decision 2 and the comparison with the earlier renders.
-- [ ] Run the mockup check and smoke-test the changed pages.
+- [x] Run the mockup check and smoke-test the changed pages.
+- [x] Done on 2026-10-31 by the ui implementor and checked, with decision 6
+      applied: the library's device frame, comparison pane, empty state, and
+      flow step, and every artboard copy of the preview slice, render the
+      package components, including the explorer's canvas, comparison frame,
+      and section headings. Zero computed-style differences across 166
+      states, 2909 Node tests, 1420 design browser tests, and the repository
+      suite passed. Static forms added: `BrowserBar` and `BrowserFrame`
+      `interactive`, `VariantBarItem` `href`, and `EmptyState` and
+      `EmptyAction` `interactive`. Calls: the browser toggle and the address
+      pill keep their shipped hairlines, which the palette contract names;
+      explorer captions name the viewport only; the comparison pane names its
+      side, and the device frame's caption follows where it stands, so the
+      `label` and `scheme` props go; the explorer draws each component 24px
+      from the frame's top left, as the shell's documents do. Evidence:
+      `.context/ui-package-shell-views/preview-mockups/`.
 
 ## Milestone 14: Fourth pull request
 
 Depends on: 12, 13
 
-- [ ] Merge, gate, commit, push, review, and open the pull request on the
+- [x] Merge, gate, commit, push, review, and open the pull request on the
       third one, as milestone 8 says.
+- [x] Done on 2026-10-31: the branch merged the inspector branch and
+      `origin/main` at `9f68de16` (#253). Review round 1 found no finding in
+      scope. On `a30efb0d` the remote gate passed 5 of 7 suites, and browser
+      shards 1 and 4 passed on reruns after two known flaky tests. Reports:
+      `.context/reviews/calummoore/mokly-ui-preview/`.
 
 ## Milestone 15: Layout components
 

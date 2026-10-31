@@ -59,7 +59,6 @@ export function ExampleWorkspace({
           );
         return previewViewport === "mobile" ? (
           <PhoneFrame
-            label="Mobile"
             small={viewport === "mobile"}
             dark={dark}
             lightOnly={lightOnly}
@@ -69,7 +68,6 @@ export function ExampleWorkspace({
         ) : (
           <BrowserFrame
             address={`example.test/${subject}`}
-            label="Desktop"
             dark={dark}
             lightOnly={lightOnly}
           >

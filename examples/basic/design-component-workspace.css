@@ -73,6 +73,13 @@
   min-height: 100%;
   overflow: visible;
 }
+/* The preview pane lays out the shipped previous version and comparison
+   stage as the shell's preview pane does: a column whose stage fills it and
+   scrolls, below the previous version's band. */
+.ce-preview-pane:has(> :is(.mbk-preview, .mbk-diff-screen)) {
+  display: flex;
+  flex-direction: column;
+}
 /* The dock places and sizes the shipped inspector, which fills it, so the
    inspector neither places itself nor stacks above the preview's sizer. */
 .ce-inspector-dock {
@@ -106,10 +113,10 @@
 }
 /* A current desktop canvas sizes its view, centred while it fits and
    otherwise from the left edge of the scrolling preview pane. */
-.ce-preview-set:has(.ce-canvas--current) {
+.ce-preview-set:has(.mbk-component-canvas) {
   justify-content: safe center;
 }
-.ce-preview-view[data-preview-viewport="desktop"]:has(.ce-canvas--current) {
+.ce-preview-view[data-preview-viewport="desktop"]:has(.mbk-component-canvas) {
   flex: 0 0 auto;
   min-width: 0;
 }
@@ -129,10 +136,10 @@
   .mbk-preview-switch {
   display: none;
 }
-.ce-preview-view .ce-canvas--mobile {
+.ce-preview-view .mbk-component-canvas.mbk-frame-mobile {
   margin-inline: auto;
 }
-.ce-preview-view > .mbk-frame-mobile {
+.ce-preview-view > .mbk-device-frame > .mbk-frame-mobile {
   margin-inline: auto;
 }
 .ce-preview-view .mbk-frame-desktop {

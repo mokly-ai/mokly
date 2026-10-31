@@ -62,7 +62,7 @@ async function assertFragmentEligibility(
     componentDesign &&
     (await page.locator('.mbk-entry-status[data-status="Removed"]').count()) >
       0 &&
-    (await page.locator(".ce-variants").count()) > 0;
+    (await page.locator(".mbk-selection-bar").count()) > 0;
   const expected =
     changedDesigns.has(entry.path) ||
     affectedDesigns.has(entry.path) ||
@@ -71,10 +71,7 @@ async function assertFragmentEligibility(
   const toolbar = page.locator(".mbk-diff-toolbar");
   await expect(toolbar, fragment).toHaveCount(expected ? 1 : 0);
   if (!expected) {
-    await expect(
-      page.locator(".mbk-comparison-stage h3"),
-      fragment,
-    ).toHaveCount(0);
+    await expect(page.locator(".mbk-diff-view > h3"), fragment).toHaveCount(0);
   } else {
     await expect(toolbar, fragment).toHaveCSS(
       "background-color",

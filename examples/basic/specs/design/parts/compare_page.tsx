@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { PreviewWorkspace } from "../components/parts/workspace.js";
 
 import type { AppearanceChoice } from "./appearance.js";
-import { ComparisonStage } from "./compare.js";
+import { ComparisonStage, ComparisonView } from "./compare.js";
 import type { DesignDestination } from "./destinations.js";
 import { DetailsPanel, type CardEvidence } from "./details.js";
 import { reasonEvidence, type ChangeReasonKind } from "./reason_sentences.js";
@@ -94,9 +94,12 @@ export function ComparePage({
           />
         }
         render={(previewViewport) => (
-          <ComparisonStage state={state} viewport={previewViewport}>
+          <ComparisonView state={state} viewport={previewViewport}>
             {render(previewViewport)}
-          </ComparisonStage>
+          </ComparisonView>
+        )}
+        wrap={(previews) => (
+          <ComparisonStage path={path}>{previews}</ComparisonStage>
         )}
       />
     </Shell>

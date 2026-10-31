@@ -1,83 +1,8 @@
-/** Package-owned shell styling; concatenation preserves delivered bytes. */
-export const CSS_CHROME_DEVICES = `
-.phone-frame {
-  position: relative;
-  width: 390px;
-  height: 844px;
-  padding: 12px;
-  border-radius: 46px;
-  background: var(--mbk-device-body);
-}
-
-/* The decorative notch and home pill let pointers through to the document;
-   the screen itself keeps pointer events, so links under the pill work. */
-.phone-notch,
-.phone-home {
-  pointer-events: none;
-}
-
-.phone-notch {
-  position: absolute;
-  top: 22px;
-  left: 50%;
-  z-index: 2;
-  width: 108px;
-  height: 30px;
-  transform: translateX(-50%);
-  border-radius: 999px;
-  background: var(--mbk-device-notch);
-}
-
-.phone-screen {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-  border-radius: 36px;
-}
-
-.phone-status {
-  position: relative;
-  z-index: 1;
-  flex: 0 0 44px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  height: 44px;
-  padding: 14px 28px 0;
-  font-size: 13.5px;
-  font-weight: 600;
-  font-feature-settings: "tnum";
-}
-
-.phone-status-icons {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.phone-home {
-  position: absolute;
-  left: 50%;
-  bottom: 20px;
-  width: 128px;
-  height: 4px;
-  transform: translateX(-50%);
-  border-radius: 999px;
-  pointer-events: none;
-}
-
-.browser-frame {
-  width: 100%;
-  max-width: 1180px;
-  height: 760px;
-  overflow: hidden;
-  border: 1px solid var(--chrome-border-strong);
-  border-radius: 8px;
-  background: var(--chrome-surface);
-}
-
+/* The bar of a browser window: its traffic lights, the address pill with its
+   copy glyph and "URL copied" message, and the expand toggle. The bar of a
+   static depiction is a picture of itself, so its address and its toggle
+   keep their resting look: the pointer and the hover rules apply only to the
+   bar that acts. */
 .browser-bar {
   position: relative;
   height: 40px;
@@ -147,12 +72,12 @@ export const CSS_CHROME_DEVICES = `
   color: var(--chrome-muted);
 }
 
-.address:hover {
+:where(.browser-bar:not([data-browser-static])) .address:hover {
   background: var(--chrome-surface);
   color: var(--chrome-ink);
 }
 
-.address:hover .address-copy {
+:where(.browser-bar:not([data-browser-static])) .address:hover .address-copy {
   color: var(--chrome-accent);
 }
 
@@ -175,4 +100,66 @@ export const CSS_CHROME_DEVICES = `
   box-shadow: var(--chrome-shadow-sheet);
   animation: addressCopiedIn 0.18s ease-out;
 }
-`;
+
+.address-copied::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 8px;
+  height: 8px;
+  background: var(--chrome-ink);
+}
+
+@keyframes addressCopiedIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.browser-expand {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--chrome-border);
+  border-radius: 6px;
+  background: var(--chrome-surface);
+  color: var(--chrome-muted);
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+:where(.browser-bar:not([data-browser-static])) .browser-expand:hover {
+  background: var(--chrome-surface);
+  color: var(--chrome-accent);
+  border-color: var(--chrome-border-strong);
+}
+
+/* The address and the toggle of a static depiction act on nothing. */
+.browser-bar[data-browser-static] :is(.address, .browser-expand) {
+  cursor: default;
+}
+
+.browser-expand .i-expand,
+.browser-expand .i-collapse {
+  display: inline-flex;
+}
+
+.browser-expand .i-collapse {
+  display: none;
+}

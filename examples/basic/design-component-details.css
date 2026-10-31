@@ -9,7 +9,8 @@
 @import "../../packages/ui/src/text-button/text-button.css";
 @import "../../packages/ui/src/controls-panel/controls-panel.css";
 
-.ce-design code {
+/* The code that a @mokly/ui empty state draws keeps its package size. */
+.ce-design code:where(:not(.mbk-empty code)) {
   font-family: var(--mono);
   font-size: 11px;
 }

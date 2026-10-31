@@ -6,7 +6,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { shellCatalogueModel } from "../src/catalogue/shell_model.js";
 import type { ColorScheme } from "../src/data/axes.js";
-import { SHELL_PREVIEW_CSS } from "../src/shell/css_previews.js";
 import { DocumentStageFrame } from "../src/shell/document_stage_frame.js";
 import {
   removedPreviewData,
@@ -121,15 +120,4 @@ test("a removed document with no dark render adds the note to its label", () => 
     );
     assert.doesNotMatch(html, /Light only/u);
   }
-});
-
-test("the stylesheet names a document's fallback only under Dark", () => {
-  const css = SHELL_PREVIEW_CSS.replace(/\s+/gu, " ");
-  const dark = 'body[data-mokly-color-scheme="dark"]';
-  for (const rule of [
-    ".mbk-previous.mbk-scheme-fallback { display: none; }",
-    `${dark} .mbk-previous.mbk-scheme-fallback { display: block; }`,
-    `${dark} .mbk-previous[data-color-scheme-fallback] .mbk-frame-scheme-note { display: inline; }`,
-  ])
-    assert.ok(css.includes(rule), rule);
 });

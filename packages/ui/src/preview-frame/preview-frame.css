@@ -1,0 +1,132 @@
+/* The frame of each viewport on a stage: the phone keeps its size, and the
+   browser window grows up to its full width. */
+.mbk-frame-wrap {
+  min-width: 0;
+}
+
+.mbk-frame-mobile {
+  flex: 0 0 auto;
+}
+
+.mbk-frame-desktop {
+  flex: 0 1 1180px;
+  min-width: 0;
+}
+
+.mbk-frame-desktop .browser-frame {
+  width: 100%;
+}
+
+.mbk-frame-label {
+  margin: 0 0 10px;
+  color: var(--chrome-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* A light-only view under Dark keeps its light frame and names that fallback
+   in its frame label. Screen frames and component canvases both carry the
+   fallback mark. */
+body[data-mokly-color-scheme="dark"]
+  .mbk-frame-wrap[data-color-scheme-fallback]
+  .mbk-frame-scheme-note,
+body[data-mokly-color-scheme="dark"]
+  .mbk-component-canvas[data-color-scheme-fallback]
+  .mbk-frame-scheme-note {
+  display: inline;
+}
+
+/* The screen of a user flow's step, below the step's heading. */
+.mbk-flow-screen {
+  margin-left: 44px;
+  max-width: 1180px;
+}
+
+.mbk-flow-screen .browser-frame {
+  height: 640px;
+}
+
+.mbk-flow-screen .browser-frame.is-expanded {
+  height: auto;
+}
+
+/* A whole document fills the stage. */
+.mbk-stage-embed {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  padding: 18px 24px;
+  overflow: auto;
+  background: radial-gradient(
+      circle at center,
+      var(--mbk-dot) 1px,
+      transparent 1px
+    )
+    0 0 / 22px 22px;
+}
+
+.mbk-stage-embed iframe {
+  flex: 1;
+  width: 100%;
+  min-height: 520px;
+  border: 1px solid var(--chrome-border);
+  border-radius: 12px;
+}
+
+.mbk-frag {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+@media (max-width: 760px) {
+  .mbk-frame-desktop {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  .mbk-flow-screen {
+    margin-left: 0;
+  }
+}
+
+/* A preview surface follows the scheme of the shown document, independently
+   of the shell's appearance, so transparent content keeps its base. */
+.mbk-frag {
+  color-scheme: light;
+  background: var(--mbk-screen-bg);
+}
+
+[data-preview-color-scheme="dark"] .mbk-frag {
+  color-scheme: dark;
+  background: var(--mbk-dark-screen-bg);
+}
+
+/* A component's canvas: the bordered frame of one viewport's render. */
+.mbk-component-canvas {
+  flex: none;
+}
+
+.mbk-component-canvas.mbk-frame-mobile {
+  width: 390px;
+}
+
+.mbk-component-canvas.mbk-frame-desktop {
+  width: 1024px;
+}
+
+.mbk-component-canvas iframe {
+  width: 100%;
+  height: 520px;
+  display: block;
+  border: 1px solid var(--chrome-border);
+  border-radius: 8px;
+}
+
+/* The chrome of a comparison pane fills its column. */
+.mb-pane-chrome {
+  width: 100%;
+}

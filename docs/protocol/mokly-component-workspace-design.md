@@ -200,7 +200,7 @@ only the reasons that fit, so that a recoverable mismatch never hides the entry.
 | `metadata`       | “Page details or saved examples changed.”                |
 
 The `implementation` sentence describes actual-instance impact. The
-component's own view states and comparison captions stay unchanged. The
+component's own view states and comparison headings stay unchanged. The
 `design/components/states/shared-impact/style-changed` artboard depicts it: a
 markup change shows only where screens use Action, so Details read the
-sentence while the Default caption still names only the changed styles.
+sentence while the comparison headings still name only the changed styles.

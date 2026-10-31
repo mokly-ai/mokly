@@ -285,7 +285,7 @@
     },
     {
       "source": "design/components/overview",
-      "within": "ce-variants",
+      "within": "mbk-selection-bar",
       "name": "Disabled",
       "target": "design/components/pages/variants"
     },

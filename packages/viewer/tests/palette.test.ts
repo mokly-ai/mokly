@@ -63,8 +63,14 @@ test("no shell stylesheet names a colour outside a palette source", async () => 
 
 test("the shell stylesheets were actually scanned", async () => {
   const modules = await styleModules();
-  assert.ok(modules.length > 15, `only ${modules.length} modules scanned`);
-  for (const source of [...PALETTE_SOURCES, PACKAGE_STYLESHEET])
+  // Every module that the shell stylesheet composes, wherever it lives.
+  const composed = [
+    ...(
+      await fs.readFile(new URL("../src/shell/css.ts", import.meta.url), "utf8")
+    ).matchAll(/from "\.\/(css[a-z_]*)\.js"/gu),
+  ].map((match) => `${match[1]}.ts`);
+  assert.ok(composed.length > 3, `only ${composed.length} modules composed`);
+  for (const source of [...composed, ...PALETTE_SOURCES, PACKAGE_STYLESHEET])
     assert.ok(
       modules.some((module) => module.file === source),
       `${source} is missing`,
