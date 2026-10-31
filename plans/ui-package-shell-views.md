@@ -1285,6 +1285,12 @@ artboards draw its parts with their own scaffolds.
       `docs/protocol/mokly-component-design.md` says "Details uses a clipped
       scrim". When the scrim depicts the highlight mask, render the package
       mask and align the doc. Found by milestone 1 on 2026-10-30.
+- [ ] Decision 6: the Browse and Changes artboards that draw an enabled
+      Highlight components switch depict the Action and Toolbar of the real
+      Welcome and Details screens, and draw their highlights with the
+      package mask. One record per depicted view holds the highlight state
+      and the preview's regions, and the header and the preview read it.
+      Delete `plans/follow-ups/browse-artboard-highlight-drawing.md`.
 - [ ] Run the mockup check and smoke-test the changed pages.
 
 ## Milestone 20: Last pull request
