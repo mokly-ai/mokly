@@ -81,6 +81,7 @@ export function PropField({
       id={id}
       label={label}
       named={named}
+      nativeSupply={false}
       onSupply={onSupply}
       optional={optional}
       supplied={supplied}
@@ -130,7 +131,10 @@ interface FrameProps {
  * One field of a static depiction, around a native control that the host
  * draws itself: an input or a select with the field's id. The control carries
  * the id of the help or the error that describes it, its invalid state, and
- * its value. The help and the error take the ids of `PropField`.
+ * its value. The help and the error take the ids of `PropField`. A static
+ * depiction runs no script, so an optional field draws both its control and
+ * its Not set line under `data-native-supply`, and the package stylesheet
+ * shows the one that matches the Set check box.
  */
 export function PropFieldFrame({
   input,
@@ -140,7 +144,7 @@ export function PropFieldFrame({
   input: ReactNode;
 }) {
   return (
-    <FieldFrame {...frame} named={false}>
+    <FieldFrame {...frame} named={false} nativeSupply>
       {input}
     </FieldFrame>
   );
@@ -159,6 +163,7 @@ function FieldFrame({
   id,
   label,
   named,
+  nativeSupply,
   onSupply,
   optional,
   supplied,
@@ -168,7 +173,12 @@ function FieldFrame({
   children: ReactNode;
   /** Whether the control names itself, so the label column names nothing. */
   named: boolean;
+  /** Whether the Set check box alone shows the field's state, without a script. */
+  nativeSupply: boolean;
 }) {
+  // An optional field whose Set check box shows its state without a script
+  // draws both states under its marker.
+  const native = nativeSupply && optional;
   const heading = (
     <>
       {label}
@@ -183,7 +193,10 @@ function FieldFrame({
     </>
   );
   return (
-    <div className="mbk-control-field mbk-reset">
+    <div
+      className="mbk-control-field mbk-reset"
+      data-native-supply={native ? "" : undefined}
+    >
       {named ? (
         <span className="mbk-control-label mbk-reset">{heading}</span>
       ) : (
@@ -205,7 +218,7 @@ function FieldFrame({
           </label>
         ) : null}
         {children}
-        {supplied ? null : (
+        {supplied && !native ? null : (
           <p className="mbk-control-unset mbk-reset">{wording.notSet}</p>
         )}
         <small
