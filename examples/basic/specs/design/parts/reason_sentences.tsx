@@ -34,18 +34,3 @@ export function reasonEvidence(
     reason === "dependency" ? [] : [{ key: reason, text: SENTENCES[reason] }],
   );
 }
-
-/** The same sentences as paragraphs, for the explorer's own evidence. */
-export function ReasonSentences({
-  reasons,
-}: {
-  reasons: readonly ChangeReasonKind[];
-}) {
-  return (
-    <>
-      {reasonEvidence(reasons).map((reason) => (
-        <p key={reason.key}>{reason.text}</p>
-      ))}
-    </>
-  );
-}

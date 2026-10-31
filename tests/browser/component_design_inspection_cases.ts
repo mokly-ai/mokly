@@ -88,7 +88,7 @@ export function registerComponentDesignInspection(
           }
           if (route === "nested") {
             await expect(
-              page.locator(".ce-instance-tree details").first(),
+              page.locator(".mbk-instance-tree details").first(),
             ).toHaveAttribute("open", "");
             await expect(
               page.getByRole("region", { name: "Selected instance" }),
@@ -125,9 +125,11 @@ export function registerComponentDesignInspection(
         await page
           .getByRole("button", { name: "Components", exact: true })
           .click();
+        // The tree lists the instance that renders nothing, and its
+        // selection says that it has no visible region.
         await page
-          .locator(".ce-instance-tree summary")
-          .filter({ hasText: "Help hint" })
+          .locator(".mbk-instance-tree")
+          .getByRole("link", { name: "Help hint · Help" })
           .click();
         await expect(
           page.getByText("No visible region", { exact: true }),

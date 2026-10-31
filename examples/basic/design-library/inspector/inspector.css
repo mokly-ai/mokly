@@ -69,28 +69,11 @@
   width: 36px;
   height: 5px;
   border-radius: 9px;
-  background: var(--chrome-muted);
-  opacity: 0.5;
+  background: var(--chrome-control-edge);
 }
 
 .mbk-shell--mobile
   .mbk-inspector[data-inspector-disclosures]:has(> details[open])
   > .mbk-inspector-resize {
   display: none;
-}
-
-/* Interim, until the user chooses between the shipped grip and grabber
-   colours and the palette contract's control edge: the artboards keep the
-   control edge that they drew before. */
-.mbk-inspector[data-inspector-disclosures] > .mbk-inspector-resize::after {
-  background: var(--chrome-control-edge);
-}
-
-.mbk-inspector[data-inspector-disclosures] > .mbk-sheet-grab > span,
-.mbk-shell--mobile
-  .mbk-inspector[data-inspector-disclosures]
-  > .mbk-sheet-grab
-  > span {
-  background: var(--chrome-control-edge);
-  opacity: 1;
 }

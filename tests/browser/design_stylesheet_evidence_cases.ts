@@ -158,7 +158,7 @@ export function registerDesignStylesheetEvidence(
         const count =
           viewport === "desktop" ? ".mbk-nav-filter-count" : ".ce-change-count";
         await expect(page.locator(count)).toHaveText("5");
-        const evidence = page.locator(".ce-comparison-evidence");
+        const evidence = page.locator("[data-workspace-evidence]");
         await expect(evidence).toContainText(
           "These changed styles also apply outside the changed components on this screen:",
         );
@@ -227,7 +227,7 @@ export function registerDesignStylesheetEvidence(
             "Before",
             "Current",
           ]);
-        const evidence = page.locator(".ce-comparison-evidence");
+        const evidence = page.locator("[data-workspace-evidence]");
         await expect(
           evidence.locator(".mbk-evidence-files > li > p"),
         ).toHaveText(["Changed styles that apply to this screen:"]);

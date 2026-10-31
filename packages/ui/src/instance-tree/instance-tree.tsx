@@ -18,6 +18,11 @@ export interface InstanceNode {
   /** The title of the instance's component, or its component id. */
   title: string;
   nested: readonly InstanceNode[];
+  /**
+   * The address that the instance of a static depiction opens, such as the
+   * document that shows it selected. The instance is then a link.
+   */
+  href?: string | undefined;
 }
 
 /** A viewport that the tab can show the instances of. */
@@ -57,16 +62,28 @@ function InstanceList({
     <ul className="mbk-instance-tree">
       {instances.map((instance) => (
         <li key={instance.key}>
-          <button
-            aria-pressed={selectedKey === instance.key}
-            className="mbk-instance-select"
-            data-instance-key={instance.key}
-            onClick={() => onSelect?.(instance.key)}
-            type="button"
-          >
-            {instance.title}
-            {` · ${instance.id}`}
-          </button>
+          {instance.href === undefined ? (
+            <button
+              aria-pressed={selectedKey === instance.key}
+              className="mbk-instance-select"
+              data-instance-key={instance.key}
+              onClick={() => onSelect?.(instance.key)}
+              type="button"
+            >
+              {instance.title}
+              {` · ${instance.id}`}
+            </button>
+          ) : (
+            <a
+              aria-current={selectedKey === instance.key ? "true" : undefined}
+              className="mbk-instance-select"
+              data-instance-key={instance.key}
+              href={instance.href}
+            >
+              {instance.title}
+              {` · ${instance.id}`}
+            </a>
+          )}
           {instance.nested.length ? (
             <details
               onToggle={(event) => {
@@ -95,6 +112,7 @@ function InstanceList({
 }
 
 export function InstanceTree({
+  initiallyExpanded = [],
   onFocus,
   onSelect,
   onViewport,
@@ -103,6 +121,11 @@ export function InstanceTree({
   viewport,
   viewports,
 }: {
+  /**
+   * The keys of the instances whose nested lists start open, for a static
+   * depiction that runs no script.
+   */
+  initiallyExpanded?: readonly string[] | undefined;
   /**
    * Receives the instance to point out when a nested list opens or closes:
    * the first nested instance of an opened list, or the instance whose list
@@ -124,7 +147,9 @@ export function InstanceTree({
    */
   viewports: readonly { key: string; viewport: InstanceViewport }[];
 }) {
-  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(
+    () => new Set(initiallyExpanded),
+  );
   return (
     <>
       {viewports.length > 1 ? (

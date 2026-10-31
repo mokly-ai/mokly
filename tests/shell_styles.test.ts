@@ -66,7 +66,7 @@ test("shell stylesheet stays aligned with the design contract", () => {
   );
 });
 
-test("both split dividers share one grip affordance", () => {
+test("both split dividers share one grip shape and pointer look, and rest in their palette colours", () => {
   const css = flatCss(STANDALONE_CSS);
   for (const grip of [
     '.mbk-nav-resize::after { content: ""; position: absolute; ' +
@@ -75,7 +75,7 @@ test("both split dividers share one grip affordance", () => {
       "transition: background 120ms ease, box-shadow 120ms ease; }",
     '.mbk-inspector-resize::after { content: ""; position: absolute; ' +
       "top: 7px; left: calc(50% - 16px); width: 32px; height: 2px; " +
-      "border-radius: 999px; background: var(--chrome-border-strong); " +
+      "border-radius: 999px; background: var(--chrome-control-edge); " +
       "transition: background 120ms ease, box-shadow 120ms ease; }",
   ])
     assert.ok(css.includes(grip), grip);

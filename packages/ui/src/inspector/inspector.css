@@ -168,8 +168,8 @@
 @media (width < 56.25rem) {
   .mbk-inspector {
     position: absolute;
-    left: 8px;
-    right: 8px;
+    left: 0;
+    right: 0;
     bottom: 0;
     border: 1px solid var(--chrome-border);
     border-bottom: 0;
@@ -213,8 +213,7 @@
     width: 36px;
     height: 5px;
     border-radius: 9px;
-    background: var(--chrome-muted);
-    opacity: 0.5;
+    background: var(--chrome-control-edge);
   }
 
   .mbk-inspector:not([data-open="true"]) .mbk-sheet-grab {
@@ -223,11 +222,13 @@
 }
 
 /* The separator above an open inspector on a desktop, rotated from the
-   catalogue navigation's separator, so that both share one resting, hover,
-   focus, and active look. The offset measures from the inspector's padding
-   box, so it clears the 1px top border as well as half the handle, which
-   leaves the grip centred on that border. The resizing class marks the shell
-   root during a drag, and every element in it follows. */
+   catalogue navigation's separator, so that both share one hover, focus, and
+   active look. At rest this grip draws the control edge, while the navigation
+   grip keeps the strong border that the palette contract names as an
+   exception. The offset measures from the inspector's padding box, so it
+   clears the 1px top border as well as half the handle, which leaves the grip
+   centred on that border. The resizing class marks the shell root during a
+   drag, and every element in it follows. */
 .mbk-inspector-resize {
   position: absolute;
   z-index: 2;
@@ -256,7 +257,7 @@
   width: 32px;
   height: 2px;
   border-radius: 999px;
-  background: var(--chrome-border-strong);
+  background: var(--chrome-control-edge);
   transition:
     background 120ms ease,
     box-shadow 120ms ease;

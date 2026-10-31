@@ -127,10 +127,10 @@ they do not generate visual-analysis prose or a separate banner. See the
 
 ## Screen Inspection
 
-The shared inspector puts component groups in Components, with native
-disclosures, counts, and repeated-instance links. Selecting an instance opens
-Props with its supplied values, slot/ownership details, and an Open component
-link. Details and Usage stay available without crowding the selected instance. Welcome has four
+The shared inspector lists the view's instances by owner in Components, with
+native disclosures for nested instances, counts, and a link from each instance
+to its selection. Selecting an instance opens Props with its supplied values,
+its slots, and an Open component link. Details and Usage stay available without crowding the selected instance. Welcome has four
 instances: Toolbar, two Actions, and an invisible Help hint. Nested Toolbar
 contents start collapsed and expand in the nested-selection artboard. Help hint
 has an inspection entry and component page, without an invented visible region.

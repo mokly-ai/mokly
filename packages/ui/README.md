@@ -154,7 +154,9 @@ itself in the field's label column, Set check box, Not set line, help, and
 error. `TextButton` with an `href` is a link with the button's look, and the
 controls panels take `resetHref`, `retryHref`, `startHref`, and `currentHref`,
 which draw Reset while the props differ, the alert's action, a failed start's
-action, and Switch to Current as links.
+action, and Switch to Current as links. `InstanceTree` draws an instance with
+an `href` as a link with the button's look, whose selected one is the current
+page, and starts with the nested lists that `initiallyExpanded` names open.
 
 ## Development
 
@@ -275,7 +277,8 @@ override the desktop layout rules.
   "3 instances"
 - [`src/comparison-evidence/comparison-evidence.tsx`](./src/comparison-evidence/comparison-evidence.tsx)
   — `ComparisonEvidence`: the comparison facts of Details in the designs'
-  order, with the heading and the files of `evidence-files.tsx`
+  order, with the saved variant's rows, the heading, and the files of
+  `evidence-files.tsx`
 - [`src/text-button/text-button.tsx`](./src/text-button/text-button.tsx) —
   `TextButton`, the text button of the inspector's panels
 - [`scripts/build.mjs`](./scripts/build.mjs) — compiles the package, copies

@@ -944,17 +944,10 @@ buttons with callbacks. Add optional static props to the package components,
 as `ComparisonToolbar` gained `modeHref` and `interactive`. Found by milestone
 9 on 2026-10-30.
 
-- [ ] Adopt `inspector/inspector`, `inspector/metadata-row`, and
+- [x] Adopt `inspector/inspector`, `inspector/metadata-row`, and
       `inspector/prop-field` as milestone 4 adopts the chrome, including
       decision 2 and the comparison with the earlier renders.
-- [ ] Run the mockup check and smoke-test the changed pages.
-- [ ] Waiting for the user since 2026-10-31: six choices between the
-      shipped form and a contract keep five artboard parts as copies and two
-      mockup-only rules. They are the invalid field border, the control edge
-      of the grip, the grabber and the entry chips, the grouping of the
-      Components tab, the in-place props editing of component pages, the
-      variant state of the explorer evidence, and the width of the mobile
-      sheet.
+- [x] Run the mockup check and smoke-test the changed pages.
 - [x] Adoption done on 2026-10-31 by the ui implementor and checked, apart
       from the parts above: the library's inspector, metadata row, and prop
       field, and every other artboard copy of the inspector slice, render the
@@ -970,6 +963,19 @@ as `ComparisonToolbar` gained `modeHref` and `interactive`. Found by milestone
       component", and "1 nested instance", and the static Reset link takes
       the Reset button's look. Evidence:
       `.context/ui-package-shell-views/inspector-mockups/`.
+- [x] Apply decision 6 to the six parts that waited for the user. Done on
+      2026-10-31 by the ui implementor and checked: an invalid prop field
+      draws `--mbk-danger-ink`; the resize grip, the sheet grabber, and the
+      use-case and screen chips draw `--chrome-control-edge`; the Components
+      tab renders the shipped `InstanceTree`, with a link form and lists that
+      start open; the component Props tab renders the controls panel in
+      place; `ComparisonEvidence` shows the saved variant and its saved props;
+      the mobile sheet spans the workspace. The explorer, component design,
+      and controls design contracts follow. The selected instance keeps its
+      shipped hairline, which the palette contract and the boundary audit
+      now name, under decision 6. The computed-style tool lists only these
+      intended differences. Evidence:
+      `.context/ui-package-shell-views/decision6/`.
 
 ## Milestone 11: Third pull request
 

@@ -1,7 +1,8 @@
 /**
  * The comparison facts in an entry's Details, in the designs' order: the
  * heading and the branch point, the path of a moved entry's earlier side, one
- * sentence for each reason, the changed and excluded stylesheets, the paired
+ * sentence for each reason, the saved variant and whether its saved props
+ * stayed the same, the changed and excluded stylesheets, the paired
  * prop values, the changed components that the entry uses, the ignored
  * content, the shared-component sentence, the changed saved props, and the
  * line of an entry without changes. The host words every sentence that it
@@ -10,7 +11,7 @@
 
 import { Fragment } from "react";
 
-import { MetadataCode } from "../metadata-row/metadata-row.js";
+import { MetadataCode, MetadataRow } from "../metadata-row/metadata-row.js";
 import type { DataAttribute } from "../segmented-control/segmented-control.js";
 
 import {
@@ -68,6 +69,7 @@ export function ComparisonEvidence({
   previousPath,
   reasons = [],
   savedProps,
+  savedVariant,
   sharedImpact,
 }: {
   /** The name of the branch point, or empty when it is not known. */
@@ -90,6 +92,11 @@ export function ComparisonEvidence({
   reasons?: readonly EvidenceReason[] | undefined;
   /** The saved props before and after the change, as text, when they changed. */
   savedProps?: { after: string; before: string } | undefined;
+  /**
+   * The saved variant that the evidence describes: its title, and whether a
+   * loaded comparison found its saved props unchanged.
+   */
+  savedVariant?: { savedPropsUnchanged: boolean; title: string } | undefined;
   /** The sentence of an entry that only changed components affect. */
   sharedImpact?: string | undefined;
 }) {
@@ -113,6 +120,18 @@ export function ComparisonEvidence({
           {reasons.map((reason) => (
             <p key={reason.key}>{reason.text}</p>
           ))}
+          {savedVariant ? (
+            <dl className="mbk-props">
+              <MetadataRow label="Saved variant" presentation="props">
+                {savedVariant.title}
+              </MetadataRow>
+              {savedVariant.savedPropsUnchanged ? (
+                <MetadataRow label="Saved props" presentation="props">
+                  Unchanged
+                </MetadataRow>
+              ) : null}
+            </dl>
+          ) : null}
           <StylesheetDetails excluded={excluded} files={files} />
           {inputChanges.map((change) => (
             <Fragment key={change.key}>

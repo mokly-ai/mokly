@@ -51,15 +51,12 @@ export function registerComponentControls(
       await page.goto(
         componentDesignUrl("design/components/pages/variants", viewport),
       );
-      await page
-        .getByRole("link", { name: "Edit props", exact: false })
-        .click();
-      await expect(page).toHaveURL(
-        componentDesignUrl(
-          "design/components/controls/editing/variant",
-          viewport,
-        ),
-      );
+      // The variant page edits the Disabled variant's props in place.
+      await expect(
+        page
+          .getByRole("region", { name: "Props", exact: true })
+          .getByRole("checkbox", { name: "disabled", exact: true }),
+      ).toBeChecked();
       await expect(page.locator(".ce-canvas:visible")).toHaveCount(1);
       await expect(
         page.locator(".ce-canvas:visible .ce-action"),

@@ -10,13 +10,6 @@
   gap: 14px;
 }
 
-/* Interim, until the user chooses between the shipped hairline of an entry
-   chip and the palette contract's control edge: the use-case chip link keeps
-   the control edge that the artboards drew before. */
-.mbk-chip.flow:is(a) {
-  border-color: var(--chrome-control-edge);
-}
-
 /* Preview tokens describe what a device screen shows. They are deliberately
    separate from the interface palette in design.css, so a light phone keeps its
    light surfaces and ink inside a dark Mokly interface. */

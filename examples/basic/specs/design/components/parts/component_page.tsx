@@ -7,11 +7,11 @@ import { COMPONENT_STYLE_COPY } from "../../parts/stylesheet_evidence.js";
 import { actionEntries } from "./action_props.js";
 import { componentComparison } from "./comparison_fixtures.js";
 import {
-  actionEntryOf,
   ComponentDetails,
   type ComponentPageState,
 } from "./component_details.js";
 import { ComponentLayout } from "./component_layout.js";
+import { actionEntryOf } from "./component_props.js";
 import { VariantPicker } from "./controls.js";
 import { COMPONENT_PAGES } from "./destinations.js";
 import { toolbarAction } from "./fixtures.js";

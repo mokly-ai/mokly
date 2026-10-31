@@ -61,7 +61,10 @@
   margin: 8px 0;
 }
 
-.mbk-control-field [aria-invalid="true"] {
+/* Each selector adds the invalid attribute to its control's border selector,
+   so the invalid border outranks the control edge. */
+.mbk-control-field input:not([type="checkbox"])[aria-invalid="true"],
+.mbk-control-field select[aria-invalid="true"] {
   border-color: var(--mbk-danger-ink);
 }
 

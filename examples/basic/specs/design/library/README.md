@@ -135,11 +135,13 @@ height. The prop field frames the native control of its slot, and draws an
 optional field's Set check box and Not set line; a scoped rule in its sheet
 reads the check box, so the field's control and Not set swap in place. The
 panels of the artboards render the shipped components as well: the Details
-body, the supplied props and the selected instance's props panel, the Usage
-lists and their loading states, the controls' form with its alerts, and the
-edit status over the preview. The Browse and Changes designs draw the shipped
-comparison evidence inside the approved bordered card. The panels' actions
-link to the artboards that show the outcome. Their stylesheets follow the
+body, the comparison evidence, the instance tree of the Components tab, the
+supplied props and the selected instance's props panel, the Usage lists and
+their loading states, the controls' form with its alerts, and the edit status
+over the preview. A component page edits its props in place, in the same form
+as the controls artboards. The Browse and Changes designs draw the shipped
+comparison evidence inside the approved bordered card. The panels' actions and
+the tree's instances link to the artboards that show the outcome. Their stylesheets follow the
 shell's breakpoint, and a mobile render draws the narrow sheet, details body,
 field column and status pill at every width.
 

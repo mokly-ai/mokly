@@ -65,7 +65,7 @@ pub(crate) fn check() {
                     "{path}"
                 );
             }
-            let details = dom::class(&document.tree, "ce-comparison-evidence");
+            let details = dom::class(&document.tree, "mbk-comparison-evidence");
             assert_eq!(details.len(), 1, "{path}");
             let text = dom::text(&details[0].children);
             assert!(
