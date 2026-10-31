@@ -99,6 +99,22 @@
   font-size: 11px;
 }
 
+/* A static depiction runs no script, so the Set check box of an optional
+   field shows the field's state in place: the control while checked, and the
+   Not set line while not. The static frame draws both under its marker. */
+.mbk-control-field[data-native-supply]:has(
+    > .mbk-control-value > .mbk-control-set > input:checked
+  )
+  > .mbk-control-value
+  > .mbk-control-unset,
+.mbk-control-field[data-native-supply]:has(
+    > .mbk-control-value > .mbk-control-set > input:not(:checked)
+  )
+  > .mbk-control-value
+  > :not(.mbk-control-set, .mbk-control-unset, small) {
+  display: none;
+}
+
 .mbk-control-field .mbk-control-error,
 .mbk-control-error {
   color: var(--mbk-danger-ink);

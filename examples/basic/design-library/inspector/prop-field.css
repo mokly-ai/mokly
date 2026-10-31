@@ -7,16 +7,3 @@
 .mbk-shell--mobile .mbk-control-field {
   grid-template-columns: 100px minmax(0, 1fr);
 }
-
-/* A static artboard runs no script, so the Set check box of an optional field
-   shows its value in place: the field's control while checked, and the Not
-   set line while not. */
-.mbk-control-field:has(> .mbk-control-value > .mbk-control-set > input:checked)
-  .mbk-control-unset,
-.mbk-control-field:has(
-    > .mbk-control-value > .mbk-control-set > input:not(:checked)
-  )
-  > .mbk-control-value
-  > :not(.mbk-control-set, .mbk-control-unset, small) {
-  display: none;
-}

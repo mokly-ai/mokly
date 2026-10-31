@@ -132,8 +132,9 @@ opening a tab closes the others, and the open tab's Close is part of the tab.
 The divider grip is a picture over the workspace's native sizer, and the
 sheet's grabber is a native switch that the dock reads for the expanded
 height. The prop field frames the native control of its slot, and draws an
-optional field's Set check box and Not set line; a scoped rule in its sheet
-reads the check box, so the field's control and Not set swap in place. The
+optional field's Set check box, its control, and its Not set line. The
+package's rule for a static field reads the check box, so the control and Not
+set swap in place. The
 panels of the artboards render the shipped components as well: the Details
 body, the comparison evidence, the instance tree of the Components tab, the
 supplied props and the selected instance's props panel, the Usage lists and

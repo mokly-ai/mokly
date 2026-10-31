@@ -133,7 +133,9 @@ workspace shows both viewports. Each instance reads as its component title and
 its instance label. Decision: the list follows ownership rather than grouping
 instances by component, because the owner tree already shows each nesting.
 Selecting an instance opens Props with supplied data, slot references, and
-links to its component page. Unrendered conditional branches do not appear;
+links to its component page. Decision: Props has no Highlight action of its
+own, because selecting an instance and the view toolbar's Highlight components
+toggle already highlight it. Unrendered conditional branches do not appear;
 null-rendering instances are listed without a visible region. An empty ready
 usage set says no registered components are used in this view. Unavailable
 usage says inspection is unavailable.
