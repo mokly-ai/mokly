@@ -177,12 +177,15 @@ The resize separator is then a picture of its grip, and the sheet's grab is a
 native switch that `expanded` starts checked, which a host stylesheet reads to
 size the sheet. `PropFieldFrame` frames a native control that the mockup draws
 itself in the field's label column, Set check box, Not set line, help, and
-error. `TextButton` with an `href` is a link with the button's look, and the
-controls panels take `resetHref`, `retryHref`, `startHref`, and `currentHref`,
-which draw Reset while the props differ, the alert's action, a failed start's
-action, and Switch to Current as links. `InstanceTree` draws an instance with
-an `href` as a link with the button's look, whose selected one is the current
-page, and starts with the nested lists that `initiallyExpanded` names open.
+error. An optional field draws both its control and its Not set line under
+`data-native-supply`, and the package stylesheet shows the one that matches
+the Set check box. `TextButton` with an `href` is a link with the button's
+look, and the controls panels take `resetHref`, `retryHref`, `startHref`, and
+`currentHref`, which draw Reset while the props differ, the alert's action, a
+failed start's action, and Switch to Current as links. `InstanceTree` draws an
+instance with an `href` as a link with the button's look, whose selected one is
+the current page, and starts with the nested lists that `initiallyExpanded`
+names open.
 
 A static mockup sets `interactive={false}` on `BrowserFrame` or `BrowserBar`,
 which draws the bar as a picture of itself: the address copies nothing, the

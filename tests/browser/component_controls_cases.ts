@@ -189,18 +189,37 @@ export function registerComponentControls(
           viewport,
         ),
       );
+      const props = page.getByRole("region", { name: "Props", exact: true });
+      const notSet = props.getByText("Not set", { exact: true });
       await expect(
         page.getByRole("checkbox", { name: "Set hint", exact: true }),
       ).not.toBeChecked();
       await expect(
         page.getByRole("textbox", { name: "hint", exact: true }),
       ).toBeHidden();
+      await expect(notSet).toBeVisible();
       await page
         .getByRole("checkbox", { name: "Set hint", exact: true })
         .check();
       await expect(
         page.getByRole("textbox", { name: "hint", exact: true }),
       ).toBeVisible();
+      await expect(notSet).toBeHidden();
+      // A field that starts supplied says Not set once the reader clears Set.
+      await page.goto(
+        componentDesignUrl(
+          "design/components/controls/controls/default",
+          viewport,
+        ),
+      );
+      await expect(notSet).toBeHidden();
+      await props
+        .getByRole("checkbox", { name: "Set hint", exact: true })
+        .uncheck();
+      await expect(
+        props.getByRole("textbox", { name: "hint", exact: true }),
+      ).toBeHidden();
+      await expect(notSet).toBeVisible();
       await page.goto(
         componentDesignUrl(
           "design/components/controls/states/comparison",
