@@ -68,7 +68,10 @@ export function RemovedScreen({
       }
     >
       <ScreenHead
-        action={<ViewSwitch active={selection ?? viewport} />}
+        // A removed screen has no current preview to inspect.
+        action={
+          <ViewSwitch active={selection ?? viewport} highlight="removed" />
+        }
         crumbs={["Example", "Screens"]}
         path={entry.path}
         status="removed"

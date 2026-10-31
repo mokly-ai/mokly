@@ -169,10 +169,11 @@ export function registerComponentSurfaces(
       expect(ink.y).toBeGreaterThanOrEqual(1);
       expect(ink.right).toBeLessThanOrEqual(15);
       expect(ink.bottom).toBeLessThanOrEqual(15);
-      const chevron = page.locator('[data-view-icon="chevron"]');
+      const chevron = page.locator(".mbk-icon-select svg").last();
       await expect(chevron).toBeVisible();
       const icon = await page
-        .locator(`.ce-viewport-control [data-view-icon="${viewport}"]`)
+        .locator(".mbk-icon-select svg")
+        .first()
         .boundingBox();
       const caret = (await chevron.boundingBox())!;
       expect(caret.y + caret.height / 2).toBeCloseTo(

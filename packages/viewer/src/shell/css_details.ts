@@ -1,11 +1,10 @@
 /** Details inspector styles: the collapsible bottom panel, its two-column
- * body, a whole-document page's comparison details, and the metadata rows and
- * chips it renders. The chip rules also dress the tag picker the search field
- * drops, so both surfaces draw one chip. */
+ * body, a whole-document page's comparison details, and the metadata rows it
+ * renders. `@mokly/ui/tag-chip` styles the chips of the rows. */
 
 import { NARROW_SHELL } from "./layout_breakpoint.js";
 
-/** Details inspector and shared chip styles. */
+/** Details inspector styles. */
 export const SHELL_DETAILS_CSS = `
 .mbk-details {
   flex-shrink: 0;
@@ -149,65 +148,6 @@ details.mbk-details[open] > summary.mbk-details-bar .chev svg {
   color: var(--mokly-accent);
   font-weight: 600;
   text-decoration: none;
-}
-
-.mbk-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.mbk-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 9px;
-  border: 1px solid var(--chrome-border);
-  border-radius: 999px;
-  background: var(--chrome-bg);
-  color: var(--chrome-ink-2);
-  font-size: 11.5px;
-  text-decoration: none;
-}
-
-.mbk-chip.flow svg {
-  flex-shrink: 0;
-  color: var(--mokly-accent);
-}
-
-.mbk-chip.screen svg {
-  flex-shrink: 0;
-  color: var(--chrome-muted);
-}
-
-.mbk-chip.tag:is(a, button) {
-  font: inherit;
-  font-size: 11.5px;
-  cursor: pointer;
-}
-
-.mbk-chip.tag svg {
-  flex-shrink: 0;
-  color: var(--chrome-muted);
-}
-
-.mbk-chip.tag:is(a, button):hover {
-  background: var(--mokly-accent-soft);
-}
-
-.mbk-chip.tag:is(a, button).active {
-  background: var(--mokly-accent);
-  border-color: var(--mokly-accent);
-  color: var(--mokly-accent-contrast);
-}
-
-.mbk-chip.tag:is(a, button).active svg {
-  color: var(--mokly-accent-contrast);
-}
-
-.mbk-chip.tag:is(a, button):active {
-  box-shadow: var(--chrome-shadow-press);
-  transform: translateY(1px);
 }
 
 @media ${NARROW_SHELL} {

@@ -8,6 +8,7 @@ import type { ArtboardViewport } from "../../parts/shell.js";
 import type { ActionProps } from "./action_props.js";
 import { ChecklistExample } from "./checklist.js";
 import { toolbarPrompt } from "./fixtures.js";
+import { SingleHighlight } from "./highlight.js";
 import type { ComponentId } from "./metadata.js";
 import { PreviewScheme } from "./view_controls.js";
 
@@ -38,11 +39,27 @@ export function ActionExample({
 }
 
 /** The Toolbar's prompt and its Action, as the branch point or the head renders them. */
-export function ToolbarExample({ before = false }: { before?: boolean }) {
+export function ToolbarExample({
+  before = false,
+  highlightLabel,
+}: {
+  before?: boolean;
+  /**
+   * The label of the Action's highlight region, for a preview whose Highlight
+   * components switch highlights the Action alone. Without it the Action has
+   * no region of its own.
+   */
+  highlightLabel?: string;
+}) {
+  const action = <ActionExample before={before} />;
   return (
     <div className="ce-toolbar-example">
       <span>{toolbarPrompt}</span>
-      <ActionExample before={before} />
+      {highlightLabel === undefined ? (
+        action
+      ) : (
+        <SingleHighlight label={highlightLabel}>{action}</SingleHighlight>
+      )}
     </div>
   );
 }

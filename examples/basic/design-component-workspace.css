@@ -158,15 +158,15 @@
 .ce-preview-view[data-preview-viewport="mobile"] {
   min-width: min-content;
 }
-.ce-design:has(.ce-viewport-select option[value="mobile"]:checked)
+.ce-design:has([data-workspace-viewport] option[value="mobile"]:checked)
   [data-preview-viewport="mobile"],
-.ce-design:has(.ce-viewport-select option[value="desktop"]:checked)
+.ce-design:has([data-workspace-viewport] option[value="desktop"]:checked)
   [data-preview-viewport="desktop"],
-.ce-design:has(.ce-viewport-select option[value="both"]:checked)
+.ce-design:has([data-workspace-viewport] option[value="both"]:checked)
   .ce-preview-view {
   display: block;
 }
-.ce-design:has(.ce-viewport-select option[value="both"]:checked)
+.ce-design:has([data-workspace-viewport] option[value="both"]:checked)
   .ce-preview-set[data-viewport]
   .mbk-preview-switch {
   display: none;

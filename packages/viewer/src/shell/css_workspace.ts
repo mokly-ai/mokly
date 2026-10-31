@@ -1,4 +1,5 @@
-/** Bounded preview/inspector panes and grouped, aligned view controls. */
+/** Bounded preview/inspector panes; `@mokly/ui/view-controls` styles the view
+ * controls. */
 
 import { NARROW_SHELL } from "./layout_breakpoint.js";
 
@@ -9,24 +10,6 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk:has(.mbk-workspace) .mbk-topbar [data-mokly-schemeswitch] { display: none; }
 .mbk-workspace [hidden] { display: none !important; }
 .mbk-workspace .mbk-screen-head { align-items: center; }
-.mbk-view-tools { display: flex; align-items: center; gap: 4px; margin-left: auto; }
-.mbk-icon-button, .mbk-icon-select {
-  position: relative; display: inline-flex; align-items: center; justify-content: center;
-  flex: none; gap: 5px; width: 34px; height: 34px; padding: 0; border: 1px solid transparent;
-  border-radius: 7px; background: transparent; color: var(--chrome-ink-2); cursor: pointer;
-}
-.mbk-icon-button svg, .mbk-icon-select svg { display: block; flex: none; }
-.mbk-icon-select { width: 48px; }
-.mbk-icon-select svg:last-of-type { width: 12px; }
-.mbk-icon-select select { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
-.mbk-icon-button:hover, .mbk-icon-select:hover { background: var(--chrome-bg); }
-.mbk-icon-button:focus-visible, .mbk-icon-select:focus-within {
-  outline: 2px solid var(--mokly-accent); outline-offset: 2px;
-}
-.mbk-icon-button[aria-selected="true"], .mbk-icon-button[aria-pressed="true"] {
-  color: var(--mokly-accent); background: var(--mokly-accent-soft); border-color: var(--chrome-border);
-}
-.mbk-icon-button:disabled { opacity: .42; cursor: default; }
 .mbk-selection-bar {
   display: flex; align-items: center; flex: none; flex-wrap: wrap; gap: 6px; padding: 10px 24px;
   background: var(--chrome-surface); border-bottom: 1px solid var(--chrome-border); font-size: 12px;
@@ -44,10 +27,6 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-inspector select {
   background: var(--chrome-surface); color: var(--chrome-ink); border: 1px solid var(--chrome-border); border-radius: 6px; padding: 6px 28px 6px 8px; font: inherit;
 }
-.mbk-entry-status { border: 1px solid var(--chrome-border); border-radius: 5px; padding: 3px 7px; font-weight: 600; color: var(--chrome-ink-2); }
-.mbk-entry-status[data-status="Added"] { color: var(--mb-added); background: var(--mb-added-soft); }
-.mbk-entry-status[data-status="Changed"] { color: var(--mb-changed); background: var(--mb-changed-soft); }
-.mbk-entry-status[data-status="Removed"] { color: var(--mb-removed); background: var(--mb-removed-soft); }
 .mbk-variant-status { color: var(--chrome-muted); }
 .mbk-workspace-panes { display: flex; flex: 1; flex-direction: column; position: relative; min-height: 0; min-width: 0; }
 .mbk-preview-pane { position: relative; display: flex; flex: 1; flex-direction: column; min-height: 100px; min-width: 0; overflow: hidden; }

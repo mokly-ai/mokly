@@ -83,7 +83,7 @@ function ExcludedStylesOnly({ viewport }: { viewport: ArtboardViewport }) {
       }
     >
       <ScreenHead
-        action={<ViewSwitch active={viewport} />}
+        action={<ViewSwitch active={viewport} highlight="available" />}
         crumbs={["Example", "Screens"]}
         path="example/screens/details"
         status="unmodified"

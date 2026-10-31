@@ -3,8 +3,8 @@
 ## View Controls
 
 Place one compact icon toolbar beside the page title. It contains a native
-viewport dropdown (Mobile, Desktop, Both) and, on consuming screens, a Highlight
-components toggle. Standalone artboards use the single top-bar Appearance
+viewport dropdown (Mobile, Desktop, Both) and a Highlight components toggle.
+Standalone artboards use the single top-bar Appearance
 selector for interface and preview scheme. Embedded hosts keep their separate
 preview scheme control. Highlighting has no separate horizontal band. Icons have accessible
 names, hover tooltips, selected states, and visible keyboard focus.
@@ -30,6 +30,10 @@ Disable highlighting when no registered components exist, inspection is
 unavailable, a comparison is selected, or the screen was removed and has no
 current preview. The tooltip and accessible description
 state that specific reason; zero usage must not be confused with missing data.
+Each artboard draws the toggle in the state that the shell shows for its view.
+Decision: the shell's state, not a disabled toggle where an artboard gives no
+state or a header without the toggle, because the mockups show what the shell
+draws.
 Highlight labels are separate rounded chips with a small gap above an intact
 rounded outline. The chip must not overlap the outline's corner or obscure the
 component; apply the same treatment to outer, nested, and single-instance regions.

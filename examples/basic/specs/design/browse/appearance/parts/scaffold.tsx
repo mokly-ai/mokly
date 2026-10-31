@@ -19,6 +19,7 @@ import {
   ViewSwitch,
   type ArtboardViewport,
   type Crumb,
+  type HighlightState,
 } from "../../../parts/shell.js";
 import { BrowserFrame, PhoneFrame } from "../../../parts/stage.js";
 
@@ -97,6 +98,12 @@ export const AppearanceWorkspace = SchemeWorkspace;
 interface AppearanceHeadProps {
   /** Folder crumbs; a current screen's crumbs from All by default. */
   crumbs?: readonly Crumb[];
+  /**
+   * The Highlight components state that the shell shows for the depicted
+   * view; available by default, as on a selected screen whose preview is
+   * ready.
+   */
+  highlight?: HighlightState;
   /** The depicted entry's path, shown in the path chip. */
   path: string;
   /** Selected preview; omit the control on a route with no device previews. */
@@ -106,11 +113,12 @@ interface AppearanceHeadProps {
 }
 
 /**
- * The appearance header carries the viewport control only: the catalogue's one
+ * The appearance header carries the view controls only: the catalogue's one
  * scheme setting lives in the top bar's Appearance selector.
  */
 export function AppearanceHead({
   crumbs,
+  highlight = "available",
   path,
   preview,
   title,
@@ -123,7 +131,9 @@ export function AppearanceHead({
     <ScreenHead
       {...(selection === "none"
         ? {}
-        : { action: <ViewSwitch active={selection} /> })}
+        : {
+            action: <ViewSwitch active={selection} highlight={highlight} />,
+          })}
       crumbs={crumbs ?? SCREEN_CRUMBS}
       path={path}
       title={title}

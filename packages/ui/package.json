@@ -24,9 +24,17 @@
       "types": "./dist/change-mark/change-mark.d.ts",
       "import": "./dist/change-mark/change-mark.js"
     },
+    "./change-status": {
+      "types": "./dist/change-status/change-status.d.ts",
+      "import": "./dist/change-status/change-status.js"
+    },
     "./comparison-toolbar": {
       "types": "./dist/comparison-toolbar/comparison-toolbar.d.ts",
       "import": "./dist/comparison-toolbar/comparison-toolbar.js"
+    },
+    "./icon-control": {
+      "types": "./dist/icon-control/icon-control.d.ts",
+      "import": "./dist/icon-control/icon-control.js"
     },
     "./icons": {
       "types": "./dist/icons/icons.d.ts",
@@ -41,9 +49,21 @@
       "import": "./dist/segmented-control/segmented-control.js"
     },
     "./styles.css": "./dist/styles.css",
+    "./tag-chip": {
+      "types": "./dist/tag-chip/tag-chip.d.ts",
+      "import": "./dist/tag-chip/tag-chip.js"
+    },
+    "./tag-picker": {
+      "types": "./dist/tag-picker/tag-picker.d.ts",
+      "import": "./dist/tag-picker/tag-picker.js"
+    },
     "./top-bar": {
       "types": "./dist/top-bar/top-bar.d.ts",
       "import": "./dist/top-bar/top-bar.js"
+    },
+    "./view-controls": {
+      "types": "./dist/view-controls/view-controls.d.ts",
+      "import": "./dist/view-controls/view-controls.js"
     }
   },
   "peerDependencies": {

@@ -154,7 +154,12 @@ function ChangesScreen({
         comparisons
         comparisonMode={mode}
         scrollTogether={state !== "side-by-side-apart"}
-        action={<ViewSwitch active={viewport} />}
+        action={
+          <ViewSwitch
+            active={viewport}
+            highlight={mode === "current" ? "available" : "comparison"}
+          />
+        }
         crumbs={["Example", "Screens"]}
         path={ENTRY_PATHS.welcome}
         title="Welcome"

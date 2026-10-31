@@ -54,7 +54,7 @@ function AvailabilityScreen({
       }
     >
       <ScreenHead
-        action={<ViewSwitch active={viewport} />}
+        action={<ViewSwitch active={viewport} highlight="available" />}
         crumbs={["Example", "Screens"]}
         path={ENTRY_PATHS.welcome}
         title="Welcome"

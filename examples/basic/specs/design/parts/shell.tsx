@@ -145,18 +145,45 @@ export type ChangedView = NonNullable<
   ViewControlsProps["changedViews"]
 >[number];
 
+/**
+ * The Highlight components state that the shell shows for a depicted view:
+ * `available` where the shell can highlight the view's registered components,
+ * `on` while it highlights them, or else the reason that disables the toggle.
+ */
+export type HighlightState =
+  "available" | "on" | NonNullable<ViewControlsProps["unavailable"]>;
+
+/** The view controls props that draw one highlight state. */
+export function highlightProps(
+  state: HighlightState,
+): Pick<ViewControlsProps, "highlight" | "unavailable"> {
+  return state === "available" || state === "on"
+    ? { highlight: state === "on" }
+    : { highlight: false, unavailable: state };
+}
+
 interface ViewSwitchProps {
   active: "both" | "desktop" | "mobile";
   /** Views other than the shown one whose render changed on this branch. */
   changedViews?: readonly ChangedView[] | undefined;
+  /** The Highlight components state that the shell shows for this view. */
+  highlight: HighlightState;
 }
 
-/** Viewport selection control shown in a selected screen header. */
-export function ViewSwitch({ active, changedViews }: ViewSwitchProps) {
+/**
+ * The view controls of a selected screen's header: the viewport selection,
+ * and the Highlight components toggle in the state that the shell shows.
+ */
+export function ViewSwitch({
+  active,
+  changedViews,
+  highlight,
+}: ViewSwitchProps) {
   return (
     <viewControls.Component
       moklyInstance={useDesignInstance("viewport")}
       selection={active}
+      {...highlightProps(highlight)}
       {...optional("changedViews", changedViews)}
     />
   );
