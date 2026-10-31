@@ -3,7 +3,12 @@
 @import "./change-mark/change-mark.css";
 @import "./comparison-toolbar/comparison-toolbar.css";
 @import "./top-bar/top-bar.css";
+@import "./tag-picker/tag-picker.css";
 @import "./catalogue-tree/catalogue-tree.css";
 @import "./catalogue-navigation/catalogue-navigation.css";
 @import "./screen-header/screen-header.css";
 @import "./segmented-control/segmented-control.css";
+@import "./tag-chip/tag-chip.css";
+@import "./icon-control/icon-control.css";
+@import "./view-controls/view-controls.css";
+@import "./change-status/change-status.css";

@@ -141,15 +141,17 @@ that decides whether the theme and viewport controls carry a mark.
 `workspace_views.ts` resolves the requested axes to the views actually shown,
 including Dark-to-Light fallback, and carries the matching status, comparison
 eligibility, and evidence provenance as one decision. `workspace_controls.tsx`
-uses that effective scheme while retaining the requested scheme as the control
-state, so navigation and controlled-host updates cannot leave stale indicators.
+applies the rule to that effective scheme while retaining the requested scheme
+as the control state, so navigation and controlled-host updates cannot leave
+stale indicators, and it passes the marks, their ids, and their wording to
+`@mokly/ui/view-controls`.
 `../viewer/public_workspace_views.ts` derives the changed views themselves from
 the published catalogue's ready per-view comparisons. Workspace data keys
 those lists by component variant path or screen path, and
 `workspace_views_data.ts` reads the list of the shown selection, so every
 reader selects the evidence that belongs to the preview;
 `@mokly/ui/change-mark` draws the dot and clips its wording, and
-`css_workspace_marks.ts` mutes the dot on a disabled control.
+`@mokly/ui/view-controls` mutes the dot on a disabled control.
 The parallel `viewStates` map stores `{ viewport, colorScheme, state }` for each
 ready view under the same key, while a missing key means per-view status is
 unknown. `workspace_views.ts` resolves documents actually displayed after
@@ -193,14 +195,18 @@ reads the identifier and workspace contexts and renders
 `@mokly/ui/appearance-selector`. `top_bar.tsx`, `nav.tsx`, and `head.tsx` render
 the top bar, the catalogue navigation, and the screen header the same way,
 and `head.tsx`'s viewport and scheme switches render
-`@mokly/ui/segmented-control`. A local ESLint rule rejects every intrinsic
-JSX element in `packages/viewer/src`, so a container renders only package
-components, fragments, providers, and portals. Text that the shell derives
-from catalogue data stays here and reaches the components as props, such as
-the sentences of `entry_wording.ts` and the change-mark ids and wording of
-`view_marks.ts`. The design library and the artboards under
-`examples/basic/specs/design` render the same package sources, so a change to
-a package component also changes its design mockups.
+`@mokly/ui/segmented-control`. `tags.tsx` renders the search field's tag
+picker with `@mokly/ui/tag-picker` and each tag chip of the details with
+`@mokly/ui/tag-chip`. `workspace_controls.tsx` renders
+`@mokly/ui/view-controls`, and `views.tsx` and `workspace.tsx` render the
+status beside a title with `@mokly/ui/change-status`. A local ESLint rule
+rejects every intrinsic JSX element in `packages/viewer/src`, so a container
+renders only package components, fragments, providers, and portals. Text
+that the shell derives from catalogue data stays here and reaches the
+components as props, such as the sentences of `entry_wording.ts` and the
+change-mark ids and wording of `view_marks.ts`. The design library and the
+artboards under `examples/basic/specs/design` render the same package
+sources, so a change to a package component also changes its design mockups.
 
 The shell holds no style rule. `@mokly/ui/styles.css` holds every rule of the
 shell, in the cascade order that `packages/ui/src/styles.css` lists: the
@@ -224,7 +230,7 @@ selects its exact removed record. The `Catalogue` type requires `publicModel`:
 records that complete it.
 `tag_selection.ts` captures the open picker before a tag changes the search state.
 An inspector tag then returns focus to the toggle in its own shell. Picker
-chips keep the picker callback's focus handling.
+chips keep the focus return of `@mokly/ui/tag-picker`.
 
 `store.tsx` and the focused `store_*` modules own standalone route/history,
 selection, disclosure, drawer, details and scroll state. `routes.ts`,

@@ -241,6 +241,11 @@ and Review regressions against `mokly serve` of the example catalogue.
   [`src/shell/head.tsx`](./src/shell/head.tsx) — the containers of the top
   bar, the catalogue navigation, and the screen header; `nav_rows.ts` and
   `nav_leaf_rows.ts` build the navigation's records from the shell state
+- [`src/shell/tags.tsx`](./src/shell/tags.tsx) and
+  [`src/shell/workspace_controls.tsx`](./src/shell/workspace_controls.tsx) —
+  the containers of the tag picker, the tag chips of the details, and the
+  view controls; `tag_selection.ts` returns focus to the picker's button
+  after a tag of the details, and `view_marks.ts` decides the change marks
 - [`src/catalogue`](./src/catalogue) — the readers of the catalogue index and
   the entry detail, and the public catalogue types
 - [`src/data.ts`](./src/data.ts) — the `./data` entry: path functions,

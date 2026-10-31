@@ -11,7 +11,9 @@ import { ScreenHead, Shell, ViewSwitch } from "../../parts/shell.js";
 function DetailsHead({ mobile = false }: { mobile?: boolean }) {
   return (
     <ScreenHead
-      action={<ViewSwitch active={mobile ? "mobile" : "both"} />}
+      action={
+        <ViewSwitch active={mobile ? "mobile" : "both"} highlight="available" />
+      }
       crumbs={SCREEN_CRUMBS}
       path={ENTRY_PATHS.details}
       title="Details"

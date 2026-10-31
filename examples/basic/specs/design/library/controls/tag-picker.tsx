@@ -2,15 +2,26 @@ import { defineComponent } from "@mokly/mokly";
 
 import { DESTINATIONS } from "../../parts/destinations.js";
 import { libraryMetadata } from "../metadata.js";
-import { tagRecords, text, type LibraryProps } from "../schemas.js";
+import {
+  destination,
+  flag,
+  tagRecords,
+  text,
+  type LibraryProps,
+} from "../schemas.js";
 
 import { TagPickerView } from "./tag-picker.view.js";
 
 const propSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["tags"],
-  properties: { tags: tagRecords, activeTag: text },
+  required: ["tags", "open"],
+  properties: {
+    tags: tagRecords,
+    activeTag: text,
+    open: flag,
+    toggleDestination: destination,
+  },
 } as const;
 export type TagPickerProps = LibraryProps<typeof propSchema>;
 export const libraryTags = [
@@ -29,24 +40,24 @@ export const tagPicker = defineComponent({
     "Catalogue tags and the active selection.",
   ),
   propSchema,
-  props: { tags: libraryTags },
+  props: { tags: libraryTags, open: true },
   controls: { activeTag: { kind: "text", label: "Active tag" } },
   render: TagPickerView,
   variants: [
     {
       slug: "all",
       title: "All tags",
-      props: { tags: libraryTags },
+      props: { tags: libraryTags, open: true },
     },
     {
       slug: "selected",
       title: "Selected tag",
-      props: { tags: libraryTags, activeTag: "forms" },
+      props: { tags: libraryTags, activeTag: "forms", open: true },
     },
     {
       slug: "empty",
       title: "No tags",
-      props: { tags: [] },
+      props: { tags: [], open: true },
     },
   ],
 });

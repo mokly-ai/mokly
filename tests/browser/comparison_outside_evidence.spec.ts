@@ -176,7 +176,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(card.locator("p")).toHaveText([DESIGN_BASE, ...sentences]);
       await expect(card.locator("li")).toHaveCount(1);
       await expect(
-        page.locator(".mbk-screen-head .ce-change-status"),
+        page.locator(".mbk-screen-head .mbk-entry-status"),
       ).toHaveText("Unmodified");
     });
   });

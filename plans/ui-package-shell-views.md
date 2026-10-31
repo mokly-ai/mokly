@@ -1,9 +1,14 @@
 # Shell Views In The UI Package
 
-Status: Active. [PR #249](https://github.com/mokly-ai/mokly/pull/249) is open
-for milestones 1 to 5. The work lands as a stack of five pull requests, one
-for each slice, as design call 11 says. Each earlier pull request keeps this plan. The
-last one deletes it, as the `plans` skill says.
+Status: Active. [PR #249](https://github.com/mokly-ai/mokly/pull/249), with
+milestones 1 to 5, merged on 2026-10-30 as `14c6f9ec`. The later slices are
+stacked branches: milestones 6 to 8 on `calummoore/mokly-ui-controls`, where
+[PR #251](https://github.com/mokly-ai/mokly/pull/251) is open, 9 to 11 on
+`calummoore/mokly-ui-inspector`, 12 to 14 on `calummoore/mokly-ui-preview`,
+and 15 to 20 on `calummoore/mokly-ui-layout-theme`. The work lands as a stack
+of five pull requests, one for each slice, as design call 11 says. Each
+earlier pull request keeps this plan. The last one deletes it, as the `plans`
+skill says.
 
 `@mokly/ui` holds four parts of the Browse shell since
 [PR #243](https://github.com/mokly-ai/mokly/pull/243): the icons, the change
@@ -380,6 +385,60 @@ root class still reach host slot content without `@scope`.
 - **Action:** ask the user, because condition 1 holds: E replaces the wording
   of shared UI package decision 12, a user decision.
 
+### 5. A standing rule for the later mockups
+
+Decision 5 (2026-10-30, the user): option B. The mockup milestones after
+milestone 7 apply the shipped look by default. They ask the user only when the
+shipped form is broken, such as a wrong state or a missing element, or when
+the user must choose between the product and a contract, and they record each
+other difference in the milestone. Rejected: A, asking about every difference,
+because each round stops the work for answers that follow the user's rule of
+milestones 4 and 7.
+
+### 6. The open items of 2026-10-31
+
+Decision 6 (2026-10-31, the user): "just go with recommendation". Each open
+item takes its recommended option. Items that complete a milestone land in
+it. The wider fixes that span the stack stay follow-up items with the chosen
+option, because the user first called them follow-ups.
+
+- Merges, option D: PR #251 merges now. Each later pull request of the stack
+  merges when its gate passes and its review leaves no open finding.
+- Milestone 19:
+  - The Highlight components switch of the Browse and Changes artboards,
+    option C: their previews depict the Action and Toolbar of the real
+    screens, and the artboards draw the highlights with the package mask.
+  - The artboard highlight state, option C: one record per depicted view
+    holds the state and the preview's regions, and the header and the
+    preview read it.
+- Milestone 10:
+  - An invalid prop field draws its danger border, option A: the package
+    raises the invalid rule.
+  - The inspector resize grip, the sheet grabber, and the entry chips draw
+    `--chrome-control-edge`, option A.
+  - The Components tab renders the shipped tree, and the explorer contract
+    follows it, option B.
+  - The component Props tab renders the shipped controls panel, and the
+    controls contract follows it, option A.
+  - The comparison evidence shows the variant state in the package and the
+    product, option A.
+  - The mobile sheet takes the full workspace width, option A.
+- Milestone 13:
+  - The browser toggle keeps its shipped hairline, and the palette contract
+    names it, option A.
+  - The explorer artboards render the shipped canvas, comparison frame, and
+    heading, and the component design contract follows, option A.
+  - Explorer captions name the viewport only, option A.
+  - The comparison pane names its side, and its `label` goes, option A.
+  - Where a depicted frame stands decides its caption, and the device
+    frame's `label` goes, option A.
+- Follow-up items:
+  - A shared picture marker takes every picture form out of hit testing,
+    option B.
+  - The search field draws a visible focus ring, option B.
+  - Generic shell class names take the `mbk-` prefix, option B.
+  - The package component tests check the reset class, option B.
+
 ## Design Calls
 
 Each call is the orchestrator's own, made on 2026-10-29.
@@ -508,8 +567,10 @@ them. Files under `src/shell` drop the prefix. `views.tsx` and
 
 - Viewer files: `tags`, `workspace_controls`, and the status badges of
   `views` and `workspace`.
-- Package components: `tag-picker`, `tag-chip`, `view-controls`, and
-  `change-status`.
+- Package components: `tag-picker`, `tag-chip`, `view-controls`,
+  `icon-control`, and `change-status`. Milestone 6 added `icon-control`,
+  because one stylesheet styles both the view controls and the inspector
+  tabs.
 - CSS sources: the tag picker rules of `css_nav_rail` and `css_nav_search`,
   the chip rules of `css_details`, the icon control and status rules of
   `css_workspace`, and `css_workspace_marks`.
@@ -787,16 +848,24 @@ Depends on: 3, 5
 Move the tag picker, the tag chip, the view controls, and the change status
 badge.
 
-- [ ] Create the package components of the controls slice, with their CSS,
+- [x] Create the package components of the controls slice, with their CSS,
       exports, and order. The top bar takes the tag picker in its search slot,
       and the details rows render the package tag chip.
-- [ ] The viewer files of the slice become containers. Move their rules and
+- [x] The viewer files of the slice become containers. Move their rules and
       delete each emptied module.
-- [ ] Tests as in milestone 3: the picker's roving focus, Escape, and focus
+- [x] Tests as in milestone 3: the picker's roving focus, Escape, and focus
       return, the chip's pressed state, the viewport select and its change
       mark, the highlight toggle, and each status.
-- [ ] Remove the files of the slice from the lint exemption list.
-- [ ] Check as in milestone 3. Save evidence under
+- [x] Remove the files of the slice from the lint exemption list.
+- [x] Check as in milestone 3. Save evidence under
+      `.context/ui-package-shell-views/controls/`.
+- [x] Done on 2026-10-30 by the ui implementor on
+      `calummoore/mokly-ui-controls` and checked: zero computed-style
+      differences across 166 states and the 6 states at 520 pixels, 1168
+      browser tests and 812 Node tests passed, and no new order-tool pair.
+      The orchestrator removed the `afterSelect` parameter of `selectTag`,
+      which no product code passed after the package took the picker's focus
+      return, with the test step that covered only it. Evidence:
       `.context/ui-package-shell-views/controls/`.
 
 ## Milestone 7: Control mockups
@@ -805,23 +874,70 @@ Tags: mockup
 
 Depends on: 6
 
-- [ ] Adopt `controls/tag-picker`, `controls/tag-chip`,
+The adoption found 9 visible differences, with evidence under the worktree's
+`.context/ui-package-shell-views/controls-mockups/`. Answered on 2026-10-30
+by the user, option C:
+
+- Item 1: the Highlight components toggle. Each artboard passes the highlight
+  state that the shell shows for its view, so a screen where the shell offers
+  highlighting shows an enabled toggle. Rejected: A, a disabled toggle where an
+  artboard gives no state; B, a product header without the toggle.
+- Items 2 and 3: a pressed icon control (a pressed Highlight toggle or a
+  selected inspector tab) and a tag chip keep their shipped hairline. The
+  palette contract names both as exceptions, and the design tests exempt the
+  rules with the reason. Rejected: B, the control edge in the product.
+- Items 4, 5, and 8: the borderless view controls, the fixed viewport glyph,
+  and the tag picker sample with its button keep the shipped form.
+- Item 6: the status badge keeps its shipped shape and weight, and the
+  palette contract's sentence about status edges follows it.
+- Item 7: the chips and controls keep their shipped focus rings, and the
+  follow-up item about the search field's focus ring covers them too.
+- Item 9: a narrow desktop render draws the shipped picker sheet, under the
+  rule of milestone 4 that a desktop render follows the layout breakpoint.
+
+- [x] Adopt `controls/tag-picker`, `controls/tag-chip`,
       `controls/view-controls`, and `controls/change-status` as milestone 4
       adopts the chrome, including decision 2 and the comparison with the
       earlier renders.
-- [ ] Run the mockup check and smoke-test the changed pages.
+- [x] Run the mockup check and smoke-test the changed pages.
+- [x] Done on 2026-10-30 by the ui implementor and checked, in two passes:
+      the adoption, then the answers. The product did not change: zero
+      computed-style differences across 166 states. The design Node tests,
+      the design browser tests, the Rust design tests, the strict mockup
+      build, and the repository suite passed. Calls: the highlight state is a
+      required prop of the header, so no artboard draws the toggle without
+      the shell's state; the mockups use the shell's exact reason sentences,
+      with a new `failed` reason, under the user's answer to item 1; the
+      design components and component explorer contracts say that every
+      screen and component page draws the toggle. Follow-up item added:
+      `plans/follow-ups/highlight-reason-after-failed-details.md`. Found for
+      milestone 10: the explorer artboard's Components panel says "for this
+      screen" where the shell says "for this view", in
+      `examples/basic/specs/design/components/parts/screen_details.tsx`.
+      Evidence: the worktree's
+      `.context/ui-package-shell-views/controls-mockups/`.
 
 ## Milestone 8: Second pull request
 
 Depends on: 6, 7
 
-- [ ] Start the slice's branch from the first one. Merge the first branch
+- [x] Start the slice's branch from the first one. Merge the first branch
       into it, or `origin/main` after the first pull request merges. Run the
       complete gate. Commit and push.
-- [ ] Review against the first pull request's branch. Fix, re-review once,
+- [x] Review against the first pull request's branch. Fix, re-review once,
       and report.
-- [ ] Open the pull request on the first one. Put its link in the status
+- [x] Open the pull request on the first one. Put its link in the status
       paragraph.
+- [x] Done on 2026-10-30: the branch merged `origin/main` at `e9c20225` and
+      at `133782a9` (#247), and the remote gate passed 7 of 7 suites on
+      `c45a87cb`. Review round 1 found findings 1 and 2, and round 2 found 3
+      and 4. The fixes are `34357fa0`, `ffc19e11`, and `1d81517f`. The rest
+      of finding 1, the Highlight components switch of 22 Browse and 8
+      Changes artboards, waits for the user under
+      `plans/follow-ups/browse-artboard-highlight-drawing.md`. On `1d81517f`
+      the remote gate passed 6 of 7 suites, and browser shard 2 passed on a
+      rerun after the known flaky handoff test. Reports:
+      `.context/reviews/calummoore/mokly-ui-controls/`.
 
 ## Milestone 9: Inspector components
 

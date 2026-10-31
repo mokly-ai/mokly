@@ -1,148 +1,58 @@
-/** Accessible tag chips shared by search and entry details. */
+/**
+ * The shell's tag controls. These containers read the store and the
+ * identifier scope. `@mokly/ui/tag-picker` renders the search field's tag
+ * button and its picker, with their roving focus and focus return, and
+ * `@mokly/ui/tag-chip` renders each tag chip of an entry's details.
+ */
 
-import { useEffect, useRef } from "react";
-import type { KeyboardEvent } from "react";
-
-import { TagIcon } from "@mokly/ui/icons";
+import { TagChip as TagChipView } from "@mokly/ui/tag-chip";
+import { TagPicker } from "@mokly/ui/tag-picker";
 
 import { useShellIdentifier } from "./identifier_context.js";
-import { useOptionalShellStore } from "./store_context.js";
+import { useOptionalShellStore, type ShellStore } from "./store_context.js";
 import { selectTag } from "./tag_selection.js";
 
-/** One tag control synchronized with the shell's parsed query. */
-export function TagChip({
-  afterSelect,
-  pickerIndex,
-  tag,
-}: {
-  afterSelect?: () => void;
-  pickerIndex?: number;
-  tag: string;
-}) {
+/** Whether a tag filters the catalogue; the parsed query holds lower case. */
+function tagSelected(store: ShellStore | undefined, tag: string): boolean {
+  return store?.state.selection.tags.includes(tag.toLowerCase()) ?? false;
+}
+
+/**
+ * One tag chip of an entry's details, synchronized with the shell's parsed
+ * query. A choice while the search's picker is open returns focus to the
+ * picker's button in the chip's own shell.
+ */
+export function TagChip({ tag }: { tag: string }) {
   const store = useOptionalShellStore();
-  const active =
-    store?.state.selection.tags.includes(tag.toLowerCase()) ?? false;
   return (
-    <button
-      aria-pressed={active}
-      className={`mbk-chip tag${active ? " active" : ""}`}
-      data-mokly-tag={tag}
-      onClick={(event) => {
+    <TagChipView
+      onSelect={(chosen, chip) =>
         selectTag(
-          event.currentTarget,
-          () => store?.toggleTag(tag),
-          Boolean(store?.state.tagPickerOpen && pickerIndex === undefined),
-          afterSelect,
-        );
-      }}
-      tabIndex={
-        pickerIndex === undefined || !store?.interactive
-          ? undefined
-          : store.state.tagPickerIndex === pickerIndex
-            ? 0
-            : -1
+          chip,
+          () => store?.toggleTag(chosen),
+          Boolean(store?.state.tagPickerOpen),
+        )
       }
-      type="button"
-    >
-      <TagIcon size={11} />
-      {tag}
-    </button>
+      selected={tagSelected(store, tag)}
+      tag={tag}
+    />
   );
 }
 
-/** Search-field tag button and ephemeral roving-focus picker. */
+/** The search field's tag button and the picker that it opens. */
 export function SearchTagPicker({ tags }: { tags: readonly string[] }) {
   const store = useOptionalShellStore();
   const pickerId = useShellIdentifier("mb-tag-picker");
-  const toggle = useRef<HTMLButtonElement>(null);
-  const panel = useRef<HTMLDivElement>(null);
-  const open = store?.state.tagPickerOpen ?? false;
-  useEffect(() => {
-    if (!open) return;
-    const chips =
-      panel.current?.querySelectorAll<HTMLButtonElement>("[data-mokly-tag]");
-    chips?.[store?.state.tagPickerIndex ?? 0]?.focus();
-  }, [open, store?.state.tagPickerIndex]);
-  if (tags.length === 0) return null;
-
-  const close = (focus: boolean) => {
-    store?.setTagPicker(false);
-    if (focus) queueMicrotask(() => toggle.current?.focus());
-  };
-  const onKeyDown = (event: KeyboardEvent<HTMLSpanElement>) => {
-    if (!store) return;
-    const last = tags.length - 1;
-    let next: number | undefined;
-    if (event.key === "ArrowLeft")
-      next =
-        store.state.tagPickerIndex === 0
-          ? last
-          : store.state.tagPickerIndex - 1;
-    if (event.key === "ArrowRight")
-      next =
-        store.state.tagPickerIndex === last
-          ? 0
-          : store.state.tagPickerIndex + 1;
-    if (event.key === "Home") next = 0;
-    if (event.key === "End") next = last;
-    if (event.key === "Escape") {
-      event.preventDefault();
-      event.stopPropagation();
-      close(true);
-      return;
-    }
-    if (next === undefined) return;
-    event.preventDefault();
-    store.setTagPicker(true, next);
-  };
   return (
-    <>
-      <button
-        aria-controls={pickerId}
-        aria-expanded={open}
-        aria-label="Filter by tag"
-        className="mbk-search-tag"
-        data-mokly-tag-toggle=""
-        onClick={() => {
-          if (open) close(true);
-          else {
-            const selected = tags.findIndex((tag) =>
-              store?.state.selection.tags.includes(tag.toLowerCase()),
-            );
-            store?.setTagPicker(true, selected < 0 ? 0 : selected);
-          }
-        }}
-        ref={toggle}
-        type="button"
-      >
-        <TagIcon />
-      </button>
-      <div
-        aria-label="Tags"
-        className="mbk-tag-picker"
-        data-mokly-tag-picker=""
-        hidden={!open}
-        id={pickerId}
-        ref={panel}
-        role="group"
-      >
-        <div className="mbk-tag-picker-head">Tags</div>
-        <span
-          aria-label="Tag filters"
-          className="mbk-chips"
-          onKeyDown={onKeyDown}
-          role="toolbar"
-        >
-          {tags.map((tag, index) => (
-            <TagChip
-              afterSelect={() => queueMicrotask(() => toggle.current?.focus())}
-              key={tag}
-              pickerIndex={index}
-              tag={tag}
-            />
-          ))}
-        </span>
-      </div>
-    </>
+    <TagPicker
+      focusedIndex={store?.state.tagPickerIndex ?? 0}
+      id={pickerId}
+      interactive={store?.interactive ?? false}
+      onFocusChange={(index) => store?.setTagPicker(true, index)}
+      onOpenChange={(open, index) => store?.setTagPicker(open, index)}
+      onSelect={(tag) => store?.toggleTag(tag)}
+      open={store?.state.tagPickerOpen ?? false}
+      tags={tags.map((tag) => ({ selected: tagSelected(store, tag), tag }))}
+    />
   );
 }

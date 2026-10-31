@@ -92,7 +92,7 @@ pub(crate) fn check() {
             assert_eq!(changes[0].get("data-mokly-link"), Some(target));
         }
         assert_eq!(
-            dom::class(&document.tree, "ce-change-status")
+            dom::class(&document.tree, "mbk-entry-status")
                 .iter()
                 .map(|badge| dom::text(&badge.children))
                 .collect::<Vec<_>>(),

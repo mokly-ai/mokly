@@ -13,12 +13,19 @@ import { ViewControlsView } from "./view-controls.view.js";
 const propSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["selection"],
+  required: ["selection", "highlight"],
   properties: {
     selection: previewViewport,
     highlight: flag,
     unavailable: {
-      enum: ["empty", "unavailable", "loading", "comparison", "removed"],
+      enum: [
+        "empty",
+        "unavailable",
+        "loading",
+        "failed",
+        "comparison",
+        "removed",
+      ],
     },
     changedViews: {
       type: "array",
@@ -35,7 +42,11 @@ const propSchema = {
   },
 } as const;
 export type ViewControlsProps = LibraryProps<typeof propSchema>;
-const sample = { selection: "desktop" } as const;
+/**
+ * Every sample gives the Highlight components state, as every screen does,
+ * because the shell never draws the toggle without one.
+ */
+const sample = { selection: "desktop", highlight: false } as const;
 export const viewControls = defineComponent({
   ...libraryMetadata(
     "controls",
@@ -78,7 +89,7 @@ export const viewControls = defineComponent({
     {
       slug: "unavailable",
       title: "Unavailable",
-      props: { ...sample, highlight: false, unavailable: "empty" },
+      props: { ...sample, unavailable: "empty" },
     },
     {
       slug: "changed-views",

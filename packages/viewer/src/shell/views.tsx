@@ -2,6 +2,8 @@
 // home, missing-route, and target views, plus the title and
 // active-route helpers the document scaffold and progressive navigation use.
 
+import { ChangeStatus } from "@mokly/ui/change-status";
+
 import { canonicalJson } from "../components/data.js";
 import { sha256 } from "../data/sha256.js";
 
@@ -101,13 +103,7 @@ function TargetView(props: {
         crumbs={head.crumbs}
         heading={head.title}
         path={head.path}
-        status={
-          status ? (
-            <span className="mbk-entry-status" data-status={status}>
-              {status}
-            </span>
-          ) : undefined
-        }
+        status={status ? <ChangeStatus status={status} /> : undefined}
       />
       {stage}
       <DetailsPanel catalogue={props.catalogue} target={props.target}>
