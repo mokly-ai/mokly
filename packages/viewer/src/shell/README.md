@@ -1,7 +1,5 @@
 # Shared Browse shell
 
-Status: In progress under the [shell views plan](../../../../plans/ui-package-shell-views.md).
-
 Serve, the static build, and React hosts render this same tree in the
 browser.
 

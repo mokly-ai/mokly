@@ -1,7 +1,5 @@
 # Shared Design Components
 
-Status: In progress under the [shell views plan](../../../../../plans/ui-package-shell-views.md).
-
 ## Scope
 
 These sixteen components render both Mokly's design artboards and

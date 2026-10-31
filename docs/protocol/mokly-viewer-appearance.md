@@ -1,7 +1,5 @@
 # Viewer Appearance
 
-Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
-
 ## One Control In Standalone, Two Inputs When Embedded
 
 The model has two inputs: the interface appearance around previews and the

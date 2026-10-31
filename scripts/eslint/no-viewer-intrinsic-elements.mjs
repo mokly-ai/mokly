@@ -1,6 +1,5 @@
-// Each slice of plans/ui-package-shell-views.md removes its migrated files.
-// The list started as the 53 files of the intrinsic-inventory.tsv baseline
-// of milestone 2.
+// The viewer files whose markup has not moved to @mokly/ui yet. Every viewer
+// file composes package components now, so the list is empty.
 export const viewerIntrinsicExemptions = [];
 
 /** Keep the viewer as containers that render package components. */

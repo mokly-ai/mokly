@@ -1,7 +1,5 @@
 # Shared UI Package
 
-Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
-
 This continues the [embeddable viewer contract](./mokly-viewer.md).
 
 ## Package And Components

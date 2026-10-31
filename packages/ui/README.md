@@ -1,7 +1,5 @@
 # @mokly/ui
 
-Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
-
 `@mokly/ui` holds every element and every stylesheet of the Mokly Browse
 shell: its components, its theme, and its layout. `@mokly/viewer` composes
 them into the shell that Serve, the static build, and React hosts render, and

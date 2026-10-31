@@ -1,7 +1,5 @@
 # Component Pages And Screen Inspection
 
-Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
-
 ## Catalogue And Component Pages
 
 Components are a distinct entry kind in a dedicated collapsible Components

@@ -1,7 +1,5 @@
 # Shell Delivery And Read Model Routes
 
-Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
-
 ## Purpose And Boundary
 
 The browser renders Browse from a stub, an index, and entry details. The index

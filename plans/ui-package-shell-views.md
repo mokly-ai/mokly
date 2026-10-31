@@ -375,7 +375,7 @@ root class still reach host slot content without `@scope`.
 - **Wider fix:** G.
 - **Previous examples:** None found.
 - **Related:** The follow-up item
-  [embedded-styles-need-css-scope](./follow-ups/embedded-styles-need-css-scope.md)
+  [embedded-styles-need-css-scope](https://github.com/mokly-ai/mokly/blob/8c2bbff2c146a2f77f469668e342da127e3e0397/plans/follow-ups/embedded-styles-need-css-scope.md)
   shares the wider fix: rules authored under the root class need no `@scope`
   transform.
 - **Recommendation:** E, changed from B by the second options check, for
@@ -1328,10 +1328,12 @@ artboards draw its parts with their own scaffolds.
 
 Depends on: every other milestone
 
-- [ ] Remove the status lines that milestone 1 added.
-- [ ] Delete the follow-up item
+- [x] Remove the status lines that milestone 1 added.
+- [x] Delete the follow-up item
       `plans/follow-ups/embedded-styles-need-css-scope.md`, which milestone 18
-      fixes.
+      fixes. Also delete `plans/follow-ups/ui-package-extraction-roadmap.md`,
+      whose last slice this pull request completes, and turn the post-merge
+      task below into `plans/follow-ups/design-catalogue-package-palette.md`.
 - [ ] Merge, run the complete gate, commit, push, and review as milestone 8
       says.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
