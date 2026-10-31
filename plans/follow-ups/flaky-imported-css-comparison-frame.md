@@ -9,7 +9,11 @@
   comparison panes retain CSS Modules and url assets". The same helper also
   serves `tests/browser/serve_imported_css_comparison.spec.ts:26-28`.
 - **Reason:** The test is unrelated to PR #248, which changes only the
-  terminal spinner labels, and it passed on every rerun.
+  terminal spinner labels, and it passed on every rerun. It failed again on
+  2026-10-31 in the CI run of PR #251 at `9118c89a`, which changes only
+  Markdown: twice in a row in "Browser (Node 22.15.0, shard 2/4)", with the
+  same "Frame was detached" at `imported_css_panes.ts:40`, and it passed on
+  the third attempt. It also failed in `main`'s CI run for `7edabc30`.
 
 - **Terms:**
   - **Comparison modes:** Overlay, Difference, and Side by side, the three
