@@ -126,3 +126,29 @@ test("the inspector icons open, switch, and close panels, and only a composed co
     page.getByRole("tab", { name: "Nested components", exact: true }),
   ).toBeVisible();
 });
+
+test("Escape in another shell control closes the inspector and returns focus to the tab that opened it", async ({
+  page,
+}) => {
+  await page.goto(ACTION);
+  const usage = page.getByRole("tab", { name: "Usage", exact: true });
+  await usage.click();
+  await expect(usage).toHaveAttribute("aria-selected", "true");
+  await expect(
+    page.getByRole("tabpanel", { name: "Usage", exact: true }),
+  ).toBeVisible();
+  // Escape reaches the inspector from any control of its shell.
+  const search = page.getByRole("searchbox", { name: "Search catalogue" });
+  await search.focus();
+  await expect(search).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("[data-workspace-inspector]")).toHaveAttribute(
+    "data-open",
+    "false",
+  );
+  await expect(page.locator('[role="tab"][aria-selected="true"]')).toHaveCount(
+    0,
+  );
+  await expect(page.getByRole("tabpanel")).toHaveCount(0);
+  await expect(usage).toBeFocused();
+});

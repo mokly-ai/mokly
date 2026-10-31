@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { isValidElement, type ReactElement, type ReactNode } from "react";
+import { isValidElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { encodeProps } from "../src/components/codec.js";
@@ -67,38 +67,31 @@ function panel(
 const html = (...input: Parameters<typeof panel>) =>
   renderToStaticMarkup(panel(...input));
 
-/** The buttons of the panel and its own alert, which use no hooks. */
-function buttons(node: ReactNode): { label: string; element: ReactElement }[] {
-  if (Array.isArray(node)) return node.flatMap(buttons);
-  if (!isValidElement<{ children?: ReactNode }>(node)) return [];
-  const { type } = node;
-  if (typeof type === "function")
-    return type.name === "ControlsAlert"
-      ? buttons((type as (props: unknown) => ReactNode)(node.props))
-      : [];
-  if (type === "button")
-    return [
-      {
-        label: renderToStaticMarkup(node).replace(/<[^>]+>/g, ""),
-        element: node,
-      },
-    ];
-  return buttons(node.props.children);
+/**
+ * The labels of the panel's buttons, in their order. `@mokly/ui` tests that
+ * each button reports its press.
+ */
+function buttons(node: ReactNode): string[] {
+  return [
+    ...renderToStaticMarkup(node).matchAll(/<button[^>]*>(.*?)<\/button>/g),
+  ].map((match) => match[1]!.replace(/<[^>]+>/g, ""));
 }
 
-function button(node: ReactNode, label: string) {
-  const found = buttons(node).find((item) => item.label === label);
-  assert.ok(found, `no button ${label}`);
-  return found.element.props as { disabled?: boolean; onClick?: () => void };
+/** The props that the container passes to the `@mokly/ui` panel. */
+function passed(node: ReactNode): Readonly<Record<string, unknown>> {
+  assert.ok(isValidElement<Record<string, unknown>>(node));
+  return node.props;
 }
 
 /** The names a panel gives the elements that recovery actions focus. */
 function focusNames(mode: ControlsMode): ControlsFocus[] {
   const names: ControlsFocus[] = [];
-  panel(mode, {}, target, (name) => {
-    names.push(name);
-    return () => undefined;
-  });
+  renderToStaticMarkup(
+    panel(mode, {}, target, (name) => {
+      names.push(name);
+      return () => undefined;
+    }),
+  );
   return names.sort();
 }
 
@@ -126,9 +119,11 @@ test("edited props: the Edited props badge, and Reset restores the saved props",
     renderToStaticMarkup(node),
     /<p>Default <span class="mbk-controls-edited">Edited props<\/span><\/p>/,
   );
-  const reset = button(node, "Reset to Default");
-  assert.equal(reset.disabled, false);
-  assert.equal(reset.onClick, actions.onReset);
+  assert.match(
+    renderToStaticMarkup(node),
+    /<button class="mbk-controls-reset" type="button">Reset to Default<\/button>/,
+  );
+  assert.equal(passed(node).onReset, actions.onReset);
   assert.match(
     html("editable", { notice: "restored" }),
     /<p class="mbk-controls-restored" role="status">Saved props restored\.<\/p>/,
@@ -154,7 +149,8 @@ test("a failed render keeps the edits and offers Try again", () => {
     renderToStaticMarkup(node),
     /<div class="mbk-control-alert" role="alert"><strong>The preview could not be updated<\/strong><p>Your edits are kept\. The preview shows the last valid props\.<\/p><button[^>]*>Try again<\/button><\/div>/,
   );
-  assert.equal(button(node, "Try again").onClick, actions.onRetry);
+  assert.deepEqual(buttons(node), ["Reset to Default", "Try again"]);
+  assert.equal(passed(node).onRetry, actions.onRetry);
 });
 
 test("an expired preview keeps the edits and offers Update preview", () => {
@@ -163,7 +159,8 @@ test("an expired preview keeps the edits and offers Update preview", () => {
     renderToStaticMarkup(node),
     /<strong>The preview of your edits expired<\/strong><p>Your edits are kept\. The preview shows the saved props\.<\/p><button[^>]*>Update preview<\/button>/,
   );
-  assert.equal(button(node, "Update preview").onClick, actions.onRetry);
+  assert.deepEqual(buttons(node), ["Reset to Default", "Update preview"]);
+  assert.equal(passed(node).onRetry, actions.onRetry);
 });
 
 test("invalid values: highlighted fields, or values not valid together", () => {
@@ -176,10 +173,7 @@ test("invalid values: highlighted fields, or values not valid together", () => {
     renderToStaticMarkup(node),
     /<p class="mbk-control-alert" role="alert">These values are not valid together\.<\/p>/,
   );
-  assert.deepEqual(
-    buttons(node).map(({ label }) => label),
-    ["Reset to Default"],
-  );
+  assert.deepEqual(buttons(node), ["Reset to Default"]);
 });
 
 test("fields wait while editing starts, and a failed start offers Try again", () => {
@@ -196,7 +190,8 @@ test("fields wait while editing starts, and a failed start offers Try again", ()
     /<p class="mbk-control-alert" role="alert">Editing could not start\. <button[^>]*>Try again<\/button><\/p><fieldset class="mbk-control-fieldset" disabled="">/,
   );
   assert.doesNotMatch(markup, /Preparing to edit props/);
-  assert.equal(button(node, "Try again").onClick, actions.onStart);
+  assert.deepEqual(buttons(node), ["Reset to Default", "Try again"]);
+  assert.equal(passed(node).onStart, actions.onStart);
 });
 
 test("recovery actions can focus the heading, the fields, and the start status", () => {
@@ -226,14 +221,11 @@ test("saved props without fields name the reason and every control's value", () 
     );
     assert.doesNotMatch(markup, /<input|<table|Reset to|Edited props/);
     assert.deepEqual(
-      buttons(node).map(({ label }) => label),
+      buttons(node),
       mode === "comparison" ? ["Switch to Current"] : [],
     );
   }
-  assert.equal(
-    button(panel("comparison"), "Switch to Current").onClick,
-    actions.onCurrent,
-  );
+  assert.equal(passed(panel("comparison")).onCurrent, actions.onCurrent);
 });
 
 test("an entry without controls shows read-only props and slots; without props, one line", () => {

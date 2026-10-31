@@ -11,7 +11,7 @@ import { ENTRY_PATHS, EXAMPLE_CRUMB } from "../../parts/entry_paths.js";
 import { ExampleWorkspace } from "../../parts/example_workspace.js";
 import { NavTree } from "../../parts/nav.js";
 import { NAV_TREE_VARIANTS_OPEN } from "../../parts/nav_data.js";
-import { ReasonSentences } from "../../parts/reason_sentences.js";
+import { reasonEvidence } from "../../parts/reason_sentences.js";
 import { PreviousVersionLabel } from "../../parts/removed_preview.js";
 import { RemovedView } from "../../parts/removed_screen.js";
 import { MiniSaveFailed } from "../../parts/removed_shots.js";
@@ -103,7 +103,7 @@ function ChangedVariant({ viewport }: { viewport: ArtboardViewport }) {
         title="Save failed"
       />
       <ExampleWorkspace
-        comparisonEvidence={<ReasonSentences reasons={["material"]} />}
+        comparisonEvidence={{ reasons: reasonEvidence(["material"]) }}
         error
         subject="welcome"
         viewport={viewport}
@@ -151,7 +151,7 @@ function RemovedVariant({
         viewport={viewport}
         inspector={
           <DetailsPanel
-            comparisonEvidence={<ReasonSentences reasons={["removed"]} />}
+            comparisonEvidence={{ reasons: reasonEvidence(["removed"]) }}
             open
             subject={subject}
           />
@@ -217,7 +217,7 @@ function ChangedViews({ viewport }: { viewport: ArtboardViewport }) {
             Mobile · Dark, Desktop · Dark
           </MockLink>
         }
-        comparisonEvidence={<ReasonSentences reasons={["material"]} />}
+        comparisonEvidence={{ reasons: reasonEvidence(["material"]) }}
         open
         subject="welcome"
         viewport={viewport}

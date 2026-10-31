@@ -1,3 +1,4 @@
+import { EditStatus } from "../../../../../../../packages/ui/src/edit-status/edit-status.js";
 import { COMPONENT_NAVIGATION } from "../../../parts/component_nav_data.js";
 import type { ArtboardViewport } from "../../../parts/shell.js";
 import type { ActionEntry } from "../../parts/action_props.js";
@@ -5,7 +6,7 @@ import { ComparisonDetails } from "../../parts/comparison_details.js";
 import { actionComparison } from "../../parts/comparison_fixtures.js";
 import { ComponentInfo } from "../../parts/component_info.js";
 import { ComponentLayout } from "../../parts/component_layout.js";
-import { UsedBy } from "../../parts/component_usage.js";
+import { ComponentUsage } from "../../parts/component_usage.js";
 import { CONTROLS_PAGES } from "../../parts/destinations.js";
 import { Inspector } from "../../parts/inspector.js";
 import { COMPONENT_ENTRIES } from "../../parts/metadata.js";
@@ -123,7 +124,7 @@ export function ControlsPage({
             {
               id: "usage",
               label: "Usage",
-              content: <UsedBy state="default" />,
+              content: <ComponentUsage affected={false} state="default" />,
             },
           ]}
         />
@@ -140,12 +141,9 @@ export function ControlsPage({
                 <ActionExample {...fixture.preview} />
               </ComponentCanvas>
             </div>
-            {state === "pending" ? (
-              <p className="ce-preview-status" role="status">
-                <span aria-hidden="true" className="ce-pending-dot" />
-                {CONTROLS_COPY.updating}
-              </p>
-            ) : null}
+            <EditStatus
+              status={state === "pending" ? CONTROLS_COPY.updating : undefined}
+            />
           </div>
         )
       }

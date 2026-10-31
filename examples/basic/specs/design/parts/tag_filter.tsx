@@ -1,3 +1,4 @@
+import { MetadataChips } from "../../../../../packages/ui/src/metadata-row/metadata-row.js";
 import { optional, useDesignInstance } from "../library/composition.js";
 import { tagChip } from "../library/controls/tag-chip.js";
 
@@ -27,7 +28,7 @@ export function TagChips({
   const navigation = useDesignNavigation();
   const name = useDesignInstance("tag");
   return (
-    <span className="mbk-chips">
+    <MetadataChips>
       {designTagRecords(navigation.tags, tags).map((tag) => (
         <tagChip.Component
           key={tag.id}
@@ -36,6 +37,6 @@ export function TagChips({
           selected={tag.id === activeTag}
         />
       ))}
-    </span>
+    </MetadataChips>
   );
 }

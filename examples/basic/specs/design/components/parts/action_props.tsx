@@ -1,4 +1,4 @@
-import { MetaRow } from "../../parts/metadata_row.js";
+import { PropValues } from "../../../../../../packages/ui/src/props-panel/props-panel.js";
 import { CONTROLS_COPY } from "../controls/parts/copy.js";
 /** Shared, typed fixture inputs for saved examples and controls designs. */
 export interface ActionProps {
@@ -71,31 +71,26 @@ export const actionCompact: { title: string; props: ActionProps } = {
   },
 };
 
-const fieldIds: Record<keyof ActionProps, string> = {
-  label: "label",
-  disabled: "disabled",
-  cornerRadius: "corner-radius",
-  emphasis: "emphasis",
-  hint: "hint",
-};
+/** Action's props in their declared order. */
+const ACTION_PROPS: readonly (keyof ActionProps)[] = [
+  "label",
+  "disabled",
+  "cornerRadius",
+  "emphasis",
+  "hint",
+];
 
+/** Action's supplied props in the shipped list, an unset one as Not set. */
 export function ActionPropValues({ props }: { props: ActionProps }) {
   return (
-    <dl className="ce-props" aria-label="Supplied props">
-      {(Object.keys(fieldIds) as (keyof ActionProps)[]).map((key) => (
-        <MetaRow
-          key={key}
-          name={fieldIds[key]}
-          label={key}
-          presentation="props"
-        >
-          <code>
-            {props[key] === undefined
-              ? CONTROLS_COPY.notSet
-              : JSON.stringify(props[key])}
-          </code>
-        </MetaRow>
-      ))}
-    </dl>
+    <PropValues
+      values={ACTION_PROPS.map((name) => ({
+        name,
+        value:
+          props[name] === undefined
+            ? CONTROLS_COPY.notSet
+            : JSON.stringify(props[name]),
+      }))}
+    />
   );
 }

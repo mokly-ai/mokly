@@ -3,8 +3,9 @@
 Status: Active. [PR #249](https://github.com/mokly-ai/mokly/pull/249), with
 milestones 1 to 5, merged on 2026-10-30 as `14c6f9ec`. The later slices are
 stacked branches: milestones 6 to 8 on `calummoore/mokly-ui-controls`, where
-[PR #251](https://github.com/mokly-ai/mokly/pull/251) is open, 9 to 11 on
-`calummoore/mokly-ui-inspector`, 12 to 14 on `calummoore/mokly-ui-preview`,
+[PR #251](https://github.com/mokly-ai/mokly/pull/251) merged as `7edabc30`, 9
+to 11 on `calummoore/mokly-ui-inspector`, where
+[PR #253](https://github.com/mokly-ai/mokly/pull/253) is open, 12 to 14 on `calummoore/mokly-ui-preview`,
 and 15 to 20 on `calummoore/mokly-ui-layout-theme`. The work lands as a stack
 of five pull requests, one for each slice, as design call 11 says. Each
 earlier pull request keeps this plan. The last one deletes it, as the `plans`
@@ -584,8 +585,12 @@ them. Files under `src/shell` drop the prefix. `views.tsx` and
   `workspace_usage`, `workspace_instances`, `workspace_evidence`,
   `evidence_details`, `workspace_stylesheet_list`, and `page_evidence`.
 - Package components: `inspector`, `details-panel`, `metadata-row`,
-  `prop-field`, `controls-panel`, `props-panel`, `usage-list`,
-  `instance-tree`, and `comparison-evidence`.
+  `prop-field`, `controls-panel`, `edit-status`, `props-panel`,
+  `usage-list`, `instance-tree`, `text-button`, and `comparison-evidence`.
+  Milestone 9 added `edit-status`, which draws over the preview, and
+  `text-button`, which three panels share. `evidence_details` became a `.ts`
+  module, and `workspace_stylesheet_list.tsx` went into the evidence
+  component.
 - CSS sources: `css_details`, `css_inspector_resize`, and the inspector,
   props, field, instance, and evidence rules of `css_workspace`.
 - Design library: `inspector/inspector`, `inspector/metadata-row`, and
@@ -950,16 +955,26 @@ list, the instance tree, and the comparison evidence. The catalogue lookups
 of `details_rows.tsx` and the evidence projections stay in the viewer and
 pass plain records.
 
-- [ ] Create the package components of the inspector slice, with their CSS,
+- [x] Create the package components of the inspector slice, with their CSS,
       exports, and order. Decide under design call 3 whether the sheet and
       divider behaviour of `inspector_resize.ts` moves, and record the call.
-- [ ] The viewer files of the slice become containers. Move their rules and
+- [x] The viewer files of the slice become containers. Move their rules and
       delete each emptied module.
-- [ ] Tests as in milestone 3: the tab keys, Escape and focus return, each
+- [x] Tests as in milestone 3: the tab keys, Escape and focus return, each
       field kind with its label, description, and error ids, Reset, the usage
       links, the instance tree selection, and each evidence block.
-- [ ] Remove the files of the slice from the lint exemption list.
-- [ ] Check as in milestone 3. Save evidence under
+- [x] Remove the files of the slice from the lint exemption list.
+- [x] Check as in milestone 3. Save evidence under
+      `.context/ui-package-shell-views/inspector/`.
+- [x] Done on 2026-10-30 by the ui implementor on
+      `calummoore/mokly-ui-inspector` and checked: identical markup in 1488
+      cases, zero computed-style differences across 166 states, 805 browser
+      tests and 2803 Node tests passed, and 19 new order-tool pairs that
+      cannot change a computed value. Calls under design call 3: the
+      inspector tabs keep their own buttons with the `icon-control`
+      stylesheet, because `IconButton` writes its attributes in another order;
+      `inspector_resize.ts` and the Escape listener on the shell root stay in
+      the viewer, and the listener now has a browser test. Evidence:
       `.context/ui-package-shell-views/inspector/`.
 
 ## Milestone 10: Inspector mockups
@@ -968,17 +983,58 @@ Tags: mockup
 
 Depends on: 9
 
-- [ ] Adopt `inspector/inspector`, `inspector/metadata-row`, and
+The inventory gives the prop field a `control` slot and the inspector tabs
+that open natively with links, while the package draws typed controls and
+buttons with callbacks. Add optional static props to the package components,
+as `ComparisonToolbar` gained `modeHref` and `interactive`. Found by milestone
+9 on 2026-10-30.
+
+- [x] Adopt `inspector/inspector`, `inspector/metadata-row`, and
       `inspector/prop-field` as milestone 4 adopts the chrome, including
       decision 2 and the comparison with the earlier renders.
-- [ ] Run the mockup check and smoke-test the changed pages.
+- [x] Run the mockup check and smoke-test the changed pages.
+- [x] Adoption done on 2026-10-31 by the ui implementor and checked, apart
+      from the parts above: the library's inspector, metadata row, and prop
+      field, and every other artboard copy of the inspector slice, render the
+      package components. Zero computed-style differences across 166 states,
+      2851 Node tests, 1420 browser tests, and the repository suite passed.
+      Calls: static tabs are native disclosures and the grab is a native
+      switch; static actions link to the artboard of their outcome; the
+      selected instance renders `PropsPanel`; the approved evidence card
+      renders `ComparisonEvidence`; the dead `.mbk-inspector select` rule
+      goes; the highlight artboard stays reached through the catalogue tree;
+      the explorer's prose-link rule skips shipped links. Intended product
+      changes: one shared count helper writes "1 instance", "1 view", "1
+      component", and "1 nested instance", and the static Reset link takes
+      the Reset button's look. Evidence:
+      `.context/ui-package-shell-views/inspector-mockups/`.
+- [x] Apply decision 6 to the six parts that waited for the user. Done on
+      2026-10-31 by the ui implementor and checked: an invalid prop field
+      draws `--mbk-danger-ink`; the resize grip, the sheet grabber, and the
+      use-case and screen chips draw `--chrome-control-edge`; the Components
+      tab renders the shipped `InstanceTree`, with a link form and lists that
+      start open; the component Props tab renders the controls panel in
+      place; `ComparisonEvidence` shows the saved variant and its saved props;
+      the mobile sheet spans the workspace. The explorer, component design,
+      and controls design contracts follow. The selected instance keeps its
+      shipped hairline, which the palette contract and the boundary audit
+      now name, under decision 6. The computed-style tool lists only these
+      intended differences. Evidence:
+      `.context/ui-package-shell-views/decision6/`.
 
 ## Milestone 11: Third pull request
 
 Depends on: 9, 10
 
-- [ ] Merge, gate, commit, push, review, and open the pull request on the
+- [x] Merge, gate, commit, push, review, and open the pull request on the
       second one, as milestone 8 says.
+- [x] Done on 2026-10-31: the branch merged the controls branch and
+      `origin/main` at `7edabc30` (#251). Review round 1 found findings 1 to
+      3, and round 2 found 4; the fixes are `40d568a4` and `9841e203`. A
+      frame cleanup race outside the slice, which failed `main`'s CI and two
+      gates of this branch, is fixed in `0a9ae8b4`. On `9841e203` the remote
+      gate passed 6 of 7 suites, and browser shard 4 passed on a rerun after
+      a flaky test. Reports: `.context/reviews/calummoore/mokly-ui-inspector/`.
 
 ## Milestone 12: Preview components
 

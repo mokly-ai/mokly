@@ -1,8 +1,7 @@
-import type { ReactNode } from "react";
-
 import { CompareGrid, Pane } from "./compare.js";
 import { ComparePage, FramedShot } from "./compare_page.js";
 import type { DesignDestination } from "./destinations.js";
+import type { CardEvidence } from "./details.js";
 import { MiniWelcome } from "./mini_screens.js";
 import { StyleReviewNav } from "./review.js";
 import type { ArtboardViewport } from "./shell.js";
@@ -18,7 +17,7 @@ export function StyleComparison({
   viewport,
 }: {
   design: DesignDestination;
-  evidence: ReactNode;
+  evidence: CardEvidence;
   viewport: ArtboardViewport;
 }) {
   return (

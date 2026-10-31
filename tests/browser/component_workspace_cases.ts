@@ -43,7 +43,7 @@ export function registerComponentWorkspace(
           exact: true,
         });
         await expect(
-          inspector.locator('[data-panel="components"]'),
+          inspector.locator('[data-inspector-tab="components"]'),
         ).toHaveCount(0);
         await page.goto(
           componentDesignUrl("design/components/pages/toolbar", viewport),
@@ -186,12 +186,12 @@ export function registerComponentWorkspace(
           ),
         );
         const pane = page.locator(".ce-preview-pane");
-        const inspector = page.locator(".ce-inspector");
+        const inspector = page.locator(".mbk-inspector");
         const heading = await page.locator(".mbk-screen-head").boundingBox();
         const before = await inspector.boundingBox();
         if (viewport === "desktop") {
           const grip = (await page
-            .locator(".ce-inspector-resize")
+            .locator(".mbk-inspector-resize")
             .boundingBox())!;
           const x = grip.x + grip.width / 2;
           const y = grip.y + grip.height / 2;
@@ -211,7 +211,7 @@ export function registerComponentWorkspace(
           .locator("details[open] > summary")
           .boundingBox();
         await inspector
-          .locator("details[open] .ce-inspector-panel")
+          .locator("details[open] .mbk-inspector-content")
           .evaluate((node) => {
             node.scrollTop = node.scrollHeight;
           });
@@ -233,7 +233,7 @@ export function registerComponentWorkspace(
         await inspector
           .getByRole("button", { name: "Props", exact: true })
           .click();
-        await expect(inspector).toHaveCSS("height", "49px");
+        await expect(inspector).toHaveCSS("height", "46px");
         await expect(pane).toHaveCSS("resize", "none");
         await inspector
           .getByRole("button", { name: "Props", exact: true })

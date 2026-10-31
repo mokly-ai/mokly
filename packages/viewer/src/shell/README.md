@@ -128,9 +128,10 @@ not already a changed entry. Later navigation within Changes keeps the sticky
 view axes; container redirection still applies. The shared typed query
 parser applies each valid viewport or scheme independently and ignores invalid
 or repeated values; the embedded host and standalone router consume the same
-route result. `details_rows.tsx` owns the inspector's
+route result. `details_rows.tsx` resolves the inspector's
 metadata rows, including links between a screen and its variants, the
-`Changed views` row, and Related docs links. A related doc links to its
+`Changed views` row, and Related docs links, and `@mokly/ui/metadata-row`
+draws them. A related doc links to its
 document when it is a public `mock:<path>` reference or, in Serve and the
 static build, the source path of a current document; a removed entry keeps
 plain labels.
@@ -199,7 +200,14 @@ and `head.tsx`'s viewport and scheme switches render
 picker with `@mokly/ui/tag-picker` and each tag chip of the details with
 `@mokly/ui/tag-chip`. `workspace_controls.tsx` renders
 `@mokly/ui/view-controls`, and `views.tsx` and `workspace.tsx` render the
-status beside a title with `@mokly/ui/change-status`. A local ESLint rule
+status beside a title with `@mokly/ui/change-status`. `inspector.tsx` renders
+`@mokly/ui/inspector`, and `details.tsx` renders `@mokly/ui/details-panel`.
+The inspector's panels render `@mokly/ui/prop-field`,
+`@mokly/ui/controls-panel`, `@mokly/ui/props-panel`, `@mokly/ui/usage-list`,
+`@mokly/ui/instance-tree`, and `@mokly/ui/comparison-evidence`, from records
+that their containers build, and the preview shows the status of an edit's
+render with `@mokly/ui/edit-status`. The controls' wording of
+`component_controls_copy.ts` reaches them as props. A local ESLint rule
 rejects every intrinsic JSX element in `packages/viewer/src`, so a container
 renders only package components, fragments, providers, and portals. Text
 that the shell derives from catalogue data stays here and reaches the
@@ -330,15 +338,17 @@ same facts once. `workspace_evidence_merge.ts` clears held reasons that a newer
 publication no longer carries. `workspace_stylesheet_evidence.ts` turns that evidence into
 one item per changed file, with the contract's outcome sentences in order: own
 component rules, page selectors, unresolved rules, or else the full matched
-styles. `workspace_stylesheet_list.tsx` renders each file once with its
+styles. `@mokly/ui/comparison-evidence` draws each file once with its
 sentences and selector lists nested in its item, like the approved card.
 `entry_wording.ts` declares each kind's nouns once and builds the kind's
 evidence sentences, status lines and pane labels from them. A component's
 sentences name the shown variant, while its file list and its own rules name
 the component.
-`evidence_details.tsx` holds the shared comparison heading and the files and
-exclusions block, so `workspace_evidence.tsx` and a page's Details render the
-same markup. `workspace_evidence.tsx` follows the designs' order: the reason
+`evidence_details.ts` builds the files and exclusions records, so
+`workspace_evidence.tsx` and a page's Details pass the same facts to
+`@mokly/ui/comparison-evidence`, which draws the shared heading and block.
+`workspace_evidence.tsx` words each reason and decides which facts show, and
+the package follows the designs' order: the reason
 sentences right after the heading and a moved entry's earlier side, then the
 files and exclusions, the paired prop values, and the changed components. The
 ignored content, the shared-component sentence, the saved props block, which no
@@ -362,8 +372,9 @@ views' `resourceEvidence` from the held entry detail through
 `../viewer/public_workspace_views.ts` and `../review/view_evidence.ts`. A
 whole-document page has no workspace: `page_evidence_data.ts` reads its status
 from the index record and its evidence record from the page's entry detail,
-and `page_evidence.tsx` renders them in the page's `details.tsx` panel with
-the page wording. `views.tsx` shows that status beside the page title.
+and `page_evidence.tsx` passes them with the page wording to
+`@mokly/ui/comparison-evidence` in the page's `details.tsx` panel. `views.tsx`
+shows that status beside the page title.
 
 An entry detail that is not held carries `omitted` usage, and no list is
 derived from it. `use_workspace_data.ts` exposes loading until every detail
@@ -400,13 +411,18 @@ missing state.
 
 `workspace.tsx` coordinates the React workspace without owning transport or
 frame internals. `component_controls.tsx` owns cancellable temporary prop edits,
-and `component_control_fields.tsx` lays out each control as a row, its name in
+and `component_control_fields.tsx` derives each control's field, which
+`@mokly/ui/prop-field` lays out as a row, its name in
 a label column and then its value, help, and error, as the
 [controls design](../../../../docs/protocol/mokly-component-controls-design.md)
 draws them;
-the focused `workspace_*` components render evidence, usage, instances and
-supplied props. `inspector.tsx` and `inspector_resize.ts` own the tab and sheet
-interaction. Each shell root owns one `frame_registry.tsx` instance, so frame
+the focused `workspace_*` containers turn evidence, usage, instances and
+supplied props into the records of the package's panels. `@mokly/ui/inspector`
+owns the tab keys and returns focus from Close to the tab pressed last.
+`inspector.tsx` closes the inspector the same way on Escape anywhere in its
+shell root. `inspector_resize.ts` owns the divider and the mobile sheet,
+because they read the workspace panes and the shell root. Each shell root
+owns one `frame_registry.tsx` instance, so frame
 path-keyed identity, readiness, validated usage revisions and disposal cannot cross an
 independent embedded viewer. `frame_mount_hook.ts` mounts each frame, and
 `frame_session_usage.ts` adopts changed usage. A mount reports ready in the same

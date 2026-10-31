@@ -12,3 +12,14 @@
 @import "./icon-control/icon-control.css";
 @import "./view-controls/view-controls.css";
 @import "./change-status/change-status.css";
+@import "./details-panel/details-panel.css";
+@import "./metadata-row/metadata-row.css";
+@import "./inspector/inspector.css";
+@import "./instance-tree/instance-tree.css";
+@import "./props-panel/props-panel.css";
+@import "./usage-list/usage-list.css";
+@import "./text-button/text-button.css";
+@import "./comparison-evidence/comparison-evidence.css";
+@import "./prop-field/prop-field.css";
+@import "./controls-panel/controls-panel.css";
+@import "./edit-status/edit-status.css";

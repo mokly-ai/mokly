@@ -261,14 +261,14 @@
     },
     {
       "source": "design/components/states/shared-impact/style-outside",
-      "within": "ce-comparison-evidence",
+      "within": "mbk-comparison-evidence",
       "name": "Action",
       "target": "design/components/states/shared-impact/style-changed"
     },
     {
       "source": "design/components/states/shared-impact/style-changed",
-      "within": "ce-affected",
-      "name": "Welcome↗",
+      "within": "[data-usage-section=affected]",
+      "name": "Welcome",
       "target": "design/components/states/shared-impact/affected-screen"
     },
     {
@@ -279,7 +279,7 @@
     },
     {
       "source": "design/components/states/shared-impact/affected-screen",
-      "within": "ce-comparison-evidence",
+      "within": "mbk-comparison-evidence",
       "name": "Action",
       "target": "design/components/states/shared-impact/style-changed"
     },
@@ -291,8 +291,8 @@
     },
     {
       "source": "design/components/overview",
-      "within": "ce-usage-section",
-      "name": "Welcome↗",
+      "within": "[data-usage-section=used-by]",
+      "name": "Welcome",
       "target": "design/components/inspection/inspection-details"
     },
     {

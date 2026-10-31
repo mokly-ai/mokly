@@ -1,0 +1,327 @@
+/* The workspace inspector: the tab strip, which stays in place while the open
+   panel scrolls, and the panels. Its tabs draw with the icon control rules.
+   Below the breakpoint, the inspector is a bottom sheet with a grab handle. */
+.mbk-inspector {
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 45px;
+  background: var(--chrome-surface);
+  border-top: 1px solid var(--chrome-border);
+  z-index: 5;
+}
+
+.mbk-inspector[data-open="true"] {
+  height: var(--inspector-height, 260px);
+  max-height: calc(100% - 100px);
+}
+
+.mbk-inspector-tabs {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 5px;
+  height: 45px;
+  padding: 5px 16px;
+}
+
+.mbk-inspector-title {
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 6px;
+  flex: 1;
+}
+
+.mbk-inspector-content {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  overscroll-behavior: contain;
+  font-size: 13px;
+}
+
+.mbk-inspector-content > section {
+  padding: 10px 24px 24px;
+}
+
+.mbk-inspector-content .mbk-details-body {
+  padding: 0;
+}
+
+.mbk-inspector-content h3 {
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+
+.mbk-inspector-content h4 {
+  font-size: 12px;
+  margin: 14px 0 8px;
+}
+
+.mbk-inspector-content p {
+  line-height: 1.5;
+}
+
+.mbk-inspector-content a {
+  color: var(--mokly-accent);
+}
+
+.mbk-sheet-grab {
+  display: none;
+}
+
+.mbk-inspector-content .mbk-controls-heading h3 {
+  margin-bottom: 4px;
+}
+
+/* A static depiction draws each tab as a native disclosure. The tabs share
+   the first row with the open tab's title and Close, which is part of the
+   tab, and the open panel fills the row below. The resize separator is a
+   picture of its grip, which lets a pointer reach the host's sizer below. */
+.mbk-inspector[data-inspector-disclosures] {
+  display: grid;
+  grid-template-columns:
+    repeat(var(--inspector-tabs, 4), 34px) minmax(0, 1fr)
+    34px;
+  grid-template-rows: auto 45px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 5px;
+  padding-inline: 16px;
+}
+
+.mbk-inspector[data-inspector-disclosures] > details,
+.mbk-inspector[data-inspector-disclosures] > details::details-content {
+  display: contents;
+}
+
+.mbk-inspector[data-inspector-disclosures] > details > summary {
+  position: static;
+  grid-row: 2;
+  grid-column: var(--inspector-tab, auto);
+  list-style: none;
+}
+
+.mbk-inspector[data-inspector-disclosures]
+  > details
+  > summary::-webkit-details-marker {
+  display: none;
+}
+
+.mbk-inspector[data-inspector-disclosures] > details > .mbk-inspector-title {
+  grid-row: 2;
+  grid-column: -3 / -2;
+}
+
+.mbk-inspector[data-inspector-disclosures] [data-inspector-close] {
+  position: absolute;
+  top: 5.5px;
+  right: 16px;
+}
+
+.mbk-inspector[data-inspector-disclosures] > details > .mbk-inspector-content {
+  grid-row: 3;
+  grid-column: 1 / -1;
+  align-self: stretch;
+  margin-inline: -16px;
+}
+
+.mbk-inspector[data-inspector-disclosures]
+  > details:not([open])
+  > :not(summary),
+.mbk-inspector[data-inspector-disclosures]
+  > details:not([open])
+  [data-inspector-close] {
+  display: none;
+}
+
+.mbk-inspector-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: inherit;
+}
+
+.mbk-inspector[data-inspector-disclosures]:has(> details[open])
+  > .mbk-inspector-resize {
+  display: block;
+  pointer-events: none;
+}
+
+.mbk-sheet-grab > input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.mbk-sheet-grab:has(> input:focus-visible) {
+  outline: 2px solid var(--mokly-accent);
+  outline-offset: -2px;
+}
+
+@media (width < 56.25rem) {
+  .mbk-inspector {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 1px solid var(--chrome-border);
+    border-bottom: 0;
+    border-radius: 14px 14px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: var(--chrome-shadow-sheet);
+  }
+
+  .mbk-inspector[data-open="true"] {
+    height: min(42%, 320px);
+    min-height: 190px;
+    max-height: calc(100% - 36px);
+  }
+
+  .mbk-inspector[data-expanded="true"][data-open="true"] {
+    height: 80%;
+  }
+
+  .mbk-inspector-tabs {
+    padding: 4px 10px;
+  }
+
+  .mbk-inspector-content > section {
+    padding: 8px 14px 20px;
+  }
+
+  .mbk-sheet-grab {
+    display: grid;
+    flex: none;
+    place-items: center;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: 14px 14px 0 0;
+    background: transparent;
+    touch-action: none;
+    cursor: ns-resize;
+  }
+
+  .mbk-sheet-grab span {
+    width: 36px;
+    height: 5px;
+    border-radius: 9px;
+    background: var(--chrome-control-edge);
+  }
+
+  .mbk-inspector:not([data-open="true"]) .mbk-sheet-grab {
+    display: none;
+  }
+}
+
+/* The separator above an open inspector on a desktop, rotated from the
+   catalogue navigation's separator, so that both share one hover, focus, and
+   active look. At rest this grip draws the control edge, while the navigation
+   grip keeps the strong border that the palette contract names as an
+   exception. The offset measures from the inspector's padding box, so it
+   clears the 1px top border as well as half the handle, which leaves the grip
+   centred on that border. The resizing class marks the shell root during a
+   drag, and every element in it follows. */
+.mbk-inspector-resize {
+  position: absolute;
+  z-index: 2;
+  top: -8.5px;
+  right: 0;
+  left: 0;
+  display: none;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: row-resize;
+  outline: none;
+  touch-action: none;
+}
+
+.mbk-inspector[data-open="true"] .mbk-inspector-resize {
+  display: block;
+}
+
+.mbk-inspector-resize::after {
+  content: "";
+  position: absolute;
+  top: 7px;
+  left: calc(50% - 16px);
+  width: 32px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--chrome-control-edge);
+  transition:
+    background 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.mbk-inspector-resize:hover::after,
+.mbk-inspector-resize:focus-visible::after,
+[data-mokly-shell].mbk-inspector-resizing .mbk-inspector-resize::after {
+  background: var(--mokly-accent);
+  box-shadow: 0 0 0 3px var(--mokly-accent-soft);
+}
+
+.mbk-inspector-resize:focus-visible {
+  box-shadow: inset 0 2px 0 var(--mokly-accent);
+}
+
+[data-mokly-shell].mbk-inspector-resizing {
+  cursor: row-resize;
+  user-select: none;
+}
+
+[data-mokly-shell].mbk-inspector-resizing * {
+  cursor: row-resize !important;
+}
+
+[data-mokly-shell].mbk-inspector-resizing iframe {
+  pointer-events: none;
+}
+
+@media (width < 56.25rem) {
+  .mbk-inspector[data-open="true"] .mbk-inspector-resize {
+    display: none;
+  }
+
+  /* The static sheet draws its grab above the tabs while a tab is open. */
+  .mbk-inspector[data-inspector-disclosures] {
+    padding-inline: 10px;
+  }
+
+  .mbk-inspector[data-inspector-disclosures]
+    > details
+    > .mbk-inspector-content {
+    margin-inline: -10px;
+  }
+
+  .mbk-inspector[data-inspector-disclosures] [data-inspector-close] {
+    top: 27.5px;
+    right: 10px;
+  }
+
+  .mbk-inspector[data-inspector-disclosures] > .mbk-sheet-grab {
+    position: relative;
+    grid-row: 1;
+    grid-column: 1 / -1;
+    margin-inline: -10px;
+  }
+
+  .mbk-inspector[data-inspector-disclosures]:has(> details[open])
+    > .mbk-sheet-grab {
+    display: grid;
+  }
+
+  .mbk-inspector[data-inspector-disclosures]:has(> details[open])
+    > .mbk-inspector-resize {
+    display: none;
+  }
+}

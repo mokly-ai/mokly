@@ -31,26 +31,27 @@
   overscroll-behavior: contain;
   position: absolute;
 }
+/* The preview keeps the closed inspector's 46px strip clear. */
 .mbk-shell--mobile .ce-preview-pane {
-  padding-bottom: calc(49px + env(safe-area-inset-bottom));
+  padding-bottom: calc(46px + env(safe-area-inset-bottom));
 }
-.ce-preview-sizer,
-.ce-inspector-resize {
+.ce-preview-sizer {
   display: none;
 }
 .mbk-shell--desktop
-  .ce-workspace:has(.ce-inspector > details[open])
+  .ce-workspace:has(.mbk-inspector > details[open])
   .ce-preview-region {
   flex: 0 0 auto;
 }
 .mbk-shell--desktop
-  .ce-workspace:has(.ce-inspector > details[open])
+  .ce-workspace:has(.mbk-inspector > details[open])
   .ce-preview-pane {
   bottom: 0;
 }
-/* A narrow native sizing box gives the centered handle a 64px pointer target. */
+/* A narrow native sizing box gives the centered handle a 64px pointer target
+   below the inspector's picture of its grip. */
 .mbk-shell--desktop
-  .ce-workspace:has(.ce-inspector > details[open])
+  .ce-workspace:has(.mbk-inspector > details[open])
   .ce-preview-sizer {
   cursor: row-resize;
   display: block;
@@ -67,68 +68,25 @@
   transform: scaleX(4);
   width: 16px;
 }
-.mbk-shell--desktop
-  .ce-workspace:has(.ce-inspector > details[open])
-  .ce-inspector-resize {
-  bottom: -8px;
-  display: block;
-  height: 16px;
-  left: calc(50% - 32px);
-  pointer-events: none;
-  position: absolute;
-  width: 64px;
-  z-index: 2;
-}
-/* The inspector divider's grip borrows the navigation separator's class
-   until the inspector slice adopts the shipped divider. It draws itself here,
-   so the shipped navigation's rules, which hide a separator outside a ready
-   shell, leave it alone. */
-.ce-inspector-resize .mbk-nav-resize {
-  cursor: row-resize;
-  display: block;
-  inset: 0;
-  position: absolute;
-  width: 100%;
-  z-index: 2;
-}
-.ce-inspector-resize .mbk-nav-resize::after {
-  background: var(--chrome-control-edge);
-  border-radius: 999px;
-  content: "";
-  height: 2px;
-  left: 16px;
-  position: absolute;
-  top: 7.5px;
-  width: 32px;
-}
 .ce-design .ce-preview-pane > .mbk-stage {
   display: block;
   min-height: 100%;
   overflow: visible;
 }
+/* The dock places and sizes the shipped inspector, which fills it, so the
+   inspector neither places itself nor stacks above the preview's sizer. */
 .ce-inspector-dock {
-  flex: 0 0 49px;
-  min-height: 49px;
-  overflow: hidden;
+  flex: 0 0 auto;
 }
-.ce-inspector-dock:has(.ce-inspector > details[open]) {
+.ce-inspector-dock:has(.mbk-inspector > details[open]) {
   flex: 1 1 0;
   min-height: 120px;
 }
-.ce-workspace .ce-inspector {
-  grid-template-rows: 48px 0;
+.ce-inspector-dock > .mbk-inspector {
   height: 100%;
-  min-height: 49px;
-  overflow: hidden;
-}
-.ce-workspace .ce-inspector:has(> details[open]) {
-  grid-template-rows: 48px minmax(0, 1fr);
-}
-.ce-design .ce-workspace .ce-inspector-panel {
-  max-height: none;
-  min-height: 0;
-  overflow: auto;
-  overscroll-behavior: contain;
+  inset: auto;
+  position: relative;
+  z-index: auto;
 }
 .ce-preview-set {
   align-items: flex-start;

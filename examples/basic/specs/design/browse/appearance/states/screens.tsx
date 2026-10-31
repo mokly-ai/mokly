@@ -1,5 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
+import { DetailsBody } from "../../../../../../../packages/ui/src/details-panel/details-panel.js";
+import { MetadataCode } from "../../../../../../../packages/ui/src/metadata-row/metadata-row.js";
 import { appearanceDesignMetadata } from "../../../metadata.js";
 import { artboards } from "../../../parts/artboards.js";
 import { DESTINATIONS } from "../../../parts/destinations.js";
@@ -85,20 +87,11 @@ function LightOnlyCurrentDocument({
         <PaymentTerms />
       </MarkdownStage>
       <DetailsPanel>
-        <div className="mbk-details-body">
-          <div>
-            <p className="mbk-details-desc">
-              When an invoice is due, and what happens once it is late.
-            </p>
-          </div>
-          <div className="mbk-meta">
-            <MetaRow name="source" label="Source">
-              <code className="mbk-code">
-                specs/account/billing/payment-terms.md
-              </code>
-            </MetaRow>
-          </div>
-        </div>
+        <DetailsBody description="When an invoice is due, and what happens once it is late.">
+          <MetaRow name="source" label="Source">
+            <MetadataCode>specs/account/billing/payment-terms.md</MetadataCode>
+          </MetaRow>
+        </DetailsBody>
       </DetailsPanel>
     </AppearanceShell>
   );
@@ -146,19 +139,14 @@ function LightOnlyDocument({ viewport }: { viewport: ArtboardViewport }) {
         <PaymentTerms />
       </MarkdownStage>
       <DetailsPanel>
-        <div className="mbk-details-body">
-          <div>
-            <p className="mbk-details-desc">
-              When an invoice is due, and what happens once it is late.
-            </p>
-            <p>Location: Account › Billing &amp; Payments</p>
-          </div>
-          <div className="mbk-meta">
-            <MetaRow name="source" label="Source">
-              Previous version
-            </MetaRow>
-          </div>
-        </div>
+        <DetailsBody description="When an invoice is due, and what happens once it is late.">
+          <MetaRow name="source" label="Source">
+            Previous version
+          </MetaRow>
+          <MetaRow name="location" label="Location">
+            Account › Billing &amp; Payments
+          </MetaRow>
+        </DetailsBody>
       </DetailsPanel>
     </AppearanceShell>
   );

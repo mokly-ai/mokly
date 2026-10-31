@@ -12,6 +12,17 @@ const VIEWPORTS = ["mobile", "desktop"] as const;
 const classes = (element: HtmlElement) =>
   (attribute(element, "class") ?? "").split(/\s+/u);
 
+/**
+ * Whether an element is a link's scope: it carries the class, or, for a scope
+ * written `[name=value]`, the attribute with that value.
+ */
+const inScope = (element: HtmlElement, scope: string) => {
+  const pair = /^\[([\w-]+)=([\w-]+)\]$/u.exec(scope);
+  return pair
+    ? attribute(element, pair[1]!) === pair[2]
+    : classes(element).includes(scope);
+};
+
 const named = (
   view: ServedView,
   matches: (name: string) => boolean,
@@ -22,7 +33,7 @@ const named = (
       ([element, ancestors]) =>
         element.tagName === "a" &&
         (within === undefined ||
-          ancestors.some((node) => classes(node).includes(within))),
+          ancestors.some((node) => inScope(node, within))),
     )
     .map(([element]) => element)
     .filter((element) => matches(accessibleName(element)));
@@ -65,7 +76,7 @@ export function expectationViolations(catalogue: ServedCatalogue): string[] {
 const byClass = (view: ServedView, name: string): HtmlElement[] =>
   [...withAncestors(view.document)]
     .map(([element]) => element)
-    .filter((element) => classes(element).includes(name));
+    .filter((element) => inScope(element, name));
 
 /**
  * The Welcome tag states agree: the query, the picker, the active chips,

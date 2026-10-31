@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 import { defineScreen } from "@mokly/mokly";
 
 import { PreviewWorkspace } from "../../components/parts/workspace.js";
@@ -7,12 +5,12 @@ import { designMetadata } from "../../metadata.js";
 import { PROFILE_CHANGES_ROWS } from "../../parts/account_nav_data.js";
 import { artboards } from "../../parts/artboards.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
-import { DetailsPanel } from "../../parts/details.js";
+import { DetailsPanel, type CardEvidence } from "../../parts/details.js";
 import { ENTRY_PATHS } from "../../parts/entry_paths.js";
 import { MiniProfile, MiniSecurity } from "../../parts/mini_account.js";
 import { NavTree } from "../../parts/nav.js";
 import { NAV_TREE_PROFILE_OPEN } from "../../parts/nav_data.js";
-import { ReasonSentences } from "../../parts/reason_sentences.js";
+import { reasonEvidence } from "../../parts/reason_sentences.js";
 import {
   ScreenHead,
   Shell,
@@ -45,7 +43,7 @@ function ProfileWorkspace({
   subject,
   viewport,
 }: {
-  comparisonEvidence?: ReactNode;
+  comparisonEvidence?: CardEvidence | undefined;
   subject: ProfileSubject;
   viewport: ArtboardViewport;
 }) {
@@ -230,7 +228,7 @@ function MemberChanges({ viewport }: { viewport: ArtboardViewport }) {
         title="Security"
       />
       <ProfileWorkspace
-        comparisonEvidence={<ReasonSentences reasons={["material"]} />}
+        comparisonEvidence={{ reasons: reasonEvidence(["material"]) }}
         subject="profileSecurity"
         viewport={viewport}
       />

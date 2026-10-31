@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-
+import { DetailsBody } from "../../../../../packages/ui/src/details-panel/details-panel.js";
+import { MetadataCode } from "../../../../../packages/ui/src/metadata-row/metadata-row.js";
 import { ExampleDocument } from "../../document.js";
 import { COMPONENT_PAGES } from "../components/parts/destinations.js";
 
@@ -9,7 +9,7 @@ import {
 } from "./component_nav_data.js";
 import { useDesignNavigation } from "./design_navigation.js";
 import { DESTINATIONS } from "./destinations.js";
-import { DetailsPanel } from "./details.js";
+import { DetailsPanel, type CardEvidence } from "./details.js";
 import { MetaRow } from "./metadata_row.js";
 import type { NavNode } from "./nav.js";
 import { DocumentPane, Stage } from "./stage.js";
@@ -101,7 +101,7 @@ export function PageDetails({
   evidence,
   open = false,
 }: {
-  evidence?: ReactNode;
+  evidence?: CardEvidence | undefined;
   open?: boolean;
 }) {
   const navigation = useDesignNavigation();
@@ -111,24 +111,17 @@ export function PageDetails({
       destination={navigation.inspector}
       comparisonEvidence={evidence}
     >
-      <div className="mbk-details-body">
-        <div>
-          <p className="mbk-details-desc">
-            A handbook to accompany the example screens.
-          </p>
-        </div>
-        <div className="mbk-meta">
-          <MetaRow name="source" label="Source">
-            <code className="mbk-code">specs/catalogue.tsx</code>
-          </MetaRow>
-          <MetaRow name="tags" label="Tags">
-            documents
-          </MetaRow>
-          <MetaRow name="related-docs" label="Related docs">
-            Example notes
-          </MetaRow>
-        </div>
-      </div>
+      <DetailsBody description="A handbook to accompany the example screens.">
+        <MetaRow name="source" label="Source">
+          <MetadataCode>specs/catalogue.tsx</MetadataCode>
+        </MetaRow>
+        <MetaRow name="tags" label="Tags">
+          documents
+        </MetaRow>
+        <MetaRow name="related-docs" label="Related docs">
+          Example notes
+        </MetaRow>
+      </DetailsBody>
     </DetailsPanel>
   );
 }

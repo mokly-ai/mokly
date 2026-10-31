@@ -1,16 +1,18 @@
-// The metadata rows of the details inspector: the label/value pair itself,
-// path and tag chips, the views a classification marked changed, the use cases
-// a screen belongs to, and the links between a screen and the variants it
-// declares.
-
-import type { ReactNode } from "react";
+/**
+ * The metadata rows of the details inspector that read the catalogue: the
+ * views a classification marked changed, the related docs, the tags, the use
+ * cases a screen belongs to, and the links between a screen and the variants
+ * it declares. These containers resolve the entries and their addresses, and
+ * `@mokly/ui/metadata-row` renders the rows and their chips.
+ */
 
 import {
-  FlowIcon,
-  ScreenIcon,
-  VariantIcon,
-  WorkspaceIcon,
-} from "@mokly/ui/icons";
+  EntryChip,
+  MetadataChips,
+  MetadataCode,
+  MetadataLink,
+  MetadataRow,
+} from "@mokly/ui/metadata-row";
 
 import { parseLogicalTarget } from "../navigation/logical.js";
 import { viewHref } from "../navigation/routes.js";
@@ -21,16 +23,6 @@ import { branchPoints } from "./catalogue_branch_point.js";
 import { TagChip } from "./tags.js";
 import { changedViewsLabel, type ChangedView } from "./view_marks.js";
 
-/** One label/value pair in the inspector's metadata column. */
-export function MetaRow(props: { children: ReactNode; label: string }) {
-  return (
-    <div className="mbk-meta-row">
-      <span className="mbk-meta-k">{props.label}</span>
-      <span className="mbk-meta-v">{props.children}</span>
-    </div>
-  );
-}
-
 /**
  * The views a ready classification marked changed. The row is always present
  * so a background evidence refresh can name new views without rebuilding the
@@ -39,16 +31,14 @@ export function MetaRow(props: { children: ReactNode; label: string }) {
 export function ChangedViewsRow(props: { views: readonly ChangedView[] }) {
   const label = changedViewsLabel(props.views);
   return (
-    <div
-      className="mbk-meta-row"
-      data-workspace-changed-views=""
+    <MetadataRow
       hidden={label === ""}
+      label="Changed views"
+      mark="data-workspace-changed-views"
+      valueMark="data-workspace-changed-views-value"
     >
-      <span className="mbk-meta-k">Changed views</span>
-      <span className="mbk-meta-v" data-workspace-changed-views-value="">
-        {label}
-      </span>
-    </div>
+      {label}
+    </MetadataRow>
   );
 }
 
@@ -63,26 +53,20 @@ export function RelatedDocChips(props: {
   values: readonly string[];
 }) {
   return (
-    <span className="mbk-chips">
+    <MetadataChips>
       {props.values.map((value) => {
         const document = props.removed
           ? undefined
           : relatedDocument(props.catalogue, value);
         return document ? (
-          <a
-            className="mbk-meta-link"
-            href={viewHref(document.path)}
-            key={value}
-          >
+          <MetadataLink href={viewHref(document.path)} key={value}>
             {document.title}
-          </a>
+          </MetadataLink>
         ) : (
-          <code className="mbk-code" key={value}>
-            {value}
-          </code>
+          <MetadataCode key={value}>{value}</MetadataCode>
         );
       })}
-    </span>
+    </MetadataChips>
   );
 }
 
@@ -117,13 +101,13 @@ export function TagChips(props: { values: readonly string[] }) {
     return null;
   }
   return (
-    <MetaRow label="Tags">
-      <span className="mbk-chips">
+    <MetadataRow label="Tags">
+      <MetadataChips>
         {props.values.map((tag) => (
           <TagChip key={tag} tag={tag} />
         ))}
-      </span>
-    </MetaRow>
+      </MetadataChips>
+    </MetadataRow>
   );
 }
 
@@ -142,20 +126,18 @@ export function UsedByChips(props: {
     return null;
   }
   return (
-    <MetaRow label="Used by">
-      <span className="mbk-chips">
+    <MetadataRow label="Used by">
+      <MetadataChips>
         {useCases.map((useCase) => (
-          <a
-            className="mbk-chip flow"
+          <EntryChip
             href={viewHref(useCase.path)}
             key={useCase.path}
-          >
-            <FlowIcon size={11} />
-            {useCase.title}
-          </a>
+            kind="use-case"
+            title={useCase.title}
+          />
         ))}
-      </span>
-    </MetaRow>
+      </MetadataChips>
+    </MetadataRow>
   );
 }
 
@@ -179,20 +161,18 @@ export function VariantChips(props: {
     return null;
   }
   return (
-    <MetaRow label="Variants">
-      <span className="mbk-chips">
+    <MetadataRow label="Variants">
+      <MetadataChips>
         {variants.map((variant) => (
-          <a
-            className="mbk-chip screen"
+          <EntryChip
             href={entryHref(props.catalogue, variant)}
             key={variant.path}
-          >
-            <VariantIcon size={11} />
-            {variant.title}
-          </a>
+            kind="variant"
+            title={variant.title}
+          />
         ))}
-      </span>
-    </MetaRow>
+      </MetadataChips>
+    </MetadataRow>
   );
 }
 
@@ -206,21 +186,15 @@ export function VariantOfChip(props: {
     return null;
   }
   return (
-    <MetaRow label="Variant of">
-      <span className="mbk-chips">
-        <a
-          className="mbk-chip screen"
+    <MetadataRow label="Variant of">
+      <MetadataChips>
+        <EntryChip
           href={entryHref(props.catalogue, parent.entry)}
-        >
-          {parent.entry.kind === "component" ? (
-            <WorkspaceIcon name="components" size={11} />
-          ) : (
-            <ScreenIcon size={11} />
-          )}
-          {parent.entry.title}
-        </a>
-      </span>
-    </MetaRow>
+          kind={parent.entry.kind === "component" ? "component" : "screen"}
+          title={parent.entry.title}
+        />
+      </MetadataChips>
+    </MetadataRow>
   );
 }
 

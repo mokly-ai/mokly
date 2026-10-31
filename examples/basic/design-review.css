@@ -1,3 +1,7 @@
+/* The shipped comparison evidence, which the approved card below draws
+   without the shell's separator. */
+@import "../../packages/ui/src/comparison-evidence/comparison-evidence.css";
+
 .mbk-comparison-stage {
   background: radial-gradient(circle, var(--mbk-dot) 1px, transparent 1px) 0 0 /
     22px 22px;
@@ -24,36 +28,35 @@
   padding: 12px;
 }
 
+.mbk-comparison-details > .mbk-comparison-evidence {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
 .mbk-comparison-details summary {
   cursor: pointer;
   font-weight: 600;
 }
 
-/* The inspector-scoped copies outrank the later `.ce-inspector p` rule, which
-   otherwise wins on equal specificity and takes the card's authored spacing. */
+/* The card keeps its authored spacing inside the inspector's content. */
 .mbk-comparison-details p,
-.mbk-comparison-details ul,
-.ce-inspector .mbk-comparison-details p,
-.ce-inspector .mbk-comparison-details ul {
+.mbk-comparison-details ul {
   margin: 8px 0 0;
 }
 
-.mbk-comparison-details ul + p,
-.ce-inspector .mbk-comparison-details ul + p {
+.mbk-comparison-details ul + p {
   margin-top: 14px;
 }
 
 /* A changed file's outcome sentences and style lists sit under that file,
-   with the card's spacing in the shell card and in the component inspector. */
+   with the card's spacing. */
 .mbk-evidence-files p,
-.mbk-evidence-files ul,
-.ce-inspector .mbk-evidence-files p,
-.ce-inspector .mbk-evidence-files ul {
+.mbk-evidence-files ul {
   margin: 8px 0 0;
 }
 
-.mbk-evidence-files ul + p,
-.ce-inspector .mbk-evidence-files ul + p {
+.mbk-evidence-files ul + p {
   margin-top: 14px;
 }
 

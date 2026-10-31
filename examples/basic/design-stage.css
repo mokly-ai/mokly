@@ -1,5 +1,14 @@
 /* The Mokly design stage: device chromes on the dotted stage, the mini
-   screen sketches, the details inspector, and the use-case flow track. */
+   screen sketches, the details inspector, and the use-case flow track. The
+   details body is the shipped one, from its @mokly/ui stylesheet. */
+@import "../../packages/ui/src/details-panel/details-panel.css";
+
+/* A mobile render draws the one-column details body at every width. Below the
+   breakpoint the package stylesheet draws it on its own, as the shell does. */
+.mbk-shell--mobile .mbk-details-body {
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
 
 /* Preview tokens describe what a device screen shows. They are deliberately
    separate from the interface palette in design.css, so a light phone keeps its
@@ -274,90 +283,6 @@
   background: transparent;
 }
 
-.mbk-details-body {
-  display: grid;
-  gap: 30px;
-  grid-template-columns: 1.35fr 1fr;
-  padding: 0;
-}
-
-.mbk-shell--mobile .mbk-details-body {
-  gap: 18px;
-  grid-template-columns: 1fr;
-}
-
-.mbk-details-desc {
-  color: var(--chrome-ink);
-  font-size: 13.5px;
-  line-height: 1.55;
-  margin: 0;
-}
-
-.mbk-details-rationale {
-  color: var(--chrome-ink-2);
-  font-size: 12.5px;
-  line-height: 1.55;
-  margin: 12px 0 0;
-}
-
-.mbk-details-rationale .k {
-  color: var(--chrome-muted);
-  font-weight: 700;
-}
-
-.mbk-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 11px;
-}
-
-.mbk-meta-link {
-  color: var(--mbk-sage);
-  font-weight: 600;
-}
-
-.mbk-code {
-  background: var(--chrome-bg);
-  border: 1px solid var(--chrome-border);
-  border-radius: 6px;
-  color: var(--chrome-ink);
-  display: inline-block;
-  font-family: var(--mono);
-  font-size: 11px;
-  max-width: 100%;
-  padding: 2px 7px;
-  word-break: break-all;
-}
-
-/* The chip rules of the Details body's use-case chip, an artboard copy of the
-   shell's details row. The tag chips draw from their package stylesheet. */
-.mbk-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.mbk-chip {
-  align-items: center;
-  background: var(--chrome-bg);
-  border: 1px solid var(--chrome-border);
-  border-radius: 999px;
-  color: var(--chrome-ink-2);
-  display: inline-flex;
-  font-size: 11.5px;
-  gap: 5px;
-  padding: 3px 9px;
-}
-
-.mbk-chip.flow:is(a) {
-  border-color: var(--chrome-control-edge);
-}
-
-.mbk-chip.flow svg {
-  color: var(--mbk-sage);
-  flex-shrink: 0;
-}
-
 /* ---- Use-case flow track ---------------------------------------------- */
 
 .mbk-flow {
@@ -378,12 +303,4 @@
 
 .mbk-flow-screen .browser-frame {
   height: 640px;
-}
-
-.mbk-chip.flow:is(a) {
-  text-decoration: none;
-}
-.mbk-chip.flow:is(a):focus-visible {
-  outline: 2px solid var(--mbk-sage-deep);
-  outline-offset: 3px;
 }

@@ -28,9 +28,25 @@
       "types": "./dist/change-status/change-status.d.ts",
       "import": "./dist/change-status/change-status.js"
     },
+    "./comparison-evidence": {
+      "types": "./dist/comparison-evidence/comparison-evidence.d.ts",
+      "import": "./dist/comparison-evidence/comparison-evidence.js"
+    },
     "./comparison-toolbar": {
       "types": "./dist/comparison-toolbar/comparison-toolbar.d.ts",
       "import": "./dist/comparison-toolbar/comparison-toolbar.js"
+    },
+    "./controls-panel": {
+      "types": "./dist/controls-panel/controls-panel.d.ts",
+      "import": "./dist/controls-panel/controls-panel.js"
+    },
+    "./details-panel": {
+      "types": "./dist/details-panel/details-panel.d.ts",
+      "import": "./dist/details-panel/details-panel.js"
+    },
+    "./edit-status": {
+      "types": "./dist/edit-status/edit-status.d.ts",
+      "import": "./dist/edit-status/edit-status.js"
     },
     "./icon-control": {
       "types": "./dist/icon-control/icon-control.d.ts",
@@ -39,6 +55,26 @@
     "./icons": {
       "types": "./dist/icons/icons.d.ts",
       "import": "./dist/icons/icons.js"
+    },
+    "./inspector": {
+      "types": "./dist/inspector/inspector.d.ts",
+      "import": "./dist/inspector/inspector.js"
+    },
+    "./instance-tree": {
+      "types": "./dist/instance-tree/instance-tree.d.ts",
+      "import": "./dist/instance-tree/instance-tree.js"
+    },
+    "./metadata-row": {
+      "types": "./dist/metadata-row/metadata-row.d.ts",
+      "import": "./dist/metadata-row/metadata-row.js"
+    },
+    "./prop-field": {
+      "types": "./dist/prop-field/prop-field.d.ts",
+      "import": "./dist/prop-field/prop-field.js"
+    },
+    "./props-panel": {
+      "types": "./dist/props-panel/props-panel.d.ts",
+      "import": "./dist/props-panel/props-panel.js"
     },
     "./screen-header": {
       "types": "./dist/screen-header/screen-header.d.ts",
@@ -57,9 +93,17 @@
       "types": "./dist/tag-picker/tag-picker.d.ts",
       "import": "./dist/tag-picker/tag-picker.js"
     },
+    "./text-button": {
+      "types": "./dist/text-button/text-button.d.ts",
+      "import": "./dist/text-button/text-button.js"
+    },
     "./top-bar": {
       "types": "./dist/top-bar/top-bar.d.ts",
       "import": "./dist/top-bar/top-bar.js"
+    },
+    "./usage-list": {
+      "types": "./dist/usage-list/usage-list.d.ts",
+      "import": "./dist/usage-list/usage-list.js"
     },
     "./view-controls": {
       "types": "./dist/view-controls/view-controls.d.ts",
