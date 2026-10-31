@@ -6,7 +6,7 @@
   --ce-edge: #dce5de;
   --ce-mask: var(--chrome-bg);
 }
-.ce-preview-view .ce-canvas,
+.ce-preview-view .ce-canvas-content,
 .ce-preview-view .ce-welcome-example,
 .ce-preview-view .ce-other-example,
 .ce-preview-view .phone-screen,
@@ -14,10 +14,6 @@
 .ce-preview-view .browser-viewport {
   background: var(--ce-surface);
   color: var(--ce-text);
-}
-.ce-preview-view .ce-canvas-label {
-  border-color: var(--ce-edge);
-  color: var(--ce-secondary);
 }
 .ce-preview-view .ce-toolbar-example {
   background: var(--ce-soft);

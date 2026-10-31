@@ -68,41 +68,23 @@
 .mbk-shell--mobile .mbk-selection-bar {
   padding: 8px 12px;
 }
-/* One height sizes every depicted component viewport, so a Side by side canvas
-   and the stacked frame of Overlay and Difference always match. */
-.ce-canvas {
-  --ce-canvas-height: 190px;
-  background: white;
-  border: 1px solid var(--chrome-border-strong);
-  border-radius: 10px;
-  min-width: 0;
+/* The bordered box of a component's canvas stands in for the canvas's frame,
+   which the shell draws around a real document. */
+.mbk-component-canvas > .ce-canvas-content {
+  border: 1px solid var(--chrome-border);
+  border-radius: 8px;
+  height: 520px;
   overflow: hidden;
-  width: 100%;
 }
-.ce-canvas--mobile {
-  max-width: 390px;
-}
-/* The current desktop canvas keeps the shell's fixed 1024px layout width in
-   every window, so a component's desktop view has one layout width. */
-.ce-canvas--desktop.ce-canvas--current {
-  flex: none;
-  width: 1024px;
-}
-.ce-canvas-label {
-  border-bottom: 1px solid var(--chrome-border);
-  color: var(--chrome-muted);
-  display: block;
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  padding: 9px 14px;
-  text-transform: uppercase;
-}
+/* A depicted component document fills its canvas or the viewport of its
+   comparison frame, and draws the component 24px from its top left, as the
+   example's documents do in the shell. */
 .ce-canvas-content {
-  align-items: center;
+  align-items: flex-start;
   display: flex;
-  justify-content: center;
-  min-height: var(--ce-canvas-height);
-  padding: 28px;
+  justify-content: flex-start;
+  min-height: 100%;
+  padding: 24px;
 }
 .ce-action {
   background: var(--mbk-sage);
@@ -143,30 +125,15 @@
 .ce-toolbar-example > span {
   max-width: 170px;
 }
-.ce-component-comparison {
-  width: 100%;
-}
-.ce-caption {
-  color: var(--chrome-ink-2);
-  font-size: 12px;
-  margin: 0 0 12px;
-}
-/* Overlay and Difference keep one bordered frame: its caption stays above the
-   viewport both versions share, the only scroll container in the frame. */
-.ce-canvas > .mb-viewport {
-  height: var(--ce-canvas-height);
-}
-.ce-canvas .mb-pane-doc {
-  background-color: var(--ce-surface);
-}
-/* The tall Checklist is drawn part-way down, with the frame's scrollbar thumb
-   placed and sized to match the shown share of it. */
-.ce-canvas .mbk-stack-document[data-scrolled] {
+/* The tall Checklist is drawn part-way down the component frame's 518px
+   viewport, with the frame's scrollbar thumb placed and sized to match the
+   shown share of its 1060px document. */
+.mb-component-frame .mbk-stack-document[data-scrolled] {
   transform: translateY(-160px);
 }
-.ce-canvas .mbk-stack-thumb {
-  height: 37.4%;
-  top: 31.5%;
+.mb-component-frame .mbk-stack-thumb {
+  height: 48.9%;
+  top: 15.1%;
 }
 .ce-checklist {
   font-size: 13px;
@@ -217,10 +184,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.ce-component-comparison .mb-pane-missing {
-  height: 225px;
-  min-height: 225px;
-}
 .ce-comparison-evidence {
   border-top: 1px solid var(--chrome-border);
   margin-top: 20px;
@@ -269,19 +232,4 @@
   color: var(--mbk-sage-deep);
   font-size: 12px;
   padding: 4px 12px;
-}
-.ce-preview-view[data-preview-viewport="mobile"]
-  .ce-component-comparison
-  .mb-panes {
-  grid-template-columns: 1fr;
-}
-.ce-preview-view[data-preview-viewport="mobile"] .ce-canvas {
-  --ce-canvas-height: 180px;
-}
-.ce-preview-view[data-preview-viewport="mobile"] .ce-canvas-content {
-  padding: 18px;
-}
-.ce-preview-view[data-preview-viewport="mobile"] .ce-canvas .mbk-stack-thumb {
-  height: 36.9%;
-  top: 32.8%;
 }

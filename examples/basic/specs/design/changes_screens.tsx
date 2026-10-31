@@ -117,7 +117,7 @@ function OverlayPreview({
 function ApartPreview({ viewport }: { viewport: ArtboardViewport }) {
   const dark = useDarkPreview();
   const version = (side: "after" | "before") => (
-    <Pane label={side === "before" ? "Before" : "Current"} side={side}>
+    <Pane side={side}>
       <FramedShot
         address="example.test/welcome"
         dark={dark}

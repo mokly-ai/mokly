@@ -21,49 +21,43 @@
    fits, otherwise from the left edge of the scrolling preview pane. The mobile
    shell, below 760px, stacks them from the left edge. */
 .ce-design:has([data-workspace-viewport] option[value="both"]:checked)
-  .ce-preview-set:has(.ce-canvas) {
+  .ce-preview-set:has(.mbk-component-canvas) {
   flex-wrap: nowrap;
   gap: 40px;
   justify-content: safe center;
 }
 
 .ce-design:has([data-workspace-viewport] option[value="both"]:checked)
-  .ce-preview-set:has(.ce-canvas)
+  .ce-preview-set:has(.mbk-component-canvas)
   > [data-preview-viewport="mobile"] {
   flex: 0 0 390px;
 }
 
+/* The desktop canvas keeps its fixed 1024px width beside the mobile one; the
+   row scrolls when the pane is narrower. */
 .ce-design:has([data-workspace-viewport] option[value="both"]:checked)
-  .ce-preview-set:has(.ce-canvas)
-  > [data-preview-viewport="desktop"] {
-  flex: 1 0 720px;
-}
-
-/* The current desktop canvas keeps its fixed 1024px width beside the mobile
-   one; the row scrolls when the pane is narrower. */
-.ce-design:has([data-workspace-viewport] option[value="both"]:checked)
-  .ce-preview-set:has(.ce-canvas--current)
+  .ce-preview-set:has(.mbk-component-canvas)
   > [data-preview-viewport="desktop"] {
   flex: 0 0 auto;
 }
 
 .ce-design:has([data-workspace-viewport] option[value="both"]:checked)
   .mbk-shell--mobile
-  .ce-preview-set:has(.ce-canvas) {
+  .ce-preview-set:has(.mbk-component-canvas) {
   align-items: flex-start;
   flex-direction: column;
 }
 
 .ce-design:has([data-workspace-viewport] option[value="both"]:checked)
   .mbk-shell--mobile
-  .ce-preview-set:has(.ce-canvas)
+  .ce-preview-set:has(.mbk-component-canvas)
   > .ce-preview-view {
   flex: none;
 }
 
 .ce-design:has([data-workspace-viewport] option[value="both"]:checked)
   .mbk-shell--mobile
-  .ce-preview-set:has(.ce-canvas)
+  .ce-preview-set:has(.mbk-component-canvas)
   > [data-preview-viewport="mobile"] {
   width: 390px;
 }

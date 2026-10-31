@@ -74,14 +74,3 @@
 .mbk-device-frame[data-compact] .phone-status svg:last-child {
   width: 16px;
 }
-
-/* Interim, until the user chooses between the shipped caption and the
-   contracts' scheme name in the explorer's preview captions: a frame with
-   the scheme flag names the scheme that its artboard renders. */
-.mbk-device-frame[data-scheme-caption="light"] .mbk-frame-label::after {
-  content: " · Light";
-}
-
-.mbk-device-frame[data-scheme-caption="dark"] .mbk-frame-label::after {
-  content: " · Dark";
-}

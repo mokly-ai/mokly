@@ -7,7 +7,7 @@ import { FrameSettingScope } from "./frame_placement.js";
  * The shipped pane of one version in Side by side: its label, then the frame
  * of its slot as the chrome of a comparison, or the message of a version
  * that has no document. The pane names its side as the shell does, Before or
- * Current, so `label` repeats that name.
+ * Current.
  */
 export function ComparisonPaneView({
   children,

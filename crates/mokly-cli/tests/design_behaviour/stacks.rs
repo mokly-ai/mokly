@@ -2,7 +2,7 @@
 
 use super::{catalogue, dom};
 
-/// Check the border, caption, viewport, layers, and drawn scrollbar topology.
+/// Check the frame, its heading, viewport, layers, and drawn scrollbar topology.
 pub(crate) fn check() {
     let fixture = catalogue::shared();
     for (name, mode, tall) in [
@@ -18,10 +18,13 @@ pub(crate) fn check() {
             let previews = dom::class(&document.tree, "ce-preview-view");
             assert_eq!(previews.len(), 2, "{path}");
             for preview in previews {
-                let frames = dom::class(&preview.children, "ce-canvas");
+                let frames = dom::class(&preview.children, "mb-component-frame");
                 assert_eq!(frames.len(), 1, "one bordered frame: {path}");
                 let frame = frames[0];
-                assert_eq!(dom::class(&frame.children, "ce-canvas-label").len(), 1);
+                assert!(
+                    dom::class(&frame.children, "mbk-frame-label").is_empty(),
+                    "the frame draws no caption: {path}"
+                );
                 let viewports = dom::class(&frame.children, "mb-viewport");
                 assert_eq!(viewports.len(), 1, "one shared viewport: {path}");
                 let viewport = viewports[0];
@@ -57,7 +60,12 @@ pub(crate) fn check() {
                         "one subject per layer: {path}"
                     );
                     assert_eq!(dom::class(&layer.children, "ce-canvas-content").len(), 1);
-                    assert!(dom::class(&layer.children, "ce-canvas-label").is_empty());
+                    assert!(
+                        dom::elements(&layer.children)
+                            .iter()
+                            .all(|element| element.name != "h3"),
+                        "a layer holds no heading: {path}"
+                    );
                     assert!(dom::class(&layer.children, "mb-viewport").is_empty());
                 }
                 assert_eq!(
@@ -82,18 +90,21 @@ pub(crate) fn check() {
                         "no separate version frame {class}: {path}"
                     );
                 }
-                let ordered = dom::elements(&frame.children);
-                let caption = ordered
+                let ordered = dom::elements(&preview.children);
+                let headings: Vec<_> = ordered
                     .iter()
-                    .position(|element| element.get("class") == Some("ce-canvas-label"))
-                    .unwrap();
-                let scroll = ordered
+                    .enumerate()
+                    .filter(|(_, element)| element.name == "h3")
+                    .map(|(index, _)| index)
+                    .collect();
+                assert_eq!(headings.len(), 1, "one section heading: {path}");
+                let frame_at = ordered
                     .iter()
-                    .position(|element| element.get("class") == Some("mb-viewport"))
+                    .position(|element| element.get("class") == Some("mb-component-frame"))
                     .unwrap();
                 assert!(
-                    caption < scroll,
-                    "caption stays outside and before viewport"
+                    headings[0] < frame_at,
+                    "the heading stays outside and before the frame: {path}"
                 );
             }
         }

@@ -36,18 +36,22 @@ a depiction. The Additions story, the stylesheet stories, and the controls limit
 pages each depict a story of their own: on their pages every option except the
 shown entry is a depiction, and no option on another page links into them.
 Navigation variant rows follow the same rule.
-The viewport dropdown shows the mobile canvas, desktop canvas, or both for the selected variant. Mobile context is capped at 390px; desktop context keeps the shell's fixed 1024px layout width in every window, so a component's desktop view has one layout width, and a narrower preview pane scrolls. Both places the two canvases side by side, 40px apart: centred while the row fits, otherwise from the left edge of the scrolling pane, and stacked from the left edge below 760px. Canvases have a 10px radius, a light
-border, a small context caption, and a centered component, without device chrome.
+The viewport dropdown shows the mobile canvas, desktop canvas, or both for the selected variant. Mobile context keeps the shell's fixed 390px width and desktop context keeps the shell's fixed 1024px layout width in every window, so each view has one layout width, and a narrower preview pane scrolls. Both places the two canvases side by side, 40px apart: centred while the row fits, otherwise from the left edge of the scrolling pane, and stacked from the left edge below 760px. Each canvas is the shell's: its viewport caption stands above a
+520px frame with an 8px radius and a light border, without device chrome. The
+component stands 24px from the frame's top left, where the shell's documents
+draw it, in each canvas and comparison frame.
 Consuming screens depict the same Action and Toolbar examples as the component
 pages.
 
-Side by side draws one canvas per version under Before and Current labels.
-Overlay and Difference draw one bordered frame at the same canvas height, its
-caption above the viewport both versions share: Current sits on top at half
-opacity, or blends by difference over the opaque Before layer, and both versions
-always share one scroll position. The Stacked comparisons gallery also depicts
-a synthetic Checklist taller than that frame, part-way down with the frame's
-scrollbar drawn. Its Current version rewords one step, and its fixed-height
+A comparison draws the shell's sections. Each section's heading names its
+viewport and the variant's state, such as `Desktop · Variant changed`, and the
+component frames below it have no caption. Side by side draws one component
+frame per version under Before and Current labels. Overlay and Difference draw
+one component frame of the same size around the viewport both versions share:
+Current sits on top at half opacity, or blends by difference over the opaque
+Before layer, and both versions always share one scroll position. The Stacked
+comparisons gallery also depicts a synthetic Checklist taller than that frame,
+part-way down with the frame's scrollbar drawn. Its Current version rewords one step, and its fixed-height
 rows keep the drawn position independent of text wrapping. Its own one-entry
 Changes scenario lists only Checklist, which no screen uses yet, so its
 inspector opens on Details, where the comparison facts live.
@@ -104,10 +108,11 @@ unavailable-metadata copy.
 Its Stylesheet evidence child gallery holds four screens of three stories that
 change only `styles/actions.css`. In Component with changed styles, the changed
 rule styles only Action's own output: Action and its three saved variants have
-four Changes rows, Side by side reads "Default variant · Styles this variant uses
-changed", and Welcome and Details appear only under Affected screens. Screen
-affected by a changed component opens Welcome from that list in Side by side,
-under All, where Welcome stays Unmodified and outside Changes. Its band offers
+four Changes rows, each Side by side section reads "Styles this variant uses
+changed" after its viewport, and Welcome and Details appear only under Affected
+screens. Screen affected by a changed component opens Welcome from that list in
+Side by side, under All, where Welcome stays Unmodified and outside Changes.
+Its band offers
 the comparison, and the shown view reads "Components this screen uses
 changed" over its two versions; a component in Welcome's position reads
 "Components this variant uses changed". Its Details list the

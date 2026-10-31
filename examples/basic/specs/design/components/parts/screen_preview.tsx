@@ -86,12 +86,12 @@ export function AffectedComparison({
   return (
     <ComparisonView state="components-changed" viewport={viewport}>
       <CompareGrid>
-        <Pane label="Before" side="before">
+        <Pane side="before">
           <FramedShot address="example.test/welcome" viewport={viewport}>
             <WelcomeExample actionBefore inert />
           </FramedShot>
         </Pane>
-        <Pane label="Current" side="after">
+        <Pane side="after">
           <FramedShot address="example.test/welcome" viewport={viewport}>
             <WelcomeExample inert />
           </FramedShot>
@@ -153,13 +153,9 @@ export function ConsumerFrame({
       />
     );
   return viewport === "mobile" ? (
-    <PhoneFrame label="Mobile" scheme small>
-      {content}
-    </PhoneFrame>
+    <PhoneFrame small>{content}</PhoneFrame>
   ) : (
     <BrowserFrame
-      label="Desktop"
-      scheme
       address={`example.test/${state === "consumer" ? "details" : state === "removed-consumer" ? "farewell" : state === "empty" || state === "unavailable" ? "reading-room" : "welcome"}`}
     >
       {content}

@@ -56,6 +56,10 @@ const HAIRLINE_TOKENS = new Set([
 const DECORATIVE_BOUNDARIES = new Map([
   [".mbk-control-alert", "a label naming its own state in 5.97:1 ink"],
   [".ce-action:disabled", "WCAG exempts a disabled control"],
+  [
+    ":where(.browser-bar:not([data-browser-static])) .browser-expand:hover",
+    "the user kept the shipped border on 2026-10-31",
+  ],
 ]);
 
 /**

@@ -1,10 +1,12 @@
-//! Inspect every component design, pairing captions with independently exposed records.
+//! Inspect every component design, pairing comparison headings with independently exposed records.
 
 use std::collections::BTreeSet;
 
+use mokly_html::tree::{Element, Node};
+
 use super::{catalogue, dom, records};
 
-/// The Details sentence of each reason that a captioned record can carry. A
+/// The Details sentence of each reason that a recorded comparison can carry. A
 /// `dependency` reads only through the list of changed files.
 const EVIDENCE: [(&str, &str); 4] = [
     (
@@ -19,11 +21,11 @@ const EVIDENCE: [(&str, &str); 4] = [
     ("removed", "Removed on this branch."),
 ];
 
-/// Pair each rendered comparison caption with its authored factual record.
+/// Pair each rendered component comparison heading with its authored factual record.
 pub(crate) fn check() {
     let fixture = catalogue::shared();
     let records = records::read(&fixture);
-    let expected = records["captions"].as_object().unwrap();
+    let expected = records["headings"].as_object().unwrap();
     assert_eq!(expected.len(), 8);
     let paths: Vec<_> = fixture
         .generation
@@ -39,17 +41,17 @@ pub(crate) fn check() {
     for path in paths {
         for artifact in fixture.views(&path) {
             let document = artifact.document.as_ref().unwrap();
-            let captions = dom::class(&document.tree, "ce-caption");
-            if captions.is_empty() {
+            let sections = component_sections(&document.tree);
+            if sections.is_empty() {
                 assert!(
                     !expected.contains_key(&path),
-                    "missing comparison caption: {path}"
+                    "missing comparison heading: {path}"
                 );
                 continue;
             }
             let record = expected
                 .get(&path)
-                .unwrap_or_else(|| panic!("unrecorded caption: {path}"));
+                .unwrap_or_else(|| panic!("unrecorded comparison heading: {path}"));
             let variant = record["variant"].as_str().unwrap();
             let reasons: Vec<_> = record["reasons"]
                 .as_array()
@@ -57,11 +59,17 @@ pub(crate) fn check() {
                 .iter()
                 .map(|reason| reason.as_str().unwrap())
                 .collect();
-            assert_eq!(captions.len(), 2, "both preview contexts: {path}");
-            for actual in captions {
+            assert_eq!(sections.len(), 2, "both preview contexts: {path}");
+            for section in sections {
+                let viewport = section.get("data-diff-viewport").unwrap();
+                let headings: Vec<_> = dom::elements(&section.children)
+                    .into_iter()
+                    .filter(|element| element.name == "h3")
+                    .collect();
+                assert_eq!(headings.len(), 1, "one section heading: {path}");
                 assert_eq!(
-                    dom::text(&actual.children),
-                    caption(variant, &reasons),
+                    dom::text(&headings[0].children),
+                    heading(viewport, &reasons),
                     "{path}"
                 );
             }
@@ -72,7 +80,7 @@ pub(crate) fn check() {
                 reasons
                     .iter()
                     .all(|reason| EVIDENCE.iter().any(|(kind, _)| kind == reason)),
-                "unsupported caption reasons {reasons:?}: {path}"
+                "unsupported recorded reasons {reasons:?}: {path}"
             );
             // Each recorded reason reads once, and no other reason reads at all.
             for (reason, sentence) in EVIDENCE {
@@ -89,16 +97,33 @@ pub(crate) fn check() {
     assert_eq!(seen, expected.keys().cloned().collect::<BTreeSet<_>>());
 }
 
-/// The view change a caption names. An `implementation` reason describes
-/// actual-instance impact, so it never changes the caption.
-fn caption(variant: &str, reasons: &[&str]) -> String {
-    if reasons.contains(&"removed") {
-        format!("{variant} variant removed")
+/// The viewport sections of a component's comparison. A screen's comparison,
+/// such as an affected consumer's, carries no component mark.
+fn component_sections(tree: &[Node]) -> Vec<&Element> {
+    dom::class(tree, "mbk-diff-screen")
+        .into_iter()
+        .filter(|stage| stage.get("data-diff-component").is_some())
+        .flat_map(|stage| dom::class(&stage.children, "mbk-diff-view"))
+        .collect()
+}
+
+/// The heading a recorded change gives a section: its viewport, then the
+/// variant's state, in the shell's words. An `implementation` reason describes
+/// actual-instance impact, so it never changes the heading.
+fn heading(viewport: &str, reasons: &[&str]) -> String {
+    let viewport = match viewport {
+        "mobile" => "Mobile",
+        "desktop" => "Desktop",
+        other => panic!("unknown section viewport {other}"),
+    };
+    let state = if reasons.contains(&"removed") {
+        "Variant removed"
     } else if reasons.contains(&"material") {
-        format!("{variant} variant · Appearance changed")
+        "Variant changed"
     } else if reasons.contains(&"dependency") {
-        format!("{variant} variant · Styles this variant uses changed")
+        "Styles this variant uses changed"
     } else {
-        panic!("no caption reason in {reasons:?}")
-    }
+        panic!("no heading reason in {reasons:?}")
+    };
+    format!("{viewport} · {state}")
 }

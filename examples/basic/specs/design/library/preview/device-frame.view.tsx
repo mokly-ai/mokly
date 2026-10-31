@@ -3,7 +3,6 @@ import {
   PhoneFrame,
 } from "../../../../../../packages/ui/src/device-frame/device-frame.js";
 import { PreviewFrame } from "../../../../../../packages/ui/src/preview-frame/preview-frame.js";
-import { useRenderedAppearance } from "../../parts/appearance.js";
 
 import type { DeviceFrameProps } from "./device-frame.js";
 import { useFramePlacement } from "./frame_placement.js";
@@ -16,8 +15,7 @@ import { useFramePlacement } from "./frame_placement.js";
  * caption. A static artboard runs no script, so the window's bar is a
  * picture of itself. A light-only frame carries the shell's fallback mark,
  * whose note this component's stylesheet shows. The wrapper carries the
- * compact flag, which this component's stylesheet draws as the small phone,
- * and the scheme flag.
+ * compact flag, which this component's stylesheet draws as the small phone.
  */
 export function DeviceFrameView({
   address,
@@ -26,10 +24,8 @@ export function DeviceFrameView({
   device,
   expandable,
   lightOnly,
-  scheme,
   small,
 }: DeviceFrameProps) {
-  const appearance = useRenderedAppearance();
   const placement = useFramePlacement(
     device === "phone" ? "mobile" : "desktop",
   );
@@ -37,7 +33,6 @@ export function DeviceFrameView({
     <div
       className="mbk-device-frame"
       data-compact={small && device === "phone" ? "" : undefined}
-      data-scheme-caption={scheme ? appearance : undefined}
     >
       <PreviewFrame
         fallback={lightOnly}

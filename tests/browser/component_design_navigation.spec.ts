@@ -19,7 +19,9 @@ for (const delayedStyles of [false, true]) {
       iframe,
       /\/static\/mokly-generated\/design\/components\/overview\/index\.desktop\.html$/,
     );
-    await expect(desktop.locator(".ce-canvas:visible")).toBeVisible();
+    await expect(
+      desktop.locator(".mbk-component-canvas:visible"),
+    ).toBeVisible();
     let delayedRequests = 0;
     let release!: () => void;
     const released = new Promise<void>((resolve) => {
@@ -53,13 +55,14 @@ for (const delayedStyles of [false, true]) {
         iframe,
         /\/static\/mokly-generated\/design\/components\/pages\/variants\/index\.desktop\.html$/,
       );
-      await expect(desktop.locator(".ce-canvas:visible button")).toBeDisabled();
-      await expect(desktop.locator(".ce-canvas:visible")).toHaveCount(1);
       await expect(
-        desktop.getByRole("region", {
-          name: "Desktop component preview",
-          exact: true,
-        }),
+        desktop.locator(".mbk-component-canvas:visible button"),
+      ).toBeDisabled();
+      await expect(
+        desktop.locator(".mbk-component-canvas:visible"),
+      ).toHaveCount(1);
+      await expect(
+        desktop.locator(".mbk-component-canvas.mbk-frame-desktop"),
       ).toBeVisible();
       if (delayedStyles) expect(delayedRequests).toBeGreaterThan(0);
     } finally {

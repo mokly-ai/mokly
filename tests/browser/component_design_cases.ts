@@ -76,7 +76,9 @@ export function registerComponentDesign(
         await page.goto(
           componentDesignUrl("design/components/overview", viewport),
         );
-        await expect(page.locator(".ce-canvas:visible")).toHaveCount(1);
+        await expect(page.locator(".mbk-component-canvas:visible")).toHaveCount(
+          1,
+        );
         await expect(page.locator(".phone-frame, .browser-frame")).toHaveCount(
           0,
         );
@@ -87,11 +89,12 @@ export function registerComponentDesign(
         await expect(page).toHaveURL(
           componentDesignUrl("design/components/pages/variants", viewport),
         );
-        const preview = page.getByRole("region", {
-          name: `${viewport === "desktop" ? "Desktop" : "Mobile"} component preview`,
-          exact: true,
-        });
-        await expect(page.locator(".ce-canvas:visible")).toHaveCount(1);
+        const preview = page.locator(
+          `.mbk-component-canvas.mbk-frame-${viewport}`,
+        );
+        await expect(page.locator(".mbk-component-canvas:visible")).toHaveCount(
+          1,
+        );
         await expect(
           preview.getByRole("button", { name: "Continue" }),
         ).toBeDisabled();

@@ -131,7 +131,7 @@ pub(crate) fn check() {
             };
             let before_labels = labels(&before[0].children);
             let after_labels = labels(&after[0].children);
-            assert_eq!((before_labels.len(), after_labels.len()), (10, 10));
+            assert_eq!((before_labels.len(), after_labels.len()), (24, 24));
             let changed: Vec<_> = before_labels
                 .iter()
                 .zip(&after_labels)

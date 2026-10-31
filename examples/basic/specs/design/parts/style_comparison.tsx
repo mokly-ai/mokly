@@ -33,7 +33,7 @@ export function StyleComparison({
       viewport={viewport}
       render={(previewViewport) => (
         <CompareGrid>
-          <Pane label="Before" side="before">
+          <Pane side="before">
             <FramedShot
               address="example.test/welcome"
               viewport={previewViewport}
@@ -41,7 +41,7 @@ export function StyleComparison({
               <MiniWelcome compact={previewViewport === "mobile"} inert />
             </FramedShot>
           </Pane>
-          <Pane label="Current" side="after">
+          <Pane side="after">
             <FramedShot
               address="example.test/welcome"
               viewport={previewViewport}

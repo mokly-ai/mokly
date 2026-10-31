@@ -1,6 +1,5 @@
 import { useDesignInstance } from "../../library/composition.js";
 import { viewControls } from "../../library/controls/view-controls.js";
-import { useRenderedAppearance } from "../../parts/appearance.js";
 import {
   highlightProps,
   type ArtboardViewport,
@@ -22,14 +21,5 @@ export function ViewControls({
       selection={viewport}
       {...highlightProps(highlight)}
     />
-  );
-}
-
-/** The depicted preview scheme, which follows the artboard it renders in. */
-export function PreviewScheme() {
-  return (
-    <span className="ce-scheme">
-      {useRenderedAppearance() === "dark" ? "Dark" : "Light"}
-    </span>
   );
 }

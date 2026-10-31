@@ -51,14 +51,22 @@ const STATE_LABELS: Record<ReviewState, string> = {
  */
 export function ComparisonStage({
   children,
+  component = false,
   path,
 }: {
   children: ReactNode;
+  /** Whether the compared entry is a component, which the stage marks. */
+  component?: boolean;
   /** The compared entry's path, which the comparison carries. */
   path: string;
 }) {
   return (
-    <ComparisonStageView current={false} entryId={path} stage={children} />
+    <ComparisonStageView
+      component={component}
+      current={false}
+      entryId={path}
+      stage={children}
+    />
   );
 }
 
@@ -87,20 +95,18 @@ export function CompareGrid({ children }: { children: ReactNode }) {
   return <ComparisonPanes mode="side">{children}</ComparisonPanes>;
 }
 
+/** One version's pane, which names its side as the shell does. */
 export function Pane({
   children,
-  label,
   side,
 }: {
   children: ReactNode;
-  label: string;
   side: "after" | "before";
 }) {
   return (
     <comparisonPane.Component
       moklyInstance={useDesignInstance(side)}
       side={side}
-      label={label}
       state="present"
     >
       {children}
@@ -108,12 +114,11 @@ export function Pane({
   );
 }
 
+/** The pane of a version that has no document, with the message saying why. */
 export function MissingPane({
-  label,
   message,
   side,
 }: {
-  label: string;
   message: string;
   side: "after" | "before";
 }) {
@@ -121,7 +126,6 @@ export function MissingPane({
     <comparisonPane.Component
       moklyInstance={useDesignInstance(side)}
       side={side}
-      label={label}
       state="missing"
       message={message}
     />

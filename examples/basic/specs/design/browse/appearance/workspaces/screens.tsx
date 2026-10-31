@@ -72,7 +72,7 @@ function WelcomePanes({ viewport }: { viewport: CompareViewport }) {
   const dark = useDarkPreview();
   return (
     <>
-      <Pane label="Before" side="before">
+      <Pane side="before">
         <FramedShot
           address="example.test/welcome"
           dark={dark}
@@ -81,7 +81,7 @@ function WelcomePanes({ viewport }: { viewport: CompareViewport }) {
           <MiniWelcome compact={viewport === "mobile"} inert />
         </FramedShot>
       </Pane>
-      <Pane label="Current" side="after">
+      <Pane side="after">
         <FramedShot
           address="example.test/welcome"
           dark={dark}

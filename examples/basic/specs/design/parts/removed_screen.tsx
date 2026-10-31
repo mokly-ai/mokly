@@ -117,12 +117,8 @@ export function RemovedView({
   viewport: RemovedViewport;
 }) {
   return viewport === "mobile" ? (
-    <PhoneFrame label="Mobile" small={compact}>
-      {children}
-    </PhoneFrame>
+    <PhoneFrame small={compact}>{children}</PhoneFrame>
   ) : (
-    <BrowserFrame address={address} label="Desktop">
-      {children}
-    </BrowserFrame>
+    <BrowserFrame address={address}>{children}</BrowserFrame>
   );
 }

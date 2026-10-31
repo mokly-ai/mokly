@@ -57,7 +57,7 @@ export function registerDesignComponentStacks(
             const rect = element.getBoundingClientRect();
             return [rect.left, rect.top, rect.width, rect.height];
           };
-          const frame = node.closest(".ce-canvas")!;
+          const frame = node.closest(".mb-component-frame")!;
           const stack = node.querySelector(".mb-viewport-box")!;
           const before = node.querySelector(".mb-pane--before")!;
           const after = node.querySelector(".mb-pane--after")!;
@@ -83,7 +83,9 @@ export function registerDesignComponentStacks(
               (element.scrollHeight > element.clientHeight ||
                 element.scrollWidth > element.clientWidth),
           );
-          const caption = frame.querySelector(".ce-canvas-label")!;
+          const heading = node
+            .closest(".mbk-diff-view")!
+            .querySelector(":scope > h3")!;
           return {
             after: box(after),
             afterBackground: getComputedStyle(surface(after)).backgroundColor,
@@ -94,12 +96,9 @@ export function registerDesignComponentStacks(
             beforeBlend: getComputedStyle(before).mixBlendMode,
             beforeOpacity: getComputedStyle(before).opacity,
             blended,
-            captionBlend: getComputedStyle(caption).mixBlendMode,
-            captionBottom: caption.getBoundingClientRect().bottom,
-            frameBackground: getComputedStyle(frame).backgroundColor,
-            frameHeight: parseFloat(
-              getComputedStyle(frame).getPropertyValue("--ce-canvas-height"),
-            ),
+            frameHeight: frame.clientHeight,
+            headingBlend: getComputedStyle(heading).mixBlendMode,
+            headingBottom: heading.getBoundingClientRect().bottom,
             documentHeights: [
               ...node.querySelectorAll(".mbk-stack-document"),
             ].map((document) => document.getBoundingClientRect().height),
@@ -118,7 +117,7 @@ export function registerDesignComponentStacks(
         expect(facts.documentHeights, where).toHaveLength(2);
         for (const height of facts.documentHeights)
           expect(height, where).toBeGreaterThanOrEqual(facts.scrollerHeight);
-        expect(facts.captionBottom, where).toBeLessThanOrEqual(
+        expect(facts.headingBottom, where).toBeLessThanOrEqual(
           facts.scrollerTop,
         );
         expect(facts.scrolls, where).toBe(0);
@@ -126,9 +125,8 @@ export function registerDesignComponentStacks(
           [],
         );
         expect(facts.isolation, where).toBe("isolate");
-        expect(facts.frameBackground, where).toBe("rgb(255, 255, 255)");
-        expect(facts.beforeBackground, where).toBe(facts.frameBackground);
-        expect(facts.afterBackground, where).toBe(facts.frameBackground);
+        expect(facts.beforeBackground, where).toBe("rgb(255, 255, 255)");
+        expect(facts.afterBackground, where).toBe(facts.beforeBackground);
         expect([facts.beforeBlend, facts.beforeOpacity], where).toEqual([
           "normal",
           "1",
@@ -137,7 +135,7 @@ export function registerDesignComponentStacks(
           mode === "overlay" ? ["normal", "0.5"] : ["difference", "1"],
         );
         expect(facts.blended, `${where}: the frame never blends`).toEqual([]);
-        expect(facts.captionBlend, where).toBe("normal");
+        expect(facts.headingBlend, where).toBe("normal");
         await page.screenshot({
           path: testInfo.outputPath(
             `${route.replaceAll("/", "-")}.${viewport}.png`,
@@ -152,15 +150,18 @@ export function registerDesignComponentStacks(
       for (const [route] of STACKED.slice(0, 2)) {
         const scroller = await open(page, route, viewport);
         const facts = await scroller.evaluate((node) => {
-          const center = (side: string) => {
+          const frame = node.getBoundingClientRect();
+          // Each version's document draws its Action from the top left, as
+          // the shell's documents do, so the two corners coincide.
+          const corner = (side: string) => {
             const rect = node
               .querySelector(`.mb-pane--${side} .ce-action`)!
               .getBoundingClientRect();
-            return [rect.left + rect.width / 2, rect.top + rect.height / 2];
+            return [rect.left - frame.left, rect.top - frame.top];
           };
           return {
-            after: center("after"),
-            before: center("before"),
+            after: corner("after"),
+            before: corner("before"),
             scrollbars: node.querySelectorAll(".mbk-stack-scrollbar").length,
             stackHeights: [...node.querySelectorAll(".mbk-stack-document")].map(
               (document) => document.getBoundingClientRect().height,
@@ -173,6 +174,10 @@ export function registerDesignComponentStacks(
             0.5,
           ),
         );
+        expect(
+          facts.before,
+          `${route}: 24px from the frame's top left, as the shell's documents draw it`,
+        ).toEqual([24, 24]);
         expect(facts.stackHeights, `${route}: fits its frame`).toEqual([
           facts.viewportHeight,
           facts.viewportHeight,

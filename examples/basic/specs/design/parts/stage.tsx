@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import { DocumentFrame } from "../../../../../packages/ui/src/preview-frame/preview-frame.js";
 import { Stage as StageView } from "../../../../../packages/ui/src/stage/stage.js";
-import { optional, useDesignInstance } from "../library/composition.js";
+import { useDesignInstance } from "../library/composition.js";
 import { deviceFrame } from "../library/preview/device-frame.js";
 
 /** The shipped dotted stage around the previews of a workspace or a state. */
@@ -37,18 +37,14 @@ export function DocumentStage({
 interface PhoneFrameProps {
   children: ReactNode;
   dark?: boolean | undefined;
-  label?: string;
   lightOnly?: boolean;
-  scheme?: boolean;
   small?: boolean;
 }
 
 export function PhoneFrame({
   children,
   dark,
-  label,
   lightOnly,
-  scheme,
   small,
 }: PhoneFrameProps) {
   return (
@@ -60,8 +56,6 @@ export function PhoneFrame({
       small={small ?? false}
       expandable
       address=""
-      {...optional("label", label)}
-      {...optional("scheme", scheme)}
     >
       {children}
     </deviceFrame.Component>
@@ -73,9 +67,7 @@ interface BrowserFrameProps {
   children: ReactNode;
   dark?: boolean | undefined;
   expandable?: boolean;
-  label?: string;
   lightOnly?: boolean;
-  scheme?: boolean;
 }
 
 export function BrowserFrame({
@@ -83,9 +75,7 @@ export function BrowserFrame({
   children,
   dark,
   expandable,
-  label,
   lightOnly,
-  scheme,
 }: BrowserFrameProps) {
   return (
     <deviceFrame.Component
@@ -96,8 +86,6 @@ export function BrowserFrame({
       lightOnly={lightOnly ?? false}
       small={false}
       expandable={expandable ?? true}
-      {...optional("label", label)}
-      {...optional("scheme", scheme)}
     >
       {children}
     </deviceFrame.Component>
