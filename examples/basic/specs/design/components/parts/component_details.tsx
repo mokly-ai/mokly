@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import { MockLink } from "@mokly/mokly";
 
-import { MetaRow } from "../../parts/metadata_row.js";
+import { PropValues } from "../../../../../../packages/ui/src/props-panel/props-panel.js";
 
 import {
   actionCompact,
@@ -15,11 +15,7 @@ import { ComparisonDetails } from "./comparison_details.js";
 import { componentComparison } from "./comparison_fixtures.js";
 import { ComponentInfo } from "./component_info.js";
 import { PropsDeliveryState } from "./component_props_delivery.js";
-import {
-  AffectedScreens,
-  UsageDeliveryState,
-  UsedBy,
-} from "./component_usage.js";
+import { ComponentUsage, UsageDeliveryState } from "./component_usage.js";
 import { CONTROLS_PAGES, INSPECTION_PAGES } from "./destinations.js";
 import { toolbarPrompt } from "./fixtures.js";
 import { Inspector } from "./inspector.js";
@@ -52,7 +48,7 @@ export type ComponentPageState =
 
 function ComponentChildren() {
   return (
-    <section>
+    <section className="ce-usage-section">
       <h3>
         Nested components <span>1 instance</span>
       </h3>
@@ -64,20 +60,23 @@ function ComponentChildren() {
   );
 }
 
-/** One supplied prop row: its design instance name, prop name and value. */
-type SuppliedProp = readonly [instance: string, prop: string, value: string];
+/** One supplied prop: its name and its value as text. */
+interface SuppliedProp {
+  name: string;
+  value: string;
+}
 
 /** Supplied props of the examples outside Action's saved variants. */
 const SUPPLIED_PROPS: Partial<
   Record<ComponentPageState, readonly SuppliedProp[]>
 > = {
-  toolbar: [["selected-prop", "prompt", `"${toolbarPrompt}"`]],
-  hidden: [["selected-prop", "visible", "false"]],
-  unused: [["selected-prop", "label", '"New"']],
-  added: [["selected-prop", "label", '"New"']],
+  toolbar: [{ name: "prompt", value: `"${toolbarPrompt}"` }],
+  hidden: [{ name: "visible", value: "false" }],
+  unused: [{ name: "label", value: '"New"' }],
+  added: [{ name: "label", value: '"New"' }],
   "overlay-tall": [
-    ["title", "title", `"${checklistTitle}"`],
-    ["completed", "completed", String(checklistCompleted)],
+    { name: "title", value: `"${checklistTitle}"` },
+    { name: "completed", value: String(checklistCompleted) },
   ],
 };
 
@@ -104,18 +103,7 @@ function ComponentProps({ state }: { state: ComponentPageState }) {
     <section>
       <h3>Supplied props</h3>
       {supplied ? (
-        <dl className="ce-props" aria-label="Supplied props">
-          {supplied.map(([instance, prop, value]) => (
-            <MetaRow
-              key={prop}
-              name={instance}
-              label={prop}
-              presentation="props"
-            >
-              <code>{value}</code>
-            </MetaRow>
-          ))}
-        </dl>
+        <PropValues values={supplied} />
       ) : (
         <ActionPropValues
           props={
@@ -213,19 +201,16 @@ export function ComponentDetails({
           content: usageDelivery ? (
             <UsageDeliveryState state={usageDelivery} />
           ) : (
-            <>
-              <UsedBy state={state} />
-              {changed ? (
-                <AffectedScreens
-                  removed={state === "removed"}
-                  welcome={
-                    state === "style-changed"
-                      ? INSPECTION_PAGES["affected-screen"]
-                      : undefined
-                  }
-                />
-              ) : null}
-            </>
+            <ComponentUsage
+              affected={changed}
+              removed={state === "removed"}
+              state={state}
+              welcome={
+                state === "style-changed"
+                  ? INSPECTION_PAGES["affected-screen"]
+                  : undefined
+              }
+            />
           ),
         },
       ]}

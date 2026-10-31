@@ -1,155 +1,96 @@
-/* Exclusive shared-component styles. Global and layout rules stay shared. */
+/* The shipped inspector: the @mokly/ui stylesheets of the icon controls,
+   whose look its tabs share, and of the inspector, in the package's order,
+   then the mockup's flag. */
+@import "../../../../packages/ui/src/icon-control/icon-control.css";
+@import "../../../../packages/ui/src/inspector/inspector.css";
 
-.ce-inspector {
-  background: var(--chrome-surface);
-  border-top: 1px solid var(--chrome-border);
-  display: grid;
-  flex-shrink: 0;
-  grid-template-columns: repeat(4, 48px) minmax(0, 1fr);
-  grid-template-rows: 48px auto;
-  min-width: 0;
-  position: relative;
-}
-
-.ce-inspector > details,
-.ce-inspector > details::details-content {
-  display: contents;
-}
-
-.ce-inspector > details > summary {
-  align-items: center;
-  border: 1px solid transparent;
-  border-radius: 7px;
-  color: var(--chrome-muted);
-  cursor: pointer;
-  display: flex;
-  grid-column: var(--tab-column);
-  grid-row: 1;
-  height: 40px;
-  justify-content: center;
-  list-style: none;
-  margin: 4px;
-  width: 40px;
-}
-
-.ce-inspector > details > summary::-webkit-details-marker {
-  display: none;
-}
-
-.ce-sheet-expand {
-  display: none;
-}
-
-.ce-inspector > details > summary:hover {
-  background: var(--chrome-hover);
-  color: var(--chrome-ink);
-}
-
-.ce-inspector > details[open] > summary {
-  background: var(--mbk-accent-surface);
-  border-color: var(--mbk-sage-deep);
-  color: var(--mbk-sage-deep);
-}
-
-.ce-inspector-close {
-  align-items: center;
-  border-radius: 5px;
-  color: var(--chrome-muted);
-  display: none;
-  height: 32px;
-  justify-content: center;
-  position: absolute;
-  right: 12px;
-  top: 8px;
-  width: 32px;
-}
-
-.ce-inspector-close:hover {
-  background: var(--chrome-bg);
-  color: var(--chrome-ink);
-}
-
-.ce-inspector > details[open] .ce-inspector-close {
-  display: flex;
-}
-
-.ce-inspector-panel {
-  border-top: 1px solid var(--chrome-border);
-  grid-column: 1 / -1;
-  grid-row: 2;
-  max-height: 340px;
-  min-width: 0;
-  overflow: auto;
-  padding: 20px 24px;
-}
-
-.ce-inspector > details:not([open]) > .ce-inspector-panel {
-  display: none;
-}
-
-.ce-design .mbk-shell--mobile .ce-inspector-panel {
-  max-height: none;
-  overflow: visible;
-  padding: 18px 16px;
-}
-
-.ce-design .mbk-shell--mobile .ce-inspector:has(> details[open]) {
+/* A mobile render draws the shipped sheet at every width: its surface, its
+   grab above the tabs while a tab is open, and its narrower insets. Below the
+   breakpoint the package stylesheet draws the sheet on its own, as the shell
+   does. The workspace dock places and sizes the sheet. */
+.mbk-shell--mobile .mbk-inspector[data-inspector-disclosures] {
+  padding-inline: 10px;
+  padding-bottom: env(safe-area-inset-bottom);
   border: 1px solid var(--chrome-border);
-  border-radius: 20px;
+  border-bottom: 0;
+  border-radius: 14px 14px 0 0;
   box-shadow: var(--chrome-shadow-sheet);
-  grid-template-rows: 28px 48px minmax(0, 1fr);
-  overflow: hidden;
 }
 
-.mbk-shell--mobile .ce-inspector:has(> details[open]) > details > summary {
-  grid-row: 2;
+.mbk-shell--mobile
+  .mbk-inspector[data-inspector-disclosures]
+  > details
+  > .mbk-inspector-content {
+  margin-inline: -10px;
 }
 
-.mbk-shell--mobile .ce-inspector:has(> details[open]) .ce-inspector-panel {
-  grid-row: 3;
+.mbk-shell--mobile
+  .mbk-inspector[data-inspector-disclosures]
+  > details
+  > .mbk-inspector-content
+  > section {
+  padding: 8px 14px 20px;
 }
 
-.mbk-shell--mobile .ce-inspector-close {
-  top: 36px;
+.mbk-shell--mobile
+  .mbk-inspector[data-inspector-disclosures]
+  [data-inspector-close] {
+  top: 27.5px;
+  right: 10px;
 }
 
-.mbk-shell--mobile .ce-inspector:has(> details[open]) > .ce-sheet-expand {
-  appearance: none;
-  background: transparent;
-  border: 0;
-  border-radius: 6px;
-  cursor: pointer;
-  display: block;
-  grid-column: 1 / -1;
-  grid-row: 1;
-  height: 28px;
-  justify-self: center;
-  margin: 0;
+.mbk-shell--mobile
+  .mbk-inspector[data-inspector-disclosures]
+  > .mbk-sheet-grab {
   position: relative;
-  width: 64px;
+  grid-row: 1;
+  grid-column: 1 / -1;
+  place-items: center;
+  height: 22px;
+  margin-inline: -10px;
+  padding: 0;
+  border: 0;
+  border-radius: 14px 14px 0 0;
+  background: transparent;
+  touch-action: none;
+  cursor: ns-resize;
 }
 
-.ce-sheet-expand::before {
-  background: var(--chrome-control-edge);
-  border-radius: 999px;
-  content: "";
-  height: 5px;
-  left: 14px;
-  position: absolute;
-  top: 11px;
+.mbk-shell--mobile
+  .mbk-inspector[data-inspector-disclosures]:has(> details[open])
+  > .mbk-sheet-grab {
+  display: grid;
+}
+
+.mbk-shell--mobile
+  .mbk-inspector[data-inspector-disclosures]
+  > .mbk-sheet-grab
+  > span {
   width: 36px;
+  height: 5px;
+  border-radius: 9px;
+  background: var(--chrome-muted);
+  opacity: 0.5;
 }
 
-.ce-sheet-expand:focus-visible {
-  outline: 2px solid var(--mbk-sage-deep);
-  outline-offset: -2px;
+.mbk-shell--mobile
+  .mbk-inspector[data-inspector-disclosures]:has(> details[open])
+  > .mbk-inspector-resize {
+  display: none;
 }
 
-.ce-inspector-link {
-  align-items: center;
-  color: inherit;
-  display: flex;
-  height: 100%;
-  justify-content: center;
-  width: 100%;
+/* Interim, until the user chooses between the shipped grip and grabber
+   colours and the palette contract's control edge: the artboards keep the
+   control edge that they drew before. */
+.mbk-inspector[data-inspector-disclosures] > .mbk-inspector-resize::after {
+  background: var(--chrome-control-edge);
+}
+
+.mbk-inspector[data-inspector-disclosures] > .mbk-sheet-grab > span,
+.mbk-shell--mobile
+  .mbk-inspector[data-inspector-disclosures]
+  > .mbk-sheet-grab
+  > span {
+  background: var(--chrome-control-edge);
+  opacity: 1;
 }

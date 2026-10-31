@@ -92,7 +92,9 @@ export function registerDesignStylesheetEvidence(
             .locator(".mbk-comparison-details")
             .evaluate((card) =>
               [
-                ...card.querySelectorAll(":scope > .mbk-evidence-files ~ *"),
+                ...card.querySelectorAll(
+                  ":scope .mbk-comparison-evidence > .mbk-evidence-files ~ *",
+                ),
               ].map(
                 (element) =>
                   `${element.tagName.toLowerCase()} ${getComputedStyle(element).marginTop}`,
@@ -175,9 +177,7 @@ export function registerDesignStylesheetEvidence(
         ).toHaveText("Changed");
         await expect(page.locator(count)).toHaveText("4");
         await expect(
-          page
-            .getByRole("region", { name: "Affected screens", exact: true })
-            .getByRole("link"),
+          page.locator('[data-usage-section="affected"]').getByRole("link"),
         ).toHaveCount(2);
         await expect(
           page
@@ -195,7 +195,7 @@ export function registerDesignStylesheetEvidence(
         );
         await page.goto(story);
         await page
-          .getByRole("region", { name: "Affected screens", exact: true })
+          .locator('[data-usage-section="affected"]')
           .getByRole("link", { name: "Welcome" })
           .click();
         await expect(page).toHaveURL(

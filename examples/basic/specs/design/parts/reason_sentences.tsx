@@ -1,3 +1,5 @@
+import type { EvidenceReason } from "../../../../../packages/ui/src/comparison-evidence/comparison-evidence.js";
+
 /** A direct change reason of the routed entry, by its review kind. */
 export type ChangeReasonKind =
   | "added"
@@ -25,6 +27,15 @@ const SENTENCES: Record<Exclude<ChangeReasonKind, "dependency">, string> = {
  * `dependency` reason has no sentence: it reads only through the list of
  * changed files.
  */
+export function reasonEvidence(
+  reasons: readonly ChangeReasonKind[],
+): EvidenceReason[] {
+  return reasons.flatMap((reason) =>
+    reason === "dependency" ? [] : [{ key: reason, text: SENTENCES[reason] }],
+  );
+}
+
+/** The same sentences as paragraphs, for the explorer's own evidence. */
 export function ReasonSentences({
   reasons,
 }: {
@@ -32,11 +43,9 @@ export function ReasonSentences({
 }) {
   return (
     <>
-      {reasons.map((reason) =>
-        reason === "dependency" ? null : (
-          <p key={reason}>{SENTENCES[reason]}</p>
-        ),
-      )}
+      {reasonEvidence(reasons).map((reason) => (
+        <p key={reason.key}>{reason.text}</p>
+      ))}
     </>
   );
 }

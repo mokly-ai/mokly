@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { DetailsBody } from "../../../../../packages/ui/src/details-panel/details-panel.js";
+
 import { useDesignNavigation } from "./design_navigation.js";
 import { DESTINATIONS, type DesignDestination } from "./destinations.js";
 import { DetailsPanel } from "./details.js";
@@ -63,23 +65,20 @@ function RemovedDetails({ entry }: { entry: RemovedDocument }) {
   const navigation = useDesignNavigation();
   return (
     <DetailsPanel open destination={navigation.inspector}>
-      <div className="mbk-details-body">
-        <div>
-          <p className="mbk-details-desc">{entry.description}</p>
-          <p>Location: Example › Handbook</p>
-        </div>
-        <div className="mbk-meta">
-          <MetaRow name="source" label="Source">
-            Previous version
-          </MetaRow>
-          <MetaRow name="tags" label="Tags">
-            documents
-          </MetaRow>
-          <MetaRow name="related-docs" label="Related docs">
-            Example notes
-          </MetaRow>
-        </div>
-      </div>
+      <DetailsBody description={entry.description}>
+        <MetaRow name="source" label="Source">
+          Previous version
+        </MetaRow>
+        <MetaRow name="location" label="Location">
+          Example › Handbook
+        </MetaRow>
+        <MetaRow name="tags" label="Tags">
+          documents
+        </MetaRow>
+        <MetaRow name="related-docs" label="Related docs">
+          Example notes
+        </MetaRow>
+      </DetailsBody>
     </DetailsPanel>
   );
 }

@@ -63,30 +63,6 @@ export interface StylesheetEvidence {
 }
 
 /**
- * Stylesheets examined and excluded, after any files list, in the order the
- * viewer's Details show them: the outcome, its label, then each file.
- */
-export function ExcludedStylesheetList({
-  lead,
-  paths,
-}: {
-  lead: string;
-  paths: readonly string[];
-}) {
-  return (
-    <>
-      <p>{lead}</p>
-      <p>Examined and excluded:</p>
-      <ul>
-        {paths.map((path) => (
-          <li key={path}>{path}</li>
-        ))}
-      </ul>
-    </>
-  );
-}
-
-/**
  * The files lead, then every changed file once. Each file's outcome sentences
  * and style lists sit under that file, so no list mixes two stylesheets.
  */

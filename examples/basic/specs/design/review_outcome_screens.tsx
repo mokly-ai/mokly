@@ -15,7 +15,7 @@ import { ENTRY_PATHS } from "./parts/entry_paths.js";
 import { ExampleWorkspace } from "./parts/example_workspace.js";
 import { MiniWelcome } from "./parts/mini_screens.js";
 import { REMOVED_SCREENS } from "./parts/nav_data.js";
-import { ReasonSentences } from "./parts/reason_sentences.js";
+import { reasonEvidence } from "./parts/reason_sentences.js";
 import { RemovedScreen, RemovedView } from "./parts/removed_screen.js";
 import { MiniFarewell } from "./parts/removed_shots.js";
 import { ReviewNav } from "./parts/review.js";
@@ -80,7 +80,7 @@ function AddedCurrent({ viewport }: { viewport: CompareViewport }) {
       <ExampleWorkspace
         subject="details"
         viewport={viewport}
-        comparisonEvidence={<ReasonSentences reasons={["added"]} />}
+        comparisonEvidence={{ reasons: reasonEvidence(["added"]) }}
       />
     </Shell>
   );

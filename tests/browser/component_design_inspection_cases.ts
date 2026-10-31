@@ -111,9 +111,7 @@ export function registerComponentDesignInspection(
           componentDesignUrl("design/components/states/unavailable", viewport),
         );
         await expect(
-          page.getByText(
-            "Component inspection is unavailable for this screen.",
-          ),
+          page.getByText("Component inspection is unavailable for this view."),
         ).toBeVisible();
         await expect(
           page.getByRole("switch", { name: "Highlight components" }),
@@ -137,9 +135,7 @@ export function registerComponentDesignInspection(
         await page.goto(
           componentDesignUrl("design/components/states/unused", viewport),
         );
-        await expect(
-          page.getByText("No screens or components use Badge yet."),
-        ).toBeVisible();
+        await expect(page.getByText("No recorded consumers.")).toBeVisible();
         await page.goto(
           componentDesignUrl("design/components/states/removed", viewport),
         );
@@ -149,7 +145,7 @@ export function registerComponentDesignInspection(
             .getByText("This variant has been removed.", { exact: true }),
         ).toBeVisible();
         await page
-          .getByRole("region", { name: "Affected screens", exact: true })
+          .locator('[data-usage-section="affected"]')
           .getByRole("link", { name: "Farewell" })
           .click();
         await expect(page).toHaveURL(

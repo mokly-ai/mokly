@@ -1,127 +1,110 @@
-import { MockLink } from "@mokly/mokly";
+import { mockLink } from "@mokly/mokly";
+
+import {
+  UsageList,
+  UsageStatus,
+  type UsageRow,
+} from "../../../../../../packages/ui/src/usage-list/usage-list.js";
 
 import type { ComponentPageState } from "./component_details.js";
 import type { ComponentDesignDestination } from "./destinations.js";
 import { componentUses, usageViews } from "./fixtures.js";
-import { COMPONENT_ENTRY_BY_STATE, COMPONENTS } from "./metadata.js";
 
+/** The Usage tab while the entry's detail loads, or after its load failed. */
 export function UsageDeliveryState({ state }: { state: "loading" | "failed" }) {
-  return (
-    <section className="ce-usage-state" aria-label="Usage status">
-      {state === "loading" ? (
-        <p className="ce-empty-copy" role="status">
-          Loading usage…
-        </p>
-      ) : (
-        <>
-          <p className="ce-empty-copy" role="alert">
-            Usage couldn’t be loaded.
-          </p>
-          <button className="ce-text-button" type="button">
-            Try again
-          </button>
-        </>
-      )}
-    </section>
-  );
+  return <UsageStatus status={state} />;
 }
 
-export function UsedBy({ state }: { state: ComponentPageState }) {
-  const unused =
-    state === "unused" || state === "added" || state === "overlay-tall";
-  const uses =
-    state === "toolbar" || state === "hidden"
-      ? componentUses.slice(0, 1)
-      : componentUses;
-  const screens = uses.filter((use) => use.kind === "screen");
-  const components = uses.filter((use) => use.kind === "component");
-  return (
-    <section className="ce-usage-section" aria-label="Used by">
-      <h3>
-        Used by{" "}
-        <span>
-          {unused
-            ? "0"
-            : `${screens.length} ${screens.length === 1 ? "screen" : "screens"}${components.length ? ` · ${components.length} component` : ""}`}
-        </span>
-      </h3>
-      {unused ? (
-        <p className="ce-empty-copy">
-          {`No screens or components use ${COMPONENTS[COMPONENT_ENTRY_BY_STATE[state].component].title} yet.`}
-        </p>
-      ) : (
-        <ul className="ce-usage-list">
-          {uses.map((use) => (
-            <li key={use.title}>
-              <MockLink
-                to={
-                  state === "toolbar"
-                    ? "design/components/inspection/selection/inspection-toolbar"
-                    : state === "hidden"
-                      ? "design/components/inspection/selection/inspection-help"
-                      : use.to
-                }
-              >
-                {use.title}
-                <span aria-hidden="true">↗</span>
-              </MockLink>
-              <span>
-                {state === "toolbar" || state === "hidden"
-                  ? "1 instance · Direct"
-                  : `${use.count} ${use.count === 1 ? "instance" : "instances"} · ${use.via}`}{" "}
-                · {usageViews.length} views
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
+/** One consumer's row, which opens the artboard that shows the consumer. */
+function usageRow(
+  use: (typeof componentUses)[number],
+  to: ComponentDesignDestination,
+  instances: number,
+): UsageRow {
+  return {
+    direct: true,
+    href: mockLink(to),
+    id: use.title,
+    instances,
+    key: use.title,
+    removed: false,
+    title: use.title,
+    views: usageViews.length,
+  };
 }
 
-export function AffectedScreens({
-  removed,
+/** The consumers of the shown component, as its Usage tab lists them. */
+function usedByRows(state: ComponentPageState): UsageRow[] {
+  if (state === "unused" || state === "added" || state === "overlay-tall")
+    return [];
+  if (state === "toolbar" || state === "hidden")
+    return [
+      usageRow(
+        componentUses[0],
+        state === "toolbar"
+          ? "design/components/inspection/selection/inspection-toolbar"
+          : "design/components/inspection/selection/inspection-help",
+        1,
+      ),
+    ];
+  return componentUses.map((use) => usageRow(use, use.to, use.count));
+}
+
+/**
+ * The screens that a change of the shown component affects. A removed
+ * variant keeps the screen that used it, which opens its Removed state.
+ */
+function affectedRows(
+  removed: boolean,
+  welcome: ComponentDesignDestination | undefined,
+): UsageRow[] {
+  const screens = componentUses
+    .filter((use) => use.kind === "screen")
+    .map((use) =>
+      usageRow(
+        use,
+        use.title === "Welcome" ? (welcome ?? use.to) : use.to,
+        use.count,
+      ),
+    );
+  return removed
+    ? [
+        ...screens,
+        {
+          direct: true,
+          href: mockLink("design/components/states/removed-consumer"),
+          id: "Farewell",
+          instances: 1,
+          key: "Farewell",
+          removed: true,
+          title: "Farewell",
+          views: 1,
+        },
+      ]
+    : screens;
+}
+
+/**
+ * The Usage tab: the consumers of the shown component and, when it changed,
+ * the screens that its change affects.
+ */
+export function ComponentUsage({
+  affected,
+  removed = false,
+  state,
   welcome,
 }: {
-  removed: boolean;
-  /** Where Welcome's row opens when its story has an artboard for it. */
+  /** Whether the shown component changed, which lists the affected screens. */
+  affected: boolean;
+  removed?: boolean;
+  state: ComponentPageState;
+  /** Where Welcome's affected row opens when its story has an artboard for it. */
   welcome?: ComponentDesignDestination | undefined;
 }) {
-  const screens = componentUses.filter((use) => use.kind === "screen");
   return (
-    <section className="ce-affected" aria-label="Affected screens">
-      <h3>
-        Affected screens <span>{screens.length + (removed ? 1 : 0)}</span>
-      </h3>
-      <p>
-        {removed
-          ? "Current screens use Action. Former screens stay available to compare."
-          : "These screens use Action. Their own content and props are unchanged."}
-      </p>
-      <ul className="ce-usage-list">
-        {screens.map((use) => (
-          <li key={use.title}>
-            <MockLink
-              to={use.title === "Welcome" ? (welcome ?? use.to) : use.to}
-            >
-              {use.title}
-              <span aria-hidden="true">↗</span>
-            </MockLink>
-            <span>
-              {use.via} · {use.count}{" "}
-              {use.count === 1 ? "instance" : "instances"}
-            </span>
-          </li>
-        ))}
-        {removed ? (
-          <li>
-            <MockLink to="design/components/states/removed-consumer">
-              Farewell <span>Removed</span>
-            </MockLink>
-            <span>Previously used the Compact variant</span>
-          </li>
-        ) : null}
-      </ul>
-    </section>
+    <UsageList
+      affected={affected ? affectedRows(removed, welcome) : []}
+      usedBy={usedByRows(state)}
+    />
   );
 }

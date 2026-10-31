@@ -44,9 +44,22 @@ test("a section keeps the shell's markup: its heading, then a row for each consu
       />,
     ),
     '<section data-usage-section="used-by"><h3>Used by</h3><ul class="mbk-usage-list">' +
-      '<li data-usage-link="[&quot;home&quot;,false]"><a href="/view/home/?viewport=desktop&amp;scheme=light&amp;instance=a">Home</a><small>Direct use · 1 instances · 2 views</small></li>' +
-      '<li data-usage-link="[&quot;farewell&quot;,true]"><a href="/view/farewell/?viewport=desktop&amp;scheme=light&amp;instance=a">Farewell · Removed</a><small>Nested use · 3 instances · 1 views</small></li>' +
+      '<li data-usage-link="[&quot;home&quot;,false]"><a href="/view/home/?viewport=desktop&amp;scheme=light&amp;instance=a">Home</a><small>Direct use · 1 instance · 2 views</small></li>' +
+      '<li data-usage-link="[&quot;farewell&quot;,true]"><a href="/view/farewell/?viewport=desktop&amp;scheme=light&amp;instance=a">Farewell · Removed</a><small>Nested use · 3 instances · 1 view</small></li>' +
       "</ul></section>",
+  );
+});
+
+test("a row counts one instance and one view in the singular", () => {
+  render(
+    <UsageList
+      affected={[]}
+      usedBy={[row("Home", { instances: 1, views: 1 })]}
+    />,
+  );
+  assert.equal(
+    screen.getByRole("listitem").querySelector("small")?.textContent,
+    "Direct use · 1 instance · 1 view",
   );
 });
 

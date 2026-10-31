@@ -7,6 +7,8 @@
 
 import { useState } from "react";
 
+import { count } from "../count/count.js";
+
 /** One recorded component instance, with the instances nested in it. */
 export interface InstanceNode {
   /** The instance's stable key, which its button carries in `data-instance-key`. */
@@ -74,7 +76,9 @@ function InstanceList({
               }}
               open={expanded.has(instance.key)}
             >
-              <summary>{instance.nested.length} nested instances</summary>
+              <summary>
+                {count(instance.nested.length, "nested instance")}
+              </summary>
               <InstanceList
                 expanded={expanded}
                 instances={instance.nested}
@@ -147,9 +151,7 @@ export function InstanceTree({
       ) : (
         <>
           <p>
-            {usage.total}
-            {" instances ·"} {usage.components}
-            {" components"}
+            {`${count(usage.total, "instance")} · ${count(usage.components, "component")}`}
           </p>
           <InstanceList
             expanded={expanded}

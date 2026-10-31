@@ -1,11 +1,40 @@
 /* Component-page artboards in the basic example's owning design catalogue. */
-/* Prose links take the deep sage. The brand and the catalogue rows keep the
-   colours of their @mokly/ui stylesheets, as the shipped shell draws them. */
-.ce-design a:where(:not(.mbk-brand, .mbk-nav-row)) {
+/* Prose links take the deep sage. The links that @mokly/ui components draw
+   keep the look of their package stylesheets, as the shipped shell draws
+   them: the brand, the catalogue rows, the crumbs, the menu, the comparison
+   modes, the Usage rows, the selected instance's component link, Reset, and
+   the text buttons. */
+.ce-design
+  a:where(
+    :not(
+      .mbk-brand,
+      .mbk-nav-row,
+      .mbk-crumb-link,
+      .mbk-menu,
+      .mbk-seg > a,
+      .mbk-usage-list a,
+      .ce-selected-instance > a,
+      .mbk-controls-reset,
+      .mbk-text-button
+    )
+  ) {
   color: var(--mbk-sage-deep);
   text-decoration: none;
 }
-.ce-design a:where(:not(.mbk-brand, .mbk-nav-row)):hover {
+.ce-design
+  a:where(
+    :not(
+      .mbk-brand,
+      .mbk-nav-row,
+      .mbk-crumb-link,
+      .mbk-menu,
+      .mbk-seg > a,
+      .mbk-usage-list a,
+      .ce-selected-instance > a,
+      .mbk-controls-reset,
+      .mbk-text-button
+    )
+  ):hover {
   text-decoration: underline;
 }
 .ce-design a:focus-visible,

@@ -937,6 +937,28 @@ as `ComparisonToolbar` gained `modeHref` and `interactive`. Found by milestone
       `inspector/prop-field` as milestone 4 adopts the chrome, including
       decision 2 and the comparison with the earlier renders.
 - [ ] Run the mockup check and smoke-test the changed pages.
+- [ ] Waiting for the user since 2026-10-31: six choices between the
+      shipped form and a contract keep five artboard parts as copies and two
+      mockup-only rules. They are the invalid field border, the control edge
+      of the grip, the grabber and the entry chips, the grouping of the
+      Components tab, the in-place props editing of component pages, the
+      variant state of the explorer evidence, and the width of the mobile
+      sheet.
+- [x] Adoption done on 2026-10-31 by the ui implementor and checked, apart
+      from the parts above: the library's inspector, metadata row, and prop
+      field, and every other artboard copy of the inspector slice, render the
+      package components. Zero computed-style differences across 166 states,
+      2851 Node tests, 1420 browser tests, and the repository suite passed.
+      Calls: static tabs are native disclosures and the grab is a native
+      switch; static actions link to the artboard of their outcome; the
+      selected instance renders `PropsPanel`; the approved evidence card
+      renders `ComparisonEvidence`; the dead `.mbk-inspector select` rule
+      goes; the highlight artboard stays reached through the catalogue tree;
+      the explorer's prose-link rule skips shipped links. Intended product
+      changes: one shared count helper writes "1 instance", "1 view", "1
+      component", and "1 nested instance", and the static Reset link takes
+      the Reset button's look. Evidence:
+      `.context/ui-package-shell-views/inspector-mockups/`.
 
 ## Milestone 11: Third pull request
 
