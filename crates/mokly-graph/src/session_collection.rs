@@ -63,16 +63,17 @@ impl Session {
                 }
             }
         }
-        let summary = summary.finish(self)?;
+        let (summary, views) = summary.finish(self)?;
         collector.summary(&summary);
         if let Some(failure) = failure {
             return Err(failure);
         }
-        self.state
-            .public_files
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .extend(summary.closure.iter().cloned());
+        for (route, view) in views {
+            let key = &self.state.plans[&route].key.0;
+            for path in view.closure {
+                self.state.inputs.closures.record(key, &path);
+            }
+        }
         Ok(summary)
     }
 }

@@ -11,7 +11,7 @@ import {
   detailFixture,
   indexFixture,
   shellModelFixture,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
 import {
   BASE,

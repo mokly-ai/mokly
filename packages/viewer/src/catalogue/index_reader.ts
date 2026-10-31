@@ -1,4 +1,4 @@
-/** The catalogue index v8 reader: the version gate first, then every field. */
+/** The catalogue index v9 reader: the version gate first, then every field. */
 
 import { invalidData, record } from "../components/data.js";
 
@@ -27,9 +27,9 @@ import {
 import { MoklyVersionError } from "./version_error.js";
 
 /** The only catalogue index number this viewer reads. */
-const CATALOGUE_INDEX_VERSION = 8;
+const CATALOGUE_INDEX_VERSION = 9;
 
-/** Gate the version, read every v8 field, and validate the relationships. */
+/** Gate the version, read every v9 field, and validate the relationships. */
 export function readCatalogueIndex(value: unknown): CatalogueReadModel {
   const version = record(value) ? value.schemaVersion : undefined;
   if (version !== CATALOGUE_INDEX_VERSION)

@@ -7,7 +7,11 @@ import {
   workspaceDetailRequest,
   type DetailRequest,
 } from "../catalogue/detail_fences.js";
-import type { CatalogueReadModel, EntryDetailV3 } from "../catalogue/types.js";
+import type {
+  CatalogueReadModel,
+  DeploymentFileV1,
+  EntryDetailV4,
+} from "../catalogue/types.js";
 import { MoklyVersionError } from "../catalogue/version_error.js";
 
 import type { ShellDataSource } from "./data_source.js";
@@ -65,10 +69,28 @@ export function routeDetailRequests(
 
 /** The outcome of loading one detail against the installed index. */
 export type DetailOutcome =
-  | { kind: "accepted"; detail: EntryDetailV3; index: CatalogueReadModel }
+  | { kind: "accepted"; detail: EntryDetailV4; index: CatalogueReadModel }
   | { kind: "deployment" }
   | { kind: "version"; error: MoklyVersionError }
   | { kind: "failed" };
+
+/** Start one optional static deployment check for a page change. */
+export function startDeploymentCheck(
+  source: ShellDataSource,
+  requests: readonly DetailRequest[],
+):
+  | {
+      controller: AbortController;
+      promise: Promise<DeploymentFileV1 | undefined>;
+    }
+  | undefined {
+  if (!source.loadDeployment || !requests.length) return undefined;
+  const controller = new AbortController();
+  return {
+    controller,
+    promise: source.loadDeployment(controller.signal).catch(() => undefined),
+  };
+}
 
 /**
  * Load one detail and apply its fence. On a revision mismatch the index is
@@ -76,6 +98,25 @@ export type DetailOutcome =
  * disagrees, does not install.
  */
 export async function loadFencedDetail(
+  source: ShellDataSource,
+  index: CatalogueReadModel,
+  request: DetailRequest,
+  signal: AbortSignal,
+  deployment?: Promise<DeploymentFileV1 | undefined>,
+): Promise<DetailOutcome> {
+  const deploymentResult = deployment?.catch(() => undefined);
+  const outcome = await loadDetailPair(source, index, request, signal);
+  if (outcome.kind === "accepted" || outcome.kind === "deployment")
+    return outcome;
+  const deploymentFile = await deploymentResult;
+  return deploymentFile !== undefined &&
+    deploymentFile.deploymentId !== index.deploymentId
+    ? { kind: "deployment" }
+    : outcome;
+}
+
+/** Read and fence a pair independently of the optional deployment check. */
+async function loadDetailPair(
   source: ShellDataSource,
   index: CatalogueReadModel,
   request: DetailRequest,
@@ -106,7 +147,7 @@ export type RefreshOutcome =
   | {
       kind: "accepted";
       index: CatalogueReadModel;
-      details: readonly (readonly [DetailRequest, EntryDetailV3])[];
+      details: readonly (readonly [DetailRequest, EntryDetailV4])[];
     }
   | { kind: "deployment" }
   | { kind: "version"; error: MoklyVersionError }
@@ -171,7 +212,7 @@ export function routeKey(route: ShellRoute): string {
 
 /** Whether every request of a route has an accepted detail. */
 function routeReady(
-  held: ReadonlyMap<string, EntryDetailV3>,
+  held: ReadonlyMap<string, EntryDetailV4>,
   requests: readonly DetailRequest[],
 ): boolean {
   return requests.every((request) => held.has(detailKey(request)));
@@ -180,7 +221,7 @@ function routeReady(
 /** What the delivery of one route's details is decided from. */
 export interface RouteDeliveryInput {
   /** The details that the installed snapshot holds. */
-  details: ReadonlyMap<string, EntryDetailV3>;
+  details: ReadonlyMap<string, EntryDetailV4>;
   /** The keys of the requested details whose last load failed. */
   failed: ReadonlySet<string>;
   /** Whether the route's last publication refresh failed. */

@@ -1,5 +1,7 @@
 # Registered Components In Mokly's Design Catalogue
 
+Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
+
 ## Scope
 
 Mokly's shared design UI has its own component pages, saved variants,
@@ -11,9 +13,32 @@ they also have independent changes.
 
 The components live in the repository's mockup catalogue under
 `examples/basic/specs/design`. The package's browser shell stays in the
-package source, and consumer fixtures stay out of package runtime code. The
-Example Action and Toolbar components, the miniature subject screens and the
-pictured usage fixtures keep their separate roles. Usage in the outer
+package source, and consumer fixtures stay out of package runtime code. An
+inventory component that the [shared UI package](./mokly-ui-package.md)
+provides renders that package component through its `defineComponent`
+registration. Its public stylesheet imports the package stylesheets of the
+component and of each package component that it renders. The component keeps
+no copy of that markup or CSS. Decision: the mockup renders
+the package component, not its own copy kept aligned by tests, because two
+implementations drift and one serves the product and its mockups.
+
+A desktop render follows the shell's
+[layout breakpoint](./mokly-shell-device-chrome.md#responsive-behavior), so
+below it the chrome draws the shell's narrow form. Decision: no mockup rule
+holds the desktop form at that width, because the mockups show what the shell
+draws.
+
+Every other artboard part that a package component provides renders that
+component too, such as an artboard's shell and workspace layout, its panels
+and lists, and its highlight mask. The sheet that styles such a part imports
+the package stylesheets by repository path, and the artboard keeps no copy of
+that markup or CSS. Decision: the rule covers the artboard scaffolds, not only
+the inventory components, because an artboard copy drifts as an inventory copy
+does. Those parts stay unregistered, because a gallery group holds at most
+five components.
+
+The Example Action and Toolbar components, the miniature subject screens and
+the pictured usage fixtures keep their separate roles. Usage in the outer
 inspector comes from the entry detail Mokly records, not from those pictured
 fixtures. Samples and artboards add no consumer scripts.
 
@@ -43,7 +68,13 @@ slug `S`:
 - Component slug: `S` (for example, `style`); its path places it in gallery `G` under the
   [path contract](./mokly-paths.md).
 - Public stylesheet: `design-library/G/S.css` when styles are owned
-  exclusively by that component. It is authored CSS, not generated HTML.
+  exclusively by that component. It is authored CSS, not generated HTML. When
+  the shared UI package provides the component, that sheet imports the package
+  stylesheets of the component and of each package component that it renders,
+  each by its repository path. It adds only mockup rules. Decision: the
+  repository path, not the package name, because a comparison's base side
+  renders from Git, which holds the package sources and not their build
+  output; the core fix for built repository packages is a separate plan.
 - Variant entry slugs, exposed props, and the parent's own props follow the
   [inventory](./mokly-design-component-library.md). Each variant entry
   renders in both viewports.
@@ -62,10 +93,12 @@ Each inventory component has one markup and style implementation. Screens
 render it through its registered `.Component`, and no story-only copy exists.
 
 Shells, page layouts, preview workspaces, stage and grid layout helpers, and
-owning screen components stay ordinary composition. Their meaningful
-constituent controls, panels and frames are registered components. A
-whole-artboard component would make initial highlighting select nearly the
-entire screen and would obscure the screen's independent content boundary.
+owning screen components stay ordinary composition. Where the shared UI
+package provides one of these parts, the composition renders the package
+component. Their meaningful constituent controls, panels and frames are
+registered components. A whole-artboard component would make initial
+highlighting select nearly the entire screen and would obscure the screen's
+independent content boundary.
 
 Browse and Changes share the same bounded preview/inspector layout as component
 designs. Desktop keeps the divider resize grip; mobile uses the same icon strip

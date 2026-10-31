@@ -5,10 +5,10 @@
 
 import type {
   CatalogueReadModel,
-  EntryDetailV3,
+  EntryDetailV4,
 } from "../src/catalogue/types.js";
 
-import { rawDetailFixtures, rawIndexFixture } from "./catalogue_v8_fixture.js";
+import { rawDetailFixtures, rawIndexFixture } from "./catalogue_v9_fixture.js";
 
 type Raw = Record<string, unknown>;
 
@@ -111,7 +111,7 @@ export function richUsage() {
 }
 
 /** Every fixture detail, with records in home's usage and its workspace. */
-export function richDetails(): EntryDetailV3[] {
+export function richDetails(): EntryDetailV4[] {
   const fixtures = rawDetailFixtures();
   const home = fixtures.current["product/browse/home"]!;
   for (const view of home.views) {

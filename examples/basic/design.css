@@ -1,8 +1,10 @@
 /* Mokly shell design language for the design mockups: the semantic interface
-   palette, the top bar, the catalogue navigation, the screen head band, and
-   shared controls. Every interface role below has a Light and a Dark value, so
-   an artboard changes appearance by selecting a palette rather than by adding
-   an override sheet. Device-screen colors are preview tokens and live in
+   palette, the base rules, and the artboard shell's layout. The shell's own
+   parts, such as the top bar, the catalogue navigation, and the screen
+   header, come from the @mokly/ui stylesheets that their component sheets
+   import. Every interface role below has a Light and a Dark value, so an
+   artboard changes appearance by selecting a palette rather than by adding an
+   override sheet. Device-screen colors are preview tokens and live in
    design-stage.css, independent of the interface appearance. A light-only
    document keeps the Light palette inside a Dark artboard. */
 
@@ -31,6 +33,12 @@
   --mbk-sage: #4f7864;
   --mbk-sage-deep: #2f5945;
   --mbk-accent-contrast: #ffffff;
+  /* The @mokly/ui components read the shell's names for five roles. */
+  --mbk-accent-deep: var(--mbk-sage-deep);
+  --mokly-accent: var(--mbk-sage);
+  --mokly-accent-contrast: var(--mbk-accent-contrast);
+  --mokly-accent-soft: var(--mbk-accent-soft);
+  --_mokly-private-on-accent-deep: var(--mbk-accent-contrast);
   --mbk-accent-soft: rgba(79, 120, 100, 0.1);
   --mbk-accent-surface: #edf3ef;
   --mbk-accent-edge: #b9cfc2;
@@ -83,6 +91,12 @@
   --mbk-sage: #86b79b;
   --mbk-sage-deep: #b6d8c4;
   --mbk-accent-contrast: #0e1a14;
+  /* The @mokly/ui components read the shell's names for five roles. */
+  --mbk-accent-deep: var(--mbk-sage-deep);
+  --mokly-accent: var(--mbk-sage);
+  --mokly-accent-contrast: var(--mbk-accent-contrast);
+  --mokly-accent-soft: var(--mbk-accent-soft);
+  --_mokly-private-on-accent-deep: var(--mbk-accent-contrast);
   --mbk-accent-soft: rgba(134, 183, 155, 0.16);
   --mbk-accent-surface: #24312a;
   --mbk-accent-edge: #3c5648;
@@ -156,36 +170,6 @@ body {
   position: relative;
 }
 
-.mbk-modes {
-  background: var(--chrome-bg);
-  border-radius: 8px;
-  display: flex;
-  gap: 4px;
-  margin-left: auto;
-  padding: 3px;
-}
-
-.mbk-mode {
-  border-radius: 6px;
-  color: var(--chrome-muted);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 12px;
-}
-
-.mbk-mode.active {
-  background: var(--chrome-surface);
-  box-shadow: var(--chrome-shadow-soft);
-  color: var(--chrome-ink);
-}
-
-/* The compact appearance selector shares the narrow bar with the menu, brand
-   and search, so the bar tightens its gaps rather than squeezing the query. */
-.mbk-topbar:has(.mbk-appearance[data-compact]) {
-  gap: 10px;
-  padding: 0 12px;
-}
-
 /* ---- Body split ------------------------------------------------------- */
 
 .mbk-body {
@@ -204,50 +188,4 @@ body {
 
 .mbk-shell--mobile .mbk-main {
   flex: 1;
-}
-
-.mbk-nav-resize {
-  bottom: 0;
-  cursor: col-resize;
-  position: absolute;
-  right: -4px;
-  top: 0;
-  width: 8px;
-  z-index: 2;
-}
-
-.mbk-nav-resize::after {
-  background: var(--chrome-control-edge);
-  border-radius: 999px;
-  content: "";
-  height: 32px;
-  left: 3px;
-  position: absolute;
-  top: calc(50% - 16px);
-  width: 2px;
-}
-
-/* ---- Shared segmented control ----------------------------------------- */
-
-.mbk-seg {
-  background: var(--chrome-bg);
-  border: 1px solid var(--chrome-control-edge);
-  border-radius: 8px;
-  display: inline-flex;
-  padding: 3px;
-}
-
-.mbk-seg > :is(span, a) {
-  border-radius: 6px;
-  color: var(--chrome-muted);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 12px;
-  white-space: nowrap;
-}
-
-.mbk-seg > :is(span, a).active {
-  background: var(--chrome-surface);
-  box-shadow: var(--chrome-shadow-soft);
-  color: var(--chrome-ink);
 }

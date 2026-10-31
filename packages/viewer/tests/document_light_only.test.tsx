@@ -14,7 +14,7 @@ import {
 } from "../src/shell/previews.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
 
-import { indexFixture } from "./catalogue_v8_fixture.js";
+import { indexFixture } from "./catalogue_v9_fixture.js";
 
 const BAND =
   '<p class="mbk-previous mbk-scheme-fallback" data-color-scheme-fallback=""><span class="mbk-frame-scheme-note">Light only</span></p>';

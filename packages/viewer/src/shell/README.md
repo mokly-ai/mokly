@@ -1,5 +1,7 @@
 # Shared Browse shell
 
+Status: In progress under the [shell views plan](../../../../plans/ui-package-shell-views.md).
+
 Serve, the static build, and React hosts render this same tree in the
 browser.
 
@@ -56,14 +58,18 @@ defines the tree and its state model, and the
 [shell delivery contract](../../../../docs/protocol/mokly-shell-delivery.md)
 the data it reads.
 
-`nav.tsx` renders the catalogue column, `nav_rows.tsx` its folder groups as
-native `<details>` that only browse, and `nav_leaf_rows.tsx` its leaves: links
-carrying their entry-kind glyph, and a screen or component's variants as a
-container the row's chevron button discloses, because a row cannot be both a
-link and a `<summary>`. `nav_disclosure.ts` records interactive folder and
-section choices during summary activation, before queued toggle events.
-Search therefore receives the last choice as its pre-filter baseline.
-Non-interactive summaries retain native behavior.
+`nav.tsx` reads the store and renders the catalogue column with
+`@mokly/ui/catalogue-navigation`, whose tree `@mokly/ui/catalogue-tree` draws
+from plain records: `nav_rows.ts` builds the sections and the folder groups,
+which the package draws as native `<details>` that only browse, and
+`nav_leaf_rows.ts` the leaves: links carrying their
+entry-kind glyph, and a screen or component's variants as a container the
+row's chevron button discloses, because a row cannot be both a link and a
+`<summary>`. `nav_filter.ts` builds the All and Changes filter and the status
+line. The package records interactive folder and section choices during
+summary activation, before queued toggle events, and reports each through
+`onDisclosure`. Search therefore receives the last choice as its pre-filter
+baseline. Non-interactive summaries retain native behavior.
 `nav_tree.ts` lists a folder's own document, page, or
 use case as the folder's first child row, labelled `Overview` when its title
 is the folder's title, and renders a folder whose own page is a screen or
@@ -85,7 +91,7 @@ that is its folder's own page sorts as a folder row in the other section.
 `search_query.ts` implements the single [search rule](../../../../docs/protocol/mokly-folders.md#titles),
 using resolved titles from `registry/folder_titles.ts`. Row visibility,
 Changes activation and route reveals all use that shared query and row, and
-`nav_rows.tsx` counts each folder's child rows with the same visibility.
+`nav_rows.ts` counts each folder's child rows with the same visibility.
 `home_summary.ts` builds the home summary from a type-checked label for every
 entry kind. The [shell layout contract](../../../../docs/protocol/mokly-shell-design.md#layout)
 owns both rules.
@@ -107,10 +113,10 @@ validation. Earlier storage versions are never read, translated, or removed.
 `target.ts` wraps a found entry as a route target without an extra routing
 filter. The [folder contract](../../../../docs/protocol/mokly-folders.md)
 owns the shared folder ordering and identity used by this shell.
-`nav_changed.ts` names the changed mark's class, attribute and wording, so
-every rendered row uses the same presentation contract;
-`css_nav_changed.ts` draws the mark from `data-changed` and
-`data-changed-variants` alone. `nav_model.ts` applies search and Changes
+`@mokly/ui/catalogue-tree` names the changed mark's class, attribute and
+wording, so every rendered row uses the same presentation contract, and its
+stylesheet draws the mark from `data-changed` and `data-changed-variants`
+alone. `nav_model.ts` applies search and Changes
 visibility to parents and their variant children. `changes_activation.ts`
 owns Changes-filter activation for both standalone and embedded shells under
 the [lookup's consumer rule](../../../../docs/protocol/mokly-branch-point-lookup.md#consumers): an
@@ -142,7 +148,8 @@ the published catalogue's ready per-view comparisons. Workspace data keys
 those lists by component variant path or screen path, and
 `workspace_views_data.ts` reads the list of the shown selection, so every
 reader selects the evidence that belongs to the preview;
-`css_workspace_marks.ts` draws the dot and clips its wording.
+`@mokly/ui/change-mark` draws the dot and clips its wording, and
+`css_workspace_marks.ts` mutes the dot on a disabled control.
 The parallel `viewStates` map stores `{ viewport, colorScheme, state }` for each
 ready view under the same key, while a missing key means per-view status is
 unknown. `workspace_views.ts` resolves documents actually displayed after
@@ -178,14 +185,37 @@ final eligibility, and opens Side by side only for an eligible view. A
 publication keeps the count, so it cannot reopen the comparison, and the mode
 owner never reads the address.
 
-`css.ts` concatenates the shared stylesheet. Split string modules preserve
-its exact bytes. The standalone stylesheet adds one rule to it: a root without
-an appearance mark, the stub before the bundle runs, takes the Auto appearance
-from the system. The package build scopes an embedded stylesheet separately and
-uses packaged relative font URLs; its selector-aware transform maps document
-selectors and shell-root `.mbk` selectors to the embedding scope without
-rewriting class names. The standalone shell keeps the original CSS and font
-paths.
+Every element of the shell is a `@mokly/ui` component under
+`packages/ui/src`: props in, callbacks out, no store. Each module here that
+renders is a container. It reads the store, the contexts, and the frames, and
+it renders package components with props and callbacks, as `appearance.tsx`
+reads the identifier and workspace contexts and renders
+`@mokly/ui/appearance-selector`. `top_bar.tsx`, `nav.tsx`, and `head.tsx` render
+the top bar, the catalogue navigation, and the screen header the same way,
+and `head.tsx`'s viewport and scheme switches render
+`@mokly/ui/segmented-control`. A local ESLint rule rejects every intrinsic
+JSX element in `packages/viewer/src`, so a container renders only package
+components, fragments, providers, and portals. Text that the shell derives
+from catalogue data stays here and reaches the components as props, such as
+the sentences of `entry_wording.ts` and the change-mark ids and wording of
+`view_marks.ts`. The design library and the artboards under
+`examples/basic/specs/design` render the same package sources, so a change to
+a package component also changes its design mockups.
+
+The shell holds no style rule. `@mokly/ui/styles.css` holds every rule of the
+shell, in the cascade order that `packages/ui/src/styles.css` lists: the
+theme, the shared controls, the components, then the layout and its
+responsive rules. The viewer build writes the standalone `shell.css` and the
+embedded `styles.css` from that stylesheet and the `@font-face` rule of the
+shell font.
+
+The theme gives the stub's document class the Auto appearance before the
+bundle runs. The standalone shell sets its appearance, scheme, and state marks
+on its own root, not on `body` or `<html>`, as an embedded root does. The
+embedded stylesheet uses packaged relative font URLs and keeps the
+fallbacks that let a host's accent value inherit. It needs no `@scope` block,
+because no package rule reaches the host page or host slot content. The
+standalone shell keeps the original font paths.
 
 `catalogue.ts` owns pure display indexing. Its `byPath` index contains current and
 removed entries whose paths are unique across both sets; an explicit snapshot
@@ -211,10 +241,11 @@ controlled viewers report the frame error and wait for host-owned selection.
 
 `data_controller.ts` owns one shell root's data outside React: the installed
 index, the entry details whose fences accepted them, the publications of the
-event stream, and the live descriptor. `data_requests.ts` lists the details a
-route renders from. A current component variant requests its own detail and
-its parent's detail. A use case also requests each step screen's detail. The
-module loads each detail under the fences of the
+event stream, and the live descriptor. Static sources also check the deployment
+file during navigation. `data_requests.ts` lists the details a route renders
+from. A current component variant requests its own detail and its parent's
+detail. A use case also requests each step screen's detail. The module loads
+each detail under the fences of the
 [shell delivery contract](../../../../docs/protocol/mokly-shell-delivery.md#fetch-and-fences),
 and loads a publication refresh; `data_refresh.ts` runs one such refresh at a
 time for the controller and keeps the route whose refresh failed.
@@ -248,7 +279,10 @@ mobile view in a phone frame, under the
 `layout_breakpoint.ts` holds that contract's layout breakpoint as one media
 query, narrower than 900px, which every shell and viewer rule and script
 reads, so the catalogue drawer, the inspector sheet and the embedded rail
-switch at the same width.
+switch at the same width. It also holds the contract's device breakpoint, at
+most 760px wide, which `narrow_layout.ts` watches. The `@mokly/ui`
+stylesheets cannot import either query, so they repeat them, and the viewer's
+[styles test](../../tests/styles.test.ts) holds them to both.
 
 Static route parsing accepts the canonical slash, extensionless, and
 `index.html` forms; the shared parser resolves each path through `byPath`. Historical
@@ -345,14 +379,15 @@ because it has no base side. A Used by link opens Current.
 
 Standalone composition lives in `src/standalone`: `shell.tsx` loads the index
 from the stub's origin, shows the loading, failed, and version states, and
-renders the shell chrome; `data_source.ts` reads the index and detail routes,
+renders the shell chrome; `data_source.ts` reads the index, deployment file,
+and detail routes,
 and `live_source.ts` the live descriptor, the event stream, and the render
 route of Serve. A publication commit rebuilds the navigation sections and
 reconciles the current disclosures and pre-filter baseline to exactly their
 new keys; initial restore uses the same `disclosure_storage.ts`
 reconciliation with an explicit fallback. A publication keeps surviving
 collapsed choices; route navigation owns active-route reveal. The
-`nav_rows.tsx` and `nav_leaf_rows.tsx` missing-key defaults remain defensive
+`nav_rows.ts` and `nav_leaf_rows.ts` missing-key defaults remain defensive
 for rendering without a store; mounted shells supply every current key. A
 removed-entry route whose snapshot record leaves a refreshed index shows the
 missing state.
@@ -423,10 +458,10 @@ must not race adapter-owned history-replacing navigation.
 Display-only selection updates preserve manually collapsed filtered groups;
 only changed search, tag or Changes filters reveal their matching groups.
 
-`diffs.tsx` owns the comparison band and stage; `comparison_toolbar.tsx`
+`diffs.tsx` owns the comparison band and stage; `@mokly/ui/comparison-toolbar`
 renders the band's mode group, the Scroll together switch (a native checkbox
 with `role="switch"`, shown in every diff mode including loading and failure)
-and Refresh. `use_comparison.ts` requests, renews and fences the selected
+and Refresh, from props and callbacks alone. `use_comparison.ts` requests, renews and fences the selected
 comparison. Current entries use Serve's selected endpoint. Removed component
 parents and variants use the current index's advertised generation in every
 host, which separates historical entries from current entries at the same path.

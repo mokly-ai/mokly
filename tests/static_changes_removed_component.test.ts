@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import type { EntryDetailV3 } from "../packages/viewer/src/generated/catalogue/EntryDetailV3.js";
+import type { EntryDetailV4 } from "../packages/viewer/src/generated/catalogue/EntryDetailV4.js";
 
 import { build, git, json, write } from "./helpers/static_changes.js";
 import { publicationFixture } from "./helpers/static_publication.js";
@@ -48,7 +48,7 @@ test(
             kind: "removed",
             eligible: true,
           });
-        const detail = await json<EntryDetailV3>(
+        const detail = await json<EntryDetailV4>(
           built.output,
           `${built.index.comparisonUrl!}entries/${entry.path}.json`,
         );

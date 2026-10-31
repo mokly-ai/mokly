@@ -79,13 +79,17 @@ export function registerComparisonDesign(
       );
       const controls = page.getByRole("group", { name: "Comparison mode" });
       await expect(controls).toBeVisible();
-      await expect(controls.locator(".active")).toHaveText("Current");
+      await expect(controls.locator('[aria-current="page"]')).toHaveText(
+        "Current",
+      );
       await expect(controls).toContainText("Side by side");
       await expect(controls).toContainText("Overlay");
       await expect(controls).toContainText("Difference");
       if (viewport === "desktop")
         await expect(
-          page.locator(".mbk-nav-row.active .mbk-nav-changed-text"),
+          page.locator(
+            '.mbk-nav-row[aria-current="page"][data-changed="true"] .mbk-nav-changed-text',
+          ),
         ).toHaveText("Changed");
     }
   });

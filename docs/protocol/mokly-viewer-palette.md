@@ -124,9 +124,17 @@ One family is exempt. The `--mbk-status-*-edge` tokens, `--mbk-accent-edge` and
 `--mbk-danger-edge` outline the Added, Changed and Removed status badges and the
 validation alert, which are labels rather than controls: each names its own
 state in 5.62:1 or better text inside a distinct tinted fill, so the outline
-adds no information and is held to the decorative hairline standard. No other
-boundary may claim this exception; a control state that draws a boundary must
-reach 3:1 against its own fill or the surface around it.
+adds no information and is held to the decorative hairline standard.
+
+Two controls keep a hairline boundary. The segmented control group, such as
+the viewport switch and the comparison modes, draws `--chrome-border`, and the
+resting navigation resize grip draws `--chrome-border-strong`. The group shows
+its value through the filled selected segment, and the grip draws the accent
+on hover and focus. Decision: the shipped hairlines, not the control edge,
+because each control already shows its state through a fill or the accent, and
+the design mockups render these shipped controls. No other boundary may claim
+either exception; a control state that draws a boundary must reach 3:1 against
+its own fill or the surface around it.
 
 Disabled controls are outside the contrast minimums, as WCAG allows. They use
 `--chrome-disabled-bg`, `--chrome-disabled-edge` and `--chrome-disabled-ink`
@@ -138,8 +146,8 @@ the same way in both appearances.
 - `--chrome-muted` carries breadcrumbs, frame captions, navigation heads,
   counts and field hints as normal text.
 - `--chrome-control-edge` draws the boundaries of the preview and appearance
-  controls, the navigation and inspector resize grips, the mobile sheet
-  grabber and native fields, including the prop field's input border.
+  controls, the inspector resize grip, the mobile sheet grabber and native
+  fields, including the prop field's input border.
   `--chrome-border-strong` keeps the device and pane frames.
 - The invalid-field border uses `--mbk-danger-ink`, matching the message it
   accompanies.

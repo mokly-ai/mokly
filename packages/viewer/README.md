@@ -20,6 +20,8 @@
   <a href="#development">Development</a>
 </p>
 
+Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
+
 `@mokly/viewer` is an open-source React library that renders a Mokly catalogue
 inside another product. It reads the catalogue that `mokly serve` serves or
 `mokly build` writes, and it renders the same Browse shell as the standalone
@@ -176,12 +178,15 @@ configuration.
 
 ## Responsibilities
 
-`@mokly/viewer` owns the readers of the catalogue index and the entry detail,
-the Browse presentation, the selection model, navigation, comparison
-presentation, inspection, instance resolution, the frame adapters, the in-frame
-inspector, and the browser entry. It makes no analytics or discovery request,
-reads no cookie, and uses no ambient credential. Consumer code never enters the
-browser through the viewer.
+`@mokly/viewer` owns the shell state, the readers of the catalogue index and the
+entry detail, the selection model, navigation, the comparison and inspection
+logic, instance resolution, the preview frames with the frame adapters and the
+in-frame inspector, and the browser entry. `@mokly/ui` owns every element and
+every style rule of the Browse shell. The viewer's containers read the shell
+state and render the package components with props and callbacks, so the
+viewer renders no element of its own. The viewer makes no analytics or
+discovery request, reads no cookie, and uses no ambient credential. Consumer
+code never enters the browser through the viewer.
 
 The embedding application owns catalogue delivery, authentication, its URL and
 route mapping, the surrounding product UI, slot content, markers, and
@@ -194,9 +199,10 @@ catalogue.
 
 The repository is an npm workspace. The Rust core is a Cargo workspace under
 `crates/`. `packages/mokly` holds the `@mokly/mokly` shim, the render sidecar,
-and the authoring API. `packages/viewer` holds this package; its shared shapes
-are the generated TypeScript types of the Rust model crate. From the repository
-root:
+and the authoring API. `packages/ui` holds `@mokly/ui`, every element and
+every stylesheet of the shell. `packages/viewer` holds this package; its
+shared shapes are the generated TypeScript types of the Rust model crate. From
+the repository root:
 
 ```bash
 npm ci
@@ -206,16 +212,23 @@ npm run test:browser
 cargo xtask check
 ```
 
-`npm run build` builds the host native target, the shim, the sidecar, and the
-viewer. The viewer build records every browser output in the browser module
-inventory; `mokly build` copies exactly those files, and Serve serves exactly
-them. `npm test -- packages/viewer/tests/<file> --test-name-pattern=<regex>`
+`npm run build` builds the host native target, the shim, the sidecar, the UI
+package, and the viewer. The viewer build writes `shell.css` and `styles.css`
+from the `@font-face` rule of the shell font and the UI package's `styles.css`,
+whose rules keep the cascade order that `packages/ui/src/styles.css` lists.
+The embedded `styles.css` needs no `@scope` rule, because no package rule
+reaches the host page or host slot content. The build records every browser
+output in the browser module inventory; `mokly build` copies exactly those
+files, and Serve serves exactly them.
+`npm test -- packages/viewer/tests/<file> --test-name-pattern=<regex>`
 runs one viewer test. `cargo xtask check` is the complete repository gate; it
 runs the viewer typecheck, the viewer's Node tests, and the Playwright Browse
 and Review regressions against `mokly serve` of the example catalogue.
 
 ### Key Code
 
+- [`../ui/src`](../ui/src) — the `@mokly/ui` presentational components the
+  shell composes, one directory per component with its CSS beside it
 - [`src/viewer`](./src/viewer) — the embedded `MoklyViewer`: React lifecycle,
   selection, host integration, and instance operations
 - [`src/viewer/host_bridge.tsx`](./src/viewer/host_bridge.tsx) and
@@ -223,6 +236,11 @@ and Review regressions against `mokly serve` of the example catalogue.
   the public handle and its highlight requests, geometry, and cancellation
 - [`src/shell`](./src/shell) — the Browse shell tree and its scoped styles,
   shared by the embedded viewer and the browser entry
+- [`src/shell/top_bar.tsx`](./src/shell/top_bar.tsx),
+  [`src/shell/nav.tsx`](./src/shell/nav.tsx), and
+  [`src/shell/head.tsx`](./src/shell/head.tsx) — the containers of the top
+  bar, the catalogue navigation, and the screen header; `nav_rows.ts` and
+  `nav_leaf_rows.ts` build the navigation's records from the shell state
 - [`src/catalogue`](./src/catalogue) — the readers of the catalogue index and
   the entry detail, and the public catalogue types
 - [`src/data.ts`](./src/data.ts) — the `./data` entry: path functions,

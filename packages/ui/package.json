@@ -1,0 +1,74 @@
+{
+  "name": "@mokly/ui",
+  "version": "0.17.0",
+  "description": "Presentational components and stylesheets of the Mokly Browse shell.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    "./appearance-selector": {
+      "types": "./dist/appearance-selector/appearance-selector.d.ts",
+      "import": "./dist/appearance-selector/appearance-selector.js"
+    },
+    "./catalogue-navigation": {
+      "types": "./dist/catalogue-navigation/catalogue-navigation.d.ts",
+      "import": "./dist/catalogue-navigation/catalogue-navigation.js"
+    },
+    "./catalogue-tree": {
+      "types": "./dist/catalogue-tree/catalogue-tree.d.ts",
+      "import": "./dist/catalogue-tree/catalogue-tree.js"
+    },
+    "./change-mark": {
+      "types": "./dist/change-mark/change-mark.d.ts",
+      "import": "./dist/change-mark/change-mark.js"
+    },
+    "./comparison-toolbar": {
+      "types": "./dist/comparison-toolbar/comparison-toolbar.d.ts",
+      "import": "./dist/comparison-toolbar/comparison-toolbar.js"
+    },
+    "./icons": {
+      "types": "./dist/icons/icons.d.ts",
+      "import": "./dist/icons/icons.js"
+    },
+    "./screen-header": {
+      "types": "./dist/screen-header/screen-header.d.ts",
+      "import": "./dist/screen-header/screen-header.js"
+    },
+    "./segmented-control": {
+      "types": "./dist/segmented-control/segmented-control.d.ts",
+      "import": "./dist/segmented-control/segmented-control.js"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./top-bar": {
+      "types": "./dist/top-bar/top-bar.d.ts",
+      "import": "./dist/top-bar/top-bar.js"
+    }
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0",
+    "react-dom": ">=19.0.0"
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mokly-ai/mokly.git",
+    "directory": "packages/ui"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "test": "tsx --test tests/*.test.ts tests/*.test.tsx",
+    "prepack": "npm run build"
+  }
+}

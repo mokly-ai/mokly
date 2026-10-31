@@ -33,8 +33,7 @@
 .mbk-library[data-library-component="catalogue-navigation"] .mbk-library-host {
   height: 540px;
 }
-.mbk-library .mbk-drawer {
-  bottom: 0;
+.mbk-library .mbk-nav-frame[data-drawer] > .mbk-nav {
   top: 0;
 }
 .mbk-library[data-library-component="inspector"] .mbk-library-host {

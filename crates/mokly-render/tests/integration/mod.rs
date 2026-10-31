@@ -29,6 +29,8 @@ mod review_validation_tests;
 mod side_reuse_tests;
 mod slot_order_tests;
 mod source_alias_tests;
+mod stylesheet_reuse_tests;
+mod stylesheet_scan_tests;
 mod supplier_containment_tests;
 mod support;
 mod validation_tests;

@@ -66,7 +66,7 @@ async function assertFragmentEligibility(
     affectedDesigns.has(entry.path) ||
     changedComponentOrScreen ||
     removedComponent;
-  const toolbar = page.locator(".mbk-cmp-toolbar");
+  const toolbar = page.locator(".mbk-diff-toolbar");
   await expect(toolbar, fragment).toHaveCount(expected ? 1 : 0);
   if (!expected) {
     await expect(

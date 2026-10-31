@@ -3,7 +3,8 @@
 import { useEffect, useRef } from "react";
 import type { KeyboardEvent } from "react";
 
-import { TagIcon } from "./icons.js";
+import { TagIcon } from "@mokly/ui/icons";
+
 import { useShellIdentifier } from "./identifier_context.js";
 import { useOptionalShellStore } from "./store_context.js";
 import { selectTag } from "./tag_selection.js";

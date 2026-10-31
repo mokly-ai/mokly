@@ -12,7 +12,7 @@ fn request() -> RenderRequest {
 #[test]
 fn edit_unknown_prop_unset_view_and_revision_contracts() {
     let mut index = readers::index(include_str!(
-        "../../../../docs/protocol/fixtures/catalogue-v8.json"
+        "../../../../docs/protocol/fixtures/catalogue-v9.json"
     ))
     .unwrap();
     index.revision = 1;
@@ -86,7 +86,7 @@ fn unset_rejects_value_and_unknown_fields() {
 #[test]
 fn controls_cover_unicode_numbers_choices_null_optional_and_uneditable_props() {
     let mut index = readers::index(include_str!(
-        "../../../../docs/protocol/fixtures/catalogue-v8.json"
+        "../../../../docs/protocol/fixtures/catalogue-v9.json"
     ))
     .unwrap();
     index.revision = 1;
@@ -134,7 +134,7 @@ fn controls_cover_unicode_numbers_choices_null_optional_and_uneditable_props() {
 #[test]
 fn complete_props_obey_control_bounds_even_when_the_prop_is_not_overridden() {
     let mut index = readers::index(include_str!(
-        "../../../../docs/protocol/fixtures/catalogue-v8.json"
+        "../../../../docs/protocol/fixtures/catalogue-v9.json"
     ))
     .unwrap();
     index.revision = 1;

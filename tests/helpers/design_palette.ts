@@ -9,12 +9,20 @@ export type Appearance = "light" | "dark";
 const LIGHT_BLOCK = /\[data-mbk-appearance="light"\]\s*\{([^}]*)\}/;
 const DARK_BLOCK = /\[data-mbk-appearance="dark"\]\s*\{([^}]*)\}/;
 
+/**
+ * The roles of one palette block, including private names such as
+ * `--_mokly-private-on-accent-deep`. A role that names another role of the
+ * block, such as `var(--mbk-sage)`, takes that role's value.
+ */
 function readTokens(block: string): Map<string, string> {
+  const declared = new Map<string, string>();
+  for (const [, name, value] of block.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g))
+    declared.set(name!, value!.replace(/\s+/g, " ").trim());
   const tokens = new Map<string, string>();
-  for (const [, name, value] of block.matchAll(
-    /(--[a-z0-9-]+)\s*:\s*([^;]+);/g,
-  ))
-    tokens.set(name!, value!.replace(/\s+/g, " ").trim());
+  for (const [name, value] of declared) {
+    const alias = /^var\((--[\w-]+)\)$/u.exec(value)?.[1];
+    tokens.set(name, (alias && declared.get(alias)) || value);
+  }
   return tokens;
 }
 

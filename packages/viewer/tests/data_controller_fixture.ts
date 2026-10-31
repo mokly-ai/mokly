@@ -15,9 +15,12 @@ import { FakeDataSource } from "./data_fakes.js";
 /** A controller, its fakes, and what it reported to its host. */
 export function controllerFixture(
   index: CatalogueReadModel,
-  options: { live?: boolean; path?: string } = {},
+  options: { live?: boolean; path?: string; static?: boolean } = {},
 ) {
-  const source = new FakeDataSource(options.live ?? false);
+  const source = new FakeDataSource(
+    options.live ?? false,
+    options.static ?? false,
+  );
   const commits: ShellDataSnapshot[] = [];
   const versionErrors: MoklyVersionError[] = [];
   const warnings: string[] = [];
@@ -39,7 +42,8 @@ export function controllerFixture(
     /** Route the shell to a path of the installed index and request its details. */
     navigate(path: string): ShellRoute {
       route = routeAt(controller.snapshot, path);
-      controller.request(routeDetailRequests(controller.snapshot.index, route));
+      const requests = routeDetailRequests(controller.snapshot.index, route);
+      controller.request(requests);
       return route;
     },
     route: () => route,

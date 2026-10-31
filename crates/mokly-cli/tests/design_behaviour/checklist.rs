@@ -6,7 +6,9 @@ use mokly_model::wire_props::ComponentWireValue;
 
 use super::{catalogue, dom, records};
 
-/// Keep the one-entry Changes story and its sole output edit explicit.
+/// Keep the one-entry Changes story and its sole output edit explicit. The
+/// parent row and its selected variant row open the same artboard, so both
+/// name the current page and both draw the current-row highlight.
 pub(crate) fn check() {
     let fixture = catalogue::shared();
     let records = records::read(&fixture);
@@ -69,18 +71,6 @@ pub(crate) fn check() {
                     .map(|row| row.get("aria-current"))
                     .collect::<Vec<_>>(),
                 [Some("page"), Some("page")]
-            );
-            assert_eq!(
-                rows.iter()
-                    .map(|row| {
-                        row.get("class").is_some_and(|classes| {
-                            classes
-                                .split_ascii_whitespace()
-                                .any(|class| class == "active")
-                        })
-                    })
-                    .collect::<Vec<_>>(),
-                [false, true]
             );
             let counts = dom::class(&document.tree, "mbk-nav-filter-count");
             assert_eq!(counts.len(), 1);

@@ -1,11 +1,12 @@
 import type { CatalogueNode } from "../../packages/viewer/src/generated/catalogue/CatalogueNode.js";
 
+import { withAncestors } from "./design_accessibility.js";
 import {
   DUAL_SCHEME,
   INVENTORY,
   SHARED_COMPONENTS,
 } from "./design_expectations.js";
-import { stylesheets, withAncestors } from "./design_rules.js";
+import { stylesheets } from "./design_rules.js";
 import { attribute } from "./html.js";
 import type { ServedCatalogue } from "./served_design.js";
 

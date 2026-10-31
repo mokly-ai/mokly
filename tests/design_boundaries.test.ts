@@ -66,8 +66,23 @@ const EXEMPT_SURFACES = new Map([
 ]);
 
 /**
+ * Control surfaces that keep a decorative hairline, each named as the audit
+ * names a rule, by its sheet and selector, with the reason that exempts it.
+ * Each entry must be reached by the control-edge audit, so a future control
+ * cannot quietly inherit the exemption.
+ */
+const EXEMPT_CONTROL_SURFACES = new Map([
+  [
+    "packages/ui/src/segmented-control/segmented-control.css .mbk-seg",
+    "the user kept the shipped border on 2026-10-30",
+  ],
+]);
+
+/**
  * Every rule the audit collects, so a failure names the rule that appeared or
- * vanished instead of only reporting that the total moved.
+ * vanished instead of only reporting that the total moved. A component that
+ * `@mokly/ui` provides is audited in the package stylesheet that its library
+ * sheet imports.
  */
 const AUDITED_BOUNDARIES = [
   "design-component-controls.css .ce-action--quiet",
@@ -77,14 +92,9 @@ const AUDITED_BOUNDARIES = [
   "design-components.css .ce-badge",
   "design-components.css .ce-design a:focus-visible, .ce-design button:focus-visible, .ce-design summary:focus-visible, .ce-design input:focus-visible, .ce-design select:focus-visible",
   "design-components.css .ce-variants a[aria-current]",
-  "design-library/chrome/appearance-selector.css .mbk-appearance:focus-within",
-  "design-library/chrome/appearance-selector.css .mbk-appearance:hover",
-  "design-library/chrome/catalogue-navigation.css .mbk-nav-variants-toggle:focus-visible",
   "design-library/controls/change-status.css .ce-added",
   "design-library/controls/change-status.css .ce-changed",
   "design-library/controls/change-status.css .ce-removed",
-  "design-library/controls/comparison-toolbar.css .mbk-cmp-sync:has(input:checked) .mbk-cmp-sync-track",
-  "design-library/controls/comparison-toolbar.css .mbk-cmp-sync:has(input:focus-visible) .mbk-cmp-sync-track",
   "design-library/controls/tag-chip.css .mbk-chip.tag:is(a).active",
   "design-library/controls/view-controls.css .ce-icon-control:focus-within",
   "design-library/controls/view-controls.css .ce-icon-control:hover, .ce-icon-control:has(input:checked)",
@@ -92,6 +102,11 @@ const AUDITED_BOUNDARIES = [
   "design-library/inspector/inspector.css .ce-inspector > details[open] > summary",
   "design-library/inspector/inspector.css .ce-sheet-expand:focus-visible",
   "design-stage.css .mbk-chip:is(a):focus-visible",
+  "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:focus-within",
+  "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:hover",
+  "packages/ui/src/catalogue-tree/catalogue-tree.css .mbk-nav-variants-toggle:focus-visible",
+  "packages/ui/src/comparison-toolbar/comparison-toolbar.css .mbk-diff-sync input:checked + .mbk-diff-sync-track",
+  "packages/ui/src/comparison-toolbar/comparison-toolbar.css .mbk-diff-sync input:focus-visible + .mbk-diff-sync-track",
 ];
 
 function isExemptSurface(file: string, selector: string): boolean {
@@ -195,10 +210,22 @@ test("every marked boundary is visible against an adjacent colour", async () => 
 
 test("every control boundary is a readable control edge", async () => {
   const palette = await designPalette();
+  const rules = await designStyleRules();
+  for (const [surface, reason] of EXEMPT_CONTROL_SURFACES)
+    assert.ok(
+      rules.some(
+        (rule) =>
+          `${rule.file} ${rule.selector}` === surface &&
+          CONTROL_SELECTOR.test(rule.selector) &&
+          boundaryOf(rule.body) !== undefined,
+      ),
+      `the exempt control surface ${surface} (${reason}) is not reached by the audit`,
+    );
   const failures: string[] = [];
-  for (const rule of await designStyleRules()) {
+  for (const rule of rules) {
     if (!CONTROL_SELECTOR.test(rule.selector)) continue;
     if (DECORATIVE_BOUNDARIES.has(rule.selector)) continue;
+    if (EXEMPT_CONTROL_SURFACES.has(`${rule.file} ${rule.selector}`)) continue;
     const boundary = boundaryOf(rule.body);
     if (!boundary) continue;
     if (boundary.token && HAIRLINE_TOKENS.has(boundary.token)) {

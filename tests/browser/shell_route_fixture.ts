@@ -44,6 +44,16 @@ export function readsOf(page: Page): string[] {
   return reads;
 }
 
+/** Deployment-file reads from the current page. */
+export function deploymentReadsOf(page: Page): string[] {
+  const reads: string[] = [];
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname === "/mokly-viewer/deployment.json")
+      reads.push("/mokly-viewer/deployment.json");
+  });
+  return reads;
+}
+
 /** The number of page loads from now on; in-shell navigation makes none. */
 export function loadsOf(page: Page): { count: number } {
   const loads = { count: 0 };

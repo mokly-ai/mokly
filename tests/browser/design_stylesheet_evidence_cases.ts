@@ -119,7 +119,7 @@ export function registerDesignStylesheetEvidence(
         await expect(page).toHaveURL(
           shellDesignUrl("design/changes/impact/styles/page", viewport),
         );
-        await expect(page.locator(".mbk-cmp-toolbar")).toHaveCount(0);
+        await expect(page.locator(".mbk-diff-toolbar")).toHaveCount(0);
         await expect(page.locator(".mbk-comparison-stage")).toHaveCount(0);
         await expect(page.locator(".mbk-doc-pane")).toContainText("Next steps");
         const evidence = page.locator(".mbk-comparison-details");
@@ -211,7 +211,7 @@ export function registerDesignStylesheetEvidence(
           page.locator(".mbk-screen-head .ce-change-status"),
         ).toHaveText("Unmodified");
         // Welcome stays out of Changes, yet Action's link opens its comparison.
-        const toolbar = page.locator(".mbk-cmp-toolbar");
+        const toolbar = page.locator(".mbk-diff-toolbar");
         await expect(toolbar).toHaveCount(1);
         await expect(
           toolbar.getByRole("button", { name: "Side by side", exact: true }),

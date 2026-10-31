@@ -1,12 +1,15 @@
 # Embeddable Mokly Viewer
 
+Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
+
 ## Package And Props
 
 `@mokly/viewer` is an MIT, ESM npm package with declarations and React and React DOM
 `>=19.0.0` peers. `@mokly/mokly` depends on its exact released version. The
 viewer never imports the CLI, Node built-ins, Git, or consumer code, and it
 renders only in the browser. Its shared shapes are the
-[generated types](../../packages/viewer/src/generated/catalogue/) of the model.
+[generated types](../../packages/viewer/src/generated/catalogue/)
+of the model.
 The package has four entry points:
 
 - The root React entry exports `MoklyViewer`, its types, the frame adapters,
@@ -18,95 +21,14 @@ The package has four entry points:
   `build` deliver it as `/mokly-viewer/client/shell.js`.
 - `./data` exports, with no React dependency, the pure path functions and directory names of the [artifact path contract](./mokly-artifact-paths.md), the path grammar of the [path contract](./mokly-paths.md), the link grammar of the [authoring links contract](./mokly-authoring.md#links), and the prop schema validators of the [entry props contract](./mokly-entry-props.md#prop-schema-profile); `./styles.css` is the scoped stylesheet of an embedded root.
 
+The viewer renders every element of its shell with the components of the
+[shared UI package](./mokly-ui-package.md), and every style rule of its shell
+comes from that package.
+
 Every delivery renders the shell from data in the browser.
 
-```ts
-import type { CSSProperties, ReactNode, Ref } from "react";
-import type { CatalogueReadModel, EntryDetailV3 } from "@mokly/viewer";
-import type { FrameAdapter, Box, FrameNavigation } from "@mokly/viewer";
-import type { InstanceRef, ViewerMarker, MarkerState } from "@mokly/viewer";
-
-interface ViewerSelection {
-  /** Entry path of any kind, including a variant; null is home. */
-  screenPath: string | null;
-  /** Exact removed record; absent for current content. */
-  snapshotId?: string;
-  view: "all" | "changes";
-  viewport: "mobile" | "desktop" | "both";
-  colorScheme: "light" | "dark";
-  search: string;
-  tags: readonly string[];
-}
-/** The catalogue index v8 as an object, or its absolute HTTP(S) URL. */
-type IndexSource = CatalogueReadModel | string | URL;
-type DetailResult = EntryDetailV3 | string | URL;
-/** One entry detail v3, or its URL; a removed entry names its snapshot. */
-type DetailSource = (
-  entryPath: string,
-  snapshotId?: string,
-) => DetailResult | Promise<DetailResult>;
-interface InstanceEvent {
-  instance: InstanceRef | null;
-  boxes: readonly Box[];
-  frame: { entryPath: string; stepIndex?: number };
-}
-interface ScreenNavigateEvent {
-  screenPath: string;
-  snapshotId?: string;
-  fragment?: string;
-  navigation?: FrameNavigation;
-}
-type PickEnd =
-  | { reason: "selected"; instance: InstanceRef }
-  | {
-      reason:
-        | "cancelled"
-        | "escape"
-        | "navigation"
-        | "source-change"
-        | "evidence"
-        | "error";
-    };
-type ViewerError = import("@mokly/viewer").ViewerError;
-type ViewerTheme = "auto" | "light" | "dark";
-interface ViewerSlots {
-  topBarStart?: ReactNode;
-  topBarEnd?: ReactNode;
-  railStart?: ReactNode;
-  railEnd?: ReactNode;
-  sidePanel?: { content: ReactNode; width: CSSProperties["width"] };
-  stageOverlay?: { content: ReactNode; pointerEvents: "none" | "auto" };
-  emptyState?: ReactNode;
-}
-interface MoklyViewerHandle {
-  select(selection: Partial<ViewerSelection>): void;
-  highlightInstance(instance: InstanceRef | null): Promise<void>;
-  highlightInstances(instances: readonly InstanceRef[]): Promise<void>;
-  scrollToInstance(instance: InstanceRef): Promise<void>;
-  startPick(): Promise<void>;
-  cancelPick(): void;
-}
-interface MoklyViewerProps {
-  index: IndexSource;
-  detail: DetailSource;
-  baseUrl?: string | URL;
-  frameAdapter?: FrameAdapter;
-  defaultSelection?: Partial<ViewerSelection>;
-  selection?: ViewerSelection;
-  theme?: ViewerTheme;
-  onSelectionChange?: (selection: ViewerSelection) => void;
-  markers?: readonly ViewerMarker[];
-  onMarkerChange?: (states: readonly MarkerState[]) => void;
-  slots?: ViewerSlots;
-  onScreenNavigate?: (event: ScreenNavigateEvent) => void;
-  onInstanceHover?: (event: InstanceEvent) => void;
-  onInstanceClick?: (event: InstanceEvent) => void;
-  onPickStart?: () => void;
-  onPickEnd?: (event: PickEnd) => void;
-  onError?: (error: ViewerError) => void;
-  ref?: Ref<MoklyViewerHandle>;
-}
-```
+The [viewer API declarations](./mokly-viewer-api.md) define the props, event
+payloads, and imperative handle.
 
 `InstanceRef` is the [instance contract](./mokly-instances.md); `ViewerMarker`
 and `MarkerState` are the [marker contract](./mokly-viewer-markers.md).
@@ -117,14 +39,14 @@ the index publishes, and absent otherwise. The event has no `route`,
 `viewHref(path)` of the [artifact path contract](./mokly-artifact-paths.md)
 for its shell URL.
 
-`index` is the catalogue index v8. For an object source, `baseUrl` is
+`index` is the catalogue index v9. For an object source, `baseUrl` is
 required and supplies the HTTP(S) artifact origin root. A URL or string source
 must be an absolute HTTP(S) URL; its validated final response URL establishes
 that root, and `baseUrl` is invalid for it. Do not resolve artifact paths
 relative to the embedding application. The viewer validates every index as
-[read model v8](./mokly-catalogue.md) before it renders.
+[read model v9](./mokly-catalogue.md) before it renders.
 
-`detail` supplies the entry detail v3 of one entry. The viewer calls it with the
+`detail` supplies the entry detail v4 of one entry. The viewer calls it with the
 entry path, plus the `snapshotId` of a removed record, when it commits a
 selection whose detail it does not hold. For a current component variant, the
 viewer also calls `detail` with the parent's path and no `snapshotId` when it
@@ -134,15 +56,25 @@ request. The stage, Props, and Usage wait for all route details under the
 The result is a detail object, a URL on
 the artifact origin root, or a promise of either. A URL is fetched under the
 fetch rules of the shell delivery contract: same origin, `credentials: "omit"`,
-no redirect outside the origin. A detail is accepted only under the fences of
-that contract: `identity`, `deploymentId`, and `revision` equal to the installed
-index for a current entry, and `generation` and `snapshotId` equal to the
-index's record for a removed entry. On a revision mismatch the viewer requests
-the index again once; a detail that still disagrees leaves the entry unavailable
-with a retry control. A different `deploymentId` emits one `onError` and keeps
-the installed state and the loading stage until the host replaces `index`. A
-detail that a newer selection does not need is discarded. Sources are
-host-supplied transports, not permission for viewer telemetry. A fetch failure
+no redirect outside the origin. A static viewer also reads
+`mokly-viewer/deployment.json` at the catalogue origin root with each detail
+request of an in-shell navigation and before a comparison or removed-entry
+request when it fetched the index from a URL. An object index does not request
+the file. It does not request the file on the first load. The standalone shell
+keeps the same check for static catalogues.
+The viewer accepts a current detail only when its `revision`, then its
+`detailId`, then its identity and content fields match the installed index. It
+accepts a removed detail only when its identity, path record, `snapshotId`, and
+`detailId` match the index. On a revision mismatch, the embedded viewer
+requests the index once. If the revision still disagrees after that request,
+the entry is unavailable with retry. A deployment file with another
+`deploymentId`, or a current detail whose `detailId` differs from the index at
+the same revision, emits one `onError` and keeps the installed state and
+loading stage. A detail whose identity or other content fields do not match
+leaves the entry unavailable with retry. A missing or unreadable deployment file
+changes nothing. Serve viewers do not request it. A detail that arrives after
+the selection moved on, or that a newer selection does not need, is discarded.
+Sources are host-supplied transports, not permission for viewer telemetry. A fetch failure
 renders an explicit error and retry state and emits `onError`. A version failure
 shows the headline of the [version contract](./mokly-viewer-namespace.md)
 without an action and emits `onError` with `code: "version"`, the headline, and
@@ -209,11 +141,26 @@ values under the [appearance contract](./mokly-viewer-appearance.md).
 
 Import `@mokly/viewer/styles.css` once. Its public accent surface and internal
 ownership follow the [shell design](./mokly-shell-design.md) and
-[brand contract](./mokly-shell-brand.md). Scoped styles exclude the host page
-and slot content; do not inject host CSS into frames. The host must give the
-viewer's containing element a definite height. The viewer fills that height,
-clips its outer shell and owns scrolling within the stage and other bounded
-shell regions; the embedding document must not be the stage scroll container.
+[brand contract](./mokly-shell-brand.md).
+
+Every rule of `styles.css` comes from the
+[shared UI package](./mokly-ui-package.md#stylesheets), apart from the
+`@font-face` rule of the shell font. The rules are unlayered, so a host rule
+competes with them by specificity and order. Decision: unlayered rules, not a
+cascade layer, because a host reset or a host layer declared later would
+otherwise restyle the package components, and one cascade then serves hosts,
+direct users of the package, and the design mockups.
+
+The rules exclude the host page and slot content without an `@scope` rule,
+under the [theme rules](./mokly-ui-package.md#theme-and-host-pages) of the
+package. Decision: no `@scope` rule, because a browser without `@scope`
+support drops the whole block and shows an unstyled viewer. Do not inject host
+CSS into frames.
+
+The host must give the viewer's containing element a definite height. The
+viewer fills that height, clips its outer shell and owns scrolling within the
+stage and other bounded shell regions; the embedding document must not be the
+stage scroll container.
 
 ## Shell Tree And State
 

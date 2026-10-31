@@ -1,5 +1,7 @@
 # Inspector Handshake And Wire Protocol
 
+Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
+
 This continues the [viewer frame adapter contract](./mokly-frame-adapter.md).
 It defines how `postMessageAdapter` mounts a frame on a separate origin and
 exchanges messages with the in-frame inspector.
@@ -33,8 +35,8 @@ accepts replies only when `event.source === frame.contentWindow`,
 `event.origin === frameOrigin`, and channel, version and nonce match its active
 mount. Both sides use exact `targetOrigin` for every `postMessage`, never `"*"`.
 No `window.top` or `parent.location` reads/writes occur. The inspector is inert
-without handshake: no overlays, navigation interception, geometry collection or
-outgoing messages. Only its bounded handshake listener exists before activation.
+without handshake: no navigation interception, geometry collection or outgoing
+messages. Only its bounded handshake listener exists before activation.
 
 Ready/requests time out after five seconds, disposing the session without retries.
 Disposal/unload clears all work; a fresh mount loads a new document and nonce.
@@ -109,17 +111,18 @@ ids and the bounded control/navigation metadata above: never consumer text,
 HTML, prop values, source paths, selectors, or arbitrary attributes. Labels come
 from the catalogue in the host, not DOM text. Host validation rejects unknown
 keys even after a valid handshake; the nonce binds a mount, not content honesty.
-The viewer uses the same `geometry` notification and `list` response to refresh
-package labels and host marker placement.
+The viewer uses the same `geometry` notification and `list` response to redraw
+the highlight mask and the package labels and to refresh host marker placement.
 
 ## Published Inspector
 
-Static injection, inert document metadata, overlay isolation, and the script
-budget are defined by the [published inspector contract](./mokly-published-inspector.md).
+Static injection, inert document metadata, the rule that the script draws
+nothing, and the script budget are defined by the
+[published inspector contract](./mokly-published-inspector.md).
 They do not change the handshake, the wire messages, or the same-origin adapter.
 
 ## Related Docs
 
 - [Viewer frame adapter](./mokly-frame-adapter.md)
-- [Published inspector and overlay](./mokly-published-inspector.md)
+- [Published inspector](./mokly-published-inspector.md)
 - [Frame link navigation](./mokly-frame-link-navigation.md)

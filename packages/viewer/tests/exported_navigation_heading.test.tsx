@@ -10,7 +10,7 @@ import {
 } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 
-import { indexFixture, shellModelFixture } from "./catalogue_v8_fixture.js";
+import { indexFixture, shellModelFixture } from "./catalogue_v9_fixture.js";
 import { standaloneMarkup } from "./shell_markup.js";
 
 /** The branch name that the export recorded from its comparison. */

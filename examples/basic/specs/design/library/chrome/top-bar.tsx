@@ -17,13 +17,11 @@ import { TopBarView } from "./top-bar.view.js";
 const propSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["placeholder", "menu", "menuPresentation", "tags", "pickerOpen"],
+  required: ["menu", "tags", "pickerOpen"],
   properties: {
     query: text,
-    placeholder: text,
     viewport: { enum: ["mobile", "desktop"] },
     menu: { enum: ["none", "open", "close"] },
-    menuPresentation: { enum: ["text", "icon"] },
     tags: tagRecords,
     activeTag: text,
     appearance: { enum: ["auto", "light", "dark"] },
@@ -36,9 +34,7 @@ const propSchema = {
 } as const;
 export type TopBarProps = LibraryProps<typeof propSchema>;
 const sample = {
-  placeholder: "Search screens…",
   menu: "open",
-  menuPresentation: "text",
   tags: libraryTags,
   pickerOpen: false,
   brandDestination: DESTINATIONS.home,

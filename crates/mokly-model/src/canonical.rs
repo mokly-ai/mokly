@@ -4,9 +4,11 @@
 //! serde_json 1.0.154 uses zmij, which writes `1e+16` where ryu wrote `1e16`.
 
 use std::cmp::Ordering;
+use std::io;
 
 use serde::Serialize;
 use serde_json::Value;
+use sha2::{Digest, Sha256};
 
 use crate::error::{InternalError, ModelError, Result};
 
@@ -48,6 +50,33 @@ pub fn to_string(value: &impl Serialize) -> Result<String> {
         }
         Err(source) => Err(ModelError::Internal(InternalError::Json { source })),
     }
+}
+
+/// Hash a detail's canonical JSON with its id and current revision zeroed.
+pub fn detail_id(value: &impl Serialize) -> Result<String> {
+    let value = match serde_json::to_value(value) {
+        Ok(Value::Object(mut object)) => {
+            object.insert("detailId".into(), Value::String("0".repeat(64)));
+            if object.contains_key("revision") {
+                object.insert("revision".into(), Value::from(0));
+            }
+            Value::Object(object)
+        }
+        Ok(_) => {
+            return Err(ModelError::Internal(InternalError::Json {
+                source: serde_json::Error::io(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "detail must be an object",
+                )),
+            }));
+        }
+        Err(source) => return Err(ModelError::Internal(InternalError::Json { source })),
+    };
+    let bytes = to_string(&value)?.into_bytes();
+    Ok(Sha256::digest(bytes)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect())
 }
 
 #[cfg(test)]
