@@ -85,11 +85,15 @@ function ProfileWorkspace({
   );
 }
 
+/**
+ * Profile and Security render no registered component, so the shell disables
+ * Highlight components with its empty reason.
+ */
 function viewSwitch(viewport: ArtboardViewport) {
   return (
     <ViewSwitch
       active={viewport === "mobile" ? "mobile" : "both"}
-      highlight="available"
+      highlight="empty"
     />
   );
 }
@@ -214,7 +218,7 @@ function MemberChanges({ viewport }: { viewport: ArtboardViewport }) {
           <ViewSwitch
             active="mobile"
             changedViews={SECURITY_VIEWS}
-            highlight="available"
+            highlight="empty"
           />
         }
         comparisonMode="current"

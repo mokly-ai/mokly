@@ -45,3 +45,9 @@
   pointer-events: auto;
   position: absolute;
 }
+
+/* A component canvas dims only its content, as the shell dims the preview and
+   never the caption above it. */
+.ce-canvas-content:has(.ce-single-highlight) {
+  overflow: hidden;
+}

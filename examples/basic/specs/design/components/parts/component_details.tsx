@@ -17,7 +17,7 @@ import { ComponentInfo } from "./component_info.js";
 import { PropsDeliveryState } from "./component_props_delivery.js";
 import { ComponentUsage, UsageDeliveryState } from "./component_usage.js";
 import { CONTROLS_PAGES, INSPECTION_PAGES } from "./destinations.js";
-import { toolbarPrompt } from "./fixtures.js";
+import { toolbarAction, toolbarPrompt } from "./fixtures.js";
 import { Inspector } from "./inspector.js";
 import {
   COMPONENT_ENTRIES,
@@ -52,9 +52,7 @@ function ComponentChildren() {
       <h3>
         Nested components <span>1 instance</span>
       </h3>
-      <MockLink to="design/components/overview">
-        Action · Main action ↗
-      </MockLink>
+      <MockLink to="design/components/overview">{`${toolbarAction} ↗`}</MockLink>
       <p className="ce-muted">1 instance · Default variant</p>
     </section>
   );

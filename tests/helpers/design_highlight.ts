@@ -22,6 +22,7 @@ const COMPARISON = unavailable(
   "A comparison is selected. Highlighting is available in Current.",
 );
 const LOADING = unavailable("Waiting for the component preview.");
+const EMPTY = unavailable("No registered components are used in this view.");
 
 /**
  * The state that the shell shows for the view that each artboard depicts, for
@@ -43,11 +44,13 @@ const SHELL_STATES: Readonly<Record<string, HighlightSwitch>> = {
   "design/browse/appearance/status/error": unavailable(
     "This preview could not be loaded.",
   ),
+  // Profile and Security render no registered component, in Browse and in
+  // Changes.
+  "design/browse/index-entries/screen": EMPTY,
+  "design/browse/index-entries/member-changes": EMPTY,
   // Component pages. Only Toolbar's example renders a registered component.
   "design/components/pages/toolbar": AVAILABLE,
-  "design/components/overview": unavailable(
-    "No registered components are used in this view.",
-  ),
+  "design/components/overview": EMPTY,
   "design/components/pages/comparison": COMPARISON,
   "design/components/states/loading/usage-loading": LOADING,
 };

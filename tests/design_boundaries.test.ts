@@ -111,7 +111,7 @@ const AUDITED_BOUNDARIES = [
   'packages/ui/src/icon-control/icon-control.css .mbk-icon-button[aria-selected="true"], .mbk-icon-button[aria-pressed="true"], .mbk-icon-button:has(> input:checked), details[open] > summary.mbk-icon-button',
   "packages/ui/src/inspector/inspector.css .mbk-sheet-grab:has(> input:focus-visible)",
   "packages/ui/src/prop-field/prop-field.css .mbk-control-field input:focus-visible, .mbk-control-field select:focus-visible",
-  "packages/ui/src/tag-chip/tag-chip.css .mbk-chip.tag:is(a, button).active",
+  "packages/ui/src/tag-chip/tag-chip.css .mbk-chip.tag.active",
   "packages/ui/src/text-button/text-button.css .mbk-text-button:focus-visible",
 ];
 
