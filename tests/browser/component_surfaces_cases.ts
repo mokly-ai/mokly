@@ -30,7 +30,7 @@ export function registerComponentSurfaces(
     );
     const divider = page.locator(".mbk-inspector-resize");
     await expect(divider).toBeVisible();
-    const region = page.locator(".ce-preview-region");
+    const region = page.locator(".mbk-preview-pane");
     const inspector = page.locator(".mbk-inspector");
     const before = (await inspector.boundingBox())!;
     const grip = (await divider.boundingBox())!;
@@ -46,7 +46,7 @@ export function registerComponentSurfaces(
       before.y + 0.5,
       0,
     );
-    const shell = (await page.locator(".ce-workspace").boundingBox())!;
+    const shell = (await page.locator(".mbk-workspace-panes").boundingBox())!;
     expect(grip.x + grip.width / 2).toBeCloseTo(shell.x + shell.width / 2, 0);
     await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
     await page.mouse.down();
@@ -66,9 +66,10 @@ export function registerComponentSurfaces(
     expect(await region.boundingBox()).toEqual(resized);
     await expect(page.locator(".ce-preview-pane")).toHaveCSS("resize", "none");
     await page.setViewportSize({ width: 1440, height: 600 });
-    const smaller = (await page.locator(".ce-workspace").boundingBox())!;
+    const smaller = (await page.locator(".mbk-workspace-panes").boundingBox())!;
     const bounded = (await region.boundingBox())!;
-    expect(bounded.height).toBeGreaterThanOrEqual(96);
+    // The shipped preview pane keeps 100px, as the shell's does.
+    expect(bounded.height).toBeGreaterThanOrEqual(100);
     expect(bounded.height).toBeLessThanOrEqual(smaller.height - 120);
     const nextGrip = (await divider.boundingBox())!;
     const x = nextGrip.x + nextGrip.width / 2;
@@ -77,7 +78,7 @@ export function registerComponentSurfaces(
     await page.mouse.down();
     await page.mouse.move(x, smaller.y + 20, { steps: 10 });
     await page.mouse.up();
-    expect((await region.boundingBox())!.height).toBe(96);
+    expect((await region.boundingBox())!.height).toBe(100);
   });
 
   test.describe("mobile inspector sheet", () => {
@@ -95,7 +96,9 @@ export function registerComponentSurfaces(
       const dock = page.locator(".ce-inspector-dock");
       const inspector = page.locator(".mbk-inspector");
       const preview = page.locator(".ce-preview-pane");
-      const workspace = (await page.locator(".ce-workspace").boundingBox())!;
+      const workspace = (await page
+        .locator(".mbk-workspace-panes")
+        .boundingBox())!;
       const toggle = page.getByRole("switch", { name: "Expanded inspector" });
       await expect(toggle).toBeVisible();
       const previewBounds = (await preview.boundingBox())!;

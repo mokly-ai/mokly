@@ -2,17 +2,25 @@
  * The highlight mask: a dimmed layer over a preview with a cutout and an
  * outline for each highlighted box, drawn as an SVG mask. Boxes that overlap
  * cut out one area, so their shared pixels never dim. The host measures the
- * boxes in the coordinates of the drawn area.
+ * boxes in the coordinates of the drawn area. A static depiction that cannot
+ * measure gives SVG lengths instead, which the drawing resolves against its
+ * area.
  */
 
 import { useId } from "react";
 
-/** One highlighted box, in pixels from the top left corner of the area. */
+/**
+ * A length of the drawing: pixels, or, in a static depiction, an SVG length
+ * such as `100%` or `calc(100% - 48px)`.
+ */
+export type HighlightLength = number | string;
+
+/** One highlighted box, from the top left corner of the area. */
 export interface HighlightBox {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+  x: HighlightLength;
+  y: HighlightLength;
+  width: HighlightLength;
+  height: HighlightLength;
 }
 
 /** The host's visible frame box, in viewport or shell-root coordinates. */
@@ -39,8 +47,8 @@ export function HighlightMask({
 }: {
   /** The highlighted boxes, in their drawing order. */
   boxes: readonly HighlightBox[];
-  /** The height of the dimmed area, in pixels. */
-  height: number;
+  /** The height of the dimmed area. */
+  height: HighlightLength;
   /**
    * The id of the mask element, which must be unique in the document. Without
    * it, the mask takes an id from React's `useId`.
@@ -48,8 +56,8 @@ export function HighlightMask({
   id?: string | undefined;
   /** Wrap the mask in a clipped, pointer-transparent frame layer. */
   placement?: HighlightMaskPlacement | undefined;
-  /** The width of the dimmed area, in pixels. */
-  width: number;
+  /** The width of the dimmed area. */
+  width: HighlightLength;
 }) {
   const generated = maskId(useId());
   const mask = id ?? generated;

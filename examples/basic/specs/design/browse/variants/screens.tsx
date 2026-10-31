@@ -51,22 +51,25 @@ function SelectedVariant({ viewport }: { viewport: ArtboardViewport }) {
         ) : null
       }
     >
-      <ScreenHead
-        action={
-          <ViewSwitch
-            active={viewport === "mobile" ? "mobile" : "both"}
-            highlight="available"
+      <ExampleWorkspace
+        empty
+        header={
+          <ScreenHead
+            action={
+              <ViewSwitch active={viewport === "mobile" ? "mobile" : "both"} />
+            }
+            crumbs={[
+              EXAMPLE_CRUMB,
+              "Screens",
+              { label: "Welcome", to: DESTINATIONS.welcome },
+            ]}
+            path={ENTRY_PATHS.welcomeEmpty}
+            title="Empty workspace"
           />
         }
-        crumbs={[
-          EXAMPLE_CRUMB,
-          "Screens",
-          { label: "Welcome", to: DESTINATIONS.welcome },
-        ]}
-        path={ENTRY_PATHS.welcomeEmpty}
-        title="Empty workspace"
+        subject="welcome"
+        viewport={viewport}
       />
-      <ExampleWorkspace empty subject="welcome" viewport={viewport} />
     </Shell>
   );
 }
@@ -87,18 +90,20 @@ function ChangedVariant({ viewport }: { viewport: ArtboardViewport }) {
         ) : null
       }
     >
-      <ScreenHead
-        comparisons
-        action={<ViewSwitch active={viewport} highlight="available" />}
-        comparisonMode="current"
-        crumbs={VARIANT_CRUMBS}
-        path={ENTRY_PATHS.welcomeError}
-        status="changed"
-        title="Save failed"
-      />
       <ExampleWorkspace
         comparisonEvidence={{ reasons: reasonEvidence(["material"]) }}
         error
+        header={
+          <ScreenHead
+            comparisons
+            action={<ViewSwitch active={viewport} />}
+            comparisonMode="current"
+            crumbs={VARIANT_CRUMBS}
+            path={ENTRY_PATHS.welcomeError}
+            status="changed"
+            title="Save failed"
+          />
+        }
         subject="welcome"
         viewport={viewport}
       />
@@ -123,20 +128,16 @@ function ChangedViews({ viewport }: { viewport: ArtboardViewport }) {
         ) : null
       }
     >
-      <ScreenHead
-        action={
-          <ViewSwitch
-            active={viewport}
-            changedViews={DARK_VIEWS}
-            highlight="available"
+      <ExampleWorkspace
+        header={
+          <ScreenHead
+            action={<ViewSwitch active={viewport} changedViews={DARK_VIEWS} />}
+            crumbs={["Example", "Screens"]}
+            path={ENTRY_PATHS.welcome}
+            status="unmodified"
+            title="Welcome"
           />
         }
-        crumbs={["Example", "Screens"]}
-        path={ENTRY_PATHS.welcome}
-        status="unmodified"
-        title="Welcome"
-      />
-      <ExampleWorkspace
         changedViews={
           <MockLink to={DESTINATIONS.changed}>
             Mobile · Dark, Desktop · Dark

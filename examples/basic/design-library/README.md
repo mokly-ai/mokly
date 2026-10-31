@@ -32,6 +32,11 @@ CSS merely because another variant uses chips.
 
 Keep component selectors in its declared stylesheet. Tokens, resets, mixed
 selectors and cross-component layout/state rules stay in the shared design CSS.
+The shared design CSS also imports the package stylesheets of the parts that
+the artboard scaffolds render in every family: `design.css` imports the theme
+and the reset class first, `design-component-workspace.css` the shell and
+workspace layouts after the component sheets, as the package's `styles.css`
+orders them, and `design-stage.css` the highlight's labels and mask.
 Keep shared host resets at zero specificity so component styles render
 identically in standalone samples and in-screen compositions.
 Declared sheets reload automatically in Serve, including after an edit.

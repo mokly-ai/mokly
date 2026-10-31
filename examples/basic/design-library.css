@@ -1,7 +1,11 @@
-/* Standalone design samples: tokens and room for the same component markup. */
+/* Standalone design samples: tokens and room for the same component markup.
+   A sample's root carries the shell root's class for its theme, and it keeps
+   the page's flow instead of the shell's full-height column. */
 .mbk-library {
+  display: block;
   font-family: var(--sans);
   font-size: 13px;
+  height: auto;
   padding: 24px;
 }
 .mbk-library-host {

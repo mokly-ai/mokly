@@ -58,7 +58,7 @@ export function registerDesignLibrary(
         await page.goto(fileUrl(viewRoute(entry.path, viewport, "light")));
         await expect(page.locator(".mbk-library-host")).toBeVisible();
         for (const panel of await page
-          .locator(".ce-workspace details[open] > .mbk-inspector-content")
+          .locator(".mbk-workspace details[open] > .mbk-inspector-content")
           .all()) {
           await expect(panel).toHaveCSS("overflow-y", "auto");
         }
@@ -249,7 +249,7 @@ export function registerDesignLibrary(
       if (entry?.kind !== "component" || !("variantOf" in entry))
         throw new Error("Missing footer panel");
       await page.goto(fileUrl(viewRoute(entry.path, "mobile", "light")));
-      const workspace = page.locator(".ce-workspace");
+      const workspace = page.locator(".mbk-workspace-panes");
       const dock = page.locator(".ce-inspector-dock");
       const inspector = page.locator(".mbk-inspector");
       const [workspaceBounds, dockBounds] = await Promise.all([

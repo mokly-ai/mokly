@@ -40,7 +40,7 @@ export function registerComponentDesign(
           ).toHaveCount(1);
           await expect(page.locator(".mbk-screen-head h2")).toBeVisible();
           for (const panel of await page
-            .locator(".ce-workspace details[open] > .mbk-inspector-content")
+            .locator(".mbk-workspace details[open] > .mbk-inspector-content")
             .all()) {
             await expect(
               panel,

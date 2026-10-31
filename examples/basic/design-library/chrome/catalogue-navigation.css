@@ -8,15 +8,9 @@
   display: contents;
 }
 
-/* A static artboard has no shell root to mark the column ready, so the frame
-   stands in for it: a resizable column shows its separator. */
-.mbk-nav-frame > .mbk-nav[data-resize-ready] .mbk-nav-resize {
-  display: block;
-}
-
 /* The drawer flag draws the open drawer at every width. Below its breakpoint
-   the package stylesheet draws the drawer on its own and the shell root opens
-   it; a static artboard has no shell root, so the flag opens it. */
+   the package stylesheet draws the drawer on its own and opens it from the
+   shell root, as the shell does. */
 .mbk-nav-frame[data-drawer] > .mbk-nav {
   position: absolute;
   top: 48px;

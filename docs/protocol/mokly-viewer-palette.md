@@ -176,6 +176,9 @@ surfaces, ink and status indicators.
 | `--mbk-screen-border`      | `#e3e5e0`     | 12% ink mixed into the dark surface |
 | `--mbk-screen-link`        | `#4f7864`     | `#7fae95`                           |
 | `--mbk-screen-link-strong` | `#2f5945`     | `#a4c9b3`                           |
+| `--mbk-screen-danger-bg`   | `#fdf1ef`     | `#fdf1ef`                           |
+| `--mbk-screen-danger-edge` | `#e7c3bb`     | `#e7c3bb`                           |
+| `--mbk-screen-danger-ink`  | `#8a3423`     | `#8a3423`                           |
 
 These values are the authored fragment's own colors, not the viewer interface.
 Each device screen also sets its own CSS `color-scheme`, so native controls and
@@ -213,20 +216,19 @@ the interface, so they stay Light in both appearances, exactly as the preview
 tokens above do. A stylesheet that needs one of these reads the token rather
 than repeating its value.
 
-| Role             | Both appearances   |
-| ---------------- | ------------------ |
-| `--ce-surface`   | `white`            |
-| `--ce-text`      | `#252e28`          |
-| `--ce-secondary` | `#647068`          |
-| `--ce-soft`      | `#f3f6f3`          |
-| `--ce-edge`      | `#dce5de`          |
-| `--ce-mask`      | `var(--chrome-bg)` |
+| Role             | Both appearances |
+| ---------------- | ---------------- |
+| `--ce-surface`   | `white`          |
+| `--ce-text`      | `#252e28`        |
+| `--ce-secondary` | `#647068`        |
+| `--ce-soft`      | `#f3f6f3`        |
+| `--ce-edge`      | `#dce5de`        |
 
-`--ce-mask` is the exception: the highlight scrim covers the catalogue around a
-depicted component rather than the component itself, so it follows the interface
-background. The explorer's own artboards render in Light only, so these roles
-have no Dark counterpart; a dark component canvas would need this table extended
-before those artboards could publish a dark render.
+The explorer's own artboards render in Light only, so these roles have no Dark
+counterpart; a dark component canvas would need this table extended before
+those artboards could publish a dark render. The explorer highlights a depicted
+component with the shell's highlight mask, in the two highlight roles of the
+preview tokens.
 
 ## Related Docs
 

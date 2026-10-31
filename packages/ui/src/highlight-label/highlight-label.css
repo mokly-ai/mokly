@@ -12,6 +12,16 @@
   background: var(--mbk-accent-deep);
   color: var(--_mokly-private-on-accent-deep);
   padding: 3px 7px;
-  font: 11px var(--sans);
+  font: 11px/13px var(--sans);
+}
+
+/* The button, and the link of a static depiction, show the pointer. The
+   picture of a static depiction acts on nothing, so it keeps the arrow. */
+.mbk-highlight-label:is(a, button) {
   cursor: pointer;
+}
+
+/* The link of a static depiction keeps the button's look. */
+a.mbk-highlight-label {
+  text-decoration: none;
 }

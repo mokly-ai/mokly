@@ -212,6 +212,14 @@ without an `href` as a picture of itself. A `VariantBar` variant without an
 `href` is a picture of its link that keeps the link's look and its current
 mark.
 
+A static mockup cannot measure its preview, so it gives `HighlightMask` its
+width, its height, and its boxes as SVG lengths, such as `100%` or
+`calc(100% - 48px)`, which the drawing resolves against its area, and it gives
+`HighlightLabel` its place as CSS lengths. `HighlightLabel` with an `href` is a
+link with the label's look, which `current` marks as the current page, and
+`interactive={false}` draws a label without an address as a picture of itself
+that keeps the arrow.
+
 ## Development
 
 From the repository root, `npm run build` builds this package before the
@@ -397,7 +405,8 @@ override the desktop layout rules.
   inspector
 - [`src/highlight-label/highlight-label.tsx`](./src/highlight-label/highlight-label.tsx)
   — `LabelLayer` and `HighlightLabel`: the layer and the labels of
-  highlighted instances
+  highlighted instances, as buttons or as the links and pictures of a static
+  depiction
 - [`src/highlight-mask/highlight-mask.tsx`](./src/highlight-mask/highlight-mask.tsx)
   — `HighlightMask`: the dimmed layer with a cutout and an outline for each
   box, as an SVG mask

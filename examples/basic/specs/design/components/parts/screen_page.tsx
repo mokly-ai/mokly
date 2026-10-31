@@ -1,17 +1,19 @@
 import type { ReactNode } from "react";
 
 import { ComparisonStage } from "../../parts/compare.js";
+import type { DepictedView } from "../../parts/depicted_view.js";
 import type { ComparisonMode } from "../../parts/destinations.js";
 import { EXAMPLE_CRUMB } from "../../parts/entry_paths.js";
 import { PreviousVersionStage } from "../../parts/removed_preview.js";
-import {
-  ScreenHead,
-  type ArtboardViewport,
-  type HighlightState,
-} from "../../parts/shell.js";
+import { ScreenHead, type ArtboardViewport } from "../../parts/shell.js";
 
 import { screenComparison } from "./comparison_fixtures.js";
 import { INSPECTION_PAGES } from "./destinations.js";
+import {
+  CONSUMER_REGIONS,
+  NESTED_REGIONS,
+  WELCOME_REGIONS,
+} from "./explorer_regions.js";
 import type { PropsLimit } from "./limit.js";
 import { SCREENS, screenIdentity } from "./metadata.js";
 import { ExplorerShell } from "./navigation.js";
@@ -25,20 +27,31 @@ import { ViewControls } from "./view_controls.js";
 import { PreviewWorkspace } from "./workspace.js";
 
 /**
- * The Highlight components state that the shell shows for a consuming screen.
+ * The depicted view of a consuming screen: the Highlight components state
+ * that the shell shows for it, and the regions that its preview highlights.
  * Every mode but Current is a comparison, which cannot highlight, and a
  * removed screen has no current preview. The inspection states give their
- * own reason, and the highlight states turn it on.
+ * own reason, and the highlight states turn it on. Details highlights its
+ * single Action, a nested selection the Toolbar's Action, and the other
+ * states Welcome's own instances.
  */
-function screenHighlight(
+function screenView(
   state: ScreenPageState,
   mode: ComparisonMode,
-): HighlightState {
-  if (mode !== "current") return "comparison";
-  if (state === "removed-consumer") return "removed";
-  if (state === "inspection-loading") return "loading";
-  if (state === "unavailable" || state === "empty") return state;
-  return state === "highlight" || state === "nested" ? "on" : "available";
+): DepictedView {
+  if (mode !== "current") return { highlight: "comparison" };
+  if (state === "removed-consumer") return { highlight: "removed" };
+  if (state === "inspection-loading") return { highlight: "loading" };
+  if (state === "unavailable" || state === "empty") return { highlight: state };
+  return {
+    highlight: state === "highlight" || state === "nested" ? "on" : "available",
+    regions:
+      state === "consumer"
+        ? CONSUMER_REGIONS
+        : state === "nested"
+          ? NESTED_REGIONS
+          : WELCOME_REGIONS,
+  };
 }
 
 /**
@@ -78,7 +91,7 @@ export function ScreenPage({
     ) : removed ? (
       <PreviousVersionStage
         entry={{ kind: "screen", path, title }}
-        viewport={viewport}
+        viewport="both"
       >
         {previews}
       </PreviousVersionStage>
@@ -92,22 +105,19 @@ export function ScreenPage({
       scenario={scenario}
       viewport={viewport}
     >
-      <ScreenHead
-        accessibleControls
-        title={title}
-        crumbs={[scenario === "all" ? EXAMPLE_CRUMB : "Example", "Screens"]}
-        path={path}
-        comparisonMode={comparisonMode}
-        comparisons={comparison?.status === "changed" || affected}
-        status={comparison?.status ?? "unmodified"}
-        action={
-          <ViewControls
-            viewport={viewport}
-            highlight={screenHighlight(state, comparisonMode)}
+      <PreviewWorkspace
+        header={
+          <ScreenHead
+            accessibleControls
+            title={title}
+            crumbs={[scenario === "all" ? EXAMPLE_CRUMB : "Example", "Screens"]}
+            path={path}
+            comparisonMode={comparisonMode}
+            comparisons={comparison?.status === "changed" || affected}
+            status={comparison?.status ?? "unmodified"}
+            action={<ViewControls viewport={viewport} />}
           />
         }
-      />
-      <PreviewWorkspace
         inspector={
           <ScreenDetails
             props={limit?.panel}
@@ -115,6 +125,7 @@ export function ScreenPage({
             viewport={viewport}
           />
         }
+        view={screenView(state, comparisonMode)}
         viewport={viewport}
         render={(previewViewport) =>
           affected ? (

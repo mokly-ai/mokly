@@ -11,9 +11,7 @@ import { ScreenHead, Shell, ViewSwitch } from "../../parts/shell.js";
 function DetailsHead({ mobile = false }: { mobile?: boolean }) {
   return (
     <ScreenHead
-      action={
-        <ViewSwitch active={mobile ? "mobile" : "both"} highlight="available" />
-      }
+      action={<ViewSwitch active={mobile ? "mobile" : "both"} />}
       crumbs={SCREEN_CRUMBS}
       path={ENTRY_PATHS.details}
       title="Details"
@@ -29,8 +27,11 @@ export function DetailsScreenDesktop() {
       viewport="desktop"
       nav={<NavTree activeLabel="Details" />}
     >
-      <DetailsHead />
-      <SchemeWorkspace subject="details" viewport="desktop" />
+      <SchemeWorkspace
+        header={<DetailsHead />}
+        subject="details"
+        viewport="desktop"
+      />
     </Shell>
   );
 }
@@ -39,8 +40,11 @@ export function DetailsScreenDesktop() {
 export function DetailsScreenMobile() {
   return (
     <Shell design={DESTINATIONS.details} viewport="mobile" nav={null}>
-      <DetailsHead mobile />
-      <SchemeWorkspace subject="details" viewport="mobile" />
+      <SchemeWorkspace
+        header={<DetailsHead mobile />}
+        subject="details"
+        viewport="mobile"
+      />
     </Shell>
   );
 }

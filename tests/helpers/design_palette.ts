@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import type { ColorReference } from "./design_styles.js";
+import { designStyleRules, type ColorReference } from "./design_styles.js";
 import { repositoryRoot } from "./fixture.js";
 
 /** The two interface palettes the design mockups select between. */
@@ -56,6 +56,25 @@ export async function designPreviewTokens(): Promise<Map<string, string>> {
   const block = PREVIEW_BLOCK.exec(source)?.[1];
   if (!block) throw new Error("design-stage.css is missing its preview tokens");
   return readTokens(block);
+}
+
+/** The shipped theme of `@mokly/ui`, by its repository path. */
+export const SHIPPED_THEME = "packages/ui/src/theme/theme.css";
+
+/**
+ * The tokens that the shipped theme declares on the viewer root class, which
+ * every artboard's and sample's root carries, when a design stylesheet
+ * imports the theme: its Light half, which the Dark half redeclares.
+ */
+export async function designThemeTokens(): Promise<Map<string, string>> {
+  const tokens = new Map<string, string>();
+  for (const rule of await designStyleRules())
+    if (rule.file === SHIPPED_THEME && rule.selector === ".mbk, .mbk-document")
+      for (const [, name, value] of rule.body.matchAll(
+        /(--[\w-]+)\s*:\s*([^;]+);/gu,
+      ))
+        tokens.set(name!, value!.replace(/\s+/gu, " ").trim());
+  return tokens;
 }
 
 function channel(value: number): number {

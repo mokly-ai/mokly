@@ -7,6 +7,8 @@ import {
   contrast,
   designPalette,
   designPreviewTokens,
+  designThemeTokens,
+  SHIPPED_THEME,
 } from "./helpers/design_palette.js";
 import { designStyleRules } from "./helpers/design_styles.js";
 import { repositoryRoot } from "./helpers/fixture.js";
@@ -162,13 +164,21 @@ const COMPONENT_PARAMETERS = new Map([
   ],
 ]);
 
+test("the design stylesheets import the shipped theme and the reset class that every @mokly/ui component reads", async () => {
+  const imported = new Set((await designStyleRules()).map((rule) => rule.file));
+  for (const file of [SHIPPED_THEME, "packages/ui/src/reset/reset.css"])
+    assert.ok(imported.has(file), `no design stylesheet imports ${file}`);
+});
+
 test("the design palettes declare every token that a @mokly/ui stylesheet reads", async () => {
   // The root block of the interface palette declares each of its tokens, and
   // the same-roles test above holds the dark block to the same roles. The
-  // preview tokens of the stage stylesheet declare the device colours.
+  // preview tokens of the stage stylesheet declare the device colours, and
+  // the shipped theme declares its own tokens on every artboard's root.
   const declared = new Map([
     ...(await designPalette()).light,
     ...(await designPreviewTokens()),
+    ...(await designThemeTokens()),
   ]);
   const files = new Set<string>();
   const missing: string[] = [];

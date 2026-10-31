@@ -30,6 +30,11 @@ export function PreviousVersionStage({
   children: ReactNode;
   entry: PreviousEntry;
   lightOnly?: boolean | undefined;
+  /**
+   * The viewport that the host shows. A workspace's previews pass `both`:
+   * its native viewport select shows and hides them without a script, which
+   * the host's own viewport would override.
+   */
   viewport: "both" | "desktop" | "mobile";
 }) {
   return (

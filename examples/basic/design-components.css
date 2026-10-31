@@ -6,8 +6,8 @@
    keep the look of their package stylesheets, as the shipped shell draws
    them: the brand, the catalogue rows, the crumbs, the menu, the comparison
    modes, the Usage rows, the instance tree, the selected instance's component
-   link, Reset, the text buttons, the variants, an empty state's action, and a
-   flow step's screen. */
+   link, Reset, the text buttons, the variants, an empty state's action, a
+   flow step's screen, and a highlight label. */
 .ce-design
   a:where(
     :not(
@@ -23,7 +23,8 @@
       .mbk-text-button,
       .mbk-selection-bar > a,
       .mbk-empty-link,
-      .flow-step-link
+      .flow-step-link,
+      .mbk-highlight-label
     )
   ) {
   color: var(--mbk-sage-deep);
@@ -44,7 +45,8 @@
       .mbk-text-button,
       .mbk-selection-bar > a,
       .mbk-empty-link,
-      .flow-step-link
+      .flow-step-link,
+      .mbk-highlight-label
     )
   ):hover {
   text-decoration: underline;
@@ -81,6 +83,10 @@
 /* A depicted component document fills its canvas or the viewport of its
    comparison frame, and draws the component 24px from its top left, as the
    example's documents do in the shell. */
+/* A canvas that the depicted view highlights holds the highlight's layer. */
+.ce-canvas-content:has(> .ce-highlight-layer) {
+  position: relative;
+}
 .ce-canvas-content {
   align-items: flex-start;
   display: flex;
@@ -123,6 +129,13 @@
   min-height: 82px;
   padding: 16px;
   width: 100%;
+}
+/* The Toolbar's Action keeps one width, so its highlight region is a fixed
+   box wherever the Toolbar is drawn. */
+.ce-toolbar-example .ce-action {
+  flex: 0 0 104px;
+  padding: 0 10px;
+  width: 104px;
 }
 .ce-toolbar-example > span {
   max-width: 170px;

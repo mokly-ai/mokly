@@ -64,6 +64,17 @@ export function RemovedScreen({
       open
     />
   );
+  const header = (
+    <ScreenHead
+      action={<ViewSwitch active={shown} />}
+      crumbs={["Example", "Screens"]}
+      path={entry.path}
+      status="removed"
+      title={entry.title}
+    />
+  );
+  // A removed screen has no current preview to inspect.
+  const view = { highlight: "removed" } as const;
   return (
     <Shell
       design={entry.design}
@@ -74,27 +85,21 @@ export function RemovedScreen({
         ) : null
       }
     >
-      <ScreenHead
-        // A removed screen has no current preview to inspect.
-        action={<ViewSwitch active={shown} highlight="removed" />}
-        crumbs={["Example", "Screens"]}
-        path={entry.path}
-        status="removed"
-        title={entry.title}
-      />
       {state ? (
-        <InspectorWorkspace inspector={inspector}>
-          <PreviousVersionStage entry={previous} viewport={shown}>
+        <InspectorWorkspace header={header} inspector={inspector} view={view}>
+          <PreviousVersionStage entry={previous} viewport="both">
             {state}
           </PreviousVersionStage>
         </InspectorWorkspace>
       ) : (
         <PreviewWorkspace
+          header={header}
           inspector={inspector}
+          view={view}
           viewport={shown}
           render={(previewViewport) => preview?.(previewViewport)}
           wrap={(previews) => (
-            <PreviousVersionStage entry={previous} viewport={shown}>
+            <PreviousVersionStage entry={previous} viewport="both">
               {previews}
             </PreviousVersionStage>
           )}

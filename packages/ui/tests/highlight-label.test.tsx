@@ -74,6 +74,44 @@ test("a host inspection's label names its label and states its pointer events", 
   );
 });
 
+test("a static depiction's label with an address is a link, and the link to the shown page is the current page", () => {
+  assert.equal(
+    renderToString(
+      <>
+        <HighlightLabel
+          current
+          href="#nested"
+          left="calc(100% - 145px)"
+          text="Action · Toolbar action"
+          top={77}
+        />
+        <HighlightLabel
+          href="#details"
+          left={24}
+          text="Action · Footer action"
+          top={236}
+        />
+      </>,
+    ),
+    '<a aria-current="page" class="mbk-highlight-label mbk-reset" href="#nested" style="left:calc(100% - 145px);top:77px">Action · Toolbar action</a>' +
+      '<a class="mbk-highlight-label mbk-reset" href="#details" style="left:24px;top:236px">Action · Footer action</a>',
+  );
+});
+
+test("a static depiction's label without an address is a picture of itself", () => {
+  assert.equal(
+    renderToString(
+      <HighlightLabel
+        interactive={false}
+        left={20}
+        text="Toolbar · toolbar"
+        top="calc(50% - 22px)"
+      />,
+    ),
+    '<span class="mbk-highlight-label mbk-reset" style="left:20px;top:calc(50% - 22px)">Toolbar · toolbar</span>',
+  );
+});
+
 test("each press of a label selects its instance", () => {
   let presses = 0;
   render(

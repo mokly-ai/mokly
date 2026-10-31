@@ -1273,25 +1273,44 @@ Depends on: 18
 Decision 2 B. The layout slice has no inventory component, but the
 artboards draw its parts with their own scaffolds.
 
-- [ ] The artboard scaffolds `specs/design/parts/shell.tsx` and
+- [x] The artboard scaffolds `specs/design/parts/shell.tsx` and
       `specs/design/components/parts/workspace.tsx` render the package
       layout components, and the artboard mask
       `specs/design/components/parts/highlight.tsx` renders the package mask,
       with the comparison and the findings step of milestone 4.
-- [ ] The design library's sheets import the `theme` and `mbk-reset`
+- [x] The design library's sheets import the `theme` and `mbk-reset`
       stylesheets where a package component needs them.
-- [ ] The artboard "Details" draws its own clipped scrim in
+- [x] The artboard "Details" draws its own clipped scrim in
       `specs/design/components/parts/screen_preview.tsx`, and
       `docs/protocol/mokly-component-design.md` says "Details uses a clipped
       scrim". When the scrim depicts the highlight mask, render the package
       mask and align the doc. Found by milestone 1 on 2026-10-30.
-- [ ] Decision 6: the Browse and Changes artboards that draw an enabled
+- [x] Decision 6: the Browse and Changes artboards that draw an enabled
       Highlight components switch depict the Action and Toolbar of the real
       Welcome and Details screens, and draw their highlights with the
       package mask. One record per depicted view holds the highlight state
       and the preview's regions, and the header and the preview read it.
       Delete `plans/follow-ups/browse-artboard-highlight-drawing.md`.
-- [ ] Run the mockup check and smoke-test the changed pages.
+- [x] Run the mockup check and smoke-test the changed pages.
+- [x] Done on 2026-10-31 by the ui implementor and checked: the artboard
+      scaffolds render `ShellLayout` and `WorkspaceLayout`, the artboard
+      highlights render `HighlightMask` and `HighlightLabel` from fixed boxes,
+      and the design sheets import the package theme and reset. Under
+      decision 6, one record per depicted view holds the highlight state and
+      the preview's regions, its type requires regions for an enabled switch,
+      and the Browse and Changes sketches depict the Action and Toolbar of
+      the real screens; the scan found an enabled switch without a layer only
+      on the five view-controls samples, which show the control alone. Zero
+      computed-style differences across 166 states before the label change
+      below, 2949 Node tests, 1483 design browser tests, and the repository
+      suite passed. Calls: `HighlightLabel` gains a link form, a picture
+      form, and CSS lengths, and `HighlightMask` takes CSS lengths; under
+      the user's answer to go with the recommended option, the label takes a
+      fixed 13px line height, so it keeps its gap above the outline in every
+      font, which changes the shell's label by about 0.3px. The bare test
+      page of `tests/browser/shell_styles_page.ts` carries the stub document
+      class, which milestone 18's theme reads. Evidence:
+      `.context/ui-package-shell-views/layout-mockups/`.
 
 ## Milestone 20: Last pull request
 

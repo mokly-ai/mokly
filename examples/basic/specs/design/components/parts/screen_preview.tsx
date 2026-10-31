@@ -1,13 +1,10 @@
-import { MockLink } from "@mokly/mokly";
-
 import { CompareGrid, ComparisonView, Pane } from "../../parts/compare.js";
 import { FramedShot } from "../../parts/compare_page.js";
-import { useCurrentPage } from "../../parts/design_navigation.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 import { BrowserFrame, PhoneFrame } from "../../parts/stage.js";
 
 import { footerLabelChange } from "./comparison_fixtures.js";
-import { HighlightMask, type InspectionSelection } from "./highlight.js";
+import { HighlightLayer } from "./highlight.js";
 import { ActionExample, ToolbarExample } from "./preview.js";
 
 export type ScreenPageState =
@@ -27,22 +24,24 @@ export type ScreenPageState =
   | "affected-screen"
   | "screen-props";
 
-/** A single consumer screen reused by Current, inspection, and comparison mockups. */
+/**
+ * A single consumer screen reused by Current, inspection, and comparison
+ * mockups. Its fixed layout draws each instance at the box of its highlight
+ * region, so the depicted view's highlight lies over it.
+ */
 export function WelcomeExample({
   actionBefore = false,
   directChange = false,
-  inert = false,
   outsideAction = false,
-  selection = "off",
+  viewport,
 }: {
   /** Draws every Action that Welcome uses as the branch point renders it. */
   actionBefore?: boolean;
   directChange?: boolean;
-  /** A comparison version: no inspection regions, so it opens nothing. */
-  inert?: boolean;
   /** Welcome's own link that reuses the action's style outside Action. */
   outsideAction?: boolean;
-  selection?: InspectionSelection;
+  /** The viewport whose regions the depicted view's highlight draws. */
+  viewport: ArtboardViewport;
 }) {
   return (
     <div className="ce-welcome-example">
@@ -65,9 +64,7 @@ export function WelcomeExample({
           <span className="ce-action ce-outside-action">Not now</span>
         ) : null}
       </div>
-      {inert ? null : (
-        <HighlightMask selection={selection === "off" ? "outer" : selection} />
-      )}
+      <HighlightLayer viewport={viewport} />
     </div>
   );
 }
@@ -88,12 +85,12 @@ export function AffectedComparison({
       <CompareGrid>
         <Pane side="before">
           <FramedShot address="example.test/welcome" viewport={viewport}>
-            <WelcomeExample actionBefore inert />
+            <WelcomeExample actionBefore viewport={viewport} />
           </FramedShot>
         </Pane>
         <Pane side="after">
           <FramedShot address="example.test/welcome" viewport={viewport}>
-            <WelcomeExample inert />
+            <WelcomeExample viewport={viewport} />
           </FramedShot>
         </Pane>
       </CompareGrid>
@@ -108,25 +105,13 @@ export function ConsumerFrame({
   state: ScreenPageState;
   viewport: ArtboardViewport;
 }) {
-  const current = useCurrentPage();
   const content =
     state === "consumer" ? (
-      <div className="ce-other-example">
+      <div className="ce-other-example ce-consumer-example">
         <h2>Details</h2>
         <p>Everything you need for your next step.</p>
-        <div className="ce-single-action">
-          <ActionExample />
-          <MockLink
-            className="ce-single-highlight ce-highlight-layer"
-            to="design/components/inspection/inspection-consumer"
-            aria-current={current(
-              "design/components/inspection/inspection-consumer",
-            )}
-            aria-label="Inspect Action, Continue"
-          >
-            <span>Action · Continue</span>
-          </MockLink>
-        </div>
+        <ActionExample />
+        <HighlightLayer viewport={viewport} />
       </div>
     ) : state === "empty" || state === "unavailable" ? (
       <div className="ce-other-example">
@@ -143,13 +128,7 @@ export function ConsumerFrame({
       <WelcomeExample
         directChange={state === "direct-change"}
         outsideAction={state === "style-outside"}
-        selection={
-          state === "highlight"
-            ? "outer"
-            : state === "nested"
-              ? "nested"
-              : "off"
-        }
+        viewport={viewport}
       />
     );
   return viewport === "mobile" ? (

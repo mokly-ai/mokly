@@ -5,6 +5,7 @@ import { changesDesignMetadata } from "../../../../metadata.js";
 import { artboards } from "../../../../parts/artboards.js";
 import { DESTINATIONS } from "../../../../parts/destinations.js";
 import { DetailsPanel } from "../../../../parts/details.js";
+import { miniView } from "../../../../parts/mini_views.js";
 import { NavTree } from "../../../../parts/nav.js";
 import { EXCLUDED_STYLE_ROWS } from "../../../../parts/nav_data.js";
 import {
@@ -47,8 +48,8 @@ function ExcludedStyles({ viewport }: { viewport: ArtboardViewport }) {
         />
       }
     >
-      <WelcomeHead active={viewport} changed />
       <PreviewWorkspace
+        header={<WelcomeHead active={viewport} changed />}
         viewport={viewport}
         inspector={
           <DetailsPanel
@@ -57,6 +58,7 @@ function ExcludedStyles({ viewport }: { viewport: ArtboardViewport }) {
             open
           />
         }
+        view={miniView("welcome")}
         render={(previewViewport) => (
           <WelcomeShot viewport={previewViewport} comparison={false} />
         )}
@@ -82,14 +84,16 @@ function ExcludedStylesOnly({ viewport }: { viewport: ArtboardViewport }) {
         />
       }
     >
-      <ScreenHead
-        action={<ViewSwitch active={viewport} highlight="available" />}
-        crumbs={["Example", "Screens"]}
-        path="example/screens/details"
-        status="unmodified"
-        title="Details"
-      />
       <PreviewWorkspace
+        header={
+          <ScreenHead
+            action={<ViewSwitch active={viewport} />}
+            crumbs={["Example", "Screens"]}
+            path="example/screens/details"
+            status="unmodified"
+            title="Details"
+          />
+        }
         viewport={viewport}
         inspector={
           <DetailsPanel
@@ -98,6 +102,7 @@ function ExcludedStylesOnly({ viewport }: { viewport: ArtboardViewport }) {
             open
           />
         }
+        view={miniView("details")}
         render={(previewViewport) => <DetailsShot viewport={previewViewport} />}
       />
     </Shell>

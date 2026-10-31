@@ -258,12 +258,14 @@ test("every control boundary is a readable control edge", async () => {
 /**
  * Sheets that define a palette, where a literal is the definition itself:
  * the interface palette, the preview palette with its fixed device hardware,
- * and the component explorer's scoped palette for depicted content.
+ * the component explorer's scoped palette for depicted content, and the
+ * shipped theme that the package components draw in.
  */
 const PALETTE_SOURCES = new Set([
   "design.css",
   "design-stage.css",
   "design-component-view.css",
+  "packages/ui/src/theme/theme.css",
 ]);
 
 test("no design stylesheet outside a palette source names a colour", async () => {

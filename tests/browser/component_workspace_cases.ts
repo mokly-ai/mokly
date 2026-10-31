@@ -151,8 +151,9 @@ export function registerComponentWorkspace(
           frame!.y + frame!.height,
           0,
         );
+        // The shipped label of the highlighted Action opens its selection.
         await preview
-          .getByRole("link", { name: "Inspect Action, Continue" })
+          .getByRole("link", { name: "Action · Continue" })
           .click({ timeout: 15_000 });
         await expect(page).toHaveURL(
           componentDesignUrl(
