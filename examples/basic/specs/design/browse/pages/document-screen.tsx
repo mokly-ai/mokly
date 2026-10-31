@@ -1,5 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
+import { DetailsBody } from "../../../../../../packages/ui/src/details-panel/details-panel.js";
+import { MetadataCode } from "../../../../../../packages/ui/src/metadata-row/metadata-row.js";
 import { designMetadata } from "../../metadata.js";
 import { artboards } from "../../parts/artboards.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
@@ -15,20 +17,11 @@ import { PaymentTerms } from "../../parts/spec_documents.js";
 function DocumentDetails() {
   return (
     <DetailsPanel open>
-      <div className="mbk-details-body">
-        <div>
-          <p className="mbk-details-desc">
-            When an invoice is due, and what happens once it is late.
-          </p>
-        </div>
-        <div className="mbk-meta">
-          <MetaRow name="source" label="Source">
-            <code className="mbk-code">
-              specs/account/billing/payment-terms.md
-            </code>
-          </MetaRow>
-        </div>
-      </div>
+      <DetailsBody description="When an invoice is due, and what happens once it is late.">
+        <MetaRow name="source" label="Source">
+          <MetadataCode>specs/account/billing/payment-terms.md</MetadataCode>
+        </MetaRow>
+      </DetailsBody>
     </DetailsPanel>
   );
 }

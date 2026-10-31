@@ -125,6 +125,24 @@ enabled where the shell can highlight the view. A comparison, a removed
 screen, a preview that loads or failed, or a view without registered
 components disables it, with the shell's own sentence for that reason.
 
+The inspector, the metadata row and the prop field are the shipped `@mokly/ui`
+components too. A static artboard runs no script, so each inspector tab is a
+native disclosure of one group: a tab opens its panel and closes it again,
+opening a tab closes the others, and the open tab's Close is part of the tab.
+The divider grip is a picture over the workspace's native sizer, and the
+sheet's grabber is a native switch that the dock reads for the expanded
+height. The prop field frames the native control of its slot, and draws an
+optional field's Set check box and Not set line; a scoped rule in its sheet
+reads the check box, so the field's control and Not set swap in place. The
+panels of the artboards render the shipped components as well: the Details
+body, the supplied props and the selected instance's props panel, the Usage
+lists and their loading states, the controls' form with its alerts, and the
+edit status over the preview. The Browse and Changes designs draw the shipped
+comparison evidence inside the approved bordered card. The panels' actions
+link to the artboards that show the outcome. Their stylesheets follow the
+shell's breakpoint, and a mobile render draws the narrow sheet, details body,
+field column and status pill at every width.
+
 ## Authoring
 
 For each component, `{group}/{slug}.tsx` calls `defineComponent` with a
@@ -164,10 +182,11 @@ copying titles or authored order.
 Use explicit semantic `moklyInstance` names for repeated siblings. The
 `DesignInstances` context supplies a stable prefix for simultaneous viewport
 regions. Flow-step names must be independent of destinations or ordering.
-Input ids, label associations and description/error ids belong to the form caller;
-the prop-field component supplies framing and matching description/error nodes,
-including the surface, border and invalid state of whatever native control the
-caller puts in its slot, so a prop panel reads the same in every host.
+Input ids, label associations and the control's description and invalid state
+belong to the form caller; the prop-field component supplies the framing, the
+help and error nodes, whose ids are the input id followed by `-help` and
+`-error`, and the surface, border and invalid state of whatever native control
+the caller puts in its slot, so a prop panel reads the same in every host.
 
 Components may compose registered children. Top bar → Tag picker → Tag chip
 records the full nested ownership chain. Components supplied in a caller's slot

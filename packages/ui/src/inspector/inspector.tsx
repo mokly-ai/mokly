@@ -5,7 +5,8 @@
  * returns focus to the tab that the reader pressed last. A host closes the
  * inspector the same way through the handle, such as on Escape anywhere in
  * its shell. The resize separator and the sheet grab carry the attributes
- * through which the host sizes the inspector.
+ * through which the host sizes the inspector. A static depiction that runs no
+ * script draws each tab as a native disclosure instead.
  */
 
 import {
@@ -18,6 +19,7 @@ import {
 
 import { WorkspaceIcon } from "../icons/icons.js";
 
+import { InspectorDisclosures } from "./inspector-disclosures.js";
 import { onTabKeyDown } from "./tab-keys.js";
 
 /** The tabs of the inspector, each with its glyph. */
@@ -34,6 +36,12 @@ export interface InspectorTab {
   panelId: string;
   /** The panel's content. */
   panel: ReactNode;
+  /**
+   * The address that the tab of a static depiction opens, such as another
+   * document that shows the inspector open or closed. The tab is then a
+   * link, which is its one keyboard stop.
+   */
+  href?: string | undefined;
 }
 
 /** What a host can ask of the inspector that it renders. */
@@ -50,6 +58,8 @@ export interface InspectorHandle {
 export function Inspector({
   active,
   contentId,
+  disclosures = false,
+  expanded = false,
   interactive,
   onOpenChange,
   open,
@@ -60,6 +70,15 @@ export function Inspector({
   active?: string | undefined;
   /** The id of the panels' region, unique in the document. */
   contentId: string;
+  /**
+   * Whether each tab is a native disclosure, for a static depiction that runs
+   * no script. A tab then opens its panel and closes it again by itself, one
+   * tab at a time, and the sheet's grab is a native switch. `contentId` names
+   * the tabs' group.
+   */
+  disclosures?: boolean;
+  /** Whether the sheet of a static depiction starts expanded. */
+  expanded?: boolean;
   /**
    * Whether a script runs, which marks the inspector with its open state for
    * the stylesheet.
@@ -96,6 +115,16 @@ export function Inspector({
     previousTab.current = target;
     onOpenChange?.(!(open && active === id), id);
   };
+  if (disclosures)
+    return (
+      <InspectorDisclosures
+        active={active}
+        contentId={contentId}
+        expanded={expanded}
+        open={open}
+        tabs={tabs}
+      />
+    );
   return (
     <section
       aria-label="Inspector"

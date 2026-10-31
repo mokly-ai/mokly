@@ -17,7 +17,7 @@ import { DetailsPanel } from "./parts/details.js";
 import { ENTRY_PATHS } from "./parts/entry_paths.js";
 import { MiniWelcomeApp } from "./parts/mini_app_shell.js";
 import { MiniWelcome, MiniWelcomePage } from "./parts/mini_screens.js";
-import { ReasonSentences } from "./parts/reason_sentences.js";
+import { reasonEvidence } from "./parts/reason_sentences.js";
 import { ReviewNav } from "./parts/review.js";
 import {
   ScreenHead,
@@ -170,7 +170,7 @@ function ChangesScreen({
         inspector={
           <DetailsPanel
             subject="welcome"
-            comparisonEvidence={<ReasonSentences reasons={["material"]} />}
+            comparisonEvidence={{ reasons: reasonEvidence(["material"]) }}
             open={state === "overlay"}
           />
         }

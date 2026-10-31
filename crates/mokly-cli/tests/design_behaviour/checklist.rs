@@ -98,22 +98,22 @@ pub(crate) fn check() {
                 .collect::<Vec<_>>(),
             ["Changed"]
         );
-        let inspector = dom::class(&document.tree, "ce-inspector");
+        let inspector = dom::class(&document.tree, "mbk-inspector");
         assert_eq!(inspector.len(), 1);
         let panels = dom::elements(&inspector[0].children);
         let open: Vec<_> = panels
             .iter()
             .filter(|element| element.name == "details" && element.get("open").is_some())
-            .map(|element| element.get("data-panel").unwrap())
+            .map(|element| element.get("data-inspector-tab").unwrap())
             .collect();
-        assert_eq!(open, ["info"]);
+        assert_eq!(open, ["details"]);
         let usage = panels
             .iter()
-            .find(|element| element.get("data-panel") == Some("usage"))
+            .find(|element| element.get("data-inspector-tab") == Some("usage"))
             .unwrap();
         let usage_text = dom::text(&usage.children);
         assert!(
-            usage_text.contains("No screens or components use Checklist yet."),
+            usage_text.contains("No recorded consumers."),
             "{usage_text}"
         );
         assert!(!usage_text.contains("Affected screens"), "{usage_text}");

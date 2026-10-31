@@ -9,8 +9,8 @@ import { NavTree } from "../../../../parts/nav.js";
 import { EXCLUDED_STYLE_ROWS } from "../../../../parts/nav_data.js";
 import {
   DetailsShot,
-  ExcludedOnlyStyleCard,
-  MatchedAndExcludedStyleCard,
+  EXCLUDED_ONLY_STYLES,
+  MATCHED_AND_EXCLUDED_STYLES,
   WelcomeShot,
 } from "../../../../parts/review.js";
 import { WelcomeHead } from "../../../../parts/screen_heads.js";
@@ -27,7 +27,7 @@ function MatchedStyles({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <StyleComparison
       design={DESTINATIONS.styleMatched}
-      evidence={<MatchedAndExcludedStyleCard />}
+      evidence={MATCHED_AND_EXCLUDED_STYLES}
       viewport={viewport}
     />
   );
@@ -53,7 +53,7 @@ function ExcludedStyles({ viewport }: { viewport: ArtboardViewport }) {
         inspector={
           <DetailsPanel
             subject="welcome"
-            comparisonEvidence={<MatchedAndExcludedStyleCard />}
+            comparisonEvidence={MATCHED_AND_EXCLUDED_STYLES}
             open
           />
         }
@@ -94,7 +94,7 @@ function ExcludedStylesOnly({ viewport }: { viewport: ArtboardViewport }) {
         inspector={
           <DetailsPanel
             subject="details"
-            comparisonEvidence={<ExcludedOnlyStyleCard />}
+            comparisonEvidence={EXCLUDED_ONLY_STYLES}
             open
           />
         }

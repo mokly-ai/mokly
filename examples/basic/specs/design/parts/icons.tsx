@@ -43,14 +43,3 @@ export function ExpandIcon({ size }: IconProps) {
     </IconSvg>
   );
 }
-
-/** A use case: connected steps through canonical screens. */
-export function FlowIcon({ size }: IconProps) {
-  return (
-    <IconSvg size={size ?? 13}>
-      <rect height={8} rx={2} width={8} x={3} y={3} />
-      <path d="M7 11v4a2 2 0 0 0 2 2h4" />
-      <rect height={8} rx={2} width={8} x={13} y={13} />
-    </IconSvg>
-  );
-}

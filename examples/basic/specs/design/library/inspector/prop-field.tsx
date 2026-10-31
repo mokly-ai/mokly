@@ -59,11 +59,7 @@ export const propField = defineComponent({
       title: "Boolean",
       props: { ...sample, label: "disabled", inputId: "sample-disabled" },
       slots: {
-        control: (
-          <div className="ce-check-value">
-            <input id="sample-disabled" type="checkbox" />
-          </div>
-        ),
+        control: <input id="sample-disabled" type="checkbox" />,
       },
     },
     {
@@ -113,21 +109,7 @@ export const propField = defineComponent({
         supplied: false,
       },
       slots: {
-        control: (
-          <div>
-            <label className="ce-check-value">
-              <input type="checkbox" />
-              <span>{CONTROLS_COPY.set("hint")}</span>
-            </label>
-            <input
-              className="ce-hint-value"
-              id="sample-hint"
-              type="text"
-              defaultValue=""
-            />
-            <p className="ce-unset-value">{CONTROLS_COPY.notSet}</p>
-          </div>
-        ),
+        control: <input id="sample-hint" type="text" defaultValue="" />,
       },
     },
   ],

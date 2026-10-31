@@ -169,6 +169,19 @@ host's scroll controller through refs. `VariantBar` draws a component's saved
 variants. The host supplies the wording of its copy modules, such as the
 unavailable previous version and the comparison's state labels.
 
+A static mockup sets `disclosures` on `Inspector`, which draws each tab as a
+native disclosure of one group, named by `contentId`: a tab opens its panel
+and closes it again without a script, one tab at a time, and Close is part of
+the open tab. A tab with an `href` is a link, which is its one keyboard stop.
+The resize separator is then a picture of its grip, and the sheet's grab is a
+native switch that `expanded` starts checked, which a host stylesheet reads to
+size the sheet. `PropFieldFrame` frames a native control that the mockup draws
+itself in the field's label column, Set check box, Not set line, help, and
+error. `TextButton` with an `href` is a link with the button's look, and the
+controls panels take `resetHref`, `retryHref`, `startHref`, and `currentHref`,
+which draw Reset while the props differ, the alert's action, a failed start's
+action, and Switch to Current as links.
+
 ## Development
 
 From the repository root, `npm run build` builds this package before the
@@ -257,6 +270,8 @@ override the desktop layout rules.
   `Inspector` and `InspectorHandle`: the tabs, whose keys `tab-keys.ts`
   handles, the panels, Close with its focus return, and the resize separator
   and sheet grab
+- [`src/inspector/inspector-disclosures.tsx`](./src/inspector/inspector-disclosures.tsx)
+  — the inspector of a static depiction, whose tabs are native disclosures
 - [`src/details-panel/details-panel.tsx`](./src/details-panel/details-panel.tsx)
   — `DetailsPanel` and `DetailsBody`: the collapsible Details and the body
   with the description, the rationale, and the metadata column
@@ -265,7 +280,8 @@ override the desktop layout rules.
   chips, links, chip groups, and entry chips of a value
 - [`src/prop-field/prop-field.tsx`](./src/prop-field/prop-field.tsx) —
   `PropField` and `PropFields`: a field with its label, help, error, and
-  optional supply, and the native control of each kind in `prop-input.tsx`
+  optional supply, and the native control of each kind in `prop-input.tsx`;
+  `PropFieldFrame` frames a static depiction's own control
 - [`src/controls-panel/controls-panel.tsx`](./src/controls-panel/controls-panel.tsx)
   — `ControlsPanel` and `SavedPropsPanel`: the edit form with its alerts and
   focus targets, and the saved props
@@ -280,6 +296,9 @@ override the desktop layout rules.
 - [`src/instance-tree/instance-tree.tsx`](./src/instance-tree/instance-tree.tsx)
   — `InstanceTree`: the viewport choice and the instances, whose nested lists
   keep their open state
+- [`src/count/count.ts`](./src/count/count.ts) — `count`, the internal count
+  wording of the usage list and the instance tree, such as "1 instance" and
+  "3 instances"
 - [`src/comparison-evidence/comparison-evidence.tsx`](./src/comparison-evidence/comparison-evidence.tsx)
   — `ComparisonEvidence`: the comparison facts of Details in the designs'
   order, with the heading and the files of `evidence-files.tsx`

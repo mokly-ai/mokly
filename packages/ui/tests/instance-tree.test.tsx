@@ -51,9 +51,30 @@ test("the tree keeps the shell's markup: the viewport choice, the counts, and th
       }),
     ),
     '<div><button aria-pressed="true" class="mbk-instance-context mbk-chip" type="button">Desktop</button><button aria-pressed="false" class="mbk-instance-context mbk-chip" type="button">Mobile</button></div>' +
-      "<p>3 instances · 1 components</p>" +
-      '<ul class="mbk-instance-tree"><li><button aria-pressed="false" class="mbk-instance-select" data-instance-key="a" type="button">Action · a-id</button><details><summary>1 nested instances</summary><ul class="mbk-instance-tree"><li><button aria-pressed="false" class="mbk-instance-select" data-instance-key="b" type="button">Action · b-id</button></li></ul></details></li>' +
+      "<p>3 instances · 1 component</p>" +
+      '<ul class="mbk-instance-tree"><li><button aria-pressed="false" class="mbk-instance-select" data-instance-key="a" type="button">Action · a-id</button><details><summary>1 nested instance</summary><ul class="mbk-instance-tree"><li><button aria-pressed="false" class="mbk-instance-select" data-instance-key="b" type="button">Action · b-id</button></li></ul></details></li>' +
       '<li><button aria-pressed="true" class="mbk-instance-select" data-instance-key="d" type="button">Action · d-id</button></li></ul>',
+  );
+});
+
+test("the counts take the singular for one component and one nested instance", () => {
+  const { container } = render(
+    tree({
+      usage: {
+        components: 1,
+        instances: [node("a", [node("b")])],
+        status: "ready",
+        total: 2,
+      },
+    }),
+  );
+  assert.equal(
+    container.querySelector("p")?.textContent,
+    "2 instances · 1 component",
+  );
+  assert.equal(
+    container.querySelector("summary")?.textContent,
+    "1 nested instance",
   );
 });
 
@@ -117,7 +138,7 @@ test("a nested list opens on its first instance and closes on its owner, and sta
   assert.ok(outer);
   assert.equal(
     outer.querySelector("summary")?.textContent,
-    "1 nested instances",
+    "1 nested instance",
   );
   // A toggle that agrees with the shown state reports nothing.
   fireEvent(outer, new Event("toggle"));

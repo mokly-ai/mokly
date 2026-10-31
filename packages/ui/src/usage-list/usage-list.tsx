@@ -4,6 +4,7 @@
  * whether the use is direct or nested, and counts its instances and views.
  */
 
+import { count } from "../count/count.js";
 import { TextButton } from "../text-button/text-button.js";
 
 /** One consumer of the component. */
@@ -53,7 +54,7 @@ function UsageSection({
               </a>
               <small>
                 {row.direct ? "Direct use" : "Nested use"}
-                {` · ${row.instances} instances · ${row.views} views`}
+                {` · ${count(row.instances, "instance")} · ${count(row.views, "view")}`}
               </small>
             </li>
           ))}

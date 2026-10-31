@@ -23,9 +23,6 @@ export function InspectorWorkspace({
         <div className="ce-preview-pane" aria-label="Preview pane">
           {children}
         </div>
-        <div className="ce-inspector-resize" aria-hidden="true">
-          <span aria-hidden="true" className="mbk-nav-resize" />
-        </div>
       </div>
       <div className="ce-inspector-dock">{inspector}</div>
     </section>

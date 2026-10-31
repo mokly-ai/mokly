@@ -2,7 +2,8 @@
  * The Props tab's controls: the form that edits the shown entry's props, and
  * the saved props of an entry that cannot be edited here. The host owns the
  * edit state and the wording. It names the elements that its recovery
- * actions focus through `focus`.
+ * actions focus through `focus`. A static depiction that runs no script gives
+ * an action an address, which draws it as a link.
  */
 
 import type { ReactNode, RefCallback } from "react";
@@ -70,9 +71,11 @@ function ControlsHeading({
 function AlertView({
   alert,
   onRetry,
+  retryHref,
 }: {
   alert: ControlsAlert;
   onRetry: (() => void) | undefined;
+  retryHref: string | undefined;
 }) {
   if ("text" in alert)
     return (
@@ -84,7 +87,9 @@ function AlertView({
     <div className="mbk-control-alert" role="alert">
       <strong>{alert.title}</strong>
       <p>{alert.body}</p>
-      <TextButton onClick={onRetry}>{alert.action}</TextButton>
+      <TextButton href={retryHref} onClick={onRetry}>
+        {alert.action}
+      </TextButton>
     </div>
   );
 }
@@ -104,8 +109,11 @@ export function ControlsPanel({
   onReset,
   onRetry,
   onStart,
+  resetHref,
   restored,
+  retryHref,
   start,
+  startHref,
   title,
   wording,
 }: {
@@ -122,9 +130,19 @@ export function ControlsPanel({
   onRetry?: (() => void) | undefined;
   /** Receives each press of the action of a failed start. */
   onStart?: (() => void) | undefined;
+  /**
+   * The address that Reset opens in a static depiction, such as a document
+   * that shows the saved props restored. While the props differ from the
+   * saved props, Reset is then a link.
+   */
+  resetHref?: string | undefined;
   /** The status after a reset, such as "Saved props restored." */
   restored?: string | undefined;
+  /** The address that the alert's action opens in a static depiction. */
+  retryHref?: string | undefined;
   start?: ControlsStart | undefined;
+  /** The address that the action of a failed start opens in a static depiction. */
+  startHref?: string | undefined;
   /** The shown entry's title. */
   title: string;
   wording: ControlsPanelWording;
@@ -133,14 +151,20 @@ export function ControlsPanel({
     <section className="mbk-component-controls">
       <ControlsHeading
         action={
-          <button
-            className="mbk-controls-reset"
-            disabled={!dirty}
-            onClick={() => onReset?.()}
-            type="button"
-          >
-            {wording.reset}
-          </button>
+          dirty && resetHref !== undefined ? (
+            <a className="mbk-controls-reset" href={resetHref}>
+              {wording.reset}
+            </a>
+          ) : (
+            <button
+              className="mbk-controls-reset"
+              disabled={!dirty}
+              onClick={() => onReset?.()}
+              type="button"
+            >
+              {wording.reset}
+            </button>
+          )
         }
         focus={focus}
         heading={wording.heading}
@@ -158,7 +182,9 @@ export function ControlsPanel({
           </>
         }
       />
-      {alert ? <AlertView alert={alert} onRetry={onRetry} /> : null}
+      {alert ? (
+        <AlertView alert={alert} onRetry={onRetry} retryHref={retryHref} />
+      ) : null}
       <p className="mbk-controls-restored" role="status">
         {restored}
       </p>
@@ -174,7 +200,10 @@ export function ControlsPanel({
       ) : null}
       {start?.status === "failed" ? (
         <p className="mbk-control-alert" role="alert">
-          {start.text} <TextButton onClick={onStart}>{start.action}</TextButton>
+          {start.text}{" "}
+          <TextButton href={startHref} onClick={onStart}>
+            {start.action}
+          </TextButton>
         </p>
       ) : null}
       <fieldset
@@ -197,6 +226,7 @@ export function ControlsPanel({
 export function SavedPropsPanel({
   children,
   current,
+  currentHref,
   focus,
   heading,
   notice,
@@ -207,6 +237,8 @@ export function SavedPropsPanel({
   children?: ReactNode;
   /** The label of Switch to Current. Without it, the panel has no such action. */
   current?: string | undefined;
+  /** The address that Switch to Current opens in a static depiction. */
+  currentHref?: string | undefined;
   focus?: ControlsFocusRef | undefined;
   /** The panel's heading, such as "Saved props". */
   heading: string;
@@ -222,7 +254,9 @@ export function SavedPropsPanel({
       <ControlsHeading focus={focus} heading={heading} title={title} />
       <p className="mbk-controls-notice">{notice}</p>
       {current !== undefined ? (
-        <TextButton onClick={onCurrent}>{current}</TextButton>
+        <TextButton href={currentHref} onClick={onCurrent}>
+          {current}
+        </TextButton>
       ) : null}
       {children}
     </section>

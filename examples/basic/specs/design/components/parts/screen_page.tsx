@@ -92,7 +92,13 @@ export function ScreenPage({
       />
       {removed ? <PreviousVersionLabel /> : null}
       <PreviewWorkspace
-        inspector={<ScreenDetails state={state} props={limit?.panel} />}
+        inspector={
+          <ScreenDetails
+            props={limit?.panel}
+            state={state}
+            viewport={viewport}
+          />
+        }
         viewport={viewport}
         render={(previewViewport) =>
           affected ? (

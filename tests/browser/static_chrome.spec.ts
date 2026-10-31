@@ -43,9 +43,9 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await page.goto("/view/design/browse/pages/view/");
     await chooseViewport(page, viewport);
     const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
-    await frame.locator(".ce-inspector-link").click();
+    await frame.locator(".mbk-inspector-link").click();
     await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/details\/$/);
-    await frame.locator(".ce-inspector-link").click();
+    await frame.locator(".mbk-inspector-link").click();
     await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/view\/$/);
     await frame
       .getByRole("link", { name: "Open Welcome", exact: true })

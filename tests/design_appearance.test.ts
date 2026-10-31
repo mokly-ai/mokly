@@ -149,6 +149,9 @@ test("preview tokens stay independent of the interface appearance", async () => 
 const COMPONENT_PARAMETERS = new Map([
   ["--mbk-indent", "each catalogue row sets its own indent"],
   ["--mbk-nav-width", "a resizable catalogue column sets its own width"],
+  ["--inspector-height", "a resizable inspector sets its own height"],
+  ["--inspector-tabs", "a static inspector sets the number of its tabs"],
+  ["--inspector-tab", "each tab of a static inspector sets its own column"],
 ]);
 
 test("the design palette declares every token that a @mokly/ui stylesheet reads", async () => {

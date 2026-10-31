@@ -3,7 +3,8 @@
    chevron. A pressed toggle and a selected tab fill with the accent. A static
    depiction draws a toggle as a label with the button's look, whose
    transparent native switch lies over the glyph and takes the pressed,
-   disabled, and focus states of the button. */
+   disabled, and focus states of the button, and a tab as the summary of a
+   disclosure, which the open disclosure selects. */
 .mbk-icon-button,
 .mbk-icon-select {
   position: relative;
@@ -72,7 +73,8 @@
 
 .mbk-icon-button[aria-selected="true"],
 .mbk-icon-button[aria-pressed="true"],
-.mbk-icon-button:has(> input:checked) {
+.mbk-icon-button:has(> input:checked),
+details[open] > summary.mbk-icon-button {
   color: var(--mokly-accent);
   background: var(--mokly-accent-soft);
   border-color: var(--chrome-border);

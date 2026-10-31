@@ -58,7 +58,7 @@ export function registerDesignLibrary(
         await page.goto(fileUrl(viewRoute(entry.path, viewport, "light")));
         await expect(page.locator(".mbk-library-host")).toBeVisible();
         for (const panel of await page
-          .locator(".ce-workspace details[open] > .ce-inspector-panel")
+          .locator(".ce-workspace details[open] > .mbk-inspector-content")
           .all()) {
           await expect(panel).toHaveCSS("overflow-y", "auto");
         }
@@ -254,7 +254,7 @@ export function registerDesignLibrary(
       await page.goto(fileUrl(viewRoute(entry.path, "mobile", "light")));
       const workspace = page.locator(".ce-workspace");
       const dock = page.locator(".ce-inspector-dock");
-      const inspector = page.locator(".ce-inspector");
+      const inspector = page.locator(".mbk-inspector");
       const [workspaceBounds, dockBounds] = await Promise.all([
         workspace.boundingBox(),
         dock.boundingBox(),
@@ -267,7 +267,7 @@ export function registerDesignLibrary(
       await expect(dock).toHaveCSS("border-top-left-radius", "0px");
       await expect(dock).toHaveCSS("box-shadow", "none");
       await expect(inspector).toHaveCSS("border-top-width", "1px");
-      await expect(inspector).toHaveCSS("border-top-left-radius", "20px");
+      await expect(inspector).toHaveCSS("border-top-left-radius", "14px");
       await expect(inspector).not.toHaveCSS("box-shadow", "none");
     });
   }

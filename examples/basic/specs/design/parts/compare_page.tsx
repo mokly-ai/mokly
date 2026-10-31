@@ -5,8 +5,8 @@ import { PreviewWorkspace } from "../components/parts/workspace.js";
 import type { AppearanceChoice } from "./appearance.js";
 import { ComparisonStage } from "./compare.js";
 import type { DesignDestination } from "./destinations.js";
-import { DetailsPanel } from "./details.js";
-import { ReasonSentences, type ChangeReasonKind } from "./reason_sentences.js";
+import { DetailsPanel, type CardEvidence } from "./details.js";
+import { reasonEvidence, type ChangeReasonKind } from "./reason_sentences.js";
 import { ReviewNav, type ReviewState } from "./review.js";
 import { ScreenHead, Shell, ViewSwitch, type Crumb } from "./shell.js";
 import { BrowserFrame, PhoneFrame } from "./stage.js";
@@ -23,14 +23,14 @@ interface ComparePageProps {
   /** Draws the depicted Appearance selector holding this setting. */
   appearanceChoice?: AppearanceChoice | undefined;
   /**
-   * Where the earlier side comes from, after the branch-point sentence; a
-   * moved entry names its previous path.
+   * The previous path of a moved entry, which Details name after the
+   * branch-point sentence as the source of the earlier side.
    */
-  source?: ReactNode;
+  previousPath?: string | undefined;
   /** The compared entry's direct reasons, one sentence each in Details. */
   reasons: readonly ChangeReasonKind[];
   /** Further comparison evidence after the reasons, such as changed files. */
-  evidence?: ReactNode;
+  evidence?: CardEvidence | undefined;
   /** Desktop navigation column; the Changes catalogue when omitted. */
   nav?: ReactNode;
   render: (viewport: CompareViewport) => ReactNode;
@@ -49,8 +49,8 @@ export function ComparePage({
   crumbs,
   evidence,
   nav,
+  previousPath,
   reasons,
-  source,
   subject,
   render,
   path,
@@ -85,13 +85,11 @@ export function ComparePage({
         inspector={
           <DetailsPanel
             subject={subject}
-            comparisonEvidence={
-              <>
-                {source}
-                <ReasonSentences reasons={reasons} />
-                {evidence}
-              </>
-            }
+            comparisonEvidence={{
+              previousPath,
+              reasons: reasonEvidence(reasons),
+              ...evidence,
+            }}
             open
           />
         }
