@@ -27,13 +27,15 @@ export function PhoneFrame({ children }: { children?: ReactNode }) {
 
 /**
  * A desktop browser window whose viewport hosts a desktop preview. An
- * expanded window covers the page, and the host marks the page meanwhile.
+ * expanded window covers the page, and the host marks the page meanwhile. A
+ * static depiction that runs no script draws its bar as a picture of itself.
  */
 export function BrowserFrame({
   address,
   children,
   expandable = true,
   expanded = false,
+  interactive = true,
   onCopy,
   onExpandedChange,
 }: {
@@ -44,6 +46,11 @@ export function BrowserFrame({
   expandable?: boolean;
   /** Whether the window is expanded over the page. */
   expanded?: boolean;
+  /**
+   * Whether the window's bar acts, as it does by default. A static depiction
+   * sets `false`, which draws the address and the toggle as pictures.
+   */
+  interactive?: boolean;
   /** Receives each press on the address, which asks to copy it. */
   onCopy?: (() => void) | undefined;
   /** Receives the expanded state that the toggle asks for. */
@@ -55,6 +62,7 @@ export function BrowserFrame({
         address={address}
         expandable={expandable}
         expanded={expanded}
+        interactive={interactive}
         onCopy={onCopy}
         onExpandedChange={onExpandedChange}
       />

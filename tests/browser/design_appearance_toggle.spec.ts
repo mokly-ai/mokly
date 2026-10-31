@@ -93,7 +93,9 @@ for (const viewport of ["mobile", "desktop"] as const) {
       await expect
         .poll(async () => (await artboard(page, viewport)).background)
         .toBe(BACKGROUNDS[scheme]);
-      await expect(frame.locator(".mbk-screen-dark")).toHaveCount(0);
+      await expect(
+        frame.locator('[data-preview-color-scheme="dark"]'),
+      ).toHaveCount(0);
       if (scheme === "dark")
         await expect(
           frame.locator(".mbk-frame-scheme-note").first(),
@@ -120,7 +122,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       await expect(frame.locator(".ce-theme-control")).toHaveCount(0);
       await expect(frame.locator(".ce-theme-toggle")).toHaveCount(0);
       await expect
-        .poll(() => frame.locator(".mbk-screen-dark").count())
+        .poll(() => frame.locator('[data-preview-color-scheme="dark"]').count())
         .toBe(scheme === "dark" ? 2 : 0);
     }
   });

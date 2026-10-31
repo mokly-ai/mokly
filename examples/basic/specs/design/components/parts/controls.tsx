@@ -20,6 +20,7 @@ const UNLINKED_SIBLINGS: ReadonlySet<ComponentPageState> = new Set([
 
 interface SavedVariant {
   path: string;
+  removed?: boolean;
   title: string;
   to?: string;
 }
@@ -102,7 +103,8 @@ export function VariantPicker({
       ? [
           {
             path: COMPONENT_ENTRIES.actionCompact.path,
-            title: "Compact · Removed",
+            removed: true,
+            title: "Compact",
           },
         ]
       : []),
@@ -118,6 +120,8 @@ export function VariantPicker({
             : entry.to;
         return {
           label: entry.title,
+          path: entry.path,
+          ...(entry.removed ? { removed: true } : {}),
           ...(to ? { to } : {}),
           ...(current ? { current } : {}),
         };

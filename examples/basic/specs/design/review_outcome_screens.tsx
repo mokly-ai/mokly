@@ -35,7 +35,7 @@ function ChangedCompare({ viewport }: { viewport: CompareViewport }) {
       viewport={viewport}
       render={(previewViewport) => (
         <CompareGrid>
-          <Pane label="Before" side="before">
+          <Pane side="before">
             <FramedShot
               address="example.test/welcome"
               dark={dark}
@@ -44,7 +44,7 @@ function ChangedCompare({ viewport }: { viewport: CompareViewport }) {
               <MiniWelcome compact={previewViewport === "mobile"} inert />
             </FramedShot>
           </Pane>
-          <Pane label="Current" side="after">
+          <Pane side="after">
             <FramedShot
               address="example.test/welcome"
               dark={dark}

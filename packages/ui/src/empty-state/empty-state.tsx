@@ -2,7 +2,8 @@
  * The quiet state of a stage that has no preview to show, and the states of
  * the shell that use it: the catalogue home, a route that matches no entry,
  * and a removed entry. A state can be busy while it loads, or an alert after
- * a failure, and its action is a link or a button.
+ * a failure, and its action is a link or a button. A static depiction that
+ * runs no script draws an action without an address as a picture of itself.
  */
 
 import type { ReactNode } from "react";
@@ -36,12 +37,28 @@ function dataMark(mark: DataAttribute | undefined) {
  * The action of an empty state, as a link or a button. It can also stand
  * inline in another line, such as the Try again of a failed comparison.
  */
-export function EmptyAction({ action }: { action: EmptyStateAction }) {
+export function EmptyAction({
+  action,
+  interactive = true,
+}: {
+  action: EmptyStateAction;
+  /**
+   * Whether an action without an address is a button, as it is by default.
+   * A static depiction sets `false`, which draws it as a picture of itself.
+   */
+  interactive?: boolean;
+}) {
   if ("href" in action)
     return (
       <a className="mbk-empty-link" href={action.href}>
         {action.label}
       </a>
+    );
+  if (!interactive)
+    return (
+      <span className="mbk-empty-link" {...dataMark(action.mark)}>
+        {action.label}
+      </span>
     );
   return (
     <button
@@ -64,6 +81,7 @@ export function EmptyState({
   body,
   busy = false,
   code,
+  interactive = true,
   mark,
   note,
   role,
@@ -77,6 +95,12 @@ export function EmptyState({
   busy?: boolean;
   /** The code after the body, such as the path that matches no entry. */
   code?: string | undefined;
+  /**
+   * Whether an action without an address is a button, as it is by default.
+   * A static depiction that runs no script sets `false`, which draws such an
+   * action as a picture of itself.
+   */
+  interactive?: boolean;
   /** An empty data attribute on the state, such as `data-workspace-empty`. */
   mark?: DataAttribute | undefined;
   /** A quieter line after the body, such as what the catalogue holds. */
@@ -106,7 +130,9 @@ export function EmptyState({
         </p>
       )}
       {note === undefined ? null : <p className="mbk-empty-note">{note}</p>}
-      {action === undefined ? null : <EmptyAction action={action} />}
+      {action === undefined ? null : (
+        <EmptyAction action={action} interactive={interactive} />
+      )}
     </div>
   );
 }

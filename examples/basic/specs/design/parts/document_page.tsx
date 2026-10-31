@@ -12,7 +12,7 @@ import { DESTINATIONS } from "./destinations.js";
 import { DetailsPanel, type CardEvidence } from "./details.js";
 import { MetaRow } from "./metadata_row.js";
 import type { NavNode } from "./nav.js";
-import { DocumentPane, Stage } from "./stage.js";
+import { DocumentStage } from "./stage.js";
 
 /** The handbook in its declared folder, beside Welcome and the tour. */
 export const PAGE_NODES: readonly NavNode[] = [
@@ -129,10 +129,8 @@ export function PageDetails({
 /** The complete handbook in its bordered pane, linking to the Welcome design. */
 export function HandbookStage() {
   return (
-    <Stage>
-      <DocumentPane>
-        <ExampleDocument welcomeId={DESTINATIONS.welcome} />
-      </DocumentPane>
-    </Stage>
+    <DocumentStage>
+      <ExampleDocument welcomeId={DESTINATIONS.welcome} />
+    </DocumentStage>
   );
 }

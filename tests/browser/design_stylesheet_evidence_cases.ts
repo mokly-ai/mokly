@@ -122,7 +122,7 @@ export function registerDesignStylesheetEvidence(
           shellDesignUrl("design/changes/impact/styles/page", viewport),
         );
         await expect(page.locator(".mbk-diff-toolbar")).toHaveCount(0);
-        await expect(page.locator(".mbk-comparison-stage")).toHaveCount(0);
+        await expect(page.locator(".mbk-diff-screen")).toHaveCount(0);
         await expect(page.locator(".mbk-doc-pane")).toContainText("Next steps");
         const evidence = page.locator(".mbk-comparison-details");
         await expect(evidence).toContainText(
@@ -218,12 +218,12 @@ export function registerDesignStylesheetEvidence(
         ).toHaveAttribute("aria-pressed", "true");
         const heading = "Components this screen uses changed";
         // The shown view reads the heading over its two versions.
-        const stages = page.locator(".mbk-comparison-stage:visible");
+        const stages = page.locator(".mbk-diff-view:visible");
         await expect(stages.locator(":scope > h3")).toHaveText([
           `${viewport === "desktop" ? "Desktop" : "Mobile"} · ${heading}`,
         ]);
         for (const stage of await stages.all())
-          await expect(stage.locator(".mbk-compare-label")).toHaveText([
+          await expect(stage.locator(".mb-pane-label")).toHaveText([
             "Before",
             "Current",
           ]);

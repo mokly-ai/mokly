@@ -65,9 +65,7 @@ function ProfileWorkspace({
             <MiniSecurity compact={compact} />
           );
         return previewViewport === "mobile" ? (
-          <PhoneFrame label="Mobile" small={viewport === "mobile"}>
-            {content}
-          </PhoneFrame>
+          <PhoneFrame small={viewport === "mobile"}>{content}</PhoneFrame>
         ) : (
           <BrowserFrame
             address={
@@ -75,7 +73,6 @@ function ProfileWorkspace({
                 ? "example.test/account/profile"
                 : "example.test/account/profile/security"
             }
-            label="Desktop"
           >
             {content}
           </BrowserFrame>

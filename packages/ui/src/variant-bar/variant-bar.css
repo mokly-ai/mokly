@@ -1,5 +1,6 @@
 /* The bar of a component's saved variants, which hides while it holds only
-   its hidden status. */
+   its hidden status. The picture of a variant in a static depiction keeps the
+   resting look of its link, and only a link takes the hover look. */
 .mbk-selection-bar {
   display: flex;
   align-items: center;
@@ -21,7 +22,8 @@
   margin-right: 10px;
 }
 
-.mbk-selection-bar a {
+.mbk-selection-bar a,
+.mbk-selection-bar > .mbk-variant-option {
   border: 1px solid transparent;
   border-radius: 6px;
   color: var(--chrome-ink-2);
@@ -38,7 +40,8 @@
   outline-offset: 2px;
 }
 
-.mbk-selection-bar a[aria-current="page"] {
+.mbk-selection-bar a[aria-current="page"],
+.mbk-selection-bar > .mbk-variant-option[aria-current="page"] {
   background: var(--mokly-accent-soft);
   border-color: var(--mokly-accent);
   color: var(--mokly-accent);

@@ -2,15 +2,16 @@ import { defineScreen } from "@mokly/mokly";
 
 import { DetailsBody } from "../../../../../../../packages/ui/src/details-panel/details-panel.js";
 import { MetadataCode } from "../../../../../../../packages/ui/src/metadata-row/metadata-row.js";
+import { LightOnlyBand } from "../../../../../../../packages/ui/src/scheme-fallback/scheme-fallback.js";
 import { appearanceDesignMetadata } from "../../../metadata.js";
 import { artboards } from "../../../parts/artboards.js";
 import { DESTINATIONS } from "../../../parts/destinations.js";
 import { DetailsPanel } from "../../../parts/details.js";
 import { ENTRY_PATHS } from "../../../parts/entry_paths.js";
-import { LightOnlyBand, MarkdownStage } from "../../../parts/markdown.js";
+import { MarkdownStage } from "../../../parts/markdown.js";
 import { MetaRow } from "../../../parts/metadata_row.js";
 import { NavTree, type NavNode } from "../../../parts/nav.js";
-import { PreviousVersionLabel } from "../../../parts/removed_preview.js";
+import { PreviousVersionStage } from "../../../parts/removed_preview.js";
 import { ScreenHead, type ArtboardViewport } from "../../../parts/shell.js";
 import { PaymentTerms } from "../../../parts/spec_documents.js";
 import {
@@ -134,10 +135,19 @@ function LightOnlyDocument({ viewport }: { viewport: ArtboardViewport }) {
         status="removed"
         title="Payment terms"
       />
-      <PreviousVersionLabel lightOnly />
-      <MarkdownStage lightOnly>
-        <PaymentTerms />
-      </MarkdownStage>
+      <PreviousVersionStage
+        entry={{
+          kind: "document",
+          path: ENTRY_PATHS.paymentTerms,
+          title: "Payment terms",
+        }}
+        lightOnly
+        viewport={viewport}
+      >
+        <MarkdownStage lightOnly>
+          <PaymentTerms />
+        </MarkdownStage>
+      </PreviousVersionStage>
       <DetailsPanel>
         <DetailsBody description="When an invoice is due, and what happens once it is late.">
           <MetaRow name="source" label="Source">

@@ -179,7 +179,7 @@ export function registerComponentDesignInspection(
         await expect(
           page.getByRole("group", { name: "Comparison mode" }),
         ).toHaveCount(0);
-        await expect(page.locator(".mbk-pane-missing")).toHaveCount(0);
+        await expect(page.locator(".mb-pane-missing")).toHaveCount(0);
         await expect(
           page.getByRole("switch", { name: "Dark mode" }),
         ).toHaveCount(0);

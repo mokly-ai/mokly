@@ -1012,10 +1012,25 @@ The inventory's `preview/device-frame` includes the frame caption, which the
 package draws in `PreviewFrame`. Its view renders `PreviewFrame` with
 `PhoneFrame` or `BrowserFrame`. Found by milestone 12 on 2026-10-30.
 
-- [ ] Adopt `preview/device-frame`, `preview/comparison-pane`,
+- [x] Adopt `preview/device-frame`, `preview/comparison-pane`,
       `preview/empty-state`, and `preview/flow-step` as milestone 4 adopts the
       chrome, including decision 2 and the comparison with the earlier renders.
-- [ ] Run the mockup check and smoke-test the changed pages.
+- [x] Run the mockup check and smoke-test the changed pages.
+- [x] Done on 2026-10-31 by the ui implementor and checked, with decision 6
+      applied: the library's device frame, comparison pane, empty state, and
+      flow step, and every artboard copy of the preview slice, render the
+      package components, including the explorer's canvas, comparison frame,
+      and section headings. Zero computed-style differences across 166
+      states, 2909 Node tests, 1420 design browser tests, and the repository
+      suite passed. Static forms added: `BrowserBar` and `BrowserFrame`
+      `interactive`, `VariantBarItem` `href`, and `EmptyState` and
+      `EmptyAction` `interactive`. Calls: the browser toggle and the address
+      pill keep their shipped hairlines, which the palette contract names;
+      explorer captions name the viewport only; the comparison pane names its
+      side, and the device frame's caption follows where it stands, so the
+      `label` and `scheme` props go; the explorer draws each component 24px
+      from the frame's top left, as the shell's documents do. Evidence:
+      `.context/ui-package-shell-views/preview-mockups/`.
 
 ## Milestone 14: Fourth pull request
 

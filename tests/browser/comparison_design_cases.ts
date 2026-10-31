@@ -126,7 +126,7 @@ export function registerComparisonDesign(
       await expect(
         page.getByRole("group", { name: "Comparison mode" }),
       ).toHaveCount(0);
-      await expect(page.locator(".mbk-comparison-stage")).toHaveCount(0);
+      await expect(page.locator(".mbk-diff-screen")).toHaveCount(0);
       await expect(page.locator(".mbk-comparison-details")).toContainText(
         /Examined and excluded:\s*generated\/excluded\.css\s*No changes to this screen\.$/,
       );

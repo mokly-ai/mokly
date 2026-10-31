@@ -31,7 +31,9 @@
   margin-bottom: 24px;
 }
 
-.mbk-diff-view h3 {
+/* Only the section's own heading: a static depiction draws each version's
+   document in place, and that document keeps its own headings. */
+.mbk-diff-view > h3 {
   margin: 0 0 12px;
   color: var(--chrome-ink-2);
   font-size: 12px;
