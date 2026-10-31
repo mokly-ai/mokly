@@ -42,6 +42,8 @@ Contract owners:
   runs. Extend the window when a week has no comparable successful run.
 - 2026-10-30, agent call: Use measurements to order inspection work. Keep
   findings in severity order and show potential savings in a separate table.
+- 2026-10-31, agent call: Read every protocol page for the baseline. Tests
+  also depend on requirements that no area README links.
 
 No user decision is needed to write this plan. Future recommendations can
 need decisions under the shared decision and review skills.
@@ -70,22 +72,27 @@ its meaning and its affected requirement.
 
 Depends on: none
 
+Completed: 2026-10-31. The baseline records the current requirements,
+test inventory, and unresolved policy questions.
+
 Establish the rules used by the review. This milestone reads the current
 requirements. It changes no protocol requirement or README behaviour.
 
-- [ ] Record the code commit, installed skill revisions, and review date.
+- [x] Record the code commit, installed skill revisions, and review date.
       Read `testing`, `deterministic-tests`, `rust`, and `typescript`.
-- [ ] Read every test reference named above. Read each area's README and
+- [x] Read every test reference named above. Read each area's README and
       relevant product protocol before reviewing its tests.
-- [ ] Map gate suites, discovery rules, exclusions, optional targets, and
+- [x] Map gate suites, discovery rules, exclusions, optional targets, and
       platform coverage from the runner code and verification contracts.
-- [ ] Read existing test follow-up items and the active shell views plan.
+- [x] Read existing test follow-up items and the active shell views plan.
       Preserve recorded decisions and option letters. Link repeated issues
       to their existing items instead of creating duplicates.
-- [ ] Record requirement gaps and conflicting rules for user decisions.
+- [x] Record requirement gaps and conflicting rules for user decisions.
       Continue independent review work without choosing an unstated rule.
 
-Evidence: `baseline.md` and `inventory.csv` under the evidence directory.
+Evidence: `baseline.md`, `inventory.csv`, `milestone-1/protocol-read-notes.md`,
+and `milestone-1/handoff.md` under the evidence directory.
+Merge preservation: `orchestrator-verification/main-merge.md`.
 
 ## Milestone 2: Measure test cost and CI trend
 
