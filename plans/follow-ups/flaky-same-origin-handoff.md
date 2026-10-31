@@ -11,7 +11,9 @@
   `calummoore/mokly-ui-controls` at `1d81517f`, which did not change it, with
   "page.evaluate: TypeError: Cannot read properties of null (reading
   'dispatchEvent')" at the probe call of line 206, and the shard passed on a
-  rerun.
+  rerun. It failed the same way on 2026-10-31 in browser shard 2 of the
+  remote gate of `conductor/built-repository-packages-in-changes` at
+  `b5acdf71`, which did not change it, and it passed 3 of 3 local reruns.
 - **Location:** `tests/browser/same_origin_identity.spec.ts:126`, with the
   probe call at line 206 and the probe helper at lines 245 to 273.
 - **Reason:** The test failed in the remote gates of PR #226 and of the
