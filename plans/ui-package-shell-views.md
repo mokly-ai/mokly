@@ -2,8 +2,9 @@
 
 Status: Active. [PR #249](https://github.com/mokly-ai/mokly/pull/249), with
 milestones 1 to 5, merged on 2026-10-30 as `14c6f9ec`. The later slices are
-stacked branches: milestones 6 to 8 on `calummoore/mokly-ui-controls`, 9 to 11
-on `calummoore/mokly-ui-inspector`, 12 to 14 on `calummoore/mokly-ui-preview`,
+stacked branches: milestones 6 to 8 on `calummoore/mokly-ui-controls`, where
+[PR #251](https://github.com/mokly-ai/mokly/pull/251) is open, 9 to 11 on
+`calummoore/mokly-ui-inspector`, 12 to 14 on `calummoore/mokly-ui-preview`,
 and 15 to 20 on `calummoore/mokly-ui-layout-theme`. The work lands as a stack
 of five pull requests, one for each slice, as design call 11 says. Each
 earlier pull request keeps this plan. The last one deletes it, as the `plans`
@@ -41,7 +42,7 @@ call 10 leaves for later, and the design catalogue's own palette in
 outside React live.
 
 No brainstorm ran. The user's message of 2026-10-29 and decision 1 of the
-[shared UI package plan](./ui-package.md) choose the approach, and the
+[shared UI package plan](https://github.com/mokly-ai/mokly/blob/14c6f9ec4c6a328bd90a5cc06481ebf45e409fd9/plans/ui-package.md) choose the approach, and the
 product rule of [`AGENTS.md`](../AGENTS.md) sets the split: a component that
 needs the store stays in the viewer and composes a package component. These
 decisions of the shared UI package plan stay in force: 1, a separate package
@@ -393,6 +394,50 @@ the user must choose between the product and a contract, and they record each
 other difference in the milestone. Rejected: A, asking about every difference,
 because each round stops the work for answers that follow the user's rule of
 milestones 4 and 7.
+
+### 6. The open items of 2026-10-31
+
+Decision 6 (2026-10-31, the user): "just go with recommendation". Each open
+item takes its recommended option. Items that complete a milestone land in
+it. The wider fixes that span the stack stay follow-up items with the chosen
+option, because the user first called them follow-ups.
+
+- Merges, option D: PR #251 merges now. Each later pull request of the stack
+  merges when its gate passes and its review leaves no open finding.
+- Milestone 19:
+  - The Highlight components switch of the Browse and Changes artboards,
+    option C: their previews depict the Action and Toolbar of the real
+    screens, and the artboards draw the highlights with the package mask.
+  - The artboard highlight state, option C: one record per depicted view
+    holds the state and the preview's regions, and the header and the
+    preview read it.
+- Milestone 10:
+  - An invalid prop field draws its danger border, option A: the package
+    raises the invalid rule.
+  - The inspector resize grip, the sheet grabber, and the entry chips draw
+    `--chrome-control-edge`, option A.
+  - The Components tab renders the shipped tree, and the explorer contract
+    follows it, option B.
+  - The component Props tab renders the shipped controls panel, and the
+    controls contract follows it, option A.
+  - The comparison evidence shows the variant state in the package and the
+    product, option A.
+  - The mobile sheet takes the full workspace width, option A.
+- Milestone 13:
+  - The browser toggle keeps its shipped hairline, and the palette contract
+    names it, option A.
+  - The explorer artboards render the shipped canvas, comparison frame, and
+    heading, and the component design contract follows, option A.
+  - Explorer captions name the viewport only, option A.
+  - The comparison pane names its side, and its `label` goes, option A.
+  - Where a depicted frame stands decides its caption, and the device
+    frame's `label` goes, option A.
+- Follow-up items:
+  - A shared picture marker takes every picture form out of hit testing,
+    option B.
+  - The search field draws a visible focus ring, option B.
+  - Generic shell class names take the `mbk-` prefix, option B.
+  - The package component tests check the reset class, option B.
 
 ## Design Calls
 
@@ -884,13 +929,23 @@ by the user, option C:
 
 Depends on: 6, 7
 
-- [ ] Start the slice's branch from the first one. Merge the first branch
+- [x] Start the slice's branch from the first one. Merge the first branch
       into it, or `origin/main` after the first pull request merges. Run the
       complete gate. Commit and push.
-- [ ] Review against the first pull request's branch. Fix, re-review once,
+- [x] Review against the first pull request's branch. Fix, re-review once,
       and report.
-- [ ] Open the pull request on the first one. Put its link in the status
+- [x] Open the pull request on the first one. Put its link in the status
       paragraph.
+- [x] Done on 2026-10-30: the branch merged `origin/main` at `e9c20225` and
+      at `133782a9` (#247), and the remote gate passed 7 of 7 suites on
+      `c45a87cb`. Review round 1 found findings 1 and 2, and round 2 found 3
+      and 4. The fixes are `34357fa0`, `ffc19e11`, and `1d81517f`. The rest
+      of finding 1, the Highlight components switch of 22 Browse and 8
+      Changes artboards, waits for the user under
+      `plans/follow-ups/browse-artboard-highlight-drawing.md`. On `1d81517f`
+      the remote gate passed 6 of 7 suites, and browser shard 2 passed on a
+      rerun after the known flaky handoff test. Reports:
+      `.context/reviews/calummoore/mokly-ui-controls/`.
 
 ## Milestone 9: Inspector components
 
@@ -937,10 +992,38 @@ buttons with callbacks. Add optional static props to the package components,
 as `ComparisonToolbar` gained `modeHref` and `interactive`. Found by milestone
 9 on 2026-10-30.
 
-- [ ] Adopt `inspector/inspector`, `inspector/metadata-row`, and
+- [x] Adopt `inspector/inspector`, `inspector/metadata-row`, and
       `inspector/prop-field` as milestone 4 adopts the chrome, including
       decision 2 and the comparison with the earlier renders.
-- [ ] Run the mockup check and smoke-test the changed pages.
+- [x] Run the mockup check and smoke-test the changed pages.
+- [x] Adoption done on 2026-10-31 by the ui implementor and checked, apart
+      from the parts above: the library's inspector, metadata row, and prop
+      field, and every other artboard copy of the inspector slice, render the
+      package components. Zero computed-style differences across 166 states,
+      2851 Node tests, 1420 browser tests, and the repository suite passed.
+      Calls: static tabs are native disclosures and the grab is a native
+      switch; static actions link to the artboard of their outcome; the
+      selected instance renders `PropsPanel`; the approved evidence card
+      renders `ComparisonEvidence`; the dead `.mbk-inspector select` rule
+      goes; the highlight artboard stays reached through the catalogue tree;
+      the explorer's prose-link rule skips shipped links. Intended product
+      changes: one shared count helper writes "1 instance", "1 view", "1
+      component", and "1 nested instance", and the static Reset link takes
+      the Reset button's look. Evidence:
+      `.context/ui-package-shell-views/inspector-mockups/`.
+- [x] Apply decision 6 to the six parts that waited for the user. Done on
+      2026-10-31 by the ui implementor and checked: an invalid prop field
+      draws `--mbk-danger-ink`; the resize grip, the sheet grabber, and the
+      use-case and screen chips draw `--chrome-control-edge`; the Components
+      tab renders the shipped `InstanceTree`, with a link form and lists that
+      start open; the component Props tab renders the controls panel in
+      place; `ComparisonEvidence` shows the saved variant and its saved props;
+      the mobile sheet spans the workspace. The explorer, component design,
+      and controls design contracts follow. The selected instance keeps its
+      shipped hairline, which the palette contract and the boundary audit
+      now name, under decision 6. The computed-style tool lists only these
+      intended differences. Evidence:
+      `.context/ui-package-shell-views/decision6/`.
 
 ## Milestone 11: Third pull request
 
@@ -990,10 +1073,25 @@ The inventory's `preview/device-frame` includes the frame caption, which the
 package draws in `PreviewFrame`. Its view renders `PreviewFrame` with
 `PhoneFrame` or `BrowserFrame`. Found by milestone 12 on 2026-10-30.
 
-- [ ] Adopt `preview/device-frame`, `preview/comparison-pane`,
+- [x] Adopt `preview/device-frame`, `preview/comparison-pane`,
       `preview/empty-state`, and `preview/flow-step` as milestone 4 adopts the
       chrome, including decision 2 and the comparison with the earlier renders.
-- [ ] Run the mockup check and smoke-test the changed pages.
+- [x] Run the mockup check and smoke-test the changed pages.
+- [x] Done on 2026-10-31 by the ui implementor and checked, with decision 6
+      applied: the library's device frame, comparison pane, empty state, and
+      flow step, and every artboard copy of the preview slice, render the
+      package components, including the explorer's canvas, comparison frame,
+      and section headings. Zero computed-style differences across 166
+      states, 2909 Node tests, 1420 design browser tests, and the repository
+      suite passed. Static forms added: `BrowserBar` and `BrowserFrame`
+      `interactive`, `VariantBarItem` `href`, and `EmptyState` and
+      `EmptyAction` `interactive`. Calls: the browser toggle and the address
+      pill keep their shipped hairlines, which the palette contract names;
+      explorer captions name the viewport only; the comparison pane names its
+      side, and the device frame's caption follows where it stands, so the
+      `label` and `scheme` props go; the explorer draws each component 24px
+      from the frame's top left, as the shell's documents do. Evidence:
+      `.context/ui-package-shell-views/preview-mockups/`.
 
 ## Milestone 14: Fourth pull request
 

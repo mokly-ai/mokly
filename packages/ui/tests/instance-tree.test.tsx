@@ -53,10 +53,69 @@ test("the tree keeps the shell's markup: the viewport choice, the counts, and th
       }),
     ),
     '<div class="mbk-reset"><button aria-pressed="true" class="mbk-instance-context mbk-chip mbk-reset" type="button">Desktop</button><button aria-pressed="false" class="mbk-instance-context mbk-chip mbk-reset" type="button">Mobile</button></div>' +
-      '<p class="mbk-reset">3 instances · 1 components</p>' +
-      '<ul class="mbk-instance-tree mbk-reset"><li class="mbk-reset"><button aria-pressed="false" class="mbk-instance-select mbk-reset" data-instance-key="a" type="button">Action · a-id</button><details class="mbk-reset"><summary class="mbk-reset">1 nested instances</summary><ul class="mbk-instance-tree mbk-reset"><li class="mbk-reset"><button aria-pressed="false" class="mbk-instance-select mbk-reset" data-instance-key="b" type="button">Action · b-id</button></li></ul></details></li>' +
+      '<p class="mbk-reset">3 instances · 1 component</p>' +
+      '<ul class="mbk-instance-tree mbk-reset"><li class="mbk-reset"><button aria-pressed="false" class="mbk-instance-select mbk-reset" data-instance-key="a" type="button">Action · a-id</button><details class="mbk-reset"><summary class="mbk-reset">1 nested instance</summary><ul class="mbk-instance-tree mbk-reset"><li class="mbk-reset"><button aria-pressed="false" class="mbk-instance-select mbk-reset" data-instance-key="b" type="button">Action · b-id</button></li></ul></details></li>' +
       '<li class="mbk-reset"><button aria-pressed="true" class="mbk-instance-select mbk-reset" data-instance-key="d" type="button">Action · d-id</button></li></ul>',
   );
+});
+
+test("the counts take the singular for one component and one nested instance", () => {
+  const { container } = render(
+    tree({
+      usage: {
+        components: 1,
+        instances: [node("a", [node("b")])],
+        status: "ready",
+        total: 2,
+      },
+    }),
+  );
+  assert.equal(
+    container.querySelector("p")?.textContent,
+    "2 instances · 1 component",
+  );
+  assert.equal(
+    container.querySelector("summary")?.textContent,
+    "1 nested instance",
+  );
+});
+
+test("a static depiction's instances with addresses are links, the selected one is current, and named lists start open", () => {
+  const linked = (
+    key: string,
+    nested: readonly InstanceNode[] = [],
+  ): InstanceNode => ({ ...node(key, nested), href: `#${key}` });
+  const { container } = render(
+    tree({
+      initiallyExpanded: ["a"],
+      selectedKey: "b",
+      usage: {
+        components: 1,
+        instances: [linked("a", [linked("b")])],
+        status: "ready",
+        total: 2,
+      },
+    }),
+  );
+  assert.deepEqual(
+    screen
+      .queryAllByRole("link")
+      .map((link) => [
+        link.textContent,
+        link.getAttribute("href"),
+        link.getAttribute("aria-current"),
+        link.className,
+      ]),
+    [
+      ["Action · a-id", "#a", null, "mbk-instance-select mbk-reset"],
+      ["Action · b-id", "#b", "true", "mbk-instance-select mbk-reset"],
+    ],
+  );
+  assert.equal(
+    container.querySelectorAll("button.mbk-instance-select").length,
+    0,
+  );
+  assert.equal(container.querySelector("details")?.open, true);
 });
 
 test("one viewport offers no choice, and a choice reports its viewport", () => {
@@ -119,7 +178,7 @@ test("a nested list opens on its first instance and closes on its owner, and sta
   assert.ok(outer);
   assert.equal(
     outer.querySelector("summary")?.textContent,
-    "1 nested instances",
+    "1 nested instance",
   );
   // A toggle that agrees with the shown state reports nothing.
   fireEvent(outer, new Event("toggle"));

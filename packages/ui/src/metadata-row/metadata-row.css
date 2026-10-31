@@ -42,6 +42,13 @@
   text-decoration: none;
 }
 
+/* An entry chip links to an entry, so it is a control with the control
+   edge. A resting tag chip keeps its hairline, which the palette contract
+   names as an exception. */
+.mbk-chip:is(.flow, .screen) {
+  border-color: var(--chrome-control-edge);
+}
+
 .mbk-meta-row[hidden] {
   display: none;
 }

@@ -1,6 +1,7 @@
 /* The component instances of a view: a list whose nested lists step in beside
-   a rule, and a selectable button for each instance. The viewport choice draws
-   as chips. */
+   a rule, and a selectable button for each instance. The instance of a static
+   depiction is a link with the button's look, whose selected one is the
+   current page. The viewport choice draws as chips. */
 .mbk-instance-context {
   display: inline-block;
   margin: 0 8px 12px 0;
@@ -39,7 +40,14 @@
   font: inherit;
 }
 
-.mbk-instance-select[aria-pressed="true"] {
+.mbk-instance-tree a.mbk-instance-select {
+  display: inline-block;
+  color: var(--chrome-ink);
+  text-decoration: none;
+}
+
+.mbk-instance-select[aria-pressed="true"],
+.mbk-instance-tree a.mbk-instance-select[aria-current="true"] {
   background: var(--mokly-accent-soft);
   color: var(--mokly-accent);
   border-color: var(--chrome-border);

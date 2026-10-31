@@ -1,54 +1,18 @@
-/* Component props, usage, and screen instance details in the design catalogue. */
-.ce-props {
-  font-size: 12px;
-  margin: 0 0 14px;
-}
-.ce-props > div {
-  border-bottom: 1px solid var(--chrome-border);
-  display: grid;
-  gap: 10px;
-  grid-template-columns: minmax(60px, 0.7fr) minmax(0, 1fr);
-  padding: 7px 0;
-}
-.ce-props dt {
-  color: var(--chrome-muted);
-}
-.ce-props dd {
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-.ce-design code {
+/* Component props, usage, and screen instance details in the design
+   catalogue. The instance trees, the supplied props, the usage lists, the text
+   buttons of their states, and the Props tab's form, which every component
+   page edits in place, are the shipped ones, from their @mokly/ui
+   stylesheets, in the package's order. */
+@import "../../packages/ui/src/instance-tree/instance-tree.css";
+@import "../../packages/ui/src/props-panel/props-panel.css";
+@import "../../packages/ui/src/usage-list/usage-list.css";
+@import "../../packages/ui/src/text-button/text-button.css";
+@import "../../packages/ui/src/controls-panel/controls-panel.css";
+
+/* The code that a @mokly/ui empty state draws keeps its package size. */
+.ce-design code:where(:not(.mbk-empty code)) {
   font-family: var(--mono);
   font-size: 11px;
-}
-.ce-usage-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.ce-usage-list li {
-  border-bottom: 1px solid var(--chrome-border);
-  padding: 8px 0;
-}
-.ce-usage-list li:first-child {
-  padding-top: 0;
-}
-.ce-usage-list a {
-  align-items: center;
-  display: flex;
-  font-weight: 600;
-  gap: 8px;
-  justify-content: space-between;
-}
-.ce-usage-list li > span {
-  color: var(--chrome-muted);
-  display: block;
-  font-size: 11px;
-  margin-top: 4px;
-}
-.ce-affected > p {
-  color: var(--chrome-ink-2);
-  font-size: 12px;
 }
 .ce-muted {
   color: var(--chrome-muted);
@@ -58,71 +22,4 @@
   color: var(--chrome-ink-2);
   font-size: 12px;
   max-width: 310px;
-}
-.ce-instance-tree details {
-  border-bottom: 1px solid var(--chrome-border);
-  padding: 6px 0;
-}
-.ce-instance-tree summary {
-  color: var(--chrome-ink);
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-}
-.ce-instance-tree summary > span {
-  color: var(--chrome-muted);
-  float: right;
-  font-size: 11px;
-  font-weight: 400;
-}
-.ce-instance-tree a {
-  border-radius: 5px;
-  display: block;
-  font-size: 12px;
-  margin-top: 4px;
-  padding: 5px 8px 5px 16px;
-}
-.ce-instance-tree a[aria-current] {
-  background: var(--mbk-accent-surface);
-  color: var(--mbk-sage-deep);
-  font-weight: 600;
-}
-.ce-instance-tree small {
-  color: var(--chrome-muted);
-  display: block;
-  font-size: 10px;
-  font-weight: 400;
-}
-.ce-nested-instance {
-  border-left: 1px solid var(--mbk-guide);
-  margin-left: 16px;
-}
-.ce-detail-links {
-  display: flex;
-  flex-wrap: wrap;
-  font-size: 12px;
-  gap: 10px 16px;
-}
-.ce-text-button {
-  background: none;
-  border: 0;
-  color: var(--mbk-sage-deep);
-  cursor: pointer;
-  font: inherit;
-  padding: 0;
-}
-.ce-text-button:disabled {
-  color: var(--chrome-muted);
-  cursor: default;
-}
-.ce-slot-details {
-  color: var(--chrome-muted);
-  font-size: 11px;
-  margin-top: 14px;
-}
-.ce-slot-details summary {
-  cursor: pointer;
-}
-.ce-slot-details p {
-  margin-top: 8px !important;
 }

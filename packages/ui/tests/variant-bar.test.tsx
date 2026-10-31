@@ -74,3 +74,23 @@ test("the status stays in place, hidden and empty, while the variant has none", 
   assert.equal(status.textContent, "");
   assert.equal(status.className, "mbk-variant-status mbk-reset");
 });
+
+test("a variant without an address is a picture that keeps its mark", () => {
+  const variants: readonly VariantBarItem[] = [
+    { current: true, href: "../a/", path: "c/a", removed: false, title: "A" },
+    { current: false, path: "c/b", removed: false, title: "B" },
+    { current: false, path: "c/c", removed: true, title: "C" },
+  ];
+  assert.equal(
+    renderToString(<VariantBar variants={variants} />),
+    '<nav aria-label="Saved variants" class="mbk-selection-bar mbk-reset"><span class="mbk-reset">Variant</span><a aria-current="page" class="mbk-reset" data-workspace-variant="c/a" href="../a/">A</a><span class="mbk-variant-option mbk-reset" data-workspace-variant="c/b">B</span><span class="mbk-variant-option mbk-reset" data-workspace-variant="c/c">C<!-- --> · Removed</span><span class="mbk-variant-status mbk-reset" data-workspace-variant-status="" hidden=""></span></nav>',
+  );
+  render(
+    <VariantBar
+      variants={[{ current: true, path: "c/d", removed: false, title: "D" }]}
+    />,
+  );
+  const bar = screen.getByRole("navigation", { name: "Saved variants" });
+  assert.equal(within(bar).queryAllByRole("link").length, 0);
+  assert.equal(within(bar).getByText("D").getAttribute("aria-current"), "page");
+});

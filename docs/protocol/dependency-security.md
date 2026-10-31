@@ -1,6 +1,6 @@
 # Dependency Security
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+Status: Follow-up work remains in the [Wrangler dependency claim item](../../plans/follow-ups/dependency-security-wrangler-claim.md).
 
 ## Verification Boundary
 

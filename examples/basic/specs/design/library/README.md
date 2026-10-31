@@ -125,6 +125,51 @@ enabled where the shell can highlight the view. A comparison, a removed
 screen, a preview that loads or failed, or a view without registered
 components disables it, with the shell's own sentence for that reason.
 
+The inspector, the metadata row and the prop field are the shipped `@mokly/ui`
+components too. A static artboard runs no script, so each inspector tab is a
+native disclosure of one group: a tab opens its panel and closes it again,
+opening a tab closes the others, and the open tab's Close is part of the tab.
+The divider grip is a picture over the workspace's native sizer, and the
+sheet's grabber is a native switch that the dock reads for the expanded
+height. The prop field frames the native control of its slot, and draws an
+optional field's Set check box and Not set line; a scoped rule in its sheet
+reads the check box, so the field's control and Not set swap in place. The
+panels of the artboards render the shipped components as well: the Details
+body, the comparison evidence, the instance tree of the Components tab, the
+supplied props and the selected instance's props panel, the Usage lists and
+their loading states, the controls' form with its alerts, and the edit status
+over the preview. A component page edits its props in place, in the same form
+as the controls artboards. The Browse and Changes designs draw the shipped
+comparison evidence inside the approved bordered card. The panels' actions and
+the tree's instances link to the artboards that show the outcome. Their stylesheets follow the
+shell's breakpoint, and a mobile render draws the narrow sheet, details body,
+field column and status pill at every width.
+
+The device frame, the comparison pane, the empty state and the flow step are
+the shipped `@mokly/ui` components too. The device frame renders
+`PreviewFrame` around `PhoneFrame` or `BrowserFrame`, in the scheme of the
+depicted screen. Where it stands decides its caption, as in the shell: on a
+stage it names its viewport above the chrome, and in a flow step or a
+comparison it stands where the shared `FrameSettingScope` context of
+`preview/frame_placement.tsx` places it, without a caption. A static artboard
+runs no script, so the window's bar is a picture of itself: the address copies
+nothing, and the expand toggle expands nothing. The compact flag draws a
+small phone, and the light-only flag shows the caption's Light-only note, as a
+Dark shell shows it. The comparison pane
+names its side, Before or Current, and the empty state's action links to the
+artboard of its outcome. The artboards render the rest of the preview slice
+in the same way: the stages and the document stage, the use-case flows, a
+removed entry's previous version with its states, the comparison stage with
+its sections, panes, viewports and layers, and the component pages' variant
+bar, canvases and component frames. A component canvas depicts its document
+in a bordered box that stands in for the shell's frame. The depicted document
+draws the component 24px from its top left, as the example's documents do in
+the shell. The previous version
+and the comparison stage stand in the preview pane, as the shell nests them. A
+static comparison draws each version's document on the shipped opaque
+surface, at a drawn scroll position, with a drawn scrollbar where the document
+is taller than the viewport.
+
 ## Authoring
 
 For each component, `{group}/{slug}.tsx` calls `defineComponent` with a
@@ -164,10 +209,11 @@ copying titles or authored order.
 Use explicit semantic `moklyInstance` names for repeated siblings. The
 `DesignInstances` context supplies a stable prefix for simultaneous viewport
 regions. Flow-step names must be independent of destinations or ordering.
-Input ids, label associations and description/error ids belong to the form caller;
-the prop-field component supplies framing and matching description/error nodes,
-including the surface, border and invalid state of whatever native control the
-caller puts in its slot, so a prop panel reads the same in every host.
+Input ids, label associations and the control's description and invalid state
+belong to the form caller; the prop-field component supplies the framing, the
+help and error nodes, whose ids are the input id followed by `-help` and
+`-error`, and the surface, border and invalid state of whatever native control
+the caller puts in its slot, so a prop panel reads the same in every host.
 
 Components may compose registered children. Top bar → Tag picker → Tag chip
 records the full nested ownership chain. Components supplied in a caller's slot
@@ -181,40 +227,14 @@ nearest `DesignNavigation` artboard. The component explorer's narrow shortcuts
 compare with the artboard that their shell renders. Only the top bar's brand
 link on the home screen opens its own artboard without the mark.
 
-The device frame's `scheme` flag adds the rendered scheme to its caption, as
-the component explorer previews show it, so no screen draws its own frame
-caption.
+No screen draws its own frame caption. The device frame and the component
+canvas name their viewport, as the shell's frames do.
 
 ## Styles And Hosts
 
-`style_files.ts` names each component's public stylesheet,
-`design-library/{group}/{slug}.css`, relative to the configuration file, and
-`metadata.ts` declares it through `stylesheets`. For a component that
-`@mokly/ui` provides, that sheet only imports the package's source
-stylesheets by their repository paths, plus mockup-only rules such as the
-compact and drawer flags. CSS Changes uses own-page matches
-kept after nested-component filtering, not file ownership or source paths.
-Shared helpers and saved fixtures are metadata or rendered-output inputs, not
-independent comparison evidence.
-
-Rendered components link their declared files in first-render order.
-The shared preview layout reserves intrinsic mobile widths so full-size phones
-cannot overlap desktop frames when Both is selected.
-The phone notch and home pill are decorative and ignore pointer events, so
-they cannot intercept interactions with the caller-owned screen below them.
-The configuration orders shared base styles first, the `$componentStylesheets`
-marker next, then context/layout overrides. Keep this explicit order: equal-specificity
-mobile rules must not override bounded workspace scrolling.
-The Rust core writes each document head. It links the declared files at the
-marker of the first matching rule, or after that rule's shared entries when
-the rule has no marker. A closed picker draws no chip, so it does not link chip
-CSS merely because another variant uses chips.
-
-Keep component selectors in its declared stylesheet. Tokens, resets, mixed
-selectors and cross-component layout/state rules stay in the shared design CSS.
-Keep shared host resets at zero specificity so component styles render
-identically in standalone samples and in-screen compositions.
-Declared sheets reload automatically in Serve, including after an edit.
+The [stylesheet rules](../../../design-library/README.md) say how a
+component's sheet imports the `@mokly/ui` stylesheets and how each document
+links the sheets in order.
 
 `host.tsx` supplies standalone layout and semantic parents without fixture data.
 Every inspector uses the ordinary preview workspace for its resizer and mobile

@@ -1,15 +1,11 @@
 import { MOVED_ROWS } from "./account_nav_data.js";
 import { DESTINATIONS, type DesignDestination } from "./destinations.js";
+import type { CardEvidence } from "./details.js";
 import { MiniDetails, MiniWelcome } from "./mini_screens.js";
 import { NavDrawer, NavTree, type ChangesStatus, type NavNode } from "./nav.js";
 import { REMOVED_SCREEN_ROWS } from "./nav_data.js";
 import { BrowserFrame, PhoneFrame } from "./stage.js";
-import {
-  ExcludedStylesheetList,
-  PAGE_STYLE_COPY,
-  SCREEN_STYLE_COPY,
-  StylesheetEvidenceList,
-} from "./stylesheet_evidence.js";
+import { PAGE_STYLE_COPY, SCREEN_STYLE_COPY } from "./stylesheet_evidence.js";
 
 /**
  * Comparison classification states depicted inside a loaded comparison. An
@@ -159,9 +155,7 @@ export function AvailabilityNav({
 }
 
 /** Content exclusions belong in the secondary comparison details. */
-export function IgnoredImpactCard() {
-  return <p>Excluded content: example-nav.</p>;
-}
+export const IGNORED_IMPACT: CardEvidence = { ignored: ["example-nav"] };
 
 /** The configured stylesheet that the screen cards name as changed. */
 const STYLES = "generated/styles.css";
@@ -169,83 +163,71 @@ const STYLES = "generated/styles.css";
 /** A changed stylesheet whose changed styles apply to neither Welcome nor Details. */
 const EXCLUDED_STYLES = "generated/excluded.css";
 
+/** The stylesheet that Welcome's Details examined and excluded. */
+const EXCLUDED: CardEvidence["excluded"] = {
+  paths: [EXCLUDED_STYLES],
+  sentence: SCREEN_STYLE_COPY.excluded,
+};
+
 /**
  * Welcome's Details in the Excluded (All) and Matched (Changes) designs. The
  * viewer shows the same Details in either filter: the retained file with the
  * changed styles that apply here, then the file it examined and excluded.
  */
-export function MatchedAndExcludedStyleCard() {
-  return (
-    <>
-      <StylesheetEvidenceList
-        lead={SCREEN_STYLE_COPY.files}
-        stylesheets={[
+export const MATCHED_AND_EXCLUDED_STYLES: CardEvidence = {
+  excluded: EXCLUDED,
+  files: {
+    lead: SCREEN_STYLE_COPY.files,
+    stylesheets: [
+      {
+        path: STYLES,
+        outcomes: [
           {
-            path: STYLES,
-            outcomes: [
-              {
-                lead: SCREEN_STYLE_COPY.matched,
-                selectors: [".example-head", "main a"],
-              },
-            ],
+            lead: SCREEN_STYLE_COPY.matched,
+            selectors: [".example-head", "main a"],
           },
-        ]}
-      />
-      <ExcludedStylesheetList
-        lead={SCREEN_STYLE_COPY.excluded}
-        paths={[EXCLUDED_STYLES]}
-      />
-    </>
-  );
-}
+        ],
+      },
+    ],
+  },
+};
 
 /**
  * Details in the same branch links only the excluded file. Nothing keeps it in
  * Changes, so its Details end with the line for an unchanged screen.
  */
-export function ExcludedOnlyStyleCard() {
-  return (
-    <>
-      <ExcludedStylesheetList
-        lead={SCREEN_STYLE_COPY.excluded}
-        paths={[EXCLUDED_STYLES]}
-      />
-      <p>{SCREEN_STYLE_COPY.noChanges}</p>
-    </>
-  );
-}
+export const EXCLUDED_ONLY_STYLES: CardEvidence = {
+  excluded: EXCLUDED,
+  noChanges: SCREEN_STYLE_COPY.noChanges,
+};
 
 /** A changed stylesheet whose change can reach anything on the screen. */
-export function UnresolvedStyleCard() {
-  return (
-    <StylesheetEvidenceList
-      lead={SCREEN_STYLE_COPY.files}
-      stylesheets={[
-        {
-          path: STYLES,
-          outcomes: [
-            { lead: SCREEN_STYLE_COPY.unresolved, selectors: [":root"] },
-          ],
-        },
-      ]}
-    />
-  );
-}
+export const UNRESOLVED_STYLES: CardEvidence = {
+  files: {
+    lead: SCREEN_STYLE_COPY.files,
+    stylesheets: [
+      {
+        path: STYLES,
+        outcomes: [
+          { lead: SCREEN_STYLE_COPY.unresolved, selectors: [":root"] },
+        ],
+      },
+    ],
+  },
+};
 
 /** A changed stylesheet whose change has no style name to show. */
-export function UnnamedStyleCard() {
-  return (
-    <StylesheetEvidenceList
-      lead={SCREEN_STYLE_COPY.files}
-      stylesheets={[
-        {
-          path: STYLES,
-          outcomes: [{ lead: SCREEN_STYLE_COPY.unnamed, selectors: [] }],
-        },
-      ]}
-    />
-  );
-}
+export const UNNAMED_STYLES: CardEvidence = {
+  files: {
+    lead: SCREEN_STYLE_COPY.files,
+    stylesheets: [
+      {
+        path: STYLES,
+        outcomes: [{ lead: SCREEN_STYLE_COPY.unnamed, selectors: [] }],
+      },
+    ],
+  },
+};
 
 /**
  * The changed handbook's stylesheets. The shared `.action` rule also changed
@@ -253,23 +235,21 @@ export function UnnamedStyleCard() {
  * handbook's own sheet changed no component and also has a change that can
  * apply anywhere on the page.
  */
-export function PageStyleCard() {
-  return (
-    <StylesheetEvidenceList
-      lead={PAGE_STYLE_COPY.files}
-      stylesheets={[
-        {
-          path: "styles/actions.css",
-          outcomes: [{ lead: PAGE_STYLE_COPY.outside, selectors: [".action"] }],
-        },
-        {
-          path: "styles/handbook.css",
-          outcomes: [
-            { lead: PAGE_STYLE_COPY.matched, selectors: ["article h2"] },
-            { lead: PAGE_STYLE_COPY.unresolved, selectors: [":root"] },
-          ],
-        },
-      ]}
-    />
-  );
-}
+export const PAGE_STYLES: CardEvidence = {
+  files: {
+    lead: PAGE_STYLE_COPY.files,
+    stylesheets: [
+      {
+        path: "styles/actions.css",
+        outcomes: [{ lead: PAGE_STYLE_COPY.outside, selectors: [".action"] }],
+      },
+      {
+        path: "styles/handbook.css",
+        outcomes: [
+          { lead: PAGE_STYLE_COPY.matched, selectors: ["article h2"] },
+          { lead: PAGE_STYLE_COPY.unresolved, selectors: [":root"] },
+        ],
+      },
+    ],
+  },
+};

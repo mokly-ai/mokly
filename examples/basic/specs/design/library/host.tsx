@@ -22,7 +22,7 @@ export function LibraryHost({
         viewport={input.viewport}
       />
     ) : slug === "metadata-row" && input.props.presentation === "props" ? (
-      <dl className="ce-props">{children}</dl>
+      <dl className="mbk-props">{children}</dl>
     ) : (
       children
     );

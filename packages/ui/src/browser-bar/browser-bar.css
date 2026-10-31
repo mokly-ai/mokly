@@ -1,5 +1,8 @@
 /* The bar of a browser window: its traffic lights, the address pill with its
-   copy glyph and "URL copied" message, and the expand toggle. */
+   copy glyph and "URL copied" message, and the expand toggle. The bar of a
+   static depiction is a picture of itself, so its address and its toggle
+   keep their resting look: the pointer and the hover rules apply only to the
+   bar that acts. */
 .browser-bar:where(.mbk-reset) {
   position: relative;
   height: 40px;
@@ -69,12 +72,15 @@
   color: var(--chrome-muted);
 }
 
-.address:hover:where(.mbk-reset) {
+:where(.browser-bar:not([data-browser-static]))
+  .address:hover:where(.mbk-reset) {
   background: var(--chrome-surface);
   color: var(--chrome-ink);
 }
 
-.address:hover .address-copy:where(.mbk-reset) {
+:where(.browser-bar:not([data-browser-static]))
+  .address:hover
+  .address-copy:where(.mbk-reset) {
   color: var(--chrome-accent);
 }
 
@@ -141,10 +147,17 @@
     border-color 0.12s ease;
 }
 
-.browser-expand:hover:where(.mbk-reset) {
+:where(.browser-bar:not([data-browser-static]))
+  .browser-expand:hover:where(.mbk-reset) {
   background: var(--chrome-surface);
   color: var(--chrome-accent);
   border-color: var(--chrome-border-strong);
+}
+
+/* The address and the toggle of a static depiction act on nothing. */
+.browser-bar[data-browser-static]
+  :is(.address, .browser-expand):where(.mbk-reset) {
+  cursor: default;
 }
 
 .browser-expand .i-expand:where(.mbk-reset),

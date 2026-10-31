@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { ComparisonStage } from "../../parts/compare.js";
 import { COMPONENT_NAVIGATION } from "../../parts/component_nav_data.js";
 import type { ComparisonMode } from "../../parts/destinations.js";
 import { EXAMPLE_CRUMB } from "../../parts/entry_paths.js";
@@ -44,7 +45,11 @@ function componentHighlight(
   return NESTING_COMPONENTS.has(entry.component) ? "available" : "empty";
 }
 
-/** One component-page shell for saved examples and editable controls designs. */
+/**
+ * One component-page shell for saved examples and editable controls designs.
+ * A comparison stands in the shipped comparison stage of the preview pane, as
+ * the shell nests it, and Current stands on the dotted stage.
+ */
 export function ComponentLayout({
   children,
   detailsPending = false,
@@ -100,7 +105,17 @@ export function ComponentLayout({
       <PreviewWorkspace
         inspector={inspector}
         render={children}
+        stage={mode === "current"}
         viewport={viewport}
+        wrap={
+          mode === "current"
+            ? undefined
+            : (previews) => (
+                <ComparisonStage component path={entry.path}>
+                  {previews}
+                </ComparisonStage>
+              )
+        }
       />
     </ExplorerShell>
   );

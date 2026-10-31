@@ -126,19 +126,24 @@ validation alert are labels rather than controls: each names its own state in
 information and is held to the decorative hairline standard. The badges draw
 `--chrome-border`, and the alert draws `--mbk-danger-edge`.
 
-Four controls keep a hairline boundary. The segmented control group, such as
+Seven controls keep a hairline boundary. The segmented control group, such as
 the viewport switch and the comparison modes, draws `--chrome-border`, and the
 resting navigation resize grip draws `--chrome-border-strong`. A pressed icon
 control, such as the pressed Highlight components toggle or a selected
-inspector tab, draws `--chrome-border`, and so does a resting tag chip. The
-group shows its value through the filled selected segment, and the grip draws
-the accent on hover and focus. A pressed icon control fills with the accent
-tint and draws its glyph in the accent, and a selected tag chip fills with the
-accent. Decision: the shipped hairlines, not the control edge, because each
-control already shows its state through a fill or the accent, and the design
-mockups render these shipped controls. No other boundary may claim these
-exceptions; a control state that draws a boundary must reach 3:1 against its
-own fill or the surface around it.
+inspector tab, draws `--chrome-border`, and so do a resting tag chip and a
+selected instance of the Components tab. The address pill and the expand
+toggle of a browser frame's bar draw `--chrome-border`, and the toggle draws
+`--chrome-border-strong` on hover. The group shows its value through the
+filled selected segment, and the grip draws the accent on hover and focus. A
+pressed icon control fills with the accent tint and draws its glyph in the
+accent, a selected instance fills with the accent tint and draws its text in
+the accent, and a selected tag chip fills with the accent. On hover, the
+address pill draws its copy glyph in the accent, and the toggle draws its
+glyph in the accent. Decision: the shipped hairlines, not the control edge,
+because each control already shows its state through a fill or the accent,
+and the design mockups render these shipped controls. No other boundary may
+claim these exceptions; a control state that draws a boundary must reach 3:1
+against its own fill or the surface around it.
 
 Disabled controls are outside the contrast minimums, as WCAG allows. They use
 `--chrome-disabled-bg`, `--chrome-disabled-edge` and `--chrome-disabled-ink`

@@ -36,6 +36,7 @@ const ENTRIES = [
     id: "components/action/default",
     evidence: "data-workspace-evidence",
     rest:
+      '<dl class="mbk-props mbk-reset"><div class="mbk-reset"><dt class="mbk-reset">Saved variant</dt><dd class="mbk-reset">Default</dd></div></dl>' +
       '<p class="mbk-reset">This stylesheet changed, but none of the changed styles apply to this variant.</p>' +
       '<p class="mbk-reset">Examined and excluded:</p><ul class="mbk-reset"><li class="mbk-reset">mockups/action.css</li></ul>' +
       '<p class="mbk-reset">No changes to this variant.</p>',

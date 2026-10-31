@@ -189,6 +189,29 @@ and the root's appearance. `LabelLayer` and
 draws the dimmed layer with a cutout and an outline for each box, in the
 colours of the `--mbk-highlight-scrim` and `--mbk-highlight-edge` roles.
 
+A static mockup sets `disclosures` on `Inspector`, which draws each tab as a
+native disclosure of one group, named by `contentId`: a tab opens its panel
+and closes it again without a script, one tab at a time, and Close is part of
+the open tab. A tab with an `href` is a link, which is its one keyboard stop.
+The resize separator is then a picture of its grip, and the sheet's grab is a
+native switch that `expanded` starts checked, which a host stylesheet reads to
+size the sheet. `PropFieldFrame` frames a native control that the mockup draws
+itself in the field's label column, Set check box, Not set line, help, and
+error. `TextButton` with an `href` is a link with the button's look, and the
+controls panels take `resetHref`, `retryHref`, `startHref`, and `currentHref`,
+which draw Reset while the props differ, the alert's action, a failed start's
+action, and Switch to Current as links. `InstanceTree` draws an instance with
+an `href` as a link with the button's look, whose selected one is the current
+page, and starts with the nested lists that `initiallyExpanded` names open.
+
+A static mockup sets `interactive={false}` on `BrowserFrame` or `BrowserBar`,
+which draws the bar as a picture of itself: the address copies nothing, the
+toggle is a picture named by what it would do, and neither takes the pointer
+or the hover look. On `EmptyState`, `interactive={false}` draws an action
+without an `href` as a picture of itself. A `VariantBar` variant without an
+`href` is a picture of its link that keeps the link's look and its current
+mark.
+
 ## Development
 
 From the repository root, `npm run build` builds this package before the
@@ -294,6 +317,8 @@ override the desktop layout rules.
   `Inspector` and `InspectorHandle`: the tabs, whose keys `tab-keys.ts`
   handles, the panels, Close with its focus return, and the resize separator
   and sheet grab
+- [`src/inspector/inspector-disclosures.tsx`](./src/inspector/inspector-disclosures.tsx)
+  — the inspector of a static depiction, whose tabs are native disclosures
 - [`src/details-panel/details-panel.tsx`](./src/details-panel/details-panel.tsx)
   — `DetailsPanel` and `DetailsBody`: the collapsible Details and the body
   with the description, the rationale, and the metadata column
@@ -302,7 +327,8 @@ override the desktop layout rules.
   chips, links, chip groups, and entry chips of a value
 - [`src/prop-field/prop-field.tsx`](./src/prop-field/prop-field.tsx) —
   `PropField` and `PropFields`: a field with its label, help, error, and
-  optional supply, and the native control of each kind in `prop-input.tsx`
+  optional supply, and the native control of each kind in `prop-input.tsx`;
+  `PropFieldFrame` frames a static depiction's own control
 - [`src/controls-panel/controls-panel.tsx`](./src/controls-panel/controls-panel.tsx)
   — `ControlsPanel` and `SavedPropsPanel`: the edit form with its alerts and
   focus targets, and the saved props
@@ -317,9 +343,13 @@ override the desktop layout rules.
 - [`src/instance-tree/instance-tree.tsx`](./src/instance-tree/instance-tree.tsx)
   — `InstanceTree`: the viewport choice and the instances, whose nested lists
   keep their open state
+- [`src/count/count.ts`](./src/count/count.ts) — `count`, the internal count
+  wording of the usage list and the instance tree, such as "1 instance" and
+  "3 instances"
 - [`src/comparison-evidence/comparison-evidence.tsx`](./src/comparison-evidence/comparison-evidence.tsx)
   — `ComparisonEvidence`: the comparison facts of Details in the designs'
-  order, with the heading and the files of `evidence-files.tsx`
+  order, with the saved variant's rows, the heading, and the files of
+  `evidence-files.tsx`
 - [`src/text-button/text-button.tsx`](./src/text-button/text-button.tsx) —
   `TextButton`, the text button of the inspector's panels
 - [`src/stage/stage.tsx`](./src/stage/stage.tsx) — `Stage`, the dotted
@@ -329,10 +359,12 @@ override the desktop layout rules.
   label, and lines, a whole document's frame, and the `<iframe>` element
 - [`src/device-frame/device-frame.tsx`](./src/device-frame/device-frame.tsx)
   — `PhoneFrame` with the status band of `phone-status.tsx`, and
-  `BrowserFrame`, whose expanded window covers the page
+  `BrowserFrame`, whose expanded window covers the page, or whose bar is a
+  picture in a static depiction
 - [`src/browser-bar/browser-bar.tsx`](./src/browser-bar/browser-bar.tsx) —
   `BrowserBar`: the traffic lights, the address with its "URL copied"
-  message, and the expand toggle of a browser window
+  message, and the expand toggle of a browser window, as controls or as
+  pictures of a static depiction
 - [`src/flow-step/flow-step.tsx`](./src/flow-step/flow-step.tsx) —
   `FlowStage` and `FlowStep`: a user flow's column of numbered steps
 - [`src/previous-version/previous-version.tsx`](./src/previous-version/previous-version.tsx)
@@ -342,8 +374,8 @@ override the desktop layout rules.
 - [`src/scheme-fallback/scheme-fallback.tsx`](./src/scheme-fallback/scheme-fallback.tsx)
   — `LightOnlyNote` and `LightOnlyBand`, which only a Dark shell shows
 - [`src/empty-state/empty-state.tsx`](./src/empty-state/empty-state.tsx) —
-  `EmptyState` with its action, and the home, missing route, and removed
-  states
+  `EmptyState` with its action, as a link, a button, or the picture of a
+  static depiction, and the home, missing route, and removed states
 - [`src/comparison-stage/comparison-stage.tsx`](./src/comparison-stage/comparison-stage.tsx)
   — `ComparisonStage`, `ComparisonSection`, `ComparisonPanes`, and
   `ComparisonFailure`: Current, the comparison stage, and its sections
@@ -351,7 +383,8 @@ override the desktop layout rules.
   — `ComparisonPane`, `ComparisonLayer`, `ComparisonViewport`,
   `ComparisonSurface`, and `ComponentFrame`: one version and its viewport
 - [`src/variant-bar/variant-bar.tsx`](./src/variant-bar/variant-bar.tsx) —
-  `VariantBar`: the links of a component's saved variants and the status
+  `VariantBar`: the links of a component's saved variants, or the pictures
+  of a static depiction, and the status
 - [`src/shell-layout/shell-layout.tsx`](./src/shell-layout/shell-layout.tsx)
   — `ShellLayout`, the standalone root; `SkipLink`, `ShellBody`,
   `MainRegion`, and `RouteStatus`, which both roots draw; and `RootState`, the

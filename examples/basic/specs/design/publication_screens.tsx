@@ -7,7 +7,7 @@ import { DetailsPanel } from "./parts/details.js";
 import { ENTRY_PATHS, SCREEN_CRUMBS } from "./parts/entry_paths.js";
 import { MiniWelcome } from "./parts/mini_screens.js";
 import { NavTree } from "./parts/nav.js";
-import { ReasonSentences } from "./parts/reason_sentences.js";
+import { reasonEvidence } from "./parts/reason_sentences.js";
 import {
   ScreenHead,
   Shell,
@@ -44,11 +44,11 @@ function CatalogueView({
       />
       <Stage>
         {viewport === "desktop" ? (
-          <BrowserFrame address="example.test/welcome" label="Desktop">
+          <BrowserFrame address="example.test/welcome">
             <MiniWelcome />
           </BrowserFrame>
         ) : (
-          <PhoneFrame small label="Mobile">
+          <PhoneFrame small>
             <MiniWelcome compact />
           </PhoneFrame>
         )}
@@ -56,7 +56,7 @@ function CatalogueView({
       <DetailsPanel
         subject="welcome"
         comparisonEvidence={
-          changes ? <ReasonSentences reasons={["material"]} /> : undefined
+          changes ? { reasons: reasonEvidence(["material"]) } : undefined
         }
       />
     </Shell>

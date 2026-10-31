@@ -115,6 +115,34 @@ test("the facts follow the designs' order with the shell's text nodes", () => {
   );
 });
 
+test("a saved variant follows the reasons, and says when its saved props stayed the same", () => {
+  const reasons = [{ key: "material/0", text: "Rendered content changed." }];
+  const heading = `${HEADING}<p class="mbk-reset">Compared with the branch point on main.</p>`;
+  assert.equal(
+    renderToStaticMarkup(
+      <ComparisonEvidence
+        base="main"
+        mark="data-workspace-evidence"
+        reasons={reasons}
+        savedVariant={{ savedPropsUnchanged: true, title: "Default" }}
+      />,
+    ),
+    `<section class="mbk-comparison-evidence mbk-reset" data-workspace-evidence="">${heading}<p class="mbk-reset">Rendered content changed.</p>` +
+      '<dl class="mbk-props mbk-reset"><div class="mbk-reset"><dt class="mbk-reset">Saved variant</dt><dd class="mbk-reset">Default</dd></div><div class="mbk-reset"><dt class="mbk-reset">Saved props</dt><dd class="mbk-reset">Unchanged</dd></div></dl></section>',
+  );
+  assert.equal(
+    renderToStaticMarkup(
+      <ComparisonEvidence
+        base="main"
+        mark="data-workspace-evidence"
+        savedVariant={{ savedPropsUnchanged: false, title: "Compact" }}
+      />,
+    ),
+    `<section class="mbk-comparison-evidence mbk-reset" data-workspace-evidence="">${heading}` +
+      '<dl class="mbk-props mbk-reset"><div class="mbk-reset"><dt class="mbk-reset">Saved variant</dt><dd class="mbk-reset">Compact</dd></div></dl></section>',
+  );
+});
+
 test("a page's evidence is the heading, its files, its exclusions, and its terminal line", () => {
   assert.equal(
     renderToStaticMarkup(

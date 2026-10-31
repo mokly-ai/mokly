@@ -1,52 +1,30 @@
-.ce-inspector svg {
-  display: block;
-  flex-shrink: 0;
+/* The inspector is the shipped one. The shell's page rules start a paragraph
+   without a top margin, so this host does the same for the panels. */
+:where(.mbk-inspector-content p) {
+  margin-top: 0;
 }
-.ce-inspector h3 {
-  font-size: 13px;
+/* The selected instance's own line keeps its spacing. */
+:where(.mbk-inspector-content) .ce-selected-instance p {
   margin: 0 0 12px;
 }
-.ce-inspector h3 > span {
-  color: var(--chrome-muted);
-  font-size: 11px;
-  font-weight: 400;
-  margin-left: 6px;
-}
-.ce-inspector p {
-  margin: 0 0 12px;
-}
-.ce-inspector .ce-usage-list,
-.ce-inspector .ce-props,
-.ce-inspector .ce-control-row,
-.ce-inspector .ce-instance-tree {
-  max-width: 680px;
-}
-.ce-inspector .ce-affected {
-  border-top: 1px solid var(--chrome-border);
-  margin-top: 20px;
-  padding-top: 18px;
-}
-/* Mobile panels float over the preview and retain their own scroll position. */
+/* Mobile panels float over the preview and retain their own scroll position.
+   The sheet sits on the workspace's bottom edge and keeps the safe area
+   inside it, and the grab's check expands the open sheet. */
 .mbk-shell--mobile .ce-inspector-dock {
   bottom: 0;
-  height: calc(49px + env(safe-area-inset-bottom));
   left: 0;
-  padding-bottom: env(safe-area-inset-bottom);
   position: absolute;
   right: 0;
   z-index: 3;
 }
-.mbk-shell--mobile .ce-inspector-dock:has(.ce-inspector > details[open]) {
-  bottom: max(12px, env(safe-area-inset-bottom));
+.mbk-shell--mobile .ce-inspector-dock:has(.mbk-inspector > details[open]) {
   height: 55cqh;
   max-height: calc(100cqh - 24px);
   min-height: 180px;
-  overflow: visible;
-  padding-bottom: 0;
 }
 .mbk-shell--mobile
-  .ce-inspector-dock:has(.ce-inspector > details[open]):has(
-    .ce-sheet-expand:checked
+  .ce-inspector-dock:has(.mbk-inspector > details[open]):has(
+    .mbk-sheet-grab > input:checked
   ) {
   height: 85cqh;
 }

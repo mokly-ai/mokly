@@ -11,6 +11,7 @@ import {
 } from "@mokly/ui/comparison-evidence";
 
 import { decodeProps } from "../components/codec.js";
+import { isManifestComponentVariant } from "../components/manifest_types.js";
 import { viewHref } from "../navigation/routes.js";
 import type { ChangeReason } from "../review/types.js";
 
@@ -92,6 +93,9 @@ export function WorkspaceEvidence({
     (item) => item.value.path === variantPath,
   );
   const savedProps = evidence.comparison?.savedProps;
+  const savedPropsChanged =
+    savedProps !== undefined &&
+    JSON.stringify(savedProps.before) !== JSON.stringify(savedProps.after);
   return (
     <ComparisonEvidence
       base={data.base}
@@ -128,11 +132,20 @@ export function WorkspaceEvidence({
       previousPath={previousPath}
       reasons={reasonSentences(evidence.reasons)}
       savedProps={
-        savedProps &&
-        JSON.stringify(savedProps.before) !== JSON.stringify(savedProps.after)
+        savedProps && savedPropsChanged
           ? {
               after: propText(decodeProps(savedProps.after)),
               before: propText(decodeProps(savedProps.before)),
+            }
+          : undefined
+      }
+      savedVariant={
+        data.entry.kind === "component" &&
+        isManifestComponentVariant(data.entry)
+          ? {
+              savedPropsUnchanged:
+                savedProps !== undefined && !savedPropsChanged,
+              title: data.entry.title,
             }
           : undefined
       }

@@ -1,6 +1,9 @@
+import type { ReactNode } from "react";
+
+import { ComparisonStage } from "../../parts/compare.js";
 import type { ComparisonMode } from "../../parts/destinations.js";
 import { EXAMPLE_CRUMB } from "../../parts/entry_paths.js";
-import { PreviousVersionLabel } from "../../parts/removed_preview.js";
+import { PreviousVersionStage } from "../../parts/removed_preview.js";
 import {
   ScreenHead,
   type ArtboardViewport,
@@ -68,6 +71,20 @@ export function ScreenPage({
   // Changed components affect this screen, so it compares while Unmodified.
   const affected = comparison !== undefined && "affected" in comparison;
   const comparisonMode = affected ? "side-by-side" : "current";
+  /** The shipped container of the previews: a comparison, or a removal. */
+  const container = (previews: ReactNode) =>
+    affected ? (
+      <ComparisonStage path={path}>{previews}</ComparisonStage>
+    ) : removed ? (
+      <PreviousVersionStage
+        entry={{ kind: "screen", path, title }}
+        viewport={viewport}
+      >
+        {previews}
+      </PreviousVersionStage>
+    ) : (
+      previews
+    );
   return (
     <ExplorerShell
       design={limit?.design ?? INSPECTION_PAGES[state]}
@@ -90,9 +107,14 @@ export function ScreenPage({
           />
         }
       />
-      {removed ? <PreviousVersionLabel /> : null}
       <PreviewWorkspace
-        inspector={<ScreenDetails state={state} props={limit?.panel} />}
+        inspector={
+          <ScreenDetails
+            props={limit?.panel}
+            state={state}
+            viewport={viewport}
+          />
+        }
         viewport={viewport}
         render={(previewViewport) =>
           affected ? (
@@ -101,6 +123,8 @@ export function ScreenPage({
             <ConsumerFrame state={state} viewport={previewViewport} />
           )
         }
+        stage={!affected}
+        wrap={container}
       />
     </ExplorerShell>
   );

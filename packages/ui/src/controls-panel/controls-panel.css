@@ -1,5 +1,6 @@
 /* The Props tab's controls: the heading with the entry's title and Reset, the
-   notices and alerts, the reset status, and the fieldset of the fields. */
+   notices and alerts, the reset status, and the fieldset of the fields. The
+   Reset of a static depiction is a link with the button's look. */
 .mbk-component-controls {
   max-width: 680px;
 }
@@ -26,7 +27,8 @@
   color: var(--mbk-status-changed-ink);
 }
 
-.mbk-controls-reset {
+.mbk-controls-reset,
+a.mbk-controls-reset {
   padding: 0;
   border: 0;
   background: none;

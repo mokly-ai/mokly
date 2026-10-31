@@ -42,17 +42,21 @@
   color: var(--chrome-muted);
 }
 
-.mbk-chip.tag:is(a, button):hover {
+/* The hover fill marks a resting link or button, so a selected chip keeps the
+   accent under the pointer. */
+.mbk-chip.tag:is(a, button):not(.active):hover {
   background: var(--mokly-accent-soft);
 }
 
-.mbk-chip.tag:is(a, button).active {
+/* The selection draws on every form of the chip: a link, a toggle button, and
+   the picture of a static depiction. */
+.mbk-chip.tag.active {
   background: var(--mokly-accent);
   border-color: var(--mokly-accent);
   color: var(--mokly-accent-contrast);
 }
 
-.mbk-chip.tag:is(a, button).active svg {
+.mbk-chip.tag.active svg {
   color: var(--mokly-accent-contrast);
 }
 

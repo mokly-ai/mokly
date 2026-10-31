@@ -136,3 +136,33 @@ test("the action can stand inline, and a line stands in for content", () => {
     '<p class="mbk-empty mbk-reset">Nothing here.</p>',
   );
 });
+
+test("a static state draws an action without an address as a picture", () => {
+  assert.equal(
+    renderToStaticMarkup(
+      <EmptyState
+        action={{ label: "Retry", mark: "data-mokly-preview-retry" }}
+        interactive={false}
+        title="Unavailable"
+      />,
+    ),
+    '<div class="mbk-empty mbk-reset"><h2 class="mbk-reset">Unavailable</h2><span class="mbk-empty-link mbk-reset" data-mokly-preview-retry="">Retry</span></div>',
+  );
+  // A link stays a link.
+  assert.equal(
+    renderToStaticMarkup(
+      <EmptyState action={{ href: "../a/", label: "A" }} interactive={false} />,
+    ),
+    '<div class="mbk-empty mbk-reset"><a class="mbk-empty-link mbk-reset" href="../a/">A</a></div>',
+  );
+  let presses = 0;
+  render(
+    <EmptyAction
+      action={{ label: "Try again", onClick: () => presses++ }}
+      interactive={false}
+    />,
+  );
+  assert.equal(screen.queryAllByRole("button").length, 0);
+  fireEvent.click(screen.getByText("Try again"));
+  assert.equal(presses, 0);
+});

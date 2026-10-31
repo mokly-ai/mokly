@@ -2,7 +2,8 @@
  * The fields of the Props tab: one row for each control, its name in a label
  * column and then its value, its help, and its error. An optional field has a
  * check box that supplies it, and says when it is not set. The field names
- * only its visible help or error as its control's description.
+ * only its visible help or error as its control's description. A static
+ * depiction that runs no script frames a native control that it draws itself.
  */
 
 import type { ReactNode } from "react";
@@ -72,6 +73,102 @@ export function PropField({
 }) {
   // An optional toggle's value check box carries the field's name.
   const named = control.kind === "boolean" && optional;
+  return (
+    <FieldFrame
+      description={description}
+      disabled={disabled}
+      error={error}
+      id={id}
+      label={label}
+      named={named}
+      onSupply={onSupply}
+      optional={optional}
+      supplied={supplied}
+      wording={wording}
+    >
+      <PropInput
+        control={control}
+        describedBy={
+          error !== undefined
+            ? `${id}-error`
+            : description
+              ? `${id}-help`
+              : undefined
+        }
+        disabled={disabled}
+        id={id}
+        invalid={error !== undefined}
+        {...(named ? { label } : {})}
+        name={name}
+        onChange={(next, immediate) => onChange?.(next, immediate)}
+        supplied={supplied}
+        value={value}
+      />
+    </FieldFrame>
+  );
+}
+
+/** What a field's frame shows around its control. */
+interface FrameProps {
+  /** The field's help, or empty when it has none. */
+  description: string;
+  disabled: boolean;
+  /** Why the value is not valid. */
+  error?: string | undefined;
+  /** The id of the control, unique in the document. */
+  id: string;
+  label: string;
+  /** Receives whether the reader supplies an optional field. */
+  onSupply?: ((supplied: boolean) => void) | undefined;
+  optional: boolean;
+  /** Whether the prop has a value. */
+  supplied: boolean;
+  wording: PropFieldWording;
+}
+
+/**
+ * One field of a static depiction, around a native control that the host
+ * draws itself: an input or a select with the field's id. The control carries
+ * the id of the help or the error that describes it, its invalid state, and
+ * its value. The help and the error take the ids of `PropField`.
+ */
+export function PropFieldFrame({
+  input,
+  ...frame
+}: FrameProps & {
+  /** The native control. */
+  input: ReactNode;
+}) {
+  return (
+    <FieldFrame {...frame} named={false}>
+      {input}
+    </FieldFrame>
+  );
+}
+
+/**
+ * The frame of one field: the label column, the check box that supplies an
+ * optional field, the control, the line of a field without a value, the
+ * help, and the error.
+ */
+function FieldFrame({
+  children,
+  description,
+  disabled,
+  error,
+  id,
+  label,
+  named,
+  onSupply,
+  optional,
+  supplied,
+  wording,
+}: FrameProps & {
+  /** The control. */
+  children: ReactNode;
+  /** Whether the control names itself, so the label column names nothing. */
+  named: boolean;
+}) {
   const heading = (
     <>
       {label}
@@ -107,24 +204,7 @@ export function PropField({
             <span className="mbk-reset">{wording.set}</span>
           </label>
         ) : null}
-        <PropInput
-          control={control}
-          describedBy={
-            error !== undefined
-              ? `${id}-error`
-              : description
-                ? `${id}-help`
-                : undefined
-          }
-          disabled={disabled}
-          id={id}
-          invalid={error !== undefined}
-          {...(named ? { label } : {})}
-          name={name}
-          onChange={(next, immediate) => onChange?.(next, immediate)}
-          supplied={supplied}
-          value={value}
-        />
+        {children}
         {supplied ? null : (
           <p className="mbk-control-unset mbk-reset">{wording.notSet}</p>
         )}

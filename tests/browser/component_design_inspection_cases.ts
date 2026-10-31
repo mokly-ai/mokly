@@ -88,7 +88,7 @@ export function registerComponentDesignInspection(
           }
           if (route === "nested") {
             await expect(
-              page.locator(".ce-instance-tree details").first(),
+              page.locator(".mbk-instance-tree details").first(),
             ).toHaveAttribute("open", "");
             await expect(
               page.getByRole("region", { name: "Selected instance" }),
@@ -111,9 +111,7 @@ export function registerComponentDesignInspection(
           componentDesignUrl("design/components/states/unavailable", viewport),
         );
         await expect(
-          page.getByText(
-            "Component inspection is unavailable for this screen.",
-          ),
+          page.getByText("Component inspection is unavailable for this view."),
         ).toBeVisible();
         await expect(
           page.getByRole("switch", { name: "Highlight components" }),
@@ -127,9 +125,11 @@ export function registerComponentDesignInspection(
         await page
           .getByRole("button", { name: "Components", exact: true })
           .click();
+        // The tree lists the instance that renders nothing, and its
+        // selection says that it has no visible region.
         await page
-          .locator(".ce-instance-tree summary")
-          .filter({ hasText: "Help hint" })
+          .locator(".mbk-instance-tree")
+          .getByRole("link", { name: "Help hint · Help" })
           .click();
         await expect(
           page.getByText("No visible region", { exact: true }),
@@ -137,9 +137,7 @@ export function registerComponentDesignInspection(
         await page.goto(
           componentDesignUrl("design/components/states/unused", viewport),
         );
-        await expect(
-          page.getByText("No screens or components use Badge yet."),
-        ).toBeVisible();
+        await expect(page.getByText("No recorded consumers.")).toBeVisible();
         await page.goto(
           componentDesignUrl("design/components/states/removed", viewport),
         );
@@ -149,7 +147,7 @@ export function registerComponentDesignInspection(
             .getByText("This variant has been removed.", { exact: true }),
         ).toBeVisible();
         await page
-          .getByRole("region", { name: "Affected screens", exact: true })
+          .locator('[data-usage-section="affected"]')
           .getByRole("link", { name: "Farewell" })
           .click();
         await expect(page).toHaveURL(
@@ -183,7 +181,7 @@ export function registerComponentDesignInspection(
         await expect(
           page.getByRole("group", { name: "Comparison mode" }),
         ).toHaveCount(0);
-        await expect(page.locator(".mbk-pane-missing")).toHaveCount(0);
+        await expect(page.locator(".mb-pane-missing")).toHaveCount(0);
         await expect(
           page.getByRole("switch", { name: "Dark mode" }),
         ).toHaveCount(0);

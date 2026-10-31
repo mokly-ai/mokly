@@ -4,7 +4,11 @@ export const checklistTitle = "Before you begin";
 /** Steps the saved Default variant marks complete, its `completed` prop. */
 export const checklistCompleted = 3;
 
-/** Every step in order, as the Before version words them. */
+/**
+ * Every step in order, as the Before version words them: enough fixed-height
+ * rows to make the Checklist more than twice as tall as the shipped
+ * component frame.
+ */
 const steps = [
   "Create your account",
   "Confirm your email",
@@ -16,6 +20,20 @@ const steps = [
   "Turn on notifications",
   "Review your privacy",
   "Start your first session",
+  "Join a group",
+  "Follow a topic",
+  "Save a recipe",
+  "Set a weekly goal",
+  "Connect your calendar",
+  "Choose a theme",
+  "Add a backup email",
+  "Turn on two-step sign-in",
+  "Download the app",
+  "Bookmark an article",
+  "Share your progress",
+  "Rate your first week",
+  "Explore the library",
+  "Finish your profile",
 ] as const;
 
 /** The one step the Current version rewords, by its position in the list. */

@@ -33,3 +33,22 @@ test("a text button without a callback stays a button that a press leaves alone"
   fireEvent.click(screen.getByRole("button", { name: "Try again" }));
   assert.ok(screen.getByRole("button", { name: "Try again" }));
 });
+
+test("a text button with an address is a link with the button's look, which reports no press", () => {
+  assert.equal(
+    renderToStaticMarkup(<TextButton href="../pending/">Try again</TextButton>),
+    '<a class="mbk-text-button mbk-reset" href="../pending/">Try again</a>',
+  );
+  const presses: unknown[] = [];
+  render(
+    <TextButton href="#pending" onClick={() => presses.push("press")}>
+      Try again
+    </TextButton>,
+  );
+  fireEvent.click(screen.getByRole("link", { name: "Try again" }));
+  assert.deepEqual(presses, []);
+  assert.deepEqual(
+    screen.queryAllByRole("button").map((element) => element.textContent),
+    [],
+  );
+});

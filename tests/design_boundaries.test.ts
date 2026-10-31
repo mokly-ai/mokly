@@ -33,7 +33,7 @@ function markedFillTokens(tokens: Map<string, string>): string[] {
 
 /** Selectors naming a control primitive, whose boundary is a control edge. */
 const CONTROL_SELECTOR =
-  /\bbutton\b|\binput\b|\bselect\b|\bsummary\b|\btextarea\b|\.ce-action|\.ce-button|\.mbk-icon-(?:button|select)|\.mbk-seg|\.mbk-appearance|\.ce-sheet-expand|\.mbk-chip\.flow:is\(a\)/u;
+  /\bbutton\b|\binput\b|\bselect\b|\bsummary\b|\btextarea\b|\.ce-action|\.ce-button|\.mbk-icon-(?:button|select)|\.mbk-seg|\.mbk-appearance|\.mbk-chip:is\(\.flow, \.screen\)/u;
 
 /**
  * `@mokly/ui` stylesheets that style a control through a base class whose
@@ -54,8 +54,12 @@ const HAIRLINE_TOKENS = new Set([
  * exempts it, so a new entry has to state why rather than join a list.
  */
 const DECORATIVE_BOUNDARIES = new Map([
-  [".ce-control-alert", "a label naming its own state in 5.97:1 ink"],
+  [".mbk-control-alert", "a label naming its own state in 5.97:1 ink"],
   [".ce-action:disabled", "WCAG exempts a disabled control"],
+  [
+    ":where(.browser-bar:not([data-browser-static])) .browser-expand:hover:where(.mbk-reset)",
+    "the user kept the shipped border on 2026-10-31",
+  ],
 ]);
 
 /**
@@ -63,12 +67,7 @@ const DECORATIVE_BOUNDARIES = new Map([
  * belongs to a descendant, not to a control. Each entry must be reached by the
  * audit, so a future control cannot quietly inherit the exemption.
  */
-const EXEMPT_SURFACES = new Map([
-  [
-    "design-library/inspector/inspector.css",
-    ".ce-design .mbk-shell--mobile .ce-inspector:has(> details[open])",
-  ],
-]);
+const EXEMPT_SURFACES = new Map<string, string>();
 
 /**
  * Control surfaces that keep a decorative hairline, each named as the audit
@@ -84,12 +83,16 @@ const EXEMPT_CONTROL_SURFACES = new Map([
     "the user kept the shipped border on 2026-10-30",
   ],
   [
-    'packages/ui/src/icon-control/icon-control.css .mbk-icon-button[aria-selected="true"], .mbk-icon-button[aria-pressed="true"], .mbk-icon-button:has(> input:checked)',
+    'packages/ui/src/icon-control/icon-control.css .mbk-icon-button[aria-selected="true"], .mbk-icon-button[aria-pressed="true"], .mbk-icon-button:has(> input:checked), details[open] > summary.mbk-icon-button',
     "the user kept the shipped border on 2026-10-30",
   ],
   [
     "packages/ui/src/tag-chip/tag-chip.css .mbk-chip",
     "the user kept the shipped border on 2026-10-30",
+  ],
+  [
+    'packages/ui/src/instance-tree/instance-tree.css .mbk-instance-select[aria-pressed="true"], .mbk-instance-tree a.mbk-instance-select[aria-current="true"]',
+    "the user kept the shipped border on 2026-10-31",
   ],
 ]);
 
@@ -101,24 +104,26 @@ const EXEMPT_CONTROL_SURFACES = new Map([
  */
 const AUDITED_BOUNDARIES = [
   "design-component-controls.css .ce-action--quiet",
-  "design-component-controls.css .ce-control-alert",
   'design-component-inspection.css .ce-button[aria-pressed="true"]',
   "design-components.css .ce-action:disabled",
   "design-components.css .ce-badge",
   "design-components.css .ce-design a:focus-visible, .ce-design button:focus-visible, .ce-design summary:focus-visible, .ce-design input:focus-visible, .ce-design select:focus-visible",
-  "design-components.css .ce-variants a[aria-current]",
-  "design-library/inspector/inspector.css .ce-design .mbk-shell--mobile .ce-inspector:has(> details[open])",
-  "design-library/inspector/inspector.css .ce-inspector > details[open] > summary",
-  "design-library/inspector/inspector.css .ce-sheet-expand:focus-visible",
-  "design-stage.css .mbk-chip.flow:is(a):focus-visible",
   "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:focus-within",
   "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:hover",
+  "packages/ui/src/browser-bar/browser-bar.css :where(.browser-bar:not([data-browser-static])) .browser-expand:hover:where(.mbk-reset)",
   "packages/ui/src/catalogue-tree/catalogue-tree.css .mbk-nav-variants-toggle:focus-visible",
   "packages/ui/src/comparison-toolbar/comparison-toolbar.css .mbk-diff-sync input:checked + .mbk-diff-sync-track",
   "packages/ui/src/comparison-toolbar/comparison-toolbar.css .mbk-diff-sync input:focus-visible + .mbk-diff-sync-track",
+  "packages/ui/src/controls-panel/controls-panel.css .mbk-control-alert",
   "packages/ui/src/icon-control/icon-control.css .mbk-icon-button:focus-visible, .mbk-icon-select:focus-within, .mbk-icon-button:has(> input:focus-visible)",
-  'packages/ui/src/icon-control/icon-control.css .mbk-icon-button[aria-selected="true"], .mbk-icon-button[aria-pressed="true"], .mbk-icon-button:has(> input:checked)',
-  "packages/ui/src/tag-chip/tag-chip.css .mbk-chip.tag:is(a, button).active",
+  'packages/ui/src/icon-control/icon-control.css .mbk-icon-button[aria-selected="true"], .mbk-icon-button[aria-pressed="true"], .mbk-icon-button:has(> input:checked), details[open] > summary.mbk-icon-button',
+  "packages/ui/src/inspector/inspector.css .mbk-sheet-grab:has(> input:focus-visible)",
+  'packages/ui/src/instance-tree/instance-tree.css .mbk-instance-select[aria-pressed="true"], .mbk-instance-tree a.mbk-instance-select[aria-current="true"]',
+  "packages/ui/src/prop-field/prop-field.css .mbk-control-field input:focus-visible, .mbk-control-field select:focus-visible",
+  "packages/ui/src/tag-chip/tag-chip.css .mbk-chip.tag.active",
+  "packages/ui/src/text-button/text-button.css .mbk-text-button:focus-visible",
+  "packages/ui/src/variant-bar/variant-bar.css .mbk-selection-bar a:focus-visible",
+  'packages/ui/src/variant-bar/variant-bar.css .mbk-selection-bar a[aria-current="page"], .mbk-selection-bar > .mbk-variant-option[aria-current="page"]',
 ];
 
 function isExemptSurface(file: string, selector: string): boolean {

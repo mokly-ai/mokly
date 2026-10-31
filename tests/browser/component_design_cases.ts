@@ -40,7 +40,7 @@ export function registerComponentDesign(
           ).toHaveCount(1);
           await expect(page.locator(".mbk-screen-head h2")).toBeVisible();
           for (const panel of await page
-            .locator(".ce-workspace details[open] > .ce-inspector-panel")
+            .locator(".ce-workspace details[open] > .mbk-inspector-content")
             .all()) {
             await expect(
               panel,
@@ -76,7 +76,9 @@ export function registerComponentDesign(
         await page.goto(
           componentDesignUrl("design/components/overview", viewport),
         );
-        await expect(page.locator(".ce-canvas:visible")).toHaveCount(1);
+        await expect(page.locator(".mbk-component-canvas:visible")).toHaveCount(
+          1,
+        );
         await expect(page.locator(".phone-frame, .browser-frame")).toHaveCount(
           0,
         );
@@ -87,18 +89,24 @@ export function registerComponentDesign(
         await expect(page).toHaveURL(
           componentDesignUrl("design/components/pages/variants", viewport),
         );
-        const preview = page.getByRole("region", {
-          name: `${viewport === "desktop" ? "Desktop" : "Mobile"} component preview`,
-          exact: true,
-        });
-        await expect(page.locator(".ce-canvas:visible")).toHaveCount(1);
+        const preview = page.locator(
+          `.mbk-component-canvas.mbk-frame-${viewport}`,
+        );
+        await expect(page.locator(".mbk-component-canvas:visible")).toHaveCount(
+          1,
+        );
         await expect(
           preview.getByRole("button", { name: "Continue" }),
         ).toBeDisabled();
-        await expect(page.getByLabel("Supplied props")).toContainText("true");
+        // The variant page edits the Disabled variant's own props in place.
+        await expect(
+          page
+            .getByRole("region", { name: "Props", exact: true })
+            .getByRole("checkbox", { name: "disabled", exact: true }),
+        ).toBeChecked();
         await page.getByRole("button", { name: "Usage", exact: true }).click();
         const welcome = page
-          .getByRole("region", { name: "Used by", exact: true })
+          .locator('[data-usage-section="used-by"]')
           .getByRole("link", { name: "Welcome" });
         await welcome.focus();
         await page.keyboard.press("Enter");
@@ -147,9 +155,7 @@ export function registerComponentDesign(
           viewport === "desktop" ? ".mbk-nav-filter-count" : ".ce-change-count";
         await expect(page.locator(count)).toHaveText("1");
         await expect(
-          page
-            .getByRole("region", { name: "Affected screens", exact: true })
-            .getByRole("link"),
+          page.locator('[data-usage-section="affected"]').getByRole("link"),
         ).toHaveCount(2);
         if (viewport === "desktop") {
           await expect(page.locator(".mbk-nav-scroll a")).toContainText([
@@ -170,7 +176,7 @@ export function registerComponentDesign(
         );
         await expect(page.locator(count)).toHaveText("2");
         await expect(
-          page.locator(".ce-selected-instance .ce-props"),
+          page.locator(".ce-selected-instance .mbk-props"),
         ).toContainText("Get started");
         if (viewport === "desktop")
           await expect(page.locator(".mbk-nav-scroll a")).toContainText([
