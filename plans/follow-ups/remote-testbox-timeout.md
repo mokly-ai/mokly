@@ -27,6 +27,11 @@
   - On 2026-10-20 one remote run passed both delivery modes, 645 cases each,
     in 17.70 command minutes, without preparation.
   - Hosted CI gives the static delivery job 60 minutes.
+  - Since 2026-11-01 the Testbox job runs on `blacksmith-4vcpu-ubuntu-2404`,
+    the runner of the Linux CI suite jobs. It ran on 8 vCPUs from 2026-10-27
+    and on 2 vCPUs before that.
+  - On 2026-11-01 one remote gate on 4 vCPUs passed. Its longest command took
+    8.6 minutes, and its longest box ran for 10.3 minutes.
 - **Problem:** During the CI release checks of the rebuild, the 30-minute
   guard stopped a healthy Node 22 file-delivery run before its report
   download. Its run annotations exist only in local evidence that is not
@@ -51,9 +56,6 @@
   Repository and Viewer jobs to three times their measured medians, 75 and
   40 minutes.
 - **Related:**
-  - [linux-ci-runner-size.md](./linux-ci-runner-size.md) moves the Testbox
-    job back to 2 vCPUs with the Linux CI jobs. That makes each Testbox
-    command slower, so measure under C after that change.
   - [local-gate-duration.md](./local-gate-duration.md) concerns the time
     limit of the local complete gate, which once took 114 of its 120
     minutes. Both items recommend cutting suite cost over raising a limit,

@@ -7,6 +7,7 @@ use mokly_model::output::validation::{portable_path, timestamp};
 use serde_json::{Value, json};
 
 use crate::identity::ActionsContext;
+use crate::redaction::Secret;
 use crate::settings::{Settings, Token};
 
 use super::support::{inventory, publication};
@@ -166,7 +167,7 @@ fn actions_context_is_used_only_for_actions_and_never_changes_the_head() {
 fn endpoint_and_token_validation_preserve_queries_without_echoing_secrets() {
     let settings = Settings::new(
         "https://api.example.com:443/custom/plan?x=1=2",
-        "-secret/a==".to_owned(),
+        Secret::new("-secret/a=="),
         32,
     )
     .unwrap();
@@ -181,15 +182,19 @@ fn endpoint_and_token_validation_preserve_queries_without_echoing_secrets() {
         "file:///plan",
         "/plan",
     ] {
-        assert!(Settings::new(endpoint, "secret".to_owned(), 1).is_err());
+        assert!(Settings::new(endpoint, Secret::new("secret"), 1).is_err());
     }
     for token in ["", "=", "bad token", "token=bad", "bad\n"] {
-        assert!(Token::new(token.to_owned()).is_err());
+        assert!(Token::new(Secret::new(token)).is_err());
     }
-    assert!(Settings::new("https://example.com/plan", "secret".to_owned(), 0).is_err());
-    assert!(Settings::new("https://example.com/plan", "secret".to_owned(), 33).is_err());
-    assert_eq!(format!("{:?}", settings.token), "Token([redacted])");
+    assert!(Settings::new("https://example.com/plan", Secret::new("secret"), 0).is_err());
+    assert!(Settings::new("https://example.com/plan", Secret::new("secret"), 33).is_err());
+    assert_eq!(
+        format!("{:?}", settings.token),
+        "Token { secret: Secret([redacted]) }"
+    );
     assert!(!format!("{settings:?}").contains("-secret/a=="));
+    assert!(!format!("{:?}", Secret::new("-secret/a==")).contains("-secret/a=="));
 }
 
 #[test]

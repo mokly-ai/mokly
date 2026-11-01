@@ -44,6 +44,38 @@ pub trait BaseSourceFactory: Send + Sync {
     ) -> Result<HistoricalSources>;
 }
 
+/// A base preparation result with the state needed for its later diagnostics.
+pub struct PreparedBase {
+    /// Prepared historical render generation.
+    pub generation: Arc<dyn RenderGeneration>,
+    /// True only when a tier-two install supplied dependencies with scripts off.
+    pub scripts_off: bool,
+}
+
+/// A base preparation failure retains whether a scripts-off tier-two install completed.
+#[derive(Debug, thiserror::Error)]
+#[error("[mokly-compare/base] {source}")]
+pub struct BasePreparationError {
+    /// True only when a tier-two install supplied dependencies with scripts off.
+    pub scripts_off: bool,
+    /// Original typed preparation failure.
+    #[source]
+    pub source: Box<Error>,
+}
+
+impl BasePreparationError {
+    /// Retain the provider state beside its typed source failure.
+    pub fn new(scripts_off: bool, source: Error) -> Self {
+        Self {
+            scripts_off,
+            source: Box::new(source),
+        }
+    }
+}
+
+/// Result returned by a base provider after it prepares or fails to prepare.
+pub type BasePreparationResult = std::result::Result<PreparedBase, BasePreparationError>;
+
 /// Native batched Git source factory with explicit metadata and memory bounds.
 pub struct GitSourceFactory {
     /// Independent tree and blob bounds.
@@ -98,7 +130,7 @@ pub struct BaseRequest<'a> {
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = BaseProviderMock))]
 pub trait BaseProvider: Send + Sync {
     /// Load current-version definitions and render through the common generation interface.
-    fn prepare(&self, request: &BaseRequest<'_>) -> Result<Arc<dyn RenderGeneration>>;
+    fn prepare(&self, request: &BaseRequest<'_>) -> BasePreparationResult;
 }
 
 /// Build and Serve call the same base-selection service.
@@ -164,7 +196,7 @@ impl ChangesService for Changes {
         let base = &selected.reference;
         let repository = selected.repository.clone();
         let commit = selected.commit.clone();
-        let (before, failures) = {
+        let (before, failures, scripts_off) = {
             let base_span = tracing::info_span!("review.base-tree", status = "error");
             let _scope = base_span.enter();
             let sources =
@@ -183,35 +215,41 @@ impl ChangesService for Changes {
             if let Some(source) = failures.failure() {
                 return Err(Error::Base {
                     commit: commit.to_string(),
+                    scripts_off: prepared
+                        .as_ref()
+                        .map_or_else(|error| error.scripts_off, |prepared| prepared.scripts_off),
                     source: Box::new(Error::SourceFailure { source }),
                 });
             }
-            let before = match prepared {
-                Ok(before) => before,
+            let prepared = match prepared {
+                Ok(prepared) => prepared,
                 Err(source) => {
                     return Err(Error::Base {
                         commit: commit.to_string(),
-                        source: Box::new(source),
+                        scripts_off: source.scripts_off,
+                        source: source.source,
                     });
                 }
             };
-            let before = match self.comparison.capture_base(before) {
+            let before = match self.comparison.capture_base(prepared.generation) {
                 Ok(before) => before,
                 Err(source) => {
                     if let Some(source) = failures.failure() {
                         return Err(Error::Base {
                             commit: commit.to_string(),
+                            scripts_off: prepared.scripts_off,
                             source: Box::new(Error::SourceFailure { source }),
                         });
                     }
                     return Err(Error::Base {
                         commit: commit.to_string(),
+                        scripts_off: prepared.scripts_off,
                         source: Box::new(source),
                     });
                 }
             };
             base_span.record("status", "ok");
-            (before, failures)
+            (before, failures, prepared.scripts_off)
         };
         self.steps.step(Step::Comparing);
         let result = self.comparison.compare_prepared(
@@ -227,6 +265,7 @@ impl ChangesService for Changes {
         if let Some(source) = failures.failure() {
             return Err(Error::Base {
                 commit: commit.to_string(),
+                scripts_off,
                 source: Box::new(Error::SourceFailure { source }),
             });
         }
@@ -249,6 +288,10 @@ pub fn selected_base<'a>(config: &'a ResolvedConfig, explicit: Option<&'a str>) 
         })
         .unwrap_or("origin/main")
 }
+
+#[cfg(test)]
+#[path = "_tests_/base_render_failures_tests.rs"]
+mod base_render_failures_tests;
 
 #[cfg(test)]
 #[path = "_tests_/base_render_steps_tests.rs"]

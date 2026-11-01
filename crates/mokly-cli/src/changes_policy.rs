@@ -13,7 +13,7 @@ const VALIDATION: &str = "base validation failed";
 
 pub(crate) fn unavailable(error: &Error) -> Option<&'static str> {
     match error {
-        Error::BaseInstallScripts { source } => unavailable(source),
+        Error::Base { source, .. } => unavailable(source),
         Error::Git {
             source: mokly_git::error::Error::Conversion { .. },
         } => Some("base resource unavailable"),

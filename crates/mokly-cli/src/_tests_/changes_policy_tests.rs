@@ -51,6 +51,7 @@ fn every_runtime_category_has_an_explicit_historical_outcome() {
             };
             let error = Error::Base {
                 commit: "a".repeat(40),
+                scripts_off: false,
                 source: Box::new(source),
             };
             match (
@@ -89,6 +90,7 @@ fn every_runtime_category_has_an_explicit_historical_outcome() {
 fn a_fatal_runtime_failure_takes_precedence_over_historical_validation() {
     let error = Error::Base {
         commit: "a".repeat(40),
+        scripts_off: false,
         source: Box::new(Error::Graph {
             source: GraphError::Attempt {
                 failures: vec![

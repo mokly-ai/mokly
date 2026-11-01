@@ -106,3 +106,59 @@ fn scripts_off_manager_arguments_keep_the_original_order() {
         assert_eq!(arguments(&root, private, true), enabled, "{manager:?}");
     }
 }
+
+#[test]
+fn pnpm_versions_pin_the_modules_purge_setting_in_both_modes() {
+    let private = Path::new("private");
+    let directory = private.join("frontend");
+    let option = |name: &str, value: &str| {
+        let mut result = OsString::from(name);
+        result.push(directory.join(value));
+        result
+    };
+    for (version, purge) in [("10.34.7", true), ("11.20.0", true), ("12.14.0", false)] {
+        let root = Root {
+            directory: "frontend".into(),
+            manager: Manager::Pnpm,
+            requested: None,
+            version: version.into(),
+            classic: None,
+            berry_cache: None,
+        };
+        let mut expected = vec![
+            "install".into(),
+            "--frozen-lockfile".into(),
+            "--ignore-scripts".into(),
+            "--ignore-pnpmfile".into(),
+            "--config.pm-on-fail=ignore".into(),
+            "--config.global=false".into(),
+            "--config.use-store-server=false".into(),
+            "--config.use-running-store-server=false".into(),
+            "--config.manage-package-manager-versions=false".into(),
+            "--config.package-manager-strict-version=false".into(),
+            "--config.package-import-method=copy".into(),
+            "--config.enable-global-virtual-store=false".into(),
+            "--config.side-effects-cache=false".into(),
+            "--config.use-node-version=".into(),
+            "--config.update-notifier=false".into(),
+        ];
+        if purge {
+            expected.push("--config.confirm-modules-purge=false".into());
+        }
+        expected.extend([
+            option("--store-dir=", ".pnpm-store"),
+            option("--config.cache-dir=", ".pnpm-cache"),
+            option("--config.state-dir=", ".pnpm-state"),
+            option("--config.virtual-store-dir=", "node_modules/.pnpm"),
+            "--config.modules-dir=node_modules".into(),
+            option("--dir=", ""),
+            option("--lockfile-dir=", ""),
+        ]);
+        assert_eq!(arguments(&root, private, false), expected, "{version}");
+        let enabled = expected
+            .into_iter()
+            .filter(|arg| arg != "--ignore-scripts")
+            .collect::<Vec<_>>();
+        assert_eq!(arguments(&root, private, true), enabled, "{version}");
+    }
+}

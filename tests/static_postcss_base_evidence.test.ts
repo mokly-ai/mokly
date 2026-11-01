@@ -95,7 +95,7 @@ test(
 import fs from 'node:fs';
 import value from './value.mjs';
 export default ()=>({postcssPlugin:'probe',Once(root){
-if(process.env.MOKLY_TEST_POSTCSS_BASE_EDIT && !fs.existsSync('.git'))
+if(process.env.FIXTURE_POSTCSS_BASE_EDIT && !fs.existsSync('.git'))
   fs.writeFileSync(new URL('./value.mjs',import.meta.url),"export default 'blue';");
 root.walkDecls('color',declaration=>{declaration.value=value});
 }});`,
@@ -139,7 +139,7 @@ return '<!doctype html><html><head><title>Home</title></head><body>Home</body></
         "build",
         args,
         "plain",
-        { MOKLY_TEST_POSTCSS_BASE_EDIT: "1" },
+        { FIXTURE_POSTCSS_BASE_EDIT: "1" },
         context.signal,
       ).result;
       assert.equal(result.code, 1, result.stderr);
