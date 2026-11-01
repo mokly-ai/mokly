@@ -80,7 +80,7 @@ test("a rejected removed detail shows no preview and Retry requests the route de
   );
   assert.equal(view.container.querySelector("iframe"), null);
   assert.deepEqual(source.detailFailures, [request]);
-  assert.deepEqual(requests, []);
+  assert.deepEqual([...requests], []);
   fireEvent.click(view.getByRole("button", { name: "Retry" }));
   assert.deepEqual(
     source.details.map((item) => item.input),
@@ -98,4 +98,57 @@ test("a rejected removed detail shows no preview and Retry requests the route de
       address.startsWith(`${origin}/${index.comparisonUrl}snapshots/before/`),
       address,
     );
+});
+
+test("a page keeps its preview metadata request when the routed detail arrives", async (t) => {
+  const index = indexFixture();
+  const record = index.removedEntries.find(
+    (item) => item.entry.kind === "page",
+  );
+  assert.ok(record?.snapshotId);
+  const request = { path: record.entry.path, snapshotId: record.snapshotId };
+  const origin = "https://catalogue.test";
+  const url = `${origin}/view/${request.path}/?snapshot=${request.snapshotId}`;
+  GlobalRegistrator.register({ url });
+  const source = new FakeDataSource();
+  const requests: string[] = [];
+  const environment: ComparisonEnvironment = {
+    baseUrl: origin,
+    delivery: () => ({ kind: "pinned", comparisonUrl: index.comparisonUrl }),
+    fetch: (input) => {
+      requests.push(String(input));
+      return new Promise<Response>(() => {});
+    },
+  };
+  const view = render(
+    <ShellStoreProvider
+      comparisonEnvironment={environment}
+      context={{ embedded: true }}
+      index={index}
+      interactive
+      route={(catalogue) => routeFromUrl(catalogue, new URL(url))}
+      source={source}
+    >
+      <RemovedPreviewStage
+        data={{
+          path: request.path,
+          kind: "page",
+          title: record.entry.title,
+          published: { kind: "page" },
+        }}
+      />
+    </ShellStoreProvider>,
+  );
+  t.after(async () => {
+    view.unmount();
+    await GlobalRegistrator.unregister();
+  });
+  assert.equal(requests.length, 1);
+  await act(async () => {
+    source
+      .detail(request.path, request.snapshotId)
+      .resolve(detailFixture(request));
+    await flush();
+  });
+  assert.equal(requests.length, 1);
 });

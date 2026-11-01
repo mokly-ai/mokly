@@ -2,9 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
-import { projectTree } from "../src/catalogue/tree.js";
-import { analyzeHierarchy } from "../src/registry/hierarchy.js";
-import type { ManifestEntry } from "../src/registry/types.js";
 import type { ShellContext } from "../src/shell/context.js";
 import { navNodeVisible } from "../src/shell/nav_model.js";
 import { buildNavSections } from "../src/shell/nav_tree.js";
@@ -12,9 +9,13 @@ import type { ViewerSelection } from "../src/viewer/types.js";
 
 import { indexFixture, rawIndexFixture } from "./catalogue_v9_fixture.js";
 import { standaloneMarkup } from "./shell_markup.js";
+import {
+  treeRecord as entry,
+  treeHierarchy,
+  entryNode as e,
+  folderNode as f,
+} from "./tree_fixture.js";
 
-const entry = (path: string, kind = "page", title = path): ManifestEntry =>
-  ({ path, kind, title }) as ManifestEntry;
 const selection = (
   view: "all" | "changes",
   search = "",
@@ -37,19 +38,24 @@ test("screen index folders use their rendered row kind for ordering", () => {
   ];
   const index = [...plain, entry("invoice/component", "component")];
   for (const entries of [plain, index]) {
-    const hierarchy = analyzeHierarchy(entries).hierarchy;
+    const members = entries === index ? [e("invoice/component")] : undefined;
+    const hierarchy = treeHierarchy(entries, [
+      e("invoice", members),
+      e("apple"),
+      f("folder", "Folder", [e("folder/child")]),
+    ]);
     assert.deepEqual(
-      hierarchy.tree.map((node) => node.key),
+      hierarchy.roots.specs.map((node) => node.key),
       ["folder", "apple", "invoice"],
     );
   }
 });
 
 test("section pruning removes opposite-kind children from index entry rows", () => {
-  const hierarchy = analyzeHierarchy([
-    entry("account", "screen"),
-    entry("account/button", "component"),
-  ]).hierarchy;
+  const hierarchy = treeHierarchy(
+    [entry("account", "screen"), entry("account/button", "component")],
+    [e("account", [e("account/button")])],
+  );
   const pages = hierarchy.roots.specs[0];
   assert.equal(pages?.kind, "entry");
   assert.equal(pages?.children, undefined);
@@ -65,14 +71,15 @@ test("hidden folders stay in the wire tree and Changes but disappear from All an
       entry("account/private/item"),
       ...(index ? [entry("account/private", "screen", "Private")] : []),
     ];
-    const hierarchy = analyzeHierarchy(entries, [
-      {
-        path: "account/private",
-        hidden: true,
-        sourcePath: "specs/account/private/_folder.json",
-      },
-    ]).hierarchy;
-    const tree = projectTree(hierarchy);
+    const hidden = index
+      ? e("account/private", [e("account/private/item")], { hidden: true })
+      : f("account/private", "Private", [e("account/private/item")], {
+          hidden: true,
+        });
+    const hierarchy = treeHierarchy(entries, [
+      f("account", "Account", [hidden]),
+    ]);
+    const tree = hierarchy.tree;
     assert.equal(tree[0]?.children?.[0]?.hidden, true);
     const nodes = buildNavSections(hierarchy)[0]!.children;
     assert.equal(navNodeVisible(nodes[0]!, selection("all"), context), false);

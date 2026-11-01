@@ -1,5 +1,5 @@
 /** Pick listeners and their measured regions; consumer DOM remains unchanged. */
-import type { ComponentViewRecord } from "../components/manifest_types.js";
+import type { ComponentViewRecord } from "../components/view_types.js";
 
 import {
   authenticateRanges,

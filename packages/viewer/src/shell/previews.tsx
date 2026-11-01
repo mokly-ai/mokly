@@ -11,12 +11,13 @@ import { PreviewLoading, PreviewNotCaptured } from "@mokly/ui/preview-state";
 import { PreviousVersion } from "@mokly/ui/previous-version";
 import { Stage } from "@mokly/ui/stage";
 
+import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
 import type { RemovedEntryPreview } from "../catalogue/types.js";
 import { entryRoute } from "../navigation/routes.js";
 import type { SnapshotPresentation } from "../previews/presentation.js";
 import type { LoadedPreview, PreviewScreenView } from "../previews/request.js";
 
-import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
+import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { BrowserFrame } from "./frames.js";
 import { SnapshotFrame } from "./preview_frame.js";
@@ -52,7 +53,7 @@ export interface RemovedPreviewData {
 export function removedPreviewData(
   catalogue: Catalogue,
   context: ShellContext,
-  entry: CatalogueManifestEntry,
+  entry: ShellCatalogueRoutedEntry,
 ): RemovedPreviewData | undefined {
   if (
     entry.kind !== "page" &&

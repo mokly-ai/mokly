@@ -6,7 +6,7 @@ import {
   replaceLocalFrame,
 } from "../src/client/same_origin_adapter.js";
 import { installLocalHighlight } from "../src/client/same_origin_highlight.js";
-import type { ComponentViewRecord } from "../src/components/manifest_types.js";
+import type { ComponentViewRecord } from "../src/components/view_types.js";
 
 test("local inspection stays unavailable when the immediate document cannot authenticate", () => {
   const frame = { contentDocument: null } as unknown as HTMLIFrameElement;

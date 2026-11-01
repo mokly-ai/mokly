@@ -10,9 +10,9 @@ import {
 
 import { RootState } from "@mokly/ui/shell-layout";
 
+import { shellCatalogueModel } from "../catalogue/shell_model.js";
 import type { MoklyVersionError } from "../catalogue/version_error.js";
 import type { ScrollTogetherPreference } from "../shell/comparison_scroll_preference.js";
-import { dataSnapshot } from "../shell/data_commit.js";
 import { EmbeddedViewerShell } from "../shell/embedded_viewer.js";
 import { ShellIdentifierProvider } from "../shell/identifier_context.js";
 import { ShellStoreProvider } from "../shell/store.js";
@@ -51,7 +51,7 @@ const serverSnapshot = () => false;
 export function ReadyViewer(props: ReadyProps) {
   const [defaults] = useState(props.defaultSelection);
   const model = useMemo(
-    () => dataSnapshot(props.loaded.index, new Map()).catalogue.publicModel,
+    () => shellCatalogueModel(props.loaded.index, new Map()),
     [props.loaded.index],
   );
   const normalized = useMemo(() => {

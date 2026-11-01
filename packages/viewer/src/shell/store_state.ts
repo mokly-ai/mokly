@@ -1,8 +1,8 @@
 /** Value state owned by one mounted shell. */
 
+import type { ChangesStatus } from "../catalogue/types.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
-import type { LiveChangesStatus } from "./metadata.js";
 import type { ShellRoute } from "./routes.js";
 
 /** Stored browser preferences the standalone bundle reads before its first render. */
@@ -17,7 +17,7 @@ export interface ShellInitialState {
 /** Complete interaction state for one standalone shell mount. */
 export interface ShellState {
   announcement: string;
-  changesStatus: LiveChangesStatus | undefined;
+  changesStatus: Exclude<ChangesStatus, "disabled"> | undefined;
   detailsOpen: boolean;
   disclosures: Readonly<Record<string, boolean>>;
   drawerOpen: boolean;

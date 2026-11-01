@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import type { CatalogueUsage } from "../src/catalogue/types.js";
-import type { ComponentViewRecord } from "../src/components/manifest_types.js";
+import type { ComponentViewRecord } from "../src/components/view_types.js";
 
 export async function writeBrowserFile(
   root: string,

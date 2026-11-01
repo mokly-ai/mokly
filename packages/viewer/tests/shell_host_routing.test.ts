@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { viewHref } from "../src/navigation/routes.js";
+import { createCatalogue } from "../src/shell/catalogue.js";
 import { catalogueNavSections } from "../src/shell/nav_model.js";
 import { routeFromUrl } from "../src/shell/routes.js";
 import { withRoute } from "../src/shell/store_filters.js";
@@ -12,7 +13,7 @@ import {
   hostSelectionRouteChanged,
 } from "../src/shell/store_host_routes.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
-import { viewerCatalogue, viewerContext } from "../src/viewer/projection.js";
+import { viewerContext } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 import type { ScreenNavigateEvent } from "../src/viewer/types.js";
 
@@ -57,7 +58,7 @@ test("bare removed routes announce only published snapshot identity", () => {
 
   const announceBareRoute = (candidate: typeof model) => {
     const historical = candidate.removedEntries[0]!;
-    const candidateCatalogue = viewerCatalogue(candidate);
+    const candidateCatalogue = createCatalogue(candidate);
     const route = routeFromUrl(
       candidateCatalogue,
       new URL(viewHref(historical.entry.path), "https://example.test"),

@@ -1,47 +1,45 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { currentManifest } from "../../../tests/helpers/current_manifest.js";
-import type { ManifestEntry, ManifestV10 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 
 import { catalogueFixture, indexFixture } from "./catalogue_v9_fixture.js";
-
-const screen = (path: string) =>
-  ({
-    colorSchemes: ["light"],
-    description: path,
-    kind: "screen",
-    path,
-    relatedDocs: [],
-    sourcePath: `specs/${path}.mockup.tsx`,
-    tags: [],
-    title: path,
-    useCasePaths: [],
-  }) as unknown as ManifestEntry;
-
-const manifest: ManifestV10 = currentManifest({
-  entries: [screen("account/billing/invoice"), screen("home")],
-  folders: [],
-  generatedBy: "mokly",
-  schemaVersion: 10,
-  sourceFiles: [],
-});
+import {
+  treeRecord,
+  treeModel,
+  entryNode,
+  folderNode,
+} from "./tree_fixture.js";
 
 test("a catalogue keeps the previous path of each current entry a move paired", () => {
-  const catalogue = createCatalogue(
-    manifest,
-    [],
+  const model = treeModel(
     [
-      { path: "account/billing/invoice", previousPath: "billing/invoice" },
-      { path: "gone", previousPath: "old/gone" },
+      {
+        ...treeRecord("account/billing/invoice", "screen"),
+        previousPath: "billing/invoice",
+      },
+      treeRecord("home", "screen"),
+    ],
+    [
+      folderNode("account", "Account", [
+        folderNode("account/billing", "Billing", [
+          entryNode("account/billing/invoice"),
+        ]),
+      ]),
+      entryNode("home"),
     ],
   );
+  const catalogue = createCatalogue(model);
   assert.deepEqual(
     [...catalogue.previousPaths],
     [["account/billing/invoice", "billing/invoice"]],
   );
-  assert.equal(createCatalogue(manifest).previousPaths.size, 0);
+  assert.equal(
+    createCatalogue(
+      treeModel([treeRecord("home", "screen")], [entryNode("home")]),
+    ).previousPaths.size,
+    0,
+  );
 });
 
 test("the public viewer reads each paired entry's previous path from the read model", () => {
@@ -61,23 +59,24 @@ test("the public viewer reads each paired entry's previous path from the read mo
 });
 
 test("component parents without variants keep Dark available from their own views", () => {
-  const component = catalogueFixture().manifest.entries.find(
-    (entry) => entry.kind === "component" && !entry.variantOf,
+  const component = catalogueFixture().publicModel.components.find(
+    (entry) => entry.variantOf === undefined,
   );
-  assert.ok(component?.kind === "component");
-  assert.ok(component.componentViews?.length);
+  assert.ok(component);
+  assert.ok(component.views.length);
   const catalogue = createCatalogue({
-    ...manifest,
-    entries: [
+    ...treeModel([], []),
+    components: [
       {
         ...component,
         colorSchemes: ["light", "dark"],
-        componentViews: component.componentViews.flatMap((view) => [
+        views: component.views.flatMap((view) => [
           view,
           { ...view, colorScheme: "dark" as const },
         ]),
       },
     ],
+    tree: [folderNode("components", "Components", [entryNode(component.path)])],
   });
   assert.equal(catalogue.hasDarkFragments, true);
 });

@@ -2,8 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { folderTitleLookup } from "../src/registry/folder_titles.js";
-import { analyzeHierarchy } from "../src/registry/hierarchy.js";
-import type { ManifestEntry, ManifestFolder } from "../src/registry/types.js";
+import { createCatalogue } from "../src/shell/catalogue.js";
 import { changesActivation } from "../src/shell/changes_activation.js";
 import type { ShellContext } from "../src/shell/context.js";
 import {
@@ -18,7 +17,7 @@ import {
   type NavSectionNode,
 } from "../src/shell/nav_tree.js";
 import type { ShellRoute } from "../src/shell/routes.js";
-import { viewerCatalogue, viewerContext } from "../src/viewer/projection.js";
+import { viewerContext } from "../src/viewer/projection.js";
 import { defaultSelection, revealSelection } from "../src/viewer/selection.js";
 
 import { shellModelFixture } from "./catalogue_v9_fixture.js";
@@ -27,6 +26,12 @@ import {
   publishedModel,
   removedScreenVariant,
 } from "./published_entries_fixture.js";
+import {
+  treeRecord as entry,
+  treeHierarchy,
+  entryNode as e,
+  folderNode as f,
+} from "./tree_fixture.js";
 
 const context: ShellContext = {
   base: "main",
@@ -50,13 +55,6 @@ function rows(sections: readonly NavSectionNode[]) {
   return found;
 }
 
-const entry = (
-  path: string,
-  kind: string,
-  title: string,
-  extra: Partial<Record<"tags" | "variantOf", unknown>> = {},
-): ManifestEntry => ({ path, kind, title, ...extra }) as ManifestEntry;
-
 const entries = [
   entry("billing/invoice", "screen", "Invoice"),
   entry("billing/invoice/overdue", "screen", "Overdue", {
@@ -73,21 +71,33 @@ const entries = [
   entry("guide", "document", "Guide"),
   entry("guide/setup", "page", "Setup"),
 ];
-const record = (path: string, extra: Partial<ManifestFolder>) => ({
-  path,
-  sourcePath: `specs/${path}/_folder.json`,
-  ...extra,
-});
+const titled = (hidden?: true) => [
+  f("billing", "Billing & Payments", [
+    e("billing/invoice", [e("billing/invoice/overdue")]),
+    e("billing/terms"),
+  ]),
+  f(
+    "account",
+    "Account",
+    [
+      e("account/profile", [
+        e("account/profile/unverified"),
+        e("account/profile/security"),
+      ]),
+    ],
+    hidden ? { hidden } : {},
+  ),
+  e("welcome", [e("welcome/empty")]),
+  f("guide", "Handbook", [e("guide"), e("guide/setup")], { index: "guide" }),
+];
 
 test("search matches a folder's resolved title and shows every row below it", () => {
   const visible = (
-    folders: readonly ManifestFolder[],
+    tree: ReturnType<typeof titled>,
     search: string,
     tags: readonly string[] = [],
   ) => {
-    const found = rows(
-      buildNavSections(analyzeHierarchy(entries, folders).hierarchy),
-    );
+    const found = rows(buildNavSections(treeHierarchy(entries, tree)));
     return [...found.values()]
       .filter((row) =>
         navLeafVisible(row, { view: "all", search, tags }, context),
@@ -95,29 +105,22 @@ test("search matches a folder's resolved title and shows every row below it", ()
       .map((row) => row.entryId)
       .sort();
   };
-  const titled = [
-    record("billing", { title: "Billing & Payments" }),
-    record("guide", { title: "Handbook" }),
-  ];
-  assert.deepEqual(visible(titled, "payments"), [
+  assert.deepEqual(visible(titled(), "payments"), [
     "billing/invoice",
     "billing/invoice/overdue",
     "billing/terms",
   ]);
-  assert.deepEqual(visible(titled, "payments", ["legal"]), ["billing/terms"]);
-  assert.deepEqual(visible(titled, "handbook"), ["guide", "guide/setup"]);
-  assert.deepEqual(visible(titled, "your profile"), [
+  assert.deepEqual(visible(titled(), "payments", ["legal"]), ["billing/terms"]);
+  assert.deepEqual(visible(titled(), "handbook"), ["guide", "guide/setup"]);
+  assert.deepEqual(visible(titled(), "your profile"), [
     "account/profile",
     "account/profile/security",
     "account/profile/unverified",
   ]);
-  assert.deepEqual(visible(titled, "welcome home"), ["welcome"]);
-  assert.deepEqual(
-    visible([...titled, record("account", { hidden: true })], "your profile"),
-    [],
-  );
+  assert.deepEqual(visible(titled(), "welcome home"), ["welcome"]);
+  assert.deepEqual(visible(titled(true), "your profile"), []);
   const billing = buildNavSections(
-    analyzeHierarchy(entries, titled).hierarchy,
+    treeHierarchy(entries, titled()),
   )[0]?.children.find((node) => node.key === "folder:billing");
   assert.ok(billing);
   assert.equal(
@@ -161,7 +164,7 @@ test("Changes activation searches a removed variant as its row does", () => {
       },
     ],
   });
-  const catalogue = viewerCatalogue(model);
+  const catalogue = createCatalogue(model);
   const row = rows(catalogueNavSections(catalogue)).get(removed);
   assert.equal(row?.removedVariant, true);
   const entry = catalogue.byPath.get(parent.path);
@@ -190,7 +193,7 @@ test("Changes activation searches a removed variant as its row does", () => {
 
 test("a route reveal keeps a search that the destination's folder title matches", () => {
   const model = shellModelFixture();
-  const catalogue = viewerCatalogue(model);
+  const catalogue = createCatalogue(model);
   const details = rows(catalogueNavSections(catalogue)).get(
     "product/browse/details",
   );

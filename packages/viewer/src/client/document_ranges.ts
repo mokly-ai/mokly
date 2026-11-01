@@ -1,4 +1,4 @@
-import type { ComponentRangeRecord } from "../components/manifest_types.js";
+import type { ComponentRangeRecord } from "../components/view_types.js";
 import { MARKER } from "../inspector/markers.js";
 
 interface DocumentRange {

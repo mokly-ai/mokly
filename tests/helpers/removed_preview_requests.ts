@@ -43,6 +43,7 @@ export function removedDetail(
     reasons: [{ kind: "removed" }],
     views: views.map((view) => ({
       ...view,
+      ignoredIds: [...view.ignoredIds],
       usage: { status: "ready", instances: [], slots: [], ranges: [] },
       resourceEvidence: { rules: [], resources: [] },
     })),

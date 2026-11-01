@@ -1,63 +1,44 @@
-import type { ShellCatalogueReadModel } from "../catalogue/scoped_types.js";
-import { isManifestComponentVariant } from "../components/manifest_types.js";
-import type { CatalogueHierarchy } from "../registry/hierarchy.js";
-import { analyzeHierarchy } from "../registry/hierarchy.js";
 import type {
-  HistoricalManifestEntry,
-  HistoricalManifestScreen,
-  ManifestEntry,
-  ManifestScreen,
-} from "../registry/types.js";
+  ShellCatalogueReadModel,
+  ShellCatalogueRoutedEntry,
+  ShellRemovedEntry,
+} from "../catalogue/scoped_types.js";
+import { catalogueHierarchy } from "../registry/catalogue_hierarchy.js";
+import type { CatalogueHierarchy } from "../registry/hierarchy.js";
 
-import type { CatalogueMetadata, RemovedEntrySnapshot } from "./metadata.js";
-
-/**
- * Validated lookup model used by server routes. Every catalogue that a
- * delivery builds carries its published records.
- */
+/** Index-derived navigation and identities, with separately held detail data. */
 export interface Catalogue {
   publicModel: ShellCatalogueReadModel;
-  byPath: ReadonlyMap<string, CatalogueManifestEntry>;
+  entries: readonly ShellCatalogueRoutedEntry[];
+  byPath: ReadonlyMap<string, ShellCatalogueRoutedEntry>;
   /** Whether any current or retained view was rendered in the dark scheme. */
   hasDarkFragments: boolean;
-  hierarchy: CatalogueHierarchy<ManifestEntry>;
-  manifest: CatalogueMetadata;
-  /** Every classification tag the entries declare, deduplicated and sorted. */
+  hierarchy: CatalogueHierarchy<ShellCatalogueRoutedEntry>;
+  /** Every current classification tag, deduplicated and sorted. */
   tags: readonly string[];
-  /** Baseline screens retained only for on-demand comparisons. */
-  removedScreens: readonly (ManifestScreen | HistoricalManifestScreen)[];
-  removedEntries: readonly RemovedEntrySnapshot[];
-  /** Removed component parents retained as schemas for historical variants. */
-  removedComponents: readonly CatalogueManifestEntry[];
-  /**
-   * The branch-point path of each current entry the move contract paired with
-   * a baseline entry, keyed by the current path. Empty until Changes is ready.
-   * Shell consumers read pairs only through `branchPoints`.
-   */
+  removedEntries: readonly ShellRemovedEntry[];
+  /** Accepted move pairs. Shell consumers read them only through `branchPoints`. */
   previousPaths: ReadonlyMap<string, string>;
 }
 
-/** Current and baseline-v10 entries share identity and display metadata. */
-export type CatalogueManifestEntry = ManifestEntry | HistoricalManifestEntry;
-
-/** Resolve an entry identity, giving current content precedence over history. */
+/** Resolve an entry identity from the current and retained records. */
 export function catalogueRouteEntry(
   catalogue: Catalogue,
   id: string,
-  kind?: ManifestEntry["kind"],
-): CatalogueManifestEntry | undefined {
+  kind?: ShellCatalogueRoutedEntry["kind"],
+): ShellCatalogueRoutedEntry | undefined {
   const entry = catalogue.byPath.get(id);
   return entry && (kind === undefined || entry.kind === kind)
     ? entry
     : undefined;
 }
 
-/** Resolve one public current or historical selection into its display entry. */
+/** Resolve an exact historical selection, or a current path. */
 export function catalogueSelectionEntry(
   catalogue: Catalogue,
   entryId: string,
   snapshotId?: string,
-): CatalogueManifestEntry | undefined {
+): ShellCatalogueRoutedEntry | undefined {
   if (snapshotId !== undefined)
     return catalogue.removedEntries.find(
       (record) =>
@@ -66,67 +47,37 @@ export function catalogueSelectionEntry(
   return catalogue.byPath.get(entryId);
 }
 
-/** The union of the tags declared across every entry that can carry them. */
-function collectTags(entries: readonly ManifestEntry[]): readonly string[] {
-  const declared: string[] = [];
-  for (const entry of entries) {
-    declared.push(...(entry.tags ?? []));
-  }
-  return [...new Set(declared)].sort();
-}
-
-/**
- * Build a deterministic id index from a validated manifest, its retained
- * removed entries, and the current entries the move contract paired.
- * `viewerCatalogue` adds the published records that complete a catalogue.
- */
-export function createCatalogue(
-  manifest: CatalogueMetadata,
-  removedEntries: readonly RemovedEntrySnapshot[] = [],
-  moves: readonly { path: string; previousPath: string }[] = [],
-): Omit<Catalogue, "publicModel"> {
-  const removedScreens = removedEntries.flatMap(({ entry }) =>
-    entry.kind === "screen" ? [entry] : [],
+/** Build navigation once from the validated generated records and index tree. */
+export function createCatalogue(model: ShellCatalogueReadModel): Catalogue {
+  const entries = [
+    ...model.screens,
+    ...model.pages,
+    ...model.documents,
+    ...model.useCases,
+    ...model.components,
+  ];
+  const byPath = new Map<string, ShellCatalogueRoutedEntry>(
+    entries.map((entry) => [entry.path, entry]),
   );
-  const removedComponents = removedEntries.flatMap(({ entry }) =>
-    entry.kind === "component" && !isManifestComponentVariant(entry)
-      ? [entry]
-      : [],
-  );
-  const byPath = new Map<string, CatalogueManifestEntry>(
-    manifest.entries.map((entry) => [entry.path, entry]),
-  );
-  for (const { entry } of removedEntries) byPath.set(entry.path, entry);
-  const hasDarkFragments = [
-    ...manifest.entries,
-    ...removedEntries.map(({ entry }) => entry),
-  ].some(
-    (entry) =>
-      (entry.kind === "screen" ||
-        entry.kind === "document" ||
-        entry.kind === "component") &&
-      entry.colorSchemes.includes("dark"),
-  );
-  const hierarchy = analyzeHierarchy<ManifestEntry>(
-    manifest.entries,
-    manifest.folders,
-  ).hierarchy;
-  const tags = collectTags(manifest.entries);
-  const current = new Set(manifest.entries.map((entry) => entry.path));
-  const previousPaths = new Map(
-    moves.flatMap(({ path, previousPath }) =>
-      current.has(path) ? [[path, previousPath] as const] : [],
-    ),
-  );
+  for (const { entry } of model.removedEntries) byPath.set(entry.path, entry);
   return {
+    publicModel: model,
+    entries,
     byPath,
-    hasDarkFragments,
-    hierarchy,
-    manifest,
-    tags,
-    removedScreens,
-    removedComponents,
-    removedEntries,
-    previousPaths,
+    hasDarkFragments: [...byPath.values()].some(
+      (entry) =>
+        (entry.kind === "screen" ||
+          entry.kind === "document" ||
+          entry.kind === "component") &&
+        entry.colorSchemes.includes("dark"),
+    ),
+    hierarchy: catalogueHierarchy(entries, model.tree, model.treeOrder),
+    tags: [...new Set(entries.flatMap((entry) => entry.tags))].sort(),
+    removedEntries: model.removedEntries,
+    previousPaths: new Map(
+      entries.flatMap(({ path, previousPath }) =>
+        previousPath === undefined ? [] : [[path, previousPath]],
+      ),
+    ),
   };
 }

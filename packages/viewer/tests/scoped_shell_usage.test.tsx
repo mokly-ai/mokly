@@ -3,12 +3,12 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { createCatalogue } from "../src/shell/catalogue.js";
 import { shellFrameUsage } from "../src/shell/stage_sources.js";
 import { inspectionAvailability } from "../src/shell/workspace_inspection_runtime.js";
 import { WorkspaceInstances } from "../src/shell/workspace_instances.js";
 import { WorkspaceProps } from "../src/shell/workspace_props.js";
 import { WorkspaceUsage } from "../src/shell/workspace_usage.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
 import { publicWorkspace } from "../src/viewer/public_workspace.js";
 
 import {
@@ -22,7 +22,7 @@ const COMPONENT = ["components/action", "components/action/default"];
 /** The working model while the shell holds only the given entries' details. */
 function holding(paths: readonly string[]) {
   const model = shellModelFixture(undefined, heldDetails(paths));
-  return { catalogue: viewerCatalogue(model), model };
+  return { catalogue: createCatalogue(model), model };
 }
 
 test("omitted usage becomes pending instead of unavailable in frames", () => {

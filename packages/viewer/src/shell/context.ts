@@ -1,11 +1,10 @@
+import type { ChangesStatus } from "../catalogue/types.js";
 import type { ViewerTheme } from "../viewer/types.js";
-
-import type { LiveChangesStatus } from "./metadata.js";
 
 /** Route-independent context shared by every view of one shell root. */
 export interface ShellContext {
   /** Changes calculation state; omitted when Changes is disabled. */
-  changesStatus?: LiveChangesStatus;
+  changesStatus?: Exclude<ChangesStatus, "disabled">;
   /** Id of the currently selected catalogue entry, when one is active. */
   activeId?: string;
   /** The index's Changes base ref; empty when the index names none. */

@@ -1,27 +1,40 @@
+import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
 import type { CatalogueNode } from "../catalogue/types.js";
+
 import {
   filterHierarchy,
   type CatalogueHierarchy,
   type HierarchyNode,
-} from "../registry/hierarchy.js";
-import type { ManifestEntry } from "../registry/types.js";
+} from "./hierarchy.js";
 
 /**
  * Retain the validated public tree's titles, order and hidden-folder flags,
  * with the folder `order` lists each section applies again.
  */
-export function adoptCatalogueTree(
-  hierarchy: CatalogueHierarchy<ManifestEntry>,
+export function catalogueHierarchy(
+  entries: readonly ShellCatalogueRoutedEntry[],
   nodes: readonly CatalogueNode[],
   order?: readonly string[],
-): CatalogueHierarchy<ManifestEntry> {
-  const ancestors = new Map(hierarchy.ancestorsByPath);
+): CatalogueHierarchy<ShellCatalogueRoutedEntry> {
+  const byPath = new Map(entries.map((entry) => [entry.path, entry]));
+  const variantsByPath = new Map<string, ShellCatalogueRoutedEntry[]>();
+  const variantParentByPath = new Map<string, ShellCatalogueRoutedEntry>();
+  for (const entry of entries) {
+    if (!("variantOf" in entry) || entry.variantOf === undefined) continue;
+    const parent = byPath.get(entry.variantOf);
+    if (!parent) continue;
+    const variants = variantsByPath.get(parent.path) ?? [];
+    variants.push(entry);
+    variantsByPath.set(parent.path, variants);
+    variantParentByPath.set(entry.path, parent);
+  }
+  const ancestors = new Map<string, readonly string[]>();
   const convert = (
     node: CatalogueNode,
     titles: readonly string[],
-  ): HierarchyNode<ManifestEntry> => {
+  ): HierarchyNode<ShellCatalogueRoutedEntry> => {
     if (node.kind === "folder") {
-      const index = node.index ? hierarchy.byPath.get(node.index) : undefined;
+      const index = node.index ? byPath.get(node.index) : undefined;
       return {
         kind: "folder",
         ...(node.hidden ? { hidden: true } : {}),
@@ -38,7 +51,7 @@ export function adoptCatalogueTree(
         ),
       };
     }
-    const entry = hierarchy.byPath.get(node.path)!;
+    const entry = byPath.get(node.path)!;
     ancestors.set(entry.path, titles);
     return {
       kind: "entry",
@@ -52,8 +65,7 @@ export function adoptCatalogueTree(
             children: node.children.map((child) =>
               convert(
                 child,
-                hierarchy.variantParentByPath.get(child.path)?.path ===
-                  entry.path
+                variantParentByPath.get(child.path)?.path === entry.path
                   ? titles
                   : [...titles, entry.title],
               ),
@@ -63,9 +75,10 @@ export function adoptCatalogueTree(
     };
   };
   const tree = nodes.map((node) => convert(node, []));
-  const { order: _previous, ...adopted } = hierarchy;
   return {
-    ...adopted,
+    byPath,
+    variantsByPath,
+    variantParentByPath,
     ancestorsByPath: ancestors,
     tree,
     ...(order ? { order } : {}),

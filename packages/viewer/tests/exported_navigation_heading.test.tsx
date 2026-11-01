@@ -2,12 +2,9 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import type { CatalogueReadModel } from "../src/catalogue/types.js";
+import { createCatalogue } from "../src/shell/catalogue.js";
 import { workspaceData } from "../src/shell/workspace_data.js";
-import {
-  viewerCatalogue,
-  viewerContext,
-  viewerView,
-} from "../src/viewer/projection.js";
+import { viewerContext, viewerView } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 
 import { indexFixture, shellModelFixture } from "./catalogue_v9_fixture.js";
@@ -74,7 +71,7 @@ test("the index fallback keeps the index's base in every delivery, and an index 
   ] as const) {
     // The temporary workspace of a route whose detail has not arrived.
     const model = shellModelFixture(index, new Map());
-    const catalogue = viewerCatalogue(model);
+    const catalogue = createCatalogue(model);
     for (const [, screenPath, evidence] of ENTRIES) {
       if (evidence !== "workspace") continue;
       const selection = { ...defaultSelection, screenPath };

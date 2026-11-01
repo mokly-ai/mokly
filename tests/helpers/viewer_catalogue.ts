@@ -9,16 +9,14 @@ import type {
   CatalogueReadModel,
   EntryDetailV4,
 } from "../../packages/viewer/dist/catalogue/types.js";
+import { createCatalogue } from "../../packages/viewer/dist/shell/catalogue.js";
 import { routeFromUrl } from "../../packages/viewer/dist/shell/routes.js";
 import { createInitialShellState } from "../../packages/viewer/dist/shell/store_initial.js";
 import type {
   ShellInitialState,
   ShellState,
 } from "../../packages/viewer/dist/shell/store_state.js";
-import {
-  viewerCatalogue,
-  viewerContext,
-} from "../../packages/viewer/dist/viewer/projection.js";
+import { viewerContext } from "../../packages/viewer/dist/viewer/projection.js";
 import { defaultSelection } from "../../packages/viewer/dist/viewer/selection.js";
 
 function fixtureJson(name: string): unknown {
@@ -71,7 +69,7 @@ export function fixtureShellState({
   initial?: ShellInitialState;
   model?: ShellCatalogueReadModel;
 } = {}): ShellState {
-  const catalogue = viewerCatalogue(model);
+  const catalogue = createCatalogue(model);
   const route = routeFromUrl(catalogue, new URL(href));
   const screenPath =
     route.view.kind === "target" ? route.view.target.entry.path : null;

@@ -1,6 +1,6 @@
 /**
  * The Details of the routed entry: its description, rationale, and metadata
- * rows, read from the manifest entry, and the collapsible panel that shows
+ * rows, read from the catalogue record, and the collapsible panel that shows
  * them below a page's stage. These containers read the catalogue and the
  * store. `@mokly/ui/details-panel` renders the panel and the body, and
  * `@mokly/ui/metadata-row` the rows.
@@ -14,9 +14,12 @@ import {
 } from "@mokly/ui/details-panel";
 import { MetadataCode, MetadataRow } from "@mokly/ui/metadata-row";
 
-import type { ManifestScreen } from "../registry/types.js";
+import type {
+  ShellCatalogueScreen,
+  ShellCatalogueRoutedEntry,
+} from "../catalogue/scoped_types.js";
 
-import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
+import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
 import {
   ChangedViewsRow,
@@ -31,14 +34,14 @@ import type { RouteTarget } from "./target.js";
 import { SCHEME_LABELS, type ChangedView } from "./view_marks.js";
 
 /** The schemes a screen renders in, named for the reader. */
-function schemeNames(screen: ManifestScreen): string {
+function schemeNames(screen: ShellCatalogueScreen): string {
   return screen.colorSchemes.map((scheme) => SCHEME_LABELS[scheme]).join(", ");
 }
 
 export function EntryDetailsBody(props: {
   catalogue: Catalogue;
   changedViews?: readonly ChangedView[];
-  entry: CatalogueManifestEntry;
+  entry: ShellCatalogueRoutedEntry;
 }) {
   const entry = props.entry;
   const removed = props.catalogue.removedEntries.find(
@@ -49,12 +52,12 @@ export function EntryDetailsBody(props: {
     : branchPoints(props.catalogue).previousPath(entry);
   return (
     <DetailsBody
-      description={entry.description}
-      {...(entry.rationale
+      description={entry.details.description}
+      {...(entry.details.rationale
         ? {
             rationale: {
               noun: entry.kind === "use-case" ? "flow" : entry.kind,
-              text: entry.rationale,
+              text: entry.details.rationale,
             },
           }
         : {})}
@@ -65,7 +68,7 @@ export function EntryDetailsBody(props: {
         </MetadataRow>
       ) : null}
       <MetadataRow label="Source">
-        <MetadataCode>{entry.sourcePath}</MetadataCode>
+        <MetadataCode>{entry.details.sourcePath}</MetadataCode>
       </MetadataRow>
       {movedFrom ? (
         <MetadataRow label="Moved from">
@@ -86,12 +89,12 @@ export function EntryDetailsBody(props: {
       <VariantOfChip catalogue={props.catalogue} entry={entry} />
       <VariantChips catalogue={props.catalogue} entry={entry} />
       <TagChips values={entry.tags ?? []} />
-      {entry.relatedDocs.length > 0 ? (
+      {entry.details.relatedDocs.length > 0 ? (
         <MetadataRow label="Related docs">
           <RelatedDocChips
             catalogue={props.catalogue}
             removed={removed !== undefined}
-            values={entry.relatedDocs}
+            values={entry.details.relatedDocs}
           />
         </MetadataRow>
       ) : null}

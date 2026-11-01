@@ -1,84 +1,44 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { analyzeHierarchy } from "../src/registry/hierarchy.js";
-import type { ManifestEntry, ManifestFolder } from "../src/registry/types.js";
-import type { ShellContext } from "../src/shell/context.js";
 import {
   defaultDisclosures,
   disclosurePath,
   navLeafVisible,
   navNodeVisible,
 } from "../src/shell/nav_model.js";
+
 import {
-  buildNavSections,
-  type NavGroupNode,
-  type NavLeafNode,
-  type NavNode,
-  type NavSectionNode,
-} from "../src/shell/nav_tree.js";
+  context,
+  sections,
+  section,
+  group,
+  leaf,
+} from "./nav_folder_fixture.js";
+import {
+  treeRecord as entry,
+  entryNode as e,
+  folderNode as f,
+} from "./tree_fixture.js";
 
-const entry = (
-  path: string,
-  kind: string,
-  title: string,
-  variantOf?: string,
-): ManifestEntry =>
-  ({
-    path,
-    kind,
-    title,
-    sourcePath: `specs/${path}.mockup.tsx`,
-    ...(variantOf ? { variantOf } : {}),
-  }) as ManifestEntry;
-
-const context: ShellContext = {
-  base: "main",
-  changedEntries: [],
-  changesStatus: "ready",
-};
-
-function sections(
-  entries: readonly ManifestEntry[],
-  folders: readonly ManifestFolder[] = [],
-): readonly NavSectionNode[] {
-  return buildNavSections(analyzeHierarchy(entries, folders).hierarchy);
-}
-
-function section(
-  all: readonly NavSectionNode[],
-  id: NavSectionNode["id"],
-): NavSectionNode {
-  const found = all.find((candidate) => candidate.id === id);
-  assert.ok(found, id);
-  return found;
-}
-
-function group(nodes: readonly NavNode[], key: string): NavGroupNode {
-  const found = nodes.find(
-    (node): node is NavGroupNode => node.kind === "group" && node.key === key,
-  );
-  assert.ok(found, key);
-  return found;
-}
-
-function leaf(nodes: readonly NavNode[], entryId: string): NavLeafNode {
-  const found = nodes.find(
-    (node): node is NavLeafNode =>
-      node.kind === "leaf" && node.entryId === entryId,
-  );
-  assert.ok(found, entryId);
-  return found;
-}
-
-for (const kind of ["page", "document", "use-case"]) {
+for (const kind of ["page", "document", "use-case"] as const) {
   test(`a ${kind} index stays a browse-only folder with its page first, labelled Overview`, () => {
     const specs = section(
-      sections([
-        entry("guide/intro", "screen", "Intro"),
-        entry("guide", kind, "Guide"),
-        entry("guide/appendix", "page", "Appendix"),
-      ]),
+      sections(
+        [
+          entry("guide/intro", "screen", "Intro"),
+          entry("guide", kind, "Guide"),
+          entry("guide/appendix", "page", "Appendix"),
+        ],
+        [
+          f(
+            "guide",
+            "Guide",
+            [e("guide"), e("guide/intro"), e("guide/appendix")],
+            { index: "guide" },
+          ),
+        ],
+      ),
       "specs",
     );
     const guide = group(specs.children, "folder:guide");
@@ -103,7 +63,7 @@ test("an index page keeps its own title when the folder record names the folder"
         entry("guide", "page", "Getting started"),
         entry("guide/a", "page", "A"),
       ],
-      [{ path: "guide", title: "Handbook", sourcePath: "specs/guide.ts" }],
+      [f("guide", "Handbook", [e("guide"), e("guide/a")], { index: "guide" })],
     ),
     "specs",
   );
@@ -119,12 +79,27 @@ test("an index page keeps its own title when the folder record names the folder"
 
 test("a screen index renders as one entry row listing its variants and then the folder's members", () => {
   const specs = section(
-    sections([
-      entry("billing/invoice", "screen", "Invoice"),
-      entry("billing/invoice/overdue", "screen", "Overdue", "billing/invoice"),
-      entry("billing/invoice/history", "screen", "History"),
-      entry("billing/invoice/archive/old", "screen", "Old"),
-    ]),
+    sections(
+      [
+        entry("billing/invoice", "screen", "Invoice"),
+        entry("billing/invoice/overdue", "screen", "Overdue", {
+          variantOf: "billing/invoice",
+        }),
+        entry("billing/invoice/history", "screen", "History"),
+        entry("billing/invoice/archive/old", "screen", "Old"),
+      ],
+      [
+        f("billing", "Billing", [
+          e("billing/invoice", [
+            e("billing/invoice/overdue"),
+            e("billing/invoice/history"),
+            f("billing/invoice/archive", "Archive", [
+              e("billing/invoice/archive/old"),
+            ]),
+          ]),
+        ]),
+      ],
+    ),
     "specs",
   );
   const billing = group(specs.children, "folder:billing");
@@ -146,12 +121,22 @@ test("a screen index renders as one entry row listing its variants and then the 
 });
 
 test("a component index lists its variants and members in Components only", () => {
-  const all = sections([
-    entry("kit/button", "component", "Button"),
-    entry("kit/button/primary", "component", "Primary", "kit/button"),
-    entry("kit/button/icon", "component", "Icon button"),
-    entry("kit/demo", "screen", "Demo"),
-  ]);
+  const all = sections(
+    [
+      entry("kit/button", "component", "Button"),
+      entry("kit/button/primary", "component", "Primary", {
+        variantOf: "kit/button",
+      }),
+      entry("kit/button/icon", "component", "Icon button"),
+      entry("kit/demo", "screen", "Demo"),
+    ],
+    [
+      f("kit", "Kit", [
+        e("kit/button", [e("kit/button/primary"), e("kit/button/icon")]),
+        e("kit/demo"),
+      ]),
+    ],
+  );
   const components = group(section(all, "components").children, "folder:kit");
   const button = leaf(components.children, "kit/button");
   assert.deepEqual(
@@ -173,12 +158,27 @@ test("a component index lists its variants and members in Components only", () =
 });
 
 test("an index entry's list opens for a member route and exposes nested folders", () => {
-  const all = sections([
-    entry("billing/invoice", "screen", "Invoice"),
-    entry("billing/invoice/overdue", "screen", "Overdue", "billing/invoice"),
-    entry("billing/invoice/archive/old", "screen", "Old"),
-    entry("billing/plans", "screen", "Plans"),
-  ]);
+  const all = sections(
+    [
+      entry("billing/invoice", "screen", "Invoice"),
+      entry("billing/invoice/overdue", "screen", "Overdue", {
+        variantOf: "billing/invoice",
+      }),
+      entry("billing/invoice/archive/old", "screen", "Old"),
+      entry("billing/plans", "screen", "Plans"),
+    ],
+    [
+      f("billing", "Billing", [
+        e("billing/invoice", [
+          e("billing/invoice/overdue"),
+          f("billing/invoice/archive", "Archive", [
+            e("billing/invoice/archive/old"),
+          ]),
+        ]),
+        e("billing/plans"),
+      ]),
+    ],
+  );
   assert.deepEqual(disclosurePath(all, "billing/invoice/archive/old"), [
     "section:specs",
     "folder:specs:billing",
@@ -200,10 +200,17 @@ test("an index entry's list opens for a member route and exposes nested folders"
 
 test("search matches titles and path segments, not the Overview label", () => {
   const specs = section(
-    sections([
-      entry("handbook", "document", "Handbook"),
-      entry("handbook/setup", "page", "Setup"),
-    ]),
+    sections(
+      [
+        entry("handbook", "document", "Handbook"),
+        entry("handbook/setup", "page", "Setup"),
+      ],
+      [
+        f("handbook", "Handbook", [e("handbook"), e("handbook/setup")], {
+          index: "handbook",
+        }),
+      ],
+    ),
     "specs",
   );
   const overview = leaf(
@@ -220,10 +227,17 @@ test("search matches titles and path segments, not the Overview label", () => {
 
 test("an index entry row stays visible while one of its members matches", () => {
   const specs = section(
-    sections([
-      entry("billing/invoice", "screen", "Invoice"),
-      entry("billing/invoice/history", "screen", "History"),
-    ]),
+    sections(
+      [
+        entry("billing/invoice", "screen", "Invoice"),
+        entry("billing/invoice/history", "screen", "History"),
+      ],
+      [
+        f("billing", "Billing", [
+          e("billing/invoice", [e("billing/invoice/history")]),
+        ]),
+      ],
+    ),
     "specs",
   );
   const invoice = leaf(

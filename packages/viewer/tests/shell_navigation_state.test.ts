@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { createCatalogue } from "../src/shell/catalogue.js";
 import { entryWording } from "../src/shell/entry_wording.js";
 import { targetHead } from "../src/shell/head.js";
 import { catalogueNavSections } from "../src/shell/nav_model.js";
@@ -15,7 +16,6 @@ import { withFilterSelection, withRoute } from "../src/shell/store_filters.js";
 import { withHostRoute } from "../src/shell/store_host_routes.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
 import { viewTitle } from "../src/shell/view_title.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
 
 import { withoutTreeEntries } from "./catalogue_fixture.js";
 import { catalogue, context, model } from "./shell_state_fixture.js";
@@ -112,7 +112,7 @@ test("removed component variants keep catalogue-wide Dark available", () => {
     ],
   };
 
-  assert.equal(viewerCatalogue(removedModel).hasDarkFragments, true);
+  assert.equal(createCatalogue(removedModel).hasDarkFragments, true);
 });
 
 test("filter transitions restore their disclosure baseline and route activation reveals its row", () => {

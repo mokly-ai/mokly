@@ -10,19 +10,16 @@ import type {
   ShellCatalogueReadModel,
   ShellCatalogueRoutedEntry,
 } from "../catalogue/scoped_types.js";
-import type { UsageLink as DetailUsageLink } from "../catalogue/types.js";
-import { isManifestComponentVariant } from "../components/manifest_types.js";
+import { isComponentVariant } from "../catalogue/variants.js";
 import { generatedViews } from "../components/views.js";
 import { keepsComponentRecord } from "../review/shared_impact.js";
 import type { Catalogue } from "../shell/catalogue.js";
 import type {
   EntryStatus,
-  UsageLink,
   WorkspaceData,
   WorkspaceVariant,
 } from "../shell/workspace_data.js";
 
-import { displayEntry } from "./projection.js";
 import { publicComparedEntry } from "./public_compared.js";
 import { shownReasons } from "./public_reasons.js";
 import { publicParent, publicVariants } from "./public_variants.js";
@@ -105,13 +102,9 @@ export function publicWorkspace(
         ? publicParent(catalogue, model, original)
         : original
       : undefined;
-  const projectedComponent = publicComponent
-    ? displayEntry(publicComponent)
-    : undefined;
   const component =
-    projectedComponent?.kind === "component" &&
-    !isManifestComponentVariant(projectedComponent)
-      ? projectedComponent
+    publicComponent && !isComponentVariant(publicComponent)
+      ? publicComponent
       : undefined;
   if (publicComponent && !component)
     throw new Error("The component parent is unavailable.");
@@ -153,7 +146,7 @@ export function publicWorkspace(
       keepsComponentRecord(view.resourceEvidence),
   );
   return {
-    entry,
+    entry: original,
     ...(component ? { component } : {}),
     components: [
       ...model.components,
@@ -166,7 +159,7 @@ export function publicWorkspace(
     views:
       component || orphanVariant
         ? variants.flatMap(({ value }) => generatedViews(value))
-        : generatedViews(entry),
+        : generatedViews(original),
     changedViews: publishedChangedViewsBySelection(
       publicComponent ?? original,
       rowSources,
@@ -177,8 +170,8 @@ export function publicWorkspace(
     ),
     variants,
     ...(held?.controlOrder ? { controlOrder: held.controlOrder } : {}),
-    usedBy: (workspace?.usedBy ?? []).map(shellUsageLink),
-    affected: (workspace?.affected ?? []).map(shellUsageLink),
+    usedBy: workspace?.usedBy ?? [],
+    affected: workspace?.affected ?? [],
     base,
     comparisons,
     comparisonEligible:
@@ -214,24 +207,16 @@ function workspaceRow(
   source: ShellCatalogueComponent,
   parentRemoved: boolean,
 ): WorkspaceVariant {
-  const value = displayEntry(source);
-  if (value.kind !== "component")
-    throw new Error("The component entry is unavailable.");
   const record = model.removedEntries.find(
     ({ entry: candidate }) => candidate === source,
   );
   const shown = variantStatus(source);
   return {
-    value,
+    value: source,
     removed: parentRemoved || record !== undefined,
     comparisonEligible:
       source.comparison.status === "ready" && source.comparison.eligible,
     ...(record?.snapshotId ? { snapshotId: record.snapshotId } : {}),
     ...(shown ? { status: shown } : {}),
   };
-}
-
-function shellUsageLink(link: DetailUsageLink): UsageLink {
-  const { entryPath, ...rest } = link;
-  return { entryId: entryPath, ...rest };
 }

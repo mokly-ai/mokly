@@ -13,10 +13,12 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { detailKey } from "../src/catalogue/detail_fences.js";
 import type { CatalogueReadModel } from "../src/catalogue/types.js";
 import type { EntryChangeReason } from "../src/review/types.js";
-import { catalogueSelectionEntry } from "../src/shell/catalogue.js";
+import {
+  catalogueSelectionEntry,
+  createCatalogue,
+} from "../src/shell/catalogue.js";
 import { WorkspaceEvidence } from "../src/shell/workspace_evidence.js";
 import { mergeWorkspaceEvidence } from "../src/shell/workspace_evidence_merge.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
 import { publicWorkspace } from "../src/viewer/public_workspace.js";
 
 import {
@@ -69,7 +71,7 @@ function workspace(
       ]),
     ),
   );
-  const catalogue = viewerCatalogue(model);
+  const catalogue = createCatalogue(model);
   const entry = catalogue.byPath.get(path);
   assert.ok(entry?.kind === "screen" || entry?.kind === "component");
   return publicWorkspace(catalogue, model, entry, true, undefined, "main");
@@ -125,7 +127,7 @@ test("a screen reason, which only a use case carries, has no sentence", () => {
 
 test("a removed snapshot's Details read its removed reason once", () => {
   const model = shellModelFixture();
-  const catalogue = viewerCatalogue(model);
+  const catalogue = createCatalogue(model);
   const entry = catalogueSelectionEntry(catalogue, RETIRED_PATH, RETIRED);
   assert.ok(entry?.kind === "screen");
   const data = publicWorkspace(catalogue, model, entry, true, RETIRED, "main");

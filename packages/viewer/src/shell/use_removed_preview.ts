@@ -101,6 +101,7 @@ export function useRemovedPreview({
   const model = useOptionalShellStore()?.catalogue.publicModel;
   const comparisonUrl = model?.comparisonUrl;
   const delivery = useRouteDelivery();
+  const deliveryStatus = data.kind === "screen" ? delivery?.status : undefined;
   const detail =
     data.kind === "screen"
       ? model?.details.get(
@@ -125,8 +126,7 @@ export function useRemovedPreview({
 
   useEffect(() => {
     if (!interactive || !environment) return;
-    if (data.kind === "screen" && delivery && delivery.status !== "ready")
-      return;
+    if (deliveryStatus !== undefined && deliveryStatus !== "ready") return;
     const controller = new AbortController();
     const refresh = retryRequested.current;
     const owns = () => !controller.signal.aborted;
@@ -226,7 +226,7 @@ export function useRemovedPreview({
     attempt,
     colorScheme,
     comparisonUrl,
-    delivery?.status,
+    deliveryStatus,
     detail,
     environment,
     interactive,

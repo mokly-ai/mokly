@@ -4,8 +4,8 @@ import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { detailKey } from "../src/catalogue/detail_fences.js";
+import { createCatalogue } from "../src/shell/catalogue.js";
 import { WorkspaceEvidence } from "../src/shell/workspace_evidence.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
 import { publicWorkspace } from "../src/viewer/public_workspace.js";
 
 import {
@@ -69,12 +69,12 @@ test("a current variant reads Used by and Affected from its parent detail", () =
     variant,
   );
   assert.deepEqual(
-    variantData.usedBy.map(({ entryId }) => entryId),
-    parentData.usedBy.map(({ entryId }) => entryId),
+    variantData.usedBy.map(({ entryPath }) => entryPath),
+    parentData.usedBy.map(({ entryPath }) => entryPath),
   );
   assert.deepEqual(
-    variantData.affected.map(({ entryId }) => entryId),
-    parentData.affected.map(({ entryId }) => entryId),
+    variantData.affected.map(({ entryPath }) => entryPath),
+    parentData.affected.map(({ entryPath }) => entryPath),
   );
   assert.equal(variantData.usedBy[0]?.title, "Edited consumer");
   assert.equal(variantData.affected[0]?.title, "Edited affected");
@@ -86,7 +86,7 @@ test("a current variant does not show a zero list without its parent detail", ()
     undefined,
     heldDetails(["components/action/default"]),
   );
-  const partialCatalogue = viewerCatalogue(partial);
+  const partialCatalogue = createCatalogue(partial);
   const variant = partialCatalogue.byPath.get("components/action/default");
   assert.ok(variant?.kind === "component");
   const data = publicWorkspace(partialCatalogue, partial, variant);
@@ -148,11 +148,11 @@ test("a removed entry reads its own workspace detail", () => {
   )?.workspace;
   assert.ok(expected);
   assert.deepEqual(
-    data.usedBy.map(({ entryId }) => entryId),
+    data.usedBy.map(({ entryPath }) => entryPath),
     expected.usedBy!.map(({ entryPath }) => entryPath),
   );
   assert.deepEqual(
-    data.affected.map(({ entryId }) => entryId),
+    data.affected.map(({ entryPath }) => entryPath),
     expected.affected!.map(({ entryPath }) => entryPath),
   );
   assert.equal(data.usedBy[0]?.title, "Edited removed consumer");
@@ -172,7 +172,7 @@ function edited(edit: (fixtures: DetailFixtures) => void) {
       ]),
     ),
   );
-  return { catalogue: viewerCatalogue(shell), model: shell };
+  return { catalogue: createCatalogue(shell), model: shell };
 }
 
 test("a published screen keeps its catalogue view evidence in Current", () => {

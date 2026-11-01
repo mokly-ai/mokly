@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { ShellCatalogueComponent } from "../src/catalogue/scoped_types.js";
 import { encodeProps } from "../src/components/codec.js";
-import { type ManifestComponent } from "../src/components/manifest_types.js";
 import {
   controlDraft,
   validateControlDraft,
@@ -15,7 +15,7 @@ import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
 const { source, sourceVariant } = componentWorkspaceFixture();
 
 test("control drafts preserve primitive edits and emit typed overrides", () => {
-  const declared: Pick<ManifestComponent, "controls" | "propSchema"> = {
+  const declared: Pick<ShellCatalogueComponent, "controls" | "propSchema"> = {
     controls: {
       label: { kind: "text" },
       count: { kind: "number", minimum: -1, maximum: 10 },

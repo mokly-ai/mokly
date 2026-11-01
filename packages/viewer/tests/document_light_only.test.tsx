@@ -6,12 +6,12 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { shellCatalogueModel } from "../src/catalogue/shell_model.js";
 import type { ColorScheme } from "../src/data/axes.js";
+import { createCatalogue } from "../src/shell/catalogue.js";
 import { DocumentStageFrame } from "../src/shell/document_stage_frame.js";
 import {
   removedPreviewData,
   RemovedPreviewStage,
 } from "../src/shell/previews.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
 
 import { indexFixture } from "./catalogue_v9_fixture.js";
 
@@ -89,7 +89,7 @@ function removedStage(
       snapshotId: hash(`removed:${REMOVED}`),
     });
   });
-  const catalogue = viewerCatalogue(shellCatalogueModel(index, new Map()));
+  const catalogue = createCatalogue(shellCatalogueModel(index, new Map()));
   const removed = catalogue.byPath.get(REMOVED);
   assert.ok(removed);
   const data = removedPreviewData(

@@ -1,7 +1,11 @@
 /** Serializable, source-derived state shared by every delivery's inspector. */
 
-import type { EntryDetailV4, InputChange } from "../catalogue/types.js";
-import type { ManifestComponent } from "../components/manifest_types.js";
+import type { ShellCatalogueComponent } from "../catalogue/scoped_types.js";
+import type {
+  EntryDetailV4,
+  InputChange,
+  UsageLink,
+} from "../catalogue/types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 import type {
   ComparedEntry,
@@ -14,13 +18,12 @@ import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import type { EntryStatus, ViewStatesBySelection } from "./view_status.js";
 import type { WorkspaceEntry } from "./workspace_entry.js";
-import type { UsageLink } from "./workspace_usage_data.js";
 import type { WorkspaceVariant } from "./workspace_variants.js";
 import type { ChangedViewsBySelection } from "./workspace_views_data.js";
 
 export type { EntryStatus } from "./view_status.js";
 export type { WorkspaceVariant } from "./workspace_variants.js";
-export type { UsageLink } from "./workspace_usage_data.js";
+export type { UsageLink } from "../catalogue/types.js";
 export interface WorkspaceData {
   controlOrder?: EntryDetailV4["controlOrder"];
   /** False when the detail that carries this entry's Usage lists is absent. */
@@ -30,8 +33,8 @@ export interface WorkspaceData {
   /** The exact routed entry whose chrome and lifecycle own this workspace. */
   entry: WorkspaceEntry;
   /** Parent schema and controls for a component parent or variant route. */
-  component?: ManifestComponent;
-  components: readonly Pick<ManifestComponent, "path" | "title">[];
+  component?: ShellCatalogueComponent;
+  components: readonly Pick<ShellCatalogueComponent, "path" | "title">[];
   views: readonly GeneratedComponentView[];
   /**
    * Canonically ordered changed views, keyed by saved-variant id for a

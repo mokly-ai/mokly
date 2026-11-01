@@ -55,12 +55,12 @@ test("a document's Details show its description, tags, and Markdown source", () 
   const shell = catalogue();
   const entry = shell.byPath.get("product");
   assert.ok(entry?.kind === "document");
-  assert.match(html, new RegExp(`>${entry.description}</p>`, "u"));
+  assert.match(html, new RegExp(`>${entry.details.description}</p>`, "u"));
   assert.match(html, /data-mokly-tag="guide"/u);
   assert.match(
     html,
     new RegExp(
-      `Source</span>.*?<code class="mbk-code mbk-reset">${entry.sourcePath}`,
+      `Source</span>.*?<code class="mbk-code mbk-reset">${entry.details.sourcePath}`,
       "u",
     ),
   );
@@ -75,7 +75,7 @@ const GUIDE: CatalogueNode = {
   title: "Guide",
 };
 
-test("the served manifest's source path links its current document", () => {
+test("the catalogue record's source path links its current document", () => {
   const related = ["specs/guide/terms.md", "specs/guide/old.md", "x.md"];
   const billing = publishedScreen("billing", "Billing");
   billing.details.relatedDocs = [...related];
@@ -119,11 +119,7 @@ test("a served document shows its source without the removed dependency list", (
   });
   const published = shell.byPath.get("guide/terms");
   assert.ok(published);
-  // An older manifest's document also named its resources.
-  const document = {
-    ...published,
-    resources: ["specs/guide/terms.svg"],
-  } as typeof published;
+  const document = published;
   const markup = renderToStaticMarkup(
     <EntryDetailsBody catalogue={shell} entry={document} />,
   );

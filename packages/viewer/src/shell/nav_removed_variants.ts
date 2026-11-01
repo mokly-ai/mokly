@@ -4,8 +4,8 @@
  * current variants. A row that cannot attach stays a flat removed row.
  */
 
+import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
 import type { CatalogueHierarchy } from "../registry/hierarchy.js";
-import type { ManifestEntry } from "../registry/types.js";
 
 import type { NavLeafNode, NavNode } from "./nav_tree.js";
 
@@ -14,7 +14,7 @@ import type { NavLeafNode, NavNode } from "./nav_tree.js";
  * lookup resolved for them. An ineligible variant keeps its flat removed row.
  */
 export function adoptedVariants(
-  hierarchy: CatalogueHierarchy<ManifestEntry>,
+  hierarchy: CatalogueHierarchy<ShellCatalogueRoutedEntry>,
   leaves: readonly NavLeafNode[],
 ): Map<string, NavLeafNode[]> {
   const byParent = new Map<string, NavLeafNode[]>();

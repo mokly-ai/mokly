@@ -2,19 +2,17 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
-import { projectTree } from "../src/catalogue/tree.js";
-import {
-  analyzeHierarchy,
-  type HierarchyNode,
-} from "../src/registry/hierarchy.js";
-import type { ManifestEntry, ManifestFolder } from "../src/registry/types.js";
+import type { ShellCatalogueRoutedEntry } from "../src/catalogue/scoped_types.js";
+import type { HierarchyNode } from "../src/registry/hierarchy.js";
 import { buildNavSections } from "../src/shell/nav_tree.js";
-import { adoptCatalogueTree } from "../src/viewer/catalogue_tree.js";
 
 import { rawIndexFixture } from "./catalogue_v9_fixture.js";
-
-const entry = (path: string, kind: string, title: string): ManifestEntry =>
-  ({ path, kind, title }) as ManifestEntry;
+import {
+  treeRecord as entry,
+  treeHierarchy,
+  entryNode as e,
+  folderNode as f,
+} from "./tree_fixture.js";
 
 /** Library and Kit are folders' own pages whose members are the other kind. */
 const entries = [
@@ -27,18 +25,27 @@ const entries = [
   entry("fx/zoo/z", "screen", "Z"),
 ];
 
-const record = (path: string, order: readonly string[]): ManifestFolder => ({
-  path,
-  order,
-  sourcePath: `specs/${path}/_folder.json`,
-});
+const tree = (order?: readonly string[]) => [
+  f(
+    "fx",
+    "Fx",
+    [
+      e("fx/lib", [e("fx/lib/guide")]),
+      e("fx/kit", [e("fx/kit/badge")]),
+      e("fx/alpha"),
+      e("fx/button"),
+      f("fx/zoo", "Zoo", [e("fx/zoo/z")]),
+    ],
+    order ? { order: [...order] } : {},
+  ),
+];
 
 /** Each section's children of `fx`, as `kind:key` in rendered order. */
 function sectionRows(roots: {
-  specs: readonly HierarchyNode<ManifestEntry>[];
-  components: readonly HierarchyNode<ManifestEntry>[];
+  specs: readonly HierarchyNode<ShellCatalogueRoutedEntry>[];
+  components: readonly HierarchyNode<ShellCatalogueRoutedEntry>[];
 }) {
-  const rows = (nodes: readonly HierarchyNode<ManifestEntry>[]) =>
+  const rows = (nodes: readonly HierarchyNode<ShellCatalogueRoutedEntry>[]) =>
     (nodes.find((node) => node.key === "fx")?.children ?? []).map(
       (node) => `${node.kind}:${node.key}`,
     );
@@ -46,7 +53,7 @@ function sectionRows(roots: {
 }
 
 test("a folder whose own page is in the other section sorts with the folder rows there", () => {
-  const { hierarchy } = analyzeHierarchy(entries);
+  const hierarchy = treeHierarchy(entries, tree());
   assert.deepEqual(sectionRows(hierarchy.roots), {
     specs: ["folder:fx/lib", "folder:fx/zoo", "entry:fx/alpha", "entry:fx/kit"],
     components: ["folder:fx/kit", "entry:fx/button", "entry:fx/lib"],
@@ -72,47 +79,25 @@ test("a folder whose own page is in the other section sorts with the folder rows
 });
 
 test("each section applies a folder's order record to the children it shows", () => {
-  const ordered = (records: readonly ManifestFolder[]) =>
-    sectionRows(analyzeHierarchy(entries, records).hierarchy.roots);
-  assert.deepEqual(ordered([record("fx", ["zoo", "..."])]), {
+  const ordered = (order: readonly string[]) =>
+    sectionRows(treeHierarchy(entries, tree(order)).roots);
+  assert.deepEqual(ordered(["zoo", "..."]), {
     specs: ["folder:fx/zoo", "folder:fx/lib", "entry:fx/alpha", "entry:fx/kit"],
     components: ["folder:fx/kit", "entry:fx/button", "entry:fx/lib"],
   });
-  assert.deepEqual(ordered([record("fx", ["button", "lib"])]), {
+  assert.deepEqual(ordered(["button", "lib"]), {
     specs: ["folder:fx/lib", "folder:fx/zoo", "entry:fx/alpha", "entry:fx/kit"],
     components: ["entry:fx/button", "entry:fx/lib", "folder:fx/kit"],
   });
-  const top = analyzeHierarchy(
+  const top = treeHierarchy(
     [...entries, entry("aa/one", "screen", "One")],
-    [record("", ["fx", "..."])],
-  ).hierarchy;
+    [...tree(), f("aa", "Aa", [e("aa/one")])],
+    ["fx", "..."],
+  );
   assert.deepEqual(top.order, ["fx", "..."]);
   assert.deepEqual(
     top.roots.specs.map((node) => node.key),
     ["fx", "aa"],
-  );
-});
-
-test("the public tree carries each order so the viewer sorts sections as Serve does", () => {
-  const records = [record("", ["fx", "..."]), record("fx", ["button", "lib"])];
-  const served = analyzeHierarchy(
-    [...entries, entry("aa/one", "screen", "One")],
-    records,
-  ).hierarchy;
-  const tree = projectTree(served);
-  assert.deepEqual(tree.find((node) => node.path === "fx")?.order, [
-    "button",
-    "lib",
-  ]);
-  const adopted = adoptCatalogueTree(
-    analyzeHierarchy([...entries, entry("aa/one", "screen", "One")]).hierarchy,
-    tree,
-    served.order,
-  );
-  assert.deepEqual(sectionRows(adopted.roots), sectionRows(served.roots));
-  assert.deepEqual(
-    adopted.roots.specs.map((node) => node.key),
-    served.roots.specs.map((node) => node.key),
   );
 });
 

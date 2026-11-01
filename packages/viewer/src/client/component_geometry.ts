@@ -4,7 +4,7 @@ import {
   VIEWER_DIRECTORY,
   currentDocumentPath,
 } from "../catalogue/delivery_paths.js";
-import type { ComponentViewRecord } from "../components/manifest_types.js";
+import type { ComponentViewRecord } from "../components/view_types.js";
 import { clipNode } from "../inspector/clipping.js";
 
 import { uncoveredBoxes } from "./component_occlusion.js";

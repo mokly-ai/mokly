@@ -13,8 +13,8 @@ import { detailKey } from "../src/catalogue/detail_fences.js";
 import type { ShellCatalogueRoutedEntry } from "../src/catalogue/scoped_types.js";
 import type { CatalogueReadModel } from "../src/catalogue/types.js";
 import type { EntryChangeReason } from "../src/review/types.js";
+import { createCatalogue } from "../src/shell/catalogue.js";
 import { WorkspaceEvidence } from "../src/shell/workspace_evidence.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
 import { shownReasons } from "../src/viewer/public_reasons.js";
 import { publicWorkspace } from "../src/viewer/public_workspace.js";
 
@@ -127,7 +127,7 @@ test("Details keep the detail but not its contradicting reason", () => {
       ]),
     ),
   );
-  const catalogue = viewerCatalogue(model);
+  const catalogue = createCatalogue(model);
   const entry = catalogue.byPath.get(HOME);
   assert.ok(entry?.kind === "screen");
   const data = publicWorkspace(

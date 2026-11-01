@@ -4,7 +4,7 @@ import {
   currentDocumentRoute,
 } from "../catalogue/delivery_paths.js";
 import type { CatalogueUsage } from "../catalogue/types.js";
-import type { ComponentViewRecord } from "../components/manifest_types.js";
+import type { ComponentViewRecord } from "../components/view_types.js";
 import { inspection } from "../inspector/inspection.js";
 
 import { authenticateRanges, rangeBounds } from "./component_geometry.js";

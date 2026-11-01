@@ -16,11 +16,11 @@ import type {
   EntryDetailV4,
 } from "../src/catalogue/types.js";
 import type { Viewport } from "../src/data/axes.js";
+import { createCatalogue } from "../src/shell/catalogue.js";
 import type { UsageLink } from "../src/shell/workspace_data.js";
 import { selectedVariant } from "../src/shell/workspace_selection.js";
 import { usageHref } from "../src/shell/workspace_usage.js";
 import { resolveWorkspaceView } from "../src/shell/workspace_views.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
 import { publicWorkspace } from "../src/viewer/public_workspace.js";
 
 import {
@@ -75,7 +75,7 @@ function shown(
       ]),
     ),
   );
-  const catalogue = viewerCatalogue(model);
+  const catalogue = createCatalogue(model);
   const entry = catalogue.byPath.get(path);
   assert.ok(entry?.kind === "screen" || entry?.kind === "component");
   const data = publicWorkspace(catalogue, model, entry, true, undefined, "");
@@ -188,7 +188,7 @@ test("an affected-only entry without its detail offers no comparison yet", () =>
       ]),
     ),
   );
-  const catalogue = viewerCatalogue(model);
+  const catalogue = createCatalogue(model);
   const entry = catalogue.byPath.get(SCREEN);
   assert.ok(entry?.kind === "screen");
   const data = publicWorkspace(catalogue, model, entry, true, undefined, "");
@@ -202,7 +202,7 @@ test("an affected-only entry without its detail offers no comparison yet", () =>
 
 const link = (extra: Partial<UsageLink> = {}): UsageLink => ({
   title: "Consumer screen",
-  entryId: "screens/consumer",
+  entryPath: "screens/consumer",
   entryKind: "screen",
   viewport: "mobile",
   colorScheme: "light",

@@ -11,7 +11,7 @@ keeps the sentence during loading; an index without a `base` omits it.
 
 ## Scope
 
-`metadata.ts` carries accepted move evidence privately. `comparison_selection.ts`
+`comparison_selection.ts`
 uses each side's original path for snapshot URLs, including moved variants.
 `catalogue.ts` keeps each paired current entry's branch-point path in
 `previousPaths`, read from the index's `previousPath`. No shell module
@@ -32,8 +32,8 @@ counterparts for workspace inputs, variants and nested component instances.
 
 `catalogue_branch_point.ts` implements that pure lookup beside `createCatalogue`.
 `branchPoints(catalogue)` is its one construction point: it indexes a catalogue
-generation on first use and returns the same lookup for that catalogue object
-afterwards. `resolve` requires an explicit before/after side and kind.
+generation on first use and returns the same lookup while that index stays
+installed, including when held details change. `resolve` requires an explicit before/after side and kind.
 `parent` gives an eligible parent of a resolved variant or a stored title
 without a link, and `parentOf` locates a current entry or removed record first.
 `removedVariants(parent)` lists the removed variants whose parent resolves to
@@ -107,7 +107,7 @@ empty path segments and every earlier key form on restore.
 `disclosure_storage.ts` owns the v4 map codec and its storage key; the
 stored preferences the browser entry reads and the shell store share its
 validation. Earlier storage versions are never read, translated, or removed.
-`routes.ts` resolves URL paths to current or retained manifest entries;
+`routes.ts` resolves URL paths to current or retained catalogue records;
 `target.ts` wraps a found entry as a route target without an extra routing
 filter. The [folder contract](../../../../docs/protocol/mokly-folders.md)
 owns the shared folder ordering and identity used by this shell.
@@ -254,11 +254,15 @@ fallbacks that let a host's accent value inherit. It needs no `@scope` block,
 because no package rule reaches the host page or host slot content. The
 standalone shell keeps the original font paths.
 
-`catalogue.ts` owns pure display indexing. Its `byPath` index contains current and
-removed entries whose paths are unique across both sets; an explicit snapshot
-selects its exact removed record. The `Catalogue` type requires `publicModel`:
-`createCatalogue` builds the lookup, and `viewerCatalogue` adds the published
-records that complete it.
+`catalogue.ts` indexes the generated records of `ShellCatalogueReadModel`.
+Its `entries` holds current records, and `removedEntries` holds `ShellRemovedEntry`
+records. Its `byPath` index contains both sets, whose paths are unique across them.
+An explicit snapshot selects its exact removed record. `createCatalogue` builds
+these lookups, tags, Dark availability, and accepted move pairs once per index.
+`registry/catalogue_hierarchy.ts` reads the index `tree` for folders, titles,
+hidden flags, and ancestor titles. `filterHierarchy` derives and orders each
+navigation section. The catalogue's `publicModel` joins held details separately.
+A detail commit replaces that model and retains the index lookups and sections.
 `tag_selection.ts` captures the open picker before a tag changes the search state.
 An inspector tag then returns focus to the toggle in its own shell. Picker
 chips keep the focus return of `@mokly/ui/tag-picker`.

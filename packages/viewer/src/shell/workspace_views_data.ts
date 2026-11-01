@@ -4,10 +4,10 @@
 // is unmodified when it has not examined one.
 
 import type {
-  ManifestComponent,
-  ManifestComponentVariant,
-} from "../components/manifest_types.js";
-import type { ManifestScreen } from "../registry/types.js";
+  ShellCatalogueComponent,
+  ShellCatalogueVariant,
+  ShellCatalogueScreen,
+} from "../catalogue/scoped_types.js";
 
 import type { ChangedView } from "./view_marks.js";
 
@@ -18,7 +18,7 @@ export type ChangedViewsBySelection = Readonly<
 
 /** Read the screen or selected saved variant without a caller inventing a key. */
 export function selectedChangedViews(
-  entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
+  entry: ShellCatalogueComponent | ShellCatalogueVariant | ShellCatalogueScreen,
   evidence: ChangedViewsBySelection,
   variantPath?: string,
 ): readonly ChangedView[] {

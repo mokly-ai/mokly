@@ -1,15 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { projectTree } from "../packages/viewer/dist/catalogue/tree.js";
-import { analyzeHierarchy } from "../packages/viewer/dist/registry/hierarchy.js";
-
-const entry = (
-  path: string,
-  kind: string,
-  title: string,
-  variantOf?: string,
-) => ({ path, kind, title, ...(variantOf ? { variantOf } : {}) });
+import {
+  treeRecord as entry,
+  entryNode as e,
+  folderNode as f,
+  treeHierarchy,
+} from "../packages/viewer/tests/tree_fixture.js";
 
 test("one path tree splits mixed folders by kind and retains authored variants", () => {
   const entries = [
@@ -17,10 +14,26 @@ test("one path tree splits mixed folders by kind and retains authored variants",
     entry("design/z", "screen", "Zed"),
     entry("design/button", "component", "Button"),
     entry("design/browse/b", "page", "Beta"),
-    entry("design/browse/a/second", "screen", "Second", "design/browse/a"),
-    entry("design/browse/a/first", "screen", "First", "design/browse/a"),
+    entry("design/browse/a/second", "screen", "Second", {
+      variantOf: "design/browse/a",
+    }),
+    entry("design/browse/a/first", "screen", "First", {
+      variantOf: "design/browse/a",
+    }),
   ];
-  const { hierarchy } = analyzeHierarchy(entries);
+  const hierarchy = treeHierarchy(entries, [
+    f("design", "Design", [
+      f("design/browse", "Browse", [
+        e("design/browse/a", [
+          e("design/browse/a/second"),
+          e("design/browse/a/first"),
+        ]),
+        e("design/browse/b"),
+      ]),
+      e("design/button"),
+      e("design/z"),
+    ]),
+  ]);
   assert.deepEqual(hierarchy.ancestorsByPath.get("design/browse/a"), [
     "Design",
     "Browse",
@@ -49,7 +62,7 @@ test("one path tree splits mixed folders by kind and retains authored variants",
       browse.children.map(({ label }) => label),
       ["Alpha", "Beta"],
     );
-  const full = projectTree(hierarchy);
+  const full = hierarchy.tree;
   assert.equal(full[0]?.children?.length, 3);
 });
 
@@ -59,53 +72,16 @@ test("display labels may repeat without changing paths or causing identity confl
     entry("two/a", "page", "Settings"),
     entry("settings/b", "page", "Nested"),
   ];
-  const records = ["one", "two"].map((path) => ({
-    path,
-    title: "The same title",
-    sourcePath: "specs/folders.mockup.ts",
-  }));
-  const hierarchy = analyzeHierarchy(entries, records).hierarchy;
+  const hierarchy = treeHierarchy(entries, [
+    f("one", "The same title", [e("one/a")]),
+    f("two", "The same title", [e("two/a")]),
+    f("settings", "Settings", [e("settings/b")]),
+  ]);
   assert.deepEqual(
-    hierarchy.tree.map((node) => node.key),
+    hierarchy.roots.specs.map((node) => node.key),
     ["settings", "one", "two"],
   );
   assert.equal(hierarchy.byPath.size, 3);
-});
-
-test("folder index pages are first and screen indexes retain ordinary members", () => {
-  const entries = [
-    entry("account", "page", "Account"),
-    entry("account/invoice", "screen", "Invoice"),
-    entry("account/invoice/overdue", "screen", "Overdue", "account/invoice"),
-    entry("account/invoice/history/item", "page", "Item"),
-  ];
-  const tree = projectTree(analyzeHierarchy(entries).hierarchy);
-  assert.deepEqual(tree, [
-    {
-      kind: "folder",
-      path: "account",
-      title: "Account",
-      index: "account",
-      children: [
-        { kind: "entry", path: "account" },
-        {
-          kind: "entry",
-          path: "account/invoice",
-          children: [
-            { kind: "entry", path: "account/invoice/overdue" },
-            {
-              kind: "folder",
-              path: "account/invoice/history",
-              title: "History",
-              children: [
-                { kind: "entry", path: "account/invoice/history/item" },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  ]);
 });
 
 test("folder order places unnamed children at ellipsis and defaults to appending them", () => {
@@ -121,9 +97,18 @@ test("folder order places unnamed children at ellipsis and defaults to appending
       ["group/b", "group/a", "group/sub"],
     ],
   ] as const) {
-    const folder = analyzeHierarchy(entries, [
-      { path: "group", order, sourcePath: "specs/group/_folder.json" },
-    ]).hierarchy.tree[0];
+    const folder = treeHierarchy(entries, [
+      f(
+        "group",
+        "Group",
+        [
+          f("group/sub", "Sub", [e("group/sub/item")]),
+          e("group/a"),
+          e("group/b"),
+        ],
+        { order: [...order] },
+      ),
+    ]).roots.specs[0];
     assert.deepEqual(
       folder?.children?.map((node) => node.key),
       expected,

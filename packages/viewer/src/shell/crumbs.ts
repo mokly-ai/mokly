@@ -1,11 +1,11 @@
 // Breadcrumb trails derived from the one path tree.
 
+import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
 import { viewHref } from "../navigation/routes.js";
 import type {
   CatalogueHierarchy,
   HierarchyNode,
 } from "../registry/hierarchy.js";
-import type { ManifestEntry } from "../registry/types.js";
 
 import type { NavSectionNode } from "./nav_tree.js";
 
@@ -34,7 +34,7 @@ export interface CatalogueCrumb {
  * All and search never show their rows.
  */
 export function structuredCrumbTrail(
-  hierarchy: CatalogueHierarchy<ManifestEntry>,
+  hierarchy: CatalogueHierarchy<ShellCatalogueRoutedEntry>,
   entryId: string,
 ): CatalogueCrumb[] {
   const titles = hierarchy.ancestorsByPath.get(entryId) ?? [];
@@ -46,7 +46,8 @@ export function structuredCrumbTrail(
     hierarchy.byPath.get(entryId)?.kind === "component"
       ? "components"
       : "specs";
-  let nodes: readonly HierarchyNode<ManifestEntry>[] = hierarchy.tree;
+  let nodes: readonly HierarchyNode<ShellCatalogueRoutedEntry>[] =
+    hierarchy.tree;
   let hidden = false;
   return titles.map((label, index) => {
     const path = segments.slice(0, index + 1).join("/");

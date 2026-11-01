@@ -1,8 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { analyzeHierarchy } from "../src/registry/hierarchy.js";
-import type { ManifestEntry, ManifestFolder } from "../src/registry/types.js";
 import type { ShellContext } from "../src/shell/context.js";
 import { structuredCrumbTrail } from "../src/shell/crumbs.js";
 import {
@@ -13,28 +11,47 @@ import { buildNavSections } from "../src/shell/nav_tree.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 import type { ViewerSelection } from "../src/viewer/types.js";
 
-const entry = (
-  path: string,
-  kind: string,
-  title: string,
-  variantOf?: string,
-): ManifestEntry =>
-  ({ path, kind, title, ...(variantOf ? { variantOf } : {}) }) as ManifestEntry;
+import {
+  treeRecord as entry,
+  treeHierarchy,
+  entryNode as e,
+  folderNode as f,
+} from "./tree_fixture.js";
 
 const entries = [
   entry("guide", "page", "Guide"),
   entry("guide/setup/first", "screen", "First"),
   entry("guide/secret/plan", "screen", "Plan"),
   entry("billing/invoice", "screen", "Invoice"),
-  entry("billing/invoice/overdue", "screen", "Overdue", "billing/invoice"),
+  entry("billing/invoice/overdue", "screen", "Overdue", {
+    variantOf: "billing/invoice",
+  }),
   entry("billing/invoice/history", "screen", "History"),
   entry("billing/invoice/archive/old", "screen", "Old"),
   entry("kit/parts/chip", "component", "Chip"),
 ];
-const folders: ManifestFolder[] = [
-  { path: "guide/secret", hidden: true, sourcePath: "specs/secret.ts" },
-];
-const hierarchy = analyzeHierarchy(entries, folders).hierarchy;
+const hierarchy = treeHierarchy(entries, [
+  f(
+    "guide",
+    "Guide",
+    [
+      e("guide"),
+      f("guide/setup", "Setup", [e("guide/setup/first")]),
+      f("guide/secret", "Secret", [e("guide/secret/plan")], { hidden: true }),
+    ],
+    { index: "guide" },
+  ),
+  f("billing", "Billing", [
+    e("billing/invoice", [
+      e("billing/invoice/overdue"),
+      e("billing/invoice/history"),
+      f("billing/invoice/archive", "Archive", [
+        e("billing/invoice/archive/old"),
+      ]),
+    ]),
+  ]),
+  f("kit", "Kit", [f("kit/parts", "Parts", [e("kit/parts/chip")])]),
+]);
 const sections = buildNavSections(hierarchy);
 
 const context = (changedEntries: readonly string[]): ShellContext => ({

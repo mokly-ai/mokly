@@ -8,8 +8,8 @@ import type {
   CatalogueDetails,
   CatalogueReadModel,
 } from "../src/catalogue/types.js";
+import { createCatalogue } from "../src/shell/catalogue.js";
 import { ShellMain } from "../src/shell/views.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
 
 function renderedBaselineHash(details: CatalogueDetails): string {
   const entry = {
@@ -42,7 +42,7 @@ function renderedBaselineHash(details: CatalogueDetails): string {
     tree: [],
     useCases: [],
   };
-  const catalogue = viewerCatalogue(shellCatalogueModel(model, new Map()));
+  const catalogue = createCatalogue(shellCatalogueModel(model, new Map()));
   const removed = catalogue.removedEntries[0]?.entry;
   assert.ok(removed);
   const html = renderToStaticMarkup(

@@ -293,9 +293,13 @@ and Review regressions against `mokly serve` of the example catalogue.
   directory names, the path and link grammar, and the prop schema validators
 - [`src/navigation/routes.ts`](./src/navigation/routes.ts) — entry, view,
   snapshot, preview, and shell URL derivation
-- [`src/registry/nav_paths.ts`](./src/registry/nav_paths.ts) and
-  [`src/registry/hierarchy.ts`](./src/registry/hierarchy.ts) — folder keys,
-  labels, sibling order, and the path tree of each section
+- [`src/shell/catalogue.ts`](./src/shell/catalogue.ts) — the shell's lookups of
+  generated current and removed records, tags, schemes, and accepted moves
+- [`src/registry/catalogue_hierarchy.ts`](./src/registry/catalogue_hierarchy.ts)
+  and [`src/registry/hierarchy.ts`](./src/registry/hierarchy.ts) — the index
+  tree's navigation records and the Specs and Components sections
+- [`src/registry/nav_paths.ts`](./src/registry/nav_paths.ts) — the shared
+  comparator for each section's sibling order
 - [`src/client`](./src/client) — the frame adapters, message transport, and
   geometry
 - [`src/inspector`](./src/inspector) — the React-free in-frame inspector

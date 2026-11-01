@@ -9,7 +9,7 @@ import type {
   ShellCatalogueView,
 } from "../catalogue/scoped_types.js";
 import type { CatalogueUsage } from "../catalogue/types.js";
-import type { ComponentViewRecord } from "../components/manifest_types.js";
+import type { ComponentViewRecord } from "../components/view_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 import { encodeUrlPath } from "../data/paths.js";
 import { viewRoute } from "../navigation/routes.js";

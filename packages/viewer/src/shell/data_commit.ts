@@ -9,9 +9,8 @@ import {
 import type { HeldDetails } from "../catalogue/shell_model.js";
 import { shellCatalogueModel } from "../catalogue/shell_model.js";
 import type { CatalogueReadModel, EntryDetailV4 } from "../catalogue/types.js";
-import { viewerCatalogue } from "../viewer/projection.js";
 
-import type { Catalogue } from "./catalogue.js";
+import { createCatalogue, type Catalogue } from "./catalogue.js";
 import { reconcileDisclosures } from "./disclosure_storage.js";
 import {
   catalogueNavSections,
@@ -37,7 +36,7 @@ export function dataSnapshot(
   return {
     index,
     details,
-    catalogue: viewerCatalogue(shellCatalogueModel(index, details)),
+    catalogue: createCatalogue(shellCatalogueModel(index, details)),
   };
 }
 
@@ -61,7 +60,14 @@ export function withDetails(
   const details = new Map(snapshot.details);
   for (const [request, detail] of accepted)
     details.set(detailKey(request), detail);
-  return dataSnapshot(snapshot.index, details);
+  return {
+    ...snapshot,
+    details,
+    catalogue: {
+      ...snapshot.catalogue,
+      publicModel: shellCatalogueModel(snapshot.index, details),
+    },
+  };
 }
 
 /**

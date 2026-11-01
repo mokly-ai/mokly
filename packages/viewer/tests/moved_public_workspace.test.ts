@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { catalogueComponentVariants } from "../src/catalogue/entry_selection.js";
+import { createCatalogue } from "../src/shell/catalogue.js";
 import { catalogueNavSections } from "../src/shell/nav_model.js";
 import { navRowPresentation } from "../src/shell/nav_moves.js";
 import type { NavLeafNode, NavNode } from "../src/shell/nav_tree.js";
@@ -9,13 +10,13 @@ import {
   workspaceData,
   type WorkspaceData,
 } from "../src/shell/workspace_data.js";
-import { viewerCatalogue, viewerContext } from "../src/viewer/projection.js";
+import { viewerContext } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 
 import { movedComponentModel } from "./moved_component_model.js";
 
 const model = movedComponentModel();
-const catalogue = viewerCatalogue(model);
+const catalogue = createCatalogue(model);
 const context = viewerContext(model, defaultSelection);
 const VARIANTS = [
   "ui/action/primary",

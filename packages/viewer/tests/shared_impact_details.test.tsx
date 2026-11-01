@@ -13,8 +13,8 @@ import type {
   CatalogueReadModel,
   EntryDetailV4,
 } from "../src/catalogue/types.js";
+import { createCatalogue } from "../src/shell/catalogue.js";
 import { WorkspaceEvidence } from "../src/shell/workspace_evidence.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
 import { publicWorkspace } from "../src/viewer/public_workspace.js";
 
 import {
@@ -48,7 +48,7 @@ function details(edit: {
       ]),
     ),
   );
-  const catalogue = viewerCatalogue(model);
+  const catalogue = createCatalogue(model);
   const entry = catalogue.byPath.get(SCREEN);
   assert.ok(entry?.kind === "screen");
   const data = publicWorkspace(

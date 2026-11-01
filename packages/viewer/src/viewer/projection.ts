@@ -1,134 +1,13 @@
-/** Convert validated public data to the existing shell's display records. */
+/** Resolve the shared shell context and route from validated public data. */
 
 import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
-import type {
-  ShellCatalogueReadModel,
-  ShellCatalogueRoutedEntry,
-  ShellCatalogueView,
-} from "../catalogue/scoped_types.js";
-import type { CatalogueEntry } from "../catalogue/types.js";
-import type { ComponentViewRecord } from "../components/manifest_types.js";
-import type { ManifestEntry } from "../registry/types.js";
-import {
-  catalogueRouteEntry,
-  createCatalogue,
-  type Catalogue,
-} from "../shell/catalogue.js";
+import type { ShellCatalogueReadModel } from "../catalogue/scoped_types.js";
+import { catalogueRouteEntry, type Catalogue } from "../shell/catalogue.js";
 import type { ShellContext } from "../shell/context.js";
 import { toRouteTarget } from "../shell/target.js";
 import type { ShellView } from "../shell/views.js";
 
-import { adoptCatalogueTree } from "./catalogue_tree.js";
 import type { ViewerSelection } from "./types.js";
-
-function metadata(entry: CatalogueEntry) {
-  return {
-    path: entry.path,
-    title: entry.title,
-    tags: entry.tags,
-    ...entry.details,
-  };
-}
-
-function usageView(view: ShellCatalogueView): ComponentViewRecord | undefined {
-  if (view.usage.status !== "ready") return;
-  return {
-    viewport: view.viewport,
-    colorScheme: view.colorScheme,
-    instances: view.usage.instances,
-    slots: view.usage.slots,
-    ranges: view.usage.ranges,
-    styles: [],
-    resources: [],
-  };
-}
-
-export function displayEntry(entry: ShellCatalogueRoutedEntry): ManifestEntry {
-  const base = { ...metadata(entry) };
-  switch (entry.kind) {
-    case "document":
-      return {
-        ...base,
-        kind: "document",
-        colorSchemes: entry.colorSchemes,
-        resources: [],
-      };
-    case "page":
-      return { ...base, kind: "page" };
-    case "use-case":
-      return { ...base, kind: "use-case", steps: entry.steps };
-    case "screen":
-      return {
-        ...base,
-        colorSchemes: entry.colorSchemes,
-        kind: "screen",
-        componentViews: entry.views.flatMap((view) => usageView(view) ?? []),
-        useCasePaths: entry.useCasePaths,
-        propSchema: entry.propSchema,
-        props: entry.props,
-        controls: entry.controls,
-        ...(entry.address ? { address: entry.address } : {}),
-        ...(entry.variantOf !== undefined
-          ? { variantOf: entry.variantOf }
-          : {}),
-      };
-    case "component":
-      return {
-        ...base,
-        colorSchemes: entry.colorSchemes,
-        componentViews: entry.views.flatMap((view) => usageView(view) ?? []),
-        kind: "component",
-        propSchema: entry.propSchema,
-        props: entry.props,
-        controls: entry.controls,
-        slots: entry.slots,
-        suppliedSlots: entry.suppliedSlots,
-        ...(entry.variantOf !== undefined
-          ? { variantOf: entry.variantOf }
-          : {}),
-      };
-  }
-}
-
-export function viewerCatalogue(model: ShellCatalogueReadModel) {
-  const current = [
-    ...model.screens,
-    ...model.pages,
-    ...model.documents,
-    ...model.useCases,
-    ...model.components,
-  ];
-  const manifest = {
-    schemaVersion: "live-index-2" as const,
-    generatedBy: "mokly" as const,
-    folders: [],
-    sourceFiles: [],
-    entries: current.map((entry) => displayEntry(entry)),
-  };
-  const catalogue = createCatalogue(
-    manifest,
-    model.removedEntries.map(
-      ({ entry, snapshotId, folderTitles, parentTitle }) => ({
-        folderTitles,
-        entry: displayEntry(entry),
-        ...(snapshotId ? { snapshotId } : {}),
-        ...(parentTitle !== undefined ? { parentTitle } : {}),
-      }),
-    ),
-    current.flatMap(({ path, previousPath }) =>
-      previousPath === undefined ? [] : [{ path, previousPath }],
-    ),
-  );
-  return {
-    ...catalogue,
-    hierarchy: adoptCatalogueTree(
-      catalogue.hierarchy,
-      model.tree,
-      model.treeOrder,
-    ),
-    publicModel: model,
-  };
-}
 
 export function viewerContext(
   model: ShellCatalogueReadModel,

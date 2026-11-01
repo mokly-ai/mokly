@@ -4,8 +4,8 @@ import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { detailKey } from "../src/catalogue/detail_fences.js";
+import { createCatalogue } from "../src/shell/catalogue.js";
 import { ShellMain } from "../src/shell/views.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
 
 import {
   detailFixture,
@@ -33,7 +33,7 @@ const CHANGED_PAGE = {
 } as const;
 
 test("a changed document shows its status and each stylesheet once in Details", () => {
-  const markup = renderPage(viewerCatalogue(published(CHANGED_PAGE, CHANGED)));
+  const markup = renderPage(createCatalogue(published(CHANGED_PAGE, CHANGED)));
   assert.deepEqual(status(markup), ["Changed"]);
   assert.ok(markup.includes(`${CHANGED_SECTION}</details>`), markup);
   assert.doesNotMatch(
@@ -47,7 +47,7 @@ test("a changed document shows its status and each stylesheet once in Details", 
 });
 
 test("an unchanged document lists examined stylesheets, then its terminal line", () => {
-  const markup = renderPage(viewerCatalogue(fixture));
+  const markup = renderPage(createCatalogue(fixture));
   assert.deepEqual(status(markup), ["Unmodified"]);
   assert.equal(
     section(markup),
@@ -62,7 +62,7 @@ test("an unchanged document lists examined stylesheets, then its terminal line",
 
 test("an added document shows Added without a terminal line", () => {
   const markup = renderPage(
-    viewerCatalogue(
+    createCatalogue(
       published({
         changes: { status: "ready", kind: "added", included: true },
       }),
@@ -100,7 +100,7 @@ test("Changes that are not ready show no page status or comparison details", () 
       }));
     });
     const markup = renderPage(
-      viewerCatalogue(
+      createCatalogue(
         shellModelFixture(
           index,
           new Map([[detailKey({ path: "guide" }), guide]]),
@@ -113,7 +113,7 @@ test("Changes that are not ready show no page status or comparison details", () 
 });
 
 test("a removed document keeps its Removed badge and no comparison details", () => {
-  const catalogue = viewerCatalogue(fixture);
+  const catalogue = createCatalogue(fixture);
   const removed = catalogue.removedEntries.find(
     ({ entry }) => entry.path === "product/removed-page",
   );

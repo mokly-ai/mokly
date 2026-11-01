@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { detailKey } from "../src/catalogue/detail_fences.js";
 import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
+import { createCatalogue } from "../src/shell/catalogue.js";
 import { publicWorkspace } from "../src/viewer/public_workspace.js";
 
 import {
@@ -74,7 +74,7 @@ test("a removed component variant keeps its own workspace lists", () => {
       ]),
     ),
   );
-  const historicalCatalogue = viewerCatalogue(model);
+  const historicalCatalogue = createCatalogue(model);
   const entry = historicalCatalogue.byPath.get("components/action/retired");
   assert.ok(entry?.kind === "component");
   const data = publicWorkspace(historicalCatalogue, model, entry);

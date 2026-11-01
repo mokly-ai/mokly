@@ -30,7 +30,7 @@ export function usageHref(
   });
   if (link.comparisonEligible && (section === "affected" || link.removed))
     query.set("comparison", "side");
-  return `${viewHref(link.entryId)}?${query}`;
+  return `${viewHref(link.entryPath)}?${query}`;
 }
 
 /** Usage and affected-consumer sections for the inspector. */
@@ -67,7 +67,7 @@ function sectionRows(
     return {
       direct: values.some((value) => value.direct),
       href: usageHref(first, section),
-      id: JSON.stringify([first.entryId, first.removed]),
+      id: JSON.stringify([first.entryPath, first.removed]),
       instances: new Set(values.map((value) => value.instanceKey)).size,
       key,
       removed: first.removed,
@@ -99,7 +99,7 @@ export function usageRows(
     const first = values[0]!;
     const identity = JSON.stringify([
       first.entryKind,
-      first.entryId,
+      first.entryPath,
       first.removed,
     ]);
     const repeat = seen.get(identity) ?? 0;
@@ -109,5 +109,5 @@ export function usageRows(
 }
 
 function usageGroupKey(link: UsageLink): string {
-  return `${link.entryKind}|${link.entryId}|${link.removed}|${link.comparisonEligible}`;
+  return `${link.entryKind}|${link.entryPath}|${link.removed}|${link.comparisonEligible}`;
 }

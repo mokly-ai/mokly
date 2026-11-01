@@ -2,9 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { CatalogueNode } from "../src/catalogue/types.js";
+import { createCatalogue } from "../src/shell/catalogue.js";
 import { changesActivation } from "../src/shell/changes_activation.js";
 import type { ShellRoute } from "../src/shell/routes.js";
-import { viewerCatalogue, viewerContext } from "../src/viewer/projection.js";
+import { viewerContext } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 import type { ViewerSelection } from "../src/viewer/types.js";
 
@@ -65,7 +66,7 @@ function opened(
     ),
     tree,
   });
-  const catalogue = viewerCatalogue(model);
+  const catalogue = createCatalogue(model);
   const selected = {
     ...defaultSelection,
     view: "changes" as const,

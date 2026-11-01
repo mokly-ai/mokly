@@ -5,16 +5,16 @@ import { isStylesheetPath } from "../review/css/stylesheet_path.js";
 import { decodeProps, encodeProps } from "./codec.js";
 import { canonicalJson, exactKeys, invalidData } from "./data.js";
 import { instanceKey, isComponentKey, slotKey } from "./keys.js";
+import { validateProps } from "./props.js";
+import { validateComponentSource } from "./source.js";
+import { sortedStrings, validateResourcePath } from "./validation_helpers.js";
+import { validateViewReferences } from "./view_references.js";
 import type {
   ComponentInputOwner,
   ComponentInstanceRecord,
   ComponentViewRecord,
   ComponentSchemaRecord,
-} from "./manifest_types.js";
-import { validateProps } from "./props.js";
-import { validateComponentSource } from "./source.js";
-import { sortedStrings, validateResourcePath } from "./validation_helpers.js";
-import { validateViewReferences } from "./view_references.js";
+} from "./view_types.js";
 
 /** Validate one actual render without asserting completeness of other views. */
 export function validateComponentViewRecord(

@@ -160,25 +160,25 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Build the shell catalogue from `CatalogueReadModel`: lookups by path,
+- [x] Build the shell catalogue from `CatalogueReadModel`: lookups by path,
       variants by parent, removed records, tags, and Dark availability.
       Delete `displayEntry`, the `live-index-2` manifest, and the manifest
       input of `createCatalogue`.
-- [ ] Use the index `tree` for folders, titles, hidden flags, and ancestor
+- [x] Use the index `tree` for folders, titles, hidden flags, and ancestor
       titles. Delete `analyzeHierarchy` and the folder-record branches of
       `registry/hierarchy.ts`. Keep `filterHierarchy` under design call 3.
-- [ ] Replace the hand-written types that restate generated ones:
+- [x] Replace the hand-written types that restate generated ones:
       `registry/types.ts`, `components/manifest_types.ts`,
       `shell/metadata.ts`, `data/axes.ts`, and
       `shell/workspace_usage_data.ts`. Apply design call 9.
-- [ ] Stop rebuilding the whole catalogue for each accepted batch of
+- [x] Stop rebuilding the whole catalogue for each accepted batch of
       details, in `shell/data_commit.ts:40,57-65`.
 - [ ] Move the tests that build manifest shapes to the generated shapes, with
       every assertion of live behaviour. Examples are
       `tests/helpers/current_manifest.ts` and
       `packages/viewer/tests/moved_catalogue.test.ts`. Remove a test only
       under the removal rule of the `testing` skill, with its proof.
-- [ ] Update the READMEs that name a removed module.
+- [x] Update the READMEs that name a removed module.
 
 ## Milestone 4: Use the values that Rust writes
 

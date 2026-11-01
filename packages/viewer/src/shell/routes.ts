@@ -1,5 +1,6 @@
 /** URL-derived route state for the standalone shell. */
 
+import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
 import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
 import { isLogicalFragment } from "../navigation/logical.js";
 import { parseViewHref, viewHref } from "../navigation/routes.js";
@@ -9,7 +10,6 @@ import {
   catalogueRouteEntry,
   catalogueSelectionEntry,
   type Catalogue,
-  type CatalogueManifestEntry,
 } from "./catalogue.js";
 import { toRouteTarget } from "./target.js";
 import type { ShellView } from "./views.js";
@@ -40,7 +40,7 @@ export function routeFromUrl(catalogue: Catalogue, url: URL): ShellRoute {
       ? snapshots[0]
       : undefined;
   const currentEntry = entry
-    ? catalogue.manifest.entries.some(
+    ? catalogue.entries.some(
         (candidate) =>
           candidate.path === entry.path && candidate.kind === entry.kind,
       )
@@ -119,7 +119,7 @@ export function routeScreenId(route: ShellRoute): string | null {
 function routeEntry(
   catalogue: Catalogue,
   pathname: string,
-): CatalogueManifestEntry | undefined {
+): ShellCatalogueRoutedEntry | undefined {
   const identity = parseViewHref(pathname);
   return identity ? catalogueRouteEntry(catalogue, identity) : undefined;
 }

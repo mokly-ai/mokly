@@ -1,5 +1,6 @@
 // Builds the Specs and Components sections from the one path tree.
 
+import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
 import {
   folderTitleLookup,
   type FolderTitleLookup,
@@ -8,7 +9,6 @@ import type {
   CatalogueHierarchy,
   HierarchyNode,
 } from "../registry/hierarchy.js";
-import type { ManifestEntry } from "../registry/types.js";
 
 import {
   adoptedVariants,
@@ -98,13 +98,13 @@ interface NavFolderContext {
 /** Shared lookups for projecting one hierarchy into rows. */
 interface NavProjection {
   /** Each current variant's current parent, keyed by the variant's path. */
-  parents: ReadonlyMap<string, ManifestEntry>;
+  parents: ReadonlyMap<string, ShellCatalogueRoutedEntry>;
   titles: FolderTitleLookup;
 }
 
 /** Project the one path tree into the Specs and Components sections. */
 export function buildNavSections(
-  hierarchy: CatalogueHierarchy<ManifestEntry>,
+  hierarchy: CatalogueHierarchy<ShellCatalogueRoutedEntry>,
   additionalLeaves: readonly NavLeafNode[] = [],
 ): NavSectionNode[] {
   const adopted = adoptedVariants(hierarchy, additionalLeaves);
@@ -165,7 +165,7 @@ export function buildNavSections(
 
 /** One entry row, with the variants and folder members it discloses. */
 function leafNode(
-  entry: ManifestEntry,
+  entry: ShellCatalogueRoutedEntry,
   titles: FolderTitleLookup,
   variants: readonly NavLeafNode[] = [],
   members: readonly NavNode[] = [],
@@ -186,7 +186,7 @@ function leafNode(
 }
 
 function isVariantOf(
-  node: HierarchyNode<ManifestEntry>,
+  node: HierarchyNode<ShellCatalogueRoutedEntry>,
   path: string,
   projection: NavProjection,
 ): boolean {
@@ -204,7 +204,7 @@ function isVariantOf(
  * A hidden folder hides every row below it, variants included.
  */
 function structuredNode(
-  node: HierarchyNode<ManifestEntry>,
+  node: HierarchyNode<ShellCatalogueRoutedEntry>,
   projection: NavProjection,
   inheritedHidden = false,
   folder?: NavFolderContext,

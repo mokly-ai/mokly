@@ -1,6 +1,6 @@
 import { sha256 } from "../data/sha256.js";
 
-import type { ComponentInputOwner } from "./manifest_types.js";
+import type { ComponentInputOwner } from "./view_types.js";
 
 const INSTANCE_KEY_DOMAIN = "mokly-instance-v1";
 const SLOT_KEY_DOMAIN = "mokly-slot-v1";

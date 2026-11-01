@@ -1,12 +1,9 @@
 /** Changes-filter navigation shared by standalone and embedded shells. */
 
+import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
-import {
-  catalogueSelectionEntry,
-  type Catalogue,
-  type CatalogueManifestEntry,
-} from "./catalogue.js";
+import { catalogueSelectionEntry, type Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { catalogueNavSections, navLeafVisible } from "./nav_model.js";
 import type { NavLeafNode, NavNode } from "./nav_tree.js";
@@ -16,7 +13,7 @@ import { workspaceEvidenceEntry } from "./workspace_entry.js";
 import { selectedChangedViews } from "./workspace_views_data.js";
 
 interface ChangedDestination {
-  entry: CatalogueManifestEntry;
+  entry: ShellCatalogueRoutedEntry;
   snapshotId?: string;
 }
 
@@ -102,7 +99,7 @@ function firstVisibleChangedEntry(
   catalogue: Catalogue,
   context: ShellContext,
   selection: ViewerSelection,
-  container: CatalogueManifestEntry,
+  container: ShellCatalogueRoutedEntry,
 ): ChangedDestination | undefined {
   const row = containerRow(
     catalogueNavSections(catalogue).flatMap(({ children }) => children),

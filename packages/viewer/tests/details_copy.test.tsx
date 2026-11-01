@@ -12,7 +12,7 @@ import { catalogueFixture, indexFixture } from "./catalogue_v9_fixture.js";
 function details(path: string, edit: (index: CatalogueReadModel) => void) {
   const catalogue = catalogueFixture(indexFixture(edit));
   const entry =
-    catalogue.manifest.entries.find((candidate) => candidate.path === path) ??
+    catalogue.entries.find((candidate) => candidate.path === path) ??
     catalogue.removedEntries.find((record) => record.entry.path === path)
       ?.entry;
   assert.ok(entry, path);

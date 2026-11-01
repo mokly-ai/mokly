@@ -10,8 +10,8 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { createCatalogue } from "../src/shell/catalogue.js";
 import { WorkspaceEvidence } from "../src/shell/workspace_evidence.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
 import { publicWorkspace } from "../src/viewer/public_workspace.js";
 
 import { shellModelFixture } from "./catalogue_v9_fixture.js";
@@ -21,7 +21,7 @@ const MOVED = "product/browse/details";
 
 test("Details read reasons before the other evidence", () => {
   const model = shellModelFixture();
-  const catalogue = viewerCatalogue(model);
+  const catalogue = createCatalogue(model);
   const entry = catalogue.byPath.get(MOVED);
   assert.ok(entry?.kind === "screen");
   const data = publicWorkspace(

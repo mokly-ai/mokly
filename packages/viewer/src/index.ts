@@ -1,6 +1,11 @@
 export type * from "./catalogue/types.js";
 export type * from "./client/frame_adapter.js";
-export type * from "./components/manifest_types.js";
+export type * from "./components/view_types.js";
+export type {
+  ComponentMetadata as ManifestComponent,
+  ComponentVariantMetadata as ManifestComponentVariant,
+  isComponentVariantMetadata as isManifestComponentVariant,
+} from "./components/public_types.js";
 export type * from "./components/prop_types.js";
 export type * from "./components/control_types.js";
 export type * from "./data/axes.js";

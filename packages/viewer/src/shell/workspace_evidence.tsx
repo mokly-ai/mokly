@@ -10,8 +10,8 @@ import {
   type EvidenceReason,
 } from "@mokly/ui/comparison-evidence";
 
+import { isComponentVariant } from "../catalogue/variants.js";
 import { decodeProps } from "../components/codec.js";
-import { isManifestComponentVariant } from "../components/manifest_types.js";
 import { viewHref } from "../navigation/routes.js";
 import type { ChangeReason } from "../review/types.js";
 
@@ -140,8 +140,7 @@ export function WorkspaceEvidence({
           : undefined
       }
       savedVariant={
-        data.entry.kind === "component" &&
-        isManifestComponentVariant(data.entry)
+        data.entry.kind === "component" && isComponentVariant(data.entry)
           ? {
               savedPropsUnchanged:
                 savedProps !== undefined && !savedPropsChanged,

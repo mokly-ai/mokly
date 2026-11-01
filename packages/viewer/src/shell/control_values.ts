@@ -1,10 +1,13 @@
 /** Pure draft and validation rules of the Props controls. */
 
+import type {
+  ShellCatalogueComponent,
+  ShellCatalogueRoutedEntry,
+} from "../catalogue/scoped_types.js";
 import type { EntryDetailV4 } from "../catalogue/types.js";
 import { decodeProps } from "../components/codec.js";
 import type { ComponentControl } from "../components/control_types.js";
 import { validateControlledValues } from "../components/controls.js";
-import type { ManifestComponent } from "../components/manifest_types.js";
 import {
   isMultipleOf,
   validateProfileValue,
@@ -16,7 +19,6 @@ import type {
 } from "../components/prop_types.js";
 import { propertySchema, validateProps } from "../components/props.js";
 import type { ComponentOverride } from "../components/render_types.js";
-import type { ManifestEntry } from "../registry/types.js";
 
 import { CONTROLS_COPY } from "./component_controls_copy.js";
 import {
@@ -198,8 +200,8 @@ function fieldValue(
 
 /** The entry the Props controls edit: the shown component row, or the screen. */
 export function controlTarget(
-  entry: ManifestEntry,
-  row: { value: ManifestComponent; removed: boolean } | undefined,
+  entry: ShellCatalogueRoutedEntry,
+  row: { value: ShellCatalogueComponent; removed: boolean } | undefined,
   removed: boolean,
   controlOrder?: ControlTarget["controlOrder"],
 ): ControlTarget | undefined {

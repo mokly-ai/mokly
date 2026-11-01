@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { viewHref } from "../packages/viewer/dist/data.js";
+import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { routeFromUrl } from "../packages/viewer/dist/shell/routes.js";
-import { viewerCatalogue } from "../packages/viewer/dist/viewer/projection.js";
 
 import { catalogueModel } from "./helpers/viewer_catalogue.js";
 
@@ -12,7 +12,7 @@ const historical = fixture.removedEntries.find(
   ({ entry }) => entry.kind === "page",
 )!;
 const snapshotId = historical.snapshotId!;
-const catalogue = viewerCatalogue(fixture);
+const catalogue = createCatalogue(fixture);
 
 test("provider-normalized history resolves the exact retained id", () => {
   const href = viewHref(historical.entry.path).replace(/\.html$/, "");

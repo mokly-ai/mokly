@@ -4,9 +4,9 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { routeFromUrl } from "../packages/viewer/dist/shell/routes.js";
 import { TargetStage } from "../packages/viewer/dist/shell/stages.js";
-import { viewerCatalogue } from "../packages/viewer/dist/viewer/projection.js";
 
 import { catalogueModel } from "./helpers/viewer_catalogue.js";
 
@@ -90,7 +90,7 @@ test("preview fragment routes fail closed before stage rendering", () => {
     const url = new URL(
       `https://example.test/view/product/browse/home/${search}`,
     );
-    const catalogue = viewerCatalogue(catalogueModel());
+    const catalogue = createCatalogue(catalogueModel());
     const route = routeFromUrl(catalogue, url);
     assert.equal(route.fragment, undefined, search);
     assert.doesNotMatch(renderTarget(catalogue, route), /#[^"]+/, search);
@@ -113,14 +113,14 @@ function renderRoute(
   expectedFragment: string,
   model = catalogueModel(),
 ): string {
-  const catalogue = viewerCatalogue(model);
+  const catalogue = createCatalogue(model);
   const route = routeFromUrl(catalogue, new URL(href));
   assert.equal(route.fragment, expectedFragment);
   return renderTarget(catalogue, route);
 }
 
 function renderTarget(
-  catalogue: ReturnType<typeof viewerCatalogue>,
+  catalogue: ReturnType<typeof createCatalogue>,
   route: ReturnType<typeof routeFromUrl>,
 ): string {
   assert.equal(route.view.kind, "target");

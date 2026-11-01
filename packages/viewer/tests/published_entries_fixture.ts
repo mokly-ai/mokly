@@ -16,7 +16,7 @@ import type {
   RemovedEntry,
 } from "../src/catalogue/types.js";
 import type { Catalogue } from "../src/shell/catalogue.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
+import { createCatalogue } from "../src/shell/catalogue.js";
 
 import { rawIndexFixture } from "./catalogue_v9_fixture.js";
 
@@ -258,5 +258,5 @@ export function publishedModel(
 
 /** The shell catalogue that a delivery builds from those published entries. */
 export function publishedCatalogue(input: PublishedEntries): Catalogue {
-  return viewerCatalogue(publishedModel(input));
+  return createCatalogue(publishedModel(input));
 }
