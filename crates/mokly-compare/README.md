@@ -147,6 +147,12 @@ and repository handles for extraction and dependency leases. The CLI supplies
 `mokly_render::runtime::Runtime` for both sides, sharing its render cache,
 sidecar pool, and cancellation.
 
+`Changes` announces each comparison `Step` through its `dyn Steps` as the step
+starts, so a command can name the running step on its progress line. It
+announces reading and comparing, and the base provider announces rendering.
+`StepCache` wraps a `dyn Cache` and announces a source build as extracting and
+a dependency build as installing. A complete entry announces nothing.
+
 The projection functions publish one retained result, and neither Serve nor
 `mokly-static` changes the render bytes. `projection_index::apply` projects the
 classification onto current or historical public records of the same retained
@@ -217,6 +223,9 @@ development dependencies, and no test uses the internet.
 - [`src/base_render.rs`](./src/base_render.rs) defines `ChangesService`,
   `Changes`, and `BaseProvider`, which pin the base, prepare its sources, and
   compare it with the head.
+- [`src/comparison_steps.rs`](./src/comparison_steps.rs) defines `Step`,
+  `Steps`, and `StepCache`, the comparison steps that a command shows while
+  Changes runs.
 - [`src/base_selection.rs`](./src/base_selection.rs) defines `BaseLookup`,
   `GitBaseLookup`, and `PinnedBase`, the one pinned repository, ref, and merge
   base.

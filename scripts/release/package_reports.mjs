@@ -17,6 +17,20 @@ export function validateNativeReport(report, name) {
   );
 }
 
+/** The UI package: its package stylesheet, its metadata, and `dist` only. */
+export function validateUiReport(report) {
+  const files = report.files.map(({ path }) => path);
+  for (const file of [...METADATA, "CHANGELOG.md", "dist/styles.css"])
+    assert.ok(files.includes(file), `UI package is missing ${file}`);
+  for (const file of files)
+    assert.ok(
+      METADATA.includes(file) ||
+        file === "CHANGELOG.md" ||
+        file.startsWith("dist/"),
+      `UI package contains non-allowlisted path ${file}`,
+    );
+}
+
 export function validateCliReport(report) {
   const files = report.files.map(({ path }) => path);
   for (const file of [

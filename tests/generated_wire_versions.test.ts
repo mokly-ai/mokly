@@ -11,11 +11,11 @@ import { readLiveDescriptor } from "../packages/viewer/dist/catalogue/live_reade
 
 import { legacyCatalogueGate } from "./helpers/legacy_catalogue_gate.js";
 
-test("the legacy v3 catalogue gate rejects v4 before any entry or path read", () => {
+test("the legacy v3 catalogue gate rejects the current format before any entry or path read", () => {
   assert.throws(
     () =>
       legacyCatalogueGate({
-        schemaVersion: 5,
+        schemaVersion: 9,
         get screens(): never {
           throw new Error("Unexpected entry read");
         },
@@ -28,8 +28,8 @@ test("the legacy v3 catalogue gate rejects v4 before any entry or path read", ()
 });
 
 for (const [boundary, supported, read] of [
-  ["catalogue", 8, readCatalogueIndex],
-  ["detail", 3, readEntryDetail],
+  ["catalogue", 9, readCatalogueIndex],
+  ["detail", 4, readEntryDetail],
   ["live", 3, readLiveDescriptor],
 ] as const) {
   test(`${boundary} rejects unsupported versions before consuming payload fields`, () => {

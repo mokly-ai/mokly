@@ -5,12 +5,13 @@ import { changesDesignMetadata } from "../../../../metadata.js";
 import { artboards } from "../../../../parts/artboards.js";
 import { DESTINATIONS } from "../../../../parts/destinations.js";
 import { DetailsPanel } from "../../../../parts/details.js";
+import { miniView } from "../../../../parts/mini_views.js";
 import { NavTree } from "../../../../parts/nav.js";
 import { EXCLUDED_STYLE_ROWS } from "../../../../parts/nav_data.js";
 import {
   DetailsShot,
-  ExcludedOnlyStyleCard,
-  MatchedAndExcludedStyleCard,
+  EXCLUDED_ONLY_STYLES,
+  MATCHED_AND_EXCLUDED_STYLES,
   WelcomeShot,
 } from "../../../../parts/review.js";
 import { WelcomeHead } from "../../../../parts/screen_heads.js";
@@ -27,7 +28,7 @@ function MatchedStyles({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <StyleComparison
       design={DESTINATIONS.styleMatched}
-      evidence={<MatchedAndExcludedStyleCard />}
+      evidence={MATCHED_AND_EXCLUDED_STYLES}
       viewport={viewport}
     />
   );
@@ -47,16 +48,17 @@ function ExcludedStyles({ viewport }: { viewport: ArtboardViewport }) {
         />
       }
     >
-      <WelcomeHead active={viewport} changed />
       <PreviewWorkspace
+        header={<WelcomeHead active={viewport} changed />}
         viewport={viewport}
         inspector={
           <DetailsPanel
             subject="welcome"
-            comparisonEvidence={<MatchedAndExcludedStyleCard />}
+            comparisonEvidence={MATCHED_AND_EXCLUDED_STYLES}
             open
           />
         }
+        view={miniView("welcome")}
         render={(previewViewport) => (
           <WelcomeShot viewport={previewViewport} comparison={false} />
         )}
@@ -82,22 +84,25 @@ function ExcludedStylesOnly({ viewport }: { viewport: ArtboardViewport }) {
         />
       }
     >
-      <ScreenHead
-        action={<ViewSwitch active={viewport} />}
-        crumbs={["Example", "Screens"]}
-        path="example/screens/details"
-        status="unmodified"
-        title="Details"
-      />
       <PreviewWorkspace
+        header={
+          <ScreenHead
+            action={<ViewSwitch active={viewport} />}
+            crumbs={["Example", "Screens"]}
+            path="example/screens/details"
+            status="unmodified"
+            title="Details"
+          />
+        }
         viewport={viewport}
         inspector={
           <DetailsPanel
             subject="details"
-            comparisonEvidence={<ExcludedOnlyStyleCard />}
+            comparisonEvidence={EXCLUDED_ONLY_STYLES}
             open
           />
         }
+        view={miniView("details")}
         render={(previewViewport) => <DetailsShot viewport={previewViewport} />}
       />
     </Shell>

@@ -134,6 +134,19 @@ export async function completed(
       if (
         detail.revision === index.revision &&
         ["ready", "unavailable", "disabled"].includes(index.changesStatus) &&
+        detail.workspace !== undefined &&
+        Array.isArray(index.screens) &&
+        Array.isArray(index.components)
+      )
+        assert.equal(
+          detail.detailId,
+          [...index.screens, ...index.components].find(
+            (entry) => entry.path === path,
+          )?.detailId,
+        );
+      if (
+        detail.revision === index.revision &&
+        ["ready", "unavailable", "disabled"].includes(index.changesStatus) &&
         detail.workspace !== undefined
       )
         return { index, detail };

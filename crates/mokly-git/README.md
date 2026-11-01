@@ -85,7 +85,8 @@ time and inode. `Repository::read_extracted` and
 `Repository::digest_extracted` read the converted files back with the count
 and byte checks and the error kinds of a Git read. A file reads from the
 extraction only while it matches its fingerprint before and after the read. A
-file that the extraction does not hold, or that changed, reads through Git.
+file that the extraction does not hold, that changed, or that it cannot
+read, reads through Git.
 
 Opaque digests stream converted stdout into SHA-256 without a temporary spool.
 Working dependency inputs retain Git clean normalization through
@@ -165,7 +166,7 @@ extraction cleanup after cancellation during a streamed copy.
   confined digests, and extraction.
 - [`src/extracted.rs`](./src/extracted.rs) defines `ExtractedFiles` and reads
   and hashes the converted files of an extraction, with Git for the files
-  that it lacks or that changed.
+  that it lacks, that changed, or that it cannot read.
   [`src/fingerprint.rs`](./src/fingerprint.rs) defines `Fingerprint` and the
   checked reads.
 - [`src/checkout.rs`](./src/checkout.rs) defines `Checkout`, the converted

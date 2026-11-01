@@ -42,6 +42,7 @@ test("the release smoke resolves every entry it reads as a file", () => {
   assert.deepEqual(resolved, [
     "@mokly/viewer/browser",
     "@mokly/viewer/styles.css",
+    "@mokly/ui/styles.css",
   ]);
   for (const specifier of resolved)
     assert.ok(

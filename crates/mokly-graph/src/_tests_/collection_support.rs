@@ -20,6 +20,7 @@ use crate::cache::RenderCacheMock;
 use crate::delivery_inputs::DeliveryInputs;
 use crate::graph::Graph;
 use crate::key::NodeKey;
+use crate::public_inputs::{ClosureInputs, MemoryClosureInputs};
 use crate::resource_inputs::ResourceInputsMock;
 use crate::session::{Session, SessionInput};
 use crate::styles::Matchers;
@@ -49,6 +50,10 @@ pub(super) fn warning(path: &str) -> Warning {
 }
 
 pub(super) fn probe(count: usize) -> Probe {
+    probe_with_closures(count, Arc::new(MemoryClosureInputs::default()))
+}
+
+pub(super) fn probe_with_closures(count: usize, closures: Arc<dyn ClosureInputs>) -> Probe {
     let renders = Arc::new(Mutex::new(Vec::new()));
     let recorded = renders.clone();
     let options = Arc::new(Mutex::new(Options::default()));
@@ -82,6 +87,7 @@ pub(super) fn probe(count: usize) -> Probe {
     let graph = Graph {
         inputs: DeliveryInputs {
             resources: mock.clone(),
+            closures,
             ..Default::default()
         },
         tree: mock.clone(),

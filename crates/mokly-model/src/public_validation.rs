@@ -157,6 +157,7 @@ pub(crate) fn entries(index: &CatalogueReadModel) -> Vec<&CatalogueEntry> {
 
 pub(crate) fn metadata(entry: &CatalogueEntry) -> Result<(), ReadError> {
     if !is_entry_path(&entry.path)
+        || !hash(&entry.detail_id)
         || entry
             .previous_path
             .as_deref()

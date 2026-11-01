@@ -1,7 +1,13 @@
-/** Viewer-owned frame for one accepted historical or comparison presentation. */
+/**
+ * Viewer-owned frame for one accepted historical or comparison presentation.
+ * This container keeps the read-only guard of the frame's document;
+ * `@mokly/ui/preview-frame` draws the `<iframe>` element.
+ */
 
 import { useEffect, useRef } from "react";
 import type { RefObject } from "react";
+
+import { PreviewIframe } from "@mokly/ui/preview-frame";
 
 import type { SnapshotPresentation } from "../previews/presentation.js";
 import { enforcePreviewReadOnly } from "../previews/read_only.js";
@@ -19,7 +25,7 @@ export interface ComparisonFrameOptions {
  * comparison pane's frame is marked as such and is never user-scrollable: its
  * document is scrolled only by the pane's shared viewport.
  */
-export function PreviewFrame(props: {
+export function SnapshotFrame(props: {
   comparison?: ComparisonFrameOptions;
   presentation: SnapshotPresentation;
   title: string;
@@ -40,14 +46,14 @@ export function PreviewFrame(props: {
   );
   const comparison = props.comparison !== undefined;
   return (
-    <iframe
-      className="mbk-frag"
-      data-mokly-comparison-frame={comparison ? "" : undefined}
-      data-mokly-preview-frame={comparison ? undefined : ""}
-      data-mokly-preview-source={props.presentation.snapshotAddress}
+    <PreviewIframe
+      data={{
+        "data-mokly-comparison-frame": comparison ? "" : undefined,
+        "data-mokly-preview-frame": comparison ? undefined : "",
+        "data-mokly-preview-source": props.presentation.snapshotAddress,
+      }}
       ref={frame}
-      sandbox="allow-same-origin"
-      scrolling={comparison ? "no" : undefined}
+      scrollable={!comparison}
       srcDoc={props.presentation.srcdoc}
       title={props.title}
     />

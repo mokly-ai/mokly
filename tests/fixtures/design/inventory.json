@@ -178,6 +178,7 @@
     "design/components/controls/states/error",
     "design/components/controls/states/invalid",
     "design/components/inspection/inspection-direct-change",
+    "design/components/inspection/inspection-highlight",
     "design/components/inspector/inspector-closed",
     "design/components/inspector/screen-inspector-closed",
     "design/components/pages/stacked/overlay-tall",

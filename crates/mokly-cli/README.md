@@ -100,7 +100,9 @@ the interrupt outcomes.
 
 One injected terminal writer handles startup, shortcuts, rebuilds, and render
 diagnostics. Raw mode preserves carriage returns and ignores shortcut release
-events. Catalogue counts include variants. The reporter implements output-mode precedence, fixed error
+events. Catalogue counts include variants. While Changes runs, the comparing
+spinner names the current comparison step in Serve, `build`, and `publish`.
+The reporter implements output-mode precedence, fixed error
 categories, recovery hints, control escaping, token redaction, ASCII fallback,
 and display width bounds under the
 [terminal output contract](../../docs/protocol/mokly-terminal-output.md).
@@ -163,7 +165,8 @@ reserves an 8 MiB main-thread stack through its linker settings in
   and [publish](../../docs/guides/cli/publish.md) guides.
 - [Package contract](../../docs/protocol/mokly-package.md).
 - [Terminal help](../../docs/protocol/mokly-terminal-help.md).
-- [Terminal output](../../docs/protocol/mokly-terminal-output.md).
+- [Terminal output](../../docs/protocol/mokly-terminal-output.md) and
+  [comparison steps](../../docs/protocol/mokly-terminal-steps.md).
 - [Terminal errors](../../docs/protocol/mokly-terminal-errors.md).
 - [On-demand Serve](../../docs/protocol/mokly-on-demand.md) and
   [watch runtime](../../docs/protocol/mokly-watch-runtime.md).

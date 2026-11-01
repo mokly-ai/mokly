@@ -1,6 +1,7 @@
 /** Comparison generation requests shared by the shell's comparison controller. */
 
 import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
+import { DeploymentChangedError } from "../viewer/sources.js";
 
 import type {
   ComparisonDelivery,
@@ -33,6 +34,11 @@ export async function requestComparison(
   refresh: boolean,
   signal: AbortSignal,
 ): Promise<LoadedComparison> {
+  if (
+    environment.deploymentCheck &&
+    !(await environment.deploymentCheck(signal))
+  )
+    throw new DeploymentChangedError();
   const baseUrl = comparisonBaseUrl(environment.baseUrl);
   const delivery = environment.delivery();
   const advertised = advertisedRoot(baseUrl, delivery, scope);
@@ -67,6 +73,11 @@ export async function renewComparison(
   scope: ComparisonScope,
   signal: AbortSignal,
 ): Promise<LoadedComparison> {
+  if (
+    environment.deploymentCheck &&
+    !(await environment.deploymentCheck(signal))
+  )
+    throw new DeploymentChangedError();
   const baseUrl = comparisonBaseUrl(environment.baseUrl);
   const delivery = environment.delivery();
   const current = safeUrl(loaded.url);

@@ -1,5 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
+import { DetailsBody } from "../../../../../../packages/ui/src/details-panel/details-panel.js";
+import { MetadataCode } from "../../../../../../packages/ui/src/metadata-row/metadata-row.js";
 import { designMetadata } from "../../metadata.js";
 import { artboards } from "../../parts/artboards.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
@@ -15,18 +17,11 @@ import { ExampleReadme } from "../../parts/spec_documents.js";
 function ReadmeDetails() {
   return (
     <DetailsPanel>
-      <div className="mbk-details-body">
-        <div>
-          <p className="mbk-details-desc">
-            What the Example area holds and how its screens are kept.
-          </p>
-        </div>
-        <div className="mbk-meta">
-          <MetaRow name="source" label="Source">
-            <code className="mbk-code">specs/example/README.md</code>
-          </MetaRow>
-        </div>
-      </div>
+      <DetailsBody description="What the Example area holds and how its screens are kept.">
+        <MetaRow name="source" label="Source">
+          <MetadataCode>specs/example/README.md</MetadataCode>
+        </MetaRow>
+      </DetailsBody>
     </DetailsPanel>
   );
 }

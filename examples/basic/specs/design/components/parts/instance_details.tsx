@@ -1,88 +1,59 @@
-import { MockLink } from "@mokly/mokly";
+import { mockLink } from "@mokly/mokly";
 
-import { useCurrentPage } from "../../parts/design_navigation.js";
-import { MetaRow } from "../../parts/metadata_row.js";
+import {
+  PropsPanel,
+  type PropValue,
+} from "../../../../../../packages/ui/src/props-panel/props-panel.js";
 
 import { footerLabelChange } from "./comparison_fixtures.js";
 import { toolbarPrompt } from "./fixtures.js";
-import { PropValues } from "./prop_values.js";
 import type { ScreenPageState } from "./screen_preview.js";
 
-/** Selected instance data follows the component reached from the usage link. */
+/**
+ * The selected instance in the shipped props panel: its component and label,
+ * the link to its component's page, and the props that the screen supplies.
+ * The hidden Help instance adds that it has no visible region.
+ */
 export function InstanceDetails({ state }: { state: ScreenPageState }) {
   const toolbar = state === "toolbar-selection";
   const help = state === "help-selection";
-  const nested = state === "nested";
-  const consumer = state === "consumer";
-  const current = useCurrentPage();
-  const highlight = nested
-    ? "design/components/inspection/inspection-nested"
-    : "design/components/inspection/inspection-highlight";
-  const title = toolbar ? "Toolbar" : help ? "Help hint" : "Action";
   const label = toolbar
     ? "Main"
     : help
       ? "Help"
-      : nested
+      : state === "nested"
         ? "Toolbar action"
-        : consumer
+        : state === "consumer"
           ? "Continue"
           : "Footer action";
+  const values: readonly PropValue[] = toolbar
+    ? [{ name: "prompt", value: `"${toolbarPrompt}"` }]
+    : help
+      ? [{ name: "visible", value: "false" }]
+      : [
+          {
+            name: "label",
+            value: `"${state === "direct-change" ? footerLabelChange.after : footerLabelChange.before}"`,
+          },
+          { name: "disabled", value: "false" },
+        ];
   return (
     <section className="ce-selected-instance" aria-label="Selected instance">
-      <h3>
-        {title} <span>{label}</span>
-      </h3>
-      {toolbar || help ? (
-        <dl className="ce-props" aria-label="Supplied props">
-          <MetaRow
-            name="selected-prop"
-            label={toolbar ? "prompt" : "visible"}
-            presentation="props"
-          >
-            <code>{toolbar ? `"${toolbarPrompt}"` : "false"}</code>
-          </MetaRow>
-        </dl>
-      ) : (
-        <PropValues
-          label={
-            state === "direct-change"
-              ? footerLabelChange.after
-              : footerLabelChange.before
-          }
-        />
-      )}
-      <div className="ce-detail-links">
-        <MockLink
-          to={
+      <PropsPanel
+        instance={{
+          href: mockLink(
             toolbar
               ? "design/components/pages/toolbar"
               : help
                 ? "design/components/pages/help"
-                : "design/components/overview"
-          }
-        >
-          Open component ↗
-        </MockLink>
-        {toolbar || help || consumer ? (
-          <button className="ce-text-button" type="button" disabled={help}>
-            Highlight on screen
-          </button>
-        ) : (
-          <MockLink to={highlight} aria-current={current(highlight)}>
-            Highlight on screen
-          </MockLink>
-        )}
-      </div>
+                : "design/components/overview",
+          ),
+          id: label,
+          title: toolbar ? "Toolbar" : help ? "Help hint" : "Action",
+        }}
+        values={values}
+      />
       {help ? <p className="ce-muted">No visible region</p> : null}
-      <details className="ce-slot-details">
-        <summary>Slots and ownership</summary>
-        <p>
-          Supplied by{" "}
-          {nested ? "Main toolbar" : consumer ? "Details" : "Welcome"}. No slots
-          supplied.
-        </p>
-      </details>
     </section>
   );
 }

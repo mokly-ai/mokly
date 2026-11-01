@@ -1,5 +1,6 @@
 import { defineScreen } from "@mokly/mokly";
 
+import { FlowStage } from "../../../../../../packages/ui/src/flow-step/flow-step.js";
 import { designMetadata } from "../../metadata.js";
 import { artboards } from "../../parts/artboards.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
@@ -12,46 +13,44 @@ import { FlowStep } from "../../parts/stage_content.js";
 
 function UseCaseSteps({ viewport }: { viewport: "desktop" | "mobile" }) {
   return (
-    <div className="mbk-flow">
-      <div className="flow-track">
-        <FlowStep
-          name="arrival"
-          number={1}
-          title="Welcome"
-          screenTitle="Welcome"
-          description="The tour starts on the landing screen."
-          screenPath={DESTINATIONS.welcome}
-        >
-          {viewport === "desktop" ? (
-            <BrowserFrame address="example.test/welcome">
-              <MiniWelcome />
-            </BrowserFrame>
-          ) : (
-            <PhoneFrame small>
-              <MiniWelcome compact />
-            </PhoneFrame>
-          )}
-        </FlowStep>
-        <FlowStep
-          name="detail"
-          number={2}
-          title="Details"
-          screenTitle="Details"
-          description="The tour ends on the details screen."
-          screenPath={DESTINATIONS.details}
-        >
-          {viewport === "desktop" ? (
-            <BrowserFrame address="example.test/details">
-              <MiniDetails />
-            </BrowserFrame>
-          ) : (
-            <PhoneFrame small>
-              <MiniDetails compact />
-            </PhoneFrame>
-          )}
-        </FlowStep>
-      </div>
-    </div>
+    <FlowStage>
+      <FlowStep
+        name="arrival"
+        number={1}
+        title="Welcome"
+        screenTitle="Welcome"
+        description="The tour starts on the landing screen."
+        screenPath={DESTINATIONS.welcome}
+      >
+        {viewport === "desktop" ? (
+          <BrowserFrame address="example.test/welcome">
+            <MiniWelcome />
+          </BrowserFrame>
+        ) : (
+          <PhoneFrame small>
+            <MiniWelcome compact />
+          </PhoneFrame>
+        )}
+      </FlowStep>
+      <FlowStep
+        name="detail"
+        number={2}
+        title="Details"
+        screenTitle="Details"
+        description="The tour ends on the details screen."
+        screenPath={DESTINATIONS.details}
+      >
+        {viewport === "desktop" ? (
+          <BrowserFrame address="example.test/details">
+            <MiniDetails />
+          </BrowserFrame>
+        ) : (
+          <PhoneFrame small>
+            <MiniDetails compact />
+          </PhoneFrame>
+        )}
+      </FlowStep>
+    </FlowStage>
   );
 }
 

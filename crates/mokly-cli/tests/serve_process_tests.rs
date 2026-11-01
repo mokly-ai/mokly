@@ -200,6 +200,7 @@ async fn debug_timings_keep_plain_stdout_and_emit_safe_json() {
     for bundle in bundles {
         let parent = bundle["parentId"].as_u64().unwrap();
         assert_eq!(starts[&parent], "graph.prepare");
+        assert_eq!(bundle["cache"], "no-record", "{stderr}");
     }
     let position = |stage, event| {
         records

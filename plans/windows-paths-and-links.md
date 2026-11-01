@@ -4,13 +4,11 @@ Status: Active. On branch
 `conductor/rust-rebuild-166-windows-paths-and-links`, no pull request yet.
 The plan closes when its PR merges. The coordinator answered every decision
 on 2026-10-28. The Clippy rule of item 166 B waits for the user and is not
-part of this change. Milestones 1 to 4 are done. Milestone 5 is blocked: on
-2026-10-28 from 20:17 UTC the Codex delegate failed with "429 Too Many
-Requests" for more than 30 minutes, so the orchestrator stopped that part,
-as the coordinator's rule for a Codex usage limit says.
+part of this change. Milestones 1 to 6 are done. Milestone 7 is in progress.
+The loader work resumed after the 2026-10-28 usage limit and is committed.
 
 This plan resolves user items 179, 174, and 173 of the
-[Rust rebuild plan](./rust-rebuild.md#open-user-items-deferred-by-the-user-on-2026-10-21),
+[Rust rebuild plan](https://github.com/mokly-ai/mokly/blob/fcfe159186c64e6a381a75cf3bb6e446ce609d7c/plans/rust-rebuild.md#open-user-items-deferred-by-the-user-on-2026-10-21),
 and the product part of item 166. Native CI round 6 recorded 166, the
 rebuild review W8 recorded 173 and 174, and the delta review recorded 179.
 
@@ -54,8 +52,7 @@ its source `item-174-probe_tests.rs.txt`, `item-174-git-link-probe.log`,
 Not covered: the package-root path rule of item 171 B and the removal of
 `ResolvedConfig::package_root_aliases()`, which the
 `normalize-config-relative-paths` plan of workspace 386 owns on its branch
-`conductor/rust-rebuild-167-normalize-config-relative-paths`, not merged
-yet; the Clippy rule of item 166 B; the seven other Rust test helpers that
+`conductor/rust-rebuild-167-normalize-config-relative-paths`, merged in PR #240; the Clippy rule of item 166 B; the seven other Rust test helpers that
 commit without Git isolation, and the shared helper of workspace 353; and
 the convention of item 172 A, which the tests of this plan follow.
 
@@ -281,8 +278,8 @@ This milestone applies decision 179 A.
 
 ## Milestone 5: The loader names the base link
 
-This milestone applies decision 174 C. It is blocked by the Codex usage
-limit of 2026-10-28. Its brief is
+This milestone applies decision 174 C. Its implementation is committed as
+`0efe546b`. Its brief is
 `.context/windows-paths-and-links/briefs/m2-fix-and-m5.md`.
 
 - [x] Add the regression test first in
@@ -322,15 +319,18 @@ The READMEs describe the code of Milestones 3 to 5.
 
 ## Milestone 7: Verification, commit, review, and handoff
 
-- [ ] Tick items 179, 174, and 173 in `plans/rust-rebuild.md` with the
+The inbound main merge audit is recorded in
+`.context/main-sync-2026-11-01/merge-justifications.md`.
+
+- [x] Tick items 179, 174, and 173 in `plans/rust-rebuild.md` with the
       decisions, their date, and a link to this plan. Under item 166, record
       the product part and the open Clippy rule. Use the smallest edit.
-- [ ] Apply the orchestrator's change request for `git_input` in
+- [x] Apply the orchestrator's change request for `git_input` in
       `crates/mokly-compare/tests/support/mod.rs`: bind the spawned process
       to `child`, and assert the Git status before the input write result,
       so a failed Git command shows its standard error. The brief above
       holds the request.
-- [ ] Merge `origin/main` with the `git-merge` skill.
+- [x] Merge `origin/main` with the `git-merge` skill.
 - [ ] Run the targeted tests, `cargo xtask check --suite repository`, and
       then the complete gate `cargo xtask check --executor local` once, on
       the final commit. The `auto` executor warms Blacksmith Testboxes,

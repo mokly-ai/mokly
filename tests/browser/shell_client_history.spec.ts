@@ -144,7 +144,7 @@ for (const direction of ["Back", "Forward"] as const)
     const detail = `/mokly-viewer/entries/${DETAILS}.json`;
     const replaced = rewritten((body) => ({
       ...body,
-      deploymentId: "f".repeat(64),
+      detailId: "f".repeat(64),
     }));
     let release!: () => void;
     const released = new Promise<void>((resolve) => {

@@ -5,6 +5,7 @@ import type { ScrollTogetherPreference } from "../shell/comparison_scroll_prefer
 import type { EmbeddedShellEnvironment } from "../shell/store_host.js";
 
 import type { LoadedIndex } from "./sources.js";
+import { deploymentCheck } from "./sources.js";
 import type { ViewerEvents, ViewerSelection } from "./types.js";
 
 /** Bind public viewer data to shell selection and navigation behavior. */
@@ -38,6 +39,8 @@ export function viewerComparisonEnvironment(
   loaded: LoadedIndex,
   reportError?: (error: unknown) => void,
   scrollTogether?: ScrollTogetherPreference,
+  deploymentChanged?: () => void,
+  checkDeployment = true,
 ): ComparisonEnvironment {
   return {
     baseUrl: loaded.root,
@@ -46,6 +49,16 @@ export function viewerComparisonEnvironment(
       comparisonUrl: loaded.index.comparisonUrl,
     }),
     fetch: (input, init) => fetch(input, init),
+    ...(checkDeployment && deploymentChanged && loaded.index.live === undefined
+      ? {
+          deploymentCheck: deploymentCheck(
+            loaded.root,
+            loaded.index.deploymentId,
+            undefined,
+            deploymentChanged,
+          ),
+        }
+      : {}),
     ...(reportError ? { reportError } : {}),
     ...(scrollTogether ? { scrollTogether } : {}),
   };

@@ -1,0 +1,18 @@
+/* The consumers of a component: one ruled row for each, with its use and its
+   counts below its link. */
+.mbk-usage-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.mbk-usage-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--chrome-border);
+}
+
+.mbk-usage-list small {
+  display: block;
+  margin-top: 4px;
+  color: var(--chrome-muted);
+}

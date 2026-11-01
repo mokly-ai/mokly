@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use mokly_catalogue::config::relative;
 use mokly_catalogue::config_types::ResolvedConfig;
+use mokly_compare::comparison_steps::Step;
 use mokly_model::output::artifact::{Artifact, File};
 use mokly_model::output::upload::Publication;
 use mokly_static::assembly::{Assembler, Assembly};
@@ -40,6 +41,8 @@ pub enum Phase {
 pub trait Phases: Send + Sync {
     /// Complete the earlier phase and begin this phase.
     fn start(&self, phase: Phase);
+    /// Show the current comparison step beside the label of the running phase.
+    fn step(&self, step: Step);
     /// Emit consumer diagnostics through the same terminal owner.
     fn diagnostic(&self, message: &str);
     /// Emit a formatted stdout note under the phase reporter lock.

@@ -1,17 +1,21 @@
 import type { ReactNode } from "react";
 
-import { optional, useDesignInstance } from "../library/composition.js";
+import { DocumentFrame } from "../../../../../packages/ui/src/preview-frame/preview-frame.js";
+import { Stage as StageView } from "../../../../../packages/ui/src/stage/stage.js";
+import { useDesignInstance } from "../library/composition.js";
 import { deviceFrame } from "../library/preview/device-frame.js";
 
+/** The shipped dotted stage around the previews of a workspace or a state. */
 export function Stage({ children }: { children: ReactNode }) {
-  return <div className="mbk-stage">{children}</div>;
+  return <StageView>{children}</StageView>;
 }
 
 /**
- * The bordered pane a whole document occupies on the dotted stage. A
- * light-only document keeps the light palette while the catalogue is Dark.
+ * A whole document on the shipped document stage, in the bordered pane that
+ * depicts its frame. A light-only document keeps the light palette while the
+ * catalogue is Dark.
  */
-export function DocumentPane({
+export function DocumentStage({
   children,
   lightOnly,
 }: {
@@ -19,30 +23,28 @@ export function DocumentPane({
   lightOnly?: boolean | undefined;
 }) {
   return (
-    <div
-      className="mbk-doc-pane"
-      data-mbk-light-only={lightOnly ? "" : undefined}
-    >
-      {children}
-    </div>
+    <DocumentFrame scheme="light">
+      <div
+        className="mbk-doc-pane"
+        data-mbk-light-only={lightOnly ? "" : undefined}
+      >
+        {children}
+      </div>
+    </DocumentFrame>
   );
 }
 
 interface PhoneFrameProps {
   children: ReactNode;
   dark?: boolean | undefined;
-  label?: string;
   lightOnly?: boolean;
-  scheme?: boolean;
   small?: boolean;
 }
 
 export function PhoneFrame({
   children,
   dark,
-  label,
   lightOnly,
-  scheme,
   small,
 }: PhoneFrameProps) {
   return (
@@ -54,8 +56,6 @@ export function PhoneFrame({
       small={small ?? false}
       expandable
       address=""
-      {...optional("label", label)}
-      {...optional("scheme", scheme)}
     >
       {children}
     </deviceFrame.Component>
@@ -67,9 +67,7 @@ interface BrowserFrameProps {
   children: ReactNode;
   dark?: boolean | undefined;
   expandable?: boolean;
-  label?: string;
   lightOnly?: boolean;
-  scheme?: boolean;
 }
 
 export function BrowserFrame({
@@ -77,9 +75,7 @@ export function BrowserFrame({
   children,
   dark,
   expandable,
-  label,
   lightOnly,
-  scheme,
 }: BrowserFrameProps) {
   return (
     <deviceFrame.Component
@@ -90,8 +86,6 @@ export function BrowserFrame({
       lightOnly={lightOnly ?? false}
       small={false}
       expandable={expandable ?? true}
-      {...optional("label", label)}
-      {...optional("scheme", scheme)}
     >
       {children}
     </deviceFrame.Component>

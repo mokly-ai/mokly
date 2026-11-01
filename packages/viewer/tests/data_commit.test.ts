@@ -19,7 +19,7 @@ import {
   detailFixture,
   detailPairs,
   indexFixture,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 
 const OTHER = "f".repeat(64);
 const RETIRED =

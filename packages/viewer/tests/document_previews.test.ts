@@ -4,7 +4,7 @@ import test from "node:test";
 import { readPreviewDescriptor } from "../src/previews/descriptor.js";
 import { previewEndpoint, requestPreview } from "../src/previews/request.js";
 
-import { rawDetailFixtures } from "./catalogue_v8_fixture.js";
+import { indexFixture, rawDetailFixtures } from "./catalogue_v9_fixture.js";
 
 test("removed document descriptors and requests retain historical schemes", async () => {
   const data = readPreviewDescriptor(
@@ -25,10 +25,15 @@ test("removed document descriptors and requests retain historical schemes", asyn
   );
   assert.ok(request);
   assert.ok(request.endpoint.pathname.endsWith("/previews/guide/index.json"));
+  let deploymentChecks = 0;
   const loaded = await requestPreview(
     data,
     request,
     {
+      deploymentCheck: async () => {
+        deploymentChecks += 1;
+        return true;
+      },
       fetch: async () => {
         const response = Response.json({
           schemaVersion: 3,
@@ -45,6 +50,7 @@ test("removed document descriptors and requests retain historical schemes", asyn
     new AbortController().signal,
   );
   assert.ok(loaded.content.kind === "document");
+  assert.equal(deploymentChecks, 1);
   assert.deepEqual(
     loaded.content.views.map((view) => [
       view.colorScheme,
@@ -88,7 +94,7 @@ test("a removed screen's preview reads its removed detail inside the generation"
     ([, candidate]) => candidate.entry.kind === "screen",
   )!;
   const path = detail.entry.path;
-  const root = `mokly-viewer/diffs/generations/${detail.generation!}/`;
+  const root = indexFixture().comparisonUrl!;
   const data = {
     path,
     kind: "screen" as const,

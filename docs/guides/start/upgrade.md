@@ -150,7 +150,8 @@ and the entry details carry every public comparison fact.
   root of the comparison generation, which ends with `/`, instead of a file.
 - Read each view's comparison `state` and `ignoredIds` from the entry detail,
   beside its `resourceEvidence`. A ready current screen or component also
-  carries `before`, the address of its base side.
+  carries `before`, the address of its base side. These are optional fields of
+  the entry detail.
 - In Serve, request `/mokly-viewer/diffs/selection?path={path}` instead of
   `/mokly-viewer/diffs/review.json?path={path}`. It redirects to the root of
   the selected generation.
@@ -165,3 +166,23 @@ and the entry details carry every public comparison fact.
 Entry detail version 3 omits `usedBy` and `affected` from current component
 variants. Their pages request the parent detail and read both lists there.
 Rename `EntryDetailV2` to `EntryDetailV3` in viewer integrations.
+
+## Upgrade to content-addressed details
+
+The catalogue index version 9 lists a `detailId` in each entry record and keeps
+`deploymentId`. Current and removed entry details use detail version 4. A
+current detail carries `detailId` and `revision`. A removed detail carries
+`detailId` and `snapshotId`. Details no longer carry `deploymentId` or
+`generation`.
+
+Static builds also write `mokly-viewer/deployment.json` with schema version 1.
+The standalone shell and an embedded viewer use this file to detect a replaced
+static deployment. Serve does not write or answer this file. A missing or
+unreadable file does not change viewer state.
+
+- Rename `EntryDetailV3` to `EntryDetailV4` in viewer integrations.
+  `readCatalogueIndex` reads index version 9 only, and `readEntryDetail` reads
+  detail version 4 only.
+- Update the viewer and each receiver that validates catalogue versions before
+  you deploy a catalogue with these shapes. Mokly Cloud must accept index
+  version 9 before it stores a publication of this release.

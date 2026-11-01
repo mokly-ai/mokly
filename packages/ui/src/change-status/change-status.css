@@ -1,0 +1,24 @@
+/* The change status beside an entry's title. Added, Changed, and Removed take
+   the colour of their status; Unmodified keeps the neutral ink. */
+.mbk-entry-status {
+  border: 1px solid var(--chrome-border);
+  border-radius: 5px;
+  padding: 3px 7px;
+  font-weight: 600;
+  color: var(--chrome-ink-2);
+}
+
+.mbk-entry-status[data-status="Added"] {
+  color: var(--mb-added);
+  background: var(--mb-added-soft);
+}
+
+.mbk-entry-status[data-status="Changed"] {
+  color: var(--mb-changed);
+  background: var(--mb-changed-soft);
+}
+
+.mbk-entry-status[data-status="Removed"] {
+  color: var(--mb-removed);
+  background: var(--mb-removed-soft);
+}

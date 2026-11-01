@@ -77,6 +77,10 @@ pub mod inspector_error;
 mod inspector_map_tests;
 
 #[cfg(test)]
+#[path = "_tests_/assembly_support.rs"]
+mod assembly_support;
+
+#[cfg(test)]
 #[path = "_tests_/assembly_tests.rs"]
 mod assembly_tests;
 

@@ -6,7 +6,7 @@ import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
 import type { ShellCatalogueReadModel } from "../src/catalogue/scoped_types.js";
 import type { CatalogueComponent, ChangeKind } from "../src/catalogue/types.js";
 
-import { rawIndexFixture, shellModelFixture } from "./catalogue_v8_fixture.js";
+import { rawIndexFixture, shellModelFixture } from "./catalogue_v9_fixture.js";
 
 const READY = { status: "ready" } as const;
 

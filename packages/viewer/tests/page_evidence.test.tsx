@@ -11,7 +11,7 @@ import {
   detailFixture,
   indexFixture,
   shellModelFixture,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
 import {
   BASE,
@@ -51,12 +51,12 @@ test("an unchanged document lists examined stylesheets, then its terminal line",
   assert.deepEqual(status(markup), ["Unmodified"]);
   assert.equal(
     section(markup),
-    '<section class="mbk-comparison-evidence" data-page-evidence="">' +
-      "<h3>Comparison details</h3>" +
-      `<p>Compared with the branch point on ${BASE}.</p>` +
-      "<p>This stylesheet changed, but none of the changed styles apply to this page.</p>" +
-      "<p>Examined and excluded:</p><ul><li>mockups/page.css</li></ul>" +
-      "<p>No changes to this page.</p></section>",
+    '<section class="mbk-comparison-evidence mbk-reset" data-page-evidence="">' +
+      '<h3 class="mbk-reset">Comparison details</h3>' +
+      `<p class="mbk-reset">Compared with the branch point on ${BASE}.</p>` +
+      '<p class="mbk-reset">This stylesheet changed, but none of the changed styles apply to this page.</p>' +
+      '<p class="mbk-reset">Examined and excluded:</p><ul class="mbk-reset"><li class="mbk-reset">mockups/page.css</li></ul>' +
+      '<p class="mbk-reset">No changes to this page.</p></section>',
   );
 });
 
@@ -71,8 +71,8 @@ test("an added document shows Added without a terminal line", () => {
   assert.deepEqual(status(markup), ["Added"]);
   assert.equal(
     section(markup),
-    '<section class="mbk-comparison-evidence" data-page-evidence="">' +
-      `<h3>Comparison details</h3><p>Compared with the branch point on ${BASE}.</p></section>`,
+    '<section class="mbk-comparison-evidence mbk-reset" data-page-evidence="">' +
+      `<h3 class="mbk-reset">Comparison details</h3><p class="mbk-reset">Compared with the branch point on ${BASE}.</p></section>`,
   );
 });
 

@@ -21,7 +21,7 @@ function removedHeading(entry: Record<string, unknown>): string | undefined {
       variantRemoved={false}
     />,
   );
-  return /<h2>([^<]*)<\/h2>/.exec(markup)?.[1];
+  return /<h2 class="mbk-reset">([^<]*)<\/h2>/.exec(markup)?.[1];
 }
 
 test("a removed variant names itself, not its surviving parent", () => {

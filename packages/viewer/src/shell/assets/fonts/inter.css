@@ -1,0 +1,11 @@
+/* The shell font, which the viewer delivers beside this rule. The viewer
+   build writes the address of each delivery into the rule: the standalone
+   stylesheet reads the font from the viewer namespace, and the embedded
+   stylesheet from its packaged assets, under a family name of its own. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("./InterVariable.woff2") format("woff2");
+}

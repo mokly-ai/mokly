@@ -59,7 +59,7 @@ test("nested selection and frame Escape preserve focus and consumer markup", asy
   const frame = page.frameLocator('[data-workspace-frame="desktop"]');
   const html = await frame.locator("body").innerHTML();
   await page.getByRole("tab", { name: "Components", exact: true }).click();
-  await page.getByText("1 nested instances", { exact: true }).click();
+  await page.getByText("1 nested instance", { exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Highlight components", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");

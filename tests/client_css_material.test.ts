@@ -56,7 +56,7 @@ test("a material change with matched stylesheet evidence reads Screen changed", 
     viewport: "mobile",
   });
 
-  assert.match(markup, /<h3>Mobile · Screen changed<\/h3>/);
+  assert.match(markup, /<h3 class="mbk-reset">Mobile · Screen changed<\/h3>/);
   assert.doesNotMatch(markup, /Styles this screen uses changed/);
   assert.equal(isStyleOnlyView(view, entry.reasons), false);
 });
@@ -75,7 +75,10 @@ test("a change that only stylesheet records prove reads as a style change", () =
     viewport: "mobile",
   });
 
-  assert.match(markup, /<h3>Mobile · Styles this screen uses changed<\/h3>/);
+  assert.match(
+    markup,
+    /<h3 class="mbk-reset">Mobile · Styles this screen uses changed<\/h3>/,
+  );
   assert.equal(isStyleOnlyView(entry.views[0]!, entry.reasons), true);
 });
 
@@ -87,7 +90,10 @@ test("an effective Light comparison retains the requested Dark fallback label", 
     viewport: "mobile",
   });
 
-  assert.match(markup, /<h3>Mobile · Screen changed · Light only<\/h3>/);
+  assert.match(
+    markup,
+    /<h3 class="mbk-reset">Mobile · Screen changed · Light only<\/h3>/,
+  );
 });
 
 /** The ordinary label of each view state, which the presentation contract names. */
@@ -110,6 +116,10 @@ test("each view state reads the ordinary label that the contract names", () => {
       requestedColorScheme: "light",
       viewport: "mobile",
     });
-    assert.match(markup, new RegExp(`<h3>Mobile · ${label}</h3>`, "u"), state);
+    assert.match(
+      markup,
+      new RegExp(`<h3 class="mbk-reset">Mobile · ${label}</h3>`, "u"),
+      state,
+    );
   }
 });

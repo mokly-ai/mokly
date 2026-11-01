@@ -5,7 +5,7 @@
  * with fakes.
  */
 
-import { detailKey, type DetailRequest } from "../catalogue/detail_fences.js";
+import type { DetailRequest } from "../catalogue/detail_fences.js";
 import type { LiveDescriptorV3 } from "../catalogue/types.js";
 import type { MoklyVersionError } from "../catalogue/version_error.js";
 
@@ -15,9 +15,10 @@ import {
   type ShellDataSnapshot,
 } from "./data_commit.js";
 import { LiveDescriptor, type LiveEditingStatus } from "./data_descriptor.js";
+import { DetailLoader } from "./data_detail_loader.js";
 import { staleAwareLiveSource } from "./data_live_transport.js";
 import { PublicationRefresh } from "./data_refresh.js";
-import { loadFencedDetail, type DetailOutcome } from "./data_requests.js";
+import type { DetailOutcome } from "./data_requests.js";
 import type { ShellDataSource, ShellLiveSource } from "./data_source.js";
 import type { ShellRoute } from "./routes.js";
 
@@ -39,9 +40,7 @@ export class ShellDataController {
   readonly #listeners = new Set<() => void>();
   #snapshot: ShellDataSnapshot;
   #version = 0;
-  #wanted: readonly DetailRequest[] = [];
-  #failed: ReadonlySet<string> = new Set();
-  readonly #loading = new Map<string, AbortController>();
+  readonly #details: DetailLoader;
   #replaced = false;
   #connected = false;
   #closeStream: (() => void) | undefined;
@@ -58,6 +57,13 @@ export class ShellDataController {
     this.#snapshot = initial;
     this.#source = source;
     this.#host = host;
+    this.#details = new DetailLoader(source, {
+      snapshot: () => this.#snapshot,
+      replaced: () => this.#replaced,
+      adopt: (request, outcome) => this.#adopt(request, outcome),
+      replace: () => this.#replace(),
+      changed: () => this.#changed(),
+    });
     this.#live =
       source?.live &&
       staleAwareLiveSource(source.live, (revision) =>
@@ -86,7 +92,7 @@ export class ShellDataController {
 
   /** The keys of the requested details whose last load failed. */
   get failed(): ReadonlySet<string> {
-    return this.#failed;
+    return this.#details.failed;
   }
 
   /** Another deployment replaced the catalogue; no detail loads after it. */
@@ -126,45 +132,12 @@ export class ShellDataController {
 
   /** Load each missing detail of a route; abort the loads it no longer wants. */
   request(requests: readonly DetailRequest[]): void {
-    this.#wanted = requests;
-    const source = this.#source;
-    if (!source || this.#replaced) return;
-    const wanted = new Set(requests.map(detailKey));
-    for (const [key, controller] of this.#loading)
-      if (!wanted.has(key)) {
-        controller.abort();
-        this.#loading.delete(key);
-      }
-    for (const request of requests) {
-      const key = detailKey(request);
-      if (
-        this.#snapshot.details.has(key) ||
-        this.#failed.has(key) ||
-        this.#loading.has(key)
-      )
-        continue;
-      const controller = new AbortController();
-      this.#loading.set(key, controller);
-      void loadFencedDetail(
-        source,
-        this.#snapshot.index,
-        request,
-        controller.signal,
-      ).then((outcome) => {
-        if (controller.signal.aborted) return;
-        this.#loading.delete(key);
-        this.#adopt(request, outcome);
-      });
-    }
+    this.#details.request(requests);
   }
 
   /** Forget the failures of these keys and load the wanted details again. */
   retry(keys: readonly string[]): void {
-    const failed = new Set(this.#failed);
-    for (const key of keys) failed.delete(key);
-    this.#failed = failed;
-    this.#changed();
-    this.request(this.#wanted);
+    this.#details.retry(keys);
   }
 
   /** Follow the event stream and load the descriptor while the index is live. */
@@ -211,11 +184,13 @@ export class ShellDataController {
 
   /** Abort every load; a later request starts them again. */
   abortLoads(): void {
-    for (const controller of this.#loading.values()) controller.abort();
-    this.#loading.clear();
+    this.#details.abort();
   }
 
-  #adopt(request: DetailRequest, outcome: DetailOutcome): void {
+  #adopt(
+    request: DetailRequest,
+    outcome: Exclude<DetailOutcome, { kind: "failed" }>,
+  ): void {
     if (outcome.kind === "accepted") {
       const current = this.#snapshot;
       this.#commit(
@@ -233,9 +208,6 @@ export class ShellDataController {
       this.#replace();
       return;
     }
-    this.#source?.detailFailed?.(request);
-    this.#failed = new Set(this.#failed).add(detailKey(request));
-    this.#changed();
   }
 
   /**

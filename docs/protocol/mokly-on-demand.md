@@ -1,6 +1,6 @@
 # On-demand Serve
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+Status: Follow-up work remains in the [large React startup item](../../plans/follow-ups/large-react-startup.md).
 
 ## Startup And Completeness
 

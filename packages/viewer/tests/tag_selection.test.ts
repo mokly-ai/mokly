@@ -30,20 +30,14 @@ for (const open of [true, false]) {
         calls.push("select tag");
       },
       pickerOpen,
-      () => calls.push("after selection"),
     );
     assert.equal(pickerOpen, false);
-    assert.deepEqual(calls, [
-      ...(open ? ["find shell"] : []),
-      "select tag",
-      "after selection",
-    ]);
+    assert.deepEqual(calls, [...(open ? ["find shell"] : []), "select tag"]);
     assert.equal(queued.length, open ? 1 : 0);
     for (const callback of queued) callback();
     assert.deepEqual(calls, [
       ...(open ? ["find shell"] : []),
       "select tag",
-      "after selection",
       ...(open ? ["focus local toggle"] : []),
     ]);
   });

@@ -8,7 +8,7 @@ import { promisify } from "node:util";
 
 import { platformPackage } from "../packages/mokly/src/platform.mjs";
 import { systemRuntime } from "../packages/mokly/src/runtime.mjs";
-import type { EntryDetailV3 } from "../packages/viewer/src/generated/catalogue/EntryDetailV3.js";
+import type { EntryDetailV4 } from "../packages/viewer/src/generated/catalogue/EntryDetailV4.js";
 import { prepareFixture } from "../scripts/large/setup.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
@@ -120,7 +120,7 @@ test(
           path.join(output, `mokly-viewer/entries/${prefix}/screen-1.json`),
           "utf8",
         ),
-      ) as EntryDetailV3;
+      ) as EntryDetailV4;
       assert.equal(detail.views.length, 4);
       for (const view of detail.views) {
         assert.equal(view.usage.status, "ready");
