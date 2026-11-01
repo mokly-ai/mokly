@@ -31,25 +31,26 @@
   in every viewer, with no error at build time.
 - **Root question:** How do derived select controls offer each value once, as
   the controls contract requires?
-- **Options:**
-  - **A.** Change nothing. The decision of 2026-11-01 keeps this state until
+- **Options:** The letters follow the options of the investigation of
+  2026-11-01.
+  - **A.** The core rejects a repeated `enum` or `oneOf` value with a
+    diagnostic that names the source file. This is a new build error.
+    Effort: Small.
+  - **C.** Change nothing. The decision of 2026-11-01 keeps this state until
     the viewer runs the Rust checks. Those checks do not cover control
     options, so the problem stays then too. Effort: Small.
-  - **B.** The core derives each option once. It keeps the first of repeated
+  - **D.** The core derives each option once. It keeps the first of repeated
     `enum` values, and it leaves out a repeated `oneOf` constant, because a
     value that matches two members fails `oneOf`. No build error and no
     requirement change. Effort: Small.
-  - **C.** The core rejects a repeated `enum` or `oneOf` value with a
-    diagnostic that names the source file. This is a new build error.
-    Effort: Small.
-- **Left out:** The viewer accepts repeated options: it breaks the unique
-  values rule of the controls contract.
-- **Wider fix:** B, because the derivation then cannot make the wrong case.
+- **Left out:** Option B of the investigation, the viewer accepts repeated
+  options: it breaks the unique values rule of the controls contract.
+- **Wider fix:** D, because the derivation then cannot make the wrong case.
 - **Previous examples:** `plans/follow-ups/saved-slot-reserved-metadata.md`
   records another check that differs between two places.
 - **Related:** `plans/follow-ups/viewer-checks-from-rust.md`: the Rust index
   reader checks no control options, so that change does not fix this one.
-- **Recommendation:** B. It meets the existing contract with no new error.
+- **Recommendation:** D. It meets the existing contract with no new error.
 - **Action:** ask the user, because the user chose on 2026-11-01 to change
   nothing about the schema differences, and only the user can reopen that
   answer.
