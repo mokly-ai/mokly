@@ -15,7 +15,7 @@ globset = "0.4.20"
 mokly-catalogue = { workspace = true }
 mokly-css = { workspace = true }
 mokly-source-interface = { workspace = true }
-notify = "8.2.0"
+notify = "=9.0.0-rc.7"
 thiserror = "2.0.21"
 tokio = { version = "1.53.3", features = ["sync", "time"] }
 tracing = "0.1.44"
