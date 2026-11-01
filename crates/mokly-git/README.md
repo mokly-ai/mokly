@@ -13,6 +13,7 @@ through this crate, and `mokly-publish` checks the checkout with it.
 - Preserve binary input, output, and typed process failures.
 - Validate checkout identity before resolving a merge base.
 - Read changed paths, tree metadata, and checkout-converted regular source files.
+- Hash converted files in batches, and stream one converted file to a writer.
 - Extract exact commit sources with the pinned commit's checkout attributes.
 
 ## What This Crate Does
@@ -42,10 +43,11 @@ Untracked additions never infer a rename.
 
 Tree queries use literal pathspecs and NUL records. Requested files and their
 ancestor attribute files share a missing-object preflight with lazy fetch
-disabled. One serialized `fetch --stdin` request retrieves each missing set
-before conversion. Failed fetches name the remote and a recovery command. Tree
-listings retain directory and link modes. Regular files and all metadata nodes
-have independent count bounds.
+disabled. An exact lookup reads those attribute files in the same tree query
+as the requested files. One serialized `fetch --stdin` request retrieves each
+missing set before conversion. Failed fetches name the remote and a recovery
+command. Tree listings retain directory and link modes. Regular files and all
+metadata nodes have independent count bounds.
 
 Byte reads, extraction, and digests share a commit-pinned `cat-file --filters`
 context in the real repository. `--attr-source` selects the base attributes,
@@ -77,6 +79,20 @@ cancellation supervise every conversion. Failed optional filters return typed
 `Conversion` errors instead of raw fallback bytes. Conversion includes line
 endings, encodings, filters, and LFS downloads.
 
+`Repository::digest_many` hashes entries that `list` or `lookup` already
+preflighted, so a batch starts no lookup of its own. One `config` call and at
+most one `check-attr` call select the converted paths of the whole batch. The
+conversion then writes each converted file into `DigestFiles`, which hashes
+the bytes and counts them into a `BlobDigest`. A batch keeps the 48 MiB batch
+bound, and each file keeps a 64 MiB bound. When the batch fails, reaches its
+deadline, or exceeds a bound, each of its files digests alone with its own
+64 MiB bound and 120-second deadline. Each retry repeats the object preflight
+and the attribute check of its file. Only a file whose own digest fails
+returns an error. `Repository::stream` converts one preflighted file in its
+own `cat-file --filters` process. It copies the output to the caller's writer
+under the selected byte bound and the 120-second deadline, and it returns the
+converted length.
+
 `Repository::fingerprint_extracted` records a `Fingerprint` of each confined
 regular file of an extraction: its size, its times, and on Unix its change
 time and inode. `Repository::read_extracted` and
@@ -86,7 +102,8 @@ extraction only while it matches its fingerprint before and after the read. A
 file that the extraction does not hold, that changed, or that it cannot
 read, reads through Git.
 
-Opaque digests stream converted stdout into SHA-256 without a temporary spool.
+`Repository::digest` streams the converted stdout of one file into SHA-256
+without a temporary spool.
 Working dependency inputs retain Git clean normalization through
 `hash-object --stdin-paths`. Extraction copies regular converted files in
 bounded batches and preserves executable mode. It omits links and submodules.
@@ -157,8 +174,10 @@ extraction cleanup after cancellation during a streamed copy.
 - [`src/batches.rs`](./src/batches.rs) defines `Batches` and `BoundedRunner`,
   which split path arguments into ordered, bounded batches.
 - [`src/repository.rs`](./src/repository.rs) defines `Repositories`,
-  `GitRepositories`, and `Repository`, which validate a checkout and read merge
-  bases, changed paths, trees, blobs, and archives.
+  `GitRepositories`, `Repository`, and `BlobDigest`, which validate a checkout
+  and read merge bases, changed paths, trees, blobs, digests, and archives.
+  [`src/repository_ops.rs`](./src/repository_ops.rs) implements `Repository`
+  for a validated checkout.
 - [`src/disk.rs`](./src/disk.rs) defines `Disk` and `Archive`, the filesystem
   boundary for checkout identity, working reads, confined digests, and
   extraction.
@@ -173,7 +192,12 @@ extraction cleanup after cancellation during a streamed copy.
   [`src/checkout_output.rs`](./src/checkout_output.rs) defines `BatchSink`,
   the decoder that splits its output at the sentinel records.
   [`src/checkout_files.rs`](./src/checkout_files.rs) defines `BatchFiles`, with
-  `MemoryFiles` for reads and `DirectoryFiles` for the extraction.
+  `MemoryFiles` for reads, `DirectoryFiles` for the extraction, and
+  `DigestFiles` for digests.
+  [`src/checkout_digest.rs`](./src/checkout_digest.rs) hashes a batch of
+  converted files for `Repository::digest_many`, and
+  [`src/checkout_stream.rs`](./src/checkout_stream.rs) streams one converted
+  file for `Repository::stream`.
 - [`src/tree.rs`](./src/tree.rs) and [`src/changes.rs`](./src/changes.rs)
   define the tree `Entry` and `Limits` records and the changed-path `Change`
   records.

@@ -74,11 +74,13 @@
 - **Previous examples:** The large-project work of the Rust rebuild made
   opaque assets digest-only inputs. The generation keeps the route, the path,
   and the digest. Delivery streams and checks the bytes.
-- **Related:**
-  [git-opaque-asset-batching.md](./git-opaque-asset-batching.md) concerns
-  the base side of the same assets: one Git process for each digest and a
-  buffered copy during delivery. The two items change different code and can
-  land in either order.
+- **Related:** The
+  [opaque asset batching item at its last commit](https://github.com/mokly-ai/mokly/blob/c7e7d9b88efc84152eb33539ed8ed7ca2ad2bb93/plans/follow-ups/git-opaque-asset-batching.md)
+  concerned the base side of the same assets: one Git process for each digest
+  and a buffered copy during delivery. It closed on 2026-11-01, when the
+  branch `conductor/rust-rebuild-64-opaque-asset-digests` batched the base
+  digests and streamed each base asset from Git into the temporary file of its
+  request.
 - **Recommendation:** B. It removes the repeated copies for the
   life of a generation, and the rebuild kept A only as the interim design. C
   is the smaller step if the measured disk use of B is too high.

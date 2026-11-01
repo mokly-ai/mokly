@@ -60,6 +60,10 @@ Working and Git adapters implement `digest` with bounded streaming reads.
 Snapshot and static admission wrappers retain the resulting hash without the
 resource bytes. `digest_unretained` hashes an opaque input without promoting bytes into a
 private payload cache. Snapshot adapters share one digest cell with `digest`.
+`digest_unretained_batch` hashes several opaque inputs and returns one result
+for each path, in request order. Its default calls `digest_unretained` for
+each path and continues after a failed digest. The Git adapter overrides it
+with one batch, and wrapper adapters forward it.
 `open_stream` returns a `dyn SourceStream` with a length and checked-copy
 operation. It reads bounded chunks into private destination storage and
 returns `SourceError::Changed` on a digest or length mismatch. Callers expose

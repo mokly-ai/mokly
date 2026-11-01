@@ -99,6 +99,11 @@ changes work only. Evidence retains each source's public route.
 Opaque assets use `Bundle.assets` records with logical paths, confined source
 identities, SHA-256 digests, and input aliases. `Bundle.inputs` retains parsed
 CSS only. The graph checks asset streams against these digests at delivery.
+The compiler collects the new asset targets of each stylesheet file and hashes
+them through one `SourceTree::digest_unretained_batch` call. Each result keeps
+its own asset diagnostic. An asset whose confined identity differs from its
+logical path, such as a symlink into a workspace package, hashes that identity
+alone.
 
 `Bundle.read_evidence` retains distinct observed and late input versions.
 Combining stylesheets preserves both kinds without overwriting earlier
@@ -143,6 +148,8 @@ CSS that each parser and pipeline survives on a 2 MiB worker stack. Run it with
 
 - [`src/compiler.rs`](./src/compiler.rs) defines `Compiler`, the
   `StylesheetBundler` that reads, transforms, scopes, and bundles one root.
+  [`src/compiler_assets.rs`](./src/compiler_assets.rs) rewrites the asset URLs
+  of a stylesheet file and hashes its new assets in one batch.
 - [`src/types.rs`](./src/types.rs) defines the `StylesheetBundler` and
   `CssProcessor` boundaries and the `StylesheetRoot` and `Bundle` records.
 - [`src/resolver.rs`](./src/resolver.rs) defines `ImportResolver` and
