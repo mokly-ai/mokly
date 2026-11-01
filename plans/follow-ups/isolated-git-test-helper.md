@@ -1,6 +1,6 @@
 # Use the isolated Git test helper
 
-- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 173, from decision 7 of the W8 work.
@@ -67,8 +67,7 @@
     Rust tests outside the support modules. It adds a gate. Effort: Medium.
   - **D.** Add one isolated Git helper in a new shared test support crate.
     Move every Git caller of the Rust tests to it. It needs a new shared
-    support boundary and a caller migration in several crates. Effort: Large
-    (estimate).
+    support boundary and a caller migration in several crates. Effort: Large.
 - **Left out:** Clear one known Git variable in the test. It misses the
   other global settings.
 - **Wider fix:** D. One shared helper removes the unisolated case in every
@@ -80,12 +79,11 @@
   - `crates/mokly-compare/tests/deep_tree_tests.rs:44-51` and
     `crates/mokly-cli/tests/changes_failures_tests.rs:9-16` start `git`
     directly, but they set both variables, so they are isolated.
-- **Recommendation:** A. It removes the known dependence on local settings
-  with a Small change in the crate's own test support. D best protects the
-  codebase, but it is Large. B needs the user's approval, because it adds a
-  gate.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user ruled that new review items wait for the user after the merge. The
-  branch that lands the chosen option deletes this item.
+- **Recommendation:** D. One shared isolated helper removes the local-settings
+  dependency in every Rust test crate. Its new crate and caller migration affect
+  effort, not approval. The user's reserved choice still waits for an answer.
+- **Action:** ask the user, because on 2026-10-21 the user ruled that new review
+  items wait for the user after the merge. The branch that lands the chosen
+  option deletes this item.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6319).

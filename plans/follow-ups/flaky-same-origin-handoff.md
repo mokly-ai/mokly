@@ -1,6 +1,6 @@
 # Stabilize the same-origin handoff browser test
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #226 and its completed plan, which put the
   failure outside the scope of its review. On 2026-10-30 the duplicate item
@@ -79,20 +79,20 @@
     document is the exact-resource document with its action link. Keep every
     assertion. Effort: Small.
   - **B.** Change nothing until the test fails again, and record the failure
-    details in this item then. Effort: Small (estimate).
+    details in this item then. Effort: Small.
   - **C.** If the reproduction shows a product race in the handoff of the
     same-origin adapter, add a failing test first. Then fix the order in the
-    adapter. Effort: Medium (estimate).
+    adapter. Effort: Medium.
   - **D.** Reproduce the failure and name the source, as in A. Then make
     `probeCurrentDocument` wait for its selector in the current frame
     document before it dispatches the click, so that every caller probes a
     ready document. Its callers are the tests at lines 90 and 206. Effort:
     Small.
 - **Left out:** A retry, a sleep, or a longer time limit. The
-  `deterministic-tests` skill forbids them, because they hide the source.
+  `testing` skill forbids them, because they hide the source.
 - **Wider fix:** D. The shared probe helper then waits for a ready document
   for both of its callers. Until the merge of 2026-10-30, this item gave
-  none, because the `deterministic-tests` skill already requires an explicit
+  none, because the `testing` skill already requires an explicit
   readiness signal, and it took the fix to be specific to this probe.
 - **Previous examples:** Other browser tests that failed once and passed on
   the rerun:
@@ -107,11 +107,11 @@
     frame adapter test that once got no navigation message.
   - [flaky-large-watch-react.md](./flaky-large-watch-react.md): the large
     React watch test, which timed out once at its 300-second guard.
-- **Recommendation:** A (estimate). It removes the race from the test and
+- **Recommendation:** A. It removes the race from the test and
   keeps every assertion. D best protects every caller of the shared probe.
-- **Action:** ask the user, because condition 6 holds (estimate): the
-  failure was not reproduced and its source is not confirmed, so the
-  `deterministic-tests` skill gives `ask the user`.
+- **Action:** ask the user, because the failure has not been reproduced with a
+  confirmed cause. No fix is clearly best until reproduction identifies the
+  source, as the flaky-test rule requires.
 
 The duplicate item `flaky-same-origin-exact-resource-handoff.md` merged into
 this item on 2026-10-30. Its fields map onto this item as follows:

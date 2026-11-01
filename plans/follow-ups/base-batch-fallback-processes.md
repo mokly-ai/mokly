@@ -1,6 +1,6 @@
 # Avoid one Git process per failed-batch file
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from the review of PR #229, the batch conversion
   change, recorded in the completed plan of PR #236.
@@ -46,15 +46,14 @@
     file then needs a few batch processes for each halving. Keep the
     per-file retry after a deadline, because each halving would wait for a
     new 120-second deadline. Update the mechanism sentence at
-    `docs/protocol/mokly-git.md:106`. Effort: Medium (estimate).
+    `docs/protocol/mokly-git.md:106`. Effort: Medium.
   - **C.** Keep the per-file fallback, but share the attribute lookup and the
     object fetch of the failed batch among its single-file calls. Each file
-    then starts one process instead of about three. Effort: Medium
-    (estimate).
+    then starts one process instead of about three. Effort: Medium.
 - **Left out:** Asking Git which file failed. The batch diagnostic is
   bounded standard error without a structured path, so a parser would
   depend on Git's wording.
-- **Wider fix:** B (estimate). The split also gives each failure its own
+- **Wider fix:** B. The split also gives each failure its own
   path, so the extraction and the prefetch need no own retry loops.
 - **Previous examples:** PR #229 replaced one process for each converted
   file with one process for each batch on 2026-10-28. PR #236 then read the
@@ -68,9 +67,9 @@
   - [git-opaque-asset-batching.md](./git-opaque-asset-batching.md) concerns
     the Git processes of each opaque asset in the base. It is the same cost
     class in another reader, so one design can cover both.
-- **Recommendation:** B (estimate). It keeps every failure with its file and
+- **Recommendation:** B. It keeps every failure with its file and
   bounds the process count.
-- **Action:** ask the user, because condition 6 holds (estimate): this is a
-  performance finding.
+- **Action:** ask the user, because B changes the failed-batch retry rule in
+  docs/protocol/mokly-git.md. No recorded user decision approves that change.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/batched-base-reads.md?plain=1#L389).

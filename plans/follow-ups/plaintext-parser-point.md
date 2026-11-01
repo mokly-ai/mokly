@@ -10,7 +10,7 @@
   of PR #199, and confirmed its serializer part on 2026-10-28.
 
 - **Source:** Review.
-- **Category:** Code structure (estimate).
+- **Category:** Code structure.
 - **Terms:**
   - **`plaintext` element:** an HTML element after which the HTML parser
     reads the rest of the document as raw text.
@@ -39,7 +39,7 @@
 - **Options:**
   - **A.** Keep the fail-safe check that retries with all text escaped when
     the parser disagrees. A fix round of the rebuild applied it.
-    Effort: Small (estimate).
+    Effort: Small.
   - **B.** Serialize first with all text escaped. Find the first HTML
     `plaintext` element in that parse by its repair id. Write raw text only
     after it. Effort: Large.

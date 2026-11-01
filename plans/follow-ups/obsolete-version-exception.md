@@ -37,8 +37,7 @@
 - **Wider fix:** A. One shared-version rule removes the obsolete branch.
 - **Previous examples:** None found.
 - **Recommendation:** A. It matches every release after 0.16.0.
-- **Action:** ask the user, because condition 3 holds: the plan recorded
-  that the removal needs the user's approval, because the check is release
-  functionality on `main`.
+- **Action:** ask the user, because the plan recorded that the removal needs the
+  user's approval, because the check is release functionality on `main`.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6540).

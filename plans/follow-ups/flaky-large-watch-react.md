@@ -1,6 +1,6 @@
 # Stabilize the large React watch test
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #217 and its completed plan, which put the
   failure outside the scope of its review.
@@ -68,21 +68,20 @@
 - **Options:**
   - **A.** Reproduce the timeout by repeating the React test, and name the
     step that waits. Then make that step wait for an explicit readiness
-    signal. Keep every assertion. Effort: Medium (estimate).
+    signal. Keep every assertion. Effort: Medium.
   - **B.** Change nothing until the test fails again. Then record the step,
-    the failure text, and the CI run in this item. Effort: Small
-    (estimate).
+    the failure text, and the CI run in this item. Effort: Small.
   - **C.** Make the harness report the last finished step of each edit when
     a run ends early, so that the next failure names its step. Effort:
-    Small (estimate).
+    Small.
   - **D.** Run this test alone on its own browser shard or on a larger
     machine. This changes CI and remote gate configuration and costs an
-    extra job or a larger runner. Effort: Medium (estimate).
+    extra job or a larger runner. Effort: Medium.
   - **E.** Reuse compiled JavaScript across the three edits to reduce the
     twelve compilations. This needs a new compile cache in the render and
-    sidecar crates. Effort: Large (estimate).
+    sidecar crates. Effort: Large.
 - **Left out:** A longer time limit, a retry, or a sleep. The
-  `deterministic-tests` skill forbids them, because they hide the source.
+  `testing` skill forbids them, because they hide the source.
   One test per edit kind conflicts with the user's decision of 2026-10-20.
 - **Wider fix:** E reduces the compile cost that can exhaust the guard.
   C records the last finished step of each later harness failure.
@@ -105,10 +104,10 @@
   - [flaky-same-origin-handoff.md](./flaky-same-origin-handoff.md) is a
     separate case of the same recorded class: a browser test that failed
     once and passed on the rerun. It has its own test and suspected source.
-- **Recommendation:** C (estimate). The failed wait is known, but its cause
+- **Recommendation:** C. The failed wait is known, but its cause
   is not confirmed. The last finished step can help distinguish CPU
-  contention from a lost event. E best reduces the compile cost, but it is
-  Large.
+  contention from a lost event. E reduces compile cost if compilation causes
+  the timeout. The current evidence does not confirm that cause.
 - **Action:** ask the user, because the evidence does not show which cause
   needs a fix. The failure was not reproduced, and no option is clearly
   best until its cause is confirmed.

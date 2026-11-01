@@ -1,6 +1,6 @@
 # Use progress as the large benchmark liveness signal
 
-- **Severity:** Low. **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 162, from the harness note of integration batch 25. Updated on
@@ -47,7 +47,7 @@
   - **A.** Raise the build deadline and the Changes wait above the measured
     times. Effort: Small.
   - **B.** Make the deadline a liveness limit that each progress line
-    resets. Effort: Medium (estimate).
+    resets. Effort: Medium.
 - **Left out:** Remove the deadline. It loses the detection of a stuck
   process. Fewer than three approaches exist, because the limit is either
   fixed or reset by progress.
@@ -60,7 +60,7 @@
   is about the time that the harness adds to a build. Both concern the
   build scenario of the same harness, so one branch can handle both.
 - **Recommendation:** B. It tells slow progress from a hung build.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user ruled that new review items wait for the user after the merge.
+- **Action:** ask the user, because on 2026-10-21 the user ruled that new review
+  items wait for the user after the merge.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6197).

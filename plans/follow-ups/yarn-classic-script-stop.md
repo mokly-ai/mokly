@@ -1,6 +1,6 @@
 # Stop Yarn Classic dependency scripts
 
-- **Severity:** High. **Likelihood:** Rare (estimate). **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 150, finding 42 of the review of user decision 135 B.
 - **Location:** `crates/mokly-platform/src/unix.rs:59`,
@@ -36,9 +36,9 @@
 - **Root question:** How should Mokly stop every process that a base
   install starts, also outside its process group?
 - **Options:**
-  - **A.** Document the process leak. Effort: Small (estimate).
+  - **A.** Document the process leak. Effort: Small.
   - **B.** Keep lifecycle scripts off for Yarn Classic on Unix, and warn
-    when the user asks for them. Effort: Small (estimate).
+    when the user asks for them. Effort: Small.
   - **C.** Make the process owner stop every descendant, also in new
     sessions. Effort: Large.
 - **Left out:** Another group signal cannot reach a new session.
@@ -47,8 +47,7 @@
 - **Previous examples:** None found.
 - **Recommendation:** C. It keeps the scripts opt-in for Yarn Classic and
   meets the no-orphan rule of the runtime contract.
-- **Action:** ask the user, because condition 5 holds: the user reserved
-  the choice for each open review item of the rebuild. Condition 3 also
-  holds, because C is Large.
+- **Action:** ask the user, because the user reserved the choice for each open
+  review item of the rebuild.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6109).

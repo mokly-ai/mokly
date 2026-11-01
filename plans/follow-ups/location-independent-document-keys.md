@@ -1,6 +1,6 @@
 # Make JavaScript document keys location-independent
 
-- **Severity:** Medium. **Likelihood:** Common (estimate). **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 133, from decision 1 of integration batch 19, widened by batch 21.
@@ -52,7 +52,7 @@
 - **Options:**
   - **A.** Document that absolute roots and all ancestor manifests are
     render inputs. The watch contract already states the manifest half.
-    Effort: Small (estimate).
+    Effort: Small.
   - **B.** Keep them in the compiled-code cache key. Compute the published
     document keys from folder-independent data: module digests by
     repository path, class maps, and bindings. Dropping the manifests or the
@@ -69,8 +69,7 @@
 - **Recommendation:** B. It fixes published identity and keeps conservative
   compiled-code reuse. First measure the two cases on the current code,
   because PR #227 changed the keys. C best protects every bundle consumer.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user deferred the open review items past the merge to decide each one
-  later.
+- **Action:** ask the user, because on 2026-10-21 the user deferred the open
+  review items past the merge to decide each one later.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6063).

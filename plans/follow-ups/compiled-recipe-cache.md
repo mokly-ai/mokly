@@ -1,6 +1,6 @@
 # Cache unused compiled recipes
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   the deferred option C of F8 decision 59, 2026-10-20.
@@ -70,9 +70,9 @@
   - [flaky-large-watch-react.md](flaky-large-watch-react.md) tracks the
     large React watch test. Its timeouts come from accumulated React and
     base compilations, which this cache can reduce.
-- **Recommendation:** B (estimate). A measured fixed limit adds reuse
+- **Recommendation:** B. A measured fixed limit adds reuse
   without a new public setting.
-- **Action:** ask the user, because condition 4 holds: the byte budget
-  trades memory for reuse, and the plan requires the user to agree it.
+- **Action:** ask the user, because the byte budget trades memory for reuse, and
+  the plan requires the user to agree it.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5417).

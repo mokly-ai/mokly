@@ -46,15 +46,15 @@
     itself, through an explicit signal, before it compares the events. Keep
     every assertion. Effort: Small.
   - **B.** Change nothing until the test fails again, and record the
-    failure text in this item then. Effort: Small (estimate).
+    failure text in this item then. Effort: Small.
   - **C.** Apply A through one fixture helper that resolves on the next
     frame event of a given type. Use it in each of the nine specs that read
-    `frameEvents`. Effort: Small (estimate).
+    `frameEvents`. Effort: Small.
   - **D.** If the reproduction shows a product race in the frame code, add
     a failing test first. Then fix the order in the viewer frame code.
-    Effort: Medium (estimate).
+    Effort: Medium.
 - **Left out:** A retry, a sleep, or a longer time limit. The
-  `deterministic-tests` skill forbids them, because they hide the source.
+  `testing` skill forbids them, because they hide the source.
 - **Wider fix:** C. One helper gives every frame adapter spec an explicit
   readiness signal.
 - **Previous examples:** Other browser tests that failed once and passed
@@ -81,8 +81,8 @@
     suspected source is a page navigation. The two items share no test code.
 - **Recommendation:** A. The plan recommended it: wait for the message
   event. C best protects the other frame adapter specs.
-- **Action:** ask the user, because condition 6 holds (estimate): the
-  failure was not reproduced and its source is unknown, so the
-  `deterministic-tests` skill gives `ask the user`.
+- **Action:** ask the user, because the failure has not been reproduced with a
+  confirmed cause. No fix is clearly best until reproduction identifies the
+  source, as the flaky-test rule requires.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L4696).
