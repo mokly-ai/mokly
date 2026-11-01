@@ -16,13 +16,17 @@ fn paths(values: &[&str]) -> BTreeSet<PathBuf> {
     values.iter().map(PathBuf::from).collect()
 }
 
-fn failed(mut operations: Vec<PathOp>, index: usize, source: notify::Error) -> UpdatePathsError {
+fn failed(
+    mut operations: Vec<PathOp>,
+    index: usize,
+    source: notify::Error,
+) -> Box<UpdatePathsError> {
     let remaining = operations.split_off(index + 1);
-    UpdatePathsError {
+    Box::new(UpdatePathsError {
         source,
         origin: operations.pop(),
         remaining,
-    }
+    })
 }
 
 #[test]
@@ -31,11 +35,11 @@ fn an_unknown_applied_prefix_keeps_previous_attachment_state_for_retry() {
         PathUpdatesMock::apply
             .next_call(matching!(_))
             .answers(&|_, _| {
-                Err(UpdatePathsError {
+                Err(Box::new(UpdatePathsError {
                     source: notify::Error::generic("batch reply lost"),
                     origin: None,
                     remaining: vec![],
-                })
+                }))
             }),
         PathUpdatesMock::apply
             .next_call(matching!((operations) if operations.len() == 3))

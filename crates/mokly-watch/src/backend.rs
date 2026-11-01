@@ -47,12 +47,12 @@ struct NotifyWatch {
 
 #[cfg_attr(test, unimock::unimock(api = PathUpdatesMock))]
 trait PathUpdates: Send {
-    fn apply(&mut self, operations: Vec<PathOp>) -> std::result::Result<(), UpdatePathsError>;
+    fn apply(&mut self, operations: Vec<PathOp>) -> std::result::Result<(), Box<UpdatePathsError>>;
 }
 
 impl PathUpdates for RecommendedWatcher {
-    fn apply(&mut self, operations: Vec<PathOp>) -> std::result::Result<(), UpdatePathsError> {
-        self.update_paths(operations)
+    fn apply(&mut self, operations: Vec<PathOp>) -> std::result::Result<(), Box<UpdatePathsError>> {
+        Ok(self.update_paths(operations)?)
     }
 }
 
@@ -99,6 +99,7 @@ impl DirectoryWatch for NotifyWatch {
                     }
                 }
                 Err(update) => {
+                    let update = *update;
                     let Some(origin) = update.origin else {
                         error.get_or_insert(Error::Observer {
                             source: update.source,
