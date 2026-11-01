@@ -1,6 +1,6 @@
 # Use screen copy for screen evidence
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of the W2 viewer review.
 - **Location:** `packages/viewer/src/shell/workspace_evidence.tsx:36`,
@@ -12,7 +12,7 @@
   waits for the user's choice.
 
 - **Source:** Review.
-- **Category:** UX wording (estimate).
+- **Category:** UX wording.
 - **Terms:**
   - **Change reason:** one reason why Changes lists an entry, such as
     `material`, `inputs`, or `metadata`. The evidence panel prints one line
@@ -42,11 +42,11 @@
   - **A.** Change the fixed line to words that fit every kind, such as
     "Details or variants changed.". It changes the sentence of
     `mokly-component-workspace-design.md:194` and the design mockup.
-    Effort: Small (estimate).
+    Effort: Small.
   - **B.** Add the metadata line to `EntryWording`, so that each entry kind
     gets its own noun. It changes the sentence of
     `mokly-component-workspace-design.md:194` and the design mockup.
-    Effort: Small (estimate).
+    Effort: Small.
 - **Left out:** Keeping "saved examples" keeps an old product term.
 - **Wider fix:** B. The shared wording for each entry kind removes fixed
   page nouns from this panel.
@@ -55,10 +55,10 @@
 - **Related:** [slot-owner-copy.md](./slot-owner-copy.md) has the same
   class: "this page" in the Props slot line for every entry kind. One noun
   source per entry kind would serve both.
-- **Recommendation:** B. (estimate) It reuses the existing noun source and
+- **Recommendation:** B. It reuses the existing noun source and
   fixes both words.
-- **Action:** ask the user, because condition 1 holds: each option changes
-  the reason sentence that `docs/protocol/mokly-component-workspace-design.md:194`
-  states, and no recorded user decision changes it.
+- **Action:** ask the user, because each option changes the reason sentence that
+  `docs/protocol/mokly-component-workspace-design.md:194` states, and no
+  recorded user decision changes it.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6728).

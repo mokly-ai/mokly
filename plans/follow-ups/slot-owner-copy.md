@@ -1,6 +1,6 @@
 # Name the slot owner consistently
 
-- **Severity:** Low. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 161, W2 decision 2.
 - **Location:** `packages/viewer/src/shell/workspace_props.tsx:166`, which
@@ -9,7 +9,7 @@
   PR #199 until after its merge, for the user's later choice.
 
 - **Source:** Review.
-- **Category:** UX wording (estimate).
+- **Category:** UX wording.
 - **Terms:**
   - **Slot line:** the line in the Props panel that names a supplied slot
     and the entry or component that supplied its content.
@@ -30,11 +30,11 @@
 - **Root question:** How should the slot line name the entry that supplied
   the content?
 - **Options:**
-  - **A.** Keep "this page". Effort: Small (estimate).
+  - **A.** Keep "this page". Effort: Small.
   - **B.** Name the owner by its title, as the design mockups did. Effort:
-    Small (estimate).
+    Small.
   - **C.** Design one shared entry noun first, then use it in every owner
-    message. Effort: Large (estimate).
+    message. Effort: Large.
 - **Left out:** Using an internal entry kind name leaks implementation
   words into the product.
 - **Wider fix:** C. One shared entry noun prevents copy drift across
@@ -47,7 +47,7 @@
   noun source per entry kind would serve both.
 - **Recommendation:** B. It gives the user the specific owner, as the
   earlier design did. C best protects the wording class.
-- **Action:** ask the user, because condition 5 holds: the user reserved
-  the choice for each open review item of the rebuild.
+- **Action:** ask the user, because the user reserved the choice for each open
+  review item of the rebuild.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6189).

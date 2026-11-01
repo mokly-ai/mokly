@@ -1,6 +1,6 @@
 # Recover from native watch event loss
 
-- **Severity:** Medium. **Likelihood:** Rare (estimate). **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 134, from the Milestone 11 plan TODO.
@@ -50,18 +50,18 @@
     this item. Otherwise copy the failure text and the counts into this
     item, and keep A and B for the user's choice. It needs a macOS host and
     a Windows host. One run covers only the system versions of that run.
-    Effort: Small (estimate).
+    Effort: Small.
   - **A.** Rescan the repository roots after each macOS batch, and check
-    exact-input stamps on Windows. Effort: Medium (estimate).
+    exact-input stamps on Windows. Effort: Medium.
   - **B.** Use one recursive watch for each root on both systems. Effort:
-    Medium (estimate).
+    Medium.
 - **Left out:**
   - A periodic rescan on a wall clock. It adds timing behaviour and delays
     recovery.
   - Former option C: Keep the current rescan-flag recovery. Add hosted
     macOS and Windows tests that force a batch and a buffer overflow. Add A
     or B only for a loss that comes without a rescan flag. Effort: Small
-    (estimate). Under the `testing` skill of 2026-10-30, the hosted check of
+    . Under the `testing` skill of 2026-10-30, the hosted check of
     the operating system's watcher is a one-time proof, so it gets no suite
     test. D keeps this approach as a check that runs once.
 - **Wider fix:** A. Platform-specific recovery handles each known loss mode
@@ -70,10 +70,9 @@
 - **Related:** [watch-resource-attach-gap.md](watch-resource-attach-gap.md)
   is another case where Serve can miss a change. Both concern how Serve
   recovers watched changes, so one branch can test both.
-- **Recommendation:** A (estimate). It handles each platform's known loss
+- **Recommendation:** A. It handles each platform's known loss
   mode directly.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user deferred the open review items past the merge to decide each one
-  later.
+- **Action:** ask the user, because on 2026-10-21 the user deferred the open
+  review items past the merge to decide each one later.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6078).

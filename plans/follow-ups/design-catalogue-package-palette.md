@@ -1,9 +1,12 @@
 # Design catalogue repeats the package palette
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** Yes.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-31, from the branch `calummoore/mokly-ui-layout-theme`, an unchecked post-merge task of the shell views plan, which its last pull request deletes.
-- **Location:** `examples/basic/design.css`, the `:root`, `[data-mbk-light-only]`, and `[data-mbk-appearance]` palette blocks, about 105 token declarations; `packages/ui/src/theme/theme.css`, the shipped palette.
+- **Location:** `examples/basic/design.css`, the `:root`,
+  `[data-mbk-light-only]`, and `[data-mbk-appearance]` palette blocks, about 105
+  token declarations; `packages/ui/src/theme/theme.css`, the shipped palette.
+- **Reason:** The shell views change kept the shipped palette and left removal of the design-only duplicate declarations for work after the merge.
 
 - **Terms:**
   - **Design catalogue:** the static mockups of the Browse shell under

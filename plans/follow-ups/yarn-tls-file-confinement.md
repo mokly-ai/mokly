@@ -35,10 +35,9 @@
   - **A.** Use tier three when a base `.yarnrc.yml` sets
     `httpsCaFilePath`, `httpsKeyFilePath`, or `httpsCertFilePath`.
     Effort: Small.
-  - **B.** Clear those settings before the install. Effort: Small
-    (estimate).
+  - **B.** Clear those settings before the install. Effort: Small.
   - **C.** Allow only TLS files that `RepositoryPath::confine` keeps inside
-    the repository. Effort: Medium (estimate).
+    the repository. Effort: Medium.
 - **Left out:** Allowing any absolute path breaks the base-input
   confinement rule of `docs/protocol/mokly-base-dependencies.md`.
 - **Wider fix:** C. Path confinement keeps valid repository certificates
@@ -47,8 +46,7 @@
 - **Recommendation:** A. It closes the read at once with the existing
   fallback tier. C best keeps the confined use. The rebuild asked for a
   decision before the first npm release of the new core.
-- **Action:** ask the user, because condition 5 holds: the user reserved
-  the choice for each open review item of the rebuild. Condition 3 also
-  holds, because each option makes base validation stricter.
+- **Action:** ask the user, because the user reserved the choice for each open
+  review item of the rebuild. Each option makes base validation stricter.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6133).

@@ -1,6 +1,6 @@
 # StrictMode runs a host detail source twice
 
-- **Severity:** Low (estimate). **Likelihood:** Common (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #224, implementation review 2.
 - **Location:** `packages/viewer/src/shell/data_store.ts:92` to line 96.
@@ -32,16 +32,16 @@
     can call the source twice. Effort: Small.
   - **B.** Keep a pending request across the StrictMode replay. Abort it only
     when the store really unmounts or the request changes, so that the
-    replay reuses it. Effort: Small (estimate).
+    replay reuses it. Effort: Small.
   - **C.** Move the first-load requests out of the effect into the data
     controller, which starts each request once and shares its result.
-    Effort: Medium (estimate).
+    Effort: Medium.
 - **Left out:** Turning off StrictMode checks for the viewer. Hosts own their
   React tree, so the viewer cannot choose that.
-- **Wider fix:** C (estimate). One owner of each request removes repeats from
+- **Wider fix:** C. One owner of each request removes repeats from
   every mount order.
 - **Previous examples:** None found.
-- **Recommendation:** B (estimate). It keeps the documented single call with
-  a small change in the store.
-- **Action:** fix after merge, apply B (estimate), because the repeated call
-  contradicts the concepts README, and B is Small.
+- **Recommendation:** C. One request owner preserves the documented single call
+  through every mount order. The record first recommended B.
+- **Action:** fix after merge, apply C, because the request ownership defect
+  lies outside the viewer change that found it.

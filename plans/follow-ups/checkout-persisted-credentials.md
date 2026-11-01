@@ -1,6 +1,6 @@
 # Disable persisted credentials in CI checkouts
 
-- **Severity:** Medium. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 164, from finding R3 of the final review.
@@ -34,12 +34,12 @@
   the code that they test?
 - **Options:**
   - **A.** Set `persist-credentials: false` on all six checkout steps.
-    Effort: Small (estimate).
+    Effort: Small.
 - **Left out:**
   - Remove the checkout permission. The jobs need to read the source.
   - Former option B: apply A, and add a policy test that rejects a checkout
     that persists credentials in any workflow. It adds a gate. Effort:
-    Medium (estimate). The `testing` skill of 2026-10-30 lists workflow YAML
+    Medium. The `testing` skill of 2026-10-30 lists workflow YAML
     literals under "What never gets a test", so the options check no longer
     gives this test.
   - Fewer than three approaches exist, because the token is either stored
@@ -50,7 +50,7 @@
 - **Previous examples:** The release, release-check, dependency audit, and
   native bootstrap workflows already set it, and their tests check it.
 - **Recommendation:** A. It removes the stored token at once.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user ruled that new review items wait for the user after the merge.
+- **Action:** ask the user, because on 2026-10-21 the user ruled that new review
+  items wait for the user after the merge.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6213).

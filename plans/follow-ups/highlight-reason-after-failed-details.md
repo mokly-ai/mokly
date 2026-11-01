@@ -1,11 +1,13 @@
 # Failed details keep a waiting highlight reason
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate).
+- **Severity:** Low. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-30, from the branch `calummoore/mokly-ui-controls`, during the control mockup work of the shell views plan.
 - **Location:** `packages/viewer/src/shell/workspace_inspection_runtime.ts`, `inspectionAvailability`, which picks the reason that the Highlight components toggle shows while the inspection is unavailable.
 - **Reason:** The behaviour is older than the shell views plan, which keeps the shell's output unchanged.
 
+- **Source:** Implementation.
+- **Category:** Product bug.
 - **Terms:**
   - **Highlight components toggle:** the header control that turns the
     component mask over a preview on and off. When highlighting is
@@ -39,6 +41,7 @@
   its controls in every state.
 - **Wider fix:** C.
 - **Previous examples:** None found.
-- **Recommendation:** B. One branch of the reason gives the true state.
-- **Action:** fix after merge, apply B, because the shell views plan keeps
-  the shell's behaviour unchanged.
+- **Recommendation:** C. One delivery-state owner gives every disabled reason
+  the actual request state. The record first recommended B.
+- **Action:** fix after merge, apply C, because the shell views change preserved
+  the existing behaviour and left its state correction for a separate branch.

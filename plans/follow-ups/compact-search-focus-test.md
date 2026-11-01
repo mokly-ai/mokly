@@ -1,13 +1,13 @@
 # Test compact search host slots and restored control
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a problem outside the scope of the F9b re-review of 2026-10-20.
 - **Location:** `docs/protocol/mokly-viewer.md:124-130` and
   `tests/browser/viewer_layout.spec.ts:110-122`.
-- **Reason:** The review found the gap beside its change, and a missing
-  test needs the user's answer under the review-fix rule.
+- **Reason:** The review found this requirement-test gap outside its change, so
+  its test belongs in a separate branch.
 
 - **Source:** Review.
 - **Category:** Test.
@@ -74,9 +74,9 @@
 - **Related:** [compact-search-activation.md](compact-search-activation.md)
   changes what the same control does after a row activation. The test of
   this item is the natural place to cover that choice too.
-- **Recommendation:** A (estimate). It covers a stated requirement with one
+- **Recommendation:** A. It covers a stated requirement with one
   short extension of an existing test.
-- **Action:** ask the user, because condition 6 holds: the review-fix rule
-  sends every finding about a missing test to the user.
+- **Action:** fix after merge, apply A, because the missing browser assertions
+  cover an existing requirement outside the reviewed change.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L4904).

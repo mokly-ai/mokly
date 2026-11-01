@@ -1,6 +1,6 @@
 # Close compact search after row activation
 
-- **Severity:** Low (estimate). **Likelihood:** Common (estimate). **Effort:** Large (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Likelihood:** Common. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a problem outside the scope of the F9b re-review of 2026-10-20.
@@ -54,14 +54,14 @@
   - **C.** Change nothing. State in `docs/protocol/mokly-viewer.md` that the
     search stays open until Close or Escape. Effort: Small.
   - **D.** Move the open state into the shell store, so that `withRoute`
-    resets it with the drawer and the tag picker. Effort: Large (estimate).
+    resets it with the drawer and the tag picker. Effort: Large.
     - Since PR #249 the state lives in the package component `TopBar`. So D
-      changes seven code files, more than the five of a Medium effort, in
+      changes seven code files in
       two packages: `packages/ui/src/top-bar/top-bar.tsx`, its container
       `packages/viewer/src/shell/top_bar.tsx`, and `store_state.ts`,
       `store_initial.ts`, `store_host_routes.ts`, `store_actions.ts`, and
       `store_filters.ts` in `packages/viewer/src/shell`.
-    - Before PR #249 moved the state, this item estimated D as Medium.
+    - Grade the whole change, including the package props, store state, focus behaviour, tests, and mockup review. Before PR #249 moved the state, this item estimated D as Medium.
 - **Left out:** Close the search on every query change. It closes the
   surface while the user types.
 - **Wider fix:** D. One store reset then closes every temporary top bar
@@ -74,10 +74,10 @@
   again. A package test already covers the state and the focus return after
   Close and Escape. The test from that item can also cover the option chosen
   here.
-- **Recommendation:** D (estimate). It matches the drawer and the tag
+- **Recommendation:** D. It matches the drawer and the tag
   picker, and it covers every route change, not only one row type.
-- **Action:** ask the user, because condition 2 holds (estimate): A, B,
-  and D add compact search behaviour that the viewer contract does not
-  state. No design mockup shows the compact search.
+- **Action:** ask the user, because A, B, and D add compact search behaviour
+  that the viewer contract does not state. No design mockup shows the compact
+  search.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L4900).

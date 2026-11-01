@@ -11,7 +11,7 @@
   and kept the final warning text as the user's choice.
 
 - **Source:** Review.
-- **Category:** Docs or spec (estimate).
+- **Category:** Docs or spec.
 - **Terms:**
   - **Invocation warning:** a prop warning about a component instance that
     an entry renders, rather than about the entry's own props.
@@ -36,7 +36,7 @@
   can find the prop and the instance that caused it?
 - **Options:**
   - **A.** Define the current messages in the three contracts, and add the
-    missing code to the HTML Diagnostics table. Effort: Small (estimate).
+    missing code to the HTML Diagnostics table. Effort: Small.
   - **B.** Also make invocation warnings name the component path and the
     instance id, and use one prop-name form. Then define the messages.
     Effort: Medium.
@@ -48,8 +48,7 @@
 - **Previous examples:** None found.
 - **Recommendation:** B. It defines consistent messages with enough context
   to fix the problem.
-- **Action:** ask the user, because condition 5 holds: the user reserved
-  the choice for each open review item of the rebuild, and the final warning
-  text.
+- **Action:** ask the user, because the user reserved the choice for each open
+  review item of the rebuild, and the final warning text.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5851).

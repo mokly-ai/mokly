@@ -1,11 +1,14 @@
 # Test the wiring of the comparison step labels
 
-- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-30, from branch `calummoore/loading-status-updates`, review round 1, finding 1 and two problems that its check found.
 - **Location:** `crates/mokly-cli/src/base_dependencies.rs:141`, `crates/mokly-cli/src/changes_runtime.rs:89`, `crates/mokly-cli/src/serve_changes_native.rs:151`, `crates/mokly-cli/tests/changes_names_tests.rs:239`.
-- **Reason:** The review rules send each missing-test finding to the user, so the test waits for a decision.
+- **Reason:** The comparison-label change merged without tests of its three
+  composition wires.
 
+- **Source:** Review.
+- **Category:** Test.
 - **Terms:**
   - **Changes:** The Mokly feature that compares the current catalogue with the catalogue of a Git base commit.
   - **Comparison step:** One of the five labels that the `Comparing with <base>` spinner shows while Changes runs, defined in `docs/protocol/mokly-terminal-steps.md`.
@@ -20,11 +23,16 @@
   - **B.** Add a native dependency preparation test with a real temporary cache, and observe its extracting and installing steps. It needs a new fixture and covers only the cache wrapper. Effort: Medium.
   - **C.** Add a Serve command test with stdout on a pseudo-terminal, as `crates/mokly-cli/tests/serve_js/fixture.rs` opens one for stdin. Assert the visible labels during a real comparison. It covers every Serve wire, but it adds a slow command run with a Git fixture. Effort: Medium.
   - **D.** Put the cache construction of `NativeDependencies` behind an injected trait, and add a `unimock` unit test of `BaseDependencies::prepare`. The product gets a seam that only this test uses. Effort: Medium.
-  - **E.** Give `CachedExtraction` and `DependencyTiers` a required `steps` field, so that their builders announce their own steps, and delete `StepCache`. A dropped cache wire becomes a compile error, but `PhaseSteps` and `RunSteps` stay untested. Effort: Large.
+  - **E.** Give `CachedExtraction` and `DependencyTiers` a required `steps` field, so that their builders announce their own steps, and delete `StepCache`. Each builder then receives its step channel directly. Move every existing `StepCache` test assertion to the coordinator tests. Include the `PhaseSteps` and `RunSteps` requirement tests from G. This changes internal construction in an unpublished crate and preserves terminal behaviour. Effort: Medium.
   - **F.** Give `DiskCache` a required `steps` field instead, and delete `StepCache`. It gives the guard of E in fewer files, but the generic cache then maps cache kinds to terminal steps. Effort: Large.
   - **G.** Do A. Also add a Serve unit test that runs `Source::classify` with a Git runner that fails at the first command and a `Progress` mock. Assert that `Progress::step` receives the reading step with the same cancellation token as the classification. Both tests are in-process and add no command run. Effort: Small.
 - **Left out:** More tests that construct `StepCache` directly fail the goal, because they never run a composition. Changing nothing fails the goal. A build method on the cache `Reporter` trait is worse than F on every point.
-- **Wider fix:** E. It removes the silent drop of the cache steps for every composition, but it is Large and covers neither `PhaseSteps` nor `RunSteps`.
+- **Wider fix:** E. Required step channels remove the optional cache-wrapper
+  connection. Include G's remaining composition tests and preserve every
+  existing StepCache assertion.
 - **Previous examples:** None found.
-- **Recommendation:** G. It covers all three wires, including the token match of Serve, at the lowest level that fails, and adds no command run. E best protects the cache steps against a future composition.
-- **Action:** ask the user, because the review rules send each missing-test finding to the user (decision-test condition 6).
+- **Recommendation:** E. The structural connection protects cache steps, and G's
+  requirement tests cover the other two wires. The record first recommended G.
+- **Action:** fix after merge, apply E, because the comparison-label change
+  merged before its review fixed the wiring coverage. A required internal field
+  adds no product rejection or repository gate.

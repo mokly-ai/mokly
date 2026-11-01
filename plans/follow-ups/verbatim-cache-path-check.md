@@ -1,6 +1,6 @@
 # Normalize verbatim cache paths before safety checks
 
-- **Severity:** Low. **Likelihood:** Rare (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 179, delta review 4.
 - **Location:** `crates/mokly-compare/src/locations.rs:40`,
@@ -31,8 +31,8 @@
   that can use different forms?
 - **Options:**
   - **A.** Normalize both paths to one form before the containment check,
-    and keep the returned path. Effort: Small (estimate).
-  - **B.** Document the long-path limit. Effort: Small (estimate).
+    and keep the returned path. Effort: Small.
+  - **B.** Document the long-path limit. Effort: Small.
 - **Left out:** A string-prefix check stays unsafe across separators and
   path aliases.
 - **Wider fix:** A. One path form protects every containment check.
@@ -42,7 +42,7 @@
   align both.
 - **Recommendation:** A. It keeps the cache safety rule for long Windows
   paths.
-- **Action:** ask the user, because condition 5 holds: the user reserved
-  the choice for each open review item of the rebuild.
+- **Action:** ask the user, because the user reserved the choice for each open
+  review item of the rebuild.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6375).

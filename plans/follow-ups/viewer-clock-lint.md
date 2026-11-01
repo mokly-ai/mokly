@@ -9,7 +9,7 @@
   the merge of PR #199, without approving it.
 
 - **Source:** Design.
-- **Category:** Test (estimate).
+- **Category:** Test.
 - **Terms:**
   - **Timing lint:** the ESLint `no-restricted-syntax` rules in
     `eslint.config.js` that reject elapsed-time assertions in tests.
@@ -42,12 +42,12 @@
   every test root?
 - **Options:**
   - **A.** Keep the current lint, which already covers the viewer and UI
-    test roots. Effort: Small (estimate).
+    test roots. Effort: Small.
   - **B.** Port the three clock forms of #174, with their lint test cases,
     and state them in `ci-test-timing.md`. Then remove its status line.
     Effort: Small.
   - **C.** Apply B, and give unit-test discovery and the lint one shared
-    list of test roots, as #174 did. Effort: Medium (estimate).
+    list of test roots, as #174 did. Effort: Medium.
 - **Left out:** A lint for every clock call breaks the allowed clock uses of
   the timing contract, such as polling deadlines.
 - **Wider fix:** C. One list of test roots stops a new root from missing
@@ -60,8 +60,7 @@
   the empty-test assertion guard of closed PR #153.
 - **Recommendation:** B. It ports the recorded forms with the smallest
   change. C best protects later test roots.
-- **Action:** ask the user, because condition 3 holds: B and C add lint
-  rules, a stricter check. On 2026-10-21 the user deferred this lint without
-  approving it.
+- **Action:** ask the user, because B and C add lint rules, a stricter check. On
+  2026-10-21 the user deferred this lint without approving it.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5448).
