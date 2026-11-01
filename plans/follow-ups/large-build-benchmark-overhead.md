@@ -29,6 +29,13 @@
   - Large HTML fixture: 166.2 s against 86.0 s for the old binary, and
     44.1 s against 39.9 s for the new binary.
   - The source of the overhead was not found or recorded.
+  - On 2026-10-28, with the release binary in both runs on a quiet
+    eight-CPU machine, the harness and a direct run took about the same
+    time: 39.1 s against 42.7 s for the large HTML fixture, and 125.6 s
+    against 127.2 s for the large React fixture. Before 2026-11-01 the
+    build scenario timed whichever binary the host package held, often the
+    debug binary that `npm run build` installs. So a part of the measured
+    gap can come from two different binaries.
 - **Impact if no action:** Harness measurements overstate build times, most
   for slow builds. A before and after comparison can show a gain that a
   direct run does not show.
@@ -48,11 +55,11 @@
   can find and remove the existing overhead first.
 - **Previous examples:** None found.
 - **Related:** [large-benchmark-liveness.md](./large-benchmark-liveness.md)
-  concerns the 300-second deadline of the same build scenario, at
-  `scripts/large/benchmark.ts:68`. Both items change the build scenario of
-  this harness, so one branch can handle both. Their causes differ: that
-  deadline stops healthy builds, and this item is time that the harness
-  adds.
+  concerns the fixed waits of the same harness. Its build part is fixed:
+  since 2026-11-01, each output line restarts the 300-second build
+  deadline, and the build scenario builds and installs the release binary.
+  Its Changes wait stays open. The causes differ: a fixed wait stops a
+  healthy run, and this item is time that the harness adds.
 - **Recommendation:** B. It explains the measured gap before the
   harness gets more measurement duties.
 - **Action:** fix after merge, apply B, because the benchmark harness lies
