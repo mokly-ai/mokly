@@ -15,8 +15,7 @@ The work moved here from the
 2026-10-29, when the coordinator split it out under decision 9 D. That plan
 ships the stop requirement in
 [Base Install Processes](../docs/protocol/mokly-base-install-processes.md#bounds-and-stops)
-and the runtime shutdown rule, each with a status line that names
-`plans/follow-ups/yarn-classic-script-stop.md`.
+and the runtime shutdown rule.
 Windows needs no change, because its kill-on-close job already holds every
 descendant.
 
@@ -44,6 +43,13 @@ Contract owners:
   subreaper, so an orphan inside the owned tree stays reachable through parent
   links while the manager runs. Record the mechanism in code comments, not in
   the protocol page.
+- Design call (2026-11-01): the macOS limit of
+  `docs/protocol/mokly-base-install-processes.md` says "whose parent exits
+  before the stop reaches that parent", not "whose parent exited before the
+  stop". On macOS, an orphan moves to launchd, so no parent link leads to it,
+  and a parent outside the group can exit while the walk runs. The design
+  call of 2026-10-28 already names the class of the limit: an orphan outside
+  the manager's process group. The code and the class do not change.
 
 ## Evidence
 
@@ -58,7 +64,7 @@ Contract owners:
 
 The stop requirement and its limits landed with the base install fixes plan.
 
-- [ ] Check that `docs/protocol/mokly-base-install-processes.md` states the
+- [x] Check that `docs/protocol/mokly-base-install-processes.md` states the
       complete stop contract. Propose any change that the implementation
       finds as a decision.
   - Checked on 2026-11-01 against `8ed374c0`. The page states the contract
@@ -68,6 +74,8 @@ The stop requirement and its limits landed with the base install fixes plan.
     misses a descendant outside the group whose parent exits after the stop
     starts and before the walk reaches that parent. The page names only a
     parent that exited before the stop.
+  - The design call of 2026-11-01 rewords the macOS limit, so the page now
+    states the contract.
 
 ## Milestone 2: Process ownership for escaped scripts
 
@@ -95,12 +103,17 @@ sessions. Windows keeps its kill-on-close job.
 
 ## Milestone 3: Docs alignment
 
-- [ ] Update `crates/mokly-platform/README.md` for the descendant walk.
-- [ ] Remove the status lines of `docs/protocol/mokly-runtime.md` and
+- [x] Update `crates/mokly-platform/README.md` for the descendant walk.
+- [x] Remove the status lines of `docs/protocol/mokly-runtime.md` and
       `docs/protocol/mokly-base-install-processes.md`.
-- [ ] Close `plans/follow-ups/yarn-classic-script-stop.md` when the stop
+- [x] Close `plans/follow-ups/yarn-classic-script-stop.md` when the stop
       implementation is complete. Main replaced the completed Rust rebuild
       plan with that follow-up file.
+- On 2026-11-01 the branch resolved each fact of that record, apart from its
+  post-merge macOS smoke test, which became
+  `plans/follow-ups/macos-process-tree-smoke-test.md`. `docs/protocol/mokly-runtime.md`
+  and `docs/protocol/mokly-git.md` still match the code, so they did not
+  change.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
@@ -131,5 +144,7 @@ sessions. Windows keeps its kill-on-close job.
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Run a macOS process-tree smoke test for escaped manager sessions on a
+- [x] Run a macOS process-tree smoke test for escaped manager sessions on a
       hosted runner.
+- On 2026-11-01 this task became the follow-up item
+  `plans/follow-ups/macos-process-tree-smoke-test.md`.

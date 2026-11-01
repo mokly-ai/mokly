@@ -1,7 +1,5 @@
 # Base Install Processes
 
-Status: Follow-up work remains in the [Yarn Classic script stop item](../../plans/follow-ups/yarn-classic-script-stop.md).
-
 This page defines how Mokly runs the package managers of a
 [base dependency install](./mokly-base-dependencies.md#installation-and-bundle-settings):
 the environment that each manager starts from, the executables, the bounds,
@@ -65,6 +63,7 @@ descendant. Rejected: scripts off for Yarn Classic on Unix, because Classic
 projects would lose the opt-in.
 
 Two limits remain. On macOS, a stop does not signal a descendant outside the
-manager's process group whose parent exited before the stop. After a normal
-finish, Mokly signals only the manager's process group, so a process in a new
-session that a finished script left behind is outside that signal.
+manager's process group whose parent exits before the stop reaches that
+parent. After a normal finish, Mokly signals only the manager's process group,
+so a process in a new session that a finished script left behind is outside
+that signal.
