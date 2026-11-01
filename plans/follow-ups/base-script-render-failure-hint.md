@@ -1,14 +1,15 @@
 # Show the install-scripts hint for render failures
 
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Large. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 152, the wider part of finding 44 of the 135 B review.
 - **Location:** `crates/mokly-cli/src/changes_base.rs:86-160` and
   `crates/mokly-cli/src/changes_diagnostics.rs:14-24`, `:89-94`, and
   `:173-174`.
-- **Reason:** The plan recorded this item after the user's rule of
-  2026-10-21 that new review items wait for the user after the merge.
+- **Reason:** The Rust rebuild merged with only the direct fix of this finding,
+  and the typed cause reaches several CLI failure paths, so it needs a separate
+  branch.
 
 - **Source:** Review.
 - **Category:** Product bug.
@@ -56,7 +57,8 @@
   the one helper.
 - **Recommendation:** C. It gives every applicable failure one source for
   the recovery action.
-- **Action:** ask the user, because on 2026-10-21 the user ruled that new review
-  items wait for the user after the merge.
+- **Action:** fix after merge, apply C, because
+  `docs/protocol/mokly-terminal-errors.md:150-151` already requires the hint,
+  and the typed cause changes only the CLI diagnostics.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6127).

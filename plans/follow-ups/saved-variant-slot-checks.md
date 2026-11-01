@@ -7,8 +7,8 @@
   `crates/mokly-catalogue/src/templates.rs:161-181`, in `Checker::start`,
   `crates/mokly-catalogue/tests/ignore_attribute_tests.rs:182-199`, and
   `docs/protocol/mokly-html-components.md:85`.
-- **Reason:** On 2026-10-21 the user deferred the open review items of PR #199
-  until after its merge, for the user's later choice.
+- **Reason:** The Variants section states no check rule for saved slots, so each
+  option adds a requirement, and option A adds a build error.
 
 - **Source:** Review.
 - **Category:** Docs or spec.
@@ -86,8 +86,9 @@
     option B shares the same wider fix.
 - **Recommendation:** A. It gives saved slots the checks of every other
   authored HTML.
-- **Action:** ask the user, because A adds build errors, and C adds a
-  warning that strict builds count. The coordinator's answer of 2026-10-28
-  also kept this choice for the user.
+- **Action:** ask the user, because each option adds a check rule that the
+  Variants section of `docs/protocol/mokly-html-components.md` does not state,
+  A also adds build errors, and C adds a warning that strict builds count.
+  The coordinator's answer of 2026-10-28 also kept this choice for the user.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6018).
