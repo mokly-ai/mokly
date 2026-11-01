@@ -1,6 +1,6 @@
 {
   "name": "@mokly/viewer",
-  "version": "0.18.0",
+  "version": "0.19.0",
   "description": "Embeddable Mokly catalogue viewer, frame adapters, and the client-rendered Browse shell.",
   "license": "MIT",
   "type": "module",
@@ -25,7 +25,7 @@
     "./styles.css": "./dist/styles.css"
   },
   "dependencies": {
-    "@mokly/ui": "0.18.0"
+    "@mokly/ui": "0.19.0"
   },
   "peerDependencies": {
     "react": ">=19.0.0",
