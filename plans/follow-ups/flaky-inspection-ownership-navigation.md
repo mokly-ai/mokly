@@ -1,6 +1,6 @@
 # Inspection ownership test races a navigation
 
-- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-31, from the remote gate of `calummoore/mokly-ui-inspector` at `d7a9780e`, "browser-4-of-4", during the shell views plan, which does not change this test or the code it covers.
 - **Location:** `tests/browser/viewer_inspection_ownership.spec.ts:79`, the `page.evaluate` of the generated test "same-origin obsolete labels success preserves request replacement pick".
