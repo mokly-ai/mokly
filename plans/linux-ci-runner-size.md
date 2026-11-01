@@ -342,46 +342,60 @@ Each call is the orchestrator's own, made on 2026-11-01.
    branches are measurement inputs that never merge. Each changes a few
    labels and test lines. So the orchestrator prepares them in separate Git
    worktrees, and the implementors do milestones 1 and 2.
+10. **A reason against 2 vCPUs in the protocol.** The 4-vCPU sentence of the
+    CI workflow protocol compared 4 vCPUs only with 8, as the docs
+    implementor found. So the protocol also says why these jobs do not use
+    2 vCPUs. The reason comes from the recommendation of decision 1.
+11. **Go on with C after the scratch runs.** The scratch runs measured
+    2 vCPUs much faster than decision 1 said. The slowest job took 12.1
+    minutes, not about 19. C still passed every stop rule, and the user chose
+    C. So the work goes on with C, and the report gives the new times.
 
 ## Milestone 1: Documentation and protocol
 
 Depends on: none
 
-- [ ] `docs/protocol/ci-workflow.md`, the runner paragraph of Job Execution:
-      the Linux CI jobs that compile Rust use 4 vCPUs, because 4 vCPUs give
-      most of the speed of 8 vCPUs at half the price per minute. Keep the
-      8-vCPU rule of the Windows native job and the reason against 16 vCPUs.
-- [ ] `docs/protocol/remote-verification-testbox.md:14`: name
+- [x] `docs/protocol/ci-workflow.md`, the runner paragraph of Job Execution:
+      the Linux CI jobs that compile Rust use 4 vCPUs. The reason: 4 vCPUs
+      give most of the speed of 8 vCPUs at half the price per minute. Keep
+      the 8-vCPU rule of the Windows native job and the reason against
+      16 vCPUs.
+- [x] `docs/protocol/remote-verification-testbox.md:14`: name
       `blacksmith-4vcpu-ubuntu-2404` as the runner of the CI suite jobs.
-- [ ] `docs/protocol/ci-suite-evidence.md:60-62`: the concurrency example
+- [x] `docs/protocol/ci-suite-evidence.md:60-62`: the concurrency example
       names the 4-vCPU CI runner, not an 8-vCPU CI runner. A 2-vCPU or 4-vCPU
       runner runs two Node test files and one Playwright worker. An
       eight-CPU workstation runs four.
-- [ ] Run the Markdown check named in `AGENTS.md`.
+- [x] Run the Markdown check named in `AGENTS.md`.
+- [x] Done on 2026-11-01 by the docs implementor and checked. Design call 10
+      added one sentence. Report: `.context/linux-ci-runner-size/m1-report.md`.
 
 ## Milestone 2: Workflows and the runner size test
 
 Depends on: none
 
-- [ ] Change the runner size test first. It is
+- [x] Change the runner size test first. It is
       `tests/workflow_runner_sizes.test.ts`, or its Rust port when PR #212
       has merged.
-  - [ ] Give the five entries of `LARGER_LINUX_RUNNERS` the label
+  - [x] Give the five entries of `LARGER_LINUX_RUNNERS` the label
         `blacksmith-4vcpu-ubuntu-2404`.
-  - [ ] Run the test, and see it fail on the 8-vCPU labels of the workflows.
-- [ ] `.github/workflows/ci.yml`: set `runs-on` of the `repository`,
+  - [x] Run the test, and see it fail on the 8-vCPU labels of the workflows.
+- [x] `.github/workflows/ci.yml`: set `runs-on` of the `repository`,
       `viewer`, `browser`, and `static-delivery` jobs to
       `blacksmith-4vcpu-ubuntu-2404`.
-- [ ] `.github/workflows/blacksmith-testbox.yml`: set `runs-on` of the
+- [x] `.github/workflows/blacksmith-testbox.yml`: set `runs-on` of the
       `testbox` job to the same label.
-- [ ] Add `blacksmith-4vcpu-ubuntu-2404` to `.github/actionlint.yaml` in
+- [x] Add `blacksmith-4vcpu-ubuntu-2404` to `.github/actionlint.yaml` in
       sorted order. Keep `blacksmith-8vcpu-ubuntu-2404`, because the design
       matrix uses it.
-- [ ] Run the targeted tests of `tests/workflow_runner_sizes.test.ts`,
+- [x] Run the targeted tests of `tests/workflow_runner_sizes.test.ts`,
       `tests/actionlint_config.test.ts`, `tests/ci_testbox_alignment.test.ts`,
       and `tests/ci_timing_policy.test.ts`, or of their Rust ports.
-- [ ] Run `actionlint` from the repository root.
-- [ ] Run the early check: `cargo xtask check --suite repository`.
+- [x] Run `actionlint` from the repository root.
+- [x] Run the early check: `cargo xtask check --suite repository`.
+- [x] Done on 2026-11-01 by the non-UI implementor and checked. The
+      orchestrator ran the early check, which passed. Report:
+      `.context/linux-ci-runner-size/m2-report.md`.
 
 ## Milestone 3: Measure the tier
 
@@ -391,33 +405,36 @@ start first.
 Its evidence goes to `.context/linux-ci-runner-size/scratch-runs.md` and
 `.context/linux-ci-runner-size/branch-run.md`.
 
-- [ ] Decision 2: create `calummoore/runner-size-measure-2vcpu` and
+- [x] Decision 2: create `calummoore/runner-size-measure-2vcpu` and
       `calummoore/runner-size-measure-4vcpu` from this branch, each in its own
       Git worktree. Each holds the workflow, `actionlint`, and runner size
       test changes for its tier.
-- [ ] Push both branches. Each push starts a push run of the Testbox workflow,
+- [x] Push both branches. Each push starts a push run of the Testbox workflow,
       which gives the Testbox preparation time on its tier.
-- [ ] Start one CI run on each branch at the same time with
+- [x] Start one CI run on each branch at the same time with
       `gh workflow run ci.yml --ref {branch}`. Wait until both end.
-- [ ] Collect the job and step times with the scripts under
+- [x] Collect the job and step times with the scripts under
       `.context/linux-ci-runner-size/`. Read the VM memory of each job with
       `check_real_sizes.py`. Blacksmith can move a runner one tier up for
       free, so leave each upgraded job out.
-- [ ] Compare the 4-vCPU jobs with their figures in decision 1. Compare the
+- [x] Compare the 4-vCPU jobs with their figures in decision 1. Compare the
       2-vCPU jobs with the runs of 2026-10-27.
-- [ ] Check the three-times rule of `docs/protocol/ci-workflow.md`. Each CI
+- [x] Check the three-times rule of `docs/protocol/ci-workflow.md`. Each CI
       job limit must allow three times the measured 4-vCPU job time.
-- [ ] Estimate the 4-vCPU box time of each remote gate command. Add the
+- [x] Estimate the 4-vCPU box time of each remote gate command. Add the
       Testbox preparation time, the suite step time of its CI job, and one
       minute for the probe and the report download.
-- [ ] Before any commit of milestones 1 and 2, stop and give the user the
+- [x] Before any commit of milestones 1 and 2, stop and give the user the
       measured times when one of these holds:
   - A 4-vCPU job breaks the three-times rule.
   - The median 4-vCPU browser shard or another 4-vCPU suite job takes more
     than a quarter longer than its figure in decision 1.
   - A 4-vCPU box estimate reaches the 30-minute Testbox guard.
   - A suite fails on 4 vCPUs, and the failure does not occur on 8 vCPUs.
-- [ ] Delete both scratch branches and their worktrees.
+  - No condition held on 2026-11-01. Two tests failed once on 4 vCPUs and
+    passed on a rerun. One fails on 8 vCPUs too. The other is the new
+    follow-up item `flaky-static-delivery-catalogue-request.md`.
+- [x] Delete both scratch branches and their worktrees.
 - [ ] Commit milestones 1 and 2 with Conventional Commits, and push this
       branch. The push starts a push run of the Testbox workflow on 4 vCPUs.
 - [ ] Start one CI run on this branch:
@@ -429,6 +446,7 @@ Its evidence goes to `.context/linux-ci-runner-size/scratch-runs.md` and
 - [ ] When the work stops, record the user's answer under decision 1, and add
       a milestone for the work that the answer needs.
 - [ ] Add one line under this milestone that names each evidence file.
+- Scratch run evidence: `.context/linux-ci-runner-size/scratch-runs.md`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
