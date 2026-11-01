@@ -126,6 +126,9 @@ Preparation, discovery, missing reports and invalid reports cannot produce
 success. Never substitute local suite results after remote execution starts.
 Remote runs cover the Linux Node 22.15.0 profile only. Native macOS and Windows
 tests and the Node 24 release profile run in hosted CI.
+The viewer command installs the synced Bun pin on its box under the
+[suite wrapper contract](./remote-verification-testbox.md#suite-wrapper).
+A remote run needs no Bun on the local machine.
 
 The default warmup command for each box is:
 
