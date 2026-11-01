@@ -88,8 +88,8 @@
     - Effort: Small.
   - **B.** Keep the promise, and track the descendants of each Git command
     while it runs. Signal each one after a normal finish too.
-    - It needs the new tracking design that the design call of 2026-10-28
-      left out.
+    - It needs a new tracking design. A design call of 2026-10-28 kept the
+      two recorded limits, because both need such a design.
     - It adds reads of the process table to every Git command.
     - It ends a helper that a user's configuration keeps on purpose.
     - Effort: Large.

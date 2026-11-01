@@ -61,7 +61,8 @@ script that Yarn Classic starts in a new session on Linux and macOS. On Linux,
 a stop while the manager runs also signals a descendant whose parent exited
 before the stop. Windows uses the manager's owned job. Decision: signal every
 descendant. Rejected: scripts off for Yarn Classic on Unix, because Classic
-projects would lose the opt-in.
+projects would lose the opt-in. Rejected: a documented limit in place of this
+signal, because the runtime shutdown rule says that no orphan process survives.
 
 Two limits remain. On macOS, a stop does not signal a descendant outside the
 manager's process group whose parent exited before the stop. After a normal
