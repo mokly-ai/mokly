@@ -334,14 +334,23 @@ The inbound main merge audit is recorded in
       so a failed Git command shows its standard error. The brief above
       holds the request.
 - [x] Merge `origin/main` with the `git-merge` skill.
-- [ ] Run the targeted tests, `cargo xtask check --suite repository`, and
+- [x] Run the targeted tests, `cargo xtask check --suite repository`, and
       then the complete gate `cargo xtask check --executor local` once, on
       the final commit. The `auto` executor warms Blacksmith Testboxes,
       which dispatches the `Blacksmith Testbox` workflow.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+      The local complete gate passed on `605edad5` on 2026-11-01. Later
+      commits change follow-up items and merge `main`. The pull request CI
+      checks the final head. Evidence:
+      `.context/windows-paths-and-links/gate-local-605edad5-run2.log`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+      Rounds 1 to 4 ran on 2026-10-29 and 2026-11-01. Finding 2 was fixed
+      in `adbc6559`, and finding 4 in `cb82f3ee`. Findings 5 and 6 repeat
+      the open finding 1, which waits for the user with finding 3 in
+      `plans/follow-ups/postcss-link-message-contract.md`. The findings file
+      is under `.context/reviews/`.
 - [ ] Hand the branch to the coordinator, who opens the pull request. Put
       its link in the status paragraph when it opens.
