@@ -7,8 +7,6 @@ package-lock.json
 test-results
 playwright-report
 
-# Protocol fixtures keep their canonical bytes.
-
 # Parser fixtures keep their exact bytes.
 crates/mokly-html/tests/fixtures/differential
 crates/mokly-html/tests/fixtures/html5lib

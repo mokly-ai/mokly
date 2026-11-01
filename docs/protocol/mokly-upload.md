@@ -88,6 +88,36 @@ Mokly-owned caches and temporary paths never count. Uncommitted changes fail
 with `git-uncommitted` under the
 [terminal error contract](./mokly-terminal-errors.md).
 
+## Token Exposure
+
+Mokly redacts the `--token` value and the `MOKLY_TOKEN` value in every
+terminal line, also when the value fails the token grammar. A value matches
+text that spells each of its bytes literally or as a `%HH` escape in either hex
+case. A `%` in the text matches a literal `%` in the value, and it also starts
+a `%HH` escape. When both readings match from one position, Mokly redacts the
+longer match.
+
+Decision in force: a literal `%` matches, so Mokly also redacts a value that
+fails the grammar. Rejected: a rule that tokens cannot contain `%`, because
+Mokly redacts the value before it checks the grammar.
+
+Mokly passes no inherited `MOKLY_` variable to package managers, lifecycle
+scripts, sidecars, or PostCSS children. Code that these processes run therefore
+does not receive the token. The
+[base install environment](./mokly-base-dependencies.md#installation-and-bundle-settings)
+and the [source worker environment](./mokly-sidecar-modules.md#source-root-workers)
+give the rule for each process.
+
+[Git commands](./mokly-git.md#child-environment) and the browser opener of
+`serve --open` and the `o` key still receive inherited `MOKLY_` variables,
+because they run the user's own tools.
+
+Mokly cannot stop code that runs as the same user from reading the environment
+of Mokly, or of the shell and launcher that started it. Such code can read it
+through `/proc/{pid}/environ`, `ps -E`, or the Windows process environment
+block. Set the token in `MOKLY_TOKEN`, not with `--token`, because
+`/proc/{pid}/cmdline` shows the command line to every user.
+
 ## Repository And Revision Identity
 
 `--repository <host>/<owner>/<name>` overrides remote detection. Otherwise use

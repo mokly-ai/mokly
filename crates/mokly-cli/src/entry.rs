@@ -11,6 +11,7 @@ use mokly_cli::output::{Style, select};
 use mokly_cli::parsing::{ParseError, parse};
 use mokly_cli::redaction::Redactor;
 use mokly_cli::version::VERSION;
+use mokly_publish::redaction::Secret;
 use terminal_size::{Width, terminal_size};
 
 use crate::terminal::{SystemTerminal, Terminal};
@@ -21,8 +22,11 @@ pub(super) fn main() -> ExitCode {
     let arguments: Vec<_> = env::args_os()
         .map(|value| value.to_string_lossy().into_owned())
         .collect();
-    let token = env::var("MOKLY_TOKEN").ok();
-    let redactor = Arc::new(Redactor::collect(&arguments, token.as_deref()));
+    let token = env::var("MOKLY_TOKEN").ok().map(Secret::new);
+    let redactor = Arc::new(Redactor::collect(
+        &arguments,
+        token.as_ref().map(Secret::expose),
+    ));
     let style = Style {
         mode: select(
             arguments

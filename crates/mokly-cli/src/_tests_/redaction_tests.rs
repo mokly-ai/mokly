@@ -17,3 +17,13 @@ fn long_diagnostics_keep_unicode_secrets_and_control_rules() {
         format!("{prefix} [redacted] [redacted]\n\\u001b\\u0009")
     );
 }
+
+#[test]
+fn malformed_argument_and_environment_tokens_are_redacted() {
+    let arguments = vec!["mokly".to_owned(), "--token=abc%2Bdef".to_owned()];
+    let redactor = Redactor::collect(&arguments, Some("ab%zz"));
+    assert_eq!(
+        redactor.safe("diagnostic ab%zz and abc%2Bdef"),
+        "diagnostic [redacted] and [redacted]"
+    );
+}

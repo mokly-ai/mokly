@@ -1,13 +1,13 @@
 # Disable persisted credentials in CI checkouts
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 164, from finding R3 of the final review.
 - **Location:** `.github/workflows/ci.yml:68`, `:122`, `:172`, `:230`,
   `:275`, and `:335`.
-- **Reason:** The plan recorded this item after the user's rule of
-  2026-10-21 that new review items wait for the user after the merge.
+- **Reason:** The Rust rebuild merged with this finding open, and the fix
+  changes only the CI workflow, so it needs a separate branch.
 
 - **Source:** Review.
 - **Category:** Security.
@@ -50,7 +50,8 @@
 - **Previous examples:** The release, release-check, dependency audit, and
   native bootstrap workflows already set it, and their tests check it.
 - **Recommendation:** A. It removes the stored token at once.
-- **Action:** ask the user, because on 2026-10-21 the user ruled that new review
-  items wait for the user after the merge.
+- **Action:** fix after merge, apply A, because the setting changes only
+  `.github/workflows/ci.yml`, and no CI step uses the stored token after the
+  checkout.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6213).
