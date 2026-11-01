@@ -4,8 +4,8 @@
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 151, from finding 43 of the 135 B review.
-- **Location:** `crates/mokly-cli/src/entry.rs:24`,
-  `crates/mokly-cli/src/options.rs:61`, and
+- **Location:** `crates/mokly-cli/src/entry.rs:25`,
+  `crates/mokly-cli/src/options.rs:63`, and
   `crates/mokly-compare/src/process.rs:36-45`.
 - **Reason:** Option B overrides the documented script opt-in, which needs the
   user's decision, and the hub had asked for that decision before the first npm
@@ -26,7 +26,7 @@
   - Each install child starts from an allowed list of environment
     variables, at `process.rs:36-45`, so it does not inherit the token.
   - `mokly publish` reads the publication token from `MOKLY_TOKEN`, at
-    `entry.rs:24`. The variable stays in Mokly's own process environment.
+    `entry.rs:25`. The variable stays in Mokly's own process environment.
 - **Problem:** When scripts are on, a dependency script runs as the same
   user. It can read `MOKLY_TOKEN` from Mokly's own `/proc/{pid}/environ`.
 - **Impact if no action:** Dependency code of the base commit can read and
@@ -44,15 +44,21 @@
   child. It makes the exposure worse.
 - **Wider fix:** C. Process isolation protects every parent secret, not
   only this token.
-- **Previous examples:** The sidecar inherits `MOKLY_TOKEN` too, which
-  [sidecar-publish-token.md](sidecar-publish-token.md) records.
+- **Previous examples:** The sidecar inherited `MOKLY_TOKEN` too. Decision
+  180 of 2026-10-28 fixed that path in
+  [`crates/mokly-sidecar/src/process_environment.rs`](../../crates/mokly-sidecar/src/process_environment.rs).
+  Sidecars and their PostCSS children now receive no inherited `MOKLY_`
+  variable.
 - **Related:**
-  - [sidecar-publish-token.md](sidecar-publish-token.md) is the same
-    secret in another child process. The two items share the class, so one
-    branch can protect both paths.
-  - [publish-token-debug.md](publish-token-debug.md) is about the token in
-    the `Debug` form of the publish command. It is the same secret, but a
-    separate fix.
+  - Sidecar code also runs as the same user. It can still read Mokly's own
+    environment, as the
+    [token exposure](../../docs/protocol/mokly-upload.md#token-exposure)
+    rules state. The two paths share this class, so one branch can protect
+    both.
+  - The `Debug` form of the publish command held the same secret. Decision
+    181 of 2026-10-28 fixed it with the redacting `Secret` type in
+    [`crates/mokly-publish/src/redaction.rs`](../../crates/mokly-publish/src/redaction.rs).
+    It was a separate fix.
 - **Recommendation:** B. It blocks the known path with a small change. C
   best protects all parent secrets.
 - **Action:** ask the user, because option B keeps scripts off whenever

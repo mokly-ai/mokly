@@ -31,7 +31,7 @@ export default {plugins:[{postcssPlugin:'range',async Once(root,{result}){
 const buffer=Buffer.alloc(3);
 ${reader === "handle" ? "const handle=await open('tokens.txt','r'); await handle.read(buffer,0,3,0); await handle.close();" : "const fd=fs.openSync('tokens.txt','r'); fs.readSync(fd,buffer,0,3,0); fs.closeSync(fd);"}
 root.walkDecls('color',declaration=>{declaration.value=buffer.toString()});
-if(process.env.MOKLY_TEST_RANGE_EDIT)fs.writeFileSync('tokens.txt','tan-unused');
+if(process.env.FIXTURE_RANGE_EDIT)fs.writeFileSync('tokens.txt','tan-unused');
 result.messages.push({type:'dependency',file:'tokens.txt'});
 }}]};`,
       );
@@ -44,7 +44,7 @@ result.messages.push({type:'dependency',file:'tokens.txt'});
         "build",
         args,
         "plain",
-        { MOKLY_TEST_RANGE_EDIT: "1" },
+        { FIXTURE_RANGE_EDIT: "1" },
         context.signal,
       ).result;
       assert.equal(changed.code, 1, changed.stderr);

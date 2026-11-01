@@ -15,6 +15,7 @@ use crate::postcss_phase::PhaseState;
 use crate::process_clock::Wait;
 use crate::process_completion::{ProcessCompletion, complete};
 use crate::process_control::ProcessControl;
+use crate::process_environment;
 use crate::process_io::{read_diagnostics, read_frames, write_frames};
 use crate::process_memory::MemoryFactory;
 use crate::process_parent::{ParentSpawn, ParentSpawner};
@@ -86,14 +87,15 @@ impl WorkerFactory for NodeFactory {
         command
             .arg(&launch.entry)
             .current_dir(&repository)
-            .env("PWD", &repository)
-            .env("MOKLY_POSTCSS_PHASES", "1")
-            .env_remove("INIT_CWD")
-            .env_remove("npm_package_json")
-            .env_remove("npm_config_local_prefix")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
+        process_environment::apply(
+            &mut command,
+            std::env::vars_os().map(|(name, _)| name),
+            &repository,
+            cfg!(windows),
+        );
         if let Err(source) = self.groups.configure(&mut command) {
             return Err(InternalError::Platform { source }.into());
         }
