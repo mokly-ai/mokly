@@ -1,4 +1,4 @@
-//! Windows' standard cache variable can isolate a child without relative-path writes.
+//! LOCALAPPDATA selection and cache containment after paths share one form.
 
 use std::path::Path;
 
