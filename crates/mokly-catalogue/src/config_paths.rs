@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use mokly_source_interface::tree::{FileKind, SourceTree};
 
 use crate::config::{invalid_path_text, normalize, relative};
+use crate::config_links;
 use crate::config_postcss;
 use crate::config_types::ResolvedConfig;
 use crate::config_validation::invalid;
@@ -192,6 +193,11 @@ fn confined(
         Err(error) => return Err(invalid(format!("{setting}: {value}: {}", error.code()))),
     };
     let Some(node) = node else {
+        if let Some(error) =
+            config_links::link_error(tree, &path, &config.repo_root, setting, value)
+        {
+            return Err(error);
+        }
         return Err(invalid(format!("{setting}: {value} does not exist")));
     };
     let expected = if directory {
@@ -203,6 +209,11 @@ fn confined(
         return Err(invalid(format!("{setting}: {value} is outside repoRoot")));
     }
     if node.kind != expected {
+        if let Some(error) =
+            config_links::link_error(tree, &path, &config.repo_root, setting, value)
+        {
+            return Err(error);
+        }
         return Err(invalid(format!(
             "{setting}: {value} must be a {}",
             if directory {
