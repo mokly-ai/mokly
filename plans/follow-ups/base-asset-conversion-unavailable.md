@@ -41,7 +41,7 @@
   - `docs/protocol/mokly-git.md:121-131` applies that rule to the digest
     batch of the opaque assets of one stylesheet file. Each asset keeps a
     64 MiB byte bound, and an asset is unavailable only when its own digest
-    fails. `docs/protocol/mokly-imported-styles-assets.md:111` bounds a
+    fails. `docs/protocol/mokly-imported-styles-assets.md:134` bounds a
     base-side asset at 64 MiB.
   - `docs/protocol/mokly-comparison.md` and `docs/protocol/mokly-git.md`
     each start with a status line that links this item.

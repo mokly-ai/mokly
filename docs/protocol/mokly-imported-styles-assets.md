@@ -1,5 +1,7 @@
 # Imported Stylesheet Assets And Delivery
 
+Status: Follow-up work remains in the [extracted asset delivery item](../../plans/follow-ups/git-opaque-asset-batching.md).
+
 Continuation of [Imported Stylesheet Delivery](./mokly-imported-styles.md).
 
 ## Assets, Links And Delivery

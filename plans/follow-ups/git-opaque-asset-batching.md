@@ -1,15 +1,17 @@
 # Extracted base assets are read whole for delivery
 
-- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 64, from finding 8 of the sixth Milestone 14 review, and its
   measurement task. Narrowed on 2026-11-01 by the branch
   `conductor/rust-rebuild-64-opaque-asset-digests`, from finding 6 of its
-  review, to the part that the branch did not resolve.
+  review, to the part that the branch did not resolve. Corrected on the same
+  day from finding 7 of that review, to name the whole cause.
 - **Location:** `crates/mokly-compare/src/git_asset_stream.rs:38-53`,
-  `crates/mokly-compare/src/sources_assets.rs:35-47`, and
-  `crates/mokly-cli/src/changes_base.rs:68-86`.
+  `crates/mokly-compare/src/sources_assets.rs:35-47` and lines 103-123,
+  `crates/mokly-git/src/extracted.rs:81-136`, and
+  `crates/mokly-cli/src/changes_base.rs:87-108`.
 - **Reason:** The branch that streamed the Git path kept the extracted path,
   and its two fix rounds without the user are used up.
 
@@ -39,7 +41,7 @@
   - Delivery from a leased extraction still reads the whole file. The CLI
     attaches an extraction when the base configuration names PostCSS or a
     renderer, or when the base holds modules or stories, at
-    `crates/mokly-cli/src/changes_base.rs:68-86`. Every React base is such a
+    `crates/mokly-cli/src/changes_base.rs:87-108`. Every React base is such a
     base.
   - Since PR #236, merged on 2026-10-28, an attached extraction answers the
     reads and the digests of the files that it holds without Git, at
@@ -52,6 +54,43 @@
     `opaque_stream` then reads the whole file through `read_many` into a
     `Cursor` before the verified copy or the final payload, at
     `crates/mokly-compare/src/git_asset_stream.rs:38-53`.
+  - A length alone does not remove the copy. A digest record also gets a
+    length from the byte LRU, at
+    `crates/mokly-compare/src/git_asset_io.rs:173-184`. With a length,
+    `opaque_stream` returns a `GitStream`, whose `copy_verified` calls
+    `Sources::stream`. With an extraction attached,
+    `GitSources::stream_source` then takes its extraction branch, at
+    `crates/mokly-compare/src/sources_assets.rs:103-123`. That branch holds
+    the whole file from `Repository::read_extracted` before its first write.
+  - `extracted_read`, at `crates/mokly-git/src/extracted.rs:81-136`, reads a
+    pinned file whole through `Disk::read_pinned`. A file without a
+    fingerprint, whose fingerprint changed, or that the extraction cannot
+    read falls back to Git, and `checkout_read` reads that whole file too, at
+    line 130. `extracted_digest`, at lines 140-170, gives only a hash, from
+    `Disk::digest_pinned` or from `checkout_digest`. So a fallback file gets
+    no length either, and it stays on the buffered branch of `opaque_stream`.
+  - Today the pin check runs before and after a whole read.
+    `crates/mokly-git/README.md:102-105` says that a file reads from the
+    extraction only while it matches its fingerprint before and after the
+    read.
+  - No test reaches the extraction branch of `stream_source`. The test
+    `an_attached_extraction_serves_reads_digests_and_projections_without_git`
+    in `crates/mokly-compare/tests/extraction_reads_tests.rs` streams an
+    extracted asset whose digest has no length, so it takes the buffered
+    branch of `opaque_stream`.
+  - Two texts of that branch name only the missing length as the cause.
+    `crates/mokly-compare/README.md:65-69` says that with a converted length
+    `copy_verified` streams the file from one Git process, and that a leased
+    extraction keeps a buffered delivery "because its digests carry no
+    length". The `Sources::stream` doc comment at
+    `crates/mokly-compare/src/sources.rs:64` says "Stream one converted
+    opaque blob without retaining its bytes", which is false with an
+    extraction.
+  - `docs/protocol/mokly-imported-styles-assets.md:134-144` says that an
+    asset that reads through Git streams into the verified copy or the final
+    payload. Under `docs/protocol/mokly-base-preparation.md:30-35`, an
+    extraction's Git-fallback file reads through Git, but the code still
+    reads it whole. That page starts with a status line that links this item.
   - The first commit of that branch, `5128643e`, kept this buffered path,
     because PR #237 owned `crates/mokly-git/src/extracted.rs` at that time.
     PR #237 merged on 2026-10-29. The fix of finding 2 of that branch kept
@@ -87,23 +126,58 @@
     `plans/follow-ups/snapshot-resource-copies.md` concerns.
 - **Problem:** Delivery of a base asset from a leased extraction holds a
   full copy of the file in memory before the verified copy or the final
-  payload.
+  payload, on each path: the buffered branch of `opaque_stream` without a
+  length, the extraction branch of `stream_source` with a length, and
+  `checkout_read` for a Git-fallback file.
 - **Impact if no action:** A large base asset of a React catalogue costs one
   full extra copy in memory for each delivery. The extraction path also has
   no 64 MiB bound, which `base-asset-conversion-unavailable.md` records
   under its option D.
-- **Root question:** How does delivery of an extracted base asset avoid a
-  full copy in memory, as the Git path now does?
-- **Options:**
-  - **A.** Stream an extracted asset from its file into the verified copy or
-    the final payload. Take the length from the extracted file, and check the
-    SHA-256 and the length through the copy. Keep the Git fallback of PR #236
-    and PR #237 for a file that changed or that the extraction cannot read.
-    Effort: Small.
-  - **B.** Give each extraction digest the length of its extracted file, so
-    that the streamed path of Git delivery takes it. Effort: Small.
-  - **C.** Change nothing. Effort: Small.
+- **Root question:** How does delivery of an extracted base asset, and of
+  its Git-fallback file, avoid every full copy in memory, as the Git path now
+  does?
+- **Options:** Each option also corrects the reason in
+  `crates/mokly-compare/README.md:65-69` and the `Sources::stream` doc
+  comment at `crates/mokly-compare/src/sources.rs:64`. It adds a test that
+  reaches the extraction branch of `stream_source`, which no test reaches
+  today. It removes the status line of
+  `docs/protocol/mokly-imported-styles-assets.md`.
+  - **A.** `GitStream` serves both base sources, through a streamed
+    extraction branch of `stream_source`. Remove both whole-file reads: the
+    buffered branch of `GitTree::opaque_stream` and the extraction branch of
+    `GitSources::stream_source`.
+    - Take the length of an extraction digest from its pinned fingerprint.
+    - Give a fallback file a converted length from a Git digest that counts
+      bytes, such as `Repository::digest_many`, and stream that file through
+      `Repository::stream`.
+    - Check the SHA-256 and the length through the copy. Keep the Git
+      fallback of PR #236 and PR #237 for a file that changed or that the
+      extraction cannot read.
+    - A stream can fall back to Git only before its first write. A file that
+      changes during the copy then fails the digest or length check with
+      `SourceError::Changed`, where today the pin check runs before and after
+      a whole read.
+    - It needs new `Disk` and `Repository` methods: a streamed read of a
+      pinned file, and a streamed extracted read with its Git fallback.
+      Effort: Medium.
+  - **B.** Keep the extraction as the byte source with a file-backed stream.
+    `opaque_stream` opens the pinned file and returns a file-backed
+    `OpenedSource`, with the length read when the file opens, as
+    `crates/mokly-catalogue/src/working_tree_stream.rs:18-26` does for a
+    working file. A file that fails its pin check at the open goes to
+    `GitStream` with a length that Git counts, and `stream_source` then
+    streams only through Git. It needs a pinned open on `Disk`.
+    Effort: Medium.
 - **Left out:**
+  - Change nothing: it fails the goal, because each delivery of an extracted
+    asset keeps a full copy in memory.
+  - Give each extraction digest only its length: `GitStream` then reaches the
+    extraction branch of `stream_source`, which still reads the whole file,
+    and a fallback file still gets no length.
+  - Deliver every base asset through Git, also with an extraction attached:
+    it changes the rule of `docs/protocol/mokly-base-preparation.md:28-30`
+    that leased reads use the extraction's files, which needs the user, and
+    it repeats the Git conversion that the extraction saves.
   - Fix the snapshot copies of the static build here:
     `snapshot-resource-copies.md` owns that work.
   - Remove the bounds to simplify the code: it breaks the comparison memory
