@@ -52,15 +52,18 @@ at-rule keeps its prelude as authored, except the keyframes name and an
 `@scope` selector.
 
 The renamer, the module check, and the token check share one statement reader.
-It takes each statement's start and kind from cssparser's own rule parsers, so
+It takes each statement's start and kind from cssparser's own rule parsers. So
 all three scanners agree with `lightningcss` on each statement that
-`lightningcss` keeps, except in the declaration-only at-rules above, where kept
-text can read as other statements. Before each stylesheet statement, the
-reader skips the HTML comment tokens `<!--` and `-->`, as cssparser does. Text
-that `lightningcss` drops or rejects can read as other statements. For
-example, in a rule list such as the stylesheet or a keyframes block, a `;` also
-ends a statement for the reader, but cssparser ends a style rule or a keyframe
-only at its `{}` block.
+`lightningcss` keeps, with two exceptions. In the declaration-only at-rules
+above, kept text can read as other statements. Outside a style rule, an
+`@-moz-document` block reads as the block of a style rule. `lightningcss`
+parses it as a rule list there, as it parses `@media`.
+
+Before each stylesheet statement, the reader skips the HTML comment tokens
+`<!--` and `-->`, as cssparser does. Text that `lightningcss` drops or rejects
+can read as other statements. For example, in a rule list such as the
+stylesheet or a keyframes block, a `;` also ends a statement for the reader,
+but cssparser ends a style rule or a keyframe only at its `{}` block.
 
 `rule_collection::collect` returns a complete rule list or a whole-sheet parse
 failure. `rules::diff` cancels equal occurrences before pairing declaration
@@ -148,6 +151,20 @@ integration tests verify complete delivery with real authored fixtures.
 `tests/nesting_depth_tests.rs` re-runs its own test binary to find the deepest
 CSS that each parser and pipeline survives on a 2 MiB worker stack. Run it with
 `--nocapture` to print the limits, and with `--release` for release builds.
+
+`tests/token_differential_tests.rs` compares the shared statement reader with
+the token walk that the scanners used before it. It runs `git` to list the
+repository's stylesheets: tracked files, and untracked files that Git does not
+ignore. It skips a listed file that the working tree deleted. The
+`test-support` feature exposes the module `token_differential` for this test.
+The crate's own dev-dependency turns the feature on. So
+`cargo test -p mokly-css` and `cargo test --workspace` run the test with no
+extra flag.
+
+`src/_tests_/token_grammar_tests.rs` checks that the shared statement reader
+reads the block of each block at-rule as `lightningcss` parses it. Its one
+listed exception is an `@-moz-document` block outside a style rule. The test
+also fails when that exception no longer differs.
 
 ### Key Code
 

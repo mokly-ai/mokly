@@ -1,6 +1,6 @@
 # Stabilize the PostCSS context release test
 
-- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #225 and its completed plan, which put the
   failure outside the scope of its review.

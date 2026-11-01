@@ -98,6 +98,11 @@ mod token_sections;
 mod token_statement;
 mod token_tree;
 
+/// Both statement readers, for the differential tests of the section reader.
+#[cfg(any(test, feature = "test-support"))]
+#[path = "_tests_/token_differential.rs"]
+pub mod token_differential;
+
 #[cfg(test)]
 #[path = "_tests_/deep_scanner_tests.rs"]
 mod deep_scanner_tests;
