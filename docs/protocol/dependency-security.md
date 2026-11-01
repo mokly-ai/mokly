@@ -199,6 +199,20 @@ The current maintenance choices are:
   help: `wrangler` 4.152.0 resolves a Miniflare with the same pin. Remove the
   override when the pinned `miniflare` resolves `undici` 7.30.1 or newer.
 
+- `minimatch` 11.0.3 is an override scoped to `eslint`,
+  `@typescript-eslint/typescript-estree`, `@google-automations/git-file-utils`,
+  and `code-suggester`. Their ranges select `minimatch` 10 or 3, which have
+  GHSA-g3hv-75wg-m249. Release 11.0.1 is the first patched release, and no
+  release of these parents accepts it yet. The `code-suggester` scope reaches
+  its `glob` 7, which cannot use `minimatch` 11, but `code-suggester` never
+  loads `glob`. Remove each scope when its parent resolves `minimatch` 11.0.1
+  or newer.
+
+- `eslint-plugin-import-x` keeps `minimatch` 10.2.6 through a reviewed
+  exception for GHSA-g3hv-75wg-m249. The plugin fails to load with `minimatch`
+  11, which removed the `makeRe` export that the plugin imports. Remove the
+  exception when a plugin release accepts `minimatch` 11.0.1 or newer.
+
 - `release-please` 17.6.0 is an exact development pin. The repository's
   release configuration checks use its real manifest parser, changelog
   writer, workspace plugin, and version updaters. Update the pin with the workflow action and schema in a reviewed
