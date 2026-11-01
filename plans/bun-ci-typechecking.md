@@ -212,8 +212,8 @@ Verify the required checker and all gate consumers before the PR merges.
 - [x] Save one-time timing and command evidence under `.context/bun-ci-typechecking/`.
 - [x] Repeat each new asynchronous test ten times without adding retries to tests.
 - [x] Check an older warmup preparation and older release-ref conditions without publishing.
-- [ ] Run a real remote complete gate against the main warmup without Bun, or report the missing access.
-- [ ] Run formatting, lint, Markdown links, actionlint, and the complete gate with the pin.
+- [x] Run a real remote complete gate against the main warmup without Bun, or report the missing access.
+- [x] Run formatting, lint, Markdown links, actionlint, and the complete gate with the pin.
 - [ ] Verify hosted Viewer logs actually run the pinned native checker under Node test profiles.
 - [ ] Confirm required hosted CI succeeds for the final candidate and preserve Node platform coverage.
 - [ ] Commit with Conventional Commits and push the branch.
@@ -225,6 +225,7 @@ Verify the required checker and all gate consumers before the PR merges.
 
 Smoke evidence: `.context/bun-ci-typechecking/smoke/`.
 Repeat evidence: `.context/bun-ci-typechecking/combined-repeats.json`.
+Gate evidence: `.context/bun-ci-typechecking/remote-summary.json`.
 
 ## Evidence
 
