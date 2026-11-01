@@ -57,7 +57,9 @@ in parallel, one per box: `repository`, `viewer`, and `browser-1-of-4` to
 and checks both HTTP and file delivery. The suite wrapper stages the synced tree after its
 fingerprint check, so index readers see the same tree as a committed
 checkout. Every command refreshes copied changed-file modification times
-before its first build, so Cargo rebuilds changed crates after warmup. When a
+before its first build, so Cargo rebuilds changed crates after warmup. The
+viewer command installs the synced Bun pin on its box before its suite, so a
+warmup image without Bun still runs the required type check. When a
 command ends, its worker downloads its report and cleans up
 its box at once. Only the viewer command and the four browser shards produce
 suite reports; repository and delivery outcomes use their exit codes. After all commands end,
@@ -135,9 +137,9 @@ workflow before it merges. It changes neither the fingerprint nor the base.
   SSH adapters, and [`disconnect.rs`](../src/remote/clients/disconnect.rs)
   owns the socket identity and the SSH close.
 - [`../../scripts/verification/testbox-suite.mjs`](../../scripts/verification/testbox-suite.mjs)
-  is the suite wrapper on each box,
-  [`source-tree.mjs`](../../scripts/verification/source-tree.mjs) computes the
-  fingerprint, and [`aggregate.mjs`](../../scripts/verification/aggregate.mjs)
+  is the suite wrapper on each box. It also installs the Bun of the viewer
+  command. [`source-tree.mjs`](../../scripts/verification/source-tree.mjs)
+  computes the fingerprint, and [`aggregate.mjs`](../../scripts/verification/aggregate.mjs)
   validates the report aggregate with
   [`report-validation.mjs`](../../scripts/verification/report-validation.mjs)
   and [`shard-balance.mjs`](../../scripts/verification/shard-balance.mjs).

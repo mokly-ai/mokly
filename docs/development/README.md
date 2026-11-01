@@ -2,16 +2,20 @@
 
 For repository development, use the tested Node.js version in
 [`.nvmrc`](../../.nvmrc), npm 11.21.0 (the `packageManager` version in
-`package.json`), the Rust toolchain in
+`package.json`), the Bun version in [`.bun-version`](../../.bun-version) for
+the required type check, the Rust toolchain in
 [`rust-toolchain.toml`](../../rust-toolchain.toml) (Rust 1.95.0 with rustfmt and
 Clippy), and Chromium for the browser suite. With nvm, run `nvm install` in
 the repository before the npm commands below. rustup reads the toolchain file
 and installs the pinned Rust the first time `cargo` runs in the repository.
+The Bun install command below reads `.bun-version`. Run it again when that file
+changes.
 
 ```bash
 git clone https://github.com/mokly-ai/mokly.git
 cd mokly
 npm install --global npm@11.21.0
+npm install --global "bun@$(cat .bun-version)"
 npm ci
 npm run build
 cargo xtask check
@@ -47,6 +51,47 @@ dependency checks, and the length audits. See
 argument and report rules, the [xtask README](../../xtask/README.md) for focused
 suites, and [CI test timing](../../docs/protocol/ci-test-timing.md) for the rule
 that tests never assert elapsed time.
+
+`cargo xtask check` and `cargo xtask check --suite viewer` run the required
+type check, `npm run typecheck:ci`. It checks the five TypeScript projects of
+the repository with Bun's native checker. It fails when the `bun` on the PATH
+is not exactly the version in `.bun-version`. It never falls back to another
+checker. A fresh workspace, such as a new cloud machine, has no Bun until you
+install it. To run the required check alone, build first:
+
+```bash
+npm run build
+npm run typecheck:ci
+```
+
+Two other commands check the same projects:
+
+- `npm run typecheck` uses the TypeScript 6 compiler that `npm ci` installs.
+  It checks compatibility with the compiler of the package builds. No gate
+  runs it.
+- `npm run typecheck:fast` gives quick local feedback with Bun 1.4.4 or newer
+  from the PATH. Without such a Bun, it prints a warning with the installation
+  command and runs the standard check.
+
+The checkers implement different TypeScript versions. Bun 1.4.4 matches
+TypeScript 7.0.2, a native implementation of the compiler. The package builds
+compile the package sources and write their public JavaScript and
+declarations with TypeScript 6. Node runs every test. The two compiler
+versions can report different diagnostics for the same code. When the results
+disagree:
+
+1. Look for the fallback warning. A run with that warning used the standard
+   checker.
+2. Run `npm run typecheck:ci` on the same sources and build. Its result
+   decides the gate, also for the tests and the examples.
+3. Fix each error that the required check reports, also after a fast or
+   standard pass.
+4. Fix each error that `npm run build` reports. A TypeScript 6 error in a
+   package source stops the build. Another error that only the standard check
+   reports does not fail the gate.
+
+The [type check contract](../../docs/protocol/developer-type-checks.md)
+defines the three commands.
 
 The [remote verification contract](../../docs/protocol/remote-verification.md)
 defines the Testbox gate, which runs the same suites on Blacksmith boxes:

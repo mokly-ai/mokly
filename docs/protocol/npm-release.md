@@ -157,16 +157,17 @@ maintainer setup, and the evidence each release keeps.
 ## Local Verification
 
 `cargo xtask check` is the complete repository gate. Release verification uses
-`cargo xtask check --dependency-audit strict`. Both orchestrate npm, Node, and
-Rust commands from the workspace root and include:
+`cargo xtask check --dependency-audit strict`. Both orchestrate npm, Node, Bun,
+and Rust commands from the workspace root and include:
 
 - every check of the
   [repository suite list](./ci-verification-repository.md#repository-boundary),
   in the listed order; its Rust tests cover discovery, rendering, comparison,
   Serve, the static build, and publish against fixtures and the captured
   reference scenarios;
-- the TypeScript typecheck of every project and the Node tests of the viewer
-  and the tooling, with a 100% pass rate; and
+- the [required type check](./developer-type-checks.md#required-type-check)
+  of every project and the Node tests of the viewer and the tooling, with a
+  100% pass rate; and
 - Playwright Browse and Review regressions in Chromium against `mokly serve` of
   the example catalogue, with zero retries.
 
@@ -184,7 +185,9 @@ runs in GitHub Actions, where `GITHUB_ACTIONS=true` forbids the remote executor
 under the [remote verification contract](./remote-verification.md). Its default
 `evidence` mode may instead consume a validated aggregate that proves the same
 tree under the
-[release verification evidence contract](./npm-release-evidence.md).
+[release verification evidence contract](./npm-release-evidence.md). That
+contract also says when preparation sets up the pinned Bun before a complete
+gate.
 
 ## Continuous Integration
 

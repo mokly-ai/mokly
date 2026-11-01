@@ -10,6 +10,11 @@ runs, including after a cache hit, and every platform's optional native
 package remains available. A cache miss is an ordinary cold install or build
 and never permits a skipped command.
 
+The Bun setup of the CI viewer jobs and of release preparation sets
+`no-cache: true`, so it neither restores nor saves a workflow cache. It can
+still reuse a matching Bun that the runner already holds. The Bun setup
+therefore adds no cache to CI. Release preparation stays uncached.
+
 The [Rust build cache](#rust-build-cache) section gives the rules for Rust.
 
 The live lockfile-only workspace audit runs first in the CI repository job and

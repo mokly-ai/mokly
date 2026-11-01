@@ -55,7 +55,7 @@ Arguments remain separate from the program name.
 | Suite      | Content                                                                                                                                                                                                                                   |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Repository | Every check of the [repository gate list](../docs/protocol/ci-verification-repository.md#repository-boundary), in the listed order.                                                                                                       |
-| Viewer     | The TypeScript typecheck of every project, then every discovered Node test file under `tests/`, `packages/viewer/tests/`, and `packages/ui/tests/`. The suite has no shard.                                                               |
+| Viewer     | The required Bun type check of every project, then every discovered Node test file under `tests/`, `packages/viewer/tests/`, and `packages/ui/tests/`. The suite has no shard.                                                            |
 | Browser    | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with zero retries. `--shard INDEX/TOTAL` runs one whole-file partition. CI and remote runs use four shards; the local gate runs the suite unsharded. |
 | Native     | Build the `mokly` binary once, check Rust formatting and Clippy, and run the Rust tests of every crate. Hosted CI runs `--suite native` on macOS and Windows runners.                                                                     |
 
@@ -187,7 +187,10 @@ cargo xtask source-file-length-lint --all
 
 Remote checks need `blacksmith`, `rsync`, and `ssh` on `PATH`, and a pushed
 ancestor in the local origin refs. Set `BLACKSMITH_ORG_TOKEN` for org-key
-login. For targeted test runs during development, use the
+login. A local complete gate and `--suite viewer` need the Bun version in
+[`.bun-version`](../.bun-version) on `PATH`. Xtask never installs it. The
+[development guide](../docs/development/README.md) shows the installation.
+For targeted test runs during development, use the
 [developer test commands](../docs/protocol/developer-test-commands.md).
 
 ## Development

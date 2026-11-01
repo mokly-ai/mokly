@@ -5,6 +5,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { parseShardArgument } from "./browser-shard.mjs";
+import { readBunPin } from "./bun-pin.mjs";
 import { childEnvironment } from "./child-environment.mjs";
 import { runCaptured, runInherited } from "./process.mjs";
 import { readSourceTree, validateFingerprint } from "./source-tree.mjs";
@@ -132,6 +133,32 @@ export async function runTestboxSuite(args, dependencies) {
     await writeFile(stampFile, `${digest}\n`);
   }
 
+  let suiteEnvironment = env;
+  if (request.suite === "viewer") {
+    const pin = await readBunPin(cwd, {
+      readFile: async (file) =>
+        Buffer.from(await readFile(file)).toString("utf8"),
+    });
+    if (pin.status === "invalid")
+      throw new Error(`Bun pin is invalid: ${pin.reason}`);
+    const prefix = path.join(cwd, ".context", "testbox-bun");
+    await requireSuccess(
+      command("npm", [
+        "install",
+        "--global",
+        "--prefix",
+        prefix,
+        `bun@${pin.version}`,
+      ]),
+      "Bun install",
+    );
+    const bin = path.join(prefix, "bin");
+    suiteEnvironment = {
+      ...env,
+      PATH: env.PATH ? `${bin}${path.delimiter}${env.PATH}` : bin,
+    };
+  }
+
   if (request.suite === "static-delivery") {
     const build = outcomeExitCode(await command("npm", ["run", "build"]));
     if (build !== 0) return build;
@@ -158,7 +185,7 @@ export async function runTestboxSuite(args, dependencies) {
     cwd,
     captureOutput: false,
     env: {
-      ...env,
+      ...suiteEnvironment,
       MOKLY_VERIFICATION_REPORT: `.context/verification-reports/remote/${request.commandName}.json`,
     },
   });

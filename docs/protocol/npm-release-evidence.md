@@ -11,6 +11,12 @@ sets `GITHUB_SHA` to the checked-out tag commit. A manual retry dispatches from
 `main`, whose head can be newer than the tag, and the suite runners require
 reports to name the checked-out commit.
 
+A complete gate needs the Bun version that the release checkout's
+`.bun-version` pins. Preparation sets it up before the gate, with the setup
+action of the CI viewer jobs. A checkout without `.bun-version` predates the
+required Bun check. Preparation then sets up no Bun and adds no Bun
+requirement to that checkout's gate. Evidence mode sets up no Bun.
+
 Both modes run the live npm and Rust audits in read-only preparation after
 dependency installation. Evidence mode
 does not treat an earlier audit as current security evidence. Complete mode then
