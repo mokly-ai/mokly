@@ -24,7 +24,7 @@ stay aligned, so that a remote gate takes the time and cost of CI. So the
 Testbox job moved to 8 vCPUs too.
 
 The follow-up item
-[linux-ci-runner-size.md](follow-ups/linux-ci-runner-size.md) asks for the
+[linux-ci-runner-size.md](https://github.com/mokly-ai/mokly/blob/6508b9505e64eda3e7460a2b3c344f6258c086b5/plans/follow-ups/linux-ci-runner-size.md) asks for the
 move back to 2 vCPUs. It asks to measure the cached job times on 2 vCPUs
 first. When 2 vCPUs make CI much slower, the user sees both times before the
 change. The CI runs of 2026-10-27 already gave these times, and 2 vCPUs make
@@ -435,28 +435,36 @@ Its evidence goes to `.context/linux-ci-runner-size/scratch-runs.md` and
     passed on a rerun. One fails on 8 vCPUs too. The other is the new
     follow-up item `flaky-static-delivery-catalogue-request.md`.
 - [x] Delete both scratch branches and their worktrees.
-- [ ] Commit milestones 1 and 2 with Conventional Commits, and push this
+- [x] Commit milestones 1 and 2 with Conventional Commits, and push this
       branch. The push starts a push run of the Testbox workflow on 4 vCPUs.
-- [ ] Start one CI run on this branch:
+- [x] Start one CI run on this branch:
       `gh workflow run ci.yml --ref calummoore/linux-ci-runner-size-plan`.
       Wait until it ends. Apply the same checks and stop rules to it.
-- [ ] Smoke-test the new Testbox tier with one remote complete gate:
+  - Passed on 2026-11-01 at `cc9e7450`, with no stop rule. The Viewer job
+    lost its runner once and passed on a rerun.
+- [x] Smoke-test the new Testbox tier with one remote complete gate:
       `MOKLY_TESTBOX_REF=calummoore/linux-ci-runner-size-plan cargo xtask check --executor remote`.
       When the session has no Blacksmith key, ask the user to run it.
-- [ ] When the work stops, record the user's answer under decision 1, and add
-      a milestone for the work that the answer needs.
-- [ ] Add one line under this milestone that names each evidence file.
+  - Passed on 2026-11-01 at `cc9e7450`: 7 of 7 commands, 5 of 5 reports,
+    and the aggregate. Every box ran on a 4-vCPU VM.
+- [x] When the work stops, record the user's answer under decision 1, and add
+      a milestone for the work that the answer needs. Not needed: no stop
+      rule held.
+- [x] Add one line under this milestone that names each evidence file.
 - Scratch run evidence: `.context/linux-ci-runner-size/scratch-runs.md`.
+- Remote gate evidence: `.context/linux-ci-runner-size/remote-gate.log` and
+  `remote-gate-boxes.txt` in the same folder.
+- Branch run evidence: `.context/linux-ci-runner-size/branch-run.md`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
-- [ ] Rewrite the line of `plans/follow-ups/remote-testbox-timeout.md` that
+- [x] Rewrite the line of `plans/follow-ups/remote-testbox-timeout.md` that
       links to `linux-ci-runner-size.md`. Without the link, it says which tier
       the Testbox job uses since this change. Its measurement under option C
       runs on that tier.
-- [ ] Delete `plans/follow-ups/linux-ci-runner-size.md`, and name it in the
+- [x] Delete `plans/follow-ups/linux-ci-runner-size.md`, and name it in the
       commit message.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`. The
       remote gate of milestone 3 counts when it ran on the final tree.
