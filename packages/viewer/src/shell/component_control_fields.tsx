@@ -24,15 +24,6 @@ import {
 } from "./control_values.js";
 import { useShellIdentifierScope } from "./identifier_context.js";
 
-export {
-  controlDraft,
-  validateControlDraft,
-  type ControlDraft,
-  type ControlDraftField,
-  type ControlTarget,
-  type ValidatedControlDraft,
-} from "./control_values.js";
-
 /** The control of a field: its kind, a number's HTML bounds, or a select's choices. */
 function fieldControl(control: ComponentControl): PropFieldControl {
   if (control.kind === "number")

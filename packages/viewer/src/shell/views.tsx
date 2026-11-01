@@ -10,9 +10,6 @@ import {
 } from "@mokly/ui/empty-state";
 import { MainRegion } from "@mokly/ui/shell-layout";
 
-import { canonicalJson } from "../components/data.js";
-import { sha256 } from "../data/sha256.js";
-
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { DetailsPanel } from "./details.js";
@@ -119,14 +116,6 @@ function TargetView(props: {
   );
 }
 
-/** The active catalogue route for a shell view, when it has one. */
-function activeIdForView(view: ShellView): string | undefined {
-  if (view.kind !== "target") {
-    return undefined;
-  }
-  return view.target.entry.path;
-}
-
 /** Render the only region replaced by client-side Browse navigation. */
 export function ShellMain(props: {
   catalogue: Catalogue;
@@ -135,16 +124,8 @@ export function ShellMain(props: {
 }) {
   const elements = useShellRoot()?.elements;
   const mainId = useShellIdentifier("mb-main");
-  const activeId = activeIdForView(props.view);
-  const baseline = props.catalogue.removedEntries.find(
-    ({ entry }) => entry.path === activeId,
-  );
   return (
-    <MainRegion
-      baseline={baseline ? sha256(canonicalJson(baseline)) : undefined}
-      id={mainId}
-      ref={elements?.main}
-    >
+    <MainRegion id={mainId} ref={elements?.main}>
       {props.view.kind === "home" ? (
         <HomeState summary={homeSummary(props.catalogue.publicModel)} />
       ) : null}

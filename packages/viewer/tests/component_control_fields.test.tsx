@@ -5,11 +5,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { encodeProps } from "../src/components/codec.js";
 import type { PropSchema } from "../src/components/prop_types.js";
+import { ComponentControlFields } from "../src/shell/component_control_fields.js";
 import {
-  ComponentControlFields,
   controlDraft,
-} from "../src/shell/component_control_fields.js";
-import type { ControlTarget } from "../src/shell/control_values.js";
+  type ControlTarget,
+} from "../src/shell/control_values.js";
 
 const target: ControlTarget = {
   path: "components/action",

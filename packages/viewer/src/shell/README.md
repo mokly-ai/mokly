@@ -598,9 +598,10 @@ contracts own the scroll behavior.
 
 `previews.tsx` renders the one previous-version presentation a removed page and
 a removed screen share: the "Showing previous version" label, the stage host
-carrying the descriptor the React request lifecycle validates, and the shared
+marked by `data-mokly-preview`, and the shared
 device chrome around captured screen views, which `@mokly/ui/previous-version`
-and `@mokly/ui/device-frame` draw. It advertises a packaged address only when the accepted
+and `@mokly/ui/device-frame` draw. The React request lifecycle reads preview
+data directly from props. It advertises a packaged address only when the accepted
 public catalogue publishes one, so a delivery without that descriptor stays
 quiet. A removed screen uses the route's held, fenced detail. Its stage waits
 for that detail and shows the unavailable state with Retry if the detail fails

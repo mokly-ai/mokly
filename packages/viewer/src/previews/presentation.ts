@@ -11,7 +11,7 @@ import {
   type SnapshotSides,
 } from "./snapshot_address.js";
 
-export type { SnapshotSide, SnapshotSides } from "./snapshot_address.js";
+export type { SnapshotSides } from "./snapshot_address.js";
 
 /** Maximum snapshot HTML body accepted by the viewer. */
 export const MAX_SNAPSHOT_DOCUMENT_BYTES = 67_108_864;

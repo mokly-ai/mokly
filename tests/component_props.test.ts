@@ -5,7 +5,6 @@ import {
   encodeProps,
   decodeProps,
   encodeValue,
-  decodeValue,
 } from "../packages/viewer/dist/components/codec.js";
 import { canonicalJson } from "../packages/viewer/dist/components/data.js";
 import { validatePropSchema } from "../packages/viewer/dist/components/profile_schema.js";
@@ -173,7 +172,7 @@ test("codec rejects noncanonical values and orders integer-looking keys lexicall
       ],
     ],
   ])
-    assert.throws(() => decodeValue(value));
+    assert.throws(() => decodeProps({ value }));
   const value = { "2": true, "10": false };
   assert.deepEqual(encodeValue(value), [
     "object",
@@ -183,12 +182,14 @@ test("codec rejects noncanonical values and orders integer-looking keys lexicall
     ],
   ]);
   assert.equal(canonicalJson(value), '{"10":false,"2":true}');
-  assert.deepEqual(decodeValue(encodeValue(value)), value);
+  assert.deepEqual(decodeProps({ value: encodeValue(value) }).value, value);
 });
 
 test("codec budget follows logical data nesting rather than its tagged containers", () => {
-  let value: PropValue = "leaf";
-  for (let i = 0; i < 64; i++) value = [value];
-  assert.deepEqual(decodeValue(encodeValue(value)), value);
-  assert.throws(() => decodeValue(["array", [encodeValue(value)]]), /limit/);
+  let value: PropValue[] = ["leaf"];
+  for (let i = 1; i < 64; i++) value = [value];
+  // The props object replaces the outer array at depth zero.
+  const props = { value: value[0]! };
+  assert.deepEqual([decodeProps(encodeProps(props)).value], value);
+  assert.throws(() => decodeProps({ value: encodeValue(value) }), /limit/);
 });

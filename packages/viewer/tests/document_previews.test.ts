@@ -2,10 +2,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { DeliveryFetchError } from "../src/catalogue/sources.js";
-import { readPreviewDescriptor } from "../src/previews/descriptor.js";
 import { previewEndpoint, requestPreview } from "../src/previews/request.js";
+import { removedPreviewData } from "../src/shell/previews.js";
 
-import { indexFixture, rawDetailFixtures } from "./catalogue_v9_fixture.js";
+import {
+  catalogueFixture,
+  indexFixture,
+  rawDetailFixtures,
+} from "./catalogue_v9_fixture.js";
 
 test("removed preview metadata rejects a response from another origin", async () => {
   const data = {
@@ -46,14 +50,27 @@ test("removed preview metadata rejects a response from another origin", async ()
 });
 
 test("removed document descriptors and requests retain historical schemes", async () => {
-  const data = readPreviewDescriptor(
-    JSON.stringify({
-      path: "guide",
-      kind: "document",
-      title: "Guide",
-      colorSchemes: ["light", "dark"],
-      published: { kind: "document" },
-    }),
+  const index = indexFixture();
+  const catalogue = catalogueFixture({
+    ...index,
+    removedEntries: [
+      {
+        entry: {
+          ...index.documents[0]!,
+          path: "guide",
+          title: "Guide",
+          colorSchemes: ["light", "dark"],
+          changes: { included: true, kind: "removed", status: "ready" },
+        },
+        folderTitles: [],
+        preview: { kind: "document" },
+      },
+    ],
+  });
+  const data = removedPreviewData(
+    catalogue,
+    { base: "main" },
+    catalogue.removedEntries[0]!.entry,
   );
   assert.ok(data);
   const comparisonUrl = `mokly-viewer/diffs/generations/${"a".repeat(64)}/`;
@@ -114,17 +131,6 @@ test("removed document descriptors and requests retain historical schemes", asyn
     previewEndpoint(data, { comparisonUrl: null }, "https://example.test"),
     undefined,
   );
-  for (const colorSchemes of [
-    undefined,
-    [],
-    ["dark"],
-    ["light", "other"],
-    ["light", "light"],
-  ])
-    assert.equal(
-      readPreviewDescriptor(JSON.stringify({ ...data, colorSchemes })),
-      undefined,
-    );
 });
 
 test("a removed screen's preview uses its held detail without another read", async () => {

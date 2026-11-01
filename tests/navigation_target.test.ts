@@ -1,10 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  parseBrowsingTarget,
-  serializeBrowsingTarget,
-} from "../packages/viewer/dist/navigation/target.js";
+import { parseBrowsingTarget } from "../packages/viewer/dist/navigation/target.js";
 
 test("browsing targets follow one strict shared grammar", () => {
   const cases = [
@@ -28,13 +25,4 @@ test("browsing targets follow one strict shared grammar", () => {
   for (const [input, expected] of cases) {
     assert.deepEqual(parseBrowsingTarget(input), expected, String(input));
   }
-  assert.equal(serializeBrowsingTarget({ kind: "self" }), undefined);
-  assert.equal(serializeBrowsingTarget({ kind: "top" }), "_top");
-  assert.equal(serializeBrowsingTarget({ kind: "parent" }), "_parent");
-  assert.equal(serializeBrowsingTarget({ kind: "blank" }), "_blank");
-  assert.equal(
-    serializeBrowsingTarget({ kind: "named", name: "Report.Frame:2" }),
-    "Report.Frame:2",
-  );
-  assert.equal(serializeBrowsingTarget({ kind: "invalid" }), undefined);
 });

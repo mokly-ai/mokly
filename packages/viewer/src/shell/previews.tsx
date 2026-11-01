@@ -241,7 +241,7 @@ export function RemovedPreviewStage(props: { data: RemovedPreviewData }) {
   const viewport = store?.state.selection.viewport ?? "both";
   return (
     <PreviousVersion
-      descriptor={JSON.stringify(props.data)}
+      descriptor=""
       lightOnly={props.data.lightOnly === true}
       viewport={viewport}
     >

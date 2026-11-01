@@ -5,9 +5,9 @@ import type { ShellCatalogueComponent } from "../src/catalogue/scoped_types.js";
 import { encodeProps } from "../src/components/codec.js";
 import {
   controlDraft,
+  controlTarget,
   validateControlDraft,
-} from "../src/shell/component_control_fields.js";
-import { controlTarget } from "../src/shell/control_values.js";
+} from "../src/shell/control_values.js";
 import { type WorkspaceVariant } from "../src/shell/workspace_data.js";
 
 import { componentWorkspaceFixture } from "./component_workspace_fixture.js";

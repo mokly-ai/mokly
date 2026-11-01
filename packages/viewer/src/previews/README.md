@@ -7,7 +7,7 @@ Changes baseline, for the shell of Serve, of a static build and of an embedded
 
 ## Requests
 
-`previewEndpoint` resolves the descriptor to one address inside the
+`previewEndpoint` resolves the preview data to one address inside the
 comparison generation that the catalogue's `comparisonUrl` names: the removed
 entry's detail, `entries/{path}.json`, for a screen, and
 `previewMetadataPath(path)` for a page or document. The screen uses the
@@ -26,8 +26,6 @@ Retry from replacing an open historical record after the baseline changes.
 `renewPreview` extends a live generation's retention with HEAD at its root
 before reusing it. It omits credentials and rejects a different final address.
 Static previews keep their deployment check and never request the root.
-`advertisedPreviewPaths` describes the documented
-embedded fetch set for tests and has no runtime consumer.
 
 ## Presentation
 
@@ -75,8 +73,7 @@ cargo xtask check --suite viewer
   `followPresentedDocument`, which finds a frame's viewer-owned `srcdoc`
   document as soon as it commits.
 - [`descriptor.ts`](./descriptor.ts) holds `previewKey`, the identity of one
-  preview request, and `readPreviewDescriptor`, which parses the
-  `data-mokly-preview` attribute of a stage.
+  route-owned preview request. The shell passes preview data through props.
 - [`copy.ts`](./copy.ts) holds `PREVIEW_UNAVAILABLE`, the unavailable copy and
   the Retry control of the shell.
 - [`../shell/use_removed_preview.ts`](../shell/use_removed_preview.ts) is the

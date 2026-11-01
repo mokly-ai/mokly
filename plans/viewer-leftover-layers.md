@@ -238,10 +238,10 @@ Depends on: 4, 5, 6
 
 Depends on: 7
 
-- [ ] Apply the dead-code test of the `git-commit` skill to each candidate
+- [x] Apply the dead-code test of the `git-commit` skill to each candidate
       that the survey reports name, and delete each one that passes. Save
       the searches under `.context/viewer-leftover-layers/`.
-- [ ] Update the viewer README, the shell README, and the package READMEs.
+- [x] Update the viewer README, the shell README, and the package READMEs.
 
 ## Milestone 9: Verification, commit, review, and pull request
 

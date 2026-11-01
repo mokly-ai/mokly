@@ -1,10 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { CatalogueReadModel } from "../packages/viewer/dist/catalogue/types.js";
-import { readPreviewDescriptor } from "../packages/viewer/dist/previews/descriptor.js";
 import {
-  advertisedPreviewPaths,
   previewEndpoint,
   type PreviewDelivery,
 } from "../packages/viewer/dist/previews/request.js";
@@ -100,64 +97,5 @@ test("a mismatched kind or unavailable generation is declined", () => {
       BASE,
     ),
     undefined,
-  );
-});
-
-test("a damaged or unknown descriptor advertises nothing", () => {
-  assert.equal(readPreviewDescriptor(null), undefined);
-  assert.equal(readPreviewDescriptor("{"), undefined);
-  assert.equal(
-    readPreviewDescriptor(JSON.stringify({ kind: "component" })),
-    undefined,
-  );
-  assert.equal(
-    readPreviewDescriptor(
-      JSON.stringify({ kind: "page", title: "Missing id" }),
-    ),
-    undefined,
-  );
-  assert.deepEqual(
-    readPreviewDescriptor(
-      JSON.stringify({ ...removedPage, published: { kind: "page" } }),
-    ),
-    { ...removedPage, published: { kind: "page" } },
-  );
-  assert.deepEqual(
-    readPreviewDescriptor(
-      JSON.stringify({
-        ...removedScreen,
-        published: { kind: "screen" },
-        unknown: 1,
-      }),
-    ),
-    { ...removedScreen, published: { kind: "screen" } },
-  );
-});
-
-test("the documented embedded fetch set advertises comparison snapshots", () => {
-  const model = {
-    comparisonUrl: COMPARISON.slice(1),
-    removedEntries: [
-      { entry: { path: "removed-screen" }, preview: { kind: "screen" } },
-      {
-        entry: { path: "removed-page" },
-        preview: { kind: "page" },
-      },
-      { entry: { path: "tour" } },
-    ],
-  } as unknown as CatalogueReadModel;
-  assert.deepEqual(advertisedPreviewPaths(model), {
-    files: [screenPath, pagePath],
-    prefixes: [
-      `mokly-viewer/diffs/generations/${GENERATION}/snapshots/before/`,
-      `mokly-viewer/diffs/generations/${GENERATION}/snapshots/after/`,
-    ],
-  });
-  assert.deepEqual(
-    advertisedPreviewPaths({
-      comparisonUrl: null,
-      removedEntries: [],
-    } as unknown as CatalogueReadModel),
-    { files: [], prefixes: [] },
   );
 });

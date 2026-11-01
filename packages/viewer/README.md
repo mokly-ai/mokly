@@ -268,6 +268,8 @@ and Review regressions against `mokly serve` of the example catalogue.
   — the containers of the inspector's panels, which turn the controls state,
   the usage links, the instance records, and the comparison evidence into the
   records and the wording of the package components
+- [`src/shell/control_values.ts`](./src/shell/control_values.ts) — the control
+  targets, drafts, and validation shared by the controls and their fields
 - [`src/shell/stage_frame.tsx`](./src/shell/stage_frame.tsx),
   [`src/shell/document_stage_frame.tsx`](./src/shell/document_stage_frame.tsx),
   [`src/shell/public_stage.tsx`](./src/shell/public_stage.tsx), and
@@ -317,10 +319,15 @@ and Review regressions against `mokly serve` of the example catalogue.
   geometry
 - [`src/inspector`](./src/inspector) — the React-free in-frame inspector
 - [`src/previews`](./src/previews) — the removed-entry previews
+- [`src/previews/descriptor.ts`](./src/previews/descriptor.ts) — the identity
+  key of a route-owned previous-version request
 - [`src/shell/use_comparison.ts`](./src/shell/use_comparison.ts),
+  [`src/shell/comparison_mode.tsx`](./src/shell/comparison_mode.tsx),
   [`src/shell/comparison_presentation.ts`](./src/shell/comparison_presentation.ts),
   and [`src/shell/diffs.tsx`](./src/shell/diffs.tsx) — the comparison-mode
   owner, request identity, and current and comparison presentation
+- [`src/shell/view_status.ts`](./src/shell/view_status.ts) — the combined
+  status and eligibility of the displayed views from their index comparisons
 - [`src/shell/frame_instances.ts`](./src/shell/frame_instances.ts) — exact
   `InstanceRef` matching against mounted preview frames
 - [`src/shell/store_host.ts`](./src/shell/store_host.ts) and

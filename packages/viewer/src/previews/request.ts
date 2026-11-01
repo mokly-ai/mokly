@@ -7,10 +7,10 @@ import {
   fetchJson,
   type DeploymentCheck,
 } from "../catalogue/sources.js";
-import type { CatalogueReadModel, EntryDetailV4 } from "../catalogue/types.js";
+import type { EntryDetailV4 } from "../catalogue/types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 import { encodeUrlPath } from "../data/paths.js";
-import { previewMetadataPath, snapshotSidePath } from "../navigation/routes.js";
+import { previewMetadataPath } from "../navigation/routes.js";
 import type { RemovedPreviewData } from "../shell/previews.js";
 
 import { pageContent, screenContent, type ParsedPreview } from "./content.js";
@@ -64,14 +64,6 @@ export interface PreviewRequestEnvironment {
   deploymentCheck?: DeploymentCheck;
 }
 
-/** Exact files and directory prefixes in the documented embedded fetch set. */
-export interface AdvertisedPreviewPaths {
-  /** Metadata files that catalogue descriptors advertise. */
-  files: readonly string[];
-  /** Snapshot prefixes advertised by the comparison generation. */
-  prefixes: readonly string[];
-}
-
 /**
  * The address to request, or `undefined` when the delivery advertises nothing
  * for this entry. Static delivery loads only advertised addresses, so an older
@@ -94,31 +86,6 @@ export function previewEndpoint(
       ? removedEntryDetailPath(comparisonPath, data.path)
       : `${comparisonPath}${encodeUrlPath(previewMetadataPath(data.path))}`;
   return { endpoint: new URL(`/${path}`, base), generation };
-}
-
-/**
- * The documented embedded fetch set for one catalogue, relative to the
- * artifact root. Tests verify this description; presentation loaders enforce
- * their own generation and snapshot-side boundaries at runtime.
- */
-export function advertisedPreviewPaths(
-  model: CatalogueReadModel,
-): AdvertisedPreviewPaths {
-  const comparison = model.comparisonUrl;
-  if (comparison === null) return { files: [], prefixes: [] };
-  return {
-    files: model.removedEntries.flatMap((removed) =>
-      removed.preview?.kind === "screen"
-        ? [removedEntryDetailPath(comparison, removed.entry.path)]
-        : removed.preview?.kind === "page" ||
-            removed.preview?.kind === "document"
-          ? [`${comparison}${previewMetadataPath(removed.entry.path)}`]
-          : [],
-    ),
-    prefixes: (["before", "after"] as const).map(
-      (side) => `${comparison}${snapshotSidePath(side)}`,
-    ),
-  };
 }
 
 function unavailable(): never {

@@ -90,7 +90,7 @@ async function createCrossOriginFixture(options: BrowserSourceOptions) {
     await build({
       stdin: {
         contents:
-          'export * from "./packages/viewer/dist/client/post_message_adapter.js"; export * from "./packages/viewer/dist/client/same_origin_adapter.js";',
+          'export * from "./packages/viewer/dist/client/post_message_adapter.js"; export * from "./packages/viewer/dist/client/same_origin_adapter.js"; export { authenticateRanges, rangeBounds } from "./packages/viewer/dist/client/component_geometry.js";',
         resolveDir: repositoryRoot,
         sourcefile: "browser-adapters.ts",
       },

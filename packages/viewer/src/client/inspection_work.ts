@@ -39,15 +39,3 @@ export class InspectionWork {
     }
   }
 }
-
-export class InspectionOwnership {
-  private cancellation = new AbortController();
-  constructor(private available: () => boolean) {}
-  reset(): void {
-    this.cancellation.abort();
-    this.cancellation = new AbortController();
-  }
-  work(): InspectionWork {
-    return new InspectionWork(this.cancellation.signal, this.available);
-  }
-}

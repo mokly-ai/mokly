@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 
+import type * as ComponentGeometry from "../../packages/viewer/dist/client/component_geometry.js";
 import type * as LocalAdapter from "../../packages/viewer/dist/client/same_origin_adapter.js";
 import type { BrowserUsage } from "../../packages/viewer/tests/browser_documents.js";
 
@@ -107,14 +108,16 @@ for (const transport of ["same-origin", "postMessage"] as const) {
       if (transport === "same-origin") {
         const local = await page.evaluate(
           async ({ usageJson, key }) => {
-            const { localInspection } = (await import(
+            const { authenticateRanges, rangeBounds } = (await import(
               `${location.origin}/test-adapters.js`
-            )) as typeof LocalAdapter;
-            return localInspection(
-              document.querySelector<HTMLIFrameElement>("#frame")!,
+            )) as typeof ComponentGeometry;
+            const frame = document.querySelector<HTMLIFrameElement>("#frame")!;
+            const ranges = authenticateRanges(
+              frame,
               "home/index.mobile.html",
               JSON.parse(usageJson) as BrowserUsage,
-            )!.measure(new Set([key]));
+            )!;
+            return rangeBounds(frame, ranges, new Set([key]));
           },
           { usageJson: JSON.stringify(fixture.usage), key },
         );
