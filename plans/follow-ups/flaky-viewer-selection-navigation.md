@@ -1,6 +1,6 @@
 # Viewer selection test races a navigation
 
-- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from a local complete gate run of PR #242 at
   `f15728a5`.
@@ -47,17 +47,21 @@
 - **Wider fix:** None. The `testing` skill already requires an
   explicit readiness signal, and the fix is specific to this test.
 - **Previous examples:** Other browser tests that failed once and passed on
-  the rerun: [flaky-same-origin-handoff.md](./flaky-same-origin-handoff.md)
-  and [frame-adapter-message-flake.md](./frame-adapter-message-flake.md).
+  the rerun:
+  - The same-origin handoff test, in
+    [flaky-same-origin-handoff.md at its last commit](https://github.com/mokly-ai/mokly/blob/c7e7d9b88efc84152eb33539ed8ed7ca2ad2bb93/plans/follow-ups/flaky-same-origin-handoff.md).
+    Its confirmed source: the preparation poll accepted the committed URL
+    while the document still loaded. The fix of 2026-11-01 also waits for a
+    complete document and its action link.
+  - [frame-adapter-message-flake.md](./frame-adapter-message-flake.md).
 - **Related:**
   - [flaky-browser-error-rejection-commit-info.md](./flaky-browser-error-rejection-commit-info.md)
     records the other unrelated browser failure that PR #242 met. It has a
     different test and a different source.
-  - [flaky-same-origin-handoff.md](./flaky-same-origin-handoff.md) and
-    [frame-adapter-message-flake.md](./frame-adapter-message-flake.md) are
-    separate cases of the same recorded class: a browser test that failed
-    once and passed on the rerun. Each has its own test and suspected
-    source, so each needs its own fix.
+  - [frame-adapter-message-flake.md](./frame-adapter-message-flake.md) is a
+    separate case of the same recorded class: a browser test that failed
+    once and passed on the rerun. It has its own test and suspected source,
+    so it needs its own fix.
 - **Recommendation:** A. It removes the race and keeps every
   assertion.
 - **Action:** ask the user, because the failure has not been reproduced with a
