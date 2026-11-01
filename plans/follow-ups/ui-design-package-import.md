@@ -1,6 +1,6 @@
 # Design mockups import the UI package by path
 
-- **Severity:** Low (estimate). **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
+- **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #243 and its completed plan, the follow-up
   of finding 1 of its first review.
@@ -65,10 +65,10 @@
   - **A.** Keep the repository-path imports, as the user chose on
     2026-10-28. Effort: Small.
   - **B.** Import by package name, and accept that Changes is unavailable on
-    later bases. Effort: Small (estimate).
+    later bases. Effort: Small.
   - **C.** Add a source export condition to `@mokly/ui`, so that a
     package-name import resolves to its sources. The CSS keeps the relative
-    import. Effort: Medium (estimate).
+    import. Effort: Medium.
   - **D.** After the core fix for built repository packages lands, import
     `@mokly/ui` by package name in the design library. Update the design
     components contract. Effort: Large.
@@ -80,7 +80,8 @@
   smoke test both copy `packages/ui/src`.
 - **Recommendation:** D. It removes the deep paths without losing Changes,
   once its prerequisite lands.
-- **Action:** ask the user, because condition 3 holds (estimate): D is
-  Large, and its prerequisite is a separate plan that the user owns.
+- **Action:** ask the user, because D changes the repository-path import
+  decision of 2026-10-28 in docs/protocol/mokly-design-components.md. The user
+  also reserved its core prerequisite as a separate plan.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/ui-package.md?plain=1#L501).

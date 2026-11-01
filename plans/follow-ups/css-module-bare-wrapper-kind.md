@@ -1,6 +1,6 @@
 # Detect statement changes from bare CSS Module wrappers
 
-- **Severity:** Low. **Likelihood:** Rare (estimate). **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 112, from item 27 of the Milestone 14 nesting report and the
@@ -56,8 +56,8 @@
   both.
 - **Recommendation:** B. One guard catches every edit that changes a
   statement.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user deferred the open review items past the merge to decide each one
-  later. B and C also reject stylesheets that build today.
+- **Action:** ask the user, because on 2026-10-21 the user deferred the open
+  review items past the merge to decide each one later. B and C also reject
+  stylesheets that build today.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5962).

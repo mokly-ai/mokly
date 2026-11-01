@@ -1,6 +1,6 @@
 # No upload status for an unsupported index version
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #217 and its completed plan, which put the
   gap outside the scope of its review.
@@ -66,7 +66,7 @@
   - **E.** Do D, and make the test receiver in
     `tests/helpers/receiver/ownership.ts` return `unsupported-version` for
     an unknown index version. Add a test for that class. This needs the
-    user's approval for a test for the class. Effort: Small (estimate).
+    user's approval for a test for the class. Effort: Small.
 - **Left out:** A new CLI category for an index version. The CLI maps
   statuses by value, and 426 already has a category for unsupported
   versions.

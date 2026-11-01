@@ -1,6 +1,6 @@
 # Follow-up list hides pending user choices
 
-- **Severity:** Medium (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-30, from PR #247, the check of finding 3 in review
   round 3.
@@ -14,7 +14,7 @@
   it needs the user's process choice.
 
 - **Source:** Review.
-- **Category:** Process (estimate).
+- **Category:** Process.
 - **Terms:**
   - **Follow-up item:** one file under `plans/follow-ups/` that records work
     that waits until after a merge.
@@ -65,10 +65,9 @@
   wait for the user's choice?
 - **Options:**
   - **A.** Keep the current list. Readers open each item and read its
-    Action. Pending choices stay hidden in the list. Effort: Small (estimate).
+    Action. Pending choices stay hidden in the list. Effort: Small.
   - **B.** Keep Kind. Make the listing helper read the outcome of the
-    existing Action field, the words before its first comma. Drop an
-    "(estimate)" mark, as the helper already does for severity. Print the
+    existing Action field, the words before its first comma. Read the top-level field. Print the
     outcome beside the Kind, for example
     `[Outside the scope | ask the user]`. Print only
     the Kind for an item without Action, such as a post-merge task. Update
@@ -78,20 +77,19 @@
     keeps the mixed Kind field. The helper must read only the top-level
     Action field, the line that starts with `- **Action:**`. At commit
     `53aad7c` its reader takes the first `**Label:** ` text on any line, and
-    the Terms entry of this item has the same label. Effort: Small
-    (estimate).
+    the Terms entry of this item has the same label. Effort: Small.
   - **C.** Keep one Kind field, and give a pending choice precedence: an item
     whose Action is `ask the user` has Kind Needs decision, whatever its
     origin. Keep the origin in the Added line. Change the wording of the
     template and the reference, and re-mark the existing items. The origin
     then lives only in prose, and Kind still repeats the Action outcome, so
-    the two can disagree. Effort: Small (estimate).
+    the two can disagree. Effort: Small.
   - **D.** Replace Kind with two fields, Origin and Approval state. The
     helper reads Kind while the new fields are absent, so old items still
     list during the move. Update the template, the reference, the `plans`
     skill, the helper, and its tests. Each repository that uses the skill
     then migrates its open items. A shared format change with a migration
-    is Large. The new field repeats the Action outcome. Effort: Large (estimate).
+    is Large. The new field repeats the Action outcome. Effort: Large.
 - **Left out:**
   - A helper flag that lists only the waiting items. It is a narrower form
     of B, and it hides the rest of the list.
@@ -99,7 +97,7 @@
     file, and an index goes stale.
   - A check that fails an item whose Kind and Action disagree. It adds a
     gate, which needs the user, and it keeps two fields for one fact.
-- **Wider fix:** B (estimate). The list then takes the approval state from Action, the
+- **Wider fix:** B. The list then takes the approval state from Action, the
   one field that holds it, so no Kind value can hide it again.
 - **Previous examples:**
   - The Mokly migration of commit `0ee5e459` moved 145 items to the layout
@@ -110,10 +108,10 @@
     to match a dated user choice.
   - The shared template, `templates/follow-up.md:4` at commit `53aad7c`, sets
     the mixed field for every repository.
-- **Recommendation:** B (estimate). It shows every pending choice at once,
+- **Recommendation:** B. It shows every pending choice at once,
   reads the field that is already the authority, and needs no migration.
   D best separates origin and approval state as data, but it is Large, and
   its new field repeats the Action outcome.
-- **Action:** ask the user, because condition 6 holds (estimate): the review-fix rule
-  sends every process finding to the user. This one changes a shared skill
-  outside Mokly.
+- **Action:** ask the user, because B changes the shared listing output to
+  expose approval state. No recorded requirement or user choice covers that new
+  output.

@@ -1,7 +1,7 @@
 # Decide the publish render-cache lifetime
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #222 and its completed plan, the residual
   risk of its first review.
 - **Location:** `crates/mokly-cli/src/entry_publish.rs:46`,
@@ -44,11 +44,10 @@
   - **A.** Keep the cache through upload. Record no new measurement. Effort:
     Small.
   - **B.** Measure retained bytes. Release the cache before network upload
-    when the output no longer needs it. Effort: Medium (estimate).
+    when the output no longer needs it. Effort: Medium.
   - **C.** Empty the cache at the end of the build through a new cache
     method, without a measurement first. This also frees the entries that
-    the timing layer keeps under `--debug-timings`. Effort: Small
-    (estimate).
+    the timing layer keeps under `--debug-timings`. Effort: Small.
 - **Left out:** A separate upload-process cache has no upload consumer and
   adds complexity.
 - **Wider fix:** B. It ends the cache ownership at its last consumer, so no
@@ -56,11 +55,10 @@
 - **Previous examples:** PR #222 moved the cache to each command's
   composition root and measured its charge in Serve on 2026-10-28. It did
   not measure publish.
-- **Recommendation:** B (estimate). It uses evidence and ends ownership at
+- **Recommendation:** B. It uses evidence and ends ownership at
   the last consumer. C frees the memory with less code, but it changes the
   cache without a measured need.
-- **Action:** ask the user, because condition 6 holds (estimate): this is a
-  performance finding, and the user chooses whether its cost is worth a
-  change.
+- **Action:** fix after merge, apply B, because PR #222 left publish retention
+  unmeasured and the ownership change belongs in a separate branch.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/render-cache-weight-and-watch-recheck.md?plain=1#L422).

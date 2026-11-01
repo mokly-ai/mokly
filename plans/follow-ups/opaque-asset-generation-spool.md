@@ -1,6 +1,6 @@
 # Share an opaque-asset spool for each generation
 
-- **Severity:** Medium (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: the post-merge task of user decision 61 and M14 review 6, finding 5.
 - **Location:** `crates/mokly-server/src/asset_streams.rs:21`,
@@ -10,7 +10,7 @@
   request and deferred the shared spool without approving it.
 
 - **Source:** Review.
-- **Category:** Performance (estimate).
+- **Category:** Performance.
 - **Terms:**
   - **Opaque asset:** a file that a stylesheet references, such as an image
     or a font, that Mokly delivers by route without decoding it.
@@ -60,11 +60,11 @@
     process memory. Keep the large-catalogue budgets of
     `docs/protocol/mokly-timings.md`, section Budgets. Update the delivery
     rule of the asset page in the same change, because a request after the
-    first reads the spool, not the source. Effort: Medium (estimate).
+    first reads the spool, not the source. Effort: Medium.
   - **C.** Share one verified copy only among concurrent requests for one
     generation and route, and close it after the last response. A later
     request copies and checks the asset again. Disk use never grows past
-    the current design. Effort: Medium (estimate).
+    the current design. Effort: Medium.
 - **Left out:** A stream from the source that checks the digest after the
   bytes leave breaks the rule that Serve checks the asset before it sends
   headers. A copy in process memory adds the full size of each large asset
@@ -79,12 +79,11 @@
   the base side of the same assets: one Git process for each digest and a
   buffered copy during delivery. The two items change different code and can
   land in either order.
-- **Recommendation:** B. (estimate) It removes the repeated copies for the
+- **Recommendation:** B. It removes the repeated copies for the
   life of a generation, and the rebuild kept A only as the interim design. C
   is the smaller step if the measured disk use of B is too high.
-- **Action:** ask the user, because condition 1 holds: B changes the delivery
-  rule of `docs/protocol/mokly-imported-styles-assets.md`, and no user
-  decision approves that change. Condition 6 also holds, because the item is
-  a performance choice.
+- **Action:** ask the user, because B changes the delivery rule of
+  `docs/protocol/mokly-imported-styles-assets.md`, and no user decision approves
+  that change.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5426).

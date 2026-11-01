@@ -1,6 +1,6 @@
 # Pick promise stays unsettled during adapter swap
 
-- **Severity:** Low (estimate). **Likelihood:** Rare (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #224, the investigation of CI run 40933916619.
 - **Location:** `packages/viewer/src/viewer/picking.ts:33` and
@@ -45,20 +45,20 @@
   - **A.** Change nothing. Effort: Small.
   - **B.** Make `cancelPick()` reject the pending start promise also while an
     adapter swap is in progress. Add a browser test for this order. Effort:
-    Small (estimate).
+    Small.
   - **C.** Let the picking state own every started promise, and settle each
     one when the host cancels it or when the frame adapter changes. Add a
-    browser test for both orders. Effort: Medium (estimate).
-- **Left out:** A longer wait in the test. The `deterministic-tests` skill
+    browser test for both orders. Effort: Medium.
+- **Left out:** A longer wait in the test. The `testing` skill
   forbids it, and it does not settle the promise for a host.
-- **Wider fix:** C (estimate). One owner settles every pick, whatever ends
+- **Wider fix:** C. One owner settles every pick, whatever ends
   it.
 - **Previous examples:** None found. The test "frame failures end picking
   once and reject one handle with one safe error" in
   `tests/browser/viewer_async.spec.ts` covers the related case of a frame
   failure.
-- **Recommendation:** C (estimate). It follows the rule that a frame
+- **Recommendation:** C. It follows the rule that a frame
   replacement ends host picking, for every order of events.
-- **Action:** fix after merge, apply C (estimate), because an unsettled
+- **Action:** fix after merge, apply C, because an unsettled
   promise is a product bug outside the diff of PR #224, and C is not
   blocked.

@@ -1,6 +1,6 @@
 # Commit info warning breaks a nested JSON report
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from the CI run of PR #242 at `410de45e`.
 - **Location:** `tests/browser/browser_error_rejection.spec.ts:10`, with the
@@ -47,25 +47,24 @@
 - **Options:**
   - **A.** Write the nested JSON report to a file in the test's temporary
     output directory, and parse that file instead of the standard output.
-    Effort: Small (estimate).
+    Effort: Small.
   - **B.** Turn off the commit info step in the nested configuration. Other
-    warnings can still reach the standard output. Effort: Small (estimate).
-  - **C.** Change nothing until the test fails again. Effort: Small
-    (estimate).
+    warnings can still reach the standard output. Effort: Small.
+  - **C.** Change nothing until the test fails again. Effort: Small.
   - **D.** Remove this test and `tests/fixtures/browser-errors/` under
     removal rule 3 of the `testing` skill, because it tests the test
     harness. It is the last test of the browser error rule, so the removal
-    needs the user's approval. Effort: Small (estimate).
-- **Left out:** A retry of the nested run. The `deterministic-tests` skill
+    needs the user's approval. Effort: Small.
+- **Left out:** A retry of the nested run. The `testing` skill
   forbids retries, because they hide the source.
-- **Wider fix:** A (estimate). A report file keeps every later warning out of
+- **Wider fix:** A. A report file keeps every later warning out of
   the parsed JSON.
 - **Previous examples:** None found.
 - **Related:** [flaky-viewer-selection-navigation.md](./flaky-viewer-selection-navigation.md)
   records the other unrelated browser failure that PR #242 met. It has a
   different test and a different source.
-- **Recommendation:** A (estimate). It removes the mixed stream, whatever
+- **Recommendation:** A. It removes the mixed stream, whatever
   writes to it.
-- **Action:** ask the user, because condition 6 holds (estimate): the
-  failure was not reproduced, so the `deterministic-tests` skill gives
-  `ask the user`.
+- **Action:** ask the user, because the failure has not been reproduced with a
+  confirmed cause. No fix is clearly best until reproduction identifies the
+  source, as the flaky-test rule requires.

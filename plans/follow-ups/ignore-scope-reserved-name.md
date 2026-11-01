@@ -1,6 +1,6 @@
 # Check reserved names on saved ignore scopes
 
-- **Severity:** Medium (estimate). **Likelihood:** Rare (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a problem outside the scope of round 2 of the HTML pipeline decision work
@@ -50,7 +50,7 @@
     `docs/protocol/mokly-html-screens.md`. Effort: Small.
   - **C.** Evaluate the kept wrapper attributes once, in the shared step at
     `elements.rs:26`, so that every wrapper uses one path. It adds the same
-    new failure as A. Effort: Small (estimate).
+    new failure as A. Effort: Small.
 - **Left out:** Stop evaluating reserved names on `mokly-ignore` too. It
   removes the failure that the user kept on 2026-10-26.
 - **Wider fix:** C. One shared step stops the two wrappers from drifting
@@ -69,10 +69,9 @@
     consumer output" for an authored template body. This item changes the
     wrapper path in `crates/mokly-html/src/elements.rs`. The fixes touch
     different code, so each item needs its own change.
-- **Recommendation:** C (estimate). It makes both wrappers follow one rule
+- **Recommendation:** C. It makes both wrappers follow one rule
   and prevents new differences.
-- **Action:** ask the user, because condition 3 holds (estimate): A and C
-  add a build failure for `mokly-ignore-scope` that today's code does not
-  raise.
+- **Action:** ask the user, because A and C add a build failure for
+  `mokly-ignore-scope` that today's code does not raise.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5587).

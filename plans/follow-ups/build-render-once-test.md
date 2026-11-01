@@ -1,13 +1,13 @@
 # Test the build render-once requirement
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #220 and its completed plan, finding 1 of
   its first review.
 - **Location:** `tests/static_capture_timing.test.ts:8` and
-  `docs/protocol/mokly-runtime.md:52`.
-- **Reason:** The review of PR #220 left the finding open when the pull
-  request merged on 2026-10-27, and no answer was recorded.
+  `docs/protocol/mokly-runtime.md:55`.
+- **Reason:** PR #220 merged before its review added the test of the render-once
+  requirement.
 
 - **Source:** Review.
 - **Category:** Test.
@@ -21,7 +21,7 @@
   - Before PR #220, `build` and `publish` rendered every head document five
     times. PR #220 made the build check capture the head once, under the
     user's decision of 2026-10-26.
-  - `docs/protocol/mokly-runtime.md:52` states the rule: the head reuses the
+  - `docs/protocol/mokly-runtime.md:55` states the rule: the head reuses the
     capture, so a build renders each head document once.
   - The test "build capture timings report bounded retention for both
     sides" at `tests/static_capture_timing.test.ts:8` checks the
@@ -41,20 +41,18 @@
     `render.document` record has a `review.capture-side` ancestor. Effort:
     Small.
   - **B.** Count the `render.document` records of one build, and assert that
-    the count equals the view count of the two captures. Effort: Small
-    (estimate).
+    the count equals the view count of the two captures. Effort: Small.
   - **C.** Change nothing, and rely on the Rust tests of `prepare`. They do
     not cover the output loop or the comparison output end to end. Effort:
-    Small (estimate).
-- **Left out:** A time limit on the build. The `deterministic-tests` skill
+    Small.
+- **Left out:** A time limit on the build. The `testing` skill
   forbids elapsed-time assertions.
-- **Wider fix:** A. The ancestor check catches every new render path outside
-  the capture, whatever stage adds it.
+- **Wider fix:** None. A structural fix would remove the render path from later
+  build stages. The requirement keeps that path for an evicted head document.
 - **Previous examples:** None found.
 - **Recommendation:** A. It checks the rule directly with the records that
   the test already reads.
-- **Action:** ask the user, because condition 6 holds (estimate): the item
-  asks for a missing test, and the review-fix rule gives every missing-test
-  finding to the user.
+- **Action:** fix after merge, apply A, because PR #220 merged before its review
+  fixed the finding.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/build-head-capture.md?plain=1#L205).

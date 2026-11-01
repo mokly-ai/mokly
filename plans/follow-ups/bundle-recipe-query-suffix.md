@@ -1,6 +1,6 @@
 # Support query and hash suffixes in bundle recipes
 
-- **Severity:** Low (estimate). **Likelihood:** Rare (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #226 and its completed plan, which put the
   problem outside the scope of its review.
@@ -33,7 +33,7 @@
   a `?query` or `#hash` suffix fails every bundle with "Bundled source bytes
   were not recorded". The most likely cause: the metafile path keeps the
   suffix, but the load hook records the bytes under the path without it
-  (estimate). The same failure exists on `origin/main` before PR #226.
+  . The same failure exists on `origin/main` before PR #226.
 - **Impact if no action:** A catalogue whose modules use such an import
   cannot bundle at all. The message names an internal record, so the user
   cannot see that the suffix is the cause.
@@ -43,20 +43,20 @@
   - **A.** Change nothing. Effort: Small.
   - **B.** Fail such an import early with a `bundle-failed` diagnostic that
     names the importer and the suffix. The bundle still fails, but the
-    message tells the user what to change. Effort: Small (estimate).
+    message tells the user what to change. Effort: Small.
   - **C.** Remove the suffix when `moduleGraph` maps a metafile input to its
     logical name and its physical path. The recipe then finds the recorded
-    bytes, and the watch inputs name a real file. Effort: Small (estimate).
+    bytes, and the watch inputs name a real file. Effort: Small.
 - **Left out:** A separate module for each suffix of one file. Mokly runs no
   loader that reads a suffix, so the bytes are equal, and C is simpler on
   every point.
-- **Wider fix:** C (estimate). One mapping from a metafile input to its file
+- **Wider fix:** C. One mapping from a metafile input to its file
   then serves the graph, the digests, and the watch inputs, as `clean`
   already does for the `mokly-css:` namespace.
 - **Previous examples:** None found.
-- **Recommendation:** C (estimate). It makes a valid esbuild import bundle
+- **Recommendation:** C. It makes a valid esbuild import bundle
   and keeps the digest rule of the bundling contract.
-- **Action:** fix after merge, apply C (estimate), because a valid import
+- **Action:** fix after merge, apply C, because a valid import
   fails with an internal error, which is a product bug, and C is Small.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/esbuild-resolve-fast-path.md?plain=1#L413).

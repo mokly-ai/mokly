@@ -1,6 +1,6 @@
 # Make pnpm recreation independent of CI
 
-- **Severity:** Medium. **Likelihood:** Rare (estimate). **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 158, pnpm CI fix finding 1.
 - **Location:** `crates/mokly-compare/src/manager_command.rs:21` and
@@ -43,8 +43,7 @@
 - **Options:**
   - **A.** Turn off the recreation prompt for Mokly's private installs, so
     that pnpm never stops on it. Effort: Small.
-  - **B.** Document that the dependency tier can differ in CI. Effort: Small
-    (estimate).
+  - **B.** Document that the dependency tier can differ in CI. Effort: Small.
 - **Left out:** Forcing every install into CI mode can change other
   package-manager behaviour. Removing a tracked `node_modules` from the
   private entry changes the base source that the install reads. A tracked
@@ -53,7 +52,7 @@
   every environment.
 - **Previous examples:** None found.
 - **Recommendation:** A. It gives local and CI runs the same tier.
-- **Action:** ask the user, because condition 5 holds: the user reserved
-  the choice for each open review item of the rebuild.
+- **Action:** ask the user, because the user reserved the choice for each open
+  review item of the rebuild.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6158).

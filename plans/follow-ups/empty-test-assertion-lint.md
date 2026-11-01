@@ -1,6 +1,6 @@
 # Reject unit tests that make no assertion
 
-- **Severity:** Low. **Effort:** Large (estimate). **Confidence:** High. **Harder later:** Yes.
+- **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user decision 66 A of 2026-10-21.
@@ -46,11 +46,11 @@
   - **A.** Change nothing, and rely on review. Effort: Small.
   - **B.** Add an ESLint rule that rejects a test callback with no direct
     `assert` call. It misses tests that assert through helpers, and it adds
-    a lint. Effort: Medium (estimate).
+    a lint. Effort: Medium.
   - **C.** Port the assertion guard to the current runner. Load it after
     `tsx` in `node-execution.mjs` and in each CI command that runs
     `node --test`. Port its own tests. The original change added six guard
-    modules and changed the runner and CI. Effort: Large (estimate).
+    modules and changed the runner and CI. Effort: Large.
 - **Left out:** Count assertions only in browser specs. Playwright assertions
   were outside the original guard, and the problem is in Node tests.
 - **Wider fix:** C. A runtime count catches every test that checks nothing,
@@ -60,10 +60,9 @@
 - **Related:** [viewer-clock-lint.md](viewer-clock-lint.md) is the other
   test gate of the same user decision of 2026-10-21. The two gates are
   separate changes, but they share the decision, so each can cite it.
-- **Recommendation:** C (estimate). It covers the whole class with a guard
+- **Recommendation:** C. It covers the whole class with a guard
   that already exists.
-- **Action:** ask the user, because condition 3 holds (estimate): B and C
-  add a test gate. The decision of 2026-10-21 deferred this gate without
-  approving it.
+- **Action:** ask the user, because B and C add a test gate. The decision of
+  2026-10-21 deferred this gate without approving it.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5452).
