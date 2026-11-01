@@ -100,8 +100,12 @@ impl Engine<'_> {
                 props.insert(name, value);
             }
         }
-        self.warnings
-            .extend(numeric_warnings::for_entry(&props, self.request.entry));
+        self.warnings.extend(numeric_warnings::for_invocation(
+            &props,
+            self.request.entry,
+            &component.path,
+            id,
+        ));
         validate(&component.prop_schema, &props, &component.path)?;
         let key = match instance_key(&context.owner, context.slot_key.as_deref(), id) {
             Ok(key) => key,

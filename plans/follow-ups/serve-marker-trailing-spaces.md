@@ -1,11 +1,11 @@
 # Remove trailing spaces from the Serve marker fixture
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 163, final review R2.
 - **Location:** `packages/viewer/tests/serve_marker_documents.ts:18`.
-- **Reason:** A user rule of 2026-10-21 deferred each new review item of
-  PR #199 until after its merge, for the user's later choice.
+- **Reason:** The Rust rebuild merged with this finding open, and the fix
+  changes one viewer test fixture, so it needs a separate branch.
 
 - **Source:** Review.
 - **Category:** Repository rule.
@@ -29,7 +29,7 @@
   the only case, and a new gate needs its own decision.
 - **Previous examples:** None found.
 - **Recommendation:** A. It removes the needless bytes and weakens no check.
-- **Action:** ask the user, because the user reserved the choice for each open
-  review item of the rebuild.
+- **Action:** fix after merge, apply A, because the change stays in one test
+  fixture and its range assertions, and it removes or loosens no assertion.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6205).

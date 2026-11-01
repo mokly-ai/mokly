@@ -8,7 +8,7 @@ use html5ever::tree_builder::{ElementFlags, TreeBuilder, TreeBuilderOpts, TreeSi
 use html5ever::{QualName, local_name, ns};
 use html5gum::Tokenizer;
 
-use crate::html_driver_events::DriverEmitter;
+use crate::html_driver_emitter::DriverEmitter;
 use crate::html_input::HtmlShape;
 use crate::html_token_types::Token;
 
@@ -44,7 +44,7 @@ pub fn drive<Sink: DriverSink>(text: &str, shape: HtmlShape, sink: Sink) -> Sink
     } else {
         0
     };
-    let emitter = DriverEmitter::new(&builder, offset);
+    let emitter = DriverEmitter::new(&builder, text, offset);
     match Tokenizer::new_with_emitter(&text[offset..], emitter).finish() {
         Ok(()) => {}
         Err(error) => match error {},

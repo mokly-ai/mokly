@@ -13,6 +13,12 @@ import {
   importedCssImage,
 } from "../helpers/imported_css_sources.js";
 
+const comparisonModes = {
+  Overlay: "overlay",
+  Difference: "difference",
+  "Side by side": "side",
+} as const;
+
 /** The byte length of the PNG that the CSS Module loads through `url()`. */
 export async function importedImageSize(): Promise<number> {
   return (await fs.stat(importedCssImage)).size;
@@ -22,16 +28,18 @@ export async function importedImageSize(): Promise<number> {
 export async function expectStyledPanes(
   page: Page,
   imageSize: number,
+  mode: keyof typeof comparisonModes,
 ): Promise<void> {
+  const panes = page.locator(
+    `[data-diff-viewport="desktop"] [data-compare-mode="${comparisonModes[mode]}"]`,
+  );
   for (const [side, color] of [
     ["before", importedCssColors.Before],
     ["after", importedCssColors.After],
   ] as const) {
-    const frame = page
-      .locator(
-        `[data-mokly-comparison-frame][data-mokly-preview-source*="/snapshots/${side}/"]`,
-      )
-      .first();
+    const frame = panes.locator(
+      `[data-mokly-comparison-frame][data-mokly-preview-source*="/snapshots/${side}/"]`,
+    );
     await expect(frame).toHaveAttribute("srcdoc", /\S/u);
     const button = frame
       .contentFrame()

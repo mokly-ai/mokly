@@ -1,12 +1,12 @@
 # Make pnpm recreation independent of CI
 
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 158, pnpm CI fix finding 1.
 - **Location:** `crates/mokly-compare/src/manager_command.rs:21` and
   `crates/mokly-compare/src/manager_environment.rs:17`.
-- **Reason:** A user rule of 2026-10-21 deferred each new review item of
-  PR #199 until after its merge, for the user's later choice.
+- **Reason:** The Rust rebuild merged with this finding open, and the fix first
+  confirms the current tier in each environment, so it needs a separate branch.
 
 - **Source:** Review.
 - **Category:** Product bug.
@@ -52,7 +52,7 @@
   every environment.
 - **Previous examples:** None found.
 - **Recommendation:** A. It gives local and CI runs the same tier.
-- **Action:** ask the user, because the user reserved the choice for each open
-  review item of the rebuild.
+- **Action:** fix after merge, apply A, because the setting changes only Mokly's
+  private pnpm installs, and their state stays inside the private entry.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6158).

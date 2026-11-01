@@ -1,13 +1,14 @@
 # Keep delegated commits buildable
 
-- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 130, from finding 7 of the F21 review.
 - **Location:** None. The process rule lives in the shared `delegating`
   skill, outside this repository.
-- **Reason:** On 2026-10-21 the user deferred the open review items until
-  after the merge and kept each choice for a later decision.
+- **Reason:** This item already records the broken range, which is all that
+  option A does, and option C adds a handoff check to a shared skill outside
+  this repository.
 
 - **Source:** Review.
 - **Category:** Process.
@@ -41,9 +42,11 @@
   did not build: `b9dad262`, `e877ca04`, `a5e7461b`, `62e1e3f7`, and
   `fd3fccba`. On 2026-10-28 the user chose to record that list and
   squash-merge the branch.
-- **Recommendation:** A. A merged branch cannot be fixed safely. C best
-  protects later branches.
-- **Action:** ask the user, because on 2026-10-21 the user deferred the open
-  review items past the merge to decide each one later.
+- **Recommendation:** C. This item already records the broken range, which is
+  all that A does, so C is the remaining work, and it stops new broken commits
+  in later delegated branches. The record recommended A before 2026-11-01.
+- **Action:** ask the user, because C adds a build check for each delegated
+  commit to the shared `delegating` skill, and the always-on rules reserve a new
+  check for the user.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6043).
