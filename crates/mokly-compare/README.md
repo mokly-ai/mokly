@@ -50,20 +50,20 @@ owns the read bounds and the failure outcomes. Opaque Git assets use the same
 commit-pinned conversion context and byte bounds. Hash-only preparation does
 not fill the source-byte LRU.
 
-`GitTree::digest_unretained_batch` hashes a batch of opaque assets, such as
-the new assets of one stylesheet file. One `Sources::ensure` call looks up the
-paths that the index lacks. One `Sources::digest_with_length` call hashes the
-uncached paths through `Repository::digest_many`, with one `config`, at most
-one `check-attr`, and one `cat-file` conversion for the batch. Each
-`SourceDigest` keeps the SHA-256 and, for a Git digest, the converted length.
-The CSS confinement check projects each asset before its batch, so each asset
-that the index lacks runs its own `ls-tree` and `rev-list`. A projection of a
-directory that holds an indexed file starts no Git lookup. The digest cache
-keeps hash-only records of `digest` apart from completed opaque records. An
-opaque digest upgrades a hash-only record and reuses a completed one, also in
-`GitTree::open_stream`, without Git. A digest that fails on the 64 MiB bound
-of its asset stays unavailable for the base preparation. A smaller
-batch-bound failure stays retryable. Cached bytes also start no Git process.
+`GitTree::digest_unretained_batch` hashes a batch of opaque assets, such as the
+new assets of one stylesheet file. It looks up the paths that the index lacks,
+then hashes them through one `Sources::digest_with_length` call into
+`Repository::digest_many`. Each `SourceDigest` keeps the SHA-256 and, for a Git
+digest, the converted length. `GitTree::project_batch` looks up its paths
+through one `Sources::ensure` call, and the CSS confinement walk reads that
+metadata. The lookup, attribute, and digest processes of a stylesheet then stay
+one batch, constant at 4 and 16 assets in a count test of mokly-render. A
+projection of a directory that holds an indexed file starts no Git lookup. The
+digest cache keeps hash-only records of `digest` apart from completed opaque
+records. An opaque digest upgrades a hash-only record and reuses a completed
+one, also in `GitTree::open_stream`, without Git. A digest that failed on its
+64 MiB bound stays unavailable for the base preparation. A smaller batch-bound
+failure stays retryable. Cached bytes also start no Git process.
 
 With a converted length, `copy_verified` runs `Sources::stream` on a worker
 thread, and one Git process converts the file. The worker passes chunks of at

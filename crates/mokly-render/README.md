@@ -116,7 +116,9 @@ including configured package roots and historical installations. Single
 digests, batch digests, and streams of an asset share one selection in
 `SideTree`. It resolves a dependency path to its physical identity before any
 digest. A repository path stays as it is, so the Git source tree can look up
-a whole batch of them together. Authored
+a whole batch of them together. `SideTree::project_batch` groups the
+repository and alias-candidate projections of its paths in one source batch.
+Dependency paths keep their own selection and confinement. Authored
 public-resource reads retain their separate source confinement checks.
 Secondary package roots retain their virtual dependency parent even when the
 primary installation is absent. CSS and asset confinement can traverse these

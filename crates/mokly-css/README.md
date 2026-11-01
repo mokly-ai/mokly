@@ -102,10 +102,12 @@ changes work only. Evidence retains each source's public route.
 Opaque assets use `Bundle.assets` records with logical paths, confined source
 identities, SHA-256 digests, and input aliases. `Bundle.inputs` retains parsed
 CSS only. The graph checks asset streams against these digests at delivery.
-The compiler confines each new asset target before it requests any digest, so
-an escaping or missing target fails before any read. One
-`SourceTree::digest_unretained_batch` call then hashes the confined identities
-of the new assets of each stylesheet file. An identity can differ from its
+The compiler first collects the eligible asset targets of a stylesheet file
+without raising an error, and projects them in one `SourceTree::project_batch`
+call. It then runs the confinement walk in the authored reference order, so
+the diagnostics keep their order. One `SourceTree::digest_unretained_batch`
+call hashes the confined identities of the targets that pass. An escaping or
+missing target fails before any read. An identity can differ from its
 logical path, such as a symlink into a workspace package. A missing or
 non-regular target keeps the "not a regular file inside repoRoot" diagnostic.
 An unavailable digest becomes `AssetFailure::Unavailable` with the message of
@@ -171,7 +173,9 @@ also fails when that exception no longer differs.
 - [`src/compiler.rs`](./src/compiler.rs) defines `Compiler`, the
   `StylesheetBundler` that reads, transforms, scopes, and bundles one root.
   [`src/compiler_assets.rs`](./src/compiler_assets.rs) rewrites the asset URLs
-  of a stylesheet file and hashes its new assets in one batch.
+  of a stylesheet file and hashes its new assets in one batch, and
+  [`src/compiler_projection.rs`](./src/compiler_projection.rs) projects their
+  targets in one batch before the confinement walk.
 - [`src/types.rs`](./src/types.rs) defines the `StylesheetBundler` and
   `CssProcessor` boundaries and the `StylesheetRoot` and `Bundle` records.
 - [`src/resolver.rs`](./src/resolver.rs) defines `ImportResolver` and

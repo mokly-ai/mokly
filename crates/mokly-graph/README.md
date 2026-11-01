@@ -133,7 +133,9 @@ replacing the witnessed bytes with a later snapshot hash. Stylesheet keys
 include these versions separately from plugin declaration digests. Source
 snapshots return `Arc<[u8]>` through `read_shared`, and cache hits share
 storage. `digest_unretained` memoizes an opaque input hash without retaining
-its payload. `SourceSnapshot::retained_bytes()` reports the retained private
+its payload. `project_batch` answers cached metadata and forwards the other
+paths in one batch, and it keeps no opaque bytes.
+`SourceSnapshot::retained_bytes()` reports the retained private
 payload per path. Parsed source snapshots have no byte eviction policy.
 
 Opaque CSS asset preparation retains source identities and digests. A shared
