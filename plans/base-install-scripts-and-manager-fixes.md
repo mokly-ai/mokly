@@ -221,17 +221,19 @@ Items 152 and 156 in `mokly-compare` and `mokly-cli`.
   `.context/base-install-scripts-managers/item152-156/`.
 - The orchestrator's change request of 2026-10-28 to the delegate is
   superseded by the review answers in the TODOs below.
-- [ ] Review finding 2, option E: cover every copy of the scripts-off flag
+- [x] Review finding 2, option E: cover every copy of the scripts-off flag
       in tests: the `NativeBase` success arm, both `AttemptBase` arms, the
       third `StaticBase` arm, and the four `Changes::classify` arms.
-- [ ] Review finding 5, option C: move the body of `NativeBase::prepare`
+- [x] Review finding 5, option C: move the body of `NativeBase::prepare`
       into a private function and wrap its result once. This removes the
       four `map_err` calls.
-- [ ] Review finding 6, option A: prefix the `BasePreparationError` message
+- [x] Review finding 6, option A: prefix the `BasePreparationError` message
       with `[mokly-compare/base]`.
-- [ ] Review finding 7, option B: restore the `CatalogueError` import, use
+- [x] Review finding 7, option B: restore the `CatalogueError` import, use
       imported names in the tests, and replace the hand-written comparison
       fake with `ComparisonMock`.
+- Commit `54b3638a` fixed findings 2 E, 5 C, 6 A, and 7 B. Commit `8ce71bbc`
+  added the opt-out precedence test of finding 10 on 2026-11-01.
 
 ## Milestone 5: Removed
 
@@ -303,10 +305,13 @@ justifications: `.context/main-sync-2026-11-01/merge-decisions.md`.
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Review finding 1, option D, in a later small pull request: the rich
+- [x] Review finding 1, option D, in a later small pull request: the rich
       renderer never cuts its hint line, and the scripts hint becomes the
       recovery action of these failures. Keep the plain output bytes the
       same, and keep the period of decision 156.
-- [ ] Review finding 2, option D, the wider fix that is too large here:
+- [x] Review finding 2, option D, the wider fix that is too large here:
       record the scripts-off flag once, in a write-once field of
       `BaseRequest`, so that no wrapper copies it.
+- On 2026-11-01 the two post-merge tasks above became the follow-up items
+  `plans/follow-ups/rich-scripts-hint-cut.md` and
+  `plans/follow-ups/scripts-off-flag-record.md`.
