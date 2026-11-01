@@ -31,10 +31,13 @@
     `html-ignore-attribute`, the message of an authored body, and the page's
     `entry` subject. It appears once per page document and attribute, also
     when the document then fails another check, and `--strict` counts it.
-    It names the first wrapper in document order, as authored bodies do.
-  - `docs/protocol/mokly-html-screens.md:139-141` states these rules.
-    `:194` says that the attribute name in the message is in ASCII
-    lowercase.
+    It names the wrapper whose start tag comes first in the HTML text, also
+    when HTML parsing moves a wrapper, as authored bodies do.
+  - `docs/protocol/mokly-html-screens.md:139-141` states these rules. Line
+    139 says: "When several wrappers carry the same unknown attribute, its
+    warning names the wrapper whose start tag comes first in the HTML text.
+    This rule applies also when HTML parsing moves a wrapper." `:194` says
+    that the attribute name in the message is in ASCII lowercase.
   - Authored bodies: `crates/mokly-catalogue/src/templates.rs:46-58` reads
     the html5gum tokens in source order. The tokenizer gives each attribute
     name in ASCII lowercase. `html_tokens::normalize` removes the unknown
@@ -94,8 +97,10 @@
     authored bodies, before `source_checks::page` and
     `source_checks::validate` run. Skip the reserved navigation names, as
     the tree filter does today. Keep the tree filter for the output. Add
-    regression cases for SVG, MathML, and a table, and update the
-    `crates/mokly-html/README.md` paragraph on page callback warnings.
+    regression cases for SVG, MathML, and a table. Update the sentences on
+    how composition collects these warnings in the
+    `crates/mokly-html/README.md` paragraph on page callback warnings. The
+    order rule stays only in the protocol, which that paragraph links to.
     Effort: Medium.
 - **Left out:**
   - Change nothing. One authored name keeps two warnings.

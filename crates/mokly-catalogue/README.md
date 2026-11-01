@@ -186,6 +186,10 @@ the `mock` feature for the public unimock boundaries.
 YAML that each path survives on a 2 MiB worker stack. Run it with
 `--nocapture` to print the limits, and with `--release` for release builds.
 
+The property test of the source maps over the vendored HTML corpus lives in
+[`mokly-html`](../mokly-html/README.md#development) and runs with
+`cargo test -p mokly-html --test source_map_corpus_tests`.
+
 ### Key Code
 
 - [`src/config.rs`](./src/config.rs) defines `ConfigLoader` and `Loader`,

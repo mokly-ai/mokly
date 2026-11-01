@@ -95,8 +95,9 @@ table repair. Diagnostic identities do not expose discarded values.
 Catalogue preparation reports `html-ignore-attribute` once per shared body
 and attribute. For a page callback document, composition reports this warning
 for the attributes that it removes, once per page and attribute, with the
-page's `entry` subject. As in a body, the message names the first wrapper in
-document order that carries the attribute. Composition reports these warnings
+page's `entry` subject. The
+[HTML screens contract](../../docs/protocol/mokly-html-screens.md#links-and-markers)
+defines which wrapper the message names. Composition reports these warnings
 before the page and source checks run, so a later failure keeps them. Unknown
 attribute values are not evaluated. Strict builds fail on these warnings.
 Reserved navigation names are not unknown attributes: composition keeps them,
@@ -166,6 +167,11 @@ parse as a document and as a `body` fragment to html5ever's own tree, and each
 recorded position must name its own start tag. The corpus has no duplicate
 attributes and no text that a CDATA section reorders, so the tracked fixtures
 cover those steps. Neither directory is part of the crate build.
+
+The integration test `tests/source_map_corpus_tests.rs` reads both directories
+and checks the `mokly-catalogue` source map of each text token and attribute
+value. Each map must be monotonic and stay inside its source interval, and each
+aligned byte must equal its source byte or be an LF from a CR.
 
 ### Key Code
 

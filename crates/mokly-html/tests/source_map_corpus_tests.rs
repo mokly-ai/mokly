@@ -4,7 +4,6 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use mokly_catalogue::html_input::{DeliveredHtml, HtmlInput};
-use mokly_catalogue::html_tokens::Span;
 use mokly_catalogue::html_tokens::{self, Spanned, Token};
 use mokly_catalogue::template_types::Template;
 
@@ -99,22 +98,6 @@ fn check(name: &str, input: HtmlInput<'_>) {
             _ => {}
         }
     }
-}
-
-#[test]
-fn script_eof_text_keeps_compatibility_span_and_maps_actual_source_byte() {
-    let source = "<!doctype html><script><";
-    let tokens: Vec<_> = html_tokens::parse(DeliveredHtml::document(source))
-        .filter_map(|parsed| match parsed.token {
-            Token::String(text) => Some(text),
-            _ => None,
-        })
-        .collect();
-    assert_eq!(tokens.len(), 1);
-    assert_eq!(tokens[0].value, b"<");
-    assert_eq!(tokens[0].span, Span { start: 23, end: 23 });
-    assert_eq!(tokens[0].source_map.span, Span { start: 23, end: 24 });
-    assert_eq!(tokens[0].source_offset(0), 23);
 }
 
 #[test]

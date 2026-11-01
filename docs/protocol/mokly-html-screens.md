@@ -136,7 +136,7 @@ Ignore ids use lowercase kebab-case. `mokly-ignore` accepts `id` and
 `material-key`; `mokly-ignore-scope` accepts `enabled`. Both accept `mokly-if`
 and `mokly-viewport`. Invalid ids fail with `html-element`. Unknown attributes
 warn once per shared body and attribute. Their values are not evaluated and do not enter document keys.
-When several wrappers carry the same unknown attribute, its warning names the first of these wrappers in document order.
+When several wrappers carry the same unknown attribute, its warning names the wrapper whose start tag comes first in the HTML text. This rule applies also when HTML parsing moves a wrapper.
 A page callback document is the HTML that a JavaScript `definePage` callback returns. Unknown attributes on its wrappers warn in the same way, once per page document and attribute, with the page's `entry` subject and the message of an authored body.
 The core reports these warnings, also when the document then fails another check. Leaving callback documents without these warnings was rejected, because a misspelled wrapper attribute would then pass without a message.
 Strict builds fail. The reserved navigation names `data-mokly-link` and `data-mokly-link-control…` are not unknown attributes: a body or callback output that supplies one fails, and a saved slot warns that the name is rejected.

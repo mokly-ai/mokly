@@ -7,7 +7,7 @@
   implementation review.
 - **Location:** `crates/mokly-catalogue/src/html_source_map.rs:80` and
   `:115`, `crates/mokly-catalogue/src/templates.rs:139`, and
-  `crates/mokly-html/src/_tests_/source_map_corpus_tests.rs:67` and `:83`.
+  `crates/mokly-html/tests/source_map_corpus_tests.rs:66` and `:81-84`.
 - **Reason:** The defect needs malformed HTML, an empty end tag after text,
   and its fix changes no stored format or interface, so it costs the same
   after the merge.
@@ -71,10 +71,11 @@
   - In 923,521 generated inputs, every location mismatch came from an empty
     end tag.
 - **Test premise:** The corpus property test
-  `corpus_source_maps_are_monotonic_bounded_and_preserve_aligned_bytes`
-  treats a value as plain when its source range has no `&`, CR, or NUL, at
-  `source_map_corpus_tests.rs:67`. For a plain value it asserts
-  `offset == range.start + decoded`, at `:83-86`. A discarded empty end tag
+  `corpus_source_maps_are_monotonic_bounded_and_preserve_aligned_bytes`, an
+  integration test of `mokly-html`, treats a value as plain when its source
+  range has no `&`, CR, or NUL, at
+  `crates/mokly-html/tests/source_map_corpus_tests.rs:66`. For a plain value
+  it asserts `offset == range.start + decoded`, at `:81-84`. A discarded empty end tag
   breaks that premise: the assertion accepts the wrong offset of `b` in
   `a</>b` today, and it rejects the correct offset after the fix. The
   vendored corpus has no empty end tag, so the test passes now.

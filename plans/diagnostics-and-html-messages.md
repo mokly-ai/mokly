@@ -177,9 +177,13 @@ do not change. `--strict` counts the new warning.
 - The core parses the callback document and collects the removed names
   before the page and source checks run. A later failure then keeps the
   warnings, as the sidecar's own warnings do.
-- `ignore_checks::filter_tree` walks the tree in reverse document order. The
-  warning for one attribute names the first wrapper in document order that
-  carries it, as `templates.rs` does for authored bodies.
+- `ignore_checks::filter_tree` walks the parsed tree from the first node to
+  the last. The warning for one attribute names the first wrapper that it
+  returns. Authored bodies name the wrapper whose start tag comes first in
+  the HTML text. The two differ when HTML parsing moves a wrapper, or when
+  SVG or MathML parsing changes an attribute name:
+  `plans/follow-ups/callback-wrapper-warning-names.md` records that
+  defect as a fix after merge (2026-11-01).
 
 ### Authored HTML checks (item 128 and finding 1)
 
@@ -467,9 +471,11 @@ The README parts for items 1 and 128 move to Milestone 4.
       `cargo xtask check`. Done at `4037700c`. Evidence:
       `.context/diagnostics-and-html-messages/repository-suite.log`,
       `gate-4037700c.log`, `gate-4037700c-rerun.log`, and `flaky-rerun.log`.
-- [ ] Merge `origin/main` at `c7e7d9b8`, then run the complete gate on the
+- [x] Merge `origin/main` at `c7e7d9b8`, then run the complete gate on the
       merged commit. The merge justifications are in
       `.context/diagnostics-and-html-messages/merge-justifications.md`.
+      Merged in `f7d4a844`. The gate passed at `c417fba4`:
+      `gate-c417fba4.log`.
 - [x] ~~Edit `plans/rust-rebuild.md`.~~ Main deleted that plan in
       `133782a9` and moved its open work into `plans/follow-ups/`, so the
       bookkeeping below replaces these edits (2026-11-01).
@@ -480,7 +486,7 @@ The README parts for items 1 and 128 move to Milestone 4.
       Milestone 5 lands. Done in `55f16cad`; 146 open follow-up items
       remain.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Apply the fix rule: fix
       the `fix now` findings, record follow-up items for the rest, re-review
       once, and report.
@@ -488,6 +494,14 @@ The README parts for items 1 and 128 move to Milestone 4.
     are fix after merge: `plans/follow-ups/empty-end-tag-substitution-location.md`
     and `plans/follow-ups/callback-wrapper-warning-names.md`. The findings
     file is in `.context/reviews/`.
+  - Round 3, the re-review at `c417fba4`, gave findings 11 and 12, both Low.
+    Both are fix now: move the corpus check to a `mokly-html` integration
+    test (A), and state the wrapper order once in the protocol (C).
+  - [x] Apply findings 11 and 12, run the targeted checks, commit, and
+        push. No further review round runs. The new problems of the round 3
+        checks are in `plans/follow-ups/corpus-fixture-unit-test-reads.md`.
+        The reports are in the review folder of the branch under
+        `.context/reviews/`.
 - [ ] Delete this plan in the last commit before the pull request. Give its
       dated decisions and a permalink in the pull request description.
 - [ ] Open the pull request. The coordinator merges it.
