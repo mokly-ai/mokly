@@ -1,6 +1,6 @@
 /** Shared React-owned shell layout for embedded viewer roots. */
 
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
 import type { ReactNode, RefObject } from "react";
 
 import { EmbeddedLayout } from "@mokly/ui/embedded-layout";
@@ -16,6 +16,7 @@ import { ShellFrameMarkerLayer } from "./frame_marker_layer.js";
 import { useShellFragment, useShellIdentifier } from "./identifier_context.js";
 import { CatalogueNav } from "./nav.js";
 import { useNavigationBounds } from "./nav_resize.js";
+import { useShellRoot } from "./root_context.js";
 import { useShellStore } from "./store_context.js";
 import { useShellBindings } from "./store_interactions.js";
 import { normalizeTheme } from "./theme.js";
@@ -44,7 +45,17 @@ export function EmbeddedViewerShell({
 }: EmbeddedViewerShellProps) {
   const store = useShellStore();
   const localRoot = useRef<HTMLDivElement>(null);
-  const root = rootRef ?? localRoot;
+  const shellRoot = useShellRoot();
+  const root = shellRoot?.elements.root ?? rootRef ?? localRoot;
+  const attachRoot = shellRoot?.ref;
+  const ref = useCallback(
+    (element: HTMLDivElement | null) => {
+      if (attachRoot) attachRoot(element);
+      else root.current = element;
+      if (rootRef) rootRef.current = element;
+    },
+    [attachRoot, root, rootRef],
+  );
   const mainFragment = useShellFragment("mb-main");
   const statusId = useShellIdentifier("mb-status");
   useNavigationBounds(root);
@@ -54,6 +65,9 @@ export function EmbeddedViewerShell({
       announcement={store.state.announcement}
       colorScheme={store.state.selection.colorScheme}
       drawerOpen={store.state.drawerOpen}
+      frameExpanded={Boolean(store.state.expandedFrame)}
+      resizing={shellRoot?.resizing}
+      slotRef={shellRoot?.elements.slots.ref}
       emptyStateShown={
         store.state.route.view.kind === "home" &&
         slots?.emptyState !== undefined
@@ -79,7 +93,7 @@ export function EmbeddedViewerShell({
       }
       onClick={store.onShellClick}
       onKeyDown={store.onShellKeyDown}
-      ref={root}
+      ref={ref}
       slots={slots}
       statusId={statusId}
       theme={normalizeTheme(theme)}

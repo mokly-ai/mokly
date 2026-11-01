@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { registerFrameSession } from "../packages/viewer/dist/client/frame_session.js";
 import { recordedFrameResource } from "../packages/viewer/dist/client/same_origin_access.js";
 import { localFrameReady } from "../packages/viewer/dist/client/same_origin_adapter.js";
 import {
@@ -55,8 +56,11 @@ for (const suffix of ["/index.html", "/", ""]) {
     );
     const fixture = fakeFrame();
     fixture.attributes.set("src", pathname);
+    registerFrameSession(fixture.frame, {
+      identity: {},
+      sources: [expected.href],
+    });
     Object.assign(fixture.frame, {
-      dataset: { fragmentLight: expected.href },
       contentDocument: { readyState: "complete" },
       contentWindow: { location: { pathname } },
     });

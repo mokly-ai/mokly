@@ -10,21 +10,12 @@ for (const open of [true, false]) {
     context.mock.method(globalThis, "queueMicrotask", (callback: () => void) =>
       queued.push(callback),
     );
-    const target = {
-      closest(selector: string) {
-        assert.equal(selector, "[data-mokly-shell]");
-        calls.push("find shell");
-        return {
-          querySelector(selector: string) {
-            assert.equal(selector, "[data-mokly-tag-toggle]");
-            return { focus: () => calls.push("focus local toggle") };
-          },
-        };
-      },
-    } as unknown as HTMLElement;
+    const toggle = {
+      focus: () => calls.push("focus local toggle"),
+    } as unknown as HTMLButtonElement;
     let pickerOpen = open;
     selectTag(
-      target,
+      toggle,
       () => {
         pickerOpen = false;
         calls.push("select tag");
@@ -32,11 +23,10 @@ for (const open of [true, false]) {
       pickerOpen,
     );
     assert.equal(pickerOpen, false);
-    assert.deepEqual(calls, [...(open ? ["find shell"] : []), "select tag"]);
+    assert.deepEqual(calls, ["select tag"]);
     assert.equal(queued.length, open ? 1 : 0);
     for (const callback of queued) callback();
     assert.deepEqual(calls, [
-      ...(open ? ["find shell"] : []),
       "select tag",
       ...(open ? ["focus local toggle"] : []),
     ]);

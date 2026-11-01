@@ -9,6 +9,7 @@ import type { Catalogue } from "./catalogue.js";
 import { changesActivation } from "./changes_activation.js";
 import type { ShellContext } from "./context.js";
 import type { NavSectionNode } from "./nav_tree.js";
+import type { ShellElements } from "./root_context.js";
 import { routeFromUrl, type ShellRoute } from "./routes.js";
 import {
   sameShellRoute,
@@ -112,12 +113,12 @@ export function hostClick(
   environment: EmbeddedShellEnvironment | undefined,
   request: (route: ShellRoute) => void,
   state: ShellState,
+  elements?: ShellElements,
 ): void {
   const target = event.target instanceof Element ? event.target : undefined;
   if (!target || !environment) return;
-  if (target.closest("[data-mokly-tag-toggle], [data-mokly-tag-picker]"))
-    return;
-  if (target.closest("[data-mokly-slot]")) return;
+  if (elements?.inTagPicker(target)) return;
+  if (elements?.inHostSlot(target)) return;
   const anchor = target.closest<HTMLAnchorElement>("a[href]");
   if (!anchor || !eligibleAnchor(event, anchor)) return;
   const href = anchor.getAttribute("href");
@@ -126,7 +127,7 @@ export function hostClick(
   if (!ownedCatalogueUrl(url, environment.baseUrl, anchor.ownerDocument))
     return;
   const requested = routeFromUrl(catalogue, url);
-  const route = anchor.hasAttribute("data-nav-row")
+  const route = elements?.navigation.current?.contains(anchor)
     ? changesActivation(catalogue, context, state.selection, requested)
     : requested;
   event.preventDefault();

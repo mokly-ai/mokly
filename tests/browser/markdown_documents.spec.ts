@@ -53,8 +53,15 @@ for (const width of [390, 1280]) {
       page.locator(".mbk-stage-embed iframe"),
       /index\.dark\.html#your-first-visit$/,
     );
-    await expect(page.locator(".mbk-stage-embed iframe")).toHaveAttribute(
-      "data-fragment-dark",
+    // Switch both sources through the rendered control instead of reading metadata.
+    await page.getByLabel("Appearance", { exact: true }).selectOption("light");
+    await expectFrameSource(
+      page.locator(".mbk-stage-embed iframe"),
+      /index\.html#your-first-visit$/,
+    );
+    await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
+    await expectFrameSource(
+      page.locator(".mbk-stage-embed iframe"),
       /index\.dark\.html#your-first-visit$/,
     );
   });

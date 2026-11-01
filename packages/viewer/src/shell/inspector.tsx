@@ -5,11 +5,12 @@
  * renders the tabs and the panels, with the tab keys and the focus return.
  */
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode, type RefObject } from "react";
 
 import {
   Inspector as InspectorView,
   type InspectorHandle,
+  type InspectorSizing,
   type InspectorTab,
   type InspectorTabId,
 } from "@mokly/ui/inspector";
@@ -21,6 +22,7 @@ import {
   useShellIdentifier,
   useShellIdentifierScope,
 } from "./identifier_context.js";
+import { useShellRoot } from "./root_context.js";
 import { useOptionalShellStore } from "./store_context.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { workspaceEvidenceEntry } from "./workspace_entry.js";
@@ -40,10 +42,14 @@ export function Inspector({
   catalogue,
   data,
   panels,
+  inspectorRef,
+  sizing,
 }: {
   catalogue: Catalogue;
   data: WorkspaceData;
   panels: InspectorPanels;
+  inspectorRef?: RefObject<InspectorHandle | null>;
+  sizing?: InspectorSizing;
 }) {
   const store = useOptionalShellStore();
   const contentId = useShellIdentifier("mb-inspector-content");
@@ -94,7 +100,9 @@ export function Inspector({
   ];
   const open = store?.state.detailsOpen ?? false;
   const interactive = store?.interactive ?? false;
-  const inspector = useRef<InspectorHandle>(null);
+  const localInspector = useRef<InspectorHandle>(null);
+  const inspector = inspectorRef ?? localInspector;
+  const elements = useShellRoot()?.elements;
   // Escape anywhere in the shell root closes an open inspector.
   useEffect(() => {
     if (!interactive || !open) return;
@@ -103,15 +111,16 @@ export function Inspector({
       event.preventDefault();
       inspector.current?.close();
     };
-    const root =
-      inspector.current?.element?.closest<HTMLElement>("[data-mokly-shell]");
+    const root = elements?.root.current;
     root?.addEventListener("keydown", escape);
     return () => root?.removeEventListener("keydown", escape);
-  }, [interactive, open]);
+  }, [elements, inspector, interactive, open]);
   return (
     <InspectorView
       active={store?.state.inspectorTab}
       contentId={contentId}
+      contentRef={elements?.scrolls.ref("inspector")}
+      {...sizing}
       interactive={interactive}
       onOpenChange={(next, id) => store?.setDetails(next, id)}
       open={open}

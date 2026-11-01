@@ -182,7 +182,10 @@ logic, instance resolution, the preview frames with the frame adapters and the
 in-frame inspector, and the browser entry. `@mokly/ui` owns every element and
 every style rule of the Browse shell. The viewer's containers read the shell
 state and render the package components with props and callbacks, so the
-viewer renders no element of its own. The viewer makes no analytics or
+viewer renders no element of its own. The containers reach measured and focused
+elements through package refs. A root context shares those refs across the shell.
+Comparison and appearance state reach package components through props.
+The viewer makes no analytics or
 discovery request, reads no cookie, and uses no ambient credential. Consumer
 code never enters the browser through the viewer.
 
@@ -237,6 +240,11 @@ and Review regressions against `mokly serve` of the example catalogue.
   the public handle and its highlight requests, geometry, and cancellation
 - [`src/shell`](./src/shell) — the Browse shell tree, shared by the embedded
   viewer and the browser entry; it holds no style rule
+- [`src/shell/root_context.tsx`](./src/shell/root_context.tsx) — the root ref,
+  named scroll regions, focus targets, host slots, and resizing state
+- [`src/standalone/startup.ts`](./src/standalone/startup.ts) and
+  [`src/standalone/use_appearance.ts`](./src/standalone/use_appearance.ts) —
+  the appearance resolved before the first render and its React state owner
 - [`src/shell/top_bar.tsx`](./src/shell/top_bar.tsx),
   [`src/shell/nav.tsx`](./src/shell/nav.tsx), and
   [`src/shell/head.tsx`](./src/shell/head.tsx) — the containers of the top

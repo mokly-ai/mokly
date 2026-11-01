@@ -15,6 +15,7 @@ import type { FrameAdapter, FrameEvent } from "../client/frame_adapter.js";
 import { FrameError } from "../client/frame_error.js";
 import { cancelFrameMount } from "../client/frame_mount.js";
 
+import type { FrameLayout } from "./frame_layout_context.js";
 import { mountedFrameReadiness } from "./frame_readiness.js";
 import {
   type ShellFrameIdentity,
@@ -34,6 +35,8 @@ interface MountedFrameInput {
   /** Advances when the frame element is replaced to load changed bytes. */
   generation?: number;
   identity: ShellFrameIdentity;
+  layout?: FrameLayout;
+  sources?: readonly string[];
   onEvent?(event: FrameEvent): void;
   source: string | undefined;
   usage: CatalogueUsage;
@@ -48,6 +51,10 @@ export function useMountedShellFrame(input: MountedFrameInput): {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const active = useRef<ActiveSession | undefined>(undefined);
   const latestEvent = useRef(input.onEvent);
+  const latestLayout = useRef(input.layout);
+  const latestSources = useRef(input.sources);
+  latestLayout.current = input.layout;
+  latestSources.current = input.sources;
   const latestIdentity = useRef(input.identity);
   const latestUsage = useRef(input.usage);
   const [replacement, replace] = useReducer((value: number) => value + 1, 0);
@@ -76,6 +83,8 @@ export function useMountedShellFrame(input: MountedFrameInput): {
       element,
       generation: registry.nextGeneration(),
       identity: latestIdentity.current,
+      ...(latestLayout.current ? { layout: latestLayout.current } : {}),
+      ...(latestSources.current ? { sources: latestSources.current } : {}),
       initializing: true,
       ready: readiness.promise,
       rejectReady: readiness.reject,
@@ -157,15 +166,23 @@ export function useMountedShellFrame(input: MountedFrameInput): {
   useEffect(() => {
     const session = active.current;
     if (!session) return;
-    if (!sameFrameIdentity(session.identity, input.identity)) {
+    if (input.sources) session.sources = input.sources;
+    const layout = input.layout;
+    const layoutChanged =
+      layout?.expanded !== session.layout?.expanded ||
+      layout?.stage !== session.layout?.stage;
+    if (layout) session.layout = layout;
+    if (layoutChanged || !sameFrameIdentity(session.identity, input.identity)) {
       session.identity = input.identity;
       registry?.changed();
+      if (layoutChanged)
+        void registry?.geometry.refresh().catch(() => undefined);
     }
     if (session.usage !== input.usage)
       void (registry
         ? adoptUsage(registry, session, input.usage, replace, setStatus)
         : undefined);
-  }, [input.identity, input.usage, registry]);
+  }, [input.identity, input.layout, input.sources, input.usage, registry]);
 
   return { frameRef, status };
 }

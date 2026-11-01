@@ -104,7 +104,7 @@ export function useWorkspaceInspection(
     setHighlighting(false);
     const state = latest.current;
     if (currentClaim) state.registry?.inspection.release(currentClaim);
-    if (focus) focusWorkspaceHighlightControl(state.sessions[0]?.element);
+    if (focus) focusWorkspaceHighlightControl(state.input.highlightRef.current);
   }, []);
 
   const reveal = useCallback(
@@ -165,7 +165,7 @@ export function useWorkspaceInspection(
     }
   }, [clearPresentation]);
 
-  const root = sessions[0]?.element.closest<HTMLElement>("[data-workspace]");
+  const root = input.workspaceRef.current;
   const sessionSignature = workspaceSessionSignature(sessions);
   const geometry = useWorkspaceInspectionGeometry(
     root,

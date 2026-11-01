@@ -247,10 +247,6 @@ function animationFrames(): {
   let disconnects = 0;
   let observations = 0;
   const pending = new Map<number, FrameRequestCallback>();
-  class MutationObserver {
-    disconnect() {}
-    observe() {}
-  }
   class ResizeObserver {
     disconnect() {
       disconnects += 1;
@@ -261,15 +257,12 @@ function animationFrames(): {
   }
   const root = {
     addEventListener() {},
-    classList: { remove() {}, toggle() {} },
     ownerDocument: {
       defaultView: {
         addEventListener() {},
         cancelAnimationFrame(id: number) {
           pending.delete(id);
         },
-        Element: class {},
-        MutationObserver,
         removeEventListener() {},
         requestAnimationFrame(callback: FrameRequestCallback) {
           const id = ++sequence;
@@ -279,8 +272,6 @@ function animationFrames(): {
         ResizeObserver,
       },
     },
-    querySelector: () => null,
-    querySelectorAll: () => [],
     removeEventListener() {},
   } as unknown as HTMLElement;
   return {

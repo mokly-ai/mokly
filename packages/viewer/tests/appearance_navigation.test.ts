@@ -1,68 +1,64 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { installAppearance } from "../src/standalone/startup.js";
+import { environment } from "./appearance_fixture.js";
 
-import { environment, frame } from "./appearance_fixture.js";
-
-test("route pins update the whole appearance without storing a preference", () => {
-  const dual = frame("welcome.html", "welcome.dark.html");
-  const world = environment({ stored: "light", frames: [dual] });
-  world.attach({ select: true, frames: [dual] });
-  const handle = installAppearance(world.document, world.window);
-  handle.applyRoute("dark");
-  assert.equal(world.root.attributes["data-mokly-theme"], "dark");
-  assert.equal(handle.current().scheme, "dark");
-  assert.equal(world.select.value, "dark");
-  assert.deepEqual(dual.loads, ["welcome.dark.html"]);
+test("route pins update the whole appearance without storing a preference", async (t) => {
+  const world = await environment(t, { stored: "light" });
+  await world.start();
+  await world.navigate("dark");
+  assert.equal(world.theme(), "dark");
+  assert.equal(world.scheme(), "dark");
+  assert.equal(world.select().value, "dark");
+  for (const frame of world.frames()) assert.match(frame.src, /\.dark\.html/);
   assert.equal(world.stored(), "light");
-  handle.applyRoute(undefined);
-  assert.equal(world.root.attributes["data-mokly-theme"], "dark");
-  handle.applyRoute("light");
-  assert.equal(world.root.attributes["data-mokly-theme"], "light");
+  await world.navigate();
+  assert.equal(world.theme(), "dark");
+  await world.navigate("light");
+  assert.equal(world.theme(), "light");
 });
 
-test("reader choices outrank later route pins even without storage", () => {
+test("reader choices outrank later route pins even without storage", async (t) => {
   for (const theme of ["light", "auto", "dark"] as const) {
-    const world = environment({ search: "?scheme=dark", failStorage: true });
-    const handle = installAppearance(world.document, world.window);
-    handle.choose(theme);
+    const world = await environment(t, {
+      search: "?scheme=dark",
+      failStorage: true,
+    });
+    await world.start();
+    await world.choose(theme);
     for (const pin of ["light", "dark", undefined] as const) {
-      handle.applyRoute(pin);
-      assert.equal(world.root.attributes["data-mokly-theme"], theme);
+      await world.navigate(pin);
+      assert.equal(world.theme(), theme);
     }
-    handle.dispose();
-    handle.applyRoute("dark");
-    assert.equal(world.root.attributes["data-mokly-theme"], theme);
+    await world.exit();
+    assert.equal(world.theme(), theme);
+    await world.dispose();
   }
 });
 
-test("Auto continues to follow the system after a conflicting route pin", () => {
-  const world = environment({ search: "?scheme=dark" });
-  const handle = installAppearance(world.document, world.window);
-  handle.choose("auto");
-  handle.applyRoute("dark");
-  assert.deepEqual(handle.current(), { theme: "auto", scheme: "light" });
-  world.media.matches = true;
-  for (const listener of world.listeners) listener.handler();
-  assert.equal(world.root.attributes["data-mokly-theme"], "auto");
-  assert.deepEqual(handle.current(), { theme: "auto", scheme: "dark" });
+test("Auto continues to follow the system after a conflicting route pin", async (t) => {
+  const world = await environment(t, { search: "?scheme=dark" });
+  await world.start();
+  await world.choose("auto");
+  await world.navigate("dark");
+  assert.equal(world.theme(), "auto");
+  assert.equal(world.scheme(), "light");
+  await world.system(true);
+  assert.equal(world.theme(), "auto");
+  assert.equal(world.scheme(), "dark");
 });
 
-test("a mounted appearance host exclusively owns live fragment navigation", () => {
-  const dual = frame("welcome.html", "welcome.dark.html");
-  const world = environment({ frames: [dual] });
-  const handle = installAppearance(world.document, world.window);
+test("React appearance changes keep one mounted frame owner", async (t) => {
+  const world = await environment(t);
+  await world.start();
+  const frames = world.frames();
   const schemes: string[] = [];
-  world.window.onAppearance = (_theme, scheme) => schemes.push(scheme);
-  handle.choose("dark");
-  handle.choose("auto");
-  world.media.matches = true;
-  for (const listener of world.listeners) listener.handler();
+  await world.choose("dark");
+  schemes.push(world.scheme() ?? "missing");
+  await world.choose("auto");
+  schemes.push(world.scheme() ?? "missing");
+  await world.system(true);
+  schemes.push(world.scheme() ?? "missing");
   assert.deepEqual(schemes, ["dark", "light", "dark"]);
-  assert.deepEqual(
-    dual.loads,
-    [],
-    "startup must not create iframe history after the host takes ownership",
-  );
+  assert.deepEqual(world.frames(), frames);
 });

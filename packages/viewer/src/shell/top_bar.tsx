@@ -8,9 +8,7 @@
 
 import { TopBar as TopBarView } from "@mokly/ui/top-bar";
 
-import type { StandaloneAppearanceState } from "../standalone/appearance_bridge.js";
-
-import { AppearanceSelect } from "./appearance.js";
+import { AppearanceSelect, type AppearanceState } from "./appearance.js";
 import type { Catalogue } from "./catalogue.js";
 import { SchemeSwitch } from "./head.js";
 import { useShellIdentifier } from "./identifier_context.js";
@@ -19,7 +17,7 @@ import { SearchTagPicker } from "./tags.js";
 
 /** The shared 48px catalogue header keeps search available at every width. */
 export function TopBar(props: {
-  appearance?: StandaloneAppearanceState;
+  appearance?: AppearanceState;
   catalogue: Catalogue;
 }) {
   const store = useOptionalShellStore();
@@ -37,6 +35,7 @@ export function TopBar(props: {
           <AppearanceSelect
             ready={props.appearance?.ready ?? false}
             theme={props.appearance?.theme ?? "auto"}
+            onChange={props.appearance?.onChange}
           />
         )
       }

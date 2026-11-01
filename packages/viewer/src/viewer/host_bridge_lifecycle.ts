@@ -6,6 +6,7 @@ import type { MutableRefObject, RefObject } from "react";
 import { runCleanup } from "../client/cleanup.js";
 import type { FrameEvent } from "../client/frame_adapter.js";
 import type { PickEnd } from "../host/types.js";
+import { useShellComparisonMode } from "../shell/comparison_mode.js";
 import type { ShellInspectionController } from "../shell/frame_inspection_controller.js";
 import type {
   ShellFrameRegistry,
@@ -43,6 +44,7 @@ export function useHostBridgeLifecycle({
   replaced,
   root,
 }: HostBridgeLifecycleInput): void {
+  const mode = useShellComparisonMode();
   useLayoutEffect(() => {
     if (!registry) return;
     active.current = true;
@@ -102,13 +104,6 @@ export function useHostBridgeLifecycle({
     if (!registry) return;
     const shell = root.current;
     if (!shell) return;
-    const comparison = () => {
-      const mode = shell
-        .querySelector('[data-diff-mode][aria-pressed="true"]')
-        ?.getAttribute("data-diff-mode");
-      if (mode && mode !== "current") clearInspection({ reason: "navigation" });
-      void registry.geometry.refresh().catch(() => undefined);
-    };
     const escape = (event: KeyboardEvent) => {
       if (
         event.key !== "Escape" ||
@@ -119,26 +114,14 @@ export function useHostBridgeLifecycle({
       event.preventDefault();
       clearInspection({ reason: "escape" });
     };
-    const observer = new MutationObserver((records) => {
-      if (
-        records.some(
-          ({ target }) =>
-            target instanceof Element && target.matches("[data-diff-mode]"),
-        )
-      )
-        comparison();
-    });
-    observer.observe(shell, {
-      attributes: true,
-      attributeFilter: ["aria-pressed"],
-      subtree: true,
-    });
     shell.addEventListener("keydown", escape);
-    shell.addEventListener("mokly:comparison", comparison);
     return () => {
-      observer.disconnect();
       shell.removeEventListener("keydown", escape);
-      shell.removeEventListener("mokly:comparison", comparison);
     };
   }, [clearInspection, picking, registry, root]);
+
+  useEffect(() => {
+    if (mode !== "current") clearInspection({ reason: "navigation" });
+    void registry?.geometry.refresh().catch(() => undefined);
+  }, [clearInspection, mode, registry]);
 }

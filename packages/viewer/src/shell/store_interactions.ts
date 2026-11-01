@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
 
+import { useShellRoot, type ShellElements } from "./root_context.js";
 import type { ShellKeyEvent } from "./store_browser_routes.js";
 import type { ShellStore } from "./store_context.js";
 import type { ShellState } from "./store_state.js";
@@ -12,14 +13,13 @@ export function shellKeyDown(
   event: ShellKeyEvent,
   setState: Dispatch<SetStateAction<ShellState>>,
   state: ShellState,
+  elements?: ShellElements,
 ): void {
   if (event.key !== "Escape") return;
   if (state.tagPickerOpen) {
     event.preventDefault();
     setState((current) => ({ ...current, tagPickerOpen: false }));
-    const root = event.currentTarget;
-    if (root instanceof Element)
-      root.querySelector<HTMLElement>("[data-mokly-tag-toggle]")?.focus();
+    elements?.tagToggle.current?.focus();
   } else if (state.expandedFrame) {
     event.preventDefault();
     setState((current) => ({ ...current, expandedFrame: undefined }));
@@ -29,22 +29,20 @@ export function shellKeyDown(
 /** Dismiss overlays on any outside click, including outside an embedded root. */
 function dismissOverlays(
   target: Element,
-  root: HTMLElement,
+  elements: ShellElements,
   store: ShellStore,
 ): void {
-  const picker = target.closest(
-    "[data-mokly-tag-toggle], [data-mokly-tag-picker]",
-  );
-  if (picker && root.contains(picker)) return;
+  if (elements.inTagPicker(target)) return;
   if (store.state.tagPickerOpen) {
-    const panel = root.querySelector("[data-mokly-tag-picker]");
-    const heldFocus = panel?.contains(root.ownerDocument.activeElement);
+    const panel = elements.tagPicker.current;
+    const heldFocus = panel?.contains(panel.ownerDocument.activeElement);
     store.setTagPicker(false);
-    if (heldFocus)
-      root.querySelector<HTMLElement>("[data-mokly-tag-toggle]")?.focus();
+    if (heldFocus) elements.tagToggle.current?.focus();
   }
-  const frame = target.closest(".browser-frame.is-expanded");
-  if (store.state.expandedFrame && !(frame && root.contains(frame)))
+  if (
+    store.state.expandedFrame &&
+    !elements.expandedBrowser.current?.contains(target)
+  )
     store.setExpandedFrame(undefined);
 }
 
@@ -53,6 +51,7 @@ export function useShellBindings(
   root: RefObject<HTMLElement | null>,
   store: ShellStore,
 ): void {
+  const elements = useShellRoot()?.elements;
   const latest = useRef(store);
   latest.current = store;
   useEffect(() => {
@@ -62,7 +61,7 @@ export function useShellBindings(
     const click = (event: MouseEvent) => {
       const current = latest.current;
       if (!current.interactive || !(event.target instanceof Element)) return;
-      dismissOverlays(event.target, element, current);
+      if (elements) dismissOverlays(event.target, elements, current);
       if (!current.context.embedded) current.onShellClick(event);
     };
     const keydown = (event: KeyboardEvent) => {
@@ -81,5 +80,5 @@ export function useShellBindings(
       doc.removeEventListener("click", click);
       doc.removeEventListener("keydown", keydown);
     };
-  }, [root]);
+  }, [elements, root]);
 }

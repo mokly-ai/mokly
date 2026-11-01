@@ -10,6 +10,7 @@ import { folderTitleLookup } from "../registry/folder_titles.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import type { NavSectionNode } from "./nav_tree.js";
+import { useShellRoot } from "./root_context.js";
 import { routeFromUrl, type ShellRoute } from "./routes.js";
 import { mergeSelection, sameSelection, selectionQuery } from "./selection.js";
 import type { ShellBrowserActions } from "./store_browser.js";
@@ -57,6 +58,7 @@ interface PendingQuery {
 
 /** Bind shell actions to controlled or uncontrolled public viewer props. */
 export function useShellHost(input: HostStoreInput): ShellHostActions {
+  const elements = useShellRoot()?.elements;
   const stateRef = useRef(input.state);
   const environmentRef = useRef(input.environment);
   const pendingNavigation = useRef<PendingNavigation | undefined>(undefined);
@@ -273,10 +275,11 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
         environmentRef.current,
         requestRoute,
         stateRef.current,
+        elements,
       );
     },
     onShellKeyDown(event) {
-      shellKeyDown(event, input.setState, stateRef.current);
+      shellKeyDown(event, input.setState, stateRef.current, elements);
     },
     openFrame(href, target) {
       const environment = environmentRef.current;

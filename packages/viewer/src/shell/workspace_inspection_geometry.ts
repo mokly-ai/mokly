@@ -6,6 +6,7 @@ import type { Dispatch, SetStateAction } from "react";
 import type { ShellFrameGeometryController } from "./frame_geometry_controller.js";
 import type { ShellFrameSession } from "./frame_registry.js";
 import { useOptionalShellFrameRegistry } from "./frame_registry.js";
+import { useShellRoot } from "./root_context.js";
 
 interface GeometryDemand {
   readonly current: readonly ShellFrameSession[];
@@ -29,12 +30,13 @@ export function useWorkspaceInspectionGeometry(
   demand: GeometryDemand,
   setFailed: Dispatch<SetStateAction<boolean>>,
 ): ShellFrameGeometryController | undefined {
+  const elements = useShellRoot()?.elements;
   const registry = useOptionalShellFrameRegistry();
   const geometry = registry?.geometry;
   const owner = useRef({});
   const [, setCycle] = useState(0);
   useEffect(() => {
-    const root = workspace?.closest<HTMLElement>("[data-mokly-shell]");
+    const root = elements?.root.current;
     if (!geometry || !root) return;
     const release = geometry.acquire(owner.current, root, () => demand.current);
     const unsubscribe = geometry.subscribe(setCycle);
@@ -44,6 +46,6 @@ export function useWorkspaceInspectionGeometry(
       unsubscribe();
       release();
     };
-  }, [geometry, workspace]);
+  }, [elements, geometry, workspace]);
   return geometry;
 }

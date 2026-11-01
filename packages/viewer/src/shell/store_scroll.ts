@@ -1,27 +1,25 @@
 /** Browser history persistence for shell-owned scroll regions. */
 
-/** Read every named stage or inspector scroll position. */
-export function captureScrolls(doc: Document): Record<string, number> {
+import type { ElementRefs } from "./element_refs.js";
+import type { ScrollRegion } from "./root_context.js";
+
+type ScrollRegions = ElementRefs<ScrollRegion, HTMLDivElement> | undefined;
+
+/** Read every named stage or inspector scroll position through its ref. */
+export function captureScrolls(regions: ScrollRegions): Record<string, number> {
   return Object.fromEntries(
-    [...doc.querySelectorAll<HTMLElement>("[data-mokly-scroll]")].flatMap(
-      (region) => {
-        const key = region.dataset["moklyScroll"];
-        return key ? [[key, region.scrollTop]] : [];
-      },
-    ),
+    (regions?.values() ?? []).map(([name, region]) => [name, region.scrollTop]),
   );
 }
 
-/** Restore every named position that exists in the next route tree. */
+/** Restore positions only for regions present in the next route tree. */
 export function restoreScrolls(
-  doc: Document,
+  regions: ScrollRegions,
   scrolls: Readonly<Record<string, number>>,
 ): void {
-  for (const region of doc.querySelectorAll<HTMLElement>(
-    "[data-mokly-scroll]",
-  )) {
-    const key = region.dataset["moklyScroll"];
-    if (key && scrolls[key] !== undefined) region.scrollTop = scrolls[key];
+  for (const [name, region] of regions?.values() ?? []) {
+    const top = scrolls[name];
+    if (top !== undefined) region.scrollTop = top;
   }
 }
 

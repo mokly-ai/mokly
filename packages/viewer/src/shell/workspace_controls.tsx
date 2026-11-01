@@ -4,6 +4,8 @@
  * `@mokly/ui/view-controls` renders the viewport select, the Dark preview
  * toggle, and the Highlight components toggle.
  */
+import type { Ref } from "react";
+
 import { ViewControls } from "@mokly/ui/view-controls";
 
 import type { ColorScheme } from "../data/axes.js";
@@ -22,10 +24,12 @@ export function WorkspaceControls({
   dark,
   effectiveColorScheme,
   highlight,
+  highlightRef,
 }: {
   changedViews: readonly ChangedView[];
   dark: boolean;
   effectiveColorScheme: ColorScheme;
+  highlightRef?: Ref<HTMLButtonElement>;
   highlight?: {
     available: boolean;
     active: boolean;
@@ -53,6 +57,7 @@ export function WorkspaceControls({
             }
           : undefined
       }
+      highlightRef={highlightRef}
       highlight={
         highlight
           ? {

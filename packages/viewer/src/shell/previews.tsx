@@ -22,6 +22,7 @@ import type { ShellContext } from "./context.js";
 import { BrowserFrame } from "./frames.js";
 import { SnapshotFrame } from "./preview_frame.js";
 import { PreviewUnavailable } from "./preview_unavailable.js";
+import { useShellRoot } from "./root_context.js";
 import { schemeValue, documentLightOnly } from "./scheme_fallback.js";
 import { useOptionalShellStore } from "./store_context.js";
 import { useRemovedPreview } from "./use_removed_preview.js";
@@ -129,6 +130,7 @@ export function ReadyPreview(props: {
   retry(): void;
   viewport: "both" | "desktop" | "mobile";
 }) {
+  const elements = useShellRoot()?.elements;
   const content = props.loaded.content;
   if (content.kind === "page" || content.kind === "document") {
     const view =
@@ -142,7 +144,10 @@ export function ReadyPreview(props: {
     const presentation = presentationFor(props.presentations, view.url);
     if (!presentation) return <PreviewUnavailable retry={props.retry} />;
     return (
-      <DocumentFrame scheme={view.colorScheme}>
+      <DocumentFrame
+        ref={elements?.scrolls.ref("embed")}
+        scheme={view.colorScheme}
+      >
         <SnapshotFrame presentation={presentation} title={props.data.title} />
       </DocumentFrame>
     );
@@ -177,7 +182,11 @@ export function ReadyPreview(props: {
   if (frames.some((frame) => frame === undefined))
     return <PreviewUnavailable retry={props.retry} />;
   return (
-    <Stage kind="live" viewport={props.viewport}>
+    <Stage
+      kind="live"
+      ref={elements?.scrolls.ref("stage")}
+      viewport={props.viewport}
+    >
       {frames}
     </Stage>
   );

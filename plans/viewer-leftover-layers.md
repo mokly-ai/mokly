@@ -215,22 +215,22 @@ Depends on: 1
 
 Depends on: 4, 5, 6
 
-- [ ] Read the comparison mode from shell state. Delete the `aria-pressed`
+- [x] Read the comparison mode from shell state. Delete the `aria-pressed`
       observers and the `mokly:comparison` listeners in
       `viewer/host_bridge_lifecycle.ts:105-141`, `shell/frame_markers.ts:95-98`,
       and `shell/frame_marker_layer.tsx:67-92`.
-- [ ] Hold the standalone appearance in React state. Delete the controller in
+- [x] Hold the standalone appearance in React state. Delete the controller in
       `standalone/startup.ts` that writes into rendered elements, and the
       `window.__moklyAppearance` and `window.onAppearance` globals. Keep the
       stored appearance applied before the first render.
-- [ ] Use the props and refs of Milestone 6 in place of selectors and class
+- [x] Use the props and refs of Milestone 6 in place of selectors and class
       changes, for example in `shell/inspector_resize.ts`,
       `shell/nav_resize.ts`, `shell/frame_geometry.ts`, and
       `client/same_origin_adapter.ts:108`.
-- [ ] Pass the scheme of each frame through its session, not through the
+- [x] Pass the scheme of each frame through its session, not through the
       `data-fragment-light` and `data-fragment-dark` attributes.
-- [ ] Keep the standalone appearance code out of the React-host entry.
-- [ ] Move each test that uses an internal that this milestone deletes to
+- [x] Keep the standalone appearance code out of the React-host entry.
+- [x] Move each test that uses an internal that this milestone deletes to
       the public path, with every assertion. An example is
       `packages/viewer/tests/appearance_startup.test.ts:142`.
 

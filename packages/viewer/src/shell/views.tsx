@@ -27,6 +27,7 @@ import { useShellIdentifier } from "./identifier_context.js";
 import { PageEvidence } from "./page_evidence.js";
 import { pageComparisonEvidence } from "./page_evidence_data.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
+import { useShellRoot } from "./root_context.js";
 import { TargetStage } from "./stages.js";
 import type { RouteTarget } from "./target.js";
 import { ComponentWorkspace } from "./workspace.js";
@@ -132,6 +133,7 @@ export function ShellMain(props: {
   context: ShellContext;
   view: ShellView;
 }) {
+  const elements = useShellRoot()?.elements;
   const mainId = useShellIdentifier("mb-main");
   const activeId = activeIdForView(props.view);
   const baseline = props.catalogue.removedEntries.find(
@@ -141,6 +143,7 @@ export function ShellMain(props: {
     <MainRegion
       baseline={baseline ? sha256(canonicalJson(baseline)) : undefined}
       id={mainId}
+      ref={elements?.main}
     >
       {props.view.kind === "home" ? (
         <HomeState summary={homeSummary(props.catalogue.publicModel)} />

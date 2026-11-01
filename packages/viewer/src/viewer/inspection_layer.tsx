@@ -24,6 +24,7 @@ import type {
   ShellFrameRegistry,
   ShellFrameSession,
 } from "../shell/frame_registry.js";
+import { useShellRoot } from "../shell/root_context.js";
 
 export type ViewerInspectionPresentation =
   | {
@@ -65,6 +66,7 @@ export function ViewerInspectionLayer({
   presentation?: ViewerInspectionPresentation;
   registry: ShellFrameRegistry;
 }) {
+  const elements = useShellRoot()?.elements;
   const layer = useRef<HTMLDivElement>(null);
   const owner = useRef({});
   const demand = useRef<readonly ShellFrameSession[]>([]);
@@ -88,7 +90,7 @@ export function ViewerInspectionLayer({
   demand.current = sessions;
 
   useEffect(() => {
-    const root = layer.current?.closest<HTMLElement>("[data-mokly-shell]");
+    const root = elements?.root.current;
     if (!root) return;
     const geometry = registry.geometry;
     const release = geometry.acquire(owner.current, root, () => demand.current);
@@ -97,7 +99,7 @@ export function ViewerInspectionLayer({
       unsubscribe();
       release();
     };
-  }, [registry]);
+  }, [elements, registry]);
 
   useEffect(() => {
     if (!sessions.length) return;

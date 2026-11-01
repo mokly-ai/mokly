@@ -1,8 +1,11 @@
 /** Shared React frame primitives for browser-only registry harnesses. */
 
+import { useContext } from "react";
+
 import type { ShellCatalogueView } from "../src/catalogue/scoped_types.js";
 import type { CatalogueUsage } from "../src/catalogue/types.js";
 import type { FrameEvent } from "../src/client/frame_adapter.js";
+import { FrameStageContext } from "../src/shell/frame_layout_context.js";
 import { useMountedShellFrame } from "../src/shell/frame_mount_hook.js";
 import { useOptionalShellFrameRegistry } from "../src/shell/frame_registry.js";
 import { useFrameSource } from "../src/shell/frame_source_hook.js";
@@ -21,9 +24,11 @@ export function RegistryHarnessFrame({
   view: ShellCatalogueView;
 }) {
   const registry = useOptionalShellFrameRegistry();
+  const stage = useContext(FrameStageContext);
   const source = frameSource(entry, view);
   const mounted = useMountedShellFrame({
     enabled: true,
+    layout: { expanded: false, stage },
     identity: {
       entryPath: entry.path,
       viewport: view.viewport,

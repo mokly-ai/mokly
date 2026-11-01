@@ -1,5 +1,4 @@
 import {
-  VIEWER_DIRECTORY,
   currentDocumentPath,
   currentDocumentRoute,
 } from "../catalogue/delivery_paths.js";
@@ -11,6 +10,7 @@ import { authenticateRanges, rangeBounds } from "./component_geometry.js";
 import type { FrameAdapter } from "./frame_adapter.js";
 import { FrameError } from "./frame_error.js";
 import { frameUrl, temporaryFrameUrl } from "./frame_mount.js";
+import { frameSession } from "./frame_session.js";
 import { frameEvents, frameUsage } from "./frame_usage.js";
 import { localFrameAccess } from "./same_origin_access.js";
 import { installLocalHighlight } from "./same_origin_highlight.js";
@@ -105,8 +105,7 @@ function localAdapter(resolveUrl: typeof frameUrl): FrameAdapter {
               selecting = mode !== "off";
               if (mode === "off" || !record) return;
               stop = installLocalHighlight(
-                frame.closest<HTMLElement>(`.${VIEWER_DIRECTORY}`) ??
-                  frame.ownerDocument.body,
+                frame.ownerDocument.body,
                 [
                   {
                     frame,
@@ -149,8 +148,7 @@ function localRecord(
   return usage.status === "ready"
     ? {
         ...usage,
-        viewport:
-          frame.dataset["workspaceFrame"] === "mobile" ? "mobile" : "desktop",
+        viewport: frameSession(frame)?.identity.viewport ?? "desktop",
         colorScheme: "light",
         styles: [],
         resources: [],

@@ -14,15 +14,15 @@ import { useShellIdentifier } from "./identifier_context.js";
 import { VIEW_CHANGED_IDS, VIEW_CHANGED_TEXT } from "./view_marks.js";
 import { useActiveWorkspace } from "./workspace_context.js";
 
-/**
- * Rendered hidden: the control cannot do anything until the startup asset
- * installs its behaviour, and CSS alone still gives the initial and Auto
- * appearance, so a reader without JavaScript is never shown a dead control.
- */
-export function AppearanceSelect(props: {
+/** Appearance data and callback supplied by the standalone root. */
+export interface AppearanceState {
   ready: boolean;
   theme: ViewerTheme;
-}) {
+  onChange?: ((theme: ViewerTheme) => void) | undefined;
+}
+
+/** Show the selector only when its React change handler is installed. */
+export function AppearanceSelect(props: AppearanceState) {
   const changed = useActiveWorkspace()?.marks.scheme ?? false;
   const changedId = useShellIdentifier(VIEW_CHANGED_IDS.scheme);
   return (
@@ -31,6 +31,8 @@ export function AppearanceSelect(props: {
       changedId={changedId}
       changedText={VIEW_CHANGED_TEXT.scheme}
       hidden={!props.ready}
+      controlled
+      {...(props.onChange ? { onChange: props.onChange } : {})}
       value={props.theme}
     />
   );

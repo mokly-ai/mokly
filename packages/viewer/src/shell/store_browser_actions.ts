@@ -5,6 +5,7 @@ import type { FrameNavigation } from "../client/frame_adapter.js";
 import type { Catalogue } from "./catalogue.js";
 import { changesActivation } from "./changes_activation.js";
 import type { ShellContext } from "./context.js";
+import type { ShellElements } from "./root_context.js";
 import { routeFromUrl, routeHref } from "./routes.js";
 import {
   eligibleShellAnchor,
@@ -15,6 +16,7 @@ import { shellKeyDown } from "./store_interactions.js";
 import type { ShellState } from "./store_state.js";
 
 interface ShellBrowserActionInput {
+  elements?: ShellElements | undefined;
   catalogue: Catalogue;
   context: ShellContext;
   navigate(href: string): Promise<void>;
@@ -47,7 +49,7 @@ export function shellBrowserActions(
     openFrame: (href, target) => window.open(href, target, "noopener"),
     onShellClick: (event) => handleShellClick(event, input),
     onShellKeyDown: (event) =>
-      shellKeyDown(event, input.setState, input.state()),
+      shellKeyDown(event, input.setState, input.state(), input.elements),
   };
 }
 
@@ -58,14 +60,13 @@ function handleShellClick(
   const target = event.target instanceof Element ? event.target : undefined;
   if (!target) return;
   const state = input.state();
-  if (target.closest("[data-mokly-tag-toggle], [data-mokly-tag-picker]"))
-    return;
+  if (input.elements?.inTagPicker(target)) return;
   const anchor = target.closest<HTMLAnchorElement>("a[href]");
   if (!anchor || !eligibleShellAnchor(event, anchor, window.location)) return;
   event.preventDefault();
   const requested = new URL(anchor.href, window.location.href);
   const route = routeFromUrl(input.catalogue, requested);
-  const activated = anchor.hasAttribute("data-nav-row")
+  const activated = input.elements?.navigation.current?.contains(anchor)
     ? changesActivation(input.catalogue, input.context, state.selection, route)
     : route;
   if (activated === route || activated.view.kind !== "target") {

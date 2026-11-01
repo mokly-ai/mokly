@@ -177,7 +177,8 @@ request shows the comparison failure with Try again; Current remains
 available.
 Every failed comparison uses the details sentence "The comparison is
 unavailable.". The shell never shows server or browser error text there.
-`use_comparison.ts` is the single owner of comparison mode: component sibling
+`use_comparison.ts` owns comparison mode through `comparison_mode.tsx`,
+which shares that state with host inspection and markers: component sibling
 navigation keeps that owner mounted, and the workspace reads its mode directly
 so Props and highlighting remain read-only until Current is selected.
 `views.tsx` keys the workspace with `workspaceKey`, the parent the lookup
@@ -250,7 +251,7 @@ shell font.
 The theme gives the stub's document class the Auto appearance before the
 bundle runs. The standalone shell sets its appearance, scheme, and state marks
 on its own root, as an embedded root does, and never on `body`. The appearance
-controller also writes the appearance on `<html>`, so the stub page around the
+state also supplies the appearance on `<html>`, so the stub page around the
 shell takes the same appearance as the root. The
 embedded stylesheet uses packaged relative font URLs and keeps the
 fallbacks that let a host's accent value inherit. It needs no `@scope` block,
@@ -461,7 +462,11 @@ supplied props into the records of the package's panels. `@mokly/ui/inspector`
 owns the tab keys and returns focus from Close to the tab pressed last.
 `inspector.tsx` closes the inspector the same way on Escape anywhere in its
 shell root. `inspector_resize.ts` owns the divider and the mobile sheet,
-because they read the workspace panes and the shell root. Each shell root
+through Inspector sizing props and the refs of its handles and workspace
+panes. `root_context.tsx` shares the root ref, drag state, focus targets,
+host slots, and named scroll regions. Containers use package refs for focus
+and measurement. Frame sessions carry their source choices, stage refs,
+and expanded state, so geometry never reads package selectors. Each shell root
 owns one `frame_registry.tsx` instance, so frame
 path-keyed identity, readiness, validated usage revisions and disposal cannot cross an
 independent embedded viewer. `frame_mount_hook.ts` mounts each frame, and
@@ -491,18 +496,20 @@ identities follow the [folder contract](../../../../docs/protocol/mokly-folders.
 and persisted values follow the
 [disclosure persistence contract](../../../../docs/protocol/mokly-disclosure-persistence.md).
 
-Appearance follows the same order: the browser entry installs the appearance
-controller of [`../standalone/startup.ts`](../standalone/startup.ts) before the
-first render, so it resolves Auto/Light/Dark from the stored choice or the
-system before the shell paints.
-[`appearance_bridge.ts`](../standalone/appearance_bridge.ts) adopts that theme
-and the controller's effective scheme into the live shell, marks the shell root
-with both, and independently asks the store for matching preview files. A light-only catalogue can therefore keep
-Light previews under a Dark interface. Embedded roots skip the bridge and
-receive `theme` from their host while retaining independent preview controls.
-Standalone route installation sends scheme pins to that controller; it never
-changes preview selection separately. A reader's choice wins over later pins
-through navigation and browser history. Each preview wrapper records its actual
+Appearance follows the same order: the browser entry resolves the theme and
+scheme through [`../standalone/startup.ts`](../standalone/startup.ts) before
+it creates the React root. It writes the stub document's theme at that point.
+[`../standalone/use_appearance.ts`](../standalone/use_appearance.ts) holds the
+appearance in React state for loading, failed, version, and ready states.
+The ready shell passes the theme, scheme, and change callback to its layout
+and controlled Appearance selector. It selects the same scheme in the store.
+A light-only catalogue keeps Light previews under a Dark interface.
+Embedded roots receive `theme` from their host and keep independent preview
+controls. Their entry graph imports no standalone appearance code.
+Standalone route installation passes scheme pins to the React appearance
+owner through a callback. It never changes preview selection separately.
+A reader's choice wins over later pins through navigation and browser history.
+Each preview wrapper records its actual
 file's scheme for iframe media queries, native controls, device colors and
 comparison backgrounds, including globally light-only catalogues.
 `scheme_fallback.ts` decides when a document keeps its light file under Dark
@@ -515,8 +522,8 @@ surface background and iframe color scheme from the wrapper's scheme.
 Transparent content therefore keeps its selected Light or Dark base in screen,
 page, component, historical and comparison frames, independently of interface
 appearance.
-React's frame adapters exclusively own source changes; the appearance
-controller only reports the effective scheme, avoiding iframe history entries
+React's frame adapters exclusively own source changes. Appearance state
+supplies the effective scheme, avoiding iframe history entries
 during manual or automatic appearance changes. The frame-source hook keeps the
 first source and updates sources only for frames without an active adapter; it
 must not race adapter-owned history-replacing navigation.

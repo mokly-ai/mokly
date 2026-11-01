@@ -6,10 +6,12 @@ import { runCleanup } from "../client/cleanup.js";
 import { viewerFailures } from "../host/failures.js";
 import type { ViewerEvents, ViewerMarker } from "../host/types.js";
 
+import { useShellComparisonMode } from "./comparison_mode.js";
 import { ShellFrameMarkers } from "./frame_markers.js";
 import { useOptionalShellFrameRegistry } from "./frame_registry.js";
 import { MarkerLayer } from "./marker_layer.js";
 import { MarkerStore } from "./marker_store.js";
+import { useShellRoot } from "./root_context.js";
 
 interface MarkerRuntime {
   dispose(): void;
@@ -27,9 +29,16 @@ export function ShellFrameMarkerLayer({
   onError?: ViewerEvents["onError"];
   onMarkerChange?: ViewerEvents["onMarkerChange"];
 }) {
+  const shellRoot = useShellRoot();
+  const elements = shellRoot?.elements;
+  const root = shellRoot?.element;
+  const mode = useShellComparisonMode();
+  const currentMode = useRef(mode);
+  currentMode.current = mode;
   const registry = useOptionalShellFrameRegistry();
   const [store] = useState(() => new MarkerStore());
-  const layer = useRef<HTMLDivElement>(null);
+  const localLayer = useRef<HTMLDivElement>(null);
+  const layer = elements?.markers ?? localLayer;
   const runtime = useRef<MarkerRuntime | undefined>(undefined);
   const active = useRef(false);
   const latestMarkers = useRef(markers);
@@ -45,7 +54,6 @@ export function ShellFrameMarkerLayer({
 
   useLayoutEffect(() => {
     const markerLayer = layer.current;
-    const root = markerLayer?.closest<HTMLElement>("[data-mokly-shell]");
     if (!registry || !markerLayer || !root) return;
     active.current = true;
     const geometry = registry.geometry;
@@ -56,6 +64,10 @@ export function ShellFrameMarkerLayer({
       store,
       () => callbacks.current,
       (error) => report(error, "markers"),
+      {
+        current: () => currentMode.current === "current",
+        layer: () => layer.current,
+      },
     );
     const sync = () => {
       owner.changed();
@@ -64,21 +76,6 @@ export function ShellFrameMarkerLayer({
     const releaseGeometry = geometry.acquire(owner, root, owner.demand);
     const unsubscribeGeometry = geometry.subscribe(() => owner.changed());
     const unsubscribeRegistry = registry.subscribe(sync);
-    const comparisons = new MutationObserver((records) => {
-      if (
-        records.some(
-          ({ target }) =>
-            target instanceof Element && target.matches("[data-diff-mode]"),
-        )
-      )
-        sync();
-    });
-    root.addEventListener("mokly:comparison", sync);
-    comparisons.observe(root, {
-      attributes: true,
-      attributeFilter: ["aria-pressed"],
-      subtree: true,
-    });
     let disposed = false;
     const current: MarkerRuntime = {
       sync,
@@ -88,8 +85,6 @@ export function ShellFrameMarkerLayer({
         disposed = true;
         active.current = false;
         runCleanup([
-          () => comparisons.disconnect(),
-          () => root.removeEventListener("mokly:comparison", sync),
           unsubscribeRegistry,
           unsubscribeGeometry,
           releaseGeometry,
@@ -109,7 +104,7 @@ export function ShellFrameMarkerLayer({
       if (runtime.current === current) runtime.current = undefined;
       current.dispose();
     };
-  }, [registry, report, store]);
+  }, [layer, registry, report, root, store]);
 
   useLayoutEffect(() => runtime.current?.sync());
   useEffect(() => runtime.current?.update(markers), [markers]);

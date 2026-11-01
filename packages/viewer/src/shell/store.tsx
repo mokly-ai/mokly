@@ -14,6 +14,7 @@ import {
   ComparisonEnvironmentProvider,
   type ComparisonEnvironment,
 } from "./comparison_context.js";
+import { ComparisonModeProvider } from "./comparison_mode.js";
 import type { ShellContext } from "./context.js";
 import { initialSnapshot } from "./data_commit.js";
 import { ShellDataBoundary } from "./data_context.js";
@@ -24,6 +25,7 @@ import { ShellFrameEventRouter } from "./frame_event_router.js";
 import { ShellFrameRegistryProvider } from "./frame_registry.js";
 import { catalogueNavSections } from "./nav_model.js";
 import { shellContext } from "./projection.js";
+import { ShellRootProvider } from "./root_context.js";
 import type { ShellRoute } from "./routes.js";
 import { shellStore } from "./store_actions.js";
 import { useShellBrowser } from "./store_browser.js";
@@ -49,6 +51,8 @@ interface ShellStoreProviderProps {
   initialDetails?: readonly (readonly [DetailRequest, EntryDetailV4])[];
   initialState?: ShellInitialState;
   interactive: boolean;
+  onAppearanceRoute?:
+    ((scheme: "dark" | "light" | undefined) => void) | undefined;
   onVersionError?: (error: MoklyVersionError) => void;
   /** The detail and live transports; absent, the shell renders the index only. */
   source?: ShellDataSource;
@@ -57,7 +61,15 @@ interface ShellStoreProviderProps {
 }
 
 /** Provide one state owner to a complete shell tree. */
-export function ShellStoreProvider({
+export function ShellStoreProvider(props: ShellStoreProviderProps) {
+  return (
+    <ShellRootProvider>
+      <ShellStoreContents {...props} />
+    </ShellRootProvider>
+  );
+}
+
+function ShellStoreContents({
   children,
   comparisonEnvironment,
   context,
@@ -69,6 +81,7 @@ export function ShellStoreProvider({
   initialState,
   interactive,
   onVersionError,
+  onAppearanceRoute,
   route,
   source,
 }: ShellStoreProviderProps) {
@@ -113,6 +126,7 @@ export function ShellStoreProvider({
     [activeCatalogue],
   );
   const browser = useShellBrowser({
+    onAppearanceRoute,
     catalogue: activeCatalogue,
     context: activeContext,
     interactive: interactive && !embeddedHost,
@@ -159,7 +173,9 @@ export function ShellStoreProvider({
           >
             <DisplaySelection.Provider value={state.selection}>
               <ShellFrameEventRouter />
-              <WorkspaceProvider>{children}</WorkspaceProvider>
+              <ComparisonModeProvider>
+                <WorkspaceProvider>{children}</WorkspaceProvider>
+              </ComparisonModeProvider>
             </DisplaySelection.Provider>
           </ShellFrameRegistryProvider>
         </ComparisonEnvironmentProvider>
