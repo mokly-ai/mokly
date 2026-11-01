@@ -53,6 +53,17 @@
     shards of a remote `cargo xtask check`. A local
     `npm run test:browser -- tests/browser/imported_css_comparison.spec.ts --repeat-each=30`
     passed 30 of 30.
+  - On 2026-11-01 it failed twice more with the same text, in browser shard
+    2/4 of a remote `cargo xtask check` on the branch
+    `conductor/rust-rebuild-59-performance-follow-ups`, which changes no
+    browser, viewer, or comparison code: run `20261101T010415Z-113144` at
+    `b84b0a6b` and run `20261101T133531Z-209562` at `e1cec37b`. After the
+    first, a targeted run of the test passed 1 of 1, and the complete gate
+    on the same executable files had passed it earlier.
+  - It failed a third time that day, in run `20261101T134937Z-449298` at
+    `f70d9693` of the same branch. A local rerun passed it, and the next
+    complete gate on the same commit, run `20261101T140038Z-511451`, passed
+    all seven suites.
   - Suspected source: async ordering in the test. After the mode click, the
     locator
     `[data-mokly-comparison-frame][data-mokly-preview-source*="/snapshots/before/"]`

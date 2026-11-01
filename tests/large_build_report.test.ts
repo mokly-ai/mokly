@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import type { AcceptanceBuild } from "../scripts/large/acceptance_build.js";
 import { benchmark } from "../scripts/large/benchmark.js";
 
 import { generateLargeFixture } from "./fixtures/large/generate.js";
@@ -33,6 +34,15 @@ for (const event of ['start', 'end']) {
   })+'\\n');
 }`,
   );
+  const acceptanceBuild: AcceptanceBuild = {
+    profile: "release",
+    target: "test-target",
+    binarySha256: "a".repeat(64),
+    sourceCommit: "test-commit",
+    sourceTree: "test-tree",
+    dirty: false,
+  };
+  let acceptanceCalls = 0;
   for (const options of [
     {},
     { buildChanges: false, buildDeadlineMs: 420_000 },
@@ -46,7 +56,14 @@ for (const event of ['start', 'end']) {
       },
       ["build"],
       1,
-      options,
+      {
+        ...options,
+        acceptanceForFixture: async (input) => {
+          acceptanceCalls++;
+          assert.equal(input.root, root);
+          return acceptanceBuild;
+        },
+      },
     );
     const stored = JSON.parse(
       await fs.readFile(path.join(root, ".context/measurements.json"), "utf8"),
@@ -70,6 +87,8 @@ for (const event of ['start', 'end']) {
     const measured = stored.results[0];
     assert.ok(measured && "status" in measured && "inputProfile" in measured);
     assert.equal(measured.status, "measured");
+    assert.ok("acceptanceBuild" in measured);
+    assert.deepEqual(measured.acceptanceBuild, acceptanceBuild);
     const profile = measured.inputProfile;
     assert.ok(
       profile &&
@@ -84,4 +103,5 @@ for (const event of ['start', 'end']) {
     assert.equal(spans[0].inputPaths, 7);
     assert.equal(spans[0].retainedSourceBytes, 42);
   }
+  assert.equal(acceptanceCalls, 2);
 });
