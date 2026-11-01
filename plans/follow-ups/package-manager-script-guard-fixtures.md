@@ -1,14 +1,15 @@
 # Add fixtures for package-manager script guards
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 121, finding 7 of the pnpm and Yarn review, joined by fix round 2 finding 5.
 - **Location:** `crates/mokly-compare/src/manager_command.rs:25`,
   `crates/mokly-compare/src/manager_command.rs:157`,
   `tests/helpers/base_manager_fixture.ts:15`, and
   `tests/static_base_managers.test.ts:96`.
-- **Reason:** On 2026-10-21 the user deferred the open review items of PR #199
-  until after its merge, for the user's later choice.
+- **Reason:** The Rust rebuild merged with this test gap open, and the work
+  reaches the base-install tests and a one-time install check, so it needs a
+  separate branch.
 
 - **Source:** Review.
 - **Category:** Test.
@@ -85,7 +86,8 @@
   package-manager checks out of the suite. The recommendation was former
   option B before the `testing` skill of 2026-10-30. It was then A, which
   does not cover the lifecycle checks that the Problem names.
-- **Action:** ask the user, because on 2026-10-21 the user reserved the choice
-  for each open review item of the rebuild.
+- **Action:** fix after merge, apply C, because the assertions cover guards that
+  `docs/protocol/mokly-base-dependencies.md:183` and `:191` already require, and
+  the install check runs once outside the suite.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5996).
