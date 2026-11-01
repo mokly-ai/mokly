@@ -5,7 +5,8 @@ Status: Active. On branch
 The plan closes when its PR merges. The coordinator answered every decision
 on 2026-10-28. The Clippy rule of item 166 B waits for the user and is not
 part of this change. Milestones 1 to 6 are done. Milestone 7 is in progress.
-The loader work resumed after the 2026-10-28 usage limit and is committed.
+The loader work resumed after the 2026-10-28 usage limit and is committed as
+`0efe546b`. The completed milestone keeps its earlier status note below.
 
 This plan resolves user items 179, 174, and 173 of the
 [Rust rebuild plan](https://github.com/mokly-ai/mokly/blob/fcfe159186c64e6a381a75cf3bb6e446ce609d7c/plans/rust-rebuild.md#open-user-items-deferred-by-the-user-on-2026-10-21),
@@ -278,8 +279,10 @@ This milestone applies decision 179 A.
 
 ## Milestone 5: The loader names the base link
 
-This milestone applies decision 174 C. Its implementation is committed as
-`0efe546b`. Its brief is
+Historical status from before the implementation:
+
+This milestone applies decision 174 C. It is blocked by the Codex usage
+limit of 2026-10-28. Its brief is
 `.context/windows-paths-and-links/briefs/m2-fix-and-m5.md`.
 
 - [x] Add the regression test first in
