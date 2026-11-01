@@ -10,15 +10,15 @@
   `docs/protocol/mokly-terminal-output.md:51` to line 58,
   `docs/protocol/mokly-terminal-errors.md:150` to line 157, and
   `crates/mokly-cli/tests/changes_build_tests.rs:91` to line 126.
-- **Reason:** The mismatch is older than the branch that found it, and its
-  review found it outside the diff.
+- **Reason:** The mismatch is older than the branch that found it. Its review
+  found it outside the diff.
 
 - **Source:** Review.
 - **Category:** Docs or spec.
 - **Terms:**
   - **Rich mode:** the terminal output for an interactive terminal, or for
-    `MOKLY_OUTPUT=rich`. Plain mode is the automation output, and it prints
-    full lines.
+    `MOKLY_OUTPUT=rich`. Plain mode is the automation output. It prints full
+    lines.
   - **Changes unavailable details:** the base diagnostics that `build` and
     `publish` print on stderr when the base fails validation or reaches a
     comparison limit. The command still succeeds.
@@ -50,11 +50,11 @@
   - Other rich lines go through `bounded` in `crates/mokly-cli/src/output.rs`.
     One is the `! Changes unavailable · {reason}` line on stdout.
   - Rich Serve shows the same base diagnostics in an error block and in a
-    reason line, and it cuts both.
+    reason line. It cuts both.
   - The test
     `base_validation_failure_keeps_the_head_catalogue_and_prints_each_source_diagnostic`
     runs a rich `build` with an unknown width. It expects the full message
-    text in stderr, so a cut at 80 columns fails it.
+    text in stderr. A cut at 80 columns fails it.
   - `origin/main` prints the details in the same way, since the Rust rebuild
     of 2026-10-25.
 - **Problem:** Rich `build` and `publish` print each base diagnostic in full.
@@ -70,11 +70,11 @@
     exception of the width rule, beside recovery paths. Add a unit test that
     a rich scripts hint detail longer than the width prints in full. Long
     details wrap at the terminal edge without an indent. Effort: Small.
-  - **B.** Wrap each rich detail at the width, and indent each continuation
-    line. Every terminal line then stays inside the width, and the full text
-    shows. The width rule gets a wrap rule for these lines. `output.rs` gets
-    a wrap helper that keeps ANSI sequences and counts display columns.
-    Effort: Medium.
+  - **B.** Wrap each rich detail at the width. Indent each continuation line.
+    Every terminal line then stays inside the width. The full text shows. The
+    width rule gets a wrap rule for these lines. `output.rs` gets a wrap
+    helper that keeps ANSI sequences and counts display columns. Effort:
+    Medium.
   - **C.** State one width rule for every rich line that the user needs
     whole. These lines are the recovery paths, the rich hint line of an
     error, and the Changes unavailable details. Give the shared renderer one
@@ -91,7 +91,19 @@
     recovery paths, the rich hint line, and the details. A printer then
     cannot skip the bound or cut a whole line by mistake. It changes every
     rich printer in `mokly-cli`. Effort: Large.
-- **Shared assumptions:** Options A, B, and C share five assumptions.
+  - **F.** Stop the cut of every rich error, warning, and diagnostic line. A
+    long line then wraps at the terminal edge without its indent. The user
+    sees the full failure text. About ten `bounded` calls in eight files
+    under `crates/mokly-cli/src` change. Examples are `output.rs:173`,
+    `:187`, and `:189`, `build_output.rs:32`, `one_shot.rs:203`,
+    `changes_output.rs:85`, `publish_errors.rs:185`, and
+    `serve_progress.rs:242`. Three protocol rules change:
+    `docs/protocol/mokly-terminal-output.md:51` to line 58,
+    `docs/protocol/mokly-terminal-errors.md:54` to line 56, and
+    `docs/protocol/mokly-build-warnings.md:115` to line 117. F also keeps the
+    whole rich hint line of an error, which the hint item's D requires. So
+    the D work still does not wait for this answer. Effort: Medium.
+- **Shared assumptions:** Every option except D shares five assumptions.
   - Each base diagnostic is one detail line that names the full base commit
     and its code. Source: `docs/protocol/mokly-base-preparation.md:91` to
     line 92. Every option keeps it.
@@ -116,13 +128,11 @@
   - Print the base commit once as a header line, then cut shorter lines. It
     breaks `docs/protocol/mokly-base-preparation.md:91` to line 92, because
     each detail line must name the full base commit.
-  - Stop the cut of every rich error and diagnostic line. It brings back
-    option E of the hint item, which the user did not choose on 2026-10-29.
-  - Change nothing. The contract and the output keep disagreeing, so it
+  - Change nothing. The contract and the output keep disagreeing. So it
     fails the goal.
 - **Wider fix:** E. It removes both wrong cases of this class: a line that
   must stay whole is cut, and a printer skips the bound. C removes only the
-  first case.
+  first case. C is a Medium step toward E.
 - **Previous examples:** Commit `dafc5933` of 2026-10-16, which reached `main`
   in `d935e6a6`, added the recovery-path exception after a review found cut
   recovery paths. The first review of the base install fixes branch found
@@ -136,8 +146,7 @@
     exception changes once. The D work does not wait for this answer,
     because the user chose D for a later small pull request. Every option
     here keeps the scripts hint whole, as that D requires.
-- **Recommendation:** A. It makes the contract describe the full diagnostics
-  that `origin/main` prints and a test pins, at the smallest cost. E best
-  protects the codebase, and C is a Medium step toward it.
+- **Recommendation:** A. It is the smallest option that makes the contract
+  match the full diagnostics on `origin/main`. E best protects the codebase.
 - **Action:** ask the user, because A changes the width rule for each base
   diagnostic, and the hint item's chosen D covers only the scripts hint.
