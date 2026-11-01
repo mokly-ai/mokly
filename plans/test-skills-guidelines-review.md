@@ -155,13 +155,18 @@ Merge preservation: `orchestrator-verification/main-merge.md`.
 
 Depends on: 1
 
+Completed: 2026-11-01. The merged tree has 543 Node test files, 284
+browser specs, and the same Rust targets as the baseline.
+
 Bring the reviewed tree up to date before the review starts.
 
-- [ ] Merge `origin/main` with the `git-merge` skill, and audit the merge.
-- [ ] Rerun `milestone-1/scripts/run-all.sh` on the merged tree. Record the
+- [x] Merge `origin/main` with the `git-merge` skill, and audit the merge.
+- [x] Rerun `milestone-1/scripts/run-all.sh` on the merged tree. Record the
       test files that main added, deleted, or changed.
 
-Evidence: `milestone-2/` under the evidence directory.
+Evidence: `milestone-2/inventory.csv` and `milestone-2/inventory-diff.md`
+under the evidence directory. The inventory steps ran from a copy of the
+scripts in `milestone-2/scripts/`, because main deleted the shell views plan.
 
 ## Milestone 3: Find the tests that the removal rule covers
 
