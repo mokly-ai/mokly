@@ -2,6 +2,9 @@
 
 import { useEffect } from "react";
 
+import type { EmptyStateRoot } from "@mokly/ui/empty-state";
+import { RootState } from "@mokly/ui/shell-layout";
+
 import {
   type MoklyVersionError,
   VERSION_ERROR_MESSAGE,
@@ -14,19 +17,22 @@ import {
 export function VersionFailure({
   error,
   reload,
+  root,
 }: {
   error: MoklyVersionError;
   reload(): void;
+  /** The standalone root, in the document's appearance. */
+  root: EmptyStateRoot;
 }) {
   useEffect(() => {
     console.error(VERSION_ERROR_MESSAGE, error.message);
   }, [error]);
   return (
-    <div className="mbk mbk-empty" data-mokly-version-error="" role="alert">
-      <h2>{VERSION_ERROR_MESSAGE}</h2>
-      <button className="mbk-empty-link" onClick={reload} type="button">
-        Reload
-      </button>
-    </div>
+    <RootState
+      message={VERSION_ERROR_MESSAGE}
+      onReload={reload}
+      root={root}
+      state="version"
+    />
   );
 }

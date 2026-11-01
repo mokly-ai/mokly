@@ -1,5 +1,9 @@
-import { defineComponent, MockLink } from "@mokly/mokly";
+import { defineComponent, mockLink } from "@mokly/mokly";
 
+import {
+  EntryChip,
+  MetadataChips,
+} from "../../../../../../packages/ui/src/metadata-row/metadata-row.js";
 import { tagChip } from "../controls/tag-chip.js";
 import { libraryMetadata } from "../metadata.js";
 import { text, type LibraryProps } from "../schemas.js";
@@ -48,7 +52,13 @@ export const metadataRow = defineComponent({
       props: { label: "Used by", presentation: "metadata" },
       slots: {
         children: (
-          <MockLink to="design/browse/views/use-case">Example tour</MockLink>
+          <MetadataChips>
+            <EntryChip
+              href={mockLink("design/browse/views/use-case")}
+              kind="use-case"
+              title="Example tour"
+            />
+          </MetadataChips>
         ),
       },
     },
@@ -58,9 +68,9 @@ export const metadataRow = defineComponent({
       props: { label: "Tags", presentation: "metadata" },
       slots: {
         children: (
-          <span className="mbk-chips">
+          <MetadataChips>
             <tagChip.Component id="forms" label="forms" selected={false} />
-          </span>
+          </MetadataChips>
         ),
       },
     },

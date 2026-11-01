@@ -33,6 +33,7 @@ async function start(page: Page, cross: boolean, screenPath = "home") {
         {
           kind: "use-case",
           path: "tour",
+          detailId: catalogue.screens[0]!.detailId,
 
           title: "Tour",
           tags: [],
@@ -62,21 +63,35 @@ async function highlight(
   cross: boolean,
   index: number,
 ) {
+  const frames = page.locator("iframe[data-mokly-frame-state]");
+  for (let i = 0; i < (await frames.count()); i++)
+    await expect(frames.nth(i)).toHaveAttribute(
+      "data-mokly-frame-state",
+      "ready",
+    );
   await page.evaluate(
     (instance) =>
       window.viewerHarness.get("one").ref.current.highlightInstance(instance),
     instance,
   );
+  await expect(frames.nth(index)).toHaveAccessibleName(
+    new RegExp(`— ${instance.viewport}$`),
+  );
   const labels = page.locator("[data-mokly-label-layer] button");
   await expect(labels).toHaveCount(1);
+  await expect(page.locator(".mbk-highlight-layer")).toHaveCount(1);
+  await expect(page.locator(".mbk-highlight-layer")).toHaveAttribute(
+    "data-highlight-viewport",
+    instance.viewport,
+  );
   if (cross) {
     const frames = page.locator("iframe[data-mokly-fragment-frame]");
     for (let i = 0; i < (await frames.count()); i++) {
       await expect(
         frames.nth(i).contentFrame().locator("[data-mokly-overlay]"),
-      ).toHaveCount(i === index ? 1 : 0);
+      ).toHaveCount(0);
     }
-  } else await expect(page.locator(".mbk-highlight-layer")).toHaveCount(1);
+  }
   await labels.click();
   const clicked = await page.evaluate(
     () =>

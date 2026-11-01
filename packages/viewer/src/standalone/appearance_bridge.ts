@@ -8,7 +8,7 @@ import type { ViewerTheme } from "../viewer/types.js";
 
 import { standaloneAppearanceHost } from "./appearance_host.js";
 
-/** Appearance values rendered by the standalone document and top bar. */
+/** Appearance values rendered by the standalone shell root and top bar. */
 export interface StandaloneAppearanceState {
   ready: boolean;
   scheme: "dark" | "light";
@@ -61,12 +61,12 @@ function initialAppearance(
   const control = document.querySelector<HTMLElement>(
     "[data-mokly-appearance-control]",
   );
-  const scheme = document.body.getAttribute("data-mokly-color-scheme");
+  const current = standaloneAppearanceHost(document.defaultView)?.current();
   return {
     ready: control ? !control.hidden : false,
-    scheme: scheme === "dark" || scheme === "light" ? scheme : fallbackScheme,
+    scheme: current?.scheme ?? fallbackScheme,
     theme: normalizeTheme(
-      document.documentElement.getAttribute(THEME_ATTRIBUTE),
+      current?.theme ?? document.documentElement.getAttribute(THEME_ATTRIBUTE),
     ),
   };
 }

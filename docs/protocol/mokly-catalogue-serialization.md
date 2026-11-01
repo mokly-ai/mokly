@@ -55,12 +55,31 @@ generation carries the same `snapshotId`, and the shell accepts it only when
 it equals the index's record, under the
 [shell delivery fences](./mokly-shell-delivery.md#fetch-and-fences).
 
+## Detail Identity
+
+Every current and removed entry record in the index carries a `detailId`.
+`detailId` is 64 lowercase hexadecimal characters. It is the SHA-256 of the
+detail's canonical JSON after setting `detailId` to 64 zeros and, for a
+current detail, setting `revision` to `0`. A detail never hashes its own
+final id. Equal detail content therefore has the same id in every build and
+Serve publication.
+
+The decision in force is to give each detail its own content id instead of a
+deployment id. An unchanged detail therefore keeps its bytes from one
+deployment to the next, and a content-addressed upload can skip it. The
+rejected alternative put the deployment id in every detail, because any edit
+then changed every detail.
+
+A current detail requires `detailId` and `revision`. A removed detail requires
+`detailId` and `snapshotId`.
+
 ## Deployment Identity And Revision
 
 `deploymentId` is a 64-hex identity and `revision` one integer. The
 [shell delivery contract](./mokly-shell-delivery.md#identity) owns both: how
-`build` hashes the output with the id fields zeroed, how Serve chooses one id
-for the life of the process, and that a build writes `revision: 0`. Every
+`build` hashes the output with only the index's `deploymentId` zeroed, how
+Serve chooses one id for the life of the process, and that a build writes
+`revision: 0`. Every
 other byte of the index and the details participates in the deployment hash
 unchanged, under the
 [deployment identity algorithm](./mokly-export-browser.md#deployment-identity).
@@ -76,9 +95,11 @@ addition, a changed meaning, a new union discriminant, or an incompatible
 path requires a new number. The detail's view `state` and `ignoredIds` and
 its `before` address are additive optional fields, so they keep the detail's
 number. The review result stays in memory under the
-[comparison contract](./mokly-comparison.md). The generated
+[comparison contract](./mokly-comparison.md). The required `detailId` and the
+current and removed detail shapes use the detail version in the
+[format inventory](./mokly-format-versions.md). The generated
 [`CatalogueReadModel`](../../packages/viewer/src/generated/catalogue/CatalogueReadModel.ts)
-and [`EntryDetailV3`](../../packages/viewer/src/generated/catalogue/EntryDetailV3.ts)
+and [`EntryDetailV4`](../../packages/viewer/src/generated/catalogue/EntryDetailV4.ts)
 types are the normative shapes. A reader validates a document against them
 before use.
 

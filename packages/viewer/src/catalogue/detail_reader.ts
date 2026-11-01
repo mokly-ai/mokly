@@ -1,4 +1,4 @@
-/** The entry detail v3 reader: the version gate first, then every field. */
+/** The entry detail v4 reader: the version gate first, then every field. */
 
 import { invalidData, record } from "../components/data.js";
 
@@ -14,7 +14,7 @@ import { assertPublicDetail } from "./privacy.js";
 import type {
   CatalogueUsage,
   DetailView,
-  EntryDetailV3,
+  EntryDetailV4,
   EvidenceOwner,
   InputChange,
   UsageLink,
@@ -36,7 +36,7 @@ import {
 import { MoklyVersionError } from "./version_error.js";
 
 /** The only entry detail number this viewer reads. */
-const ENTRY_DETAIL_VERSION = 3;
+const ENTRY_DETAIL_VERSION = 4;
 
 const KINDS = ["component", "document", "page", "screen", "use-case"] as const;
 const VIEWPORTS = ["mobile", "desktop"] as const;
@@ -44,9 +44,9 @@ const SCHEMES = ["light", "dark"] as const;
 
 /**
  * Gate the version and read one current or removed entry's detail: the
- * fields v3 defines, ignoring any other field a newer writer adds.
+ * fields v4 defines, ignoring any other field a newer writer adds.
  */
-export function readEntryDetail(value: unknown): EntryDetailV3 {
+export function readEntryDetail(value: unknown): EntryDetailV4 {
   const version = record(value) ? value.schemaVersion : undefined;
   if (version !== ENTRY_DETAIL_VERSION)
     throw new MoklyVersionError("detail", version, ENTRY_DETAIL_VERSION);
@@ -55,18 +55,13 @@ export function readEntryDetail(value: unknown): EntryDetailV3 {
   const identity = object(input.identity);
   const entry = object(input.entry);
   const kind = choice(entry.kind, KINDS);
-  const detail: EntryDetailV3 = {
+  const detail: EntryDetailV4 = {
     schemaVersion: ENTRY_DETAIL_VERSION,
     identity: { id: hash(identity.id), title: text(identity.title) },
-    ...(input.deploymentId === undefined
-      ? {}
-      : { deploymentId: hash(input.deploymentId) }),
+    detailId: hash(input.detailId),
     ...(input.revision === undefined
       ? {}
       : { revision: counter(input.revision) }),
-    ...(input.generation === undefined
-      ? {}
-      : { generation: hash(input.generation) }),
     entry: {
       path: entryPath(entry.path),
       kind,
@@ -97,15 +92,9 @@ export function readEntryDetail(value: unknown): EntryDetailV3 {
       : { workspace: readWorkspace(input.workspace) }),
   };
   const current =
-    detail.deploymentId !== undefined &&
-    detail.revision !== undefined &&
-    detail.generation === undefined &&
-    detail.entry.snapshotId === undefined;
+    detail.revision !== undefined && detail.entry.snapshotId === undefined;
   const removed =
-    detail.deploymentId === undefined &&
-    detail.revision === undefined &&
-    detail.generation !== undefined &&
-    detail.entry.snapshotId !== undefined;
+    detail.revision === undefined && detail.entry.snapshotId !== undefined;
   if (!current && !removed)
     invalidData("$detail", "current and removed fences are exclusive");
   const visual = kind === "screen" || kind === "component";

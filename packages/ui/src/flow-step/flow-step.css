@@ -1,0 +1,96 @@
+/* The stage of a user flow scrolls its column of steps. */
+.mbk-flow {
+  flex: 1;
+  overflow: auto;
+  padding: 28px 28px 40px;
+}
+
+.mbk-flow .flow-track {
+  gap: 26px;
+}
+
+.mbk-flow .flow-step::before {
+  top: 32px;
+  bottom: -26px;
+}
+
+.mbk-flow .flow-step-head h3 {
+  font-size: 16px;
+}
+
+/* The steps, joined by a rail from each number to the next. */
+.flow-track:where(.mbk-reset) {
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
+}
+
+.flow-step:where(.mbk-reset) {
+  position: relative;
+}
+
+.flow-step:where(.mbk-reset)::before {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 34px;
+  bottom: -34px;
+  width: 2px;
+  background: var(--chrome-border);
+}
+
+.flow-step:last-child:where(.mbk-reset)::before {
+  display: none;
+}
+
+.flow-step-head:where(.mbk-reset) {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.flow-step-num:where(.mbk-reset) {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--mokly-accent);
+  color: var(--mokly-accent-contrast);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.flow-step-head h3:where(.mbk-reset) {
+  margin: 2px 0 4px;
+  font-size: 18px;
+  letter-spacing: -0.005em;
+}
+
+.flow-step-head p:where(.mbk-reset) {
+  margin: 0;
+  color: var(--chrome-muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.flow-step-link:where(.mbk-reset) {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--mokly-accent);
+  text-decoration: none;
+}
+
+.flow-step-link:hover:where(.mbk-reset) {
+  text-decoration: underline;
+}
+
+@media (max-width: 760px) {
+  .flow-step:where(.mbk-reset)::before {
+    display: none;
+  }
+}

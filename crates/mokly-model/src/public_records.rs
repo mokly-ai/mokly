@@ -196,3 +196,27 @@ pub enum CatalogueRecord {
     /// Ordered journey.
     UseCase(CatalogueUseCase),
 }
+
+impl CatalogueRecord {
+    /// Return the shared entry path.
+    pub fn path(&self) -> &str {
+        match self {
+            Self::Screen(entry) => &entry.entry.path,
+            Self::Component(entry) => &entry.entry.path,
+            Self::Page(entry) => &entry.entry.path,
+            Self::Document(entry) => &entry.entry.path,
+            Self::UseCase(entry) => &entry.entry.path,
+        }
+    }
+
+    /// Set the shared detail content id.
+    pub fn set_detail_id(&mut self, detail_id: &str) {
+        match self {
+            Self::Screen(entry) => entry.entry.detail_id = detail_id.to_owned(),
+            Self::Component(entry) => entry.entry.detail_id = detail_id.to_owned(),
+            Self::Page(entry) => entry.entry.detail_id = detail_id.to_owned(),
+            Self::Document(entry) => entry.entry.detail_id = detail_id.to_owned(),
+            Self::UseCase(entry) => entry.entry.detail_id = detail_id.to_owned(),
+        }
+    }
+}

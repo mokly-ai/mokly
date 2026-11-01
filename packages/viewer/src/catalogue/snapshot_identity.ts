@@ -3,26 +3,12 @@
 import { invalidData } from "../components/data.js";
 import { sha256 } from "../data/sha256.js";
 
-import { VIEWER_DIRECTORY } from "./delivery_paths.js";
-
 const HASH_40_OR_64 = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/;
 const HASH_64 = /^[a-f0-9]{64}$/;
-const COMPARISON_GENERATION = new RegExp(
-  `^${VIEWER_DIRECTORY}\\/diffs\\/generations\\/([a-f0-9]{64})\\/$`,
-);
 
 /** Whether a value is one public historical snapshot identity. */
 export function isHistoricalSnapshotId(value: unknown): value is string {
   return typeof value === "string" && HASH_64.test(value);
-}
-
-/** Read the immutable generation from a validated comparison URL. */
-export function comparisonGeneration(
-  comparisonUrl: string | null,
-): string | undefined {
-  return comparisonUrl === null
-    ? undefined
-    : COMPARISON_GENERATION.exec(comparisonUrl)?.[1];
 }
 
 /**

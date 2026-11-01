@@ -5,12 +5,9 @@ import { changesDesignMetadata } from "./metadata.js";
 import { artboards } from "./parts/artboards.js";
 import { DESTINATIONS } from "./parts/destinations.js";
 import { DetailsPanel } from "./parts/details.js";
+import { miniView } from "./parts/mini_views.js";
 import { NavDrawer, NavTree } from "./parts/nav.js";
-import {
-  EmptyReviewNav,
-  IgnoredImpactCard,
-  WelcomeShot,
-} from "./parts/review.js";
+import { EmptyReviewNav, IGNORED_IMPACT, WelcomeShot } from "./parts/review.js";
 import { WelcomeHead } from "./parts/screen_heads.js";
 import { Shell } from "./parts/shell.js";
 
@@ -23,16 +20,17 @@ function IgnoredOnlyCompare({ viewport }: { viewport: ReviewViewport }) {
       viewport={viewport}
       nav={<NavTree activeLabel="Welcome" changedCount={0} />}
     >
-      <WelcomeHead active={viewport} />
       <PreviewWorkspace
+        header={<WelcomeHead active={viewport} />}
         viewport={viewport}
         inspector={
           <DetailsPanel
             subject="welcome"
-            comparisonEvidence={<IgnoredImpactCard />}
+            comparisonEvidence={IGNORED_IMPACT}
             open
           />
         }
+        view={miniView("welcome")}
         render={(previewViewport) => (
           <WelcomeShot viewport={previewViewport} comparison={false} />
         )}
@@ -53,10 +51,11 @@ function EmptyChanges({ viewport }: { viewport: ReviewViewport }) {
         ) : null
       }
     >
-      <WelcomeHead active={viewport} changes />
       <PreviewWorkspace
+        header={<WelcomeHead active={viewport} changes />}
         viewport={viewport}
         inspector={<DetailsPanel subject="welcome" />}
+        view={miniView("welcome")}
         render={(previewViewport) => (
           <WelcomeShot viewport={previewViewport} comparison={false} />
         )}

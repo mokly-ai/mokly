@@ -4,9 +4,8 @@
   --ce-secondary: #647068;
   --ce-soft: #f3f6f3;
   --ce-edge: #dce5de;
-  --ce-mask: var(--chrome-bg);
 }
-.ce-preview-view .ce-canvas,
+.ce-preview-view .ce-canvas-content,
 .ce-preview-view .ce-welcome-example,
 .ce-preview-view .ce-other-example,
 .ce-preview-view .phone-screen,
@@ -15,10 +14,6 @@
   background: var(--ce-surface);
   color: var(--ce-text);
 }
-.ce-preview-view .ce-canvas-label {
-  border-color: var(--ce-edge);
-  color: var(--ce-secondary);
-}
 .ce-preview-view .ce-toolbar-example {
   background: var(--ce-soft);
   border-color: var(--ce-edge);
@@ -26,22 +21,4 @@
 .ce-preview-view .ce-demo-content p,
 .ce-preview-view .ce-other-example > p {
   color: var(--ce-secondary);
-}
-.ce-highlight-layer {
-  display: none;
-}
-.ce-design:has(.ce-highlight-toggle:checked) .ce-highlight-layer {
-  display: block;
-}
-.ce-single-action {
-  display: inline-flex;
-  position: relative;
-}
-.ce-single-highlight {
-  border: 2px solid var(--mbk-sage);
-  border-radius: 8px;
-  box-shadow: 0 0 0 2000px color-mix(in srgb, var(--ce-mask) 78%, transparent);
-  inset: 0;
-  pointer-events: auto;
-  position: absolute;
 }

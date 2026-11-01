@@ -11,6 +11,8 @@ import {
 } from "react";
 import { flushSync } from "react-dom";
 
+import { LabelLayer } from "@mokly/ui/highlight-label";
+
 import {
   useOptionalShellFrameRegistry,
   useOptionalShellInspectionController,
@@ -241,7 +243,7 @@ export function ViewerHostBridge({
     ],
   );
 
-  if (!registry) return <div data-mokly-label-layer="" />;
+  if (!registry) return <LabelLayer />;
   return (
     <ViewerInspectionLayer
       model={store.catalogue.publicModel}

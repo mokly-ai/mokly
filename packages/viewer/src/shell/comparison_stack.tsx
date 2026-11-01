@@ -1,4 +1,11 @@
-/** Overlay and Difference: both versions stacked inside one chrome. */
+/**
+ * Overlay and Difference: both versions stacked inside one chrome.
+ * `@mokly/ui/comparison-stage` draws the grid and `@mokly/ui/comparison-pane`
+ * each version's layer.
+ */
+
+import { ComparisonLayer } from "@mokly/ui/comparison-pane";
+import { ComparisonPanes } from "@mokly/ui/comparison-stage";
 
 import type { ReviewView } from "../review/types.js";
 
@@ -32,19 +39,19 @@ export function StackedComparison({
   view: ReviewView;
 }) {
   return (
-    <div className="mb-panes" data-compare-mode={mode}>
+    <ComparisonPanes mode={mode}>
       <ChromeScheme view={view}>
         {chrome(
           <ComparisonViewport sync={sync}>
-            <div className="mb-pane mb-pane--before">
+            <ComparisonLayer side="before">
               <ComparisonFrame {...before} />
-            </div>
-            <div className="mb-pane mb-pane--after">
+            </ComparisonLayer>
+            <ComparisonLayer side="after">
               <ComparisonFrame {...after} />
-            </div>
+            </ComparisonLayer>
           </ComparisonViewport>,
         )}
       </ChromeScheme>
-    </div>
+    </ComparisonPanes>
   );
 }

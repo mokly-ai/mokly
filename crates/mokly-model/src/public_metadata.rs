@@ -106,6 +106,8 @@ pub struct CatalogueDetails {
 pub struct CatalogueEntry {
     /// Complete entry path.
     pub path: String,
+    /// Content id of this entry's detail.
+    pub detail_id: String,
     /// Paired previous path, when Changes proves a move.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]

@@ -1,0 +1,14 @@
+/* The view controls: one group of icon controls at the end of the screen
+   header. */
+.mbk-view-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+/* A disabled view control mutes the dot of its change mark. */
+.mbk-icon-button:disabled .mbk-view-changed,
+.mbk-icon-select:has(select:disabled) .mbk-view-changed {
+  background: var(--chrome-muted);
+}

@@ -27,6 +27,15 @@ selects its own with `TEST_PARALLEL_INDEX`. `MOKLY_PLAYWRIGHT_COPIED_URL` and
 `MOKLY_PLAYWRIGHT_COMPARISON_URL` and `MOKLY_PLAYWRIGHT_COMPARISON_DIR` carry
 the comparison build.
 
+## Package components on a bare page
+
+[`shell_styles_page.ts`](./shell_styles_page.ts) runs a browser entry, such as
+[`tag_chip_forms.tsx`](./tag_chip_forms.tsx), on a page that loads only the
+built `shell.css`. The entry renders `@mokly/ui` components in the page, and
+the spec reads their computed styles. No spec renders React in the Playwright
+worker: on Node 22, the JSX runtime fails there once another spec of the same
+worker has loaded `@mokly/viewer`.
+
 ## Browser errors and waits
 
 - The automatic error fixture in `browser_test.ts` applies the console rule of

@@ -99,11 +99,10 @@ impl ArtifactWorker for Session {
         self.state
             .cache
             .insert(self.state.plans[route].key.clone(), composed);
-        self.state
-            .public_files
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .extend(closure.files);
+        let key = &self.state.plans[route].key.0;
+        for path in &closure.files {
+            self.state.inputs.closures.record(key, path);
+        }
         Ok(artifact)
     }
 }

@@ -1,18 +1,31 @@
-import type { Viewport } from "@mokly/mokly";
+import { useId } from "react";
 
-import { ViewIcon } from "../../components/parts/view_icons.js";
-import { DesignLink } from "../../parts/design_navigation.js";
-import { BrandIcon, SearchIcon, TagIcon } from "../../parts/icons.js";
+import { mockLink, type Viewport } from "@mokly/mokly";
+
+import { TopBar } from "../../../../../../packages/ui/src/top-bar/top-bar.js";
+import type { DesignDestination } from "../../parts/destinations.js";
+import { optional } from "../composition.js";
 import { tagPicker } from "../controls/tag-picker.js";
 
 import { appearanceSelector } from "./appearance-selector.js";
 import type { TopBarProps } from "./top-bar.js";
 
+/** A static artboard's address for a design destination, or none. */
+function address(to: DesignDestination | undefined): string | undefined {
+  return to === undefined ? undefined : mockLink(to);
+}
+
+/**
+ * The shipped top bar. A static artboard runs no script, so its brand and
+ * menu link to their artboards, a control without one is a picture, and the
+ * compact search, which needs a script, is left out. The search field ends
+ * with the registered tag picker. The bar's frame carries the flags that this
+ * component's stylesheet draws: the compact bar of a mobile render at every
+ * width, and a bar without a menu.
+ */
 export function TopBarView({
   query,
-  placeholder,
   menu,
-  menuPresentation,
   tags,
   activeTag,
   appearance,
@@ -26,69 +39,40 @@ export function TopBarView({
   appearance: NonNullable<TopBarProps["appearance"]>;
   viewport: Viewport;
 }) {
+  const id = useId();
+  const compact = viewport === "mobile";
   return (
-    <header className="mbk-topbar">
-      {viewport === "mobile" && menu !== "none" ? (
-        <DesignLink to={menuDestination}>
-          <span
-            className="mbk-menu-btn"
-            aria-label={
-              menu === "close"
-                ? "Close catalogue navigation"
-                : "Open catalogue navigation"
-            }
-          >
-            {menuPresentation === "icon" && menu === "open" ? (
-              <ViewIcon kind="menu" />
-            ) : menu === "close" ? (
-              "×"
-            ) : (
-              "☰"
-            )}
-          </span>
-        </DesignLink>
-      ) : null}
-      <DesignLink to={brandDestination}>
-        <span className="mbk-brand" aria-label="Mokly">
-          <span className="mbk-mark" aria-hidden="true">
-            <BrandIcon />
-          </span>
-          {viewport === "mobile" ? null : (
-            <span className="mbk-name">mokly.</span>
-          )}
-        </span>
-      </DesignLink>
-      <div className="mbk-search">
-        <SearchIcon />
-        {query === undefined ? (
-          <span className="mbk-search-placeholder">{placeholder}</span>
-        ) : (
-          <span className="mbk-search-value">{query}</span>
-        )}
-        {tags.length ? (
-          <DesignLink to={pickerDestination}>
-            <span
-              className="mbk-search-tag"
-              aria-label={pickerOpen ? "Close tag picker" : "Filter by tag"}
-            >
-              <TagIcon size={13} />
-            </span>
-          </DesignLink>
-        ) : null}
-        {pickerOpen ? (
+    <div
+      className="mbk-topbar-frame"
+      data-compact={compact ? "" : undefined}
+      data-menu={menu === "none" ? "none" : undefined}
+    >
+      <TopBar
+        brandHref={address(brandDestination)}
+        drawerOpen={menu === "close"}
+        end={
+          <appearanceSelector.Component
+            value={appearance}
+            {...(appearanceChanged === undefined
+              ? {}
+              : { otherSchemeChanged: appearanceChanged })}
+            compact={compact}
+          />
+        }
+        interactive={false}
+        menuHref={menu === "none" ? undefined : address(menuDestination)}
+        navigationId={`${id}navigation`}
+        query={query}
+        searchId={`${id}search`}
+        tagPicker={
           <tagPicker.Component
             tags={tags}
-            {...(activeTag === undefined ? {} : { activeTag })}
+            open={pickerOpen}
+            {...optional("activeTag", activeTag)}
+            {...optional("toggleDestination", pickerDestination)}
           />
-        ) : null}
-      </div>
-      <appearanceSelector.Component
-        value={appearance}
-        {...(appearanceChanged === undefined
-          ? {}
-          : { otherSchemeChanged: appearanceChanged })}
-        compact={viewport === "mobile"}
+        }
       />
-    </header>
+    </div>
   );
 }

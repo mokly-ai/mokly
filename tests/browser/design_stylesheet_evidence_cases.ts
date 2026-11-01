@@ -92,7 +92,9 @@ export function registerDesignStylesheetEvidence(
             .locator(".mbk-comparison-details")
             .evaluate((card) =>
               [
-                ...card.querySelectorAll(":scope > .mbk-evidence-files ~ *"),
+                ...card.querySelectorAll(
+                  ":scope .mbk-comparison-evidence > .mbk-evidence-files ~ *",
+                ),
               ].map(
                 (element) =>
                   `${element.tagName.toLowerCase()} ${getComputedStyle(element).marginTop}`,
@@ -119,8 +121,8 @@ export function registerDesignStylesheetEvidence(
         await expect(page).toHaveURL(
           shellDesignUrl("design/changes/impact/styles/page", viewport),
         );
-        await expect(page.locator(".mbk-cmp-toolbar")).toHaveCount(0);
-        await expect(page.locator(".mbk-comparison-stage")).toHaveCount(0);
+        await expect(page.locator(".mbk-diff-toolbar")).toHaveCount(0);
+        await expect(page.locator(".mbk-diff-screen")).toHaveCount(0);
         await expect(page.locator(".mbk-doc-pane")).toContainText("Next steps");
         const evidence = page.locator(".mbk-comparison-details");
         await expect(evidence).toContainText(
@@ -156,7 +158,7 @@ export function registerDesignStylesheetEvidence(
         const count =
           viewport === "desktop" ? ".mbk-nav-filter-count" : ".ce-change-count";
         await expect(page.locator(count)).toHaveText("5");
-        const evidence = page.locator(".ce-comparison-evidence");
+        const evidence = page.locator("[data-workspace-evidence]");
         await expect(evidence).toContainText(
           "These changed styles also apply outside the changed components on this screen:",
         );
@@ -171,13 +173,11 @@ export function registerDesignStylesheetEvidence(
           ),
         );
         await expect(
-          page.locator(".mbk-screen-head .ce-change-status"),
+          page.locator(".mbk-screen-head .mbk-entry-status"),
         ).toHaveText("Changed");
         await expect(page.locator(count)).toHaveText("4");
         await expect(
-          page
-            .getByRole("region", { name: "Affected screens", exact: true })
-            .getByRole("link"),
+          page.locator('[data-usage-section="affected"]').getByRole("link"),
         ).toHaveCount(2);
         await expect(
           page
@@ -195,7 +195,7 @@ export function registerDesignStylesheetEvidence(
         );
         await page.goto(story);
         await page
-          .getByRole("region", { name: "Affected screens", exact: true })
+          .locator('[data-usage-section="affected"]')
           .getByRole("link", { name: "Welcome" })
           .click();
         await expect(page).toHaveURL(
@@ -208,26 +208,26 @@ export function registerDesignStylesheetEvidence(
           viewport === "desktop" ? ".mbk-nav-filter-count" : ".ce-change-count";
         await expect(page.locator(count)).toHaveText("4");
         await expect(
-          page.locator(".mbk-screen-head .ce-change-status"),
+          page.locator(".mbk-screen-head .mbk-entry-status"),
         ).toHaveText("Unmodified");
         // Welcome stays out of Changes, yet Action's link opens its comparison.
-        const toolbar = page.locator(".mbk-cmp-toolbar");
+        const toolbar = page.locator(".mbk-diff-toolbar");
         await expect(toolbar).toHaveCount(1);
         await expect(
           toolbar.getByRole("button", { name: "Side by side", exact: true }),
         ).toHaveAttribute("aria-pressed", "true");
         const heading = "Components this screen uses changed";
         // The shown view reads the heading over its two versions.
-        const stages = page.locator(".mbk-comparison-stage:visible");
+        const stages = page.locator(".mbk-diff-view:visible");
         await expect(stages.locator(":scope > h3")).toHaveText([
           `${viewport === "desktop" ? "Desktop" : "Mobile"} · ${heading}`,
         ]);
         for (const stage of await stages.all())
-          await expect(stage.locator(".mbk-compare-label")).toHaveText([
+          await expect(stage.locator(".mb-pane-label")).toHaveText([
             "Before",
             "Current",
           ]);
-        const evidence = page.locator(".ce-comparison-evidence");
+        const evidence = page.locator("[data-workspace-evidence]");
         await expect(
           evidence.locator(".mbk-evidence-files > li > p"),
         ).toHaveText(["Changed styles that apply to this screen:"]);

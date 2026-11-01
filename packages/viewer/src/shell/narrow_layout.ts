@@ -2,8 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 
-/** The width below which the shell lays out for phones. */
-const NARROW_LAYOUT = "(max-width: 760px)";
+import { NARROW_LAYOUT } from "./layout_breakpoint.js";
 
 function media(): MediaQueryList | undefined {
   return typeof window === "undefined" ||

@@ -1,5 +1,6 @@
 import { defineScreen } from "@mokly/mokly";
 
+import { FlowStage } from "../../../../../../../packages/ui/src/flow-step/flow-step.js";
 import { PreviewWorkspace } from "../../../components/parts/workspace.js";
 import { appearanceDesignMetadata } from "../../../metadata.js";
 import { useDarkPreview } from "../../../parts/appearance.js";
@@ -11,6 +12,7 @@ import {
 import { DetailsPanel } from "../../../parts/details.js";
 import { ENTRY_PATHS, EXAMPLE_CRUMB } from "../../../parts/entry_paths.js";
 import { MiniDetails, MiniWelcome } from "../../../parts/mini_screens.js";
+import { miniView } from "../../../parts/mini_views.js";
 import type { ChangesStatus } from "../../../parts/nav.js";
 import { AvailabilityNav } from "../../../parts/review.js";
 import type { ArtboardViewport } from "../../../parts/shell.js";
@@ -56,13 +58,16 @@ function ErrorAndRetry({ viewport }: { viewport: ArtboardViewport }) {
       design={DESTINATIONS.appearanceError}
       viewport={viewport}
     >
-      <AppearanceHead
-        path={ENTRY_PATHS.welcome}
-        preview={viewport}
-        title="Welcome"
-        viewport={viewport}
-      />
       <PreviewWorkspace
+        view={{ highlight: "failed" }}
+        header={
+          <AppearanceHead
+            path={ENTRY_PATHS.welcome}
+            preview={viewport}
+            title="Welcome"
+            viewport={viewport}
+          />
+        }
         inspector={<DetailsPanel subject="welcome" />}
         viewport={viewport}
         render={() => (
@@ -98,15 +103,18 @@ function AvailabilityScreen({
       nav={<AvailabilityNav status={status} />}
       viewport={viewport}
     >
-      <AppearanceHead
-        crumbs={["Example", "Screens"]}
-        path={ENTRY_PATHS.welcome}
-        title="Welcome"
-        viewport={viewport}
-      />
       <PreviewWorkspace
+        header={
+          <AppearanceHead
+            crumbs={["Example", "Screens"]}
+            path={ENTRY_PATHS.welcome}
+            title="Welcome"
+            viewport={viewport}
+          />
+        }
         inspector={<DetailsPanel subject="welcome" />}
         viewport={viewport}
+        view={miniView("welcome")}
         render={(previewViewport) => <WelcomeShot viewport={previewViewport} />}
       />
     </AppearanceShell>
@@ -127,38 +135,36 @@ function UseCaseFlow({ viewport }: { viewport: ArtboardViewport }) {
         title="Example tour"
         viewport={viewport}
       />
-      <div className="mbk-flow">
-        <div className="flow-track">
-          <FlowStep
-            name="arrival"
-            number={1}
-            title="Welcome"
-            screenTitle="Welcome"
-            description="The tour starts on the landing screen."
-            screenPath={DESTINATIONS.appearance}
-          >
-            <FlowWelcomeShot viewport={viewport} />
-          </FlowStep>
-          <FlowStep
-            name="detail"
-            number={2}
-            title="Details"
-            screenTitle="Details"
-            description="The tour ends on the details screen."
-            screenPath={DESTINATIONS.appearanceLightOnly}
-          >
-            {viewport === "desktop" ? (
-              <BrowserFrame address="example.test/details">
-                <MiniDetails />
-              </BrowserFrame>
-            ) : (
-              <PhoneFrame small>
-                <MiniDetails compact />
-              </PhoneFrame>
-            )}
-          </FlowStep>
-        </div>
-      </div>
+      <FlowStage>
+        <FlowStep
+          name="arrival"
+          number={1}
+          title="Welcome"
+          screenTitle="Welcome"
+          description="The tour starts on the landing screen."
+          screenPath={DESTINATIONS.appearance}
+        >
+          <FlowWelcomeShot viewport={viewport} />
+        </FlowStep>
+        <FlowStep
+          name="detail"
+          number={2}
+          title="Details"
+          screenTitle="Details"
+          description="The tour ends on the details screen."
+          screenPath={DESTINATIONS.appearanceLightOnly}
+        >
+          {viewport === "desktop" ? (
+            <BrowserFrame address="example.test/details">
+              <MiniDetails />
+            </BrowserFrame>
+          ) : (
+            <PhoneFrame small>
+              <MiniDetails compact />
+            </PhoneFrame>
+          )}
+        </FlowStep>
+      </FlowStage>
     </AppearanceShell>
   );
 }

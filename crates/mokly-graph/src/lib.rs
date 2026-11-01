@@ -12,6 +12,7 @@ pub mod graph;
 pub mod key;
 pub mod policy;
 pub mod public_denial;
+pub mod public_inputs;
 mod public_locations;
 pub mod reference_index;
 pub mod references;

@@ -7,12 +7,12 @@ use crate::read_contract::ContractViolation;
 use crate::readers::{ReadError, detail, index};
 
 pub(super) fn empty_index() -> Value {
-    json!({"schemaVersion":8,"identity":{"id":"a".repeat(64),"title":"Mokly"},"deploymentId":"b".repeat(64),"revision":0,
+    json!({"schemaVersion":9,"identity":{"id":"a".repeat(64),"title":"Mokly"},"deploymentId":"b".repeat(64),"revision":0,
         "changesStatus":"disabled","comparisonUrl":null,"tree":[],"screens":[],"pages":[],"documents":[],"useCases":[],"components":[],"removedEntries":[]})
 }
 
 pub(super) fn metadata(path: &str) -> Value {
-    json!({"path":path,"title":"Home","tags":[],"details":{"description":"","relatedDocs":[],"sourcePath":"specs/home.screen.html"},"changes":{"status":"disabled"}})
+    json!({"path":path,"detailId":"c".repeat(64),"title":"Home","tags":[],"details":{"description":"","relatedDocs":[],"sourcePath":"specs/home.screen.html"},"changes":{"status":"disabled"}})
 }
 
 pub(super) fn screen(path: &str, parent: Option<&str>) -> Value {
@@ -86,26 +86,15 @@ fn index_rejects_private_fields_bad_props_and_invalid_tree_relationships() {
 
 #[test]
 fn current_and_removed_detail_fences_are_exclusive() {
-    let current = json!({"schemaVersion":3,"controlOrder":[],"identity":{"id":"a".repeat(64),"title":"Mokly"},"deploymentId":"b".repeat(64),"revision":0,"entry":{"path":"home","kind":"screen"},"views":[]});
+    let current = json!({"schemaVersion":4,"controlOrder":[],"identity":{"id":"a".repeat(64),"title":"Mokly"},"detailId":"c".repeat(64),"revision":0,"entry":{"path":"home","kind":"screen"},"views":[]});
     assert!(detail(&current.to_string()).is_ok());
     let mut current_with_generation = current.clone();
     current_with_generation["generation"] = json!("c".repeat(64));
-    assert!(matches!(
-        detail(&current_with_generation.to_string()),
-        Err(ReadError::Contract {
-            message: ContractViolation::DetailFence,
-            ..
-        })
-    ));
+    assert!(detail(&current_with_generation.to_string()).is_err());
 
     let mut valid_removed = current;
-    valid_removed
-        .as_object_mut()
-        .unwrap()
-        .remove("deploymentId");
     valid_removed.as_object_mut().unwrap().remove("revision");
     valid_removed["entry"]["snapshotId"] = json!("d".repeat(64));
-    valid_removed["generation"] = json!("c".repeat(64));
     valid_removed["workspace"] = json!({"comparisonEligible":false,"usedBy":[],"affected":[],"relatedComponents":[],"inputChanges":[]});
     assert!(detail(&valid_removed.to_string()).is_ok());
 

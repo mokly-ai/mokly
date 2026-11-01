@@ -10,10 +10,9 @@ import { deviceFrame } from "./device-frame.js";
 const propSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["side", "label", "state"],
+  required: ["side", "state"],
   properties: {
     side: { enum: ["before", "after"] },
-    label: text,
     state: { enum: ["present", "missing"] },
     message: text,
   },
@@ -42,10 +41,9 @@ export const comparisonPane = defineComponent({
     "A before or current preview, including an absent screen.",
   ),
   propSchema,
-  props: { side: "before", label: "Before", state: "present" },
+  props: { side: "before", state: "present" },
   slots,
   controls: {
-    label: { kind: "text", label: "Label" },
     state: {
       kind: "select",
       label: "State",
@@ -61,13 +59,13 @@ export const comparisonPane = defineComponent({
     {
       slug: "before",
       title: "Before",
-      props: { side: "before", label: "Before", state: "present" },
+      props: { side: "before", state: "present" },
       slots: welcomeFrame,
     },
     {
       slug: "current",
       title: "Current",
-      props: { side: "after", label: "Current", state: "present" },
+      props: { side: "after", state: "present" },
       slots: welcomeFrame,
     },
     {
@@ -75,7 +73,6 @@ export const comparisonPane = defineComponent({
       title: "Missing before",
       props: {
         side: "before",
-        label: "Before",
         state: "missing",
         message: "This screen did not exist before.",
       },
@@ -85,7 +82,6 @@ export const comparisonPane = defineComponent({
       title: "Missing current",
       props: {
         side: "after",
-        label: "Current",
         state: "missing",
         message: "This screen has been removed.",
       },

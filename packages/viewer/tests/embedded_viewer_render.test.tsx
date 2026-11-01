@@ -3,7 +3,6 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { ComparisonFailure } from "../src/shell/diffs.js";
 import { MoklyViewer } from "../src/viewer/component.js";
 import { loadIndexSource, sourceUrl } from "../src/viewer/sources.js";
 
@@ -11,7 +10,7 @@ import {
   detailPairs,
   rawDetailFixtures,
   rawIndexFixture,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 import {
   embeddedMarkup,
   heldEmbeddedMarkup,
@@ -59,12 +58,15 @@ for (const screenPath of [
     if (screenPath === "unknown-item") {
       assert.match(
         html,
-        /<h2>Item not found<\/h2><p>Nothing in the catalogue matches <code>unknown-item<\/code><\/p><a class="mbk-empty-link" href="\/">Go to the catalogue home<\/a>/,
+        /<h2 class="mbk-reset">Item not found<\/h2><p class="mbk-reset">Nothing in the catalogue matches <code class="mbk-reset">unknown-item<\/code><\/p><a class="mbk-empty-link mbk-reset" href="\/">Go to the catalogue home<\/a>/,
       );
       assert.doesNotMatch(html, /mokly build|renamed or removed/);
     } else if (screenPath) {
       // The first render waits for the entry's detail; its frames follow it.
-      assert.match(html, /aria-busy="true"[^>]*><p role="status">Loading/);
+      assert.match(
+        html,
+        /aria-busy="true"[^>]*><p class="mbk-reset" role="status">Loading/,
+      );
       assert.doesNotMatch(html, /<iframe/);
       assert.match(
         heldEmbeddedMarkup({ selection: { screenPath } }),
@@ -115,7 +117,7 @@ test("the embedded viewer renders its default selection and host slots", () => {
   });
   assert.match(html, /<b>Account<\/b>/);
   assert.match(html, /data-mokly-color-scheme="dark"/);
-  assert.match(html, /<option value="mobile" selected="">/);
+  assert.match(html, /<option class="mbk-reset" value="mobile" selected="">/);
   assert.match(html, /value="phrase tag:forms"/);
   // The selected viewport reaches the stage once the entry's detail is held.
   assert.match(heldEmbeddedMarkup({ selection }), /data-viewport="mobile"/);
@@ -192,7 +194,7 @@ test("distinct identifier prefixes keep roots apart; published props have no fie
       first.indexOf('data-inspector-panel="props"'),
       first.indexOf('data-inspector-panel="usage"'),
     ),
-    /<p role="status">Loading props…<\/p>/,
+    /<p class="mbk-reset" role="status">Loading props…<\/p>/,
   );
 
   // Props wait for the routed detail, so a render that holds it shows them.
@@ -207,9 +209,9 @@ test("distinct identifier prefixes keep roots apart; published props have no fie
   );
   assert.match(
     props,
-    /<h3 tabindex="-1">Saved props<\/h3><p>Action<\/p><\/div><\/div><p class="mbk-controls-notice">Open this catalogue locally to edit props\.<\/p>/,
+    /<h3 class="mbk-reset" tabindex="-1">Saved props<\/h3><p class="mbk-reset">Action<\/p><\/div><\/div><p class="mbk-controls-notice mbk-reset">Open this catalogue locally to edit props\.<\/p>/,
   );
-  assert.match(props, /<dt>mb-main<\/dt>/);
+  assert.match(props, /<dt class="mbk-reset">mb-main<\/dt>/);
   assert.doesNotMatch(props, /<input|<select|mb-prop-/);
   assert.deepEqual(
     [...firstIds].filter((id) => secondIds.has(id)),
@@ -218,11 +220,11 @@ test("distinct identifier prefixes keep roots apart; published props have no fie
 });
 
 test("an index of another version shows the version headline without an action", () => {
-  const index = { ...fixture, schemaVersion: 9 } as unknown as typeof fixture;
+  const index = { ...fixture, schemaVersion: 10 } as unknown as typeof fixture;
   const html = embeddedMarkup({ index });
   assert.match(
     html,
-    /role="alert"[^>]*><h2>This catalogue needs a compatible viewer<\/h2><\/div>/,
+    /^<div class="mbk mokly-viewer mbk-empty mbk-reset" role="alert"[^>]*><h2 class="mbk-reset">This catalogue needs a compatible viewer<\/h2><\/div>$/,
   );
   assert.doesNotMatch(html, /<button|Try again|Reload/);
 });
@@ -232,7 +234,7 @@ test("an index that cannot be read offers Try again under its headline", () => {
   const html = embeddedMarkup({ index });
   assert.match(
     html,
-    /<h2>The catalogue could not be loaded<\/h2><button class="mbk-empty-link" type="button">Try again<\/button>/,
+    /<h2 class="mbk-reset">The catalogue could not be loaded<\/h2><button class="mbk-empty-link mbk-reset" type="button">Try again<\/button>/,
   );
 });
 
@@ -245,15 +247,6 @@ test("the embedded viewer is one busy status line while its index loads", () => 
   );
   assert.match(
     html,
-    /^<div aria-busy="true" class="mokly-viewer mbk-empty" tabindex="-1"[^>]*><p role="status">Loading catalogue…<\/p><\/div>$/,
-  );
-});
-
-test("a comparison that could not load offers Try again", () => {
-  assert.match(
-    renderToStaticMarkup(
-      <ComparisonFailure details="offline" retry={() => undefined} />,
-    ),
-    /^<p>The comparison could not be loaded\. <button class="mbk-empty-link" data-diff-refresh="" type="button">Try again<\/button><\/p>/,
+    /^<div aria-busy="true" class="mbk mokly-viewer mbk-empty mbk-reset" tabindex="-1"[^>]*><p class="mbk-reset" role="status">Loading catalogue…<\/p><\/div>$/,
   );
 });

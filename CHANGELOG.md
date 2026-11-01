@@ -1,5 +1,46 @@
 # Changelog
 
+## [0.17.0](https://github.com/mokly-ai/mokly/compare/v0.16.1...v0.17.0) (2026-10-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* keep a component's usage lists in its parent detail ([#223](https://github.com/mokly-ai/mokly/issues/223))
+* catalogue index v8 and upload envelope v3. Viewers, hosts, and receivers that read index v7, review.json, or envelope v2 must upgrade. Mokly Cloud adopts the change in its own repository after the release.
+
+### Features
+
+* **html:** share one HTML driver between checks and trees ([#239](https://github.com/mokly-ai/mokly/issues/239)) ([02eec93](https://github.com/mokly-ai/mokly/commit/02eec9371e2cf46ef0dd075cb246b80e3826c9c9))
+* keep a component's usage lists in its parent detail ([#223](https://github.com/mokly-ai/mokly/issues/223)) ([0a1d351](https://github.com/mokly-ai/mokly/commit/0a1d351dfae463893117f8a6e433ef01e36fe41b))
+* **publish:** send gzip Blob bodies when the receiver lists gzip ([#221](https://github.com/mokly-ai/mokly/issues/221)) ([2dd2937](https://github.com/mokly-ai/mokly/commit/2dd2937f22b1671123a62cd51e2a11a536617b03))
+* remove review.json; compare from the index and entry details ([#217](https://github.com/mokly-ai/mokly/issues/217)) ([c65aaef](https://github.com/mokly-ai/mokly/commit/c65aaef6b533cb4a004401f9593169d60b6d92bf))
+* **ui:** add the @mokly/ui shared UI package ([#243](https://github.com/mokly-ai/mokly/issues/243)) ([e4c6d2c](https://github.com/mokly-ai/mokly/commit/e4c6d2c850fd26dd10392d061c6c9c2ae5d2af25))
+* warn on stylesheet renderer seeds and align the docs ([#218](https://github.com/mokly-ai/mokly/issues/218)) ([89c12ef](https://github.com/mokly-ai/mokly/commit/89c12ef1726bd29cd5e8c029e83bbe58dba7e3de))
+
+
+### Bug Fixes
+
+* **config:** give config-relative paths one normalized form ([#240](https://github.com/mokly-ai/mokly/issues/240)) ([843ac8b](https://github.com/mokly-ai/mokly/commit/843ac8bf0ec2b1a91fa21b57231591d96e6844cd))
+* **css:** align CSS Modules scanners with cssparser (user item 111 C) ([#241](https://github.com/mokly-ai/mokly/issues/241)) ([c9d402c](https://github.com/mokly-ai/mokly/commit/c9d402cdfa5f0c8301be67e8d46868854164a9f6))
+* **deps:** update pulldown-cmark to 0.13.5 ([#230](https://github.com/mokly-ai/mokly/issues/230)) ([9f78200](https://github.com/mokly-ai/mokly/commit/9f78200e3f85ce000cac34769bd0d317dfd43731))
+* **git:** read unreadable extraction files through Git ([#237](https://github.com/mokly-ai/mokly/issues/237)) ([3ea78c0](https://github.com/mokly-ai/mokly/commit/3ea78c0b4cc55051668fd75afb3b40f6927bec6c))
+* **graph:** key unattributed definitions and unnamed previews exactly ([#235](https://github.com/mokly-ai/mokly/issues/235)) ([c92c1a7](https://github.com/mokly-ai/mokly/commit/c92c1a7f7787bffd18c3598b7f439b3243daf012))
+* **graph:** report closure warnings in Serve and previews (finding 1) ([89c12ef](https://github.com/mokly-ai/mokly/commit/89c12ef1726bd29cd5e8c029e83bbe58dba7e3de))
+* **postcss:** keep the paths of hook-supplied modules ([#238](https://github.com/mokly-ai/mokly/issues/238)) ([10dd5a0](https://github.com/mokly-ai/mokly/commit/10dd5a01a88c0b47f18ee16ba2587f2dc439bcf6))
+* **verification:** name the right command in two errors (finding 5) ([89c12ef](https://github.com/mokly-ai/mokly/commit/89c12ef1726bd29cd5e8c029e83bbe58dba7e3de))
+
+
+### Performance Improvements
+
+* **build:** capture head documents once during the build check ([#220](https://github.com/mokly-ai/mokly/issues/220)) ([a9dd1e8](https://github.com/mokly-ai/mokly/commit/a9dd1e81562c4acaacec4a512967c38d1db80de3))
+* **compare:** read base files from the leased extraction ([#236](https://github.com/mokly-ai/mokly/issues/236)) ([aab537b](https://github.com/mokly-ai/mokly/commit/aab537bdf0aca61eb731d258c2f54c51bda0e316))
+* **git:** convert base batches in one Git process, time the extraction ([#229](https://github.com/mokly-ai/mokly/issues/229)) ([d4c6f6a](https://github.com/mokly-ai/mokly/commit/d4c6f6a825dc73af66e8df524d67e7f6d876a547))
+* **graph:** bundle stylesheet roots in parallel ([#228](https://github.com/mokly-ai/mokly/issues/228)) ([c83becc](https://github.com/mokly-ai/mokly/commit/c83beccfcfbc36a503c681a2a59c9a08f0596b74))
+* per-entry render keys and cross-side render reuse ([#227](https://github.com/mokly-ai/mokly/issues/227)) ([9ce7585](https://github.com/mokly-ai/mokly/commit/9ce7585394f36c01aa54cd2a274f2d46fd672d6b))
+* **serve:** render the background pass in bounded batches ([#225](https://github.com/mokly-ai/mokly/issues/225)) ([9c56286](https://github.com/mokly-ai/mokly/commit/9c56286d1bb89096f24392ba7a3c955cbf816f3c))
+* **serve:** smaller cache charges, cache counts, covered-root recheck ([#222](https://github.com/mokly-ai/mokly/issues/222)) ([140bb0e](https://github.com/mokly-ai/mokly/commit/140bb0ef8fbfa3d048303b70588d2a8c5cfd86a4))
+* **sidecar:** resolve bundle imports natively and plan a second compile ([#226](https://github.com/mokly-ai/mokly/issues/226)) ([3192b19](https://github.com/mokly-ai/mokly/commit/3192b19b9060f0905d9f573784bce787b4f3707c))
+
 ## [0.16.1](https://github.com/mokly-ai/mokly/compare/v0.16.0...v0.16.1) (2026-10-26)
 
 
