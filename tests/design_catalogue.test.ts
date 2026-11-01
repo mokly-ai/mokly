@@ -9,6 +9,7 @@ import {
   reachabilityViolations,
   scopeViolations,
 } from "./helpers/design_catalogue_checks.js";
+import { highlightViolations } from "./helpers/design_highlight.js";
 import {
   expectationViolations,
   tagViolations,
@@ -142,6 +143,14 @@ test(
   setup,
   async () => {
     assert.deepEqual(keyboardStopViolations(await served()), []);
+  },
+);
+
+test(
+  "each artboard draws Highlight components in the shell's state",
+  setup,
+  async () => {
+    assert.deepEqual(highlightViolations(await served()), []);
   },
 );
 

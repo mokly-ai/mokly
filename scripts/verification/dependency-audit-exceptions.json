@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "advisory": "GHSA-g3hv-75wg-m249",
+    "package": "minimatch",
+    "path": ["node_modules/eslint-plugin-import-x", "node_modules/minimatch"],
+    "until": "2026-11-30",
+    "reason": "Dev-only ESLint plugin dependency. eslint-plugin-import-x 4.17.1, the latest release, accepts only minimatch 9 or 10, and no patched 9 or 10 release exists. Its no-internal-modules rule imports makeRe, which minimatch 11 removed, so an override stops ESLint from loading the plugin. The plugin matches only the repository's own lint configuration patterns, never untrusted patterns.",
+    "tracking": "https://github.com/un-ts/eslint-plugin-import-x/issues/569"
+  }
+]

@@ -1,6 +1,6 @@
+import { MetadataChips } from "../../../../../packages/ui/src/metadata-row/metadata-row.js";
 import { optional, useDesignInstance } from "../library/composition.js";
 import { tagChip } from "../library/controls/tag-chip.js";
-import { tagPicker } from "../library/controls/tag-picker.js";
 
 import { useDesignNavigation } from "./design_navigation.js";
 import { tagTarget, type NavigationState } from "./navigation_states.js";
@@ -28,7 +28,7 @@ export function TagChips({
   const navigation = useDesignNavigation();
   const name = useDesignInstance("tag");
   return (
-    <span className="mbk-chips">
+    <MetadataChips>
       {designTagRecords(navigation.tags, tags).map((tag) => (
         <tagChip.Component
           key={tag.id}
@@ -37,17 +37,6 @@ export function TagChips({
           selected={tag.id === activeTag}
         />
       ))}
-    </span>
-  );
-}
-
-export function TagPicker({ activeTag }: { activeTag?: string | undefined }) {
-  const navigation = useDesignNavigation();
-  return (
-    <tagPicker.Component
-      moklyInstance={useDesignInstance("tag-picker")}
-      tags={designTagRecords(navigation.tags)}
-      {...optional("activeTag", activeTag)}
-    />
+    </MetadataChips>
   );
 }

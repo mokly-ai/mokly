@@ -5,7 +5,7 @@ use std::collections::BTreeSet;
 use crate::axes::EntryKind;
 use crate::canonical::compare_utf16;
 use crate::paths::is_entry_path;
-use crate::public_detail::EntryDetailV3;
+use crate::public_detail::EntryDetailV4;
 use crate::public_validation::hash;
 use crate::read_contract::ContractViolation;
 use crate::readers::ReadError;
@@ -14,22 +14,15 @@ use crate::review_validation::ignore_id;
 use crate::usage::CatalogueUsage;
 use crate::wire_decode;
 
-pub(crate) fn validate(detail: &EntryDetailV3) -> Result<(), ReadError> {
-    let current = detail.deployment_id.is_some()
-        && detail.revision.is_some()
-        && detail.generation.is_none()
-        && detail.entry.snapshot_id.is_none();
-    let removed = detail.deployment_id.is_none()
-        && detail.revision.is_none()
-        && detail.generation.is_some()
-        && detail.entry.snapshot_id.is_some();
+pub(crate) fn validate(detail: &EntryDetailV4) -> Result<(), ReadError> {
+    let current = detail.revision.is_some() && detail.entry.snapshot_id.is_none();
+    let removed = detail.revision.is_none() && detail.entry.snapshot_id.is_some();
     if !current && !removed {
         return Err(invalid(ContractViolation::DetailFence));
     }
     if !hash(&detail.identity.id)
         || detail.identity.title != "Mokly"
-        || detail.deployment_id.as_deref().is_some_and(|id| !hash(id))
-        || detail.generation.as_deref().is_some_and(|id| !hash(id))
+        || !hash(&detail.detail_id)
         || detail
             .entry
             .snapshot_id
@@ -103,7 +96,7 @@ pub(crate) fn validate(detail: &EntryDetailV3) -> Result<(), ReadError> {
 }
 
 /// View states and ignore ids travel with view evidence; `before` names a current visual entry's base side.
-fn comparison(detail: &EntryDetailV3, current_visual: bool) -> Result<(), ReadError> {
+fn comparison(detail: &EntryDetailV4, current_visual: bool) -> Result<(), ReadError> {
     let views = detail.views.iter().all(|view| {
         let ready = view.resource_evidence.is_some();
         view.state.is_some() == ready

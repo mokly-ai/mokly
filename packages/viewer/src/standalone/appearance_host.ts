@@ -2,7 +2,7 @@
 
 import type { ViewerTheme } from "../viewer/types.js";
 
-import { installAppearance } from "./startup.js";
+import { installAppearance, type EffectiveAppearance } from "./startup.js";
 
 /** The controller the React bridge reaches through the shell's window. */
 export interface StandaloneAppearanceHost {
@@ -12,6 +12,8 @@ export interface StandaloneAppearanceHost {
   applyRoute(scheme: "dark" | "light" | undefined): void;
   /** Re-apply the current appearance to newly rendered shell elements. */
   refresh(): void;
+  /** The appearance and preview scheme in force, which a first render reads. */
+  current(): EffectiveAppearance;
 }
 
 interface AppearanceHostWindow {
@@ -26,11 +28,12 @@ export function standaloneAppearanceHost(
 }
 
 /**
- * Opt the stub document in and install the appearance: the root carries the
- * stored, pinned or system appearance, and the body the effective preview
- * scheme, before React renders a frame. Persisted page exits keep the
- * controller for the back-forward cache, and a persisted `pageshow` refreshes
- * the restored page; a final exit disposes it and removes both page listeners.
+ * Opt the stub document in and install the appearance: the document root
+ * carries the stored, pinned or system appearance before React renders, and
+ * the shell renders its own root from `current()` with the same appearance and
+ * the effective preview scheme. Persisted page exits keep the controller for
+ * the back-forward cache, and a persisted `pageshow` refreshes the restored
+ * page; a final exit disposes it and removes both page listeners.
  */
 export function installStandaloneAppearance(
   doc: Document,
@@ -39,9 +42,6 @@ export function installStandaloneAppearance(
   doc.documentElement.dataset["moklyAppearance"] = "";
   const handle = installAppearance(
     {
-      get body() {
-        return doc.body;
-      },
       documentElement: doc.documentElement,
       querySelectorAll: (selector) =>
         doc.querySelectorAll(selector) as unknown as Iterable<never>,
@@ -53,6 +53,7 @@ export function installStandaloneAppearance(
     choose: (theme) => handle.choose(theme),
     applyRoute: (scheme) => handle.applyRoute(scheme),
     refresh: () => handle.refresh(),
+    current: () => handle.current(),
   };
   owner.__moklyAppearance = appearance;
   const dispose = (): void => {

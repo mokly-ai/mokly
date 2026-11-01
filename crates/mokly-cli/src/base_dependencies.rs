@@ -10,6 +10,7 @@ use mokly_compare::base_render::BaseRequest;
 use mokly_compare::cache::DiskCache;
 use mokly_compare::cache_types::{Cache, Lease, Reporter, Storage};
 use mokly_compare::commands::TimedCommands;
+use mokly_compare::comparison_steps::StepCache;
 use mokly_compare::dependencies::{Dependencies, DependencyTiers};
 use mokly_compare::dependency_types::{Request, Tier};
 use mokly_compare::error::{Error, InternalError, Result};
@@ -140,6 +141,10 @@ impl NativeDependencies {
             storage,
             clock,
         } = self.caches(&config.repo_root)?;
+        let cache: Arc<dyn Cache> = Arc::new(StepCache {
+            inner: cache,
+            steps: request.steps.clone(),
+        });
         let sources = match sources {
             Some(sources) => sources,
             None => {

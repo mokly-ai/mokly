@@ -1,10 +1,10 @@
 /**
- * Pack the viewer, the CLI, and the host's native package; install the
- * archives into a scratch copy of the example outside the repository; serve
- * it through the installed shim from a nested directory and open a React, a
- * design, and an HTML screen and a Markdown document in headless Chrome;
- * build it with `--strict` and open the same entries in the built site; then
- * build it again through npx with an empty npm cache.
+ * Pack the UI package, the viewer, the CLI, and the host's native package;
+ * install the archives into a scratch copy of the example outside the
+ * repository; serve it through the installed shim from a nested directory
+ * and open a React, a design, and an HTML screen and a Markdown document in
+ * headless Chrome; build it with `--strict` and open the same entries in the
+ * built site; then build it again through npx with an empty npm cache.
  */
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
@@ -56,6 +56,7 @@ async function pack(destination) {
   assert.ok(host, "the packed consumer smoke requires a supported host");
   const packages = [];
   for (const [directory, name] of [
+    ["packages/ui", "@mokly/ui"],
     ["packages/viewer", "@mokly/viewer"],
     ["packages/mokly", "@mokly/mokly"],
     [host.directory, host.name],
@@ -81,13 +82,14 @@ async function installedVersion(name) {
 }
 
 /**
- * Copy the example with the repository pages its documents link to, and
- * install the archives, not the workspace links. The copy keeps the
- * repository layout, so the configuration's `repoRoot`, the example's asset
- * outside its catalogue root, and those links resolve as they do here.
+ * Copy the example with the UI package sources its design mockups import by
+ * repository path and the repository pages its documents link to, and install
+ * the archives, not the workspace links. The copy keeps the repository layout,
+ * so the configuration's `repoRoot`, the example's asset outside its catalogue
+ * root, and those imports and links resolve as they do here.
  */
 async function install(consumer, packages) {
-  for (const directory of ["examples", "docs", "plans"])
+  for (const directory of ["examples", "packages/ui/src", "docs", "plans"])
     await fs.cp(
       path.join(repositoryRoot, directory),
       path.join(consumer, directory),

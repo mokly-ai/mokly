@@ -83,10 +83,10 @@ test("each view of a component renders in its actual viewport and scheme", async
   const mobile = page.frameLocator('[data-workspace-frame="mobile"]');
   const desktop = page.frameLocator('[data-workspace-frame="desktop"]');
   // The top bar reads the viewport and scheme from its render context.
-  await expect(mobile.locator(".mbk-menu-btn")).toBeVisible();
-  await expect(mobile.locator(".mbk-name")).toHaveCount(0);
+  await expect(mobile.locator(".mbk-menu")).toBeVisible();
+  await expect(mobile.locator(".mbk-name")).toBeHidden();
   await expect(desktop.locator(".mbk-name")).toHaveText("mokly.");
-  await expect(desktop.locator(".mbk-menu-btn")).toHaveCount(0);
+  await expect(desktop.locator(".mbk-menu")).toBeHidden();
   await chooseScheme(page, "dark");
   for (const frame of [mobile, desktop])
     await expect(frame.locator("html")).toHaveCSS("color-scheme", "dark");
@@ -125,4 +125,30 @@ test("the inspector icons open, switch, and close panels, and only a composed co
   await expect(
     page.getByRole("tab", { name: "Nested components", exact: true }),
   ).toBeVisible();
+});
+
+test("Escape in another shell control closes the inspector and returns focus to the tab that opened it", async ({
+  page,
+}) => {
+  await page.goto(ACTION);
+  const usage = page.getByRole("tab", { name: "Usage", exact: true });
+  await usage.click();
+  await expect(usage).toHaveAttribute("aria-selected", "true");
+  await expect(
+    page.getByRole("tabpanel", { name: "Usage", exact: true }),
+  ).toBeVisible();
+  // Escape reaches the inspector from any control of its shell.
+  const search = page.getByRole("searchbox", { name: "Search catalogue" });
+  await search.focus();
+  await expect(search).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("[data-workspace-inspector]")).toHaveAttribute(
+    "data-open",
+    "false",
+  );
+  await expect(page.locator('[role="tab"][aria-selected="true"]')).toHaveCount(
+    0,
+  );
+  await expect(page.getByRole("tabpanel")).toHaveCount(0);
+  await expect(usage).toBeFocused();
 });

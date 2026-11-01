@@ -19,6 +19,7 @@ use crate::dependency_usage::DependencyUsage;
 use crate::error::{RenderError, Result};
 use crate::leases::ContextLease;
 use crate::postcss_cache::{CssCache, CssRecord};
+use crate::postcss_read_inventory::ModuleDigests;
 use crate::postcss_turns::Turns;
 use crate::side::SideInputs;
 use crate::{postcss_inventory, postcss_nested, postcss_read_inventory};
@@ -36,6 +37,7 @@ pub(crate) struct PostCss {
     pub(crate) resolver: Arc<dyn ImportResolver>,
     /// One sidecar request of this context at a time, held outside the shared cache lock.
     pub(crate) turns: Turns,
+    pub(crate) module_digests: ModuleDigests,
 }
 
 impl CssProcessor for PostCss {
@@ -102,6 +104,7 @@ impl PostCss {
             &self.side,
             &inventory,
             &record.result.read_evidence,
+            &self.module_digests,
         );
         let processed = ProcessedCss {
             read_evidence,

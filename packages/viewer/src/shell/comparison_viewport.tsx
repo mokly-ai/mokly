@@ -1,7 +1,13 @@
-/** The shared viewport one comparison chrome scrolls. */
+/**
+ * The shared viewport one comparison chrome scrolls. This container attaches
+ * the viewport and its spacer to the scroll controller;
+ * `@mokly/ui/comparison-pane` draws them.
+ */
 
 import { createContext, useContext, useEffect, useMemo, useRef } from "react";
 import type { ReactNode, RefObject } from "react";
+
+import { ComparisonViewport as ComparisonViewportView } from "@mokly/ui/comparison-pane";
 
 import type { ComparisonScrollSync } from "./comparison_scroll_types.js";
 
@@ -39,16 +45,10 @@ export function ComparisonViewport({
     return sync.attachViewport(viewport.current, spacer.current);
   }, [sync]);
   return (
-    <div className="mb-viewport" data-comparison-viewport="" ref={viewport}>
+    <ComparisonViewportView ref={viewport} spacerRef={spacer}>
       <ViewportContext.Provider value={scope}>
-        <div className="mb-viewport-box">{children}</div>
+        {children}
       </ViewportContext.Provider>
-      <div
-        aria-hidden="true"
-        className="mb-viewport-spacer"
-        data-comparison-spacer=""
-        ref={spacer}
-      />
-    </div>
+    </ComparisonViewportView>
   );
 }

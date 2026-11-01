@@ -1,7 +1,12 @@
+import type { ComparisonMode as ToolbarMode } from "@mokly/ui/comparison-toolbar";
+
 import type { ComparisonScope } from "./comparison_request.js";
 
-/** Available comparison presentations; Current never makes a request. */
-export type ComparisonMode = "current" | "side" | "overlay" | "difference";
+/**
+ * Available comparison presentations, exactly the modes the comparison toolbar
+ * offers; Current never makes a request.
+ */
+export type ComparisonMode = ToolbarMode;
 
 /** Axes and mode for the comparison artifact currently shown. */
 export interface ComparisonPresentation {

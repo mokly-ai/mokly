@@ -1,8 +1,8 @@
 //! Stylesheet roots follow ordered module edges and renderer exclusion.
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
-use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_css::compiler::Compiler;
@@ -66,6 +66,7 @@ pub(crate) fn compiler(
             module,
             cache: runtime.css.clone(),
             turns: Turns::default(),
+            module_digests: Default::default(),
         }) as Arc<dyn CssProcessor>,
         None => Arc::new(IdentityProcessor),
     };
@@ -73,25 +74,18 @@ pub(crate) fn compiler(
         "{:?}:{:?}:{:?}",
         config.input, side.source_root, side.module_resolution
     );
-    Arc::new(CachedStylesheets {
-        inner: Arc::new(Compiler {
+    Arc::new(CachedStylesheets::new(
+        Arc::new(Compiler {
             tree: tree.clone(),
             repo_root: config.repo_root.clone(),
             resolver,
             processor,
         }),
         tree,
-        root: config.repo_root.clone(),
+        config.repo_root.clone(),
         settings,
-        shared: runtime.styles.clone(),
-        local: Mutex::new(
-            runtime
-                .styles
-                .lock()
-                .unwrap_or_else(|error| error.into_inner())
-                .empty_peer(),
-        ),
-    })
+        runtime.styles.clone(),
+    ))
 }
 
 #[tracing::instrument(name = "graph.prepare.stylesheet-roots", skip_all)]

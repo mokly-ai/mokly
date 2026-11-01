@@ -18,7 +18,7 @@ const variantPath = `${homePath}/empty`;
 
 async function fixture(): Promise<Fixture> {
   return JSON.parse(
-    await readFile("docs/protocol/fixtures/catalogue-v8.json", "utf8"),
+    await readFile("docs/protocol/fixtures/catalogue-v9.json", "utf8"),
   ) as Fixture;
 }
 function find(nodes: readonly Node[], path: string): Node {

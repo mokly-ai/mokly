@@ -5,7 +5,7 @@ import type { CatalogueReadModel } from "../src/catalogue/types.js";
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
 import { routeKey } from "../src/shell/data_requests.js";
 
-import { detailFixture, indexFixture } from "./catalogue_v8_fixture.js";
+import { detailFixture, indexFixture } from "./catalogue_v9_fixture.js";
 import { controllerFixture } from "./data_controller_fixture.js";
 import { flush, liveDescriptor } from "./data_fakes.js";
 
@@ -166,9 +166,11 @@ test("a refresh from another deployment replaces the catalogue", async () => {
 test("a replacement ends the live connection, so no message or retry loads an index", async () => {
   const fixture = connected();
   fixture.navigate(`/view/${HOME}/`);
-  fixture.source
-    .detail(HOME)
-    .resolve({ ...detailFixture({ path: HOME }), deploymentId: OTHER });
+  fixture.source.detail(HOME).resolve({
+    ...detailFixture({ path: HOME }),
+    revision: 1,
+    detailId: OTHER,
+  });
   await flush();
   assert.equal(fixture.controller.replaced, true);
   // The stream closes, so a later message of the installed deployment

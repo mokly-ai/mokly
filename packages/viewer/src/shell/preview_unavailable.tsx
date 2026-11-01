@@ -1,25 +1,27 @@
-/** Shared unavailable state for a removed entry's previous version. */
+/**
+ * Shared unavailable state for a removed entry's previous version, worded by
+ * `previews/copy.ts`. `@mokly/ui/preview-state` draws it.
+ */
+
+import { PreviewUnavailable as PreviewUnavailableView } from "@mokly/ui/preview-state";
 
 import { PREVIEW_UNAVAILABLE } from "../previews/copy.js";
 
 /** Render the unavailable copy and, after a failed request, its Retry action. */
 export function PreviewUnavailable(props: { retry: (() => void) | undefined }) {
   return (
-    <div className="mbk-stage">
-      <div className="mbk-empty">
-        <h2>{PREVIEW_UNAVAILABLE.title}</h2>
-        <p>{PREVIEW_UNAVAILABLE.body}</p>
-        {props.retry ? (
-          <button
-            className="mbk-empty-link"
-            data-mokly-preview-retry=""
-            onClick={props.retry}
-            type="button"
-          >
-            {PREVIEW_UNAVAILABLE.retry.label}
-          </button>
-        ) : null}
-      </div>
-    </div>
+    <PreviewUnavailableView
+      body={PREVIEW_UNAVAILABLE.body}
+      retry={
+        props.retry
+          ? {
+              label: PREVIEW_UNAVAILABLE.retry.label,
+              mark: PREVIEW_UNAVAILABLE.retry.attribute,
+              onClick: props.retry,
+            }
+          : undefined
+      }
+      title={PREVIEW_UNAVAILABLE.title}
+    />
   );
 }

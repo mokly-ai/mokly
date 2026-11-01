@@ -1,5 +1,6 @@
 import { defineScreen } from "@mokly/mokly";
 
+import { PreviewLoading } from "../../../../../../../packages/ui/src/preview-state/preview-state.js";
 import { designMetadata } from "../../../metadata.js";
 import { artboards } from "../../../parts/artboards.js";
 import { DESTINATIONS } from "../../../parts/destinations.js";
@@ -8,10 +9,7 @@ import {
   REMOVED_DOCUMENTS,
   RemovedPageScreen,
 } from "../../../parts/removed_page.js";
-import {
-  PreviewLoading,
-  PreviewUnavailable,
-} from "../../../parts/removed_preview.js";
+import { PreviewUnavailable } from "../../../parts/removed_preview.js";
 import type { ArtboardViewport } from "../../../parts/shell.js";
 
 function LongDocument({ viewport }: { viewport: ArtboardViewport }) {

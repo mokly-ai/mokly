@@ -1,109 +1,72 @@
-import { useId } from "react";
+import { mockLink } from "@mokly/mokly";
 
-import { MockLink } from "@mokly/mokly";
-
+import {
+  HighlightLabel,
+  LabelLayer,
+} from "../../../../../../packages/ui/src/highlight-label/highlight-label.js";
+import {
+  HighlightMask,
+  type HighlightLength,
+  type HighlightMaskPlacement,
+} from "../../../../../../packages/ui/src/highlight-mask/highlight-mask.js";
+import { useHighlightRegions } from "../../parts/depicted_view.js";
 import { useCurrentPage } from "../../parts/design_navigation.js";
+import type { ArtboardViewport } from "../../parts/shell.js";
 
-export type InspectionSelection = "off" | "outer" | "nested";
+/** The shipped mask fills the depicted document, below the labels. */
+const FILL: HighlightMaskPlacement = {
+  expanded: false,
+  left: 0,
+  position: "absolute",
+  top: 0,
+};
 
-/** Fixed geometry belongs to this synthetic artboard, not the runtime inspector. */
-export function HighlightMask({
-  selection,
-}: {
-  selection: Exclude<InspectionSelection, "off">;
-}) {
-  const nested = selection === "nested";
-  const maskId = useId();
+/** The shell draws each label this far above its instance's box. */
+const LABEL_OFFSET = 22;
+
+function labelTop(y: HighlightLength): HighlightLength {
+  return typeof y === "number"
+    ? y - LABEL_OFFSET
+    : `calc(${y} - ${LABEL_OFFSET}px)`;
+}
+
+/**
+ * The shell's highlight over one viewport's depicted document: the shipped
+ * mask and labels of the regions in the depicted view's record, drawn from
+ * fixed boxes. The Highlight components switch reveals the layer without a
+ * script. A label whose instance has an artboard of its selection links to
+ * it, and the others are pictures of the shell's label.
+ */
+export function HighlightLayer({ viewport }: { viewport: ArtboardViewport }) {
+  const regions = useHighlightRegions(viewport);
   const current = useCurrentPage();
+  if (!regions.length) return null;
   return (
-    <div className="ce-highlight-layer" data-selection={selection}>
-      <svg className="ce-mask" aria-hidden="true" width="100%" height="100%">
-        <defs>
-          <mask
-            id={maskId}
-            maskUnits="userSpaceOnUse"
-            x="0"
-            y="0"
-            width="100%"
-            height="100%"
-          >
-            <rect width="100%" height="100%" fill="white" />
-            {nested ? (
-              <rect
-                className="ce-nested-cutout"
-                x="0"
-                y="99"
-                width="104"
-                height="36"
-                rx="8"
-                fill="black"
-              />
-            ) : (
-              <>
-                <rect
-                  className="ce-toolbar-cutout"
-                  x="24"
-                  y="76"
-                  width="100%"
-                  height="82"
-                  rx="10"
-                  fill="black"
-                />
-                <rect
-                  x="24"
-                  y="258"
-                  width="116"
-                  height="36"
-                  rx="8"
-                  fill="black"
-                />
-              </>
-            )}
-          </mask>
-        </defs>
-        <rect
-          width="100%"
-          height="100%"
-          fill="var(--ce-mask, #f4f4f1)"
-          fillOpacity="0.78"
-          mask={"url(#" + maskId + ")"}
-        />
-      </svg>
-      {nested ? (
-        <MockLink
-          className="ce-region ce-region--nested"
-          to="design/components/inspection/inspection-nested"
-          aria-current={current(
-            "design/components/inspection/inspection-nested",
-          )}
-          aria-label="Inspect Action, Toolbar action"
-        >
-          <span>Action · Toolbar</span>
-        </MockLink>
-      ) : (
-        <>
-          <MockLink
-            className="ce-region ce-region--toolbar"
-            to="design/components/inspection/inspection-nested"
-            aria-current={current(
-              "design/components/inspection/inspection-nested",
-            )}
-            aria-label="Inspect Toolbar, Main"
-          >
-            <span>Toolbar · Main</span>
-          </MockLink>
-          <MockLink
-            className="ce-region ce-region--footer"
-            to="design/components/inspection/inspection-details"
-            aria-current={current(
-              "design/components/inspection/inspection-details",
-            )}
-            aria-label="Inspect Action, Footer action"
-          >
-            <span>Action · Footer</span>
-          </MockLink>
-        </>
-      )}
+    <div className="ce-highlight-layer">
+      <HighlightMask
+        boxes={regions.map((region) => region.box)}
+        height="100%"
+        placement={FILL}
+        width="100%"
+      />
+      <div className="ce-highlight-labels">
+        <LabelLayer placement="root">
+          {regions.map((region) => (
+            <HighlightLabel
+              key={region.label}
+              left={region.box.x}
+              text={region.label}
+              top={labelTop(region.box.y)}
+              {...(region.to === undefined
+                ? { interactive: false }
+                : {
+                    current: current(region.to) === "page",
+                    href: mockLink(region.to),
+                  })}
+            />
+          ))}
+        </LabelLayer>
+      </div>
     </div>
   );
 }

@@ -20,8 +20,10 @@ interface ChangedComparisonFixture {
   reasons: readonly ChangeReasonKind[];
   variant?: string;
   savedPropsUnchanged?: boolean;
+  /** A changed supplied prop: its instance's component and id, and its values. */
   propChange?: {
-    instance: string;
+    title: string;
+    instanceId: string;
     prop: string;
     before: string;
     after: string;
@@ -59,7 +61,8 @@ export type ComparisonFixture =
 
 /** Paired synthetic values also supply the current screen and its Props panel. */
 export const footerLabelChange = {
-  instance: "Action · Footer action",
+  title: "Action",
+  instanceId: "Footer action",
   prop: "label",
   before: "Continue",
   after: "Get started",

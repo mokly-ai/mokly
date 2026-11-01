@@ -110,13 +110,13 @@ jobs:
           pattern: release-native-*
           path: .context/release-artifact
           merge-multiple: true
-      - name: Pack seven release packages
+      - name: Pack eight release packages
         run: node scripts/release/pack.mjs .context/release-artifact
-      - name: Recheck seven release packages
+      - name: Recheck eight release packages
         run: node scripts/release/pack.mjs .context/release-artifact --reuse
       - name: Install Chromium for smoke
         run: npx playwright install --with-deps chromium
-      - name: Smoke-test seven release packages
+      - name: Smoke-test eight release packages
         run: node scripts/release/smoke.mjs .context/release-artifact
       - name: Preserve release-check evidence
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

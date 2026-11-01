@@ -9,8 +9,10 @@ import { createComparisonCatalogue } from "../helpers/comparison_catalogue.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
-/** Two real builds differ only in the viewer stylesheet, not comparison bytes. */
-export async function comparisonDeployments() {
+/** Build two real static deployments for old-tab checks. */
+export async function comparisonDeployments(
+  options: { changeGeneration?: boolean } = {},
+) {
   const root = await fs.mkdtemp(
     path.join(
       process.env["MOKLY_VERIFICATION_RESOURCE_ROOT"] ??
@@ -39,6 +41,11 @@ export async function comparisonDeployments() {
   const next = path.join(root, "next");
   const indexes: { deploymentId: string; comparisonUrl: string | null }[] = [];
   for (const [offset, directory] of [site, next].entries()) {
+    if (offset === 1 && options.changeGeneration)
+      await fs.appendFile(
+        path.join(source, "specs/screens/stable.screen.html"),
+        "\n<p>New comparison content</p>\n",
+      );
     if (offset === 1)
       await fs.appendFile(
         path.join(viewer, "shell.css"),

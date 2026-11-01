@@ -13,8 +13,8 @@ fn design_stacked_versions_share_one_frame_and_viewport() {
 }
 
 #[test]
-fn design_comparison_captions_agree_with_recorded_changes() {
-    design_behaviour::captions::check();
+fn design_comparison_headings_agree_with_recorded_changes() {
+    design_behaviour::headings::check();
 }
 
 #[test]

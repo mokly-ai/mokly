@@ -19,12 +19,6 @@ export interface ViewMarks {
   viewport: boolean;
 }
 
-/** Class the stylesheet draws as the accent dot on a marked control. */
-export const VIEW_CHANGED_CLASS = "mbk-view-changed";
-
-/** Class the stylesheet clips to the wording a screen reader hears. */
-export const VIEW_CHANGED_TEXT_CLASS = "mbk-view-changed-text";
-
 /** Element ids a marked control names through `aria-describedby`. */
 export const VIEW_CHANGED_IDS = {
   scheme: "mb-view-changed-scheme",

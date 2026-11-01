@@ -29,6 +29,7 @@ expression: bytes
           "kind": "text"
         }
       },
+      "detailId": "4b73722912ebaa4d42488a1c9ff0b43dd99fcdaef05b0b25e1f0b25ecc7b784b",
       "details": {
         "description": "",
         "relatedDocs": [],
@@ -157,6 +158,7 @@ expression: bytes
           "kind": "text"
         }
       },
+      "detailId": "cb76726bfe5151ff300f8658f8a2189744c1863f231c3615c8f8ff2ffe01bdde",
       "details": {
         "description": "",
         "relatedDocs": [],
@@ -284,6 +286,7 @@ expression: bytes
           "kind": "text"
         }
       },
+      "detailId": "57380f60ebe756999b4148a511daad178c9775fcb29380e70c733b45573aeabc",
       "details": {
         "description": "",
         "relatedDocs": [],
@@ -369,6 +372,7 @@ expression: bytes
         "light",
         "dark"
       ],
+      "detailId": "768a453c5cf4e72e0254554142fa5c3279a1b7cb620874d6bd1d1074b7e14eea",
       "details": {
         "description": "",
         "relatedDocs": [],
@@ -402,6 +406,7 @@ expression: bytes
       "changes": {
         "status": "pending"
       },
+      "detailId": "a3f56e7d925c214937be14760c419605b775521ff033b76e47301f0c790120f0",
       "details": {
         "description": "",
         "relatedDocs": [],
@@ -416,7 +421,7 @@ expression: bytes
   ],
   "removedEntries": [],
   "revision": 1,
-  "schemaVersion": 8,
+  "schemaVersion": 9,
   "screens": [
     {
       "changes": {
@@ -437,6 +442,7 @@ expression: bytes
           "kind": "boolean"
         }
       },
+      "detailId": "ae2fc46fca65331fb12b16e2a4117fd42e4de73a3fa184ed73fdf1c6123e3c00",
       "details": {
         "description": "",
         "relatedDocs": [],
@@ -560,6 +566,7 @@ expression: bytes
           "kind": "boolean"
         }
       },
+      "detailId": "33f520b9000409a66157fa17bb5e64df3d3231a3ca0b8c48224dceabfbc3747a",
       "details": {
         "description": "",
         "relatedDocs": [],

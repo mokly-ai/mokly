@@ -7,6 +7,7 @@ use mokly_catalogue::config_types::{Config, ResolvedConfig};
 use mokly_cli::cancellation::BuildCancellation;
 use mokly_compare::base_render::{BaseProvider, BaseRequest, HistoricalSources};
 use mokly_compare::cache_types::Lease;
+use mokly_compare::comparison_steps::{Step, StepsMock};
 use mokly_compare::dependency_types::{Resolved, Tier};
 use mokly_compare::error::Error;
 use mokly_compare::sources::SourcesMock;
@@ -79,6 +80,17 @@ fn sources(events: Events, attaches: usize) -> Unimock {
     )
 }
 
+/// Comparison steps that log the rendering step; any other step fails the test.
+fn steps(events: Events) -> Unimock {
+    Unimock::new(
+        StepsMock::step
+            .each_call(matching!(Step::Rendering))
+            .answers_arc(Arc::new(move |_, _| {
+                events.lock().unwrap().push("rendering");
+            })),
+    )
+}
+
 fn lease() -> Arc<Lease> {
     Arc::new(Lease {
         directory: "/base".into(),
@@ -104,7 +116,13 @@ fn side(sources: Arc<Lease>) -> Arc<BaseSide> {
 }
 
 /// Runs a base preparation whose bundle fails with a protocol handshake error.
-fn prepare(input: Config, dependencies: Unimock, tree: Unimock, sources: Unimock) -> Error {
+fn prepare(
+    input: Config,
+    dependencies: Unimock,
+    tree: Unimock,
+    sources: Unimock,
+    steps: Unimock,
+) -> Error {
     let head = Arc::new(Runtime::new(
         Arc::new(Unimock::new(())), Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(PoolMock::request.next_call(matching!((call) if matches!(call,
@@ -139,6 +157,7 @@ fn prepare(input: Config, dependencies: Unimock, tree: Unimock, sources: Unimock
             sources: Arc::new(sources),
             failures: Arc::new(Unimock::new(())),
         },
+        steps: Arc::new(steps),
     })
     .err()
     .unwrap()
@@ -157,9 +176,10 @@ fn native_base_uses_the_head_pool_and_the_leased_base_source_root() {
         dependencies,
         tree(events.clone()),
         sources(events.clone(), 1),
+        steps(events.clone()),
     );
     assert!(matches!(error, Error::Catalogue { .. }));
-    assert_eq!(events.lock().unwrap().last(), Some(&"attach"));
+    assert!(events.lock().unwrap().ends_with(&["attach", "rendering"]));
 }
 
 #[test]
@@ -182,12 +202,13 @@ fn a_renderer_configuration_attaches_an_existing_extraction_before_the_configura
         dependencies,
         tree(events.clone()),
         sources(events.clone(), 2),
+        steps(events.clone()),
     );
     assert!(matches!(error, Error::Catalogue { .. }));
     let events = events.lock().unwrap();
     assert_eq!(events.first(), Some(&"attach"));
     assert!(events.contains(&"read configuration"));
-    assert_eq!(events.last(), Some(&"attach"));
+    assert!(events.ends_with(&["attach", "rendering"]));
 }
 
 #[test]
@@ -211,9 +232,10 @@ fn a_failed_early_lookup_keeps_the_base_reads_on_git() {
         dependencies,
         tree(events.clone()),
         sources(events.clone(), 1),
+        steps(events.clone()),
     );
     assert!(matches!(error, Error::Catalogue { .. }));
     let events = events.lock().unwrap();
     assert_eq!(events.first(), Some(&"read configuration"));
-    assert_eq!(events.last(), Some(&"attach"));
+    assert!(events.ends_with(&["attach", "rendering"]));
 }

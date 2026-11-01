@@ -10,8 +10,8 @@ and their owning folders.
 
 Component pages use the top bar, split navigation tree, screen heading,
 comparison band, stage, and comparison controls of the shell designs, plus the
-shared icon inspector and compact view toolbar. Components use a small cube
-icon in the Components section. Both sections are views of one tree, so the
+shared icon inspector and compact view toolbar. Components use the
+stacked-layers icon of the Components panel in the Components section. Both sections are views of one tree, so the
 `Example` folder appears above `Screens` in Specs and above its `Components`
 library in Components, and component crumbs read `Example › Components`. A
 variant's page keeps its parent's title as the heading; the browser title and
@@ -36,18 +36,22 @@ a depiction. The Additions story, the stylesheet stories, and the controls limit
 pages each depict a story of their own: on their pages every option except the
 shown entry is a depiction, and no option on another page links into them.
 Navigation variant rows follow the same rule.
-The viewport dropdown shows the mobile canvas, desktop canvas, or both for the selected variant. Mobile context is capped at 390px; desktop context keeps the shell's fixed 1024px layout width in every window, so a component's desktop view has one layout width, and a narrower preview pane scrolls. Both places the two canvases side by side, 40px apart: centred while the row fits, otherwise from the left edge of the scrolling pane, and stacked from the left edge below 760px. Canvases have a 10px radius, a light
-border, a small context caption, and a centered component, without device chrome.
+The viewport dropdown shows the mobile canvas, desktop canvas, or both for the selected variant. Mobile context keeps the shell's fixed 390px width and desktop context keeps the shell's fixed 1024px layout width in every window, so each view has one layout width, and a narrower preview pane scrolls. Both places the two canvases side by side, 40px apart: centred while the row fits, otherwise from the left edge of the scrolling pane, and stacked from the left edge below 760px. Each canvas is the shell's: its viewport caption stands above a
+520px frame with an 8px radius and a light border, without device chrome. The
+component stands 24px from the frame's top left, where the shell's documents
+draw it, in each canvas and comparison frame.
 Consuming screens depict the same Action and Toolbar examples as the component
 pages.
 
-Side by side draws one canvas per version under Before and Current labels.
-Overlay and Difference draw one bordered frame at the same canvas height, its
-caption above the viewport both versions share: Current sits on top at half
-opacity, or blends by difference over the opaque Before layer, and both versions
-always share one scroll position. The Stacked comparisons gallery also depicts
-a synthetic Checklist taller than that frame, part-way down with the frame's
-scrollbar drawn. Its Current version rewords one step, and its fixed-height
+A comparison draws the shell's sections. Each section's heading names its
+viewport and the variant's state, such as `Desktop · Variant changed`, and the
+component frames below it have no caption. Side by side draws one component
+frame per version under Before and Current labels. Overlay and Difference draw
+one component frame of the same size around the viewport both versions share:
+Current sits on top at half opacity, or blends by difference over the opaque
+Before layer, and both versions always share one scroll position. The Stacked
+comparisons gallery also depicts a synthetic Checklist taller than that frame,
+part-way down with the frame's scrollbar drawn. Its Current version rewords one step, and its fixed-height
 rows keep the drawn position independent of text wrapping. Its own one-entry
 Changes scenario lists only Checklist, which no screen uses yet, so its
 inspector opens on Details, where the comparison facts live.
@@ -104,10 +108,11 @@ unavailable-metadata copy.
 Its Stylesheet evidence child gallery holds four screens of three stories that
 change only `styles/actions.css`. In Component with changed styles, the changed
 rule styles only Action's own output: Action and its three saved variants have
-four Changes rows, Side by side reads "Default variant · Styles this variant uses
-changed", and Welcome and Details appear only under Affected screens. Screen
-affected by a changed component opens Welcome from that list in Side by side,
-under All, where Welcome stays Unmodified and outside Changes. Its band offers
+four Changes rows, each Side by side section reads "Styles this variant uses
+changed" after its viewport, and Welcome and Details appear only under Affected
+screens. Screen affected by a changed component opens Welcome from that list in
+Side by side, under All, where Welcome stays Unmodified and outside Changes.
+Its band offers
 the comparison, and the shown view reads "Components this screen uses
 changed" over its two versions; a component in Welcome's position reads
 "Components this variant uses changed". Its Details list the
@@ -127,20 +132,19 @@ they do not generate visual-analysis prose or a separate banner. See the
 
 ## Screen Inspection
 
-The shared inspector puts component groups in Components, with native
-disclosures, counts, and repeated-instance links. Selecting an instance opens
-Props with its supplied values, slot/ownership details, and an Open component
-link. Details and Usage stay available without crowding the selected instance. Welcome has four
+The shared inspector lists the view's instances by owner in Components, with
+native disclosures for nested instances, counts, and a link from each instance
+to its selection. Selecting an instance opens Props with the contents that the
+[explorer contract](./mokly-component-explorer.md#components-in-the-screen-inspector)
+states. Details and Usage stay available without crowding the selected instance. Welcome has four
 instances: Toolbar, two Actions, and an invisible Help hint. Nested Toolbar
 contents start collapsed and expand in the nested-selection artboard. Help hint
 has an inspection entry and component page, without an invented visible region.
 Toolbar and Help hint usage links lead to their own selected-instance artboards,
 with the correct prompt or visibility props and Open component destination.
 
-Highlight components is a native switch grouped with the viewport dropdown beside the title. It toggles the overlay without navigation. The enabled artboards show a light mask at 78% coverage with cutouts over the visible
-components. Sage outlines and named labels expose the selected regions; a
-nested selection cuts out only the Toolbar action and dims the parent again.
-The same consumer DOM is used with highlighting off and on. Welcome uses an SVG overlay; Details uses a clipped scrim around its single Action. Neither sets ancestor opacity. Each viewport uses its own overlay, with unique SVG mask ids when Both is selected.
+Highlight components is a native switch grouped with the viewport dropdown beside the title. It toggles the highlight without navigation. The enabled artboards draw the shell's highlight mask and labels: the shell's scrim with a cutout and an outline over each highlighted component, and the shell's label of each, which names its component and its instance. A nested selection cuts out only the Toolbar action and dims the parent again.
+The same consumer DOM is used with highlighting off and on. Welcome and Details draw the same mask, and neither sets ancestor opacity. Each viewport uses its own mask, with unique SVG mask ids when Both is selected.
 
 Mask geometry is fixed to the synthetic artboard's layout and matches its
 actual DOM bounds. The runtime owns geometry collection, selection, Escape

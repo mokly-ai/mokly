@@ -33,3 +33,22 @@ export function viewerPackageReport(): PackageReport {
     ].map((path) => ({ path, size: 1 })),
   };
 }
+
+export function uiPackageReport(): PackageReport {
+  return {
+    integrity: `sha512-${"c".repeat(12)}`,
+    shasum: "d".repeat(40),
+    name: "@mokly/ui",
+    version: "0.1.0",
+    files: [
+      "dist/styles.css",
+      "dist/top-bar/top-bar.js",
+      "dist/top-bar/top-bar.d.ts",
+      "dist/top-bar/top-bar.css",
+      "README.md",
+      "CHANGELOG.md",
+      "LICENSE",
+      "package.json",
+    ].map((path) => ({ path, size: 1 })),
+  };
+}

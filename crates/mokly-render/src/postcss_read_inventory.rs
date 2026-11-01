@@ -1,7 +1,8 @@
 //! Select read witnesses without changing plugin privacy or catalogue membership.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
+use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 
 use mokly_catalogue::config::{normalize, relative};
 use mokly_sidecar::postcss_evidence::{Evidence, Read};
@@ -12,12 +13,120 @@ use crate::postcss_inventory::Inventory;
 use crate::side::SideInputs;
 use crate::source_paths::SOURCE_INPUT_PREFIX;
 
+/// The late digests of one context's modules. The attempt's tree keeps each answer, so a
+/// context projects and hashes each module once. The tree calls run outside the map lock.
+#[derive(Default)]
+pub(crate) struct ModuleDigests(Mutex<BTreeMap<String, Arc<ModuleCell>>>);
+
+struct ModuleCell {
+    state: Mutex<ModuleState>,
+    ready: Condvar,
+}
+
+enum ModuleState {
+    Running,
+    Ready(String),
+    Failed,
+}
+
+/// Releases a module's waiters even when its owner unwinds before publishing a result.
+struct ModuleOwner<'a> {
+    digests: &'a ModuleDigests,
+    name: &'a str,
+    cell: &'a Arc<ModuleCell>,
+}
+
+impl Drop for ModuleOwner<'_> {
+    fn drop(&mut self) {
+        let failed = {
+            let mut state = self
+                .cell
+                .state
+                .lock()
+                .unwrap_or_else(|error| error.into_inner());
+            if matches!(&*state, ModuleState::Ready(_)) {
+                false
+            } else {
+                *state = ModuleState::Failed;
+                true
+            }
+        };
+        if failed {
+            let mut known = self.digests.known();
+            if known
+                .get(self.name)
+                .is_some_and(|current| Arc::ptr_eq(current, self.cell))
+            {
+                known.remove(self.name);
+            }
+        }
+        self.cell.ready.notify_all();
+    }
+}
+
+impl ModuleDigests {
+    fn late(&self, tree: &dyn SourceTree, root: &Path, name: &str) -> Option<String> {
+        let (cell, owner) = {
+            let mut known = self.known();
+            match known.get(name) {
+                Some(cell) => (cell.clone(), false),
+                None => {
+                    let cell = Arc::new(ModuleCell {
+                        state: Mutex::new(ModuleState::Running),
+                        ready: Condvar::new(),
+                    });
+                    known.insert(name.into(), cell.clone());
+                    (cell, true)
+                }
+            }
+        };
+        if !owner {
+            let mut state = cell.state.lock().unwrap_or_else(|error| error.into_inner());
+            loop {
+                match &*state {
+                    ModuleState::Running => {
+                        state = cell
+                            .ready
+                            .wait(state)
+                            .unwrap_or_else(|error| error.into_inner());
+                    }
+                    ModuleState::Ready(digest) => return Some(digest.clone()),
+                    ModuleState::Failed => return None,
+                }
+            }
+        }
+        let _owner = ModuleOwner {
+            digests: self,
+            name,
+            cell: &cell,
+        };
+        let digest = tree
+            .project(&root.join(name))
+            .ok()
+            .flatten()
+            .and_then(|node| tree.digest(&node.identity).ok());
+        {
+            let mut state = cell.state.lock().unwrap_or_else(|error| error.into_inner());
+            *state = match &digest {
+                Some(digest) => ModuleState::Ready(digest.clone()),
+                None => ModuleState::Failed,
+            };
+        }
+        digest
+    }
+
+    fn known(&self) -> MutexGuard<'_, BTreeMap<String, Arc<ModuleCell>>> {
+        self.0.lock().unwrap_or_else(|error| error.into_inner())
+    }
+}
+
 pub(crate) fn collect(
     tree: &dyn SourceTree,
     root: &Path,
     side: &SideInputs,
     inventory: &Inventory,
     evidence: &Evidence,
+    digests: &ModuleDigests,
 ) -> ReadEvidence {
     let mut result = ReadEvidence::default();
     for (path, digest) in &inventory.inputs {
@@ -32,9 +141,7 @@ pub(crate) fn collect(
         .filter_map(|file| logical(file, side))
         .collect();
     for name in &modules {
-        if let Ok(Some(node)) = tree.project(&root.join(name))
-            && let Ok(digest) = tree.digest(&node.identity)
-        {
+        if let Some(digest) = digests.late(tree, root, name) {
             result.insert(name.clone(), ReadBaseline::Late(digest));
         }
     }
@@ -109,3 +216,11 @@ fn logical(file: &str, side: &SideInputs) -> Option<String> {
 #[cfg(test)]
 #[path = "_tests_/postcss_read_inventory_tests.rs"]
 mod postcss_read_inventory_tests;
+
+#[cfg(test)]
+#[path = "_tests_/postcss_module_digest_tests.rs"]
+mod postcss_module_digest_tests;
+
+#[cfg(test)]
+#[path = "_tests_/postcss_module_flight_tests.rs"]
+mod postcss_module_flight_tests;

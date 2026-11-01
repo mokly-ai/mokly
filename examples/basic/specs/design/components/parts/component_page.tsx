@@ -1,17 +1,15 @@
-import { optional } from "../../library/composition.js";
 import { COMPONENT_NAVIGATION } from "../../parts/component_nav_data.js";
 import type { ComparisonMode } from "../../parts/destinations.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
-import { COMPONENT_STYLE_COPY } from "../../parts/stylesheet_evidence.js";
 
 import { actionEntries } from "./action_props.js";
 import { componentComparison } from "./comparison_fixtures.js";
 import {
-  actionEntryOf,
   ComponentDetails,
   type ComponentPageState,
 } from "./component_details.js";
 import { ComponentLayout } from "./component_layout.js";
+import { actionEntryOf } from "./component_props.js";
 import { VariantPicker } from "./controls.js";
 import { COMPONENT_PAGES } from "./destinations.js";
 import type { PropsLimit } from "./limit.js";
@@ -22,6 +20,7 @@ import {
   ComponentCanvas,
   ComponentComparison,
   ToolbarExample,
+  type ComparedState,
 } from "./preview.js";
 
 /** The mode each comparing state selects; every other state shows Current. */
@@ -36,10 +35,25 @@ const COMPARISON_MODES: Partial<
   "style-changed": "side-by-side",
 };
 
-/** The recorded change a comparing state's caption names, when not appearance. */
-const COMPARISON_CHANGES: Partial<Record<ComponentPageState, string>> = {
-  "style-changed": COMPONENT_STYLE_COPY.stylesChanged,
+/**
+ * The state that a comparing page's sections name when its variant was
+ * removed or only its styles changed. Every other comparison names a change.
+ */
+const COMPARED_STATES: Partial<Record<ComponentPageState, ComparedState>> = {
+  removed: "removed",
+  "style-changed": "styles-changed",
 };
+
+/**
+ * The states in which the entry's details, which hold its usage and its
+ * props, are loading or failed.
+ */
+const DETAILS_PENDING: ReadonlySet<ComponentPageState> = new Set([
+  "usage-loading",
+  "usage-failed",
+  "props-loading",
+  "props-failed",
+]);
 
 /** The Changes scenario whose navigation each state's artboard depicts. */
 function changeScenario(state: ComponentPageState): ChangeScenario {
@@ -83,6 +97,7 @@ export function ComponentPage({
   return (
     <ComponentLayout
       design={limit?.design ?? COMPONENT_PAGES[state]}
+      detailsPending={DETAILS_PENDING.has(state)}
       entry={entry}
       navigationKey={navigationKey}
       mode={mode}
@@ -103,9 +118,8 @@ export function ComponentPage({
           </ComponentCanvas>
         ) : mode ? (
           <ComponentComparison
-            {...optional("change", COMPARISON_CHANGES[state])}
             mode={mode}
-            removed={state === "removed"}
+            state={COMPARED_STATES[state] ?? "changed"}
             subject={entry.component === "checklist" ? "checklist" : "action"}
             viewport={previewViewport}
           />

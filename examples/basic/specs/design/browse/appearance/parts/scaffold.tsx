@@ -39,6 +39,8 @@ interface AppearanceShellProps {
   appearanceChoice?: AppearanceChoice | undefined;
   aside?: ReactNode;
   children: ReactNode;
+  /** Depicts a desktop window narrower than the layout breakpoint. */
+  collapsed?: boolean | undefined;
   design: DesignDestination;
   nav?: ReactNode;
   viewport: ArtboardViewport;
@@ -54,6 +56,7 @@ export function AppearanceShell({
   appearanceChoice,
   aside,
   children,
+  collapsed,
   design,
   nav,
   viewport,
@@ -62,6 +65,7 @@ export function AppearanceShell({
     <Shell
       design={design}
       appearanceChoice={appearanceChoice}
+      collapsed={collapsed}
       viewport={viewport}
       nav={
         viewport === "desktop"
@@ -106,8 +110,9 @@ interface AppearanceHeadProps {
 }
 
 /**
- * The appearance header carries the viewport control only: the catalogue's one
- * scheme setting lives in the top bar's Appearance selector.
+ * The appearance header carries the view controls only: the catalogue's one
+ * scheme setting lives in the top bar's Appearance selector. Its Highlight
+ * components switch shows the state of the view that the workspace depicts.
  */
 export function AppearanceHead({
   crumbs,
@@ -123,7 +128,9 @@ export function AppearanceHead({
     <ScreenHead
       {...(selection === "none"
         ? {}
-        : { action: <ViewSwitch active={selection} /> })}
+        : {
+            action: <ViewSwitch active={selection} />,
+          })}
       crumbs={crumbs ?? SCREEN_CRUMBS}
       path={path}
       title={title}

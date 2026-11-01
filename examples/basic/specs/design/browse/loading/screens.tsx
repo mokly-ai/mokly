@@ -3,7 +3,11 @@ import type { ReactNode } from "react";
 import { defineScreen } from "@mokly/mokly";
 
 import { PreviewWorkspace } from "../../components/parts/workspace.js";
-import { DesignAppearanceScope } from "../../parts/appearance.js";
+import { RootPlacementScope } from "../../library/preview/root_placement.js";
+import {
+  DesignAppearanceScope,
+  useRenderedAppearance,
+} from "../../parts/appearance.js";
 import { artboards } from "../../parts/artboards.js";
 import { DesignNavigation } from "../../parts/design_navigation.js";
 import {
@@ -26,7 +30,11 @@ const loadingDesignMetadata = {
   ],
 };
 
-/** The page before the catalogue index arrives: the shell has no chrome yet. */
+/**
+ * The page before the catalogue index arrives: the shell has no chrome yet,
+ * so its one state takes the place of the viewer root, in the frame that
+ * carries the artboard's render flag.
+ */
 function StartupPage({
   children,
   design,
@@ -36,10 +44,13 @@ function StartupPage({
   design: DesignDestination;
   viewport: ArtboardViewport;
 }) {
+  const theme = useRenderedAppearance();
   return (
     <DesignNavigation design={design}>
       <DesignAppearanceScope>
-        <div className={`mbk-shell mbk-shell--${viewport}`}>{children}</div>
+        <div className={`mbk-shell-frame mbk-shell--${viewport}`}>
+          <RootPlacementScope theme={theme}>{children}</RootPlacementScope>
+        </div>
       </DesignAppearanceScope>
     </DesignNavigation>
   );
@@ -84,13 +95,16 @@ function PreviewLoading({ viewport }: { viewport: ArtboardViewport }) {
       design={DESTINATIONS.previewLoading}
       viewport={viewport}
     >
-      <AppearanceHead
-        path={ENTRY_PATHS.welcome}
-        preview={viewport}
-        title="Welcome"
-        viewport={viewport}
-      />
       <PreviewWorkspace
+        view={{ highlight: "loading" }}
+        header={
+          <AppearanceHead
+            path={ENTRY_PATHS.welcome}
+            preview={viewport}
+            title="Welcome"
+            viewport={viewport}
+          />
+        }
         inspector={<DetailsPanel subject="welcome" />}
         viewport={viewport}
         render={() => <LoadingState status="Loading preview…" />}

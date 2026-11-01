@@ -50,8 +50,8 @@ test("a failed catalogue read shows its failure state, and Try again installs th
 });
 
 for (const [boundary, path, version, supported] of [
-  ["catalogue", "/mokly-viewer/index.json", 7, 8],
-  ["detail", `/mokly-viewer/entries/${WELCOME}.json`, 2, 3],
+  ["catalogue", "/mokly-viewer/index.json", 7, 9],
+  ["detail", `/mokly-viewer/entries/${WELCOME}.json`, 2, 4],
 ] as const)
   test(`an unsupported ${boundary} version shows the compatible-viewer headline`, async ({
     page,

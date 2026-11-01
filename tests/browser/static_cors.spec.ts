@@ -39,11 +39,13 @@ test("a public embedded viewer fetches copied data without credentials or live e
     .getByRole("button", { name: "Highlight components", exact: true })
     .click();
   await expect(
+    page.locator('.mbk-highlight-layer[data-highlight-viewport="mobile"]'),
+  ).toBeVisible();
+  await expect(
     page
       .frameLocator('iframe[data-workspace-frame="mobile"]')
-      .locator("[data-mokly-overlay]")
-      .first(),
-  ).toBeVisible();
+      .locator("[data-mokly-overlay]"),
+  ).toHaveCount(0);
   await page.keyboard.press("Escape");
   await page
     .locator('a[data-route="example/screens/details/index.html"]')
@@ -123,6 +125,6 @@ test("the public test host applies exact-origin CORS and headers to copied files
       ).json(),
     fixture.frames.url,
   );
-  expect(index.schemaVersion).toBe(8);
+  expect(index.schemaVersion).toBe(9);
   expect(index).not.toHaveProperty("live");
 });

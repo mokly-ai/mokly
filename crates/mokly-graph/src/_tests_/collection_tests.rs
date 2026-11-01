@@ -6,9 +6,45 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::collection::ComparisonCollectorMock;
 use crate::error::GraphError;
+use crate::public_inputs::ClosureInputsMock;
 use crate::types::RenderGeneration;
 
 use super::collection_support;
+
+#[test]
+fn public_membership_uses_one_path_lookup_at_four_and_sixteen_keys() {
+    for count in [4, 16] {
+        let closures = Arc::new(Unimock::new((
+            ClosureInputsMock::retain
+                .each_call(matching!(_))
+                .returns(())
+                .n_times(count),
+            ClosureInputsMock::release
+                .each_call(matching!(_))
+                .returns(())
+                .n_times(count),
+            ClosureInputsMock::contains
+                .each_call(matching!((path, _) if *path == "assets/missing.svg"))
+                .answers_arc(Arc::new(move |_, _, keys| {
+                    assert_eq!(keys.len(), count);
+                    assert!(keys.contains("page-000/index.html"));
+                    false
+                }))
+                .n_times(8),
+        )));
+        let probe = collection_support::probe_with_closures(count, closures);
+        probe.session.render_all().unwrap();
+        let mut collector = Unimock::new(
+            ComparisonCollectorMock::collect
+                .each_call(matching!(_, _))
+                .answers(&|_, _, _| Ok(())),
+        );
+        probe.session.collect_comparison(&mut collector).unwrap();
+        for _ in 0..8 {
+            assert!(!probe.session.contains_public_file("assets/missing.svg"));
+        }
+    }
+}
 
 #[test]
 fn validated_collection_composes_each_view_once_at_one_and_four_sizes() {

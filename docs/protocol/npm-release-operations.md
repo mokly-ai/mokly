@@ -31,7 +31,7 @@ Publishing requires this configuration, and maintainers verify it:
 - the `RELEASE_PLEASE_TOKEN` credential owner, least-privilege repository
   access, expiry and rotation, and fallback behavior;
 - approved Mokly npm maintainer accounts and teams, enforced 2FA, public
-  scoped-package access, and the intended initial owner list for all seven
+  scoped-package access, and the intended initial owner list for all eight
   packages;
 - each package's trusted-publisher repository, workflow filename, environment,
   and allowed publish action exactly match the values above; and

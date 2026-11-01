@@ -3,10 +3,7 @@ import { defineScreen } from "@mokly/mokly";
 import { changesDesignMetadata } from "../../../../metadata.js";
 import { artboards } from "../../../../parts/artboards.js";
 import { DESTINATIONS } from "../../../../parts/destinations.js";
-import {
-  UnnamedStyleCard,
-  UnresolvedStyleCard,
-} from "../../../../parts/review.js";
+import { UNNAMED_STYLES, UNRESOLVED_STYLES } from "../../../../parts/review.js";
 import type { ArtboardViewport } from "../../../../parts/shell.js";
 import { StyleComparison } from "../../../../parts/style_comparison.js";
 
@@ -14,7 +11,7 @@ function UnresolvedStyles({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <StyleComparison
       design={DESTINATIONS.styleUnresolved}
-      evidence={<UnresolvedStyleCard />}
+      evidence={UNRESOLVED_STYLES}
       viewport={viewport}
     />
   );
@@ -24,7 +21,7 @@ function UnnamedStyles({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <StyleComparison
       design={DESTINATIONS.styleUnnamed}
-      evidence={<UnnamedStyleCard />}
+      evidence={UNNAMED_STYLES}
       viewport={viewport}
     />
   );

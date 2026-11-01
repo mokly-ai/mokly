@@ -23,9 +23,10 @@ dispatch authorizes a retry of those already-created immutable tags.
   can create new tags without a special bypass credential.
 - Preserve the existing protected `main` branch and verify it requires the
   exact `Required CI` check. Do not replace branch rules as part of this setup.
-- All seven npm packages need their own trusted-publisher and team-access settings.
-  They share environment `npm` and its main-only policy; a second GitHub
-  environment is unnecessary. The CLI's trust does not cover the viewer or a native package.
+- All eight npm packages need their own trusted-publisher and team-access
+  settings. They share environment `npm` and its main-only policy; a second
+  GitHub environment is unnecessary. The CLI's trust does not cover the UI
+  package, the viewer, or a native package.
 
 Publishing stays disabled until a read-back of the environment, its deployment
 branch policies, the tag ruleset, and the `main` branch protection confirms

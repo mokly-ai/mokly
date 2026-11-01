@@ -10,7 +10,10 @@ test("the stage waits for the routed details with a quiet status", () => {
     <StageDelivery delivery={{ status: "loading" }} kind="screen" />,
   );
   assert.match(html, /aria-busy="true"/);
-  assert.match(html, /<p role="status">Loading preview…<\/p>/);
+  assert.match(
+    html,
+    /<p class="mbk-reset" role="status">Loading preview…<\/p>/,
+  );
   assert.doesNotMatch(html, /<iframe/);
 });
 
@@ -20,7 +23,10 @@ test("a replaced catalogue keeps the quiet loading status without an action", ()
       <StageDelivery delivery={{ status: "replaced" }} kind={kind} />,
     );
     assert.match(html, /aria-busy="true"/);
-    assert.match(html, /<p role="status">Loading preview…<\/p>/);
+    assert.match(
+      html,
+      /<p class="mbk-reset" role="status">Loading preview…<\/p>/,
+    );
     assert.doesNotMatch(html, /role="alert"|could not be shown|<button/);
   }
 });
@@ -37,7 +43,10 @@ test("a failed detail names the entry and offers one retry", () => {
     const html = renderToStaticMarkup(
       <StageDelivery delivery={{ status: "failed", retry }} kind={kind} />,
     );
-    assert.match(html, new RegExp(`<h2>This ${noun} could not be shown</h2>`));
+    assert.match(
+      html,
+      new RegExp(`<h2 class="mbk-reset">This ${noun} could not be shown</h2>`),
+    );
     assert.match(
       html,
       /The catalogue is still available while you try again\./,
