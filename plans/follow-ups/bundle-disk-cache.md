@@ -31,11 +31,23 @@
   - On each Serve start and each `build`, the sidecar compiles every
     JavaScript entry with esbuild. Nothing survives a restart. The base side
     of the first Changes classification compiles again.
-  - On 2026-10-30, `main` at `f93afcea` on a slow machine: warm
-    `serve.ready` 6.6 s, head bundle 2.8 s, CSS Modules class maps 1.5 s,
-    `sidecar.describe` 0.26 s, base bundle 3.2 s. The baseline machine
-    measured `serve.ready` at 4.2 s. The task asked for 1.5 s or less there
-    on a warm restart. The user's startup target is about 1 s.
+  - On 2026-10-30, `main` at `f93afcea` on a slow machine took 6.6 s to a
+    warm `serve.ready`. Of that, the head bundle took 2.8 s, the CSS
+    Modules class maps 1.5 s, and `sidecar.describe` 0.26 s. The base bundle
+    took 3.2 s. The baseline machine measured `serve.ready` at 4.2 s. The
+    user's startup target is about 1 s.
+  - The task of the closed workspace set these requirements:
+    - A warm restart of `examples/basic` runs no `sidecar.bundle.compile`,
+      and no `sidecar.describe` if descriptions are cached. `serve.ready`
+      falls from about 4.2 s to 1.5 s or less on the baseline machine.
+    - A change to any consumed input misses and rebuilds. A cache entry from
+      another format version is rejected and rebuilt.
+    - `mokly build --strict` output with a cache hit is byte-identical to
+      the output of a cold build.
+    - A damaged or unreadable entry: warn, rebuild, and continue.
+    - Tests, each at the lowest level that fails without the change: a hit,
+      a miss for each input kind, a version mismatch, a damaged entry,
+      eviction under the byte bound, and two writers.
   - The pool can already install a recipe in a new sidecar with the
     `restoreGeneration` request. One stored head recipe of `examples/basic`
     is 3.3 MB of JSON with 2,753 consumed input files.
@@ -94,20 +106,35 @@
      Entries that never change, with a pointer file per key. A, C, D, E:
      Large.
   7. **Terminal output** (Low). **A.** No output. The timing record names
-     the reason. Small. **B.** A, plus one warning line for a damaged entry or
-     an unusable directory. **C.** B, plus the shared cache directory line.
-     **D.** A, plus the directory line. B to D: Large.
+     the reason. It drops the task's warning. Small. **B.** A, plus one
+     warning line for a damaged entry or an unusable directory. **C.** B,
+     plus the shared cache directory line. **D.** A, plus the directory line.
+     It drops the task's warning. B to D: Large.
   8. **Timing record** (Low). **A.** A new core span `catalogue.bundle` with
      `cache` set to `hit`, `memory`, `no-record`, `stamp-mismatch`,
      `version-mismatch`, `damaged`, or `unavailable`, and remove the dead
      `catalogue.describe` row. **B.** Emit `catalogue.describe` with that
      field. **C.** Put the field on `sidecar.bundle`. **D.** The pool emits
      the span. All Large.
-  9. **Tests** (Low). **A.** One test for each new rule: a hit in a fresh
-     process, a changed-source miss, a toolchain miss, a version mismatch, a
-     damaged entry, two writers, and the `cache` field. **B.** The task's
-     list as written. **C.** A, plus a replace-past-the-bound eviction case,
-     and one case for each new input kind of 4D. All Small.
+  9. **Tests** (Low). Tests already cover the six input kinds of the
+     `reuse` check. `crates/mokly-render/tests/integration/watch_tests.rs`
+     covers module bytes. `watch_metadata_tests.rs` in the same directory
+     covers ancestor manifests, tsconfig files, the React manifest, preview
+     candidates, and directory membership. The stored path goes through the
+     same check.
+     - **A.** One test for each new rule. The tests cover a hit in a fresh
+       process, a changed-source miss, and a toolchain miss. They also cover
+       a version mismatch, a damaged entry, two writers of one key, and the
+       `cache` field of a real span. Eviction keeps its existing tests.
+     - **B.** The task's test list as written. It differs from A in two
+       ways: a stored-path miss for each input kind, and an eviction test
+       for the new kind.
+     - **C.** A, plus one case in
+       `crates/mokly-compare/src/_tests_/cache_tests.rs`: a replace past the
+       bound evicts the least recently used other entry. With 4D, add one
+       case for each new input kind to the existing reuse tests. Under A, a
+       replace that skips eviction passes every test.
+     - All three: Small.
 - **Left out:**
   - A shared sidecar daemon: a sidecar must never outlive its binary.
   - A store of only the native resolution plan: the second compile still
@@ -127,9 +154,21 @@
     and startup work. Decide them together.
   - [keep-base-side-in-memory.md](./keep-base-side-in-memory.md): both
     shorten the base side. Measure again after either merges.
-- **Recommendation:** 1A, 2A, 3A, 4D, 5A, 6D, 7C, 8A, 9C. One input check
-  then decides for live and stored recipes, and no stale code passes it.
-- **Action:** ask the user, because the recommended option 2A changes the
-  acceptance of the task, and 4D changes the reuse rule.
+- **Recommendation:** 1A, 2A, 3A, 4D, 5A, 6D, 7C, 8A, 9C.
+  - 1A: one check then decides for live and stored recipes, with no new
+    pool method. 1D is about 0.1 s faster for each hit.
+  - 2A: the bundle is the part that this item can remove. Only 2D reaches
+    1.5 s, and it needs its own design.
+  - 3A: a stored description saves at most 0.26 s and risks wrong output.
+  - 4D: no stale code passes the check, also after a toolchain change.
+  - 5A: it needs no extra code and keeps one compile identity per side.
+  - 6D: one set of cache rules, and a new release never parses old entries.
+  - 7C: the user sees damage and finds the cache directory to delete.
+  - 8A: the span measures the whole wait that the cache shortens.
+  - 9C: under A, a replace that skips eviction passes every test.
+- **Action:** ask the user, because the recommended options change the
+  task's requirements and rules in force. 2A changes the acceptance, 4D
+  changes the reuse rule, and 6D adds a 512 MiB budget. 7C changes the
+  terminal output, and 9C changes the task's test list.
 
 The full plan, with its baseline, design, and six milestones, is in the [unmerged plan](https://github.com/mokly-ai/mokly/blob/0677f60995459ae066142770207e14b8ebe7e250/plans/bundle-disk-cache.md?plain=1).

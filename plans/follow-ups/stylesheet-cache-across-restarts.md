@@ -35,9 +35,9 @@
     on the baseline machine with the compiled bundle kept on disk. Keeping
     the stylesheet cache on disk too gives about 1.2 s (estimate). The user's
     startup target is about 1 s.
-  - A stored record needs its own format version, a byte bound, eviction,
-    and a check of its inputs: PostCSS read evidence, asset and glob
-    stamps, and the PostCSS configuration files.
+  - A stored record needs its own format version, a byte bound, and
+    eviction. It also needs a check of its inputs: PostCSS read evidence,
+    asset and glob stamps, and the PostCSS configuration files.
   - On 2026-10-30 the orchestrator asked the user when to start this work.
     The user did not answer before the workspaces closed.
 - **Problem:** Each restart bundles every stylesheet root again, also when

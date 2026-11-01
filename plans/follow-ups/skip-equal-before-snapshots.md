@@ -36,8 +36,8 @@
     equal. The before side was 12,440,910 bytes: 580 view documents of
     12,239,799 bytes, 10 page and Markdown documents, and 41 resources.
   - On 2026-10-27 the user chose this rule: write a before file only when
-    its bytes differ from the after file, and let the viewer read the after
-    file when the before file is absent.
+    its bytes differ from the after file. When the before file is absent,
+    the viewer reads the after file.
   - The plan stores a shared document once, at its after address. The
     detail marks the view with `sameDocument: true`. The before pane
     fetches the after document but keeps its own base address, so its

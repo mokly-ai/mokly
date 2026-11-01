@@ -41,10 +41,21 @@
     needs a new versioned format.
   - On 2026-10-30 the user chose to start this work in parallel with
     [bundle-disk-cache.md](./bundle-disk-cache.md).
-  - The acceptance of the task: after an edit to one screen module, the
-    second classification runs no base `config.load`, `catalogue.discover`,
-    `catalogue.validate`, or `graph.prepare` span. `review.base-tree` takes
-    under 0.5 s. The first classification does not get slower.
+  - The task of the closed workspace set this acceptance:
+    - After an edit to one screen module, the second classification runs no
+      base `config.load`, `catalogue.discover`, `catalogue.validate`, or
+      `graph.prepare` span. `review.base-tree` takes under 0.5 s.
+    - Edit to the end of the second classification falls by about the base
+      side, from 11.5 s to about 7 s or less on the baseline machine.
+    - The first classification does not get slower.
+    - Tests, each at the lowest level that fails without the change: a
+      second classification with the same merge base prepares the base
+      once. A merge-base move prepares it again. A tier-1 dependency change
+      prepares it again, or follows the rule that the plan decides. Serve
+      releases the kept base when the merge base moves and when it stops.
+    - `docs/protocol/mokly-runtime.md` and
+      `docs/protocol/mokly-base-preparation.md` state the new lifetime rule
+      and its decisions in the same change.
   - The plan keeps one base, keyed by the merge-base commit, a digest of
     the working configuration, and the install-scripts setting. It keeps no
     base after a base error, a source failure, a `base-conversion` warning,
@@ -76,9 +87,14 @@
      - **D.** A, and release the kept base on a head watch event below a
        used dependency directory. It changes the watch code. Effort: Medium.
      - **E.** C, and digest again each file that the base read through the
-       working dependency reader. Effort: Large.
+       working dependency reader. The sidecar reads module files itself, so
+       this reader misses modules that only the base imports. Effort: Large.
      - **F.** B, and check the input stamps of the base runtime again, with
-       a new check in `crates/mokly-render`. Effort: Large.
+       a new check in `crates/mokly-render`. Nobody measured it against the
+       0.5 s target. The stamps miss `jsconfig.json` candidates, tsconfig
+       `extends` targets, and peer manifests other than React. The 64 MiB
+       stylesheet store can evict a record with its stamp, so the kept base
+       must keep its own copy of its stylesheet stamps. Effort: Large.
   2. **Cancelled readers** (High). How do a replaced classification and a
      cancelled selected capture stop quickly, and leave the kept base usable?
      Today a stopped Git read records a fatal source failure.
@@ -90,8 +106,9 @@
        the capture-abort rule of `docs/protocol/mokly-selected-comparisons.md`.
        Effort: Large.
      - **C.** B, and a cancelled Git read records no source failure, so the
-       capture-abort rule stays. It changes `crates/mokly-compare`. Effort:
-       Large.
+       capture-abort rule stays. A cancelled capture can then also stop a
+       read of a classification that runs at the same time. It changes
+       `crates/mokly-compare`. Effort: Large.
      - **D.** A shared reader scope: the base stops only when every reader
        is cancelled. Effort: Large.
   3. **What Serve keeps** (Medium). **A.** The captured generation with its
@@ -105,10 +122,9 @@
      Medium.
   5. **The render pool item** (Low). **A.** Change nothing in
      `plans/follow-ups/background-base-render-pool.md`. **B.** Add two facts
-     to it: base capture then runs only on a fresh preparation, and under
-     2B a replaced reader cannot cancel a kept-base render at the admission
-     gate. **C.** Do that item in the same branch. Effort: Small, Small,
-     Large.
+     to it. Base capture then runs only on a fresh preparation. Under 2B, a
+     replaced reader cannot cancel a kept-base render at the admission gate.
+     **C.** Do that item in the same branch. Effort: Small, Small, Large.
 - **Left out:**
   - A disk copy of the capture: the user chose option A over it on
     2026-10-27.
@@ -127,11 +143,19 @@
     decision 5 changes its text.
   - [bundle-disk-cache.md](./bundle-disk-cache.md): it caches the base
     bundle on disk, so a fresh preparation gets cheaper. Measure this item
-    again after either merges.
-- **Recommendation:** 1C, 2B, 3A, 4A, 5B. They are the most complete
-  options inside the scope of the plan. 1F and 2C best protect the
-  comparison, but they change `crates/mokly-render` and
-  `crates/mokly-compare`.
+    again after either merges. Its option 4D records the inputs that the
+    stamps of 1F miss.
+  - [jsconfig-resolution-input.md](./jsconfig-resolution-input.md): one of
+    the inputs that the stamps of 1F miss.
+- **Recommendation:** 1F, 2B, 3A, 4A, 5B.
+  - 1F: of the options that a reuse can check, it covers the most inputs,
+    and a reuse must give the result of a fresh preparation. Measure its
+    check against the 0.5 s target first. The plan recommended 1C, because
+    its task limited the files that the work could change. That limit
+    ended when the workspace closed.
+  - 2B: it is the only option that keeps the base across replacements
+    without a new race. Choose 2C if the capture-abort rule must stay.
+  - 3A, 4A, 5B: each is the smallest option that meets the goal.
 - **Action:** ask the user, because the recommended option 2B changes two
   protocol rules that no user decision covers.
 

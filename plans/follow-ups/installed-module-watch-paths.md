@@ -36,10 +36,10 @@
     reads the right file. The watcher does not use that map.
   - `docs/protocol/mokly-watch.md` requires Serve to watch the sidecar's
     reported modules, also beneath `node_modules`.
-- **Problem:** When the first dependency root is not
-  `{repository}/node_modules`, or a module comes from a second root, Serve
-  watches a path that is not the real file. An edit or an install there
-  starts no rebuild.
+- **Problem:** Serve can watch a path that is not the real file of a
+  module. This happens when the first dependency root is not
+  `{repository}/node_modules`, or when a module comes from a second root.
+  An edit or an install there then starts no rebuild.
 - **Impact if no action:** For a configuration in a nested package with its
   own `node_modules`, previews stay stale after an install until Serve
   restarts. An installed stylesheet that JavaScript imports may have the
@@ -50,9 +50,9 @@
   - **A.** Change nothing, and tell users to restart Serve after an install
     in a nested package. Effort: Small.
   - **B.** Map each logical path to its real path with the dependency roots
-    of the side, through one helper that the input check and the watch plan
-    share. Include the `.css` modules when the stylesheet watch does not
-    cover them. Effort: Medium (estimate).
+    of the side. Put the mapping in one helper that the input check and the
+    watch plan share. Include the `.css` modules when the stylesheet watch
+    does not cover them. Effort: Medium (estimate).
   - **C.** Let the sidecar report the real path beside the logical path,
     and watch the real path. This changes the `bundle` result. Effort:
     Medium (estimate).

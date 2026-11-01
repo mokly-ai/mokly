@@ -28,10 +28,10 @@
   - `side` in `crates/mokly-static/src/comparison_files.rs:31` writes every
     document, generated resource, and public file to both sides. The
     protocol pages above require the snapshots of both sides.
-  - The viewer fetches a snapshot only for an eligible view, which offers
-    Side by side, Overlay, or Difference, and for the base side of a removed
-    entry. With Both viewports selected, one eligible view makes the whole
-    comparison eligible.
+  - The viewer fetches a snapshot only for an eligible view and for the
+    base side of a removed entry. An eligible view offers Side by side,
+    Overlay, or Difference. With Both viewports selected, one eligible view
+    makes the whole comparison eligible.
   - No host reads the snapshots of current page and Markdown documents.
     Only screen and component views have comparison panes.
   - On 2026-11-01, `main` at `c553bd6f` built `examples/basic` with the

@@ -20,8 +20,8 @@
     runs it. On the cloud VM the debug binary reached Changes ready in about
     90 s, and the release binary in 17 s to 26 s. On 2026-10-30 the user
     chose to keep the debug build.
-  - On 2026-10-30 a second Mac run, in a new folder with a new cache
-    directory, printed "Catalogue ready" after 2.5 s and reached Changes
+  - On 2026-10-30 a second Mac run used a new folder with a new cache
+    directory. It printed "Catalogue ready" after 2.5 s and reached Changes
     ready after about 26 s. A new cache directory means a first run: Mokly
     first copies the base commit's files into it.
   - The Mac builds the catalogue faster than the VM, so the rest of the
