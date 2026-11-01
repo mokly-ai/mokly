@@ -75,6 +75,18 @@
     2026-10-26 kept this failure.
   - For `mokly-ignore-scope`, `elements.rs:30-44` reads only `enabled`. It
     never evaluates the other kept attributes.
+  - These tests pin today's behaviour. A change must update them, keep each
+    assertion that still holds, and record each changed expectation and its
+    decision in the commit body:
+    `reserved_navigation_warning_names_rejection_instead_of_ignoring` at
+    `crates/mokly-catalogue/tests/ignore_attribute_tests.rs:143`,
+    `saved_slot_reserved_wrapper_attributes_stay_visible_to_composition` at
+    `crates/mokly-cli/tests/ignore_warning_tests.rs:63`, and
+    `reserved_navigation_fields_remain_visible_and_fail_as_before` at
+    `crates/mokly-html/src/_tests_/ignore_parsing_tests.rs:224`.
+  - `crates/mokly-catalogue/src/templates.rs` has 280 lines, and the
+    repository caps Rust files at 300. Move its attribute checks into their
+    own module before a change adds checks there.
 - **Problem:** The warning says that the name is rejected, but a saved slot
   with a literal value builds. The two wrappers also treat one invalid
   reference in different ways. Probes on 2026-11-01, with a saved slot in the
@@ -107,8 +119,20 @@
     catalogue validation, with `html-attribute`. A body failure gives the
     file, line, and column. A saved-slot failure gives its front matter
     field. The saved-slot warning goes. Saved slots then fail, and
-    `mokly serve` rejects the whole rebuild instead of one view. Effort:
-    Medium.
+    `mokly serve` rejects the whole rebuild instead of one view. The design
+    of 2026-10-28 for C: the message is `<name> is reserved for Mokly`; the
+    token boundary reports each reserved name and its span instead of a
+    flag; the render-time check stays as a backstop, and its message names
+    its input, authored HTML or consumer output. C adds failing tests for a
+    reserved name on a saved-slot wrapper, on an ordinary saved-slot element,
+    and in a body, where the failure names the attribute's line and column.
+    C updates `docs/protocol/mokly-html-screens.md` (a reserved name fails
+    in a body, a saved slot, and callback output; authored HTML fails with
+    `html-attribute` at the attribute or the slot field; the sentence "a
+    saved slot warns that the name is rejected" goes),
+    `docs/protocol/mokly-html-components.md` (saved slot fragments use the
+    body checks, and each failure names the slot field), and the READMEs of
+    `crates/mokly-catalogue` and `crates/mokly-html`. Effort: Medium.
 - **Left out:**
   - Keep the reserved name in the output. It breaks the rule that only Mokly
     writes these names.

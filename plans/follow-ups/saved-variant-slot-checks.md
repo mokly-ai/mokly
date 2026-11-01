@@ -48,7 +48,19 @@
 - **Options:**
   - **A.** Apply the body element checks to saved slots, and state the rule
     in the Variants section. Each failure names the slot's front matter
-    field. This adds a build error. Effort: Medium.
+    field. This adds a build error. The work of A, as planned on
+    2026-10-28: add failing catalogue tests in which a saved slot with
+    `script`, `html`, `head`, `body`, `base`, `mokly-foo`, or an unknown
+    hyphenated element fails with `html-element` at the slot field, and a
+    CLI test in which a saved slot with `<script>` fails and writes no
+    output; apply the element checks to the saved-slot role; update
+    `saved_variant_slots_keep_element_failures_deferred` and record the
+    changed expectation and its decision in the commit body; state in
+    `docs/guides/authoring/components.md` that saved slot HTML follows the
+    body element rules; and update the READMEs of `crates/mokly-catalogue`
+    and `crates/mokly-html`. `crates/mokly-catalogue/src/templates.rs` has
+    280 lines, under the cap of 300, so move its attribute checks into
+    their own module before A adds checks. Effort: Medium.
   - **B.** Keep only the required `html-ignore-attribute` and
     `html-foster-parented` warnings for saved slots, and state that saved
     slots skip the element checks. Effort: Small.
