@@ -429,8 +429,8 @@ The decided offset maps and finding 3 A in `mokly-catalogue`.
       `.context/diagnostics-and-html-messages/`. If parsing slows by more
       than 2%, record maps only for the checks' sink.
 - [x] Run the crate tests, `cargo clippy`, and `cargo fmt --all -- --check`.
-- [ ] Review of `2e6d62a1`: make the two corpus assertions inside `if`
-      blocks unconditional, with the same meaning.
+- [x] Review of `2e6d62a1`: make the two corpus assertions inside `if`
+      blocks unconditional, with the same meaning. Done in `63cdca52`.
 - Done in `2e6d62a1`. The corpus timing median fell from 1337.466 ms to
   1088.449 ms, so maps stay on for both sinks. Evidence:
   `.context/diagnostics-and-html-messages/m5-measure.md`, `m5-item7-red.log`,
@@ -465,9 +465,9 @@ The README parts for items 1 and 128 move to Milestone 4.
 - [x] ~~Edit `plans/rust-rebuild.md`.~~ Main deleted that plan in
       `133782a9` and moved its open work into `plans/follow-ups/`, so the
       bookkeeping below replaces these edits (2026-11-01).
-- [ ] Delete the follow-up items that this branch resolves, merge the
+- [x] Delete the follow-up items that this branch resolves, merge the
       reserved-name items, and add the items of "Open decisions" that have
-      no file.
+      no file. Done in `fdeeb825`: open follow-up items went from 151 to 147.
 - [ ] Delete `plans/follow-ups/template-source-offset-maps.md` when
       Milestone 5 lands.
 - [ ] Commit with Conventional Commits and push the branch.
