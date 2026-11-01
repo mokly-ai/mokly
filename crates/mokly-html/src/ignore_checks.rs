@@ -10,27 +10,46 @@ use crate::tree::{Element, Node};
 /// Keep the wrapper attributes that the authored parse keeps: the catalogue rule and the
 /// reserved navigation names. Other elements keep all attributes.
 pub(crate) fn filter_attributes(element: &mut Element) {
+    filter_attributes_with_removed(element);
+}
+
+fn filter_attributes_with_removed(element: &mut Element) -> Vec<String> {
     let Element {
         name, attributes, ..
     } = element;
+    let mut removed = Vec::new();
     attributes.retain(|attribute| {
-        ignore_attribute_allowed(name, &attribute.name)
+        if ignore_attribute_allowed(name, &attribute.name)
             || reserved_navigation_attribute(attribute.name.as_bytes())
+        {
+            true
+        } else {
+            removed.push(attribute.name.clone());
+            false
+        }
     });
+    removed
 }
 
 /// Filter the wrapper attributes of every element of a delivered tree, before any composition
 /// step reads it.
-pub(crate) fn filter_tree(nodes: &mut [Node]) {
-    let mut pending: Vec<_> = nodes.iter_mut().collect();
+pub(crate) fn filter_tree(nodes: &mut [Node]) -> Vec<(String, String)> {
+    let mut removed = Vec::new();
+    let mut pending: Vec<_> = nodes.iter_mut().rev().collect();
     while let Some(node) = pending.pop() {
         if let Node::Element(element) = node {
-            filter_attributes(element);
+            let name = element.name.clone();
+            removed.extend(
+                filter_attributes_with_removed(element)
+                    .into_iter()
+                    .map(|attribute| (attribute, name.clone())),
+            );
         }
         if let Some(children) = node.children_mut() {
-            pending.extend(children.iter_mut());
+            pending.extend(children.iter_mut().rev());
         }
     }
+    removed
 }
 
 pub(crate) fn id(value: &str) -> Result<()> {
