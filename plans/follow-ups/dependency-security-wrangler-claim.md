@@ -5,8 +5,8 @@
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 191.
 - **Location:** `docs/protocol/dependency-security.md:3` and `:188-194`.
-- **Reason:** The plan recorded this item after the user's rule of
-  2026-10-21 that new review items wait for the user after the merge.
+- **Reason:** Option A removes a check that the page's status line marks as
+  still to build, and no user decision chose removal over building it.
 
 - **Source:** Review.
 - **Category:** Docs or spec.
@@ -41,7 +41,8 @@
 - **Previous examples:** None found.
 - **Recommendation:** A. It makes the protocol match the current
   verification without a slow new gate.
-- **Action:** ask the user, because on 2026-10-21 the user ruled that new review
-  items wait for the user after the merge.
+- **Action:** ask the user, because A drops the Cloudflare local static-host
+  checks from `docs/protocol/dependency-security.md:188-189`, a requirement that
+  the status line keeps open, and B adds a gate.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6495).

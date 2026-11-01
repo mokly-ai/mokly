@@ -21,9 +21,9 @@ test("static export comparison panes retain CSS Modules and url assets", async (
   await page.goto(`/view/${importedCssPaths.screen}/`);
   await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
   await page.getByRole("button", { name: "Overlay", exact: true }).click();
-  await expectStyledPanes(page, imageSize);
+  await expectStyledPanes(page, imageSize, "Overlay");
   for (const mode of ["Difference", "Side by side"] as const) {
     await page.getByRole("button", { name: mode, exact: true }).click();
-    await expectStyledPanes(page, imageSize);
+    await expectStyledPanes(page, imageSize, mode);
   }
 });

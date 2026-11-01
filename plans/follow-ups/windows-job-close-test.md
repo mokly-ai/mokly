@@ -1,12 +1,12 @@
 # Make the Windows job-close test effective
 
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 176, delta review 1.
 - **Location:** `crates/mokly-platform/tests/process_tests.rs:86` and
   `crates/mokly-platform/tests/process_tests.rs:104`.
-- **Reason:** A user rule of 2026-10-21 deferred each new review item of
-  PR #199 until after its merge, for the user's later choice.
+- **Reason:** The Rust rebuild merged with this test gap open, and the shared
+  helper changes the Windows platform tests, so it needs a separate branch.
 
 - **Source:** Review.
 - **Category:** Test.
@@ -35,9 +35,8 @@
   every job-close test.
 - **Previous examples:** None found.
 - **Recommendation:** B. One event-based helper makes every existing job-close
-  test prove termination without an elapsed-time assertion. The user's reserved
-  choice still waits for an answer.
-- **Action:** ask the user, because the user reserved the choice for each open
-  review item of the rebuild.
+  test prove termination without an elapsed-time assertion.
+- **Action:** fix after merge, apply B, because the helper changes only the
+  platform tests, adds no gate, and keeps every assertion.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6348).
