@@ -20,10 +20,14 @@ use crate::source_paths;
 /// leases last while the base graph can still request a render. The base
 /// source reader shares the extraction lease.
 pub struct BaseSide {
+    /// Working repository root used to name render environment paths on both sides.
+    pub working_root: PathBuf,
     /// Extracted immutable source root.
     pub sources: Arc<Lease>,
     /// Selected dependencies, repository mappings, and optional install lease.
     pub dependencies: Resolved,
+    /// Comparison cache namespace that owns the selected base leases.
+    pub cache_namespace: Option<PathBuf>,
     /// Pinned commit identity used for the stylesheet context.
     pub identity: String,
 }

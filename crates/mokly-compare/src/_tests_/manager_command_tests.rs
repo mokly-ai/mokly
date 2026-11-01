@@ -15,6 +15,7 @@ fn request(manager: Manager, args: Vec<OsString>) -> Command {
     Command {
         program: manager.program().into(),
         args,
+        scripts: false,
         directory,
         timeout: Duration::from_secs(10),
         byte_limit: Some(1000),
@@ -171,9 +172,9 @@ fn scripts_on_install_commands_omit_only_script_suppression_flags() {
             !args.iter().any(|arg| arg == "--mode=skip-build"),
             "{manager:?}"
         );
-        let captured = variables(&request(manager, args))
-            .into_iter()
-            .collect::<BTreeMap<_, _>>();
+        let mut command = request(manager, args);
+        command.scripts = true;
+        let captured = variables(&command).into_iter().collect::<BTreeMap<_, _>>();
         assert!(
             !captured.contains_key("npm_config_ignore_scripts"),
             "{manager:?}"
@@ -185,7 +186,7 @@ fn scripts_on_install_commands_omit_only_script_suppression_flags() {
 #[test]
 fn install_environment_is_an_allowed_list_without_secrets() {
     // Mokly's own variables, every inherited token, and each manager setting
-    // are not on the list, so a base cannot read one through its config.
+    // are not on the list, so a base does not receive one through its config.
     for name in [
         "MOKLY_TOKEN",
         "MOKLY_BASE",
@@ -257,4 +258,26 @@ fn berry_install_disables_base_environment_files() {
         .into_os_string();
     expected.push("?");
     assert_eq!(captured["YARN_INJECT_ENVIRONMENT_FILES"], expected);
+}
+
+#[test]
+fn scripts_mode_is_stored_on_the_command_instead_of_inferred_from_arguments() {
+    let mut install = request(Manager::Npm, vec!["rebuild-base".into()]);
+    install.scripts = true;
+    let captured = variables(&install);
+    assert!(
+        !captured
+            .iter()
+            .any(|(name, _)| *name == "npm_config_ignore_scripts")
+    );
+
+    let probe = request(Manager::Npm, vec!["--version".into()]);
+    let captured = variables(&probe);
+    assert_eq!(
+        captured
+            .iter()
+            .find(|(name, _)| *name == "npm_config_ignore_scripts")
+            .map(|(_, value)| value),
+        Some(&OsString::from("true"))
+    );
 }

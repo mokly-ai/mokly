@@ -89,7 +89,7 @@ pub(crate) fn normalize(mut token: Token, authored: bool) -> ParsedToken {
 }
 
 /// Format one ignore-wrapper attribute warning with reserved metadata wording.
-pub(crate) fn ignore_warning_message(attribute: &str, tag: &[u8]) -> String {
+pub fn ignore_warning_message(attribute: &str, tag: &[u8]) -> String {
     let (label, ending) = if reserved_navigation_attribute(attribute.as_bytes()) {
         ("reserved navigation metadata", "is rejected")
     } else {

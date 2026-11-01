@@ -11,7 +11,7 @@ workflow file only. A branch push must match both filters. Tag pushes do not
 start the workflow. A push run registers the workflow before merge.
 
 Set `permissions: contents: read`. Use no workflow secrets.
-Run one job on the runner of the CI suite jobs, `blacksmith-8vcpu-ubuntu-2404`.
+Run one job on the runner of the CI suite jobs, `blacksmith-4vcpu-ubuntu-2404`.
 Set the workflow `env` of the CI workflow, which holds the CI Cargo settings.
 Set `timeout-minutes: 30`.
 `Required CI` does not depend on this workflow.

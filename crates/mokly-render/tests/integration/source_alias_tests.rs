@@ -50,6 +50,7 @@ fn linked_workspace_stylesheets_keep_both_repository_aliases_in_sources() {
     );
     let workspace = workspace();
     let base = Arc::new(BaseSide {
+        working_root: consumer.repository(),
         sources: Arc::new(Lease {
             directory: consumer.root().into(),
             guard: Box::new(Unimock::new(())),
@@ -68,6 +69,7 @@ fn linked_workspace_stylesheets_keep_both_repository_aliases_in_sources() {
             warning: None,
             lease: None,
         },
+        cache_namespace: None,
         identity: "linked-base".into(),
     });
     let runtime = Arc::new(Runtime::new(

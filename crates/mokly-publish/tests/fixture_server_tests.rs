@@ -9,6 +9,7 @@ use mokly_publish::completion::{Completion, Outcome, retryable};
 use mokly_publish::error::Error;
 use mokly_publish::http::{Encoding, Http, Request, ReqwestHttp, Step};
 use mokly_publish::plan::Plan;
+use mokly_publish::redaction::Secret;
 use mokly_publish::settings::Settings;
 use mokly_publish::snapshot::Prepared;
 use serde_json::Value;
@@ -62,7 +63,7 @@ async fn all_plan_and_complete_cases_run_against_the_local_fixture_receiver() {
     }));
     let settings = Settings::new(
         &format!("{}/exact/plan?preserved=1=2", server.origin),
-        "secret".to_owned(),
+        Secret::new("secret"),
         8,
     )
     .unwrap();
@@ -148,7 +149,7 @@ async fn redirects_are_returned_without_forwarding_the_bearer_credential() {
         }
     }));
     let settings =
-        Settings::new(&format!("{}/plan", source.origin), "secret".to_owned(), 1).unwrap();
+        Settings::new(&format!("{}/plan", source.origin), Secret::new("secret"), 1).unwrap();
     let http: &dyn Http = &ReqwestHttp::new().unwrap();
     let response = http
         .send(
@@ -184,7 +185,7 @@ async fn declared_and_streamed_excess_are_bounded_and_unreadable_completion_stil
             headers: Vec::new(),
         }));
         let settings =
-            Settings::new(&format!("{}/plan", server.origin), "secret".to_owned(), 1).unwrap();
+            Settings::new(&format!("{}/plan", server.origin), Secret::new("secret"), 1).unwrap();
         let http: &dyn Http = &ReqwestHttp::new().unwrap();
         let response = http
             .send(
@@ -214,7 +215,7 @@ async fn declared_and_streamed_excess_are_bounded_and_unreadable_completion_stil
     }));
     let settings = Settings::new(
         &format!("{}/complete", server.origin),
-        "secret".to_owned(),
+        Secret::new("secret"),
         1,
     )
     .unwrap();

@@ -13,6 +13,7 @@ use mokly_model::output::upload::{BuildInventory, Publication};
 use mokly_model::output::validation::digest;
 use mokly_publish::exchange::{Client, Exchange};
 use mokly_publish::http::{Body, HttpMock, Response, Step};
+use mokly_publish::redaction::Secret;
 use mokly_publish::runtime::{self, ClockMock};
 use mokly_publish::settings::Settings;
 use mokly_publish::snapshot::Prepared;
@@ -173,7 +174,7 @@ async fn exercise(empty: bool) {
     let receipt = client
         .publish(
             &prepared(),
-            &Settings::new("https://example.com/plan", "synthetic".into(), 1).unwrap(),
+            &Settings::new("https://example.com/plan", Secret::new("synthetic"), 1).unwrap(),
             &cancellation,
         )
         .await

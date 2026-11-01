@@ -107,6 +107,18 @@ fn rejected_roots_keep_their_authored_spelling_and_message() {
 }
 
 #[test]
+fn a_linked_package_root_names_the_link() {
+    let tree = tree(&[
+        ("/repo/packages", FileKind::Directory),
+        ("/repo/packages/ui", FileKind::Symlink),
+    ]);
+    assert_eq!(
+        message(&tree, &["../packages/ui"]),
+        "moduleResolution.packageRoots[0]: ../packages/ui uses the symbolic link packages/ui; name the target path instead"
+    );
+}
+
+#[test]
 fn only_the_normalized_root_satisfies_the_manifest_rule() {
     let link_target_only = tree(&[
         ("/repo/tools/ui", FileKind::Directory),
