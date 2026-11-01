@@ -23,16 +23,19 @@
   - **Leased extraction:** the extracted copy of the files of the base
     commit that a base gets when it needs the sidecar. It answers base reads
     and digests without Git.
-  - **Private copy:** the copy into which delivery copies an asset and
-    checks its SHA-256 before the asset leaves: a temporary file in Serve,
-    and the final payload in a static build.
+  - **Verified copy:** the copy of a complete asset that passed the digest
+    and length check. Serve delivers the asset from it, and concurrent
+    requests for one asset route of one generation share it. The decision of
+    2026-10-28 below calls it the private copy that Serve already makes.
+  - **Final payload:** the one immutable copy of an asset that static output
+    captures after its file-size check.
 - **Background:**
   - The branch `conductor/rust-rebuild-64-opaque-asset-digests` resolved the
     Git part of this item on 2026-11-01. The lookups, the attribute checks,
     and the digests of the opaque assets of one stylesheet run as one batch.
     The probe of 65 base assets fell from 742 to 90 Git processes. Delivery
-    through Git streams the converted bytes into the private copy, in chunks
-    of at most 64 KiB, so it holds no whole blob.
+    through Git streams the converted bytes into the verified copy or the
+    final payload, in chunks of at most 64 KiB, so it holds no whole blob.
   - Delivery from a leased extraction still reads the whole file. The CLI
     attaches an extraction when the base configuration names PostCSS or a
     renderer, or when the base holds modules or stories, at
@@ -47,7 +50,7 @@
   - With an extraction, `digest_source_batch` returns each digest with
     `length: None`, at `crates/mokly-compare/src/sources_assets.rs:35-47`.
     `opaque_stream` then reads the whole file through `read_many` into a
-    `Cursor` before the private copy, at
+    `Cursor` before the verified copy or the final payload, at
     `crates/mokly-compare/src/git_asset_stream.rs:38-53`.
   - The first commit of that branch, `5128643e`, kept this buffered path,
     because PR #237 owned `crates/mokly-git/src/extracted.rs` at that time.
@@ -83,7 +86,8 @@
     cause is the snapshot copies, which
     `plans/follow-ups/snapshot-resource-copies.md` concerns.
 - **Problem:** Delivery of a base asset from a leased extraction holds a
-  full copy of the file in memory before the private copy.
+  full copy of the file in memory before the verified copy or the final
+  payload.
 - **Impact if no action:** A large base asset of a React catalogue costs one
   full extra copy in memory for each delivery. The extraction path also has
   no 64 MiB bound, which `base-asset-conversion-unavailable.md` records
@@ -91,10 +95,10 @@
 - **Root question:** How does delivery of an extracted base asset avoid a
   full copy in memory, as the Git path now does?
 - **Options:**
-  - **A.** Stream an extracted asset from its file into the private copy.
-    Take the length from the extracted file, and check the SHA-256 and the
-    length through the copy. Keep the Git fallback of PR #236 and PR #237
-    for a file that changed or that the extraction cannot read.
+  - **A.** Stream an extracted asset from its file into the verified copy or
+    the final payload. Take the length from the extracted file, and check the
+    SHA-256 and the length through the copy. Keep the Git fallback of PR #236
+    and PR #237 for a file that changed or that the extraction cannot read.
     Effort: Small.
   - **B.** Give each extraction digest the length of its extracted file, so
     that the streamed path of Git delivery takes it. Effort: Small.

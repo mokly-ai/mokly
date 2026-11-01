@@ -131,13 +131,15 @@ stops the copy with the cancellation diagnostic.
 
 A base-side asset is bounded by the 64 MiB output bound of the
 [Git runtime](./mokly-git.md). When the asset reads through Git, delivery
-streams its converted bytes from Git into the private copy that it checks. No
-buffer holds the whole asset before that copy. The opened length of that asset
-is the converted length that its digest counted. The digest and length check
-of the complete copy runs before Serve sends headers, as for every asset.
-Decision: stream base delivery from Git into the private copy. Rejected: a
-read of the whole converted asset before the copy, because it keeps extra full
-copies of a large asset in memory.
+streams its converted bytes from Git. In Serve, the stream fills the verified
+copy. In a static build, it fills the one immutable final payload that static
+output captures. No buffer holds the whole asset before that copy or payload.
+The opened length of that asset is the converted length that its digest
+counted. The digest and length check of the complete copy runs before Serve
+sends headers, as for every asset. Decision: stream base delivery from Git into
+the verified copy or the final payload. Rejected: a read of the whole converted
+asset before the copy or the payload, because it keeps extra full copies of a
+large asset in memory.
 
 An edit to an imported stylesheet, a nested import, an asset, the
 configuration, or a plugin-reported dependency invalidates the stylesheet
