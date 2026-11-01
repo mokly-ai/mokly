@@ -1,6 +1,19 @@
 //! Cache receipt publication, confined paths and cancellable traversals.
 
+#[cfg(windows)]
+use std::fs;
+#[cfg(windows)]
+use std::os::windows::ffi::OsStrExt;
+#[cfg(windows)]
+use std::path::Path;
+#[cfg(windows)]
+use std::process::Command;
 use std::sync::Arc;
+
+#[cfg(windows)]
+use mokly_compare::error::Error;
+#[cfg(windows)]
+use mokly_compare::locations::{Locations, SystemLocations};
 
 #[cfg(unix)]
 #[test]
@@ -129,5 +142,65 @@ fn windows_cache_roots_keep_the_plain_drive_form() {
         !root.as_os_str().to_string_lossy().starts_with(r"\\?\"),
         "npm and Node need the plain drive form: {}",
         root.display()
+    );
+}
+
+#[cfg(windows)]
+#[test]
+fn windows_rejects_a_long_cache_path_inside_the_repository() {
+    let temporary = tempfile::tempdir().unwrap();
+    let repository = dunce::canonicalize(temporary.path()).unwrap();
+    assert!(
+        !repository
+            .as_os_str()
+            .to_string_lossy()
+            .starts_with(r"\\?\"),
+        "the fixture needs a plain repository path: {}",
+        repository.display()
+    );
+    let cache_home = repository
+        .join("a".repeat(100))
+        .join("b".repeat(100))
+        .join("c".repeat(100));
+    fs::create_dir_all(&cache_home).unwrap();
+    let cache_home = dunce::canonicalize(&cache_home).unwrap();
+    assert!(cache_home.as_os_str().encode_wide().count() > 260);
+    assert!(
+        cache_home
+            .as_os_str()
+            .to_string_lossy()
+            .starts_with(r"\\?\"),
+        "the fixture needs a verbatim cache path: {}",
+        cache_home.display()
+    );
+    let output = Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "windows_long_cache_inside_repository_rejection_probe",
+            "--nocapture",
+        ])
+        .env("LOCALAPPDATA", &cache_home)
+        .env("MOKLY_LONG_INTERNAL_CACHE_PROBE", &repository)
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "stdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+#[cfg(windows)]
+#[test]
+fn windows_long_cache_inside_repository_rejection_probe() {
+    let Some(repository) = std::env::var_os("MOKLY_LONG_INTERNAL_CACHE_PROBE") else {
+        return;
+    };
+    let locations: &dyn Locations = &SystemLocations;
+    let result = locations.repository(Path::new(&repository));
+    assert!(
+        matches!(result, Err(Error::UnsafeCache { .. })),
+        "{result:?}"
     );
 }

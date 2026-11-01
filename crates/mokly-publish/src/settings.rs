@@ -1,20 +1,20 @@
 //! Validated request credentials and same-origin URL boundaries.
 
-use std::fmt;
-
 use url::Url;
 
 use crate::error::{Error, Result};
-use crate::redaction::SecretMatcher;
+use crate::redaction::{Secret, SecretMatcher};
 
 /// A validated bearer credential, deliberately opaque in diagnostics.
-#[derive(Clone)]
-pub struct Token(String);
+#[derive(Clone, Debug)]
+pub struct Token {
+    secret: Secret,
+}
 
 impl Token {
     /// Require the RFC bearer-token grammar, including trailing padding.
-    pub fn new(value: String) -> Result<Self> {
-        let core = value.trim_end_matches('=');
+    pub fn new(value: Secret) -> Result<Self> {
+        let core = value.expose().trim_end_matches('=');
         if core.is_empty()
             || !core
                 .bytes()
@@ -22,23 +22,17 @@ impl Token {
         {
             return Err(Error::Token);
         }
-        Ok(Self(value))
+        Ok(Self { secret: value })
     }
 
     /// Expose the credential only to an HTTP implementation. Never log this value.
     pub fn expose(&self) -> &str {
-        &self.0
+        self.secret.expose()
     }
 
     /// Create the shared matcher used by completion and terminal consumers.
     pub fn matcher(&self) -> SecretMatcher {
-        SecretMatcher::new(self.0.clone())
-    }
-}
-
-impl fmt::Debug for Token {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str("Token([redacted])")
+        SecretMatcher::new(self.expose().to_owned())
     }
 }
 
@@ -68,7 +62,7 @@ impl Settings {
     }
 
     /// Validate the resolved explicit options or environment fallbacks.
-    pub fn new(endpoint: &str, token: String, concurrency: u8) -> Result<Self> {
+    pub fn new(endpoint: &str, token: Secret, concurrency: u8) -> Result<Self> {
         let Ok(endpoint) = Url::parse(endpoint) else {
             return Err(Error::Endpoint);
         };

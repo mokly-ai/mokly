@@ -75,12 +75,13 @@
   - [base-batch-fallback-processes.md](base-batch-fallback-processes.md) is
     about Git processes per file after a failed batch of source reads. It is
     the same cost class in another reader, so one design can cover both.
-  - [opaque-asset-generation-spool.md](opaque-asset-generation-spool.md) is
-    about how Serve delivers the same opaque assets: each request copies and
-    checks the asset into its own temporary file, in
-    `crates/mokly-server/src/asset_streams.rs`. This item changes the
-    base-side Git reads in `crates/mokly-compare/src/git_asset_io.rs`. The
-    two items change different code and can land in either order.
+  - The
+    [opaque asset spool item at its last commit](https://github.com/mokly-ai/mokly/blob/c7e7d9b88efc84152eb33539ed8ed7ca2ad2bb93/plans/follow-ups/opaque-asset-generation-spool.md)
+    was about how Serve delivers the same opaque assets. It closed on
+    2026-11-01 with commit `6198d7d7`, which makes concurrent requests for one
+    generation and asset route share one verified copy. Serve makes that copy
+    in `crates/mokly-server/src/asset_streams.rs`. This item changes the
+    base-side Git reads in `crates/mokly-compare/src/git_asset_io.rs`.
 - **Recommendation:** A, refined as the Background says. It removes both
   measured costs and keeps the existing limits.
 - **Action:** fix after merge, apply A, refined, because the user's choice

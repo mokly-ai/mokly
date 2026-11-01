@@ -74,6 +74,7 @@ fn classic_pins_its_mirror_and_folders_against_every_inherited_spelling() {
     let request = Command {
         program: "yarn".into(),
         args: vec!["install".into(), "--frozen-lockfile".into()],
+        scripts: false,
         directory: "/private".into(),
         timeout: Duration::from_secs(120),
         byte_limit: Some(1000),

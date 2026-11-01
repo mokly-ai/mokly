@@ -35,8 +35,22 @@ is the receiver's Plan URL. For Mokly Cloud it is
 | `--debug-timings`                | Select plain output and report timing records.                       |
 
 Value options also accept `--name=value`. Use `--token=-TOKEN` for a token
-that starts with a hyphen. `--base` conflicts with `--no-changes`.
+that starts with a hyphen. `--base` conflicts with `--no-changes`. Publish
+accepts `--base-install-scripts` or `--no-base-install-scripts` with
+`--no-changes`, but the flag has no effect, because no base install runs.
 Publish chooses its own private output directory outside the repository.
+
+## Keep the token safe
+
+Set the token in `MOKLY_TOKEN`, not with `--token`. Other users of the machine
+can read command-line arguments through `/proc/{pid}/cmdline` and `ps`.
+
+Lifecycle scripts of a base dependency install do not receive `MOKLY_TOKEN`.
+A script runs as your user. Code that runs as your user can still read the
+environment of Mokly and of the shell or launcher that started it. Publish from
+a job that runs only code you trust. Pass `--no-base-install-scripts` to every
+command that runs with a token in its environment, such as a publish. The flag
+keeps the scripts off even when `review.baseInstallScripts` is `true`.
 
 ## Checkout and identity
 

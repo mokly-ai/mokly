@@ -7,18 +7,22 @@ use mokly_catalogue::config::ConfigLoaderMock;
 use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_catalogue::error::CatalogueError;
 use mokly_catalogue::preparation::CatalogueBuilderMock;
-use mokly_compare::base_render::ChangesServiceMock;
+use mokly_compare::base_render::{BasePreparationError, ChangesServiceMock};
 use mokly_compare::error::Error;
 use mokly_model::read_contract::ContractViolation;
 use mokly_model::readers::ReadError;
+use mokly_server::error::ServerError;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::build::{BuildChanges, BuildError, BuildService, CatalogueBuild};
 use crate::cancellation::BuildCancellation;
 use crate::changes_diagnostics;
 use crate::codes::Code;
+use crate::serve_errors::changes_reason;
 
 use super::build_tests::{capture_head, config, graphs, options, prepared};
+
+const HINT: &str = "If this base needs lifecycle scripts, enable `review.baseInstallScripts` or use `--base-install-scripts`.";
 
 #[test]
 fn strict_reports_head_and_base_preparation_warnings_after_classification() {
@@ -53,6 +57,7 @@ fn strict_reports_head_and_base_preparation_warnings_after_classification() {
                 .next_call(matching!(_, _, _, _))
                 .returns(Err(Error::Base {
                     commit: "a".repeat(40),
+                    scripts_off: false,
                     source: Box::new(Error::Catalogue {
                         source: CatalogueError::Invalid {
                             issues: Vec::new(),
@@ -80,7 +85,9 @@ fn strict_reports_head_and_base_preparation_warnings_after_classification() {
 
 #[test]
 fn failed_base_install_diagnostic_names_the_scripts_opt_in() {
-    let error = Error::BaseInstallScripts {
+    let error = Error::Base {
+        commit: "a".repeat(40),
+        scripts_off: true,
         source: Box::new(Error::Graph {
             source: mokly_graph::error::GraphError::Invalid {
                 route: "base/index.html".into(),
@@ -92,6 +99,69 @@ fn failed_base_install_diagnostic_names_the_scripts_opt_in() {
     let message = changes_diagnostics::failure_detail(&error);
     assert!(message.contains("review.baseInstallScripts"));
     assert!(message.contains("--base-install-scripts"));
+    let expected = format!("base {}: render failed. {HINT}", "a".repeat(40));
+    assert_eq!(message, expected);
+}
+
+#[test]
+fn capture_failure_with_scripts_off_base_keeps_the_hint_in_each_detail_path() {
+    let error = Error::Base {
+        commit: "a".repeat(40),
+        scripts_off: true,
+        source: Box::new(Error::Graph {
+            source: mokly_graph::error::GraphError::Invalid {
+                route: "base/index.html".into(),
+                message: "render failed.".into(),
+                code: mokly_html::diagnostic_code::Code::BuildInvalid,
+            },
+        }),
+    };
+    let detail = changes_diagnostics::failure_detail(&error);
+    assert!(detail.contains(&format!("base {}", "a".repeat(40))));
+    assert!(detail.ends_with("--base-install-scripts`."));
+    assert!(!detail.contains(".."));
+    let expected = format!("base {}: render failed. {HINT}", "a".repeat(40));
+    assert_eq!(detail, expected);
+    let Some(BuildChanges::Unavailable {
+        base_ref,
+        base_commit,
+        diagnostics,
+        ..
+    }) = changes_diagnostics::unavailable(&error, "fixture-base")
+    else {
+        panic!("render failure must make Changes unavailable");
+    };
+    assert_eq!(base_ref, "fixture-base");
+    assert_eq!(base_commit, "a".repeat(40));
+    assert!(matches!(
+        changes_diagnostics::failure_code(&error),
+        Code::ReviewInvalid
+    ));
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| { diagnostic.message.ends_with("--base-install-scripts`.") })
+    );
+    let serve_reason = changes_reason(&ServerError::Comparison {
+        source: Box::new(error),
+    });
+    assert!(serve_reason.ends_with("--base-install-scripts`."));
+}
+
+#[test]
+fn preparation_error_prefix_does_not_change_cli_details() {
+    let prepared = BasePreparationError::new(false, Error::Cancelled);
+    let error = Error::Base {
+        commit: "a".repeat(40),
+        scripts_off: prepared.scripts_off,
+        source: prepared.source,
+    };
+    let expected = format!("base {}: build cancelled", "a".repeat(40));
+    assert_eq!(changes_diagnostics::failure_detail(&error), expected);
+    let serve = ServerError::Comparison {
+        source: Box::new(error),
+    };
+    assert_eq!(changes_reason(&serve), expected);
 }
 
 #[test]
@@ -104,15 +174,9 @@ fn scripts_off_base_validation_adds_a_separate_opt_in_diagnostic() {
                 code: mokly_html::diagnostic_code::Code::BuildInvalid,
             },
         };
-        let source = if scripts_off {
-            Error::BaseInstallScripts {
-                source: Box::new(source),
-            }
-        } else {
-            source
-        };
         let error = Error::Base {
             commit: "a".repeat(40),
+            scripts_off,
             source: Box::new(source),
         };
         let Some(BuildChanges::Unavailable { diagnostics, .. }) =
@@ -127,7 +191,7 @@ fn scripts_off_base_validation_adds_a_separate_opt_in_diagnostic() {
             assert!(matches!(diagnostics[1].code, Code::BuildInvalid));
             assert_eq!(
                 diagnostics[1].message,
-                "If this base needs lifecycle scripts, enable `review.baseInstallScripts` or use `--base-install-scripts`"
+                "If this base needs lifecycle scripts, enable `review.baseInstallScripts` or use `--base-install-scripts`."
             );
         }
     }
@@ -187,6 +251,7 @@ fn source_limits_are_unavailable_and_name_the_limit_and_requested_path() {
     ] {
         let error = Error::Base {
             commit: "a".repeat(40),
+            scripts_off: false,
             source: Box::new(Error::SourceFailure {
                 source: Arc::new(Error::Limit {
                     path: "specs/large.html".into(),
@@ -217,11 +282,10 @@ fn source_limits_are_unavailable_and_name_the_limit_and_requested_path() {
 fn scripts_off_limit_diagnostic_keeps_the_opt_in_hint() {
     let error = Error::Base {
         commit: "a".repeat(40),
-        source: Box::new(Error::BaseInstallScripts {
-            source: Box::new(Error::Limit {
-                path: "specs/large.html".into(),
-                source: mokly_git::error::Error::ByteLimit { limit: 64 },
-            }),
+        scripts_off: true,
+        source: Box::new(Error::Limit {
+            path: "specs/large.html".into(),
+            source: mokly_git::error::Error::ByteLimit { limit: 64 },
         }),
     };
     let Some(BuildChanges::Unavailable { diagnostics, .. }) =
