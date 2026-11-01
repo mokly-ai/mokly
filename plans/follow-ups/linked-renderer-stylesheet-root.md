@@ -59,9 +59,10 @@
   - [config-repository-root-symlink.md](./config-repository-root-symlink.md)
     is the second linked-path problem that the same review found. It
     concerns the containment checks of the configuration.
-  - [base-symlink-package-root.md](./base-symlink-package-root.md) concerns
-    linked package roots in the base tree of Changes. It is the same class
-    of link handling in another reader.
+  - [postcss-link-message-contract.md](./postcss-link-message-contract.md)
+    asks which configured paths, the renderer included, name an unresolved
+    symbolic link when they fail in the base tree of Changes. It is the same
+    class of link handling in another reader.
 - **Recommendation:** C (estimate). It removes the cause for the renderer
   and for every other configured module path.
 - **Action:** fix after merge, apply C (estimate), because a silent loss of
