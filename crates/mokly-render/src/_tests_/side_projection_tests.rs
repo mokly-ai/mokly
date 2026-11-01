@@ -71,11 +71,15 @@ fn side_projection_batch_matches_single_alias_and_dependency_selection() {
     .no_verify_in_drop();
     let dependencies = Unimock::new(SourceTreeMock::project.each_call(matching!(_)).answers(
         &|_, path| {
-            let identity = match path.to_str().unwrap() {
-                "/deps/node_modules/work/icon.svg" => {
+            let identity = match path {
+                path if path == Path::new("/deps/node_modules/work/icon.svg") => {
                     PathBuf::from("/checkout/components/work/icon.svg")
                 }
-                "/second/other/icon.svg" | "/second" => path.into(),
+                path if path == Path::new("/second/other/icon.svg")
+                    || path == Path::new("/second") =>
+                {
+                    path.into()
+                }
                 _ => return Ok(None),
             };
             Ok(Some(Node {
