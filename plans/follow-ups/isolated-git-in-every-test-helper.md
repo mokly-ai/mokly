@@ -154,4 +154,4 @@
   test.
 
 The earlier item is
-[isolated-git-test-helper.md at the commit before its deletion](https://github.com/mokly-ai/mokly/blob/75bacb9d016205c804633b79ff0e8496c6c07929/plans/follow-ups/isolated-git-test-helper.md).
+[isolated-git-test-helper.md at the commit before its deletion](https://github.com/mokly-ai/mokly/blob/208205c24cb0b6d9f78bfe507ef0373af25f11ba/plans/follow-ups/isolated-git-test-helper.md).
