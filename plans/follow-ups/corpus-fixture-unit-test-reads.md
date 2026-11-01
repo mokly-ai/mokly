@@ -8,9 +8,8 @@
 - **Location:** `crates/mokly-html/src/_tests_/html5lib_corpus_tests.rs:17-48`,
   `crates/mokly-html/src/_tests_/pipeline_differential_tests.rs:13-31`, and
   `crates/mokly-html/tests/source_map_corpus_tests.rs:10-49`.
-- **Reason:** The two unit tests that read files are on `main` since commit
-  `02eec937`, outside the change that found them, and moving them needs a
-  test entry to a private parser.
+- **Reason:** The two unit tests that read files came to `main` in commit
+  `02eec937`, before the change that found them.
 
 - **Source:** Review.
 - **Category:** Test.
@@ -56,29 +55,33 @@
   the fixture paths, and two hold their own `.dat` reader.
 - **Impact if no action:** The library unit-test binary depends on readable
   fixture directories in the checkout. A change to the fixture layout or
-  the `.dat` reading must be made in up to three places, and the source-map
-  test does not fail when a fixture file goes missing.
+  the `.dat` reading needs edits in up to three places. The source-map test
+  does not fail when a fixture file goes missing.
 - **Root question:** How should the corpus tests load the vendored corpus,
   so that unit tests read no files and one helper reads each fixture
   format?
 - **Options:**
   - **A.** Give the reference parser a test entry behind the existing `mock`
     feature of `mokly-html`, or a new test-support feature. Move both older
-    tests to `crates/mokly-html/tests/`. Put one fixture loader, with the
-    directory walk, the `.dat` reader, and the case counts, in one shared
-    module, for example `crates/mokly-html/tests/support/corpus.rs`, and
-    use it in all three corpus tests. Keep every assertion, the counts 1796
+    tests to `crates/mokly-html/tests/`. Put one fixture loader in one shared
+    module, for example `crates/mokly-html/tests/support/corpus.rs`. The
+    loader holds the directory walk, the `.dat` reader, and the case counts.
+    Use it in all three corpus tests. Keep every assertion, the counts 1796
     and 55, and the `insta` snapshots. Effort: Medium.
-  - **B.** Keep the two older tests as unit tests, and embed the fixtures at
+  - **B.** Keep the two older tests as unit tests. Embed the fixtures at
     compile time through a build script that lists the files. The
-    integration test reads the same list. Effort: Medium. It needs a
-    generated list, and a hand-kept list went stale before: the hand-kept
-    fixture lists of the CSS differential test of `mokly-css` missed 11 of
-    62 stylesheets, until commit `9e57d861` replaced them with every
-    stylesheet that Git lists.
-  - **C.** Put only the loader into one shared file now, and include it in
+    integration test reads the same list. It needs a generated list, because
+    a hand-kept list goes stale. Effort: Medium.
+    - The CSS differential test of `mokly-css` had three hand-kept fixture
+      lists.
+    - Since PR #249 of 2026-10-30, the lists missed 11 of the 62 tracked
+      stylesheets.
+    - At `1b93c27f`, the lists missed 48 of the 99 tracked `.css` files.
+    - Commit `9e57d861` replaced the lists with every stylesheet that Git
+      lists.
+  - **C.** Put only the loader into one shared file now. Include that file in
     the unit tests and the integration test with a `#[path]` module. It
-    removes the copies of the reader, but the unit tests still read files.
+    removes the copies of the reader. The unit tests still read files.
     Effort: Small.
 - **Left out:**
   - Mock the file reads. The tests would check canned data instead of the
@@ -89,15 +92,17 @@
     the HTML screens contract over the full corpus.
 - **Wider fix:** The `rust` skill rule for unit tests and the `testing` skill
   rule for one file-format helper are in force, so no other wider fix.
-- **Previous examples:** Commit `02eec937` added both older tests.
-  `crates/mokly-cli/tests/static_output_tests.rs:68` reads the fixtures of
-  another crate from an integration test. Commit `9e57d861` moved the CSS
-  differential test of `mokly-css` out of the library unit tests into
-  `crates/mokly-css/tests/token_differential_tests.rs`, with a
-  `test-support` feature that exposes both of its readers. That is the
-  pattern of option A.
+- **Previous examples:**
+  - Commit `02eec937` added both older tests.
+  - `crates/mokly-cli/tests/static_output_tests.rs:68` reads the fixtures of
+    another crate from an integration test.
+  - Commit `9e57d861` moved the repository-stylesheet part of the CSS
+    differential test of `mokly-css` into
+    `crates/mokly-css/tests/token_differential_tests.rs`. Its
+    generated-stylesheet test stays a unit test. A `test-support` feature
+    makes one test entry public, `token_differential::first_difference`,
+    which runs both section readers. That is the pattern of option A.
 - **Recommendation:** A. It applies both rules: every corpus test becomes an
   integration test, and one loader serves all three.
-- **Action:** fix after merge, apply A, because the two older tests are on
-  `main`, outside the change that found them, and A adds a test entry to a
-  private parser.
+- **Action:** fix after merge, apply A, because the two older tests came to
+  `main` before the change that found them.
