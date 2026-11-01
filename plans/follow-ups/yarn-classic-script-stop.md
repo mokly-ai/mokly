@@ -100,6 +100,12 @@
       shows the pattern.
     - Tests treat a zombie as gone: the state `Z` in `/proc/{pid}/stat` on
       Linux, and `SZOMB` on macOS.
+    - A `mokly-compare` integration test runs a fake manager that starts a
+      detached child, as Yarn Classic does. It covers the time limit and
+      cancellation, and it checks that the detached child stops.
+    - Check that the macOS and Windows code compiles. After the change
+      merges, run a process-tree smoke test of escaped manager sessions on
+      a hosted macOS runner.
   - As context only: a first attempt exists on the branch
     `conductor/rust-rebuild-150-process-tree-stops`.
 - **Problem:** Yarn Classic 1.22.22 starts each dependency lifecycle script
