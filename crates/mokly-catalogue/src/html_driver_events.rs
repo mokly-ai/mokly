@@ -9,10 +9,11 @@ use html5ever::tokenizer::states::RawKind;
 use html5ever::tokenizer::{self, TagKind, TokenSink, TokenSinkResult};
 use html5ever::tree_builder::TreeBuilder;
 use html5ever::{Attribute, QualName};
-use html5gum::emitters::callback::{Callback, CallbackEmitter, CallbackEvent};
-use html5gum::{Emitter, ForwardingEmitter, State};
+use html5gum::State;
+use html5gum::emitters::callback::{Callback, CallbackEvent};
 
 use crate::html_driver::DriverSink;
+use crate::html_source_map::{Recorder, SourceMap};
 use crate::html_token_types::{Doctype, EndTag, Error, ErrorToken, Span, Spanned, StartTag, Token};
 
 /// The start tag that html5gum is still reading.
@@ -28,10 +29,31 @@ struct OpenTag {
 
 /// Sends each event to the sink hooks and to the tree builder, in source order.
 pub(crate) struct EventSink<'a, Sink: DriverSink> {
-    builder: &'a TreeBuilder<Sink::Handle, Sink>,
+    /// The tree builder that consumes each forwarded token.
+    pub(crate) builder: &'a TreeBuilder<Sink::Handle, Sink>,
     offset: usize,
     tag: OpenTag,
-    next_state: Option<State>,
+    /// Tokenizer state selected by the tree builder.
+    pub(crate) next_state: Option<State>,
+    /// Source origins collected before events combine emitted chunks.
+    pub(crate) recorder: Recorder<'a>,
+}
+
+impl<'a, Sink: DriverSink> EventSink<'a, Sink> {
+    /// Bind token events and their source origins to one tree builder.
+    pub(crate) fn new(
+        builder: &'a TreeBuilder<Sink::Handle, Sink>,
+        source: &'a str,
+        offset: usize,
+    ) -> Self {
+        Self {
+            builder,
+            offset,
+            tag: OpenTag::default(),
+            next_state: None,
+            recorder: Recorder::new(source, offset),
+        }
+    }
 }
 
 impl<Sink: DriverSink> EventSink<'_, Sink> {
@@ -65,6 +87,10 @@ impl<Sink: DriverSink> EventSink<'_, Sink> {
         let value = Spanned {
             value: Vec::new(),
             span,
+            source_map: SourceMap::plain(Span {
+                start: span.end,
+                end: span.end,
+            }),
         };
         self.tag.token_attributes.insert(name.to_vec(), value);
         self.tag.tree_attributes.push(Attribute {
@@ -74,13 +100,15 @@ impl<Sink: DriverSink> EventSink<'_, Sink> {
         self.tag.current = Some(name.to_vec());
     }
 
-    fn attribute_value(&mut self, value: &[u8], end: usize) {
+    fn attribute_value(&mut self, value: &[u8], span: Span) {
+        let source_map = self.recorder.attribute(value);
         let Some(name) = &self.tag.current else {
             return;
         };
         if let Some(attribute) = self.tag.token_attributes.get_mut(name) {
             attribute.value.extend_from_slice(value);
-            attribute.span.end = end + 1;
+            attribute.span.end = span.end + 1;
+            attribute.source_map = source_map;
         }
         if let Some(attribute) = self.tag.tree_attributes.last_mut() {
             attribute.value.push_slice(&text(value));
@@ -137,6 +165,7 @@ impl<Sink: DriverSink> EventSink<'_, Sink> {
         let token = Token::String(Spanned {
             value: value.to_vec(),
             span,
+            source_map: self.recorder.text(value),
         });
         self.send(&token, tree_tokens);
     }
@@ -155,7 +184,7 @@ impl<Sink: DriverSink> Callback<Infallible, usize> for EventSink<'_, Sink> {
                 self.tag.start = span.start;
             }
             CallbackEvent::AttributeName { name } => self.attribute_name(name, span),
-            CallbackEvent::AttributeValue { value } => self.attribute_value(value, span.end),
+            CallbackEvent::AttributeValue { value } => self.attribute_value(value, span),
             CallbackEvent::CloseStartTag { self_closing } => {
                 self.close_start_tag(self_closing, span.end);
             }
@@ -165,6 +194,7 @@ impl<Sink: DriverSink> Callback<Infallible, usize> for EventSink<'_, Sink> {
                 let token = Token::Comment(Spanned {
                     value: value.to_vec(),
                     span,
+                    source_map: SourceMap::plain(span),
                 });
                 self.send(&token, vec![tokenizer::CommentToken(text(value).into())]);
             }
@@ -198,69 +228,6 @@ impl<Sink: DriverSink> Callback<Infallible, usize> for EventSink<'_, Sink> {
             }
         }
         None
-    }
-}
-
-/// The html5gum emitter that lets the tree builder choose each tokenizer state.
-pub(crate) struct DriverEmitter<'a, Sink: DriverSink> {
-    inner: CallbackEmitter<EventSink<'a, Sink>, Infallible, usize>,
-    cdata: bool,
-}
-
-impl<'a, Sink: DriverSink> DriverEmitter<'a, Sink> {
-    pub(crate) fn new(builder: &'a TreeBuilder<Sink::Handle, Sink>, offset: usize) -> Self {
-        Self {
-            inner: CallbackEmitter::new(EventSink {
-                builder,
-                offset,
-                tag: OpenTag::default(),
-                next_state: None,
-            }),
-            cdata: false,
-        }
-    }
-}
-
-impl<Sink: DriverSink> ForwardingEmitter for DriverEmitter<'_, Sink> {
-    type Token = Infallible;
-
-    fn inner(&mut self) -> &mut impl Emitter<Token = Self::Token> {
-        &mut self.inner
-    }
-
-    fn emit_eof(&mut self) {
-        self.inner.emit_eof();
-        let builder = self.inner.callback_mut().builder;
-        let _ = builder.process_token(tokenizer::EOFToken, 1);
-        builder.end();
-    }
-
-    fn emit_current_tag(&mut self) -> Option<State> {
-        let _ = self.inner.emit_current_tag();
-        let state = self.inner.callback_mut().next_state.take();
-        if state.is_some() {
-            self.inner.init_string();
-        }
-        state
-    }
-
-    fn adjusted_current_node_present_but_not_in_html_namespace(&mut self) -> bool {
-        self.inner.emit_eof();
-        self.inner.init_string();
-        self.cdata = self
-            .inner
-            .callback_mut()
-            .builder
-            .adjusted_current_node_present_but_not_in_html_namespace();
-        self.cdata
-    }
-
-    fn init_string(&mut self) {
-        if self.cdata {
-            self.cdata = false;
-            self.inner.emit_eof();
-        }
-        self.inner.init_string();
     }
 }
 
