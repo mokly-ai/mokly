@@ -12,8 +12,8 @@
   `crates/mokly-platform/src/unix_process_tree/walk.rs:39` to line 70,
   `crates/mokly-platform/src/unix_process_table/macos.rs:20` to line 46, and
   `crates/mokly-platform/src/unix.rs:67` to line 72.
-- **Reason:** Each option either widens a stated limit of the stop
-  requirement or adds stop code that no user decision approves.
+- **Reason:** Each option changes a stated limit of the stop requirement, and
+  no user decision covers that change.
 
 - **Source:** Implementation.
 - **Category:** Product bug.
@@ -72,11 +72,21 @@
   - On Linux, `crates/mokly-platform/src/unix.rs:67` to line 72 makes the
     manager a subreaper. An orphan then moves to the manager, and a later pass
     of the walk finds it.
-  - The Git runner and the render sidecar use the same owner of process
-    trees. `docs/protocol/mokly-git.md` says that a Git helper process never
+  - The Git runner, at `crates/mokly-git/src/system.rs:72`, and the render
+    sidecar, at `crates/mokly-sidecar/src/process_factory.rs:111`, attach the
+    same owner of process trees. So the same macOS gap reaches their trees.
+  - `docs/protocol/mokly-runtime.md:231` to line 232 makes an exception only
+    for "the base install limits". That exception does not cover a Git or
+    sidecar tree.
+  - `docs/protocol/mokly-git.md` says that a Git helper process never
     outlives its command.
-  - Both protocol pages start with a status line that links this item. The
-    branch that applies the answer removes both lines.
+  - Two records quote the macOS limit:
+    `plans/follow-ups/install-pipe-wait-after-stop.md` and
+    `plans/follow-ups/macos-process-tree-smoke-test.md`. A change of the
+    limit changes them too.
+  - Both protocol pages start with a status line that links this item. A
+    branch that applies an answer removes both lines only when both pages
+    then match the code.
   - No run has reproduced this timing on macOS. A read of the code shows the
     gap.
 - **Problem:** On macOS, the stop never signals a mid-walk orphan. The orphan
@@ -89,14 +99,12 @@
   the manager's process group exits while the stop runs?
 - **Options:**
   - **A.** Reword the macOS limit to "whose parent exits before the stop
-    reaches that parent". Make the same change in
-    `plans/follow-ups/install-pipe-wait-after-stop.md` and
-    `plans/follow-ups/macos-process-tree-smoke-test.md`, which quote the
-    limit. Remove both status lines. A widens a stated limit of the
-    requirement. Effort: Small.
-  - **B.** Keep the recorded limit and the code. Delete this item and both
-    status lines. The pages then promise more than the code does, in this
-    short window on macOS. Effort: Small.
+    reaches that parent".
+    - Extend the runtime words "except for the base install limits" to the
+      same macOS limit for Git and sidecar trees.
+    - Remove both status lines with these two changes.
+    - A widens a stated limit of the requirement.
+    - Effort: Small.
   - **C.** Track the descendants while the manager runs, so that an orphan
     stays known after its parent exits.
     - It needs the new tracking design that the design call of 2026-10-28
@@ -106,6 +114,11 @@
     - Without a macOS source of fork events that names each child, tracking
       reads the table from time to time. A process that starts and loses its
       parent between two reads still escapes.
+    - The macOS limit then names a descendant outside the manager's process
+      group that starts and loses its parent between two reads of the table.
+    - Extend the runtime words "except for the base install limits" to the
+      same macOS limit for Git and sidecar trees.
+    - Both status lines go only with these two changes.
     - Effort: Large.
   - **D.** On macOS, read one snapshot of the whole process table when the
     stop starts. Find every descendant by its identity, PID and start time,
@@ -117,6 +130,11 @@
       lists the PIDs, and `proc_pidinfo` reads each one. A parent that exits
       during that read can still hide its child. So D moves the window, but
       it does not close it.
+    - The macOS limit then names a descendant outside the manager's process
+      group whose parent exits before the stop reads that descendant.
+    - Extend the runtime words "except for the base install limits" to the
+      same macOS limit for Git and sidecar trees.
+    - Both status lines go only with these two changes.
     - Effort: Medium.
   - **E.** On macOS, when the walk finds a process that leads its own process
     group, also list that group with `proc_listpgrppids`. Stop and signal
@@ -130,6 +148,11 @@
     - `crates/mokly-platform/src/unix_group_members/system.rs:54` already
       checks `proc_pidinfo` for a zombie status.
     - E adds one group read for each group leader that the walk finds.
+    - The macOS limit then names an orphan outside the manager's process
+      group when the walk finds no leader of the orphan's process group.
+    - Extend the runtime words "except for the base install limits" to the
+      same macOS limit for Git and sidecar trees.
+    - Both status lines go only with these two changes.
     - Effort: Medium.
 - **Shared assumptions:**
   - The stop finds the descendants in user space, through the process table.
@@ -143,8 +166,13 @@
     Mac or in CI. The fork watch under **Left out** drops it.
   - The requirement keeps its scope: each process that descends from the
     manager when the stop starts. Source: the protocol page. A keeps that
-    scope and changes only the stated limit.
+    scope, and it changes only the stated limit and its runtime exception.
 - **Left out:**
+  - Keep the recorded limit and the code, and delete this item and both
+    status lines. It fails the goal, because both pages keep promising more
+    than the code does. It also breaks the status-line rule of `AGENTS.md`,
+    because a page whose behaviour is not implemented yet starts with a
+    status line.
   - Run a second walk after the first. On macOS, no parent link leads from a
     found process to the orphan, so it fails the goal.
   - Contain the tree in the operating system, such as a Linux cgroup. macOS
