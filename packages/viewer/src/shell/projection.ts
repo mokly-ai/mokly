@@ -2,17 +2,14 @@
 
 import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
 import type { ShellCatalogueReadModel } from "../catalogue/scoped_types.js";
-import { catalogueRouteEntry, type Catalogue } from "../shell/catalogue.js";
-import type { ShellContext } from "../shell/context.js";
-import { toRouteTarget } from "../shell/target.js";
-import type { ShellView } from "../shell/views.js";
+import type { ViewerSelection } from "../host/types.js";
 
-import type { ViewerSelection } from "./types.js";
+import type { ShellContext } from "./context.js";
 
-export function viewerContext(
+export function shellContext(
   model: ShellCatalogueReadModel,
   selection: ViewerSelection,
-): ShellContext {
+): Omit<ShellContext, "embedded" | "theme"> {
   const resolved =
     typeof selection.screenPath === "string"
       ? resolveCatalogueSelection(
@@ -34,7 +31,6 @@ export function viewerContext(
   );
   return {
     base: model.base ?? "",
-    embedded: true,
     comparisons:
       model.comparisonUrl !== null ||
       (model.live !== undefined && model.changesStatus !== "disabled"),
@@ -54,23 +50,4 @@ export function viewerContext(
         }
       : {}),
   };
-}
-
-export function viewerView(
-  catalogue: Catalogue,
-  selection: ViewerSelection,
-): ShellView {
-  if (selection.screenPath === null) return { kind: "home" };
-  const selected = resolveCatalogueSelection(
-    catalogue.publicModel,
-    selection.screenPath,
-    selection.snapshotId,
-  );
-  const entry = selected
-    ? catalogueRouteEntry(catalogue, selected.entry.path, selected.entry.kind)
-    : undefined;
-  const target = entry && toRouteTarget(entry);
-  return target
-    ? { kind: "target", target }
-    : { kind: "missing", requested: selection.screenPath };
 }

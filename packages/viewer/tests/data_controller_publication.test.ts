@@ -6,10 +6,10 @@ import {
   initialSnapshot,
   shellStateWithCatalogue,
 } from "../src/shell/data_commit.js";
+import { shellContext } from "../src/shell/projection.js";
 import { routeFromUrl } from "../src/shell/routes.js";
+import { defaultSelection } from "../src/shell/selection.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
-import { viewerContext } from "../src/viewer/projection.js";
-import { defaultSelection } from "../src/viewer/selection.js";
 
 import { detailFixture, indexFixture } from "./catalogue_v9_fixture.js";
 import { controllerFixture } from "./data_controller_fixture.js";
@@ -37,7 +37,7 @@ function stateAfter(
   const before = initialSnapshot(index);
   const state = createInitialShellState(
     before.catalogue,
-    viewerContext(before.catalogue.publicModel, defaultSelection),
+    shellContext(before.catalogue.publicModel, defaultSelection),
     routeFromUrl(before.catalogue, new URL(path, "https://catalogue.test")),
     undefined,
   );

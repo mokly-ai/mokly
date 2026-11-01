@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
 import { detailKey } from "../catalogue/detail_fences.js";
+import { DeploymentChangedError } from "../catalogue/sources.js";
 import type { EntryDetailV4 } from "../catalogue/types.js";
 import { previewKey } from "../previews/descriptor.js";
 import {
@@ -16,7 +17,6 @@ import {
   requestPreview,
   type LoadedPreview,
 } from "../previews/request.js";
-import { DeploymentChangedError } from "../viewer/sources.js";
 
 import {
   snapshotPresentationEnvironment,
@@ -24,6 +24,7 @@ import {
 } from "./comparison_context.js";
 import { useRouteDelivery } from "./data_context.js";
 import type { RemovedPreviewData } from "./previews.js";
+import { schemeValue } from "./scheme_fallback.js";
 import { useOptionalShellStore } from "./store_context.js";
 
 /** Display state for one route-owned previous-version request. */
@@ -60,9 +61,10 @@ function selectedAddresses(
   if (loaded.content.kind === "page") return [loaded.content.url];
   if (loaded.content.kind === "document")
     return [
-      (
-        loaded.content.views.find((view) => view.colorScheme === colorScheme) ??
-        loaded.content.views[0]!
+      schemeValue(
+        colorScheme,
+        loaded.content.views[0]!,
+        loaded.content.views.find((view) => view.colorScheme === "dark"),
       ).url,
     ];
   const viewports =
@@ -71,16 +73,17 @@ function selectedAddresses(
       : ([viewport] as const);
   return viewports.flatMap((selected) => {
     if (loaded.content.kind !== "screen") return [];
-    const view =
-      loaded.content.views.find(
-        (candidate) =>
-          candidate.viewport === selected &&
-          candidate.colorScheme === colorScheme,
-      ) ??
+    const view = schemeValue(
+      colorScheme,
       loaded.content.views.find(
         (candidate) =>
           candidate.viewport === selected && candidate.colorScheme === "light",
-      );
+      ),
+      loaded.content.views.find(
+        (candidate) =>
+          candidate.viewport === selected && candidate.colorScheme === "dark",
+      ),
+    );
     return view ? [view.url] : [];
   });
 }

@@ -1,14 +1,11 @@
 import type { Box } from "../client/frame_adapter.js";
+import {
+  intersectRectangles,
+  type CoordinateRect,
+} from "../client/geometry.js";
+import type { MarkerStatus } from "../host/types.js";
 
 import type { MarkerRect } from "./marker_store.js";
-import type { MarkerStatus } from "./types.js";
-
-export interface CoordinateRect {
-  left: number;
-  top: number;
-  right: number;
-  bottom: number;
-}
 
 export interface MarkerCoordinates {
   frameLeft: number;
@@ -20,21 +17,6 @@ export interface MarkerCoordinates {
   clip: CoordinateRect;
   originLeft: number;
   originTop: number;
-}
-
-function intersect(
-  left: CoordinateRect,
-  right: CoordinateRect,
-): CoordinateRect | undefined {
-  const result = {
-    left: Math.max(left.left, right.left),
-    top: Math.max(left.top, right.top),
-    right: Math.min(left.right, right.right),
-    bottom: Math.min(left.bottom, right.bottom),
-  };
-  return result.right > result.left && result.bottom > result.top
-    ? result
-    : undefined;
 }
 
 /** Scale, clip and union frame-content boxes into marker-layer coordinates. */
@@ -49,7 +31,7 @@ export function markerRect(
     const top =
       coordinates.frameTop +
       (box.y + coordinates.frameClientTop) * coordinates.scaleY;
-    const clipped = intersect(
+    const clipped = intersectRectangles(
       {
         left,
         top,

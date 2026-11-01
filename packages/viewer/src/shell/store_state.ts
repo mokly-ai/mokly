@@ -1,7 +1,7 @@
 /** Value state owned by one mounted shell. */
 
 import type { ChangesStatus } from "../catalogue/types.js";
-import type { ViewerSelection } from "../viewer/types.js";
+import type { ViewerSelection } from "../host/types.js";
 
 import type { ShellRoute } from "./routes.js";
 

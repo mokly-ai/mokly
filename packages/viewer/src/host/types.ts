@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode, Ref } from "react";
 
+import type { DetailSource, IndexSource } from "../catalogue/sources.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import type {
   Box,
@@ -7,9 +8,11 @@ import type {
   FrameNavigation,
 } from "../client/frame_adapter.js";
 
-import type { DetailSource, IndexSource } from "./sources.js";
-
-export type { DetailResult, DetailSource, IndexSource } from "./sources.js";
+export type {
+  DetailResult,
+  DetailSource,
+  IndexSource,
+} from "../catalogue/sources.js";
 
 export interface ViewerSelection {
   screenPath: string | null;

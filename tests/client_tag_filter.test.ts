@@ -16,7 +16,7 @@ import {
   parseSearchQuery,
   setTagTerm,
 } from "../packages/viewer/dist/shell/search_query.js";
-import { defaultSelection } from "../packages/viewer/dist/viewer/selection.js";
+import { defaultSelection } from "../packages/viewer/dist/shell/selection.js";
 
 const context: ShellContext = {
   base: "",

@@ -2,12 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { readCatalogueIndex } from "../catalogue/index_reader.js";
-import type { CatalogueReadModel } from "../catalogue/types.js";
-import type { ShellDataSource } from "../shell/data_source.js";
-
 import {
-  DeliveryFetchError,
+  isObjectSource,
+  readObjectSource,
   loadDeploymentFile,
   loadDetailResult,
   loadIndexSource,
@@ -15,7 +12,9 @@ import {
   type DetailSource,
   type IndexSource,
   type LoadedIndex,
-} from "./sources.js";
+} from "../catalogue/sources.js";
+import type { CatalogueReadModel } from "../catalogue/types.js";
+import type { ShellDataSource } from "../shell/data_source.js";
 
 /** The identity whose change remounts the shell: object, URL value, or origin. */
 function sourceIdentity(
@@ -75,22 +74,6 @@ export function useIndexSource(
     ...(current?.loaded ? { loaded: current.loaded } : {}),
     ...(current?.error ? { error: current.error } : {}),
     retry: () => setRetry((value) => value + 1),
-  };
-}
-
-function isObjectSource(source: IndexSource): source is CatalogueReadModel {
-  return typeof source === "object" && !(source instanceof URL);
-}
-
-function readObjectSource(
-  source: CatalogueReadModel,
-  baseUrl: string | URL | undefined,
-): LoadedIndex {
-  if (baseUrl === undefined)
-    throw new DeliveryFetchError("The catalogue needs its artifact address.");
-  return {
-    index: readCatalogueIndex(source),
-    root: new URL("/", sourceUrl(baseUrl)),
   };
 }
 

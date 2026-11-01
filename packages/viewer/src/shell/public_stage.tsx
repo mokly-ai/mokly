@@ -18,8 +18,8 @@ import type {
 import type { GeneratedComponentView } from "../components/views.js";
 import { viewHref } from "../navigation/routes.js";
 import { VIEWPORTS } from "../registry/views.js";
-import { DisplaySelection } from "../viewer/display_context.js";
 
+import { DisplaySelection } from "./display_context.js";
 import { DocumentStageFrame } from "./document_stage_frame.js";
 import { useNarrowLayout } from "./narrow_layout.js";
 import { StageFrame } from "./stage_frame.js";

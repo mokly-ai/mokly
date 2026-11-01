@@ -2,8 +2,8 @@ import {
   MoklyVersionError,
   VERSION_ERROR_MESSAGE,
 } from "../catalogue/version_error.js";
+import { ObsoleteInspection } from "../client/inspection_work.js";
 
-import { ObsoleteInspection } from "./inspection_work.js";
 import type { ViewerError, ViewerEvents } from "./types.js";
 
 /** A detail the viewer could not load or accept; the entry offers a retry. */

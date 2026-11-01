@@ -13,6 +13,12 @@ import { flushSync } from "react-dom";
 
 import { LabelLayer } from "@mokly/ui/highlight-label";
 
+import { viewerFailures } from "../host/failures.js";
+import type {
+  MoklyViewerHandle,
+  MoklyViewerProps,
+  PickEnd,
+} from "../host/types.js";
 import {
   useOptionalShellFrameRegistry,
   useOptionalShellInspectionController,
@@ -20,7 +26,6 @@ import {
 } from "../shell/frame_registry.js";
 import { useShellStore } from "../shell/store_context.js";
 
-import { viewerFailures } from "./failures.js";
 import { useHostBridgeEvents } from "./host_bridge_events.js";
 import { useViewerEvidenceRestoration } from "./host_bridge_evidence.js";
 import { registerHostBridgeFailureBarrier } from "./host_bridge_failure.js";
@@ -33,7 +38,6 @@ import {
   type ViewerInspectionPresentation,
 } from "./inspection_layer.js";
 import { Picking } from "./picking.js";
-import type { MoklyViewerHandle, MoklyViewerProps, PickEnd } from "./types.js";
 
 interface HostBridgeProps {
   callbacks: MutableRefObject<MoklyViewerProps>;

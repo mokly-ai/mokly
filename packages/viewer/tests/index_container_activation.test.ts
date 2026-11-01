@@ -2,12 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { CatalogueNode } from "../src/catalogue/types.js";
+import type { ViewerSelection } from "../src/host/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { changesActivation } from "../src/shell/changes_activation.js";
+import { shellContext } from "../src/shell/projection.js";
 import type { ShellRoute } from "../src/shell/routes.js";
-import { viewerContext } from "../src/viewer/projection.js";
-import { defaultSelection } from "../src/viewer/selection.js";
-import type { ViewerSelection } from "../src/viewer/types.js";
+import { defaultSelection } from "../src/shell/selection.js";
 
 import {
   publishedScreen,
@@ -79,7 +79,7 @@ function opened(
   };
   const activated = changesActivation(
     catalogue,
-    viewerContext(model, selected),
+    shellContext(model, selected),
     selected,
     route,
   );

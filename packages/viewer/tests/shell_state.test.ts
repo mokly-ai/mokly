@@ -1,16 +1,16 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { ScreenNavigateEvent } from "../src/host/types.js";
 import { viewHref } from "../src/navigation/routes.js";
 import { frameNavigationHref } from "../src/shell/frame_event_router.js";
 import { routeFromUrl, routeHref } from "../src/shell/routes.js";
+import { defaultSelection } from "../src/shell/selection.js";
 import { canonicalRouteUrl } from "../src/shell/store_browser_urls.js";
 import {
   announceNavigation,
   hostRoute,
 } from "../src/shell/store_host_routes.js";
-import { defaultSelection } from "../src/viewer/selection.js";
-import type { ScreenNavigateEvent } from "../src/viewer/types.js";
 
 import { catalogue, model } from "./shell_state_fixture.js";
 

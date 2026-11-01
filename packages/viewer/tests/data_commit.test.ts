@@ -10,10 +10,10 @@ import {
   withDetails,
   withIndex,
 } from "../src/shell/data_commit.js";
+import { shellContext } from "../src/shell/projection.js";
 import { routeFromUrl } from "../src/shell/routes.js";
+import { defaultSelection } from "../src/shell/selection.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
-import { viewerContext } from "../src/viewer/projection.js";
-import { defaultSelection } from "../src/viewer/selection.js";
 
 import {
   detailFixture,
@@ -36,7 +36,7 @@ function state(snapshot: ReturnType<typeof dataSnapshot>, path: string) {
   const model = snapshot.catalogue.publicModel;
   return createInitialShellState(
     snapshot.catalogue,
-    viewerContext(model, defaultSelection),
+    shellContext(model, defaultSelection),
     routeFromUrl(snapshot.catalogue, new URL(path, "https://catalogue.test")),
     undefined,
   );

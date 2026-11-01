@@ -7,10 +7,10 @@ import {
   catalogueNavSections,
   defaultDisclosures,
 } from "../src/shell/nav_model.js";
+import { shellContext } from "../src/shell/projection.js";
 import { shellStore } from "../src/shell/store_actions.js";
 import { withFilterSelection } from "../src/shell/store_filters.js";
 import type { ShellState } from "../src/shell/store_state.js";
-import { viewerContext } from "../src/viewer/projection.js";
 
 import {
   baseModel,
@@ -26,7 +26,7 @@ function persistedStore(catalogue: Catalogue, initial: ShellState) {
   const stateRef = { current: state };
   const store = shellStore({
     catalogue,
-    context: viewerContext(catalogue.publicModel, state.selection),
+    context: shellContext(catalogue.publicModel, state.selection),
     embedded: false,
     interactive: false,
     navigation: {

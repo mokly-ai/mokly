@@ -1,5 +1,6 @@
 /** Pure classification for logical activations in same-origin frames. */
 
+import { frameLinkActivation } from "../navigation/activation.js";
 import { logicalMarker, parseLogicalMarker } from "../navigation/logical.js";
 import { parseBrowsingTarget } from "../navigation/target.js";
 
@@ -26,26 +27,20 @@ export function classifyFrameActivation(
   const destination = parseLogicalMarker(candidate.marker);
   if (!destination || logicalMarker(destination) !== candidate.marker)
     return undefined;
-  if (candidate.download || candidate.altKey) return undefined;
-  if (candidate.eventType === "click" && candidate.button !== 0)
-    return undefined;
-  if (candidate.eventType === "auxclick" && candidate.button !== 1)
-    return undefined;
+  const activation = frameLinkActivation(
+    { ...candidate, type: candidate.eventType },
+    candidate.download,
+  );
+  if (!activation) return;
   const target = parseBrowsingTarget(candidate.target);
   if (target.kind === "invalid") return undefined;
-  const modified = candidate.metaKey || candidate.ctrlKey || candidate.shiftKey;
   return {
     screenPath: destination.path,
     ...(destination.fragment === undefined
       ? {}
       : { fragment: destination.fragment }),
     target,
-    activation:
-      candidate.eventType === "auxclick"
-        ? "middle"
-        : modified
-          ? "modified"
-          : "primary",
+    activation,
   };
 }
 

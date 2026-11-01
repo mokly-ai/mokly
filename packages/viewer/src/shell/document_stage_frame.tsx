@@ -12,15 +12,15 @@ import { LightOnlyBand } from "@mokly/ui/scheme-fallback";
 import { currentDocumentPath } from "../catalogue/delivery_paths.js";
 import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
 import { documentRoute } from "../navigation/routes.js";
-import { DisplaySelection } from "../viewer/display_context.js";
 
+import { DisplaySelection } from "./display_context.js";
 import { useMountedShellFrame } from "./frame_mount_hook.js";
 import {
   useOptionalShellFrameRegistry,
   type ShellFrameIdentity,
 } from "./frame_registry.js";
 import { useFrameGeneration, useFrameSource } from "./frame_source_hook.js";
-import { documentLightOnly } from "./scheme_fallback.js";
+import { documentLightOnly, schemeValue } from "./scheme_fallback.js";
 import { framePath, unavailableUsage } from "./stage_sources.js";
 import { useOptionalShellStore } from "./store_context.js";
 
@@ -37,11 +37,13 @@ export function DocumentStageFrame({
   const store = useOptionalShellStore();
   const registry = useOptionalShellFrameRegistry();
   const selection = useContext(DisplaySelection);
-  const scheme =
-    entry.kind === "document" &&
-    entry.colorSchemes.includes(selection.colorScheme)
-      ? selection.colorScheme
-      : "light";
+  const scheme = schemeValue<"dark" | "light">(
+    selection.colorScheme,
+    "light",
+    entry.kind === "document" && entry.colorSchemes.includes("dark")
+      ? "dark"
+      : undefined,
+  );
   const source = framePath(
     currentDocumentPath(documentRoute(entry.path, scheme)),
     fragment,

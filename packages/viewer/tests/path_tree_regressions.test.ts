@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
+import type { ViewerSelection } from "../src/host/types.js";
 import type { ShellContext } from "../src/shell/context.js";
 import { navNodeVisible } from "../src/shell/nav_model.js";
 import { buildNavSections } from "../src/shell/nav_tree.js";
-import type { ViewerSelection } from "../src/viewer/types.js";
 
 import { indexFixture, rawIndexFixture } from "./catalogue_v9_fixture.js";
 import { standaloneMarkup } from "./shell_markup.js";

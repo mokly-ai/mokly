@@ -1,7 +1,7 @@
 /** Pure navigation-tree state of the shell. */
 
+import type { ViewerSelection } from "../host/types.js";
 import { folderTitlesAt } from "../registry/folder_titles.js";
-import type { ViewerSelection } from "../viewer/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";

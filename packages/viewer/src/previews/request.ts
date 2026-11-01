@@ -2,16 +2,16 @@
 
 import { removedEntryDetailPath } from "../catalogue/delivery_paths.js";
 import { historicalSnapshotId } from "../catalogue/snapshot_identity.js";
+import {
+  DeploymentChangedError,
+  fetchJson,
+  type DeploymentCheck,
+} from "../catalogue/sources.js";
 import type { CatalogueReadModel, EntryDetailV4 } from "../catalogue/types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 import { encodeUrlPath } from "../data/paths.js";
 import { previewMetadataPath, snapshotSidePath } from "../navigation/routes.js";
 import type { RemovedPreviewData } from "../shell/previews.js";
-import {
-  DeploymentChangedError,
-  fetchJson,
-  type DeploymentCheck,
-} from "../viewer/sources.js";
 
 import { pageContent, screenContent, type ParsedPreview } from "./content.js";
 

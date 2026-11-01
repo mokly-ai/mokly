@@ -11,8 +11,8 @@ import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { createCatalogue } from "../src/shell/catalogue.js";
+import { publicWorkspace } from "../src/shell/public_workspace.js";
 import { WorkspaceEvidence } from "../src/shell/workspace_evidence.js";
-import { publicWorkspace } from "../src/viewer/public_workspace.js";
 
 import { shellModelFixture } from "./catalogue_v9_fixture.js";
 

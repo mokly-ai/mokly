@@ -1,6 +1,6 @@
 /** The standalone appearance controller the bundle installs before its first render. */
 
-import type { ViewerTheme } from "../viewer/types.js";
+import type { ViewerTheme } from "../host/types.js";
 
 import { installAppearance, type EffectiveAppearance } from "./startup.js";
 

@@ -144,7 +144,7 @@ applies the rule to that effective scheme while retaining the requested scheme
 as the control state, so navigation and controlled-host updates cannot leave
 stale indicators, and it passes the marks, their ids, and their wording to
 `@mokly/ui/view-controls`.
-`../viewer/public_workspace_views.ts` derives the changed views themselves from
+`public_workspace_views.ts` derives the changed views themselves from
 the published catalogue's ready per-view comparisons. Workspace data keys
 those lists by component variant path or screen path, and
 `workspace_views_data.ts` reads the list of the shown selection, so every
@@ -270,10 +270,17 @@ A detail commit replaces that model and retains the index lookups and sections.
 An inspector tag then returns focus to the toggle in its own shell. Picker
 chips keep the focus return of `@mokly/ui/tag-picker`.
 
-`store.tsx` and the focused `store_*` modules own standalone route/history,
-selection, disclosure, drawer, details and scroll state. `routes.ts`,
+`store.tsx` and the focused `store_*` modules own the shared route,
+selection, disclosure, drawer, details and scroll state. `store_browser.ts`
+owns standalone history, and `store_host.ts` owns host selection commits.
+`store_routes.ts` installs each route's display for both roots.
+`store_interactions.ts` binds both roots to clicks and Escape. It dismisses
+the picker and expanded frame on an outside click, including a click outside
+an embedded root. It returns picker focus only when the panel held focus.
+`routes.ts`,
 `nav_model.ts`, `search_query.ts` and `entry_wording.ts` are deterministic
-helpers. `store_browser_actions.ts` owns DOM interaction and
+helpers. `selection.ts` owns selection changes and query equality.
+`store_browser_actions.ts` owns standalone link navigation, and
 `store_browser_urls.ts` owns provider-normalized URL policy. Frame documents
 remain static while `frame_event_router.tsx` routes authenticated logical-link
 events from visible sessions in the owning `frame_registry.tsx`.
@@ -330,7 +337,8 @@ stylesheets cannot import either query, so they repeat them, and the viewer's
 [styles test](../../tests/styles.test.ts) holds them to both.
 
 Static route parsing accepts the canonical slash, extensionless, and
-`index.html` forms; the shared parser resolves each path through `byPath`. Historical
+`index.html` forms; the shared parser resolves each selection through
+`catalogue/entry_selection.ts`. Historical
 resolution binds that route to its published snapshot; an explicit query must
 match, while an inferred identity is canonicalized into the URL. Entry
 destinations come from the shared route helpers.
@@ -395,12 +403,12 @@ when its usage holds a changed component that the detail names:
 `workspace_context.tsx` collects those views with `viewsUsingComponents`. The heading names
 the branch point only when its name is known; an empty or blank name leaves the
 heading alone. An index without a
-`base` has no name, because `viewerContext` supplies an empty one, so its
+`base` has no name, because `shellContext` supplies an empty one, so its
 Details keep the rest of the evidence without that sentence. `workspace_data.ts`
 passes the shell's known name to `publicWorkspace`, so a workspace keeps the
 sentence while its entry detail loads. The workspace projects the selected
 views' `resourceEvidence` from the held entry detail through
-`../viewer/public_workspace_views.ts` and `../review/view_evidence.ts`. A
+`public_workspace_views.ts` and `../review/view_evidence.ts`. A
 whole-document page has no workspace: `page_evidence_data.ts` reads its status
 from the index record and its evidence record from the page's entry detail,
 and `page_evidence.tsx` passes them with the page wording to

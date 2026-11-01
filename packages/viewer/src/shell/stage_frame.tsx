@@ -17,8 +17,8 @@ import type {
 import { temporaryPreviewAdapter } from "../client/same_origin_adapter.js";
 import type { GeneratedComponentView } from "../components/views.js";
 import { entryRoute } from "../navigation/routes.js";
-import { DisplaySelection } from "../viewer/display_context.js";
 
+import { DisplaySelection } from "./display_context.js";
 import { useMountedShellFrame } from "./frame_mount_hook.js";
 import {
   useOptionalShellFrameRegistry,
@@ -26,6 +26,7 @@ import {
 } from "./frame_registry.js";
 import { useFrameGeneration, useFrameSource } from "./frame_source_hook.js";
 import { BrowserFrame } from "./frames.js";
+import { schemeValue } from "./scheme_fallback.js";
 import {
   frameSource,
   generatedFrameSource,
@@ -79,11 +80,8 @@ export function StageFrame({
     viewport,
     "dark",
   );
-  const selected = selection.colorScheme === "dark" ? (dark ?? light) : light;
-  const preview =
-    selection.colorScheme === "dark"
-      ? (previewDark ?? previewLight)
-      : previewLight;
+  const selected = schemeValue(selection.colorScheme, light, dark);
+  const preview = schemeValue(selection.colorScheme, previewLight, previewDark);
   const source = preview
     ? generatedFrameSource(preview, fragment, stepIndex)
     : frameSource(entry, selected, fragment, stepIndex);

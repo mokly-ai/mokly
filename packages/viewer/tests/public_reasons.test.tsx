@@ -14,9 +14,9 @@ import type { ShellCatalogueRoutedEntry } from "../src/catalogue/scoped_types.js
 import type { CatalogueReadModel } from "../src/catalogue/types.js";
 import type { EntryChangeReason } from "../src/review/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
+import { shownReasons } from "../src/shell/public_reasons.js";
+import { publicWorkspace } from "../src/shell/public_workspace.js";
 import { WorkspaceEvidence } from "../src/shell/workspace_evidence.js";
-import { shownReasons } from "../src/viewer/public_reasons.js";
-import { publicWorkspace } from "../src/viewer/public_workspace.js";
 
 import {
   detailPairs,

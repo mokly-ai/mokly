@@ -5,7 +5,7 @@
  * never reaches for storage at all.
  */
 
-import type { ViewerTheme } from "../viewer/types.js";
+import type { ViewerTheme } from "../host/types.js";
 
 /** Origin-local key holding an explicit override; Auto is its absence. */
 export const APPEARANCE_STORAGE_KEY = "mokly:theme";

@@ -12,6 +12,7 @@ import { HighlightLabel, LabelLayer } from "@mokly/ui/highlight-label";
 import { HighlightMask } from "@mokly/ui/highlight-mask";
 
 import type { Box } from "../client/frame_adapter.js";
+import type { InstanceRef } from "../host/types.js";
 import { SupersededFrameGeometry } from "../shell/frame_geometry.js";
 import { frameInspectionMask } from "../shell/frame_inspection_mask.js";
 import {
@@ -23,8 +24,6 @@ import type {
   ShellFrameRegistry,
   ShellFrameSession,
 } from "../shell/frame_registry.js";
-
-import type { InstanceRef } from "./types.js";
 
 export type ViewerInspectionPresentation =
   | {

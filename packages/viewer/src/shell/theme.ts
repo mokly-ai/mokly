@@ -1,6 +1,6 @@
 /** The interface appearance a viewer root draws, independent of its previews. */
 
-import type { ViewerTheme } from "./types.js";
+import type { ViewerTheme } from "../host/types.js";
 
 /** The value a root's `data-mokly-theme` carries. */
 export const THEME_ATTRIBUTE = "data-mokly-theme";

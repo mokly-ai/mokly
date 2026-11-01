@@ -3,7 +3,7 @@
 import { createContext, useContext } from "react";
 
 import type { FrameNavigation } from "../client/frame_adapter.js";
-import type { ViewerSelection } from "../viewer/types.js";
+import type { ViewerSelection } from "../host/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";

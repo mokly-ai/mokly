@@ -1,11 +1,12 @@
 /** Pure rules for revealing a folder row from a breadcrumb. */
 
-import type { ViewerSelection } from "../viewer/types.js";
+import type { ViewerSelection } from "../host/types.js";
 
 import type { ShellContext } from "./context.js";
 import { folderDisclosureKey } from "./disclosure_keys.js";
 import { navNodeVisible, variantDisclosureKey } from "./nav_model.js";
 import type { NavGroupNode, NavNode, NavSectionNode } from "./nav_tree.js";
+import { sameQuery } from "./selection.js";
 
 /** A folder row and every disclosure, its own last, that exposes it. */
 export interface FolderRevealPath {
@@ -83,14 +84,6 @@ export function folderRevealProposal(
 /** Whether two selections share one view, search, and tag set. */
 export function sameNavFilters(a: NavFilters, b: NavFilters): boolean {
   return a.view === b.view && sameQuery(a, b);
-}
-
-function sameQuery(a: NavFilters, b: NavFilters): boolean {
-  return (
-    a.search === b.search &&
-    a.tags.length === b.tags.length &&
-    a.tags.every((tag, index) => tag === b.tags[index])
-  );
 }
 
 function withoutQuery<T extends NavFilters>(selection: T): T {

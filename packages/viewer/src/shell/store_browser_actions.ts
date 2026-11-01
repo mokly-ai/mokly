@@ -11,6 +11,7 @@ import {
   type ShellClickEvent,
   type ShellKeyEvent,
 } from "./store_browser_routes.js";
+import { shellKeyDown } from "./store_interactions.js";
 import type { ShellState } from "./store_state.js";
 
 interface ShellBrowserActionInput {
@@ -45,7 +46,8 @@ export function shellBrowserActions(
     },
     openFrame: (href, target) => window.open(href, target, "noopener"),
     onShellClick: (event) => handleShellClick(event, input),
-    onShellKeyDown: (event) => handleShellKeyDown(event, input),
+    onShellKeyDown: (event) =>
+      shellKeyDown(event, input.setState, input.state()),
   };
 }
 
@@ -56,16 +58,8 @@ function handleShellClick(
   const target = event.target instanceof Element ? event.target : undefined;
   if (!target) return;
   const state = input.state();
-  if (
-    state.tagPickerOpen &&
-    !target.closest("[data-mokly-tag-toggle], [data-mokly-tag-picker]")
-  ) {
-    input.setState((current) => ({ ...current, tagPickerOpen: false }));
-  }
   if (target.closest("[data-mokly-tag-toggle], [data-mokly-tag-picker]"))
     return;
-  if (state.expandedFrame && !target.closest(".browser-frame.is-expanded"))
-    input.setState((current) => ({ ...current, expandedFrame: undefined }));
   const anchor = target.closest<HTMLAnchorElement>("a[href]");
   if (!anchor || !eligibleShellAnchor(event, anchor, window.location)) return;
   event.preventDefault();
@@ -84,21 +78,4 @@ function handleShellClick(
     ...(activated.snapshot ? { snapshot: activated.snapshot } : {}),
   });
   void input.transition(new URL(href, requested), true, {}, activated);
-}
-
-function handleShellKeyDown(
-  event: ShellKeyEvent,
-  input: ShellBrowserActionInput,
-): void {
-  if (event.key !== "Escape") return;
-  if (input.state().tagPickerOpen) {
-    event.preventDefault();
-    input.setState((state) => ({ ...state, tagPickerOpen: false }));
-    const root = event.currentTarget;
-    if (root instanceof Element)
-      root.querySelector<HTMLElement>("[data-mokly-tag-toggle]")?.focus();
-  } else if (input.state().expandedFrame) {
-    event.preventDefault();
-    input.setState((state) => ({ ...state, expandedFrame: undefined }));
-  }
 }

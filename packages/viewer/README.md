@@ -228,7 +228,10 @@ and Review regressions against `mokly serve` of the example catalogue.
 - [`../ui/src`](../ui/src) — the `@mokly/ui` presentational components the
   shell composes, one directory per component with its CSS beside it
 - [`src/viewer`](./src/viewer) — the embedded `MoklyViewer`: React lifecycle,
-  selection, host integration, and instance operations
+  source loading, host integration, and instance operations; it imports the
+  shared shell, which has no dependency on this directory
+- [`src/host/types.ts`](./src/host/types.ts) — the public viewer contract,
+  shared by the shell and the embedded host
 - [`src/viewer/host_bridge.tsx`](./src/viewer/host_bridge.tsx) and
   [`src/viewer/host_bridge_highlight.ts`](./src/viewer/host_bridge_highlight.ts) —
   the public handle and its highlight requests, geometry, and cancellation
@@ -274,7 +277,7 @@ and Review regressions against `mokly serve` of the example catalogue.
   preview scheme, and the expanded window's mark; `src/viewer/component.tsx`
   shows an
   embedded root's loading and failure states, and
-  `src/viewer/marker_layer.tsx` and `src/viewer/inspection_layer.tsx` place
+  `src/shell/marker_layer.tsx` and `src/viewer/inspection_layer.tsx` place
   the host's markers and inspection labels
 - [`src/shell/comparison_views.tsx`](./src/shell/comparison_views.tsx) and
   [`src/shell/comparison_viewport.tsx`](./src/shell/comparison_viewport.tsx) —
@@ -289,6 +292,8 @@ and Review regressions against `mokly serve` of the example catalogue.
   inherit
 - [`src/catalogue`](./src/catalogue) — the readers of the catalogue index and
   the entry detail, and the public catalogue types
+- [`src/catalogue/sources.ts`](./src/catalogue/sources.ts) — the shared object
+  and URL source validation and the index, detail, and deployment transports
 - [`src/data.ts`](./src/data.ts) — the `./data` entry: path functions,
   directory names, the path and link grammar, and the prop schema validators
 - [`src/navigation/routes.ts`](./src/navigation/routes.ts) — entry, view,
@@ -314,21 +319,28 @@ and Review regressions against `mokly serve` of the example catalogue.
   [`src/shell/store_host_routes.ts`](./src/shell/store_host_routes.ts) —
   controlled and uncontrolled selection commits, frame-link misses, and
   navigation events
+- [`src/shell/store_routes.ts`](./src/shell/store_routes.ts) and
+  [`src/shell/store_interactions.ts`](./src/shell/store_interactions.ts) — the
+  shared route installation, Escape priority, outside-click dismissal, and
+  input listeners of both roots
+- [`src/shell/selection.ts`](./src/shell/selection.ts) and
+  [`src/shell/projection.ts`](./src/shell/projection.ts) — selection changes,
+  query equality, and the catalogue context; root options alone set `embedded`
 - [`src/shell/workspace_data.ts`](./src/shell/workspace_data.ts) and
-  [`src/viewer/public_workspace.ts`](./src/viewer/public_workspace.ts) — the
+  [`src/shell/public_workspace.ts`](./src/shell/public_workspace.ts) — the
   routed workspace data and its projection from the index, entry detail, and
   parent detail for current component variant lists
 - [`src/shell/comparison_request.ts`](./src/shell/comparison_request.ts) — the
   generation root of a comparison: the pinned root a static catalogue names,
   or the root that Serve's selection redirects to and its renewal
 - [`src/catalogue/detail_comparison.ts`](./src/catalogue/detail_comparison.ts)
-  and [`src/viewer/public_compared.ts`](./src/viewer/public_compared.ts) — the
+  and [`src/shell/public_compared.ts`](./src/shell/public_compared.ts) — the
   detail's view states, ignore ids, and base side, and the routed entry's
   comparison facts that the panes and Details read from them
 - [`src/catalogue/detail_reasons.ts`](./src/catalogue/detail_reasons.ts) and
   [`src/catalogue/reason_order.ts`](./src/catalogue/reason_order.ts) — the
   entry detail's `reasons` and the reason order it shares with review v8
-- [`src/viewer/public_reasons.ts`](./src/viewer/public_reasons.ts) — the
+- [`src/shell/public_reasons.ts`](./src/shell/public_reasons.ts) — the
   detail reasons that Details shows: listed records only, without the reasons
   that contradict the record
 - [`tests`](./tests) — package-level conformance tests

@@ -4,14 +4,14 @@ import {
 } from "../catalogue/entry_selection.js";
 import type { ShellCatalogueReadModel } from "../catalogue/scoped_types.js";
 import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
+import type { ViewerSelection } from "../host/types.js";
 import type { FolderTitleLookup } from "../registry/folder_titles.js";
+
 import {
   parseSearchQuery,
   rowMatchesQuery,
   searchRow,
-} from "../shell/search_query.js";
-
-import type { ViewerSelection } from "./types.js";
+} from "./search_query.js";
 
 export const defaultSelection: ViewerSelection = {
   screenPath: null,
@@ -83,9 +83,7 @@ export function sameSelection(a: ViewerSelection, b: ViewerSelection): boolean {
     a.view === b.view &&
     a.viewport === b.viewport &&
     a.colorScheme === b.colorScheme &&
-    a.search === b.search &&
-    a.tags.length === b.tags.length &&
-    a.tags.every((tag, index) => tag === b.tags[index])
+    sameQuery(a, b)
   );
 }
 /** Merge one public proposal and normalize route-owned entry identity. */
@@ -147,4 +145,16 @@ export function revealSelection(
       ? { view: "all" as const }
       : {}),
   };
+}
+
+/** Compare the search and ordered tags without relying on array identity. */
+export function sameQuery(
+  a: Pick<ViewerSelection, "search" | "tags">,
+  b: Pick<ViewerSelection, "search" | "tags">,
+): boolean {
+  return (
+    a.search === b.search &&
+    a.tags.length === b.tags.length &&
+    a.tags.every((tag, index) => tag === b.tags[index])
+  );
 }

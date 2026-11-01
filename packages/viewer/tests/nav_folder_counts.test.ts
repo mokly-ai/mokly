@@ -4,8 +4,8 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 
+import type { ViewerSelection } from "../src/host/types.js";
 import { MoklyViewer } from "../src/viewer/component.js";
-import type { ViewerSelection } from "../src/viewer/types.js";
 
 import { detailFixture, rawIndexFixture } from "./catalogue_v9_fixture.js";
 

@@ -4,6 +4,7 @@ import type { GeneratedComponentView } from "../components/views.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 import { viewAxesKey, viewsUsingComponents } from "../review/shared_impact.js";
 
+import { schemeValue } from "./scheme_fallback.js";
 import {
   resolveViewPresentation,
   type EntryStatus,
@@ -40,14 +41,15 @@ export function resolveWorkspaceViews(
   const views = (["mobile", "desktop"] as const)
     .filter((size) => viewport === "both" || viewport === size)
     .flatMap((size) => {
-      const view =
-        variants.find(
-          (item) =>
-            item.viewport === size && item.colorScheme === requestedScheme,
-        ) ??
+      const view = schemeValue(
+        requestedScheme,
         variants.find(
           (item) => item.viewport === size && item.colorScheme === "light",
-        );
+        ),
+        variants.find(
+          (item) => item.viewport === size && item.colorScheme === "dark",
+        ),
+      );
       return view ? [view] : [];
     });
   return {

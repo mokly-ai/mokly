@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   defaultSelection,
   revealSelection,
-} from "../packages/viewer/dist/viewer/selection.js";
+} from "../packages/viewer/dist/shell/selection.js";
 
 import {
   noTitles,

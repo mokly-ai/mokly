@@ -11,26 +11,26 @@ import {
 import { RootState } from "@mokly/ui/shell-layout";
 
 import { shellCatalogueModel } from "../catalogue/shell_model.js";
+import type { LoadedIndex } from "../catalogue/sources.js";
+import { DeploymentChangedError } from "../catalogue/sources.js";
 import type { MoklyVersionError } from "../catalogue/version_error.js";
+import { EntryUnavailableError, viewerFailures } from "../host/failures.js";
+import type { MoklyViewerProps, ViewerSelection } from "../host/types.js";
 import type { ScrollTogetherPreference } from "../shell/comparison_scroll_preference.js";
 import { EmbeddedViewerShell } from "../shell/embedded_viewer.js";
 import { ShellIdentifierProvider } from "../shell/identifier_context.js";
+import { defaultSelection, normalizeSelection } from "../shell/selection.js";
 import { ShellStoreProvider } from "../shell/store.js";
+import { hostRoute } from "../shell/store_host_routes.js";
 import { viewRoute } from "../shell/store_initial.js";
+import { normalizeTheme } from "../shell/theme.js";
 
 import {
   viewerComparisonEnvironment,
   viewerShellEnvironment,
 } from "./environment.js";
-import { EntryUnavailableError, viewerFailures } from "./failures.js";
 import { ViewerHostBridge } from "./host_bridge.js";
 import { embeddedDataSource } from "./index_source.js";
-import { viewerView } from "./projection.js";
-import { defaultSelection, normalizeSelection } from "./selection.js";
-import type { LoadedIndex } from "./sources.js";
-import { DeploymentChangedError } from "./sources.js";
-import { normalizeTheme } from "./theme.js";
-import type { MoklyViewerProps, ViewerSelection } from "./types.js";
 
 type ReadyProps = MoklyViewerProps & {
   loaded: LoadedIndex;
@@ -159,7 +159,7 @@ function MountedViewer(
         route={(catalogue) =>
           viewRoute(
             catalogue,
-            viewerView(catalogue, initial),
+            hostRoute(catalogue, initial).view,
             initial.snapshotId,
           )
         }

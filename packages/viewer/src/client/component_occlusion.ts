@@ -1,21 +1,11 @@
 /** Remove areas covered by unrelated content using the live paint hit-test. */
-export interface VisibleBox {
-  left: number;
-  top: number;
-  right: number;
-  bottom: number;
-}
-function intersectBoxes(a: VisibleBox, b: VisibleBox): VisibleBox | undefined {
-  const box = {
-    left: Math.max(a.left, b.left),
-    top: Math.max(a.top, b.top),
-    right: Math.min(a.right, b.right),
-    bottom: Math.min(a.bottom, b.bottom),
-  };
-  return box.right > box.left && box.bottom > box.top ? box : undefined;
-}
-function subtractBox(box: VisibleBox, cut: VisibleBox): VisibleBox[] {
-  const overlap = intersectBoxes(box, cut);
+import { intersectRectangles, type CoordinateRect } from "./geometry.js";
+
+function subtractBox(
+  box: CoordinateRect,
+  cut: CoordinateRect,
+): CoordinateRect[] {
+  const overlap = intersectRectangles(box, cut);
   if (!overlap) return [box];
   return [
     { ...box, bottom: overlap.top },
@@ -35,11 +25,11 @@ function subtractBox(box: VisibleBox, cut: VisibleBox): VisibleBox[] {
   ].filter((value) => value.right > value.left && value.bottom > value.top);
 }
 export function uncoveredBoxes(
-  box: VisibleBox,
+  box: CoordinateRect,
   range: Range,
   candidates: readonly Element[],
   rects: WeakMap<Element, readonly DOMRect[]>,
-): VisibleBox[] {
+): CoordinateRect[] {
   const doc = range.startContainer.ownerDocument!;
   let pieces = [box];
   for (const candidate of candidates) {
@@ -48,7 +38,7 @@ export function uncoveredBoxes(
     if (!rects.has(candidate))
       rects.set(candidate, [...candidate.getClientRects()]);
     for (const rect of rects.get(candidate)!) {
-      const overlap = intersectBoxes(box, rect);
+      const overlap = intersectRectangles(box, rect);
       if (!overlap) continue;
       const hit = doc.elementFromPoint(
         (overlap.left + overlap.right) / 2,

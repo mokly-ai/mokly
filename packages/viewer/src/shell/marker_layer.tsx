@@ -6,8 +6,9 @@ import {
   type MarkerRecord,
 } from "@mokly/ui/embedded-layout";
 
+import type { ViewerMarker } from "../host/types.js";
+
 import type { MarkerStore } from "./marker_store.js";
-import type { ViewerMarker } from "./types.js";
 
 interface MarkerLayerProps {
   layerRef?: Ref<HTMLDivElement>;

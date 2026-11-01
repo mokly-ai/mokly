@@ -3,9 +3,10 @@ import { test } from "node:test";
 
 import type { CatalogueReadModel } from "../src/catalogue/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
+import { shellContext } from "../src/shell/projection.js";
+import { defaultSelection } from "../src/shell/selection.js";
+import { hostRoute } from "../src/shell/store_host_routes.js";
 import { workspaceData } from "../src/shell/workspace_data.js";
-import { viewerContext, viewerView } from "../src/viewer/projection.js";
-import { defaultSelection } from "../src/viewer/selection.js";
 
 import { indexFixture, shellModelFixture } from "./catalogue_v9_fixture.js";
 import { standaloneMarkup } from "./shell_markup.js";
@@ -75,13 +76,13 @@ test("the index fallback keeps the index's base in every delivery, and an index 
     for (const [, screenPath, evidence] of ENTRIES) {
       if (evidence !== "workspace") continue;
       const selection = { ...defaultSelection, screenPath };
-      const view = viewerView(catalogue, selection);
+      const view = hostRoute(catalogue, selection).view;
       if (view.kind !== "target" || view.target.kind !== "entry")
         throw new Error(`Missing fixture route ${screenPath}`);
       const entry = view.target.entry;
       if (entry.kind !== "screen" && entry.kind !== "component")
         throw new Error(`Unexpected fixture entry ${screenPath}`);
-      const embedded = viewerContext(model, selection);
+      const embedded = { ...shellContext(model, selection), embedded: true };
       for (const context of [embedded, { ...embedded, embedded: false }])
         assert.equal(workspaceData(catalogue, context, entry).base, base);
     }

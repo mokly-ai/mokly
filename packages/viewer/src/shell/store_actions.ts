@@ -2,7 +2,7 @@
 
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
-import type { ViewerSelection } from "../viewer/types.js";
+import type { ViewerSelection } from "../host/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";

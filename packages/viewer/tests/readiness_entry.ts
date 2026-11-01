@@ -3,7 +3,7 @@ import type {
   CatalogueReadModel,
   EntryDetailV4,
 } from "../src/catalogue/types.js";
-import type { InstanceRef } from "../src/viewer/types.js";
+import type { InstanceRef } from "../src/host/types.js";
 
 import {
   type EvidenceFrames,

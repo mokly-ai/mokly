@@ -8,6 +8,7 @@ import {
 } from "../src/catalogue/detail_fences.js";
 import type { ShellCatalogueView } from "../src/catalogue/scoped_types.js";
 import { shellCatalogueModel } from "../src/catalogue/shell_model.js";
+import type { LoadedIndex } from "../src/catalogue/sources.js";
 import type {
   CatalogueReadModel,
   CatalogueUsage,
@@ -15,18 +16,17 @@ import type {
 } from "../src/catalogue/types.js";
 import { postMessageAdapter } from "../src/client/post_message_adapter.js";
 import { sameOriginAdapter } from "../src/client/same_origin_adapter.js";
-import { ShellStoreProvider } from "../src/shell/store.js";
-import { viewRoute } from "../src/shell/store_initial.js";
-import { viewerShellEnvironment } from "../src/viewer/environment.js";
-import type { MarkerPlacement } from "../src/viewer/marker_store.js";
-import { viewerView } from "../src/viewer/projection.js";
-import type { LoadedIndex } from "../src/viewer/sources.js";
 import type {
   InstanceRef,
   MarkerState,
   ViewerMarker,
   ViewerSelection,
-} from "../src/viewer/types.js";
+} from "../src/host/types.js";
+import type { MarkerPlacement } from "../src/shell/marker_store.js";
+import { ShellStoreProvider } from "../src/shell/store.js";
+import { hostRoute } from "../src/shell/store_host_routes.js";
+import { viewRoute } from "../src/shell/store_initial.js";
+import { viewerShellEnvironment } from "../src/viewer/environment.js";
 
 import { evidenceAdapter } from "./evidence_frame_adapter.js";
 import { EvidenceRuntime } from "./evidence_runtime.js";
@@ -167,7 +167,7 @@ export function startEvidenceHarness(
       initialDetails={details}
       interactive
       route={(catalogue) =>
-        viewRoute(catalogue, viewerView(catalogue, selection))
+        viewRoute(catalogue, hostRoute(catalogue, selection).view)
       }
     >
       <EvidenceRuntime

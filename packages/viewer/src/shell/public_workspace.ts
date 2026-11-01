@@ -13,13 +13,8 @@ import type {
 import { isComponentVariant } from "../catalogue/variants.js";
 import { generatedViews } from "../components/views.js";
 import { keepsComponentRecord } from "../review/shared_impact.js";
-import type { Catalogue } from "../shell/catalogue.js";
-import type {
-  EntryStatus,
-  WorkspaceData,
-  WorkspaceVariant,
-} from "../shell/workspace_data.js";
 
+import type { Catalogue } from "./catalogue.js";
 import { publicComparedEntry } from "./public_compared.js";
 import { shownReasons } from "./public_reasons.js";
 import { publicParent, publicVariants } from "./public_variants.js";
@@ -28,6 +23,11 @@ import {
   publishedResourceEvidence,
   publishedViewStatesBySelection,
 } from "./public_workspace_views.js";
+import type {
+  EntryStatus,
+  WorkspaceData,
+  WorkspaceVariant,
+} from "./workspace_data.js";
 
 const statuses = {
   added: "Added",

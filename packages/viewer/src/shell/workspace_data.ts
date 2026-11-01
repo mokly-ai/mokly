@@ -12,10 +12,10 @@ import type {
   EntryChangeReason,
   ViewResourceEvidence,
 } from "../review/types.js";
-import { publicWorkspace } from "../viewer/public_workspace.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
+import { publicWorkspace } from "./public_workspace.js";
 import type { EntryStatus, ViewStatesBySelection } from "./view_status.js";
 import type { WorkspaceEntry } from "./workspace_entry.js";
 import type { WorkspaceVariant } from "./workspace_variants.js";

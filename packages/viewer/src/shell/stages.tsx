@@ -3,11 +3,11 @@
 // are sandboxed without script permission.
 
 import type { GeneratedComponentView } from "../components/views.js";
-import { routedEntries } from "../viewer/selection.js";
 
 import type { Catalogue } from "./catalogue.js";
 import { useRouteDelivery } from "./data_context.js";
 import { PublicStage } from "./public_stage.js";
+import { routedEntries } from "./selection.js";
 import { StageDelivery } from "./stage_delivery.js";
 import type { RouteTarget } from "./target.js";
 

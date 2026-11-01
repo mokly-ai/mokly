@@ -8,15 +8,15 @@ import type {
   ShellCatalogueScreen,
   ShellCatalogueView,
 } from "../src/catalogue/scoped_types.js";
+import type { LoadedIndex } from "../src/catalogue/sources.js";
 import type { CatalogueUsage } from "../src/catalogue/types.js";
-import { ShellFrameMarkerLayer } from "../src/shell/frame_marker_layer.js";
-import { ViewerHostBridge } from "../src/viewer/host_bridge.js";
-import type { LoadedIndex } from "../src/viewer/sources.js";
 import type {
   MoklyViewerHandle,
   MoklyViewerProps,
   ViewerMarker,
-} from "../src/viewer/types.js";
+} from "../src/host/types.js";
+import { ShellFrameMarkerLayer } from "../src/shell/frame_marker_layer.js";
+import { ViewerHostBridge } from "../src/viewer/host_bridge.js";
 
 import type {
   EvidenceRuntimeProbe,

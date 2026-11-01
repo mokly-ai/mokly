@@ -21,32 +21,6 @@ export interface Catalogue {
   previousPaths: ReadonlyMap<string, string>;
 }
 
-/** Resolve an entry identity from the current and retained records. */
-export function catalogueRouteEntry(
-  catalogue: Catalogue,
-  id: string,
-  kind?: ShellCatalogueRoutedEntry["kind"],
-): ShellCatalogueRoutedEntry | undefined {
-  const entry = catalogue.byPath.get(id);
-  return entry && (kind === undefined || entry.kind === kind)
-    ? entry
-    : undefined;
-}
-
-/** Resolve an exact historical selection, or a current path. */
-export function catalogueSelectionEntry(
-  catalogue: Catalogue,
-  entryId: string,
-  snapshotId?: string,
-): ShellCatalogueRoutedEntry | undefined {
-  if (snapshotId !== undefined)
-    return catalogue.removedEntries.find(
-      (record) =>
-        record.entry.path === entryId && record.snapshotId === snapshotId,
-    )?.entry;
-  return catalogue.byPath.get(entryId);
-}
-
 /** Build navigation once from the validated generated records and index tree. */
 export function createCatalogue(model: ShellCatalogueReadModel): Catalogue {
   const entries = [

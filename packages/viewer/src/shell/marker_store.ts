@@ -1,4 +1,4 @@
-import type { MarkerState } from "./types.js";
+import type { MarkerState } from "../host/types.js";
 
 export interface MarkerRect {
   left: number;

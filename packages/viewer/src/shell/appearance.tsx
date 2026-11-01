@@ -8,7 +8,7 @@
 
 import { AppearanceSelector } from "@mokly/ui/appearance-selector";
 
-import type { ViewerTheme } from "../viewer/types.js";
+import type { ViewerTheme } from "../host/types.js";
 
 import { useShellIdentifier } from "./identifier_context.js";
 import { VIEW_CHANGED_IDS, VIEW_CHANGED_TEXT } from "./view_marks.js";

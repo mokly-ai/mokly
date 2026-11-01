@@ -173,19 +173,19 @@ Depends on: 3
 
 Depends on: 3
 
-- [ ] Merge the Escape handling, the link eligibility, the route
+- [x] Merge the Escape handling, the link eligibility, the route
       installation, and the outside click of `shell/store_browser_*.ts` and
       `shell/store_host_routes.ts`, under design call 1.
-- [ ] Use one resolver from a selection to an entry, in place of
+- [x] Use one resolver from a selection to an entry, in place of
       `shell/catalogue.ts:56-67`, `catalogue/entry_selection.ts:99-125`, and
       `shell/routes.ts:31-60`.
-- [ ] Use one helper each for the Light fallback, rectangle intersection,
+- [x] Use one helper each for the Light fallback, rectangle intersection,
       point-in-box tests, frame cleanup, `sameQuery`, and the object index
       source.
-- [ ] Remove the import cycle between `shell/` and `viewer/`.
-- [ ] Move each test that uses an internal that this milestone deletes to
+- [x] Remove the import cycle between `shell/` and `viewer/`.
+- [x] Move each test that uses an internal that this milestone deletes to
       the public path, with every assertion.
-- [ ] Record each difference that design call 1 keeps as a follow-up item.
+- [x] Record each difference that design call 1 keeps as a follow-up item.
 
 ## Milestone 6: Package props for viewer state
 

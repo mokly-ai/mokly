@@ -4,30 +4,26 @@ import { useCallback, useLayoutEffect, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
 import type { FrameNavigation } from "../client/frame_adapter.js";
+import type { ViewerEvents, ViewerSelection } from "../host/types.js";
 import { folderTitleLookup } from "../registry/folder_titles.js";
-import {
-  mergeSelection,
-  sameSelection,
-  selectionQuery,
-} from "../viewer/selection.js";
-import type { ViewerEvents, ViewerSelection } from "../viewer/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import type { NavSectionNode } from "./nav_tree.js";
 import { routeFromUrl, type ShellRoute } from "./routes.js";
+import { mergeSelection, sameSelection, selectionQuery } from "./selection.js";
 import type { ShellBrowserActions } from "./store_browser.js";
 import { withFilterSelection } from "./store_filters.js";
 import {
   announceNavigation,
   frameMissState,
   hostClick,
-  hostKeyDown,
   hostRoute,
   hostSelectionRouteChanged,
   type PendingNavigation,
   withHostRoute,
 } from "./store_host_routes.js";
+import { shellKeyDown } from "./store_interactions.js";
 import type { ShellState } from "./store_state.js";
 
 /** Host behavior needed by an application-owned shell root. */
@@ -280,7 +276,7 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       );
     },
     onShellKeyDown(event) {
-      hostKeyDown(event, input.setState, stateRef.current);
+      shellKeyDown(event, input.setState, stateRef.current);
     },
     openFrame(href, target) {
       const environment = environmentRef.current;

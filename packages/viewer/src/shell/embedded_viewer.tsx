@@ -5,19 +5,20 @@ import type { ReactNode, RefObject } from "react";
 
 import { EmbeddedLayout } from "@mokly/ui/embedded-layout";
 
-import { normalizeTheme } from "../viewer/theme.js";
 import type {
   ViewerEvents,
   ViewerMarker,
   ViewerSlots,
   ViewerTheme,
-} from "../viewer/types.js";
+} from "../host/types.js";
 
 import { ShellFrameMarkerLayer } from "./frame_marker_layer.js";
 import { useShellFragment, useShellIdentifier } from "./identifier_context.js";
 import { CatalogueNav } from "./nav.js";
 import { useNavigationBounds } from "./nav_resize.js";
 import { useShellStore } from "./store_context.js";
+import { useShellBindings } from "./store_interactions.js";
+import { normalizeTheme } from "./theme.js";
 import { TopBar } from "./top_bar.js";
 import { ShellMain } from "./views.js";
 
@@ -47,6 +48,7 @@ export function EmbeddedViewerShell({
   const mainFragment = useShellFragment("mb-main");
   const statusId = useShellIdentifier("mb-status");
   useNavigationBounds(root);
+  useShellBindings(root, store);
   return (
     <EmbeddedLayout
       announcement={store.state.announcement}

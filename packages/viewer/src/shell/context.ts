@@ -1,5 +1,5 @@
 import type { ChangesStatus } from "../catalogue/types.js";
-import type { ViewerTheme } from "../viewer/types.js";
+import type { ViewerTheme } from "../host/types.js";
 
 /** Route-independent context shared by every view of one shell root. */
 export interface ShellContext {

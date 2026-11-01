@@ -7,9 +7,10 @@ import type {
 } from "../catalogue/scoped_types.js";
 import type { ViewResourceEvidence } from "../review/types.js";
 import { viewEvidenceReasons } from "../review/view_evidence.js";
-import type { ChangedView } from "../shell/view_marks.js";
-import type { ViewState, ViewStatesBySelection } from "../shell/view_status.js";
-import type { ChangedViewsBySelection } from "../shell/workspace_views_data.js";
+
+import type { ChangedView } from "./view_marks.js";
+import type { ViewState, ViewStatesBySelection } from "./view_status.js";
+import type { ChangedViewsBySelection } from "./workspace_views_data.js";
 
 /** Published per-view comparisons name the same changed views the shell derives. */
 function publishedChangedViews(

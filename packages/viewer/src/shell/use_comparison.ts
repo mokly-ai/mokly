@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 
-import { DeploymentChangedError } from "../viewer/sources.js";
+import { DeploymentChangedError } from "../catalogue/sources.js";
 
 import { useComparisonEnvironment } from "./comparison_context.js";
 import { useComparisonIntent } from "./comparison_intent.js";

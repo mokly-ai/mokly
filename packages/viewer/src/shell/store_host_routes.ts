@@ -1,25 +1,22 @@
 /** Pure route projection and input handling for application-owned shell roots. */
 
-import type { Dispatch, SetStateAction } from "react";
-
 import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
 import type { FrameNavigation } from "../client/frame_adapter.js";
-import type { ViewerSelection } from "../viewer/types.js";
+import type { ViewerSelection } from "../host/types.js";
+import { eligibleAnchor } from "../navigation/activation.js";
 
-import { catalogueSelectionEntry, type Catalogue } from "./catalogue.js";
+import type { Catalogue } from "./catalogue.js";
 import { changesActivation } from "./changes_activation.js";
 import type { ShellContext } from "./context.js";
-import { disclosurePath } from "./nav_model.js";
 import type { NavSectionNode } from "./nav_tree.js";
 import { routeFromUrl, type ShellRoute } from "./routes.js";
 import {
   sameShellRoute,
   type ShellClickEvent,
-  type ShellKeyEvent,
 } from "./store_browser_routes.js";
 import type { EmbeddedShellEnvironment } from "./store_host.js";
-import { openDisclosures, type ShellState } from "./store_state.js";
-import { viewTitle } from "./view_title.js";
+import { installShellRoute } from "./store_routes.js";
+import type { ShellState } from "./store_state.js";
 
 export interface PendingNavigation {
   fragment?: string;
@@ -33,11 +30,11 @@ export function hostRoute(
   fragment?: string,
 ): ShellRoute {
   const entry = selection.screenPath
-    ? catalogueSelectionEntry(
-        catalogue,
+    ? resolveCatalogueSelection(
+        catalogue.publicModel,
         selection.screenPath,
         selection.snapshotId,
-      )
+      )?.entry
     : undefined;
   const view = entry
     ? { kind: "target" as const, target: { kind: "entry" as const, entry } }
@@ -81,27 +78,7 @@ export function withHostRoute(
   sections: readonly NavSectionNode[],
   catalogue: Catalogue,
 ): ShellState {
-  const path =
-    route.view.kind === "target"
-      ? disclosurePath(sections, route.view.target.entry.path)
-      : [];
-  return {
-    ...state,
-    announcement:
-      route.view.kind === "target"
-        ? `Loaded ${viewTitle(catalogue, route.view)}`
-        : "Loaded Mokly",
-    comparisonIntent: route.comparison === "side",
-    disclosures: openDisclosures(state.disclosures, path),
-    drawerOpen: false,
-    expandedFrame: undefined,
-    filterBaseline: state.filterBaseline
-      ? openDisclosures(state.filterBaseline, path)
-      : undefined,
-    route,
-    routeInstallation: state.routeInstallation + 1,
-    tagPickerOpen: false,
-  };
+  return installShellRoute(state, route, catalogue, sections, "embedded");
 }
 
 export function announceNavigation(
@@ -173,39 +150,5 @@ function ownedCatalogueUrl(
       url.origin === ownerDocument.location.origin) &&
     url.hash === "" &&
     (url.pathname === "/" || url.pathname.startsWith("/view/"))
-  );
-}
-
-export function hostKeyDown(
-  event: ShellKeyEvent,
-  setState: Dispatch<SetStateAction<ShellState>>,
-  state: ShellState,
-): void {
-  if (event.key !== "Escape") return;
-  if (state.tagPickerOpen) {
-    event.preventDefault();
-    setState((current) => ({ ...current, tagPickerOpen: false }));
-    const root = event.currentTarget;
-    if (root instanceof Element)
-      root.querySelector<HTMLElement>("[data-mokly-tag-toggle]")?.focus();
-  } else if (state.expandedFrame) {
-    event.preventDefault();
-    setState((current) => ({ ...current, expandedFrame: undefined }));
-  }
-}
-
-function eligibleAnchor(
-  event: ShellClickEvent,
-  anchor: HTMLAnchorElement,
-): boolean {
-  return (
-    !event.defaultPrevented &&
-    event.button === 0 &&
-    !event.metaKey &&
-    !event.ctrlKey &&
-    !event.shiftKey &&
-    !event.altKey &&
-    !anchor.hasAttribute("download") &&
-    (!anchor.target || anchor.target === "_self")
   );
 }

@@ -17,11 +17,11 @@ import type {
 } from "../src/catalogue/types.js";
 import type { Viewport } from "../src/data/axes.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
+import { publicWorkspace } from "../src/shell/public_workspace.js";
 import type { UsageLink } from "../src/shell/workspace_data.js";
 import { selectedVariant } from "../src/shell/workspace_selection.js";
 import { usageHref } from "../src/shell/workspace_usage.js";
 import { resolveWorkspaceView } from "../src/shell/workspace_views.js";
-import { publicWorkspace } from "../src/viewer/public_workspace.js";
 
 import {
   detailPairs,

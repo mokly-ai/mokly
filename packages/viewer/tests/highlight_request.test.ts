@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import type { CatalogueUsage } from "../src/catalogue/types.js";
 import type { MountedFrame } from "../src/client/frame_adapter.js";
+import type { InstanceRef } from "../src/host/types.js";
 import {
   frameHasInstance,
   frameInstanceRef,
@@ -10,7 +11,6 @@ import {
   matchFrameInstances,
 } from "../src/shell/frame_instances.js";
 import type { ShellFrameSession } from "../src/shell/frame_registry.js";
-import type { InstanceRef } from "../src/viewer/types.js";
 
 const alpha = "a".repeat(64);
 const beta = "b".repeat(64);

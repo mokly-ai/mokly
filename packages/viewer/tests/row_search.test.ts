@@ -16,9 +16,9 @@ import {
   type NavNode,
   type NavSectionNode,
 } from "../src/shell/nav_tree.js";
+import { shellContext } from "../src/shell/projection.js";
 import type { ShellRoute } from "../src/shell/routes.js";
-import { viewerContext } from "../src/viewer/projection.js";
-import { defaultSelection, revealSelection } from "../src/viewer/selection.js";
+import { defaultSelection, revealSelection } from "../src/shell/selection.js";
 
 import { shellModelFixture } from "./catalogue_v9_fixture.js";
 import {
@@ -178,7 +178,7 @@ test("Changes activation searches a removed variant as its row does", () => {
     ["launchpad", true],
   ] as const) {
     const selection = { ...defaultSelection, view: "changes" as const, search };
-    const changed = viewerContext(model, selection);
+    const changed = shellContext(model, selection);
     assert.deepEqual(changed.changedEntries, [removed]);
     assert.equal(navLeafVisible(row!, selection, changed), opens, search);
     const activated = changesActivation(catalogue, changed, selection, route);

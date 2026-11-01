@@ -1,16 +1,12 @@
 /** URL-derived route state for the standalone shell. */
 
-import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
+import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
 import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
 import { isLogicalFragment } from "../navigation/logical.js";
 import { parseViewHref, viewHref } from "../navigation/routes.js";
 import { parseViewAxes } from "../navigation/view_axes.js";
 
-import {
-  catalogueRouteEntry,
-  catalogueSelectionEntry,
-  type Catalogue,
-} from "./catalogue.js";
+import type { Catalogue } from "./catalogue.js";
 import { toRouteTarget } from "./target.js";
 import type { ShellView } from "./views.js";
 
@@ -27,39 +23,22 @@ export interface ShellRoute {
 
 /** Resolve a browser URL strictly against the accepted catalogue snapshot. */
 export function routeFromUrl(catalogue: Catalogue, url: URL): ShellRoute {
-  const entry = routeEntry(catalogue, url.pathname);
+  const identity = parseViewHref(url.pathname);
   const snapshots = url.searchParams.getAll("snapshot");
-  const historical = entry
-    ? catalogue.removedEntries.find(
-        ({ entry: candidate }) =>
-          candidate.path === entry.path && candidate.kind === entry.kind,
-      )
-    : undefined;
   const requestedSnapshot =
     snapshots.length === 1 && isHistoricalSnapshotId(snapshots[0])
       ? snapshots[0]
       : undefined;
-  const currentEntry = entry
-    ? catalogue.entries.some(
-        (candidate) =>
-          candidate.path === entry.path && candidate.kind === entry.kind,
-      )
-    : false;
-  const snapshot =
-    historical &&
-    ((!currentEntry && snapshots.length === 0) ||
-      requestedSnapshot === historical.snapshotId)
-      ? (requestedSnapshot ?? historical.snapshotId)
+  const selected =
+    identity && (snapshots.length === 0 || requestedSnapshot !== undefined)
+      ? resolveCatalogueSelection(
+          catalogue.publicModel,
+          identity,
+          requestedSnapshot,
+        )
       : undefined;
-  const validSnapshot = historical
-    ? snapshots.length === 0 || snapshot !== undefined
-    : snapshots.length === 0;
-  const selectedEntry =
-    entry && snapshot
-      ? catalogueSelectionEntry(catalogue, entry.path, snapshot)
-      : entry;
-  const target =
-    selectedEntry && validSnapshot ? toRouteTarget(selectedEntry) : undefined;
+  const snapshot = selected?.snapshotId;
+  const target = selected && toRouteTarget(selected.entry);
   const view = target
     ? { kind: "target" as const, target }
     : url.pathname === "/" && snapshots.length === 0
@@ -114,14 +93,6 @@ export function routeDocumentKey(url: URL): string {
 /** Screen selection represented by a resolved route. */
 export function routeScreenId(route: ShellRoute): string | null {
   return route.view.kind === "target" ? route.view.target.entry.path : null;
-}
-
-function routeEntry(
-  catalogue: Catalogue,
-  pathname: string,
-): ShellCatalogueRoutedEntry | undefined {
-  const identity = parseViewHref(pathname);
-  return identity ? catalogueRouteEntry(catalogue, identity) : undefined;
 }
 
 function decodePath(value: string): string | undefined {

@@ -14,6 +14,7 @@ import {
   documentRangeRecords,
   type AuthenticatedRanges,
 } from "./document_ranges.js";
+import { intersectRectangles, type CoordinateRect } from "./geometry.js";
 import { localFrameAccess } from "./same_origin_access.js";
 import { normalizedHtmlPath } from "./same_origin_identity.js";
 
@@ -52,29 +53,17 @@ export function authenticateRanges(
   }
 }
 
-interface Box {
-  left: number;
-  top: number;
-  right: number;
-  bottom: number;
-}
-function intersect(a: Box, b: Box): Box | undefined {
-  const box = {
-    left: Math.max(a.left, b.left),
-    top: Math.max(a.top, b.top),
-    right: Math.min(a.right, b.right),
-    bottom: Math.min(a.bottom, b.bottom),
-  };
-  return box.right > box.left && box.bottom > box.top ? box : undefined;
-}
-function clipAncestors(box: Box, node: Node): Box | undefined {
+function clipAncestors(
+  box: CoordinateRect,
+  node: Node,
+): CoordinateRect | undefined {
   const [left, top, right, bottom] = clipNode(node, [
     box.left,
     box.top,
     box.right,
     box.bottom,
   ]);
-  return intersect(box, { left, top, right, bottom });
+  return intersectRectangles(box, { left, top, right, bottom });
 }
 /** Read each actual range without inserting wrappers or changing consumer styles. */
 export function rangeBounds(
@@ -93,7 +82,7 @@ export function rangeBounds(
     if (!keys.has(key)) continue;
     for (const range of values) {
       for (const { rect, node } of componentNodeRects(range)) {
-        let box = intersect(rect, {
+        let box = intersectRectangles(rect, {
           left: 0,
           top: 0,
           right: frame.clientWidth,
@@ -129,10 +118,12 @@ export function rangeBounds(
       ),
   );
 }
-export function visibleFrameBox(frame: HTMLIFrameElement): Box | undefined {
+export function visibleFrameBox(
+  frame: HTMLIFrameElement,
+): CoordinateRect | undefined {
   const win = frame.ownerDocument.defaultView!;
   const bounds = frame.getBoundingClientRect();
-  const viewport = intersect(bounds, {
+  const viewport = intersectRectangles(bounds, {
     left: 0,
     top: 0,
     right: win.innerWidth,

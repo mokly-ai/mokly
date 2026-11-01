@@ -3,17 +3,17 @@
 import { useEffect, useLayoutEffect } from "react";
 import type { MutableRefObject, RefObject } from "react";
 
+import { runCleanup } from "../client/cleanup.js";
 import type { FrameEvent } from "../client/frame_adapter.js";
+import type { PickEnd } from "../host/types.js";
 import type { ShellInspectionController } from "../shell/frame_inspection_controller.js";
 import type {
   ShellFrameRegistry,
   ShellFrameSession,
 } from "../shell/frame_registry.js";
 
-import { runCleanup } from "./cleanup.js";
 import { deferHostBridgeFailure } from "./host_bridge_failure.js";
 import type { Picking } from "./picking.js";
-import type { PickEnd } from "./types.js";
 
 interface HostBridgeLifecycleInput {
   active: MutableRefObject<boolean>;

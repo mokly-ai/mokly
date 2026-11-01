@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { FrameError } from "../src/client/frame_error.js";
-import { viewerFailures } from "../src/viewer/failures.js";
 import {
   InspectionOwnership,
   ObsoleteInspection,
-} from "../src/viewer/inspection_work.js";
+} from "../src/client/inspection_work.js";
+import { viewerFailures } from "../src/host/failures.js";
 
 for (const fail of [true, false]) {
   test(`obsolete ${fail ? "failure" : "success"} settles before a custom adapter finishes`, async () => {

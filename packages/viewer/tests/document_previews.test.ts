@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { DeliveryFetchError } from "../src/catalogue/sources.js";
 import { readPreviewDescriptor } from "../src/previews/descriptor.js";
 import { previewEndpoint, requestPreview } from "../src/previews/request.js";
-import { DeliveryFetchError } from "../src/viewer/sources.js";
 
 import { indexFixture, rawDetailFixtures } from "./catalogue_v9_fixture.js";
 

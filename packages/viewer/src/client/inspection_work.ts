@@ -1,4 +1,4 @@
-import { FrameError } from "../client/frame_error.js";
+import { FrameError } from "./frame_error.js";
 
 /** Internal cancellation is distinct from a current adapter reporting disposal. */
 export class ObsoleteInspection extends FrameError {

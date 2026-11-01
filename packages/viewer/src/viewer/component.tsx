@@ -7,8 +7,10 @@ import {
   VERSION_ERROR_MESSAGE,
 } from "../catalogue/version_error.js";
 import { sameOriginAdapter } from "../client/same_origin_adapter.js";
+import type { MoklyViewerProps } from "../host/types.js";
 import { memoryScrollTogether } from "../shell/comparison_scroll_preference.js";
 import { useFocusAfter } from "../shell/focus_after.js";
+import { normalizeTheme } from "../shell/theme.js";
 
 import {
   awaitHostBridgeFailureBarrier,
@@ -16,8 +18,6 @@ import {
 } from "./host_bridge_failure.js";
 import { useIndexSource } from "./index_source.js";
 import { ReadyViewer } from "./ready.js";
-import { normalizeTheme } from "./theme.js";
-import type { MoklyViewerProps } from "./types.js";
 
 /** Mount a validated catalogue with host-owned slots and isolated runtime state. */
 export function MoklyViewer(props: MoklyViewerProps) {

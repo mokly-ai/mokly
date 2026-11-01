@@ -1,0 +1,32 @@
+# The two roots announce non-entry routes differently
+
+- **Severity:** Low. **Likelihood:** Common. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-01, from the branch `calummoore/mokly-viewer-responsibilities`: Milestone 5 of the plan for the viewer's leftover layers kept this difference under its design call 1.
+- **Location:** `packages/viewer/src/shell/store_routes.ts:20-30`.
+- **Reason:** No protocol doc states the text, so the merged route installer kept each root's current text.
+
+- **Source:** Implementation.
+- **Category:** UX wording.
+- **Terms:**
+  - **Standalone root:** the Browse shell that Serve and the static build deliver as their whole page.
+  - **Embedded root:** the Browse shell that a React host renders with the `MoklyViewer` component.
+  - **Route announcement:** the live-region text that a screen reader reads after a route change.
+- **Background:**
+  - `docs/protocol/mokly-component-design.md:18-19` gives entry announcements such as `Loaded Default · Action · Mokly`.
+  - Both roots now install routes through one function in `packages/viewer/src/shell/store_routes.ts`. It keeps the text of each root behind its delivery argument.
+- **Problem:**
+  - For a missing route, the standalone root announces "Loaded Not found · Mokly", and the embedded root announces "Loaded Mokly".
+  - For the home and missing views, the standalone root uses the catalogue title, so the title "Catalogue A" gives "Loaded Catalogue A" and "Loaded Not found · Catalogue A". The embedded root always says "Loaded Mokly".
+- **Impact if no action:** A screen-reader user hears a different and less exact text in an embedded viewer.
+- **Root question:** What does a screen reader hear when a root shows the home view or a missing route?
+- **Options:**
+  - **A.** Use the standalone text in both roots: the catalogue title, with "Not found ·" before it for a missing route. Add the rule to the protocol. Effort: Small.
+  - **B.** Use the embedded text in both roots. Effort: Small.
+  - **C.** Keep both texts, and state the difference in the protocol. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** A, because one rule then serves both roots and names the destination.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/root-hash-links.md` and `plans/follow-ups/root-missing-link-destination.md`: other differences between the two roots that the same change kept.
+- **Recommendation:** A. It tells the reader where they are, in both roots.
+- **Action:** ask the user, because the fix sets text that no protocol doc states.

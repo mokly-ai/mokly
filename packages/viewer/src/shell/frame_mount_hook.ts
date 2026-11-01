@@ -10,11 +10,11 @@ import {
 import type { RefObject } from "react";
 
 import type { CatalogueUsage } from "../catalogue/types.js";
+import { runCleanup } from "../client/cleanup.js";
 import type { FrameAdapter, FrameEvent } from "../client/frame_adapter.js";
 import { FrameError } from "../client/frame_error.js";
 import { cancelFrameMount } from "../client/frame_mount.js";
 
-import { runFrameCleanup } from "./frame_cleanup.js";
 import { mountedFrameReadiness } from "./frame_readiness.js";
 import {
   type ShellFrameIdentity,
@@ -116,7 +116,7 @@ export function useMountedShellFrame(input: MountedFrameInput): {
       })
       .then(async (mounted) => {
         if (controller.signal.aborted || active.current !== session) {
-          runFrameCleanup([
+          runCleanup([
             () => mounted.dispose(),
             () => cancelFrameMount(element),
           ]);
@@ -189,7 +189,7 @@ function disposeSession(
   active: RefObject<ActiveSession | undefined>,
 ): void {
   if (active.current === session) active.current = undefined;
-  runFrameCleanup([
+  runCleanup([
     () => session.rejectReady(new FrameError("disposed")),
     () => session.controller.abort(),
     () => session.unsubscribe?.(),

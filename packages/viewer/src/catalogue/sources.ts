@@ -1,14 +1,14 @@
 /** Index and detail sources and the fetch rules of the shell delivery contract. */
 
-import { DEPLOYMENT_PATH } from "../catalogue/delivery_paths.js";
-import { readDeploymentFile } from "../catalogue/deployment_reader.js";
-import { readEntryDetail } from "../catalogue/detail_reader.js";
-import { readCatalogueIndex } from "../catalogue/index_reader.js";
+import { DEPLOYMENT_PATH } from "./delivery_paths.js";
+import { readDeploymentFile } from "./deployment_reader.js";
+import { readEntryDetail } from "./detail_reader.js";
+import { readCatalogueIndex } from "./index_reader.js";
 import type {
   CatalogueReadModel,
   DeploymentFileV1,
   EntryDetailV4,
-} from "../catalogue/types.js";
+} from "./types.js";
 
 /** The catalogue index v9 as an object, or its absolute HTTP(S) URL. */
 export type IndexSource = CatalogueReadModel | string | URL;
@@ -126,14 +126,7 @@ export async function loadIndexSource(
   signal: AbortSignal,
   fetchImpl?: JsonFetch,
 ): Promise<LoadedIndex> {
-  if (typeof source === "object" && !(source instanceof URL)) {
-    if (baseUrl === undefined)
-      throw new DeliveryFetchError("The catalogue needs its artifact address.");
-    return {
-      index: readCatalogueIndex(source),
-      root: new URL("/", sourceUrl(baseUrl)),
-    };
-  }
+  if (isObjectSource(source)) return readObjectSource(source, baseUrl);
   if (baseUrl !== undefined)
     throw new DeliveryFetchError(
       "Only a catalogue object accepts a base address.",
@@ -155,4 +148,24 @@ export async function loadDetailResult(
   if (url.origin !== root.origin) throw new DeliveryFetchError();
   const { value } = await fetchJson(url, signal, fetchImpl);
   return readEntryDetail(value);
+}
+
+/** An index object can validate synchronously before a React effect starts. */
+export function isObjectSource(
+  source: IndexSource,
+): source is CatalogueReadModel {
+  return typeof source === "object" && !(source instanceof URL);
+}
+
+/** The object-source boundary used by both immediate and asynchronous loading. */
+export function readObjectSource(
+  source: CatalogueReadModel,
+  baseUrl: string | URL | undefined,
+): LoadedIndex {
+  if (baseUrl === undefined)
+    throw new DeliveryFetchError("The catalogue needs its artifact address.");
+  return {
+    index: readCatalogueIndex(source),
+    root: new URL("/", sourceUrl(baseUrl)),
+  };
 }

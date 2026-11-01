@@ -22,7 +22,7 @@ import type { ShellContext } from "./context.js";
 import { BrowserFrame } from "./frames.js";
 import { SnapshotFrame } from "./preview_frame.js";
 import { PreviewUnavailable } from "./preview_unavailable.js";
-import { documentLightOnly } from "./scheme_fallback.js";
+import { schemeValue, documentLightOnly } from "./scheme_fallback.js";
 import { useOptionalShellStore } from "./store_context.js";
 import { useRemovedPreview } from "./use_removed_preview.js";
 
@@ -133,9 +133,11 @@ export function ReadyPreview(props: {
   if (content.kind === "page" || content.kind === "document") {
     const view =
       content.kind === "document"
-        ? (content.views.find(
-            (view) => view.colorScheme === props.colorScheme,
-          ) ?? content.views[0]!)
+        ? schemeValue(
+            props.colorScheme,
+            content.views[0]!,
+            content.views.find((view) => view.colorScheme === "dark"),
+          )
         : { url: content.url, colorScheme: "light" as const };
     const presentation = presentationFor(props.presentations, view.url);
     if (!presentation) return <PreviewUnavailable retry={props.retry} />;
@@ -150,14 +152,15 @@ export function ReadyPreview(props: {
       ? (["mobile", "desktop"] as const)
       : ([props.viewport] as const);
   const frames = viewports.map((viewport) => {
-    const view =
-      content.views.find(
-        (item) =>
-          item.viewport === viewport && item.colorScheme === props.colorScheme,
-      ) ??
+    const view = schemeValue(
+      props.colorScheme,
       content.views.find(
         (item) => item.viewport === viewport && item.colorScheme === "light",
-      );
+      ),
+      content.views.find(
+        (item) => item.viewport === viewport && item.colorScheme === "dark",
+      ),
+    );
     if (!view) return <PreviewNotCaptured key={viewport} viewport={viewport} />;
     const presentation = presentationFor(props.presentations, view.url);
     return presentation ? (

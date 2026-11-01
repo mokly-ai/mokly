@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { detailKey } from "../src/catalogue/detail_fences.js";
 import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
-import { publicWorkspace } from "../src/viewer/public_workspace.js";
+import { publicWorkspace } from "../src/shell/public_workspace.js";
 
 import {
   detailPairs,

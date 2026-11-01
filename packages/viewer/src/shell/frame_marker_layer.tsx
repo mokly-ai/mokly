@@ -2,14 +2,14 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { runCleanup } from "../viewer/cleanup.js";
-import { viewerFailures } from "../viewer/failures.js";
-import { MarkerLayer } from "../viewer/marker_layer.js";
-import { MarkerStore } from "../viewer/marker_store.js";
-import type { ViewerEvents, ViewerMarker } from "../viewer/types.js";
+import { runCleanup } from "../client/cleanup.js";
+import { viewerFailures } from "../host/failures.js";
+import type { ViewerEvents, ViewerMarker } from "../host/types.js";
 
 import { ShellFrameMarkers } from "./frame_markers.js";
 import { useOptionalShellFrameRegistry } from "./frame_registry.js";
+import { MarkerLayer } from "./marker_layer.js";
+import { MarkerStore } from "./marker_store.js";
 
 interface MarkerRuntime {
   dispose(): void;

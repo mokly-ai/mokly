@@ -6,8 +6,8 @@
  * marks the shell root with the same appearance and preview scheme.
  */
 
-import { normalizeTheme, THEME_ATTRIBUTE } from "../viewer/theme.js";
-import type { ViewerTheme } from "../viewer/types.js";
+import type { ViewerTheme } from "../host/types.js";
+import { normalizeTheme, THEME_ATTRIBUTE } from "../shell/theme.js";
 
 import {
   effectiveScheme,

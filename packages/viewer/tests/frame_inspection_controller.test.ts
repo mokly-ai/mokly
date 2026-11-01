@@ -7,12 +7,12 @@ import type {
   FrameAdapter,
   MountedFrame,
 } from "../src/client/frame_adapter.js";
+import type { InstanceRef } from "../src/host/types.js";
 import { ShellInspectionController } from "../src/shell/frame_inspection_controller.js";
 import {
   ShellFrameRegistry,
   type ShellFrameSession,
 } from "../src/shell/frame_registry.js";
-import type { InstanceRef } from "../src/viewer/types.js";
 
 interface Deferred<T> {
   promise: Promise<T>;

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { markerRect, markerStatus } from "../src/viewer/marker_geometry.js";
+import { markerRect, markerStatus } from "../src/shell/marker_geometry.js";
 
 test("marker geometry scales, clips and unions every visible box", () => {
   assert.deepEqual(

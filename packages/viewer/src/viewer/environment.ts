@@ -1,12 +1,11 @@
 /** Explicit browser boundaries for application-owned shell roots. */
 
+import type { LoadedIndex } from "../catalogue/sources.js";
+import { deploymentCheck } from "../catalogue/sources.js";
+import type { ViewerEvents, ViewerSelection } from "../host/types.js";
 import type { ComparisonEnvironment } from "../shell/comparison_context.js";
 import type { ScrollTogetherPreference } from "../shell/comparison_scroll_preference.js";
 import type { EmbeddedShellEnvironment } from "../shell/store_host.js";
-
-import type { LoadedIndex } from "./sources.js";
-import { deploymentCheck } from "./sources.js";
-import type { ViewerEvents, ViewerSelection } from "./types.js";
 
 /** Bind public viewer data to shell selection and navigation behavior. */
 export function viewerShellEnvironment(

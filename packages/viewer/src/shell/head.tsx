@@ -6,8 +6,8 @@ import type { ReactNode } from "react";
 import { ScreenHeader } from "@mokly/ui/screen-header";
 import { SegmentedControl, type Segment } from "@mokly/ui/segmented-control";
 
+import type { ViewerSelection } from "../host/types.js";
 import { viewHref } from "../navigation/routes.js";
-import type { ViewerSelection } from "../viewer/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import {

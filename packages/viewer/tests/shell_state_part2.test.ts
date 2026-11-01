@@ -1,17 +1,20 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { ScreenNavigateEvent } from "../src/host/types.js";
 import { viewHref } from "../src/navigation/routes.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { entryWording } from "../src/shell/entry_wording.js";
 import { targetHead } from "../src/shell/head.js";
 import { catalogueNavSections } from "../src/shell/nav_model.js";
+import { shellContext } from "../src/shell/projection.js";
 import { routeFromUrl } from "../src/shell/routes.js";
 import {
   clearTagTerm,
   parseSearchQuery,
   setTagTerm,
 } from "../src/shell/search_query.js";
+import { defaultSelection } from "../src/shell/selection.js";
 import { withFilterSelection, withRoute } from "../src/shell/store_filters.js";
 import {
   announceNavigation,
@@ -19,9 +22,6 @@ import {
   hostSelectionRouteChanged,
 } from "../src/shell/store_host_routes.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
-import { viewerContext } from "../src/viewer/projection.js";
-import { defaultSelection } from "../src/viewer/selection.js";
-import type { ScreenNavigateEvent } from "../src/viewer/types.js";
 
 import { withoutTreeEntries } from "./catalogue_fixture.js";
 import { catalogue, context, model } from "./shell_state_fixture.js";
@@ -39,7 +39,7 @@ test("bare removed routes announce only published snapshot identity", () => {
     );
     const initial = createInitialShellState(
       candidateCatalogue,
-      viewerContext(candidate, defaultSelection),
+      shellContext(candidate, defaultSelection),
       { view: { kind: "home" } },
       undefined,
     );

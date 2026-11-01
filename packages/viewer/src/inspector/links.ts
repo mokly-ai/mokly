@@ -1,4 +1,5 @@
 import type { FrameNavigation } from "../client/frame_adapter.js";
+import { frameLinkActivation } from "../navigation/activation.js";
 
 import type { InspectorMetadata } from "./metadata.js";
 /** Cache accepted identities once, independently of the portable href or link text. */
@@ -11,9 +12,6 @@ export const inspectorNavigation =
     if (
       !link ||
       link.ownerDocument !== event.currentTarget ||
-      link.hasAttribute("download") ||
-      event.altKey ||
-      (event.type === "click" ? event.button !== 0 : event.button !== 1) ||
       !(
         link instanceof HTMLAnchorElement ||
         link instanceof HTMLAreaElement ||
@@ -21,6 +19,11 @@ export const inspectorNavigation =
       )
     )
       return;
+    const activation = frameLinkActivation(
+      event,
+      link.hasAttribute("download"),
+    );
+    if (!activation) return;
     const index = link.getAttribute("data-mokly-inspector-link")!;
     const item = /^(0|[1-9]\d{0,3})$/.test(index)
       ? metadata.links[Number(index)]
@@ -28,12 +31,7 @@ export const inspectorNavigation =
     return item
       ? {
           ...item,
-          activation:
-            event.type === "auxclick"
-              ? "middle"
-              : event.metaKey || event.ctrlKey || event.shiftKey
-                ? "modified"
-                : "primary",
+          activation,
         }
       : undefined;
   };

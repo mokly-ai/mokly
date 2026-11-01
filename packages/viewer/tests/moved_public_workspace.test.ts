@@ -6,18 +6,18 @@ import { createCatalogue } from "../src/shell/catalogue.js";
 import { catalogueNavSections } from "../src/shell/nav_model.js";
 import { navRowPresentation } from "../src/shell/nav_moves.js";
 import type { NavLeafNode, NavNode } from "../src/shell/nav_tree.js";
+import { shellContext } from "../src/shell/projection.js";
+import { defaultSelection } from "../src/shell/selection.js";
 import {
   workspaceData,
   type WorkspaceData,
 } from "../src/shell/workspace_data.js";
-import { viewerContext } from "../src/viewer/projection.js";
-import { defaultSelection } from "../src/viewer/selection.js";
 
 import { movedComponentModel } from "./moved_component_model.js";
 
 const model = movedComponentModel();
 const catalogue = createCatalogue(model);
-const context = viewerContext(model, defaultSelection);
+const context = shellContext(model, defaultSelection);
 const VARIANTS = [
   "ui/action/primary",
   "ui/action/ghost",

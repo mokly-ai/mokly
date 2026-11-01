@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { viewerFailures } from "../src/viewer/failures.js";
+import { viewerFailures } from "../src/host/failures.js";
+import type { ViewerError } from "../src/host/types.js";
 import { Picking } from "../src/viewer/picking.js";
-import type { ViewerError } from "../src/viewer/types.js";
 
 test("idle cancellation does not clear a separately requested highlight", () => {
   let cleared = 0;

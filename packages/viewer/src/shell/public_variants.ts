@@ -7,11 +7,12 @@ import type {
   ShellCatalogueRoutedEntry,
   ShellCatalogueVariant,
 } from "../catalogue/scoped_types.js";
-import type { Catalogue } from "../shell/catalogue.js";
+
+import type { Catalogue } from "./catalogue.js";
 import {
   branchPoints,
   type EntryResolution,
-} from "../shell/catalogue_branch_point.js";
+} from "./catalogue_branch_point.js";
 
 /**
  * The public record a lookup result names: the current record at the same

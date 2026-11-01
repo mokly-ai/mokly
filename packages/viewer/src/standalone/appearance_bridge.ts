@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import type { ViewerTheme } from "../host/types.js";
 import type { ShellStore } from "../shell/store_context.js";
-import { normalizeTheme, THEME_ATTRIBUTE } from "../viewer/theme.js";
-import type { ViewerTheme } from "../viewer/types.js";
+import { normalizeTheme, THEME_ATTRIBUTE } from "../shell/theme.js";
 
 import { standaloneAppearanceHost } from "./appearance_host.js";
 

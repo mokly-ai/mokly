@@ -3,12 +3,12 @@ import test from "node:test";
 
 import type { ShellCatalogueScreen } from "../packages/viewer/dist/catalogue/scoped_types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
+import { publicWorkspace } from "../packages/viewer/dist/shell/public_workspace.js";
 import {
   changedViewsLabel,
   viewMarks,
   type ChangedView,
 } from "../packages/viewer/dist/shell/view_marks.js";
-import { publicWorkspace } from "../packages/viewer/dist/viewer/public_workspace.js";
 
 import { catalogueModel } from "./helpers/viewer_catalogue.js";
 

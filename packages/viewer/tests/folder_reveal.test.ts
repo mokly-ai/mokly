@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import type { ViewerSelection } from "../src/host/types.js";
 import type { ShellContext } from "../src/shell/context.js";
 import { structuredCrumbTrail } from "../src/shell/crumbs.js";
 import {
@@ -8,8 +9,7 @@ import {
   folderRevealSelection,
 } from "../src/shell/nav_reveal.js";
 import { buildNavSections } from "../src/shell/nav_tree.js";
-import { defaultSelection } from "../src/viewer/selection.js";
-import type { ViewerSelection } from "../src/viewer/types.js";
+import { defaultSelection } from "../src/shell/selection.js";
 
 import {
   treeRecord as entry,

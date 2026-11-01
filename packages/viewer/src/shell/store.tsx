@@ -7,9 +7,7 @@ import type { DetailRequest } from "../catalogue/detail_fences.js";
 import type { CatalogueReadModel, EntryDetailV4 } from "../catalogue/types.js";
 import type { MoklyVersionError } from "../catalogue/version_error.js";
 import type { FrameAdapter } from "../client/frame_adapter.js";
-import { DisplaySelection } from "../viewer/display_context.js";
-import { viewerContext } from "../viewer/projection.js";
-import type { ViewerSelection } from "../viewer/types.js";
+import type { ViewerSelection } from "../host/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import {
@@ -21,9 +19,11 @@ import { initialSnapshot } from "./data_commit.js";
 import { ShellDataBoundary } from "./data_context.js";
 import type { ShellDataSource } from "./data_source.js";
 import { useShellDataStore } from "./data_store.js";
+import { DisplaySelection } from "./display_context.js";
 import { ShellFrameEventRouter } from "./frame_event_router.js";
 import { ShellFrameRegistryProvider } from "./frame_registry.js";
 import { catalogueNavSections } from "./nav_model.js";
+import { shellContext } from "./projection.js";
 import type { ShellRoute } from "./routes.js";
 import { shellStore } from "./store_actions.js";
 import { useShellBrowser } from "./store_browser.js";
@@ -78,7 +78,7 @@ export function ShellStoreProvider({
       initial.catalogue,
       {
         ...context,
-        ...viewerContext(
+        ...shellContext(
           initial.catalogue.publicModel,
           defaultSelectionOf(initialState),
         ),
@@ -103,9 +103,8 @@ export function ShellStoreProvider({
   const model = activeCatalogue.publicModel;
   const activeContext = useMemo(
     () => ({
-      ...viewerContext(model, state.selection),
-      embedded: context.embedded === true,
-      ...(context.theme ? { theme: context.theme } : {}),
+      ...shellContext(model, state.selection),
+      ...context,
     }),
     [context.embedded, context.theme, model, state.selection],
   );
@@ -137,7 +136,7 @@ export function ShellStoreProvider({
   const store = shellStore({
     catalogue: activeCatalogue,
     context: runtimeContext,
-    embedded: embeddedHost !== undefined,
+    embedded: activeContext.embedded === true,
     interactive,
     navigation: embeddedHost ? host : browser,
     propose: host.select,
