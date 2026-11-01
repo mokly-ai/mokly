@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use lightningcss::stylesheet::{ParserOptions, StyleSheet};
+use mokly_source_interface::error;
 use mokly_source_interface::tree::{Node, SourceTree};
 
 use crate::error::{AssetFailure, CssError, Result, TransformFailure};
@@ -28,6 +29,7 @@ pub(crate) struct Preparation<'a> {
     pub(crate) compiler: &'a Compiler,
     root: &'a StylesheetRoot,
     pub(crate) sources: BTreeMap<String, String>,
+    pub(crate) asset_nodes: BTreeMap<PathBuf, error::Result<Option<Node>>>,
     pub(crate) resolutions: BTreeMap<(String, String), String>,
     pub(crate) result: Bundle,
 }
@@ -56,6 +58,7 @@ impl StylesheetBundler for Compiler {
             compiler: self,
             root,
             sources: BTreeMap::new(),
+            asset_nodes: BTreeMap::new(),
             resolutions: BTreeMap::new(),
             result: Bundle {
                 read_evidence: Default::default(),
@@ -156,6 +159,7 @@ impl Preparation<'_> {
         self.result.dependency_digests.extend(processed.inputs);
         let mut edits = Vec::new();
         let mut assets = Vec::new();
+        self.project_asset_targets(path, &processed.text);
         for reference in syntax::references(&processed.text) {
             if reference.image_set_string && !paths::external(&reference.value) {
                 return Err(CssError::Asset {

@@ -75,6 +75,11 @@ pub trait SourceTree: Send + Sync {
     }
     /// Resolve a repository, root, or candidate identity once per pass.
     fn project(&self, path: &Path) -> Result<Option<Node>>;
+    /// Project metadata without reading source contents, with one result per path.
+    /// The default preserves request order and continues after each projection error.
+    fn project_batch(&self, paths: &[PathBuf]) -> Vec<Result<Option<Node>>> {
+        paths.iter().map(|path| self.project(path)).collect()
+    }
     /// List direct children of a projected directory identity without following links.
     fn children(&self, path: &Path) -> Result<Vec<Child>>;
     /// Read the bytes of one confined, inventoried source.

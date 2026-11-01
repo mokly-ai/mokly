@@ -1,7 +1,7 @@
 //! Project indexed leaves and their directory ancestors without another Git lookup.
 
 use std::ops::Bound;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use mokly_git::identity::RepoPath;
 use mokly_source_interface::error::Result;
@@ -11,6 +11,19 @@ use crate::git_tree::{GitTree, kind};
 use crate::sources::TreeIndex;
 
 impl GitTree {
+    /// Load exact metadata together, then retain ordinary per-path projection outcomes.
+    /// A failed batch falls back to the existing per-path error handling.
+    pub(crate) fn project_nodes(&self, paths: &[PathBuf]) -> Vec<Result<Option<Node>>> {
+        let relative: Vec<_> = paths
+            .iter()
+            .filter_map(|path| self.relative(path).ok().flatten())
+            .collect();
+        if !relative.is_empty() {
+            let _ = self.sources.ensure(&relative);
+        }
+        paths.iter().map(|path| self.project_node(path)).collect()
+    }
+
     pub(crate) fn project_node(&self, path: &Path) -> Result<Option<Node>> {
         let kind = if let Some(relative) = self.relative(path)? {
             let index = self.index(path)?;

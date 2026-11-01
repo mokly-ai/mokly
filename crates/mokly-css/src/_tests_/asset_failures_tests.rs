@@ -1,7 +1,10 @@
 //! Asset confinement precedes every opaque byte read and digest.
 
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
+
+use mokly_source_interface::error::SourceError;
 
 use mokly_source_interface::tree::{FileKind, Node, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
@@ -86,4 +89,67 @@ fn escaping_asset_fails_before_any_digest_read() {
         }
     ));
     assert_eq!(*reads.lock().unwrap(), Vec::<PathBuf>::new());
+}
+
+#[test]
+fn projection_failure_cannot_preempt_an_earlier_asset_reference_error() {
+    let calls = Arc::new(AtomicUsize::new(0));
+    let recorded = calls.clone();
+    let tree = Arc::new(
+        Unimock::new((
+            SourceTreeMock::project
+                .each_call(matching!(_))
+                .answers(&|_, path| {
+                    Ok(Some(Node {
+                        identity: path.into(),
+                        lexical_kind: FileKind::File,
+                        kind: FileKind::File,
+                    }))
+                }),
+            SourceTreeMock::read.some_call(matching!(_)).returns(Ok(
+                b".a{background:url('/absolute.svg')}.b{background:url('./later.svg')}".to_vec(),
+            )),
+            SourceTreeMock::project_batch
+                .each_call(matching!(_))
+                .answers_arc(Arc::new(move |_, paths| {
+                    recorded.fetch_add(1, Ordering::SeqCst);
+                    paths
+                        .iter()
+                        .map(|path| {
+                            Err(SourceError::Unavailable {
+                                path: path.into(),
+                                message: "later metadata failure".into(),
+                            })
+                        })
+                        .collect()
+                })),
+        ))
+        .no_verify_in_drop(),
+    );
+    let compiler = Compiler {
+        tree: tree.clone(),
+        repo_root: "/repo".into(),
+        resolver: Arc::new(SourceResolver {
+            settings: Default::default(),
+            tree,
+            repo_root: "/repo".into(),
+        }),
+        processor: Arc::new(IdentityProcessor),
+    };
+    let error = compiler
+        .bundle(&StylesheetRoot {
+            path: "main.css".into(),
+            stylesheets: vec!["main.css".into()],
+            excluded: Default::default(),
+            local_css: true,
+        })
+        .unwrap_err();
+    assert!(matches!(
+        error,
+        CssError::Asset {
+            kind: AssetFailure::Absolute,
+            ..
+        }
+    ));
+    assert_eq!(calls.load(Ordering::SeqCst), 1);
 }

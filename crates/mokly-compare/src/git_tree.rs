@@ -81,6 +81,10 @@ impl GitTree {
 }
 
 impl SourceTree for GitTree {
+    fn project_batch(&self, paths: &[PathBuf]) -> Vec<Result<Option<Node>>> {
+        self.project_nodes(paths)
+    }
+
     fn project(&self, path: &Path) -> Result<Option<Node>> {
         self.project_node(path)
     }

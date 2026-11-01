@@ -56,6 +56,9 @@ impl SourceTree for LeasedTree {
     fn digest(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
         self.tree.digest(path)
     }
+    fn project_batch(&self, paths: &[PathBuf]) -> Vec<Result<Option<Node>>> {
+        self.tree.project_batch(paths)
+    }
     fn project(&self, path: &Path) -> Result<Option<Node>> {
         self.tree.project(path)
     }
@@ -69,3 +72,7 @@ impl SourceTree for LeasedTree {
         self.tree.read_shared(path)
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/lease_projection_tests.rs"]
+mod lease_projection_tests;

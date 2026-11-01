@@ -7,7 +7,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::error::Result;
 use crate::error::SourceError;
-use crate::tree::{Child, Node, SourceTree, SourceTreeMock};
+use crate::tree::{Child, FileKind, Node, SourceTree, SourceTreeMock};
 
 struct PerPath(Unimock);
 
@@ -49,4 +49,40 @@ fn the_batch_default_keeps_order_and_does_not_stop_at_a_failed_digest() {
     assert!(results.next().unwrap().unwrap_err().is_vanished());
     assert_eq!(results.next().unwrap().unwrap(), "c-hash");
     assert!(tree.digest_unretained_batch(&[]).is_empty());
+}
+
+#[test]
+fn projection_batch_default_keeps_nodes_missing_paths_and_errors() {
+    let paths: Vec<PathBuf> = ["file", "missing", "cancelled"]
+        .into_iter()
+        .map(PathBuf::from)
+        .collect();
+    let tree = PerPath(Unimock::new((
+        SourceTreeMock::project
+            .some_call(matching!((path) if *path == Path::new("file")))
+            .returns(Ok(Some(Node {
+                identity: "resolved".into(),
+                kind: FileKind::File,
+                lexical_kind: FileKind::File,
+            }))),
+        SourceTreeMock::project
+            .some_call(matching!((path) if *path == Path::new("missing")))
+            .returns(Ok(None)),
+        SourceTreeMock::project
+            .some_call(matching!((path) if *path == Path::new("cancelled")))
+            .returns(Err(SourceError::Cancelled {
+                path: "cancelled".into(),
+            })),
+    )));
+    let results = tree.project_batch(&paths);
+    assert_eq!(results.len(), 3);
+    let mut results = results.into_iter();
+    assert_eq!(
+        results.next().unwrap().unwrap().unwrap().identity,
+        Path::new("resolved")
+    );
+    assert_eq!(results.next().unwrap().unwrap(), None);
+    assert!(
+        matches!(results.next().unwrap(), Err(SourceError::Cancelled { path }) if path == Path::new("cancelled"))
+    );
 }

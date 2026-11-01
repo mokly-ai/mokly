@@ -195,6 +195,36 @@ impl SourceTree for SourceSnapshot {
             })
             .collect()
     }
+    fn project_batch(&self, paths: &[PathBuf]) -> Vec<Result<Option<Node>>> {
+        let mut results: Vec<_> = {
+            let nodes = self.nodes.lock().unwrap_or_else(|error| error.into_inner());
+            paths
+                .iter()
+                .map(|path| nodes.get(path).cloned().map(Ok))
+                .collect()
+        };
+        let pending: Vec<_> = paths
+            .iter()
+            .enumerate()
+            .filter(|(index, _)| results[*index].is_none())
+            .collect();
+        let pending_paths: Vec<_> = pending.iter().map(|(_, path)| (*path).clone()).collect();
+        if !pending_paths.is_empty() {
+            let projected = self.source.project_batch(&pending_paths);
+            let mut nodes = self.nodes.lock().unwrap_or_else(|error| error.into_inner());
+            for ((index, path), result) in pending.into_iter().zip(projected) {
+                results[index] = Some(match result {
+                    Ok(node) => Ok(nodes.entry(path.clone()).or_insert(node).clone()),
+                    Err(error) => Err(error),
+                });
+            }
+        }
+        paths
+            .iter()
+            .zip(results)
+            .map(|(path, result)| result.unwrap_or_else(|| self.project(path)))
+            .collect()
+    }
     fn project(&self, path: &Path) -> Result<Option<Node>> {
         let mut nodes = self.nodes.lock().unwrap_or_else(|error| error.into_inner());
         if let Some(node) = nodes.get(path) {
@@ -239,3 +269,7 @@ impl SourceTree for SourceSnapshot {
 #[cfg(test)]
 #[path = "_tests_/public_snapshot_tests.rs"]
 mod public_snapshot_tests;
+
+#[cfg(test)]
+#[path = "_tests_/projection_forwarding_tests.rs"]
+mod projection_forwarding_tests;

@@ -21,7 +21,7 @@ impl Preparation<'_> {
                 return None;
             }
             cursor.push(part);
-            let node = self.compiler.tree.project(&cursor).ok()??;
+            let node = self.projected_node(&cursor)?;
             if (node.lexical_kind == FileKind::Symlink
                 && !cursor
                     .components()
@@ -31,10 +31,7 @@ impl Preparation<'_> {
                 return None;
             }
         }
-        self.compiler
-            .tree
-            .project(&cursor)
-            .ok()?
+        self.projected_node(&cursor)
             .filter(|node| node.kind == FileKind::File)
     }
 

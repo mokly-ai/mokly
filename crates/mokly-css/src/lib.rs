@@ -85,6 +85,7 @@ mod physical_ownership_tests;
 mod scoped_universal_tests;
 
 mod compiler_assets;
+mod compiler_projection;
 mod css_boundaries;
 mod selector_nesting;
 

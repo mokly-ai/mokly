@@ -93,3 +93,7 @@ mod reservation_tests;
 mod comparison_tests;
 
 mod resource_bytes;
+
+#[cfg(test)]
+#[path = "_tests_/projection_forwarding_tests.rs"]
+mod projection_forwarding_tests;
