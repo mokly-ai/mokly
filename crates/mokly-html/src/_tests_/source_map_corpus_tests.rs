@@ -73,16 +73,16 @@ fn check_value(name: &str, source: &str, text: &Spanned, attribute: bool) {
             range.start <= offset && offset < range.end,
             "{name}: {text:?}, byte {decoded}"
         );
-        if text.source_map.is_aligned(decoded) {
-            let original = source.as_bytes()[offset];
-            assert!(
-                original == *byte || (original == b'\r' && *byte == b'\n'),
-                "{name}: {text:?}, byte {decoded}"
-            );
-        }
-        if plain {
-            assert_eq!(offset, range.start + decoded, "{name}: {text:?}");
-        }
+        let aligned = text.source_map.is_aligned(decoded);
+        let original = source.as_bytes()[offset];
+        assert!(
+            !aligned || original == *byte || (original == b'\r' && *byte == b'\n'),
+            "{name}: {text:?}, byte {decoded}"
+        );
+        assert!(
+            !plain || offset == range.start + decoded,
+            "{name}: {text:?}"
+        );
         previous = offset;
     }
 }
