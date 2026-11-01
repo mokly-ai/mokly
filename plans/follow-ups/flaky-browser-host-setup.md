@@ -1,6 +1,6 @@
 # Browser host setup failed once and passed on rerun
 
-- **Severity:** Low. **Effort:** Small. **Confidence:** Low. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** Low. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-30, from the branch `calummoore/mokly-ui-controls`, during the second review fix round of the shell views plan.
 - **Location:** `tests/browser/setup.ts:106`, the global setup of the browser suite, which throws `AggregateError(errors, "Browser host setup failed")` when more than one host fails to start.
