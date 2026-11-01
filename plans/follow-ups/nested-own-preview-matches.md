@@ -5,8 +5,8 @@
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 108, from finding 3 of the engine round 4 own review.
 - **Location:** `crates/mokly-css/src/attribution.rs:19` (`OwnPageMatches`),
-  `crates/mokly-compare/src/owned_styles.rs:115`, and
-  `crates/mokly-compare/src/owned_style_instances.rs:120`.
+  `crates/mokly-compare/src/owned_styles.rs:129`, and
+  `crates/mokly-compare/src/owned_style_instances.rs:80`.
 - **Reason:** On 2026-10-21 the user deferred the open review items until
   after the merge and kept each choice for a later decision.
 
@@ -49,9 +49,11 @@
 - **Wider fix:** B. Per-path evidence tells nested and own sources apart in
   mixed pages too.
 - **Previous examples:** None found.
-- **Related:** [owned-proof-memory.md](owned-proof-memory.md) is about the
-  memory of the same own-page proof. Both items change the proof data, so
-  decide them in the same branch.
+- **Related:** The
+  [owned-proof memory item at its last commit](https://github.com/mokly-ai/mokly/blob/c7e7d9b88efc84152eb33539ed8ed7ca2ad2bb93/plans/follow-ups/owned-proof-memory.md)
+  was about the memory of the same own-page proof. Both items change the
+  proof data. That item closed on 2026-11-01 with the branch
+  `conductor/rust-rebuild-97-owned-proof-state`.
 - **Recommendation:** B. It gives classification the exact own-page
   evidence, and it is the code today.
 - **Action:** ask the user, because on 2026-10-21 the user deferred the open
