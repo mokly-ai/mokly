@@ -1,7 +1,5 @@
 # On-demand Serve
 
-Status: Follow-up work remains in the [large React startup item](../../plans/follow-ups/large-react-startup.md).
-
 ## Startup And Completeness
 
 Serve validates the configuration, the catalogue model, the routes, the
