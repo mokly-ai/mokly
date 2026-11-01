@@ -98,8 +98,9 @@ with their accessibility, responsive, unavailable, loading and empty states.
 Documents render in the complete-document frame, one document per scheme and
 no viewport axis ([documents](./mokly-documents.md)); a moved entry reads
 `Moved` with its previous path in details ([moves](./mokly-moves.md)). Removed
-entries load their [previous version](./mokly-removed-previews.md) only from
-the advertised comparison generation. Details show the workspace of the entry
+entries load the historical documents of their
+[previous version](./mokly-removed-previews.md) only from the advertised
+comparison generation. Details show the workspace of the entry
 detail in every delivery: Used by, Affected screens, related changed
 components, and input changes with Before and Current props.
 A current component variant shows Used by and Affected lists from its parent's
@@ -169,8 +170,8 @@ defines the shell tree and its state.
 
 The viewer fetches only the index, the details, documents, removed previews,
 and comparison generation files of its artifact origin root, under the fetch
-rules of the [shell delivery contract](./mokly-shell-delivery.md#fetch-and-fences)
-contracts. It sends no telemetry and reads no cookies. Consumer code never
+rules of the [shell delivery contract](./mokly-shell-delivery.md#fetch-and-fences).
+It sends no telemetry and reads no cookies. Consumer code never
 enters the browser through the viewer. The in-frame inspector script of the
 frame adapter contract is the one React-free part of the package. Several
 viewers can mount in one document with independent state, and each cleans up

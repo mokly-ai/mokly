@@ -82,6 +82,21 @@ invalidates pending captures and discards the cached selection. Superseded
 snapshots stay available briefly for in-flight requests. Shutdown stops
 admission and drains active generation work before the server exits.
 
+When a comparison route of Serve fails, it answers with a JSON body
+`{ code, message }`. The selection endpoint answers `invalid-input` with 400
+when its query does not follow the
+[request rules](./mokly-selected-comparisons.md#requests-and-evidence). It
+answers `comparison-unavailable` with 503 while Changes is not ready, or when
+Serve cannot prepare the selection. A generation route answers the same code
+when the restore of a missing snapshot fails. Serve answers `not-found` with
+404 for an address under `mokly-viewer/diffs/` that names no route, or a
+generation or file that Serve does not hold. `message` is plain text for a
+person who reads the response. The shell never shows `message`. A comparison
+that fails shows the one comparison failure of the
+[pane lifecycle](./mokly-comparison-panes.md#lifecycle), whatever the code.
+Decision: the shell owns the failure text and reads only the stable `code`, not
+Serve's `message`, so that a failure reads the same in every host.
+
 Complete base validation and capture must use the same rendered input for each
 view. Capture must preserve validation failures and warning order, including
 when another view fails later. A failed validation publishes no partial capture.

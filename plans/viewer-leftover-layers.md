@@ -25,13 +25,12 @@ The five survey reports and the notes of the investigation are under
 
 Contract owners:
 
-- [Embeddable viewer](../docs/protocol/mokly-viewer.md) and
-  [viewer selection](../docs/protocol/mokly-viewer-selection.md).
-- [Shell delivery](../docs/protocol/mokly-shell-delivery.md) and
+- [Embeddable viewer](../docs/protocol/mokly-viewer.md),
+  [shell delivery](../docs/protocol/mokly-shell-delivery.md), and
   [shell fetch and fences](../docs/protocol/mokly-shell-fences.md).
-- [Catalogue tree](../docs/protocol/mokly-catalogue-tree.md) and
-  [shared UI package](../docs/protocol/mokly-ui-package.md).
-- [Package boundary](../docs/architecture/package-boundary.md).
+- [Catalogue tree](../docs/protocol/mokly-catalogue-tree.md),
+  [shared UI package](../docs/protocol/mokly-ui-package.md), and
+  [package boundary](../docs/architecture/package-boundary.md).
 - The [viewer README](../packages/viewer/README.md) and the
   [shell README](../packages/viewer/src/shell/README.md).
 
@@ -105,7 +104,8 @@ My calls, on 2026-11-01:
 7. Flat removed rows keep the order of `removedEntries`. The sort by kind
    and path in `shell/nav_tree.ts:138-150` breaks the sibling order of
    `docs/protocol/mokly-catalogue-serialization.md:8-12`, which puts a
-   parent's variants directly after the parent.
+   parent's variants directly after the parent. Removed pages and documents
+   keep their order, which `plans/follow-ups/removed-page-row-order.md` holds.
 8. The renewal `HEAD` request of a removed preview,
    `previews/request.ts:189`, also omits credentials and rejects another
    origin, so that every read-model request follows one rule.
@@ -127,18 +127,19 @@ the behaviour.
       `comparison-error-text.md`, `removed-preview-detail-fence.md`,
       `viewer-credential-rule.md`, and `comparison-chrome-address.md`, all
       under `plans/follow-ups/`.
-- [ ] State decision 4 in `docs/protocol/mokly-removed-previews.md`: a
+- [x] State decision 4 in `docs/protocol/mokly-removed-previews.md`: a
       removed screen's preview uses the removed detail that the route loads
       and fences, which an embedded viewer takes from its host's `detail`
       source. Check `mokly-viewer.md` and `mokly-shell-fences.md` for the same
       rule.
-- [ ] State decision 5 in the protocol page of the comparison routes: the
+- [x] State decision 5 in the protocol page of the comparison routes: the
       codes of Serve's error body, and the one sentence that the shell shows
       for a failed comparison.
-- [ ] Confirm that no protocol or architecture doc names a mechanism that
+- [x] Confirm that no protocol or architecture doc names a mechanism that
       this change removes, such as the `live-index-2` manifest or the
       appearance asset in the head. Save the search under
-      `.context/viewer-leftover-layers/`.
+      `.context/viewer-leftover-layers/`. The search is in
+      `.context/viewer-leftover-layers/m1-doc-search.md`.
 
 ## Milestone 2: Fixes from the investigation
 

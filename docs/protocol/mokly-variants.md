@@ -133,9 +133,8 @@ current entry of the same kind without `variantOf` and requires the variant's
 path to be the parent's path plus exactly one segment. Canonical entry sorting
 places a parent's variants directly after it in authored order.
 
-The hierarchy analysis exposes each parent's variants in authored order and
-each variant's parent. The [path contract](./mokly-paths.md#folders-and-leaves)
-owns the leaf-with-children rule; [variant navigation](./mokly-variant-navigation.md)
+The [path contract](./mokly-paths.md#folders-and-leaves) owns the
+leaf-with-children rule; [variant navigation](./mokly-variant-navigation.md)
 owns rows, breadcrumbs, icons, and removed-parent fallback. When a parent and
 its variants are paired by the [move contract](./mokly-moves.md), each variant
 pairs through its slug before the ordinary signals run.
