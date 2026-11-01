@@ -32,8 +32,10 @@ both sides. `mokly-server` and `mokly-static` publish the retained result.
 It indexes configured roots and exact requested paths and retains every tree
 mode. `GitTree` implements `dyn SourceTree` over that index, so the catalogue
 applies its roots, globs, and source rules to base files. Exact projections use
-cached metadata and bounded path queries. Catalogue inventories and planning
-inputs request generation-wide prefetch sets before reading bytes. Links and
+cached metadata and bounded path queries. A projection of a directory that
+holds an indexed file starts no Git lookup. Catalogue inventories and planning
+inputs request generation-wide prefetch sets before reading bytes. Reads retain
+a byte-bounded file LRU, and a miss reads only its requested path. Links and
 submodules supply no regular source bytes. `Sources::attach` gives
 `GitSources` a leased extraction of the same commit: it lists the whole tree
 once, and later reads and digests use the extracted files, with the Git
@@ -47,20 +49,24 @@ from missing paths. The
 owns the read bounds and the failure outcomes.
 
 `GitTree::digest_unretained_batch` hashes a batch of opaque assets, such as the
-new assets of one stylesheet file, through one `Sources::digest_with_length`
-call into `Repository::digest_many`. Each `SourceDigest` keeps the SHA-256 and,
-for a Git digest, the converted length. `GitTree::project_batch` looks up its
-paths through one `Sources::ensure` call before the CSS confinement walk. The
-lookup, attribute, and digest processes of a stylesheet then stay one batch,
-constant at 4 and 16 assets in a count test of mokly-render. The digest cache
-keeps hash-only `digest` records apart from completed opaque records, which
-`GitTree::open_stream` reuses. A digest that failed on its 64 MiB bound stays
+new assets of one stylesheet file. Hash-only preparation does not fill the
+source-byte LRU. The batch looks up only the paths that the index lacks, and an
+asset whose bytes the LRU holds starts no Git process. The other assets hash
+through one `Sources::digest_with_length` call into `Repository::digest_many`.
+Each `SourceDigest` keeps the SHA-256 and, for a Git digest, the converted
+length. `GitTree::project_batch` looks up its paths through one
+`Sources::ensure` call before the CSS confinement walk. The lookup, attribute,
+and digest processes of a stylesheet then stay one batch, constant at 4 and 16
+assets in a count test of mokly-render. The digest cache keeps hash-only
+`digest` records apart from completed opaque records. An opaque digest
+upgrades a hash-only record and reuses a completed one, also in
+`GitTree::open_stream`. A digest that failed on its 64 MiB bound stays
 unavailable for the base preparation, and a smaller batch-bound failure stays
 retryable. With a converted length, `copy_verified` streams the file from one
 Git process through `Sources::stream`, in chunks of at most 64 KiB. A digest or
-length mismatch, or a stream above 64 MiB, returns `SourceError::Changed`. A
-leased extraction keeps a buffered delivery, because its digests carry no
-length.
+a length that differs from the digest pass, or a stream above 64 MiB, returns
+`SourceError::Changed`. A leased extraction keeps a buffered delivery, because
+its digests carry no length.
 
 `CachedExtraction` implements `dyn Extraction`. It extracts one commit into
 the source cache only when JavaScript, a renderer module, or consumer PostCSS
@@ -146,9 +152,8 @@ merge base. Static commands retain that `PinnedBase` before current rendering.
 `Changes` implements `dyn ChangesService` and reuses the pin when supplied.
 The CLI implements `BaseProvider`, which supplies the base render generation
 through the common graph. A JavaScript provider uses the same request's source
-and repository handles for extraction and dependency leases. The CLI supplies
-`mokly_render::runtime::Runtime` for both sides, sharing its render cache,
-sidecar pool, and cancellation.
+and repository handles for extraction and dependency leases. Both sides share
+the render runtime that the [CLI](../mokly-cli/README.md) composes.
 
 `Changes` announces each comparison `Step` through its `dyn Steps` as the step
 starts, so a command can name the running step on its progress line. It
