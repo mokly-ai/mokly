@@ -1,6 +1,7 @@
 //! Bundle inputs that every render input key of one side shares, without a source root.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
 
 use mokly_graph::render_inputs::PREVIEWS;
 use mokly_model::material::digest;
@@ -31,13 +32,65 @@ pub(crate) struct RenderEnvironment {
 
 /// Every bundle setting except the source root, the entry lists, and the evaluation.
 #[derive(Serialize)]
-struct Settings<'a> {
-    renderer: &'a Option<String>,
-    module_resolution: &'a ModuleResolution,
-    configuration_directory: &'a str,
-    repository_roots: &'a [String],
-    dependency_roots: &'a [String],
-    peers: Option<&'a BTreeMap<String, Option<String>>>,
+struct Settings {
+    renderer: Option<String>,
+    module_resolution: ModuleResolution,
+    configuration_directory: String,
+    repository_roots: Vec<String>,
+    dependency_roots: Vec<String>,
+    peers: Option<BTreeMap<String, Option<String>>>,
+}
+
+/// Convert physical settings to names that are stable across equivalent checkouts.
+struct PathMapper<'a> {
+    working_root: &'a Path,
+    cache_namespace: Option<&'a Path>,
+    external: BTreeSet<String>,
+}
+
+impl<'a> PathMapper<'a> {
+    fn new(working_root: &'a Path, cache_namespace: Option<&'a Path>) -> Self {
+        Self {
+            working_root,
+            cache_namespace,
+            external: BTreeSet::new(),
+        }
+    }
+
+    fn map(&mut self, value: &str) -> String {
+        let path = Path::new(value);
+        if !path.is_absolute() {
+            return value.to_owned();
+        }
+        if let Ok(relative) = path.strip_prefix(self.working_root) {
+            return logical(relative, "");
+        }
+        if let Some(cache_namespace) = self.cache_namespace
+            && let Ok(relative) = path.strip_prefix(cache_namespace)
+        {
+            return logical(relative, "cache:");
+        }
+        self.external.insert(value.to_owned());
+        value.to_owned()
+    }
+
+    fn report_external(&self) {
+        if !self.external.is_empty() {
+            tracing::warn!(
+                paths = ?self.external,
+                "render environment contains absolute paths outside the working repository and comparison cache"
+            );
+        }
+    }
+}
+
+fn logical(path: &Path, prefix: &str) -> String {
+    let relative = path.to_string_lossy().replace('\\', "/");
+    if relative.is_empty() {
+        format!("{prefix}.")
+    } else {
+        format!("{prefix}{relative}")
+    }
 }
 
 /// Derive the shared render-key inputs from one bundle request, its result, and its maps.
@@ -45,16 +98,13 @@ pub(crate) fn derive(
     params: &Bundle,
     result: &results::Bundle,
     maps: &ClassMaps,
+    working_root: &Path,
+    cache_namespace: Option<&Path>,
 ) -> Result<RenderEnvironment> {
     let compiled = result.compiled.as_ref();
-    let settings = Settings {
-        renderer: &params.renderer,
-        module_resolution: &params.module_resolution,
-        configuration_directory: &params.configuration_directory,
-        repository_roots: &params.repository_roots,
-        dependency_roots: compiled.map_or(&[], |compiled| &compiled.dependency_roots),
-        peers: compiled.map(|compiled| &compiled.peers),
-    };
+    let mut paths = PathMapper::new(working_root, cache_namespace);
+    let settings = settings(params, result, &mut paths);
+    paths.report_external();
     let previewed = result
         .modules
         .iter()
@@ -74,6 +124,52 @@ pub(crate) fn derive(
             .map(|compiled| compiled.peers.keys().map(|peer| package(peer)).collect())
             .unwrap_or_default(),
     })
+}
+
+fn settings(params: &Bundle, result: &results::Bundle, paths: &mut PathMapper<'_>) -> Settings {
+    let mut module_resolution = params.module_resolution.clone();
+    module_resolution.dependency_root = module_resolution
+        .dependency_root
+        .as_deref()
+        .map(|path| paths.map(path));
+    module_resolution.package_roots = module_resolution
+        .package_roots
+        .iter()
+        .map(|path| paths.map(path))
+        .collect();
+    module_resolution.aliases = module_resolution
+        .aliases
+        .iter()
+        .map(|(alias, target)| (paths.map(alias), paths.map(target)))
+        .collect();
+    Settings {
+        renderer: params.renderer.as_deref().map(|path| paths.map(path)),
+        module_resolution,
+        configuration_directory: paths.map(&params.configuration_directory),
+        repository_roots: params
+            .repository_roots
+            .iter()
+            .map(|path| paths.map(path))
+            .collect(),
+        dependency_roots: result
+            .compiled
+            .as_ref()
+            .map(|compiled| {
+                compiled
+                    .dependency_roots
+                    .iter()
+                    .map(|path| paths.map(path))
+                    .collect()
+            })
+            .unwrap_or_default(),
+        peers: result.compiled.as_ref().map(|compiled| {
+            compiled
+                .peers
+                .iter()
+                .map(|(name, path)| (name.clone(), path.as_deref().map(|path| paths.map(path))))
+                .collect()
+        }),
+    }
 }
 
 /// The package of a runtime package specifier, such as `@emotion/server` for
@@ -116,3 +212,11 @@ fn json_digest(value: &impl Serialize) -> Result<String> {
 #[cfg(test)]
 #[path = "_tests_/render_environment_tests.rs"]
 mod render_environment_tests;
+
+#[cfg(test)]
+#[path = "_tests_/render_environment_support.rs"]
+mod render_environment_support;
+
+#[cfg(test)]
+#[path = "_tests_/render_environment_paths_tests.rs"]
+mod render_environment_paths_tests;

@@ -11,18 +11,11 @@ use crate::changes_output::ChangeDiagnostic;
 use crate::codes::Code;
 use crate::{changes_policy, render_errors};
 
-const SCRIPTS_HINT: &str = "If this base needs lifecycle scripts, enable `review.baseInstallScripts` or use `--base-install-scripts`";
+const SCRIPTS_HINT: &str = "If this base needs lifecycle scripts, enable `review.baseInstallScripts` or use `--base-install-scripts`.";
 
 pub(crate) fn details(error: &Error) -> Vec<ChangeDiagnostic> {
-    match error {
-        Error::BaseInstallScripts { source } => {
-            let mut diagnostics = details(source);
-            diagnostics.push(ChangeDiagnostic {
-                code: Code::BuildInvalid,
-                message: SCRIPTS_HINT.into(),
-            });
-            diagnostics
-        }
+    let mut diagnostics = match error {
+        Error::Base { source, .. } => details(source),
         Error::Catalogue {
             source: CatalogueError::Invalid { issues, .. },
         } => issues
@@ -58,12 +51,13 @@ pub(crate) fn details(error: &Error) -> Vec<ChangeDiagnostic> {
             code: Code::BuildInvalid,
             message: error.to_string(),
         }],
-    }
+    };
+    append_scripts_hint(error, &mut diagnostics);
+    diagnostics
 }
 
 pub(crate) fn warnings(error: &Error) -> Vec<Warning> {
     let records = match error {
-        Error::BaseInstallScripts { source } => warnings(source),
         Error::Base { source, .. } => warnings(source),
         Error::Catalogue {
             source: CatalogueError::Invalid { warnings, .. },
@@ -78,7 +72,7 @@ pub(crate) fn warnings(error: &Error) -> Vec<Warning> {
 }
 
 pub(crate) fn unavailable(error: &Error, base_ref: &str) -> Option<BuildChanges> {
-    let Error::Base { commit, source } = error else {
+    let Error::Base { commit, source, .. } = error else {
         return None;
     };
     if let Some(detail) = limit_detail(source) {
@@ -86,12 +80,7 @@ pub(crate) fn unavailable(error: &Error, base_ref: &str) -> Option<BuildChanges>
             code: Code::BuildInvalid,
             message: detail,
         }];
-        if matches!(&**source, Error::BaseInstallScripts { .. }) {
-            diagnostics.push(ChangeDiagnostic {
-                code: Code::BuildInvalid,
-                message: SCRIPTS_HINT.into(),
-            });
-        }
+        append_scripts_hint(error, &mut diagnostics);
         return Some(BuildChanges::Unavailable {
             base_ref: base_ref.into(),
             base_commit: commit.clone(),
@@ -104,7 +93,7 @@ pub(crate) fn unavailable(error: &Error, base_ref: &str) -> Option<BuildChanges>
         base_ref: base_ref.into(),
         base_commit: commit.clone(),
         reason: reason.into(),
-        diagnostics: details(source),
+        diagnostics: details(error),
     })
 }
 
@@ -117,7 +106,6 @@ pub(crate) fn failure_code(error: &Error) -> Code {
         Error::Graph { source } => changes_policy::failure_code(source),
         Error::Cancelled => Code::BuildInvalid,
         Error::Base { source, .. } => failure_code(source),
-        Error::BaseInstallScripts { source } => failure_code(source),
         Error::SourceFailure { source } => failure_code(source),
         _ => Code::ReviewInvalid,
     }
@@ -127,7 +115,6 @@ fn limit_detail(error: &Error) -> Option<String> {
     match error {
         Error::Limit { path, source } => Some(format!("{path}: {}", plain(&source.to_string()))),
         Error::Base { source, .. } => limit_detail(source),
-        Error::BaseInstallScripts { source } => limit_detail(source),
         Error::SourceFailure { source } => limit_detail(source),
         _ => None,
     }
@@ -156,8 +143,7 @@ pub(crate) fn failure_detail(error: &Error) -> String {
             }
         }
         Error::Git { source } => plain(&source.to_string()).into(),
-        Error::Base { commit, source } => format!("base {commit}: {}", failure_detail(source)),
-        Error::BaseInstallScripts { source } => failure_detail(source),
+        Error::Base { commit, source, .. } => format!("base {commit}: {}", failure_detail(source)),
         Error::SourceFailure { source } => failure_detail(source),
         Error::Catalogue {
             source: CatalogueError::Runtime { source },
@@ -170,9 +156,36 @@ pub(crate) fn failure_detail(error: &Error) -> String {
         Error::Cancelled => "build cancelled".into(),
         _ => error.to_string(),
     };
-    if matches!(error, Error::BaseInstallScripts { .. }) {
-        format!("{detail}. {SCRIPTS_HINT}")
-    } else {
-        detail
+    with_scripts_hint(error, detail)
+}
+
+fn append_scripts_hint(error: &Error, diagnostics: &mut Vec<ChangeDiagnostic>) {
+    if scripts_hint(error).is_some() {
+        diagnostics.push(ChangeDiagnostic {
+            code: Code::BuildInvalid,
+            message: SCRIPTS_HINT.into(),
+        });
     }
+}
+
+fn scripts_hint(error: &Error) -> Option<&'static str> {
+    match error {
+        Error::Base {
+            scripts_off: true, ..
+        } => Some(SCRIPTS_HINT),
+        Error::Base { source, .. } => scripts_hint(source),
+        Error::SourceFailure { source } => scripts_hint(source),
+        _ => None,
+    }
+}
+
+fn with_scripts_hint(error: &Error, detail: String) -> String {
+    let Some(hint) = scripts_hint(error) else {
+        return detail;
+    };
+    let separator = match detail.chars().last() {
+        Some('.') | Some('!') | Some('?') => " ",
+        _ => ". ",
+    };
+    format!("{detail}{separator}{hint}")
 }

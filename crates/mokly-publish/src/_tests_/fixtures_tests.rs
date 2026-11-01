@@ -10,6 +10,7 @@ use crate::completion::{Completion, Outcome, retryable};
 use crate::error::Error;
 use crate::http::{Body, Encoding, Response};
 use crate::plan::Plan;
+use crate::redaction::Secret;
 use crate::settings::Settings;
 
 use super::support::response;
@@ -62,7 +63,7 @@ fn every_plan_and_completion_fixture_matches_the_client_contract() {
     .unwrap();
     let settings = Settings::new(
         fixture["endpoint"].as_str().unwrap(),
-        "secret".to_owned(),
+        Secret::new("secret"),
         8,
     )
     .unwrap();

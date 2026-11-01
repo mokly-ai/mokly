@@ -132,6 +132,7 @@ pub mod source_failures;
 mod git_failures;
 mod git_prefetch;
 
+mod owned_style_chain_source;
 mod owned_style_instances;
 mod owned_styles;
 

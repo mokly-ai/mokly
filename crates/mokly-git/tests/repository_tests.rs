@@ -5,6 +5,8 @@ use std::fs;
 use std::os::unix::fs::{PermissionsExt, symlink};
 
 use mokly_git::changes::{ChangedPath, Kind};
+#[cfg(windows)]
+use mokly_git::disk::{Disk, SystemDisk};
 use mokly_git::error::Error;
 use mokly_git::identity::RepoPath;
 use mokly_git::tree::Limits;
@@ -216,4 +218,29 @@ fn repository_root_validation_accepts_aliases_and_rejects_nested_roots() {
         factory.open(&fixture.root().join("nested")),
         Err(Error::RootMismatch { .. })
     ));
+}
+
+#[cfg(windows)]
+#[test]
+fn windows_canonical_roots_keep_the_plain_drive_form() {
+    let fixture = Fixture::new();
+    fixture.write("nested/file", b"file");
+    fixture.commit();
+    let canonical = SystemDisk.canonicalize(fixture.root()).unwrap();
+    assert!(!canonical.as_os_str().to_string_lossy().starts_with(r"\\?\"));
+    let factory: &dyn mokly_git::repository::Repositories =
+        &mokly_git::repository::GitRepositories {
+            runner: support::runner(std::sync::Arc::new(mokly_git::control::Token::default())),
+            disk: std::sync::Arc::new(SystemDisk),
+        };
+    let error = match factory.open(&fixture.root().join("nested")) {
+        Ok(_) => panic!("a nested repository root must be rejected"),
+        Err(error) => error,
+    };
+    let Error::RootMismatch { configured, actual } = error else {
+        panic!("expected a root mismatch error");
+    };
+    for path in [configured, actual] {
+        assert!(!path.as_os_str().to_string_lossy().starts_with(r"\\?\"));
+    }
 }

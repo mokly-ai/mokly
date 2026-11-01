@@ -8,13 +8,14 @@ use crate::accounting::{Progress, Receipt};
 use crate::completion::{Completion, Outcome};
 use crate::error::Error;
 use crate::http::{Body, Response};
+use crate::redaction::Secret;
 use crate::settings::Token;
 
 use super::support::response;
 
 #[test]
 fn optional_url_is_normalized_and_omitted_when_unusable_or_secret_bearing() {
-    let token = Token::new("secret/a==".to_owned()).unwrap();
+    let token = Token::new(Secret::new("secret/a==")).unwrap();
     for (input, expected) in [
         (
             "https://EXAMPLE.com:443/a/../catalogue",
@@ -72,7 +73,7 @@ fn optional_url_is_normalized_and_omitted_when_unusable_or_secret_bearing() {
 
 #[test]
 fn completion_debug_does_not_expose_a_secret_bearing_viewer_url() {
-    let token = Token::new("secret/a==".to_owned()).unwrap();
+    let token = Token::new(Secret::new("secret/a==")).unwrap();
     let body = serde_json::to_vec(&json!({
         "viewerUrl": "https://example.com/secret%2fa%3d%3d"
     }))
@@ -87,6 +88,65 @@ fn completion_debug_does_not_expose_a_secret_bearing_viewer_url() {
     .unwrap();
     assert!(completion.viewer_url.is_none());
     assert!(!format!("{completion:?}").contains("secret/a=="));
+}
+
+#[test]
+fn viewer_hosts_match_the_token_without_ascii_case_sensitivity() {
+    let token = Token::new(Secret::new("AbCdEfGh1234")).unwrap();
+    for input in [
+        "https://AbCdEfGh1234.example.com/catalogue",
+        "https://abcdefgh1234.example.com/catalogue",
+        "https://%41bCdEfGh1234.example.com/catalogue",
+        "https://x-AbCdEfGh1234-y.example.com/catalogue",
+        "https://ＡｂＣｄＥｆＧｈ１２３４.example.com/catalogue",
+    ] {
+        let body = serde_json::to_vec(&json!({"viewerUrl": input})).unwrap();
+        let viewer_response = Response {
+            body: Body::Bytes(body.into()),
+            ..response(201)
+        };
+        assert!(
+            Completion::parse(&viewer_response, &token)
+                .unwrap()
+                .viewer_url
+                .is_none(),
+            "viewer URL was not redacted: {input}"
+        );
+    }
+
+    let path = "https://example.com/abcdefgh1234/catalogue";
+    let path_response = Response {
+        body: Body::Bytes(
+            serde_json::to_vec(&json!({"viewerUrl": path}))
+                .unwrap()
+                .into(),
+        ),
+        ..response(201)
+    };
+    assert_eq!(
+        Completion::parse(&path_response, &token)
+            .unwrap()
+            .viewer_url
+            .as_deref(),
+        Some(path)
+    );
+
+    let short = "https://abcdefgh123.example.com/catalogue";
+    let short_response = Response {
+        body: Body::Bytes(
+            serde_json::to_vec(&json!({"viewerUrl": short}))
+                .unwrap()
+                .into(),
+        ),
+        ..response(201)
+    };
+    assert_eq!(
+        Completion::parse(&short_response, &token)
+            .unwrap()
+            .viewer_url
+            .as_deref(),
+        Some(short)
+    );
 }
 
 #[test]

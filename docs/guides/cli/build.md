@@ -27,8 +27,10 @@ npx mokly build --config tools/mokly.config.json --base origin/main
 | `--sidecars {count}`        | Set the positive JavaScript worker count.                                                           |
 | `--debug-timings`           | Select plain output and report timing records.                                                      |
 
-`--base` and `--no-changes` cannot be combined. Build starts no server or
-watcher. Use [Serve](/docs/cli/serve/) for watched browsing.
+`--base` and `--no-changes` cannot be combined. Build accepts
+`--base-install-scripts` or `--no-base-install-scripts` with `--no-changes`,
+but the flag has no effect, because no base install runs. Build starts no
+server or watcher. Use [Serve](/docs/cli/serve/) for watched browsing.
 
 ## Output
 

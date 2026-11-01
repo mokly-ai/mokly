@@ -14,6 +14,7 @@ fn command() -> Command {
     Command {
         program: "npm".into(),
         args: vec![],
+        scripts: false,
         directory: "/private".into(),
         timeout: Duration::from_secs(120),
         byte_limit: None,

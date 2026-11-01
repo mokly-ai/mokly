@@ -1,7 +1,6 @@
 //! Trusted sidecar rules enter the shared catalogue-wide evidence reducer.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::mem;
 
 use mokly_css::attribution::{self, OwnPageMatches, RuleObservation};
 use mokly_css::match_tree::MatchTree;
@@ -9,13 +8,15 @@ use mokly_css::rule_matching::{DocumentMatching, match_document};
 use mokly_css::rules::{ParsedCss, RuleDiff};
 use mokly_html::tree::{Node, RegionKind};
 use mokly_model::catalogue::ModelEntry;
-use mokly_model::review::EntryChangeReason;
+use mokly_model::review::{EntryChangeReason, ReviewEntryAddress};
 
 use crate::comparison_address::address;
 use crate::comparison_types::ViewKey;
 use crate::error::Result;
+use crate::instance_impact::PairedInstance;
 use crate::instance_proof::InstanceProof;
 use crate::material::mapped;
+use crate::owned_style_chain_source::DocumentIndex;
 use crate::owned_style_instances;
 use crate::resource_memo::ResourceMemo;
 use crate::view_material::MaterialComparison;
@@ -23,22 +24,32 @@ use crate::view_material::MaterialComparison;
 #[derive(Default)]
 pub(crate) struct Changes {
     pub(crate) rules: Vec<RuleObservation>,
-    matching: Vec<(String, DocumentMatching)>,
-    indices: Option<[owned_style_instances::Index; 2]>,
-    potential: Vec<InstanceProof>,
+    chains: Vec<(String, owned_style_instances::Compact)>,
+    proof: Option<ProofContext>,
 }
 
+struct ProofContext {
+    candidates: Vec<(String, String)>,
+    before: ReviewEntryAddress,
+    after: ReviewEntryAddress,
+    view: ViewKey,
+}
+
+/// Compare owned rules and retain ancestry only for eligible paired instances.
 pub(crate) fn compare(
     nodes: [&[Node]; 2],
     trees: [Option<&MatchTree>; 2],
     paths: &BTreeMap<String, String>,
     route: &str,
     memo: &dyn ResourceMemo,
+    instances: &[PairedInstance],
 ) -> Result<Changes> {
     let before = collect(nodes[0], paths);
     let after = collect(nodes[1], &BTreeMap::new());
     let owners: BTreeSet<_> = before.keys().chain(after.keys()).collect();
     let mut changes = Changes::default();
+    let mut indices = None;
+    let mut eligible = None;
     for owner in owners {
         let left = before.get(owner).cloned().unwrap_or_default();
         let right = after.get(owner).cloned().unwrap_or_default();
@@ -54,13 +65,32 @@ pub(crate) fn compare(
         let matching = match_document(&diff, trees[0], trees[1]);
         let rules = attribution::observe_owned(route, &matching, trees[0], trees[1], Some(owner));
         changes.rules.extend(rules);
-        changes.matching.push((owner.clone(), matching));
-    }
-    if !changes.matching.is_empty() {
-        changes.indices = Some([
-            owned_style_instances::index(nodes[0], paths),
-            owned_style_instances::index(nodes[1], &BTreeMap::new()),
-        ]);
+        if instances.is_empty() || !matches!(matching, DocumentMatching::Resolved(_)) {
+            continue;
+        }
+        let eligible = eligible.get_or_insert_with(|| {
+            let mut eligible = BTreeMap::<_, BTreeSet<_>>::new();
+            for instance in instances {
+                eligible
+                    .entry(instance.component.as_str())
+                    .or_default()
+                    .insert(instance.key.as_str());
+            }
+            eligible
+        });
+        let Some(candidates) = eligible.get(owner.as_str()) else {
+            continue;
+        };
+        let indices = indices.get_or_insert_with(|| {
+            [
+                DocumentIndex::build(nodes[0], paths),
+                DocumentIndex::build(nodes[1], &BTreeMap::new()),
+            ]
+        });
+        let chains = owned_style_instances::compact(indices, &matching, owner, candidates);
+        if !chains.is_empty() {
+            changes.chains.push((owner.clone(), chains));
+        }
     }
     Ok(changes)
 }
@@ -93,39 +123,70 @@ impl Changes {
         after: &ModelEntry,
         view: ViewKey,
     ) {
-        if self.matching.is_empty() {
+        if self.chains.is_empty() {
             return;
         }
-        self.potential = comparison
+        let candidate_keys: BTreeSet<_> = self
+            .chains
+            .iter()
+            .flat_map(|(owner, chains)| owned_style_instances::candidates(chains, owner))
+            .collect();
+        let candidates: Vec<_> = comparison
             .instances
             .iter()
-            .map(|instance| InstanceProof {
-                component: instance.component.clone(),
-                instance: instance.key.clone(),
-                before: address(before),
-                after: address(after),
-                view,
-                reason: EntryChangeReason::Implementation,
-                reference: None,
-            })
+            .filter(|instance| candidate_keys.contains(&instance.key))
+            .map(|instance| (instance.component.clone(), instance.key.clone()))
             .collect();
+        self.proof = (!candidates.is_empty()).then(|| ProofContext {
+            candidates,
+            before: address(before),
+            after: address(after),
+            view,
+        });
     }
 
     /// Resolve exact instance proof with the same unfiltered own-page sets as records.
     pub(crate) fn proofs(&mut self, own_pages: &OwnPageMatches) -> Vec<InstanceProof> {
-        let Some(indices) = &self.indices else {
+        let Some(proof) = self.proof.take() else {
             return Vec::new();
         };
         let mut instances = BTreeSet::new();
-        for (owner, matching) in &self.matching {
-            instances.extend(owned_style_instances::matched(
-                matching, owner, indices, own_pages,
-            ));
+        for (owner, chains) in &self.chains {
+            instances.extend(owned_style_instances::matched(chains, owner, own_pages));
         }
-        mem::take(&mut self.potential)
+        proof
+            .candidates
             .into_iter()
-            .filter(|proof| instances.contains(&proof.instance))
+            .filter_map(|(component, instance)| {
+                instances.contains(&instance).then(|| InstanceProof {
+                    component,
+                    instance,
+                    before: proof.before.clone(),
+                    after: proof.after.clone(),
+                    view: proof.view,
+                    reason: EntryChangeReason::Implementation,
+                    reference: None,
+                })
+            })
             .collect()
+    }
+
+    /// Count retained chain instances, per-rule starts, and paired candidates.
+    #[cfg(test)]
+    pub(crate) fn retained_counts(&self) -> (usize, usize, usize) {
+        let (chains, starts) = self.chains.iter().map(|(_, chains)| chains.counts()).fold(
+            (0, 0),
+            |(chains, starts), (next_chains, next_starts)| {
+                (chains + next_chains, starts + next_starts)
+            },
+        );
+        (
+            chains,
+            starts,
+            self.proof
+                .as_ref()
+                .map_or(0, |proof| proof.candidates.len()),
+        )
     }
 }
 
@@ -219,3 +280,7 @@ fn visit(
 #[cfg(test)]
 #[path = "_tests_/owned_styles_tests.rs"]
 mod owned_styles_tests;
+
+#[cfg(test)]
+#[path = "_tests_/owned_proof/mod.rs"]
+mod owned_proof_tests;

@@ -1,6 +1,8 @@
 //! Pure option normalization and environment fallbacks.
 
 use mokly_catalogue::config_types::{ResolvedConfig, ReviewConfig};
+use mokly_publish::redaction::Secret;
+use mokly_publish::settings::Token;
 use url::Url;
 
 use crate::errors::Failure;
@@ -16,7 +18,7 @@ pub struct Environment {
     /// MOKLY_ENDPOINT fallback.
     pub endpoint: Option<String>,
     /// MOKLY_TOKEN fallback.
-    pub token: Option<String>,
+    pub token: Option<Secret>,
     /// Available core count used only for the default pool size.
     pub cores: usize,
 }
@@ -93,12 +95,7 @@ fn validate_publish(publish: &mut Publish, environment: &Environment) -> Result<
         .or(environment.token.as_ref())
         .filter(|value| !value.is_empty())
         .ok_or(Failure::TokenRequired)?;
-    let core = token.trim_end_matches('=');
-    if core.is_empty()
-        || !core
-            .bytes()
-            .all(|byte| byte.is_ascii_alphanumeric() || b"._~+/-".contains(&byte))
-    {
+    if Token::new(token.clone()).is_err() {
         return Err(Failure::TokenInvalid);
     }
     publish.endpoint = Some(endpoint.clone());

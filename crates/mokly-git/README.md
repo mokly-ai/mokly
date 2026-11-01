@@ -35,7 +35,9 @@ command. A failed batch stops the sequence. Merge-base, changed-path, tree,
 blob, and source archive operations build on this boundary.
 
 `GitRepositories::open` compares canonical filesystem identities with Git's
-checkout root. Its `Repository` trait resolves the configured ref to a commit
+checkout root. `SystemDisk` resolves these identities with `dunce`, so on
+Windows they use the plain drive form without `\\?\` when that form can name
+the location. The `Repository` trait resolves the configured ref to a commit
 before `merge-base`. Changed paths include committed, staged, unstaged, and
 untracked paths. Rename records keep Git's previous path and similarity.
 Untracked additions never infer a rename.
@@ -159,9 +161,9 @@ extraction cleanup after cancellation during a streamed copy.
 - [`src/repository.rs`](./src/repository.rs) defines `Repositories`,
   `GitRepositories`, and `Repository`, which validate a checkout and read merge
   bases, changed paths, trees, blobs, and archives.
-- [`src/disk.rs`](./src/disk.rs) defines `Disk` and `Archive`, the filesystem
-  boundary for checkout identity, working reads, confined digests, and
-  extraction.
+- [`src/disk.rs`](./src/disk.rs) defines `Disk`, its host type `SystemDisk`,
+  and `Archive`, the filesystem boundary for checkout identity, working reads,
+  confined digests, and extraction.
 - [`src/extracted.rs`](./src/extracted.rs) defines `ExtractedFiles` and reads
   and hashes the converted files of an extraction, with Git for the files
   that it lacks, that changed, or that it cannot read.
