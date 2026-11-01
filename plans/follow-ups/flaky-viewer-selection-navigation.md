@@ -1,6 +1,6 @@
 # Viewer selection test races a navigation
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from a local complete gate run of PR #242 at
   `f15728a5`.
@@ -36,15 +36,15 @@
   - **A.** Reproduce the failure by repeating the test, and find the
     evaluation that races. Then wait for an explicit signal that the
     navigation ended, such as the new URL or a ready mark, before that
-    evaluation. Keep every assertion. Effort: Small (estimate).
+    evaluation. Keep every assertion. Effort: Small.
   - **B.** Change nothing until the test fails again, and record the failed
-    step then. Effort: Small (estimate).
+    step then. Effort: Small.
   - **C.** If the reproduction shows an unexpected navigation of the page,
     add a failing test first. Then fix the viewer code that starts it.
-    Effort: Medium (estimate).
+    Effort: Medium.
 - **Left out:** A retry, a sleep, or a longer time limit. The
-  `deterministic-tests` skill forbids them, because they hide the source.
-- **Wider fix:** None. The `deterministic-tests` skill already requires an
+  `testing` skill forbids them, because they hide the source.
+- **Wider fix:** None. The `testing` skill already requires an
   explicit readiness signal, and the fix is specific to this test.
 - **Previous examples:** Other browser tests that failed once and passed on
   the rerun: [flaky-same-origin-handoff.md](./flaky-same-origin-handoff.md)
@@ -58,8 +58,8 @@
     separate cases of the same recorded class: a browser test that failed
     once and passed on the rerun. Each has its own test and suspected
     source, so each needs its own fix.
-- **Recommendation:** A (estimate). It removes the race and keeps every
+- **Recommendation:** A. It removes the race and keeps every
   assertion.
-- **Action:** ask the user, because condition 6 holds (estimate): the
-  failure was not reproduced and its source is not confirmed, so the
-  `deterministic-tests` skill gives `ask the user`.
+- **Action:** ask the user, because the failure has not been reproduced with a
+  confirmed cause. No fix is clearly best until reproduction identifies the
+  source, as the flaky-test rule requires.

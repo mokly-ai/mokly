@@ -1,6 +1,6 @@
 # Keep head render entries while the base renders
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #222 and its completed plan, the
   post-merge follow-up of its eviction decision.
@@ -48,7 +48,7 @@
   - The base added only its stylesheet bundles, so each base document had
     the key of a head document in that run. A base that differs in many
     documents still renders its own documents, and it can still evict head
-    entries (estimate).
+    entries.
 - **Task:**
   1. Run watched Serve on `examples/basic` from a release build with
      `--debug-timings` and `--sidecars 8`, after one warm-up run. Use a

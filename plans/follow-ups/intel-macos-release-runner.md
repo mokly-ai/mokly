@@ -1,6 +1,6 @@
 # Replace the Intel macOS release runner
 
-- **Severity:** Medium (estimate). **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan.
 - **Location:** `.github/workflows/release.yml:142-144`,

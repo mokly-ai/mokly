@@ -1,6 +1,6 @@
 # Define saved variant slot element checks
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 128, from the F21 decision record.
 - **Location:** `crates/mokly-catalogue/src/template_role.rs:57`,
@@ -10,7 +10,7 @@
   until after its merge, for the user's later choice.
 
 - **Source:** Review.
-- **Category:** Docs or spec (estimate).
+- **Category:** Docs or spec.
 - **Terms:**
   - **Saved slot:** an HTML fragment that a saved component variant
     supplies for a declared slot in its front matter, under `slots`.
@@ -33,10 +33,10 @@
 - **Options:**
   - **A.** Apply the body element checks to saved slots, and state the rule
     in the Variants section. Each failure names the slot's front matter
-    field. This adds a build error. Effort: Small (estimate).
+    field. This adds a build error. Effort: Small.
   - **B.** Keep only the required `html-ignore-attribute` and
     `html-foster-parented` warnings for saved slots, and state that saved
-    slots skip the element checks. Effort: Small (estimate).
+    slots skip the element checks. Effort: Small.
 - **Left out:** Skipping every check also drops the two required warnings.
   Only two distinct approaches exist: a saved slot follows the body checks,
   or it skips them.
@@ -50,8 +50,7 @@
   names. One rule for authored HTML would settle both.
 - **Recommendation:** A. It gives saved slots the checks of every other
   authored HTML.
-- **Action:** ask the user, because condition 5 holds: the user reserved
-  the choice for each open review item of the rebuild. Condition 3 also
-  holds, because A adds a build error.
+- **Action:** ask the user, because the user reserved the choice for each open
+  review item of the rebuild. A adds a build error.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6018).

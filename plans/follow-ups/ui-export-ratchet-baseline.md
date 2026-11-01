@@ -1,6 +1,6 @@
 # Add UI package export ratchet baselines
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** Yes.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #243 and its completed plan, an unchecked
   post-merge task.

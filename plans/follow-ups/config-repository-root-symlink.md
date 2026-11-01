@@ -1,6 +1,6 @@
 # One path rule for a linked repository root
 
-- **Severity:** Medium (estimate). **Likelihood:** Rare (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #240 and its completed plan, which put the
   problem outside the scope of its first review.
@@ -32,22 +32,21 @@
   another.
 - **Impact if no action:** A repository at a linked path can get an
   "is outside repoRoot" error for one field and not for another, or accept
-  paths that the other rule rejects (estimate).
+  paths that the other rule rejects.
 - **Root question:** How does every configured path use one containment rule
   when `repoRoot` goes through a symbolic link?
 - **Options:**
   - **A.** Change nothing. Effort: Small.
   - **B.** Check `roots[].dir` against the link target, as the other fields
-    are. Effort: Small (estimate).
+    are. Effort: Small.
   - **C.** Reject a `repoRoot` that goes through a symbolic link, with a
-    configuration error. This adds a rejection. Effort: Small (estimate).
+    configuration error. This adds a rejection. Effort: Small.
   - **D.** Move the containment check of every configured path into one
-    helper that both files call, with the rule of B. Effort: Medium
-    (estimate).
+    helper that both files call, with the rule of B. Effort: Medium.
 - **Left out:** Checking every field against the lexical path only. A link
   inside the repository could then reach files outside the target, which
   breaks confinement.
-- **Wider fix:** D (estimate). One helper keeps every field on one rule.
+- **Wider fix:** D. One helper keeps every field on one rule.
 - **Previous examples:** PR #240 replaced four separate joins of the authored
   spelling with one normalized form on 2026-10-28.
 - **Related:**
@@ -57,9 +56,9 @@
   - [base-symlink-package-root.md](./base-symlink-package-root.md) concerns
     linked package roots in the base tree of Changes. It is the same class
     of link handling in another reader.
-- **Recommendation:** D (estimate). It fixes the difference and keeps every
+- **Recommendation:** D. It fixes the difference and keeps every
   later field on the same rule.
-- **Action:** fix after merge, apply D (estimate), because the inconsistent
+- **Action:** fix after merge, apply D, because the inconsistent
   check is a product bug outside the reviewed diff, and D is not blocked.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/normalize-config-relative-paths.md?plain=1#L322).

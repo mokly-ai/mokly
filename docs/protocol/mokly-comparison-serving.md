@@ -90,6 +90,34 @@ Replacing an unfinished classification cancels its base capture, its base
 workers, its source reads, and its sidecar calls. Command shutdown cancels
 both current and base work.
 
+## Base And Head Capture
+
+A capture is a bounded store of one side's rendered views. A later read of a
+kept view does not render the view again. Each classification captures its
+base side in Serve, `build`, and `publish`. `build` and `publish` also capture
+the head side. The [render cache rules](./mokly-runtime.md#render-graph-and-cache)
+give the bound of each side.
+
+Route order is the byte order of the view routes. A capture keeps views in
+route order while they fit its bound. It skips a view that does not fit when
+that view arrives. It still keeps a later view that fits. The side's validation
+summary, stylesheets, and asset digests come before views in the same bound.
+When they need more room, the capture drops its last kept views first.
+
+A view that a capture does not keep comes from its side's source when a
+comparison or the output needs it. The source renders the view again unless
+the render cache still holds it. The comparison and the output have the same
+bytes whichever views a capture keeps. Only the number of views that render
+again changes.
+
+Decision: a capture does not try a skipped view again. Strict route order,
+which keeps no view after the first skip, was rejected, because it keeps fewer
+views for no change in output. A second pass, which renders each dropped view
+that fits the final capacity, was rejected, because it adds renders when memory
+is tight. The default [large fixture](./mokly-timings.md#scale-fixture) does not
+need that pass, because each side keeps every view within about a third of the
+bound.
+
 ## Build And Publish
 
 `build` writes one complete comparison into the output directory unless

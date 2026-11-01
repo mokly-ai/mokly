@@ -1,6 +1,6 @@
 # Require the sidecar parent watchdog in package reports
 
-- **Severity:** Medium (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of the 117 C port review.
 - **Location:** `scripts/release/package_reports.mjs:34`,
@@ -10,7 +10,7 @@
   code outside its change, so a separate branch fixes it.
 
 - **Source:** Review.
-- **Category:** Test (estimate).
+- **Category:** Test.
 - **Terms:**
   - **Package report:** the file list of `npm pack --dry-run` for one
     package, which `scripts/release/package_reports.mjs` checks before a
@@ -37,14 +37,13 @@
   - **A.** Add `dist/sidecar/parent-watchdog.js` to the required list of
     `validateCliReport`, and add it to the missing-file cases of
     `tests/release_native.test.ts`. This adds a release rejection.
-    Effort: Small (estimate).
+    Effort: Small.
   - **B.** Start the watchdog from inline source, so that no separate file
     exists. This changes the sidecar start and the read-evidence filter of
-    `postcss-read-sharing.ts`, which names the watchdog file. Effort: Medium
-    (estimate).
+    `postcss-read-sharing.ts`, which names the watchdog file. Effort: Medium.
   - **C.** Keep one shared list of the separately loaded sidecar files,
     which the build and the release check both read. This adds a release
-    rejection. Effort: Large (estimate).
+    rejection. Effort: Large.
 - **Left out:** A check of the built tree alone misses a file that packing
   leaves out, so it fails the goal.
 - **Wider fix:** C. One shared list covers every file that the sidecar
@@ -53,10 +52,9 @@
   check did not require `dist/sidecar/postcss-async-loader.mjs`, which the
   PostCSS preload loaded by path. The user closed it with no work on
   2026-10-26, because a later change removed that bundle.
-- **Recommendation:** A. (estimate) It closes the known gap with the
+- **Recommendation:** A. It closes the known gap with the
   smallest change. C best protects the codebase.
-- **Action:** ask the user (estimate), because condition 3 holds: A and C
-  add a release rejection, and B changes product startup code for a test
-  gap.
+- **Action:** ask the user, because A and C add a release rejection, and B
+  changes product startup code for a test gap.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6741).

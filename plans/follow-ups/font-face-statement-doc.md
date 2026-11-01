@@ -1,6 +1,6 @@
 # Align the Statement doc with descriptor parsing
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a problem outside the scope of the review of commit `3066e47a` of the
@@ -47,9 +47,9 @@
 - **Related:** [moz-document-statement-kind.md](moz-document-statement-kind.md)
   is another difference between the scanner reading and lightningcss from
   the same review series. One branch can settle both.
-- **Recommendation:** A (estimate). It makes the comment match the code and
+- **Recommendation:** A. It makes the comment match the code and
   the protocol.
-- **Action:** fix after merge, apply A (estimate), because the comment
+- **Action:** fix after merge, apply A, because the comment
   contradicts the code, and the code is outside the reviewed change.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6696).

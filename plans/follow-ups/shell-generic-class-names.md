@@ -1,11 +1,13 @@
 # Shell rules guard generic class names
 
-- **Severity:** Low (estimate). **Effort:** Large (estimate). **Confidence:** High. **Harder later:** Yes.
+- **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-30, from the branch `calummoore/mokly-ui-layout-theme`, during the theme milestone of the shell views plan.
 - **Location:** The 77 selectors with `:where(.mbk-reset)` in `packages/ui/src/browser-bar/browser-bar.css`, `packages/ui/src/device-frame/device-frame.css`, `packages/ui/src/catalogue-tree/catalogue-tree.css`, `packages/ui/src/comparison-pane/comparison-pane.css`, `packages/ui/src/comparison-stage/comparison-stage.css`, `packages/ui/src/flow-step/flow-step.css`, and `packages/ui/src/preview-frame/preview-frame.css`, and the components that render these classes.
 - **Reason:** The rename changes the shell's class names, which the browser specs, the tests, and the design mockups read, and the theme milestone kept every class name.
 
+- **Source:** Implementation.
+- **Category:** Code structure.
 - **Terms:**
   - **Reset class:** `mbk-reset`, which each `@mokly/ui` component puts on
     every element that it renders, apart from host slots. It gives border-box
