@@ -1,6 +1,6 @@
 # Cache unused compiled recipes
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   the deferred option C of F8 decision 59, 2026-10-20.
@@ -98,7 +98,7 @@
     through `restoreGeneration` and the sidecar's input check, as D does.
     The two items can land in either order.
   - The
-    [large React startup item at its last commit](https://github.com/mokly-ai/mokly/blob/a5cd66c7c16ea76f2da7391e712f9fe8ac9811d1/plans/follow-ups/large-react-startup.md)
+    [large React startup item at its last commit](https://github.com/mokly-ai/mokly/blob/75bacb9d016205c804633b79ff0e8496c6c07929/plans/follow-ups/large-react-startup.md)
     asked for a compilation cache redesign to bring large React startup
     under 5,000 ms. It closed on 2026-11-01, when large React startup
     measured about 3.7 s, cold and warm, so no startup work waits for this
@@ -107,8 +107,7 @@
     large React watch test. Its timeouts come from accumulated React and
     base compilations, which this cache can reduce.
 - **Recommendation:** D. It keeps every measured repeat at the smallest
-  memory, under an existing limit. The first recommendation was B
-  (estimate).
+  memory, under an existing limit. The first recommendation was B.
 - **Action:** fix after merge, apply D, because the design call of
   2026-11-01 settles the budget and only the implementation remains.
 

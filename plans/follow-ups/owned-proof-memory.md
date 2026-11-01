@@ -10,7 +10,7 @@
   with the counted test of option C. Only its implementation waits.
 
 - **Source:** Review.
-- **Category:** Performance (estimate).
+- **Category:** Performance.
 - **Terms:**
   - **Owned rule:** a CSS rule that a component supplies with its own
     styles, such as CSS-in-JS from the sidecar.
@@ -57,12 +57,12 @@
   without holding whole-document data for every view until collection ends?
 - **Options:**
   - **A.** Keep the current state, which a fix round of the rebuild
-    already changed to pass by value. Effort: Small (estimate).
+    already changed to pass by value. Effort: Small.
   - **B.** Keep compact candidates. Keep instance chains without duplicates
     for each owner and rule identity, and candidates only for owners with
     changed rules. Keep one address pair for each view. Effort: Medium.
   - **C.** Add a counted test at two catalogue sizes, and keep the current
-    retention. Effort: Medium (estimate).
+    retention. Effort: Medium.
 - **Left out:** A proof that each view resolves alone breaks the decision of
   2026-10-20, because it cannot see the own-page proof of other pages.
   Dropping the candidate proofs loses the owned-instance evidence.

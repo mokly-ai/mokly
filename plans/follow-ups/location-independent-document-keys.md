@@ -1,6 +1,6 @@
 # Make JavaScript document keys location-independent
 
-- **Severity:** Medium. **Likelihood:** Common (estimate). **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 133, from decision 1 of integration batch 19, widened by batch 21.
@@ -69,7 +69,7 @@
 - **Options:**
   - **A.** Document that absolute roots and all ancestor manifests are
     render inputs. The watch contract already states the manifest half.
-    Effort: Small (estimate).
+    Effort: Small.
   - **B.** Keep them in the compiled-code cache key. Compute the published
     document keys from folder-independent data: module digests by
     repository path, class maps, and bindings. Dropping the manifests or the

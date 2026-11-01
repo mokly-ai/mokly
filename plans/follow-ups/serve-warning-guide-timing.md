@@ -1,6 +1,6 @@
 # Align the Serve warning guide with on-demand views
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #225 and its completed plan, which put the
   problem outside the scope of its review.
@@ -45,9 +45,9 @@
 - **Wider fix:** None. The `documentation` skill already requires a guide to
   follow the behaviour that it describes.
 - **Previous examples:** None found.
-- **Recommendation:** A (estimate). The protocol settles the behaviour, so
+- **Recommendation:** A. The protocol settles the behaviour, so
   only the guide is wrong.
-- **Action:** fix after merge, apply A (estimate), because the guide
+- **Action:** fix after merge, apply A, because the guide
   contradicts the protocol, and A changes only its words.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/parallel-background-pass.md?plain=1#L388).

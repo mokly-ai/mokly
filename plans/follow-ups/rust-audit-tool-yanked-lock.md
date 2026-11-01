@@ -1,6 +1,6 @@
 # Avoid yanked packages in the cargo-audit tool lock
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #225 and its completed plan, which put the
   problem outside the scope of its review.
@@ -34,13 +34,13 @@
   - **A.** Update `tokio` in `.cargo/audit-tool/Cargo.lock` to a release that
     is not yanked, and review the lock diff. Effort: Small.
   - **B.** Move to a newer `cargo-audit` release, with its checksum and a new
-    reviewed lock. Effort: Small (estimate).
+    reviewed lock. Effort: Small.
   - **C.** Change nothing. Effort: Small.
 - **Left out:** A check that fails when the tool lock holds a yanked
   release. It needs the crates.io index during the gate, and a new gate
   needs the user.
-- **Wider fix:** B (estimate). A current tool release brings a lock that its
-  authors maintain.
+- **Wider fix:** None. Updating a tool does not prevent a dependency from being
+  yanked later. A new yanked-release check would need approval.
 - **Previous examples:** PR #230 updated `pulldown-cmark` on 2026-10-28,
   after a new advisory failed the Rust dependency audit on every branch.
 - **Related:** [locked-cargo-gate.md](./locked-cargo-gate.md) asks the gate to
@@ -48,9 +48,9 @@
   fails the gate. This item concerns the separate reviewed lock of the audit
   tool, which already builds with `--locked`. The items share the
   `--locked` mechanism, but their causes and fixes differ.
-- **Recommendation:** A (estimate). It removes the yanked release with the
+- **Recommendation:** A. It removes the yanked release with the
   smallest reviewed change.
-- **Action:** ask the user, because condition 6 holds (estimate): this is a
-  process finding about the verification tooling.
+- **Action:** fix after merge, apply A, because the audit-tool lock lies outside
+  the pass-scheduler change that found the yanked dependency.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/parallel-background-pass.md?plain=1#L392).

@@ -1,7 +1,7 @@
 # Use progress as the large benchmark liveness signal
 
-- **Severity:** Low. **Likelihood:** Common. **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
-- **Kind:** Fix after merge.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 162, from the harness note of integration batch 25. Updated on
   2026-11-01 with the Changes wait, from an open item of the closed
@@ -12,9 +12,9 @@
 - **Location:** `scripts/large/delivery.ts:114` and `:145`,
   `scripts/large/benchmark.ts:185`, and
   `tests/fixtures/large/README.md:96-97`.
-- **Reason:** The Changes wait needs its own change and measurement runs of
-  about five minutes each, so it follows the build deadline fix in a
-  separate branch.
+- **Reason:** On 2026-10-21 the user ruled that new review items wait for
+  the user after the merge. The answer of 2026-10-28 covers only the build
+  deadline.
 
 - **Source:** Design.
 - **Category:** Test.
@@ -69,7 +69,7 @@
     30 minutes as the watch scenario does. Effort: Small.
   - **B.** Make the Changes wait a liveness limit that each Serve output
     line restarts, with the window of the build scenario's liveness helper.
-    Effort: Medium (estimate).
+    Effort: Medium.
 - **Left out:** Remove the wait. It loses the detection of a stuck process.
   Fewer than three approaches exist, because the limit is either fixed or
   restarted by progress.
@@ -85,9 +85,8 @@
 - **Recommendation:** B. Serve already writes a line at least every few
   seconds, so the window that the build scenario uses tells slow progress
   from a stuck run.
-- **Action:** fix after merge, apply B, because the change is Medium and
-  needs measurement runs of its own. No condition of the decision test
-  holds: B adds no gate and changes no protocol requirement, and the
-  harness is an opt-in tool outside the product.
+- **Action:** ask the user, because on 2026-10-21 the user ruled that new
+  review items wait for the user after the merge, and no answer covers the
+  Changes wait.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6197).

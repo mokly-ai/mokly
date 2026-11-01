@@ -1,6 +1,6 @@
 # Diagnose the Yarn Classic mirror fallback
 
-- **Severity:** Low. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 192.
 - **Location:** `tests/static_base_manager_mirror.test.ts:14`.
@@ -35,10 +35,10 @@
   cause?
 - **Options:**
   - **A.** Find the cause from a reproduction with the manager output
-    captured. Effort: Small (estimate).
+    captured. Effort: Small.
   - **B.** Apply A, and also print the manager output in the failure
     message. The test already prints the manager output as a diagnostic.
-    Effort: Small (estimate).
+    Effort: Small.
 - **Left out:** A longer timeout has no evidence, because the failure did
   not show a timeout.
 - **Wider fix:** None. B's lasting diagnostic is already in place.
@@ -47,7 +47,7 @@
   a test diagnostic when a build does not reach tier two.
 - **Recommendation:** A. A reproduction names the source before the test
   changes. The manager output diagnostic of B is already in place.
-- **Action:** ask the user, because condition 5 holds: the user reserved
-  the choice for each open review item of the rebuild.
+- **Action:** ask the user, because the user reserved the choice for each open
+  review item of the rebuild.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6503).

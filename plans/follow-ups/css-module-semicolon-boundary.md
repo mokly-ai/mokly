@@ -1,6 +1,6 @@
 # Align the CSS Modules semicolon boundary
 
-- **Severity:** Low. **Likelihood:** Rare (estimate). **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   finding 2 of the review of the `rebuild/port-111c` work.
@@ -40,8 +40,7 @@
   - **A.** Keep the documented `;` boundary, and delete this item. Effort:
     Small.
   - **B.** End a rule-list statement only at its `{}` block, as cssparser
-    does. Update the protocol page and its diagnostics. Effort: Medium
-    (estimate).
+    does. Update the protocol page and its diagnostics. Effort: Medium.
 - **Left out:** Change the bundler. lightningcss is a dependency, and its
   reading defines the output.
 - **Wider fix:** B. One boundary rule removes this difference between the
@@ -52,10 +51,9 @@
 - **Related:** [css-module-custom-property-rules.md](css-module-custom-property-rules.md)
   is another statement that the scanners read differently in a rule list.
   B touches that case, so decide the two together.
-- **Recommendation:** A (estimate). The protocol records why alignment was
+- **Recommendation:** A. The protocol records why alignment was
   not chosen, and no realistic stylesheet reaches the boundary.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-26 the
-  user documented the boundary and kept its alignment as a follow-up for a
-  later choice.
+- **Action:** ask the user, because on 2026-10-26 the user documented the
+  boundary and kept its alignment as a follow-up for a later choice.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6652).

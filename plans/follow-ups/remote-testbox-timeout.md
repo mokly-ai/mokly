@@ -1,17 +1,17 @@
 # Keep healthy remote Testbox runs alive
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of the CI release checks hub review.
 - **Location:** `.github/workflows/blacksmith-testbox.yml:25`,
   `docs/protocol/remote-verification-testbox.md:16`, and
   `docs/protocol/remote-verification-testbox.md:99`.
-- **Reason:** The review found the stop outside the change that it
-  reviewed, and the rebuild required a decision on the Testbox guard before
-  any timeout change.
+- **Reason:** The stopped Testbox run lay outside the reviewed change. A
+  separate branch must measure and reduce its cost without weakening its checks
+  or raising its guard.
 
 - **Source:** Review.
-- **Category:** Process (estimate).
+- **Category:** Process.
 - **Terms:**
   - **Testbox:** a Blacksmith remote runner that the remote gate prepares
     with `.github/workflows/blacksmith-testbox.yml` and then runs one gate
@@ -37,13 +37,10 @@
 - **Root question:** How should the remote gate finish a healthy suite and
   still stop a hung one at a bounded cost?
 - **Options:**
-  - **A.** Keep the 30-minute guard, and rerun a stopped job. Effort: Small
-    (estimate).
+  - **A.** Keep the 30-minute guard, and rerun a stopped job. Effort: Small.
   - **B.** Raise the job guard of the delivery Testbox. This raises a time
-    limit and changes the Testbox protocol. Effort: Small (estimate).
-  - **C.** Measure the suite and its preparation, then reduce or split its
-    work so that it fits under the 30-minute guard. Effort: Medium
-    (estimate).
+    limit and changes the Testbox protocol. Effort: Small.
+  - **C.** Measure the suite and its preparation, then reduce its cost without removing checks. Keep the suite and runner requirements, and the 30-minute guard. Splitting a suite that the protocol keeps together needs a separate decision. Effort: Medium.
 - **Left out:** Removing the timeout loses the remote cost bound and the
   hang bound.
 - **Wider fix:** C. Work that fits its guard removes the stop for every
@@ -61,11 +58,10 @@
     limit of the local complete gate, which once took 114 of its 120
     minutes. Both items recommend cutting suite cost over raising a limit,
     so one measurement of suite times can serve both. The limits and the
-    runners differ, so each item keeps its own decision.
-- **Recommendation:** C. (estimate) It keeps the guard and makes the suite
+    runners differ. The local-gate item still waits for the choice that the user reserved.
+- **Recommendation:** C. It keeps the guard and makes the suite
   fit it.
-- **Action:** ask the user, because condition 6 holds: the item concerns a
-  slow check and its cost. Condition 3 also holds for B, because it raises
-  a time limit.
+- **Action:** fix after merge, apply C, because the run cost lies outside the
+  change that found it. Preserve every check and the existing time limit.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L4212).

@@ -1,6 +1,6 @@
 # Confirm that hosted uploads skip unchanged details
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #224.
 - **Location:** None in the code. The check publishes

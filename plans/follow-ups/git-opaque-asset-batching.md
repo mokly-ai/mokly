@@ -64,7 +64,7 @@
   - **A.** Measure the workload first. Then batch the digests and stream the
     delivery, and keep every current bound, including the 64 MiB Git read
     bound. Effort: Large.
-  - **B.** Keep the measured adapter. Effort: Small (estimate).
+  - **B.** Keep the measured adapter. Effort: Small.
 - **Left out:** Remove the bounds to simplify the code. It breaks the
   comparison memory contract. Fewer than three approaches exist, because
   the choice is whether the measured cost is worth a redesign.

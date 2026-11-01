@@ -1,6 +1,6 @@
 # Recover from native watch event loss
 
-- **Severity:** Medium. **Likelihood:** Rare (estimate). **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 134, from the Milestone 11 plan TODO.
@@ -60,11 +60,11 @@
     this item. Otherwise copy the failure text and the counts into this
     item, and keep A and B for the user's choice. It needs a macOS host and
     a Windows host. One run covers only the system versions of that run.
-    Effort: Small (estimate).
+    Effort: Small.
   - **A.** Rescan the repository roots after each macOS batch, and check
-    exact-input stamps on Windows. Effort: Medium (estimate).
+    exact-input stamps on Windows. Effort: Medium.
   - **B.** Use one recursive watch for each root on both systems. Effort:
-    Medium (estimate).
+    Medium.
   - **E.** Upgrade `notify` from 8.2.0 to exactly `=9.0.0-rc.7`, and name
     9.0.0 as the exit in the `mokly-watch` README. That release candidate
     reports both losses as rescan events, so the current rescan-flag
@@ -76,8 +76,8 @@
     recovery.
   - Former option C: Keep the current rescan-flag recovery. Add hosted
     macOS and Windows tests that force a batch and a buffer overflow. Add A
-    or B only for a loss that comes without a rescan flag. Effort: Small
-    (estimate). Under the `testing` skill of 2026-10-30, the hosted check of
+    or B only for a loss that comes without a rescan flag. Effort: Small.
+    Under the `testing` skill of 2026-10-30, the hosted check of
     the operating system's watcher is a one-time proof, so it gets no suite
     test. D keeps this approach as a check that runs once.
 - **Wider fix:** A. Platform-specific recovery handles each known loss mode
@@ -88,7 +88,7 @@
   recovers watched changes, so one branch can test both.
 - **Recommendation:** E. The upstream fix reaches every loss that `notify`
   can report, and Mokly already recovers from a rescan event. The first
-  recommendation was A (estimate).
+  recommendation was A.
 - **Action:** fix after merge, apply E, because the user's choice of
   2026-10-28 settles it and only the implementation remains.
 

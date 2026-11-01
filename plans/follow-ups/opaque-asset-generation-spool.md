@@ -1,6 +1,6 @@
 # Share an opaque-asset spool for each generation
 
-- **Severity:** Medium (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: the post-merge task of user decision 61 and M14 review 6, finding 5.
 - **Location:** `crates/mokly-server/src/asset_streams.rs:21`,
@@ -10,7 +10,7 @@
   Only its implementation waits.
 
 - **Source:** Review.
-- **Category:** Performance (estimate).
+- **Category:** Performance.
 - **Terms:**
   - **Opaque asset:** a file that a stylesheet references, such as an image
     or a font, that Mokly delivers by route without decoding it.
@@ -71,11 +71,11 @@
     process memory. Keep the large-catalogue budgets of
     `docs/protocol/mokly-timings.md`, section Budgets. Update the delivery
     rule of the asset page in the same change, because a request after the
-    first reads the spool, not the source. Effort: Medium (estimate).
+    first reads the spool, not the source. Effort: Medium.
   - **C.** Share one verified copy only among concurrent requests for one
     generation and route, and close it after the last response. A later
     request copies and checks the asset again. Disk use never grows past
-    the current design. Effort: Medium (estimate).
+    the current design. Effort: Medium.
 - **Left out:** A stream from the source that checks the digest after the
   bytes leave breaks the rule that Serve checks the asset before it sends
   headers. A copy in process memory adds the full size of each large asset
@@ -91,8 +91,7 @@
   buffered copy during delivery. The two items change different code and can
   land in either order.
 - **Recommendation:** C. It removes the measured duplication without a new
-  budget or a change of the delivery rule. The first recommendation was B
-  (estimate).
+  budget or a change of the delivery rule. The first recommendation was B.
 - **Action:** fix after merge, apply C, because the user's choice of
   2026-10-28 settles it, and the design call of 2026-11-01 settles
   retention.

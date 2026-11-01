@@ -1,6 +1,6 @@
 # Run Cargo checks with the locked dependency graph
 
-- **Severity:** Medium (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a problem outside the scope of the F18 re-review of 2026-10-20.
@@ -75,10 +75,9 @@
 - **Related:** [rust-audit-tool-yanked-lock.md](rust-audit-tool-yanked-lock.md)
   is about the separate lock file of the `cargo-audit` tool. It shares the
   `--locked` mechanism but not this cause, so each item needs its own fix.
-- **Recommendation:** B (estimate). The launcher then fails first on every
+- **Recommendation:** B. The launcher then fails first on every
   platform, for local and CI runs, at no runtime cost.
-- **Action:** ask the user, because condition 3 holds (estimate): B and C
-  add stricter validation to the gate, which the always-on rules reserve
-  for the user.
+- **Action:** ask the user, because B and C add stricter validation to the gate,
+  which the always-on rules reserve for the user.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L4853).
