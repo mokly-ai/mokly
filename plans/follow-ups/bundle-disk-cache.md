@@ -172,7 +172,7 @@
     `restoreGeneration` request and `reuse` check as 1A. Decide this item
     with D in mind.
   - The
-    [large React startup item at its last commit](https://github.com/mokly-ai/mokly/blob/a5cd66c7c16ea76f2da7391e712f9fe8ac9811d1/plans/follow-ups/large-react-startup.md)
+    [large React startup item at its last commit](https://github.com/mokly-ai/mokly/blob/75bacb9d016205c804633b79ff0e8496c6c07929/plans/follow-ups/large-react-startup.md)
     closed on 2026-11-01, when large React startup measured about 3.7 s,
     cold and warm.
   - [keep-base-side-in-memory.md](./keep-base-side-in-memory.md): both

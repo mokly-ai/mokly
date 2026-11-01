@@ -1,6 +1,6 @@
 # Build exits late after SIGTERM in its output step
 
-- **Severity:** Low (estimate). **Likelihood:** Rare (estimate). **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-01, from the branch `conductor/rust-rebuild-59-performance-follow-ups`, which changed the large benchmark harness but not the build's signal handling.
 - **Location:** `crates/mokly-static/src/fingerprint.rs:87` and `:136`, the two `output.input-read` spans, and the cancellation checks of `crates/mokly-cli/src/build.rs:167`.
@@ -43,13 +43,13 @@
   - **A.** Reproduce with the release binary first: run the build on the
     large React fixture, send SIGTERM during `output.input-read`, and time
     the exit. Close the item when the release binary exits within
-    10 seconds. Effort: Small (estimate).
+    10 seconds. Effort: Small.
   - **B.** Check cancellation inside the output read loop of
     `fingerprint.rs`, so that a requested stop ends the read between files.
-    Effort: Small (estimate).
+    Effort: Small.
   - **C.** Release the output reservation in the cancellation path of
     every phase, so that a cancelled build never leaves it. Effort: Medium
-    (estimate).
+   .
 - **Left out:** A longer grace period in the harness. It hides a slow stop
   and does not help other callers.
 - **Wider fix:** C. A cancellation that always releases the reservation
