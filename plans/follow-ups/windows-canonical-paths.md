@@ -5,8 +5,7 @@
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 166, native CI round 6.
 - **Location:** `crates/mokly-git/src/disk.rs:62` and
   `crates/mokly-sidecar/src/memory_table.rs:67`.
-- **Reason:** A user rule of 2026-10-21 deferred each new review item of
-  PR #199 until after its merge, for the user's later choice.
+- **Reason:** Option B adds a Clippy lint, and a new lint needs the user.
 
 - **Source:** Review.
 - **Category:** Product bug.
@@ -41,7 +40,7 @@
   can align both.
 - **Recommendation:** B. It aligns all product canonicalization and stops
   a repeat.
-- **Action:** ask the user, because the user reserved the choice for each open
-  review item of the rebuild. B adds a lint.
+- **Action:** ask the user, because B adds a Clippy `disallowed-methods` rule, a
+  new lint that the always-on rules reserve for the user.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6231).

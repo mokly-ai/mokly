@@ -1,13 +1,13 @@
 # Make the deployment test observe its step failure
 
-- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 143, from finding 2 of the review of the 89 B and 90 C work.
 - **Location:** `tests/browser/static_deployment_flow.spec.ts:42-80`,
   `:137-194`, and `:180`, and `tests/browser/README.md:86-92`.
-- **Reason:** On 2026-10-21 the user deferred the open review items until
-  after the merge and kept each choice for a later decision.
+- **Reason:** The Rust rebuild merged with this test gap open, so a separate
+  branch adds the failure-ready signal to the browser spec.
 
 - **Source:** Review.
 - **Category:** Test.
@@ -52,9 +52,10 @@
   scenario.
 - **Previous examples:** The second test of the spec asserts the 404 at line 282. Its title is "a removed step that fails before the other details
   keeps the use case loading".
-- **Recommendation:** A. It makes the test state only the behaviour that
-  its scenario can prove. B best protects failure delivery.
-- **Action:** ask the user, because on 2026-10-21 the user deferred the open
-  review items past the merge to decide each one later.
+- **Recommendation:** B. An explicit failure-ready signal lets the test prove
+  the step failure that its title names. The record recommended A before
+  2026-11-01, and the fix rule ranks the unblocked wider fix B first.
+- **Action:** fix after merge, apply B, because the signal and the 404 assertion
+  change only the deployment spec, and they remove or loosen no assertion.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6090).

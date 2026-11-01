@@ -8,8 +8,8 @@
 - **Location:** `examples/basic/specs/design/components/parts/component_usage.tsx:92-94`,
   `examples/basic/specs/design/components/states/shared-impact/screens.tsx:32-38`,
   and `packages/viewer/src/shell/workspace_usage.tsx:68`.
-- **Reason:** On 2026-10-21 the user deferred the open review items until
-  after the merge and kept each choice for a later decision.
+- **Reason:** Both options side with the product in a mockup and product
+  mismatch, and no user decision settles that mismatch.
 
 - **Source:** Review.
 - **Category:** Mockup.
@@ -58,7 +58,8 @@
   needs a design state for a pure move in the same shared-impact area. One
   mockup branch can draw both, but each item has its own state.
 - **Recommendation:** B. It gives every product state a reviewed mockup.
-- **Action:** ask the user, because on 2026-10-21 the user deferred the open
-  review items past the merge to decide each one later.
+- **Action:** ask the user, because both options make the design list components
+  under Affected, while `docs/protocol/mokly-component-design.md:75` lists only
+  screens there, and no user decision settles that mismatch.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5918).

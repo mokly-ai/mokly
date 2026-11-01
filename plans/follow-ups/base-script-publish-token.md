@@ -7,9 +7,9 @@
 - **Location:** `crates/mokly-cli/src/entry.rs:24`,
   `crates/mokly-cli/src/options.rs:61`, and
   `crates/mokly-compare/src/process.rs:36-45`.
-- **Reason:** The plan recorded this item after the user's rule of
-  2026-10-21 that new review items wait for the user after the merge. The
-  hub asked for a decision before the first npm release.
+- **Reason:** Option B overrides the documented script opt-in, which needs the
+  user's decision, and the hub had asked for that decision before the first npm
+  release.
 
 - **Source:** Review.
 - **Category:** Security.
@@ -55,7 +55,9 @@
     separate fix.
 - **Recommendation:** B. It blocks the known path with a small change. C
   best protects all parent secrets.
-- **Action:** ask the user, because on 2026-10-21 the user ruled that new review
-  items wait for the user after the merge.
+- **Action:** ask the user, because option B keeps scripts off whenever
+  `MOKLY_TOKEN` is set, which overrides the opt-in of
+  `docs/protocol/mokly-base-dependencies.md:126-129`, and no user decision
+  covers that change.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6118).

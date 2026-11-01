@@ -6,8 +6,9 @@
   user item 113, from item 28 of the Milestone 14 nesting report and the
   round 7 differential review.
 - **Location:** `crates/mokly-css/src/module_checks.rs:30-34`.
-- **Reason:** On 2026-10-21 the user deferred the open review items until
-  after the merge, and option B rejects stylesheets that build today.
+- **Reason:** Option B rejects stylesheets that build today, and it touches the
+  statement boundary that `css-module-semicolon-boundary.md` keeps open for the
+  user.
 
 - **Source:** Review.
 - **Category:** Product bug.
@@ -47,8 +48,8 @@
     case, so decide the two together.
 - **Recommendation:** B. It removes the last statement that one scanner
   reads on its own, and `@value` then fails at every rule level.
-- **Action:** ask the user, because on 2026-10-21 the user deferred the open
-  review items past the merge to decide each one later. B also rejects
-  stylesheets that build today.
+- **Action:** ask the user, because B makes keyframes and `@document`
+  stylesheets that build today fail, and the always-on rules reserve a new
+  rejection for the user.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5982).
