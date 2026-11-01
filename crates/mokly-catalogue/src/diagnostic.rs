@@ -3,6 +3,23 @@
 use mokly_model::catalogue::SourceLocation;
 use serde_json::Value;
 
+/// Quote a string with the JSON escapes used by build warning messages.
+pub fn json_quoted(value: &str) -> String {
+    let mut output = String::from("\"");
+    for character in value.chars() {
+        match character {
+            '"' => output.push_str("\\\""),
+            '\\' => output.push_str("\\\\"),
+            character if character.is_control() => {
+                output.push_str(&format!("\\u{:04x}", character as u32));
+            }
+            character => output.push(character),
+        }
+    }
+    output.push('"');
+    output
+}
+
 /// Stable catalogue diagnostic code. Automation can branch on this enum.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Code {
