@@ -442,7 +442,8 @@ The README parts for items 1 and 128 move to Milestone 4.
 
 - [x] `crates/mokly-catalogue/README.md`: the warning formatter and the
       JSON quoting helper under Key Code. Done in `50adf49a`.
-- [ ] `crates/mokly-catalogue/README.md`: the source offset maps.
+- [x] `crates/mokly-catalogue/README.md`: the source offset maps. Done in
+      `55f16cad`.
 - [x] `crates/mokly-html/README.md`: page callback warnings, invocation
       warnings, and duplicate attribute text. Done in `50adf49a`.
 - [x] `docs/protocol/mokly-build-warnings.md`: the `html-ignore-attribute`
@@ -452,7 +453,8 @@ The README parts for items 1 and 128 move to Milestone 4.
       A). Done in `2b77ae17`.
 - [x] Remove the status lines of the build warnings, entry props, and
       component controls pages. Done in `50adf49a`.
-- [ ] Remove the status line of the HTML screens page after Milestone 5.
+- [x] Remove the status line of the HTML screens page after Milestone 5.
+      Done in `55f16cad`.
 
 ## Milestone 7: Verification, bookkeeping, commit, review, and pull request
 
@@ -468,8 +470,9 @@ The README parts for items 1 and 128 move to Milestone 4.
 - [x] Delete the follow-up items that this branch resolves, merge the
       reserved-name items, and add the items of "Open decisions" that have
       no file. Done in `fdeeb825`: open follow-up items went from 151 to 147.
-- [ ] Delete `plans/follow-ups/template-source-offset-maps.md` when
-      Milestone 5 lands.
+- [x] Delete `plans/follow-ups/template-source-offset-maps.md` when
+      Milestone 5 lands. Done in `55f16cad`; 146 open follow-up items
+      remain.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Apply the fix rule: fix
