@@ -26,7 +26,7 @@ pub(crate) enum Grammar {
     Rules,
     /// A style block: the block of a style rule or an `@-moz-document` rule
     /// in a rule list or a style block, and the block of a conditional,
-    /// layer, scope, or starting-style rule in a style block. A custom
+    /// layer, scope, starting-style, or `@nest` rule in a style block. A custom
     /// property runs through its `{}` blocks to the next `;`, and a statement
     /// without a block that starts with an identifier and a colon is a
     /// declaration. Every other statement is a rule or an at-rule, except the
@@ -56,7 +56,20 @@ pub(crate) struct Block {
     pub(crate) grammar: Grammar,
 }
 
-/// What a statement is, read as lightningcss reads the block that holds it.
+/// What a statement is, read as `lightningcss` reads the block that holds it.
+/// Outside a descriptor block, each statement that `lightningcss` keeps reads
+/// with the start and kind that `lightningcss` gives it. An `@-moz-document`
+/// block outside a style rule is an exception: it reads as a style block here,
+/// but `lightningcss` parses it as a rule list, as it parses `@media`.
+///
+/// In a descriptor block such as `@font-face`, a statement that is not a
+/// custom property ends at its first `{}` block, as postcss reads it. See
+/// [`Grammar::Declarations`]. In `@font-face{c:d{x}e;}`, `lightningcss` keeps
+/// the descriptor `c: d{x}e`, but this reader reads a rule `c:d` with a block,
+/// then the text `e`.
+///
+/// Text that `lightningcss` drops or rejects can read as other statements. For
+/// example, a rule-list statement that a `;` ends can read differently.
 /// Every scanner reads a statement through this one classification.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum Statement {

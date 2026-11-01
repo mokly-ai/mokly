@@ -2151,6 +2151,7 @@ dependencies = [
  "cssparser 0.38.0",
  "insta",
  "lightningcss",
+ "mokly-css",
  "mokly-model",
  "mokly-source-interface",
  "precomputed-hash",

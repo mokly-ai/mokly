@@ -59,12 +59,14 @@ pub(crate) fn normalize(statement: Statement, grammar: Grammar, block: bool) -> 
 
 /// Return the grammar of the block that a statement opens. An
 /// `@-moz-document` block reads as a style rule's block, so a keyframes
-/// block in it holds declarations.
+/// block in it holds declarations. An `@nest` block in a style block also
+/// reads as a style block.
 pub(crate) fn nested(grammar: Grammar, statement: &Statement) -> Grammar {
     match (grammar, statement) {
         (Grammar::Stylesheet | Grammar::Rules, Statement::AtRule(name)) if rule_list(name) => {
             Grammar::Rules
         }
+        (Grammar::Style, Statement::AtRule(name)) if name == "nest" => Grammar::Style,
         (Grammar::Stylesheet | Grammar::Rules | Grammar::Style, Statement::AtRule(name))
             if rule_list(name) || name == "-moz-document" =>
         {
@@ -120,3 +122,7 @@ pub(crate) fn custom_property(tokens: &Tokens<'_>, mut range: Range<usize>) -> b
     matches!(significant(), Some(Token::Ident(name)) if name.starts_with("--"))
         && matches!(significant(), Some(Token::Colon))
 }
+
+#[cfg(test)]
+#[path = "_tests_/token_grammar_tests.rs"]
+mod token_grammar_tests;
