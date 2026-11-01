@@ -142,11 +142,16 @@
     - This reaches a mid-walk orphan whose exited parent led the orphan's
       process group. A Yarn Classic script leads such a group, and its
       children stay in it unless they start their own session.
-    - For this gap, the walk must still find the exited parent. That needs
-      two macOS facts that nobody checked: `proc_listchildpids` still lists a
-      zombie child of a stopped parent, and `proc_pidinfo` still reads it.
-    - `crates/mokly-platform/src/unix_group_members/system.rs:54` already
-      checks `proc_pidinfo` for a zombie status.
+    - For this gap, the walk must still find the exited parent.
+    - Since `32069985`, the macOS reader passes 1 to `proc_pidinfo`, so it
+      also reads a zombie: an exited process that its parent has not reaped.
+    - In the XNU source, `proc_listchildpids` lists a zombie child too,
+      because `proc_listpids` with `PROC_PPID_ONLY` visits the list of zombies.
+    - So the walk now finds an exited parent while its own parent is stopped
+      and has not reaped it. No macOS run has confirmed this timing.
+    - `crates/mokly-platform/src/unix_group_members/system.rs` still passes 0
+      to `proc_pidinfo`. There a zombie member gives ESRCH, which counts as
+      not live before the zombie check at line 54.
     - E adds one group read for each group leader that the walk finds.
     - The macOS limit then names an orphan outside the manager's process
       group when the walk finds no leader of the orphan's process group.
