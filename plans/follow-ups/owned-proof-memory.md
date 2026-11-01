@@ -1,13 +1,13 @@
 # Reduce catalogue-wide owned-proof memory
 
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 97, review 2 finding 3 of the defaults-engine work.
 - **Location:** `crates/mokly-compare/src/owned_styles.rs:24`,
   `crates/mokly-compare/src/owned_styles.rs:115`, and
   `crates/mokly-compare/src/comparison_attribution.rs:35`.
-- **Reason:** On 2026-10-21 the user deferred the open review items of PR #199
-  until after its merge, for the user's later choice.
+- **Reason:** On 2026-10-28 the coordinator chose option B for the user,
+  with the counted test of option C. Only its implementation waits.
 
 - **Source:** Review.
 - **Category:** Performance (estimate).
@@ -32,6 +32,21 @@
     instance indexes, and the candidate proofs of each view.
   - `comparison_attribution::apply` resolves them after the catalogue-wide
     sets are complete.
+  - A view builds its two instance indexes only when an owner's rules
+    changed in that view, in `owned_styles::compare`. Each element costs
+    32 bytes per side in an index. So 1,000 elements per side give about
+    375 MB over 5,850 views, but only when every view has a changed owned
+    rule. The estimate under **Problem** gives about 190 MB. Nobody measured
+    either estimate.
+  - On 2026-10-28, a change of the dark text token of the large React
+    fixture changed 1,350 entries, and 0 of 5,850 views held owned state.
+    Only the styled-components and Emotion adapters give a style an owner.
+  - On 2026-10-28 the coordinator chose option B for the user, with the
+    counted test of option C as its regression test. Keep, for each owner
+    with changed rules and each rule identity, the deduplicated instance
+    chains that the proof needs. Keep candidates only for instances of
+    those owners, and one address pair for each view. The proof results
+    stay the same.
 - **Problem:** Every view with changed owned rules keeps its two document
   indexes and its candidates until all views are collected. An estimate
   gave about 190 MB for 5,850 views at 1,000 elements per side. Nobody has
@@ -62,11 +77,10 @@
   resolves with `OwnPageMatches`, so decide them in one branch. Their scopes
   differ: that item fixes which matches count as own, and this item fixes
   how long the candidates stay in memory.
-- **Recommendation:** B. It removes a memory regression that the
-  catalogue-wide wait added, and the counted test of C can be its
-  regression test.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user reserved the choice for each open review item of the rebuild.
-  Condition 6 also holds, because the item concerns performance.
+- **Recommendation:** B, with the counted test of C. It removes the memory
+  regression and keeps every proof result.
+- **Action:** fix after merge, apply B with the counted test of C, because
+  the user's choice of 2026-10-28 settles it and only the implementation
+  remains.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5878).

@@ -1,9 +1,11 @@
 # Performance Follow-Ups
 
-Status: Active. Milestone groups ship as separate pull requests from stacked
-branches. The first is `conductor/rust-rebuild-59-performance-follow-ups`.
-No pull request exists yet. The plan closes when the last of its pull
-requests merges.
+Status: Closed on 2026-11-01. Pull request 1, from
+`conductor/rust-rebuild-59-performance-follow-ups`, deletes this plan, as
+the coordinator asked for each pull request. Milestones 3 to 8 ship as
+separate pull requests from their own branches. Until each merges, its
+follow-up item under `plans/follow-ups/` holds its decisions and its
+remaining work.
 
 The [Rust rebuild plan](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md) left performance items open in its
 post-merge section: user items 59, 61, 64, 97, 99, 134, and 162, the
@@ -71,8 +73,49 @@ of each item at `c9d402cd`. Each answer keeps the options of the report of
 - Item 61 (2026-10-28): option D, added by the review: concurrent requests
   for one generation and asset route share one verified copy, which closes
   after the last response. It never uses more disk than today, so it sets no
-  budget. The retention cap of option A waits for Cal, below.
-- Item 59: waits for Cal, below. Do not start the store of unused recipes.
+  budget.
+
+On 2026-11-01 the coordinator asked to apply the current decision test to
+every open item. Under that test, an item waits for the user only when its
+recommended option changes a requirement without a user decision, adds
+behaviour at a boundary, is blocked, has no clearly best option, or the user
+asked for the choice. These design calls follow:
+
+- Item 59 (design call, 2026-11-01): option D, below. No message of Cal and
+  no protocol requirement reserves the budget. The deferral of 2026-10-20
+  keeps the current lifetime only until this work lands. D keeps every
+  measured reusable repeat with about 6.4 MiB, under the existing 64 MiB
+  sidecar frame limit. Rejected: A, B, and C, because they keep older
+  recipes that the one-candidate seed cannot select, and E, because it
+  differs from D only for a recipe above 32 MiB. The call also weighed
+  main's new `plans/follow-ups/bundle-disk-cache.md`, which asks to decide
+  the two items together. D does not depend on its open decisions: that
+  cache keeps the latest compile of each bundle settings on disk, and its
+  decision 1 A restores a recipe through the same input check as D.
+- Item 61 retention (design call, 2026-11-01): option C, no retention after
+  the last response. Cal's decision 61 of 2026-10-20 chose one private
+  capture for each request, deferred the shared spool, and approved no
+  retention. Retention changes the delivery
+  rule of `mokly-imported-styles-assets.md`, so that a later request reads
+  the kept copy and a changed source no longer fails it in `--no-watch`
+  Serve. It also adds a disk budget, which is memory on tmpfs. Option D
+  already removes the only measured cost. Rejected: A, B, and E.
+- Item 57 (2026-11-01): answer A of 2026-10-28 applies now. On the merged
+  tree, large React startup measured 3,686 to 3,721 ms cold and 3,565 to
+  3,633 ms warm, and large HTML startup 4,686 ms cold and 4,531 ms warm. The
+  run of 2026-10-30, 9,139.757 ms cold at `cd35ab37`, did not reproduce:
+  main commit `f93afcea`, with the same product code, measured 3,802 to
+  3,877 ms cold on the same machine. Pull request 1 removes the status line
+  of `mokly-on-demand.md` and deletes
+  `plans/follow-ups/large-react-startup.md`.
+- Item 162, the Changes wait (design call, 2026-11-01): main added the
+  60-second Changes wait of the `changes` and `serve` scenarios to this item
+  on 2026-11-01. The answer of 2026-10-28 covers the build deadline only.
+  On the merged tree, Changes became ready after 305.5 s (React) and 66.6 s
+  (HTML), and Serve wrote an output line at least every 3.3 s. Outcome: fix
+  after merge, apply B, a liveness window that each Serve output line
+  restarts. No condition of the decision test holds, because the harness
+  is an opt-in tool outside the product and B adds no gate.
 
 ### 59. Byte budget for unused compiled recipes
 
@@ -112,8 +155,9 @@ of each item at `c9d402cd`. Each answer keeps the options of the report of
   64 MiB ceiling, but holds about 6.4 MiB. The report of 2026-10-28
   recommended A, the coordinator's review B, and the options check of
   2026-10-29 D.
-- **Auto-fix:** no, because condition 5 holds: the record says Cal agrees
-  the budget.
+- **Outcome:** design call D, 2026-11-01, under the current decision test.
+  The record's "Cal agrees the budget" was agent text beside a default, not
+  a reservation by Cal.
 
 ### 61. Retention cap for verified asset copies
 
@@ -152,16 +196,17 @@ of each item at `c9d402cd`. Each answer keeps the options of the report of
   enough for a budget. The report of 2026-10-28 recommended A, and the
   options check of 2026-10-29 changed it to C. If Cal wants to keep copies,
   E reuses more than A within the same cap.
-- **Auto-fix:** no, because condition 5 holds: the coordinator asked that
-  each disk budget goes to Cal.
+- **Outcome:** design call C, 2026-11-01, under the current decision test.
+  C sets no disk budget, so the coordinator's rule for disk budgets does
+  not apply.
 
 ## The item records and the code
 
 Release binary and eight CPUs, 2026-10-28, unless a line says otherwise.
 
-Merge note, 2026-11-01: the item 57 result below is historical. Main records
-a later run above five seconds. Its current owner is
-`plans/follow-ups/large-react-startup.md`, which links both records.
+Release runs on the merged tree of 2026-11-01, on a quiet eight-CPU,
+16 GiB machine, updated items 57 and 162. The decisions above give those
+numbers. The records below are from 2026-10-28.
 
 - Item 57 holds. The default React fixture (1,620 routes, 5,850 documents,
   two sidecars) reached usable startup in 4,311 to 4,819 ms cold and 3,863 to
@@ -288,9 +333,17 @@ design call of 2026-10-28.
   recipe live again.
 - My call: each milestone group from Milestone 2 to Milestone 7 is its own
   pull request, so the coordinator can merge it alone.
-- Design call, 2026-11-01: keep main's startup status and record both
-  dated startup runs in the existing follow-up. Neither run measures the
-  final merged tree, so this merge does not close the startup target.
+- Design call, 2026-11-01, at the main sync: keep main's startup status
+  and record both dated startup runs in the existing follow-up, because
+  neither run measured the final merged tree. Superseded the same day by
+  the runs on the merged tree, which apply answer A of item 57.
+- Design call, 2026-11-01: main's new Changes wait leaves
+  `plans/follow-ups/large-benchmark-liveness.md` open. Pull request 1
+  narrows that item to the Changes wait and keeps every fact that main
+  added. It does not delete the item.
+- Design call, 2026-11-01: on the large React fixture, the debug build did
+  not exit within 10 s of SIGTERM in its output step. That problem is
+  outside the scope and goes to `plans/follow-ups/build-sigterm-exit-delay.md`.
 
 ## Milestone 1: Decision record
 
@@ -311,119 +364,153 @@ Merge evidence of 2026-11-01: `.context/main-sync-2026-11-01/merge-resolution.md
       `scripts/large/benchmark.ts`. Build and install the release binary
       before the build scenario, and record it in the result.
 - [x] Item 162: update the deadline text of the large fixture README.
-- [ ] Item 162: run both default build scenarios with the release binary.
+- [x] Item 162: run both default build scenarios with the release binary.
+      2026-11-01: 37.7 s (HTML) and 119.3 s (React).
 - [x] Item 99: keep the probe as a regression test in
       `crates/mokly-compare/src/_tests_/capture_collection_tests.rs`.
 - [x] Item 99: state the rule in `mokly-comparison-serving.md`.
-- [x] Item 57: record the older measurement and answer in
-      `plans/follow-ups/large-react-startup.md`. Keep the current startup
-      status while that follow-up remains open.
-- [ ] Close `plans/follow-ups/partial-capture-retention-order.md` and
-      `plans/follow-ups/large-benchmark-liveness.md` when Milestone 2
-      closes. Record item 165's completed check in this plan. Keep item 57's
-      current startup follow-up open.
+- [x] Item 57: measure the merged tree. Remove the status line of
+      `mokly-on-demand.md`, delete the startup follow-up, and link its last
+      commit from the items that named it.
+- [x] Delete `plans/follow-ups/partial-capture-retention-order.md`. Narrow
+      `plans/follow-ups/large-benchmark-liveness.md` to the Changes wait.
+      Item 165's completed check is in "The item records and the code".
+- [x] Record the decisions and design calls of 2026-11-01 in the follow-up
+      items of Milestones 3 to 8, so that the deletion of this plan loses
+      no open work.
 - [ ] Run the targeted tests and the complete gate. Commit and push.
 - [ ] Review the diff with the `implementation-review` skill, apply the
       review-fix rule, and report the pull request text.
 
 ## Milestone 3: Batched opaque digests and streamed base assets
 
-Item 64. Pull request 2.
+Item 64. Its own pull request, from
+`conductor/rust-rebuild-64-opaque-asset-digests`. Until it merges,
+`plans/follow-ups/git-opaque-asset-batching.md` holds its decisions.
 
-- [ ] Add a counted test at two asset counts in a 1:4 ratio: the Git
+- [x] Add a counted test at two asset counts in a 1:4 ratio: the Git
       processes for lookups and digests stay the same, and delivery of a
-      large base asset never buffers the whole blob.
-- [ ] Batch the lookups and digests in `mokly-git`, `mokly-compare`,
+      large base asset never buffers the whole blob. Commit `5128643e`.
+- [x] Batch the lookups and digests in `mokly-git`, `mokly-compare`,
       `mokly-css`, and `mokly-source-interface`. Stream base delivery.
+      Commit `5128643e`.
+- [x] Repeat the asset probes before the main merge: the 65-asset probe
+      fell from 742 to 90 Git processes.
+- [ ] Merge main, and repeat the asset probes on the merged tree.
 - [ ] Update `mokly-git.md`, `mokly-imported-styles-assets.md`, and the
-      crate READMEs.
-- [ ] Repeat the asset probes. Close
-      `plans/follow-ups/git-opaque-asset-batching.md` with the result.
-- [ ] Run the targeted tests and the complete gate. Commit and push.
-- [ ] Review the diff, apply the review-fix rule, and report the pull
-      request text.
+      crate READMEs. Delete the follow-up item and this plan in the branch.
+- [ ] Run the complete gate. Review the diff, apply the review-fix rule,
+      and open the pull request.
 
 ## Milestone 4: Shared verified copy for concurrent asset requests
 
-Item 61, option D. Pull request 3.
+Item 61, option D, with no retention. Its own pull request, from
+`conductor/rust-rebuild-61-shared-asset-copy`, which restarted from
+`origin/main` `a5cd66c7` on 2026-11-01. Until it merges,
+`plans/follow-ups/opaque-asset-generation-spool.md` holds its decisions.
 
 - [ ] Add a failing test: concurrent requests for one asset route make one
       copy and one check, and a request after the last response copies
       again.
-- [ ] Share the copy in `mokly-server`. Update
-      `mokly-imported-styles-assets.md` and the `mokly-server` README.
+- [ ] Share the copy in `mokly-server`.
 - [ ] Repeat the eight-request probe.
-- [ ] Run the targeted tests and the complete gate. Commit and push.
-- [ ] Review the diff, apply the review-fix rule, and report the pull
-      request text. Item 61 stays open for the cap decision.
+- [ ] Update `mokly-imported-styles-assets.md` and the `mokly-server`
+      README. Delete the follow-up item in the branch.
+- [ ] Run the complete gate. Review the diff, apply the review-fix rule,
+      and open the pull request.
 
 ## Milestone 5: Compact owned proof state
 
-Item 97. Pull request 4.
+Item 97. Its own pull request, from
+`conductor/rust-rebuild-97-owned-proof-state`. Until it merges,
+`plans/follow-ups/owned-proof-memory.md` holds its decisions.
 
-- [ ] Add a counted test at two catalogue sizes for the retained candidate
-      state of owned styles.
-- [ ] Keep the compact chains and drop the indexes in `owned_styles.rs`,
-      `owned_style_instances.rs`, and `comparison_attribution.rs`.
-- [ ] Close `plans/follow-ups/owned-proof-memory.md`. Run the targeted
-      tests and the complete gate. Commit and push.
-- [ ] Review the diff, apply the review-fix rule, and report the pull
-      request text.
+- [x] Add a counted test at two catalogue sizes for the retained candidate
+      state of owned styles. Commits `e1191f49` and `84da7333`.
+- [x] Keep the compact chains and drop the indexes in `owned_styles.rs`,
+      `owned_style_instances.rs`, and `comparison_attribution.rs`. Commit
+      `84da7333`.
+- [ ] Merge main. Delete the follow-up item and this plan in the branch.
+- [ ] Run the complete gate. Review the diff, apply the review-fix rule,
+      and open the pull request.
 
 ## Milestone 6: Watch event loss on macOS and Windows
 
-Item 134. Pull request 5.
+Item 134. Its own pull request, from
+`conductor/rust-rebuild-134-watch-event-loss`. Until it merges,
+`plans/follow-ups/native-watch-event-recovery.md` holds its decisions.
 
-- [ ] Add a Windows test that blocks the event handler until the read
-      overflows and asserts a rescan, and a test that the path update skips
-      a vanished directory and applies the rest.
-- [ ] Pin `notify` to `=9.0.0-rc.7` in `crates/mokly-watch`, port
-      `backend.rs`, and name 9.0.0 as the exit in the README.
-- [ ] Close `plans/follow-ups/native-watch-event-recovery.md`. Run the
-      targeted tests and the complete gate. Commit and push. The native
-      suite runs on macOS and Windows in the pull
-      request's CI.
-- [ ] Review the diff, apply the review-fix rule, and report the pull
-      request text.
+- [x] Add a test that the path update skips a vanished directory and
+      applies the rest. Commits `f5f7c82f` and `197446a3`.
+- [x] Pin `notify` to `=9.0.0-rc.7` in `crates/mokly-watch`, and port
+      `backend.rs`. Commits `f5f7c82f` and `197446a3`.
+- [ ] The Windows overflow test checks the behaviour of `notify`, a
+      third-party tool. Under the `testing` skill it is a one-time proof:
+      run it once in the Windows CI of the pull request, save the result,
+      then remove it from the suite.
+- [ ] Merge main. Name 9.0.0 as the exit in the `mokly-watch` README.
+      Delete the follow-up item and this plan in the branch.
+- [ ] Run the complete gate. The native suite runs on macOS and Windows in
+      the pull request's CI. Review the diff and apply the review-fix rule.
 
 ## Milestone 7: Folder-independent document keys
 
-Item 133. Pull request 6.
+Item 133. Its own pull request, from
+`conductor/rust-rebuild-133-folder-keys`. Until it merges,
+`plans/follow-ups/location-independent-document-keys.md` holds its
+decisions.
 
-- [ ] Add a failing test: two folders of one commit give equal render input
+- [x] Add a failing test: two folders of one commit give equal render input
       keys, and the head and a tier-two base still give different keys.
-- [ ] Map the paths of the render environment in `render_environment.rs`.
-      State the folder rule of `documentKey` in `mokly-shell-delivery.md`.
-- [ ] Repeat the two-folder probe. Close
-      `plans/follow-ups/location-independent-document-keys.md`. Record in
-      the closeout that the root `package.json` half stays under #227
-      decision 3 B.
-- [ ] Run the targeted tests and the complete gate. Commit and push.
-- [ ] Review the diff, apply the review-fix rule, and report the pull
-      request text.
+      Commit `337a645c`.
+- [x] Map the paths of the render environment in `render_environment.rs`.
+      Commit `337a645c`.
+- [x] Repeat the two-folder probe before the main merge: 0 of 594 records
+      differ.
+- [ ] Merge main, and repeat the probe on the merged tree.
+- [ ] State the folder rule of `documentKey` in `mokly-shell-delivery.md`
+      and the `mokly-render` README. Record that the root `package.json`
+      half stays under #227 decision 3 B. Delete the follow-up item and
+      this plan in the branch.
+- [ ] Run the complete gate. Review the diff, apply the review-fix rule,
+      and open the pull request.
 
-## Milestone 8: Store of unused compiled recipes
+## Milestone 8: Store of released compiled recipes
 
-Item 59. Waits for Cal's budget. The TODOs assume the recommended option D.
+Item 59, design call D of 2026-11-01. Its own pull request, from
+`conductor/rust-rebuild-59-compiled-recipe-store`, which starts at
+`origin/main` `a5cd66c7`. Until it merges,
+`plans/follow-ups/compiled-recipe-cache.md` holds its decisions.
 
 - [ ] Add failing pool tests: a released recipe restores without esbuild
-      after an edit and a revert, a changed input compiles, the seed picks
-      the stored recipe of the same settings deterministically, and the
-      budget evicts the least recently used recipe.
-- [ ] Add the store to the pool and `seed_compilation`. Clear it on
-      dispose and shutdown. State it in `mokly-sidecar-modules.md` and the
-      `mokly-sidecar` README.
+      after an edit and a revert, a changed input compiles, the seed
+      chooses a candidate deterministically, and the bound evicts the least
+      recently used recipe.
+- [ ] Add the store to the pool and `seed_compilation`. Clear it when the
+      pool stops.
 - [ ] Repeat the watched session probe and record the esbuild counts.
+- [ ] State the store in `mokly-sidecar-modules.md` and the
+      `mokly-sidecar` README. Delete the follow-up item, and update its
+      links in `bundle-disk-cache.md` and `esbuild-memory-after-bundle.md`.
+- [ ] Run the complete gate. Review the diff, apply the review-fix rule,
+      and open the pull request.
 
-## Milestone 9: Kept verified copies
+## Milestone 9: Changes wait liveness
 
-Item 61, option A, B, or E. Waits for Cal. Option C needs no milestone.
+Item 162, the Changes wait: fix after merge, apply B, from the design call
+of 2026-11-01. A branch from main after pull request 1 merges, because it
+changes the same harness files. Until it merges,
+`plans/follow-ups/large-benchmark-liveness.md` holds its record. The kept
+verified copies of item 61, options A, B, and E, left the plan with the
+design call C of 2026-11-01.
 
-- [ ] Add failing tests: a kept copy serves a later request without a new
-      copy, the cap evicts the least recently used copy, and the copies
-      close with their generation or on eviction.
-- [ ] Add one shared store from `mokly-cli` to `mokly-server`.
-- [ ] Change the delivery rule in `mokly-imported-styles-assets.md`: a kept
-      copy serves later requests without reading the source. Update the
-      `mokly-server` README.
-- [ ] Repeat the eight-request probe and a sequential-request probe.
+- [ ] Add failing harness tests: a Changes wait that keeps receiving Serve
+      output past the window passes, and a silent Serve fails with the
+      liveness message.
+- [ ] Restart the Changes wait of the `changes` and `serve` scenarios on
+      each Serve output line, with the window of the build scenario.
+      Update the large fixture README.
+- [ ] Run both `changes` scenarios on the default fixtures with the release
+      binary. Delete the follow-up item in the branch.
+- [ ] Run the complete gate. Review the diff, apply the review-fix rule,
+      and open the pull request.

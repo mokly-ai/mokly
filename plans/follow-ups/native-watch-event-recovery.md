@@ -1,16 +1,15 @@
 # Recover from native watch event loss
 
 - **Severity:** Medium. **Likelihood:** Rare (estimate). **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 134, from the Milestone 11 plan TODO.
 - **Location:** `crates/mokly-watch/src/native_events.rs:33-42`,
   `crates/mokly-watch/src/native.rs:140`,
   `docs/protocol/mokly-watch.md:152-154`, and the native CI matrix at
   `.github/workflows/ci.yml:220-227`.
-- **Reason:** The plan waited for the first hosted macOS and Windows runs,
-  and on 2026-10-21 the user deferred the open review items until after the
-  merge.
+- **Reason:** On 2026-10-28 the coordinator chose the `notify` upgrade of
+  option E for the user. Only its implementation waits.
 
 - **Source:** Design.
 - **Category:** Product bug.
@@ -35,6 +34,17 @@
   - This item replaced an earlier TODO of the rebuild's watch milestone,
     which held the same choice. That TODO read "After the first hosted macOS
     and Windows runs, make event loss recoverable there".
+  - The source of `notify` 8.2.0 and 8.2.1 shows two losses that never
+    reach the rescan. On macOS, `fsevent.rs` drops an event whose path is
+    neither a watched directory nor its child, and FSEvents reports a "must
+    scan subdirectories" event at a coalesced ancestor. On Windows,
+    `windows.rs` ignores the zero byte count of an overflowed read, and it
+    unwatches the directory on `ERROR_NOTIFY_ENUM_DIR` with only a log line.
+  - `notify` 9.0.0-rc.7, published on 2026-10-27, reports both losses as
+    events with the rescan flag.
+  - On 2026-10-28 the coordinator chose option E for the user. Under the
+    `testing` skill, the behaviour of the operating system's watcher is a
+    one-time proof, so the Windows overflow gets no suite test.
 - **Problem:** Mokly has no tested recovery rule for events that macOS
   batching or a Windows buffer overflow loses on those platforms.
 - **Impact if no action:** Serve can stay on stale output after a lost
@@ -55,6 +65,12 @@
     exact-input stamps on Windows. Effort: Medium (estimate).
   - **B.** Use one recursive watch for each root on both systems. Effort:
     Medium (estimate).
+  - **E.** Upgrade `notify` from 8.2.0 to exactly `=9.0.0-rc.7`, and name
+    9.0.0 as the exit in the `mokly-watch` README. That release candidate
+    reports both losses as rescan events, so the current rescan-flag
+    recovery covers them. Port the batched path update to `update_paths`,
+    with a retry over the operations that a failure leaves untried. The
+    native suite stays green on macOS and Windows. Effort: Medium.
 - **Left out:**
   - A periodic rescan on a wall clock. It adds timing behaviour and delays
     recovery.
@@ -70,10 +86,10 @@
 - **Related:** [watch-resource-attach-gap.md](watch-resource-attach-gap.md)
   is another case where Serve can miss a change. Both concern how Serve
   recovers watched changes, so one branch can test both.
-- **Recommendation:** A (estimate). It handles each platform's known loss
-  mode directly.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user deferred the open review items past the merge to decide each one
-  later.
+- **Recommendation:** E. The upstream fix reaches every loss that `notify`
+  can report, and Mokly already recovers from a rescan event. The first
+  recommendation was A (estimate).
+- **Action:** fix after merge, apply E, because the user's choice of
+  2026-10-28 settles it and only the implementation remains.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6078).

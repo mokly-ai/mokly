@@ -56,11 +56,12 @@
     [coalesce-document-composition.md](./coalesce-document-composition.md)
     are the other two follow-ups of the same acceptance decision. Each
     removes a different part of the pass time.
-  - [large-react-startup.md](./large-react-startup.md) targets the usable
-    startup of large React catalogues, where JavaScript compilation takes
-    most of the time. Both items touch Serve startup and the sidecar pool,
-    but this item removes only the sidecar start wait of the first
-    background renders. The work differs, so the items stay separate.
+  - The
+    [large React startup item at its last commit](https://github.com/mokly-ai/mokly/blob/a5cd66c7c16ea76f2da7391e712f9fe8ac9811d1/plans/follow-ups/large-react-startup.md)
+    targeted the usable startup of large React catalogues. It closed on
+    2026-11-01, when large React startup measured about 3.7 s, cold and
+    warm. This item removes only the sidecar start wait of the first
+    background renders, after Serve is ready.
 - **Recommendation:** B (estimate). PR #225 expected a gain of about 0.8 s
   for each pass from it.
 - **Action:** ask the user, because condition 6 holds (estimate): this is a

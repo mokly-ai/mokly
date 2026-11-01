@@ -1,14 +1,14 @@
 # Batch Git reads for opaque assets
 
 - **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 64, from finding 8 of the sixth Milestone 14 review, and its
   measurement task.
 - **Location:** `crates/mokly-compare/src/git_asset_io.rs:13-69`
   (`digest_file`) and `:71-100` (`opaque_stream`).
-- **Reason:** On 2026-10-21 the user deferred the open review items until
-  after the merge and kept each choice for a later decision.
+- **Reason:** On 2026-10-28 the coordinator chose option A, refined, for
+  the user. Only its implementation waits.
 
 - **Source:** Review.
 - **Category:** Performance.
@@ -38,6 +38,21 @@
     workloads, and it keeps the 64 MiB Git read bound. That measurement
     informs this choice. The earlier evidence file was under `.context/` of
     the rebuild workspace and is not in the repository.
+  - On 2026-10-28 the coordinator chose option A, refined, for the user.
+    Batch the lookups, the attribute checks, and the digests of the opaque
+    assets of one stylesheet, with one Git process for each kind of a
+    bounded batch. Stream a base asset from Git into the private copy that
+    Serve already makes in `crates/mokly-server/src/asset_streams.rs`,
+    instead of reading the whole blob. Keep the 48 MiB batch bound, the
+    64 MiB blob bound, and the 120-second process deadline. A digest also
+    counts the converted bytes, so that delivery knows the length before
+    it copies.
+  - Measured on 2026-10-28 with a release binary, for an HTML catalogue
+    whose base commit held 65 opaque assets: the base build started 742
+    Git processes, about ten for each asset. 64 small assets added 4.5 s to
+    a 0.3 s build. A build that copied a 60 MiB base asset added about
+    180 MB of peak RSS. The default large fixtures hold one opaque asset
+    each.
 - **Problem:** Without an attached extraction, each opaque asset starts its
   own Git processes. Delivery holds full copies of large blobs in every
   case.
@@ -66,10 +81,9 @@
     `crates/mokly-server/src/asset_streams.rs`. This item changes the
     base-side Git reads in `crates/mokly-compare/src/git_asset_io.rs`. The
     two items change different code and can land in either order.
-- **Recommendation:** A. It removes both measured costs and keeps the
-  existing limits.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user deferred the open review items past the merge to decide each one
-  later.
+- **Recommendation:** A, refined as the Background says. It removes both
+  measured costs and keeps the existing limits.
+- **Action:** fix after merge, apply A, refined, because the user's choice
+  of 2026-10-28 settles it and only the implementation remains.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5834).
