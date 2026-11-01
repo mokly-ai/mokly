@@ -64,6 +64,13 @@
     `f70d9693` of the same branch. A local rerun passed it, and the next
     complete gate on the same commit, run `20261101T140038Z-511451`, passed
     all seven suites.
+  - It also failed that day with the same text, in browser shard 2/4 of run
+    `20261101T133712Z-151065` at `4037700c` on the branch
+    `conductor/rust-rebuild-87-diagnostics-and-html-messages`, which changes
+    no browser, viewer, or comparison code. A local
+    `npx --no-install playwright test tests/browser/imported_css_comparison.spec.ts -g "static export comparison panes retain CSS Modules and url assets" --repeat-each=5`
+    passed 5 of 5, and the next complete gate on the same commit, run
+    `20261101T134921Z-176932`, passed all seven suites.
   - Suspected source: async ordering in the test. After the mode click, the
     locator
     `[data-mokly-comparison-frame][data-mokly-preview-source*="/snapshots/before/"]`

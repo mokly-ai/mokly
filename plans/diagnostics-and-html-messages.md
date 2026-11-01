@@ -458,12 +458,18 @@ The README parts for items 1 and 128 move to Milestone 4.
 
 ## Milestone 7: Verification, bookkeeping, commit, review, and pull request
 
-- [ ] Smoke test: run `npm run build`, rerun every probe of the evidence
+- [x] Smoke test: run `npm run build`, rerun every probe of the evidence
       file, and build the example catalogue with
       `npx mokly build --config examples/basic/mokly.config.json --strict --out ../../.context/example`.
       Save the results in `.context/diagnostics-and-html-messages/after.md`.
-- [ ] Run `cargo xtask check --suite repository`, then the complete gate
-      `cargo xtask check`.
+      Done at `4037700c`.
+- [x] Run `cargo xtask check --suite repository`, then the complete gate
+      `cargo xtask check`. Done at `4037700c`. Evidence:
+      `.context/diagnostics-and-html-messages/repository-suite.log`,
+      `gate-4037700c.log`, `gate-4037700c-rerun.log`, and `flaky-rerun.log`.
+- [ ] Merge `origin/main` at `c7e7d9b8`, then run the complete gate on the
+      merged commit. The merge justifications are in
+      `.context/diagnostics-and-html-messages/merge-justifications.md`.
 - [x] ~~Edit `plans/rust-rebuild.md`.~~ Main deleted that plan in
       `133782a9` and moved its open work into `plans/follow-ups/`, so the
       bookkeeping below replaces these edits (2026-11-01).
@@ -473,11 +479,15 @@ The README parts for items 1 and 128 move to Milestone 4.
 - [x] Delete `plans/follow-ups/template-source-offset-maps.md` when
       Milestone 5 lands. Done in `55f16cad`; 146 open follow-up items
       remain.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Apply the fix rule: fix
       the `fix now` findings, record follow-up items for the rest, re-review
       once, and report.
+  - Round 2 at `4037700c` gave findings 9 and 10, both Low and Rare. Both
+    are fix after merge: `plans/follow-ups/empty-end-tag-substitution-location.md`
+    and `plans/follow-ups/callback-wrapper-warning-names.md`. The findings
+    file is in `.context/reviews/`.
 - [ ] Delete this plan in the last commit before the pull request. Give its
       dated decisions and a permalink in the pull request description.
 - [ ] Open the pull request. The coordinator merges it.
