@@ -172,15 +172,18 @@ test("an unowned exact-resource document gains no navigation privilege during ha
   await frame.locator("#exact-resource-link").click();
   await expect
     .poll(() =>
-      page
-        .locator("#frame")
-        .evaluate((element: HTMLIFrameElement) =>
-          element.contentDocument?.URL.endsWith(
+      page.locator("#frame").evaluate((element: HTMLIFrameElement) => {
+        const doc = element.contentDocument;
+        return {
+          urlMatches: doc?.URL.endsWith(
             "/static/mokly-generated/home/index.mobile.html?handoff=exact",
           ),
-        ),
+          readyState: doc?.readyState,
+          hasAction: Boolean(doc?.querySelector('[data-mokly-link="action"]')),
+        };
+      }),
     )
-    .toBe(true);
+    .toEqual({ urlMatches: true, readyState: "complete", hasAction: true });
 
   try {
     await page.evaluate(async () => {
