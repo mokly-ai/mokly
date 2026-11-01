@@ -10,7 +10,7 @@ use mokly_graph::types::RenderGeneration;
 use mokly_model::data::Props;
 use mokly_model::usage::CatalogueUsage;
 
-use crate::asset_streams::{AssetRequest, AssetResult, AssetStreams, Capture};
+use crate::asset_streams::{AssetRequest, AssetStreams, Capture};
 use crate::assets::{File, content_type};
 use crate::backend_preview::ArtifactBytes;
 use crate::error::{Result, ServerError};
@@ -32,15 +32,8 @@ pub struct PreviewDocument {
 pub trait Documents: Send + Sync {
     /// Read a declared generated document or resource.
     fn generated(&self, route: &str) -> Result<Option<File>>;
-    /// Verify and spool a generated opaque asset before streaming its response.
-    fn asset(&self, _route: &str) -> AssetResult {
-        Ok(None)
-    }
     /// Reserve shared storage with no IO before foreground worker admission.
-    /// Backends without reservations return None and use `asset` instead.
-    fn asset_request(&self, _route: &str) -> Option<Box<dyn AssetRequest>> {
-        None
-    }
+    fn asset_request(&self, route: &str) -> Box<dyn AssetRequest>;
     /// Render one background document without copying its response bytes. Its warnings
     /// return unreported, and a failure keeps them, so the usage pass reports them in
     /// catalogue order through [`Documents::report`].
@@ -129,11 +122,8 @@ impl GraphDocuments {
 }
 
 impl Documents for GraphDocuments {
-    fn asset(&self, route: &str) -> AssetResult {
-        self.reserve_asset(route).capture()
-    }
-    fn asset_request(&self, route: &str) -> Option<Box<dyn AssetRequest>> {
-        Some(self.reserve_asset(route))
+    fn asset_request(&self, route: &str) -> Box<dyn AssetRequest> {
+        self.reserve_asset(route)
     }
 
     fn generated(&self, route: &str) -> Result<Option<File>> {

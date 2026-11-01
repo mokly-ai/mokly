@@ -61,10 +61,7 @@ impl Workers {
             parent.in_scope(|| {
                 let _guard = guard;
                 let _permit = permit;
-                match request {
-                    Some(request) => request.capture(),
-                    None => documents.asset(&route),
-                }
+                request.capture()
             })
         })
         .await
