@@ -7,8 +7,8 @@
   `crates/mokly-catalogue/src/control_warnings.rs:32`,
   `crates/mokly-catalogue/src/numeric_warnings.rs:60`, and
   `docs/protocol/mokly-html-screens.md:173`.
-- **Reason:** On 2026-10-21 the user deferred the open review items of PR #199
-  and kept the final warning text as the user's choice.
+- **Reason:** A rebuild record of 2026-10-20 says that the user decides the
+  final text of these warnings.
 
 - **Source:** Review.
 - **Category:** Docs or spec.
@@ -48,7 +48,7 @@
 - **Previous examples:** None found.
 - **Recommendation:** B. It defines consistent messages with enough context
   to fix the problem.
-- **Action:** ask the user, because the user reserved the choice for each open
-  review item of the rebuild, and the final warning text.
+- **Action:** ask the user, because a rebuild record of 2026-10-20 leaves the
+  final text of these warnings to the user, and both options define that text.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5851).
