@@ -182,6 +182,7 @@ impl MoveEvidence for RenderedMoves<'_> {
                 &style_paths,
                 &format!("static/mokly-generated/{}", right_plan.route),
                 self.memo.as_ref(),
+                &[],
             )?;
             let owner = matches!(after.content, EntryContent::Component { .. }).then_some(
                 after

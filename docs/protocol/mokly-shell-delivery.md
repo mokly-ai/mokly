@@ -1,5 +1,7 @@
 # Shell Delivery And Read Model Routes
 
+Status: Follow-up work remains in the [fallback keys item](../../plans/follow-ups/fallback-keys-checkout-folder.md).
+
 ## Purpose And Boundary
 
 The browser renders Browse from a stub, an index, and entry details. The index
@@ -71,7 +73,29 @@ a page record carries one `documentKey`, a document record one per colour
 scheme. `documentKey` is the document node's key in the
 [render graph](../architecture/rust-core.md#render-graph), the hash of the
 document's inputs: it exists before the render and changes exactly when an input
-changes. No record carries `usage` or `resourceEvidence`; the reader rejects
+changes.
+
+The folder of the checkout is not an input of `documentKey`. Two checkouts of
+one commit with equal installed dependencies give equal document keys. Builds
+of both checkouts with the same options and base commit give the same
+`deploymentId`.
+
+An input path in the checkout, such as a dependency directory or the resolved
+path of a runtime package, enters the key relative to the checkout. A path in
+the [base cache](./mokly-base-cache.md#cache-location-and-ownership) enters it
+relative to the repository's cache namespace. Absolute paths were rejected for
+both, because a moved checkout would then change the JavaScript document keys
+and the `deploymentId`, although no render changes. A path outside the checkout
+and the base cache enters the key as an absolute path.
+
+The root `package.json` of the repository is an input of each document that
+JavaScript renders, because each manifest on a closure module's directory chain
+is a [render input](./mokly-watch.md#invalidation-through-the-render-graph). One
+devDependency edit in it therefore changes these keys. Keys without the root
+manifest were rejected, because a change of its `sideEffects` field could then
+leave a stale render.
+
+No record carries `usage` or `resourceEvidence`; the reader rejects
 either anywhere. In Serve the index carries `live: { generation }`, the render
 generation: the hash of the config, every `documentKey`, every stylesheet bundle
 and its assets, and any consumer bundle generation. It is wider than a live prop

@@ -24,6 +24,7 @@ fn aliases() -> BTreeMap<String, String> {
 fn tree(sources: Unimock, dependencies: Unimock, usage: Unimock) -> SideTree {
     SideTree {
         _base: Some(Arc::new(BaseSide {
+            working_root: "/repo".into(),
             sources: Arc::new(Lease {
                 directory: "/base".into(),
                 guard: Box::new(Unimock::new(())),
@@ -36,6 +37,7 @@ fn tree(sources: Unimock, dependencies: Unimock, usage: Unimock) -> SideTree {
                 lease: None,
                 repository_roots: vec![],
             },
+            cache_namespace: None,
             identity: "base".into(),
         })),
         sources: Arc::new(sources),

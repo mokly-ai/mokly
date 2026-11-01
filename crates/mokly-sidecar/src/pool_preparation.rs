@@ -7,20 +7,31 @@ use crate::compiled::{CompiledGeneration, RestoreGeneration};
 use crate::error::{Error, Result};
 use crate::methods::{Bundle, Call, CssModules, Generation};
 use crate::pool::Pool;
+use crate::pool_recipes::same_settings;
 use crate::pool_state::{Slot, State};
 use crate::results::Module;
 use crate::wire::{MethodResult, Request};
 
 impl Pool {
     pub(super) fn seed_compilation(&self, slot: &mut Slot, params: &Bundle) -> Result<()> {
-        let candidate = {
-            let state = self.lock()?;
-            state.bundles.iter().find_map(|(id, retained)| {
-                let mut settings = retained.clone();
-                settings.evaluation = params.evaluation.clone();
-                (settings == *params && state.compiled.contains_key(id)).then(|| id.clone())
-            })
+        let (stored, candidate) = {
+            let mut state = self.lock()?;
+            let stored = state.recipes.seed(params);
+            let candidate = state
+                .bundles
+                .iter()
+                .filter(|(id, retained)| {
+                    same_settings(retained, params) && state.compiled.contains_key(*id)
+                })
+                .max_by_key(|(id, _)| (state.epochs.get(*id).copied().unwrap_or(0), *id))
+                .map(|(id, _)| id.clone());
+            (stored, candidate)
         };
+        if let Some(recipe) = stored {
+            let generation = recipe.generation.clone();
+            self.prerequisite(slot, Call::RestoreGeneration(recipe))?;
+            slot.generations.insert(generation, 0);
+        }
         if let Some(generation) = candidate {
             self.prepare(slot, &generation, false, false, false)?;
         }

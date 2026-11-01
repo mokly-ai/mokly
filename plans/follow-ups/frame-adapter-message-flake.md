@@ -79,6 +79,13 @@
     once and passed on its rerun. Its test is in
     `tests/browser/viewer.spec.ts`. That test reads no frame events, and its
     suspected source is a page navigation. The two items share no test code.
+  - [flaky-viewer-events-active-picks.md](flaky-viewer-events-active-picks.md)
+    is a separate case of the same recorded class: a browser test that failed
+    once and passed on its rerun. Its test is in
+    `tests/browser/viewer_events.spec.ts`. Both tests serve their
+    cross-origin preview frames through `crossOriginFixture` in
+    `packages/viewer/tests/standalone_fixture.ts`. Each item has its own
+    suspected source, so it needs its own fix.
 - **Recommendation:** A. The plan recommended it: wait for the message
   event. C best protects the other frame adapter specs.
 - **Action:** ask the user, because the failure has not been reproduced with a

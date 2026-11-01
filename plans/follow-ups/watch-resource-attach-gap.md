@@ -65,13 +65,15 @@
 - **Previous examples:** PR #222 fixed the same class for the exact input
   files of a preparation on 2026-10-28, through the file-time check in
   `crates/mokly-cli/src/serve_watch_files.rs:64`.
-- **Related:**
-  [native-watch-event-recovery.md](./native-watch-event-recovery.md) covers
-  events that the native watcher loses on macOS and Windows in a directory
-  that it already observes. This item covers edits before the watcher
-  observes the directory. Both are cases of one class, a watched change
-  that Serve misses, but their causes and fixes differ. One branch can test
-  both.
+- **Related:** The
+  [native watch event recovery item at its last commit](https://github.com/mokly-ai/mokly/blob/c7e7d9b88efc84152eb33539ed8ed7ca2ad2bb93/plans/follow-ups/native-watch-event-recovery.md)
+  covered events that the native watcher lost on macOS and Windows in a
+  directory that it already observed. It closed on 2026-11-01, when the
+  branch `conductor/rust-rebuild-134-watch-event-loss` pinned `notify` to
+  `=9.0.0-rc.7`, which reports those losses as rescan events. This item
+  covers edits before the watcher observes the directory. Both are cases of
+  one class, a watched change that Serve misses, but their causes and fixes
+  differ.
 - **Recommendation:** D. Observation before the read removes the attachment gap
   instead of inferring edits from modification times. The record first
   recommended B.

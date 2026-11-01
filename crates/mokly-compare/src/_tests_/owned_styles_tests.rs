@@ -96,9 +96,7 @@ fn move_admission_keeps_a_declared_owner_match_inside_a_nested_region() {
             Some(&tree),
             Some("parent"),
         ),
-        matching: vec![],
-        indices: None,
-        potential: vec![],
+        ..Default::default()
     };
     assert!(changes.changes_owner(Some("parent")));
 }

@@ -24,9 +24,6 @@ current sources, including after a change to the viewer, the shim, the sidecar,
 or a crate. The build runs before the developer runner starts; argument
 rejection still happens before any test process starts.
 
-`npm run typecheck` resolves public authoring declarations from package
-output. Run `npm run build` first. The viewer suite supplies this preparation.
-
 The raw commands `node --import tsx --test <file>` and
 `npx playwright test <spec>` skip the build and test the last build. After a
 source change, run `npm run build` before using either raw command. One build
@@ -149,6 +146,11 @@ the developer allowance for skips and todos.
 
 The [browser command contract](./developer-browser-commands.md#browser-selection)
 defines selected browser runs and the required static-delivery check.
+
+## Type Checks
+
+The [type check contract](./developer-type-checks.md) defines the type check
+commands, their shared project inventory, and the Bun provisioning rules.
 
 ## Partial Verification
 

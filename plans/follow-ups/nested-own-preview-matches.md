@@ -5,8 +5,8 @@
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 108, from finding 3 of the engine round 4 own review.
 - **Location:** `crates/mokly-css/src/attribution.rs:19` (`OwnPageMatches`),
-  `crates/mokly-compare/src/owned_styles.rs:115`, and
-  `crates/mokly-compare/src/owned_style_instances.rs:120`.
+  `crates/mokly-compare/src/owned_styles.rs:149`, and
+  `crates/mokly-compare/src/owned_style_instances.rs:94`.
 - **Reason:** On 2026-10-21 the user accepted the earlier default choices of the
   rebuild, except this one, which stays open for the user's own answer.
 
@@ -49,10 +49,12 @@
 - **Wider fix:** B. Per-path evidence tells nested and own sources apart in
   mixed pages too.
 - **Previous examples:** None found.
-- **Related:** [owned-proof-memory.md](owned-proof-memory.md) is about the
-  memory of the same own-page proof. Its compaction keeps the unfiltered
-  `Attribution.own_pages` of exact instance proof, so it does not wait for this
-  answer. One branch may do both.
+- **Related:** The
+  [owned-proof memory item at its last commit](https://github.com/mokly-ai/mokly/blob/43a2a76b80c37965c00a7193b5d8aa6442e5ddc6/plans/follow-ups/owned-proof-memory.md)
+  was about the memory of the same own-page proof. Its compaction keeps the
+  unfiltered `Attribution.own_pages` of exact instance proof, so it did not wait
+  for this answer. That item closed on 2026-11-01 with the branch
+  `conductor/rust-rebuild-97-owned-proof-state`.
 - **Recommendation:** B. It gives classification the exact own-page
   evidence, and it is the code today.
 - **Action:** ask the user, because on 2026-10-21, when the user accepted the

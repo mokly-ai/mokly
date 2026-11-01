@@ -19,6 +19,7 @@ mod pool_cleanup;
 mod pool_exchange;
 pub mod pool_options;
 mod pool_preparation;
+mod pool_recipes;
 mod pool_releases;
 mod pool_requests;
 mod pool_shutdown;

@@ -166,11 +166,14 @@
     the rest of the startup target, under decision 2A.
   - [jsconfig-resolution-input.md](./jsconfig-resolution-input.md): 4D
     records the same file for reuse. That item also covers the watch rule.
-  - [compiled-recipe-cache.md](./compiled-recipe-cache.md): reuse of
-    released compiled recipes in memory. A design call of 2026-11-01 chose
-    its option D, which restores a recipe through the same
-    `restoreGeneration` request and `reuse` check as 1A. Decide this item
-    with D in mind.
+  - The
+    [compiled recipe cache item at its last commit](https://github.com/mokly-ai/mokly/blob/c7e7d9b88efc84152eb33539ed8ed7ca2ad2bb93/plans/follow-ups/compiled-recipe-cache.md)
+    asked for reuse of released compiled recipes in memory. It closed on
+    2026-11-01, when the sidecar pool started to keep the last released
+    recipe of each set of bundle settings, its option D, under the
+    [compiled recipes contract](../../docs/protocol/mokly-sidecar-modules.md#compiled-recipes-and-release).
+    D restores a recipe through the same `restoreGeneration` request and
+    `reuse` check as 1A. Decide this item with D in mind.
   - The
     [large React startup item at its last commit](https://github.com/mokly-ai/mokly/blob/75bacb9d016205c804633b79ff0e8496c6c07929/plans/follow-ups/large-react-startup.md)
     closed on 2026-11-01, when large React startup measured about 3.7 s,

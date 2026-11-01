@@ -141,6 +141,11 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Install dependencies
         run: npm ci
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version-file: .bun-version
+          no-cache: true
       - name: Run viewer verification
         run: cargo xtask check --suite viewer
       - name: Retain viewer inventory and timings

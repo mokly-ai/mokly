@@ -14,7 +14,7 @@ pub(super) fn commands_for(
         VerificationSuite::Repository => repository_commands(dependency_audit),
         VerificationSuite::Viewer => vec![
             npm(&["run", "build"]),
-            npm(&["run", "typecheck"]),
+            npm(&["run", "typecheck:ci"]),
             npm(&["run", "test:viewer:prepared"]),
         ],
         VerificationSuite::Browser => vec![npm(&["run", "build"]), browser_test_command(shard)],

@@ -106,6 +106,7 @@ fn side(sources: Arc<Lease>) -> Arc<BaseSide> {
 
 fn side_with_tier(sources: Arc<Lease>, tier: Tier) -> Arc<BaseSide> {
     Arc::new(BaseSide {
+        working_root: "/repo".into(),
         sources,
         dependencies: Resolved {
             tier,
@@ -115,6 +116,7 @@ fn side_with_tier(sources: Arc<Lease>, tier: Tier) -> Arc<BaseSide> {
             lease: None,
             repository_roots: Vec::new(),
         },
+        cache_namespace: None,
         identity: "commit".into(),
     })
 }

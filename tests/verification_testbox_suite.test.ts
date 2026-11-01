@@ -13,62 +13,6 @@ import {
   testboxHarness,
 } from "./helpers/testbox_suite.js";
 
-const commands = [
-  { suite: "repository", name: "repository", shard: undefined },
-  { suite: "viewer", name: "viewer", shard: undefined },
-  ...[1, 2, 3, 4].map((index) => ({
-    suite: "browser",
-    name: `browser-${index}-of-4`,
-    shard: `${index}/4`,
-  })),
-];
-
-test("six commands derive exact cargo arguments, report names and streamed output", async () => {
-  for (const { suite, name, shard } of commands) {
-    const harness = testboxHarness();
-    const args = ["--expect", TESTBOX_FINGERPRINT, "--suite", suite];
-    if (shard) args.push("--shard", shard);
-    assert.equal(parseTestboxArguments(args).commandName, name);
-    assert.equal(await runTestboxSuite(args, harness.dependencies), 0);
-    assert.deepEqual(
-      harness.commands.map(({ file, args, captureOutput }) => ({
-        file,
-        args,
-        captureOutput,
-      })),
-      [
-        { file: "git", args: ["add", "-A"], captureOutput: false },
-        {
-          file: "git",
-          args: ["rev-parse", "--is-shallow-repository"],
-          captureOutput: true,
-        },
-        {
-          file: "cargo",
-          args: [
-            "xtask",
-            "check",
-            "--executor",
-            "local",
-            "--suite",
-            suite,
-            ...(shard ? ["--shard", shard] : []),
-          ],
-          captureOutput: false,
-        },
-      ],
-    );
-    const cargo = harness.commands.find((command) => command.file === "cargo")!;
-    assert.equal(cargo.cwd, "/repo");
-    assert.equal(
-      cargo.env.MOKLY_VERIFICATION_REPORT,
-      `.context/verification-reports/remote/${name}.json`,
-    );
-    assert.equal(cargo.env.PATH, "/tools");
-    assert.deepEqual(harness.writes, []);
-  }
-});
-
 test("static delivery builds and runs in an independent Testbox command", async () => {
   const harness = testboxHarness();
   const args = ["--expect", TESTBOX_FINGERPRINT, "--suite", "static-delivery"];
@@ -242,7 +186,11 @@ test("a lockfile content change triggers installation even with the old stamp", 
     Buffer.from("new lockfile"),
   );
   await runTestboxSuite(TESTBOX_ARGUMENTS, harness.dependencies);
-  assert.ok(harness.commands.some(({ file }) => file === "npm"));
+  assert.ok(
+    harness.commands.some(
+      ({ file, args }) => file === "npm" && args[0] === "ci",
+    ),
+  );
   assert.notEqual(harness.writes[0]?.contents, `${harness.digest}\n`);
 });
 

@@ -6,11 +6,13 @@ use std::os::unix::ffi::OsStrExt;
 use std::os::unix::process::CommandExt;
 use std::path::Path;
 use std::process::{Child, Command};
+use std::sync::Arc;
 
-use crate::error::{Error, InternalError, IoResult, Result};
+use crate::error::{Error, Result};
 use crate::processes::ProcessGroup;
 #[cfg(target_os = "macos")]
 use crate::unix_group_members::{self, SystemMembers};
+use crate::unix_process_tree::{self, GroupSignal};
 
 /// Renames with Linux `renameat2(RENAME_NOREPLACE)` or macOS
 /// `renamex_np(RENAME_EXCL)`, and reads `errno` directly after the call. The
@@ -51,6 +53,9 @@ fn path_string(path: &Path) -> Result<CString> {
     }
 }
 
+/// Configure a new session and, on Linux, a child subreaper before `execve`.
+/// Subreaping keeps orphans inside the owned tree reachable through parent
+/// links while the manager runs, including children in other sessions.
 pub(crate) fn configure(command: &mut Command) {
     // SAFETY: The child runs this async-signal-safe call before exec. A new
     // session gives shells and their descendants one process group.
@@ -59,38 +64,38 @@ pub(crate) fn configure(command: &mut Command) {
             if libc::setsid() == -1 {
                 Err(io::Error::last_os_error())
             } else {
+                #[cfg(target_os = "linux")]
+                {
+                    // SAFETY: The child is single-threaded in this pre-exec
+                    // hook. The option and arguments are integer constants.
+                    let _ = libc::prctl(libc::PR_SET_CHILD_SUBREAPER, 1, 0, 0, 0);
+                }
                 Ok(())
             }
         });
     }
 }
 
+/// Capture the root identity before the caller can reap its child.
 pub(crate) fn attach(child: &Child) -> Result<Box<dyn ProcessGroup>> {
-    match i32::try_from(child.id()) {
-        Ok(pid) => Ok(Box::new(UnixGroup { pid })),
-        Err(_) => Err(Error::Internal(InternalError::Io {
-            source: io::Error::other("process id exceeds pid_t"),
-        })),
-    }
+    unix_process_tree::attach(child, Arc::new(SystemGroupSignal))
 }
 
-struct UnixGroup {
-    pid: i32,
-}
+struct SystemGroupSignal;
 
-impl UnixGroup {
-    fn signal(&self, signal: i32) -> Result<()> {
+impl GroupSignal for SystemGroupSignal {
+    fn signal(&self, pid: i32, signal: i32) -> io::Result<bool> {
         // SAFETY: The positive child PID identifies the process group created
         // by setsid in the child pre-exec hook. No memory is accessed by kill.
-        let result = unsafe { libc::kill(-self.pid, signal) };
+        let result = unsafe { libc::kill(-pid, signal) };
         if result == 0 {
-            return Ok(());
+            return Ok(false);
         }
         let source = io::Error::last_os_error();
-        if group_is_gone(&source, self.pid) {
-            return Ok(());
+        if group_is_gone(&source, pid) {
+            return Ok(true);
         }
-        Err(source).platform()
+        Err(source)
     }
 }
 
@@ -105,15 +110,6 @@ fn group_is_gone(source: &io::Error, pid: i32) -> bool {
         return unix_group_members::stopped(&SystemMembers, pid);
     }
     false
-}
-
-impl ProcessGroup for UnixGroup {
-    fn terminate(&self) -> Result<()> {
-        self.signal(libc::SIGTERM)
-    }
-    fn kill(&self) -> Result<()> {
-        self.signal(libc::SIGKILL)
-    }
 }
 
 #[cfg(test)]

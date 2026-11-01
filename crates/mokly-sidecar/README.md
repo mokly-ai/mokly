@@ -46,6 +46,28 @@ cleanup use one staleness rule: a missing bundle or a missing or different
 epoch makes a loaded generation stale. Cleanup stops when a pass changes no
 state.
 
+After the final release of a generation, the pool keeps its bundle settings,
+module graph, compiled code, input digests, and directory lists in a bounded
+store. The
+[compiled recipes contract](../../docs/protocol/mokly-sidecar-modules.md#compiled-recipes-and-release)
+owns the retention rule and the bound. Each entry costs the bytes of its
+serialized `restoreGeneration` envelope, with its private seed id and
+without the LF delimiter. `MAX_FRAME_BYTES` bounds the total. A use counter,
+not a clock, orders eviction. Keeping or seeding an entry counts as a use.
+Before a `bundle` call, the pool restores the stored entry with equal
+settings under a private seed id. It then prepares the live generation with
+equal settings and the highest epoch. The generation id breaks an epoch tie.
+Directory membership can change without a change of the content id. The
+private seed id keeps a stored and a live recipe with the same content id
+apart, so both reach the sidecar's `reuse` check. Bundle results carry the
+public content id, never a seed id. Cleanup disposes of the seed when the
+slot returns from the bundle request. A reused recipe leaves the store when
+it becomes live. Its next final release can keep it again. Only a `bundle`
+call loads stored entries. Replays of live generations never do.
+`shutdown`, `abort`, and `cancel_requests` clear the store. A late release
+cannot refill a stopped pool. The store writes no file. It adds no
+configuration, terminal output, operation event, or timing name.
+
 Bundle results include the digests of the bytes consumed by each module. An
 optional evaluation digest isolates CSS Modules and resolved configuration
 lifetimes. CSS source text belongs to stylesheet nodes. JavaScript bundle
@@ -164,7 +186,12 @@ Unit tests use `unimock` at process, pipe, clock, and reporter boundaries.
 They verify frame limits, hello, correlation, deadlines, retry, recycling,
 FIFO order, concurrency bounds, queue cancellation, and UTF-8 diagnostic lines.
 Replay tests keep complete inputs for fresh workers, omit already loaded
-inputs, and preserve binding updates across workers. The shutdown unit tests
+inputs, and preserve binding updates across workers. Recipe store tests
+check the seed choice, eviction by use order, the replacement of an entry
+with equal settings, the exact envelope bound, and clearing on every stop.
+Real-process recipe tests count esbuild operations. A revert after a
+release skips esbuild, a changed input compiles, and a stored and a live
+recipe with one content id both stay usable. The shutdown unit tests
 control exit and drain independently through `WaitMock`. Command stderr tests
 acknowledge all forwarded bytes before shutdown and check bounded pieces and
 process reaping. Direct sidecar tests check graceful exit code 0 and the final
@@ -181,6 +208,12 @@ spawn the built sidecar and render a component, screen, story, and page. The
   implementation.
 - [`src/pool_options.rs`](./src/pool_options.rs) defines `Launch` and
   `PoolOptions`, the launch settings and the pool size and deadline override.
+- [`src/pool_recipes.rs`](./src/pool_recipes.rs) defines `Recipes`, the
+  bounded store of released compiled recipes.
+- [`src/pool_releases.rs`](./src/pool_releases.rs) keeps the recipe of each
+  final release in that store, and
+  [`src/pool_preparation.rs`](./src/pool_preparation.rs) selects the seeds
+  of each `bundle` call.
 - [`src/process_factory.rs`](./src/process_factory.rs) defines `NodeFactory`,
   the `WorkerFactory` that starts Node with whole-tree ownership.
 - [`src/process_environment.rs`](./src/process_environment.rs) holds the pure

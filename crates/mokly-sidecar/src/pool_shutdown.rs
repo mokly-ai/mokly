@@ -8,6 +8,7 @@ impl Pool {
         let controls = {
             let mut state = self.lock()?;
             state.stopped = true;
+            state.recipes.clear();
             let busy: Vec<_> = state
                 .controls
                 .keys()
@@ -42,6 +43,7 @@ impl Pool {
         let controls = {
             let mut state = self.lock()?;
             state.stopped = true;
+            state.recipes.clear();
             self.ready.notify_all();
             state.controls.values().cloned().collect::<Vec<_>>()
         };

@@ -179,6 +179,10 @@ pub(crate) fn collect(
             )),
             _ => None,
         };
+        let candidates = match (&comparison, previous, current) {
+            (Some(comparison), Some(_), Some(_)) => comparison.instances.as_slice(),
+            _ => &[],
+        };
         let mut owned = owned_styles::compare(
             [
                 before_document.map_or(&[], |document| document.tree.as_slice()),
@@ -194,6 +198,7 @@ pub(crate) fn collect(
                     .map_or("", String::as_str)
             ),
             memo,
+            candidates,
         )?;
         if let (Some(comparison), Some(before), Some(after)) = (&comparison, previous, current) {
             owned.prepare(comparison, before, after, key);

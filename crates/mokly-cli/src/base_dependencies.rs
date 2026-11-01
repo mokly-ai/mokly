@@ -1,6 +1,6 @@
 //! Native base extraction and dependency selection retain both leases for the runtime.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -46,6 +46,7 @@ pub(super) trait BaseDependencies: Send + Sync {
 
 /// The source and dependency caches of one repository, with their storage and clock.
 struct Caches {
+    root: PathBuf,
     cache: Arc<dyn Cache>,
     storage: Arc<dyn Storage>,
     clock: Arc<SystemClock>,
@@ -109,7 +110,7 @@ impl NativeDependencies {
             flush: Arc::new(SystemFlush),
         });
         let cache: Arc<dyn Cache> = Arc::new(DiskCache {
-            root,
+            root: root.clone(),
             source_bytes: 2 * 1024 * 1024 * 1024,
             dependency_bytes: 2 * 1024 * 1024 * 1024,
             storage: storage.clone(),
@@ -119,6 +120,7 @@ impl NativeDependencies {
             reporter: self.reporter.clone(),
         });
         Ok(Caches {
+            root,
             cache,
             storage,
             clock,
@@ -134,6 +136,7 @@ impl NativeDependencies {
         sources: Option<Arc<Lease>>,
     ) -> Result<Arc<BaseSide>> {
         let Caches {
+            root: cache_namespace,
             cache,
             storage,
             clock,
@@ -197,8 +200,10 @@ impl NativeDependencies {
         span.record("tier", tier_number(dependencies.tier));
         span.record("status", "ok");
         Ok(Arc::new(BaseSide {
+            working_root: request.working_config.repo_root.clone(),
             sources,
             dependencies,
+            cache_namespace: Some(cache_namespace),
             identity: request.commit.to_string(),
         }))
     }

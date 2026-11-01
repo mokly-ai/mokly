@@ -8,6 +8,7 @@ use crate::bindings::Bindings;
 use crate::compiled::CompiledGeneration;
 use crate::memory_schedule::MemorySchedule;
 use crate::methods::{Bundle, CssModules};
+use crate::pool_recipes::Recipes;
 use crate::pool_timing::Reason;
 use crate::results::Module;
 use crate::workers::{Worker, WorkerControl};
@@ -45,6 +46,7 @@ pub(super) struct State {
     pub(super) bundles: BTreeMap<String, Bundle>,
     pub(super) modules: BTreeMap<String, Vec<Module>>,
     pub(super) compiled: BTreeMap<String, Arc<CompiledGeneration>>,
+    pub(super) recipes: Recipes,
     pub(super) leases: BTreeMap<String, BTreeSet<u64>>,
     pub(super) maps: BTreeMap<String, CssModules>,
     pub(super) bindings: BTreeMap<String, Arc<Bindings>>,

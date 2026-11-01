@@ -1,4 +1,4 @@
-//! Table of event forms emitted by notify 8.2.0 on Windows, macOS, and Linux.
+//! Table of event forms emitted by notify 9.0.0-rc.7 on Windows, macOS, and Linux.
 
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;

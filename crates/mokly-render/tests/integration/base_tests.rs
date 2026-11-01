@@ -68,6 +68,7 @@ fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
     assert!(String::from_utf8_lossy(&head_css).contains("var(--head-cwd)"));
     let dependencies = workspace();
     let leased = Arc::new(BaseSide {
+        working_root: head.repository(),
         sources: Arc::new(Lease {
             directory: base.root().into(),
             guard: Box::new(Unimock::new(())),
@@ -86,6 +87,7 @@ fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
             }),
             repository_roots: vec![head.root().into(), dependencies],
         },
+        cache_namespace: None,
         identity: "base-commit".into(),
     });
     let weak = Arc::downgrade(&leased);

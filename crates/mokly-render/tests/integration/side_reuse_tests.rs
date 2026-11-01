@@ -29,7 +29,12 @@ fn base() -> Consumer {
 /// A base runtime over `base`'s sources that reads its packages from `installation`,
 /// sharing the head's pool, render cache, and workers, as Changes does. Every root
 /// uses the loaded repository spelling, as the product's base preparation does.
-fn base_runtime(head: &Consumer, base: &Consumer, installation: &Path) -> Arc<Runtime> {
+fn base_runtime(
+    head: &Consumer,
+    base: &Consumer,
+    installation: &Path,
+    cache_namespace: Option<&Path>,
+) -> Arc<Runtime> {
     let head_root = head.repository();
     let root = installation.to_string_lossy().into_owned();
     let mut repository_roots = vec![head_root.clone()];
@@ -37,6 +42,7 @@ fn base_runtime(head: &Consumer, base: &Consumer, installation: &Path) -> Arc<Ru
         repository_roots.push(installation.to_path_buf());
     }
     let side = Arc::new(BaseSide {
+        working_root: head_root.clone(),
         sources: Arc::new(Lease {
             directory: base.repository(),
             guard: Box::new(Unimock::new(())),
@@ -57,6 +63,7 @@ fn base_runtime(head: &Consumer, base: &Consumer, installation: &Path) -> Arc<Ru
             lease: None,
             repository_roots,
         },
+        cache_namespace: cache_namespace.map(Path::to_owned),
         identity: "base-commit".into(),
     });
     Arc::new(Runtime::new(
@@ -118,7 +125,7 @@ fn an_unchanged_base_reuses_head_renders_and_a_changed_entry_renders_on_its_side
     let base = base();
     let head_generation = head.generation(head.prepare().unwrap());
     render_all(head_generation.as_ref());
-    let runtime = base_runtime(&head, &base, &head.repository());
+    let runtime = base_runtime(&head, &base, &head.repository(), None);
     let unchanged = base_generation(&runtime, &base);
     assert_eq!(keys(unchanged.as_ref()), keys(head_generation.as_ref()));
     assert_ne!(
@@ -154,24 +161,29 @@ fn an_unchanged_base_reuses_head_renders_and_a_changed_entry_renders_on_its_side
 fn a_base_with_its_own_installation_shares_no_javascript_render() {
     let head = consumer();
     let base = base();
-    let installation = tempfile::tempdir().unwrap();
+    let namespace = tempfile::tempdir().unwrap();
+    let installation = dunce::canonicalize(namespace.path())
+        .unwrap()
+        .join("dependencies/entries/install/data");
+    std::fs::create_dir_all(&installation).unwrap();
     link_directory(
         &workspace().join("node_modules"),
-        &installation.path().join("node_modules"),
+        &installation.join("node_modules"),
     );
     let installed = Consumer::fixture("render-keys");
     dependency(&installed, "1.0.0", "dep-1");
-    std::fs::create_dir_all(installation.path().join("specs")).unwrap();
+    std::fs::create_dir_all(installation.join("specs")).unwrap();
     std::fs::rename(
         installed.root().join("specs/node_modules"),
-        installation.path().join("specs/node_modules"),
+        installation.join("specs/node_modules"),
     )
     .unwrap();
     let head_generation = head.generation(head.prepare().unwrap());
     let runtime = base_runtime(
         &head,
         &base,
-        &dunce::canonicalize(installation.path()).unwrap(),
+        &installation,
+        Some(&dunce::canonicalize(namespace.path()).unwrap()),
     );
     let installed_base = base_generation(&runtime, &base);
     let (head_keys, base_keys) = (

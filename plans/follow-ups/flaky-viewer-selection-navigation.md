@@ -62,6 +62,12 @@
     separate case of the same recorded class: a browser test that failed
     once and passed on the rerun. It has its own test and suspected source,
     so it needs its own fix.
+  - [flaky-viewer-events-active-picks.md](./flaky-viewer-events-active-picks.md)
+    is a separate case of the same recorded class, with the same failure
+    text and the same `viewerFixture` and `window.viewerHarness`. The trace
+    of its failure shows no second load of the top page, and that item says
+    why the failure text alone does not prove a navigation. It has its own
+    test and suspected source, so it needs its own fix.
 - **Recommendation:** A. It removes the race and keeps every
   assertion.
 - **Action:** ask the user, because the failure has not been reproduced with a

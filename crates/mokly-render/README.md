@@ -58,7 +58,13 @@ The graph installs every definition binding and uses `MemoFragments` for
 screens, components, stories, and pages. A fragment key uses the render input
 key of the handle's entry module: its module closure, the renderer or
 Storybook preview closure, the class maps, bindings, and resolution files of
-that closure, and the bundle environment. The bundle fingerprint of the
+that closure, and the bundle environment. The bundle environment names each
+path below the working repository root by its POSIX path relative to that
+root, and the root itself as `.`. It names each path below the cache namespace
+of a `BaseSide` as `cache:` and the path below that namespace. Two checkouts of
+one commit with equal installations therefore get equal render input keys. Any
+other absolute path stays unchanged, and a `tracing` warning lists it. The
+bundle fingerprint of the
 generation, binding table, and class maps stays the fallback for an unknown
 module and an input of the live generation. Requests add effective entry
 identity, handle, props, saved slots, view axes, and ignore scope. HTML slot content stays in the
@@ -125,7 +131,12 @@ reachability index excludes module branches that cannot contribute CSS.
 `BaseSide` takes the shared source lease and the complete dependency selection
 from `mokly-compare`. The base source reader holds the same lease. Bundle
 requests use that extraction, its selected dependencies,
-and all repository mappings. Configuration ancestor dependency directories
+and all repository mappings. `BaseSide` also carries `working_root`, the
+working repository root, so both sides name their paths from the same root. Its
+optional `cache_namespace` is the repository's directory in the base cache,
+which holds the base leases. A caller with base files outside that cache passes
+`None`, and those paths enter the keys as absolute paths.
+Configuration ancestor dependency directories
 retain Node's lookup order on each side, for JavaScript and CSS. The runtime
 records the directories actually used by head JavaScript, CSS, and PostCSS
 package loads for base fallback checks. Repository-relative importer directories,
@@ -223,6 +234,9 @@ view after the edit and counts real process starts and hello calls.
   same composition path.
 - [`src/bundle.rs`](./src/bundle.rs) bundles only changed JavaScript and
   isolates class maps across retained graphs.
+- [`src/render_environment.rs`](./src/render_environment.rs) derives the inputs
+  that every render input key of one side shares, and names their paths
+  without the checkout folder.
 - [`src/postcss.rs`](./src/postcss.rs) runs consumer PostCSS in an explicit
   side-specific context before scoping.
 - [`src/stylesheet_cache.rs`](./src/stylesheet_cache.rs) defines

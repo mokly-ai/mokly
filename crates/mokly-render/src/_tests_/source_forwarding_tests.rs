@@ -82,6 +82,7 @@ fn nested_dependency_hashes_and_prefetch_use_the_selected_base_installation() {
     ));
     let tree: &dyn SourceTree = &SideTree {
         _base: Some(Arc::new(BaseSide {
+            working_root: "/head".into(),
             sources: Arc::new(Lease {
                     directory: "/base".into(),
                     guard: Box::new(Unimock::new(())),
@@ -94,6 +95,7 @@ fn nested_dependency_hashes_and_prefetch_use_the_selected_base_installation() {
                 lease: None,
                 repository_roots: vec![],
             },
+            cache_namespace: None,
             identity: "base".into(),
         })),
         sources: Arc::new(Unimock::new(SourceTreeMock::project.each_call(matching!((path) if *path == Path::new("/head/packages/ui/node_modules/theme.css"))).answers(&|_, _| Ok(None)).n_times(2))),

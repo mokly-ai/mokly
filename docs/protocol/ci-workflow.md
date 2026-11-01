@@ -56,6 +56,8 @@ job outputs. The repository job, `Required CI`, and every viewer, browser, and
 static-delivery job selected for Node 24 install that exact version. Matrix
 labels and report runtime identities stay `node-24`; reports record the exact
 installed version. The aggregate rejects mixed versions within a group.
+A profile names the Node version that runs the tests. The pinned Bun of the
+viewer jobs adds no profile and changes no label or runtime identity.
 
 Node 22.15 is the ordinary functional runtime because it is the package's
 declared minimum. The Node 24 repository job runs on every event. A
@@ -80,7 +82,12 @@ event-selected runtime profiles.
 
 Matrix jobs use `fail-fast: false`, so one failing shard does not erase evidence
 from its peers. Chromium is installed only in the browser and static-delivery
-jobs. Every job that runs
+jobs. In this workflow, only the viewer jobs set up Bun. Each viewer job sets
+it up before the viewer suite with the official `oven-sh/setup-bun` action.
+The action reads the version from `.bun-version`, so the workflow holds no
+second copy of the pin. The
+[cache rules](./ci-verification-security.md#dependency-cache-and-security)
+keep its workflow cache off. Every job that runs
 the binary builds it for its host from `rust-toolchain.toml`; Rust formatting,
 Clippy, and the complete Rust tests run in the repository job and in the native
 jobs. Native jobs build the checked-out `@mokly/mokly` sidecar package after

@@ -62,6 +62,7 @@ fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources
     );
     let workspace = workspace();
     let base = Arc::new(BaseSide {
+        working_root: consumer.repository(),
         sources: Arc::new(Lease {
             directory: consumer.root().into(),
             guard: Box::new(Unimock::new(())),
@@ -83,6 +84,7 @@ fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources
             }),
             repository_roots: vec![consumer.root().into()],
         },
+        cache_namespace: None,
         identity: "dependency-base".into(),
     });
     let runtime = Arc::new(Runtime::new(

@@ -8,7 +8,7 @@ use ts_rs::TS;
 use crate::methods::Bundle;
 use crate::results::Module;
 
-/// Private compiled code retained only while its generation is live.
+/// Private compiled code retained for live generations and bounded release reuse.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CompiledGeneration {
@@ -52,4 +52,14 @@ pub struct RestoreGeneration {
     pub modules: Vec<Module>,
     /// Immutable compilation.
     pub compiled: CompiledGeneration,
+}
+
+impl CompiledGeneration {
+    /// Compare the fields used to share compilation inputs between generations.
+    pub(super) fn same_recipe(&self, other: &Self) -> bool {
+        self.identity == other.identity
+            && self.inputs == other.inputs
+            && self.input_directories == other.input_directories
+            && self.unmapped_dependency_directories == other.unmapped_dependency_directories
+    }
 }
