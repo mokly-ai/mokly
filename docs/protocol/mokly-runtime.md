@@ -1,6 +1,6 @@
 # Mokly Build And Browse Runtime
 
-Status: In progress under the [Base Install Scripts And Manager Fixes plan](../../plans/base-install-scripts-and-manager-fixes.md).
+Status: In progress under the [Base Install Process Tree Stops plan](../../plans/base-install-process-tree-stops.md).
 
 This page is the runtime contract of `mokly serve` and `mokly build`: how a
 catalogue is discovered, rendered, cached, served, written, and shut down. The
