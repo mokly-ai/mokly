@@ -42,7 +42,10 @@ installed `@mokly/viewer` package. When the working configuration names a
 renderer or PostCSS, base preparation leases an existing extraction of the
 base commit before it loads the base configuration, and base reads use it. The
 dependency step then reuses that lease, or it extracts the sources and
-attaches the new lease before catalogue and graph preparation.
+attaches the new lease before catalogue and graph preparation. Base preparation
+passes the working repository root and the repository's cache namespace, the
+`DiskCache` root, to `BaseSide`. Base render keys then name their paths without
+the checkout folder.
 
 Serve validates an HTML, JavaScript, or mixed catalogue before it reserves a
 loopback port, then serves it through `mokly-server` under the
