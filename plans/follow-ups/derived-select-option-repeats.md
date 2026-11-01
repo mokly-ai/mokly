@@ -46,8 +46,9 @@
 - **Left out:** Option B of the investigation, the viewer accepts repeated
   options: it breaks the unique values rule of the controls contract.
 - **Wider fix:** D, because the derivation then cannot make the wrong case.
-- **Previous examples:** `plans/follow-ups/saved-slot-reserved-metadata.md`
-  records another check that differs between two places.
+- **Previous examples:** `plans/follow-ups/reserved-navigation-names-in-authored-html.md`
+  holds the saved-slot reserved-name check, another check that differs
+  between two places.
 - **Related:** `plans/follow-ups/viewer-checks-from-rust.md`: the Rust index
   reader checks no control options, so that change does not fix this one.
 - **Recommendation:** D. It meets the existing contract with no new error.

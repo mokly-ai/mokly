@@ -2,26 +2,18 @@
 
 Status: Active. On branch `calummoore/mokly-viewer-responsibilities`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
-`@mokly/viewer` has about 33,000 lines of TypeScript under
-`packages/viewer/src`, and `@mokly/ui` already holds every element and style
-of the shell. About 22,400 lines are browser work: frames, comparison,
-inspection, data delivery, URL state, and the containers that feed
-`@mokly/ui`. About 3,500 lines are the viewer's own reader and validator of
-the read model, which `docs/protocol/mokly-viewer.md` requires. The other
-5,100 lines derive values from catalogue data. Most of that code is left over
-from the TypeScript backend that the Rust rebuild replaced:
-`viewer/projection.ts:102` converts the read model into a `live-index-2`
-manifest, builds a folder tree from it, and replaces that tree with the tree
-that Rust wrote. The viewer also recalculates values that the JSON holds,
-keeps separate paths for the standalone and embedded roots, and reads
-`@mokly/ui` markup from the DOM.
+`@mokly/viewer` has about 33,000 lines of TypeScript. About 22,400 are
+browser work, and about 3,500 are the reader and validator of the read model
+that `docs/protocol/mokly-viewer.md` requires. Most of the other 5,100 lines
+are left over from the replaced TypeScript backend: `viewer/projection.ts:102`
+converts the read model into a `live-index-2` manifest and rebuilds a tree
+that it then replaces with the tree that Rust wrote. The viewer also
+recalculates values that the JSON holds, keeps separate paths for the
+standalone and embedded roots, and reads `@mokly/ui` markup from the DOM.
 
-This change removes those layers and keeps the JSON formats, the protocol
-requirements, and the behaviour. It does not make Rust write more results
-into the JSON. It does not share the Rust checks with the viewer: the
-follow-up item `plans/follow-ups/viewer-checks-from-rust.md` owns that work.
-The five survey reports and the notes of the investigation are under
-`.context/viewer-thin/`.
+This change removes those layers and keeps the JSON formats and the
+behaviour. `plans/follow-ups/viewer-checks-from-rust.md` owns the sharing of
+the Rust checks. The survey reports are under `.context/viewer-thin/`.
 
 Contract owners:
 
@@ -297,3 +289,9 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+
+## Post-merge follow-up (non-blocking)
+
+- [ ] Check that the `detail` source of Mokly Cloud answers a removed
+      record's path and `snapshotId`. Under decision 4, a removed screen's
+      preview in an embedded viewer needs that answer.

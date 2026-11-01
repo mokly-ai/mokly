@@ -177,18 +177,27 @@ deletes this file with the plan.
     values, and declared controls already reject repeats, in
     `crates/mokly-catalogue/src/declared_controls.rs:163-188`. It settles only
     the repeated options. Effort: Small.
+  - **E.** One option builder in `crates/mokly-model` makes every select,
+    also from Storybook `argTypes.options`. It keeps each value once and only
+    values that the property schema accepts, and it makes no control from a
+    schema with no value left. Contains D. Effort: Medium.
+  - **F.** The Rust read-model reader checks each select as the viewer does.
+    This is stricter validation, so it is blocked. Effort: Medium.
 - **Left out:** One shared validator stays out, because it must still accept
   or reject each case, so it does not answer the root question.
 - **Wider fix:** Option F of decision 1 removes the drift between the
   validators, but it does not choose a rule. The Rust index reader checks no
   control options, in `crates/mokly-model/src/public_validation.rs:196-242`.
-- **Previous examples:** `plans/follow-ups/saved-slot-reserved-metadata.md`.
+- **Previous examples:** `plans/follow-ups/reserved-navigation-names-in-authored-html.md`,
+  which holds the saved-slot reserved-name check.
 - **Related:** Decision 1, same cause.
 - **Recommendation:** A was the first recommendation. The options check
   recommends D for the repeated options, with A for the reserved names.
 - **Action:** The user first chose C on 2026-11-01, because option F of
   decision 1 follows. After the options check, the user chose D on the same
-  day. The plan applies D. The reserved-name difference stays until F.
+  day. The plan applies D: it compares numbers by value, as the viewer does.
+  The second options check of the same day added E and F and recommends E.
+  D stays in force until the user answers again.
 
 ## 4. Removed previews skip the removed-detail fence
 
@@ -230,7 +239,9 @@ deletes this file with the plan.
   fence once, and it ends the two sources of one removed detail.
 - **Previous examples:** None found.
 - **Related:** Decision 2: same file, same read path.
-- **Recommendation:** B.
+- **Recommendation:** B, also after the second options check. The live
+  renewal of a generation needs a new target, such as the generation root of
+  `docs/protocol/mokly-selected-comparisons.md:23-25`.
 - **Action:** The user chose B on 2026-11-01. The plan applies it.
 
 ## 5. Comparison errors ignore the reason that Serve sends
@@ -264,9 +275,18 @@ deletes this file with the plan.
   - **D.** Map Serve's `code` to one sentence that the viewer owns, also in
     place of the second sentence. The protocol page lists the codes. Effort:
     Small.
+  - **E.** Every comparison failure shows "The comparison is unavailable.",
+    also a network failure. The viewer reads no error body, and the protocol
+    lists no codes. Effort: Small.
+  - **F.** E without the details line, so a failure shows only its headline
+    and Try again. It changes `mokly-comparison-panes.md:138-142`. Effort:
+    Medium.
 - **Left out:** None.
 - **Wider fix:** D, because the viewer then owns all failure text and reads
   only a stable code.
 - **Previous examples:** None found.
-- **Recommendation:** D.
-- **Action:** The user chose D on 2026-11-01. The plan applies it.
+- **Recommendation:** D first. The second options check recommends E,
+  because D with one sentence for every code reads the code for nothing.
+- **Action:** The user chose D on 2026-11-01. The plan applies D with one
+  sentence for every failure, so E differs only in the list of codes. D
+  stays in force until the user answers again.

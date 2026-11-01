@@ -50,7 +50,9 @@
   - The viewer rejects a schema property named `__proto__`, `constructor`,
     or `prototype`, in `packages/viewer/src/components/data.ts:41`. Rust
     turns that check off for schemas, in
-    `crates/mokly-model/src/validation.rs:43`.
+    `crates/mokly-model/src/validation.rs:43`, but it rejects every props
+    object with such a key, at `:81`. So under the Rust rule such a property
+    never gets a value, and a shared reader alone does not choose the rule.
   - A repeated `enum` or `oneOf` value gives repeated select options in Rust,
     in `crates/mokly-model/src/controls.rs:80-100`. The viewer rejects
     repeated options, in `packages/viewer/src/components/controls.ts:104`.
@@ -105,7 +107,8 @@
   - Default 12 C of the Rust rebuild plan, of 2026-10-20, kept the
     TypeScript prop schema checks for the sidecar and chose no WebAssembly
     validator.
-  - `plans/follow-ups/saved-slot-reserved-metadata.md` records another
+  - `plans/follow-ups/reserved-navigation-names-in-authored-html.md` holds
+    the saved-slot reserved-name check, another
     reserved-name check that differs between two places.
 - **Related:** `plans/follow-ups/derived-select-option-repeats.md`: a
   shared reader does not fix the repeated options.

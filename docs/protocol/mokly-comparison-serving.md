@@ -94,8 +94,8 @@ generation or file that Serve does not hold. `message` is plain text for a
 person who reads the response. The shell never shows `message`. A comparison
 that fails shows the one comparison failure of the
 [pane lifecycle](./mokly-comparison-panes.md#lifecycle), whatever the code.
-Decision: the shell owns the failure text and reads only the stable `code`, not
-Serve's `message`, so that a failure reads the same in every host.
+Decision: the shell owns the failure text and never shows Serve's `message`,
+so that a failure reads the same in every host.
 
 Complete base validation and capture must use the same rendered input for each
 view. Capture must preserve validation failures and warning order, including
