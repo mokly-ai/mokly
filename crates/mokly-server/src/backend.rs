@@ -1,7 +1,7 @@
 //! Graph-backed documents and read-time public-file confinement.
 
 use std::collections::BTreeMap;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, Weak};
 
 use axum::body::Bytes;
 use mokly_catalogue::diagnostic::Warning;
@@ -10,7 +10,7 @@ use mokly_graph::types::RenderGeneration;
 use mokly_model::data::Props;
 use mokly_model::usage::CatalogueUsage;
 
-use crate::asset_streams::AssetStreams;
+use crate::asset_streams::{AssetRequest, AssetResult, AssetStreams, Capture};
 use crate::assets::{File, content_type};
 use crate::backend_preview::ArtifactBytes;
 use crate::error::{Result, ServerError};
@@ -27,14 +27,19 @@ pub struct PreviewDocument {
     pub usage: CatalogueUsage,
 }
 
-/// Blocking graph work; HTTP runs each call outside its event loop.
+/// Graph work; HTTP runs IO outside its event loop.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = DocumentsMock))]
 pub trait Documents: Send + Sync {
     /// Read a declared generated document or resource.
     fn generated(&self, route: &str) -> Result<Option<File>>;
     /// Verify and spool a generated opaque asset before streaming its response.
-    fn asset(&self, _route: &str) -> Result<Option<OpenedFile>> {
+    fn asset(&self, _route: &str) -> AssetResult {
         Ok(None)
+    }
+    /// Reserve shared storage with no IO before foreground worker admission.
+    /// Backends without reservations return None and use `asset` instead.
+    fn asset_request(&self, _route: &str) -> Option<Box<dyn AssetRequest>> {
+        None
     }
     /// Render one background document without copying its response bytes. Its warnings
     /// return unreported, and a failure keeps them, so the usage pass reports them in
@@ -56,9 +61,12 @@ pub struct GraphDocuments {
     pub generation: Arc<dyn RenderGeneration>,
     /// Confined working-tree reads, separate from captured source bytes.
     pub public: Arc<dyn PublicReader>,
-    streams: Arc<dyn AssetStreams>,
+    /// Verified-capture boundary used after foreground admission.
+    pub(crate) streams: Arc<dyn AssetStreams>,
     warnings: Arc<dyn RenderWarnings>,
     locks: BTreeMap<String, Mutex<Option<CatalogueUsage>>>,
+    /// Only live requests and responses own the capture and its temporary file.
+    pub(crate) asset_copies: Mutex<BTreeMap<String, Weak<Capture>>>,
 }
 
 impl GraphDocuments {
@@ -80,6 +88,7 @@ impl GraphDocuments {
             streams,
             warnings,
             locks,
+            asset_copies: Mutex::new(BTreeMap::new()),
         }
     }
     /// Render a declared route and record its usage. A foreground render reports its
@@ -120,15 +129,11 @@ impl GraphDocuments {
 }
 
 impl Documents for GraphDocuments {
-    fn asset(&self, route: &str) -> Result<Option<OpenedFile>> {
-        let mut asset = match self.generation.open_asset(route) {
-            Ok(Some(asset)) => asset,
-            Ok(None) => return Ok(None),
-            Err(source) => return Err(ServerError::Render { source }),
-        };
-        self.streams
-            .capture(asset.as_mut(), &content_type(route))
-            .map(Some)
+    fn asset(&self, route: &str) -> AssetResult {
+        self.reserve_asset(route).capture()
+    }
+    fn asset_request(&self, route: &str) -> Option<Box<dyn AssetRequest>> {
+        Some(self.reserve_asset(route))
     }
 
     fn generated(&self, route: &str) -> Result<Option<File>> {
@@ -214,3 +219,7 @@ mod backend_tests;
 #[cfg(test)]
 #[path = "_tests_/warning_hook_tests.rs"]
 mod warning_hook_tests;
+
+#[cfg(test)]
+#[path = "_tests_/shared_asset_failure_tests.rs"]
+mod shared_asset_failure_tests;

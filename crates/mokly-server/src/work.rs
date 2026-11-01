@@ -10,6 +10,7 @@ use mokly_catalogue::diagnostic::Warning;
 use mokly_model::data::Props;
 use tokio::sync::Semaphore;
 
+use crate::asset_streams::AssetResult;
 use crate::assets::File;
 use crate::backend::{Documents, PreviewDocument};
 use crate::diagnostics::Diagnostics;
@@ -40,11 +41,7 @@ pub trait Work: Send + Sync {
     async fn generated(&self, documents: Arc<dyn Documents>, route: String)
     -> Result<Option<File>>;
     /// Verify and spool a generated opaque asset off the HTTP event loop.
-    async fn asset(
-        &self,
-        documents: Arc<dyn Documents>,
-        route: String,
-    ) -> Result<Option<OpenedFile>>;
+    async fn asset(&self, documents: Arc<dyn Documents>, route: String) -> AssetResult;
     /// Recheck and read a reached public asset off the HTTP event loop.
     async fn authored(&self, documents: Arc<dyn Documents>, path: String) -> Option<OpenedFile>;
     /// Coalesce a page's work and bound admission and duration.
@@ -117,11 +114,7 @@ impl Work for Workers {
     ) -> Result<Option<File>> {
         self.generated_delivery(documents, route).await
     }
-    async fn asset(
-        &self,
-        documents: Arc<dyn Documents>,
-        route: String,
-    ) -> Result<Option<OpenedFile>> {
+    async fn asset(&self, documents: Arc<dyn Documents>, route: String) -> AssetResult {
         self.asset_delivery(documents, route).await
     }
     async fn authored(&self, documents: Arc<dyn Documents>, path: String) -> Option<OpenedFile> {
