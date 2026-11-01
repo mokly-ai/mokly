@@ -61,9 +61,9 @@
     `crates/mokly-cli/src/base_dependencies.rs:170`.
   - `docs/protocol/mokly-base-install-processes.md#bounds-and-stops`
     states two limits of a stop. On macOS, a stop does not signal a
-    descendant outside the manager's process group whose parent exits before
-    the stop reaches that parent. After a normal finish, Mokly signals only
-    the manager's process group.
+    descendant outside the manager's process group whose parent exited
+    before the stop. After a normal finish, Mokly signals only the manager's
+    process group.
   - The same page requires one monotonic deadline for version discovery and
     every install. `docs/protocol/mokly-base-dependencies.md:201` says that
     cancellation stops preparation.
@@ -78,7 +78,8 @@
   group kill, does not cause the wait. On each path that can block, a kill
   or the cancellation signals run before `finish`. Two cases can leave such
   a survivor:
-  - On macOS, an orphan under the documented limit.
+  - On macOS, an orphan under the documented limit, or an orphan whose parent
+    exits while the stop runs.
   - A background process in a new session that a script left behind. The
     manager exits normally, but `poll` stays false, so `run` waits until the
     time limit. The one kill at line 146 then misses the process, and the
@@ -135,6 +136,9 @@
 - **Previous examples:** None found in the base install code. The Git runner
   reads its pipes in its own code, in `crates/mokly-git/src/system.rs` and
   `crates/mokly-git/src/pipes.rs`. This item did not check that code.
+- **Related:** `plans/follow-ups/macos-stop-mid-walk-orphans.md` holds a
+  decision on the second macOS case: an orphan whose parent exits while the
+  stop runs. A of this item bounds the wait for that orphan too.
 - **Recommendation:** A. It makes every stopped install end with the result
   that the stop already gives, and it needs no new requirement. C best
   removes the pipe wait, but its output bound is weaker.

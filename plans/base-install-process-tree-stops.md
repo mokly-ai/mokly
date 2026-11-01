@@ -50,6 +50,17 @@ Contract owners:
   and a parent outside the group can exit while the walk runs. The design
   call of 2026-10-28 already names the class of the limit: an orphan outside
   the manager's process group. The code and the class do not change.
+- Design call withdrawn (2026-11-01): the coordinator's review of the same
+  day withdrew the design call of 2026-11-01 above.
+  - The new words weaken the stop requirement. No user decision covers that
+    change, because the design call of 2026-10-28 is an agent's call.
+  - The page again says "whose parent exited before the stop".
+  - The gap is now the decision item
+    `plans/follow-ups/macos-stop-mid-walk-orphans.md`.
+    `docs/protocol/mokly-base-install-processes.md` and
+    `docs/protocol/mokly-runtime.md` start with a status line that links it.
+  - The Milestone 1 TODO stays ticked. Its check ran, and the gap that it
+    found is now proposed as a decision.
 
 ## Evidence
 

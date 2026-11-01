@@ -35,11 +35,10 @@
   - Since commits `41bde015` and `4b245b40`, a stop on Linux and macOS sends
     `SIGSTOP` to the manager's process group. It then follows parent links
     to each descendant, also in a new session, and signals each one.
-  - `docs/protocol/mokly-base-install-processes.md#bounds-and-stops` states
-    the requirement and two limits. On macOS, a stop does not signal a
-    descendant outside the manager's process group whose parent exits
-    before the stop reaches that parent. After a normal finish, Mokly
-    signals only the manager's process group.
+  - `docs/protocol/mokly-base-install-processes.md#bounds-and-stops` states the
+    requirement and two limits. On macOS, a stop does not signal a descendant
+    outside the manager's process group whose parent exited before the stop.
+    After a normal finish, Mokly signals only the manager's process group.
   - On macOS, `crates/mokly-platform/src/unix_process_table/macos.rs` reads
     the process table through libproc: `proc_listchildpids`, and
     `proc_pidinfo` with `PROC_PIDTBSDINFO`. macOS has no subreaper, so an
@@ -282,10 +281,9 @@
      example as a workflow artifact. Keep `/tmp/mokly-smoke` until the saved
      evidence is available.
   10. On macOS, Mokly ignores `XDG_CACHE_HOME` and uses the user cache
-      directory. Read the `Mokly cache:` line of each `stdout.log`. After the
-      evidence is saved, remove those two directories and `/tmp/mokly-smoke`.
-      To run again, start at the step that links Yarn and the Mokly binary,
-      with no `/tmp/mokly-smoke` folder.
+      directory. Read the `Mokly cache:` line of each `stdout.log`. Then remove
+      those two directories and `/tmp/mokly-smoke`. To run again, start at the
+      step that links the binary, with no `/tmp/mokly-smoke` folder.
 - **Impact if no action:** A macOS-only defect of the stop, for example in
   the libproc reader, stays unseen until a user meets surviving scripts on a
   Mac. Such scripts keep running after Mokly exits.
@@ -298,3 +296,5 @@
   - The evidence is saved, and this item is deleted.
   - A survivor, if one remains, has its own follow-up item with its process
     list.
+- **Related:** `plans/follow-ups/macos-stop-mid-walk-orphans.md` holds a
+  decision on a macOS gap of the same stop. This run cannot show that gap.

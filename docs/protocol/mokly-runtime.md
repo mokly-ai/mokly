@@ -1,5 +1,7 @@
 # Mokly Build And Browse Runtime
 
+Status: Follow-up work remains in the [macOS mid-walk orphan item](../../plans/follow-ups/macos-stop-mid-walk-orphans.md).
+
 This page is the runtime contract of `mokly serve` and `mokly build`: how a
 catalogue is discovered, rendered, cached, served, written, and shut down. The
 [Rust core architecture](../architecture/rust-core.md) is the map of the
