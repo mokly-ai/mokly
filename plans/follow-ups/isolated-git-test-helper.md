@@ -1,14 +1,14 @@
 # Use the isolated Git test helper
 
 - **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 173, from decision 7 of the W8 work.
 - **Location:** `crates/mokly-compare/tests/large_sources_tests.rs:10-34`,
   `crates/mokly-compare/tests/support/mod.rs:67-85`, and
   `crates/mokly-compare/tests/engine_support/mod.rs:214-231`.
-- **Reason:** The plan recorded this item after the user's rule of
-  2026-10-21 that new review items wait for the user after the merge.
+- **Reason:** The Rust rebuild merged with this finding open, and the shared
+  helper reaches the tests of several crates, so it needs a separate branch.
 
 - **Source:** Review.
 - **Category:** Test.
@@ -81,9 +81,8 @@
     directly, but they set both variables, so they are isolated.
 - **Recommendation:** D. One shared isolated helper removes the local-settings
   dependency in every Rust test crate. Its new crate and caller migration affect
-  effort, not approval. The user's reserved choice still waits for an answer.
-- **Action:** ask the user, because on 2026-10-21 the user ruled that new review
-  items wait for the user after the merge. The branch that lands the chosen
-  option deletes this item.
+  effort, not approval.
+- **Action:** fix after merge, apply D, because the new support crate and the
+  caller migration reach the tests of several crates, and they add no gate.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6319).

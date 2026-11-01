@@ -166,9 +166,15 @@
     the rest of the startup target, under decision 2A.
   - [jsconfig-resolution-input.md](./jsconfig-resolution-input.md): 4D
     records the same file for reuse. That item also covers the watch rule.
-  - [compiled-recipe-cache.md](./compiled-recipe-cache.md) and
-    [large-react-startup.md](./large-react-startup.md): other compile reuse
-    and startup work. Decide them together.
+  - [compiled-recipe-cache.md](./compiled-recipe-cache.md): reuse of
+    released compiled recipes in memory. A design call of 2026-11-01 chose
+    its option D, which restores a recipe through the same
+    `restoreGeneration` request and `reuse` check as 1A. Decide this item
+    with D in mind.
+  - The
+    [large React startup item at its last commit](https://github.com/mokly-ai/mokly/blob/75bacb9d016205c804633b79ff0e8496c6c07929/plans/follow-ups/large-react-startup.md)
+    closed on 2026-11-01, when large React startup measured about 3.7 s,
+    cold and warm.
   - [keep-base-side-in-memory.md](./keep-base-side-in-memory.md): both
     shorten the base side. Measure again after either merges.
 - **Recommendation:** 1A, 2A, 3A, 4D, 5A, 6D, 7C, 8A, 9C.

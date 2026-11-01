@@ -1,6 +1,6 @@
 # Keep healthy remote Testbox runs alive
 
-- **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of the CI release checks hub review.
 - **Location:** `.github/workflows/blacksmith-testbox.yml:25`,
@@ -58,7 +58,7 @@
     limit of the local complete gate, which once took 114 of its 120
     minutes. Both items recommend cutting suite cost over raising a limit,
     so one measurement of suite times can serve both. The limits and the
-    runners differ. The local-gate item still waits for the choice that the user reserved.
+    runners differ. Since 2026-11-01, neither item waits for the user.
 - **Recommendation:** C. It keeps the guard and makes the suite
   fit it.
 - **Action:** fix after merge, apply C, because the run cost lies outside the

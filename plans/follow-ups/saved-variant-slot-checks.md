@@ -6,8 +6,8 @@
 - **Location:** `crates/mokly-catalogue/src/template_role.rs:57`,
   `crates/mokly-catalogue/src/templates.rs:152`, and
   `docs/protocol/mokly-html-components.md:85`.
-- **Reason:** On 2026-10-21 the user deferred the open review items of PR #199
-  until after its merge, for the user's later choice.
+- **Reason:** The Variants section states no check rule for saved slots, so each
+  option adds a requirement, and option A adds a build error.
 
 - **Source:** Review.
 - **Category:** Docs or spec.
@@ -50,7 +50,8 @@
   names. One rule for authored HTML would settle both.
 - **Recommendation:** A. It gives saved slots the checks of every other
   authored HTML.
-- **Action:** ask the user, because the user reserved the choice for each open
-  review item of the rebuild. A adds a build error.
+- **Action:** ask the user, because each option adds a check rule that the
+  Variants section of `docs/protocol/mokly-html-components.md` does not state,
+  and A also adds a build error.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6018).

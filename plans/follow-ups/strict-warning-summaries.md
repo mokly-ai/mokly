@@ -1,13 +1,14 @@
 # Align strict-mode warning summaries
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 186, with more lines from the second delta review.
 - **Location:** `docs/protocol/mokly-build-warnings.md:165`,
   `crates/mokly-cli/src/grammar.rs:97`,
   `crates/mokly-cli/src/grammar.rs:123`, and `README.md:153`.
-- **Reason:** A user rule of 2026-10-21 deferred each new review item of
-  PR #199 until after its merge, for the user's later choice.
+- **Reason:** The Rust rebuild merged with these summaries stale, and the fix
+  reaches guides, protocol pages, and the CLI help, so it needs a separate docs
+  branch.
 
 - **Source:** Review.
 - **Category:** Docs or spec.
@@ -55,7 +56,7 @@
 - **Previous examples:** None found.
 - **Recommendation:** A. It keeps the useful summaries and makes each one
   true.
-- **Action:** ask the user, because the user reserved the choice for each open
-  review item of the rebuild.
+- **Action:** fix after merge, apply A, because the user decision of 2026-10-23
+  already changed the rule, and each summary only follows it.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6438).
