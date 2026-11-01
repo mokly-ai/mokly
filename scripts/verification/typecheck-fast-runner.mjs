@@ -2,6 +2,7 @@ import { constants } from "node:os";
 
 import { gte, valid } from "semver";
 
+import { readBunPin } from "./bun-pin.mjs";
 import { runCaptured } from "./process.mjs";
 import { runTypecheck } from "./typecheck-runner.mjs";
 
@@ -15,6 +16,7 @@ const minimumVersion = "1.4.4";
  */
 export async function runFastTypecheck({
   probe = runCaptured,
+  readFile,
   writeStdout = (text) => process.stdout.write(text),
   writeStderr = (text) => process.stderr.write(text),
   ...standard
@@ -31,7 +33,7 @@ export async function runFastTypecheck({
       error.code !== "ENOENT"
     )
       throw error;
-    return standardFallback("Bun was not found.", standard, writeStderr);
+    return standardFallback("Bun was not found.");
   }
 
   if (version.stderr) writeStderr(version.stderr);
@@ -51,29 +53,24 @@ export async function runFastTypecheck({
     return 1;
   }
   if (!gte(number, minimumVersion))
-    return standardFallback(
-      `Bun ${number} is older than ${minimumVersion}.`,
-      standard,
-      writeStderr,
-    );
+    return standardFallback(`Bun ${number} is older than ${minimumVersion}.`);
 
   return runTypecheck({
     ...standard,
     program: "bun",
     args: ["check", "--no-script", "--all"],
   });
-}
 
-/**
- * @param {string} reason
- * @param {import("./typecheck-runner.mjs").TypecheckOptions} standard
- * @param {(text: string) => void} writeStderr
- * @returns {Promise<number>}
- */
-function standardFallback(reason, standard, writeStderr) {
-  writeStderr(
-    `Warning: ${reason} Running the standard Node type check.\n` +
-      `Optional installation: npm install --global bun@${minimumVersion}\n`,
-  );
-  return runTypecheck(standard);
+  /** @param {string} reason */
+  async function standardFallback(reason) {
+    const pin = await readBunPin(standard.root, { readFile });
+    const hint =
+      pin.status === "valid"
+        ? `Optional installation: npm install --global bun@${pin.version}`
+        : `Optional native checker: install Bun ${minimumVersion} or newer.`;
+    writeStderr(
+      `Warning: ${reason} Running the standard Node type check.\n${hint}\n`,
+    );
+    return runTypecheck(standard);
+  }
 }

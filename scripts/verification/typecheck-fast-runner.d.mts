@@ -1,8 +1,9 @@
+import type { BunPinOptions } from "./bun-pin.mjs";
 import type { runCaptured } from "./process.mjs";
 import type { TypecheckOptions } from "./typecheck-runner.mjs";
 
 /** The standard fallback command and the optional Bun probe and output adapters. */
-export interface FastTypecheckOptions extends TypecheckOptions {
+export interface FastTypecheckOptions extends TypecheckOptions, BunPinOptions {
   probe?: typeof runCaptured;
   writeStdout?: (text: string) => void;
   writeStderr?: (text: string) => void;

@@ -65,6 +65,8 @@ function harness(
     probeOutcome?: Partial<ProbeOutcome>;
     checkError?: Error;
     checkOutcome?: Outcome;
+    pin?: string;
+    pinError?: Error;
   } = {},
 ) {
   const calls: Call[] = [];
@@ -79,6 +81,10 @@ function harness(
         root,
         program: node,
         args: [compiler, "--noEmit"],
+        readFile: async () => {
+          if (options.pinError) throw options.pinError;
+          return options.pin ?? "1.4.4\n";
+        },
         probe: async (program, args, settings) => {
           calls.push({ program, args, cwd: settings?.cwd });
           if (options.probeError) throw options.probeError;
@@ -203,5 +209,25 @@ test("Bun checker launch errors propagate even when Bun disappears after its ver
       ...expectedCheckerCalls("bun", nativeArgs).slice(0, 1),
     ]);
     assert.deepEqual(fixture.stderr, []);
+  }
+});
+
+test("fast fallback uses the shared pin for installation hints and tolerates an invalid pin", async () => {
+  const missing = Object.assign(new Error("Bun was not found"), {
+    code: "ENOENT",
+  });
+  for (const input of [
+    { pin: "1.5.0\n", hint: /npm install --global bun@1\.5\.0/ },
+    { pin: "bad pin", hint: /Bun 1\.4\.4 or newer/ },
+    { pin: "", hint: /Bun 1\.4\.4 or newer/ },
+    { pinError: new Error("unreadable pin"), hint: /Bun 1\.4\.4 or newer/ },
+  ]) {
+    const fixture = harness({ ...input, probeError: missing });
+    assert.equal(await fixture.run(), 0);
+    assert.deepEqual(fixture.calls, [
+      probeCall,
+      ...expectedCheckerCalls(node, [compiler, "--noEmit"]),
+    ]);
+    assert.match(fixture.stderr.join(""), input.hint);
   }
 });

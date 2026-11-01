@@ -141,17 +141,21 @@ Evidence: `.context/bun-ci-typechecking/docs-m1-report.md`.
 
 Depends on: 1
 
+Status: Complete.
+
 Add a command without changing the currently selected gate yet.
 
-- [ ] Add `.bun-version` with the approved version and one pin reader.
-- [ ] Use the pin for installation guidance without making the local fallback depend on a valid pin.
-- [ ] Add `typecheck:ci` through the existing Node coordinator and shared inventory.
-- [ ] Reuse native flags and preserve project coverage, paths, diagnostics, and exits.
-- [ ] Fail required checking when the pinned tool cannot run; do not use the local fallback.
-- [ ] Preserve standard checking and the existing optional fast command.
-- [ ] Test required-mode selection and failure propagation through injected process boundaries.
-- [ ] Save failure proofs and ten successful runs of each new asynchronous test.
-- [ ] Run focused tests, standard typechecking, fast checking, and lint.
+- [x] Add `.bun-version` with the approved version and one pin reader.
+- [x] Use the pin for installation guidance without making the local fallback depend on a valid pin.
+- [x] Add `typecheck:ci` through the existing Node coordinator and shared inventory.
+- [x] Reuse native flags and preserve project coverage, paths, diagnostics, and exits.
+- [x] Fail required checking when the pinned tool cannot run; do not use the local fallback.
+- [x] Preserve standard checking and the existing optional fast command.
+- [x] Test required-mode selection and failure propagation through injected process boundaries.
+- [x] Save failure proofs and ten successful runs of each new asynchronous test.
+- [x] Run focused tests, standard typechecking, fast checking, and lint.
+
+Evidence: `.context/bun-ci-typechecking/command-m2-report.md`.
 
 ## Milestone 3: Provision hosted gate jobs
 
