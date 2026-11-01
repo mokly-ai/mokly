@@ -5,12 +5,12 @@ import { fenceDetail } from "../src/catalogue/detail_fences.js";
 import { readEntryDetail } from "../src/catalogue/detail_reader.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV3,
+  EntryDetailV4,
 } from "../src/catalogue/types.js";
 import { loadFencedDetail } from "../src/shell/data_requests.js";
 import type { ShellDataSource } from "../src/shell/data_source.js";
 
-import { indexFixture, rawDetailFixtures } from "./catalogue_v8_fixture.js";
+import { indexFixture, rawDetailFixtures } from "./catalogue_v9_fixture.js";
 
 const HOME = "product/browse/home";
 const OTHER = "b2".repeat(32);
@@ -24,7 +24,7 @@ function withDark<T extends { colorScheme: string }>(
 }
 
 /** Home's detail at a revision, optionally with dark views. */
-function home(revision: number, dark = false): EntryDetailV3 {
+function home(revision: number, dark = false): EntryDetailV4 {
   const detail = rawDetailFixtures().current[HOME]!;
   detail.revision = revision;
   if (dark)
@@ -89,7 +89,7 @@ test("a newer detail with changed views installs with the refetched index", asyn
 
 test("another deployment wins over another identity", () => {
   const detail = rawDetailFixtures().current[HOME]!;
-  detail.deploymentId = OTHER;
+  detail.detailId = OTHER;
   detail.identity = { ...detail.identity, id: OTHER };
   assert.deepEqual(
     fenceDetail(index(0), { path: HOME }, readEntryDetail(detail)),

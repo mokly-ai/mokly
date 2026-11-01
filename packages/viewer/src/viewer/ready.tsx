@@ -8,7 +8,8 @@ import {
   useSyncExternalStore,
 } from "react";
 
-import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
+import { RootState } from "@mokly/ui/shell-layout";
+
 import type { MoklyVersionError } from "../catalogue/version_error.js";
 import type { ScrollTogetherPreference } from "../shell/comparison_scroll_preference.js";
 import { dataSnapshot } from "../shell/data_commit.js";
@@ -27,7 +28,8 @@ import { embeddedDataSource } from "./index_source.js";
 import { viewerView } from "./projection.js";
 import { defaultSelection, normalizeSelection } from "./selection.js";
 import type { LoadedIndex } from "./sources.js";
-import { themeAttributes } from "./theme.js";
+import { DeploymentChangedError } from "./sources.js";
+import { normalizeTheme } from "./theme.js";
 import type { MoklyViewerProps, ViewerSelection } from "./types.js";
 
 type ReadyProps = MoklyViewerProps & {
@@ -77,13 +79,10 @@ export function ReadyViewer(props: ReadyProps) {
   }, [normalized]);
   if (!normalized)
     return (
-      <div
-        className={`${VIEWER_DIRECTORY} mbk-empty`}
-        role="alert"
-        {...themeAttributes(props.theme)}
-      >
-        The requested view is unavailable.
-      </div>
+      <RootState
+        root={{ kind: "embedded", theme: normalizeTheme(props.theme) }}
+        state="unavailable"
+      />
     );
   return <MountedViewer {...props} normalized={normalized} />;
 }
@@ -103,10 +102,10 @@ function MountedViewer(
       () => root.current !== null,
     ),
   );
+  const [replacedDeployment] = useState(() => new DeploymentChangedError());
   const [initial] = useState(props.normalized);
   const [source] = useState(() => {
     // One failure object, so another deployment emits `onError` once.
-    const replacedDeployment = new Error("another deployment answered");
     return embeddedDataSource(props.index, props.loaded, props.detail, {
       deploymentChanged: () => report(replacedDeployment, "catalogue"),
       detailFailed: () => report(new EntryUnavailableError(), "catalogue"),
@@ -136,6 +135,10 @@ function MountedViewer(
           report(error, "comparison");
         },
         props.scrollTogether,
+        typeof props.index === "string" || props.index instanceof URL
+          ? () => report(replacedDeployment, "catalogue")
+          : undefined,
+        typeof props.index === "string" || props.index instanceof URL,
       ),
     [props.loaded, props.scrollTogether, report],
   );

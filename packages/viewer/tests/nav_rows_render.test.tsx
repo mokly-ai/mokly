@@ -22,7 +22,7 @@ test("a folder's own document is its first row, labelled Overview with the docum
   const html = render("product");
   const folder = element(
     html,
-    /<details class="mbk-nav-group" data-nav-folder="folder:product"[\s\S]*?<\/summary>[\s\S]*?<\/a>/,
+    /<details class="mbk-nav-group mbk-reset" data-nav-folder="folder:product"[\s\S]*?<\/summary>[\s\S]*?<\/a>/,
   );
   const row = element(folder, /<a [^>]*data-entry-id="product"[\s\S]*?<\/a>/);
   assert.match(row, /aria-current="page"/);
@@ -32,7 +32,10 @@ test("a folder's own document is its first row, labelled Overview with the docum
     row,
     /<path d="M9 13h6M9 17h4"><\/path><\/svg><\/span>Overview</,
   );
-  assert.match(folder, /<span class="mbk-nav-label">Product overview<\/span>/);
+  assert.match(
+    folder,
+    /<span class="mbk-nav-label mbk-reset">Product overview<\/span>/,
+  );
 });
 
 test("the Specs section holds every kind but components, which keep their own section", () => {
@@ -63,11 +66,11 @@ test("breadcrumbs link a folder's page and reveal a folder without one", () => {
   );
   assert.match(
     crumbs,
-    /<a class="mbk-crumb-link" href="\/view\/product\/">Product overview<\/a>/,
+    /<a class="mbk-crumb-link mbk-reset" href="\/view\/product\/">Product overview<\/a>/,
   );
   assert.match(
     crumbs,
-    /<button class="mbk-crumb-link" data-crumb-folder="product\/browse" type="button">Browse<\/button>/,
+    /<button class="mbk-crumb-link mbk-reset" data-crumb-folder="product\/browse" type="button">Browse<\/button>/,
   );
 });
 
@@ -75,6 +78,6 @@ test("component details show the shown entry's path above its source", () => {
   const html = render("components/action/default");
   assert.match(
     html,
-    /Path<\/[^>]+>[\s\S]{0,120}<code class="mbk-code">components\/action\/default<\/code>[\s\S]*?Source/,
+    /Path<\/[^>]+>[\s\S]{0,120}<code class="mbk-code mbk-reset">components\/action\/default<\/code>[\s\S]*?Source/,
   );
 });

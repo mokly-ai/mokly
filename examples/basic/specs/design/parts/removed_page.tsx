@@ -1,13 +1,15 @@
 import type { ReactNode } from "react";
 
+import { DetailsBody } from "../../../../../packages/ui/src/details-panel/details-panel.js";
+
 import { useDesignNavigation } from "./design_navigation.js";
 import { DESTINATIONS, type DesignDestination } from "./destinations.js";
 import { DetailsPanel } from "./details.js";
 import { MetaRow } from "./metadata_row.js";
 import { NavTree, type NavNode } from "./nav.js";
-import { PreviousVersionLabel } from "./removed_preview.js";
+import { PreviousVersionStage } from "./removed_preview.js";
 import { ScreenHead, Shell, type ArtboardViewport } from "./shell.js";
-import { DocumentPane, Stage } from "./stage.js";
+import { DocumentStage } from "./stage.js";
 
 /** One removed document retained by Changes, with the state it opens in. */
 interface RemovedDocument {
@@ -63,23 +65,20 @@ function RemovedDetails({ entry }: { entry: RemovedDocument }) {
   const navigation = useDesignNavigation();
   return (
     <DetailsPanel open destination={navigation.inspector}>
-      <div className="mbk-details-body">
-        <div>
-          <p className="mbk-details-desc">{entry.description}</p>
-          <p>Location: Example › Handbook</p>
-        </div>
-        <div className="mbk-meta">
-          <MetaRow name="source" label="Source">
-            Previous version
-          </MetaRow>
-          <MetaRow name="tags" label="Tags">
-            documents
-          </MetaRow>
-          <MetaRow name="related-docs" label="Related docs">
-            Example notes
-          </MetaRow>
-        </div>
-      </div>
+      <DetailsBody description={entry.description}>
+        <MetaRow name="source" label="Source">
+          Previous version
+        </MetaRow>
+        <MetaRow name="location" label="Location">
+          Example › Handbook
+        </MetaRow>
+        <MetaRow name="tags" label="Tags">
+          documents
+        </MetaRow>
+        <MetaRow name="related-docs" label="Related docs">
+          Example notes
+        </MetaRow>
+      </DetailsBody>
     </DetailsPanel>
   );
 }
@@ -88,7 +87,7 @@ function RemovedDetails({ entry }: { entry: RemovedDocument }) {
  * A removed document keeps its flat Changes row, its Removed badge, and the
  * baseline path of the folder that was deleted with it. `document`
  * holds the previous version; a state stage replaces it while the previous
- * version is unavailable.
+ * version is unavailable. Both stand below the previous version's band.
  */
 export function RemovedPageScreen({
   document,
@@ -121,16 +120,12 @@ export function RemovedPageScreen({
         status="removed"
         title={entry.title}
       />
-      {state ? (
-        <Stage>{state}</Stage>
-      ) : (
-        <>
-          <PreviousVersionLabel />
-          <Stage>
-            <DocumentPane>{document}</DocumentPane>
-          </Stage>
-        </>
-      )}
+      <PreviousVersionStage
+        entry={{ kind: "page", path: entry.path, title: entry.title }}
+        viewport={viewport}
+      >
+        {state ?? <DocumentStage>{document}</DocumentStage>}
+      </PreviousVersionStage>
       <RemovedDetails entry={entry} />
     </Shell>
   );

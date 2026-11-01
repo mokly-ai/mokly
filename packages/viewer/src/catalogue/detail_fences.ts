@@ -4,11 +4,10 @@ import { canonicalJson } from "../components/data.js";
 import type { PropSchema } from "../components/prop_types.js";
 import { validateComponentViewRecord } from "../components/view_validation.js";
 
-import { comparisonGeneration } from "./snapshot_identity.js";
 import type {
   CatalogueReadModel,
   CatalogueRecord,
-  EntryDetailV3,
+  EntryDetailV4,
 } from "./types.js";
 
 /** One requested detail: a current path, or a removed record's identity. */
@@ -40,8 +39,8 @@ export function workspaceDetailRequest(
 
 /** The outcome of comparing one validated detail with the installed index. */
 export type DetailFence =
-  | { kind: "accepted"; detail: EntryDetailV3 }
-  | { kind: "revision"; detail: EntryDetailV3 }
+  | { kind: "accepted"; detail: EntryDetailV4 }
+  | { kind: "revision"; detail: EntryDetailV4 }
   | { kind: "deployment" }
   | { kind: "rejected" };
 
@@ -53,26 +52,22 @@ export function detailKey(request: DetailRequest): string {
 }
 
 /**
- * Accept a current entry's detail only when deployment, identity and revision
- * equal the index, and a removed entry's detail only when identity,
- * generation and snapshot id equal the index's record. Another deployment
- * wins over every other difference, and a revision mismatch is reported
- * before the content is compared, so the content is matched against the
- * index of the detail's own revision.
+ * Accept a current entry's detail when revision, detail id, identity and
+ * content match the index. A revision mismatch is reported before the content
+ * is compared, so the content is matched against its own revision's index.
  */
 export function fenceDetail(
   index: CatalogueReadModel,
   request: DetailRequest,
-  detail: EntryDetailV3,
+  detail: EntryDetailV4,
 ): DetailFence {
   if (request.snapshotId === undefined) {
-    if (detail.deploymentId === undefined) return { kind: "rejected" };
-    if (detail.deploymentId !== index.deploymentId)
-      return { kind: "deployment" };
-    if (canonicalJson(detail.identity) !== canonicalJson(index.identity))
-      return { kind: "rejected" };
     if (detail.revision !== index.revision) return { kind: "revision", detail };
     const entry = currentEntry(index, request.path);
+    if (!entry) return { kind: "rejected" };
+    if (detail.detailId !== entry.detailId) return { kind: "deployment" };
+    if (canonicalJson(detail.identity) !== canonicalJson(index.identity))
+      return { kind: "rejected" };
     return entry && matches(index, entry, detail, false)
       ? { kind: "accepted", detail }
       : { kind: "rejected" };
@@ -86,9 +81,8 @@ export function fenceDetail(
   );
   if (
     !record ||
-    detail.generation === undefined ||
-    detail.generation !== comparisonGeneration(index.comparisonUrl) ||
     detail.entry.snapshotId !== request.snapshotId ||
+    detail.detailId !== record.entry.detailId ||
     !matches(index, record.entry, detail, true)
   )
     return { kind: "rejected" };
@@ -112,7 +106,7 @@ export function currentEntry(
 function matches(
   index: CatalogueReadModel,
   entry: CatalogueRecord,
-  detail: EntryDetailV3,
+  detail: EntryDetailV4,
   historical: boolean,
 ): boolean {
   if (detail.entry.path !== entry.path || detail.entry.kind !== entry.kind)

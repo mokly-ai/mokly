@@ -3,8 +3,8 @@
 ## View Controls
 
 Place one compact icon toolbar beside the page title. It contains a native
-viewport dropdown (Mobile, Desktop, Both) and, on consuming screens, a Highlight
-components toggle. Standalone artboards use the single top-bar Appearance
+viewport dropdown (Mobile, Desktop, Both) and a Highlight components toggle.
+Standalone artboards use the single top-bar Appearance
 selector for interface and preview scheme. Embedded hosts keep their separate
 preview scheme control. Highlighting has no separate horizontal band. Icons have accessible
 names, hover tooltips, selected states, and visible keyboard focus.
@@ -30,6 +30,10 @@ Disable highlighting when no registered components exist, inspection is
 unavailable, a comparison is selected, or the screen was removed and has no
 current preview. The tooltip and accessible description
 state that specific reason; zero usage must not be confused with missing data.
+Each artboard draws the toggle in the state that the shell shows for its view.
+Decision: the shell's state, not a disabled toggle where an artboard gives no
+state or a header without the toggle, because the mockups show what the shell
+draws.
 Highlight labels are separate rounded chips with a small gap above an intact
 rounded outline. The chip must not overlap the outline's corner or obscure the
 component; apply the same treatment to outer, nested, and single-instance regions.
@@ -45,9 +49,11 @@ scroll region. The inspector's icon strip stays visible while its content scroll
 On desktop, use the navigation divider's centered short-line handle, rotated to
 resize vertically. The grip center sits on the divider border, with no vertical gap.
 There is no diagonal corner grip or thick colored border. Both dividers share one
-affordance: a 32×2px rounded strong-border grip at rest that turns accent-colored
-with a soft accent halo while hovered, keyboard-focused, or being dragged, fading
-between those states. Keyboard focus also draws an accent bar along the divider's
+affordance: a 32×2px rounded grip that turns accent-colored with a soft accent
+halo while hovered, keyboard-focused, or being dragged, fading between those
+states. The palette contract sets each grip's resting color: the
+[inspector grip's](./mokly-viewer-palette.md#role-use) and the
+[navigation grip's](./mokly-viewer-palette.md#recorded-contrast). Keyboard focus also draws an accent bar along the divider's
 outer edge instead of a ring around the hit area. While a drag is in progress the
 pointer keeps the resize cursor everywhere and preview frames ignore pointer input,
 so the gesture cannot be interrupted by the content underneath.
@@ -194,7 +200,7 @@ only the reasons that fit, so that a recoverable mismatch never hides the entry.
 | `metadata`       | “Page details or saved examples changed.”                |
 
 The `implementation` sentence describes actual-instance impact. The
-component's own view states and comparison captions stay unchanged. The
+component's own view states and comparison headings stay unchanged. The
 `design/components/states/shared-impact/style-changed` artboard depicts it: a
 markup change shows only where screens use Action, so Details read the
-sentence while the Default caption still names only the changed styles.
+sentence while the comparison headings still name only the changed styles.

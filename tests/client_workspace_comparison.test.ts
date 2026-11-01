@@ -57,10 +57,17 @@ test("loaded comparison details merge with classification, deduplicate selectors
   assert.match(markup, /This change can apply anywhere on the screen/);
   for (const selector of [".auth", ".global", ".saved"])
     assert.equal(markup.split(`>${selector}</code>`).length - 1, 1);
-  assert.equal(markup.split(`<li>${SHARED}<p>`).length - 1, 1);
+  assert.equal(
+    markup.split(`<li class="mbk-reset">${SHARED}<p class="mbk-reset">`)
+      .length - 1,
+    1,
+  );
   assert.match(markup, /Excluded content: chrome/);
   assert.doesNotMatch(markup, /Examined and excluded|Shared component changes/);
-  assert.equal(markup.split("<h3>Comparison details</h3>").length - 1, 1);
+  assert.equal(
+    markup.split('<h3 class="mbk-reset">Comparison details</h3>').length - 1,
+    1,
+  );
   assert.equal(renderEvidence(data, true), markup);
 });
 
@@ -104,7 +111,7 @@ test("workspace evidence keeps excluded stylesheets separate", () => {
   assert.doesNotMatch(markup, /Changes to these files may affect this screen:/);
   assert.match(
     markup,
-    /Examined and excluded:<\/p><ul><li>static\/unused\.css<\/li><\/ul>/,
+    /Examined and excluded:<\/p><ul class="mbk-reset"><li class="mbk-reset">static\/unused\.css<\/li><\/ul>/,
   );
   assert.doesNotMatch(markup, /Changed styles that apply to this screen/);
 });
@@ -121,9 +128,12 @@ test("loaded evidence lists a resource that several views keep once", () => {
 
   assert.match(
     markup,
-    /Changes to these files may affect this screen:<\/p><ul class="mbk-evidence-files"><li>static\/beta\.svg<\/li><\/ul>/,
+    /Changes to these files may affect this screen:<\/p><ul class="mbk-evidence-files mbk-reset"><li class="mbk-reset">static\/beta\.svg<\/li><\/ul>/,
   );
-  assert.equal(markup.split(`<li>${beta}</li>`).length - 1, 1);
+  assert.equal(
+    markup.split(`<li class="mbk-reset">${beta}</li>`).length - 1,
+    1,
+  );
 });
 
 function renderEvidence(data: WorkspaceData, loaded = false): string {

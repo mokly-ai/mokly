@@ -72,8 +72,8 @@ export function TagScreen({
       searchValue={tag ? `tag:${tag}` : undefined}
       tagPickerOpen={picker}
     >
-      <WelcomeHead active={viewport} />
       <ExampleWorkspace
+        header={<WelcomeHead active={viewport} />}
         subject="welcome"
         viewport={viewport}
         activeTag={tag}

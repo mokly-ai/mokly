@@ -45,7 +45,7 @@ fn prepared() -> Prepared {
         ("static/one.txt", "one"),
         ("static/copy.txt", "one"),
         ("static/two.txt", "two"),
-        ("mokly-viewer/index.json", r#"{"schemaVersion":8}"#),
+        ("mokly-viewer/index.json", r#"{"schemaVersion":9}"#),
     ]
     .into_iter()
     .map(|(path, bytes)| File {

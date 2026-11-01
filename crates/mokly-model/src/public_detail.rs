@@ -1,4 +1,4 @@
-//! Entry detail v3 and live descriptor v3 public contracts.
+//! Entry detail v4 and live descriptor v3 public contracts.
 
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -137,24 +137,18 @@ pub struct RelatedComponent {
 /// One public entry detail, current or historical.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct EntryDetailV3 {
-    /// Must equal 3; readers gate it first.
-    #[ts(type = "3")]
+pub struct EntryDetailV4 {
+    /// Must equal 4; readers gate it first.
+    #[ts(type = "4")]
     pub schema_version: u32,
     /// Catalogue identity equal to the installed index.
     pub identity: CatalogueIdentity,
-    /// Current entries only, equal to the index.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub deployment_id: Option<String>,
+    /// Content id of this detail.
+    pub detail_id: String,
     /// Current entries only, equal to the index.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub revision: Option<u64>,
-    /// Removed entries only, comparison generation.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub generation: Option<String>,
     /// Entry identity and optional historical snapshot.
     pub entry: DetailEntry,
     /// Direct reasons in the review v8 shape, present for ready included entries of every kind.

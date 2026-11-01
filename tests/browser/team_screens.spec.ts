@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 
+import { shellRoot } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 
@@ -87,7 +88,7 @@ for (const viewport of ["mobile", "desktop"] as const)
         "Sam Okafor",
       ]);
       await expect(frame.locator(".member-status")).toHaveText("Invited");
-      await expect(page.locator("body")).toHaveAttribute(
+      await expect(page.locator(shellRoot)).toHaveAttribute(
         "data-mokly-color-scheme",
         scheme,
       );

@@ -6,7 +6,7 @@ import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
 import { shellCatalogueModel } from "../src/catalogue/shell_model.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV3,
+  EntryDetailV4,
 } from "../src/catalogue/types.js";
 import { routeDetailRequests } from "../src/shell/data_requests.js";
 import { routeFromUrl } from "../src/shell/routes.js";
@@ -18,7 +18,7 @@ import {
   detailFixture,
   rawDetailFixtures,
   rawIndexFixture,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 import {
   embeddedMarkup,
   heldEmbeddedMarkup,
@@ -62,7 +62,7 @@ test("the embedded viewer selects a component variant entry in navigation, chrom
     index,
     defaultSelection: { screenPath: SECOND },
   });
-  assert.match(html, /<h2>Action<\/h2>/);
+  assert.match(html, /<h2 class="mbk-reset">Action<\/h2>/);
   assert.match(
     html,
     /data-copy-path="components\/action\/second"[^>]*>components\/action\/second<\/button>/,
@@ -115,7 +115,7 @@ test("the embedded viewer requests a variant parent and shows its usage", async 
     new URL("/view/components/action/default/", "https://catalogue.example"),
   );
   const requests = routeDetailRequests(index, route);
-  const details: (readonly [DetailRequest, EntryDetailV3])[] = [];
+  const details: (readonly [DetailRequest, EntryDetailV4])[] = [];
   for (const request of requests)
     details.push([
       request,
@@ -147,7 +147,7 @@ test("the embedded viewer requests a variant parent and shows its usage", async 
     details,
     selection: { screenPath: "components/action/default" },
   });
-  assert.match(html, /<h3>Used by<\/h3>/);
+  assert.match(html, /<h3 class="mbk-reset">Used by<\/h3>/);
   assert.match(html, /data-usage-section="used-by"[\s\S]*>Welcome<\/a>/);
 });
 
@@ -182,7 +182,7 @@ test("the embedded viewer resolves light fallback evidence across status, marks 
   });
 
   assert.match(html, /data-workspace-status="">Unmodified</);
-  assert.match(html, /class="mbk-diff-toolbar" hidden=""/);
+  assert.match(html, /class="mbk-diff-toolbar mbk-reset" hidden=""/);
   assert.match(html, /data-view-changed="scheme" hidden=""/);
   assert.doesNotMatch(html, /data-view-changed="viewport" hidden=""/);
 });
@@ -202,7 +202,7 @@ test("the embedded viewer preserves comparison ineligibility while view evidence
   });
 
   assert.match(html, /data-workspace-status="">Changed</);
-  assert.match(html, /class="mbk-diff-toolbar" hidden=""/);
+  assert.match(html, /class="mbk-diff-toolbar mbk-reset" hidden=""/);
 });
 
 test("incomplete current view axes are rejected", () => {

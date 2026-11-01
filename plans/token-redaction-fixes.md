@@ -12,8 +12,13 @@ token to that code. Parsed CLI values must stay safe when formatted for
 diagnostics.
 
 This plan resolves user items 177, 178, 180, and 181 from the post-merge
-follow-up in `plans/rust-rebuild.md`. Its last milestone ticks those four items
-in that coordinator plan. The plan makes no other edit there.
+follow-up of the
+[completed Rust rebuild plan](https://github.com/mokly-ai/mokly/blob/1bdbd9f469a3b36744d5abf3c4dab65354577aa1/plans/rust-rebuild.md?plain=1#L6357-L6412).
+PR #247 deleted that plan from `main` on 2026-10-30. It moved the four items to
+four follow-up items under `plans/follow-ups/`. This branch fixes the four
+items, so it deletes those four follow-up items. It keeps the item 151 record,
+`base-script-publish-token.md`, and replaces only its links to the deleted
+items.
 
 The saved audit and reproductions are in `.context/token-redaction-fixes/`.
 `code-audit.md` records the audit at `origin/main`
@@ -401,8 +406,8 @@ guide check logs.
 
 ## Milestone 6: Verification, commit, review, and handoff
 
-Prove the behaviour on the final branch, tick the coordinator items, and hand
-the branch to the coordinator.
+Prove the behaviour on the final branch, delete the follow-up items of the four
+fixed items, and hand the branch to the coordinator.
 
 - [ ] Merge `origin/main` under the `git-merge` skill.
   - [ ] When workspace 353 merged first, keep its deletion of the three Node
@@ -424,8 +429,9 @@ the branch to the coordinator.
       output, PostCSS output, or `Debug` value holds the test token.
 - [ ] Run `cargo xtask check --suite repository`.
 - [ ] Run the complete gate `cargo xtask check` once on the final commit.
-- [x] Tick user items 177, 178, 180, and 181 in `plans/rust-rebuild.md` with
-      the smallest edit.
+- [x] Tick user items 177, 178, 180, and 181 in
+      [`plans/rust-rebuild.md`](https://github.com/mokly-ai/mokly/blob/1bdbd9f469a3b36744d5abf3c4dab65354577aa1/plans/rust-rebuild.md?plain=1#L6357-L6412)
+      with the smallest edit.
 - [ ] Run the deletion audit of the `git-commit` skill. Commit and push this
       branch.
 - [ ] Review the diff against `origin/main` with the `implementation-review`
@@ -433,3 +439,16 @@ the branch to the coordinator.
       `Auto-fix: yes` findings, re-review once, and report the rest.
 - [ ] Handoff: the coordinator opens the pull request. Then put its link in
       the status paragraph.
+
+Merge design call (2026-11-01) for the merge of `main` at `8eb2b9a0`, the merge
+agents' own call: keep the deletion of `plans/rust-rebuild.md` by PR #247. The
+deletion also drops the four ticks that this branch made in that plan. Delete
+the follow-up items of the four fixed items: `percent-secret-redaction.md`,
+`token-in-viewer-host.md`, `sidecar-publish-token.md`, and
+`publish-token-debug.md`. Reason: the `plans` skill says that the branch that
+fixes an item deletes its file. PR #247 also says that such a branch removes
+its follow-up items and does not restore the plan. The Decisions section keeps
+the dated approvals.
+
+Evidence: `.context/main-sync-2026-11-01/merge-decisions.md`, with the
+justification of each merge path.

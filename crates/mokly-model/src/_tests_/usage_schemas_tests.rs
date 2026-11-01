@@ -6,7 +6,7 @@ use crate::{readers, wire_decode};
 #[test]
 fn one_schema_compilation_serves_all_instances_and_invalid_props_still_fail() {
     let index = readers::index(include_str!(
-        "../../../../docs/protocol/fixtures/catalogue-v8.json"
+        "../../../../docs/protocol/fixtures/catalogue-v9.json"
     ))
     .unwrap();
     let component = &index.components[0];

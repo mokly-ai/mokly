@@ -7,6 +7,10 @@ import type { ColorScheme, Viewport } from "../data/axes.js";
 import { encodeUrlPath } from "../data/paths.js";
 import { previewMetadataPath, snapshotSidePath } from "../navigation/routes.js";
 import type { RemovedPreviewData } from "../shell/previews.js";
+import {
+  DeploymentChangedError,
+  type DeploymentCheck,
+} from "../viewer/sources.js";
 
 import { pageContent, screenContent, type ParsedPreview } from "./content.js";
 
@@ -56,6 +60,7 @@ export interface PreviewDelivery {
 /** Fetch boundary supplied by the shell that owns the preview. */
 export interface PreviewRequestEnvironment {
   fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
+  deploymentCheck?: DeploymentCheck;
 }
 
 /** Exact files and directory prefixes in the documented embedded fetch set. */
@@ -147,6 +152,11 @@ export async function requestPreview(
   environment: PreviewRequestEnvironment,
   signal: AbortSignal,
 ): Promise<LoadedPreview> {
+  if (
+    environment.deploymentCheck &&
+    !(await environment.deploymentCheck(signal))
+  )
+    throw new DeploymentChangedError();
   const response = await environment.fetch(request.endpoint.href, {
     signal,
     headers: { accept: "application/json" },

@@ -1,7 +1,7 @@
 //! Current details follow their own index record's ready and included membership.
 
 use crate::axes::EntryKind;
-use crate::public_detail::{DetailEntry, DetailView, EntryDetailV3};
+use crate::public_detail::{DetailEntry, DetailView, EntryDetailV4};
 use crate::public_index::CatalogueReadModel;
 use crate::public_metadata::{CatalogueChanges, ChangeKind, ComparisonSelection};
 use crate::read_contract::ContractViolation;
@@ -11,13 +11,12 @@ use crate::usage::CatalogueUsage;
 
 use super::validate;
 
-fn fixture(kind: EntryKind, changes: CatalogueChanges) -> (CatalogueReadModel, EntryDetailV3) {
+fn fixture(kind: EntryKind, changes: CatalogueChanges) -> (CatalogueReadModel, EntryDetailV4) {
     let mut index = readers::index(include_str!(
-        "../../../../docs/protocol/fixtures/catalogue-v8.json"
+        "../../../../docs/protocol/fixtures/catalogue-v9.json"
     ))
     .unwrap();
     let identity = index.identity.clone();
-    let deployment_id = index.deployment_id.clone();
     let revision = index.revision;
     let (entry, visual) = match kind {
         EntryKind::Screen => {
@@ -36,6 +35,7 @@ fn fixture(kind: EntryKind, changes: CatalogueChanges) -> (CatalogueReadModel, E
         && matches!(changes, CatalogueChanges::Ready { kind, .. } if kind != ChangeKind::Added);
     entry.changes = changes;
     let path = entry.path.clone();
+    let detail_id = entry.detail_id.clone();
     let before = based.then(|| ReviewEntryAddress {
         path: path.clone(),
         title: entry.title.clone(),
@@ -62,13 +62,12 @@ fn fixture(kind: EntryKind, changes: CatalogueChanges) -> (CatalogueReadModel, E
             })
             .collect()
     });
-    let detail = EntryDetailV3 {
-        schema_version: 3,
+    let detail = EntryDetailV4 {
+        schema_version: 4,
         control_order,
         identity,
-        deployment_id: Some(deployment_id),
+        detail_id,
         revision: Some(revision),
-        generation: None,
         entry: DetailEntry {
             path,
             kind,

@@ -1,0 +1,36 @@
+/* The reset class, mbk-reset. Each package component puts it on every element
+   that it renders, apart from the host slots, whose content stays the host's.
+   The class gives its element border-box sizing and the reader's reduced
+   motion, and resets links and text blocks. Element filters sit in :where(),
+   so each reset rule weighs one class: it beats a host page's element rules,
+   and every component rule, which follows it in styles.css, beats it. An SVG
+   drawing carries the class on its <svg> element, and its shapes take the
+   same sizing and motion. */
+.mbk-reset,
+.mbk-reset::before,
+.mbk-reset::after,
+.mbk-reset:where(svg) *,
+.mbk-reset:where(svg) *::before,
+.mbk-reset:where(svg) *::after {
+  box-sizing: border-box;
+}
+
+.mbk-reset:where(a) {
+  color: inherit;
+}
+
+.mbk-reset:where(h1, h2, h3, p) {
+  margin-top: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mbk-reset,
+  .mbk-reset::before,
+  .mbk-reset::after,
+  .mbk-reset:where(svg) *,
+  .mbk-reset:where(svg) *::before,
+  .mbk-reset:where(svg) *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

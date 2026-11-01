@@ -7,6 +7,7 @@ import {
   screen,
   select,
 } from "./appearance_assertions.js";
+import { shellRoot } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
 import { missingResourceNotice } from "./document_error_allowance.js";
 import { expectFrameSource } from "./workspace_actions.js";
@@ -63,7 +64,7 @@ test("an unavailable route still offers Appearance", async ({
   await page.goto("/view/missing/");
   await expect(page.locator(control)).toBeVisible();
   await page.locator(select).selectOption("dark");
-  await expect(page.locator("body")).toHaveAttribute(
+  await expect(page.locator(shellRoot)).toHaveAttribute(
     "data-mokly-color-scheme",
     "dark",
   );
@@ -88,7 +89,7 @@ test("a component sample follows the one Appearance control", async ({
   );
 
   await page.locator(select).selectOption("dark");
-  await expect(page.locator("body")).toHaveAttribute(
+  await expect(page.locator(shellRoot)).toHaveAttribute(
     "data-mokly-color-scheme",
     "dark",
   );

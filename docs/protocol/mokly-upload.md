@@ -161,7 +161,7 @@ Readers reject missing/extra upload-manifest fields and duplicate JSON keys.
 
 - `moklyVersion` is the installed package's exact SemVer, including prerelease
   or build metadata, at most 255 UTF-8 bytes. `schemaVersion` versions this
-  envelope independently of the catalogue index v8.
+  envelope independently of the catalogue index v9.
 - `repository` obeys the identity grammar above; it is an assertion to authorize,
   not proof of repository ownership. `host` is at most 253 bytes; owner and name
   are each at most 255 bytes.
@@ -188,7 +188,7 @@ The manifest is written before ownership finalization. Publish declares it as
 publication metadata, so it is excluded from the deployment identity while
 remaining an owned file whose exact bytes are hashed in the ownership marker.
 Changing only publication metadata therefore changes the marker without
-changing `deploymentId` or the stamped index and detail bytes. The Plan
+changing `deploymentId`, the index, the deployment file, or any detail. The Plan
 archive and every Blob request use the same finalized byte snapshot as the
 installed output, never a later walk of mutable output.
 

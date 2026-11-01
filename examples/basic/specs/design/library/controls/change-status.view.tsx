@@ -1,18 +1,19 @@
+import {
+  ChangeStatus,
+  type ChangeStatusValue,
+} from "../../../../../../packages/ui/src/change-status/change-status.js";
+
 import type { ChangeStatusProps } from "./change-status.js";
 
-const labels = {
+/** The shipped badge's word for each saved status. */
+const STATUSES = {
   unmodified: "Unmodified",
   added: "Added",
   changed: "Changed",
   removed: "Removed",
-} as const;
+} as const satisfies Record<ChangeStatusProps["status"], ChangeStatusValue>;
+
+/** The shipped change status badge, which shows the status as its word. */
 export function ChangeStatusView({ status }: ChangeStatusProps) {
-  return (
-    <span
-      className={`ce-change-status ce-${status}`}
-      data-change-status={status}
-    >
-      {labels[status]}
-    </span>
-  );
+  return <ChangeStatus status={STATUSES[status]} />;
 }

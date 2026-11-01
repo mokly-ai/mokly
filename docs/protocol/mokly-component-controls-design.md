@@ -29,10 +29,11 @@ Each control is a row: its name in a label column, 120px wide on desktop and
 and error. Focus indicators and error text remain legible, and controls do not
 rely on color alone.
 
-The Edit props link opens the controls of the entry it is on: the parent's own
-entry from the component page, or a saved variant from that variant's page.
-The canonical Controls page depicts the parent's own entry, and its variant bar
-opens Default and Disabled.
+A component page edits props in place: its Props tab shows the controls of
+the entry it is on, the parent's own entry on the component page, or a saved
+variant on that variant's page. Decision: no separate Edit props link, because
+the shipped Props tab already holds the controls. The canonical Controls page
+depicts the parent's own entry, and its variant bar opens Default and Disabled.
 
 An edited-state indicator and Reset action accompany temporary overrides. Reset
 restores the shown entry's saved props: the parent's own props on the parent,
@@ -87,9 +88,9 @@ Every screen has distinct mobile and desktop components. The catalogue provides
 state navigation without adding a footer to the rendered product artboard.
 Each entry's files derive from its path under the
 [artifact path contract](./mokly-artifact-paths.md); its folder owns gallery
-membership. Component pages such as `design/components/states/removed` show a
-props summary in their Props tab, and this controls catalogue owns the states of
-the Props panel.
+membership. Component pages such as `design/components/states/removed` show the
+same Props panel in their Props tab, and this controls catalogue owns the states
+of that panel.
 
 | Entry                                                   | State                                                 |
 | ------------------------------------------------------- | ----------------------------------------------------- |

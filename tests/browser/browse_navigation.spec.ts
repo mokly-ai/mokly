@@ -1,5 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 
+import { shellRoot } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
 import { expectDestination } from "./navigation_destination.js";
 import {
@@ -96,7 +97,7 @@ test("MockLink navigation reveals the destination and preserves shell state", as
     "data-viewport",
     "mobile",
   );
-  await expect(page.locator("body")).toHaveAttribute(
+  await expect(page.locator(shellRoot)).toHaveAttribute(
     "data-mokly-color-scheme",
     "dark",
   );

@@ -21,7 +21,7 @@ function list(value: unknown): UnknownRecord[] {
   return value.map(record);
 }
 
-test("tag-free release checks stay read-only and cover all seven packages", async () => {
+test("tag-free release checks stay read-only and cover all eight packages", async () => {
   const source = await fs.readFile(
     path.join(repositoryRoot, ".github/workflows/release-check.yml"),
     "utf8",
@@ -84,13 +84,13 @@ test("tag-free release checks stay read-only and cover all seven packages", asyn
   assert.equal(record(aggregateCheckout?.with).ref, "${{ github.sha }}");
   assert.equal(record(aggregateCheckout?.with)["persist-credentials"], false);
   assert.equal(
-    aggregateSteps.find((step) => step.name === "Pack seven release packages")
+    aggregateSteps.find((step) => step.name === "Pack eight release packages")
       ?.run,
     "node scripts/release/pack.mjs .context/release-artifact",
   );
   assert.equal(
     aggregateSteps.find(
-      (step) => step.name === "Recheck seven release packages",
+      (step) => step.name === "Recheck eight release packages",
     )?.run,
     "node scripts/release/pack.mjs .context/release-artifact --reuse",
   );
@@ -101,7 +101,7 @@ test("tag-free release checks stay read-only and cover all seven packages", asyn
   );
   assert.equal(
     aggregateSteps.find(
-      (step) => step.name === "Smoke-test seven release packages",
+      (step) => step.name === "Smoke-test eight release packages",
     )?.run,
     "node scripts/release/smoke.mjs .context/release-artifact",
   );

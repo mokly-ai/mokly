@@ -103,10 +103,18 @@ test("the removed server and runtime entries cannot be imported", async () => {
     );
 });
 
-test("only the standalone stylesheet gives the unmarked stub the system appearance", async () => {
+test("only the stub's document takes the system appearance without a mark", async () => {
   const read = (name: string) =>
     fs.readFile(path.join(root, "dist", name), "utf8");
-  const stub = /:root:not\(\[data-mokly-theme\]\)/;
-  assert.match(await read("shell.css"), stub);
-  assert.doesNotMatch(await read("styles.css"), /:not\(\[data-mokly-theme\]\)/);
+  // A shell root always states its appearance, and the stub's document class
+  // exists only on the page that Serve and the static build deliver.
+  assert.match(
+    await read("shell.css"),
+    /\.mbk-document:not\(\[data-mokly-theme\]\)/,
+  );
+  for (const name of ["shell.css", "styles.css"])
+    for (const [selector] of (await read(name)).matchAll(
+      /[^\s,{}]*:not\(\[data-mokly-theme\]\)/gu,
+    ))
+      assert.equal(selector, ".mbk-document:not([data-mokly-theme])", name);
 });

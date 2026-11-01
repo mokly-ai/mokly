@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { ChangeStatus } from "@mokly/ui/change-status";
+import { WorkspaceLayout } from "@mokly/ui/workspace-layout";
+
 import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
 import { comparisonEligibilityKnown } from "./comparison_intent.js";
@@ -198,56 +201,27 @@ export function ComponentWorkspace({
   };
 
   return (
-    <section className="mbk-workspace" data-workspace="" ref={workspaceRef}>
-      <ScreenHead
-        action={
-          <WorkspaceControls
-            changedViews={changedViews}
-            dark={Boolean(context.embedded) && catalogue.hasDarkFragments}
-            effectiveColorScheme={resolvedView.colorScheme}
-            highlight={highlight}
-          />
-        }
-        crumbs={head.crumbs}
-        heading={head.title}
-        path={head.path}
-        status={
-          <span
-            className="mbk-entry-status"
-            data-status={headStatus}
-            data-workspace-status=""
-            hidden={!headStatus}
-          >
-            {headStatus}
-          </span>
-        }
-      />
-      <WorkspaceVariantBar data={data} {...(variant ? { variant } : {})} />
-      <div className="mbk-workspace-panes">
-        <div className="mbk-preview-pane" data-workspace-preview="">
-          <div
-            aria-busy={controls.pending || undefined}
-            className="mbk-preview-busy"
-          >
-            {preview ? (
-              <RemovedPreviewStage data={preview} />
-            ) : data.comparisons ? (
-              <ControlledDiffScreen
-                compared={data.compared}
-                comparison={comparison}
-                entryId={variantPath ?? entry.path}
-                entryKind={entry.kind}
-                eligible={presentation.comparisonEligible}
-                usingChanged={presentation.usingChanged}
-              >
-                {stage}
-              </ControlledDiffScreen>
-            ) : (
-              stage
-            )}
-          </div>
-          {controls.previewStatus}
-        </div>
+    <WorkspaceLayout
+      busy={controls.pending}
+      header={
+        <ScreenHead
+          action={
+            <WorkspaceControls
+              changedViews={changedViews}
+              dark={Boolean(context.embedded) && catalogue.hasDarkFragments}
+              effectiveColorScheme={resolvedView.colorScheme}
+              highlight={highlight}
+            />
+          }
+          crumbs={head.crumbs}
+          heading={head.title}
+          path={head.path}
+          status={
+            <ChangeStatus mark="data-workspace-status" status={headStatus} />
+          }
+        />
+      }
+      inspector={
         <Inspector
           catalogue={catalogue}
           data={data}
@@ -283,8 +257,31 @@ export function ComponentWorkspace({
             ),
           }}
         />
-      </div>
-      {inspection.overlay}
-    </section>
+      }
+      overlay={inspection.overlay}
+      preview={
+        preview ? (
+          <RemovedPreviewStage data={preview} />
+        ) : data.comparisons ? (
+          <ControlledDiffScreen
+            compared={data.compared}
+            comparison={comparison}
+            entryId={variantPath ?? entry.path}
+            entryKind={entry.kind}
+            eligible={presentation.comparisonEligible}
+            usingChanged={presentation.usingChanged}
+          >
+            {stage}
+          </ControlledDiffScreen>
+        ) : (
+          stage
+        )
+      }
+      previewStatus={controls.previewStatus}
+      ref={workspaceRef}
+      variantBar={
+        <WorkspaceVariantBar data={data} {...(variant ? { variant } : {})} />
+      }
+    />
   );
 }
