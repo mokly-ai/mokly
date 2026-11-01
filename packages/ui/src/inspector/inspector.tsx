@@ -24,11 +24,11 @@ import { InspectorDisclosures } from "./inspector-disclosures.js";
 import {
   InspectorSizer,
   sizeStyle,
-  type InspectorSize,
+  type InspectorSizing,
 } from "./inspector-sizer.js";
 import { onTabKeyDown } from "./tab-keys.js";
 
-export type { InspectorSize } from "./inspector-sizer.js";
+export type { InspectorSizing } from "./inspector-sizer.js";
 
 /** The tabs of the inspector, each with its glyph. */
 export type InspectorTabId = "details" | "components" | "props" | "usage";
@@ -79,7 +79,7 @@ export function Inspector({
   ref,
   tabs,
   ...size
-}: InspectorSize & {
+}: InspectorSizing & {
   /** The tab that the host shows while the inspector is open. */
   active?: string | undefined;
   /** The id of the panels' region, unique in the document. */

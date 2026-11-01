@@ -8,8 +8,12 @@
 
 import type { CSSProperties, Ref } from "react";
 
-/** The size of the inspector, which the host holds. */
-export interface InspectorSize {
+/**
+ * The props through which a host sizes the inspector: the height and its
+ * bounds, the state and the height of the narrow sheet, and the refs of the
+ * separator and the grab.
+ */
+export interface InspectorSizing {
   /**
    * Whether the narrow sheet is expanded. The inspector carries the state as
    * `data-expanded`, and the grab reports it and names what it does. Without
@@ -45,7 +49,7 @@ const STYLESHEET_HEIGHT = 260;
 export function sizeStyle({
   height,
   sheetHeight,
-}: InspectorSize): CSSProperties | undefined {
+}: InspectorSizing): CSSProperties | undefined {
   if (height === undefined && sheetHeight === undefined) return undefined;
   const style: CSSProperties & { "--inspector-height"?: string } = {};
   if (height !== undefined) style["--inspector-height"] = `${height}px`;
@@ -62,7 +66,7 @@ export function InspectorSizer({
   maximumHeight = 600,
   minimumHeight = 160,
   resizeRef,
-}: InspectorSize & {
+}: InspectorSizing & {
   /** The id of the panels' region, which the separator resizes. */
   contentId: string;
 }) {

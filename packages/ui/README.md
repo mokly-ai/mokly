@@ -349,8 +349,9 @@ override the desktop layout rules.
   `Inspector` and `InspectorHandle`: the tabs, whose keys `tab-keys.ts`
   handles, the panels, and Close with its focus return
 - [`src/inspector/inspector-sizer.tsx`](./src/inspector/inspector-sizer.tsx)
-  — `InspectorSize`: the resize separator and the sheet grab, with the
-  height, the bounds, and the sheet state that the host holds
+  — the resize separator and the sheet grab, and `InspectorSizing`, the
+  height, the bounds, the sheet state, and the refs through which the host
+  sizes the inspector
 - [`src/inspector/inspector-disclosures.tsx`](./src/inspector/inspector-disclosures.tsx)
   — the inspector of a static depiction, whose tabs are native disclosures
 - [`src/details-panel/details-panel.tsx`](./src/details-panel/details-panel.tsx)
