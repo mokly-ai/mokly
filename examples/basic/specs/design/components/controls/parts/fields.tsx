@@ -1,3 +1,4 @@
+import { PropFields } from "../../../../../../../packages/ui/src/prop-field/prop-field.js";
 import { optional, useDesignInstance } from "../../../library/composition.js";
 import { propField } from "../../../library/inspector/prop-field.js";
 import type { ActionProps } from "../../parts/action_props.js";
@@ -17,7 +18,7 @@ export function ControlFields({
   const scope = useDesignInstance(idPrefix);
   const id = (field: string) => idPrefix + "-" + field;
   return (
-    <div className="ce-control-fields">
+    <PropFields>
       <propField.Component
         moklyInstance={scope + "-label"}
         label="label"
@@ -35,13 +36,11 @@ export function ControlFields({
         optional={false}
         supplied
         control={
-          <div className="ce-check-value">
-            <input
-              id={id("disabled")}
-              type="checkbox"
-              defaultChecked={props.disabled}
-            />
-          </div>
+          <input
+            id={id("disabled")}
+            type="checkbox"
+            defaultChecked={props.disabled}
+          />
         }
       />
       <propField.Component
@@ -67,9 +66,7 @@ export function ControlFields({
             step={1}
             defaultValue={props.cornerRadius}
             aria-invalid={invalid ? "true" : undefined}
-            aria-describedby={
-              id("radius") + (invalid ? "-error" : "-description")
-            }
+            aria-describedby={id("radius") + (invalid ? "-error" : "-help")}
           />
         }
       />
@@ -93,24 +90,9 @@ export function ControlFields({
         optional
         supplied={props.hint !== undefined}
         control={
-          <div>
-            <label className="ce-check-value">
-              <input
-                type="checkbox"
-                defaultChecked={props.hint !== undefined}
-              />
-              <span>{CONTROLS_COPY.set("hint")}</span>
-            </label>
-            <input
-              className="ce-hint-value"
-              id={id("hint")}
-              type="text"
-              defaultValue={props.hint ?? ""}
-            />
-            <p className="ce-unset-value">{CONTROLS_COPY.notSet}</p>
-          </div>
+          <input id={id("hint")} type="text" defaultValue={props.hint ?? ""} />
         }
       />
-    </div>
+    </PropFields>
   );
 }

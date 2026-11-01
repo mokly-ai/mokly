@@ -11,6 +11,9 @@ export const designHomeRow =
 
 export const tourRow = 'a[data-nav-row][data-route="example/tour/index.html"]';
 
+/** The standalone shell's root, which carries its appearance and page marks. */
+export const shellRoot = ".mbk[data-mokly-shell]";
+
 export const appearance = ".mbk-topbar [data-mokly-appearance-control]";
 
 export const appearanceSelect = "[data-mokly-appearance-select]";
@@ -61,10 +64,10 @@ export async function expectSchemeSelected(
   page: Page,
   value: "dark" | "light",
 ): Promise<void> {
-  // The document mark is what every frame and caption follows. The control
+  // The shell root's mark is what every frame and caption follows. The control
   // may read Auto while resolving to the same scheme, so it is asserted where
   // an explicit choice was actually made.
-  await expect(page.locator("body")).toHaveAttribute(
+  await expect(page.locator(shellRoot)).toHaveAttribute(
     "data-mokly-color-scheme",
     value,
   );

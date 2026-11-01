@@ -45,10 +45,10 @@ pub fn artifact(directory: PathBuf, comparison: bool) -> Artifact {
         path: INDEX.to_owned(),
         bytes: match &comparison {
             Some(comparison) => format!(
-                "{{\"schemaVersion\":8,\"base\":\"{}\",\"baseCommit\":\"{}\"}}",
+                "{{\"schemaVersion\":9,\"base\":\"{}\",\"baseCommit\":\"{}\"}}",
                 comparison.base_ref, comparison.base_sha
             ),
-            None => "{\"schemaVersion\":8}".to_owned(),
+            None => "{\"schemaVersion\":9}".to_owned(),
         }
         .into(),
     });

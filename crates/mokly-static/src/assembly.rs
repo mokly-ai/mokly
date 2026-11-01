@@ -8,11 +8,12 @@ use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_compare::projection_index;
 use mokly_graph::policy::{FilePolicy, PublicPolicy};
 use mokly_graph::types::RenderGeneration;
+use mokly_model::deployment::DeploymentFileV1;
 use mokly_model::namespace;
 use mokly_model::output::artifact::{Artifact, File};
 use mokly_model::projection::{self, Publication, ViewKey};
 use mokly_model::usage::CatalogueUsage;
-use mokly_model::{detail_context, projection_usage, readers, shell};
+use mokly_model::{detail_context, projection_usage, readers, shell, versions};
 use mokly_source_interface::tree::SourceTree;
 
 use crate::changes::{ChangeState, PublicationInput};
@@ -209,6 +210,14 @@ impl Assembler for CatalogueAssembler {
             .transpose()?;
         let mut files = inventory.into_files();
         files.extend(identity::finalize(&mut index, &mut details, &files)?);
+        files.push(File {
+            path: namespace::viewer("deployment.json"),
+            bytes: identity::json(&DeploymentFileV1 {
+                schema_version: versions::DEPLOYMENT_FILE,
+                deployment_id: index.deployment_id.clone(),
+            })?
+            .into(),
+        });
         if let Err(source) = readers::index(&String::from_utf8_lossy(&identity::json(&index)?)) {
             return Err(InternalError::Index {
                 path: namespace::viewer("index.json"),

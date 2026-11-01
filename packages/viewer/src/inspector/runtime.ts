@@ -3,10 +3,9 @@ import type { Box, InstanceBoundary } from "../client/frame_adapter.js";
 import { inspection } from "./inspection.js";
 import { inspectorNavigation } from "./links.js";
 import type { InspectorMetadata } from "./metadata.js";
-import { drawOverlay } from "./overlay.js";
 import type { MessageBody, HostMessage } from "./schema.js";
 import type { InspectorEventType } from "./values.js";
-/** One handshake owns observers, input handling, presentation and ordered requests. */
+/** One handshake owns observers, input handling and ordered requests. */
 export const inspectorRuntime = (
   win: Window & typeof globalThis,
   metadata: InspectorMetadata,
@@ -25,8 +24,7 @@ export const inspectorRuntime = (
     last = 0,
     lastRequest = 0,
     dirty = false;
-  let layer: HTMLDivElement | undefined,
-    pointer: MouseEvent | null | false = false;
+  let pointer: MouseEvent | null | false = false;
   let regions: [string, readonly Box[]][] = [];
   const measure = (): readonly InstanceBoundary[] => {
     const boundaries = reader.__list();
@@ -39,19 +37,8 @@ export const inspectorRuntime = (
   const emit = (body: MessageBody) => {
     if (events.includes(body.type as InspectorEventType)) send(body);
   };
-  const draw = () => {
-    if (!active) layer?.remove();
-    else
-      drawOverlay(
-        (layer ??= doc.createElement("div")),
-        regions.flatMap(([key, boxes]) => (keys.includes(key) ? boxes : [])),
-        win.innerWidth,
-        win.innerHeight,
-      );
-  };
   const fail = (error: unknown, requestId: number | null = null) => {
     active = false;
-    draw();
     send({
       type: "error",
       requestId,
@@ -92,7 +79,6 @@ export const inspectorRuntime = (
       if (active || (pointer !== false && events.includes("hover"))) measure();
       if (dirty) {
         dirty = false;
-        draw();
         emit({ type: "geometry" });
       }
       if (pointer !== false && events.includes("hover")) point(pointer);
@@ -143,7 +129,6 @@ export const inspectorRuntime = (
     if ((event as KeyboardEvent).key === "Escape" && active) {
       event.preventDefault();
       active = false;
-      draw();
       emit({ type: "pick-end", reason: "escape" });
     }
   });
@@ -165,7 +150,6 @@ export const inspectorRuntime = (
     resize.disconnect();
     mutations.disconnect();
     win.cancelAnimationFrame(pending);
-    layer?.remove();
     disposed();
   };
   win.addEventListener("pagehide", dispose, options);
@@ -186,7 +170,6 @@ export const inspectorRuntime = (
         }
         keys = message.keys;
         active = message.mode !== "off";
-        draw();
       }
       if (type === "scroll-to") reader.__scroll(message.key);
       if (type === "subscribe") events = message.events;

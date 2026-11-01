@@ -6,7 +6,11 @@ import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
 import { repositoryRoot } from "./fixture.js";
-import { viewerPackageReport, type PackageReport } from "./release_fixture.js";
+import {
+  uiPackageReport,
+  viewerPackageReport,
+  type PackageReport,
+} from "./release_fixture.js";
 import { isolatedGitEnvironment } from "./source_tree_types.js";
 
 const execute = promisify(execFile);
@@ -51,8 +55,8 @@ export async function bootstrapFixture(
     type: "module",
     license: "MIT",
     private: true,
-    workspaces: ["packages/viewer"],
-    devDependencies: { "@mokly/viewer": "0.1.0" },
+    workspaces: ["packages/ui", "packages/viewer"],
+    devDependencies: { "@mokly/ui": "0.16.1", "@mokly/viewer": "0.1.0" },
     scripts: { prepack: "node build.mjs" },
   };
   const viewerPackage = {
@@ -63,9 +67,22 @@ export async function bootstrapFixture(
     files: ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
     scripts: { prepack: "node ../../build.mjs" },
   };
-  const distFiles = viewerPackageReport()
-    .files.filter((file) => file.path.startsWith("dist/"))
-    .map((file) => `packages/viewer/${file.path}`);
+  const uiPackage = {
+    name: "@mokly/ui",
+    version: "0.16.1",
+    license: "MIT",
+    type: "module",
+    files: ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
+    scripts: { prepack: "node ../../build.mjs" },
+  };
+  const distFiles = [
+    ...viewerPackageReport()
+      .files.filter((file) => file.path.startsWith("dist/"))
+      .map((file) => `packages/viewer/${file.path}`),
+    ...uiPackageReport()
+      .files.filter((file) => file.path.startsWith("dist/"))
+      .map((file) => `packages/ui/${file.path}`),
+  ];
   for (const [name, content] of Object.entries({
     "package.json": JSON.stringify(packageJson),
     "package-lock.json": JSON.stringify({
@@ -75,13 +92,19 @@ export async function bootstrapFixture(
       requires: true,
       packages: {
         "": packageJson,
+        "packages/ui": uiPackage,
         "packages/viewer": viewerPackage,
+        "node_modules/@mokly/ui": { resolved: "packages/ui", link: true },
         "node_modules/@mokly/viewer": {
           resolved: "packages/viewer",
           link: true,
         },
       },
     }),
+    "packages/ui/package.json": JSON.stringify(uiPackage),
+    "packages/ui/README.md": "# UI package release fixture\n",
+    "packages/ui/LICENSE": "MIT\n",
+    "packages/ui/CHANGELOG.md": "# UI package test release\n",
     "packages/viewer/package.json": JSON.stringify(viewerPackage),
     "packages/viewer/README.md": "# Viewer release fixture\n",
     "packages/viewer/LICENSE": "MIT\n",

@@ -6,7 +6,8 @@ use std::sync::{Arc, Mutex};
 use mokly_css::types::{Bundle, StylesheetBundler, StylesheetBundlerMock, StylesheetRoot};
 use unimock::{MockFn, Unimock, matching};
 
-use crate::stylesheet_cache::{CachedStylesheets, StylesheetCache};
+use crate::stylesheet_cache::CachedStylesheets;
+use crate::stylesheet_store::StylesheetCache;
 
 #[test]
 fn oversized_results_are_returned_but_recomputed_on_the_next_request() {
@@ -23,25 +24,18 @@ fn oversized_results_are_returned_but_recomputed_on_the_next_request() {
         plugin_inputs: BTreeMap::new(),
         directories: Vec::new(),
     };
-    let compiler: &dyn StylesheetBundler = &CachedStylesheets {
-        inner: Arc::new(Unimock::new(
+    let compiler: &dyn StylesheetBundler = &CachedStylesheets::new(
+        Arc::new(Unimock::new(
             StylesheetBundlerMock::bundle
                 .each_call(matching!(_))
                 .answers_arc(Arc::new(move |_, _| Ok(bundle.clone())))
                 .n_times(2),
         )),
-        tree: Arc::new(Unimock::new(())),
-        root: "/repo".into(),
-        settings: "test".into(),
-        shared: Arc::new(Mutex::new(StylesheetCache {
-            records: BTreeMap::new(),
-            limit: 1,
-        })),
-        local: Mutex::new(StylesheetCache {
-            records: BTreeMap::new(),
-            limit: 1,
-        }),
-    };
+        Arc::new(Unimock::new(())),
+        "/repo".into(),
+        "test".into(),
+        Arc::new(Mutex::new(StylesheetCache::new(1))),
+    );
     let root = StylesheetRoot {
         path: "main.css".into(),
         stylesheets: vec!["main.css".into()],

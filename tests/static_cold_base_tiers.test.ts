@@ -153,7 +153,7 @@ for (const { tier, title } of cases) {
     assert.equal(index.changesStatus, "ready");
     assert.equal(index.base, "HEAD");
     assert.ok(index.comparisonUrl);
-    assert.equal(index.schemaVersion, 8);
+    assert.equal(index.schemaVersion, 9);
     assert.equal(index.baseCommit, base);
     assert.deepEqual([...index.screens, ...index.components], []);
     const welcome = index.pages.find((entry) => entry.path === "welcome");

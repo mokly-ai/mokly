@@ -1,5 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 
+import { shellRoot } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
 import { expectFrameSource } from "./workspace_actions.js";
 
@@ -23,7 +24,7 @@ async function expectAppearance(
   scheme = theme,
 ): Promise<void> {
   await expect(page.locator("html")).toHaveAttribute("data-mokly-theme", theme);
-  await expect(page.locator("body")).toHaveAttribute(
+  await expect(page.locator(shellRoot)).toHaveAttribute(
     "data-mokly-color-scheme",
     scheme,
   );

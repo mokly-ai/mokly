@@ -21,7 +21,9 @@ use mokly_server::error::{Result, ServerError};
 use crate::base_dependencies::NativeDependencies;
 use crate::changes_base::NativeBase;
 use crate::serve_changes::Source;
-use crate::serve_changes_base::{AttemptBase, CacheNotice, CombinedCancel, PreparingDependencies};
+use crate::serve_changes_base::{
+    AttemptBase, CacheNotice, CombinedCancel, PreparingDependencies, RunSteps,
+};
 
 impl Source {
     /// Resolve HEAD and the selected base to commits and return their merge base.
@@ -145,6 +147,10 @@ impl Source {
             comparison: Arc::new(Engine {
                 moves: Arc::new(Detector),
                 css: Arc::new(MemoryParsedCss::new(64 * 1024 * 1024)),
+            }),
+            steps: Arc::new(RunSteps {
+                progress: self.services.progress.clone(),
+                cancel: cancel.clone(),
             }),
         };
         match changes.classify(

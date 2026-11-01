@@ -1,4 +1,15 @@
-/** Declarative prop controls with explicit optional supply and field errors. */
+/**
+ * Declarative prop controls with explicit optional supply and field errors.
+ * This container derives each field's label, help, error, and scoped id from
+ * the shown entry's controls and schema, and `@mokly/ui/prop-field` renders
+ * the fields.
+ */
+
+import {
+  PropField,
+  PropFields,
+  type PropFieldControl,
+} from "@mokly/ui/prop-field";
 
 import type { ComponentControl } from "../components/control_types.js";
 import { optionalProperty } from "../components/props.js";
@@ -25,6 +36,19 @@ export {
   type ValidatedControlDraft,
 } from "./control_values.js";
 
+/** The control of a field: its kind, a number's HTML bounds, or a select's choices. */
+function fieldControl(control: ComponentControl): PropFieldControl {
+  if (control.kind === "number")
+    return { kind: "number", ...numberInputBounds(control) };
+  if (control.kind === "select")
+    return {
+      kind: "select",
+      options: control.options.map((option) => option.label),
+      placeholder: CONTROLS_COPY.chooseValue,
+    };
+  return { kind: control.kind };
+}
+
 /**
  * Native form fields for every control of the shown entry, one row each: the
  * field's name in a label column, then its value, help, and error.
@@ -44,13 +68,11 @@ export function ComponentControlFields({
 }) {
   const identifier = useShellIdentifierScope();
   return (
-    <div className="mbk-control-rows">
+    <PropFields>
       {controlEntries(target).map(([key, control]) => {
         const field = draft[key]!;
         const label =
           control.label ?? target.propSchema.properties?.[key]?.title ?? key;
-        const optional = optionalProperty(target.propSchema, key);
-        const id = identifier(`mb-prop-${target.path}-${key}`);
         const shown =
           control.kind === "number"
             ? effectiveNumberControl(target, key, control)
@@ -64,164 +86,31 @@ export function ComponentControlFields({
             ? CONTROLS_COPY.range(bounds?.min, bounds?.max, shown.step)
             : "");
         const error = errors[key];
-        // An optional toggle's value check box carries the field's name.
-        const named = control.kind === "boolean" && optional;
-        const name = (
-          <>
-            {label}
-            {optional ? (
-              <>
-                {" "}
-                <span aria-hidden="true" className="mbk-control-optional">
-                  {CONTROLS_COPY.optional}
-                </span>
-              </>
-            ) : null}
-          </>
-        );
         return (
-          <div className="mbk-control-field" key={key}>
-            {named ? (
-              <span className="mbk-control-label">{name}</span>
-            ) : (
-              <label className="mbk-control-label" htmlFor={id}>
-                {name}
-              </label>
-            )}
-            <div className="mbk-control-value">
-              {optional ? (
-                <label className="mbk-control-set">
-                  <input
-                    checked={field.supplied}
-                    disabled={disabled}
-                    onChange={(event) =>
-                      onChange(
-                        key,
-                        { ...field, supplied: event.currentTarget.checked },
-                        true,
-                      )
-                    }
-                    type="checkbox"
-                  />
-                  <span>{CONTROLS_COPY.set(label)}</span>
-                </label>
-              ) : null}
-              <ControlInput
-                control={shown}
-                describedBy={
-                  error !== undefined
-                    ? `${id}-error`
-                    : help
-                      ? `${id}-help`
-                      : undefined
-                }
-                disabled={disabled}
-                field={field}
-                id={id}
-                invalid={error !== undefined}
-                {...(named ? { label } : {})}
-                name={key}
-                onChange={(value, immediate) =>
-                  onChange(key, { ...field, value }, immediate)
-                }
-              />
-              {field.supplied ? null : (
-                <p className="mbk-control-unset">{CONTROLS_COPY.notSet}</p>
-              )}
-              <small hidden={!help || error !== undefined} id={`${id}-help`}>
-                {help}
-              </small>
-              <small
-                className="mbk-control-error"
-                hidden={error === undefined}
-                id={`${id}-error`}
-              >
-                {error}
-              </small>
-            </div>
-          </div>
+          <PropField
+            control={fieldControl(shown)}
+            description={help}
+            disabled={disabled}
+            error={error}
+            id={identifier(`mb-prop-${target.path}-${key}`)}
+            key={key}
+            label={label}
+            name={key}
+            onChange={(value, immediate) =>
+              onChange(key, { ...field, value }, immediate)
+            }
+            onSupply={(supplied) => onChange(key, { ...field, supplied }, true)}
+            optional={optionalProperty(target.propSchema, key)}
+            supplied={field.supplied}
+            value={field.value}
+            wording={{
+              notSet: CONTROLS_COPY.notSet,
+              optional: CONTROLS_COPY.optional,
+              set: CONTROLS_COPY.set(label),
+            }}
+          />
         );
       })}
-    </div>
-  );
-}
-
-function ControlInput({
-  control,
-  describedBy,
-  disabled,
-  field,
-  id,
-  invalid,
-  label,
-  name,
-  onChange,
-}: {
-  control: ComponentControl;
-  /** The visible help or error that describes the field. */
-  describedBy: string | undefined;
-  disabled: boolean;
-  field: ControlDraftField;
-  id: string;
-  invalid: boolean;
-  /** The visible name of a check box that the field's heading does not label. */
-  label?: string;
-  name: string;
-  onChange(value: boolean | string, immediate: boolean): void;
-}) {
-  const accessibility = {
-    "aria-describedby": describedBy,
-    "aria-invalid": invalid || undefined,
-    "data-prop-control": name,
-    disabled,
-    hidden: !field.supplied,
-    id,
-  };
-  if (control.kind === "select")
-    return (
-      <select
-        {...accessibility}
-        onChange={(event) => onChange(event.currentTarget.value, true)}
-        value={String(field.value)}
-      >
-        <option value="">{CONTROLS_COPY.chooseValue}</option>
-        {control.options.map((option, index) => (
-          <option key={index} value={index}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    );
-  if (control.kind === "boolean") {
-    const box = (
-      <input
-        {...accessibility}
-        checked={field.value === true}
-        onChange={(event) => onChange(event.currentTarget.checked, true)}
-        type="checkbox"
-      />
-    );
-    return label === undefined ? (
-      box
-    ) : (
-      <label className="mbk-control-check" hidden={!field.supplied}>
-        {box}
-        <span>{label}</span>
-      </label>
-    );
-  }
-  return (
-    <input
-      {...accessibility}
-      {...(control.kind === "number"
-        ? {
-            inputMode: "decimal" as const,
-            ...numberInputBounds(control),
-            type: "number",
-          }
-        : { type: "text" })}
-      onChange={(event) => onChange(event.currentTarget.value, false)}
-      value={String(field.value)}
-    />
+    </PropFields>
   );
 }

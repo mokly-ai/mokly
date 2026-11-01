@@ -1,6 +1,10 @@
 /** The standalone Browse shell: index loading, the shell store and its chrome. */
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { RefObject } from "react";
+
+import type { EmptyStateRoot } from "@mokly/ui/empty-state";
+import { RootState, ShellLayout } from "@mokly/ui/shell-layout";
 
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import { MoklyVersionError } from "../catalogue/version_error.js";
@@ -16,8 +20,10 @@ import { useShellStore, type ShellStore } from "../shell/store_context.js";
 import type { ShellInitialState } from "../shell/store_state.js";
 import { TopBar } from "../shell/top_bar.js";
 import { ShellMain } from "../shell/views.js";
+import { deploymentCheck } from "../viewer/sources.js";
 
 import { useStandaloneAppearance } from "./appearance_bridge.js";
+import { standaloneAppearanceHost } from "./appearance_host.js";
 import {
   fetchStandaloneIndex,
   standaloneDataSource,
@@ -33,6 +39,16 @@ type IndexState =
 
 /** The browser surface of the standalone shell. */
 export type ShellWindow = Window & typeof globalThis & StandaloneWindow;
+
+/**
+ * The root that the standalone shell's own states take the place of, in the
+ * document's appearance. Only the ready shell's controls and routes change the
+ * appearance, so a state reads it when it renders.
+ */
+function standaloneRoot(win: ShellWindow): EmptyStateRoot {
+  const theme = standaloneAppearanceHost(win)?.current().theme ?? "auto";
+  return { kind: "standalone", theme };
+}
 
 /** Fetch the index, then render the shell; a version failure replaces it. */
 export function StandaloneShell({
@@ -62,40 +78,30 @@ export function StandaloneShell({
     );
     return () => controller.abort();
   }, [attempt, win]);
+  const root = standaloneRoot(win);
   if (state.kind === "version")
     return (
       <VersionFailure
         error={state.error}
         reload={() => win.location.reload()}
+        root={root}
       />
     );
   if (state.kind === "failed")
     return (
-      <div className="mbk mbk-empty" role="alert">
-        <h2>The catalogue could not be loaded</h2>
-        <button
-          className="mbk-empty-link"
-          onClick={() => {
-            focus.request("loading");
-            setState({ kind: "loading" });
-            setAttempt((value) => value + 1);
-          }}
-          type="button"
-        >
-          Try again
-        </button>
-      </div>
+      <RootState
+        onRetry={() => {
+          focus.request("loading");
+          setState({ kind: "loading" });
+          setAttempt((value) => value + 1);
+        }}
+        root={root}
+        state="failed"
+      />
     );
   if (state.kind === "loading")
     return (
-      <div
-        aria-busy="true"
-        className="mbk mbk-empty"
-        ref={focus.ref("loading")}
-        tabIndex={-1}
-      >
-        <p role="status">Loading catalogue…</p>
-      </div>
+      <RootState focusRef={focus.ref("loading")} root={root} state="loading" />
     );
   return (
     <ReadyShell
@@ -118,7 +124,9 @@ function ReadyShell({
   preferences: ShellInitialState;
   win: ShellWindow;
 }) {
-  const [source] = useState(() => standaloneDataSource(win));
+  const [source] = useState(() =>
+    standaloneDataSource(win, index.live === undefined),
+  );
   const comparison = useMemo<ComparisonEnvironment>(
     () => ({
       baseUrl: win.location.origin,
@@ -127,6 +135,16 @@ function ReadyShell({
           ? { kind: "live" }
           : { kind: "pinned", comparisonUrl: index.comparisonUrl },
       fetch: (input, init) => win.fetch(input, init),
+      ...(index.live === undefined
+        ? {
+            deploymentCheck: deploymentCheck(
+              new URL("/", win.location.href),
+              index.deploymentId,
+              win.fetch,
+              () => win.location.reload(),
+            ),
+          }
+        : {}),
       scrollTogether: storedScrollTogether(() => win.localStorage),
     }),
     [index, win],
@@ -154,54 +172,45 @@ export function StandaloneShellContents() {
   const shell = useRef<HTMLDivElement>(null);
   useNavigationBounds(shell);
   useBodyBindings(store);
+  useExpandedMark(shell, Boolean(store.state.expandedFrame));
   const { selection, disclosures } = store.state;
   useEffect(
     () => persistDisclosures(selection, disclosures, true),
     [disclosures, selection],
   );
   return (
-    <div
-      className="mbk"
-      data-drawer={store.state.drawerOpen ? "open" : "closed"}
-      data-mokly-shell=""
-      ref={shell}
-    >
-      <a className="mbk-skip-link" href="#mb-main">
-        Skip to content
-      </a>
-      <TopBar appearance={appearance} catalogue={store.catalogue} />
-      <div className="mbk-body">
-        <CatalogueNav catalogue={store.catalogue} context={store.context} />
+    <ShellLayout
+      announcement={store.state.announcement}
+      colorScheme={appearance.scheme}
+      drawerOpen={store.state.drawerOpen}
+      main={
         <ShellMain
           catalogue={store.catalogue}
           context={store.context}
           view={store.state.route.view}
         />
-      </div>
-      <p
-        aria-atomic="true"
-        aria-live="polite"
-        className="mbk-route-status"
-        id="mb-status"
-        role="status"
-      >
-        {store.state.announcement}
-      </p>
-    </div>
+      }
+      mainHref="#mb-main"
+      navigation={
+        <CatalogueNav catalogue={store.catalogue} context={store.context} />
+      }
+      ref={shell}
+      statusId="mb-status"
+      theme={appearance.theme}
+      topBar={<TopBar appearance={appearance} catalogue={store.catalogue} />}
+    />
   );
 }
 
 /**
- * The stub owns the document body: the shell marks it full-screen and
- * expanded, and handles clicks and Escape that reach it, including the
- * expanded frame's backdrop.
+ * The stub owns the document body: the shell handles clicks and Escape that
+ * reach it, including a click on the expanded frame's backdrop.
  */
 function useBodyBindings(store: ShellStore): void {
   const latest = useRef(store);
   latest.current = store;
   useEffect(() => {
     const body = document.body;
-    body.classList.add("mbk-fs");
     const click = (event: MouseEvent) => latest.current.onShellClick(event);
     const keydown = (event: KeyboardEvent) =>
       latest.current.onShellKeyDown(event);
@@ -212,8 +221,17 @@ function useBodyBindings(store: ShellStore): void {
       body.removeEventListener("keydown", keydown);
     };
   }, []);
-  const expanded = Boolean(store.state.expandedFrame);
+}
+
+/**
+ * Mark the shell root while a browser window is expanded, as an embedded root
+ * is marked, so the root shows the scrim below the window.
+ */
+function useExpandedMark(
+  root: RefObject<HTMLElement | null>,
+  expanded: boolean,
+): void {
   useLayoutEffect(() => {
-    document.body.classList.toggle("frame-expanded", expanded);
-  }, [expanded]);
+    root.current?.classList.toggle("frame-expanded", expanded);
+  }, [expanded, root]);
 }

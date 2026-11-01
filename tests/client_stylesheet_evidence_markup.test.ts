@@ -42,10 +42,10 @@ test("a screen's changed file holds its outside sentence and styles, as the mock
   const markup = render(data);
   assert.ok(
     markup.includes(
-      `<p>${SCREEN_STYLE_COPY.files}</p>` +
-        `<ul class="mbk-evidence-files"><li>${RULES}` +
-        `<p>${SCREEN_STYLE_COPY.outside}</p>` +
-        '<ul><li><code class="mbk-code">.heading</code></li></ul>' +
+      `<p class="mbk-reset">${SCREEN_STYLE_COPY.files}</p>` +
+        `<ul class="mbk-evidence-files mbk-reset"><li class="mbk-reset">${RULES}` +
+        `<p class="mbk-reset">${SCREEN_STYLE_COPY.outside}</p>` +
+        '<ul class="mbk-reset"><li class="mbk-reset"><code class="mbk-code mbk-reset">.heading</code></li></ul>' +
         "</li></ul>",
     ),
     markup,
@@ -59,10 +59,10 @@ test("a component's own page keeps the mockup's matched-component sentence", () 
   const markup = render(data, "action/default");
   assert.ok(
     markup.includes(
-      `<p>${COMPONENT_STYLE_COPY.files}</p>` +
-        `<ul class="mbk-evidence-files"><li>${RULES}` +
-        `<p>${COMPONENT_STYLE_COPY.matched}</p>` +
-        '<ul><li><code class="mbk-code">.action</code></li></ul>' +
+      `<p class="mbk-reset">${COMPONENT_STYLE_COPY.files}</p>` +
+        `<ul class="mbk-evidence-files mbk-reset"><li class="mbk-reset">${RULES}` +
+        `<p class="mbk-reset">${COMPONENT_STYLE_COPY.matched}</p>` +
+        '<ul class="mbk-reset"><li class="mbk-reset"><code class="mbk-code mbk-reset">.action</code></li></ul>' +
         "</li></ul>",
     ),
     markup,
@@ -86,13 +86,13 @@ test("paths and selectors render as text, including generated bundle paths", () 
   const markup = render(data);
   assert.ok(
     markup.includes(
-      "<li>mockups/mokly-generated/styles/entries/a&amp;b.mockup.tsx.css<p>",
+      '<li class="mbk-reset">mockups/mokly-generated/styles/entries/a&amp;b.mockup.tsx.css<p class="mbk-reset">',
     ),
     markup,
   );
   assert.ok(
     markup.includes(
-      '<code class="mbk-code">[aria-label=&quot;&lt;tip&gt;&quot;]</code>',
+      '<code class="mbk-code mbk-reset">[aria-label=&quot;&lt;tip&gt;&quot;]</code>',
     ),
   );
 });
@@ -102,7 +102,11 @@ test("classification and a loaded comparison merge into one file and one paragra
   data.reasons = [{ kind: "dependency", path: RULES }];
   data.compared = screenEntry([view("mobile", "light", outsideRules)]);
   const markup = render(data, undefined, true);
-  assert.equal(markup.split(`<li>${RULES}<p>`).length - 1, 1);
+  assert.equal(
+    markup.split(`<li class="mbk-reset">${RULES}<p class="mbk-reset">`).length -
+      1,
+    1,
+  );
   assert.equal(markup.split(SCREEN_STYLE_COPY.outside).length - 1, 1);
   assert.equal(markup.split(">.heading</code>").length - 1, 1);
 });
@@ -117,10 +121,10 @@ test("Details read the same facts whatever viewport or scheme is shown", () => {
   const markup = render(data);
   assert.ok(
     markup.includes(
-      `<p>${SCREEN_STYLE_COPY.outside}</p>` +
-        '<ul><li><code class="mbk-code">.heading</code></li></ul>' +
-        `<p>${SCREEN_STYLE_COPY.unresolved}</p>` +
-        '<ul><li><code class="mbk-code">.tone</code></li></ul>',
+      `<p class="mbk-reset">${SCREEN_STYLE_COPY.outside}</p>` +
+        '<ul class="mbk-reset"><li class="mbk-reset"><code class="mbk-code mbk-reset">.heading</code></li></ul>' +
+        `<p class="mbk-reset">${SCREEN_STYLE_COPY.unresolved}</p>` +
+        '<ul class="mbk-reset"><li class="mbk-reset"><code class="mbk-code mbk-reset">.tone</code></li></ul>',
     ),
     markup,
   );
@@ -134,10 +138,12 @@ test("a consuming component shows its live view evidence before any comparison l
   const markup = render(data, "toolbar/default");
   assert.match(
     markup,
-    /<li>static\/rule\.css<p>Changed styles that apply to this component:<\/p>/,
+    /<li class="mbk-reset">static\/rule\.css<p class="mbk-reset">Changed styles that apply to this component:<\/p>/,
   );
   assert.ok(
-    markup.endsWith(`<p>${COMPONENT_STYLE_COPY.sharedImpact}</p></section>`),
+    markup.endsWith(
+      `<p class="mbk-reset">${COMPONENT_STYLE_COPY.sharedImpact}</p></section>`,
+    ),
     markup,
   );
   assert.doesNotMatch(markup, /No changes to this variant\./);

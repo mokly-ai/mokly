@@ -255,6 +255,17 @@ jobs:
         run: node scripts/release/verify-ref.mjs "$PUBLISH_REF" --artifacts .context/release-artifact
       - name: Publish and verify native packages
         run: node scripts/release/publish-native.mjs .context/release-artifact
+      - name: Guard existing UI package version
+        id: ui_registry
+        run: node scripts/release/registry.mjs --mode guard --report .context/release-artifact/ui/pack-report.json
+      - name: Publish UI package with npm trusted publishing
+        if: steps.ui_registry.outputs.published != 'true'
+        env:
+          ARCHIVE_PATH: ${{ steps.package.outputs.ui_archive_path }}
+        run: npm publish "$ARCHIVE_PATH" --access public --ignore-scripts
+      - name: Verify UI package registry package and provenance
+        run: |
+          node scripts/release/registry.mjs --mode verify --report .context/release-artifact/ui/pack-report.json --dist-tag latest
       - name: Guard existing viewer version
         id: viewer_registry
         run: node scripts/release/registry.mjs --mode guard --report .context/release-artifact/viewer/pack-report.json

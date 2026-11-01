@@ -21,7 +21,7 @@ use crate::postcss_cache::CssRecord;
 
 use super::postcss_support::{DEADLINE, css, processor};
 
-/// The first read-inventory lookup waits until a second lookup starts.
+/// The first inventory waits while another module lookup or cached request completes.
 struct Gate {
     blocked: Sender<()>,
     released: Mutex<Receiver<()>>,
@@ -47,9 +47,14 @@ fn postcss(calls: Arc<AtomicUsize>, gate: Arc<Gate>) -> PostCss {
         PoolMock::request
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, call| {
-                assert!(matches!(call, Call::ProcessCss(_)));
+                let Call::ProcessCss(params) = call else {
+                    panic!("expected a PostCSS request");
+                };
                 calls.fetch_add(1, Ordering::SeqCst);
-                Ok(css(vec!["/repo/postcss.mjs".into()]))
+                Ok(css(vec![format!(
+                    "/repo/postcss-{}.mjs",
+                    params.source_path
+                )]))
             })),
         PoolMock::release_context
             .each_call(matching!("context"))
@@ -87,10 +92,21 @@ fn overlap(first: &'static str, second: &'static str) -> (usize, bool, Vec<Strin
             .text
     });
     wait.recv_timeout(DEADLINE).unwrap();
-    let beside = processor
-        .process(second, ".a {}", &BTreeSet::new())
-        .unwrap()
-        .text;
+    let beside = if first == second {
+        let key = format!("context:{second}:{}", digest(b".a {}"));
+        let result = processor
+            .request(&key, second, ".a {}")
+            .unwrap()
+            .result
+            .text;
+        gate.release.send(()).unwrap();
+        result
+    } else {
+        processor
+            .process(second, ".a {}", &BTreeSet::new())
+            .unwrap()
+            .text
+    };
     let texts = vec![waiting.join().unwrap(), beside];
     (
         calls.load(Ordering::SeqCst),

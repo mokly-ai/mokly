@@ -3,7 +3,7 @@
 These documents are Mokly's specification. They define the intended behaviour
 of the product: the Rust core, the render sidecar, the Browse shell, and the
 release and verification tooling around them. A page that describes behaviour
-which is not implemented yet starts with a status line that names its plan.
+which is not implemented yet starts with a status line.
 Every other page describes implemented behaviour. The
 [repository rules](../../AGENTS.md#repository-rules) hold the rule.
 
@@ -113,6 +113,7 @@ What the shell reads: the catalogue index and entry detail, their routes, identi
 - [Portable Viewer Namespace And Version Gates](./mokly-viewer-namespace.md)
 - [Public Catalogue Read Model](./mokly-catalogue.md)
 - [Shell Delivery And Read Model Routes](./mokly-shell-delivery.md)
+- [Shell Fetch And Fences](./mokly-shell-fences.md)
 - [Variant Navigation And Changes](./mokly-variant-navigation.md)
 
 ## Serve, Watch, And The CLI
@@ -121,6 +122,7 @@ The development server, on-demand rendering, the watcher, live controls, termina
 
 - [CLI Terminal Compatibility And Errors](./mokly-terminal-errors.md)
 - [CLI Terminal Output](./mokly-terminal-output.md)
+- [CLI Comparison Steps](./mokly-terminal-steps.md)
 - [CLI Help And Version Bytes](./mokly-terminal-help.md)
 - [Component Controls](./mokly-component-controls.md)
 - [Mokly Build And Browse Runtime](./mokly-runtime.md)
@@ -157,13 +159,15 @@ The Browse shell: the embeddable viewer, appearance, navigation, frames, inspect
 - [CSS Evidence In The Shell](./mokly-css-evidence-shell.md)
 - [CSS Evidence Presentation](./mokly-css-evidence-presentation.md)
 - [Embeddable Mokly Viewer](./mokly-viewer.md)
+- [Embeddable Viewer API](./mokly-viewer-api.md)
 - [Frame Link Navigation](./mokly-frame-link-navigation.md)
 - [Inspector Handshake And Wire Protocol](./mokly-inspector-wire.md)
 - [Logical Link Composition](./mokly-logical-links.md)
 - [Mokly Catalogue Navigation Contract](./mokly-navigation.md)
 - [Mokly Shell Brand](./mokly-shell-brand.md)
 - [Navigation Disclosure Persistence](./mokly-disclosure-persistence.md)
-- [Published Inspector And Overlay](./mokly-published-inspector.md)
+- [Published Inspector](./mokly-published-inspector.md)
+- [Shared UI Package](./mokly-ui-package.md)
 - [Shell Destination Queries](./mokly-shell-destinations.md)
 - [Shell Device Chrome And Preview Scheme](./mokly-shell-device-chrome.md)
 - [Viewer Appearance](./mokly-viewer-appearance.md)

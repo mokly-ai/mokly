@@ -40,7 +40,6 @@ pub(crate) struct AssetCandidate {
 }
 
 impl StylesheetBundler for Compiler {
-    #[tracing::instrument(name = "css.bundle", skip_all, err)]
     fn bundle(&self, root: &StylesheetRoot) -> Result<Bundle> {
         if !paths::portable(&root.path, false) {
             return Err(CssError::RootRoute {

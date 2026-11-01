@@ -15,6 +15,8 @@ mod native;
 mod scopes;
 mod shared;
 
+/// Copy the example sources, with the `@mokly/ui` sources that the design
+/// library imports by repository path, into a registered Git base.
 pub fn fixture() -> TempDir {
     let directory = TempDir::new().unwrap();
     let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
@@ -24,6 +26,7 @@ pub fn fixture() -> TempDir {
             "-z",
             "--",
             "examples",
+            "packages/ui/src",
             "docs/protocol",
             "plans/rust-rebuild.md",
         ])

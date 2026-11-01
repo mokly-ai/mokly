@@ -1,6 +1,21 @@
-/** Props inspector surface: the shown entry's fields, or its saved props. */
+/**
+ * The Props inspector surface: the shown entry's fields, or its saved props.
+ * These containers map the controls state to the notices, the alerts, and the
+ * wording of `component_controls_copy.ts`. `@mokly/ui/controls-panel` renders
+ * the panels, `@mokly/ui/props-panel` the saved props, and
+ * `@mokly/ui/edit-status` the status of an edit's render.
+ */
 
 import type { RefCallback } from "react";
+
+import {
+  ControlsPanel,
+  SavedPropsPanel,
+  type ControlsAlert,
+  type ControlsFocus,
+} from "@mokly/ui/controls-panel";
+import { EditStatus as EditStatusView } from "@mokly/ui/edit-status";
+import { PropSlots, PropValues, PropsMessage } from "@mokly/ui/props-panel";
 
 import { decodeProps, encodeProps } from "../components/codec.js";
 
@@ -17,10 +32,9 @@ import {
   type ControlTarget,
 } from "./control_values.js";
 import type { WorkspaceData } from "./workspace_data.js";
-import { PropSlots, PropValues, WorkspaceProps } from "./workspace_props.js";
+import { propValues, WorkspaceProps } from "./workspace_props.js";
 
-/** The elements of the panel that a recovery action focuses. */
-export type ControlsFocus = "heading" | "fields" | "notice";
+export type { ControlsFocus } from "@mokly/ui/controls-panel";
 
 /** The notice of each mode that shows the saved props without fields. */
 const SAVED_NOTICES: Partial<Record<ControlsMode, string>> = {
@@ -30,12 +44,32 @@ const SAVED_NOTICES: Partial<Record<ControlsMode, string>> = {
   "read-only": CONTROLS_COPY.readonlyProps,
 };
 
-const unfocused: RefCallback<HTMLElement> = () => undefined;
+/** One alert per failed edit: what failed, and one action when one exists. */
+function controlsAlert(
+  notice: ControlsNotice | undefined,
+): ControlsAlert | undefined {
+  if (notice === "invalid") return { text: CONTROLS_COPY.invalid };
+  if (notice === "invalid-together")
+    return { text: CONTROLS_COPY.invalidTogether };
+  if (notice === "failed")
+    return {
+      action: CONTROLS_COPY.retry,
+      body: CONTROLS_COPY.failedBody,
+      title: CONTROLS_COPY.failedTitle,
+    };
+  if (notice === "expired")
+    return {
+      action: CONTROLS_COPY.expiredAction,
+      body: CONTROLS_COPY.expiredBody,
+      title: CONTROLS_COPY.expiredTitle,
+    };
+  return undefined;
+}
 
 /** Render the fields with their state, or the saved props with the reason. */
 export function ComponentControlsPanel({
   data,
-  focus = () => unfocused,
+  focus,
   mode,
   onChange,
   onCurrent,
@@ -59,7 +93,7 @@ export function ComponentControlsPanel({
   target: ControlTarget;
 }) {
   if (mode === "no-props")
-    return <p className="mbk-empty-copy">{CONTROLS_COPY.noProps}</p>;
+    return <PropsMessage>{CONTROLS_COPY.noProps}</PropsMessage>;
   const savedNotice = SAVED_NOTICES[mode];
   if (savedNotice) {
     const values = decodeProps(target.props);
@@ -68,24 +102,21 @@ export function ComponentControlsPanel({
       ...Object.keys(values),
     ]);
     return (
-      <section className="mbk-component-controls">
-        <div className="mbk-controls-heading">
-          <div>
-            <h3 ref={focus("heading")} tabIndex={-1}>
-              {CONTROLS_COPY.readonlyHeading}
-            </h3>
-            <p>{target.title}</p>
-          </div>
-        </div>
-        <p className="mbk-controls-notice">{savedNotice}</p>
-        {mode === "comparison" ? (
-          <button className="mbk-text-button" onClick={onCurrent} type="button">
-            {CONTROLS_COPY.switchToCurrent}
-          </button>
+      <SavedPropsPanel
+        current={
+          mode === "comparison" ? CONTROLS_COPY.switchToCurrent : undefined
+        }
+        focus={focus}
+        heading={CONTROLS_COPY.readonlyHeading}
+        notice={savedNotice}
+        onCurrent={onCurrent}
+        title={target.title}
+      >
+        {names.size ? (
+          <PropValues values={propValues([...names], values)} />
         ) : null}
-        {names.size ? <PropValues names={[...names]} values={values} /> : null}
         <PropSlots slots={target.suppliedSlots} />
-      </section>
+      </SavedPropsPanel>
     );
   }
   const preparing = mode === "preparing" || mode === "preparing-failed";
@@ -95,80 +126,54 @@ export function ComponentControlsPanel({
     ),
   );
   return (
-    <section className="mbk-component-controls">
-      <div className="mbk-controls-heading">
-        <div>
-          <h3 ref={focus("heading")} tabIndex={-1}>
-            {CONTROLS_COPY.heading}
-          </h3>
-          <p>
-            {target.title}
-            {state.dirty ? (
-              <>
-                {/* The space keeps the title and the badge two words. */}{" "}
-                <span className="mbk-controls-edited">
-                  {CONTROLS_COPY.edited}
-                </span>
-              </>
-            ) : (
-              ` · ${CONTROLS_COPY.saved}`
-            )}
-          </p>
-        </div>
-        <button
-          className="mbk-controls-reset"
-          disabled={!state.dirty}
-          onClick={onReset}
-          type="button"
-        >
-          {CONTROLS_COPY.reset(target.title)}
-        </button>
-      </div>
-      <ControlsAlert notice={state.notice} onRetry={onRetry} />
-      <p className="mbk-controls-restored" role="status">
-        {state.notice === "restored" ? CONTROLS_COPY.restored : null}
-      </p>
-      {mode === "preparing" ? (
-        <p
-          className="mbk-controls-notice"
-          ref={focus("notice")}
-          role="status"
-          tabIndex={-1}
-        >
-          {CONTROLS_COPY.preparing}
-        </p>
-      ) : null}
-      {mode === "preparing-failed" ? (
-        <p className="mbk-control-alert" role="alert">
-          {CONTROLS_COPY.preparingFailed}{" "}
-          <button className="mbk-text-button" onClick={onStart} type="button">
-            {CONTROLS_COPY.retry}
-          </button>
-        </p>
-      ) : null}
-      <fieldset
-        className="mbk-control-fieldset"
+    <ControlsPanel
+      alert={controlsAlert(state.notice)}
+      dirty={state.dirty}
+      extra={
+        Object.keys(uncontrolled).length || target.suppliedSlots.length ? (
+          <WorkspaceProps
+            data={data}
+            selection={{
+              props: encodeProps(uncontrolled),
+              slots: target.suppliedSlots,
+            }}
+          />
+        ) : null
+      }
+      focus={focus}
+      onReset={onReset}
+      onRetry={onRetry}
+      onStart={onStart}
+      restored={
+        state.notice === "restored" ? CONTROLS_COPY.restored : undefined
+      }
+      start={
+        mode === "preparing"
+          ? { status: "preparing", text: CONTROLS_COPY.preparing }
+          : mode === "preparing-failed"
+            ? {
+                action: CONTROLS_COPY.retry,
+                status: "failed",
+                text: CONTROLS_COPY.preparingFailed,
+              }
+            : undefined
+      }
+      title={target.title}
+      wording={{
+        edited: CONTROLS_COPY.edited,
+        heading: CONTROLS_COPY.heading,
+        reset: CONTROLS_COPY.reset(target.title),
+        saved: CONTROLS_COPY.saved,
+      }}
+    >
+      <ComponentControlFields
         disabled={preparing}
-        ref={focus("fields")}
-      >
-        <ComponentControlFields
-          disabled={preparing}
-          draft={state.draft}
-          errors={state.errors}
-          onChange={onChange}
-          target={target}
-        />
-      </fieldset>
-      {Object.keys(uncontrolled).length || target.suppliedSlots.length ? (
-        <WorkspaceProps
-          data={data}
-          selection={{
-            props: encodeProps(uncontrolled),
-            slots: target.suppliedSlots,
-          }}
-        />
-      ) : null}
-    </section>
+        draft={state.draft}
+        errors={state.errors}
+        onChange={onChange}
+        target={target}
+      />
+    </ControlsPanel>
   );
 }
 
@@ -179,44 +184,6 @@ export function ComponentControlsPanel({
  */
 export function EditStatus({ pending }: { pending: boolean }) {
   return (
-    <p className="mbk-edit-status" role="status">
-      {pending ? (
-        <>
-          <span aria-hidden="true" className="mbk-pending-dot" />
-          {CONTROLS_COPY.updating}
-        </>
-      ) : null}
-    </p>
-  );
-}
-
-/** One alert per failed edit: what failed, and one action when one exists. */
-function ControlsAlert({
-  notice,
-  onRetry,
-}: {
-  notice: ControlsNotice | undefined;
-  onRetry(): void;
-}) {
-  if (notice === "invalid" || notice === "invalid-together")
-    return (
-      <p className="mbk-control-alert" role="alert">
-        {notice === "invalid"
-          ? CONTROLS_COPY.invalid
-          : CONTROLS_COPY.invalidTogether}
-      </p>
-    );
-  if (notice !== "failed" && notice !== "expired") return null;
-  const failed = notice === "failed";
-  return (
-    <div className="mbk-control-alert" role="alert">
-      <strong>
-        {failed ? CONTROLS_COPY.failedTitle : CONTROLS_COPY.expiredTitle}
-      </strong>
-      <p>{failed ? CONTROLS_COPY.failedBody : CONTROLS_COPY.expiredBody}</p>
-      <button className="mbk-text-button" onClick={onRetry} type="button">
-        {failed ? CONTROLS_COPY.retry : CONTROLS_COPY.expiredAction}
-      </button>
-    </div>
+    <EditStatusView status={pending ? CONTROLS_COPY.updating : undefined} />
   );
 }

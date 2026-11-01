@@ -56,8 +56,7 @@ export async function assertComparisonInk(
           getComputedStyle(heading.closest(".mbk-shot")!).color,
         ],
       ),
-      stage: getComputedStyle(node.querySelector(".mbk-comparison-stage > h3")!)
-        .color,
+      stage: getComputedStyle(node.querySelector(".mbk-diff-view > h3")!).color,
     }));
     expect(facts.sections.length, route).toBeGreaterThan(0);
     for (const [heading, screen] of facts.sections)

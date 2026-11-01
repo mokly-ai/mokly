@@ -1,7 +1,13 @@
-/** The comparison details that a whole-document page shows in its Details. */
+/**
+ * The comparison details that a whole-document page shows in its Details.
+ * This container words the page's evidence, and
+ * `@mokly/ui/comparison-evidence` renders it.
+ */
+
+import { ComparisonEvidence } from "@mokly/ui/comparison-evidence";
 
 import { entryWording } from "./entry_wording.js";
-import { ComparisonHeading, StylesheetDetails } from "./evidence_details.js";
+import { stylesheetDetails } from "./evidence_details.js";
 import type { PageComparisonEvidence } from "./page_evidence_data.js";
 
 /**
@@ -19,16 +25,19 @@ export function PageEvidence({
 }) {
   if (!evidence.status) return null;
   return (
-    <section className="mbk-comparison-evidence" data-page-evidence="">
-      <ComparisonHeading base={base} />
-      <StylesheetDetails
-        reasons={evidence.resources?.reasons ?? []}
-        resources={evidence.resources ? [evidence.resources] : []}
-        subject={{ kind: "page" }}
-      />
-      {evidence.status === "Unmodified" ? (
-        <p>{entryWording("page").noChanges}</p>
-      ) : null}
-    </section>
+    <ComparisonEvidence
+      base={base}
+      mark="data-page-evidence"
+      noChanges={
+        evidence.status === "Unmodified"
+          ? entryWording("page").noChanges
+          : undefined
+      }
+      {...stylesheetDetails(
+        evidence.resources?.reasons ?? [],
+        evidence.resources ? [evidence.resources] : [],
+        { kind: "page" },
+      )}
+    />
   );
 }

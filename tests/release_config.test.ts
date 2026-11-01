@@ -18,7 +18,7 @@ const json = async (file: string) =>
 /** Fixed release inputs: after the 0.15.0 release, a breaking release is 0.16.0. */
 const FIXED_MANIFEST = { ".": "0.15.0", "packages/viewer": "0.6.0" };
 
-test("the private workspace releases the CLI and viewer with one root version", async () => {
+test("the private workspace releases the CLI, UI package, and viewer with one root version", async () => {
   await verifyPackageVersions(repositoryRoot);
   const [manifest, config, versions] = await Promise.all([
     json("package.json"),
@@ -36,16 +36,21 @@ test("the private workspace releases the CLI and viewer with one root version", 
   assert.equal(entry["include-component-in-tag"], false);
   assert.equal(entry["include-v-in-tag"], true);
   assert.equal(entry["bump-minor-pre-major"], true);
-  assert.ok(
-    Array.isArray(entry["extra-files"]) &&
-      entry["extra-files"].some(
-        (file: unknown) =>
-          typeof file === "object" &&
-          file !== null &&
-          "path" in file &&
-          file.path === "/packages/viewer/package.json",
-      ),
-  );
+  for (const manifest of [
+    "/packages/viewer/package.json",
+    "/packages/ui/package.json",
+  ])
+    assert.ok(
+      Array.isArray(entry["extra-files"]) &&
+        entry["extra-files"].some(
+          (file: unknown) =>
+            typeof file === "object" &&
+            file !== null &&
+            "path" in file &&
+            file.path === manifest,
+        ),
+      manifest,
+    );
 });
 
 test("pinned Release Please updates all manifest and lockfile edges and retains changelog history", async (t) => {
@@ -61,6 +66,7 @@ test("pinned Release Please updates all manifest and lockfile edges and retains 
     ["crates/mokly-css/src/compiler.rs"],
     ["packages/mokly/src/index.ts"],
     ["packages/viewer/src/index.ts"],
+    ["packages/ui/scripts/build.mjs"],
     ["packages/mokly/src/index.ts", "packages/viewer/src/index.ts"],
   ]) {
     const root = await fs.mkdtemp(
@@ -75,11 +81,14 @@ test("pinned Release Please updates all manifest and lockfile edges and retains 
     const updates = await releaseUpdates(repositoryRoot, changed);
     assert.ok(updates.has("packages/mokly/package.json"));
     assert.ok(updates.has("packages/viewer/package.json"));
-    const viewerHistory = updates.get("packages/viewer/CHANGELOG.md") ?? "";
-    assert.ok(
-      viewerHistory.includes(`Shared release version: ${next}`),
-      viewerHistory,
-    );
+    assert.ok(updates.has("packages/ui/package.json"));
+    for (const changelog of [
+      "packages/viewer/CHANGELOG.md",
+      "packages/ui/CHANGELOG.md",
+    ]) {
+      const history = updates.get(changelog) ?? "";
+      assert.ok(history.includes(`Shared release version: ${next}`), history);
+    }
     for (const file of [
       "package.json",
       "package-lock.json",
@@ -101,13 +110,14 @@ test("pinned Release Please updates all manifest and lockfile edges and retains 
       await fs.mkdir(path.dirname(destination), { recursive: true });
       await fs.writeFile(destination, content);
     }
-    const { cli, viewer } = await verifyPackageVersions(root);
+    const { cli, viewer, ui } = await verifyPackageVersions(root);
     assert.equal(cli.version, next);
     assert.notEqual(
       cli.version,
       (await json("packages/mokly/package.json")).version,
     );
     assert.equal(viewer.version, cli.version);
+    assert.equal(ui.version, cli.version);
     assert.match(cli.version, /^0\./);
     assert.match(viewer.version, /^0\./);
   }

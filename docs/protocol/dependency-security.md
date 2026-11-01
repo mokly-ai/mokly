@@ -1,6 +1,6 @@
 # Dependency Security
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+Status: Follow-up work remains in the [Wrangler dependency claim item](../../plans/follow-ups/dependency-security-wrangler-claim.md).
 
 ## Verification Boundary
 
@@ -198,6 +198,20 @@ The current maintenance choices are:
   GHSA-xjj6-f33q-929c, and 7.30.1 patches all three. A parent update does not
   help: `wrangler` 4.152.0 resolves a Miniflare with the same pin. Remove the
   override when the pinned `miniflare` resolves `undici` 7.30.1 or newer.
+
+- `minimatch` 11.0.3 is an override scoped to `eslint`,
+  `@typescript-eslint/typescript-estree`, `@google-automations/git-file-utils`,
+  and `code-suggester`. Packages under these parents declare `minimatch` 10
+  or 3, which have GHSA-g3hv-75wg-m249. Release 11.0.1 is the first patched
+  release, and no current release of these packages accepts it. The
+  `code-suggester` scope reaches its `glob` 7, which cannot use `minimatch`
+  11, but `code-suggester` never loads `glob`. Remove a scope when, without
+  it, every `minimatch` under its parent resolves to 11.0.1 or newer.
+
+- `eslint-plugin-import-x` keeps `minimatch` 10.2.6 through a reviewed
+  exception for GHSA-g3hv-75wg-m249. The plugin fails to load with `minimatch`
+  11, which removed the `makeRe` export that the plugin imports. Remove the
+  exception when a plugin release accepts `minimatch` 11.0.1 or newer.
 
 - `release-please` 17.6.0 is an exact development pin. The repository's
   release configuration checks use its real manifest parser, changelog

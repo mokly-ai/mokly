@@ -113,7 +113,12 @@ test("the inspector divider lights up like the navigation divider", async ({
   };
   await expect(dividers.inspector).toBeVisible();
   const resting = await dividers.inspector.evaluate(grip);
-  expect(resting).toEqual(await dividers.navigation.evaluate(grip));
+  // At rest the inspector grip draws the Light control edge, while the
+  // navigation grip keeps its strong border; both share the line and shadow.
+  expect(resting).toEqual({
+    ...(await dividers.navigation.evaluate(grip)),
+    background: "rgb(134, 142, 136)",
+  });
 
   const box = (await dividers.inspector.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);

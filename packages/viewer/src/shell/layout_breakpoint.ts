@@ -1,4 +1,4 @@
-/** The shell's one layout breakpoint, from the device chrome contract. */
+/** The shell's layout and device breakpoints, from the device chrome contract. */
 
 /**
  * The media query of a shell narrower than 900px: the catalogue is a drawer
@@ -7,3 +7,10 @@
  * query, so they switch at the same width.
  */
 export const NARROW_SHELL = "(width < 56.25rem)";
+
+/**
+ * The media query of the device breakpoint: at most 760px wide, the shell
+ * lays out for phones. The `@mokly/ui` stylesheets repeat both queries, and
+ * the viewer's styles test holds them to this module.
+ */
+export const NARROW_LAYOUT = "(max-width: 760px)";

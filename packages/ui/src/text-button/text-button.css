@@ -1,0 +1,18 @@
+/* A button drawn as text in the accent colour, such as Try again. The link of
+   a static depiction takes the same look, also where its container colours
+   links. */
+.mbk-text-button,
+a.mbk-text-button {
+  background: none;
+  border: 0;
+  color: var(--mbk-accent-deep);
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-decoration: none;
+}
+
+.mbk-text-button:focus-visible {
+  outline: 2px solid var(--mokly-accent);
+  outline-offset: 2px;
+}

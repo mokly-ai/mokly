@@ -23,7 +23,7 @@ import {
   indexFixture,
   rawDetailFixtures,
   shellModelFixture,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 
 const HOME = "product/browse/home";
 const ACTION = "components/action";
@@ -140,6 +140,6 @@ test("Details keep the detail but not its contradicting reason", () => {
   );
   assert.deepEqual(data.reasons, [{ kind: "material" }]);
   const markup = renderToStaticMarkup(<WorkspaceEvidence data={data} />);
-  assert.match(markup, /<p>Rendered content changed\.<\/p>/);
+  assert.match(markup, /<p class="mbk-reset">Rendered content changed\.<\/p>/);
   assert.doesNotMatch(markup, /Removed on this branch/);
 });

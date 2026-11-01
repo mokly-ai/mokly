@@ -8,6 +8,7 @@ import {
   expectSchemeSelected,
   mobileFrame,
   overlayStyle,
+  shellRoot,
   tourRow,
 } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
@@ -42,7 +43,7 @@ test("color scheme switch swaps device frames", async ({ page }) => {
   await expectSchemeSelected(page, "light");
 
   await chooseScheme(page, "dark");
-  await expect(page.locator("body")).toHaveAttribute(
+  await expect(page.locator(shellRoot)).toHaveAttribute(
     "data-mokly-color-scheme",
     "dark",
   );
@@ -57,7 +58,7 @@ test("color scheme switch swaps device frames", async ({ page }) => {
   await expectSchemeSelected(page, "dark");
 
   await chooseScheme(page, "light");
-  await expect(page.locator("body")).toHaveAttribute(
+  await expect(page.locator(shellRoot)).toHaveAttribute(
     "data-mokly-color-scheme",
     "light",
   );

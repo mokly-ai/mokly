@@ -1,5 +1,9 @@
 import type { ReactNode } from "react";
 
+import {
+  MainRegion,
+  ShellLayout,
+} from "../../../../../packages/ui/src/shell-layout/shell-layout.js";
 import type { ChangeStatus } from "../components/parts/comparison_fixtures.js";
 import { screenHeader } from "../library/chrome/screen-header.js";
 import { optional, useDesignInstance } from "../library/composition.js";
@@ -13,6 +17,7 @@ import {
   useRenderedAppearance,
   type AppearanceChoice,
 } from "./appearance.js";
+import { useDepictedView, type HighlightState } from "./depicted_view.js";
 import { DesignNavigation, useDesignNavigation } from "./design_navigation.js";
 import { DESTINATIONS, type DesignDestination } from "./destinations.js";
 import { TopBar } from "./top_bar.js";
@@ -25,66 +30,126 @@ interface ShellProps {
   /** Draws the depicted Appearance selector holding this setting. */
   appearanceChoice?: AppearanceChoice | undefined;
   changedViews?: readonly ChangedView[] | undefined;
-  searchPlaceholder?: string | undefined;
   activeTag?: string | undefined;
+  /** The navigation drawer of a narrow render. */
   aside?: ReactNode;
   children: ReactNode;
-  menuPresentation?: "text" | "icon" | undefined;
+  /**
+   * Depicts a desktop window narrower than the layout breakpoint, in a
+   * column with the narrow top bar, whose drawer is the `aside`.
+   */
+  collapsed?: boolean | undefined;
   nav: ReactNode;
   searchValue?: string | undefined;
   tagPickerOpen?: boolean | undefined;
   viewport: ArtboardViewport;
 }
 
-/** The Mokly shell scaffold for one design mockup. */
+/** The ids of the main region and the route status, one shell per document. */
+const MAIN_ID = "mb-main";
+const STATUS_ID = "mb-route-status";
+
+/**
+ * The shipped shell root of one design mockup, in the frame that carries the
+ * artboard's render flag: `mbk-shell--mobile` draws the narrow shell of a
+ * mobile render at every width, and `mbk-shell--collapsed` a narrow desktop
+ * window. The root states the rendered appearance as its theme and its
+ * previews' scheme, so the package components draw in the shipped palette.
+ */
 export function Shell({
   activeTag,
   appearanceChoice,
   changedViews,
   aside,
   children,
+  collapsed = false,
   design,
-  menuPresentation,
   nav,
   searchValue,
-  searchPlaceholder,
   tagPickerOpen,
   viewport,
 }: ShellProps) {
-  const scheme = useRenderedAppearance();
-  const bar = (
-    <TopBar
-      menuPresentation={menuPresentation}
-      searchPlaceholder={searchPlaceholder}
-      drawerOpen={design === DESTINATIONS.navigation}
-      activeTag={activeTag}
-      appearanceChoice={appearanceChoice}
-      appearanceChanged={changedViews?.some((view) => view.scheme !== scheme)}
-      searchValue={searchValue}
-      tagPickerOpen={tagPickerOpen}
-      viewport={viewport}
-    />
-  );
+  const narrow = viewport === "mobile" || collapsed;
   return (
     <DesignNavigation design={design}>
       <DesignAppearanceScope>
-        {viewport === "desktop" ? (
-          <div className="mbk-shell mbk-shell--desktop">
-            {bar}
-            <div className="mbk-body">
-              {nav}
-              <main className="mbk-main">{children}</main>
-            </div>
-          </div>
-        ) : (
-          <div className="mbk-shell mbk-shell--mobile">
-            {bar}
-            <main className="mbk-main">{children}</main>
-            {aside}
-          </div>
-        )}
+        <ShellRoot
+          design={design}
+          flag={collapsed ? "collapsed" : viewport}
+          navigation={narrow ? aside : nav}
+          topBar={
+            <ShellTopBar
+              activeTag={activeTag}
+              appearanceChoice={appearanceChoice}
+              changedViews={changedViews}
+              design={design}
+              searchValue={searchValue}
+              tagPickerOpen={tagPickerOpen}
+              viewport={narrow ? "mobile" : "desktop"}
+            />
+          }
+        >
+          {children}
+        </ShellRoot>
       </DesignAppearanceScope>
     </DesignNavigation>
+  );
+}
+
+function ShellTopBar({
+  changedViews,
+  design,
+  ...props
+}: Pick<
+  ShellProps,
+  | "activeTag"
+  | "appearanceChoice"
+  | "changedViews"
+  | "design"
+  | "searchValue"
+  | "tagPickerOpen"
+  | "viewport"
+>) {
+  const scheme = useRenderedAppearance();
+  return (
+    <TopBar
+      drawerOpen={design === DESTINATIONS.navigation}
+      appearanceChanged={changedViews?.some((view) => view.scheme !== scheme)}
+      {...props}
+    />
+  );
+}
+
+/** The flag frame and the shipped root around one artboard's shell. */
+function ShellRoot({
+  children,
+  design,
+  flag,
+  navigation,
+  topBar,
+}: {
+  children: ReactNode;
+  design: DesignDestination;
+  flag: ArtboardViewport | "collapsed";
+  navigation: ReactNode;
+  topBar: ReactNode;
+}) {
+  const scheme = useRenderedAppearance();
+  const drawer = useDesignNavigation().drawer;
+  return (
+    <div className={`mbk-shell-frame mbk-shell--${flag}`}>
+      <ShellLayout
+        announcement=""
+        colorScheme={scheme}
+        drawerOpen={drawer?.open ?? design === DESTINATIONS.navigation}
+        main={<MainRegion id={MAIN_ID}>{children}</MainRegion>}
+        mainHref={`#${MAIN_ID}`}
+        navigation={navigation}
+        statusId={STATUS_ID}
+        theme={scheme}
+        topBar={topBar}
+      />
+    </div>
   );
 }
 
@@ -151,18 +216,33 @@ export type ChangedView = NonNullable<
   ViewControlsProps["changedViews"]
 >[number];
 
+/** The view controls props that draw one highlight state. */
+export function highlightProps(
+  state: HighlightState,
+): Pick<ViewControlsProps, "highlight" | "unavailable"> {
+  return state === "available" || state === "on"
+    ? { highlight: state === "on" }
+    : { highlight: false, unavailable: state };
+}
+
 interface ViewSwitchProps {
   active: "both" | "desktop" | "mobile";
   /** Views other than the shown one whose render changed on this branch. */
   changedViews?: readonly ChangedView[] | undefined;
 }
 
-/** Viewport selection control shown in a selected screen header. */
+/**
+ * The view controls of a selected screen's header: the viewport selection,
+ * and the Highlight components toggle in the state that the shell shows for
+ * the view that the workspace depicts.
+ */
 export function ViewSwitch({ active, changedViews }: ViewSwitchProps) {
+  const view = useDepictedView();
   return (
     <viewControls.Component
       moklyInstance={useDesignInstance("viewport")}
       selection={active}
+      {...highlightProps(view.highlight)}
       {...optional("changedViews", changedViews)}
     />
   );

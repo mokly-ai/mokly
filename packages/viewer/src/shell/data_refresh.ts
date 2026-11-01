@@ -4,7 +4,7 @@
  */
 
 import type { DetailRequest } from "../catalogue/detail_fences.js";
-import type { CatalogueReadModel, EntryDetailV3 } from "../catalogue/types.js";
+import type { CatalogueReadModel, EntryDetailV4 } from "../catalogue/types.js";
 import type { MoklyVersionError } from "../catalogue/version_error.js";
 
 import { loadRefresh, routeKey } from "./data_requests.js";
@@ -20,7 +20,7 @@ export interface PublicationRefreshHost {
   /** Adopt the refreshed index and the route's details in one commit. */
   adopt(
     index: CatalogueReadModel,
-    details: readonly (readonly [DetailRequest, EntryDetailV3])[],
+    details: readonly (readonly [DetailRequest, EntryDetailV4])[],
   ): void;
   /** Another deployment answered the refresh. */
   deploymentChanged(): void;

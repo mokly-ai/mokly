@@ -75,7 +75,7 @@ test("scroll reveals a text-only first range inside nested scrolling content", a
   );
 });
 
-test("hover and geometry coalesce and overlay redraws settle", async ({
+test("hover and geometry coalesce without drawing in the frame", async ({
   page,
 }) => {
   await mountCrossFrame(page, fixture);
