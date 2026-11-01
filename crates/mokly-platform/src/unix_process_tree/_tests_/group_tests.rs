@@ -16,6 +16,53 @@ const ROOT: ProcessIdentity = ProcessIdentity { pid: 1, start: 10 };
 const CHILD: ProcessIdentity = ProcessIdentity { pid: 2, start: 20 };
 const LEAF: ProcessIdentity = ProcessIdentity { pid: 3, start: 30 };
 
+/// The public kill boundary must signal every level of a finite deep tree.
+#[test]
+fn kill_signals_every_process_in_a_deep_chain() {
+    let signals = Arc::new(Mutex::new(Vec::new()));
+    let captured = Arc::clone(&signals);
+    let table = Unimock::new((
+        IdentityMock
+            .some_call(matching!(_))
+            .answers(&|_, pid| Ok(Some(ProcessIdentity { pid, start: 10 }))),
+        ChildrenMock.some_call(matching!(_)).answers(&|_, pid| {
+            Ok(if pid <= 200 {
+                vec![ProcessIdentity {
+                    pid: pid + 1,
+                    start: 10,
+                }]
+            } else {
+                Vec::new()
+            })
+        }),
+        SignalMock
+            .some_call(matching!(_, _))
+            .answers_arc(Arc::new(move |_, identity, signal| {
+                captured.lock().unwrap().push((identity, signal));
+                Ok(())
+            })),
+    ));
+    let groups = Unimock::new(
+        GroupSignalMock::signal
+            .some_call(matching!(1, _))
+            .answers(&|_, _, _| Ok(false)),
+    );
+    let group = UnixGroup::new(ROOT, Arc::new(table), Arc::new(groups));
+    let result = ProcessGroup::kill(&group);
+    assert!(matches!(result, Ok(())), "deep kill returned {result:?}");
+    let killed: Vec<_> = signals
+        .lock()
+        .unwrap()
+        .iter()
+        .filter(|(_, signal)| *signal == libc::SIGKILL)
+        .map(|(identity, _)| *identity)
+        .collect();
+    let expected: Vec<_> = (2..=201)
+        .map(|pid| ProcessIdentity { pid, start: 10 })
+        .collect();
+    assert_eq!(killed, expected);
+}
+
 #[test]
 fn a_reaped_root_with_no_retained_descendants_does_no_table_walk() {
     let reaped = Arc::new(AtomicBool::new(false));
