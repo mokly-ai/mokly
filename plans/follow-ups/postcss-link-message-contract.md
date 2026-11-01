@@ -5,6 +5,7 @@
 - **Added:** 2026-11-01, from branch
   `conductor/rust-rebuild-166-windows-paths-and-links`, review findings 1
   and 3. On 2026-11-01 review round 3, finding 5, merged in as a repeat.
+  On 2026-11-01 review round 4, finding 6, merged in as a repeat.
 - **Location:**
   - `crates/mokly-catalogue/src/config_postcss.rs:48` and `:61`.
   - `crates/mokly-catalogue/src/config_paths.rs:195` and `:211`.
@@ -126,8 +127,12 @@
     the five settings. Add the missing PostCSS test, and make each check call
     `link_error` once. Effort: Small.
   - **B.** Restore the catalogued PostCSS message, and keep the other four
-    link messages. Narrow the README sentence to those four settings. The
-    PostCSS test gap then closes. Effort: Small.
+    link messages: roots, package roots, the renderer, and local
+    stylesheets. State the rule for those four settings in the "Shape"
+    section of `docs/protocol/mokly-configuration.md`, as C does for five.
+    Narrow the README sentence to those four settings. The PostCSS test gap
+    then closes. B still makes PostCSS the only exception, with a message
+    that hides the cause, so C still ranks above B. Effort: Small.
   - **C.** Keep the five link messages. State one rule for exactly these five
     settings in the "Shape" section of the configuration page, and point the
     root discovery sentence to it. Add the link message to row 18 of the
@@ -178,9 +183,10 @@
     change. F covers every configured filesystem field, and
     `plans/follow-ups/base-link-manifest-and-config.md` covers the required
     files. The two answers together give the same result.
-- **Wider fix:** F. One rule for every configured filesystem field also
-  covers a path field that a later change adds. For the tests, the shared
-  typed projection helper keeps every check on the link case.
+- **Wider fix:** None beyond the rule in force. The `documentation` skill,
+  which `AGENTS.md` names, requires the code and its contract to change
+  together. The structural link check for each validation check stays with
+  `plans/follow-ups/base-link-manifest-and-config.md`, as its option E.
 - **Previous examples:**
   - PR #240, commit `843ac8bf`, changed PostCSS messages and their catalogue
     rows together.
