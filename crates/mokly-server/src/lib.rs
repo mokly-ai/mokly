@@ -5,8 +5,10 @@
 mod accept;
 pub mod application;
 mod application_evidence;
+mod asset_response;
 pub mod assets;
 pub mod backend;
+mod backend_assets;
 mod backend_preview;
 pub mod background;
 mod background_batch;

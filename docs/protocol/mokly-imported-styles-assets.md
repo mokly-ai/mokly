@@ -96,8 +96,29 @@ Delivery checks the complete asset against the generation digest and its
 opened length before Serve sends headers. A mismatch fails the request, and
 watched Serve then requests a new generation. With `--no-watch`, the
 generation stays fixed. The terminal diagnostic names the asset and tells the
-user to restart Serve or use watching. Static output captures one immutable
-final payload after its file-size check.
+user to restart Serve or use watching.
+
+Serve delivers an asset from a verified copy, a copy of the complete asset
+that passed the digest and length check. Concurrent `GET` and `HEAD` requests
+for one asset route of one generation share one verified copy and its check.
+A request that joins a copy before its check ends waits for the result. When
+the copy or its check fails, every request that shares the copy fails. A
+`HEAD` response gives the verified length and no body. Requests for different
+routes or different generations never share a copy.
+
+A request that joins a verified copy gets the bytes of that copy, also when
+the source changed after the check. Serve releases the copy when the last
+request or response that shares it ends. The next request copies and checks
+the source again.
+
+Decision: a copy lives only while a request or response uses it. Serve sets no
+storage budget for copies. Rejected: a private copy for each request, because
+concurrent requests then repeat the copy, its storage, and the digest check.
+Rejected: a copy kept for the life of its generation. A later request would
+then read the kept copy and not the source. The kept copies would also need a
+storage budget, and temporary storage on `tmpfs` is memory.
+
+Static output captures one immutable final payload after its file-size check.
 A mismatch stops the build with the input-change error before installation;
 publish uses the final captured bytes. The final live fingerprint recheck
 still applies under [Output Transaction](./mokly-export.md#output-transaction).

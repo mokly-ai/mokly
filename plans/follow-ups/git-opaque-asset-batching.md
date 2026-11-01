@@ -118,9 +118,13 @@
     records under its option D that the extraction digest has no 64 MiB
     bound. That bound and option A change the same extracted path. Either
     can land first, and the later change keeps the rule of the earlier one.
-  - [opaque-asset-generation-spool.md](./opaque-asset-generation-spool.md)
-    concerns how Serve shares the private copy among concurrent requests.
-    Option A streams into that same copy.
+  - The
+    [opaque asset spool item at its last commit](https://github.com/mokly-ai/mokly/blob/c7e7d9b88efc84152eb33539ed8ed7ca2ad2bb93/plans/follow-ups/opaque-asset-generation-spool.md)
+    was about how Serve delivers the same opaque assets. It closed on
+    2026-11-01 with PR #273, merged as `d148edc5`, which makes concurrent
+    requests for one generation and asset route share one verified copy, in
+    `crates/mokly-server/src/asset_streams.rs`. Option A streams into that
+    same copy.
   - [base-batch-fallback-processes.md](./base-batch-fallback-processes.md)
     concerns the Git processes of each file after a failed batch. The
     resolved Git part of this item added one more such retry: a failed

@@ -48,7 +48,7 @@ pub struct Harness {
     prepared: PreparedCatalogue,
     pub snapshot: Arc<Snapshot>,
     pub publications: Arc<SharedPublication>,
-    public: Arc<ConfinedReader>,
+    pub public: Arc<ConfinedReader>,
     pub url: String,
     pub client: reqwest::Client,
     stop: watch::Sender<bool>,
