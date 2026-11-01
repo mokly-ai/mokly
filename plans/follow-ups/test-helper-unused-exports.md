@@ -4,8 +4,8 @@
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 109, F18 decision 39, covering F18 review finding 36.
 - **Location:** `scripts/verification/ratchets/internal-exports.mjs:12`.
-- **Reason:** On 2026-10-21 the user deferred the open review items of PR #199
-  until after its merge, for the user's later choice.
+- **Reason:** Option B widens a repository check, and a stricter check needs the
+  user.
 
 - **Source:** Review.
 - **Category:** Process.
@@ -46,7 +46,8 @@
   the roots of one check.
 - **Recommendation:** B. The helper trees started with no baseline entries
   after the cleanup, so the check can start clean.
-- **Action:** ask the user, because the user reserved the choice for each open
-  review item of the rebuild. B is a stricter check.
+- **Action:** ask the user, because B extends the internal-export ratchet to the
+  test helper trees, a stricter check that the always-on rules reserve for the
+  user.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5953).
