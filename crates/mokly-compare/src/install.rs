@@ -80,6 +80,7 @@ impl Builder for Install<'_> {
             self.owner.commands.run(&Command {
                 program: root.manager.program().into(),
                 args: manager_command::arguments(root, destination, self.request.install_scripts),
+                scripts: self.request.install_scripts,
                 directory: destination.join(&root.directory),
                 timeout,
                 byte_limit: Some(self.owner.install_bytes),

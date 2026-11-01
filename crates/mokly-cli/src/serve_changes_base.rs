@@ -10,11 +10,12 @@ use mokly_catalogue::error::CatalogueError;
 use mokly_cli::cancellation::Cancellation;
 use mokly_cli::output::Style;
 use mokly_cli::redaction::Redactor;
-use mokly_compare::base_render::{BaseProvider, BaseRequest};
+use mokly_compare::base_render::{
+    BasePreparationError, BasePreparationResult, BaseProvider, BaseRequest, PreparedBase,
+};
 use mokly_compare::cache_types::{Lease, Reporter};
 use mokly_compare::comparison_steps::{Step, Steps};
 use mokly_compare::error::{Error, Result};
-use mokly_graph::types::RenderGeneration;
 use mokly_model::public_metadata::ChangesStatus;
 use mokly_render::side::BaseSide;
 use mokly_server::changes::{ChangeCancellation, ChangeProgress};
@@ -100,15 +101,17 @@ pub(super) struct AttemptBase {
     pub(super) progress: Arc<dyn ChangeProgress>,
 }
 impl BaseProvider for AttemptBase {
-    fn prepare(&self, request: &BaseRequest<'_>) -> Result<Arc<dyn RenderGeneration>> {
+    fn prepare(&self, request: &BaseRequest<'_>) -> BasePreparationResult {
         let prepared = self.inner.prepare(request);
         let records = match &prepared {
-            Ok(base) => base.catalogue().warnings.clone(),
-            Err(Error::Catalogue {
-                source: CatalogueError::Invalid { warnings, .. },
-            }) => warnings.clone(),
-            Err(Error::Graph { source }) => source.warnings(),
-            _ => Vec::new(),
+            Ok(base) => base.generation.catalogue().warnings.clone(),
+            Err(error) => match &*error.source {
+                Error::Catalogue {
+                    source: CatalogueError::Invalid { warnings, .. },
+                } => warnings.clone(),
+                Error::Graph { source } => source.warnings(),
+                _ => Vec::new(),
+            },
         };
         self.warnings
             .lock()
@@ -121,11 +124,17 @@ impl BaseProvider for AttemptBase {
                     })
                     .cloned(),
             );
-        let base = prepared?;
+        let prepared = prepared?;
         if !matches!(self.progress.status(ChangesStatus::Pending), Ok(true)) {
-            return Err(Error::Cancelled);
+            return Err(BasePreparationError::new(
+                prepared.scripts_off,
+                Error::Cancelled,
+            ));
         }
-        Ok(Arc::new(FrozenResources::new(base)))
+        Ok(PreparedBase {
+            generation: Arc::new(FrozenResources::new(prepared.generation)),
+            scripts_off: prepared.scripts_off,
+        })
     }
 }
 

@@ -104,7 +104,7 @@ Mokly redacts the value before it checks the grammar.
 Mokly passes no inherited `MOKLY_` variable to package managers, lifecycle
 scripts, sidecars, or PostCSS children. Code that these processes run therefore
 does not receive the token. The
-[base install environment](./mokly-base-dependencies.md#installation-and-bundle-settings)
+[base install environment](./mokly-base-install-processes.md#environment)
 and the [source worker environment](./mokly-sidecar-modules.md#source-root-workers)
 give the rule for each process.
 

@@ -1,7 +1,6 @@
 //! Temporary ancestry scans and a persistent table containing only owned processes.
 
 use std::collections::BTreeMap;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use sysinfo::{Pid, Process, ProcessRefreshKind, ProcessesToUpdate, System, UpdateKind};
@@ -64,7 +63,7 @@ impl ProcessTable for SystemTable {
             .collect()
     }
     fn canonicalize(&self, path: &Path) -> Option<PathBuf> {
-        fs::canonicalize(path).ok()
+        dunce::canonicalize(path).ok()
     }
 }
 

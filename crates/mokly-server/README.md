@@ -93,18 +93,28 @@ same document. Public authored reads require both reached closure membership
 and a fresh policy check under the
 [public closure contract](../../docs/protocol/mokly-public-closure.md).
 `ConfinedReader` opens each directory and the final regular file without
-following symlinks. Routes never fall back to repository files. Generated
-opaque assets use `dyn AssetStreams`, which verifies each asset into a
-temporary file under the
-[CSS assets contract](../../docs/protocol/mokly-imported-styles-assets.md).
-Requests for the same route do not share a capture. Worker parallelism bounds
-active captures, and the opened length bounds each file. Live response files
-have no aggregate byte bound. The OS temporary directory can use `tmpfs`, whose
-storage consumes memory outside process RSS measurements. The built viewer's
-browser manifest lists the only client modules served. The shared shell
-declares the Browse brand SVG at `/mokly-viewer/client/brand.svg`, and the
-asset loader serves the matching packaged icon for both Serve and static
+following symlinks. Routes never fall back to repository files. The built
+viewer's browser manifest lists the only client modules served. The shared
+shell declares the Browse brand SVG at `/mokly-viewer/client/brand.svg`, and
+the asset loader serves the matching packaged icon for both Serve and static
 output.
+
+Generated opaque assets follow the
+[CSS assets contract](../../docs/protocol/mokly-imported-styles-assets.md).
+`GraphDocuments::asset_request` reserves the capture of a route before
+foreground worker admission, without IO. `GraphDocuments` keeps a weak entry
+for each route, so concurrent requests of its generation join one capture.
+A request that waits for a worker already holds its capture. The first
+admitted request verifies the asset through `dyn AssetStreams` into an
+unnamed temporary file. The other requests wait for that result and share it.
+A failure keeps its original type, so the CLI still requests a new generation
+after an input change. Each response reads the shared file at its
+own byte offset, with `read_at` on Unix and `seek_read` on Windows. The last
+request or response that holds the capture closes the file, and no idle copy
+stays. Worker parallelism bounds active captures, and the opened length bounds
+each file. Live response files have no aggregate byte bound. The OS temporary
+directory can use `tmpfs`, whose storage consumes memory outside process RSS
+measurements.
 
 Each `GraphDocuments` captures a `dyn RenderWarnings` hook from its owning
 Serve attempt. Saved and temporary renders deliver private composition
@@ -160,6 +170,10 @@ collection, and recovery of selected screen and component comparisons with
 both sides' original documents and resources. Integration tests use a real
 HTML graph and loopback sockets. They cover route bytes, headers, fences,
 public-file replacement, encoded attacks, previews, and event-stream shutdown.
+[Shared asset tests](./tests/shared_assets/delivery_tests.rs) send requests
+to the router in process and keep response bodies open. They cover one copy
+for concurrent `GET` and `HEAD` requests, its release, and separate routes and
+generations.
 
 ### Key Code
 
@@ -176,6 +190,14 @@ public-file replacement, encoded attacks, previews, and event-stream shutdown.
   `GraphDocuments`, the graph-backed documents and read-time confinement.
 - [`src/public_read.rs`](./src/public_read.rs) defines `ConfinedReader`, which
   opens authored files without following symlinks.
+- [`src/asset_streams.rs`](./src/asset_streams.rs) defines `AssetStreams`,
+  `TemporaryAssets`, `AssetRequest`, `AssetResult`, and `SharedAsset`, the
+  verified asset copy that concurrent requests share.
+- [`src/backend_assets.rs`](./src/backend_assets.rs) keeps the weak route
+  entries and the shared capture result that `GraphDocuments::asset_request`
+  reserves before worker admission.
+- [`src/asset_response.rs`](./src/asset_response.rs) streams a verified asset,
+  and each response reads the shared file at its own offset.
 - [`src/background.rs`](./src/background.rs) and
   [`src/changes_background.rs`](./src/changes_background.rs) define
   `UsagePass` and `ChangesPass`, the background usage and Changes work.

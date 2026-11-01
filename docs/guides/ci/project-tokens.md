@@ -27,9 +27,9 @@ nowhere else.
 ## Where to keep it
 
 Keep the token in your CI system's secret storage and expose it to the job as
-an environment variable. Prefer `MOKLY_TOKEN` to `--token`. A command line
-ends up in shell history and in job logs, and the operating system shows it to
-every user of the machine.
+an environment variable. A token on the command line ends up in shell history
+and in job logs. [Keep the token safe](/docs/cli/publish/#keep-the-token-safe)
+gives the variable to use and the other risks of `--token`.
 
 A token that begins with `-` needs the assigned form so it is not read as an
 option:
@@ -47,10 +47,9 @@ repository before it exposes anything.
 
 Mokly never prints the token, including in error messages and diagnostics, and
 it never writes it into the output. It also keeps the token out of the
-processes that render your catalogue and out of base dependency installs. Code
-that runs under the same user account can still read the environment of Mokly
-and of the shell that started it, so publish from a job that runs only code
-you trust.
+processes that render your catalogue and out of base dependency installs.
+[Keep the token safe](/docs/cli/publish/#keep-the-token-safe) gives the limit
+of this protection and what to do about it.
 
 ## Rotating
 

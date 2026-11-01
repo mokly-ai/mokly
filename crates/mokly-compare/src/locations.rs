@@ -2,6 +2,12 @@
 
 #[cfg(windows)]
 use std::env;
+#[cfg(windows)]
+use std::ffi::OsString;
+#[cfg(windows)]
+use std::os::windows::ffi::OsStringExt;
+#[cfg(windows)]
+use std::path::{Component, Prefix};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -37,7 +43,7 @@ impl Locations for SystemLocations {
                 .join("mokly")
                 .join(repository_key(&repository)),
         )?;
-        if directory.starts_with(&repository) {
+        if inside_repository(&directory, &repository) {
             return Err(Error::UnsafeCache { path: directory });
         }
         Ok(directory)
@@ -46,6 +52,43 @@ impl Locations for SystemLocations {
 
 fn cache_directory<'a>(default: &'a Path, local: Option<&'a Path>) -> &'a Path {
     local.filter(|path| path.is_absolute()).unwrap_or(default)
+}
+
+#[cfg(windows)]
+/// Convert supported Windows verbatim prefixes to their plain equivalents.
+fn plain(path: &Path) -> PathBuf {
+    let mut components = path.components();
+    let Some(Component::Prefix(prefix)) = components.next() else {
+        return path.to_owned();
+    };
+    let mut plain = match prefix.kind() {
+        Prefix::VerbatimDisk(drive) => {
+            PathBuf::from(OsString::from_wide(&[u16::from(drive), u16::from(b':')]))
+        }
+        Prefix::VerbatimUNC(server, share) => {
+            let mut prefix = OsString::from(r"\\");
+            prefix.push(server);
+            prefix.push(r"\");
+            prefix.push(share);
+            PathBuf::from(prefix)
+        }
+        _ => return path.to_owned(),
+    };
+    for component in components {
+        plain.push(component);
+    }
+    plain
+}
+
+#[cfg(not(windows))]
+/// Keep non-Windows paths unchanged.
+fn plain(path: &Path) -> PathBuf {
+    path.to_owned()
+}
+
+/// Test cache containment after converting both paths to one prefix form.
+fn inside_repository(directory: &Path, repository: &Path) -> bool {
+    plain(directory).starts_with(plain(repository))
 }
 
 /// Stable key of a canonical repository path, including its exact OS spelling.
