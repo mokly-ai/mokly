@@ -1,15 +1,16 @@
 # Missed plan ticks become review findings
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Outside the scope.
 - **Added:** 2026-11-01, from branch
   `conductor/rust-rebuild-87-diagnostics-and-html-messages`: option C of
   finding 2 of the re-review of the HTML pipeline implementation review of
   2026-10-28.
 - **Location:** None. The rule would live in the shared
   `implementation-review` skill of the `futex-ai/skills` repository.
-- **Reason:** The rule changes a shared skill outside this repository, and
-  on 2026-10-28 the coordinator kept this choice for the user.
+- **Reason:** On 2026-11-01 the coordinator put this proposal outside the
+  scope of this repository, because it changes the shared skills, not Mokly
+  behaviour, and it blocks no work here.
 
 - **Source:** Review.
 - **Category:** Process.
@@ -58,8 +59,9 @@
   2026-10-28, which the background describes. No other case was found.
 - **Recommendation:** C. The plan already proves the work, so a missed tick
   needs a tick, not a finding.
-- **Action:** ask the user, because the coordinator asked to keep this choice
-  for the user, and it changes a shared skill outside this repository.
+- **Action:** ask the user, because the coordinator kept this choice for the
+  user on 2026-10-28, and the rule lives in the shared skills outside this
+  repository. It blocks nothing in this repository.
 
 The full historical record is in the
 [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5609).

@@ -114,6 +114,17 @@ token and span types, and it is the only html5gum user: other code must not
 construct an `html5gum::Tokenizer`. `html_driver::drive` runs html5gum under
 the html5ever tree builder for any `DriverSink`: the token checks pass a sink
 that records tokens, and `mokly-html` passes its tree arena.
+Each text token and each attribute value is a `Spanned` with a `SourceMap`.
+The map gives the source byte of each decoded byte, and its `span` is the
+source interval that the tokenizer consumed for the value. The map anchors at
+html5gum's own chunk ends, so Mokly has no second character-reference decoder.
+In a chunk that does not align with its source bytes, such as a character
+reference, each decoded byte maps to the first source byte of the chunk. The
+token's own `span` stays html5gum's compatibility span, and the other checks
+keep using it. In a body, catalogue validation maps each `{{...}}` failure
+through `Spanned::source_offset` to its own `{{`, also inside an attribute
+value, after a character reference, and after CRLF or CR line ends. A saved
+slot failure keeps the location of its front matter field.
 Composition owns literal attribute coercion, rendered document safety, assets,
 and anchors. `SourcePolicy` classifies root matches, reserved basenames, and
 inventoried inputs in that precedence order, including physical aliases.
@@ -202,6 +213,12 @@ YAML that each path survives on a 2 MiB worker stack. Run it with
 - [`src/html_driver.rs`](./src/html_driver.rs) provides `drive` and
   `DriverSink`, which run html5gum under the html5ever tree builder for the
   checks and for the tree.
+- [`src/html_driver_emitter.rs`](./src/html_driver_emitter.rs) defines
+  `DriverEmitter`, which forwards the html5gum emitter calls to the driver and
+  records the source position of each emitted chunk.
+- [`src/html_source_map.rs`](./src/html_source_map.rs) defines `SourceMap`,
+  which maps each decoded byte of a text token or an attribute value to its
+  source byte and holds the value's consumed source interval.
 - [`src/numeric_warnings.rs`](./src/numeric_warnings.rs) provides
   `for_invocation`, which reports each unsafe integer in the props of one
   component invocation, with the component path and the instance id.

@@ -1,7 +1,5 @@
 # HTML Screens, Pages, And Use Cases
 
-Status: In progress under the [diagnostics and HTML messages plan](../../plans/diagnostics-and-html-messages.md).
-
 ## File Kinds Without JavaScript
 
 | Kind      | File suffix       | Body                                              |
