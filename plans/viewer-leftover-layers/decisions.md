@@ -1,8 +1,8 @@
 # Decisions of the viewer leftover-layer change
 
 This file holds the user decisions of
-[the plan](../viewer-leftover-layers.md) in full. The user answered all three
-on 2026-11-01. The options check of the same day added the options with the
+[the plan](../viewer-leftover-layers.md) in full. The user answered all of
+them on 2026-11-01. The options check of the same day added the options with the
 letters after the recorded ones. Its summary is in
 `.context/viewer-leftover-layers/options-check.md`. The plan's pull request
 deletes this file with the plan.
@@ -186,6 +186,87 @@ deletes this file with the plan.
 - **Related:** Decision 1, same cause.
 - **Recommendation:** A was the first recommendation. The options check
   recommends D for the repeated options, with A for the reserved names.
-- **Action:** The user chose C on 2026-11-01, because option F of decision 1
-  follows. C stays in force until the user answers again.
-  `plans/follow-ups/derived-select-option-repeats.md` holds option D.
+- **Action:** The user first chose C on 2026-11-01, because option F of
+  decision 1 follows. After the options check, the user chose D on the same
+  day. The plan applies D. The reserved-name difference stays until F.
+
+## 4. Removed previews skip the removed-detail fence
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium.
+- **Source:** Review. The options check of decisions 1 to 3 found it.
+- **Category:** Product bug.
+- **Location:** `packages/viewer/src/previews/content.ts:26-37`,
+  `packages/viewer/src/previews/request.ts:132-147`, and
+  `packages/viewer/src/shell/data_requests.ts:45-54`.
+- **Terms:**
+  - **Fence:** the check that a fetched detail belongs to the index that the
+    viewer holds, in `docs/protocol/mokly-shell-fences.md`.
+- **Background:**
+  - The fence accepts a removed detail only when its identity, path,
+    `snapshotId`, and `detailId` match the index, per
+    `mokly-shell-fences.md:43-45`.
+  - The route of a removed entry already loads that detail through the shell
+    data layer, which applies the fence.
+  - The preview of a removed screen reads the same file again, and it checks
+    only the kind, the path, and the snapshot id.
+  - In an embedded host, `mokly-viewer.md:47-49` takes the removed detail from
+    the host, while `mokly-removed-previews.md:126-131` fetches it from the
+    comparison generation.
+- **Problem:** A removed detail that fails the fence can still show its
+  preview, against the fail-closed table of `mokly-shell-fences.md:65`.
+- **Impact if no action:** A stale or wrong removed detail shows a preview
+  instead of the unavailable state.
+- **Root question:** How does a removed entry's preview show only the removed
+  detail that the index names?
+- **Options:**
+  - **A.** Apply the fence inside `requestPreview`. This adds runtime
+    rejections that the protocol already asks for. Effort: Small.
+  - **B.** Show the preview from the detail that the route already loads and
+    fences, and drop the second read. `mokly-removed-previews.md:126-131`
+    changes for embedded hosts. Effort: Medium.
+  - **C.** Change nothing. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** B, because one read path applies the fetch rule and the
+  fence once, and it ends the two sources of one removed detail.
+- **Previous examples:** None found.
+- **Related:** Decision 2: same file, same read path.
+- **Recommendation:** B.
+- **Action:** The user chose B on 2026-11-01. The plan applies it.
+
+## 5. Comparison errors ignore the reason that Serve sends
+
+- **Severity:** Low. **Likelihood:** Common. **Effort:** Small.
+- **Source:** Review. The investigation found it.
+- **Category:** Product bug.
+- **Location:** `packages/viewer/src/shell/comparison_request.ts:168-182` and
+  `packages/viewer/src/shell/use_comparison.ts:200-207`.
+- **Background:**
+  - When Serve cannot prepare a comparison, it answers `{ code, message }`.
+    For example, `comparison-unavailable` comes with "The comparison is
+    unavailable. Try again.", and `not-found` comes with "The requested file
+    was not found.".
+  - No protocol doc states this body or its text.
+  - The viewer has a second sentence for the same failure, "The comparison
+    is unavailable.", in `packages/viewer/src/shell/comparison_documents.ts:11`.
+- **Problem:** The viewer reads a `details` field that Serve never sends, so
+  it always shows "Comparison unavailable". The unit test sends `{ details }`
+  too, so it cannot find the mismatch.
+- **Impact if no action:** Readers see a short generic text, and the code
+  keeps a read that never matches.
+- **Root question:** What should the shell tell the reader when Serve cannot
+  prepare a comparison?
+- **Options:**
+  - **A.** Read `message`, and give the unit test the body that Serve sends.
+    Readers then see server text. Effort: Small.
+  - **B.** A, with the error body type generated from the Rust model crate.
+    Effort: Small.
+  - **C.** Keep today's text, and delete the read of `details`. Effort: Small.
+  - **D.** Map Serve's `code` to one sentence that the viewer owns, also in
+    place of the second sentence. The protocol page lists the codes. Effort:
+    Small.
+- **Left out:** None.
+- **Wider fix:** D, because the viewer then owns all failure text and reads
+  only a stable code.
+- **Previous examples:** None found.
+- **Recommendation:** D.
+- **Action:** The user chose D on 2026-11-01. The plan applies it.

@@ -11,11 +11,10 @@ the read model, which `docs/protocol/mokly-viewer.md` requires. The other
 5,100 lines derive values from catalogue data. Most of that code is left over
 from the TypeScript backend that the Rust rebuild replaced:
 `viewer/projection.ts:102` converts the read model into a `live-index-2`
-manifest of the old model, builds a folder tree from it, and then replaces
-that tree with the tree that Rust wrote (`viewer/catalogue_tree.ts:13-76`).
-The viewer also recalculates values that the JSON holds, keeps separate code
-paths for the standalone and embedded roots, and reads `@mokly/ui` markup
-from the DOM in ways left over from the server-rendered shell.
+manifest, builds a folder tree from it, and replaces that tree with the tree
+that Rust wrote. The viewer also recalculates values that the JSON holds,
+keeps separate paths for the standalone and embedded roots, and reads
+`@mokly/ui` markup from the DOM.
 
 This change removes those layers and keeps the JSON formats, the protocol
 requirements, and the behaviour. It does not make Rust write more results
@@ -38,8 +37,8 @@ Contract owners:
 
 ## Decisions
 
-The user made three decisions on 2026-11-01, at the end of the
-investigation of the viewer's size.
+The user made these decisions on 2026-11-01, after the investigation of the
+viewer's size, and approved this plan on the same day.
 [decisions.md](./viewer-leftover-layers/decisions.md) gives each in full,
 with its options and the options that it leaves out.
 
@@ -56,26 +55,28 @@ with its options and the options that it leaves out.
    checks neither the final origin nor the content type, against
    `docs/protocol/mokly-shell-fences.md:49-51`. The other options were B,
    copy the checks into `requestPreview`, and C, change the protocol.
-3. **The schema differences stay until the follow-up.** The viewer rejects a
-   schema property named `__proto__`, `constructor`, or `prototype`, and
-   repeated select options, which Rust accepts. The user chose to change
-   nothing, because the follow-up replaces the viewer's checks with the Rust
-   ones. The other options were a new build error in the core, and a looser
-   viewer check.
+3. **The core derives each select option once.** A repeated `enum` or
+   `oneOf` value gave repeated options, which the viewer rejects. The user
+   first chose to change nothing, then chose option D after the options
+   check found it. The reserved-name difference stays until the follow-up.
+4. **A removed screen's preview reads the route's fenced detail.** The
+   preview read the removed detail a second time and skipped the fence of
+   `docs/protocol/mokly-shell-fences.md:43-45`. Option B drops the second
+   read, so `docs/protocol/mokly-removed-previews.md` changes. The other
+   options were a fence inside the preview's read, and no change.
+5. **The viewer owns the text of a comparison failure.** It maps the `code`
+   of Serve's error body to one sentence. The other options were Serve's
+   raw `message`, the same with a generated type, and today's text.
 
-The options check of 2026-11-01 ran over the three decisions. Its summary is
-in `.context/viewer-leftover-layers/options-check.md`, and decisions.md holds
-its new options. It agrees with the user's choices for decisions 1 and 2. For
-decision 3 it found option D, which the user has not seen:
-`plans/follow-ups/derived-select-option-repeats.md` holds it. Decision 3 stays
-in force until the user answers again.
+The options check of 2026-11-01 ran over decisions 1 to 3. Its summary is in
+`.context/viewer-leftover-layers/options-check.md`. A second check ran over
+decisions 3 to 5 after the user's answers; its summary is in
+`.context/viewer-leftover-layers/options-check-2.md`.
 
 The investigation also found that the embedded Light and Dark switch ignores
 the own views of component parents (`shell/catalogue.ts:100-109`). This
 change counts every entry with views, as
-`docs/protocol/mokly-variant-navigation.md:99-101` says. A second finding of
-the investigation, the comparison error text, needs the user, so
-`plans/follow-ups/comparison-error-text.md` holds it.
+`docs/protocol/mokly-variant-navigation.md:99-101` says.
 
 ## Design calls
 
@@ -117,8 +118,8 @@ My calls, on 2026-11-01:
 
 Depends on: none
 
-The change keeps the behaviour, so no protocol requirement changes. This
-milestone records the follow-up items.
+Decisions 4 and 5 change two requirements. The rest of the change keeps
+the behaviour.
 
 - [x] Add `plans/follow-ups/viewer-checks-from-rust.md` for option F.
 - [x] Add the follow-up items of the investigation and the options check:
@@ -126,6 +127,14 @@ milestone records the follow-up items.
       `comparison-error-text.md`, `removed-preview-detail-fence.md`,
       `viewer-credential-rule.md`, and `comparison-chrome-address.md`, all
       under `plans/follow-ups/`.
+- [ ] State decision 4 in `docs/protocol/mokly-removed-previews.md`: a
+      removed screen's preview uses the removed detail that the route loads
+      and fences, which an embedded viewer takes from its host's `detail`
+      source. Check `mokly-viewer.md` and `mokly-shell-fences.md` for the same
+      rule.
+- [ ] State decision 5 in the protocol page of the comparison routes: the
+      codes of Serve's error body, and the one sentence that the shell shows
+      for a failed comparison.
 - [ ] Confirm that no protocol or architecture doc names a mechanism that
       this change removes, such as the `live-index-2` manifest or the
       appearance asset in the head. Save the search under
@@ -139,9 +148,20 @@ Depends on: 1
       and apply design call 8. Decision 2. One regression test shows that
       `requestPreview` uses the helper, because
       `packages/viewer/tests/sources.test.ts:103-137` already tests its rules.
+- [ ] Show a removed screen's preview from the route's fenced detail, and
+      drop the preview's own read of that detail. Decision 4. Delete
+      `plans/follow-ups/removed-preview-detail-fence.md`.
 - [ ] Count the own views of component parents for Dark availability in
       `shell/catalogue.ts`. Add a regression test with components that have
       no variants.
+- [ ] Derive each select option once in `crates/mokly-model/src/controls.rs`,
+      with a Rust test. Decision 3. Delete
+      `plans/follow-ups/derived-select-option-repeats.md`, and remove the
+      repeated options from `plans/follow-ups/viewer-checks-from-rust.md`.
+- [ ] Map the `code` of Serve's error body to the sentence of decision 5,
+      also where the shell has a second sentence for the same failure. Make
+      the unit test send the body that Serve sends. Delete
+      `plans/follow-ups/comparison-error-text.md`.
 
 ## Milestone 3: Read the generated types directly
 
