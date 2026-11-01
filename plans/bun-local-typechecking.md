@@ -1,6 +1,6 @@
 # Bun for local TypeScript checks
 
-Status: Active. On branch `calummoore/bun-typescript-performance`, no pull request yet. The user approved implementation of every milestone and task on 2026-11-01. Implementation is in progress. The pull request that completes the work deletes this plan.
+Status: Active. On branch `calummoore/bun-typescript-performance`, no pull request yet. The user approved implementation of every milestone and task on 2026-11-01. Implementation and verification are complete. Final delivery is in progress. The pull request that completes the work deletes this plan.
 
 Mokly uses Node and npm for development and verification. Its packages use
 TypeScript to check source files and write public declarations. Add an optional
@@ -168,14 +168,15 @@ Report a pre-existing gate failure with its output if it still blocks the gate.
 - [x] Run formatting, lint, and Markdown links.
 - [x] Confirm required package commands, xtask suites, and workflows do not invoke Bun or the fast command.
 - [x] Run the complete local gate on a host with no Bun executable on its PATH.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` after the push with
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` after the push with
       the `implementation-review` skill. Apply the fix rule, record follow-up
       items for remaining findings, and re-review once.
 - [ ] Delete this plan under the `plans` skill when the implementation is complete.
 - [ ] Open the pull request with the dated decisions, design calls, and plan permalink.
 
 Evidence: `.context/bun-local-typechecking/complete-gate-after-main-result.json`.
+Review: `.context/reviews/calummoore/bun-typescript-performance/round-2-review.md`.
 
 ## Evidence and later work
 
