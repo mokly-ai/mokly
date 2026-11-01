@@ -161,15 +161,19 @@ Evidence: `.context/bun-ci-typechecking/command-m2-report.md`.
 
 Depends on: 2
 
+Status: Complete.
+
 Prepare tools before the required suite starts to use them.
 
-- [ ] Resolve and review the immutable `setup-bun` revision and its version-file input.
-- [ ] Disable the action's download cache in hosted Viewer and release preparation.
-- [ ] Provision the pin in both Viewer runtime profiles of `.github/workflows/ci.yml`.
-- [ ] Provision the pin for fallback complete verification in `release-prepare.yml`.
-- [ ] Keep old refs without the pin usable with their original gate commands.
-- [ ] Keep npm installs, lockfile use, Node setup, and non-Viewer jobs unchanged.
-- [ ] Check actual workflow syntax with `actionlint` and inspect the release conditions.
+- [x] Resolve and review the immutable `setup-bun` revision and its version-file input.
+- [x] Disable the action's download cache in hosted Viewer and release preparation.
+- [x] Provision the pin in both Viewer runtime profiles of `.github/workflows/ci.yml`.
+- [x] Provision the pin for fallback complete verification in `release-prepare.yml`.
+- [x] Keep old refs without the pin usable with their original gate commands.
+- [x] Keep npm installs, lockfile use, Node setup, and non-Viewer jobs unchanged.
+- [x] Check actual workflow syntax with `actionlint` and inspect the release conditions.
+
+Evidence: `.context/bun-ci-typechecking/hosted-m3-report.md`.
 
 ## Milestone 4: Connect the shared gate and remote Viewer
 
