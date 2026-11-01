@@ -53,10 +53,7 @@ fn child_checks_environment() {
         .join("../../tests/fixtures/sidecar/environment")
         .canonicalize()
         .unwrap();
-    let repository = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
-        .canonicalize()
-        .unwrap();
+    let repository = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
     let sidecars: Box<dyn SidecarPool> = Box::new(pool(&super::super::package_version::read()));
     let MethodResult::Bundle(bundle) = sidecars
         .request(Call::Bundle(Bundle {
