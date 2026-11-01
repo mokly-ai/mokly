@@ -3,7 +3,7 @@
 These documents are Mokly's specification. They define the intended behaviour
 of the product: the Rust core, the render sidecar, the Browse shell, and the
 release and verification tooling around them. A page that describes behaviour
-which is not implemented yet starts with a status line that names its plan.
+which is not implemented yet starts with a status line.
 Every other page describes implemented behaviour. The
 [repository rules](../../AGENTS.md#repository-rules) hold the rule.
 
