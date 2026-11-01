@@ -8,9 +8,9 @@
   `crates/mokly-compare/src/process.rs:100` to line 117,
   `docs/protocol/mokly-base-install-processes.md:57`, and
   `docs/protocol/mokly-runtime.md:231`.
-- **Reason:** On 2026-10-29 the coordinator moved this work out of the pull
-  request of the base install fixes, so that those fixes did not wait for
-  its unfinished code.
+- **Reason:** On 2026-10-29 the coordinator split this Large change from the
+  pull request of the base install fixes, so that those fixes did not wait
+  for it.
 
 - **Source:** Review.
 - **Category:** Product bug.
@@ -32,8 +32,8 @@
     Cancellation sends `SIGTERM`, then `SIGKILL` one second later. The time
     limit and the byte and output bounds send `SIGKILL` at once. After a
     normal finish, the owner sends `SIGKILL` to the group.
-  - On Windows the owner uses a job object that kills every descendant when
-    it closes. Windows needs no change.
+  - On Windows the owner uses a kill-on-close job object, which already
+    holds every descendant. Windows keeps it and needs no change.
   - The Git runner uses the same owner. It kills its group after every Git
     command, also after the command has finished.
   - `docs/protocol/mokly-base-install-processes.md#bounds-and-stops` states
@@ -63,13 +63,45 @@
     orphan inside the owned tree stays reachable through parent links while
     the manager runs. Record this mechanism in code comments, not in the
     protocol page. A subreaper can keep zombie processes until it exits.
-  - A stop of a finished or childless tree must cost only a few system
-    calls, because the Git runner stops its group after every command.
-  - The branch `conductor/rust-rebuild-150-process-tree-stops` holds a
-    pushed first attempt. It adds a process-table boundary with Linux and
-    macOS readers, a bounded walk, real-process tests for descendants in new
-    sessions, and a `mokly-compare` test with a detached Node child. On
-    2026-11-01 its code did not compile yet.
+  - A stop of a reaped or childless tree must cost only a few system calls,
+    with no table scan and no walk, because the Git runner stops its group
+    after every command.
+  - The work of C follows these rules:
+    - Record the identity of the root, its PID and start time, when the
+      owner attaches to the child, before the child is reaped.
+    - Confirm each process identity, its PID and start time, right before a
+      walk from it or a signal to it, because a PID can be reused.
+    - Before a signal, stop the group with `SIGSTOP`. Find the descendants
+      through parent links, and stop each new one at once. Walk again until
+      no new one appears, with a bound on the number of walks.
+    - On Linux, walk `/proc/{pid}/task/{tid}/children`. When those files
+      are absent, scan `/proc/*/stat` instead. On macOS, use libproc:
+      `proc_listchildpids` or `proc_listallpids`, with `proc_pidinfo` and
+      `PROC_PIDTBSDINFO`.
+    - On Linux, prefer a pidfd for each signal. Fall back to `kill` when the
+      kernel returns `ENOSYS`.
+    - Keep the identities that a first signal finds, and walk from them for
+      the next signal. Then the `SIGKILL` that follows a `SIGTERM` still
+      reaches a descendant whose parent died after the `SIGTERM`.
+    - After `SIGTERM`, send `SIGCONT` to the group and to each found
+      descendant, so that the stopped processes run their handlers.
+    - A process that is gone counts as stopped. On macOS, keep the rule of
+      `crates/mokly-platform/src/unix_group_members.rs`: when a group signal
+      fails with `EPERM`, the group counts as stopped only when a complete
+      list of its members shows no live process.
+    - When the process state cannot be read, signal the group, and then
+      return an error.
+    - The public `ProcessGroup` and `ProcessGroups` traits in
+      `crates/mokly-platform/src/processes.rs` keep their methods. So
+      `mokly-git`, `mokly-sidecar`, and `mokly-compare` need no change.
+    - Tests start a new session through a helper mode of the test binary
+      that calls `setsid()`, because macOS has no `setsid` command.
+      `signal_leaf_helper` in `crates/mokly-platform/tests/process_tests.rs`
+      shows the pattern.
+    - Tests treat a zombie as gone: the state `Z` in `/proc/{pid}/stat` on
+      Linux, and `SZOMB` on macOS.
+  - As context only: a first attempt exists on the branch
+    `conductor/rust-rebuild-150-process-tree-stops`.
 - **Problem:** Yarn Classic 1.22.22 starts each dependency lifecycle script
   with Node's `detached: true` on Linux and macOS, at
   `node_modules/yarn/lib/cli.js:34328`. So the script leads a new session,
@@ -106,6 +138,6 @@
 - **Recommendation:** C. It keeps the scripts opt-in for Yarn Classic and
   meets the no-orphan rule of the runtime contract.
 - **Action:** fix after merge, apply C, because the user chose C on
-  2026-10-28, and its unfinished code continues on its own branch.
+  2026-10-28, and the Large change gets its own pull request.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6109).
