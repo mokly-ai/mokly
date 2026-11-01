@@ -1,6 +1,6 @@
 # Commit info warning breaks a nested JSON report
 
-- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from the CI run of PR #242 at `410de45e`.
 - **Location:** `tests/browser/browser_error_rejection.spec.ts:10`, with the
