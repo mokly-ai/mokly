@@ -1,11 +1,11 @@
 # Protect tokens in viewer URL hosts
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 178, delta review 3.
 - **Location:** `crates/mokly-publish/src/completion.rs:69`.
-- **Reason:** A user rule of 2026-10-21 deferred each new review item of
-  PR #199 until after its merge, for the user's later choice.
+- **Reason:** The Rust rebuild merged with this gap open, and the fix changes
+  the viewer URL check of the publish crate, so it needs a separate branch.
 
 - **Source:** Review.
 - **Category:** Security.
@@ -38,7 +38,8 @@
   is a second gap in what `SecretMatcher` and its callers recognize as the
   token. One branch can fix both in the publish crate.
 - **Recommendation:** A. It closes the exposure without a new rejection.
-- **Action:** ask the user, because the user reserved the choice for each open
-  review item of the rebuild.
+- **Action:** fix after merge, apply A, because
+  `docs/protocol/mokly-upload-exchange.md:162` already omits a URL that contains
+  the token, and the change stays in the publish crate.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6365).

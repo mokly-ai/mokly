@@ -1,12 +1,12 @@
 # Add the missing period to the scripts hint
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 156, from finding 52 of the 135 B review.
 - **Location:** `crates/mokly-cli/src/changes_diagnostics.rs:14`.
-- **Reason:** The plan recorded this item after the user's rule of
-  2026-10-21 that new review items wait for the user after the merge.
+- **Reason:** The Rust rebuild merged with this copy defect open, so a separate
+  branch adds the period and updates the exact-message test.
 
 - **Source:** Review.
 - **Category:** UX wording.
@@ -39,7 +39,8 @@
   helper can fix its wording there.
 - **Recommendation:** A. It fixes the copy defect without changing the
   meaning.
-- **Action:** ask the user, because on 2026-10-21 the user ruled that new review
-  items wait for the user after the merge.
+- **Action:** fix after merge, apply A, because the period keeps the meaning, no
+  protocol page states the hint, and the change stays in the CLI diagnostics and
+  their test.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6150).
