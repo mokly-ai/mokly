@@ -63,7 +63,7 @@ keeps hash-only records of `digest` apart from completed opaque records. An
 opaque digest upgrades a hash-only record and reuses a completed one, also in
 `GitTree::open_stream`, without Git. A digest that fails on the 64 MiB bound
 of its asset stays unavailable for the base preparation. A smaller
-batch-bound failure stays retryable.
+batch-bound failure stays retryable. Cached bytes also start no Git process.
 
 With a converted length, `copy_verified` runs `Sources::stream` on a worker
 thread, and one Git process converts the file. The worker passes chunks of at
