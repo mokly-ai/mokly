@@ -96,11 +96,15 @@
   [flaky-same-origin-handoff.md](./flaky-same-origin-handoff.md) records
   another browser test that failed once and passed on the rerun.
 - **Related:**
-  - [compiled-recipe-cache.md](./compiled-recipe-cache.md) asks for a
-    byte-bounded cache of unused compiled recipes. On 2026-10-20 the
-    rebuild named this cache as one option against these timeouts, because
-    the accumulated React and base compilations of the journey can exhaust
-    its guard. The work differs, so the items stay separate.
+  - The
+    [compiled recipe cache item at its last commit](https://github.com/mokly-ai/mokly/blob/c7e7d9b88efc84152eb33539ed8ed7ca2ad2bb93/plans/follow-ups/compiled-recipe-cache.md)
+    asked for a byte-bounded cache of unused compiled recipes. On 2026-10-20
+    the rebuild named this cache as one option against these timeouts,
+    because the accumulated React and base compilations of the journey can
+    exhaust its guard. It closed on 2026-11-01, when the sidecar pool
+    started to keep the last released recipe of each set of bundle settings,
+    so a later bundle whose inputs equal an earlier compile can skip
+    esbuild.
   - [flaky-same-origin-handoff.md](./flaky-same-origin-handoff.md) is a
     separate case of the same recorded class: a browser test that failed
     once and passed on the rerun. It has its own test and suspected source.
