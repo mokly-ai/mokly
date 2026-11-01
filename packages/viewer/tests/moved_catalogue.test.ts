@@ -59,3 +59,25 @@ test("the public viewer reads each paired entry's previous path from the read mo
     [["product/browse/details", "product/details"]],
   );
 });
+
+test("component parents without variants keep Dark available from their own views", () => {
+  const component = catalogueFixture().manifest.entries.find(
+    (entry) => entry.kind === "component" && !entry.variantOf,
+  );
+  assert.ok(component?.kind === "component");
+  assert.ok(component.componentViews?.length);
+  const catalogue = createCatalogue({
+    ...manifest,
+    entries: [
+      {
+        ...component,
+        colorSchemes: ["light", "dark"],
+        componentViews: component.componentViews.flatMap((view) => [
+          view,
+          { ...view, colorScheme: "dark" as const },
+        ]),
+      },
+    ],
+  });
+  assert.equal(catalogue.hasDarkFragments, true);
+});

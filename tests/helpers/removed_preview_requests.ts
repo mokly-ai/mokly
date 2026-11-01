@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 
+import type { EntryDetailV4 } from "../../packages/viewer/dist/catalogue/types.js";
 import type { ReviewView } from "../../packages/viewer/dist/review/types.js";
 import type { RemovedPreviewData } from "../../packages/viewer/dist/shell/previews.js";
 
@@ -33,7 +34,7 @@ export function removedDetail(
   views: ReviewView[],
   snapshotId = "e".repeat(64),
   path = "removed-screen",
-) {
+): EntryDetailV4 {
   return {
     schemaVersion: 4,
     identity: { id: "c".repeat(64), title: "Mokly" },
@@ -81,15 +82,15 @@ export function snapshotId(
 
 export function respond(payload: unknown, url: string, ok = true) {
   const win = {
-    fetch: async (input: string, init?: RequestInit) => {
-      calls.push({ url: input, method: init?.method ?? "GET" });
-      return {
-        ok,
-        url,
-        json: async () => payload,
-      } as unknown as Response;
+    fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+      calls.push({ url: String(input), method: init?.method ?? "GET" });
+      const response = Response.json(payload ?? null, {
+        status: ok ? 200 : 404,
+      });
+      Object.defineProperty(response, "url", { value: url });
+      return response;
     },
-  } as unknown as Window & typeof globalThis;
+  };
   const calls: { url: string; method: string }[] = [];
   return { calls, win };
 }

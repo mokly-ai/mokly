@@ -24,18 +24,17 @@ function removed(viewport: ReviewView["viewport"]): ReviewView {
 }
 
 test("a screen preview renders only its captured previous views", async () => {
-  const { calls, win } = respond(
-    removedDetail([removed("mobile"), removed("desktop")]),
-    endpoint.href,
-  );
+  const detail = removedDetail([removed("mobile"), removed("desktop")]);
+  const { calls, win } = respond(detail, endpoint.href);
   const loaded = await requestPreview(
     removedScreen,
     { endpoint, generation },
     win,
     AbortSignal.timeout(15_000),
+    detail,
   );
-  assert.deepEqual(calls, [{ url: endpoint.href, method: "GET" }]);
-  assert.equal(loaded.url, endpoint.href);
+  assert.deepEqual(calls, []);
+  assert.equal(loaded.url, generation.href);
   assert.equal(
     loaded.generation,
     `https://catalogue.test/mokly-viewer/diffs/generations/${GENERATION}/`,
@@ -68,6 +67,7 @@ test("a detail without a removed view or for another entry is unavailable", asyn
       { endpoint, generation },
       changed.win,
       AbortSignal.timeout(15_000),
+      removedDetail([{ ...removed("mobile"), state: "changed" }]),
     ),
     /previous version is unavailable/,
   );
@@ -81,6 +81,7 @@ test("a detail without a removed view or for another entry is unavailable", asyn
       { endpoint, generation },
       other.win,
       AbortSignal.timeout(15_000),
+      removedDetail([removed("mobile")], undefined, "other"),
     ),
     /previous version is unavailable/,
   );
@@ -113,6 +114,7 @@ test("a removed screen's detail must name the selected snapshot", async () => {
     { endpoint, generation },
     exact.win,
     AbortSignal.timeout(15_000),
+    removedDetail(views, selected.snapshotId),
   );
 
   const laterBaseline = respond(
@@ -125,6 +127,7 @@ test("a removed screen's detail must name the selected snapshot", async () => {
       { endpoint, generation },
       laterBaseline.win,
       AbortSignal.timeout(15_000),
+      removedDetail(views, snapshotId("d".repeat(40), removedScreen)),
     ),
     /previous version is unavailable/,
   );
@@ -150,6 +153,10 @@ test("a snapshot id that names a generation instead of its base is unavailable",
       { endpoint, generation },
       response.win,
       AbortSignal.timeout(15_000),
+      removedDetail(
+        [removed("mobile")],
+        snapshotId("a".repeat(40), removedScreen),
+      ),
     ),
     /previous version is unavailable/,
   );

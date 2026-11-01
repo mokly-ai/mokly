@@ -122,26 +122,32 @@ test("a live selection that does not reach a generation root fails", async () =>
       url,
     );
   }
-  const failing: ComparisonEnvironment = {
-    baseUrl: origin,
-    delivery: () => ({ kind: "live" }),
-    fetch: async () => {
-      const value = Response.json(
-        { details: "Changes are pending." },
-        {
-          status: 503,
-        },
-      );
-      Object.defineProperty(value, "url", {
-        value: `${origin}/mokly-viewer/diffs/selection?path=home`,
-      });
-      return value;
-    },
-  };
-  await assert.rejects(
-    requestComparison(failing, { id: "home" }, false, signal),
-    /Changes are pending/,
-  );
+  for (const [code, status] of [
+    ["invalid-input", 400],
+    ["comparison-unavailable", 503],
+    ["not-found", 404],
+  ] as const) {
+    const failing: ComparisonEnvironment = {
+      baseUrl: origin,
+      delivery: () => ({ kind: "live" }),
+      fetch: async () => {
+        const value = Response.json(
+          { code, message: "Server diagnostic text." },
+          {
+            status,
+          },
+        );
+        Object.defineProperty(value, "url", {
+          value: `${origin}/mokly-viewer/diffs/selection?path=home`,
+        });
+        return value;
+      },
+    };
+    await assert.rejects(
+      requestComparison(failing, { id: "home" }, false, signal),
+      { message: "The comparison is unavailable." },
+    );
+  }
 });
 
 test("a pinned catalogue resolves its advertised root without any request", async () => {
@@ -210,10 +216,9 @@ test("a null advertised comparison fails before fetching in a live host", async 
     },
   };
   const scope = { id: "removed", comparisonUrl: null };
-  await assert.rejects(
-    requestComparison(environment, scope, false, signal),
-    /Comparisons are unavailable in this catalogue/,
-  );
+  await assert.rejects(requestComparison(environment, scope, false, signal), {
+    message: "The comparison is unavailable.",
+  });
   await assert.rejects(
     renewComparison(
       environment,
@@ -221,7 +226,7 @@ test("a null advertised comparison fails before fetching in a live host", async 
       scope,
       signal,
     ),
-    /Comparisons are unavailable in this catalogue/,
+    { message: "The comparison is unavailable." },
   );
 });
 

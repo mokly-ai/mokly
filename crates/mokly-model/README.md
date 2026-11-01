@@ -118,6 +118,10 @@ outside JavaScript's safe integer range before validation and inference.
 Catalogue and invocation boundaries report `props-unsafe-integer` warnings.
 Derived controls
 follow schema choices, labels, bounds, and zero-based number steps.
+Derived selects keep the first of repeated `enum` values. They omit every
+`oneOf` constant that matches more than one member, because the validator
+rejects that value. Numeric options compare by value, so `1` and `1.0` count
+as the same value.
 `controls::with_bounds` supplies the narrowed schema for temporary prop checks.
 `runtime_diagnostic` carries expected runtime categories across adapters.
 

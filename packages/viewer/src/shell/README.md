@@ -172,6 +172,8 @@ pinned catalogue's advertised root without a request, or the root that
 Serve's selection endpoint redirects to, which a HEAD request renews. A failed
 request shows the comparison failure with Try again; Current remains
 available.
+Every failed comparison uses the details sentence "The comparison is
+unavailable.". The shell never shows server or browser error text there.
 `use_comparison.ts` is the single owner of comparison mode: component sibling
 navigation keeps that owner mounted, and the workspace reads its mode directly
 so Props and highlighting remain read-only until Current is selected.
@@ -577,8 +579,11 @@ carrying the descriptor the React request lifecycle validates, and the shared
 device chrome around captured screen views, which `@mokly/ui/previous-version`
 and `@mokly/ui/device-frame` draw. It advertises a packaged address only when the accepted
 public catalogue publishes one, so a delivery without that descriptor stays
-quiet. The stage shows the loading state while its request runs and adds Retry
-only if that request fails. The request fencing lives in
+quiet. A removed screen uses the route's held, fenced detail. Its stage waits
+for that detail and shows the unavailable state with Retry if the detail fails
+or is rejected. Retry requests the route detail again. Page and document
+previews fetch their own metadata. The stage also waits for its historical
+documents and offers Retry if that request fails. The request fencing lives in
 `use_removed_preview.ts`; it creates the
 shared snapshot-presentation loader for the loaded generation with only the
 `before` side enabled, then fetches and validates the historical documents

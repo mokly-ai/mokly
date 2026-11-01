@@ -37,8 +37,6 @@
   requests disagree.
 - **Wider fix:** B, because one rule then serves every request.
 - **Previous examples:** None found.
-- **Related:** `plans/follow-ups/removed-preview-detail-fence.md`: both items
-  change how the viewer reads files.
 - **Recommendation:** B. Serve reads no cookie, so one rule costs nothing in
   behaviour and keeps the README true.
 - **Action:** ask the user, because B changes a protocol requirement.

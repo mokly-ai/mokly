@@ -2,13 +2,14 @@
 
 import { removedEntryDetailPath } from "../catalogue/delivery_paths.js";
 import { historicalSnapshotId } from "../catalogue/snapshot_identity.js";
-import type { CatalogueReadModel } from "../catalogue/types.js";
+import type { CatalogueReadModel, EntryDetailV4 } from "../catalogue/types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 import { encodeUrlPath } from "../data/paths.js";
 import { previewMetadataPath, snapshotSidePath } from "../navigation/routes.js";
 import type { RemovedPreviewData } from "../shell/previews.js";
 import {
   DeploymentChangedError,
+  fetchJson,
   type DeploymentCheck,
 } from "../viewer/sources.js";
 
@@ -36,7 +37,7 @@ export interface LoadedPreview {
   content: PreviewContent;
   /** Absolute generation root that owns every historical document. */
   generation: string;
-  /** Final metadata response URL used to renew a live generation. */
+  /** Generation root used to renew a live generation. */
   url: string;
 }
 
@@ -151,28 +152,31 @@ export async function requestPreview(
   request: PreviewRequest,
   environment: PreviewRequestEnvironment,
   signal: AbortSignal,
+  detail?: EntryDetailV4,
 ): Promise<LoadedPreview> {
   if (
     environment.deploymentCheck &&
     !(await environment.deploymentCheck(signal))
   )
     throw new DeploymentChangedError();
-  const response = await environment.fetch(request.endpoint.href, {
-    signal,
-    headers: { accept: "application/json" },
-  });
-  if (!response.ok) unavailable();
-  const payload: unknown = await response.json();
   const base = request.generation.href;
   const parsed =
     data.kind === "screen"
-      ? screenContent(data, payload, base)
-      : pageContent(data, payload, base);
+      ? screenContent(data, detail, base)
+      : pageContent(
+          data,
+          (
+            await fetchJson(request.endpoint, signal, (input, init) =>
+              environment.fetch(input, init),
+            )
+          ).value,
+          base,
+        );
   if (!snapshotMatches(data, parsed)) unavailable();
   return {
     content: parsed.content,
     generation: new URL(".", base).href,
-    url: response.url,
+    url: base,
   };
 }
 
@@ -188,6 +192,7 @@ export async function renewPreview(
 ): Promise<boolean> {
   const renewal = await environment.fetch(loaded.url, {
     cache: "no-store",
+    credentials: "omit",
     method: "HEAD",
     signal,
   });

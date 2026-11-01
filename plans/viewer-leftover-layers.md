@@ -137,21 +137,21 @@ the behaviour.
 
 Depends on: 1
 
-- [ ] Send the preview JSON of `previews/request.ts` through `fetchJson`,
+- [x] Send the preview JSON of `previews/request.ts` through `fetchJson`,
       and apply design call 8. Decision 2. One regression test shows that
       `requestPreview` uses the helper, because
       `packages/viewer/tests/sources.test.ts:103-137` already tests its rules.
-- [ ] Show a removed screen's preview from the route's fenced detail, and
+- [x] Show a removed screen's preview from the route's fenced detail, and
       drop the preview's own read of that detail. Decision 4. Delete
       `plans/follow-ups/removed-preview-detail-fence.md`.
-- [ ] Count the own views of component parents for Dark availability in
+- [x] Count the own views of component parents for Dark availability in
       `shell/catalogue.ts`. Add a regression test with components that have
       no variants.
-- [ ] Derive each select option once in `crates/mokly-model/src/controls.rs`,
+- [x] Derive each select option once in `crates/mokly-model/src/controls.rs`,
       with a Rust test. Decision 3. Delete
       `plans/follow-ups/derived-select-option-repeats.md`, and remove the
       repeated options from `plans/follow-ups/viewer-checks-from-rust.md`.
-- [ ] Map the `code` of Serve's error body to the sentence of decision 5,
+- [x] Map the `code` of Serve's error body to the sentence of decision 5,
       also where the shell has a second sentence for the same failure. Make
       the unit test send the body that Serve sends. Delete
       `plans/follow-ups/comparison-error-text.md`.

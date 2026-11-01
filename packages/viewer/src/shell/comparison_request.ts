@@ -21,6 +21,9 @@ export interface ComparisonScope {
   comparisonUrl?: string | null;
 }
 
+/** The viewer-owned details for every failed comparison. */
+export const COMPARISON_UNAVAILABLE = "The comparison is unavailable.";
+
 const SELECTION = `/${VIEWER_DIRECTORY}/diffs/selection`;
 
 /**
@@ -53,7 +56,7 @@ export async function requestComparison(
     cache: "no-store",
     credentials: "same-origin",
   });
-  if (!response.ok) throw new Error(await failureDetails(response));
+  if (!response.ok) throw new Error(COMPARISON_UNAVAILABLE);
   // Read the root's empty body, or the browser aborts the finished request.
   await response.arrayBuffer();
   const root = safeUrl(response.url);
@@ -62,7 +65,7 @@ export async function requestComparison(
     !isLiveGeneration(baseUrl, root) ||
     (advertised !== undefined && root.href !== advertised.href)
   )
-    throw new Error("The comparison is unavailable.");
+    throw new Error(COMPARISON_UNAVAILABLE);
   return { url: root.href };
 }
 
@@ -84,7 +87,7 @@ export async function renewComparison(
   const advertised = advertisedRoot(baseUrl, delivery, scope);
   if (delivery.kind === "pinned") {
     if (!current || current.href !== advertised?.href)
-      throw new Error("The comparison is unavailable.");
+      throw new Error(COMPARISON_UNAVAILABLE);
     return loaded;
   }
   if (
@@ -92,7 +95,7 @@ export async function renewComparison(
     !isLiveGeneration(baseUrl, current) ||
     (advertised !== undefined && current.href !== advertised.href)
   )
-    throw new Error("The comparison is unavailable.");
+    throw new Error(COMPARISON_UNAVAILABLE);
   const response = await environment.fetch(current, {
     method: "HEAD",
     cache: "no-store",
@@ -101,7 +104,7 @@ export async function renewComparison(
   });
   const renewed = safeUrl(response.url);
   if (!renewed || !isLiveGeneration(baseUrl, renewed))
-    throw new Error("The comparison is unavailable.");
+    throw new Error(COMPARISON_UNAVAILABLE);
   if (response.ok && renewed.href === current.href) return loaded;
   return requestComparison(environment, scope, false, signal);
 }
@@ -122,12 +125,11 @@ function advertisedRoot(
       : delivery.kind === "pinned"
         ? delivery.comparisonUrl
         : undefined;
-  if (advertised === null)
-    throw new Error("Comparisons are unavailable in this catalogue.");
+  if (advertised === null) throw new Error(COMPARISON_UNAVAILABLE);
   if (advertised === undefined) return undefined;
   const root = new URL(`/${advertised}`.replace(/^\/\//, "/"), baseUrl);
   if (!sameOrigin(baseUrl, root) || !root.pathname.endsWith("/"))
-    throw new Error("The comparison is unavailable.");
+    throw new Error(COMPARISON_UNAVAILABLE);
   return root;
 }
 
@@ -138,7 +140,7 @@ function comparisonBaseUrl(value: string | URL): URL {
     url.username ||
     url.password
   )
-    throw new Error("The comparison is unavailable.");
+    throw new Error(COMPARISON_UNAVAILABLE);
   return new URL("/", url);
 }
 
@@ -163,20 +165,4 @@ function safeUrl(value: string): URL | undefined {
   } catch {
     return;
   }
-}
-
-async function failureDetails(response: Response): Promise<string> {
-  try {
-    const body: unknown = await response.json();
-    if (
-      body &&
-      typeof body === "object" &&
-      "details" in body &&
-      typeof body.details === "string"
-    )
-      return body.details;
-  } catch {
-    return "Comparison unavailable";
-  }
-  return "Comparison unavailable";
 }

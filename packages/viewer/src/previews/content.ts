@@ -1,5 +1,5 @@
 /** Resolve historical documents only inside the accepted preview generation. */
-import { readEntryDetail } from "../catalogue/detail_reader.js";
+import type { EntryDetailV4 } from "../catalogue/types.js";
 import { encodeUrlPath } from "../data/paths.js";
 import {
   snapshotDocumentPath,
@@ -22,14 +22,14 @@ export interface ParsedPreview {
   content: PreviewContent;
 }
 
-/** A removed screen's views from its detail inside the generation. */
+/** A removed screen's views from the route's accepted detail. */
 export function screenContent(
   data: RemovedPreviewData,
-  payload: unknown,
+  detail: EntryDetailV4 | undefined,
   base: string,
 ): ParsedPreview {
-  const detail = readEntryDetail(payload);
   if (
+    !detail ||
     detail.entry.kind !== "screen" ||
     detail.entry.path !== data.path ||
     detail.entry.snapshotId === undefined

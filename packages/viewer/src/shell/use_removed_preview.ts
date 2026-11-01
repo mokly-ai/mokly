@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
+import { detailKey } from "../catalogue/detail_fences.js";
+import type { EntryDetailV4 } from "../catalogue/types.js";
 import { previewKey } from "../previews/descriptor.js";
 import {
   createSnapshotPresentationLoader,
@@ -20,6 +22,7 @@ import {
   snapshotPresentationEnvironment,
   useComparisonEnvironment,
 } from "./comparison_context.js";
+import { useRouteDelivery } from "./data_context.js";
 import type { RemovedPreviewData } from "./previews.js";
 import { useOptionalShellStore } from "./store_context.js";
 
@@ -41,6 +44,7 @@ interface OwnedState {
 }
 
 interface LoadedOwner {
+  detail: EntryDetailV4 | undefined;
   environment: NonNullable<ReturnType<typeof useComparisonEnvironment>>;
   key: string;
   loader: SnapshotPresentationLoader;
@@ -94,8 +98,18 @@ export function useRemovedPreview({
   viewport: "both" | "desktop" | "mobile";
 }): { retry(): void; state: RemovedPreviewState } {
   const environment = useComparisonEnvironment();
-  const comparisonUrl =
-    useOptionalShellStore()?.catalogue.publicModel.comparisonUrl;
+  const model = useOptionalShellStore()?.catalogue.publicModel;
+  const comparisonUrl = model?.comparisonUrl;
+  const delivery = useRouteDelivery();
+  const detail =
+    data.kind === "screen"
+      ? model?.details.get(
+          detailKey({
+            path: data.path,
+            ...(data.snapshotId ? { snapshotId: data.snapshotId } : {}),
+          }),
+        )
+      : undefined;
   const key = previewKey(data);
   const selection = `${viewport}:${colorScheme}`;
   const [attempt, bumpAttempt] = useReducer((value: number) => value + 1, 0);
@@ -103,12 +117,16 @@ export function useRemovedPreview({
   const loaded = useRef<LoadedOwner | undefined>(undefined);
   const retryRequested = useRef(false);
   const retry = useCallback(() => {
+    if (data.kind === "screen" && delivery?.status === "failed")
+      delivery.retry();
     retryRequested.current = true;
     bumpAttempt();
-  }, []);
+  }, [data.kind, delivery]);
 
   useEffect(() => {
     if (!interactive || !environment) return;
+    if (data.kind === "screen" && delivery && delivery.status !== "ready")
+      return;
     const controller = new AbortController();
     const refresh = retryRequested.current;
     const owns = () => !controller.signal.aborted;
@@ -129,6 +147,7 @@ export function useRemovedPreview({
       let owner =
         !refresh &&
         loaded.current?.key === key &&
+        loaded.current.detail === detail &&
         loaded.current.environment === environment &&
         loaded.current.request === requestKey
           ? loaded.current
@@ -151,9 +170,11 @@ export function useRemovedPreview({
           request,
           environment,
           controller.signal,
+          detail,
         );
         if (!owns()) return;
         owner = {
+          detail,
           environment,
           key,
           loader: createSnapshotPresentationLoader(
@@ -205,6 +226,8 @@ export function useRemovedPreview({
     attempt,
     colorScheme,
     comparisonUrl,
+    delivery?.status,
+    detail,
     environment,
     interactive,
     key,
@@ -215,12 +238,18 @@ export function useRemovedPreview({
   return {
     retry,
     state:
-      owned?.key === key
-        ? owned.selection === selection
-          ? owned.value
-          : { status: "loading" }
-        : interactive && environment
-          ? { status: "loading" }
-          : { status: "unavailable" },
+      data.kind === "screen" && delivery?.status === "failed"
+        ? { status: "failed" }
+        : data.kind === "screen" &&
+            delivery &&
+            (delivery.status !== "ready" || !detail)
+          ? { status: delivery.status === "ready" ? "failed" : "loading" }
+          : owned?.key === key
+            ? owned.selection === selection
+              ? owned.value
+              : { status: "loading" }
+            : interactive && environment
+              ? { status: "loading" }
+              : { status: "unavailable" },
   };
 }

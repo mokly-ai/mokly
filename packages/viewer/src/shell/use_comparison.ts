@@ -13,6 +13,7 @@ import {
   type ComparisonPresentation,
 } from "./comparison_presentation.js";
 import {
+  COMPARISON_UNAVAILABLE,
   renewComparison,
   requestComparison,
   type ComparisonScope,
@@ -199,11 +200,7 @@ export function useComparison({
           if (!latest || latest.scopeKey !== operation.scopeKey) return;
           const nextFailure = {
             key: latest.key,
-            message: environment.reportError
-              ? "Comparison unavailable"
-              : error instanceof Error
-                ? error.message
-                : "Comparison unavailable",
+            message: COMPARISON_UNAVAILABLE,
           };
           loadedRef.current = undefined;
           failureRef.current = nextFailure;

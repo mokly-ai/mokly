@@ -41,10 +41,6 @@
     `crates/mokly-model/src/public_metadata.rs:8`, but the viewer must ignore
     them. A shared reader needs a strict mode for the core and a lenient mode
     for the viewer.
-  - The Rust index reader checks no control options, in
-    `crates/mokly-model/src/public_validation.rs:196-242`, so a shared reader
-    alone does not fix the repeated options of
-    `plans/follow-ups/derived-select-option-repeats.md`.
 - **Problem:** Two hand-written implementations of the same checks drift.
   The investigation of 2026-11-01 found these differences:
   - The viewer rejects a schema property named `__proto__`, `constructor`,
@@ -53,9 +49,6 @@
     `crates/mokly-model/src/validation.rs:43`, but it rejects every props
     object with such a key, at `:81`. So under the Rust rule such a property
     never gets a value, and a shared reader alone does not choose the rule.
-  - A repeated `enum` or `oneOf` value gives repeated select options in Rust,
-    in `crates/mokly-model/src/controls.rs:80-100`. The viewer rejects
-    repeated options, in `packages/viewer/src/components/controls.ts:104`.
   - Rust rejects a title with leading or trailing spaces. The viewer rejects
     only a blank title.
   - The viewer skips the view-axes rule for removed entries. Rust applies it.
@@ -110,8 +103,6 @@
   - `plans/follow-ups/reserved-navigation-names-in-authored-html.md` holds
     the saved-slot reserved-name check, another
     reserved-name check that differs between two places.
-- **Related:** `plans/follow-ups/derived-select-option-repeats.md`: a
-  shared reader does not fix the repeated options.
 - **Recommendation:** F. Start with a measured trial. Build the readers for
   `wasm32-unknown-unknown`, run `wasm-opt -Oz` and wasm2js, and compare the
   gzip size and the parse time of the large fixture's index with the
@@ -119,4 +110,4 @@
   the switch when the cost is large.
 - **Action:** fix after merge, apply F, because the user chose F on
   2026-11-01 as the follow-up of the leftover-layer change. On the same day
-  the user chose to leave the two schema differences unchanged until F.
+  the user chose to leave the reserved-name difference unchanged until F.
