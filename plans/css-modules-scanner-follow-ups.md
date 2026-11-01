@@ -1,10 +1,12 @@
 # CSS Modules Scanner Follow-Ups
 
 Status: Active. On branch `conductor/rust-rebuild-112-css-modules-follow-ups`,
-no pull request yet. The plan has two pull requests. The first ships the parts
-that need no approval. The second ships items 112 and 113 and the
-`@-moz-document` part of item 1 after Cal answers. The plan closes when the
-second pull request merges.
+no pull request yet. On 2026-11-01 Cal asked that the pull request of this work
+delete this plan before it merges, and that the work that waits for him move to
+follow-up items. So the first pull request deletes this plan. The follow-up
+items `css-module-bare-wrapper-kind.md`, `css-module-custom-property-rules.md`,
+and `moz-document-statement-kind.md` under `plans/follow-ups/` hold the work of
+Milestones 5 to 8.
 
 This plan resolves user items 112 and 113 of the
 [Rust rebuild plan](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md#open-user-items-deferred-by-the-user-on-2026-10-21).
@@ -470,71 +472,71 @@ First pull request. The protocol page and the crate README state the decided
 reason of item 4 and the `@-moz-document` exception of item 1 F. Both describe
 the current behaviour, so no page needs a Status line. No code changes.
 
-- [ ] In `docs/protocol/mokly-imported-styles-modules.md`, add to the decision
+- [x] In `docs/protocol/mokly-imported-styles-modules.md`, add to the decision
       in force on the `;` boundary that alignment would also make stylesheets
       fail that build today (item 4 C).
   - The example is a composition after a `;` in an `@document` block.
-- [ ] Name the `@-moz-document` exception beside the parity rule (item 1 F).
+- [x] Name the `@-moz-document` exception beside the parity rule (item 1 F).
   - In the protocol page and in the crate README, say that the scoper reads
     an `@-moz-document` block outside a style rule as a style block, but the
     bundler reads it as a rule list, as for `@media`.
-- [ ] Run `npm run format:check` and the Markdown link test.
+- [x] Run `npm run format:check` and the Markdown link test.
 
 ## Milestone 2: The differential reads every tracked stylesheet
 
 First pull request. Decided C and items 2 B and 3 B. The behaviour does not
 change.
 
-- [ ] Add the `test-support` feature and the self dev-dependency to
+- [x] Add the `test-support` feature and the self dev-dependency to
       `crates/mokly-css/Cargo.toml`.
-- [ ] Move both readers into `src/_tests_/token_differential.rs`. Declare it in
+- [x] Move both readers into `src/_tests_/token_differential.rs`. Declare it in
       `lib.rs` as the design says.
-- [ ] Add `tests/token_differential_tests.rs` as the design says, with the
+- [x] Add `tests/token_differential_tests.rs` as the design says, with the
       item 3 B assertion.
-- [ ] Keep the generated cases and the HTML comment prefix test as unit tests.
-- [ ] Delete the three fixture list files. Record decided C as the approval in
+- [x] Keep the generated cases and the HTML comment prefix test as unit tests.
+- [x] Delete the three fixture list files. Record decided C as the approval in
       the commit message.
-- [ ] Write the `Statement` doc comment as the design says (item 2 B).
-- [ ] Prove the test, and save both results under
+- [x] Write the `Statement` doc comment as the design says (item 2 B).
+- [x] Prove the test, and save both results under
       `.context/css-modules-scanner-follow-ups/`.
   - Break `legacy_nested` once in a scratch copy. The test must fail and name
     a tracked stylesheet.
   - `cargo test --workspace -- --list` must list the test.
-- [ ] Run `cargo test -p mokly-css`, Clippy, `cargo fmt --all -- --check`, and
+- [x] Run `cargo test -p mokly-css`, Clippy, `cargo fmt --all -- --check`, and
       `cargo xtask rust-file-length-lint`.
 
 ## Milestone 3: The grammar table follows `lightningcss` (item 1 F)
 
 First pull request. The behaviour changes only for stylesheets that fail today.
 
-- [ ] Add `src/_tests_/token_grammar_tests.rs` first, and save its failure on
+- [x] Add `src/_tests_/token_grammar_tests.rs` first, and save its failure on
       the unfixed code. It must fail only for `@nest` in a style rule.
-- [ ] Read an `@nest` block in a style block as a style block, in `nested` and
+- [x] Read an `@nest` block in a style block as a style block, in `nested` and
       in `legacy_nested`.
-- [ ] Add a scoping test: `.p{@nest &{:local()}}` fails with the empty-wrapper
+- [x] Add a scoping test: `.p{@nest &{:local()}}` fails with the empty-wrapper
       message, and `.p{@nest &{.a{color:red}}}` scopes `a`.
-- [ ] Correct the doc comments of `Grammar::Style` and `nested` for `@nest`.
-- [ ] Run `cargo test -p mokly-css` and Clippy.
+- [x] Correct the doc comments of `Grammar::Style` and `nested` for `@nest`.
+- [x] Run `cargo test -p mokly-css` and Clippy.
 
 ## Milestone 4: Verification, commit, review, and the first pull request
 
 Merge notes: `.context/css-modules-scanner-follow-ups/main-sync-2026-11-01.md`.
 
-- [ ] Describe the integration test and the `test-support` feature in the
+- [x] Describe the integration test and the `test-support` feature in the
       README section Development.
-- [ ] Rerun the probes on the build. Save the results under
+- [x] Rerun the probes on the build. Save the results under
       `.context/css-modules-scanner-follow-ups/`.
-- [ ] Update the extracted Rust rebuild records in `plans/follow-ups/` with
-      the smallest edit.
-  - Record item 4 C in `css-module-semicolon-boundary.md` and decided C in
-    `css-differential-fixture-discovery.md`. Give each its decision, its
-    date, and a link to this plan.
-  - Record item 3 B in `css-differential-fixture-discovery.md` and item 2 B
-    in `font-face-statement-doc.md`, with a link to this plan.
-  - Record item 1 F in `moz-document-statement-kind.md`. Keep item 1 D open.
-  - In `css-module-bare-wrapper-kind.md` and
-    `css-module-custom-property-rules.md`, say that items 112 and 113 wait
-    for Cal, with a link to this plan.
+- [x] Delete the follow-up items that this work resolves, and rewrite the
+      open ones as complete records. Cal asked for this on 2026-11-01, in
+      place of the record notes that this TODO first named.
+  - Deleted: `css-module-semicolon-boundary.md` by 4 C,
+    `css-differential-fixture-discovery.md` by C and 3 B, and
+    `font-face-statement-doc.md` by 2 B.
+  - Rewritten with every fact, the design, and the work list:
+    `css-module-bare-wrapper-kind.md` for 112,
+    `css-module-custom-property-rules.md` for 113, and
+    `moz-document-statement-kind.md` for the `@-moz-document` change, which
+    keeps the coordinator's letters A and D of item 5.
 - [ ] Merge `origin/main`. Run the targeted tests and the complete gate
       `cargo xtask check --executor local`.
 - [ ] Commit with Conventional Commits and push the branch.
@@ -542,10 +544,15 @@ Merge notes: `.context/css-modules-scanner-follow-ups/main-sync-2026-11-01.md`.
       `implementation-review` skill after the push. Report the findings, then
       apply the review-fix rule: fix the `Auto-fix: yes` findings, re-review
       once, and report the rest.
-- [ ] Give the coordinator the title and the description of the first pull
-      request. The coordinator opens it.
+- [ ] Delete this plan in the last commit before the pull request. Name it in
+      the commit message. The pull request description keeps each dated
+      decision and design call, with a permalink to this plan.
+- [ ] Open the pull request, and send one completion message to the
+      coordinator.
 
 ## Milestone 5: Statement kinds in the token check (112)
+
+Moved on 2026-11-01 to `plans/follow-ups/css-module-bare-wrapper-kind.md`.
 
 Second pull request. This milestone waits for Cal. Under 112 A, it has no
 code: state the exception in the protocol page. Under 112 C, change the
@@ -572,6 +579,8 @@ bare-wrapper edit in `rename_selectors.rs` instead.
 
 ## Milestone 6: The module check enters every block (113)
 
+Moved on 2026-11-01 to `plans/follow-ups/css-module-custom-property-rules.md`.
+
 Second pull request. This milestone waits for Cal. Under 113 A, it has no
 code: name the exception beside the `@value` rule in the protocol page.
 
@@ -589,6 +598,8 @@ code: name the exception beside the `@value` rule in the protocol page.
 - [ ] Run `cargo test -p mokly-css` and Clippy.
 
 ## Milestone 7: The `@-moz-document` change (item 1 D)
+
+Moved on 2026-11-01 to `plans/follow-ups/moz-document-statement-kind.md`.
 
 Second pull request. This milestone waits for Cal. If Cal declines, it has no
 code, and the documented exception stays.
@@ -610,6 +621,9 @@ code, and the documented exception stays.
 - [ ] Run `cargo test -p mokly-css` and Clippy.
 
 ## Milestone 8: Verification, commit, review, and the second pull request
+
+Moved on 2026-11-01: each of the three follow-up items holds its own work list
+and checks.
 
 - [ ] Rerun every probe on the fixed build. Save the results under
       `.context/css-modules-scanner-follow-ups/`.
