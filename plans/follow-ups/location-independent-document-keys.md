@@ -1,14 +1,14 @@
 # Make JavaScript document keys location-independent
 
-- **Severity:** Medium. **Likelihood:** Common (estimate). **Effort:** Medium. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 133, from decision 1 of integration batch 19, widened by batch 21.
 - **Location:** `packages/mokly/src/sidecar/compiled.ts:18-32`, the
   per-entry key inputs in `crates/mokly-graph/src/render_inputs.rs`, and
   `packages/mokly/src/sidecar/bundle.ts`.
-- **Reason:** On 2026-10-21 the user deferred the open review items until
-  after the merge and kept each choice for a later decision.
+- **Reason:** On 2026-10-28 the coordinator chose option B, refined, for
+  the user. Only its implementation waits.
 
 - **Source:** Review.
 - **Category:** Product bug.
@@ -40,6 +40,23 @@
   - The generation id still contains the real source root, as the comment at
     `compiled.ts:18-23` says.
   - Nobody measured the two cases above again after PR #227.
+  - Measured again on 2026-10-28, after PR #227: builds of `examples/basic`
+    from two folders of one commit differed in 549 of 594 document keys and
+    in the deployment identity. Only entries that render without JavaScript
+    kept equal keys. A one-line devDependency edit in the root
+    `package.json` moved the same 549 keys.
+  - The cause of the folder part: `crates/mokly-render/src/render_environment.rs`
+    hashes physical absolute paths into the render environment of each
+    side. They are the repository roots, the dependency roots, the resolved
+    runtime package paths in `peers`, and the roots in `moduleResolution`,
+    which hold a tier-two base's install root.
+  - On 2026-10-28 the coordinator chose option B, refined, for the user.
+    Write each absolute path of the environment digest relative to the
+    working repository root, or by its path below the comparison cache
+    namespace, whose folder name is a hash of the repository path. Keep the
+    root `package.json` half, because the user's choice of 2026-10-27 makes
+    each manifest on a module chain a render input. The head and a
+    tier-two base keep different environments.
 - **Problem:** JavaScript document keys depended on the checkout folder and
   on unrelated root manifest edits. The manifest part is now a decided
   render input. The folder part may remain through the installation
@@ -52,7 +69,7 @@
 - **Options:**
   - **A.** Document that absolute roots and all ancestor manifests are
     render inputs. The watch contract already states the manifest half.
-    Effort: Small (estimate).
+    Effort: Small.
   - **B.** Keep them in the compiled-code cache key. Compute the published
     document keys from folder-independent data: module digests by
     repository path, class maps, and bindings. Dropping the manifests or the
@@ -66,11 +83,9 @@
   at its source.
 - **Previous examples:** PR #227 moved fragment and document keys off the
   root path, which covers much of B.
-- **Recommendation:** B. It fixes published identity and keeps conservative
-  compiled-code reuse. First measure the two cases on the current code,
-  because PR #227 changed the keys. C best protects every bundle consumer.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user deferred the open review items past the merge to decide each one
-  later.
+- **Recommendation:** B, refined as the Background says. It removes the
+  folder dependence and keeps the user's choices of 2026-10-27.
+- **Action:** fix after merge, apply B, refined, because the user's choice
+  of 2026-10-28 settles it and only the implementation remains.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6063).

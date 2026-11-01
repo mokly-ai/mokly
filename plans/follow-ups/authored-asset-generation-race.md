@@ -1,6 +1,6 @@
 # Keep authored assets available across generations
 
-- **Severity:** Low (estimate). **Likelihood:** Rare (estimate). **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #222 and its completed plan. The CI fix
   milestone of that plan put the problem outside the scope.
@@ -57,30 +57,26 @@
   - **B.** Carry the previous closure of a changed document into the
     replacement until the replacement renders that document. Check each
     carried file against the policy of the replacement. This changes the
-    rule in `docs/protocol/mokly-public-closure.md:71`. Effort: Medium
-    (estimate).
+    rule in `docs/protocol/mokly-public-closure.md:71`. Effort: Medium.
   - **C.** Render the changed documents before the replacement publishes, so
     that their closures exist at publication. Every rebuild then waits for
-    these renders, which departs from on-demand rendering. Effort: Large
-    (estimate).
+    these renders, which departs from on-demand rendering. Effort: Large.
   - **D.** Answer the authored requests of a page from the generation that
     rendered the page, for example through a generation segment in the
-    authored URL. The old generation answers until it drops. Effort: Large
-    (estimate).
+    authored URL. The old generation answers until it drops. Effort: Large.
 - **Left out:** Serving every declared file without closure membership.
   PR #244 rejected it on 2026-10-29, because it weakens confinement. Rendering
   every retained view again. PR #244 rejected it, because it repeats work
   that the replacement keeps on purpose.
-- **Wider fix:** D (estimate). A page then always reads the generation that
+- **Wider fix:** D. A page then always reads the generation that
   rendered it, so no publication can separate a page from its files.
 - **Previous examples:** PR #244 fixed the same class for unchanged documents
   on 2026-10-29. Before that, PR #222 narrowed its startup replay window on
   2026-10-28, which removed the extra rebuild that exposed the 404.
-- **Recommendation:** B (estimate). It closes the 404 window of a changed
+- **Recommendation:** B. It closes the 404 window of a changed
   document with the existing closure records and keeps the policy check. D
   best protects the codebase, but it changes every authored URL.
-- **Action:** ask the user, because condition 1 holds (estimate): B changes
-  the rule that a changed document does not carry its closure, which PR #244
-  set on 2026-10-29.
+- **Action:** ask the user, because B changes the rule that a changed document
+  does not carry its closure, which PR #244 set on 2026-10-29.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/render-cache-weight-and-watch-recheck.md?plain=1#L485).

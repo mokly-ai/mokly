@@ -1,11 +1,14 @@
 # No check that elements carry the reset class
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-30, from the branch `calummoore/mokly-ui-layout-theme`, during the theme milestone of the shell views plan.
 - **Location:** `packages/ui/src`, every component `.tsx` file; `packages/ui/src/reset/reset.css`.
-- **Reason:** A check for a whole class of defects needs the user's approval, and no element lacks the class today.
+- **Reason:** The user approved the component-test helper on 2026-10-31 and left
+  it for a separate branch after the shell views stack.
 
+- **Source:** Implementation.
+- **Category:** Test.
 - **Terms:**
   - **Reset class:** `mbk-reset`, defined in
     `packages/ui/src/reset/reset.css`. Its rules give the element border-box

@@ -1,6 +1,6 @@
 # Decide on a Rust module documentation check
 
-- **Severity:** Low (estimate). **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #223 and its completed plan, the wider fix
   that its first implementation review split off finding 7.
@@ -44,9 +44,9 @@
   Rust file.
 - **Previous examples:** None found before PR #223, as its review recorded.
   The seven test modules above are current cases.
-- **Recommendation:** B (estimate). It checks the exact repository rule for
+- **Recommendation:** B. It checks the exact repository rule for
   every Rust file.
-- **Action:** ask the user, because condition 3 holds: the recommended
-  option adds a new repository gate.
+- **Action:** ask the user, because the recommended option adds a new repository
+  gate.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/usage-list-in-parent-detail.md?plain=1#L381).

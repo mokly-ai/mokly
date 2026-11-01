@@ -1,9 +1,9 @@
 //! A pinned base retains its sole lookup across current rendering and comparison.
 
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
-use mokly_catalogue::config_types::{Config, ResolvedConfig};
+use mokly_catalogue::config_types::{Config, ResolvedConfig, ReviewConfig};
 use mokly_git::identity::ObjectId;
 use mokly_git::repository::{RepositoriesMock, Repository, RepositoryMock};
 use mokly_graph::error::GraphError;
@@ -11,8 +11,8 @@ use mokly_graph::types::{RenderGeneration, RenderGenerationMock, RenderSummary};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::base_render::{
-    BaseProviderMock, BaseSourceFactoryMock, Changes, ChangesService, HistoricalSources,
-    PreparedBase,
+    BasePreparationError, BaseProviderMock, BaseSourceFactoryMock, Changes, ChangesService,
+    HistoricalSources, PreparedBase,
 };
 use crate::base_selection::{BaseLookup, GitBaseLookup, PinnedBase};
 use crate::comparison_steps::StepsMock;
@@ -144,4 +144,76 @@ fn capture_failure_keeps_the_scripts_off_state_on_the_base_error() {
                 source: GraphError::InputsChanged { ref path },
             } if path.to_str() == Some("base-render"))
     ));
+}
+
+#[test]
+fn install_scripts_override_takes_precedence_over_the_working_setting() {
+    for (setting, install_scripts_override, expected) in [
+        (Some(true), Some(false), false),
+        (Some(true), None, true),
+        (Some(false), Some(true), true),
+    ] {
+        let received = Arc::new(Mutex::new(None));
+        let captured = received.clone();
+        let service: &dyn ChangesService = &Changes {
+            lookup: Arc::new(Unimock::new(())),
+            pinned: Some(Arc::new(PinnedBase {
+                reference: "selected".into(),
+                commit: ObjectId::parse(&"a".repeat(40)).unwrap(),
+                repository: Arc::new(Unimock::new(())),
+            })),
+            sources: Arc::new(Unimock::new(
+                BaseSourceFactoryMock::create
+                    .some_call(matching!(_, _, _))
+                    .returns(Ok(HistoricalSources {
+                        failures: Arc::new(Unimock::new(
+                            SourceFailuresMock::failure
+                                .some_call(matching!())
+                                .returns(None),
+                        )),
+                        tree: Arc::new(Unimock::new(())),
+                        sources: Arc::new(Unimock::new(())),
+                    })),
+            )),
+            provider: Arc::new(Unimock::new(
+                BaseProviderMock::prepare
+                    .some_call(matching!(_))
+                    .answers_arc(Arc::new(move |_, request| {
+                        *captured.lock().unwrap() = Some(request.install_scripts);
+                        Err(BasePreparationError::new(false, Error::UnsupportedManager))
+                    })),
+            )),
+            comparison: Arc::new(Unimock::new(())),
+            steps: Arc::new(Unimock::new(
+                StepsMock::step.each_call(matching!(_)).returns(()),
+            )),
+        };
+        let config = ResolvedConfig {
+            input: Config {
+                review: Some(ReviewConfig {
+                    base: None,
+                    base_install_scripts: setting,
+                }),
+                ..Config::default()
+            },
+            repo_root: "/repo".into(),
+            file: "/repo/mokly.config.json".into(),
+            roots: vec![],
+            authored_inputs: vec![],
+        };
+        assert!(matches!(
+            service.classify(
+                &config,
+                None,
+                Arc::new(Unimock::new(())),
+                install_scripts_override,
+            ),
+            Err(Error::Base { source, .. }) if matches!(*source, Error::UnsupportedManager)
+        ));
+        assert_eq!(
+            *received.lock().unwrap(),
+            Some(expected),
+            "setting={setting:?}, override={install_scripts_override:?}",
+        );
+    }
 }

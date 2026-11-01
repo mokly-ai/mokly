@@ -176,7 +176,9 @@ stay inside the private entry. The retained entry keeps no temporary download
 cache. When the copied base sources hold a tracked `node_modules` state that
 the selected pnpm must recreate, the install recreates it inside the private
 entry without a prompt. pnpm 12 does this on a plain install and gets no extra
-setting. Installed pnpm links continue to resolve inside their private
+setting. Decision: recreate without a prompt, so that local and CI runs get the
+same tier. Rejected: a documented tier difference between local and CI runs.
+Installed pnpm links continue to resolve inside their private
 `node_modules` store. Yarn node modules use the
 same selected-directory mapping as npm. Yarn path redirection is disabled.
 Yarn Berry reads no project environment file: Mokly replaces Berry's

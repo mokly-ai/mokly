@@ -42,10 +42,9 @@ installed `@mokly/viewer` package. When the working configuration names a
 renderer or PostCSS, base preparation leases an existing extraction of the
 base commit before it loads the base configuration, and base reads use it. The
 dependency step then reuses that lease, or it extracts the sources and
-attaches the new lease before catalogue and graph preparation. After a
-tier-two base install with lifecycle scripts off, every base failure in
-`build`, `publish`, and Serve ends with the scripts hint of the
-[terminal errors contract](../../docs/protocol/mokly-terminal-errors.md).
+attaches the new lease before catalogue and graph preparation. The
+[terminal errors contract](../../docs/protocol/mokly-terminal-errors.md) owns
+the scripts hint of base failures.
 
 Serve validates an HTML, JavaScript, or mixed catalogue before it reserves a
 loopback port, then serves it through `mokly-server` under the

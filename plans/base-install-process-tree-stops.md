@@ -11,7 +11,7 @@ script and its children. Lifecycle scripts run only when
 `review.baseInstallScripts` or `--base-install-scripts` turns them on.
 
 The work moved here from the
-[base install fixes plan](./base-install-scripts-and-manager-fixes.md) on
+[base install fixes plan](https://github.com/mokly-ai/mokly/blob/4038a17bdcd3114dd5db70ec27593fac8efbb6d5/plans/base-install-scripts-and-manager-fixes.md) on
 2026-10-29, when the coordinator split it out under decision 9 D. That plan
 ships the stop requirement in
 [Base Install Processes](../docs/protocol/mokly-base-install-processes.md#bounds-and-stops)

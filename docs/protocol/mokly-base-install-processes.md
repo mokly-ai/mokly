@@ -1,6 +1,6 @@
 # Base Install Processes
 
-Status: In progress under the [Base Install Process Tree Stops plan](../../plans/base-install-process-tree-stops.md).
+Status: Follow-up work remains in the [Yarn Classic script stop item](../../plans/follow-ups/yarn-classic-script-stop.md).
 
 This page defines how Mokly runs the package managers of a
 [base dependency install](./mokly-base-dependencies.md#installation-and-bundle-settings):

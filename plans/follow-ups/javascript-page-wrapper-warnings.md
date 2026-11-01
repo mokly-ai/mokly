@@ -1,6 +1,6 @@
 # Report JavaScript page wrapper attribute warnings
 
-- **Severity:** Medium. **Likelihood:** Rare (estimate). **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 138, from the F22 decision.
@@ -47,7 +47,7 @@
     `html-ignore-attribute` warning per page callback body and attribute.
     Effort: Large.
   - **B.** Keep callback HTML free of this warning, and limit the warning to
-    authored bodies in the protocol. Effort: Small (estimate).
+    authored bodies in the protocol. Effort: Small.
 - **Left out:** Parse callback HTML in JavaScript to find the attributes. It
   repeats the Rust HTML checks in a second place.
 - **Wider fix:** A. One warning rule then covers authored and callback HTML.

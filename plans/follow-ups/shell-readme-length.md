@@ -1,6 +1,6 @@
 # Bring the shell README under its length target
 
-- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 95, F9b item 7 and decision 23.
 - **Location:** `packages/viewer/src/shell/README.md:1`.
@@ -8,7 +8,7 @@
   until after its merge, for the user's later choice.
 
 - **Source:** Review.
-- **Category:** Repository rule (estimate).
+- **Category:** Repository rule.
 - **Background:** `packages/viewer/src/shell/README.md` documents the Browse
   shell, a flat directory of 186 entries since PR #249, and 192 before it.
   The contributor rules target about 200 lines for a file and ask to split a
@@ -30,9 +30,9 @@
     guide. Effort: Small.
   - **B.** Move the standalone paragraphs into
     `packages/viewer/src/standalone/README.md`, and record the exception for
-    the rest. Effort: Small (estimate).
+    the rest. Effort: Small.
   - **C.** Split the page into `packages/viewer/src/shell/docs/{subject}/README.md`
-    pages, which the link check reads. Effort: Small (estimate).
+    pages, which the link check reads. Effort: Small.
   - **D.** Move the mechanics into module doc comments, and keep a short
     index of entry points. Effort: Large.
 - **Left out:** Deleting the mechanics loses the only current explanation of
@@ -44,10 +44,10 @@
   before it. An earlier decision kept the browser test guide,
   `tests/browser/README.md`, as one page with a heading for each subject and
   a recorded exception.
-- **Recommendation:** A. A split by subject needs doc-only folders in the
-  source tree, and module mechanics belong in code comments. D best protects
-  long-term ownership.
-- **Action:** ask the user, because condition 5 holds: the user reserved
-  the choice for each open review item of the rebuild.
+- **Recommendation:** D. Module comments keep mechanics beside their owners and
+  leave the README as an entry-point index, as the documentation rules require.
+  The user's reserved choice still waits for an answer.
+- **Action:** ask the user, because the user reserved the choice for each open
+  review item of the rebuild.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5863).
