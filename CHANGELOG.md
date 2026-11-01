@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.19.0](https://github.com/mokly-ai/mokly/compare/v0.18.0...v0.19.0) (2026-11-01)
+
+
+### Features
+
+* **html:** name warning sources and point prop errors at source ([6508b95](https://github.com/mokly-ai/mokly/commit/6508b9505e64eda3e7460a2b3c344f6258c086b5))
+
+
+### Bug Fixes
+
+* **compare:** hint every scripts-off base failure and skip pnpm prompts ([7d0682a](https://github.com/mokly-ai/mokly/commit/7d0682af43baf4ab2dfa5c4e31537aeddcdfb893))
+* **css:** finish the approved CSS Modules scanner follow-ups ([9e57d86](https://github.com/mokly-ai/mokly/commit/9e57d8610b1996415a1415c44dab26efac4d8bbc))
+* keep the publish token out of output, viewer URLs, and sidecars ([e09bb3b](https://github.com/mokly-ai/mokly/commit/e09bb3ba6e46abdbba836227a2a149cc838f8b9a))
+* **large:** restart the build deadline on each output line ([c7e7d9b](https://github.com/mokly-ai/mokly/commit/c7e7d9b88efc84152eb33539ed8ed7ca2ad2bb93))
+* plain Windows paths, cache check form, base link names, test Git ([db48e47](https://github.com/mokly-ai/mokly/commit/db48e47386f125c229f30810ef23c0965919818b))
+* **render:** key environments without the checkout folder ([3378cb3](https://github.com/mokly-ai/mokly/commit/3378cb3ba3cf49785d6317c5b85541375380f343))
+* **watch:** recover lost macOS and Windows events ([5529023](https://github.com/mokly-ai/mokly/commit/5529023c365c927ca44ce71499435e2c82b21e13))
+
+
+### Performance Improvements
+
+* **compare:** keep compact owned proof candidates ([6e02b32](https://github.com/mokly-ai/mokly/commit/6e02b32ddb88f3db6bf0ae1b9da44cba2a11e038))
+* **serve:** share one verified copy among concurrent asset requests ([d148edc](https://github.com/mokly-ai/mokly/commit/d148edc50d21bb9eed756751f5b3429aba5e36be))
+* **sidecar:** retain the last released compiled recipes ([2ca5774](https://github.com/mokly-ai/mokly/commit/2ca5774254aa30e9dfe33edee679fd0eae1abf57))
+
 ## [0.18.0](https://github.com/mokly-ai/mokly/compare/v0.17.0...v0.18.0) (2026-11-01)
 
 
