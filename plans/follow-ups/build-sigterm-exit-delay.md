@@ -48,8 +48,7 @@
     `fingerprint.rs`, so that a requested stop ends the read between files.
     Effort: Small.
   - **C.** Release the output reservation in the cancellation path of
-    every phase, so that a cancelled build never leaves it. Effort: Medium
-   .
+    every phase, so that a cancelled build never leaves it. Effort: Medium.
 - **Left out:** A longer grace period in the harness. It hides a slow stop
   and does not help other callers.
 - **Wider fix:** C. A cancellation that always releases the reservation
