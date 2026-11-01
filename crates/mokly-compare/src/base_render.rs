@@ -14,6 +14,7 @@ use mokly_source_interface::tree::SourceTree;
 
 use crate::base_selection::{BaseLookup, PinnedBase};
 use crate::comparison_error::CompareResult;
+use crate::comparison_steps::{Step, Steps};
 use crate::comparison_types::{Comparison, ComparisonRequest, ComparisonResult};
 use crate::error::{Error, Result};
 use crate::extraction_snapshots::Snapshots;
@@ -121,6 +122,8 @@ pub struct BaseRequest<'a> {
     pub sources: HistoricalSources,
     /// Effective lifecycle-script setting from the working configuration and CLI.
     pub install_scripts: bool,
+    /// Receives the extraction, installation, and rendering steps of the base.
+    pub steps: Arc<dyn Steps>,
 }
 
 /// Rendering service seam. HTML and future JavaScript base entries use the same graph.
@@ -158,6 +161,8 @@ pub struct Changes {
     pub provider: Arc<dyn BaseProvider>,
     /// One materiality and attribution policy.
     pub comparison: Arc<dyn Comparison>,
+    /// Receives each step of the comparison as it starts.
+    pub steps: Arc<dyn Steps>,
 }
 
 impl ChangesService for Changes {
@@ -181,6 +186,7 @@ impl ChangesService for Changes {
                     .and_then(|review| review.base_install_scripts)
             })
             .unwrap_or(false);
+        self.steps.step(Step::Reading);
         let selected = match &self.pinned {
             Some(pinned) => pinned.clone(),
             None => self
@@ -204,6 +210,7 @@ impl ChangesService for Changes {
                 commit: commit.clone(),
                 sources,
                 install_scripts,
+                steps: self.steps.clone(),
             });
             if let Some(source) = failures.failure() {
                 return Err(Error::Base {
@@ -244,6 +251,7 @@ impl ChangesService for Changes {
             base_span.record("status", "ok");
             (before, failures, prepared.scripts_off)
         };
+        self.steps.step(Step::Comparing);
         let result = self.comparison.compare_prepared(
             &ComparisonRequest {
                 base_ref: base.into(),
@@ -284,3 +292,7 @@ pub fn selected_base<'a>(config: &'a ResolvedConfig, explicit: Option<&'a str>) 
 #[cfg(test)]
 #[path = "_tests_/base_render_failures_tests.rs"]
 mod base_render_failures_tests;
+
+#[cfg(test)]
+#[path = "_tests_/base_render_steps_tests.rs"]
+mod base_render_steps_tests;

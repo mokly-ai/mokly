@@ -44,8 +44,11 @@ test("details omit authoring dependencies for every routed entry kind", () => {
     const markup = renderToStaticMarkup(
       <EntryDetailsBody catalogue={catalogue} entry={legacyEntry} />,
     );
-    assert.match(markup, /<span class="mbk-meta-k">Source<\/span>/);
-    assert.match(markup, /<span class="mbk-meta-k">Related docs<\/span>/);
+    assert.match(markup, /<span class="mbk-meta-k mbk-reset">Source<\/span>/);
+    assert.match(
+      markup,
+      /<span class="mbk-meta-k mbk-reset">Related docs<\/span>/,
+    );
     assert.doesNotMatch(
       markup,
       /Dependencies|legacy\/source-only\.ts|legacy\/owned\.css/,

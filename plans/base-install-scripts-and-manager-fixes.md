@@ -8,7 +8,7 @@ This plan resolves the open follow-ups of that opt-in from the Rust rebuild:
 user items 151, 152, 155, 156, 157, and 158. Item 150 moved to the
 [process tree stops plan](./base-install-process-tree-stops.md) on
 2026-10-29. Item 153 is not part of this plan. It stays open in
-`plans/rust-rebuild.md` until Cal answers.
+`plans/follow-ups/yarn-tls-file-confinement.md` until Cal answers.
 
 - Item 151: a script runs as the same user as Mokly, so it can read
   `MOKLY_TOKEN` from the start environment of Mokly or of its launcher.
@@ -236,7 +236,7 @@ Items 152 and 156 in `mokly-compare` and `mokly-cli`.
 ## Milestone 5: Removed
 
 Milestone 5, item 153, left this plan on 2026-10-29. Item 153 stays open in
-`plans/rust-rebuild.md` until Cal answers.
+`plans/follow-ups/yarn-tls-file-confinement.md` until Cal answers.
 
 ## Milestone 6: Crate READMEs and doc alignment
 
@@ -248,6 +248,11 @@ Milestone 5, item 153, left this plan on 2026-10-29. Item 153 stays open in
   install processes page carries a status line until then.
 
 ## Milestone 7: Verification, commit, review, and pull request
+
+Main sync design call (2026-11-01): keep main's replacement follow-up files
+and its removal of the completed Rust rebuild plan. This plan's Decisions
+section retains every branch-only answer from that removed plan. Merge
+justifications: `.context/main-sync-2026-11-01/merge-decisions.md`.
 
 - [x] Run the targeted Rust tests of `mokly-platform`, `mokly-compare`, and
       `mokly-cli`. Add no Node test in the files that workspace 353 owns.

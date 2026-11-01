@@ -14,6 +14,7 @@ use mokly_compare::base_render::{
     BasePreparationError, BasePreparationResult, BaseProvider, BaseRequest, PreparedBase,
 };
 use mokly_compare::cache_types::{Lease, Reporter};
+use mokly_compare::comparison_steps::{Step, Steps};
 use mokly_compare::error::{Error, Result};
 use mokly_model::public_metadata::ChangesStatus;
 use mokly_render::side::BaseSide;
@@ -23,7 +24,7 @@ use mokly_server::comparison_graph::FrozenResources;
 
 use crate::base_dependencies::BaseDependencies;
 use crate::changes_runtime::cache_line;
-use crate::serve_progress::TerminalEvent;
+use crate::serve_progress::{Progress, TerminalEvent};
 use crate::serve_warnings::AttemptWarnings;
 use crate::terminal::Terminal;
 
@@ -56,6 +57,17 @@ impl ChangeCancellation for CombinedCancel {
 impl mokly_git::control::Cancellation for CombinedCancel {
     fn cancelled(&self) -> bool {
         self.requested()
+    }
+}
+
+/// The steps of one classification relabel only the phase that the classification began.
+pub(super) struct RunSteps {
+    pub(super) progress: Arc<dyn Progress>,
+    pub(super) cancel: Arc<dyn ChangeCancellation>,
+}
+impl Steps for RunSteps {
+    fn step(&self, step: Step) {
+        self.progress.step(&self.cancel, step);
     }
 }
 

@@ -1,77 +1,72 @@
-import { useDarkPreview } from "./appearance.js";
+import type { ReactNode } from "react";
+
+import { PreviousVersion } from "../../../../../packages/ui/src/previous-version/previous-version.js";
+
 import type { DesignDestination } from "./destinations.js";
+import { Stage } from "./stage.js";
 import { EmptyState } from "./stage_content.js";
 
+/** The removed entry whose previous version an artboard depicts. */
+export interface PreviousEntry {
+  kind: "document" | "page" | "screen";
+  /** The path the entry had at the branch point. */
+  path: string;
+  title: string;
+}
+
 /**
- * The quiet label that sits between the head band and a stage holding content
- * from before the entry was removed. Under Dark, a previous version with no
- * dark render names its light fallback with the existing note.
+ * The shipped previous version of a removed entry: the quiet band that names
+ * what the stage holds, and the stage host around the previous views or the
+ * state that stands in for them. The host carries the depicted entry as its
+ * request. A light-only document names its fallback in the band, which a
+ * Dark render shows, as the shell shows it under a Dark shell.
  */
-export function PreviousVersionLabel({
-  lightOnly,
+export function PreviousVersionStage({
+  children,
+  entry,
+  lightOnly = false,
+  viewport,
 }: {
+  children: ReactNode;
+  entry: PreviousEntry;
   lightOnly?: boolean | undefined;
+  /**
+   * The viewport that the host shows. A workspace's previews pass `both`:
+   * its native viewport select shows and hides them without a script, which
+   * the host's own viewport would override.
+   */
+  viewport: "both" | "desktop" | "mobile";
 }) {
-  const dark = useDarkPreview();
   return (
-    <p className="mbk-previous">
-      Showing previous version
-      {lightOnly && dark ? (
-        <span className="mbk-frame-scheme-note">{" — Light only"}</span>
-      ) : null}
-    </p>
-  );
-}
-
-/** The stage while the previous version is still being retrieved. */
-export function PreviewLoading() {
-  return (
-    <div className="mbk-preview-state">
-      <div className="mbk-preview-status" role="status">
-        <span className="mbk-preview-spinner" aria-hidden="true" />
-        Loading previous version…
-      </div>
-    </div>
+    <PreviousVersion
+      descriptor={JSON.stringify({
+        path: entry.path,
+        kind: entry.kind,
+        title: entry.title,
+      })}
+      lightOnly={lightOnly}
+      viewport={viewport}
+    >
+      {children}
+    </PreviousVersion>
   );
 }
 
 /**
- * The stage after the previous version could not be retrieved. Retry repeats
- * the request, so it returns to the loaded preview in this catalogue.
+ * The stage after the previous version could not be retrieved, in the
+ * shell's words. Retry repeats the request, so it returns to the loaded
+ * preview in this catalogue. The registered empty state draws it on the
+ * shipped stage, as the shell's unavailable state does.
  */
 export function PreviewUnavailable({ to }: { to: DesignDestination }) {
   return (
-    <EmptyState
-      body="The previous version could not be loaded."
-      linkLabel="Retry"
-      title="Previous version unavailable"
-      to={to}
-    />
-  );
-}
-
-/** The other viewport, which always holds a view when one of them is missing. */
-const OTHER_VIEWPORT = { desktop: "Mobile", mobile: "Desktop" } as const;
-
-/**
- * The stage for a viewport the previous version was never captured in. At
- * least one viewport was captured, so the note names the one that still opens.
- * Showing both viewports together already puts that view on screen, and the
- * stylesheet drops the second sentence there.
- */
-export function PreviewViewMissing({
-  viewport,
-}: {
-  viewport: "desktop" | "mobile";
-}) {
-  return (
-    <div className="mbk-preview-state">
-      <p className="mbk-preview-note" role="status">
-        No previous {viewport} version was captured.{" "}
-        <span className="mbk-preview-switch">
-          Switch to {OTHER_VIEWPORT[viewport]} to see it.
-        </span>
-      </p>
-    </div>
+    <Stage>
+      <EmptyState
+        body="The previous version could not be loaded."
+        linkLabel="Retry"
+        title="Previous version unavailable"
+        to={to}
+      />
+    </Stage>
   );
 }

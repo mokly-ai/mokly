@@ -53,10 +53,13 @@ test("native Changes publishes moved and removed entries with matching counts", 
       )
     ).json();
     expect(detail.revision).toBeUndefined();
-    expect(detail.deploymentId).toBeUndefined();
     expect(detail.entry.snapshotId).toBe(
       index.removedEntries.find((entry) => entry.entry.path === "retired")!
         .snapshotId,
+    );
+    expect(detail.detailId).toBe(
+      index.removedEntries.find((entry) => entry.entry.path === "retired")!
+        .entry.detailId,
     );
     expect(
       requests.filter(

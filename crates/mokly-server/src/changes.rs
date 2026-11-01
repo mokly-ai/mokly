@@ -18,7 +18,7 @@ use crate::changes_detail;
 use crate::changes_signal::{ChangeSignal, Signals};
 use crate::comparison_metadata;
 use crate::comparison_metadata::compared;
-use crate::detail_encoding::{DetailEncoder, ValidatedDetails};
+use crate::detail_encoding::{DetailEncoder, ValidatedDetails, detail_id};
 use crate::error::{InternalError, Result, ServerError};
 use crate::revision::RevisionLease;
 use crate::revision_file::RevisionFile;
@@ -176,13 +176,24 @@ pub(crate) fn project(
         let historical = comparison_metadata::base(accepted, current)?;
         next.index.removed_entries =
             compared(projection_removed::records(&accepted.result, historical))?;
+        let ids = comparison_metadata::detail_ids(accepted, current)?;
+        for record in &mut next.index.removed_entries {
+            if let Some(id) = ids.get(record.entry.path()) {
+                record.entry.set_detail_id(id);
+            }
+        }
         next.index.comparison_url = Some(routes::comparison_generation(&accepted.id));
     }
     changes_detail::apply(&mut next)?;
+    for (path, detail) in &mut next.details {
+        let detail = Arc::make_mut(detail);
+        detail.detail_id = detail_id(detail)?;
+        projection::set_detail_id(&mut next.index, path, &detail.detail_id);
+        detail.revision = Some(next.index.revision);
+    }
     let mut schemas = UsageSchemas::new(&next.index.components);
     for (path, detail) in &mut next.details {
         let detail = Arc::make_mut(detail);
-        detail.revision = Some(next.index.revision);
         next.files.insert(
             viewer(&format!("entries/{path}.json")),
             ValidatedDetails.encode(detail, &next.index, &mut schemas)?,

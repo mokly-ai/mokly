@@ -8,6 +8,7 @@ use mokly_cli::cancelled_work::CancellableWorkers;
 use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
 use mokly_compare::base_render::{BaseProvider, BaseRequest, HistoricalSources};
+use mokly_compare::comparison_steps::{Step, StepsMock};
 use mokly_css::types::{Bundle, StylesheetRoot};
 use mokly_git::identity::ObjectId;
 use mokly_graph::error::GraphError;
@@ -141,6 +142,11 @@ fn replaced_run_cancels_a_prepared_base_generation_without_cancelling_the_comman
                 sources: Arc::new(Unimock::new(())),
                 failures: Arc::new(Unimock::new(())),
             },
+            steps: Arc::new(Unimock::new(
+                StepsMock::step
+                    .next_call(matching!(Step::Rendering))
+                    .returns(()),
+            )),
         })
         .unwrap();
     assert!(generation.generation.check_cancelled().is_ok());

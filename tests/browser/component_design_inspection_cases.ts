@@ -29,15 +29,17 @@ export function registerComponentDesignInspection(
       test("mask cutouts match real component bounds without dimming their ancestors", async ({
         page,
       }) => {
+        // The shipped mask cuts out one box for each region, in the order of
+        // the depicted view's regions.
         for (const [route, matches] of [
           [
             "highlight",
             [
-              [".ce-toolbar-cutout", ".ce-demo-toolbar"],
-              ["mask rect[y='258']", ".ce-demo-footer .ce-action"],
+              [0, ".ce-demo-toolbar"],
+              [1, ".ce-demo-footer .ce-action"],
             ],
           ],
-          ["nested", [[".ce-nested-cutout", ".ce-demo-toolbar .ce-action"]]],
+          ["nested", [[0, ".ce-demo-toolbar .ce-action"]]],
         ] as const) {
           await page.goto(
             componentDesignUrl(
@@ -48,13 +50,15 @@ export function registerComponentDesignInspection(
           await expect(
             page.getByRole("switch", { name: "Highlight components" }),
           ).toBeChecked();
-          for (const [mask, component] of matches) {
+          for (const [order, component] of matches) {
             const geometry = await page.evaluate(
-              ({ mask, component, viewport }) => {
+              ({ order, component, viewport }) => {
                 const preview = document.querySelector(
                   `[data-preview-viewport="${viewport}"]`,
                 )!;
-                const shape = preview.querySelector<SVGGraphicsElement>(mask)!;
+                const shape = preview.querySelectorAll<SVGGraphicsElement>(
+                  ".mbk-highlight-cutout",
+                )[order]!;
                 const cutout = shape.getBBox();
                 const origin = shape.ownerSVGElement!.getBoundingClientRect();
                 const bounds = preview
@@ -77,7 +81,7 @@ export function registerComponentDesignInspection(
                   ancestors,
                 };
               },
-              { mask, component, viewport },
+              { order, component, viewport },
             );
             geometry.bounds.forEach((value, index) =>
               expect(geometry.cutout[index]).toBeCloseTo(value, 0),
@@ -88,14 +92,18 @@ export function registerComponentDesignInspection(
           }
           if (route === "nested") {
             await expect(
-              page.locator(".ce-instance-tree details").first(),
+              page.locator(".mbk-instance-tree details").first(),
             ).toHaveAttribute("open", "");
             await expect(
               page.getByRole("region", { name: "Selected instance" }),
             ).toContainText("Toolbar action");
-            await expect(page.locator(".ce-region:visible")).toHaveCount(1);
+            await expect(
+              page.locator(".mbk-highlight-label:visible"),
+            ).toHaveCount(1);
           } else
-            await expect(page.locator(".ce-region:visible")).toHaveCount(2);
+            await expect(
+              page.locator(".mbk-highlight-label:visible"),
+            ).toHaveCount(2);
         }
       });
       test("missing metadata, empty usage, invisible instances, and removed states stay distinct", async ({
@@ -111,9 +119,7 @@ export function registerComponentDesignInspection(
           componentDesignUrl("design/components/states/unavailable", viewport),
         );
         await expect(
-          page.getByText(
-            "Component inspection is unavailable for this screen.",
-          ),
+          page.getByText("Component inspection is unavailable for this view."),
         ).toBeVisible();
         await expect(
           page.getByRole("switch", { name: "Highlight components" }),
@@ -127,9 +133,11 @@ export function registerComponentDesignInspection(
         await page
           .getByRole("button", { name: "Components", exact: true })
           .click();
+        // The tree lists the instance that renders nothing, and its
+        // selection says that it has no visible region.
         await page
-          .locator(".ce-instance-tree summary")
-          .filter({ hasText: "Help hint" })
+          .locator(".mbk-instance-tree")
+          .getByRole("link", { name: "Help hint · Help" })
           .click();
         await expect(
           page.getByText("No visible region", { exact: true }),
@@ -137,9 +145,7 @@ export function registerComponentDesignInspection(
         await page.goto(
           componentDesignUrl("design/components/states/unused", viewport),
         );
-        await expect(
-          page.getByText("No screens or components use Badge yet."),
-        ).toBeVisible();
+        await expect(page.getByText("No recorded consumers.")).toBeVisible();
         await page.goto(
           componentDesignUrl("design/components/states/removed", viewport),
         );
@@ -149,7 +155,7 @@ export function registerComponentDesignInspection(
             .getByText("This variant has been removed.", { exact: true }),
         ).toBeVisible();
         await page
-          .getByRole("region", { name: "Affected screens", exact: true })
+          .locator('[data-usage-section="affected"]')
           .getByRole("link", { name: "Farewell" })
           .click();
         await expect(page).toHaveURL(
@@ -183,7 +189,7 @@ export function registerComponentDesignInspection(
         await expect(
           page.getByRole("group", { name: "Comparison mode" }),
         ).toHaveCount(0);
-        await expect(page.locator(".mbk-pane-missing")).toHaveCount(0);
+        await expect(page.locator(".mb-pane-missing")).toHaveCount(0);
         await expect(
           page.getByRole("switch", { name: "Dark mode" }),
         ).toHaveCount(0);

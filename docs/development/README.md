@@ -17,6 +17,13 @@ npm run build
 cargo xtask check
 ```
 
+To browse the example catalogue, run `npm run dev` from the repository root.
+It installs the dependencies and builds Mokly when the install or the build is
+missing or out of date with `package-lock.json`, then starts watched Serve.
+After you change Mokly's own sources, run `npm run build` first. The
+[example README](../../examples/basic/README.md#build-and-serve) gives the
+details.
+
 The Rust core lives in a Cargo workspace under `crates/`, one crate per
 subsystem, with the viewer under `packages/viewer`, the verification task
 runner under `xtask/`, and the reference consumer under
@@ -108,5 +115,8 @@ points; see the
   — checks the packed package of one native target and its TLS dependencies.
 - [`scripts/verification/process-owner-snapshot.mjs`](../../scripts/verification/process-owner-snapshot.mjs)
   — checks the owner and process records of concurrent cleanup.
+- [`scripts/dev.mjs`](../../scripts/dev.mjs) and
+  [`scripts/dev-preparation.mjs`](../../scripts/dev-preparation.mjs) — run
+  `npm run dev`: install and build when needed, then start the local CLI.
 - [`examples/basic`](../../examples/basic/README.md) — is the reference
   consumer and the design catalogue.

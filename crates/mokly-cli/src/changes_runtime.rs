@@ -14,6 +14,7 @@ use mokly_compare::base_render::{Changes, ChangesService, GitSourceFactory, sele
 use mokly_compare::base_selection::{BaseLookup, GitBaseLookup, PinnedBase};
 use mokly_compare::cache_types::Reporter;
 use mokly_compare::comparison::Engine;
+use mokly_compare::comparison_steps::{Step, Steps};
 use mokly_compare::comparison_types::ComparisonResult;
 use mokly_compare::error::Result;
 use mokly_compare::extraction_snapshots::ProcessSnapshots;
@@ -85,6 +86,7 @@ pub(super) fn service(
             moves: Arc::new(Detector),
             css: Arc::new(MemoryParsedCss::new(64 * 1024 * 1024)),
         }),
+        steps: Arc::new(PhaseSteps(phases.clone())),
     });
     Arc::new(PhasedChanges {
         changes,
@@ -152,6 +154,14 @@ impl ChangesService for PhasedChanges {
             .start(Phase::Comparing(selected_base(config, base).into()));
         self.changes
             .classify(config, base, head, self.install_scripts)
+    }
+}
+
+/// One-shot comparison steps relabel the running phase.
+struct PhaseSteps(Arc<dyn Phases>);
+impl Steps for PhaseSteps {
+    fn step(&self, step: Step) {
+        self.0.step(step);
     }
 }
 

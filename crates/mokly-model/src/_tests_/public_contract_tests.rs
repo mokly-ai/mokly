@@ -200,8 +200,8 @@ fn historical_variants_require_a_nonempty_parent_title() {
 }
 
 fn screen_detail() -> Value {
-    json!({"schemaVersion":3,"controlOrder":[],"identity":{"id":"a".repeat(64),"title":"Mokly"},
-        "deploymentId":"b".repeat(64),"revision":0,"entry":{"path":"home","kind":"screen"},
+    json!({"schemaVersion":4,"controlOrder":[],"identity":{"id":"a".repeat(64),"title":"Mokly"},
+        "detailId":"c".repeat(64),"revision":0,"entry":{"path":"home","kind":"screen"},
         "views":[{"viewport":"mobile","colorScheme":"light","usage":{"status":"ready","instances":[],"slots":[],"ranges":[]},
             "state":"unchanged","ignoredIds":[],"resourceEvidence":{"rules":[],"resources":[]}}],
         "workspace":{"comparisonEligible":false,"usedBy":[],"affected":[],"relatedComponents":[],"inputChanges":[]}})
@@ -263,9 +263,7 @@ fn view_states_and_the_base_address_travel_with_ready_evidence() {
     invalid["before"]["path"] = json!("../home");
     cases.push(invalid);
     let mut invalid = before;
-    invalid.as_object_mut().unwrap().remove("deploymentId");
     invalid.as_object_mut().unwrap().remove("revision");
-    invalid["generation"] = json!("c".repeat(64));
     invalid["entry"]["snapshotId"] = json!("d".repeat(64));
     cases.push(invalid);
     for invalid in cases {

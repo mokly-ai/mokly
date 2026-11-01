@@ -59,6 +59,7 @@ fn static_base_admits_only_a_verified_prepared_generation() {
                 sources: Arc::new(Unimock::new(())),
                 failures: Arc::new(Unimock::new(())),
             },
+            steps: Arc::new(Unimock::new(())),
         });
         if changed {
             assert!(matches!(
@@ -112,6 +113,7 @@ fn static_base_keeps_scripts_off_after_another_input_verification_failure() {
             sources: Arc::new(Unimock::new(())),
             failures: Arc::new(Unimock::new(())),
         },
+        steps: Arc::new(Unimock::new(())),
     });
     assert!(matches!(result, Err(error)
         if error.scripts_off && matches!(error.source.as_ref(), Error::Graph {

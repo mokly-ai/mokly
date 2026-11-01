@@ -1,8 +1,7 @@
 /**
  * One comparison publishes the same records in a static build and in Serve:
  * the index's base commit, each compared entry's comparison facts, and the
- * removed entries' details in two-space JSON, byte for byte apart from the
- * name of the generation that holds them.
+ * removed entries' details in two-space JSON, byte for byte.
  */
 
 import assert from "node:assert/strict";
@@ -11,13 +10,13 @@ import path from "node:path";
 import test, { type TestContext } from "node:test";
 
 import type { CatalogueReadModel } from "../packages/viewer/src/generated/catalogue/CatalogueReadModel.js";
-import type { EntryDetailV3 } from "../packages/viewer/src/generated/catalogue/EntryDetailV3.js";
+import type { EntryDetailV4 } from "../packages/viewer/src/generated/catalogue/EntryDetailV4.js";
 
 import { completed, serve } from "./helpers/mokly_serve.js";
 import { build, fixture } from "./helpers/static_changes.js";
 
 /** The comparison facts of one current detail, without its deployment fences. */
-function facts(detail: EntryDetailV3) {
+function facts(detail: EntryDetailV4) {
   return {
     before: detail.before,
     reasons: detail.reasons,
@@ -40,7 +39,7 @@ async function served(context: TestContext, root: string) {
       url,
       context.signal,
       "home",
-    )) as { index: CatalogueReadModel; detail: EntryDetailV3 };
+    )) as { index: CatalogueReadModel; detail: EntryDetailV4 };
     assert.equal(index.changesStatus, "ready");
     const removed: Record<string, string> = {};
     for (const { entry } of index.removedEntries) {
@@ -74,7 +73,7 @@ test(
           path.join(built.output, "mokly-viewer/entries/home.json"),
           "utf8",
         ),
-      ) as EntryDetailV3;
+      ) as EntryDetailV4;
       assert.equal(home.before?.path, "home");
       assert.ok(home.views.every((view) => view.state === "changed"));
       assert.ok(
@@ -85,22 +84,13 @@ test(
         Object.keys(live.removed).sort(),
         built.index.removedEntries.map(({ entry }) => entry.path).sort(),
       );
-      const generation = (url: string | null) => url!.split("/").at(-2)!;
       for (const [entry, text] of Object.entries(live.removed)) {
         const file: string = await fs.readFile(
           path.join(built.output, comparison, "entries", `${entry}.json`),
           "utf8",
         );
         assert.ok(file.startsWith('{\n  "'), file.slice(0, 40));
-        // Serve's classification generation holds no snapshot, so only its name differs.
-        assert.equal(
-          text.replace(
-            generation(live.index.comparisonUrl),
-            generation(comparison),
-          ),
-          file,
-          entry,
-        );
+        assert.equal(text, file, entry);
       }
     } finally {
       await fs.rm(root, { recursive: true, force: true });

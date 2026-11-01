@@ -1,5 +1,9 @@
+import {
+  accessibleName,
+  isHidden,
+  withAncestors,
+} from "./design_accessibility.js";
 import { links, tagStates } from "./design_expectations.js";
-import { accessibleName, withAncestors } from "./design_rules.js";
 import { attribute, textContent, type HtmlElement } from "./html.js";
 import type { ServedCatalogue, ServedView } from "./served_design.js";
 
@@ -7,6 +11,17 @@ const VIEWPORTS = ["mobile", "desktop"] as const;
 
 const classes = (element: HtmlElement) =>
   (attribute(element, "class") ?? "").split(/\s+/u);
+
+/**
+ * Whether an element is a link's scope: it carries the class, or, for a scope
+ * written `[name=value]`, the attribute with that value.
+ */
+const inScope = (element: HtmlElement, scope: string) => {
+  const pair = /^\[([\w-]+)=([\w-]+)\]$/u.exec(scope);
+  return pair
+    ? attribute(element, pair[1]!) === pair[2]
+    : classes(element).includes(scope);
+};
 
 const named = (
   view: ServedView,
@@ -18,7 +33,7 @@ const named = (
       ([element, ancestors]) =>
         element.tagName === "a" &&
         (within === undefined ||
-          ancestors.some((node) => classes(node).includes(within))),
+          ancestors.some((node) => inScope(node, within))),
     )
     .map(([element]) => element)
     .filter((element) => matches(accessibleName(element)));
@@ -61,7 +76,7 @@ export function expectationViolations(catalogue: ServedCatalogue): string[] {
 const byClass = (view: ServedView, name: string): HtmlElement[] =>
   [...withAncestors(view.document)]
     .map(([element]) => element)
-    .filter((element) => classes(element).includes(name));
+    .filter((element) => inScope(element, name));
 
 /**
  * The Welcome tag states agree: the query, the picker, the active chips,
@@ -78,10 +93,17 @@ export function tagViolations(catalogue: ServedCatalogue): string[] {
         if (JSON.stringify(actual) !== JSON.stringify(expected))
           violations.push(`${view.route}: ${label} ${JSON.stringify(actual)}`);
       };
+      // The shipped search field holds the query as its value.
       facts(
         "query",
-        byClass(view, "mbk-search-value")
-          .map((node) => textContent(node))
+        [...withAncestors(view.document)]
+          .map(([element]) => element)
+          .filter(
+            (element) =>
+              element.tagName === "input" &&
+              attribute(element, "data-mokly-search") !== undefined,
+          )
+          .map((element) => attribute(element, "value") ?? "")
           .join(""),
         state.query,
       );
@@ -106,12 +128,18 @@ export function tagViolations(catalogue: ServedCatalogue): string[] {
         facts(`chip ${tag} target`, attribute(chip, "data-mokly-link"), target);
       }
       if (chips.length === 0) violations.push(`${view.route}: no tag chips`);
+      // A closed list holds its rows hidden, as the shell does.
       if (state.rows && view.viewport === "desktop")
         facts(
           "rows",
-          byClass(view, "mbk-nav-row")
-            .filter((node) => node.tagName === "a")
-            .map((node) => accessibleName(node)),
+          [...withAncestors(view.document)]
+            .filter(
+              ([element, ancestors]) =>
+                element.tagName === "a" &&
+                classes(element).includes("mbk-nav-row") &&
+                !isHidden(element, ancestors),
+            )
+            .map(([element]) => accessibleName(element)),
           state.rows,
         );
     }

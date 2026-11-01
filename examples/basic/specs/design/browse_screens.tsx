@@ -7,7 +7,6 @@ import { tagPickerVariant } from "./browse/states/tags/picker.js";
 import { browseSchemeVariants } from "./browse/variants/appearance_screens.js";
 import { designMetadata } from "./metadata.js";
 import { artboardStates, artboards } from "./parts/artboards.js";
-import { DesignNavigation } from "./parts/design_navigation.js";
 import { DESTINATIONS } from "./parts/destinations.js";
 import {
   ExampleWorkspace,
@@ -17,7 +16,6 @@ import { NavDrawer, NavTree } from "./parts/nav.js";
 import { WelcomeHead } from "./parts/screen_heads.js";
 import { Shell } from "./parts/shell.js";
 import { EmptyState } from "./parts/stage_content.js";
-import { TopBar } from "./parts/top_bar.js";
 
 function HomeBody() {
   return (
@@ -53,8 +51,11 @@ function SelectedScreenDesktop() {
       viewport="desktop"
       nav={<NavTree activeLabel="Welcome" />}
     >
-      <WelcomeHead active="both" />
-      <SchemeWorkspace subject="welcome" viewport="desktop" />
+      <SchemeWorkspace
+        header={<WelcomeHead active="both" />}
+        subject="welcome"
+        viewport="desktop"
+      />
     </Shell>
   );
 }
@@ -62,8 +63,11 @@ function SelectedScreenDesktop() {
 function SelectedScreenMobile() {
   return (
     <Shell design={DESTINATIONS.welcome} viewport="mobile" nav={null}>
-      <WelcomeHead active="mobile" />
-      <SchemeWorkspace subject="welcome" viewport="mobile" />
+      <SchemeWorkspace
+        header={<WelcomeHead active="mobile" />}
+        subject="welcome"
+        viewport="mobile"
+      />
     </Shell>
   );
 }
@@ -75,8 +79,12 @@ function DetailsOpenDesktop() {
       viewport="desktop"
       nav={<NavTree activeLabel="Welcome" />}
     >
-      <WelcomeHead active="desktop" />
-      <ExampleWorkspace subject="welcome" viewport="desktop" open />
+      <ExampleWorkspace
+        header={<WelcomeHead active="desktop" />}
+        subject="welcome"
+        viewport="desktop"
+        open
+      />
     </Shell>
   );
 }
@@ -84,8 +92,12 @@ function DetailsOpenDesktop() {
 function DetailsOpenMobile() {
   return (
     <Shell design={DESTINATIONS.inspector} viewport="mobile" nav={null}>
-      <WelcomeHead active="mobile" />
-      <ExampleWorkspace subject="welcome" viewport="mobile" open />
+      <ExampleWorkspace
+        header={<WelcomeHead active="mobile" />}
+        subject="welcome"
+        viewport="mobile"
+        open
+      />
     </Shell>
   );
 }
@@ -120,15 +132,15 @@ function MissingRouteMobile() {
 
 function NarrowNavigationDesktop() {
   return (
-    <DesignNavigation design={DESTINATIONS.navigation}>
-      <div className="mbk-shell mbk-shell--collapsed">
-        <TopBar viewport="mobile" drawerOpen />
-        <main className="mbk-main">
-          <HomeBody />
-        </main>
-        <NavDrawer activeLabel="Welcome" />
-      </div>
-    </DesignNavigation>
+    <Shell
+      aside={<NavDrawer activeLabel="Welcome" />}
+      collapsed
+      design={DESTINATIONS.navigation}
+      nav={null}
+      viewport="desktop"
+    >
+      <HomeBody />
+    </Shell>
   );
 }
 

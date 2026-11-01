@@ -8,11 +8,11 @@ import { environment, frame } from "./appearance_fixture.js";
 test("route pins update the whole appearance without storing a preference", () => {
   const dual = frame("welcome.html", "welcome.dark.html");
   const world = environment({ stored: "light", frames: [dual] });
-  world.attach({ body: true, select: true, frames: [dual] });
+  world.attach({ select: true, frames: [dual] });
   const handle = installAppearance(world.document, world.window);
   handle.applyRoute("dark");
   assert.equal(world.root.attributes["data-mokly-theme"], "dark");
-  assert.equal(world.body.attributes["data-mokly-color-scheme"], "dark");
+  assert.equal(handle.current().scheme, "dark");
   assert.equal(world.select.value, "dark");
   assert.deepEqual(dual.loads, ["welcome.dark.html"]);
   assert.equal(world.stored(), "light");
@@ -39,15 +39,14 @@ test("reader choices outrank later route pins even without storage", () => {
 
 test("Auto continues to follow the system after a conflicting route pin", () => {
   const world = environment({ search: "?scheme=dark" });
-  world.attach({ body: true });
   const handle = installAppearance(world.document, world.window);
   handle.choose("auto");
   handle.applyRoute("dark");
-  assert.equal(world.body.attributes["data-mokly-color-scheme"], "light");
+  assert.deepEqual(handle.current(), { theme: "auto", scheme: "light" });
   world.media.matches = true;
   for (const listener of world.listeners) listener.handler();
   assert.equal(world.root.attributes["data-mokly-theme"], "auto");
-  assert.equal(world.body.attributes["data-mokly-color-scheme"], "dark");
+  assert.deepEqual(handle.current(), { theme: "auto", scheme: "dark" });
 });
 
 test("a mounted appearance host exclusively owns live fragment navigation", () => {

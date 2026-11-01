@@ -12,6 +12,7 @@ use crate::base_render::{
     ChangesService, HistoricalSources, PreparedBase,
 };
 use crate::base_selection::PinnedBase;
+use crate::comparison_steps::StepsMock;
 use crate::comparison_types::{ComparisonMock, ComparisonResult};
 use crate::error::{Error, Result};
 use crate::source_failures::SourceFailuresMock;
@@ -54,6 +55,9 @@ fn classify(
                 .returns(prepared),
         )),
         comparison: Arc::new(comparison),
+        steps: Arc::new(Unimock::new(
+            StepsMock::step.each_call(matching!(_)).returns(()),
+        )),
     };
     let config = ResolvedConfig {
         input: Config::default(),

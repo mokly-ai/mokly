@@ -68,7 +68,9 @@ or to plugin public-file protection. Plugin read evidence uses the
 Unread declarations and directory matches remain declarations, not read records.
 Known readable inputs retain an explicitly late digest beside their witnesses.
 A late digest cannot overwrite an observed digest. Read evidence counts toward
-the 64 MiB PostCSS and stylesheet cache bounds and the frame bound.
+the 64 MiB PostCSS and stylesheet cache bounds and the frame bound. The
+stylesheet cache keeps one copy of a context's module evidence for all bundles
+of that context and counts it once.
 
 ## Incomplete Coverage
 

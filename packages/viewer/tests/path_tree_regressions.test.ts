@@ -10,7 +10,7 @@ import { navNodeVisible } from "../src/shell/nav_model.js";
 import { buildNavSections } from "../src/shell/nav_tree.js";
 import type { ViewerSelection } from "../src/viewer/types.js";
 
-import { indexFixture, rawIndexFixture } from "./catalogue_v8_fixture.js";
+import { indexFixture, rawIndexFixture } from "./catalogue_v9_fixture.js";
 import { standaloneMarkup } from "./shell_markup.js";
 
 const entry = (path: string, kind = "page", title = path): ManifestEntry =>
@@ -159,5 +159,5 @@ test("All folder counts exclude hidden children without hiding their Changes anc
   const summary = html
     .slice(html.indexOf('data-nav-folder="folder:product"'))
     .split("</summary>")[0]!;
-  assert.match(summary, /class="mbk-nav-count">1<\/span>/);
+  assert.match(summary, /class="mbk-nav-count mbk-reset">1<\/span>/);
 });

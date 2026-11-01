@@ -7,6 +7,7 @@ use mokly_catalogue::config_types::{Config, ResolvedConfig};
 use mokly_cli::cancellation::BuildCancellation;
 use mokly_compare::base_render::{BaseProvider, BaseRequest, HistoricalSources};
 use mokly_compare::cache_types::Lease;
+use mokly_compare::comparison_steps::{Step, StepsMock};
 use mokly_compare::dependency_types::{Resolved, Tier};
 use mokly_compare::sources::SourcesMock;
 use mokly_git::identity::ObjectId;
@@ -158,6 +159,11 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
                 )),
                 failures: Arc::new(Unimock::new(())),
             },
+            steps: Arc::new(Unimock::new(
+                StepsMock::step
+                    .some_call(matching!(Step::Rendering))
+                    .returns(()),
+            )),
         })
         .unwrap();
     assert!(prepared.scripts_off);

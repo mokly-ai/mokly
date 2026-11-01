@@ -11,7 +11,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { detailKey } from "../src/catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV3,
+  EntryDetailV4,
 } from "../src/catalogue/types.js";
 import { WorkspaceEvidence } from "../src/shell/workspace_evidence.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
@@ -22,7 +22,7 @@ import {
   rawDetailFixtures,
   rawIndexFixture,
   shellModelFixture,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 
 const SCREEN = "product/browse/home/empty";
 const SHARED = "Changed components that this screen uses affect its preview.";
@@ -32,7 +32,7 @@ const ACTION = { path: "components/action", title: "Action" } as const;
 /** The routed screen's Details after one edit of its index record and detail. */
 function details(edit: {
   changes?: CatalogueReadModel["screens"][number]["changes"];
-  detail?: (detail: EntryDetailV3) => void;
+  detail?: (detail: EntryDetailV4) => void;
 }): string {
   const index = rawIndexFixture();
   const record = index.screens.find(({ path }) => path === SCREEN)!;
@@ -63,12 +63,12 @@ function details(edit: {
 }
 
 /** The detail of a screen that uses changed Action. */
-function usesAction(detail: EntryDetailV3) {
+function usesAction(detail: EntryDetailV4) {
   detail.workspace!.relatedComponents = [ACTION];
 }
 
 /** A view rule that changed Action owns, which the screen keeps. */
-function keepsActionRule(detail: EntryDetailV3) {
+function keepsActionRule(detail: EntryDetailV4) {
   detail.views[0]!.resourceEvidence = {
     rules: [
       {
@@ -89,21 +89,24 @@ test("an affected-only screen explains the shared change in place of its no-chan
       keepsActionRule(detail);
     },
   });
-  assert.ok(markup.includes(`<p>${SHARED}</p>`), markup);
+  assert.ok(markup.includes(`<p class="mbk-reset">${SHARED}</p>`), markup);
   assert.ok(!markup.includes(NO_CHANGES), markup);
-  assert.match(markup, /Changed component: <a href="[^"]*">Action<\/a>/);
+  assert.match(
+    markup,
+    /Changed component: <a class="mbk-reset" href="[^"]*">Action<\/a>/,
+  );
   assert.match(markup, /Changed styles that apply to this screen:/);
 });
 
 test("the explanation needs no stylesheet when the screen uses a changed component", () => {
   const markup = details({ detail: usesAction });
-  assert.ok(markup.includes(`<p>${SHARED}</p>`), markup);
+  assert.ok(markup.includes(`<p class="mbk-reset">${SHARED}</p>`), markup);
   assert.ok(!markup.includes(NO_CHANGES), markup);
 });
 
 test("a component-owned record alone explains the shared change", () => {
   const rule = details({ detail: keepsActionRule });
-  assert.ok(rule.includes(`<p>${SHARED}</p>`), rule);
+  assert.ok(rule.includes(`<p class="mbk-reset">${SHARED}</p>`), rule);
   const resource = details({
     detail: (detail) => {
       detail.views[1]!.resourceEvidence = {
@@ -117,7 +120,7 @@ test("a component-owned record alone explains the shared change", () => {
       };
     },
   });
-  assert.ok(resource.includes(`<p>${SHARED}</p>`), resource);
+  assert.ok(resource.includes(`<p class="mbk-reset">${SHARED}</p>`), resource);
 });
 
 test("an excluded component rule explains nothing", () => {
@@ -137,7 +140,10 @@ test("an excluded component rule explains nothing", () => {
     },
   });
   assert.ok(!markup.includes(SHARED), markup);
-  assert.ok(markup.endsWith(`<p>${NO_CHANGES}</p></section>`), markup);
+  assert.ok(
+    markup.endsWith(`<p class="mbk-reset">${NO_CHANGES}</p></section>`),
+    markup,
+  );
 });
 
 test("an entry with its own Changes row, or before Changes is ready, keeps the explanation out", () => {
@@ -156,5 +162,8 @@ test("an entry with its own Changes row, or before Changes is ready, keeps the e
 test("an unaffected unchanged screen keeps its no-changes line", () => {
   const markup = details({});
   assert.ok(!markup.includes(SHARED), markup);
-  assert.ok(markup.endsWith(`<p>${NO_CHANGES}</p></section>`), markup);
+  assert.ok(
+    markup.endsWith(`<p class="mbk-reset">${NO_CHANGES}</p></section>`),
+    markup,
+  );
 });

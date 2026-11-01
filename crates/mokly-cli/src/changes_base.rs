@@ -15,6 +15,7 @@ use mokly_compare::base_render::{
     BasePreparationError, BasePreparationResult, BaseProvider, BaseRequest, PreparedBase,
 };
 use mokly_compare::cache_types::Lease;
+use mokly_compare::comparison_steps::Step;
 use mokly_compare::dependency_paths;
 use mokly_compare::dependency_types::Tier;
 use mokly_compare::error::{Error, Result};
@@ -123,6 +124,7 @@ impl NativeBase {
         if self.cancellation.requested() {
             return Err(Error::Cancelled);
         }
+        request.steps.step(Step::Rendering);
         let runtime = Arc::new(Runtime::new(
             tree.clone(),
             self.runtime.dependency_tree.clone(),

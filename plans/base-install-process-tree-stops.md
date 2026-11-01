@@ -85,7 +85,9 @@ sessions. Windows keeps its kill-on-close job.
 - [ ] Update `crates/mokly-platform/README.md` for the descendant walk.
 - [ ] Remove the status lines of `docs/protocol/mokly-runtime.md` and
       `docs/protocol/mokly-base-install-processes.md`.
-- [ ] Tick user item 150 in `plans/rust-rebuild.md` with the smallest edit.
+- [ ] Close `plans/follow-ups/yarn-classic-script-stop.md` when the stop
+      implementation is complete. Main replaced the completed Rust rebuild
+      plan with that follow-up file.
 
 ## Milestone 4: Verification, commit, review, and pull request
 

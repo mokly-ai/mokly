@@ -55,7 +55,7 @@ export function registerDesignComparisonStacks(
       ).href,
     );
     const scroller = page.locator(
-      `.ce-preview-view[data-preview-viewport="${viewport}"] .mbk-stack-viewport`,
+      `.ce-preview-view[data-preview-viewport="${viewport}"] .mb-viewport`,
     );
     await expect(scroller, file).toHaveCount(1);
     await expect(scroller, file).toBeVisible();
@@ -74,9 +74,11 @@ export function registerDesignComparisonStacks(
               const rect = element.getBoundingClientRect();
               return [rect.left, rect.top, rect.width, rect.height];
             };
-            const stack = node.querySelector(".mbk-stack")!;
-            const before = node.querySelector(".mbk-stack-layer--before")!;
-            const after = node.querySelector(".mbk-stack-layer--after")!;
+            const stack = node.querySelector(".mb-viewport-box")!;
+            const before = node.querySelector(".mb-pane--before")!;
+            const after = node.querySelector(".mb-pane--after")!;
+            const surface = (layer: Element) =>
+              layer.querySelector(":scope > .mb-pane-doc")!;
             const chrome = node.closest(".browser-frame, .phone-frame")!;
             const blended: string[] = [];
             for (
@@ -90,18 +92,23 @@ export function registerDesignComparisonStacks(
             }
             return {
               after: box(after),
-              afterBackground: getComputedStyle(after).backgroundColor,
+              afterBackground: getComputedStyle(surface(after)).backgroundColor,
               afterBlend: getComputedStyle(after).mixBlendMode,
               afterOpacity: getComputedStyle(after).opacity,
               before: box(before),
-              beforeBackground: getComputedStyle(before).backgroundColor,
+              beforeBackground: getComputedStyle(surface(before))
+                .backgroundColor,
               beforeBlend: getComputedStyle(before).mixBlendMode,
               beforeOpacity: getComputedStyle(before).opacity,
               blended,
+              documentHeights: [
+                ...node.querySelectorAll(".mbk-stack-document"),
+              ].map((document) => document.getBoundingClientRect().height),
               isolation: getComputedStyle(stack).isolation,
-              overflow: getComputedStyle(node).overflow,
+              // The shipped viewport scrolls in the shell; a static artboard
+              // draws its position, so it has no range to scroll.
+              range: node.scrollHeight - node.clientHeight,
               scrollerHeight: node.getBoundingClientRect().height,
-              stackHeight: stack.getBoundingClientRect().height,
               scrolls: node.scrollTop,
             };
           });
@@ -109,10 +116,12 @@ export function registerDesignComparisonStacks(
           expect(facts.after, `${where}: layers coincide`).toEqual(
             facts.before,
           );
-          expect(facts.stackHeight, where).toBeGreaterThanOrEqual(
-            facts.scrollerHeight - 1,
-          );
-          expect(facts.overflow, where).toBe("hidden");
+          expect(facts.documentHeights, where).toHaveLength(2);
+          for (const height of facts.documentHeights)
+            expect(height, where).toBeGreaterThanOrEqual(
+              facts.scrollerHeight - 1,
+            );
+          expect(facts.range, where).toBe(0);
           expect(facts.scrolls, where).toBe(0);
           expect(facts.isolation, where).toBe("isolate");
           expect(facts.beforeBackground, where).toBe(SCREEN_BACKGROUND[scheme]);
@@ -154,14 +163,14 @@ export function registerDesignComparisonStacks(
           const headings = (side: string) =>
             [
               ...node.querySelectorAll(
-                `.mbk-stack-layer--${side} .mbk-shot-sections h3`,
+                `.mb-pane--${side} .mbk-shot-sections h3`,
               ),
             ].map((heading) => ({
               text: heading.textContent,
               top: heading.getBoundingClientRect().top - top,
             }));
           const stack = node
-            .querySelector(".mbk-stack")!
+            .querySelector(".mb-pane--before .mbk-stack-document")!
             .getBoundingClientRect();
           const track = node
             .querySelector(".mbk-stack-scrollbar")!

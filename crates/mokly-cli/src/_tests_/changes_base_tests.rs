@@ -9,6 +9,7 @@ use mokly_compare::base_render::{
     BasePreparationError, BaseProvider, BaseRequest, HistoricalSources,
 };
 use mokly_compare::cache_types::Lease;
+use mokly_compare::comparison_steps::{Step, StepsMock};
 use mokly_compare::dependency_types::{Resolved, Tier};
 use mokly_compare::error::Error;
 use mokly_compare::sources::SourcesMock;
@@ -81,6 +82,17 @@ fn sources(events: Events, attaches: usize) -> Unimock {
     )
 }
 
+/// Comparison steps that log the rendering step; any other step fails the test.
+fn steps(events: Events) -> Unimock {
+    Unimock::new(
+        StepsMock::step
+            .each_call(matching!(Step::Rendering))
+            .answers_arc(Arc::new(move |_, _| {
+                events.lock().unwrap().push("rendering");
+            })),
+    )
+}
+
 fn lease() -> Arc<Lease> {
     Arc::new(Lease {
         directory: "/base".into(),
@@ -114,6 +126,7 @@ fn prepare(
     tree: Unimock,
     sources: Unimock,
     install_scripts: bool,
+    steps: Unimock,
 ) -> BasePreparationError {
     let head = Arc::new(Runtime::new(
         Arc::new(Unimock::new(())), Arc::new(Unimock::new(())),
@@ -149,6 +162,7 @@ fn prepare(
             sources: Arc::new(sources),
             failures: Arc::new(Unimock::new(())),
         },
+        steps: Arc::new(steps),
     })
     .err()
     .unwrap()
@@ -168,9 +182,10 @@ fn native_base_uses_the_head_pool_and_the_leased_base_source_root() {
         tree(events.clone()),
         sources(events.clone(), 1),
         false,
+        steps(events.clone()),
     );
     assert!(matches!(*error.source, Error::Catalogue { .. }));
-    assert_eq!(events.lock().unwrap().last(), Some(&"attach"));
+    assert!(events.lock().unwrap().ends_with(&["attach", "rendering"]));
 }
 
 #[test]
@@ -191,8 +206,9 @@ fn native_base_reports_scripts_off_after_a_tier_two_install() {
             Config::default(),
             dependencies,
             tree(events.clone()),
-            sources(events, 1),
+            sources(events.clone(), 1),
             install_scripts,
+            steps(events),
         );
         assert_eq!(error.scripts_off, expected);
     }
@@ -219,12 +235,13 @@ fn a_renderer_configuration_attaches_an_existing_extraction_before_the_configura
         tree(events.clone()),
         sources(events.clone(), 2),
         false,
+        steps(events.clone()),
     );
     assert!(matches!(*error.source, Error::Catalogue { .. }));
     let events = events.lock().unwrap();
     assert_eq!(events.first(), Some(&"attach"));
     assert!(events.contains(&"read configuration"));
-    assert_eq!(events.last(), Some(&"attach"));
+    assert!(events.ends_with(&["attach", "rendering"]));
 }
 
 #[test]
@@ -249,9 +266,10 @@ fn a_failed_early_lookup_keeps_the_base_reads_on_git() {
         tree(events.clone()),
         sources(events.clone(), 1),
         false,
+        steps(events.clone()),
     );
     assert!(matches!(*error.source, Error::Catalogue { .. }));
     let events = events.lock().unwrap();
     assert_eq!(events.first(), Some(&"read configuration"));
-    assert_eq!(events.last(), Some(&"attach"));
+    assert!(events.ends_with(&["attach", "rendering"]));
 }

@@ -1,29 +1,37 @@
-import { SelectionControl } from "../../parts/selection_control.js";
+import { mockLink } from "@mokly/mokly";
+
+import {
+  ComparisonToolbar,
+  type ComparisonMode as ToolbarMode,
+} from "../../../../../../packages/ui/src/comparison-toolbar/comparison-toolbar.js";
+import type { ComparisonMode } from "../../parts/destinations.js";
 
 import type { ComparisonToolbarProps } from "./comparison-toolbar.js";
 
-const modes = [
-  ["current", "Current"],
-  ["side-by-side", "Side by side"],
-  ["overlay", "Overlay"],
-  ["difference", "Difference"],
-] as const;
+/** The shipped band's name for each saved mode, and the reverse. */
+const TOOLBAR_MODES = {
+  current: "current",
+  "side-by-side": "side",
+  overlay: "overlay",
+  difference: "difference",
+} as const satisfies Record<ComparisonMode, ToolbarMode>;
+const SAVED_MODES = {
+  current: "current",
+  side: "side-by-side",
+  overlay: "overlay",
+  difference: "difference",
+} as const satisfies Record<ToolbarMode, ComparisonMode>;
+
+/** A static artboard runs no script, so the band's callbacks do nothing. */
+function ignore() {}
 
 /**
- * Scroll together, the native switch that follows the mode group in every
- * diff mode. It toggles in place and opens nothing, because a static artboard
- * has no versions to scroll.
+ * The shipped comparison band. A mode with a destination links to the
+ * artboard that shows it, and the shown mode never links. An accessible band
+ * draws the other modes and Refresh as native buttons, as the component
+ * explorer depicts them; otherwise they are inert. A static artboard has a
+ * loaded comparison, so every diff mode draws Refresh.
  */
-function ScrollTogether({ on }: { on: boolean }) {
-  return (
-    <label className="mbk-cmp-sync">
-      <input type="checkbox" role="switch" defaultChecked={on} />
-      <span className="mbk-cmp-sync-track" aria-hidden="true" />
-      Scroll together
-    </label>
-  );
-}
-
 export function ComparisonToolbarView({
   mode,
   eligible,
@@ -31,28 +39,22 @@ export function ComparisonToolbarView({
   scrollTogether,
   destinations,
 }: ComparisonToolbarProps) {
-  if (!eligible) return null;
   return (
-    <div className="mbk-cmp-toolbar">
-      <span className="mbk-seg" role="group" aria-label="Comparison mode">
-        {modes.map(([key, label]) => (
-          <SelectionControl
-            key={key}
-            accessible={accessible}
-            active={key === mode}
-            label={label}
-            to={key === mode ? undefined : destinations[key]}
-          />
-        ))}
-      </span>
-      {mode !== "current" ? (
-        <>
-          <ScrollTogether on={scrollTogether} />
-          <span className="mbk-cmp-refresh" aria-label="Refresh comparison">
-            ↻
-          </span>
-        </>
-      ) : null}
-    </div>
+    <ComparisonToolbar
+      current={mode === "current"}
+      eligible={eligible}
+      interactive={accessible}
+      loaded
+      mode={TOOLBAR_MODES[mode]}
+      modeHref={(shown) => {
+        const saved = SAVED_MODES[shown];
+        const destination = saved === mode ? undefined : destinations[saved];
+        return destination === undefined ? undefined : mockLink(destination);
+      }}
+      onMode={ignore}
+      onRefresh={ignore}
+      onTogether={ignore}
+      together={scrollTogether}
+    />
   );
 }

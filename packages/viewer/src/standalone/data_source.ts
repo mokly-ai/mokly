@@ -10,6 +10,7 @@ import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { ShellDataSource } from "../shell/data_source.js";
 import {
   DeliveryFetchError,
+  loadDeploymentFile,
   fetchJson,
   loadDetailResult,
   type JsonFetch,
@@ -39,7 +40,10 @@ export async function fetchStandaloneIndex(
 }
 
 /** Read the index, details and live routes of the stub's own origin. */
-export function standaloneDataSource(win: StandaloneWindow): ShellDataSource {
+export function standaloneDataSource(
+  win: StandaloneWindow,
+  staticCatalogue = true,
+): ShellDataSource {
   const root = new URL("/", win.location.href);
   return {
     loadIndex: (signal) => fetchStandaloneIndex(win, signal),
@@ -55,6 +59,12 @@ export function standaloneDataSource(win: StandaloneWindow): ShellDataSource {
     deploymentChanged() {
       win.location.reload();
     },
+    ...(staticCatalogue
+      ? {
+          loadDeployment: (signal: AbortSignal) =>
+            loadDeploymentFile(root, signal, win.fetch),
+        }
+      : {}),
     live: standaloneLiveSource(win),
   };
 }

@@ -1,15 +1,15 @@
 import { expect } from "@playwright/test";
 
-import { test } from "./browser_test.js";
-import {
-  crossOriginFixture,
-  mountCrossFrame,
-  type FrameTestWindow,
-} from "./frame_adapter_fixture.js";
+import type { InstanceEvent } from "@mokly/viewer";
 
-let fixture: Awaited<ReturnType<typeof crossOriginFixture>>;
+import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
+
+import { test } from "./browser_test.js";
+import type {} from "./viewer_harness.js";
+
+let fixture: Awaited<ReturnType<typeof viewerFixture>>;
 test.beforeAll(async () => {
-  fixture = await crossOriginFixture({
+  fixture = await viewerFixture({
     body: '<action.Component label="Visible" />',
     actionRender:
       "(props) => <button style={{width:160,height:40}}>{props.label}</button>",
@@ -22,10 +22,17 @@ for (const hostile of [
   "universal-important",
   "inherited",
 ] as const) {
-  test(`inspector preserves highlighted pixels under ${hostile} consumer styles`, async ({
+  test(`shell preserves highlighted pixels under ${hostile} consumer styles`, async ({
     page,
   }) => {
-    await mountCrossFrame(page, fixture);
+    await page.goto(fixture.host.url);
+    await page.waitForFunction(() => Boolean(window.viewerHarness));
+    await page.evaluate(() =>
+      window.viewerHarness.start("one", { cross: true }),
+    );
+    await expect(
+      page.locator('iframe[data-workspace-frame="mobile"]'),
+    ).toHaveAttribute("data-mokly-frame-state", "ready");
     const child = page
       .frames()
       .find((frame) => frame.url().startsWith(fixture.frames.url))!;
@@ -37,7 +44,7 @@ for (const hostile of [
             ? "* { background-color: red !important; padding: 3px !important; border: 4px solid red !important; box-shadow: 0 0 20px red !important; color: purple !important } div { opacity: .6 !important; display: none !important; transform: translate(15px, 10px) !important; filter: blur(2px) !important }"
             : "html { color: red; fill: red; stroke: red; opacity: .8 } div { color: inherit; opacity: inherit; background: currentColor }",
     });
-    const frame = page.frameLocator("#frame");
+    const frame = page.frameLocator('iframe[data-workspace-frame="mobile"]');
     const key = fixture.usage.instances.find(
       (item) => item.id === "action",
     )!.key;
@@ -59,14 +66,20 @@ for (const hostile of [
     const undimmed = await page.screenshot({ clip: surrounding });
     await page.evaluate(
       (key) =>
-        (window as unknown as FrameTestWindow).mounted.highlight([key], "pick"),
+        window.viewerHarness.get("one").ref.current.highlightInstance({
+          screenPath: "home",
+          viewport: "mobile",
+          colorScheme: "light",
+          key,
+        }),
       key,
     );
-    await expect(frame.locator("[data-mokly-overlay] mask")).toHaveCount(1);
+    await expect(page.locator(".mbk-highlight-layer mask")).toHaveCount(1);
+    await expect(frame.locator("[data-mokly-overlay]")).toHaveCount(0);
     expect(await page.screenshot({ clip })).toEqual(before);
     expect(await page.screenshot({ clip: surrounding })).not.toEqual(undimmed);
-    const style = await frame
-      .locator("[data-mokly-overlay]")
+    const style = await page
+      .locator(".mbk-highlight-layer")
       .evaluate((element) => {
         const style = getComputedStyle(element);
         return {
@@ -92,21 +105,22 @@ for (const hostile of [
       .poll(() =>
         page.evaluate(
           (key) =>
-            (window as unknown as FrameTestWindow).frameEvents
-              .filter(
+            window.viewerHarness
+              .get("one")
+              .events.filter(
                 (event) =>
-                  (event.type === "hover" || event.type === "click") &&
-                  event.key === key,
+                  (event.name === "hover" || event.name === "click") &&
+                  (event.value as InstanceEvent).instance?.key === key,
               )
-              .map((event) => event.type),
+              .map((event) => event.name),
           key,
         ),
       )
       .toEqual(expect.arrayContaining(["hover", "click"]));
     await page.evaluate(() =>
-      (window as unknown as FrameTestWindow).mounted.dispose(),
+      window.viewerHarness.get("one").ref.current.highlightInstance(null),
     );
-    await expect(frame.locator("[data-mokly-overlay]")).toHaveCount(0);
+    await expect(page.locator(".mbk-highlight-layer")).toHaveCount(0);
     expect(await page.screenshot({ clip: surrounding })).toEqual(undimmed);
   });
 }

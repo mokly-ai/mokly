@@ -22,9 +22,9 @@ function missingMessages(kind: ViewRouteKind): string[] {
       wording={entryWording(kind)}
     />,
   );
-  return [...markup.matchAll(/<p class="mb-pane-missing">([^<]*)<\/p>/g)].map(
-    (match) => match[1]!,
-  );
+  return [
+    ...markup.matchAll(/<p class="mb-pane-missing mbk-reset">([^<]*)<\/p>/g),
+  ].map((match) => match[1]!);
 }
 
 /** The message of a comparison whose review has no record for the entry. */
@@ -55,10 +55,10 @@ test("a missing pane uses the design catalogue's copy for its entry kind", () =>
 test("a component without a review record does not call itself a screen", () => {
   assert.equal(
     unavailableMessage("component"),
-    "<p>This variant has no comparison available.</p>",
+    '<p class="mbk-reset">This variant has no comparison available.</p>',
   );
   assert.equal(
     unavailableMessage("screen"),
-    "<p>This screen has no comparison available.</p>",
+    '<p class="mbk-reset">This screen has no comparison available.</p>',
   );
 });

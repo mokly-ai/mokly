@@ -12,7 +12,7 @@ import { fenceDetail } from "../src/catalogue/detail_fences.js";
 import { readEntryDetail } from "../src/catalogue/detail_reader.js";
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
 
-import { indexFixture, rawDetailFixtures } from "./catalogue_v8_fixture.js";
+import { indexFixture, rawDetailFixtures } from "./catalogue_v9_fixture.js";
 
 type Raw = Record<string, unknown>;
 
