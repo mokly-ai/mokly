@@ -2,6 +2,8 @@
 
 use std::collections::BTreeMap;
 
+use crate::html_source_map::SourceMap;
+
 /// A source span owned by Mokly's HTML token boundary.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Span {
@@ -18,6 +20,15 @@ pub struct Spanned {
     pub value: Vec<u8>,
     /// Source span.
     pub span: Span,
+    /// Decoded byte origins and the value's own source range.
+    pub source_map: SourceMap,
+}
+
+impl Spanned {
+    /// Return the source byte offset of one decoded byte.
+    pub fn source_offset(&self, decoded: usize) -> usize {
+        self.source_map.source_offset(decoded)
+    }
 }
 
 /// A start tag.

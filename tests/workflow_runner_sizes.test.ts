@@ -29,11 +29,11 @@ const PROVENANCE_PUBLISH_RUNNER = "ubuntu-24.04";
  */
 const LARGER_LINUX_RUNNERS: Readonly<Record<string, string>> = {
   "design-attribution.yml:design-attribution": "blacksmith-8vcpu-ubuntu-2404",
-  "ci.yml:repository": "blacksmith-8vcpu-ubuntu-2404",
-  "ci.yml:viewer": "blacksmith-8vcpu-ubuntu-2404",
-  "ci.yml:browser": "blacksmith-8vcpu-ubuntu-2404",
-  "ci.yml:static-delivery": "blacksmith-8vcpu-ubuntu-2404",
-  "blacksmith-testbox.yml:testbox": "blacksmith-8vcpu-ubuntu-2404",
+  "ci.yml:repository": "blacksmith-4vcpu-ubuntu-2404",
+  "ci.yml:viewer": "blacksmith-4vcpu-ubuntu-2404",
+  "ci.yml:browser": "blacksmith-4vcpu-ubuntu-2404",
+  "ci.yml:static-delivery": "blacksmith-4vcpu-ubuntu-2404",
+  "blacksmith-testbox.yml:testbox": "blacksmith-4vcpu-ubuntu-2404",
 };
 /** CI's Windows native job compiles and tests the whole Rust workspace. */
 const CI_WINDOWS_NATIVE_RUNNER = "blacksmith-8vcpu-windows-2025";

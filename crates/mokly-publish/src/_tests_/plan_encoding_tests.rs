@@ -4,6 +4,7 @@ use bytes::Bytes;
 
 use crate::http::{Body, Encoding, Response};
 use crate::plan::Plan;
+use crate::redaction::Secret;
 use crate::settings::Settings;
 
 use super::support::response;
@@ -19,7 +20,7 @@ fn plan_body(encodings: &str) -> Response {
 }
 
 fn parse(encodings: &str) -> Result<Plan, crate::error::Error> {
-    let settings = Settings::new("https://api.example.com/plan", "secret".to_owned(), 1).unwrap();
+    let settings = Settings::new("https://api.example.com/plan", Secret::new("secret"), 1).unwrap();
     Plan::parse(&plan_body(encodings), &settings, &Default::default())
 }
 

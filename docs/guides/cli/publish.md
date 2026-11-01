@@ -46,10 +46,11 @@ Set the token in `MOKLY_TOKEN`, not with `--token`. Other users of the machine
 can read command-line arguments through `/proc/{pid}/cmdline` and `ps`.
 
 Lifecycle scripts of a base dependency install do not receive `MOKLY_TOKEN`.
-A script runs as your user, so it can still read the environment of Mokly and
-of the shell or launcher that started Mokly. Pass `--no-base-install-scripts`
-to every command that runs with a token in its environment, such as a publish.
-The flag keeps the scripts off even when `review.baseInstallScripts` is `true`.
+A script runs as your user. Code that runs as your user can still read the
+environment of Mokly and of the shell or launcher that started it. Publish from
+a job that runs only code you trust. Pass `--no-base-install-scripts` to every
+command that runs with a token in its environment, such as a publish. The flag
+keeps the scripts off even when `review.baseInstallScripts` is `true`.
 
 ## Checkout and identity
 

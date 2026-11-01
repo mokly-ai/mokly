@@ -1,6 +1,7 @@
 //! Public grammar acceptance and command restrictions.
 
 use clap::CommandFactory;
+use mokly_publish::redaction::Secret;
 
 use crate::errors::Failure;
 use crate::grammar::{Cli, Verb};
@@ -160,14 +161,14 @@ fn environment_fallbacks_and_resource_limits_are_validated() {
         sidecars: Some("2".into()),
         sidecar_timeout_ms: None,
         endpoint: Some("https://example.com/plan".into()),
-        token: Some("secret==".into()),
+        token: Some(Secret::new("secret==")),
     };
     validate(&mut cli, &environment).unwrap();
     assert_eq!(cli.common().sidecars, Some(2));
     let Some(Verb::Publish(publish)) = cli.command else {
         panic!()
     };
-    assert_eq!(publish.token.as_deref(), Some("secret=="));
+    assert_eq!(publish.token.as_ref().map(Secret::expose), Some("secret=="));
     for (name, value) in [
         ("--token", "bad token"),
         ("--token", "=abc"),
@@ -231,4 +232,44 @@ fn timeout_environment_is_parsed_once_and_retained_for_the_pool() {
             Err(Failure::SidecarTimeoutEnvironment)
         ));
     }
+}
+
+#[test]
+fn cli_publish_debug_does_not_expose_raw_tokens() {
+    let mut cli = try_parse(["mokly", "publish", "--token=probe-secret-181"]).unwrap();
+    assert!(!format!("{cli:?}").contains("probe-secret-181"));
+    let Some(Verb::Publish(publish)) = &cli.command else {
+        panic!()
+    };
+    assert!(!format!("{publish:?}").contains("probe-secret-181"));
+
+    validate(
+        &mut cli,
+        &Environment {
+            endpoint: Some("https://example.com/plan".into()),
+            cores: 1,
+            ..Environment::default()
+        },
+    )
+    .unwrap();
+    let Some(Verb::Publish(publish)) = &cli.command else {
+        panic!()
+    };
+    assert!(!format!("{publish:?}").contains("probe-secret-181"));
+
+    let mut environment_cli = try_parse(["mokly", "publish"]).unwrap();
+    validate(
+        &mut environment_cli,
+        &Environment {
+            endpoint: Some("https://example.com/plan".into()),
+            token: Some(Secret::new("probe-secret-181")),
+            cores: 1,
+            ..Environment::default()
+        },
+    )
+    .unwrap();
+    let Some(Verb::Publish(publish)) = &environment_cli.command else {
+        panic!()
+    };
+    assert!(!format!("{publish:?}").contains("probe-secret-181"));
 }
