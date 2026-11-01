@@ -1,5 +1,7 @@
 # mokly-source-interface
 
+Status: Follow-up work remains in the [nested path lookup item](../../plans/follow-ups/batch-lookup-nested-paths.md).
+
 `mokly-source-interface` defines read-only access to an authored source tree.
 Discovery and rendering depend on its `SourceTree` trait. Working-tree and
 Git-tree adapters use the same path, node, and error contract. Depend on it to
