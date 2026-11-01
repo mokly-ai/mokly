@@ -5,24 +5,26 @@ mod unix {
     //! Run a Node manager that creates a detached child with ignored stdio.
 
     use std::io::Read;
-    use std::os::unix::fs::PermissionsExt;
-    use std::process::Command as OsCommand;
+    use std::path::{Path, PathBuf};
+    use std::process;
     use std::sync::Arc;
     use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::mpsc;
+    use std::thread::JoinHandle;
     use std::time::{Duration, Instant};
 
     use mokly_compare::commands::{Command, Commands, TimedCommands};
-    use mokly_compare::error::Error;
+    use mokly_compare::error::{Error, Result};
     use mokly_compare::process::SystemSpawner;
     use mokly_git::control::{Clock, SystemClock, Token};
     use mokly_platform::flush::SystemFlush;
     use mokly_platform::processes::SystemProcessGroups;
 
-    fn fixture() -> (tempfile::TempDir, std::path::PathBuf, std::path::PathBuf) {
+    fn fixture() -> (tempfile::TempDir, PathBuf, PathBuf) {
         let temporary = tempfile::tempdir().unwrap();
         let fifo = temporary.path().join("child.pid");
         assert!(
-            OsCommand::new("mkfifo")
+            process::Command::new("mkfifo")
                 .arg(&fifo)
                 .status()
                 .unwrap()
@@ -43,19 +45,14 @@ setInterval(() => {}, 1000);
 "#,
         )
         .unwrap();
-        std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755)).unwrap();
         (temporary, script, fifo)
     }
 
-    fn command(
-        script: &std::path::Path,
-        fifo: &std::path::Path,
-        directory: &std::path::Path,
-        timeout: Duration,
-    ) -> Command {
+    fn command(script: &Path, fifo: &Path, directory: &Path, timeout: Duration) -> Command {
         Command {
             program: "node".into(),
             args: vec![script.as_os_str().to_owned(), fifo.as_os_str().to_owned()],
+            scripts: true,
             directory: directory.to_owned(),
             timeout,
             byte_limit: None,
@@ -88,15 +85,11 @@ setInterval(() => {}, 1000);
         }
 
         fn pause(&self, duration: Duration) {
-            std::thread::sleep(duration);
+            SystemClock::default().pause(duration);
         }
     }
 
-    fn timed(
-        cancellation: Arc<Token>,
-        clock: Arc<dyn Clock>,
-        root: &std::path::Path,
-    ) -> TimedCommands {
+    fn timed(cancellation: Arc<Token>, clock: Arc<dyn Clock>, root: &Path) -> TimedCommands {
         TimedCommands {
             spawner: Arc::new(SystemSpawner {
                 groups: Arc::new(SystemProcessGroups),
@@ -111,17 +104,18 @@ setInterval(() => {}, 1000);
         }
     }
 
-    fn read_pid(fifo: &std::path::Path) -> i32 {
-        let mut bytes = Vec::new();
-        std::fs::File::open(fifo)
-            .unwrap()
-            .read_to_end(&mut bytes)
-            .unwrap();
-        String::from_utf8(bytes)
-            .unwrap()
-            .trim()
-            .parse::<i32>()
-            .unwrap()
+    fn read_pid(fifo: &Path) -> i32 {
+        let fifo = fifo.to_owned();
+        let (sender, receiver) = mpsc::channel();
+        std::thread::spawn(move || {
+            let mut bytes = String::new();
+            std::fs::File::open(fifo)
+                .unwrap()
+                .read_to_string(&mut bytes)
+                .unwrap();
+            sender.send(bytes.trim().parse::<i32>().unwrap()).unwrap();
+        });
+        receiver.recv_timeout(Duration::from_secs(10)).unwrap()
     }
 
     fn process_exists(pid: i32) -> bool {
@@ -135,7 +129,7 @@ setInterval(() => {}, 1000);
             return false;
         }
         #[cfg(target_os = "macos")]
-        if let Ok(output) = OsCommand::new("ps")
+        if let Ok(output) = process::Command::new("ps")
             .args(["-o", "stat=", "-p", &pid.to_string()])
             .output()
             && String::from_utf8_lossy(&output.stdout)
@@ -144,65 +138,89 @@ setInterval(() => {}, 1000);
         {
             return false;
         }
-        OsCommand::new("kill")
+        process::Command::new("kill")
             .args(["-0", &pid.to_string()])
+            .stdout(process::Stdio::null())
+            .stderr(process::Stdio::null())
             .status()
             .is_ok_and(|status| status.success())
     }
 
     fn wait_gone(pid: i32) {
         let deadline = Instant::now() + Duration::from_secs(10);
-        loop {
-            if !process_exists(pid) {
-                return;
-            }
-            assert!(Instant::now() < deadline, "detached child {pid} remains");
+        while process_exists(pid) && Instant::now() < deadline {
             std::thread::sleep(Duration::from_millis(10));
+        }
+        assert!(
+            !process_exists(pid),
+            "detached child {pid} remains after the tree stop"
+        );
+    }
+
+    struct Running {
+        _temporary: tempfile::TempDir,
+        cancellation: Arc<Token>,
+        worker: Option<JoinHandle<Result<Vec<u8>>>>,
+        pid: Option<i32>,
+    }
+
+    impl Running {
+        fn start(clock: Arc<dyn Clock>) -> Self {
+            let (temporary, script, fifo) = fixture();
+            let cancellation = Arc::new(Token::default());
+            let commands = timed(Arc::clone(&cancellation), clock, temporary.path());
+            let request = command(&script, &fifo, temporary.path(), Duration::from_secs(120));
+            let worker = std::thread::spawn(move || commands.run(&request));
+            let mut running = Self {
+                _temporary: temporary,
+                cancellation,
+                worker: Some(worker),
+                pid: None,
+            };
+            running.pid = Some(read_pid(&fifo));
+            running
+        }
+
+        fn finish(&mut self) -> Result<Vec<u8>> {
+            self.worker.take().unwrap().join().unwrap()
         }
     }
 
-    fn cleanup(pid: i32) {
-        let _ = OsCommand::new("kill")
-            .args(["-9", &pid.to_string()])
-            .status();
+    impl Drop for Running {
+        fn drop(&mut self) {
+            self.cancellation.cancel();
+            if let Some(pid) = self.pid {
+                let _ = process::Command::new("kill")
+                    .args(["-9", &pid.to_string()])
+                    .stdout(process::Stdio::null())
+                    .stderr(process::Stdio::null())
+                    .status();
+            }
+            if let Some(worker) = self.worker.take() {
+                let _ = worker.join();
+            }
+        }
     }
 
     #[test]
     fn timeout_kills_a_detached_node_child() {
-        let (temporary, script, fifo) = fixture();
-        let cancellation = Arc::new(Token::default());
         let clock = Arc::new(TestClock::new());
-        let commands = timed(
-            cancellation,
-            Arc::clone(&clock) as Arc<dyn Clock>,
-            temporary.path(),
-        );
-        let request = command(&script, &fifo, temporary.path(), Duration::from_secs(120));
-        let worker = std::thread::spawn(move || commands.run(&request));
-        let pid = read_pid(&fifo);
+        let mut running = Running::start(Arc::clone(&clock) as Arc<dyn Clock>);
+        let pid = running.pid.unwrap();
         assert!(process_exists(pid));
-        clock.advance(Duration::from_secs(120));
-        assert!(matches!(worker.join().unwrap(), Err(Error::InstallTimeout)));
+        assert!(!running.worker.as_ref().unwrap().is_finished());
+        clock.advance(Duration::from_secs(121));
+        assert!(matches!(running.finish(), Err(Error::InstallTimeout)));
         wait_gone(pid);
-        cleanup(pid);
     }
 
     #[test]
     fn cancellation_kills_a_detached_node_child() {
-        let (temporary, script, fifo) = fixture();
-        let cancellation = Arc::new(Token::default());
-        let commands = timed(
-            Arc::clone(&cancellation),
-            Arc::new(SystemClock::default()),
-            temporary.path(),
-        );
-        let request = command(&script, &fifo, temporary.path(), Duration::from_secs(120));
-        let worker = std::thread::spawn(move || commands.run(&request));
-        let pid = read_pid(&fifo);
+        let mut running = Running::start(Arc::new(SystemClock::default()));
+        let pid = running.pid.unwrap();
         assert!(process_exists(pid));
-        cancellation.cancel();
-        assert!(matches!(worker.join().unwrap(), Err(Error::Cancelled)));
+        running.cancellation.cancel();
+        assert!(matches!(running.finish(), Err(Error::Cancelled)));
         wait_gone(pid);
-        cleanup(pid);
     }
 }

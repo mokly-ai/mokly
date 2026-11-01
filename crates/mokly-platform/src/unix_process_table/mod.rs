@@ -12,7 +12,7 @@ pub(super) struct ProcessIdentity {
 }
 
 /// Impure process-table boundary used by the descendant walk.
-#[cfg_attr(test, unimock::unimock(api = ProcessTableMock))]
+#[cfg_attr(test, unimock::unimock(api = [IdentityMock, ChildrenMock, SignalMock]))]
 pub(super) trait ProcessTable: Send + Sync {
     /// Read the current identity, or return `None` when the process is gone.
     fn identity(&self, pid: i32) -> io::Result<Option<ProcessIdentity>>;
@@ -31,7 +31,3 @@ pub(crate) use linux::SystemTable;
 mod macos;
 #[cfg(target_os = "macos")]
 pub(crate) use macos::SystemTable;
-
-#[cfg(test)]
-#[path = "_tests_/unix_process_table_tests.rs"]
-mod unix_process_table_tests;

@@ -1,7 +1,7 @@
 //! macOS libproc process-table adapter.
 
 use std::io;
-use std::mem::{MaybeUninit, size_of};
+use std::mem::{MaybeUninit, size_of, size_of_val};
 
 use super::{ProcessIdentity, ProcessTable};
 
@@ -20,24 +20,23 @@ impl ProcessTable for SystemTable {
     fn children(&self, pid: i32) -> io::Result<Vec<ProcessIdentity>> {
         let mut pids = vec![0_i32; 256];
         loop {
-            let bytes = proc_list_children(pid, &mut pids)?;
-            if bytes == pids.len() * size_of::<i32>() {
+            let count = proc_list_children(pid, &mut pids)?;
+            if count >= pids.len() {
                 let Some(capacity) = pids.len().checked_mul(2) else {
                     return Err(io::ErrorKind::OutOfMemory.into());
                 };
                 pids.resize(capacity, 0);
                 continue;
             }
-            if bytes % size_of::<i32>() != 0 {
-                return Err(io::Error::new(
-                    io::ErrorKind::InvalidData,
-                    "libproc returned a partial child PID",
-                ));
-            }
             let mut children = Vec::new();
-            for &child in &pids[..bytes / size_of::<i32>()] {
-                if let Some(identity) = self.identity(child)? {
-                    children.push(identity);
+            for &child in &pids[..count] {
+                match info(child) {
+                    Ok(info) if info.pbi_ppid == pid as u32 => {
+                        children.push(identity(child, &info));
+                    }
+                    Ok(_) => {}
+                    Err(error) if error.raw_os_error() == Some(libc::ESRCH) => {}
+                    Err(error) => return Err(error),
                 }
             }
             children.sort_unstable_by_key(|identity| identity.pid);
@@ -63,7 +62,7 @@ impl ProcessTable for SystemTable {
 fn identity(pid: i32, info: &libc::proc_bsdinfo) -> ProcessIdentity {
     ProcessIdentity {
         pid,
-        start: (info.pbi_start_tvsec as u128) * 1_000_000 + info.pbi_start_tvusec as u128,
+        start: u128::from(info.pbi_start_tvsec) * 1_000_000 + u128::from(info.pbi_start_tvusec),
     }
 }
 
@@ -94,9 +93,12 @@ fn info(pid: i32) -> io::Result<libc::proc_bsdinfo> {
     Ok(unsafe { info.assume_init() })
 }
 
+/// `proc_listchildpids` returns a PID count, unlike `proc_listpids`.
 fn proc_list_children(pid: i32, pids: &mut [i32]) -> io::Result<usize> {
-    let bytes = (pids.len() * size_of::<i32>()) as i32;
-    // SAFETY: The mutable PID slice is valid for the exact byte capacity.
+    let Ok(bytes) = i32::try_from(size_of_val(pids)) else {
+        return Err(io::ErrorKind::InvalidInput.into());
+    };
+    // SAFETY: errno is thread-local. The mutable slice has the exact byte size.
     let result = unsafe {
         *libc::__error() = 0;
         libc::proc_listchildpids(pid, pids.as_mut_ptr().cast(), bytes)

@@ -6,14 +6,13 @@ use std::sync::{Arc, Mutex};
 
 use crate::error::{Error, InternalError, IoResult, Result};
 use crate::processes::ProcessGroup;
+use crate::unix_process_table::{ProcessIdentity, ProcessTable, SystemTable};
 
-use super::unix_process_table::{ProcessIdentity, ProcessTable, SystemTable};
-
-pub(crate) mod walk;
+use super::walk;
 
 /// Group-level signal boundary kept separate from process-table inspection.
 #[cfg_attr(test, unimock::unimock(api = GroupSignalMock))]
-pub(super) trait GroupSignal: Send + Sync {
+pub(crate) trait GroupSignal: Send + Sync {
     /// Send one signal to the owned process group. The result is true when the
     /// group is already gone and false when the signal reached a live group.
     fn signal(&self, pid: i32, signal: i32) -> io::Result<bool>;
@@ -43,32 +42,32 @@ impl UnixGroup {
     }
 
     fn signal(&self, requested: i32) -> Result<()> {
-        let mut retained = self.retained.lock().map_err(|_| mutex_error())?;
-        let previous = retained.clone();
-        let stopped = self.group.signal(self.root.pid, libc::SIGSTOP);
-        let mut first_error = stopped.as_ref().err().map(clone_io_error);
-        let walk = if matches!(stopped, Ok(true)) && previous.is_empty() {
+        let mut retained = match self.retained.lock() {
+            Ok(retained) => retained,
+            Err(_) => return Err(mutex_error()),
+        };
+        let mut first_error = None;
+        let gone = match self.signal_group(libc::SIGSTOP) {
+            Ok(gone) => gone,
+            Err(source) => {
+                remember(&mut first_error, source);
+                false
+            }
+        };
+        let walk = if gone && retained.is_empty() {
             walk::WalkResult {
-                found: previous,
+                found: Vec::new(),
                 error: None,
             }
         } else {
-            walk::descendants(self.table.as_ref(), self.root, &previous)
+            walk::descendants(self.table.as_ref(), self.root, &retained)
         };
         if let Some(error) = walk.error {
             remember(&mut first_error, error);
         }
-        for identity in walk.found {
-            if !retained.contains(&identity) {
-                retained.push(identity);
-            }
-        }
-        let identities = retained.clone();
-        remember_result(
-            &mut first_error,
-            self.group.signal(self.root.pid, requested).map(|_| ()),
-        );
-        for identity in &identities {
+        *retained = walk.found;
+        remember_result(&mut first_error, self.signal_group(requested).map(|_| ()));
+        for identity in retained.iter() {
             remember_result(
                 &mut first_error,
                 signal_process(self.table.as_ref(), *identity, requested),
@@ -77,9 +76,9 @@ impl UnixGroup {
         if requested == libc::SIGTERM {
             remember_result(
                 &mut first_error,
-                self.group.signal(self.root.pid, libc::SIGCONT).map(|_| ()),
+                self.signal_group(libc::SIGCONT).map(|_| ()),
             );
-            for identity in &identities {
+            for identity in retained.iter() {
                 remember_result(
                     &mut first_error,
                     signal_process(self.table.as_ref(), *identity, libc::SIGCONT),
@@ -90,8 +89,27 @@ impl UnixGroup {
             Err(Error::Internal(InternalError::Io { source }))
         })
     }
+
+    /// A dead leader's group can still contain owned children. The OS reserves
+    /// its group ID until the last member exits. A reused leader PID, however,
+    /// belongs to a different process and must never receive a group signal.
+    /// Return true when the root cannot anchor a walk or the group is gone.
+    fn signal_group(&self, signal: i32) -> io::Result<bool> {
+        match self.table.identity(self.root.pid) {
+            Ok(Some(current)) if current != self.root => Ok(true),
+            Ok(current) => self
+                .group
+                .signal(self.root.pid, signal)
+                .map(|gone| gone || current.is_none()),
+            Err(source) => {
+                let _ = self.group.signal(self.root.pid, signal);
+                Err(source)
+            }
+        }
+    }
 }
 
+/// A descendant that vanished between enumeration and signaling is stopped.
 fn signal_process(
     table: &dyn ProcessTable,
     identity: ProcessIdentity,
@@ -116,10 +134,6 @@ fn remember(slot: &mut Option<io::Error>, source: io::Error) {
     }
 }
 
-fn clone_io_error(source: &io::Error) -> io::Error {
-    io::Error::new(source.kind(), source.to_string())
-}
-
 fn mutex_error() -> Error {
     Error::Internal(InternalError::Io {
         source: io::Error::other("Unix process-tree state was poisoned"),
@@ -137,12 +151,15 @@ impl ProcessGroup for UnixGroup {
 }
 
 /// Attach a Unix process-tree guard to a live child.
-pub(super) fn attach(child: &Child, group: Arc<dyn GroupSignal>) -> Result<Box<dyn ProcessGroup>> {
-    let pid = i32::try_from(child.id()).map_err(|_| {
-        Error::Internal(InternalError::Io {
-            source: io::Error::other("process id exceeds pid_t"),
-        })
-    })?;
+pub(crate) fn attach(child: &Child, group: Arc<dyn GroupSignal>) -> Result<Box<dyn ProcessGroup>> {
+    let pid = match i32::try_from(child.id()) {
+        Ok(pid) => pid,
+        Err(_) => {
+            return Err(Error::Internal(InternalError::Io {
+                source: io::Error::other("process id exceeds pid_t"),
+            }));
+        }
+    };
     let table: Arc<dyn ProcessTable> = Arc::new(SystemTable);
     let root = table.identity(pid).platform()?.ok_or_else(|| {
         Error::Internal(InternalError::Io {
@@ -152,14 +169,6 @@ pub(super) fn attach(child: &Child, group: Arc<dyn GroupSignal>) -> Result<Box<d
     Ok(Box::new(UnixGroup::new(root, table, group)))
 }
 
-/// Build a production Unix group guard with the system process-table adapter.
-pub(super) fn attach_system(
-    child: &Child,
-    group: Arc<dyn GroupSignal>,
-) -> Result<Box<dyn ProcessGroup>> {
-    attach(child, group)
-}
-
 #[cfg(test)]
-#[path = "_tests_/unix_process_tree_tests.rs"]
-mod unix_process_tree_tests;
+#[path = "_tests_/group_tests.rs"]
+mod group_tests;

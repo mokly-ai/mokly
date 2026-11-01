@@ -14,7 +14,7 @@ impl ProcessTable for SystemTable {
     fn identity(&self, pid: i32) -> io::Result<Option<ProcessIdentity>> {
         match read_stat(pid) {
             Ok(stat) => Ok(Some(stat.identity)),
-            Err(error) if error.raw_os_error() == Some(libc::ENOENT) => Ok(None),
+            Err(error) if gone(&error) => Ok(None),
             Err(error) => Err(error),
         }
     }
@@ -24,7 +24,7 @@ impl ProcessTable for SystemTable {
         let task_dir = PathBuf::from(format!("/proc/{pid}/task"));
         let tasks = match fs::read_dir(&task_dir) {
             Ok(tasks) => tasks,
-            Err(error) if error.raw_os_error() == Some(libc::ENOENT) => return Ok(Vec::new()),
+            Err(error) if gone(&error) => return Ok(Vec::new()),
             Err(error) => return Err(error),
         };
         let mut children = Vec::new();
@@ -37,8 +37,11 @@ impl ProcessTable for SystemTable {
                         let Ok(child) = child.parse::<i32>() else {
                             continue;
                         };
-                        if let Some(identity) = self.identity(child)? {
-                            children.push(identity);
+                        match read_stat(child) {
+                            Ok(stat) if stat.parent == pid => children.push(stat.identity),
+                            Ok(_) => {}
+                            Err(error) if gone(&error) => {}
+                            Err(error) => return Err(error),
                         }
                     }
                 }
@@ -57,10 +60,24 @@ impl ProcessTable for SystemTable {
     }
 
     fn signal(&self, identity: ProcessIdentity, signal: i32) -> io::Result<()> {
-        if self.identity(identity.pid)? != Some(identity) {
-            return Ok(());
+        match open_pidfd(identity.pid) {
+            Ok(fd) => {
+                if self.identity(identity.pid)? != Some(identity) {
+                    return Ok(());
+                }
+                match pidfd_signal(&fd, signal) {
+                    Err(error) if error.raw_os_error() == Some(libc::ENOSYS) => {
+                        kill(self, identity, signal)
+                    }
+                    result => result,
+                }
+            }
+            Err(error) if error.raw_os_error() == Some(libc::ENOSYS) => {
+                kill(self, identity, signal)
+            }
+            Err(error) if gone(&error) => Ok(()),
+            Err(error) => Err(error),
         }
-        send_signal(identity.pid, signal)
     }
 }
 
@@ -95,7 +112,7 @@ fn read_stat(pid: i32) -> io::Result<Stat> {
     Ok(Stat {
         identity: ProcessIdentity {
             pid,
-            start: start as u128,
+            start: u128::from(start),
         },
         parent,
     })
@@ -103,10 +120,7 @@ fn read_stat(pid: i32) -> io::Result<Stat> {
 
 fn scan_children(parent: i32) -> io::Result<Vec<ProcessIdentity>> {
     let mut children = Vec::new();
-    let entries = match fs::read_dir("/proc") {
-        Ok(entries) => entries,
-        Err(error) => return Err(error),
-    };
+    let entries = fs::read_dir("/proc")?;
     for entry in entries {
         let entry = entry?;
         let Some(pid) = entry
@@ -119,7 +133,7 @@ fn scan_children(parent: i32) -> io::Result<Vec<ProcessIdentity>> {
         match read_stat(pid) {
             Ok(stat) if stat.parent == parent => children.push(stat.identity),
             Ok(_) => {}
-            Err(error) if error.raw_os_error() == Some(libc::ENOENT) => {}
+            Err(error) if gone(&error) => {}
             Err(error) => return Err(error),
         }
     }
@@ -128,23 +142,22 @@ fn scan_children(parent: i32) -> io::Result<Vec<ProcessIdentity>> {
     Ok(children)
 }
 
-fn send_signal(pid: i32, signal: i32) -> io::Result<()> {
-    match pidfd_signal(pid, signal) {
-        Ok(()) => Ok(()),
-        Err(error) if error.raw_os_error() == Some(libc::ENOSYS) => {
-            // SAFETY: The positive PID is checked by the caller immediately
-            // before this call. kill reads no process memory.
-            if unsafe { libc::kill(pid, signal) } == 0 {
-                Ok(())
-            } else {
-                Err(io::Error::last_os_error())
-            }
-        }
-        Err(error) => Err(error),
+/// Older kernels lack pidfds. Recheck the identity directly before `kill`.
+fn kill(table: &dyn ProcessTable, identity: ProcessIdentity, signal: i32) -> io::Result<()> {
+    if table.identity(identity.pid)? != Some(identity) {
+        return Ok(());
+    }
+    // SAFETY: The positive PID was identity-checked immediately before this
+    // call. kill reads no process memory.
+    if unsafe { libc::kill(identity.pid, signal) } == 0 {
+        Ok(())
+    } else {
+        Err(io::Error::last_os_error())
     }
 }
 
-fn pidfd_signal(pid: i32, signal: i32) -> io::Result<()> {
+/// Open before checking start time, so PID reuse cannot retarget the signal.
+fn open_pidfd(pid: i32) -> io::Result<OwnedFd> {
     // SAFETY: pidfd_open receives a valid PID and zero flags. The returned
     // descriptor is owned only after the syscall reports a nonnegative value.
     let fd = unsafe { libc::syscall(libc::SYS_pidfd_open, pid, 0) };
@@ -152,7 +165,10 @@ fn pidfd_signal(pid: i32, signal: i32) -> io::Result<()> {
         return Err(io::Error::last_os_error());
     }
     // SAFETY: The syscall returned a fresh descriptor owned by this function.
-    let fd = unsafe { OwnedFd::from_raw_fd(fd as i32) };
+    Ok(unsafe { OwnedFd::from_raw_fd(fd as i32) })
+}
+
+fn pidfd_signal(fd: &OwnedFd, signal: i32) -> io::Result<()> {
     // SAFETY: The live pidfd identifies the process instance. A null siginfo
     // pointer and zero flags request the documented direct signal operation.
     let result = unsafe {
@@ -169,4 +185,8 @@ fn pidfd_signal(pid: i32, signal: i32) -> io::Result<()> {
     } else {
         Err(io::Error::last_os_error())
     }
+}
+
+fn gone(error: &io::Error) -> bool {
+    matches!(error.raw_os_error(), Some(libc::ESRCH | libc::ENOENT))
 }

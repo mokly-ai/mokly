@@ -54,7 +54,8 @@ fn path_string(path: &Path) -> Result<CString> {
 }
 
 /// Configure a new session and, on Linux, a child subreaper before `execve`.
-/// The root can keep zombie children of adopted orphans until it exits.
+/// Subreaping keeps orphans inside the owned tree reachable through parent
+/// links while the manager runs, including children in other sessions.
 pub(crate) fn configure(command: &mut Command) {
     // SAFETY: The child runs this async-signal-safe call before exec. A new
     // session gives shells and their descendants one process group.
@@ -75,6 +76,7 @@ pub(crate) fn configure(command: &mut Command) {
     }
 }
 
+/// Capture the root identity before the caller can reap its child.
 pub(crate) fn attach(child: &Child) -> Result<Box<dyn ProcessGroup>> {
     unix_process_tree::attach(child, Arc::new(SystemGroupSignal))
 }
