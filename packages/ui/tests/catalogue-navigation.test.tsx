@@ -13,7 +13,7 @@ import {
 } from "../src/catalogue-navigation/catalogue-navigation.js";
 
 import { assertSameElement } from "./dom-assertions.js";
-import { column, leaf, link, specs } from "./navigation-fixture.js";
+import { column, folder, leaf, link, specs } from "./navigation-fixture.js";
 
 function scrollPane(container: HTMLElement): HTMLElement {
   const pane = container.querySelector<HTMLElement>("[data-mokly-nav-scroll]");
@@ -196,6 +196,43 @@ test("the tree reports that it waits, and the refs reach the column and the tree
   assertSameElement(nav.current, screen.getByRole("navigation"));
   assertSameElement(tree.current, scrollPane(container));
   assert.equal(tree.current?.getAttribute("aria-busy"), "true");
+});
+
+test("the host receives the current row and each summary by its disclosure key", () => {
+  const current = createRef<HTMLAnchorElement>();
+  const summaries = new Map<string, HTMLElement>();
+  render(
+    <CatalogueNavigation
+      {...column({
+        currentRowRef: current,
+        sections: [
+          specs([
+            folder("forms", {
+              open: true,
+              rows: [leaf(link("signup", { current: true, depth: 1 }))],
+            }),
+            leaf(link("home")),
+          ]),
+        ],
+        summaryRef: (disclosure) => (summary: HTMLElement | null) => {
+          if (summary) summaries.set(disclosure, summary);
+        },
+      })}
+    />,
+  );
+  assertSameElement(current.current, screen.getByText("signup"));
+  assert.deepEqual([...summaries.keys()].sort(), [
+    "folder:specs:forms",
+    "section:specs",
+  ]);
+  assertSameElement(
+    summaries.get("section:specs"),
+    screen.getByText("Specs").closest("summary"),
+  );
+  assertSameElement(
+    summaries.get("folder:specs:forms"),
+    screen.getByText("forms").closest("summary"),
+  );
 });
 
 test("the scrolling pane holds the status line, then the tree, which reports through the column", () => {

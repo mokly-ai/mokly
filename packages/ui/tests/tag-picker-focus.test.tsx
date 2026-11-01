@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { fireEvent, render, screen } from "@testing-library/react";
+import { createRef } from "react";
 
 import { TagPicker } from "../src/tag-picker/tag-picker.js";
 
@@ -157,6 +158,34 @@ test("a picker without callbacks keeps the state that its host passes", async ()
   assert.ok(landing);
   fireEvent.click(landing);
   // The focus return is the picker's own.
+  await settle();
+  assertSameElement(focused(), tagButton());
+});
+
+test("the host receives the button and the picker, which keep their own focus", async () => {
+  const toggle = createRef<HTMLButtonElement>();
+  const picker = createRef<HTMLDivElement>();
+  render(
+    <TagPicker
+      focusedIndex={1}
+      id={PICKER_ID}
+      interactive
+      open
+      pickerRef={picker}
+      tags={TAGS}
+      toggleRef={toggle}
+    />,
+  );
+  assertSameElement(toggle.current, tagButton());
+  assertSameElement(
+    picker.current,
+    screen.getByRole("group", { name: "Tags" }),
+  );
+  // The picker still focuses the host's chip and returns focus to its button.
+  const landing = chips()[1];
+  assertSameElement(focused(), landing);
+  assert.ok(landing);
+  fireEvent.click(landing);
   await settle();
   assertSameElement(focused(), tagButton());
 });

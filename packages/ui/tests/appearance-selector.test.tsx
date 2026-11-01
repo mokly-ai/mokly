@@ -124,6 +124,22 @@ test("without a callback a choice still changes the select", () => {
   assert.equal(select.value, "dark");
 });
 
+test("a controlled select shows the value of each render, as the face does", () => {
+  const { container, rerender } = render(
+    <AppearanceSelector {...MARK} changed={false} controlled value="auto" />,
+  );
+  rerender(
+    <AppearanceSelector {...MARK} changed={false} controlled value="dark" />,
+  );
+  assert.equal(appearanceSelect().value, "dark");
+  assert.equal(
+    container
+      .querySelector("[data-mokly-appearance-control]")
+      ?.getAttribute("data-appearance-value"),
+    "dark",
+  );
+});
+
 test("the change mark describes the select only while the other scheme changed", () => {
   const { container, rerender } = render(
     <AppearanceSelector {...MARK} changed={false} value="light" />,

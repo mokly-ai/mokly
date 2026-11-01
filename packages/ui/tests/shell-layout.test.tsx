@@ -4,12 +4,18 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { render, screen, within } from "@testing-library/react";
-import { createRef } from "react";
+import { createRef, type ComponentProps } from "react";
 import { renderToString } from "react-dom/server";
 
 import { MainRegion, ShellLayout } from "../src/shell-layout/shell-layout.js";
 
 import { assertSameElement } from "./dom-assertions.js";
+
+/** The marks of the shell root's state. */
+type RootMarks = Pick<
+  ComponentProps<typeof ShellLayout>,
+  "frameExpanded" | "resizing"
+>;
 
 /** A shell with marked slot content, as the standalone viewer fills it. */
 function shell(
@@ -19,6 +25,7 @@ function shell(
     theme: "auto",
     scheme: "light",
   },
+  marks: RootMarks = {},
 ) {
   return (
     <ShellLayout
@@ -32,8 +39,16 @@ function shell(
       statusId="mb-status"
       theme={appearance.theme}
       topBar={<header>Top bar</header>}
+      {...marks}
     />
   );
+}
+
+/** The class list of a shell root with the given marks. */
+function rootClass(marks: RootMarks): string | undefined {
+  return /^<div class="([^"]*)"/u.exec(
+    renderToString(shell(false, undefined, undefined, marks)),
+  )?.[1];
 }
 
 test("the shell root holds the skip link, the top bar, the body, and the route status", () => {
@@ -57,6 +72,17 @@ test("the shell root states its appearance and its preview scheme", () => {
   const root = container.firstElementChild;
   assert.equal(root?.getAttribute("data-mokly-theme"), "dark");
   assert.equal(root?.getAttribute("data-mokly-color-scheme"), "dark");
+});
+
+test("the root marks a separator drag and an expanded window for the stylesheets", () => {
+  assert.equal(
+    rootClass({ resizing: "navigation" }),
+    "mbk mbk-nav-resizing mbk-reset",
+  );
+  assert.equal(
+    rootClass({ frameExpanded: true, resizing: "inspector" }),
+    "mbk mbk-inspector-resizing frame-expanded mbk-reset",
+  );
 });
 
 test("the skip link goes to the main region, and the status announces each navigation", () => {

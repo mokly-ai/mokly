@@ -225,15 +225,23 @@ Tags: ui
 
 Depends on: 1
 
-- [ ] Give the `@mokly/ui` components props for the state that the viewer
+- [x] Give the `@mokly/ui` components props for the state that the viewer
       writes through the DOM today: the inspector height, expanded state, and
       ARIA values, the resizing state of the inspector and the navigation,
       and the expanded browser frame.
-- [ ] Give the components that the viewer measures element refs: the device
+- [x] Give the components that the viewer measures element refs: the device
       frame, the flow step, the stage embed, the workspace preview, and the
       marker layer.
-- [ ] Keep every visual result. Run the mockup check of `AGENTS.md` and the
-      `@mokly/ui` tests.
+- [x] Give the other package elements that the viewer finds by selector a
+      prop or a ref, so that Milestone 7 can remove each selector: the
+      Appearance select, the tag picker, the Highlight components toggle, the
+      inspector tabs, the main region, the scroll regions, the current
+      navigation row and the folder summaries, and the host slots. The DOM
+      contract for Milestone 7 is in
+      `.context/viewer-leftover-layers/m6-dom-contract.md`.
+- [x] Keep every visual result. Run the mockup check of `AGENTS.md` and the
+      `@mokly/ui` tests. The check is in
+      `.context/viewer-leftover-layers/m6-mockup-check.md`.
 
 ## Milestone 7: No DOM reads of package markup
 

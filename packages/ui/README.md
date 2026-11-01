@@ -69,7 +69,10 @@ export function Toolbar() {
 ```
 
 `changed` shows the change mark, and `changedId` names its wording, which the
-select's `aria-describedby` points at while the control is marked.
+select's `aria-describedby` points at while the control is marked. By default
+the select is uncontrolled, so `value` is only its first choice. A host that
+keeps the appearance in its state sets `controlled`, and the select then
+shows `value` at every render.
 
 `ComparisonToolbar` renders its modes as toggle buttons that report through
 `onMode`. A host that runs no script, such as a static mockup, passes
@@ -127,9 +130,13 @@ panel, and Close. The host holds the open state and the open tab, and it
 receives each choice through `onOpenChange`. The inspector keeps the arrow
 keys, Home, and End of its tabs, and Close returns focus to the tab that the
 reader pressed last. The `InspectorHandle` that `ref` receives closes the
-inspector in the same way, such as on Escape anywhere in the host's shell, and
-names its element. The resize separator and the sheet grab keep the
-attributes through which the host sizes the inspector. `DetailsPanel` draws
+inspector in the same way, such as on Escape anywhere in the host's shell,
+moves focus to a tab through `focusTab`, and names its element. The host holds
+the inspector's size: `height`, `minimumHeight`, and `maximumHeight` give the
+height on a desktop and the separator's value, `expanded` the state of the
+narrow sheet, and `sheetHeight` the sheet's height during a drag. The host
+attaches its drag and its keys to the separator and the sheet grab through
+`resizeRef` and `grabRef`. `DetailsPanel` draws
 the collapsible Details below a page's stage, and `DetailsBody` the body that
 it and the Details tab show. `MetadataRow` draws one labelled value, as a row
 of the metadata column or, in its `props` presentation, as a `dt` and `dd`
@@ -186,6 +193,22 @@ and the root's appearance. `LabelLayer` and
 `HighlightLabel` draw the labels of highlighted instances. `HighlightMask`
 draws the dimmed layer with a cutout and an outline for each box, in the
 colours of the `--mbk-highlight-scrim` and `--mbk-highlight-edge` roles.
+
+Both roots mark the state that the stylesheets select on the root. `resizing`
+names the separator that the reader drags, so the whole shell keeps the
+drag's cursor, and `frameExpanded` shows the scrim below an expanded browser
+window.
+
+The package gives a host each element that the host measures, focuses, or
+scrolls through a ref. `WorkspaceLayout` gives its preview pane and its panes
+to `previewRef` and `panesRef`. `BrowserFrame`, `FlowStage`, `DocumentFrame`,
+`Stage`, and `MainRegion` give their element to `ref`, and `Inspector` its
+panels' region to `contentRef`. `TagPicker` gives its button and its picker to
+`toggleRef` and `pickerRef`, and `ViewControls` its Highlight components
+button to `highlightRef`. `CatalogueNavigation` gives the current page's row
+to `currentRowRef`, and each section and folder summary, by its disclosure
+key, to `summaryRef`. `EmbeddedLayout` names each host slot's container
+through `slotRef`.
 
 A static mockup sets `disclosures` on `Inspector`, which draws each tab as a
 native disclosure of one group, named by `contentId`: a tab opens its panel
@@ -324,8 +347,11 @@ override the desktop layout rules.
   — `ChangeStatus`: the change status beside an entry's title
 - [`src/inspector/inspector.tsx`](./src/inspector/inspector.tsx) —
   `Inspector` and `InspectorHandle`: the tabs, whose keys `tab-keys.ts`
-  handles, the panels, Close with its focus return, and the resize separator
-  and sheet grab
+  handles, the panels, and Close with its focus return
+- [`src/inspector/inspector-sizer.tsx`](./src/inspector/inspector-sizer.tsx)
+  — the resize separator and the sheet grab, and `InspectorSizing`, the
+  height, the bounds, the sheet state, and the refs through which the host
+  sizes the inspector
 - [`src/inspector/inspector-disclosures.tsx`](./src/inspector/inspector-disclosures.tsx)
   — the inspector of a static depiction, whose tabs are native disclosures
 - [`src/details-panel/details-panel.tsx`](./src/details-panel/details-panel.tsx)
@@ -398,6 +424,11 @@ override the desktop layout rules.
   — `ShellLayout`, the standalone root; `SkipLink`, `ShellBody`,
   `MainRegion`, and `RouteStatus`, which both roots draw; and `RootState`, the
   state of a root without a shell
+- [`src/shell-layout/root-marks.ts`](./src/shell-layout/root-marks.ts) — the
+  classes of a root's drag and expanded window, which both roots share
+- [`src/merged-ref/merged-ref.ts`](./src/merged-ref/merged-ref.ts) —
+  `useMergedRef`, the internal ref of an element that a component and its
+  host both need
 - [`src/embedded-layout/embedded-layout.tsx`](./src/embedded-layout/embedded-layout.tsx)
   — `EmbeddedLayout`, an embedded root with the host slots and the stage
   overlay of `host-slot.tsx`, and `MarkerLayer`, the host's markers
