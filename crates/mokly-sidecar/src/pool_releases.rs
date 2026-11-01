@@ -90,9 +90,14 @@ impl Pool {
                     .is_some_and(|leases| leases.remove(&epoch) && leases.is_empty());
                 if last {
                     state.leases.remove(&id);
-                    state.bundles.remove(&id);
-                    state.compiled.remove(&id);
-                    state.modules.remove(&id);
+                    let bundle = state.bundles.remove(&id);
+                    let compiled = state.compiled.remove(&id);
+                    let modules = state.modules.remove(&id).unwrap_or_default();
+                    if !state.stopped
+                        && let (Some(bundle), Some(compiled)) = (bundle, compiled)
+                    {
+                        state.recipes.insert(id.clone(), bundle, modules, compiled);
+                    }
                     state.epochs.remove(&id);
                     state.maps.remove(&id);
                     state.bindings.remove(&id);

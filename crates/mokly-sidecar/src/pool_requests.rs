@@ -79,17 +79,13 @@ impl Pool {
                         .or_default()
                         .insert(epoch);
                     if let Some(compiled) = &result.compiled {
+                        let restored = state.recipes.take_reused(bundle, compiled);
                         let shared = state
                             .compiled
                             .values()
-                            .find(|value| {
-                                value.identity == compiled.identity
-                                    && value.inputs == compiled.inputs
-                                    && value.input_directories == compiled.input_directories
-                                    && value.unmapped_dependency_directories
-                                        == compiled.unmapped_dependency_directories
-                            })
+                            .find(|value| value.same_recipe(compiled))
                             .cloned()
+                            .or(restored)
                             .unwrap_or_else(|| Arc::new(compiled.clone()));
                         state.compiled.insert(result.generation.clone(), shared);
                     }
