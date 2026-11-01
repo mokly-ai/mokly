@@ -187,6 +187,7 @@ for (const cross of [false, true]) {
         {
           kind: "use-case",
           path: "tour",
+          detailId: home.detailId,
 
           title: "Tour",
           tags: [],

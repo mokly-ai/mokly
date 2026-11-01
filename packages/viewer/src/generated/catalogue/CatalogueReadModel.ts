@@ -14,9 +14,9 @@ import type { RemovedEntry } from "./RemovedEntry.js";
 // prettier-ignore
 export type CatalogueReadModel = {
 /**
- * Must equal 8; readers gate it before decoding.
+ * Must equal 9; readers gate it before decoding.
  */
-schemaVersion: 8,
+schemaVersion: 9,
 /**
  * Origin-scoped catalogue identity.
  */

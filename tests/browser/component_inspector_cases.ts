@@ -65,7 +65,7 @@ export function registerComponentInspector(
         await expect(inspector.locator(":scope > details[open]")).toHaveCount(
           0,
         );
-        await expect(inspector).toHaveCSS("height", "49px");
+        await expect(inspector).toHaveCSS("height", "46px");
         await inspector
           .getByRole("button", { name: "Props", exact: true })
           .click();
@@ -95,7 +95,7 @@ export function registerComponentInspector(
         .getByRole("button", { name: "Usage", exact: true })
         .click();
       await expect(
-        inspector.getByRole("region", { name: "Used by", exact: true }),
+        inspector.locator('[data-usage-section="used-by"]'),
       ).toBeVisible();
       await inspector
         .getByRole("button", { name: "Usage", exact: true })

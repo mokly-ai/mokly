@@ -74,7 +74,7 @@ export function registerDesignScrollTogether(
         path.join(repositoryRoot, "examples/basic/mokly-generated", file),
       ).href,
     );
-    await expect(page.locator(".mbk-cmp-toolbar"), file).toHaveCount(1);
+    await expect(page.locator(".mbk-diff-toolbar"), file).toHaveCount(1);
   }
 
   function overlaps(first: Box, second: Box): boolean {
@@ -107,7 +107,7 @@ export function registerDesignScrollTogether(
           if (on) await expect(toggle, where).toBeChecked();
           else await expect(toggle, where).not.toBeChecked();
           const facts = await page
-            .locator(".mbk-cmp-toolbar")
+            .locator(".mbk-diff-toolbar")
             .evaluate((toolbar) => {
               const box = (element: Element) => {
                 const rect = element.getBoundingClientRect();
@@ -119,7 +119,7 @@ export function registerDesignScrollTogether(
                 };
               };
               const style = getComputedStyle(toolbar);
-              const control = toolbar.querySelector(".mbk-cmp-sync")!;
+              const control = toolbar.querySelector(".mbk-diff-sync")!;
               return {
                 control: box(control),
                 label: control.textContent,
@@ -128,23 +128,26 @@ export function registerDesignScrollTogether(
                   parseFloat(style.paddingLeft),
                 modes: box(toolbar.querySelector(".mbk-seg")!),
                 order: [...toolbar.children].map((child) => child.className),
-                refresh: box(toolbar.querySelector(".mbk-cmp-refresh")!),
+                refresh: box(toolbar.querySelector(".mbk-diff-refresh")!),
                 right:
                   toolbar.getBoundingClientRect().right -
                   parseFloat(style.paddingRight),
                 track: getComputedStyle(
-                  control.querySelector(".mbk-cmp-sync-track")!,
+                  control.querySelector(".mbk-diff-sync-track")!,
                 ).backgroundColor,
               };
             });
           expect(facts.order, where).toEqual([
-            "mbk-seg",
-            "mbk-cmp-sync",
-            "mbk-cmp-refresh",
+            "mbk-seg mbk-reset",
+            "mbk-diff-sync mbk-reset",
+            "mbk-diff-refresh mbk-reset",
           ]);
           expect(facts.label, where).toBe("Scroll together");
           expect(facts.track, `${where}: the drawn state`).toBe(
-            await paletteColor(scheme, on ? "--mbk-sage-deep" : "--chrome-bg"),
+            await paletteColor(
+              scheme,
+              on ? "--mbk-accent-deep" : "--chrome-bg",
+            ),
           );
           expect(follows(facts.control, facts.modes), where).toBe(true);
           expect(follows(facts.refresh, facts.control), where).toBe(true);
@@ -179,7 +182,9 @@ export function registerDesignScrollTogether(
           page.getByRole("switch", { name: "Scroll together" }),
           route,
         ).toHaveCount(0);
-        await expect(page.locator(".mbk-cmp-sync"), route).toHaveCount(0);
+        // The shared band keeps both in place, hidden, as the shell does.
+        await expect(page.locator(".mbk-diff-sync"), route).toBeHidden();
+        await expect(page.locator(".mbk-diff-refresh"), route).toBeHidden();
       }
     });
 

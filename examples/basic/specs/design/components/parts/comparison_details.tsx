@@ -1,13 +1,15 @@
-import { MockLink } from "@mokly/mokly";
+import { mockLink } from "@mokly/mokly";
 
+import {
+  ComparisonEvidence,
+  type EvidenceInputChange,
+} from "../../../../../../packages/ui/src/comparison-evidence/comparison-evidence.js";
 import { useDesignInstance } from "../../library/composition.js";
 import { changeStatusBadge } from "../../library/controls/change-status.js";
-import { MetaRow } from "../../parts/metadata_row.js";
-import { ReasonSentences } from "../../parts/reason_sentences.js";
+import { reasonEvidence } from "../../parts/reason_sentences.js";
 import {
   COMPONENT_STYLE_COPY,
   SCREEN_STYLE_COPY,
-  StylesheetEvidenceList,
 } from "../../parts/stylesheet_evidence.js";
 
 import type { ChangeStatus, ComparisonFixture } from "./comparison_fixtures.js";
@@ -21,9 +23,31 @@ export function ChangeStatusBadge({ status }: { status: ChangeStatus }) {
   );
 }
 
+/** The paired props of a changed instance in each light view, as the shell writes them. */
+function inputChanges(
+  change: NonNullable<
+    Extract<ComparisonFixture, { reasons: unknown }>["propChange"]
+  >,
+): EvidenceInputChange[] {
+  const props = (value: string) =>
+    `{${JSON.stringify(change.prop)}: ${JSON.stringify(value)}, "disabled": false}`;
+  return (["desktop", "mobile"] as const).map((viewport) => ({
+    after: props(change.after),
+    before: props(change.before),
+    colorScheme: "light",
+    instanceId: change.instanceId,
+    key: `${change.instanceId}/${viewport}/light`,
+    title: change.title,
+    viewport,
+  }));
+}
+
 /**
  * Factual evidence belongs to the inspector, with no generated visual
- * narrative: each direct reason reads as one sentence after the branch point.
+ * narrative, in the shipped evidence: each direct reason reads as one sentence
+ * after the branch point, then the saved variant, the files, the paired props,
+ * and the changed components. An ordinary Unmodified entry has no comparison,
+ * so it shows no section.
  */
 export function ComparisonDetails({
   comparison,
@@ -36,95 +60,44 @@ export function ComparisonDetails({
   if (!comparison) return null;
   const detail = comparison.status === "unmodified" ? undefined : comparison;
   const affected = "affected" in comparison ? comparison : undefined;
-  const excludedStylesheets =
+  const excluded =
     "excludedStylesheets" in comparison
       ? comparison.excludedStylesheets
       : undefined;
   const stylesheets = detail?.stylesheets ?? affected?.stylesheets;
   const changedComponents =
     detail?.changedComponents ?? affected?.changedComponents;
-  const prop = detail?.propChange;
   const styleCopy =
     subject === "component" ? COMPONENT_STYLE_COPY : SCREEN_STYLE_COPY;
   return (
-    <section className="ce-comparison-evidence" aria-label="Comparison details">
-      <h3>Comparison details</h3>
-      <p className="ce-muted">Compared with the branch point on origin/main.</p>
-      {detail ? <ReasonSentences reasons={detail.reasons} /> : null}
-      {detail && (detail.variant || detail.savedPropsUnchanged) ? (
-        <dl className="ce-props">
-          {detail.variant ? (
-            <MetaRow
-              name="saved-variant"
-              label="Saved variant"
-              presentation="props"
-            >
-              {detail.variant}
-            </MetaRow>
-          ) : null}
-          {detail.savedPropsUnchanged ? (
-            <MetaRow
-              name="saved-props"
-              label="Saved props"
-              presentation="props"
-            >
-              Unchanged
-            </MetaRow>
-          ) : null}
-        </dl>
-      ) : null}
-      {excludedStylesheets ? (
-        <>
-          <h4>Examined and excluded</h4>
-          <p>{COMPONENT_STYLE_COPY.excluded}</p>
-          <ul className="ce-comparison-paths">
-            {excludedStylesheets.map((path) => (
-              <li key={path}>{path}</li>
-            ))}
-          </ul>
-        </>
-      ) : null}
-      {stylesheets ? (
-        <StylesheetEvidenceList
-          lead={styleCopy.files}
-          stylesheets={stylesheets}
-        />
-      ) : null}
-      {prop ? (
-        <>
-          <h4>{prop.instance}</h4>
-          <table className="ce-prop-comparison" aria-label="Changed props">
-            <thead>
-              <tr>
-                <th>Prop</th>
-                <th>Before</th>
-                <th>Current</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row">
-                  <code>{prop.prop}</code>
-                </th>
-                <td>
-                  <code>{JSON.stringify(prop.before)}</code>
-                </td>
-                <td>
-                  <code>{JSON.stringify(prop.after)}</code>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </>
-      ) : null}
-      {changedComponents?.map((component) => (
-        <p key={component.to}>
-          Changed component:{" "}
-          <MockLink to={component.to}>{component.title}</MockLink>
-        </p>
-      ))}
-      {affected ? <p>{styleCopy.sharedImpact}</p> : null}
-      {excludedStylesheets ? <p>{COMPONENT_STYLE_COPY.noChanges}</p> : null}
-    </section>
+    <ComparisonEvidence
+      base="origin/main"
+      changedComponents={changedComponents?.map((component) => ({
+        href: mockLink(component.to),
+        key: component.to,
+        title: component.title,
+      }))}
+      excluded={
+        excluded
+          ? { paths: excluded, sentence: COMPONENT_STYLE_COPY.excluded }
+          : undefined
+      }
+      files={stylesheets ? { lead: styleCopy.files, stylesheets } : undefined}
+      inputChanges={
+        detail?.propChange ? inputChanges(detail.propChange) : undefined
+      }
+      mark="data-workspace-evidence"
+      noChanges={excluded ? COMPONENT_STYLE_COPY.noChanges : undefined}
+      reasons={detail ? reasonEvidence(detail.reasons) : undefined}
+      savedVariant={
+        detail?.variant
+          ? {
+              savedPropsUnchanged: detail.savedPropsUnchanged === true,
+              title: detail.variant,
+            }
+          : undefined
+      }
+      sharedImpact={affected ? styleCopy.sharedImpact : undefined}
+    />
   );
 }

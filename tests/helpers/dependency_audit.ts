@@ -36,6 +36,37 @@ export function auditFixture() {
   };
 }
 
+/**
+ * A report with one advisory for each reviewed exception, at the last
+ * element of its path, and a time on the earliest end date. A test then
+ * checks committed records against a lockfile without a live audit, which
+ * alone checks the expiry and the review window.
+ */
+export function exceptionAuditInput(exceptions: readonly AuditException[]) {
+  const vulnerabilities: AuditReport["vulnerabilities"] = {};
+  for (const { advisory, package: name, path } of exceptions) {
+    const entry = (vulnerabilities[name] ??= {
+      name,
+      severity: "moderate",
+      via: [],
+      nodes: [],
+    });
+    entry.via.push({
+      name,
+      dependency: name,
+      title: `Reviewed advisory ${advisory}`,
+      url: `https://github.com/advisories/${advisory}`,
+      severity: "moderate",
+    });
+    const node = path.at(-1);
+    if (node !== undefined && !entry.nodes.includes(node))
+      entry.nodes.push(node);
+  }
+  const report: AuditReport = { auditReportVersion: 2, vulnerabilities };
+  const [earliest = "2026-11-01"] = exceptions.map(({ until }) => until).sort();
+  return { report, today: new Date(`${earliest}T12:00:00Z`) };
+}
+
 export function bracesAdvisory(report: AuditReport): AuditAdvisory {
   const advisory = report.vulnerabilities.braces!.via.find(
     (via): via is AuditAdvisory => typeof via !== "string",

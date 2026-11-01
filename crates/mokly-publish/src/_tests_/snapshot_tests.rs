@@ -227,7 +227,7 @@ fn streaming_index_identity_rejects_duplicate_keys_inside_discarded_fields() {
             .find(|file| file.path == INDEX)
             .unwrap();
         let source = format!(
-            "{{\"schemaVersion\":8,\"base\":\"origin/main\",\"baseCommit\":\"{}\",\"unknown\":{unknown}}}",
+            "{{\"schemaVersion\":9,\"base\":\"origin/main\",\"baseCommit\":\"{}\",\"unknown\":{unknown}}}",
             "b".repeat(40)
         );
         index.bytes = source.into();

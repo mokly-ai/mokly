@@ -1,5 +1,3 @@
-import { Fragment } from "react";
-
 /** Screen copy for stylesheet evidence, as the CSS evidence contract fixes it. */
 export const SCREEN_STYLE_COPY = {
   files: "Changes to these files may affect this screen:",
@@ -60,67 +58,4 @@ export interface StylesheetOutcome {
 export interface StylesheetEvidence {
   path: string;
   outcomes: readonly StylesheetOutcome[];
-}
-
-/**
- * Stylesheets examined and excluded, after any files list, in the order the
- * viewer's Details show them: the outcome, its label, then each file.
- */
-export function ExcludedStylesheetList({
-  lead,
-  paths,
-}: {
-  lead: string;
-  paths: readonly string[];
-}) {
-  return (
-    <>
-      <p>{lead}</p>
-      <p>Examined and excluded:</p>
-      <ul>
-        {paths.map((path) => (
-          <li key={path}>{path}</li>
-        ))}
-      </ul>
-    </>
-  );
-}
-
-/**
- * The files lead, then every changed file once. Each file's outcome sentences
- * and style lists sit under that file, so no list mixes two stylesheets.
- */
-export function StylesheetEvidenceList({
-  lead,
-  stylesheets,
-}: {
-  lead: string;
-  stylesheets: readonly StylesheetEvidence[];
-}) {
-  return (
-    <>
-      <p>{lead}</p>
-      <ul className="mbk-evidence-files">
-        {stylesheets.map((stylesheet) => (
-          <li key={stylesheet.path}>
-            {stylesheet.path}
-            {stylesheet.outcomes.map((outcome) => (
-              <Fragment key={outcome.lead}>
-                <p>{outcome.lead}</p>
-                {outcome.selectors.length ? (
-                  <ul>
-                    {outcome.selectors.map((selector) => (
-                      <li key={selector}>
-                        <code className="mbk-code">{selector}</code>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </Fragment>
-            ))}
-          </li>
-        ))}
-      </ul>
-    </>
-  );
 }

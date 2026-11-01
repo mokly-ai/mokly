@@ -10,6 +10,7 @@ import { serveStaticFiles } from "../helpers/static_server.js";
 
 import { hasMarker, markPage } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
+import { deploymentReadsOf } from "./shell_route_fixture.js";
 import { staticRequests } from "./static_delivery_assertions.js";
 
 /** Where the outgoing document records an unavailable stage. */
@@ -92,9 +93,11 @@ test("a copied catalogue reloads on another deployment without comparison change
 }) => {
   expect(identities[0]).not.toBe(identities[1]);
   const requests = staticRequests(page);
+  const deployments = deploymentReadsOf(page);
   await page.goto(`${host.url}/view/home/`);
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
   await expect(page.locator("iframe[data-workspace-frame]")).toHaveCount(2);
+  expect(deployments).toEqual([]);
   await markPage(page);
   await recordUnavailableStage(page);
   site = next;
@@ -112,6 +115,7 @@ test("a copied catalogue reloads on another deployment without comparison change
   await expect(
     page.frameLocator(".mbk-frame-mobile iframe").locator("main"),
   ).toHaveText("New deployment detail");
+  expect(deployments).toEqual(["/mokly-viewer/deployment.json"]);
   await page.goBack();
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
   await page.goForward();

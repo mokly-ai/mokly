@@ -9,7 +9,7 @@ import {
   sameSelection,
 } from "../src/viewer/selection.js";
 
-import { shellModelFixture } from "./catalogue_v8_fixture.js";
+import { shellModelFixture } from "./catalogue_v9_fixture.js";
 
 const noTitles = (): readonly string[] => [];
 const fixture = shellModelFixture();

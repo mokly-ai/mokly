@@ -148,6 +148,7 @@ test("flow events preserve the screen key and identify the owning step", async (
       {
         kind: "use-case",
         path: "tour",
+        detailId: catalogue.screens[0]!.detailId,
 
         title: "Tour",
         tags: [],

@@ -55,15 +55,28 @@ variants and inspection without the live capability. See the
 ## Viewer Package Boundary
 
 `@mokly/mokly` depends on the exact coordinated release version of
-`@mokly/viewer`. The viewer
-owns the shell component tree and CSS, the browser entry, navigation, frame
-adapters, the inspector, and the readers of the catalogue index and entry
-detail. Shared shapes come from the generated types of the Rust model crate.
+`@mokly/viewer`. The viewer owns the shell state, the containers that connect
+that state to the shell's components, the readers of the catalogue index and
+entry detail, navigation, the preview frames with their adapters and the
+in-frame inspector, and the browser entry. It renders no element of its own.
+Shared shapes come from the generated types of the Rust model crate.
 The CLI keeps configuration, rendering, comparison, Serve, the static build,
 publish, and the private control and live transports. The viewer never imports
 the CLI, Node built-ins, Git, or consumer application code, and it renders only
 in the browser under the
 [shell delivery contract](../protocol/mokly-shell-delivery.md).
+
+`@mokly/viewer` depends on the exact coordinated release version of
+`@mokly/ui`, the [shared UI package](../protocol/mokly-ui-package.md). The UI
+package owns every element and every style rule of the shell: the components
+with their markup, styles, and local interaction, driven by props and
+callbacks, and the theme, the shell layout, and the highlight mask. It has no
+store, no catalogue read model, no network, and no history. It never reads a
+frame's document. React and React DOM are its only peers. The viewer's
+containers render those components with props and callbacks from the shell
+state, and the viewer bundles the package stylesheet. The design mockup
+catalogue renders the same components. The dependency direction is the CLI,
+then the viewer, then the UI package; nothing imports upward.
 
 The public boundary consists of
 [scoped instances](../protocol/mokly-instances.md), the

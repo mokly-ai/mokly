@@ -1,5 +1,27 @@
-/* The Mokly design stage: device chromes on the dotted stage, the mini
-   screen sketches, the details inspector, and the use-case flow track. */
+/* The Mokly design stage: the frames' preview tokens, the details inspector,
+   and the highlight of a depicted view, and the mini screen sketches that the
+   shipped frames hold on the dotted stage, from design-shots.css. The details
+   body, the stage, the document stage, the use-case flow, a removed entry's
+   previous version and its states, and the highlight's labels and mask are
+   the shipped ones, from their @mokly/ui stylesheets, in the package's
+   order. */
+@import "../../packages/ui/src/details-panel/details-panel.css";
+@import "../../packages/ui/src/scheme-fallback/scheme-fallback.css";
+@import "../../packages/ui/src/stage/stage.css";
+@import "../../packages/ui/src/preview-frame/preview-frame.css";
+@import "../../packages/ui/src/flow-step/flow-step.css";
+@import "../../packages/ui/src/preview-state/preview-state.css";
+@import "../../packages/ui/src/previous-version/previous-version.css";
+@import "../../packages/ui/src/highlight-label/highlight-label.css";
+@import "../../packages/ui/src/highlight-mask/highlight-mask.css";
+@import "./design-shots.css";
+
+/* A mobile render draws the one-column details body at every width. Below the
+   breakpoint the package stylesheet draws it on its own, as the shell does. */
+.mbk-shell--mobile .mbk-details-body {
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
 
 /* Preview tokens describe what a device screen shows. They are deliberately
    separate from the interface palette in design.css, so a light phone keeps its
@@ -14,6 +36,9 @@
   --mbk-screen-border: #e3e5e0;
   --mbk-screen-link: #4f7864;
   --mbk-screen-link-strong: #2f5945;
+  --mbk-screen-danger-bg: #fdf1ef;
+  --mbk-screen-danger-edge: #e7c3bb;
+  --mbk-screen-danger-ink: #8a3423;
   --mbk-device-body: #171a18;
   --mbk-device-notch: #0b0d0c;
   --mbk-device-home: rgba(20, 24, 20, 0.4);
@@ -22,7 +47,10 @@
   --mbk-device-light-expand: #50a86d;
 }
 
-.mbk-screen-dark {
+/* A depicted screen keeps its own scheme: the sketches that a dark frame
+   holds read the dark preview tokens, and a light frame keeps a light screen
+   inside a Dark interface. */
+[data-preview-color-scheme="dark"] {
   --mbk-screen-bg: var(--mbk-dark-screen-bg);
   --mbk-screen-ink: var(--mbk-dark-screen-ink);
   --mbk-screen-ink-2: color-mix(
@@ -44,344 +72,64 @@
   --mbk-screen-link-strong: #a4c9b3;
 }
 
-.mbk-stage {
-  align-items: flex-start;
-  background: radial-gradient(
-      circle at center,
-      var(--mbk-dot) 1px,
-      transparent 1px
-    )
-    0 0 / 22px 22px;
-  display: flex;
-  flex: 1;
-  gap: 40px;
-  justify-content: center;
-  min-height: 0;
-  overflow: auto;
-  padding: 28px;
+/* The sketches inside a frame, which stand in for its document, take the
+   document's scheme and ink. */
+[data-preview-color-scheme="light"] :is(.phone-screen, .browser-viewport) {
+  color-scheme: light;
 }
 
+[data-preview-color-scheme="dark"] :is(.phone-screen, .browser-viewport) {
+  color-scheme: dark;
+}
+
+.browser-viewport {
+  color: var(--mbk-screen-ink);
+}
+
+[data-preview-color-scheme="dark"] .phone-screen {
+  color: var(--mbk-screen-ink);
+}
+
+/* A mobile render draws the narrow stage at every width. Below the device
+   breakpoint the package stylesheet draws it on its own, as the shell does. */
 .mbk-shell--mobile .mbk-stage {
-  gap: 20px;
-  padding: 20px 14px;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: safe center;
 }
 
-.mbk-doc-pane {
+/* The bordered pane on the document stage stands in for the document's
+   frame, which the shell draws around a real document. */
+.mbk-stage-embed > .mbk-doc-pane {
   border: 1px solid var(--chrome-border);
   border-radius: 12px;
+  flex: 1;
+  min-height: 520px;
   overflow: auto;
   width: 100%;
 }
 
-/* ---- Previous versions of removed entries ------------------------------ */
+/* ---- Highlight of a depicted view -------------------------------------- */
 
-.mbk-previous {
-  border-bottom: 1px solid var(--chrome-border);
-  color: var(--chrome-muted);
-  flex-shrink: 0;
-  font-size: 11.5px;
-  margin: 0;
-  padding: 8px 28px;
+/* The shipped mask and labels over a depicted document, which the Highlight
+   components switch reveals without a script. The layer lets the pointer
+   through to the document and keeps the mask and the labels in its own
+   stacking, where the labels lie above the mask, as an embedded root lifts
+   them. */
+.ce-highlight-layer {
+  display: none;
+  inset: 0;
+  isolation: isolate;
+  pointer-events: none;
+  position: absolute;
 }
 
-.mbk-shell--mobile .mbk-previous {
-  padding: 8px 14px;
-}
-
-/* A previous version with no dark render names its fallback in the label. */
-.mbk-previous .mbk-frame-scheme-note {
-  font-weight: 500;
-}
-
-.mbk-preview-state {
-  align-items: center;
-  display: flex;
-  flex: 1;
-  justify-content: center;
-  min-height: 0;
-}
-
-/* A state stage fills the dotted surface instead of hugging its own text. */
-.mbk-stage > :is(.mbk-empty, .mbk-preview-state) {
-  align-self: stretch;
-}
-
-/* The bounded workspace flattens a preview stage to a block so device frames
-   lay out naturally. On desktop a state stage needs its centring layout back,
-   and the later workspace rule wins at equal specificity, so this one is
-   narrower. The mobile sheet covers the lower pane, so a narrow state stays at
-   the top of the stage where it remains readable. */
-.mbk-shell--desktop
-  .ce-preview-pane
-  > .mbk-stage:has(> :is(.mbk-empty, .mbk-preview-state)) {
-  display: flex;
-}
-
-.mbk-preview-status {
-  align-items: center;
-  color: var(--chrome-ink-2);
-  display: flex;
-  font-size: 13px;
-  gap: 10px;
-}
-
-/* A viewport with no captured previous view. */
-.mbk-preview-note {
-  color: var(--chrome-ink-2);
-  font-size: 13px;
-  margin: 0;
-  padding: 32px 0;
-  text-align: center;
-  text-wrap: balance;
-}
-
-.mbk-preview-spinner {
-  animation: mbk-preview-spin 0.8s linear infinite;
-  border: 1.5px solid var(--chrome-border);
-  border-radius: 50%;
-  border-top-color: var(--chrome-muted);
-  display: inline-block;
-  flex-shrink: 0;
-  height: 14px;
-  width: 14px;
-}
-
-@keyframes mbk-preview-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mbk-preview-spinner {
-    animation: none;
-  }
-}
-
-/* ---- Mini screen sketches --------------------------------------------- */
-
-.mbk-shot-sections h3 {
-  font-size: 13px;
-  letter-spacing: -0.01em;
-  margin: 16px 0 6px;
-}
-
-/* A long screen's introduction keeps one height in every version, so the
-   sections below it stay in place when the introduction changes. */
-.mbk-shot-hero {
-  min-height: 104px;
-}
-
-.phone-screen .mbk-shot-hero {
-  min-height: 140px;
-}
-
-.mbk-shot {
-  background: var(--mbk-screen-bg);
-  color: var(--mbk-screen-ink);
-  height: 100%;
-  overflow: hidden;
-}
-
-.mbk-shot-pad {
-  padding: 18px 20px;
-}
-
-.phone-screen .mbk-shot {
-  flex: 1 1 auto;
-  height: auto;
-  min-height: 0;
-}
-
-.mbk-shot-nav {
-  border-bottom: 1px solid var(--mbk-screen-border);
-  color: var(--mbk-screen-muted);
-  font-size: 11.5px;
-  margin-bottom: 14px;
-  padding-bottom: 10px;
-}
-
-.mbk-shot h2 {
-  font-size: 17px;
-  letter-spacing: -0.01em;
-  margin: 0 0 10px;
-}
-
-.mbk-shot p {
-  color: var(--mbk-screen-ink-2);
-  font-size: 12.5px;
-  line-height: 1.55;
-  margin: 0 0 12px;
-}
-
-.mbk-shot-link {
-  color: var(--mbk-screen-link);
-  display: inline-block;
-  font-size: 12.5px;
-  font-weight: 600;
-}
-
-.mbk-shot-error {
-  background: #fdf1ef;
-  border: 1px solid #e7c3bb;
-  border-radius: 8px;
-  color: #8a3423;
-  font-size: 12px;
-  margin: 0 0 12px;
-  padding: 8px 10px;
-}
-
-.mbk-shot-field {
-  align-items: center;
-  border: 1px solid var(--chrome-border-strong);
-  border-radius: 8px;
-  color: var(--chrome-muted);
-  display: flex;
-  font-size: 12.5px;
-  margin: 0 0 10px;
-  min-height: 32px;
-  padding: 0 10px;
-}
-
-.mbk-shot-action {
-  background: var(--chrome-bg);
-  border: 1px solid var(--chrome-border-strong);
-  border-radius: 8px;
-  color: var(--chrome-muted);
+.ce-design:has([data-workspace-highlight]:checked) .ce-highlight-layer {
   display: block;
-  font-size: 12.5px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  padding: 7px 12px;
-  width: fit-content;
 }
 
-.mbk-shot--restyled .mbk-shot-nav {
-  border-bottom-color: var(--mbk-screen-link);
-  color: var(--mbk-screen-ink);
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.mbk-shot--restyled .mbk-shot-link {
-  color: var(--mbk-screen-link-strong);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.mbk-screen-dark .mbk-shot {
-  background: transparent;
-}
-
-.mbk-details-body {
-  display: grid;
-  gap: 30px;
-  grid-template-columns: 1.35fr 1fr;
-  padding: 0;
-}
-
-.mbk-shell--mobile .mbk-details-body {
-  gap: 18px;
-  grid-template-columns: 1fr;
-}
-
-.mbk-details-desc {
-  color: var(--chrome-ink);
-  font-size: 13.5px;
-  line-height: 1.55;
-  margin: 0;
-}
-
-.mbk-details-rationale {
-  color: var(--chrome-ink-2);
-  font-size: 12.5px;
-  line-height: 1.55;
-  margin: 12px 0 0;
-}
-
-.mbk-details-rationale .k {
-  color: var(--chrome-muted);
-  font-weight: 700;
-}
-
-.mbk-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 11px;
-}
-
-.mbk-meta-link {
-  color: var(--mbk-sage);
-  font-weight: 600;
-}
-
-.mbk-code {
-  background: var(--chrome-bg);
-  border: 1px solid var(--chrome-border);
-  border-radius: 6px;
-  color: var(--chrome-ink);
-  display: inline-block;
-  font-family: var(--mono);
-  font-size: 11px;
-  max-width: 100%;
-  padding: 2px 7px;
-  word-break: break-all;
-}
-
-.mbk-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.mbk-chip {
-  align-items: center;
-  background: var(--chrome-bg);
-  border: 1px solid var(--chrome-border);
-  border-radius: 999px;
-  color: var(--chrome-ink-2);
-  display: inline-flex;
-  font-size: 11.5px;
-  gap: 5px;
-  padding: 3px 9px;
-}
-
-.mbk-chip:is(a) {
-  border-color: var(--chrome-control-edge);
-}
-
-.mbk-chip.flow svg {
-  color: var(--mbk-sage);
-  flex-shrink: 0;
-}
-
-/* ---- Use-case flow track ---------------------------------------------- */
-
-.mbk-flow {
-  flex: 1;
-  overflow: auto;
-  padding: 28px 28px 40px;
-}
-
-.mbk-shell--mobile .mbk-flow {
-  padding: 20px 14px 32px;
-}
-
-.flow-track {
-  display: flex;
-  flex-direction: column;
-  gap: 26px;
-}
-
-.mbk-flow-screen .browser-frame {
-  height: 640px;
-}
-
-.mbk-chip:is(a) {
-  text-decoration: none;
-}
-.mbk-chip:is(a):focus-visible {
-  outline: 2px solid var(--mbk-sage-deep);
-  outline-offset: 3px;
+.ce-highlight-labels {
+  inset: 0;
+  position: absolute;
+  z-index: 5;
 }

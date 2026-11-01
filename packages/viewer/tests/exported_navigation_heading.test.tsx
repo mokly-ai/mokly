@@ -10,14 +10,14 @@ import {
 } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 
-import { indexFixture, shellModelFixture } from "./catalogue_v8_fixture.js";
+import { indexFixture, shellModelFixture } from "./catalogue_v9_fixture.js";
 import { standaloneMarkup } from "./shell_markup.js";
 
 /** The branch name that the export recorded from its comparison. */
 const BASE = "origin/main";
 const HEADING =
-  "<h3>Comparison details</h3>" +
-  `<p>Compared with the branch point on ${BASE}.</p>`;
+  '<h3 class="mbk-reset">Comparison details</h3>' +
+  `<p class="mbk-reset">Compared with the branch point on ${BASE}.</p>`;
 
 /** The exported index, which carries the base ref of its comparison. */
 const named = (): CatalogueReadModel =>
@@ -47,14 +47,14 @@ function exported(screenPath: string, loaded: boolean): string {
 
 /** The comparison details in Details, or undefined when none render. */
 const section = (markup: string) =>
-  /<section class="mbk-comparison-evidence" data-(?:workspace|page)-evidence="">.*?<\/section>/.exec(
+  /<section class="mbk-comparison-evidence mbk-reset" data-(?:workspace|page)-evidence="">.*?<\/section>/.exec(
     markup,
   )?.[0];
 
 for (const [kind, screenPath, evidence] of ENTRIES)
   test(`an exported ${kind} names the known branch point before and after its data loads`, () => {
     const opening =
-      `<section class="mbk-comparison-evidence" data-${evidence}-evidence="">` +
+      `<section class="mbk-comparison-evidence mbk-reset" data-${evidence}-evidence="">` +
       HEADING;
     const temporary = section(exported(screenPath, false));
     const loaded = section(exported(screenPath, true));

@@ -158,7 +158,7 @@ function heading(
       views={views}
     />,
   );
-  return /<h3>(.*?)<\/h3>/.exec(markup)?.[1];
+  return /<h3 class="mbk-reset">(.*?)<\/h3>/.exec(markup)?.[1];
 }
 
 function changedEntry(

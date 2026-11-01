@@ -1,20 +1,22 @@
 import { defineScreen } from "@mokly/mokly";
 
+import { PreviewWorkspace } from "./components/parts/workspace.js";
 import { designMetadata } from "./metadata.js";
 import { artboards } from "./parts/artboards.js";
 import { DESTINATIONS } from "./parts/destinations.js";
 import { DetailsPanel } from "./parts/details.js";
 import { ENTRY_PATHS, SCREEN_CRUMBS } from "./parts/entry_paths.js";
 import { MiniWelcome } from "./parts/mini_screens.js";
+import { miniView } from "./parts/mini_views.js";
 import { NavTree } from "./parts/nav.js";
-import { ReasonSentences } from "./parts/reason_sentences.js";
+import { reasonEvidence } from "./parts/reason_sentences.js";
 import {
   ScreenHead,
   Shell,
   ViewSwitch,
   type ArtboardViewport,
 } from "./parts/shell.js";
-import { BrowserFrame, PhoneFrame, Stage } from "./parts/stage.js";
+import { BrowserFrame, PhoneFrame } from "./parts/stage.js";
 
 function CatalogueView({
   viewport,
@@ -31,32 +33,36 @@ function CatalogueView({
       viewport={viewport}
       nav={<NavTree changes={changes} activeLabel="Welcome" />}
     >
-      <ScreenHead
-        comparisons={changes}
-        crumbs={SCREEN_CRUMBS}
-        path={ENTRY_PATHS.welcome}
-        title="Welcome"
-        action={
-          <>
-            <ViewSwitch active={viewport} />
-          </>
+      <PreviewWorkspace
+        header={
+          <ScreenHead
+            comparisons={changes}
+            crumbs={SCREEN_CRUMBS}
+            path={ENTRY_PATHS.welcome}
+            title="Welcome"
+            action={<ViewSwitch active={viewport} />}
+          />
         }
-      />
-      <Stage>
-        {viewport === "desktop" ? (
-          <BrowserFrame address="example.test/welcome" label="Desktop">
-            <MiniWelcome />
-          </BrowserFrame>
-        ) : (
-          <PhoneFrame small label="Mobile">
-            <MiniWelcome compact />
-          </PhoneFrame>
-        )}
-      </Stage>
-      <DetailsPanel
-        subject="welcome"
-        comparisonEvidence={
-          changes ? <ReasonSentences reasons={["material"]} /> : undefined
+        inspector={
+          <DetailsPanel
+            subject="welcome"
+            comparisonEvidence={
+              changes ? { reasons: reasonEvidence(["material"]) } : undefined
+            }
+          />
+        }
+        view={miniView("welcome")}
+        viewport={viewport}
+        render={(previewViewport) =>
+          previewViewport === "desktop" ? (
+            <BrowserFrame address="example.test/welcome">
+              <MiniWelcome />
+            </BrowserFrame>
+          ) : (
+            <PhoneFrame small={viewport === "mobile"}>
+              <MiniWelcome compact />
+            </PhoneFrame>
+          )
         }
       />
     </Shell>

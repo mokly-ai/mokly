@@ -1,5 +1,6 @@
 import { defineComponent } from "@mokly/mokly";
 
+import { PropValues } from "../../../../../../packages/ui/src/props-panel/props-panel.js";
 import { libraryMetadata } from "../metadata.js";
 import { destination, text, type LibraryProps } from "../schemas.js";
 
@@ -41,16 +42,7 @@ const sample = {
 } as const;
 const sampleSlots = {
   info: <p>A shared action with an optional destination and hint.</p>,
-  props: (
-    <dl className="ce-props">
-      <div>
-        <dt>label</dt>
-        <dd>
-          <code>Continue</code>
-        </dd>
-      </div>
-    </dl>
-  ),
+  props: <PropValues values={[{ name: "label", value: "Continue" }]} />,
   usage: <p>Used by Welcome and Details.</p>,
 };
 export const inspector = defineComponent({

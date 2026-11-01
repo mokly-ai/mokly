@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import test from "node:test";
 
-import type { EntryDetailV3 } from "../packages/viewer/src/generated/catalogue/EntryDetailV3.js";
+import type { EntryDetailV4 } from "../packages/viewer/src/generated/catalogue/EntryDetailV4.js";
 
 import { build, git, json, screen, write } from "./helpers/static_changes.js";
 import { publicationFixture } from "./helpers/static_publication.js";
@@ -45,12 +45,12 @@ test(
         parent("child", "After"),
       );
       let built = await build(root);
-      const home = await json<EntryDetailV3>(
+      const home = await json<EntryDetailV4>(
         built.output,
         "mokly-viewer/entries/home.json",
       );
       assert.deepEqual(home.workspace!.inputChanges, []);
-      const changedParent = await json<EntryDetailV3>(
+      const changedParent = await json<EntryDetailV4>(
         built.output,
         "mokly-viewer/entries/parent.json",
       );
@@ -65,7 +65,7 @@ test(
         parent("alternate", "Replacement"),
       );
       built = await build(root);
-      const replaced = await json<EntryDetailV3>(
+      const replaced = await json<EntryDetailV4>(
         built.output,
         "mokly-viewer/entries/parent.json",
       );

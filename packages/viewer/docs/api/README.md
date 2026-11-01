@@ -6,8 +6,8 @@ This page belongs to the [`@mokly/viewer` README](../../README.md). It lists the
 
 | Prop                                 | Purpose                                                                                                            |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| `index`                              | The catalogue index v8 as an object, or its absolute HTTP(S) URL                                                   |
-| `detail`                             | Function from an entry path and an optional snapshot id to one entry detail v3, its URL, or a promise of either    |
+| `index`                              | The catalogue index v9 as an object, or its absolute HTTP(S) URL                                                   |
+| `detail`                             | Function from an entry path and an optional snapshot id to one entry detail v4, its URL, or a promise of either    |
 | `baseUrl`                            | Required origin root for an object `index`; invalid for a URL `index`                                              |
 | `frameAdapter`                       | Preview transport; defaults to `sameOriginAdapter()`                                                               |
 | `theme`                              | Interface appearance, independent of preview selection; defaults to `"auto"`                                       |

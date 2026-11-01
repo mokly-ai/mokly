@@ -46,18 +46,18 @@ test("the inspector lists changed files, applying styles, then exclusions", () =
 
   assert.equal(
     markup,
-    '<section class="mbk-comparison-evidence" data-workspace-evidence="">' +
-      "<h3>Comparison details</h3>" +
-      "<p>Compared with the branch point on main.</p>" +
-      "<p>Rendered content changed.</p>" +
-      "<p>Changes to these files may affect this screen:</p>" +
-      `<ul class="mbk-evidence-files"><li>${SHARED}` +
-      "<p>Changed styles that apply to this screen:</p>" +
-      '<ul><li><code class="mbk-code">.auth</code></li></ul>' +
+    '<section class="mbk-comparison-evidence mbk-reset" data-workspace-evidence="">' +
+      '<h3 class="mbk-reset">Comparison details</h3>' +
+      '<p class="mbk-reset">Compared with the branch point on main.</p>' +
+      '<p class="mbk-reset">Rendered content changed.</p>' +
+      '<p class="mbk-reset">Changes to these files may affect this screen:</p>' +
+      `<ul class="mbk-evidence-files mbk-reset"><li class="mbk-reset">${SHARED}` +
+      '<p class="mbk-reset">Changed styles that apply to this screen:</p>' +
+      '<ul class="mbk-reset"><li class="mbk-reset"><code class="mbk-code mbk-reset">.auth</code></li></ul>' +
       "</li></ul>" +
-      "<p>This stylesheet changed, but none of the changed styles apply to this screen.</p>" +
-      "<p>Examined and excluded:</p>" +
-      `<ul><li>${TOKENS}</li></ul>` +
+      '<p class="mbk-reset">This stylesheet changed, but none of the changed styles apply to this screen.</p>' +
+      '<p class="mbk-reset">Examined and excluded:</p>' +
+      `<ul class="mbk-reset"><li class="mbk-reset">${TOKENS}</li></ul>` +
       "</section>",
   );
 });
@@ -82,7 +82,10 @@ test("the terminal line names the screen or the variant it compared", () => {
     ...unmodified,
     entry: { path: "home", kind: "screen", route: "home/index.html" },
   } as unknown as WorkspaceData);
-  assert.match(screen, /<p>No changes to this screen\.<\/p><\/section>$/);
+  assert.match(
+    screen,
+    /<p class="mbk-reset">No changes to this screen\.<\/p><\/section>$/,
+  );
 
   const component = renderEvidence(
     {
@@ -91,5 +94,8 @@ test("the terminal line names the screen or the variant it compared", () => {
     } as unknown as WorkspaceData,
     "default",
   );
-  assert.match(component, /<p>No changes to this variant\.<\/p><\/section>$/);
+  assert.match(
+    component,
+    /<p class="mbk-reset">No changes to this variant\.<\/p><\/section>$/,
+  );
 });

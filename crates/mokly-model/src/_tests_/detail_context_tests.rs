@@ -1,7 +1,7 @@
 //! A current detail is valid only within one exact index fence and view set.
 
 use crate::axes::EntryKind;
-use crate::public_detail::{DetailEntry, DetailView, EntryDetailV3};
+use crate::public_detail::{DetailEntry, DetailView, EntryDetailV4};
 use crate::read_contract::ContractViolation;
 use crate::readers;
 use crate::readers::ReadError;
@@ -13,11 +13,11 @@ use super::validate;
 #[test]
 fn control_order_names_every_editable_prop_once() {
     let index = readers::index(include_str!(
-        "../../../../docs/protocol/fixtures/catalogue-v8.json"
+        "../../../../docs/protocol/fixtures/catalogue-v9.json"
     ))
     .unwrap();
     let fixtures: serde_json::Value = serde_json::from_str(include_str!(
-        "../../../../docs/protocol/fixtures/entry-details-v3.json"
+        "../../../../docs/protocol/fixtures/entry-details-v4.json"
     ))
     .unwrap();
     let mut detail =
@@ -43,7 +43,7 @@ fn control_order_names_every_editable_prop_once() {
 #[test]
 fn identity_deployment_revision_kind_and_view_order_are_fenced() {
     let mut index = readers::index(include_str!(
-        "../../../../docs/protocol/fixtures/catalogue-v8.json"
+        "../../../../docs/protocol/fixtures/catalogue-v9.json"
     ))
     .unwrap();
     for entry in &mut index.screens {
@@ -52,13 +52,12 @@ fn identity_deployment_revision_kind_and_view_order_are_fenced() {
         }
     }
     let screen = &index.screens[0];
-    let detail = EntryDetailV3 {
-        schema_version: 3,
+    let detail = EntryDetailV4 {
+        schema_version: 4,
         control_order: Some(screen.visual.controls.keys().cloned().collect()),
         identity: index.identity.clone(),
-        deployment_id: Some(index.deployment_id.clone()),
+        detail_id: screen.entry.detail_id.clone(),
         revision: Some(index.revision),
-        generation: None,
         entry: DetailEntry {
             path: screen.entry.path.clone(),
             kind: EntryKind::Screen,
@@ -92,7 +91,7 @@ fn identity_deployment_revision_kind_and_view_order_are_fenced() {
         let mut candidate = detail.clone();
         match mutation {
             0 => candidate.identity.id = "0".repeat(64),
-            1 => candidate.deployment_id = Some("f".repeat(64)),
+            1 => candidate.detail_id = "f".repeat(64),
             2 => candidate.revision = Some(index.revision + 1),
             3 => candidate.entry.kind = EntryKind::Component,
             4 => {
@@ -108,11 +107,11 @@ fn identity_deployment_revision_kind_and_view_order_are_fenced() {
 #[test]
 fn workspace_lists_stay_on_parents_and_are_rejected_on_variants() {
     let index = readers::index(include_str!(
-        "../../../../docs/protocol/fixtures/catalogue-v8.json"
+        "../../../../docs/protocol/fixtures/catalogue-v9.json"
     ))
     .unwrap();
     let fixtures: serde_json::Value = serde_json::from_str(include_str!(
-        "../../../../docs/protocol/fixtures/entry-details-v3.json"
+        "../../../../docs/protocol/fixtures/entry-details-v4.json"
     ))
     .unwrap();
     let mut parent =

@@ -179,11 +179,11 @@ test("matched evidence names the changed files and then the applying styles", ()
 
   assert.ok(
     markup.includes(
-      "<p>Changes to these files may affect this screen:</p>" +
-        `<ul class="mbk-evidence-files"><li>${SHARED}` +
-        "<p>Changed styles that apply to this screen:</p>" +
-        '<ul><li><code class="mbk-code">.auth</code></li>' +
-        '<li><code class="mbk-code">main a</code></li></ul>' +
+      '<p class="mbk-reset">Changes to these files may affect this screen:</p>' +
+        `<ul class="mbk-evidence-files mbk-reset"><li class="mbk-reset">${SHARED}` +
+        '<p class="mbk-reset">Changed styles that apply to this screen:</p>' +
+        '<ul class="mbk-reset"><li class="mbk-reset"><code class="mbk-code mbk-reset">.auth</code></li>' +
+        '<li class="mbk-reset"><code class="mbk-code mbk-reset">main a</code></li></ul>' +
         "</li></ul>",
     ),
   );
@@ -202,8 +202,8 @@ test("unresolved evidence says the change can apply anywhere", () => {
 
   assert.ok(
     markup.includes(
-      "<p>This change can apply anywhere on the screen, so the screen stays in Changes:</p>" +
-        '<ul><li><code class="mbk-code">:root</code></li></ul>',
+      '<p class="mbk-reset">This change can apply anywhere on the screen, so the screen stays in Changes:</p>' +
+        '<ul class="mbk-reset"><li class="mbk-reset"><code class="mbk-code mbk-reset">:root</code></li></ul>',
     ),
   );
 });
@@ -221,7 +221,7 @@ test("an unresolved outcome without selectors closes with a full stop", () => {
 
   assert.match(
     markup,
-    /<p>This change can apply anywhere on the screen, so the screen stays in Changes\.<\/p>/,
+    /<p class="mbk-reset">This change can apply anywhere on the screen, so the screen stays in Changes\.<\/p>/,
   );
 });
 
@@ -229,18 +229,18 @@ test("excluded stylesheets lead with the outcome and pluralize sensibly", () => 
   const one = renderEvidence({ excluded: [SHARED] });
   assert.ok(
     one.includes(
-      "<p>This stylesheet changed, but none of the changed styles apply to this screen.</p>" +
-        "<p>Examined and excluded:</p>" +
-        `<ul><li>${SHARED}</li></ul>`,
+      '<p class="mbk-reset">This stylesheet changed, but none of the changed styles apply to this screen.</p>' +
+        '<p class="mbk-reset">Examined and excluded:</p>' +
+        `<ul class="mbk-reset"><li class="mbk-reset">${SHARED}</li></ul>`,
     ),
   );
 
   const many = renderEvidence({ excluded: [SHARED, TOKENS] });
   assert.ok(
     many.includes(
-      "<p>These stylesheets changed, but none of the changed styles apply to this screen.</p>" +
-        "<p>Examined and excluded:</p>" +
-        `<ul><li>${SHARED}</li><li>${TOKENS}</li></ul>`,
+      '<p class="mbk-reset">These stylesheets changed, but none of the changed styles apply to this screen.</p>' +
+        '<p class="mbk-reset">Examined and excluded:</p>' +
+        `<ul class="mbk-reset"><li class="mbk-reset">${SHARED}</li><li class="mbk-reset">${TOKENS}</li></ul>`,
     ),
   );
 

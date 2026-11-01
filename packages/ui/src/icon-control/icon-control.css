@@ -1,0 +1,87 @@
+/* The workspace's 34px icon controls: a button drawn as one glyph, and a
+   select whose transparent native control lies over a glyph and the 12px down
+   chevron. A pressed toggle and a selected tab fill with the accent. A static
+   depiction draws a toggle as a label with the button's look, whose
+   transparent native switch lies over the glyph and takes the pressed,
+   disabled, and focus states of the button, and a tab as the summary of a
+   disclosure, which the open disclosure selects. */
+.mbk-icon-button,
+.mbk-icon-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  gap: 5px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--chrome-ink-2);
+  cursor: pointer;
+}
+
+.mbk-icon-button svg,
+.mbk-icon-select svg {
+  display: block;
+  flex: none;
+}
+
+.mbk-icon-select {
+  width: 48px;
+}
+
+.mbk-icon-select svg:last-of-type {
+  width: 12px;
+}
+
+.mbk-icon-select select {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  cursor: pointer;
+}
+
+.mbk-icon-button > input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.mbk-icon-button > input:disabled {
+  pointer-events: none;
+}
+
+.mbk-icon-button:hover,
+.mbk-icon-select:hover {
+  background: var(--chrome-bg);
+}
+
+.mbk-icon-button:focus-visible,
+.mbk-icon-select:focus-within,
+.mbk-icon-button:has(> input:focus-visible) {
+  outline: 2px solid var(--mokly-accent);
+  outline-offset: 2px;
+}
+
+.mbk-icon-button[aria-selected="true"],
+.mbk-icon-button[aria-pressed="true"],
+.mbk-icon-button:has(> input:checked),
+details[open] > summary.mbk-icon-button {
+  color: var(--mokly-accent);
+  background: var(--mokly-accent-soft);
+  border-color: var(--chrome-border);
+}
+
+.mbk-icon-button:disabled,
+.mbk-icon-button:has(> input:disabled) {
+  opacity: 0.42;
+  cursor: default;
+}

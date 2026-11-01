@@ -3,6 +3,7 @@
 use std::time::Duration;
 
 use mokly_cli::output::{Style, bounded};
+use mokly_compare::comparison_steps::Step;
 
 /// Format one bounded terminal progress frame.
 pub(super) fn frame(style: &Style, label: &str, index: usize) -> String {
@@ -19,6 +20,22 @@ pub(super) fn frame(style: &Style, label: &str, index: usize) -> String {
         )
     )
 }
+
+/// Join a phase label and the words of its current comparison step.
+pub(super) fn stepped(label: &str, step: Option<Step>) -> String {
+    let Some(step) = step else {
+        return label.into();
+    };
+    let words = match step {
+        Step::Reading => "reading base catalogue",
+        Step::Extracting => "extracting base sources",
+        Step::Installing => "installing base dependencies",
+        Step::Rendering => "rendering base catalogue",
+        Step::Comparing => "finding changes",
+    };
+    format!("{label} · {words}")
+}
+
 /// Format an observed duration without changing success criteria.
 pub(super) fn duration(value: Duration) -> String {
     if value.as_secs() == 0 {

@@ -43,7 +43,7 @@ export function registerComponentWorkspace(
           exact: true,
         });
         await expect(
-          inspector.locator('[data-panel="components"]'),
+          inspector.locator('[data-inspector-tab="components"]'),
         ).toHaveCount(0);
         await page.goto(
           componentDesignUrl("design/components/pages/toolbar", viewport),
@@ -74,9 +74,9 @@ export function registerComponentWorkspace(
             viewport,
           ),
         );
-        const toolbar = page.getByRole("toolbar", { name: "Preview options" });
+        const toolbar = page.getByRole("group", { name: "View options" });
         const mode = toolbar.getByRole("combobox", {
-          name: "Preview viewport",
+          name: "Viewport",
         });
         const label = page.getByRole("textbox", { name: "label", exact: true });
         await label.fill("Keep this edit");
@@ -94,14 +94,33 @@ export function registerComponentWorkspace(
         await expect(
           toolbar.getByRole("switch", { name: "Dark preview" }),
         ).toHaveCount(0);
-        await expect(page.locator(".ce-canvas:visible .ce-scheme")).toHaveText([
-          "Light",
-          "Light",
-        ]);
-        await expect(page.locator(".ce-canvas:visible").first()).toHaveCSS(
+        await expect(
+          page.locator(".mbk-component-canvas:visible .mbk-frame-label"),
+        ).toHaveText(["Mobile", "Desktop"]);
+        const documents = page.locator(
+          ".mbk-component-canvas:visible .ce-canvas-content",
+        );
+        await expect(documents.first()).toHaveCSS(
           "background-color",
           "rgb(255, 255, 255)",
         );
+        // The component stands where the shell's documents draw it: 24px from
+        // the top left inside the canvas's border.
+        expect(
+          await documents.evaluateAll((boxes) =>
+            boxes.map((box) => {
+              const inner = box.getBoundingClientRect();
+              const component = box.firstElementChild!.getBoundingClientRect();
+              return [
+                component.left - inner.left - box.clientLeft,
+                component.top - inner.top - box.clientTop,
+              ];
+            }),
+          ),
+        ).toEqual([
+          [24, 24],
+          [24, 24],
+        ]);
         await expect(
           page.locator(".mbk-topbar .mbk-seg, .ce-inspection-toolbar"),
         ).toHaveCount(0);
@@ -132,8 +151,9 @@ export function registerComponentWorkspace(
           frame!.y + frame!.height,
           0,
         );
+        // The shipped label of the highlighted Action opens its selection.
         await preview
-          .getByRole("link", { name: "Inspect Action, Continue" })
+          .getByRole("link", { name: "Action · Continue" })
           .click({ timeout: 15_000 });
         await expect(page).toHaveURL(
           componentDesignUrl(
@@ -186,12 +206,12 @@ export function registerComponentWorkspace(
           ),
         );
         const pane = page.locator(".ce-preview-pane");
-        const inspector = page.locator(".ce-inspector");
+        const inspector = page.locator(".mbk-inspector");
         const heading = await page.locator(".mbk-screen-head").boundingBox();
         const before = await inspector.boundingBox();
         if (viewport === "desktop") {
           const grip = (await page
-            .locator(".ce-inspector-resize")
+            .locator(".mbk-inspector-resize")
             .boundingBox())!;
           const x = grip.x + grip.width / 2;
           const y = grip.y + grip.height / 2;
@@ -211,7 +231,7 @@ export function registerComponentWorkspace(
           .locator("details[open] > summary")
           .boundingBox();
         await inspector
-          .locator("details[open] .ce-inspector-panel")
+          .locator("details[open] .mbk-inspector-content")
           .evaluate((node) => {
             node.scrollTop = node.scrollHeight;
           });
@@ -233,7 +253,7 @@ export function registerComponentWorkspace(
         await inspector
           .getByRole("button", { name: "Props", exact: true })
           .click();
-        await expect(inspector).toHaveCSS("height", "49px");
+        await expect(inspector).toHaveCSS("height", "46px");
         await expect(pane).toHaveCSS("resize", "none");
         await inspector
           .getByRole("button", { name: "Props", exact: true })
@@ -248,9 +268,9 @@ export function registerComponentWorkspace(
   }) => {
     await page.goto("/view/design/components/inspection/inspection-details/");
     const frame = page.frameLocator(".mbk-frame-desktop iframe");
-    const toolbar = frame.getByRole("toolbar", { name: "Preview options" });
+    const toolbar = frame.getByRole("group", { name: "View options" });
     await toolbar
-      .getByRole("combobox", { name: "Preview viewport" })
+      .getByRole("combobox", { name: "Viewport" })
       .selectOption("both");
     await toolbar.getByRole("switch", { name: "Highlight components" }).check();
     await expect(

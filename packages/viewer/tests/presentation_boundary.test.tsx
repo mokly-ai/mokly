@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { rawIndexFixture } from "./catalogue_v8_fixture.js";
+import { rawIndexFixture } from "./catalogue_v9_fixture.js";
 import { embeddedMarkup, withDarkViews } from "./presentation_v7_helpers.js";
 
 test("the embedded viewer preserves pending entry and saved-variant comparison eligibility", () => {
@@ -27,7 +27,7 @@ test("the embedded viewer preserves pending entry and saved-variant comparison e
 
     const html = embeddedMarkup({ index, defaultSelection: { screenPath } });
     assert.match(html, /data-workspace-status="">Changed<\/span>/);
-    assert.match(html, /class="mbk-diff-toolbar" hidden=""/);
+    assert.match(html, /class="mbk-diff-toolbar mbk-reset" hidden=""/);
   }
 });
 
@@ -55,7 +55,7 @@ test("the embedded viewer uses effective Light evidence for light-only screens a
     },
   });
   assert.match(screenHtml, /data-workspace-status="">Unmodified<\/span>/);
-  assert.match(screenHtml, /class="mbk-diff-toolbar" hidden=""/);
+  assert.match(screenHtml, /class="mbk-diff-toolbar mbk-reset" hidden=""/);
 
   const componentIndex = rawIndexFixture();
   const screen = componentIndex.screens[0]!;

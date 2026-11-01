@@ -3,7 +3,14 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { contrast, designPalette } from "./helpers/design_palette.js";
+import {
+  contrast,
+  designPalette,
+  designPreviewTokens,
+  designThemeTokens,
+  SHIPPED_THEME,
+} from "./helpers/design_palette.js";
+import { designStyleRules } from "./helpers/design_styles.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const CONTRAST_PAIRS: readonly (readonly [string, string, string, number])[] = [
@@ -138,4 +145,60 @@ test("preview tokens stay independent of the interface appearance", async () => 
     "--mbk-screen-link-strong",
   ])
     assert.match(stage, new RegExp(`${name}:`), name);
+});
+
+/**
+ * Custom properties that a @mokly/ui component sets on its own element and
+ * reads with a fallback, each with the reason, so a palette token cannot join
+ * the list unnoticed.
+ */
+const COMPONENT_PARAMETERS = new Map([
+  ["--mbk-indent", "each catalogue row sets its own indent"],
+  ["--mbk-nav-width", "a resizable catalogue column sets its own width"],
+  ["--inspector-height", "a resizable inspector sets its own height"],
+  ["--inspector-tabs", "a static inspector sets the number of its tabs"],
+  ["--inspector-tab", "each tab of a static inspector sets its own column"],
+  [
+    "--mbk-comparison-canvas",
+    "a comparison's host paints the canvas colour of each version",
+  ],
+]);
+
+test("the design stylesheets import the shipped theme and the reset class that every @mokly/ui component reads", async () => {
+  const imported = new Set((await designStyleRules()).map((rule) => rule.file));
+  for (const file of [SHIPPED_THEME, "packages/ui/src/reset/reset.css"])
+    assert.ok(imported.has(file), `no design stylesheet imports ${file}`);
+});
+
+test("the design palettes declare every token that a @mokly/ui stylesheet reads", async () => {
+  // The root block of the interface palette declares each of its tokens, and
+  // the same-roles test above holds the dark block to the same roles. The
+  // preview tokens of the stage stylesheet declare the device colours, and
+  // the shipped theme declares its own tokens on every artboard's root.
+  const declared = new Map([
+    ...(await designPalette()).light,
+    ...(await designPreviewTokens()),
+    ...(await designThemeTokens()),
+  ]);
+  const files = new Set<string>();
+  const missing: string[] = [];
+  const parameters = new Set<string>();
+  for (const rule of await designStyleRules()) {
+    if (!rule.file.startsWith("packages/ui/src/")) continue;
+    files.add(rule.file);
+    for (const [, token, fallback] of rule.body.matchAll(
+      /var\((--[\w-]+)\s*(,)?/gu,
+    )) {
+      if (COMPONENT_PARAMETERS.has(token!) && fallback) parameters.add(token!);
+      else if (!declared.has(token!))
+        missing.push(`${rule.file} ${rule.selector}: ${token}`);
+    }
+  }
+  assert.ok(files.size > 0, "no @mokly/ui stylesheet was read");
+  assert.deepEqual(missing, []);
+  for (const [parameter, reason] of COMPONENT_PARAMETERS)
+    assert.ok(
+      parameters.has(parameter),
+      `the component parameter ${parameter} (${reason}) is not read with a fallback`,
+    );
 });

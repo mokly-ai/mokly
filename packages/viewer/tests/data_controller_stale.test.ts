@@ -9,7 +9,7 @@ import {
 } from "../src/components/render_types.js";
 import { routeKey } from "../src/shell/data_requests.js";
 
-import { detailFixture, indexFixture } from "./catalogue_v8_fixture.js";
+import { detailFixture, indexFixture } from "./catalogue_v9_fixture.js";
 import { controllerFixture } from "./data_controller_fixture.js";
 import { flush, liveDescriptor } from "./data_fakes.js";
 
@@ -133,9 +133,11 @@ test("a 409 that arrives after a replacement starts no refresh", async () => {
   // another deployment replaces the catalogue.
   const { rendered, answer } = render(fixture, 1);
   fixture.navigate(`/view/${HOME}/`);
-  fixture.source
-    .detail(HOME)
-    .resolve({ ...detailFixture({ path: HOME }), deploymentId: OTHER });
+  fixture.source.detail(HOME).resolve({
+    ...detailFixture({ path: HOME }),
+    revision: 1,
+    detailId: OTHER,
+  });
   await flush();
   assert.equal(fixture.controller.replaced, true);
   answer.reject(

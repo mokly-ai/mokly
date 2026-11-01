@@ -1,4 +1,9 @@
-/** Current workspace preview or its explicit unavailable state. */
+/**
+ * Current workspace preview or its explicit unavailable state, which
+ * `@mokly/ui/empty-state` draws.
+ */
+
+import { RemovedState, RemovedVariantState } from "@mokly/ui/empty-state";
 
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
@@ -10,7 +15,9 @@ import type { RouteTarget } from "./target.js";
 import type { WorkspaceData } from "./workspace_data.js";
 
 /** What a removed entry's stage calls it: a variant names itself. */
-function removedSubject(entry: WorkspaceData["entry"]): string {
+function removedSubject(
+  entry: WorkspaceData["entry"],
+): "component" | "screen" | "variant" {
   return entry.kind === "component" && isManifestComponentVariant(entry)
     ? "variant"
     : entry.kind;
@@ -38,31 +45,8 @@ export function WorkspaceStage({
   variantPath?: string;
   variantRemoved: boolean;
 }) {
-  if (data.removed)
-    return (
-      <div className="mbk-empty" data-mokly-stage="" data-viewport="both">
-        <h2>{`This ${removedSubject(data.entry)} was removed`}</h2>
-        <p>
-          {data.entry.kind === "component"
-            ? "Select a comparison to see the previous version."
-            : "There is no current preview to show."}
-        </p>
-      </div>
-    );
-  if (variantRemoved)
-    return (
-      <div
-        className="mbk-empty"
-        data-mokly-stage=""
-        data-viewport="both"
-        data-workspace-empty=""
-      >
-        <p>
-          This variant was removed. Select a comparison to see its previous
-          version.
-        </p>
-      </div>
-    );
+  if (data.removed) return <RemovedState kind={removedSubject(data.entry)} />;
+  if (variantRemoved) return <RemovedVariantState />;
   return (
     <TargetStage
       catalogue={catalogue}

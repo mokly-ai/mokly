@@ -1,0 +1,99 @@
+/* A version's pane: its label, then its chrome or its missing message. */
+.mb-pane:where(.mbk-reset) {
+  min-width: 0;
+}
+
+.mb-pane-label:where(.mbk-reset) {
+  color: var(--chrome-muted);
+  font-size: 12px;
+  margin: 0 0 8px;
+}
+
+.mb-pane-missing:where(.mbk-reset) {
+  display: grid;
+  place-content: center;
+  min-height: 240px;
+  padding: 20px;
+  border: 1px dashed var(--chrome-border-strong);
+  border-radius: 12px;
+  background: var(--chrome-surface);
+  color: var(--chrome-muted);
+  text-align: center;
+}
+
+/* The shared viewport is its chrome's only user-scrollable container.
+   Scroll anchoring is off, so a spacer resize never moves its offset. */
+.mb-viewport:where(.mbk-reset) {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  overflow-anchor: none;
+}
+
+/* A sticky box the size of the viewport holds the device-sized frames, and
+   the spacer after it extends the range to the largest document. */
+.mb-viewport-box:where(.mbk-reset) {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.mb-viewport-spacer:where(.mbk-reset) {
+  pointer-events: none;
+}
+
+.mb-viewport-box > .mb-pane:where(.mbk-reset),
+.mb-viewport .mb-pane-doc:where(.mbk-reset) {
+  position: absolute;
+  inset: 0;
+}
+
+.mb-viewport .mb-pane-doc:where(.mbk-reset) {
+  overflow: hidden;
+}
+
+.mb-viewport .mb-pane-doc > .mbk-frag {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+
+/* Each version's surface keeps the scheme of its document, independently of
+   the shell's appearance, under the canvas colour that the host paints. */
+.mb-viewport:where(.mbk-reset) {
+  color-scheme: light;
+}
+
+.mb-pane-doc:where(.mbk-reset) {
+  background-color: var(--mbk-screen-bg);
+  background-image: linear-gradient(
+    var(--mbk-comparison-canvas, transparent),
+    var(--mbk-comparison-canvas, transparent)
+  );
+}
+
+[data-preview-color-scheme="dark"] .mb-viewport:where(.mbk-reset) {
+  color-scheme: dark;
+}
+
+[data-preview-color-scheme="dark"] .mb-pane-doc:where(.mbk-reset) {
+  background-color: var(--mbk-dark-screen-bg);
+}
+
+/* The bordered frame of a saved component variant. */
+.mb-component-frame:where(.mbk-reset) {
+  width: 100%;
+  min-width: 390px;
+  height: 520px;
+  overflow: hidden;
+  border: 1px solid var(--chrome-border);
+  border-radius: 8px;
+}

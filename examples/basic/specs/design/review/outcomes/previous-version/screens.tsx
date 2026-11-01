@@ -1,14 +1,14 @@
 import { defineScreen } from "@mokly/mokly";
 
+import {
+  PreviewLoading,
+  PreviewNotCaptured,
+} from "../../../../../../../packages/ui/src/preview-state/preview-state.js";
 import { changesDesignMetadata } from "../../../metadata.js";
 import { artboards } from "../../../parts/artboards.js";
 import { DESTINATIONS } from "../../../parts/destinations.js";
 import { REMOVED_SCREENS } from "../../../parts/nav_data.js";
-import {
-  PreviewLoading,
-  PreviewUnavailable,
-  PreviewViewMissing,
-} from "../../../parts/removed_preview.js";
+import { PreviewUnavailable } from "../../../parts/removed_preview.js";
 import { RemovedScreen, RemovedView } from "../../../parts/removed_screen.js";
 import { MiniSurvey, MiniTimeline } from "../../../parts/removed_shots.js";
 
@@ -61,7 +61,7 @@ function NoCapturedView({ viewport }: { viewport: Viewport }) {
       entry={REMOVED_SCREENS.timeline}
       preview={(previewViewport) =>
         previewViewport === "mobile" ? (
-          <PreviewViewMissing viewport="mobile" />
+          <PreviewNotCaptured viewport="mobile" />
         ) : (
           <RemovedView
             address="example.test/timeline"

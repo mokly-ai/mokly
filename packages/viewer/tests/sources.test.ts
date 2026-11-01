@@ -1,11 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { EntryDetailV3 } from "../src/catalogue/types.js";
+import { readDeploymentFile } from "../src/catalogue/deployment_reader.js";
+import type { EntryDetailV4 } from "../src/catalogue/types.js";
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
+import { viewerComparisonEnvironment } from "../src/viewer/environment.js";
 import { embeddedDataSource } from "../src/viewer/index_source.js";
 import {
   DeliveryFetchError,
+  loadDeploymentFile,
   fetchJson,
   loadDetailResult,
   loadIndexSource,
@@ -18,7 +21,7 @@ import {
   indexFixture,
   rawDetailFixtures,
   rawIndexFixture,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 
 const ORIGIN = "https://catalogue.test";
 
@@ -47,6 +50,43 @@ function fakeFetch(answer: (url: URL) => FakeAnswer) {
 }
 
 const signal = new AbortController().signal;
+
+test("deployment files accept one identity and ignore unreadable files", async () => {
+  const deploymentId = "a".repeat(64);
+  assert.deepEqual(readDeploymentFile({ schemaVersion: 1, deploymentId }), {
+    schemaVersion: 1,
+    deploymentId,
+  });
+  assert.equal(
+    readDeploymentFile({ schemaVersion: 2, deploymentId }),
+    undefined,
+  );
+  assert.equal(
+    readDeploymentFile({ schemaVersion: 1, deploymentId: "bad" }),
+    undefined,
+  );
+  const fetched = fakeFetch((url) =>
+    url.pathname === "/mokly-viewer/deployment.json"
+      ? { body: { schemaVersion: 1, deploymentId } }
+      : { status: 404, body: {} },
+  );
+  assert.deepEqual(
+    await loadDeploymentFile(new URL(`${ORIGIN}/`), signal, fetched.fetch),
+    { schemaVersion: 1, deploymentId },
+  );
+  assert.equal(
+    await loadDeploymentFile(
+      new URL(`${ORIGIN}/`),
+      signal,
+      fakeFetch(() => ({ status: 404, body: {} })).fetch,
+    ),
+    undefined,
+  );
+  assert.equal(
+    fetched.requests[0]!.url,
+    `${ORIGIN}/mokly-viewer/deployment.json`,
+  );
+});
 
 test("a source URL is HTTP(S) without userinfo or fragment", () => {
   assert.equal(sourceUrl(`${ORIGIN}/mokly-viewer/index.json`).origin, ORIGIN);
@@ -115,7 +155,7 @@ test("an object index needs its base address and a URL index refuses one", async
     signal,
   );
   assert.equal(loaded.root.href, `${ORIGIN}/`);
-  assert.equal(loaded.index.schemaVersion, 8);
+  assert.equal(loaded.index.schemaVersion, 9);
   await assert.rejects(
     loadIndexSource(rawIndexFixture(), undefined, signal),
     DeliveryFetchError,
@@ -166,7 +206,7 @@ test("a detail URL resolves on the artifact origin only", async () => {
   );
   await assert.rejects(
     loadDetailResult(
-      { ...body!, schemaVersion: 2 } as unknown as EntryDetailV3,
+      { ...body!, schemaVersion: 2 } as unknown as EntryDetailV4,
       root,
       signal,
     ),
@@ -201,4 +241,27 @@ test("an embedded detail source may answer with an object, a URL or a promise", 
   assert.equal(deployments, 1);
   assert.equal(failures, 1);
   assert.equal(source.live, undefined);
+});
+
+test("an embedded object index does not request the deployment file", () => {
+  const index = indexFixture();
+  const source = embeddedDataSource(
+    index,
+    { index, root: new URL(`${ORIGIN}/`) },
+    () => detailFixture({ path: "guide" }),
+    { deploymentChanged() {}, detailFailed() {} },
+  );
+  assert.equal(source.loadDeployment, undefined);
+});
+
+test("an embedded object index does not check deployment before comparison", () => {
+  const index = indexFixture();
+  const environment = viewerComparisonEnvironment(
+    { index, root: new URL(`${ORIGIN}/`) },
+    undefined,
+    undefined,
+    () => {},
+    false,
+  );
+  assert.equal(environment.deploymentCheck, undefined);
 });

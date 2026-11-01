@@ -66,7 +66,6 @@ export function environment(
     },
   };
   let value = options.stored ?? null;
-  const body: { attributes: Record<string, string> } = { attributes: {} };
   const select = {
     value: "auto",
     hidden: true,
@@ -86,9 +85,8 @@ export function environment(
       for (const handler of select.handlers) handler();
     },
   };
-  let attached: { frames?: FakeFrame[]; body?: boolean; select?: boolean } = {};
+  let attached: { frames?: FakeFrame[]; select?: boolean } = {};
   const document = {
-    body: undefined as unknown,
     documentElement: {
       getAttribute: (name: string) => root.attributes[name] ?? null,
       setAttribute: (name: string, next: string) => {
@@ -124,18 +122,11 @@ export function environment(
   if (options.initial) root.attributes["data-mokly-theme"] = options.initial;
   const attach = (next: typeof attached): void => {
     attached = next;
-    if (next.body)
-      (document as unknown as { body: unknown }).body = {
-        setAttribute: (name: string, value: string) => {
-          body.attributes[name] = value;
-        },
-      };
   };
   return {
     document,
     window,
     root,
-    body,
     select,
     attach,
     listeners,
