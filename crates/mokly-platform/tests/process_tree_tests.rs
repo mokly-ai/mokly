@@ -5,13 +5,57 @@ mod process_tree;
 
 #[cfg(unix)]
 mod unix {
-    //! Each test observes live helpers before it requests a tree stop.
+    //! Unix ownership checks for live descendants and exited, unreaped roots.
+
+    use std::mem::MaybeUninit;
+    use std::process::Command;
+
+    use mokly_platform::processes::{ProcessGroups, SystemProcessGroups};
 
     use crate::process_tree::fixture::Tree;
     use crate::process_tree::unix_helpers::run_helper;
     #[cfg(target_os = "linux")]
     use crate::process_tree::unix_status::parent;
     use crate::process_tree::unix_status::{alive, wait_gone};
+
+    /// An unreaped child keeps its identity even after it has stopped running.
+    #[test]
+    fn attachment_and_stops_succeed_after_the_child_exits_before_reaping() {
+        let mut command = Command::new("sh");
+        command.args(["-c", "exit 23"]);
+        SystemProcessGroups.configure(&mut command).unwrap();
+        let mut child = command.spawn().unwrap();
+        let mut info = MaybeUninit::<libc::siginfo_t>::uninit();
+        // SAFETY: This PID is our unreaped child. The aligned buffer has the
+        // exact siginfo_t size. WNOWAIT observes exit without reaping the child.
+        let waited = unsafe {
+            libc::waitid(
+                libc::P_PID,
+                child.id(),
+                info.as_mut_ptr(),
+                libc::WEXITED | libc::WNOWAIT,
+            )
+        };
+        let wait_error = std::io::Error::last_os_error();
+        let group = SystemProcessGroups.attach(&child);
+        let terminated = group.as_ref().map(|group| group.terminate());
+        let killed = group.as_ref().map(|group| group.kill());
+        let was_alive = alive(i32::try_from(child.id()).unwrap());
+        let status = child.wait().unwrap();
+        assert_eq!(waited, 0, "waitid failed: {wait_error}");
+        assert!(
+            group.is_ok(),
+            "attachment failed: {:?}",
+            group.as_ref().err()
+        );
+        assert!(
+            matches!(terminated, Ok(Ok(()))),
+            "terminate failed: {terminated:?}"
+        );
+        assert!(matches!(killed, Ok(Ok(()))), "kill failed: {killed:?}");
+        assert!(!was_alive, "an exited, unreaped child is not alive");
+        assert_eq!(status.code(), Some(23));
+    }
 
     #[test]
     fn kill_stops_a_descendant_in_a_new_session() {

@@ -14,7 +14,8 @@ pub(super) struct ProcessIdentity {
 /// Impure process-table boundary used by the descendant walk.
 #[cfg_attr(test, unimock::unimock(api = [IdentityMock, ChildrenMock, SignalMock]))]
 pub(super) trait ProcessTable: Send + Sync {
-    /// Read the current identity, or return `None` when the process is gone.
+    /// Read the current identity, including an exited process until it is reaped.
+    /// Return `None` when the PID no longer identifies a process.
     fn identity(&self, pid: i32) -> io::Result<Option<ProcessIdentity>>;
     /// Return direct children with identities read from the same table.
     fn children(&self, pid: i32) -> io::Result<Vec<ProcessIdentity>>;

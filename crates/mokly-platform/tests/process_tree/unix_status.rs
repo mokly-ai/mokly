@@ -22,12 +22,13 @@ pub(crate) fn alive(pid: i32) -> bool {
     {
         let mut info = MaybeUninit::<libc::proc_bsdinfo>::uninit();
         let expected = size_of::<libc::proc_bsdinfo>() as i32;
+        // A nonzero argument lets the SZOMB check see exited, unreaped helpers.
         // SAFETY: The aligned buffer holds exactly expected writable bytes.
         let count = unsafe {
             libc::proc_pidinfo(
                 pid,
                 libc::PROC_PIDTBSDINFO,
-                0,
+                1,
                 info.as_mut_ptr().cast(),
                 expected,
             )

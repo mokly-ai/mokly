@@ -66,6 +66,8 @@ fn identity(pid: i32, info: &libc::proc_bsdinfo) -> ProcessIdentity {
     }
 }
 
+/// Include exited children until reaping so fast commands can still attach.
+/// XNU enables zombie lookup when the BSD-info argument is nonzero.
 fn info(pid: i32) -> io::Result<libc::proc_bsdinfo> {
     let mut info = MaybeUninit::<libc::proc_bsdinfo>::uninit();
     let expected = size_of::<libc::proc_bsdinfo>() as i32;
@@ -75,7 +77,7 @@ fn info(pid: i32) -> io::Result<libc::proc_bsdinfo> {
         libc::proc_pidinfo(
             pid,
             libc::PROC_PIDTBSDINFO,
-            0,
+            1,
             info.as_mut_ptr().cast(),
             expected,
         )
