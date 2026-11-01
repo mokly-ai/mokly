@@ -27,11 +27,13 @@ The follow-up item
 [linux-ci-runner-size.md](follow-ups/linux-ci-runner-size.md) asks for the
 move back to 2 vCPUs. It asks to measure the cached job times on 2 vCPUs
 first. When 2 vCPUs make CI much slower, the user sees both times before the
-change. The CI runs of 2026-10-27 already give these times, and 2 vCPUs make
-CI much slower. So decision 1 asks the user for the tier. Under options B and
-C, the change moves the five jobs, aligns the docs and the runner size test,
-and measures the chosen tier on the branch. Under options A, B, and C, it
-deletes the follow-up item.
+change. The CI runs of 2026-10-27 already gave these times, and 2 vCPUs make
+CI much slower. On 2026-11-01 the user chose 4 vCPUs in decision 1, and a
+fresh measurement of 2 and 4 vCPUs first in decision 2.
+
+The change moves the five jobs to `blacksmith-4vcpu-ubuntu-2404`. It aligns
+the docs, the `actionlint` labels, and the runner size test, and it measures
+the tier before the merge. It also deletes the follow-up item.
 
 Out of scope:
 
@@ -67,18 +69,20 @@ Contract owners:
 
 ## Decisions
 
-Decision 1 was asked on 2026-11-01. It went through the options check of the
-`plans` skill. The check rewrote the root question and added options F, G,
-and H. It brought back two approaches from **Left out** and kept the
-recommendation C. It also corrected the length of the billing sample. Its
-notes are under `.context/linux-ci-runner-size/options-check/`.
+Decisions 1 and 2 were asked on 2026-11-01, and the user answered both on the
+same day. Decision 2 came from the report message and had no options check.
+
+Decision 1 went through the options check of the `plans` skill. The check
+rewrote the root question and added options F, G, and H. It brought back two
+approaches from **Left out** and kept the recommendation C. It also corrected
+the length of the billing sample. Its notes are under
+`.context/linux-ci-runner-size/options-check/`.
 
 ### 1. The runner tier of the Linux suite jobs
 
-Open. The milestones hold for options B and C. Under A, milestone 1 changes
-no page, and milestones 2 and 3 do not apply. Under D, E, F, G, or H, this
-plan gets new milestones before any work starts. G works with any tier, so
-it can join another option.
+Decision 1 (2026-11-01, the user): option C, `blacksmith-4vcpu-ubuntu-2404`
+for the four Linux CI suite jobs and the Testbox job. Rejected: A, B, D, E,
+F, G, and H.
 
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Design.
@@ -248,6 +252,49 @@ it can join another option.
 - **Action:** ask the user, because C changes the runner rule of the CI
   workflow protocol, which the decision of 2026-10-26 does not cover.
 
+### 2. Measure today's code before the change
+
+Decision 2 (2026-11-01, the user): option C, two manual CI runs at the same
+time, one on 2 vCPUs and one on 4 vCPUs. Milestone 3 runs them first.
+Rejected: A, no new run, B, one 2-vCPU run only, and D, C with one remote
+gate on each tier.
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Design.
+- **Category:** Process.
+- **Location:** Design call 1 of this plan.
+- **Background:** The 2-vCPU times of decision 1 come from runs of
+  2026-10-27. Since then, the 8-vCPU times on `main` have barely changed.
+  Option C of decision 1 rests on a model only. A manual CI run on a scratch
+  branch can use any tier. The follow-up item needs the user's permission for
+  such a run.
+- **Problem:** Decision 1 uses 2-vCPU times that are five days old and a
+  4-vCPU estimate that no run has measured.
+- **Impact if no action:** The user chooses from these figures. Milestone 3
+  then measures the chosen tier on the branch. It stops when a job misses its
+  figure by more than a quarter.
+- **Root question:** Does the user want measured times on today's code before
+  the change?
+- **Options:**
+  - **A.** Start no run now. Effort: Small.
+  - **B.** Start one manual CI run on 2 vCPUs. It takes about 20 minutes and
+    costs about $1.20 at list price. Effort: Small.
+  - **C.** Start two manual CI runs at the same time, one on 2 vCPUs and one
+    on 4 vCPUs. They take about 20 minutes and cost about $2.50.
+    Effort: Small.
+  - **D.** Do C, and also run one remote gate on each tier. This takes about
+    30 minutes and costs about $4. Effort: Small.
+- **Left out:** A run on 8 vCPUs. The 24 `main` runs since 2026-10-27 already
+  measure that tier.
+- **Wider fix:** None, because this is a one-time measurement.
+- **Previous examples:** PR #216 measured both tiers before the user chose on
+  2026-10-27.
+- **Related:** Decision 1 can change when the runs miss its figures.
+- **Recommendation:** C, because one 20-minute wait replaces the 4-vCPU model
+  with measured times for about $2.50.
+- **Action:** ask the user, because the follow-up item needs the user's
+  permission to run CI for a measurement.
+
 ## Design Calls
 
 Each call is the orchestrator's own, made on 2026-11-01.
@@ -257,7 +304,8 @@ Each call is the orchestrator's own, made on 2026-11-01.
    PR #215 and PR #216 already give cached times on both tiers for the same
    code. The memory of each sample VM shows that each job ran on its own
    tier. Decision 1 uses these runs, so the user answers once. Milestone 3
-   then measures the chosen tier on the current code.
+   then measures the chosen tier on the current code. Decision 2 of the user
+   then added a fresh measurement of both tiers before the change.
 2. **The other CI speed work.** The follow-up item does not name it.
    [PR #211](https://github.com/mokly-ai/mokly/pull/211), which starts every
    CI job at once, and PR #215 merged. PR #170, a Turbo build cache, closed
@@ -273,108 +321,114 @@ Each call is the orchestrator's own, made on 2026-11-01.
    Rust test. When this change merges first, PR #212 carries the new tier
    into its Rust test, as it did for PR #216.
 5. **Delete the follow-up item.** The branch that fixes an item deletes its
-   file. The item counts as done also when the user keeps 8 vCPUs. So
-   milestone 4 deletes it under options A, B, and C. It also rewrites the
-   line of `remote-testbox-timeout.md` that links to the item.
-6. **Measure, then stop or go on.** One manual CI run on the branch measures
-   the chosen tier. The push run of the Testbox workflow gives the Testbox
-   preparation time. Approval of this plan gives the permission to run CI on
-   the branch that the follow-up item asks for. The CI run and the remote gate
-   of milestone 3 cost about $2 at list price. Raising a job limit needs the
-   user, so a break of the three-times rule stops the work.
+   file. So milestone 4 deletes it. It also rewrites the line of
+   `remote-testbox-timeout.md` that links to the item.
+6. **Measure, then stop or go on.** Under decision 2, two scratch runs measure
+   2 and 4 vCPUs first. One manual CI run on this branch then measures the
+   change itself. The push runs of the Testbox workflow give the Testbox
+   preparation time. The three CI runs and the remote gate cost about $5 at
+   list price. Raising a job limit needs the user, so a break of the
+   three-times rule stops the work.
 7. **Smoke-test the Testbox tier before the merge.** The remote gate takes
    the Testbox workflow from `main`, unless `MOKLY_TESTBOX_REF` names another
    ref. So one remote gate with that variable set to the branch tests the new
    tier. It needs a Blacksmith key, such as the `BLACKSMITH_ORG_TOKEN` of a
    cloud workspace. When the session has no key, the user runs it.
+8. **Scratch runs before the commit.** The result of the scratch runs can
+   still change decision 1. Milestones 1 and 2 touch other files, so the
+   implementors do them while the scratch runs go on. Nothing of milestones
+   1 and 2 is committed until the scratch runs pass the stop rules.
+9. **The orchestrator prepares the scratch branches.** The two scratch
+   branches are measurement inputs that never merge. Each changes a few
+   labels and test lines. So the orchestrator prepares them in separate Git
+   worktrees, and the implementors do milestones 1 and 2.
 
 ## Milestone 1: Documentation and protocol
 
 Depends on: none
 
-This milestone starts when the user answers decision 1. Under option A, it
-changes no page.
-
 - [ ] `docs/protocol/ci-workflow.md`, the runner paragraph of Job Execution:
-      state the chosen tier of the Linux CI jobs that compile Rust, with its
-      reason. Keep the 8-vCPU rule of the Windows native job and the reason
-      against 16 vCPUs.
-  - [ ] Under B, the Windows native job is the only CI exception to the
-        2-vCPU rule again. Its reason: on 2 vCPUs its complete Rust build and
-        test run is usually the slowest CI job.
-  - [ ] Under C, the Linux jobs use 4 vCPUs, because 4 vCPUs give most of
-        the speed of 8 vCPUs at half the price per minute.
-- [ ] `docs/protocol/remote-verification-testbox.md:14`: name the chosen
-      label as the runner of the CI suite jobs.
+      the Linux CI jobs that compile Rust use 4 vCPUs, because 4 vCPUs give
+      most of the speed of 8 vCPUs at half the price per minute. Keep the
+      8-vCPU rule of the Windows native job and the reason against 16 vCPUs.
+- [ ] `docs/protocol/remote-verification-testbox.md:14`: name
+      `blacksmith-4vcpu-ubuntu-2404` as the runner of the CI suite jobs.
 - [ ] `docs/protocol/ci-suite-evidence.md:60-62`: the concurrency example
-      names the CI runner of the chosen tier, not an 8-vCPU CI runner. A
-      2-vCPU or 4-vCPU runner runs two Node test files and one Playwright
-      worker. An eight-CPU workstation runs four.
+      names the 4-vCPU CI runner, not an 8-vCPU CI runner. A 2-vCPU or 4-vCPU
+      runner runs two Node test files and one Playwright worker. An
+      eight-CPU workstation runs four.
 - [ ] Run the Markdown check named in `AGENTS.md`.
 
 ## Milestone 2: Workflows and the runner size test
 
-Depends on: 1
+Depends on: none
 
 - [ ] Change the runner size test first. It is
       `tests/workflow_runner_sizes.test.ts`, or its Rust port when PR #212
       has merged.
-  - [ ] Under B, remove the five jobs from `LARGER_LINUX_RUNNERS`, so that
-        the smallest-tier check covers them. Update the doc comment.
-  - [ ] Under C, give the five entries `blacksmith-4vcpu-ubuntu-2404`.
+  - [ ] Give the five entries of `LARGER_LINUX_RUNNERS` the label
+        `blacksmith-4vcpu-ubuntu-2404`.
   - [ ] Run the test, and see it fail on the 8-vCPU labels of the workflows.
 - [ ] `.github/workflows/ci.yml`: set `runs-on` of the `repository`,
-      `viewer`, `browser`, and `static-delivery` jobs to the chosen label.
+      `viewer`, `browser`, and `static-delivery` jobs to
+      `blacksmith-4vcpu-ubuntu-2404`.
 - [ ] `.github/workflows/blacksmith-testbox.yml`: set `runs-on` of the
       `testbox` job to the same label.
-- [ ] Under C, add `blacksmith-4vcpu-ubuntu-2404` to
-      `.github/actionlint.yaml` in sorted order. Keep
-      `blacksmith-8vcpu-ubuntu-2404`, because the design matrix uses it.
+- [ ] Add `blacksmith-4vcpu-ubuntu-2404` to `.github/actionlint.yaml` in
+      sorted order. Keep `blacksmith-8vcpu-ubuntu-2404`, because the design
+      matrix uses it.
 - [ ] Run the targeted tests of `tests/workflow_runner_sizes.test.ts`,
       `tests/actionlint_config.test.ts`, `tests/ci_testbox_alignment.test.ts`,
       and `tests/ci_timing_policy.test.ts`, or of their Rust ports.
 - [ ] Run `actionlint` from the repository root.
 - [ ] Run the early check: `cargo xtask check --suite repository`.
 
-## Milestone 3: Measure the chosen tier
+## Milestone 3: Measure the tier
 
-Depends on: 2
+Depends on: 2. The scratch runs of decision 2 depend on nothing, so they
+start first.
 
-Under option A, this milestone does not apply. Its evidence goes to
+Its evidence goes to `.context/linux-ci-runner-size/scratch-runs.md` and
 `.context/linux-ci-runner-size/branch-run.md`.
 
-- [ ] Commit milestones 1 and 2 with Conventional Commits, and push the
-      branch. The push starts a push run of the Testbox workflow, because its
-      file changed. That run checks the new runner and gives the preparation
-      time.
-- [ ] Start one CI run on the branch:
-      `gh workflow run ci.yml --ref calummoore/linux-ci-runner-size-plan`.
-      Wait until it ends.
-- [ ] Collect the job and step times of both runs with the scripts under
-      `.context/linux-ci-runner-size/`. Compare each job with its figure in
-      decision 1 and with the 8-vCPU `main` runs of the same days.
-- [ ] Read the VM memory of each job with `check_real_sizes.py` in the same
-      folder. Blacksmith can move a runner one tier up for free. Leave each
-      upgraded job out of the comparison.
+- [ ] Decision 2: create `calummoore/runner-size-measure-2vcpu` and
+      `calummoore/runner-size-measure-4vcpu` from this branch, each in its own
+      Git worktree. Each holds the workflow, `actionlint`, and runner size
+      test changes for its tier.
+- [ ] Push both branches. Each push starts a push run of the Testbox workflow,
+      which gives the Testbox preparation time on its tier.
+- [ ] Start one CI run on each branch at the same time with
+      `gh workflow run ci.yml --ref {branch}`. Wait until both end.
+- [ ] Collect the job and step times with the scripts under
+      `.context/linux-ci-runner-size/`. Read the VM memory of each job with
+      `check_real_sizes.py`. Blacksmith can move a runner one tier up for
+      free, so leave each upgraded job out.
+- [ ] Compare the 4-vCPU jobs with their figures in decision 1. Compare the
+      2-vCPU jobs with the runs of 2026-10-27.
 - [ ] Check the three-times rule of `docs/protocol/ci-workflow.md`. Each CI
-      job limit must allow three times the measured job time.
-- [ ] Estimate the box time of each remote gate command. Add the Testbox
-      preparation time, the suite step time of its CI job, and one minute for
-      the probe and the report download.
-- [ ] Stop, and give the user the measured and the 8-vCPU times, when one of
-      these holds:
-  - A job breaks the three-times rule.
-  - The median browser shard or another suite job takes more than a quarter
-    longer than its figure in decision 1.
-  - A box estimate reaches the 30-minute Testbox guard.
-  - A suite fails on the new tier, and the failure does not occur on
-    8 vCPUs.
-- [ ] When the work stops, record the user's answer under decision 1, and add
-      a milestone for the work that the answer needs.
+      job limit must allow three times the measured 4-vCPU job time.
+- [ ] Estimate the 4-vCPU box time of each remote gate command. Add the
+      Testbox preparation time, the suite step time of its CI job, and one
+      minute for the probe and the report download.
+- [ ] Before any commit of milestones 1 and 2, stop and give the user the
+      measured times when one of these holds:
+  - A 4-vCPU job breaks the three-times rule.
+  - The median 4-vCPU browser shard or another 4-vCPU suite job takes more
+    than a quarter longer than its figure in decision 1.
+  - A 4-vCPU box estimate reaches the 30-minute Testbox guard.
+  - A suite fails on 4 vCPUs, and the failure does not occur on 8 vCPUs.
+- [ ] Delete both scratch branches and their worktrees.
+- [ ] Commit milestones 1 and 2 with Conventional Commits, and push this
+      branch. The push starts a push run of the Testbox workflow on 4 vCPUs.
+- [ ] Start one CI run on this branch:
+      `gh workflow run ci.yml --ref calummoore/linux-ci-runner-size-plan`.
+      Wait until it ends. Apply the same checks and stop rules to it.
 - [ ] Smoke-test the new Testbox tier with one remote complete gate:
       `MOKLY_TESTBOX_REF=calummoore/linux-ci-runner-size-plan cargo xtask check --executor remote`.
       When the session has no Blacksmith key, ask the user to run it.
-- [ ] Add one line under this milestone that names the evidence file.
+- [ ] When the work stops, record the user's answer under decision 1, and add
+      a milestone for the work that the answer needs.
+- [ ] Add one line under this milestone that names each evidence file.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
@@ -397,8 +451,8 @@ Depends on: every other milestone
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives these parts:
-  - Decision 1 and the design calls of this plan, with their dates.
-  - The measured times of both tiers.
+  - Decisions 1 and 2 and the design calls of this plan, with their dates.
+  - The measured times on 2, 4, and 8 vCPUs.
   - The job times of the pull request's own CI run, as a second sample. Add
     them when that run ends.
   - A permalink to this plan.
