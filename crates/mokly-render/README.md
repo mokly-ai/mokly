@@ -112,7 +112,11 @@ Evicted stylesheet text rebuilds from that generation's captured parsed inputs.
 Opaque asset records contain metadata only. Delivery verifies a source stream
 against the generation's digest; assets never enter the stylesheet byte cache.
 Asset streams use the same selected dependency reader as CSS compilation,
-including configured package roots and historical installations. Authored
+including configured package roots and historical installations. Single
+digests, batch digests, and streams of an asset share one selection in
+`SideTree`. It resolves a dependency path to its physical identity before any
+digest. A repository path stays as it is, so the Git source tree can look up
+a whole batch of them together. Authored
 public-resource reads retain their separate source confinement checks.
 Secondary package roots retain their virtual dependency parent even when the
 primary installation is absent. CSS and asset confinement can traverse these

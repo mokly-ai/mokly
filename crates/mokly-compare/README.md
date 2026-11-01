@@ -51,25 +51,27 @@ commit-pinned conversion context and byte bounds. Hash-only preparation does
 not fill the source-byte LRU.
 
 `GitTree::digest_unretained_batch` hashes a batch of opaque assets, such as
-the new assets of one stylesheet file. One `Sources::ensure` call looks up
-every pending path. Then `Sources::digest_with_length` hashes the uncached
-paths through one `Repository::digest_many` call. A memoized digest or cached
-bytes start no Git process. Each `SourceDigest` keeps the SHA-256 and, for a
-Git digest, the converted length. A batch within the 48 MiB bound starts one
-`ls-tree`, one `rev-list`, one `config`, at most one `check-attr`, and one
-`cat-file` conversion process, whatever its asset count. When its paths and
-their attribute files need more than one argument batch, it starts one
-`ls-tree` for each argument batch. A projection of a directory that holds an
-indexed file starts no Git lookup.
+the new assets of one stylesheet file. One `Sources::ensure` call looks up the
+paths that the index lacks. One `Sources::digest_with_length` call hashes the
+uncached paths through `Repository::digest_many`, with one `config`, at most
+one `check-attr`, and one `cat-file` conversion for the batch. Each
+`SourceDigest` keeps the SHA-256 and, for a Git digest, the converted length.
+The CSS confinement check projects each asset before its batch, so each asset
+that the index lacks runs its own `ls-tree` and `rev-list`. A projection of a
+directory that holds an indexed file starts no Git lookup. The digest cache
+keeps hash-only records of `digest` apart from completed opaque records. An
+opaque digest upgrades a hash-only record and reuses a completed one, also in
+`GitTree::open_stream`, without Git. A digest that fails on the 64 MiB bound
+of its asset stays unavailable for the base preparation. A smaller
+batch-bound failure stays retryable.
 
-`GitTree::open_stream` returns a stream with the digested length. Its
-`copy_verified` runs `Sources::stream` on a worker thread, which converts the
-file in one Git process. The worker passes chunks of at most 64 KiB through a
-one-slot channel to the private output, and the copy hashes each chunk. A
-digest or a length that differs from the digest pass returns
-`SourceError::Changed`, and so does a stream above the 64 MiB bound. A leased
-extraction keeps `digest_extracted` and a buffered delivery, because its
-digests carry no length.
+With a converted length, `copy_verified` runs `Sources::stream` on a worker
+thread, and one Git process converts the file. The worker passes chunks of at
+most 64 KiB through a one-slot channel to the private output, and the copy
+hashes each chunk. A digest or a length that differs from the digest pass
+returns `SourceError::Changed`, and so does a stream above the 64 MiB bound.
+A leased extraction keeps `digest_extracted` and a buffered delivery, because
+its digests carry no length.
 
 `CachedExtraction` implements `dyn Extraction`. It extracts one commit into
 the source cache only when JavaScript, a renderer module, or consumer PostCSS
@@ -252,12 +254,11 @@ development dependencies, and no test uses the internet.
 - [`src/sources.rs`](./src/sources.rs) and
   [`src/git_tree.rs`](./src/git_tree.rs) define `GitSources` and `GitTree`,
   the commit-pinned source reader and its `SourceTree` adapter.
-- [`src/git_asset_io.rs`](./src/git_asset_io.rs) batches the opaque digests of
-  `GitTree`, and [`src/git_asset_stream.rs`](./src/git_asset_stream.rs)
-  streams one base asset into a checked copy.
-  [`src/sources_assets.rs`](./src/sources_assets.rs) holds the digest batch
-  and the stream of `GitSources`, and
-  [`src/source_digest.rs`](./src/source_digest.rs) defines `SourceDigest`.
+- [`src/git_asset_io.rs`](./src/git_asset_io.rs),
+  [`src/git_asset_stream.rs`](./src/git_asset_stream.rs), and
+  [`src/sources_assets.rs`](./src/sources_assets.rs) batch opaque digests and
+  stream base assets. [`src/source_digest.rs`](./src/source_digest.rs)
+  defines `SourceDigest` and the `CachedDigest` record of the digest cache.
 - [`src/extraction.rs`](./src/extraction.rs) defines `Extraction` and
   `CachedExtraction`, the on-demand commit extraction.
 - [`src/cache.rs`](./src/cache.rs) and

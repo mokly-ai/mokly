@@ -27,7 +27,7 @@
     `base-conversion` warning, and the other files stay.
   - The base prefetch in `crates/mokly-compare/src/git_prefetch.rs:67` does
     the same through one read for each path.
-  - `docs/protocol/mokly-git.md:106` requires that each file of a failed,
+  - `docs/protocol/mokly-git.md:108` requires that each file of a failed,
     timed-out, or oversized batch converts again alone, so that a file is
     unavailable only when its own conversion fails.
 - **Problem:** Each call of the fallback can start about three Git
@@ -46,7 +46,7 @@
     file then needs a few batch processes for each halving. Keep the
     per-file retry after a deadline, because each halving would wait for a
     new 120-second deadline. Update the mechanism sentence at
-    `docs/protocol/mokly-git.md:106`. Effort: Medium.
+    `docs/protocol/mokly-git.md:108`. Effort: Medium.
   - **C.** Keep the per-file fallback, but share the attribute lookup and the
     object fetch of the failed batch among its single-file calls. Each file
     then starts one process instead of about three. Effort: Medium.

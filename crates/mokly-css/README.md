@@ -99,11 +99,16 @@ changes work only. Evidence retains each source's public route.
 Opaque assets use `Bundle.assets` records with logical paths, confined source
 identities, SHA-256 digests, and input aliases. `Bundle.inputs` retains parsed
 CSS only. The graph checks asset streams against these digests at delivery.
-The compiler collects the new asset targets of each stylesheet file and hashes
-them through one `SourceTree::digest_unretained_batch` call. Each result keeps
-its own asset diagnostic. An asset whose confined identity differs from its
-logical path, such as a symlink into a workspace package, hashes that identity
-alone.
+The compiler confines each new asset target before it requests any digest, so
+an escaping or missing target fails before any read. One
+`SourceTree::digest_unretained_batch` call then hashes the confined identities
+of the new assets of each stylesheet file. An identity can differ from its
+logical path, such as a symlink into a workspace package. A missing or
+non-regular target keeps the "not a regular file inside repoRoot" diagnostic.
+An unavailable digest becomes `AssetFailure::Unavailable` with the message of
+the source adapter, and a cancelled digest returns the cancellation
+diagnostic. The CLI reports an unavailable base asset with the Changes reason
+"base resource unavailable", so all of Changes is unavailable.
 
 `Bundle.read_evidence` retains distinct observed and late input versions.
 Combining stylesheets preserves both kinds without overwriting earlier
