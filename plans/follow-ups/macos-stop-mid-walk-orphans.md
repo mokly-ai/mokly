@@ -197,6 +197,11 @@
     holds an output pipe of the base install. A mid-walk orphan can be such a
     survivor. That item recommends a bounded wait after a stop, which also
     ends the wait for it.
+  - `plans/follow-ups/git-helpers-outlive-commands.md` holds the promise of
+    the Git page that no Git helper outlives its command. The gap of this
+    item also reaches Git helpers. Both items change the runtime words
+    "except for the base install limits", so one branch can apply both
+    answers.
 - **Recommendation:** A. It makes both pages true at Small effort, and each
   code option still leaves a case that the pages must name. C best protects
   the codebase, because it also narrows the recorded macOS limit.
