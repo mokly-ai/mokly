@@ -214,10 +214,10 @@ Verify the required checker and all gate consumers before the PR merges.
 - [x] Check an older warmup preparation and older release-ref conditions without publishing.
 - [x] Run a real remote complete gate against the main warmup without Bun, or report the missing access.
 - [x] Run formatting, lint, Markdown links, actionlint, and the complete gate with the pin.
-- [ ] Verify hosted Viewer logs actually run the pinned native checker under Node test profiles.
-- [ ] Confirm required hosted CI succeeds for the final candidate and preserve Node platform coverage.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete diff against `origin/main` after the push with the
+- [x] Verify hosted Viewer logs actually run the pinned native checker under Node test profiles.
+- [x] Confirm required hosted CI succeeds for the final candidate and preserve Node platform coverage.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete diff against `origin/main` after the push with the
       `implementation-review` skill. Apply the fix rule, record remaining
       findings as follow-up items, and re-review once after fixes.
 - [ ] Delete this plan under the `plans` skill after the required work and reviews finish.
@@ -226,6 +226,8 @@ Verify the required checker and all gate consumers before the PR merges.
 Smoke evidence: `.context/bun-ci-typechecking/smoke/`.
 Repeat evidence: `.context/bun-ci-typechecking/combined-repeats.json`.
 Gate evidence: `.context/bun-ci-typechecking/remote-summary.json`.
+Hosted evidence: `.context/bun-ci-typechecking/hosted-candidate-status.json`.
+Review evidence: `.context/reviews/calummoore/bun-typescript-performance/round-4-review.md`.
 
 ## Evidence
 
