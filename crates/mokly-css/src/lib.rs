@@ -100,3 +100,7 @@ mod token_tree;
 #[cfg(test)]
 #[path = "_tests_/deep_scanner_tests.rs"]
 mod deep_scanner_tests;
+
+#[cfg(test)]
+#[path = "_tests_/asset_failures_tests.rs"]
+mod asset_failures_tests;

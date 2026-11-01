@@ -132,7 +132,7 @@ fn invalid_css_assets_and_late_imports_fail_with_authored_paths() {
                 ("images/a.svg", "<svg/>"),
                 ("css/late.css", ".y{}"),
             ],
-            source.contains("../missing.png"),
+            false,
         );
         let error = compiler.bundle(&root()).unwrap_err().to_string();
         assert!(error.contains("css/base.css"), "{error}");

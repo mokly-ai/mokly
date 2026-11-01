@@ -103,12 +103,17 @@ impl Preparation<'_> {
             });
         }
         let asset_route = format!("assets/{target}");
-        let candidate = (!self.result.assets.contains_key(&asset_route)).then(|| AssetCandidate {
-            route: asset_route.clone(),
-            target: target.clone(),
-            url: url.into(),
-            importer: stylesheet.into(),
-        });
+        let candidate = if self.result.assets.contains_key(&asset_route) {
+            None
+        } else {
+            Some(AssetCandidate {
+                node: self.confined_node(&target).ok_or_else(failure)?,
+                route: asset_route.clone(),
+                target: target.clone(),
+                url: url.into(),
+                importer: stylesheet.into(),
+            })
+        };
         if let Some(asset) = self.result.assets.get(&asset_route) {
             for alias in &asset.aliases {
                 self.result
@@ -137,7 +142,7 @@ impl Preparation<'_> {
         }
         let paths: Vec<_> = unique
             .iter()
-            .map(|candidate| self.compiler.repo_root.join(&candidate.target))
+            .map(|candidate| candidate.node.identity.clone())
             .collect();
         let digests = self.compiler.tree.digest_unretained_batch(&paths);
         for (candidate, digest) in unique.into_iter().zip(digests) {
@@ -148,12 +153,7 @@ impl Preparation<'_> {
                     candidate.importer, candidate.url
                 ),
             };
-            let node = self.confined_node(&candidate.target).ok_or_else(failure)?;
-            let digest = if node.identity == self.compiler.repo_root.join(&candidate.target) {
-                digest
-            } else {
-                self.compiler.tree.digest_unretained(&node.identity)
-            };
+            let node = candidate.node;
             let digest = match digest {
                 Ok(digest) => digest,
                 Err(_) => return Err(failure()),

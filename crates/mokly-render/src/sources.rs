@@ -174,17 +174,11 @@ impl SourceTree for SideTree {
         Ok(())
     }
     fn open_stream(&self, path: &Path) -> Result<Box<dyn SourceStream>> {
-        let (tree, physical, _) = self.selected(path)?;
-        let source = tree
-            .project(&physical)?
-            .map_or(physical, |node| node.identity);
+        let (tree, source, _) = self.asset_source(path)?;
         tree.open_stream(&source)
     }
     fn digest_unretained(&self, path: &Path) -> Result<String> {
-        let (tree, physical, _) = self.selected(path)?;
-        let source = tree
-            .project(&physical)?
-            .map_or(physical, |node| node.identity);
+        let (tree, source, _) = self.asset_source(path)?;
         tree.digest_unretained(&source)
     }
     fn digest_unretained_batch(&self, paths: &[PathBuf]) -> Vec<Result<String>> {

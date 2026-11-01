@@ -116,31 +116,27 @@ fn nested_dependency_hashes_and_prefetch_use_the_selected_base_installation() {
 
 #[test]
 fn opaque_digest_batches_group_by_selected_tree_and_keep_the_request_order() {
-    let sources = Unimock::new((
+    let sources = Unimock::new(
         SourceTreeMock::digest_unretained_batch
             .next_call(matching!((paths) if paths == &[
                 Path::new("/repo/a.svg").to_owned(), Path::new("/repo/c.svg").to_owned(),
             ]))
             .returns(vec![Ok("a".into()), Ok("c".into())]),
+    );
+    let dependencies = Unimock::new((
         SourceTreeMock::project
-            .each_call(matching!(_))
-            .answers(&|_, path| {
+            .each_call(matching!((path) if *path == Path::new("/deps/node_modules/pkg/b.svg")))
+            .answers(&|_, _| {
                 Ok(Some(Node {
-                    identity: path.into(),
+                    identity: "/deps/node_modules/.pnpm/pkg/b.svg".into(),
                     kind: FileKind::File,
                     lexical_kind: FileKind::File,
                 }))
             })
             .n_times(2),
-    ));
-    let dependencies = Unimock::new((
-        SourceTreeMock::project
-            .each_call(matching!((path) if *path == Path::new("/deps/node_modules/pkg/b.svg")))
-            .answers(&|_, _| Ok(None))
-            .n_times(2),
         SourceTreeMock::digest_unretained_batch
             .next_call(matching!((paths) if paths == &[
-                Path::new("/deps/node_modules/pkg/b.svg").to_owned(),
+                Path::new("/deps/node_modules/.pnpm/pkg/b.svg").to_owned(),
             ]))
             .returns(vec![Ok("b".into())]),
     ));

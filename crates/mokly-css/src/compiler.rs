@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use lightningcss::stylesheet::{ParserOptions, StyleSheet};
-use mokly_source_interface::tree::SourceTree;
+use mokly_source_interface::tree::{Node, SourceTree};
 
 use crate::error::{AssetFailure, CssError, Result, TransformFailure};
 use crate::resolver::ImportResolver;
@@ -33,6 +33,7 @@ pub(crate) struct Preparation<'a> {
 }
 
 pub(crate) struct AssetCandidate {
+    pub(crate) node: Node,
     pub(crate) route: String,
     pub(crate) target: String,
     pub(crate) url: String,
