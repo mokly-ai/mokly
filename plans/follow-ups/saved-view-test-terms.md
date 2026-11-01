@@ -1,6 +1,6 @@
 # Call variants variants in browser test names
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of the W2 viewer review.
 - **Location:** `tests/browser/react_comparison_evidence.spec.ts:70`,
@@ -11,7 +11,7 @@
   change did not touch, so a separate branch renames them.
 
 - **Source:** Review.
-- **Category:** Test (estimate).
+- **Category:** Test.
 - **Terms:**
   - **Variant:** a saved props set of a screen or component, under
     `docs/protocol/mokly-variants.md`. The product calls it a variant.
@@ -33,18 +33,17 @@
 - **Root question:** How should the browser tests name a variant?
 - **Options:**
   - **A.** Rename the four titles and three comments to use "variant", and
-    keep the negative assertion. Effort: Small (estimate).
+    keep the negative assertion. Effort: Small.
   - **B.** Apply A, and add a check that rejects "saved view" in test
-    titles. This adds a check. Effort: Medium (estimate).
+    titles. This adds a check. Effort: Medium.
 - **Left out:** Changing the product term to match the tests reverses the
   product's naming.
 - **Wider fix:** B. A check catches the old term in later titles, but it is
   a detection fix for wording only.
 - **Previous examples:** None found.
-- **Recommendation:** A. (estimate) The rename is enough, and B adds a check
+- **Recommendation:** A. The rename is enough, and B adds a check
   for a rare wording slip.
-- **Action:** ask the user (estimate), because condition 6 holds: the
-  wording of test titles is outside the categories that an agent fixes
-  without the user.
+- **Action:** fix after merge, apply A, because the rename preserves every
+  assertion and corrects test wording outside the reviewed change.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6731).

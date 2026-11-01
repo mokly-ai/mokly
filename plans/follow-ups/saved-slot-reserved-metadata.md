@@ -1,6 +1,6 @@
 # Align saved-slot reserved metadata validation
 
-- **Severity:** Medium (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of round 2 of the decision work review.
 - **Location:** `crates/mokly-catalogue/src/html_tokens.rs:92`,
@@ -10,7 +10,7 @@
   this mismatch outside its change, so a separate branch decides it.
 
 - **Source:** Review.
-- **Category:** Docs or spec (estimate).
+- **Category:** Docs or spec.
 - **Terms:**
   - **Reserved navigation metadata:** the attributes `data-mokly-link` and
     `data-mokly-link-control…`, which only Mokly's link adapter may write.
@@ -35,14 +35,14 @@
 - **Options:**
   - **A.** Keep the build passing, and change the warning text and the
     screens contract so that they no longer say that the name is rejected.
-    Effort: Small (estimate).
+    Effort: Small.
   - **B.** Fail the build for a reserved navigation name on a saved-slot
     wrapper, as for a body. This adds a build error and changes the screens
-    contract. Effort: Small (estimate).
+    contract. Effort: Small.
   - **C.** One validation rule for reserved navigation names in all
     authored HTML: bodies, saved slots, and both ignore wrappers. Each
     failure names its file and position or its slot field. This adds a
-    build error for saved slots. Effort: Medium (estimate).
+    build error for saved slots. Effort: Medium.
 - **Left out:** Keeping the attribute breaks the contract rule that only
   the link adapter writes reserved navigation names.
 - **Wider fix:** C. One rule removes the separate saved-slot path.
@@ -59,10 +59,9 @@
   - [saved-variant-slot-checks.md](./saved-variant-slot-checks.md) decides
     the same body-versus-saved-slot question for the element checks. One
     rule for authored HTML would settle both.
-- **Recommendation:** C. (estimate) It gives authored HTML one rule and one
+- **Recommendation:** C. It gives authored HTML one rule and one
   message.
-- **Action:** ask the user (estimate), because condition 1 holds: every
-  option changes the saved-slot rule of the screens contract. B and C also add
-  a build error.
+- **Action:** ask the user, because every option changes the saved-slot rule of
+  the screens contract. B and C also add a build error.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5583).

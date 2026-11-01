@@ -1,6 +1,6 @@
 # Measure hosted gzip publications
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #221 and its completed plan, an unchecked
   post-merge task.

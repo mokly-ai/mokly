@@ -1,6 +1,6 @@
 # Use one typed lockfile model
 
-- **Severity:** Low (estimate). **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 123, the wider fix of findings 3 and 4 of the pnpm and Yarn review.
 - **Location:** `crates/mokly-compare/src/pnpm_lockfile.rs:113` and
@@ -9,7 +9,7 @@
   until after its merge, for the user's later choice.
 
 - **Source:** Review.
-- **Category:** Code structure (estimate).
+- **Category:** Code structure.
 - **Terms:**
   - **Base install:** the private install of the base commit's
     dependencies that Changes runs when the base lockfile differs from the
@@ -32,8 +32,7 @@
 - **Root question:** How should base validation find exactly the path
   fields of pnpm and Yarn lockfiles?
 - **Options:**
-  - **A.** Keep the scalar scans with the targeted fixes. Effort: Small
-    (estimate).
+  - **A.** Keep the scalar scans with the targeted fixes. Effort: Small.
   - **B.** Parse pnpm and Yarn lockfiles into one typed model with importer
     and locator context. Check only its path fields, and test it with a
     differential corpus against Yarn's parser. Effort: Large.
@@ -47,8 +46,7 @@
   dependency-input model for identity and source validation.
 - **Recommendation:** B. It removes the repeated parser class, despite its
   larger cost.
-- **Action:** ask the user, because condition 5 holds: the user reserved
-  the choice for each open review item of the rebuild. Condition 3 also
-  holds, because B is Large.
+- **Action:** ask the user, because the user reserved the choice for each open
+  review item of the rebuild.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6009).

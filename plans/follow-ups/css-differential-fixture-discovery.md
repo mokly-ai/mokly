@@ -1,6 +1,6 @@
 # CSS differential test uses a fragile stylesheet list
 
-- **Severity:** Low. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   finding 1 of the final review of `rebuild/port-111c` at `b152d0dc`.
@@ -73,8 +73,7 @@
   without a fragile, hand-kept stylesheet list?
 - **Options:**
   - **D.** Remove the one-time equivalence test in four steps. It drops the
-    comparison over the 51 listed repository stylesheets. Effort: Small
-    (estimate).
+    comparison over the 51 listed repository stylesheets. Effort: Small.
     1. Run the differential test once. Save its output under `.context/`.
     2. Move each product assertion of the test to a test of its
        requirement.
@@ -104,16 +103,16 @@
     copy of the old statement reader for the generated cases. D removes the
     whole comparison on purpose, and the other tests above protect the
     statement rule.
-- **Wider fix:** D (estimate). Without the equivalence test, no stylesheet
-  list exists to go stale. Under the review-fix rule of the
-  `implementation-review` skill, a test of a one-time proof is not a wider
+- **Wider fix:** D. Without the equivalence test, no stylesheet
+  list exists to go stale. Under the fix rule of the
+  `decisions-and-findings` skill, a test of a one-time proof is not a wider
   fix. So C is no longer one.
 - **Previous examples:** None found.
-- **Recommendation:** D (estimate). It removes the hand-kept list, the build
+- **Recommendation:** D. It removes the hand-kept list, the build
   break on a moved stylesheet, the copy of the old statement reader, and the
   assertion that cannot fail. The recommendation was C before the `testing`
   skill of 2026-10-30.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user ruled that new review findings wait for the user after the merge.
+- **Action:** ask the user, because on 2026-10-21 the user ruled that new review
+  findings wait for the user after the merge.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6701).

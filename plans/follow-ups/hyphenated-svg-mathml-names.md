@@ -1,6 +1,6 @@
 # Accept standard hyphenated SVG and MathML names
 
-- **Severity:** Medium (estimate). **Likelihood:** Rare (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a problem outside the scope of the HTML pipeline decision work of
@@ -38,7 +38,7 @@
   - **A.** Accept the eight names that the HTML standard reserves, and state
     the exception in the protocol. Effort: Small.
   - **B.** Accept a hyphenated name only inside an SVG or MathML subtree, as
-    the tree builder's namespace shows. Effort: Medium (estimate).
+    the tree builder's namespace shows. Effort: Medium.
   - **C.** Keep the rule, and state in the protocol that these names fail.
     Effort: Small.
 - **Left out:** Accept every unknown hyphenated name. It loses the check for
@@ -48,10 +48,9 @@
 - **Previous examples:** Before the one-tokenizer change of 2026-10-26, a
   separate token pass missed SVG `desc` and encoded MathML `annotation-xml`
   as integration points. That change resolved it.
-- **Recommendation:** A (estimate). It follows the HTML standard and keeps
+- **Recommendation:** A. It follows the HTML standard and keeps
   the check for missing components.
-- **Action:** ask the user, because condition 1 holds (estimate): A and B
-  add an exception to the protocol rule that every unknown hyphenated name
-  fails.
+- **Action:** ask the user, because A and B add an exception to the protocol
+  rule that every unknown hyphenated name fails.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5664).

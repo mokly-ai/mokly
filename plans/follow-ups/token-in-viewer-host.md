@@ -1,6 +1,6 @@
 # Protect tokens in viewer URL hosts
 
-- **Severity:** Low. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 178, delta review 3.
 - **Location:** `crates/mokly-publish/src/completion.rs:69`.
@@ -25,9 +25,9 @@
   form that the URL parser can produce?
 - **Options:**
   - **A.** Match the token in the host without regard to letter case, and
-    add a regression test. Effort: Small (estimate).
+    add a regression test. Effort: Small.
   - **B.** Reject any viewer URL whose host contains the token. This adds a
-    rejection. Effort: Small (estimate).
+    rejection. Effort: Small.
 - **Left out:** Matching the full URL without regard to case can redact
   unrelated text in a case-sensitive path.
 - **Wider fix:** A. Case folding only for the host matches what the URL
@@ -38,7 +38,7 @@
   is a second gap in what `SecretMatcher` and its callers recognize as the
   token. One branch can fix both in the publish crate.
 - **Recommendation:** A. It closes the exposure without a new rejection.
-- **Action:** ask the user, because condition 5 holds: the user reserved
-  the choice for each open review item of the rebuild.
+- **Action:** ask the user, because the user reserved the choice for each open
+  review item of the rebuild.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6365).

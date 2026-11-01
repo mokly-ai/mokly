@@ -1,6 +1,6 @@
 # Recover resource edits before directory attachment
 
-- **Severity:** Medium (estimate). **Likelihood:** Rare (estimate). **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Large. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #222 and its completed plan, which put the
   problem outside the scope of its first review.
@@ -49,19 +49,18 @@
     After `drain` attaches the new directories, read the modification time
     of each new resource. Replay a change event when it falls after the
     recorded time, with the margins of the preparation check. Effort:
-    Medium (estimate).
+    Medium.
   - **C.** Pass the recorded digest with each new resource to the watch
     layer. After the attachment, digest each new resource again and replay
     a change event when the digests differ. This changes the
-    `ResourceObserver` boundary of `mokly-graph` and the CLI. Effort: Large
-    (estimate).
+    `ResourceObserver` boundary of `mokly-graph` and the CLI. Effort: Large.
   - **D.** Attach the watcher to the directory before the render reads the
     file, through a synchronous call from the graph to the watch layer.
-    Each render then waits for watcher IO. Effort: Large (estimate).
+    Each render then waits for watcher IO. Effort: Large.
 - **Left out:** Change detection inside the watch layer without a separate
   check. PR #222 rejected it as Large for the preparation case on
   2026-10-28, and B covers this narrower case.
-- **Wider fix:** D (estimate). The watcher then observes each resource
+- **Wider fix:** D. The watcher then observes each resource
   before its first read, so no gap remains.
 - **Previous examples:** PR #222 fixed the same class for the exact input
   files of a preparation on 2026-10-28, through the file-time check in
@@ -73,11 +72,10 @@
   observes the directory. Both are cases of one class, a watched change
   that Serve misses, but their causes and fixes differ. One branch can test
   both.
-- **Recommendation:** B (estimate). It reuses the file-time rule that the
-  watch contract already applies to exact files, and it stays in
-  `mokly-cli`. D best protects the codebase, but it puts watcher IO on the
-  render path.
-- **Action:** fix after merge, apply B (estimate), because the gap is a
-  product bug outside the diff of PR #222, and B is not blocked.
+- **Recommendation:** D. Observation before the read removes the attachment gap
+  instead of inferring edits from modification times. The record first
+  recommended B.
+- **Action:** fix after merge, apply D, because the resource attachment gap lies
+  outside the preparation check that found it.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/render-cache-weight-and-watch-recheck.md?plain=1#L428).

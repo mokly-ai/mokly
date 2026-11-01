@@ -1,6 +1,6 @@
 # Public-export ratchet fails with stale release tags
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #222 and its completed plan, which put the
   failure outside the scope in its first review.
@@ -47,7 +47,7 @@
   - Newer tags already existed on `origin`: `v0.15.0` and `viewer-v0.6.0`
     from 2026-10-20, and `v0.16.1` and `viewer-v0.16.1` from 2026-10-26.
     `HEAD` reached them. So the local clone most likely lacked these tags,
-    and the ratchet compared with an old release (estimate).
+    and the ratchet compared with an old release.
   - A branch review saw the same failure in one diagnostic run on
     2026-10-29.
   - On 2026-10-30, a read-only run of the audit in a clone with `v0.17.0` and
@@ -72,7 +72,7 @@
     the tags and runs the suite again. Effort: Small.
   - **C.** Fetch the release tags in `cargo xtask check --suite repository`
     before the audit. Every local gate then needs network access to
-    `origin`. Effort: Small (estimate).
+    `origin`. Effort: Small.
 - **Left out:**
   - Requiring the tag of the version that `.release-please-manifest.json`
     records at `HEAD`. In a release pull request that version is not
@@ -84,18 +84,19 @@
   - Comparing with the packages on npm. It needs network access like C, and
     the published packages ship `dist` without the `src` entry points that
     the ratchet maps.
-- **Wider fix:** C (estimate). A fetch inside the suite removes the stale-tag
+- **Wider fix:** C. A fetch inside the suite removes the stale-tag
   case for every local run, but it makes each local gate depend on the
   network.
 - **Previous examples:** On 2026-10-28 the agent of PR #222 opened that pull
   request with this local failure, because the ratchet failed the same way
   on `origin/main`. `AGENTS.md:87` already names a similar preparation step:
   fetch `origin/main` before `cargo xtask source-file-length-lint`.
-- **Recommendation:** A (estimate). It names the missing preparation step
+- **Recommendation:** A. It names the missing preparation step
   where contributors look for it, with no new failure mode and no network
   dependency in the gate. C best protects the codebase, at the cost of
   network access in every local gate.
-- **Action:** ask the user, because condition 6 holds (estimate): this is a
-  process finding about how a contributor prepares a local clone.
+- **Action:** ask the user, because A adds a required clone-preparation step to
+  docs/protocol/developer-test-commands.md. No recorded user decision approves
+  that requirement.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/render-cache-weight-and-watch-recheck.md?plain=1#L431).

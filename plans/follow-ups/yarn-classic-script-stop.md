@@ -1,6 +1,6 @@
 # Stop Yarn Classic dependency scripts
 
-- **Severity:** High. **Likelihood:** Rare (estimate). **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 150, finding 42 of the review of user decision 135 B.
 - **Location:** `crates/mokly-platform/src/unix.rs:54`,
@@ -123,10 +123,10 @@
   install starts, also outside its process group?
 - **Options:**
   - **A.** Document the process leak. The processes and the cache risk stay.
-    Effort: Small (estimate).
+    Effort: Small.
   - **B.** Keep lifecycle scripts off for Yarn Classic on Unix, and warn
     when the user asks for them. Classic projects lose the scripts opt-in.
-    Effort: Small (estimate).
+    Effort: Small.
   - **C.** Make the process owner stop every descendant, also in new
     sessions. Before it sends a signal, it stops the group. Then it finds
     every descendant through parent links and signals each one. Effort:

@@ -1,6 +1,6 @@
 # Base installs read TLS files outside the repository
 
-- **Severity:** High. **Effort:** Large (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** High. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 153, the probe of user decision 145 B.
 - **Location:** `crates/mokly-compare/src/manager_yarnrc.rs:15`,
@@ -78,19 +78,17 @@
     pnpm, and Yarn Classic still read outside files. Effort: Small.
   - **B.** Clear those settings before the install. A base that needs its
     own certificate authority or client certificate then fails to install.
-    npm, pnpm, and Yarn Classic still read outside files. Effort: Small
-    (estimate).
+    npm, pnpm, and Yarn Classic still read outside files. Effort: Small.
   - **C.** Allow only Yarn Berry TLS files that `RepositoryPath::confine`
     keeps inside the repository, and use tier three for an outside path. npm,
-    pnpm, and Yarn Classic still read outside files. Effort: Medium
-    (estimate).
+    pnpm, and Yarn Classic still read outside files. Effort: Medium.
   - **D.** Apply C to Yarn Berry, Yarn Classic, pnpm, and npm. Add `.npmrc`
     to the dependency inputs of npm-only repositories, so that Mokly can
     check it before the install. This changes the npm input rule of
     `docs/protocol/mokly-base-dependencies.md`. The npm dependency identity
     and install key then include `.npmrc`. A base whose configuration names a
     system file, such as a company certificate authority under `/etc`, uses
-    tier three. Effort: Large (estimate).
+    tier three. Effort: Large.
   - **E.** Keep the current install, which trusts the base commit as the
     project's own install does. Document next to the trust rule that a base
     configuration can name host TLS files and that the install reads them,
@@ -103,7 +101,7 @@
     still reads the file, so the exposure stays. A private host setup gets
     the warning on each base install. Mokly must read the TLS settings of
     every manager, also in the `.npmrc` of an npm-only repository. Effort:
-    Medium (estimate).
+    Medium.
 - **Shared assumptions:** Options A to D share two assumptions.
   - The options act only on the configuration of the base commit. The user
     configuration with its credentials stays trusted, and so do the

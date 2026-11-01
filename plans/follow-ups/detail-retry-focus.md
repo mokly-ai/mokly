@@ -1,6 +1,6 @@
 # Move focus after a detail retry
 
-- **Severity:** Low. **Likelihood:** Rare (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 160, from finding 1 of the W2 review.
@@ -34,9 +34,9 @@
   a failed load?
 - **Options:**
   - **A.** Document that a detail retry keeps the browser's focus. Effort:
-    Small (estimate).
+    Small.
   - **B.** Move focus to the loading status, then to the restored panel
-    heading. Effort: Medium (estimate).
+    heading. Effort: Medium.
 - **Left out:** Move focus only after success. The loading transition then
   stays unannounced. Fewer than three approaches exist, because focus
   either moves with the state or stays where the browser puts it.
@@ -45,7 +45,7 @@
   the live-editing retry such a sequence.
 - **Previous examples:** None found.
 - **Recommendation:** B. It gives recovery a predictable focus destination.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user ruled that new review items wait for the user after the merge.
+- **Action:** ask the user, because on 2026-10-21 the user ruled that new review
+  items wait for the user after the merge.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6183).

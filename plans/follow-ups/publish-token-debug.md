@@ -1,6 +1,6 @@
 # Redact publish tokens from Debug output
 
-- **Severity:** Low. **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 181, delta review 6.
 - **Location:** `crates/mokly-cli/src/grammar.rs:107`,
@@ -38,10 +38,9 @@
 - **Root question:** How should Mokly make every value that holds the
   publish token safe to format?
 - **Options:**
-  - **A.** Implement a redacting `Debug` for `Publish`. Effort: Small
-    (estimate).
+  - **A.** Implement a redacting `Debug` for `Publish`. Effort: Small.
   - **B.** Use one secret type with a redacting `Debug` for every token
-    field, the raw ones and the validated one. Effort: Medium (estimate).
+    field, the raw ones and the validated one. Effort: Medium.
 - **Left out:** Relying on callers to avoid `Debug` keeps a raw secret in a
   printable type. Only two distinct approaches exist: redact in each type
   that holds the token, or redact in the type of the token itself.

@@ -1,6 +1,6 @@
 # Imported CSS comparison test races a mode switch
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-30, from the CI run of PR #248 at `cc463669`, job
   "Browser (Node 22.15.0, shard 2/4)".
@@ -15,6 +15,8 @@
   same "Frame was detached" at `imported_css_panes.ts:40`, and it passed on
   the third attempt. It also failed in `main`'s CI run for `7edabc30`.
 
+- **Source:** Review.
+- **Category:** Test.
 - **Terms:**
   - **Comparison modes:** Overlay, Difference, and Side by side, the three
     ways that a comparison shows the previous and the current preview.
@@ -66,27 +68,27 @@
   - **A.** Reproduce the failure by repeating the test, and name the source.
     Then, in this test, wait for an explicit readiness signal of the new
     mode, such as the pane layout of the selected mode, before the frames
-    are read. Keep every assertion. Effort: Small (estimate).
+    are read. Keep every assertion. Effort: Small.
   - **B.** Change nothing until the test fails again, and record the failure
-    details in this item then. Effort: Small (estimate).
+    details in this item then. Effort: Small.
   - **C.** Reproduce the failure and name the source, as in A. Then put the
     same readiness wait into `expectStyledPanes`, so that both callers, this
     test and the Serve test, read only frames of the selected mode. Keep
-    every assertion. Effort: Small (estimate).
+    every assertion. Effort: Small.
   - **D.** If the reproduction shows a product race in the mode switch of
     the comparison panes, add a failing test first. Then fix the order in
-    the viewer comparison code. Effort: Medium (estimate).
+    the viewer comparison code. Effort: Medium.
 - **Left out:** A retry, a sleep, or a longer time limit. The
-  `deterministic-tests` skill forbids them, because they hide the source.
-- **Wider fix:** C (estimate). One wait in the shared helper protects both
+  `testing` skill forbids them, because they hide the source.
+- **Wider fix:** C. One wait in the shared helper protects both
   callers.
 - **Previous examples:** Other browser tests that failed and passed on the
   rerun: [flaky-same-origin-handoff.md](./flaky-same-origin-handoff.md),
   [flaky-viewer-selection-navigation.md](./flaky-viewer-selection-navigation.md),
   and [frame-adapter-message-flake.md](./frame-adapter-message-flake.md). The
   first gives its shared probe the same kind of readiness option.
-- **Recommendation:** C (estimate). It puts the wait where the frames are
+- **Recommendation:** C. It puts the wait where the frames are
   read, so both callers gain it at the cost of A.
-- **Action:** ask the user, because condition 6 holds (estimate): the
-  failure was not reproduced and its source is not confirmed, so the
-  `deterministic-tests` skill gives `ask the user`.
+- **Action:** ask the user, because the failure has not been reproduced with a
+  confirmed cause. No fix is clearly best until reproduction identifies the
+  source, as the flaky-test rule requires.

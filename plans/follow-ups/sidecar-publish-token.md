@@ -1,6 +1,6 @@
 # Remove the publish token from the sidecar environment
 
-- **Severity:** Low. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 180, delta review 5.
 - **Location:** `crates/mokly-sidecar/src/process_factory.rs:85`.
@@ -38,10 +38,9 @@
 - **Root question:** How should Mokly keep its secrets out of the processes
   that run consumer code?
 - **Options:**
-  - **A.** Remove `MOKLY_TOKEN` from the sidecar environment. Effort: Small
-    (estimate).
+  - **A.** Remove `MOKLY_TOKEN` from the sidecar environment. Effort: Small.
   - **B.** Start sidecars from an allowed list of variables, as base installs
-    do. Effort: Medium (estimate).
+    do. Effort: Medium.
 - **Left out:** Clearing every variable breaks consumer PostCSS settings
   that read the environment.
 - **Wider fix:** B. An allowed list protects every inherited secret, not

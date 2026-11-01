@@ -1,6 +1,6 @@
 # Confine opaque PostCSS inputs
 
-- **Severity:** High. **Likelihood:** Rare (estimate). **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 114, decided on 2026-10-21.
@@ -55,7 +55,7 @@
     copy of its input domain, with a platform sandbox that denies reads
     outside that domain. Bring the design's decisions to the user before any
     code changes. The design changes no code. Its later implementation is
-    Large (estimate). Effort: Small.
+    Large. Effort: Small.
   - **C.** Implement enforced immutable inputs without a design first. It
     adds a new protocol contract and isolation on every platform. Effort:
     Large.
