@@ -6,8 +6,8 @@
   user item 160, from finding 1 of the W2 review.
 - **Location:** `packages/viewer/src/shell/workspace_props.tsx:148-154` and
   `packages/viewer/src/shell/workspace_usage.tsx:41-53`.
-- **Reason:** The plan recorded this item after the user's rule of
-  2026-10-21 that open review items wait for the user after the merge.
+- **Reason:** Option B differs from the stated focus rule of the Props retry,
+  and no rule states the focus of the Usage retry.
 
 - **Source:** Review.
 - **Category:** Product bug.
@@ -45,7 +45,8 @@
   the live-editing retry such a sequence.
 - **Previous examples:** None found.
 - **Recommendation:** B. It gives recovery a predictable focus destination.
-- **Action:** ask the user, because on 2026-10-21 the user ruled that new review
-  items wait for the user after the merge.
+- **Action:** ask the user, because B moves focus to the loading status first,
+  but `docs/protocol/mokly-component-controls-design.md:69-70` sends it to the
+  panel heading after Try again.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6183).

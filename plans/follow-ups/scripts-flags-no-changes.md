@@ -1,13 +1,13 @@
 # Document scripts flags with no Changes build
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 157, finding 53 of the review of user decision 135 B.
 - **Location:** `crates/mokly-cli/src/grammar.rs:44`,
   `crates/mokly-cli/src/grammar.rs:101`,
   `docs/guides/cli/build.md:23`, and `docs/guides/cli/publish.md:29`.
-- **Reason:** A user rule of 2026-10-21 deferred each new review item of
-  PR #199 until after its merge, for the user's later choice.
+- **Reason:** The Rust rebuild merged with this gap open, and the fix changes
+  two command guides, so it needs a separate docs branch.
 
 - **Source:** Review.
 - **Category:** Docs or spec.
@@ -44,8 +44,10 @@
   can do both. Their work differs: this item says what the flags do with
   `--no-changes`, and that item removes repeated copies of the mode.
 - **Recommendation:** A. It states the current behaviour without a new
-  rejection.
-- **Action:** ask the user, because the user reserved the choice for each open
-  review item of the rebuild.
+  rejection. B, the wider fix, adds a rejection, so the branch that applies A
+  records B as its own Needs decision item.
+- **Action:** fix after merge, apply A, because the guides of `build` and
+  `publish` only state the current behaviour, and no protocol rule covers the
+  flag pair.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6154).

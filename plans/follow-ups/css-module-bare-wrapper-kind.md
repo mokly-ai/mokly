@@ -7,8 +7,8 @@
   round 7 differential review.
 - **Location:** `crates/mokly-css/src/rename_selectors.rs:96-100` and
   `:181-187`, and `crates/mokly-css/src/module_integrity.rs:17-36` and `:62`.
-- **Reason:** On 2026-10-21 the user deferred the open review items until
-  after the merge, and options B and C reject stylesheets that build today.
+- **Reason:** Options B and C reject stylesheets that build today, so the
+  rebuild kept the current behaviour until the user decides.
 
 - **Source:** Review.
 - **Category:** Product bug.
@@ -56,8 +56,8 @@
   both.
 - **Recommendation:** B. One guard catches every edit that changes a
   statement.
-- **Action:** ask the user, because on 2026-10-21 the user deferred the open
-  review items past the merge to decide each one later. B and C also reject
-  stylesheets that build today.
+- **Action:** ask the user, because B and C make stylesheets such as
+  `.p{:local}`, which build today, fail, and the always-on rules reserve a new
+  rejection for the user.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5962).

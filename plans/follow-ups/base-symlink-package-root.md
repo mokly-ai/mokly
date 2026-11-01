@@ -6,8 +6,8 @@
   user item 174, outside the scope of the W8 work.
 - **Location:** `crates/mokly-compare/src/git_tree.rs:221` and
   `crates/mokly-git/src/tree.rs:97`.
-- **Reason:** The plan recorded this item, with no options, after the
-  user's rule of 2026-10-21 that new review items wait until after the merge.
+- **Reason:** The plan recorded this item with no options, and the recommended
+  option C changes the documented link rule of the base Git reader.
 
 - **Source:** Review.
 - **Category:** Product bug.
@@ -55,7 +55,9 @@
     is the linked repository root case of the same class.
 - **Recommendation:** C. It makes the base side match Git link
   semantics without changing the configured paths.
-- **Action:** ask the user, because on 2026-10-21 the user ruled that new review
-  items wait for the user after the merge.
+- **Action:** ask the user, because C makes the base Git reader follow links
+  inside the repository, against the rule of
+  `docs/protocol/mokly-source-protection.md:135` that it rejects a symbolic
+  link, and no user decision covers that change.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6327).
