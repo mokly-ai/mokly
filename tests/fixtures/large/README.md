@@ -79,11 +79,13 @@ GPU acceleration. `--memory-stop-kib` defaults to 1750000; use 0 to
 disable it. React Serve needs a larger stop on a machine with more memory.
 Do not raise the stop on a shared machine without sufficient capacity.
 A safety stop records failure and keeps completed measurements and diagnostics.
-Startup acceptance uses an optimized release native binary. Before a Serve
-benchmark, workspace mode builds that binary and installs it in the host
-native package. Isolated generation builds it before packing, outside setup
-timing. An installed fixture verifies its recorded binary digest before Serve.
-Each startup result records the release profile, target, source, and digest.
+Startup acceptance and the `build` scenario use an optimized release native
+binary. When the selected scenarios include `build`, `serve`, or `startup`,
+workspace mode first builds that binary and installs it in the host native
+package. Isolated generation builds it before packing, outside setup timing.
+An installed fixture verifies its recorded binary digest before those
+scenarios. Each startup result and the build result record the release
+profile, target, source, and digest.
 The opt-in benchmark fails when cold or warm startup reaches the `usableMs`
 budget of its variant in the
 [timings contract](../../../docs/protocol/mokly-timings.md#budgets).
@@ -91,12 +93,20 @@ budget of its variant in the
 Sidecar deadlines use their normal contract unless `--sidecar-timeout-ms` is
 set. Reports record this override, `MOKLY_SIDECAR_TIMEOUT_MS`, `NODE_OPTIONS`,
 `GOMAXPROCS`, and `GOMEMLIMIT`. These values can change time and memory use.
-Default build and listening waits stop after 300 seconds. Browser operations allow
-60 seconds. The watch scenario uses a 30-minute browser liveness allowance for
-the full-size React catalogue. This allowance covers initial rendering,
-delivered Changes, review fetches, and restoration. It is a harness liveness
-guard, not an edit-to-reload budget or a product timeout. Shutdown escalates
-to SIGKILL after 10 seconds.
+Listening waits in the Serve scenarios stop after 300 seconds. Browser
+operations allow 60 seconds. The watch scenario uses a 30-minute browser
+liveness allowance for the full-size React catalogue. This allowance covers
+initial rendering, delivered Changes, review fetches, and restoration. It is a
+harness liveness guard, not an edit-to-reload budget or a product timeout.
+Shutdown escalates to SIGKILL after 10 seconds.
+
+By default, the `build` scenario fails when the build writes no output line
+for 300 seconds. Each line on standard output or standard error restarts that
+window. When the window expires, the harness stops the build and names the
+liveness limit in the failure. When the stopped build leaves its
+[output reservation](../../../docs/protocol/mokly-export-safety.md#output-ownership-and-confinement),
+the failure also names the reservation path. Inspect the reservation and
+remove it before the next build. The harness never removes it.
 
 `generate` accepts variant, toolchain, and size flags. `benchmark` reads those
 from the fixture record and rejects overrides. It accepts scenario, sidecar,
@@ -111,8 +121,9 @@ observations, not acceptance budgets. Captured read totals exclude inner cache
 hits and bundle copies. An unfinished span stays marked `incomplete`.
 Programmatic build probes can pass `{ buildChanges: false }` to `benchmark`
 to isolate current-source preparation from comparison work.
-They can set `buildDeadlineMs` for an observation that needs a longer build wait.
-The report records the chosen deadline. It changes no acceptance or memory budget.
+They can set `buildDeadlineMs` to change the liveness window of the `build`
+scenario. The report records the chosen window. It changes no acceptance or
+memory budget.
 
 ### Key Code
 
@@ -131,3 +142,6 @@ The report records the chosen deadline. It changes no acceptance or memory budge
 - [`scripts/large/setup_budget.ts`](../../../scripts/large/setup_budget.ts)
   and [`scripts/large/startup_budget.ts`](../../../scripts/large/startup_budget.ts)
   apply the setup and startup budgets.
+- [`scripts/large/build_liveness.ts`](../../../scripts/large/build_liveness.ts)
+  applies the liveness window of the `build` scenario and names the
+  reservation that a stopped build leaves.
