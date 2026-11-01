@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.18.0](https://github.com/mokly-ai/mokly/compare/v0.17.0...v0.18.0) (2026-11-01)
+
+
+### ⚠ BREAKING CHANGES
+
+* The catalogue index is version 9 and the entry detail is version 4. Each index record lists `detailId`. Each detail carries `detailId` and no `deploymentId`, and a removed detail no longer carries `generation`. Static builds write `mokly-viewer/deployment.json`. `@mokly/viewer` exports `EntryDetailV4` instead of `EntryDetailV3`. `readCatalogueIndex` reads version 9 only, and `readEntryDetail` reads version 4 only. Rebuild and republish every catalogue with the matching viewer. Mokly Cloud must accept index version 9.
+
+### Features
+
+* **cli:** show comparison steps while Changes loads ([#248](https://github.com/mokly-ai/mokly/issues/248)) ([afc9f58](https://github.com/mokly-ai/mokly/commit/afc9f58d20f3312cc9d73ceae55e270ed46dfe08))
+* **dev:** install and build before npm run dev serves ([#250](https://github.com/mokly-ai/mokly/issues/250)) ([e9c2022](https://github.com/mokly-ai/mokly/commit/e9c20225af1b203bea236d29869c48f8c103668b))
+* give entry details content ids and add a deployment file ([#224](https://github.com/mokly-ai/mokly/issues/224)) ([f93afce](https://github.com/mokly-ai/mokly/commit/f93afceaa1d94de3526c4825cc11708c951678ba))
+* **ui:** move the controls to @mokly/ui, 2 of 5 ([#251](https://github.com/mokly-ai/mokly/issues/251)) ([7edabc3](https://github.com/mokly-ai/mokly/commit/7edabc306d6983c43824e1425782215e44e0d7f0))
+* **ui:** move the inspector to @mokly/ui, 3 of 5 ([#253](https://github.com/mokly-ai/mokly/issues/253)) ([9f68de1](https://github.com/mokly-ai/mokly/commit/9f68de1695320adfec9ef5b112cd7865f313b283))
+* **ui:** move the layout and theme to @mokly/ui, 5 of 5 ([#255](https://github.com/mokly-ai/mokly/issues/255)) ([8eb2b9a](https://github.com/mokly-ai/mokly/commit/8eb2b9a0ffc5fd49e15f996e7277fa4237ad46d5))
+* **ui:** move the preview views to @mokly/ui, 4 of 5 ([#254](https://github.com/mokly-ai/mokly/issues/254)) ([8c2bbff](https://github.com/mokly-ai/mokly/commit/8c2bbff2c146a2f77f469668e342da127e3e0397))
+* **ui:** move the shell chrome to @mokly/ui, 1 of 5 ([#249](https://github.com/mokly-ai/mokly/issues/249)) ([14c6f9e](https://github.com/mokly-ai/mokly/commit/14c6f9ec4c6a328bd90a5cc06481ebf45e409fd9))
+
+
+### Bug Fixes
+
+* **deps:** select patched minimatch for lint and release tools ([21c8663](https://github.com/mokly-ai/mokly/commit/21c86638f7719fa799eec11e3f39215c8ce98552))
+* **graph:** carry unchanged public closures across replacements ([#244](https://github.com/mokly-ai/mokly/issues/244)) ([bb33139](https://github.com/mokly-ai/mokly/commit/bb33139552da58a3f69c52c418322821ceb9536a))
+
+
+### Performance Improvements
+
+* **render:** reuse stylesheet bundles with shared module evidence ([#242](https://github.com/mokly-ai/mokly/issues/242)) ([ee7d8ea](https://github.com/mokly-ai/mokly/commit/ee7d8ea739bd103aacd001f8e75e5aa144929348))
+
 ## [0.17.0](https://github.com/mokly-ai/mokly/compare/v0.16.1...v0.17.0) (2026-10-29)
 
 
