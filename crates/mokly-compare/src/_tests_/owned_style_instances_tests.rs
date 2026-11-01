@@ -18,12 +18,19 @@ fn compact(
     nodes: [&[Node]; 2],
     paths: &BTreeMap<String, String>,
     matching: &DocumentMatching,
+    owner: &str,
 ) -> Compact {
     let documents = [
         DocumentIndex::build(nodes[0], paths),
         DocumentIndex::build(nodes[1], &BTreeMap::new()),
     ];
-    owned_style_instances::compact(&documents, matching)
+    let candidates = documents
+        .iter()
+        .flat_map(|document| &document.instances)
+        .filter(|instance| instance.path == owner)
+        .map(|instance| instance.key.as_str())
+        .collect();
+    owned_style_instances::compact(&documents, matching, owner, &candidates)
 }
 
 fn instance(key: &str, children: Vec<Node>) -> Node {
@@ -80,26 +87,31 @@ fn shared_chains_keep_selector_matches_and_exclude_inert_or_empty_instances() {
     let source = DocumentIndex::build(&nodes, &paths);
     assert_eq!(source.elements.len(), 4);
     assert_eq!(source.instances.len(), 3);
-    let unresolved = compact([&nodes, &[]], &paths, &DocumentMatching::Unresolved(vec![]));
+    let unresolved = compact(
+        [&nodes, &[]],
+        &paths,
+        &DocumentMatching::Unresolved(vec![]),
+        "new",
+    );
     assert!(matched(&unresolved, "new", &BTreeMap::new()).is_empty());
-    let chains = compact([&nodes, &[]], &paths, &matching(1));
+    let chains = compact([&nodes, &[]], &paths, &matching(1), "new");
     assert_eq!(
         matched(&chains, "new", &BTreeMap::new()),
         BTreeSet::from(["outer".into(), "inner".into()])
     );
     assert!(matched(&chains, "old", &BTreeMap::new()).is_empty());
-    let chains = compact([&nodes, &[]], &paths, &matching(0));
+    let chains = compact([&nodes, &[]], &paths, &matching(0), "new");
     assert_eq!(
         matched(&chains, "new", &BTreeMap::new()),
         BTreeSet::from(["outer".into()])
     );
-    let chains = compact([&nodes, &[]], &paths, &matching(3));
+    let chains = compact([&nodes, &[]], &paths, &matching(3), "new");
     assert!(matched(&chains, "new", &BTreeMap::new()).is_empty());
     let mut unresolved = matching(1);
     if let DocumentMatching::Resolved(rules) = &mut unresolved {
         rules[0].selectors[0].unresolved = true;
     }
-    let chains = compact([&nodes, &[]], &paths, &unresolved);
+    let chains = compact([&nodes, &[]], &paths, &unresolved, "new");
     assert!(matched(&chains, "new", &BTreeMap::new()).is_empty());
 }
 
@@ -120,7 +132,7 @@ fn duplicate_selector_matches_share_one_chain_start() {
         });
         rules.push(rules[0].clone());
     }
-    let chains = compact([&nodes, &[]], &BTreeMap::new(), &matching);
+    let chains = compact([&nodes, &[]], &BTreeMap::new(), &matching, "old");
     assert_eq!(chains.counts(), (1, 1));
     assert_eq!(
         matched(&chains, "old", &BTreeMap::new()),
@@ -134,7 +146,7 @@ fn nested_owner_copies_keep_their_own_physical_chain() {
         "outer",
         vec![instance("inner", vec![tree::element("b", &[], vec![])])],
     )];
-    let chains = compact([&nodes, &[]], &BTreeMap::new(), &matching(0));
+    let chains = compact([&nodes, &[]], &BTreeMap::new(), &matching(0), "old");
     assert_eq!(
         matched(&chains, "old", &BTreeMap::new()),
         BTreeSet::from(["outer".into(), "inner".into()])
@@ -163,7 +175,7 @@ fn slot_input_owner_uses_the_supplier_chain_for_blocking() {
             }],
         )],
     )];
-    let chains = compact([&nodes, &[]], &BTreeMap::new(), &matching(0));
+    let chains = compact([&nodes, &[]], &BTreeMap::new(), &matching(0), "old");
     assert_eq!(
         matched(&chains, "old", &BTreeMap::new()),
         BTreeSet::from(["owner".into(), "outer".into()])
@@ -208,7 +220,7 @@ fn own_page_match_blocks_an_outer_owner_chain() {
             }],
         }],
     }];
-    let chains = compact([&nodes, &[]], &BTreeMap::new(), &matching(0));
+    let chains = compact([&nodes, &[]], &BTreeMap::new(), &matching(0), "owner");
     let identity = (None, None);
     let own_pages = BTreeMap::from([(identity, BTreeSet::from(["other".into()]))]);
     assert_eq!(
@@ -228,7 +240,7 @@ fn deep_nested_instances_retain_only_the_matched_chain() {
         let source = DocumentIndex::build(&nodes, &BTreeMap::new());
         assert_eq!(source.instances.len(), 20_000);
         assert_eq!(source.elements.len(), 1);
-        let chains = compact([&nodes, &[]], &BTreeMap::new(), &matching(0));
+        let chains = compact([&nodes, &[]], &BTreeMap::new(), &matching(0), "old");
         assert_eq!(chains.counts(), (20_000, 1));
         assert_eq!(matched(&chains, "old", &BTreeMap::new()).len(), 20_000);
     })

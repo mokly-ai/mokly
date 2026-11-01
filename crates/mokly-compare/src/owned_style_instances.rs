@@ -27,14 +27,22 @@ pub(crate) struct Compact {
     rules: Vec<RuleChains>,
 }
 
-/// Retain only deduplicated parent and input-owner chains of matched elements.
-pub(crate) fn compact(documents: &[DocumentIndex; 2], matching: &DocumentMatching) -> Compact {
+/// Retain matched ancestry only when it contains an eligible paired owner instance.
+pub(crate) fn compact(
+    documents: &[DocumentIndex; 2],
+    matching: &DocumentMatching,
+    owner: &str,
+    candidates: &BTreeSet<&str>,
+) -> Compact {
     let DocumentMatching::Resolved(rules) = matching else {
         return Compact::default();
     };
     let mut result = Compact::default();
     let mut rule_indices = BTreeMap::new();
     let mut start_sets = Vec::<[BTreeSet<Start>; 2]>::new();
+    let ancestors = documents
+        .each_ref()
+        .map(|document| eligible_ancestry(&document.instances, owner, candidates));
     for rule in rules {
         let identity = owned_identity(rule.change.identity());
         let rule_index = *rule_indices.entry(identity.clone()).or_insert_with(|| {
@@ -55,6 +63,9 @@ pub(crate) fn compact(documents: &[DocumentIndex; 2], matching: &DocumentMatchin
                 let Some(&(parent, input)) = documents[side].elements.get(element.element) else {
                     continue;
                 };
+                if !parent.is_some_and(|index| ancestors[side][index]) {
+                    continue;
+                }
                 let start = Start { parent, input };
                 if start_sets[rule_index][side].insert(start) {
                     result.rules[rule_index].starts[side].push(start);
@@ -62,6 +73,9 @@ pub(crate) fn compact(documents: &[DocumentIndex; 2], matching: &DocumentMatchin
             }
         }
     }
+    result
+        .rules
+        .retain(|rule| rule.starts.iter().any(|starts| !starts.is_empty()));
     for (side, document) in documents.iter().enumerate() {
         result.retain(side, document);
     }
@@ -100,6 +114,11 @@ pub(crate) fn matched(
 }
 
 impl Compact {
+    /// Whether no eligible match needs retained ancestry.
+    pub(crate) fn is_empty(&self) -> bool {
+        self.rules.is_empty()
+    }
+
     fn retain(&mut self, side: usize, source: &DocumentIndex) {
         let mut parents = BTreeSet::new();
         let mut inputs = BTreeSet::new();
@@ -165,6 +184,22 @@ impl Compact {
                 .sum(),
         )
     }
+}
+
+/// Preorder places parents first, so each instance reuses its parent's eligibility.
+fn eligible_ancestry(
+    instances: &[Instance],
+    owner: &str,
+    candidates: &BTreeSet<&str>,
+) -> Vec<bool> {
+    let mut ancestors = Vec::with_capacity(instances.len());
+    for instance in instances {
+        ancestors.push(
+            (instance.path == owner && candidates.contains(instance.key.as_str()))
+                || instance.parent.is_some_and(|index| ancestors[index]),
+        );
+    }
+    ancestors
 }
 
 fn collect(

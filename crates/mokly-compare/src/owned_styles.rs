@@ -13,6 +13,7 @@ use mokly_model::review::{EntryChangeReason, ReviewEntryAddress};
 use crate::comparison_address::address;
 use crate::comparison_types::ViewKey;
 use crate::error::Result;
+use crate::instance_impact::PairedInstance;
 use crate::instance_proof::InstanceProof;
 use crate::material::mapped;
 use crate::owned_style_chain_source::DocumentIndex;
@@ -34,18 +35,21 @@ struct ProofContext {
     view: ViewKey,
 }
 
+/// Compare owned rules and retain ancestry only for eligible paired instances.
 pub(crate) fn compare(
     nodes: [&[Node]; 2],
     trees: [Option<&MatchTree>; 2],
     paths: &BTreeMap<String, String>,
     route: &str,
     memo: &dyn ResourceMemo,
+    instances: &[PairedInstance],
 ) -> Result<Changes> {
     let before = collect(nodes[0], paths);
     let after = collect(nodes[1], &BTreeMap::new());
     let owners: BTreeSet<_> = before.keys().chain(after.keys()).collect();
     let mut changes = Changes::default();
     let mut indices = None;
+    let mut eligible = None;
     for owner in owners {
         let left = before.get(owner).cloned().unwrap_or_default();
         let right = after.get(owner).cloned().unwrap_or_default();
@@ -61,14 +65,30 @@ pub(crate) fn compare(
         let matching = match_document(&diff, trees[0], trees[1]);
         let rules = attribution::observe_owned(route, &matching, trees[0], trees[1], Some(owner));
         changes.rules.extend(rules);
-        if matches!(matching, DocumentMatching::Resolved(_)) {
-            let indices = indices.get_or_insert_with(|| {
-                [
-                    DocumentIndex::build(nodes[0], paths),
-                    DocumentIndex::build(nodes[1], &BTreeMap::new()),
-                ]
-            });
-            let chains = owned_style_instances::compact(indices, &matching);
+        if instances.is_empty() || !matches!(matching, DocumentMatching::Resolved(_)) {
+            continue;
+        }
+        let eligible = eligible.get_or_insert_with(|| {
+            let mut eligible = BTreeMap::<_, BTreeSet<_>>::new();
+            for instance in instances {
+                eligible
+                    .entry(instance.component.as_str())
+                    .or_default()
+                    .insert(instance.key.as_str());
+            }
+            eligible
+        });
+        let Some(candidates) = eligible.get(owner.as_str()) else {
+            continue;
+        };
+        let indices = indices.get_or_insert_with(|| {
+            [
+                DocumentIndex::build(nodes[0], paths),
+                DocumentIndex::build(nodes[1], &BTreeMap::new()),
+            ]
+        });
+        let chains = owned_style_instances::compact(indices, &matching, owner, candidates);
+        if !chains.is_empty() {
             changes.chains.push((owner.clone(), chains));
         }
     }

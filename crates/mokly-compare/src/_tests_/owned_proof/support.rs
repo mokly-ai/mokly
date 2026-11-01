@@ -60,6 +60,10 @@ pub(super) fn expected(component: &str, instance: &str) -> Proof {
 }
 
 pub(super) fn instance(path: &str, key: &str, children: Vec<Node>) -> Node {
+    instance_with_props(path, key, "props", children)
+}
+
+pub(super) fn instance_with_props(path: &str, key: &str, props: &str, children: Vec<Node>) -> Node {
     Node::Region {
         region: Region {
             id: key.into(),
@@ -67,7 +71,7 @@ pub(super) fn instance(path: &str, key: &str, children: Vec<Node>) -> Node {
                 path: path.into(),
                 key: key.into(),
                 local_id: key.into(),
-                props_key: "props".into(),
+                props_key: props.into(),
             },
         },
         children,
@@ -118,6 +122,14 @@ pub(super) fn compare(
     after: &Composed,
     paths: &BTreeMap<String, String>,
 ) -> Changes {
+    compare_views(Some(before), Some(after), paths)
+}
+
+pub(super) fn compare_views(
+    before: Option<&Composed>,
+    after: Option<&Composed>,
+    paths: &BTreeMap<String, String>,
+) -> Changes {
     let generation = Arc::new(Unimock::new(()));
     let memo = Memo::new(
         generation.clone(),
@@ -125,25 +137,36 @@ pub(super) fn compare(
         Arc::new(MemoryParsedCss::new(4096)),
         4096,
     );
-    let before_tree = matching_tree::document(&before.tree, paths);
-    let after_tree = matching_tree::document(&after.tree, &BTreeMap::new());
+    let before_nodes = before.map_or(&[][..], |document| document.tree.as_slice());
+    let after_nodes = after.map_or(&[][..], |document| document.tree.as_slice());
+    let before_tree = before.map(|document| matching_tree::document(&document.tree, paths));
+    let after_tree =
+        after.map(|document| matching_tree::document(&document.tree, &BTreeMap::new()));
+    let comparison = match (before, after) {
+        (Some(before), Some(after)) => Some(view_material::compare(
+            before,
+            after,
+            "before.html",
+            "after.html",
+            paths,
+            &BTreeMap::new(),
+        )),
+        _ => None,
+    };
     let mut changes = owned_styles::compare(
-        [&before.tree, &after.tree],
-        [Some(&before_tree), Some(&after_tree)],
+        [before_nodes, after_nodes],
+        [before_tree.as_ref(), after_tree.as_ref()],
         paths,
         "document.html",
         &memo,
+        comparison
+            .as_ref()
+            .map_or(&[], |comparison| comparison.instances.as_slice()),
     )
     .unwrap();
-    let comparison = view_material::compare(
-        before,
-        after,
-        "before.html",
-        "after.html",
-        paths,
-        &BTreeMap::new(),
-    );
-    changes.prepare(&comparison, &entry("before"), &entry("after"), VIEW);
+    if let Some(comparison) = comparison {
+        changes.prepare(&comparison, &entry("before"), &entry("after"), VIEW);
+    }
     changes
 }
 
