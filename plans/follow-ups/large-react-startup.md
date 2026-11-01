@@ -37,6 +37,12 @@
       8.533 s warm. It passed the 15,000 ms budget. The round date is not
       recorded.
   - The deleted plans record no later large React startup measurement.
+  - The performance follow-ups workspace records an older startup check
+    and the coordinator's answer of 2026-10-28 in its
+    [historical plan](https://github.com/mokly-ai/mokly/blob/c042539156ea54331f50c6c41511260a48d85d1b/plans/performance-follow-ups.md#decisions).
+    Those records predate the slower run below. The main sync of 2026-11-01
+    keeps this follow-up and the startup status. It adds no startup
+    measurement for the final merged tree.
   - On 2026-10-30, a one-time run of the startup scenario measured commit
     `cd35ab37`, source tree `92a5c41b`, with no local changes. That commit
     differs from main commit `f93afcea` only in Markdown files.

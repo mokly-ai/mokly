@@ -159,6 +159,10 @@ of each item at `c9d402cd`. Each answer keeps the options of the report of
 
 Release binary and eight CPUs, 2026-10-28, unless a line says otherwise.
 
+Merge note, 2026-11-01: the item 57 result below is historical. Main records
+a later run above five seconds. Its current owner is
+`plans/follow-ups/large-react-startup.md`, which links both records.
+
 - Item 57 holds. The default React fixture (1,620 routes, 5,850 documents,
   two sidecars) reached usable startup in 4,311 to 4,819 ms cold and 3,863 to
   4,061 ms warm in three runs. The record said 10.5 s. The perf wave, mainly
@@ -216,13 +220,14 @@ Release binary and eight CPUs, 2026-10-28, unless a line says otherwise.
 
 - Perf 6, the retained base generation, has no branch yet. It would remove
   the base recompiles of item 59 at their source.
-- [PR #224](https://github.com/mokly-ai/mokly/pull/224) (dedup 1) changes
-  `crates/mokly-server/README.md` and how `deploymentId` enters the entry
-  details. Milestone 4 edits that README.
+- [PR #224](https://github.com/mokly-ai/mokly/pull/224) (dedup 1) merged.
+  This branch now includes its entry detail ids and deployment file.
+  Milestone 4 shares `crates/mokly-server/README.md` with that change.
 - The dedup 4 branch writes a before snapshot only when it differs.
   Milestone 3 streams the base asset reads that feed those snapshots.
-- [PR #237](https://github.com/mokly-ai/mokly/pull/237) changes
-  `crates/mokly-git/src/extracted.rs` and `crates/mokly-git/README.md`.
+- [PR #237](https://github.com/mokly-ai/mokly/pull/237) merged. This branch
+  includes its extraction fallback in `crates/mokly-git/src/extracted.rs`
+  and `crates/mokly-git/README.md`.
 - The perf 5 step B branch changes `docs/protocol/mokly-timings.md` and
   `crates/mokly-render/README.md`.
 - Workspace 353 changes `Cargo.toml` and `Cargo.lock`, and ports and deletes
@@ -234,8 +239,8 @@ Release binary and eight CPUs, 2026-10-28, unless a line says otherwise.
 - Workspace 407 changes `docs/protocol/mokly-sidecar-modules.md` and
   `crates/mokly-sidecar/src/methods.rs`.
 - Workspace 408 changes `crates/mokly-git/README.md` and `disk.rs`.
-- Every branch edits `plans/rust-rebuild.md`. Each milestone group ticks only
-  its own items there.
+- Each milestone group updates its own current records under
+  `plans/follow-ups/`. The historical Rust rebuild plan is archived.
 
 Outside the scope: on the large React fixture, `mokly build` with the debug
 binary did not exit within 10 s of SIGTERM while it read its output inputs.
@@ -283,6 +288,9 @@ design call of 2026-10-28.
   recipe live again.
 - My call: each milestone group from Milestone 2 to Milestone 7 is its own
   pull request, so the coordinator can merge it alone.
+- Design call, 2026-11-01: keep main's startup status and record both
+  dated startup runs in the existing follow-up. Neither run measures the
+  final merged tree, so this merge does not close the startup target.
 
 ## Milestone 1: Decision record
 
@@ -295,20 +303,25 @@ Items 162, 99, 57, and 165. Pull request 1, on
 
 Merge evidence of 2026-11-01: `.context/main-sync-2026-11-01/merge-resolution.md`.
 
-- [ ] Item 162: add failing tests to the large harness tests: a run that
+- [x] Item 162: add failing tests to the large harness tests: a run that
       keeps printing past the window passes, a silent run fails with the
       liveness message, and an escalated kill keeps that message and names
       the reservation.
-- [ ] Item 162: reset the window on each output line in
+- [x] Item 162: reset the window on each output line in
       `scripts/large/benchmark.ts`. Build and install the release binary
       before the build scenario, and record it in the result.
-- [ ] Item 162: update the deadline text of the large fixture README.
+- [x] Item 162: update the deadline text of the large fixture README.
 - [ ] Item 162: run both default build scenarios with the release binary.
-- [ ] Item 99: keep the probe as a regression test in
+- [x] Item 99: keep the probe as a regression test in
       `crates/mokly-compare/src/_tests_/capture_collection_tests.rs`.
-- [ ] Item 99: state the rule in `mokly-comparison-serving.md`.
-- [ ] Item 57: remove the status line of `mokly-on-demand.md`.
-- [ ] Tick items 57, 99, 162, and 165 in `plans/rust-rebuild.md`.
+- [x] Item 99: state the rule in `mokly-comparison-serving.md`.
+- [x] Item 57: record the older measurement and answer in
+      `plans/follow-ups/large-react-startup.md`. Keep the current startup
+      status while that follow-up remains open.
+- [ ] Close `plans/follow-ups/partial-capture-retention-order.md` and
+      `plans/follow-ups/large-benchmark-liveness.md` when Milestone 2
+      closes. Record item 165's completed check in this plan. Keep item 57's
+      current startup follow-up open.
 - [ ] Run the targeted tests and the complete gate. Commit and push.
 - [ ] Review the diff with the `implementation-review` skill, apply the
       review-fix rule, and report the pull request text.
@@ -324,7 +337,8 @@ Item 64. Pull request 2.
       `mokly-css`, and `mokly-source-interface`. Stream base delivery.
 - [ ] Update `mokly-git.md`, `mokly-imported-styles-assets.md`, and the
       crate READMEs.
-- [ ] Repeat the asset probes. Tick item 64 and its measurement TODO.
+- [ ] Repeat the asset probes. Close
+      `plans/follow-ups/git-opaque-asset-batching.md` with the result.
 - [ ] Run the targeted tests and the complete gate. Commit and push.
 - [ ] Review the diff, apply the review-fix rule, and report the pull
       request text.
@@ -351,8 +365,8 @@ Item 97. Pull request 4.
       state of owned styles.
 - [ ] Keep the compact chains and drop the indexes in `owned_styles.rs`,
       `owned_style_instances.rs`, and `comparison_attribution.rs`.
-- [ ] Tick item 97. Run the targeted tests and the complete gate. Commit
-      and push.
+- [ ] Close `plans/follow-ups/owned-proof-memory.md`. Run the targeted
+      tests and the complete gate. Commit and push.
 - [ ] Review the diff, apply the review-fix rule, and report the pull
       request text.
 
@@ -365,8 +379,9 @@ Item 134. Pull request 5.
       a vanished directory and applies the rest.
 - [ ] Pin `notify` to `=9.0.0-rc.7` in `crates/mokly-watch`, port
       `backend.rs`, and name 9.0.0 as the exit in the README.
-- [ ] Tick item 134. Run the targeted tests and the complete gate. Commit
-      and push. The native suite runs on macOS and Windows in the pull
+- [ ] Close `plans/follow-ups/native-watch-event-recovery.md`. Run the
+      targeted tests and the complete gate. Commit and push. The native
+      suite runs on macOS and Windows in the pull
       request's CI.
 - [ ] Review the diff, apply the review-fix rule, and report the pull
       request text.
@@ -379,8 +394,10 @@ Item 133. Pull request 6.
       keys, and the head and a tier-two base still give different keys.
 - [ ] Map the paths of the render environment in `render_environment.rs`.
       State the folder rule of `documentKey` in `mokly-shell-delivery.md`.
-- [ ] Repeat the two-folder probe. Tick item 133 and say that the root
-      `package.json` half stays under #227 decision 3 B.
+- [ ] Repeat the two-folder probe. Close
+      `plans/follow-ups/location-independent-document-keys.md`. Record in
+      the closeout that the root `package.json` half stays under #227
+      decision 3 B.
 - [ ] Run the targeted tests and the complete gate. Commit and push.
 - [ ] Review the diff, apply the review-fix rule, and report the pull
       request text.
