@@ -1,6 +1,6 @@
 # Show the install-scripts hint for render failures
 
-- **Severity:** Medium. **Likelihood:** Rare (estimate). **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 152, the wider part of finding 44 of the 135 B review.
@@ -41,7 +41,7 @@
   show the recovery action?
 - **Options:**
   - **B.** Add the hint where Changes classifies render failures. Effort:
-    Medium (estimate).
+    Medium.
   - **C.** Carry a typed scripts-disabled cause on the error, and build the
     hint in one helper for every related failure. Effort: Large.
 - **Left out:** Option A was the direct diagnostic fix, and it is done.
@@ -56,8 +56,7 @@
   the one helper.
 - **Recommendation:** C. It gives every applicable failure one source for
   the recovery action.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user ruled that new review items wait for the user after the merge.
-  Condition 3 also holds, because C is Large.
+- **Action:** ask the user, because on 2026-10-21 the user ruled that new review
+  items wait for the user after the merge.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6127).

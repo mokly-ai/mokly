@@ -43,7 +43,7 @@
   changed components affect?
 - **Options:**
   - **A.** Keep the component case in the design copy only. Correct the
-    Usage list copy. Effort: Small (estimate).
+    Usage list copy. Effort: Small.
   - **B.** Draw three new states in a separate design branch. The states
     are the affected component variant, an Unmodified view in Changes with
     the band, and an Affected list that shows components. Correct the shared
@@ -58,8 +58,7 @@
   needs a design state for a pure move in the same shared-impact area. One
   mockup branch can draw both, but each item has its own state.
 - **Recommendation:** B. It gives every product state a reviewed mockup.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user deferred the open review items past the merge to decide each one
-  later.
+- **Action:** ask the user, because on 2026-10-21 the user deferred the open
+  review items past the merge to decide each one later.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5918).

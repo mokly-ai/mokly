@@ -1,6 +1,6 @@
 # Exclude nested matches from own-preview changes
 
-- **Severity:** High. **Likelihood:** Rare (estimate). **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 108, from finding 3 of the engine round 4 own review.
@@ -39,8 +39,7 @@
   from matches in nested copies of it?
 - **Options:**
   - **A.** Add one page-level flag for nested-only matches. A page that mixes
-    nested and own sources keeps the wrong result. Effort: Medium
-    (estimate).
+    nested and own sources keeps the wrong result. Effort: Medium.
   - **B.** Carry the stylesheet paths of the kept own-page matches through
     reduction and classification. Details keep the nested record. It
     changes two crates. Effort: Large.
@@ -55,8 +54,7 @@
   decide them in the same branch.
 - **Recommendation:** B. It gives classification the exact own-page
   evidence, and it is the code today.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user deferred the open review items past the merge to decide each one
-  later.
+- **Action:** ask the user, because on 2026-10-21 the user deferred the open
+  review items past the merge to decide each one later.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5938).

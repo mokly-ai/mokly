@@ -1,11 +1,13 @@
 # Inspection ownership test races a navigation
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-31, from the remote gate of `calummoore/mokly-ui-inspector` at `d7a9780e`, "browser-4-of-4", during the shell views plan, which does not change this test or the code it covers.
 - **Location:** `tests/browser/viewer_inspection_ownership.spec.ts:79`, the `page.evaluate` of the generated test "same-origin obsolete labels success preserves request replacement pick".
 - **Reason:** The failure needs the load of a full shard, and its cause is not confirmed.
 
+- **Source:** Implementation.
+- **Category:** Test.
 - **Terms:**
   - **Execution context:** the JavaScript context of one page document in
     Playwright. A navigation destroys it, and a `page.evaluate` that runs
@@ -45,11 +47,12 @@
   - **B.** A, and give the shared start of these tests, `startInspection`,
     the same wait, so that every generated test gains it. Effort: Small.
 - **Left out:** A retry or a longer time limit, because the
-  `deterministic-tests` skill rules them out.
+  `testing` skill rules them out.
 - **Wider fix:** B.
 - **Related:** `flaky-viewer-selection-navigation.md`: the same error class.
   One readiness rule for host pages could serve both.
 - **Previous examples:** `flaky-viewer-selection-navigation.md`.
 - **Recommendation:** B.
-- **Action:** fix after merge, apply B, because the test is outside the
-  shell views stack, and a reproduction needs the load of a full shard.
+- **Action:** ask the user, because the failure has not been reproduced with a
+  confirmed cause. No fix is clearly best until reproduction identifies the
+  source, as the flaky-test rule requires.

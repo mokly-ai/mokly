@@ -1,16 +1,16 @@
 # Share an opaque-asset spool for each generation
 
-- **Severity:** Medium (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: the post-merge task of user decision 61 and M14 review 6, finding 5.
 - **Location:** `crates/mokly-server/src/asset_streams.rs:21`,
   `crates/mokly-server/src/backend.rs:123`, and
   `docs/protocol/mokly-imported-styles-assets.md:84`.
-- **Reason:** On 2026-10-20 the user chose one private capture for each
-  request and deferred the shared spool without approving it.
+- **Reason:** On 2026-10-28 the coordinator chose option C for the user.
+  Only its implementation waits.
 
 - **Source:** Review.
-- **Category:** Performance (estimate).
+- **Category:** Performance.
 - **Terms:**
   - **Opaque asset:** a file that a stylesheet references, such as an image
     or a font, that Mokly delivers by route without decoding it.
@@ -42,6 +42,17 @@
     budgets. It must account for `GET` and `HEAD` capture work, live response
     files after worker permits end, and operating system temporary storage
     outside process RSS.
+  - Measured on 2026-10-28: eight concurrent requests for one 60 MiB asset
+    made eight temporary files, 480 MiB in total, with eight full SHA-256
+    checks.
+  - On 2026-10-28 the coordinator chose option C for the user: concurrent
+    requests for one generation and asset route share one verified copy,
+    which closes after the last response.
+  - Design call of 2026-11-01: no retention after the last response. Option
+    C removes the measured duplication. Retention, as in option B, changes
+    the delivery rule for a later request and adds a disk budget, which is
+    memory on tmpfs. No measurement shows a material cost of sequential
+    requests.
 - **Problem:** Each `GET` and each `HEAD` of one asset repeats the full copy
   and the digest work. Each concurrent response holds its own temporary file.
 - **Impact if no action:** A page that loads many assets repeats the copy and
@@ -60,11 +71,11 @@
     process memory. Keep the large-catalogue budgets of
     `docs/protocol/mokly-timings.md`, section Budgets. Update the delivery
     rule of the asset page in the same change, because a request after the
-    first reads the spool, not the source. Effort: Medium (estimate).
+    first reads the spool, not the source. Effort: Medium.
   - **C.** Share one verified copy only among concurrent requests for one
     generation and route, and close it after the last response. A later
     request copies and checks the asset again. Disk use never grows past
-    the current design. Effort: Medium (estimate).
+    the current design. Effort: Medium.
 - **Left out:** A stream from the source that checks the digest after the
   bytes leave breaks the rule that Serve checks the asset before it sends
   headers. A copy in process memory adds the full size of each large asset
@@ -79,12 +90,10 @@
   the base side of the same assets: one Git process for each digest and a
   buffered copy during delivery. The two items change different code and can
   land in either order.
-- **Recommendation:** B. (estimate) It removes the repeated copies for the
-  life of a generation, and the rebuild kept A only as the interim design. C
-  is the smaller step if the measured disk use of B is too high.
-- **Action:** ask the user, because condition 1 holds: B changes the delivery
-  rule of `docs/protocol/mokly-imported-styles-assets.md`, and no user
-  decision approves that change. Condition 6 also holds, because the item is
-  a performance choice.
+- **Recommendation:** C. It removes the measured duplication without a new
+  budget or a change of the delivery rule. The first recommendation was B.
+- **Action:** fix after merge, apply C, because the user's choice of
+  2026-10-28 settles it, and the design call of 2026-11-01 settles
+  retention.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5426).

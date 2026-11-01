@@ -1,6 +1,6 @@
 # Support a hash character in module paths
 
-- **Severity:** Medium (estimate). **Likelihood:** Rare (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #227 and its completed plan, which put the
   problem outside the scope of its first review.
@@ -35,18 +35,17 @@
   - **B.** Split the handle at its last `#` in `entry_modules`, as
     `definition_input.rs` does. Effort: Small.
   - **C.** Add one helper that splits a handle into its module path and its
-    export. Use it in `graph.rs` and `definition_input.rs`. Effort: Small
-    (estimate).
+    export. Use it in `graph.rs` and `definition_input.rs`. Effort: Small.
   - **D.** Carry the module path and the export as two fields of the
     definition record, so that no reader parses a string. This changes a
-    record that crosses the sidecar boundary. Effort: Large (estimate).
+    record that crosses the sidecar boundary. Effort: Large.
 - **Left out:** Rejecting module paths with `#`. Such paths are valid files,
   and the rejection would remove a working layout.
-- **Wider fix:** D (estimate). No reader then parses a handle.
+- **Wider fix:** D. No reader then parses a handle.
 - **Previous examples:** None found.
-- **Recommendation:** C (estimate). One helper gives every reader the same
-  split with a small change. D best protects the codebase, but it is Large.
-- **Action:** fix after merge, apply C (estimate), because the wrong module
+- **Recommendation:** C. One helper gives every reader the same
+  split with a small change. D best protects the codebase, but it changes the definition record at the sidecar boundary and needs a contract decision.
+- **Action:** fix after merge, apply C, because the wrong module
   path is a product bug outside the reviewed diff, and C is Small.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/per-entry-render-keys.md?plain=1#L556).

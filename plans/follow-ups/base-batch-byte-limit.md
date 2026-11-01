@@ -1,6 +1,6 @@
 # Share the base conversion batch byte limit
 
-- **Severity:** Low (estimate). **Effort:** Large (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from the review of PR #229, the batch conversion
   change, recorded in the completed plan of PR #236.
@@ -48,16 +48,15 @@
     is private at `crates/mokly-git/src/lib.rs:30`, and no named file count
     exists. So C changes four code files: `lib.rs` for the export,
     `checkout_batch.rs` for the named count, `extraction.rs`, and
-    `crates/mokly-compare/src/git_prefetch.rs`. Four files exceed the Small
-    limit, and two crates exclude Medium. Effort: Large (estimate).
+    `crates/mokly-compare/src/git_prefetch.rs`. Review both callers and run the affected crate tests. Effort: Small.
   - **D.** Give `mokly-git` one helper that forms the batches of a file list
     under both bounds. The extraction and the prefetch call it, so the bounds
     and the grouping rule live in one place. It adds the helper and its
     export to `mokly-git` and changes both callers: at least three code files
-    in two crates. Effort: Large (estimate).
+    in two crates. Review the grouping and fallback behaviour together. Effort: Medium.
 - **Left out:** A shared configuration value. The bound is an internal
   limit of the conversion, not a user setting.
-- **Wider fix:** D (estimate). One helper owns the grouping rule, so no
+- **Wider fix:** D. One helper owns the grouping rule, so no
   caller can form a batch above the bound.
 - **Previous examples:** None found.
 - **Related:**
@@ -66,9 +65,9 @@
   - [base-batch-fallback-processes.md](./base-batch-fallback-processes.md)
     changes the fallback loops beside these literals. Its wider fix can also
     live in the helper of D.
-- **Recommendation:** C (estimate). It gives both modules one source with the
-  smallest change. D best protects the codebase.
-- **Action:** ask the user, because condition 6 holds (estimate): this is a
-  code structure finding.
+- **Recommendation:** D. One helper owns both batch bounds and the grouping
+  rule. The record first recommended C.
+- **Action:** fix after merge, apply D, because the repeated grouping code lies
+  outside the batch conversion change that found it.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/batched-base-reads.md?plain=1#L393).
