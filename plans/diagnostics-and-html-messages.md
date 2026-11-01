@@ -2,8 +2,9 @@
 
 Status: Active. On branch
 `conductor/rust-rebuild-87-diagnostics-and-html-messages`, no pull request
-yet. The plan closes when its PR merges. Items 1 and 128 wait for Cal, so
-Milestone 4 waits. All other milestones are in progress.
+yet. The plan closes when its PR merges. Items 128, 1, and 6 wait for Cal,
+so Milestone 4 moves to follow-up items. This branch completes the other
+milestones and deletes the plan before its pull request merges.
 
 The Rust rebuild plan keeps post-merge follow-ups about HTML diagnostics and
 warning text: user items 87, 138, and 128, the source offset maps, and six
@@ -56,6 +57,25 @@ eight items at `origin/main` `c9d402cd` and at `7edaa44e`:
   boundary.
 - Items 1 and 128: open. Both recommended options add a build error, so
   they wait for Cal.
+
+The coordinator's instruction of 2026-11-01, on Cal's behalf, after the
+updated outcome rules of the shared skills:
+
+- Item 7, the corpus bounds of the source maps: fix now, option B. Keep the
+  tokenizer compatibility spans, and bound each source map by the actual
+  source interval of its value. The containment condition of the earlier
+  delegate brief was an implementation assumption, not a user
+  requirement. Rejected: A, which excludes empty spans and loses that
+  case; C, which changes the compatibility spans and their tests.
+- Items 128, 1, and 6 still wait for Cal, because each recommended option
+  adds a build error, and the other options change protocol text. Their
+  records are follow-up items, so Milestone 4 does not hold this pull
+  request. Item 1 keeps option D: wording plus file, line, and column on
+  body failures, without a new rejection.
+- Item 8, option C of re-review finding 2, stays a question for Cal. The
+  coordinator asked on 2026-10-28 to keep it.
+- Cal authorized the pull request for the completed milestones. The
+  coordinator merges it.
 
 The managing session delegates the protocol docs, READMEs, and the guide to
 Claude Opus 5.5 1M at max effort, and the Rust work to Codex gpt-6.1-sol at
@@ -110,6 +130,15 @@ Design calls of the managing session, 2026-10-28, under the decision test:
 - The source offset maps anchor at html5gum's own chunk ends, instead of a
   second character reference decoder. Reason: one decoder cannot drift from
   another.
+- 2026-11-01: option C of item 87 gets no follow-up item. Reason: the
+  answer of 2026-10-28 chose B over C, so C is not open.
+- 2026-11-01: the Milestone 5 timing uses the parser corpus benchmark of
+  the earlier delegate, three release runs before and after. Reason: the
+  benchmark isolates the parse cost that the maps add, and an example
+  build adds unrelated noise.
+- 2026-11-01: the reserved-name follow-up items for saved slots merge into
+  `plans/follow-ups/reserved-navigation-names-in-authored-html.md`.
+  Reason: one question with options A, D, B, and C covers both records.
 
 ### Warning text (item 87)
 
@@ -208,20 +237,30 @@ screens contract, and delete the comment without a pattern from
 
 ## Open decisions
 
-These items wait for Cal. "New gate" marks an option that adds a build
-error, a rejection, or stricter validation. Findings 1 to 5 are numbers of
-this plan. Items 87, 128, and 138 keep their user item numbers. The other
-items have answers above.
+These items wait for Cal. Each has a complete follow-up item, so it does not
+hold the pull request. "New gate" marks an option that adds a build error,
+a rejection, or stricter validation.
 
-- Item 128, saved variant slot element checks. Severity Medium (estimate),
-  effort Small (estimate). Recommended: A, apply the body element checks.
-  Alternative: B, state that saved slots skip them. A: new gate. Blocks
-  Milestone 4.
-- Finding 1, reserved navigation names in authored HTML. Severity Low
-  (estimate), effort Medium (estimate). Recommended: C, one validation rule
-  for all authored HTML. Alternatives: A, rewording only; B, A plus value
-  evaluation on saved-slot `mokly-ignore-scope`. B and C: new gate. Blocks
-  Milestone 4.
+- Item 128, saved variant slot element checks. Severity Medium, effort
+  Medium. Recommended: A, apply the body element checks. Alternatives: B,
+  state that saved slots skip them; C, warn instead. A: new gate. C: a
+  warning that strict builds count. Follow-up item:
+  `plans/follow-ups/saved-variant-slot-checks.md`.
+- Item 1, reserved navigation names in authored HTML. Severity Low, effort
+  Medium. Recommended: C, one validation rule for all authored HTML.
+  Alternatives: A, wording only; D, A plus file, line, and column on body
+  failures; B, A plus value evaluation on saved-slot `mokly-ignore-scope`.
+  A, D, and B change the protocol's saved-slot warning text. B and C: new
+  gate. Follow-up item:
+  `plans/follow-ups/reserved-navigation-names-in-authored-html.md`.
+- Item 6, saved slots skip the duplicate navigation check. Severity Low,
+  effort Medium. Recommended: B, the shared authored-HTML validation.
+  Alternatives: A, run the source checks on saved slots; C, state the skip
+  in the protocol. A and B: new gate. Follow-up item:
+  `plans/follow-ups/saved-slot-duplicate-navigation.md`.
+- Item 8, a review rule for missed plan ticks in the shared skills.
+  Severity Low, effort Small. Recommended: C, add the rule. Alternative: D,
+  change nothing. Follow-up item: `plans/follow-ups/review-missed-tick-rule.md`.
 
 ## Milestone 1: Documentation and protocol
 
@@ -317,8 +356,10 @@ Item 138 C and finding 2 A in `mokly-html`.
 ## Milestone 4: Authored HTML checks
 
 Item 128 A and finding 1 C in `mokly-catalogue` and `mokly-html`. This
-milestone waits for Cal's answers on items 1 and 128. Do not start it before
-they arrive. If an answer differs, rewrite the TODOs first.
+milestone waits for Cal's answers on items 128, 1, and 6. On 2026-11-01 its
+work moved to the follow-up items of "Open decisions", with every fact of
+the TODOs below. This branch does not implement it. A later branch applies
+the answers.
 
 - [ ] `docs/protocol/mokly-html-screens.md`: a reserved navigation name
       fails in a body, a saved slot, and callback output. Authored HTML
@@ -375,9 +416,14 @@ The decided offset maps and finding 3 A in `mokly-catalogue`.
 - [ ] Add a property test over the vendored html5lib corpus and the
       differential fixtures. Each map is monotonic, each aligned byte equals
       its source byte or a CR, and each chunk end matches html5gum.
-- [ ] Time three example builds before and after the change. Save the
-      numbers under `.context/diagnostics-and-html-messages/`. If parsing
-      slows by more than 2%, record maps only for the checks' sink.
+- [ ] Item 7, option B: keep the tokenizer compatibility spans, and bound
+      each map by the actual source interval of its value. Add a named test
+      for `<!doctype html><script><`: the decoded `<` maps to byte 23, with
+      the interval from 23 to 24.
+- [ ] Time three runs of the parser corpus benchmark before and after the
+      change. Save the numbers under
+      `.context/diagnostics-and-html-messages/`. If parsing slows by more
+      than 2%, record maps only for the checks' sink.
 - [ ] Run the crate tests, `cargo clippy`, and `cargo fmt --all -- --check`.
 
 ## Milestone 6: READMEs and cleanup
@@ -406,30 +452,23 @@ The README parts for items 1 and 128 move to Milestone 4.
       Save the results in `.context/diagnostics-and-html-messages/after.md`.
 - [ ] Run `cargo xtask check --suite repository`, then the complete gate
       `cargo xtask check`.
-- [ ] In `plans/rust-rebuild.md`, with the smallest edit:
-  - [ ] Tick items 87 and 138 and the source offset maps follow-up. Item
-        128 stays open until Cal answers.
-  - [ ] Under Cal's note of 2026-10-20 that the user still decides the final
-        warning text, add one line dated 2026-10-28: the contract forms and
-        the product copy rules now decide the final text.
-  - [ ] Add one resolved line under each outside-scope line that this
-        change fixes.
-  - [ ] Under "Re-review finding 2", add: the coordinator chose A on
-        2026-10-28, because the `plans` skill says to tick a TODO when its
-        work is complete, and Cal's decision A was done in `e236ea78`. Then
-        tick the item.
-  - [ ] Add one follow-up line for Cal: option C of re-review finding 2, a
-        rule in the shared `implementation-review` skill.
+- [x] ~~Edit `plans/rust-rebuild.md`.~~ Main deleted that plan in
+      `133782a9` and moved its open work into `plans/follow-ups/`, so the
+      bookkeeping below replaces these edits (2026-11-01).
+- [ ] Delete the follow-up items that this branch resolves, merge the
+      reserved-name items, and add the items of "Open decisions" that have
+      no file.
+- [ ] Delete `plans/follow-ups/template-source-offset-maps.md` when
+      Milestone 5 lands.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
-      `implementation-review` skill after the push. Report the findings,
-      then apply the review-fix rule: fix the `Auto-fix: yes` findings,
-      re-review once, and report the rest.
-- [ ] The coordinator opens the pull request when every other milestone
-      TODO is ticked. Put its link in the status paragraph.
+      `implementation-review` skill after the push. Apply the fix rule: fix
+      the `fix now` findings, record follow-up items for the rest, re-review
+      once, and report.
+- [ ] Delete this plan in the last commit before the pull request. Give its
+      dated decisions and a permalink in the pull request description.
+- [ ] Open the pull request. The coordinator merges it.
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Possible later change, option C of item 87: the JSON pointer form and
-      JSON quoting for `html-unused-props` and the sidecar's
-      `props-not-data`. Not decided.
+- None. Option C of item 87 is not open, as the design calls say.
