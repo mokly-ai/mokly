@@ -13,7 +13,7 @@ use mokly_source_interface::tree::{Child, FileKind, Node, SourceTree};
 
 use crate::error::Error;
 use crate::source_cache::SourceCache;
-use crate::source_digest::SourceDigest;
+use crate::source_digest::CachedDigest;
 use crate::sources::{Sources, TreeIndex};
 
 /// Git files share the working tree's private absolute namespace without reading it.
@@ -25,7 +25,7 @@ pub struct GitTree {
     pub(crate) failure: Mutex<Option<Arc<Error>>>,
     pub(crate) unavailable: Mutex<BTreeMap<RepoPath, String>>,
     children: Mutex<DirectoryIndex>,
-    pub(crate) digests: Mutex<BTreeMap<RepoPath, SourceDigest>>,
+    pub(crate) digests: Mutex<BTreeMap<RepoPath, CachedDigest>>,
 }
 
 /// Metadata only grows within a commit; rebuild child lists once per index expansion.

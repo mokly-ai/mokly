@@ -165,7 +165,9 @@ fn measure(count: usize) -> BTreeMap<String, usize> {
                 .contains(&tree.relative(path).unwrap().unwrap())
         );
         assert_eq!(
-            tree.digests.lock().unwrap()[&tree.relative(path).unwrap().unwrap()].length,
+            tree.digests.lock().unwrap()[&tree.relative(path).unwrap().unwrap()]
+                .record()
+                .length,
             Some(contents(index).len())
         );
     }

@@ -8,14 +8,14 @@ use mokly_model::material::digest;
 use mokly_source_interface::error::{Result, SourceError};
 
 use crate::git_tree::{GitTree, failure};
-use crate::source_digest::SourceDigest;
+use crate::source_digest::{CachedDigest, SourceDigest};
 
 impl GitTree {
     pub(crate) fn digest_file(&self, path: &Path) -> Result<String> {
         let Some(relative) = self.relative(path)? else {
             return Err(failure("digest", path, io::ErrorKind::IsADirectory));
         };
-        if let Some(result) = self.retained_digest(&relative, path) {
+        if let Some(result) = self.retained_digest(&relative, path, false) {
             return Ok(result?.hash);
         }
         if let Err(source) = self.sources.ensure(std::slice::from_ref(&relative)) {
@@ -33,19 +33,23 @@ impl GitTree {
             .lock()
             .unwrap_or_else(|error| error.into_inner())
             .get(&relative);
-        let record = if let Some(bytes) = cached {
-            SourceDigest {
+        let cached = if let Some(bytes) = cached {
+            CachedDigest::Opaque(SourceDigest {
                 hash: digest(&bytes),
                 length: Some(bytes.len()),
-            }
+            })
         } else {
             let hash = match self.sources.digest(&relative) {
                 Ok(hash) => hash,
                 Err(source) => return Err(self.failed("digest", path, source)),
             };
-            SourceDigest { hash, length: None }
+            CachedDigest::HashOnly(hash)
         };
-        self.remember_digest(relative, &record);
+        let record = cached.record();
+        self.digests
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .insert(relative, cached);
         Ok(record.hash)
     }
 
@@ -61,7 +65,7 @@ impl GitTree {
         let mut pending = Vec::new();
         for (index, path) in paths.iter().enumerate() {
             match self.relative(path) {
-                Ok(Some(relative)) => match self.retained_digest(&relative, path) {
+                Ok(Some(relative)) => match self.retained_digest(&relative, path, true) {
                     Some(result) => results[index] = Some(result),
                     None => pending.push((index, relative)),
                 },
@@ -92,7 +96,12 @@ impl GitTree {
             .collect()
     }
 
-    fn retained_digest(&self, relative: &RepoPath, path: &Path) -> Option<Result<SourceDigest>> {
+    fn retained_digest(
+        &self,
+        relative: &RepoPath,
+        path: &Path,
+        opaque: bool,
+    ) -> Option<Result<SourceDigest>> {
         if let Some(message) = self
             .unavailable
             .lock()
@@ -109,8 +118,8 @@ impl GitTree {
             .lock()
             .unwrap_or_else(|error| error.into_inner())
             .get(relative)
-            .cloned()
-            .map(Ok)
+            .filter(|record| !opaque || record.completed())
+            .map(|record| Ok(record.record()))
     }
 
     fn digest_one(&self, path: &Path) -> Result<SourceDigest> {
@@ -210,7 +219,7 @@ impl GitTree {
         self.digests
             .lock()
             .unwrap_or_else(|error| error.into_inner())
-            .insert(relative, record.clone());
+            .insert(relative, CachedDigest::Opaque(record.clone()));
     }
 }
 

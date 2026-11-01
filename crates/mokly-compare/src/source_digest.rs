@@ -8,3 +8,26 @@ pub struct SourceDigest {
     /// Converted length, when the adapter can prove it without retaining bytes.
     pub length: Option<usize>,
 }
+
+/// Preparation completion is independent of a source's optional length.
+#[derive(Clone, Debug)]
+pub(crate) enum CachedDigest {
+    HashOnly(String),
+    Opaque(SourceDigest),
+}
+
+impl CachedDigest {
+    pub(crate) fn record(&self) -> SourceDigest {
+        match self {
+            Self::HashOnly(hash) => SourceDigest {
+                hash: hash.clone(),
+                length: None,
+            },
+            Self::Opaque(record) => record.clone(),
+        }
+    }
+
+    pub(crate) fn completed(&self) -> bool {
+        matches!(self, Self::Opaque(_))
+    }
+}

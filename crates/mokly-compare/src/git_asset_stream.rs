@@ -34,25 +34,7 @@ impl GitTree {
         if !entry.mode.regular() {
             return Err(SourceError::Changed { path: path.into() });
         }
-        let mut record = self.digest_record(path)?;
-        if record.length.is_none() {
-            let mut records = match self
-                .sources
-                .digest_with_length(std::slice::from_ref(&relative))
-            {
-                Ok(records) => records,
-                Err(source) => return Err(self.failed("open stream", path, source)),
-            };
-            record = match records.pop() {
-                Some(Ok(record)) => record,
-                Some(Err(source)) => return Err(self.failed("open stream", path, source)),
-                None => return Err(failure("open stream", path, io::ErrorKind::UnexpectedEof)),
-            };
-            self.digests
-                .lock()
-                .unwrap_or_else(|error| error.into_inner())
-                .insert(relative.clone(), record.clone());
-        }
+        let record = self.digest_record(path)?;
         let Some(length) = record.length else {
             let mut blobs = match self
                 .sources
@@ -181,3 +163,7 @@ impl Write for ChannelWriter {
 #[cfg(test)]
 #[path = "_tests_/git_asset_stream_tests.rs"]
 mod git_asset_stream_tests;
+
+#[cfg(test)]
+#[path = "_tests_/extracted_asset_digest_tests.rs"]
+mod extracted_asset_digest_tests;
