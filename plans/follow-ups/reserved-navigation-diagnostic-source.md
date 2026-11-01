@@ -2,10 +2,10 @@
 
 - **Severity:** Low (estimate). **Likelihood:** Rare (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
-- **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of the implementation review of 2026-10-28.
+- **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of the implementation review of 2026-10-28. Updated 2026-11-01 on branch `conductor/rust-rebuild-87-diagnostics-and-html-messages`.
 - **Location:** `crates/mokly-html/src/source_checks.rs:15`,
   `crates/mokly-html/src/source_locations.rs:11`, and
-  `crates/mokly-html/src/javascript.rs:116`.
+  `crates/mokly-html/src/javascript.rs:130`.
 - **Reason:** The implementation review of 2026-10-28 found this wording
   outside its change, so a separate branch fixes it.
 
@@ -43,16 +43,12 @@
   and position of each reserved attribute.
 - **Previous examples:** None found.
 - **Related:**
-  - [saved-slot-reserved-metadata.md](./saved-slot-reserved-metadata.md):
-    the same reserved names on a saved-slot wrapper only warn. Its wider
-    fix is one rule for all authored HTML, which would also replace B.
-  - [ignore-scope-reserved-name.md](./ignore-scope-reserved-name.md): a
-    saved-slot `mokly-ignore-scope` does not evaluate a reserved name that
-    `mokly-ignore` evaluates. It is the same class of rule.
-  - [callback-duplicate-attribute-diagnostic.md](./callback-duplicate-attribute-diagnostic.md):
-    the duplicate-attribute message of the same `source_checks::validate`
-    names every duplicate in callback output a navigation attribute. Both
-    items correct wrong wording in one function, so one branch can fix both.
+  [reserved-navigation-names-in-authored-html.md](./reserved-navigation-names-in-authored-html.md)
+  asks the user how authored HTML reports the same reserved names, also in
+  saved slots and on both ignore wrappers. Each of its options includes the
+  wording fix of A here, so the branch that applies the user's choice there
+  also fixes this item. Its options D and C also give a body failure its
+  file, line, and column, as B here does.
 - **Recommendation:** A. (estimate) It corrects the wrong input name with
   the smallest change. B best protects the codebase.
 - **Action:** fix after merge, apply A (estimate), because a diagnostic

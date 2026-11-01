@@ -52,10 +52,9 @@
 - **Wider fix:** None. The `documentation` skill rule is already in force,
   and the documentation audit of PR #218 applied it to this page.
 - **Previous examples:** Commit `89c12ef1` of PR #218 moved mechanics out of
-  many protocol pages.
-- **Related:** [html-screens-implementation-detail.md](html-screens-implementation-detail.md)
-  records the same class on another protocol page. One docs branch can fix
-  both, and each item stays valid alone.
+  many protocol pages. Commit `dabf30d2` removed the same class from
+  `docs/protocol/mokly-html-screens.md`: the sentence "One parser and one
+  renderer serve both."
 - **Recommendation:** B (estimate). The path is a mechanic, and the lint
   configuration already holds it.
 - **Action:** fix after merge, apply B (estimate), because the content is
