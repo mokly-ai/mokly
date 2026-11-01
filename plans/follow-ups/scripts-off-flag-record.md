@@ -109,5 +109,7 @@
   that no test checked when the hint appears.
 - **Recommendation:** D. One record of the flag removes the copies that the
   tests of E now guard one by one.
-- **Action:** fix after merge, apply D, because the user chose D on
-  2026-10-29 and kept it out of the pull request that added the flag.
+- **Action:** fix after merge, apply D, because no condition of the
+  decision test holds, and on 2026-10-29 the user kept D out of the pull
+  request that added the flag. D changes only the code structure, changes no
+  requirement, and is not blocked.

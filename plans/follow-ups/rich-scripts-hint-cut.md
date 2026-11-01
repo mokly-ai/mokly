@@ -1,6 +1,6 @@
 # Rich output cuts off the scripts hint
 
-- **Severity:** Medium. **Likelihood:** Rare (estimate). **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-01, from the branch
   `conductor/rust-rebuild-150-base-install-scripts-and-managers`, finding 1
@@ -10,7 +10,8 @@
   `crates/mokly-cli/src/serve_errors.rs:65` and `:103`,
   `crates/mokly-cli/src/serve_output.rs:187`,
   `crates/mokly-cli/src/build_output.rs:117`,
-  `docs/protocol/mokly-terminal-errors.md:148` to line 155, and
+  `docs/protocol/mokly-terminal-errors.md:3`,
+  `docs/protocol/mokly-terminal-errors.md:150` to line 157, and
   `docs/protocol/mokly-terminal-output.md:51` to line 58.
 - **Reason:** On 2026-10-29 the user chose a later small pull request for
   this fix, because `origin/main` already cut the hint in rich mode before
@@ -35,7 +36,9 @@
 - **Background:**
   - After a tier-two install with scripts off, every failure that Mokly
     attributes to the base gets the scripts hint, in every command.
-    `docs/protocol/mokly-terminal-errors.md` states this rule.
+    `docs/protocol/mokly-terminal-errors.md` states this rule. That page
+    starts with a status line that links to this item, because rich output
+    does not meet the rule yet. The work removes that status line.
   - `changes_diagnostics::failure_detail` ends the failure detail with the
     hint. Plain and rich output both use this detail. The plain line joins
     the detail and the hint with `. `, or with one space after a final `.`,
