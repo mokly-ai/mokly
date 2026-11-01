@@ -1,6 +1,6 @@
 # Wait for the frame adapter navigation message
 
-- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a browser follow-up of Milestone 8, recorded in Milestone 15.
@@ -27,6 +27,8 @@
   - After each click, `expect.poll` waits until the list holds exactly one
     `navigation` event. The default expect timeout is 10,000 ms, in
     `playwright.config.ts:18`.
+  - `tests/browser/same_origin_identity.spec.ts` also records
+    `window.frameEvents`, so option C would change that spec too.
 - **Problem:**
   - Failure: the posted-message assertion once got no navigation event.
   - Failure text: not recorded. The plan named a browser delegate report,
@@ -65,18 +67,16 @@
     the location `about:blank` for this notice in 10 of 10 runs. Commit
     `cc5a3e01` of 2026-10-19 made the shared console rule in
     `tests/browser/console_notices.ts` accept the notice with that location.
-  - [flaky-same-origin-handoff.md](flaky-same-origin-handoff.md)
+  - The same-origin handoff test, in
+    [flaky-same-origin-handoff.md at its last commit](https://github.com/mokly-ai/mokly/blob/c7e7d9b88efc84152eb33539ed8ed7ca2ad2bb93/plans/follow-ups/flaky-same-origin-handoff.md).
+    Its confirmed source: the preparation poll accepted the committed URL
+    while the document still loaded. The fix of 2026-11-01 also waits for a
+    complete document and its action link.
   - [flaky-viewer-selection-navigation.md](flaky-viewer-selection-navigation.md)
 - **Related:**
-  - [flaky-same-origin-handoff.md](flaky-same-origin-handoff.md) is a
-    separate case of the same recorded class: a browser test that failed
-    once and passed on its rerun. Its test in
-    `tests/browser/same_origin_identity.spec.ts` also records
-    `window.frameEvents`, so option C of this item would change that spec.
-    But its failure is in a probe of the frame document, which option C does
-    not cover, so each item needs its own fix.
   - [flaky-viewer-selection-navigation.md](flaky-viewer-selection-navigation.md)
-    is another separate case of the same class, in
+    is a separate case of the same recorded class: a browser test that failed
+    once and passed on its rerun. Its test is in
     `tests/browser/viewer.spec.ts`. That test reads no frame events, and its
     suspected source is a page navigation. The two items share no test code.
 - **Recommendation:** A. The plan recommended it: wait for the message
