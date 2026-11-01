@@ -60,11 +60,13 @@ fn a_working_tier_base_selects_the_same_package_roots_as_the_head() {
     let dependencies = tiers.resolve(&request).unwrap();
     assert_eq!(dependencies.tier, Tier::Working);
     let side = Arc::new(BaseSide {
+        working_root: config.repo_root.clone(),
         sources: Arc::new(Lease {
             directory: "/cache/base".into(),
             guard: Box::new(Unimock::new(())),
         }),
         dependencies,
+        cache_namespace: None,
         identity: "commit".into(),
     });
     let base = inputs(&config, Some(&side), 0).unwrap();

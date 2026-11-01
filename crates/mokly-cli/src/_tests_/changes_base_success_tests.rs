@@ -65,6 +65,7 @@ fn tree() -> Unimock {
 #[test]
 fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
     let side = Arc::new(BaseSide {
+        working_root: "/repo".into(),
         sources: Arc::new(Lease {
             directory: "/base".into(),
             guard: Box::new(Unimock::new(())),
@@ -77,6 +78,7 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
             lease: None,
             repository_roots: Vec::new(),
         },
+        cache_namespace: None,
         identity: "commit".into(),
     });
     let pool = Unimock::new((
