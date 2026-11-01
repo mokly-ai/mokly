@@ -66,7 +66,14 @@ fn base_modules_use_selected_dependencies_and_undeclared_reads_stay_outside_the_
         })
         .collect(),
     };
-    let result = collect(&tree, Path::new("/head"), &side, &inventory, &evidence);
+    let result = collect(
+        &tree,
+        Path::new("/head"),
+        &side,
+        &inventory,
+        &evidence,
+        &Default::default(),
+    );
     assert_eq!(result.coverage, ReadCoverage::Incomplete);
     assert_eq!(result.inputs.len(), 3);
     for path in [
@@ -112,7 +119,14 @@ fn module_witnesses_select_the_ancestor_installation_before_repository_relative_
         plugin_inputs: BTreeMap::new(),
         directories: vec![],
     };
-    let result = collect(&tree, Path::new("/repo"), &side, &inventory, &evidence);
+    let result = collect(
+        &tree,
+        Path::new("/repo"),
+        &side,
+        &inventory,
+        &evidence,
+        &Default::default(),
+    );
     assert_eq!(
         result.inputs.keys().collect::<Vec<_>>(),
         vec!["node_modules/.mokly-roots/1/plugin/index.js"]
@@ -153,7 +167,14 @@ fn native_manifest_inventory_has_only_a_late_baseline_without_a_read_receipt() {
         plugin_inputs: BTreeMap::new(),
         directories: Vec::new(),
     };
-    let result = collect(&tree, Path::new("/repo"), &side, &inventory, &evidence);
+    let result = collect(
+        &tree,
+        Path::new("/repo"),
+        &side,
+        &inventory,
+        &evidence,
+        &Default::default(),
+    );
     assert_eq!(result.coverage, ReadCoverage::Incomplete);
     assert_eq!(
         result.inputs["node_modules/plugin/package.json"],

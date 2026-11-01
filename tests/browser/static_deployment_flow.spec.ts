@@ -198,32 +198,62 @@ test("a removed step that fails before the other details keeps the use case load
   allowBrowserError,
 }) => {
   allowBrowserError(missingResourceNotice(`${host.url}${STEP_URL}`));
+  allowBrowserError(
+    missingResourceNotice(`${host.url}/mokly-viewer/deployment.json`),
+  );
   const failures: string[] = [];
+  const navigationRequests: string[] = [];
+  page.on("request", (request) => {
+    if (request.isNavigationRequest()) navigationRequests.push(request.url());
+  });
   page.on("response", (response) => {
-    if (response.status() >= 400)
+    if (
+      response.status() >= 400 &&
+      new URL(response.url()).pathname === STEP_URL
+    )
       failures.push(`${response.status()} ${response.url()}`);
   });
   await page.goto(`${host.url}/view/home/`);
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
   await recordStepAnswer(page);
   let useCase: Route | undefined;
+  let releaseUseCase!: () => Promise<void>;
   let useCaseHeld!: () => void;
   let answered!: () => void;
   const held = new Promise<void>((resolve) => (useCaseHeld = resolve));
+  let pageLoadStarted = false;
   const settled = new Promise<void>((resolve) => (answered = resolve));
   await page.route("**/mokly-viewer/entries/tour.json", async (route) => {
     if (useCase) await route.continue();
     else {
       useCase = route;
       useCaseHeld();
+      releaseUseCase = async () => {
+        const response = await route.fetch();
+        const body = (await response.json()) as Record<string, unknown>;
+        await route.fulfill({
+          response,
+          json: { ...body, detailId: "f".repeat(64) },
+        });
+      };
     }
   });
   await page.route(`**${SETTLED_URL}`, async (route) => {
     await route.fulfill({ status: 204 });
     answered();
   });
+  await page.route("**/mokly-viewer/deployment.json", (route) =>
+    route.fulfill({ status: 404, body: "" }),
+  );
+  page.on("request", (request) => {
+    if (
+      request.isNavigationRequest() &&
+      new URL(request.url()).pathname === "/view/tour/"
+    )
+      pageLoadStarted = true;
+  });
   site = next;
-  await page.locator('a[data-route="tour/index.html"]').click();
+  const clicked = page.locator('a[data-route="tour/index.html"]').click();
   // Hold the tour's own detail, which shows the next deployment, until the
   // shell has handled the removed step's 404. The step failed first, but the
   // tour still loads, so the stage keeps loading.
@@ -234,9 +264,14 @@ test("a removed step that fails before the other details keeps the use case load
     "true",
   );
   await expect(page.getByRole("alert")).toHaveCount(0);
+  expect(pageLoadStarted).toBe(false);
   const reloaded = page.waitForEvent("load");
-  await useCase!.continue();
+  await releaseUseCase();
+  await expect
+    .poll(() => pageLoadStarted, { message: navigationRequests.join(" | ") })
+    .toBe(true);
   await reloaded;
+  await clicked;
   await expect(page.locator("#mb-main h2")).toHaveText("Tour");
   expect(
     await page.evaluate(

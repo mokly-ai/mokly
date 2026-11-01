@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import test from "node:test";
 
-import type { EntryDetailV3 } from "../packages/viewer/src/generated/catalogue/EntryDetailV3.js";
+import type { EntryDetailV4 } from "../packages/viewer/src/generated/catalogue/EntryDetailV4.js";
 
 import { build, git, json, write } from "./helpers/static_changes.js";
 import { files } from "./helpers/static_faults.js";
@@ -46,7 +46,7 @@ test(
           .map((entry) => entry.path),
         ["note"],
       );
-      const note = await json<EntryDetailV3>(
+      const note = await json<EntryDetailV4>(
         built.output,
         "mokly-viewer/entries/note.json",
       );
@@ -96,7 +96,7 @@ test(
       await git(root, "branch", "fixture-base");
       await write(root, "renderer.ts", renderer("blue"));
       const built = await build(root);
-      const detail = await json<EntryDetailV3>(
+      const detail = await json<EntryDetailV4>(
         built.output,
         "mokly-viewer/entries/home.json",
       );

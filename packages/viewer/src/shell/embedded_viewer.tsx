@@ -3,8 +3,9 @@
 import { useRef } from "react";
 import type { ReactNode, RefObject } from "react";
 
-import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
-import { themeAttributes } from "../viewer/theme.js";
+import { EmbeddedLayout } from "@mokly/ui/embedded-layout";
+
+import { normalizeTheme } from "../viewer/theme.js";
 import type {
   ViewerEvents,
   ViewerMarker,
@@ -12,7 +13,6 @@ import type {
   ViewerTheme,
 } from "../viewer/types.js";
 
-import { EmbeddedStageOverlay } from "./embedded_stage_overlay.js";
 import { ShellFrameMarkerLayer } from "./frame_marker_layer.js";
 import { useShellFragment, useShellIdentifier } from "./identifier_context.js";
 import { CatalogueNav } from "./nav.js";
@@ -48,72 +48,40 @@ export function EmbeddedViewerShell({
   const statusId = useShellIdentifier("mb-status");
   useNavigationBounds(root);
   return (
-    <div
-      className={`mbk ${VIEWER_DIRECTORY}`}
-      data-drawer={store.state.drawerOpen ? "open" : "closed"}
-      data-mokly-color-scheme={store.state.selection.colorScheme}
-      data-mokly-shell=""
+    <EmbeddedLayout
+      announcement={store.state.announcement}
+      colorScheme={store.state.selection.colorScheme}
+      drawerOpen={store.state.drawerOpen}
+      emptyStateShown={
+        store.state.route.view.kind === "home" &&
+        slots?.emptyState !== undefined
+      }
+      labelLayer={inspection}
+      main={
+        <ShellMain
+          catalogue={store.catalogue}
+          context={store.context}
+          view={store.state.route.view}
+        />
+      }
+      mainHref={mainFragment}
+      markerLayer={
+        <ShellFrameMarkerLayer
+          markers={markers}
+          {...(onError ? { onError } : {})}
+          {...(onMarkerChange ? { onMarkerChange } : {})}
+        />
+      }
+      navigation={
+        <CatalogueNav catalogue={store.catalogue} context={store.context} />
+      }
       onClick={store.onShellClick}
       onKeyDown={store.onShellKeyDown}
       ref={root}
-      tabIndex={-1}
-      {...themeAttributes(theme)}
-    >
-      <a className="mbk-skip-link" href={mainFragment}>
-        Skip to content
-      </a>
-      <div className="mokly-top-host">
-        <div data-mokly-slot="topBarStart">{slots?.topBarStart}</div>
-        <TopBar catalogue={store.catalogue} />
-        <div data-mokly-slot="topBarEnd">{slots?.topBarEnd}</div>
-      </div>
-      <div className="mbk-body">
-        <div className="mokly-rail-host">
-          <div data-mokly-slot="railStart">{slots?.railStart}</div>
-          <CatalogueNav catalogue={store.catalogue} context={store.context} />
-          <div data-mokly-slot="railEnd">{slots?.railEnd}</div>
-        </div>
-        <div className="mokly-stage-host">
-          <ShellMain
-            catalogue={store.catalogue}
-            context={store.context}
-            view={store.state.route.view}
-          />
-          <div
-            data-mokly-slot="emptyState"
-            hidden={
-              store.state.route.view.kind !== "home" ||
-              slots?.emptyState === undefined
-            }
-          >
-            {slots?.emptyState}
-          </div>
-          <EmbeddedStageOverlay
-            {...(slots?.stageOverlay ? { value: slots.stageOverlay } : {})}
-          />
-        </div>
-        <div
-          data-mokly-slot="sidePanel"
-          style={{ width: slots?.sidePanel?.width }}
-        >
-          {slots?.sidePanel?.content}
-        </div>
-      </div>
-      <ShellFrameMarkerLayer
-        markers={markers}
-        {...(onError ? { onError } : {})}
-        {...(onMarkerChange ? { onMarkerChange } : {})}
-      />
-      {inspection ?? <div data-mokly-label-layer="" />}
-      <p
-        aria-atomic="true"
-        aria-live="polite"
-        className="mbk-route-status"
-        id={statusId}
-        role="status"
-      >
-        {store.state.announcement}
-      </p>
-    </div>
+      slots={slots}
+      statusId={statusId}
+      theme={normalizeTheme(theme)}
+      topBar={<TopBar catalogue={store.catalogue} />}
+    />
   );
 }

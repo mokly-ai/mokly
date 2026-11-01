@@ -30,7 +30,7 @@ test("native package manifests match the root links and the CLI version pins", a
   const cli = await manifest("packages/mokly/package.json");
   assert.deepEqual(
     new Set(workspace.workspaces),
-    new Set(["packages/viewer", "packages/mokly"]),
+    new Set(["packages/ui", "packages/viewer", "packages/mokly"]),
   );
   for (const [target, os, cpu, libc] of [
     ["linux-x64-gnu", "linux", "x64", "glibc"],

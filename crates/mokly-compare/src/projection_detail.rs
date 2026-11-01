@@ -3,14 +3,14 @@
 use std::collections::BTreeMap;
 
 use mokly_model::axes::EntryKind;
-use mokly_model::public_detail::EntryDetailV3;
+use mokly_model::public_detail::EntryDetailV4;
 use mokly_model::review::{ReviewEntry, ReviewEntryAddress, ReviewKind};
 use mokly_model::review_order;
 
 use crate::comparison_types::ComparisonResult;
 
 /// Copy included reasons, view states, ignore ids, evidence, and a current entry's base address.
-pub fn apply_evidence(details: &mut BTreeMap<String, EntryDetailV3>, result: &ComparisonResult) {
+pub fn apply_evidence(details: &mut BTreeMap<String, EntryDetailV4>, result: &ComparisonResult) {
     let bases = base_addresses(&result.review.entries);
     for entry in &result.entries {
         let Some(detail) = details
@@ -24,7 +24,7 @@ pub fn apply_evidence(details: &mut BTreeMap<String, EntryDetailV3>, result: &Co
             review_order::normalize_reasons(&mut reasons);
             reasons
         });
-        if detail.generation.is_none() {
+        if detail.revision.is_some() {
             detail.before = bases.get(&(entry.kind, entry.path.as_str())).cloned();
         }
         for document in &entry.documents {

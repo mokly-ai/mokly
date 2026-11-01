@@ -75,6 +75,14 @@ impl Visit for Fields {
             "reason" if matches!(value, "recycle" | "replacement" | "retry" | "root-switch") => {
                 self.values.insert(field.name().into(), json!(value));
             }
+            "cache"
+                if matches!(
+                    value,
+                    "no-record" | "evicted" | "stamp-mismatch" | "inconsistent-evidence"
+                ) =>
+            {
+                self.values.insert(field.name().into(), json!(value));
+            }
             "status" => self.error = value == "error",
             "sidecar_timing" => self.sidecar_timing = Some(value.to_owned()),
             _ => {}
@@ -273,6 +281,10 @@ mod serve_trace_tests;
 #[cfg(test)]
 #[path = "_tests_/sidecar_trace_tests.rs"]
 mod sidecar_trace_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_trace_tests.rs"]
+mod stylesheet_trace_tests;
 
 #[cfg(test)]
 #[path = "_tests_/sidecar_stop/mod.rs"]

@@ -25,6 +25,10 @@ documentKeys: Array<DocumentKey>,
  */
 path: string,
 /**
+ * Content id of this entry's detail.
+ */
+detailId: string,
+/**
  * Paired previous path, when Changes proves a move.
  */
 previousPath?: string,

@@ -1,53 +1,26 @@
 import path from "node:path";
 
-import type { DefaultTreeAdapterMap } from "parse5";
-
+import {
+  accessibleName,
+  focusStop,
+  withAncestors,
+} from "./design_accessibility.js";
 import { ADOPTION, requiredComponents } from "./design_expectations.js";
-import { attribute, textContent, type HtmlElement } from "./html.js";
+import { attribute } from "./html.js";
 import {
   viewRoute,
   type ServedCatalogue,
   type ServedView,
 } from "./served_design.js";
 
-type HtmlNode = DefaultTreeAdapterMap["node"];
-
-/** Every element below a node, with its element ancestors nearest first. */
-export function* withAncestors(
-  node: HtmlNode,
-  ancestors: readonly HtmlElement[] = [],
-): Generator<[HtmlElement, readonly HtmlElement[]]> {
-  const own = "tagName" in node ? [node, ...ancestors] : ancestors;
-  if ("tagName" in node) yield [node, ancestors];
-  if ("childNodes" in node)
-    for (const child of node.childNodes) yield* withAncestors(child, own);
-}
-
-/** A link's accessible name: its `aria-label`, or else its collapsed text. */
-export function accessibleName(element: HtmlElement): string {
-  return (
-    attribute(element, "aria-label") ??
-    textContent(element).trim().replace(/\s+/gu, " ")
-  );
-}
-
-/** Whether sequential keyboard navigation stops at the element. */
-function focusStop(element: HtmlElement): boolean {
-  const tabindex = attribute(element, "tabindex");
-  if (tabindex === "-1" || attribute(element, "disabled") !== undefined)
-    return false;
-  if (element.tagName === "a") return attribute(element, "href") !== undefined;
-  return (
-    ["button", "input", "select", "textarea", "summary"].includes(
-      element.tagName,
-    ) || tabindex !== undefined
-  );
-}
-
 const designViews = (catalogue: ServedCatalogue) =>
   catalogue.views.filter((view) => view.path.startsWith("design/"));
 
 const label = (view: ServedView) => view.route;
+
+/** Whether an element's class list names a class, beside any reset class. */
+const hasClass = (element: Parameters<typeof attribute>[0], name: string) =>
+  (attribute(element, "class") ?? "").split(/\s+/u).includes(name);
 
 /**
  * Catalogue-wide link validation: every marked link opens an existing entry,
@@ -117,7 +90,7 @@ export function linkViolations(catalogue: ServedCatalogue): string[] {
         entryPath === view.path &&
         view.path.startsWith("design/") &&
         attribute(element, "aria-current") === undefined &&
-        attribute(element, "class") !== "mbk-brand"
+        !hasClass(element, "mbk-brand")
       )
         violations.push(`${where} links to its own entry without aria-current`);
     }
@@ -139,7 +112,7 @@ export function keyboardStopViolations(catalogue: ServedCatalogue): string[] {
       if (
         element.tagName === "button" &&
         attribute(element, "disabled") === undefined &&
-        attribute(element, "class") !== "mbk-nav-variants-toggle"
+        !hasClass(element, "mbk-nav-variants-toggle")
       )
         violations.push(`${label(view)}: button "${accessibleName(element)}"`);
       else if (

@@ -31,9 +31,12 @@ Mobile and desktop still select distinct viewport contexts; controls must not
 fake scaling or modify consumer props to fit. Long or full-width components
 stay inspectable by scrolling.
 
-One icon toolbar beside the title contains a Mobile/Desktop/Both dropdown.
-Screen views add the Highlight components toggle there. Standalone uses one
-top-bar Appearance selector; embedded hosts keep a separate preview toggle.
+One icon toolbar beside the title contains a Mobile/Desktop/Both dropdown and
+the Highlight components toggle, on component and screen pages alike. A
+component page highlights the registered components that its example renders;
+when it renders none, the toggle stays disabled and states that reason.
+Standalone uses one top-bar Appearance selector; embedded hosts keep a separate
+preview toggle.
 Both renders both real viewport contexts. The shell and title stay fixed. On
 desktop, the preview and vertically resizable inspector are sibling panes
 whose contents scroll, with the navigation divider's centred short-line grip.
@@ -120,13 +123,20 @@ Only a ready detail with a complete workspace may show the zero-consumer state.
 ## Components In The Screen Inspector
 
 Every screen uses the same icon inspector. Its Components panel lists actual
-instances for the active viewport and scheme, grouped by component, with
-nested relationships and readable instance labels, from the view's `usage` in
-the entry detail. Selecting an instance opens Props with supplied data, slot
-references, and links to its component page. Unrendered conditional branches
-do not appear; null-rendering instances are listed without a visible region.
-An empty ready usage set says no registered components are used in this view.
-Unavailable usage says inspection is unavailable.
+instances for the active viewport and scheme by owner, from the view's `usage`
+in the entry detail: the instances that the view holds, each with the
+instances nested in it under a disclosure. A count of the instances and their
+components leads the list, and a viewport choice comes first when the
+workspace shows both viewports. Each instance reads as its component title and
+its instance label. Decision: the list follows ownership rather than grouping
+instances by component, because the owner tree already shows each nesting.
+Selecting an instance opens Props with supplied data, slot references, and
+links to its component page. Decision: Props has no Highlight action of its
+own, because selecting an instance and the view toolbar's Highlight components
+toggle already highlight it. Unrendered conditional branches do not appear;
+null-rendering instances are listed without a visible region. An empty ready
+usage set says no registered components are used in this view. Unavailable
+usage says inspection is unavailable.
 
 Pending usage is neither empty nor unavailable. The Components panel and the
 Highlight control use `Waiting for the component preview.` until ready usage
@@ -135,8 +145,8 @@ frame before it is ready, so Highlight cannot use older usage. A detail that
 fails to load keeps inspection unavailable and offers recovery through the
 entry's retry control, never the empty-view copy.
 
-Repeated instances stay individually selectable. Nested component groups start
-collapsed and can be expanded to inspect inner instances. Selecting an instance
+Repeated instances stay individually selectable. Nested lists start collapsed
+and can be expanded to inspect inner instances. Selecting an instance
 reveals its props and allows opening the canonical component page without
 losing the screen's navigation history. Raw source paths and identifiers stay
 secondary metadata; visible labels use the component title and instance label.
@@ -149,12 +159,13 @@ cannot introduce arbitrary DOM selectors or file paths.
 
 ## Highlight Components
 
-The screen toolbar has a keyboard-operable Highlight components toggle with an
-accessible pressed state. It starts off. In Current, enabling it dims the
-surrounding screen while registered component regions keep their original
-appearance. Outlines and labels identify visible regions; selecting a region
-selects the corresponding instance and opens Props if needed. Selecting a
-Components entry highlights and scrolls its instance into view.
+The view toolbar of each screen and component page has a keyboard-operable
+Highlight components toggle with an accessible pressed state. It starts off.
+In Current, enabling it dims the surrounding screen while registered component
+regions keep their original appearance. Outlines and labels identify visible
+regions; selecting a region selects the corresponding instance and opens Props
+if needed. Selecting a Components entry highlights and scrolls its instance
+into view.
 
 Initially highlight outermost visible component boundaries. Selecting or
 expanding a nested entry focuses that instance so a large shared container does
@@ -166,8 +177,9 @@ Highlighting is shell-owned presentation over validated live DOM ranges: a
 dimming mask with cutouts for the selected regions. It never sets opacity on a
 consumer ancestor. It never clones component DOM, changes its position,
 inserts layout wrappers, or alters its computed styles. Component pixels,
-layout, and original opacity stay intact. Consumer CSS cannot paint over the
-selected regions, also in a cross-origin overlay.
+layout, and original opacity stay intact. The shell draws the mask above the
+preview frame, also over a cross-origin frame, so consumer CSS cannot paint
+over it or restyle it.
 
 Bounds come from the active composed document, support multi-root and text
 ranges, and follow scroll, nested scroll containers, frame resize and

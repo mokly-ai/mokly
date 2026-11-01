@@ -1,6 +1,13 @@
-/** Stage rendering from the validated public catalogue model. */
+/**
+ * Stage rendering from the validated public catalogue model. These
+ * containers choose the frames; `@mokly/ui/stage` draws the stage and
+ * `@mokly/ui/flow-step` a user flow's steps.
+ */
 
 import { useContext } from "react";
+
+import { FlowStage, FlowStep } from "@mokly/ui/flow-step";
+import { Stage } from "@mokly/ui/stage";
 
 import { catalogueComponentVariants } from "../catalogue/entry_selection.js";
 import type {
@@ -68,12 +75,11 @@ export function PublicStage({
   const effectiveVariant = selectedVariant?.path;
   const frameEntry = selectedVariant ?? entry;
   return (
-    <div
-      className={`mbk-stage ${entry.kind === "component" ? "mbk-component-stage" : "mbk-live"}`}
-      data-mokly-scroll="stage"
-      data-mokly-stage=""
-      data-viewport={selection.viewport}
+    <Stage
       key={`${entry.path}:${effectiveVariant ?? ""}`}
+      kind={entry.kind === "component" ? "component" : "live"}
+      routed
+      viewport={selection.viewport}
     >
       {VIEWPORTS.map((viewport) => (
         <StageFrame
@@ -89,7 +95,7 @@ export function PublicStage({
           {...(fragment ? { fragment } : {})}
         />
       ))}
-    </div>
+    </Stage>
   );
 }
 
@@ -110,42 +116,38 @@ function UseCaseFlow({
 }) {
   const viewport = useNarrowLayout() ? "mobile" : "desktop";
   return (
-    <div className="mbk-flow" data-mokly-scroll="flow">
-      <div className="flow-track">
-        {entry.steps.map((step, index) => {
-          const screen = catalogue.screens.find(
-            (candidate) => candidate.path === step.screenPath,
-          );
-          return (
-            <section className="flow-step" key={`${step.screenPath}-${index}`}>
-              <div className="flow-step-head">
-                <span className="flow-step-num">{index + 1}</span>
-                <div>
-                  <h3>{step.title ?? screen?.title ?? step.screenPath}</h3>
-                  <p>{step.description ?? screen?.details.description}</p>
-                  {screen ? (
-                    <a className="flow-step-link" href={viewHref(screen.path)}>
-                      This screen in the catalogue: {screen.title} →
-                    </a>
-                  ) : null}
-                </div>
-              </div>
-              {screen ? (
-                <StageFrame
-                  entry={screen}
-                  flow
-                  hasDarkFragments={hasDarkFragments}
-                  key={`${screen.path}:${index}:${viewport}`}
-                  stepIndex={index}
-                  views={screen.views}
-                  viewport={viewport}
-                  {...(index === 0 && fragment ? { fragment } : {})}
-                />
-              ) : null}
-            </section>
-          );
-        })}
-      </div>
-    </div>
+    <FlowStage>
+      {entry.steps.map((step, index) => {
+        const screen = catalogue.screens.find(
+          (candidate) => candidate.path === step.screenPath,
+        );
+        return (
+          <FlowStep
+            description={step.description ?? screen?.details.description}
+            key={`${step.screenPath}-${index}`}
+            number={index + 1}
+            screen={
+              screen
+                ? { href: viewHref(screen.path), title: screen.title }
+                : undefined
+            }
+            title={step.title ?? screen?.title ?? step.screenPath}
+          >
+            {screen ? (
+              <StageFrame
+                entry={screen}
+                flow
+                hasDarkFragments={hasDarkFragments}
+                key={`${screen.path}:${index}:${viewport}`}
+                stepIndex={index}
+                views={screen.views}
+                viewport={viewport}
+                {...(index === 0 && fragment ? { fragment } : {})}
+              />
+            ) : null}
+          </FlowStep>
+        );
+      })}
+    </FlowStage>
   );
 }

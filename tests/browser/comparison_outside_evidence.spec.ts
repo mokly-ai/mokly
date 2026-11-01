@@ -133,7 +133,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await page.goto(
         designUrl("design/components/states/shared-impact/style-outside", name),
       );
-      const card = page.locator(".ce-comparison-evidence");
+      const card = page.locator("[data-workspace-evidence]");
       await expect(card.getByText(FILES_LEAD, { exact: true })).toBeVisible();
       const approved = await evidenceFiles(card);
       expect(approved.map(([, outcomes]) => outcomes[0]?.[0])).toEqual([
@@ -176,7 +176,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(card.locator("p")).toHaveText([DESIGN_BASE, ...sentences]);
       await expect(card.locator("li")).toHaveCount(1);
       await expect(
-        page.locator(".mbk-screen-head .ce-change-status"),
+        page.locator(".mbk-screen-head .mbk-entry-status"),
       ).toHaveText("Unmodified");
     });
   });

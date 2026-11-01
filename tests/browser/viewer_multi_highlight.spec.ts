@@ -72,17 +72,15 @@ async function expectPresentation(
   await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
     selectedFrames.length,
   );
-  if (!cross) {
-    await expect(page.locator(".mbk-highlight-layer")).toHaveCount(
-      selectedFrames.length,
-    );
-    return;
-  }
+  await expect(page.locator(".mbk-highlight-layer")).toHaveCount(
+    selectedFrames.length,
+  );
+  if (!cross) return;
   const frames = page.locator("iframe[data-mokly-frame-state]");
   for (let index = 0; index < (await frames.count()); index++)
     await expect(
       frames.nth(index).contentFrame().locator("[data-mokly-overlay]"),
-    ).toHaveCount(selectedFrames.includes(index) ? 1 : 0);
+    ).toHaveCount(0);
 }
 
 for (const cross of [false, true]) {
@@ -124,6 +122,7 @@ for (const cross of [false, true]) {
         {
           kind: "use-case",
           path: "tour",
+          detailId: home.detailId,
 
           title: "Tour",
           tags: [],

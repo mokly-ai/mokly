@@ -72,8 +72,11 @@ test("Details explain a component's impact where it is used", () => {
   const markup = renderToStaticMarkup(
     <WorkspaceEvidence compared data={cardWorkspace()} variantPath="card" />,
   );
-  assert.ok(markup.includes(`<p>${SENTENCE}</p>`), markup);
-  assert.doesNotMatch(markup, /<p>Rendered content changed\.<\/p>/);
+  assert.ok(markup.includes(`<p class="mbk-reset">${SENTENCE}</p>`), markup);
+  assert.doesNotMatch(
+    markup,
+    /<p class="mbk-reset">Rendered content changed\.<\/p>/,
+  );
 });
 
 test("the reason leaves the component's own views unchanged", () => {
@@ -99,6 +102,9 @@ test("the reason leaves the component's own views unchanged", () => {
       views={views}
     />,
   );
-  assert.match(markup, /<h3>Mobile · No changes to this variant<\/h3>/);
+  assert.match(
+    markup,
+    /<h3 class="mbk-reset">Mobile · No changes to this variant<\/h3>/,
+  );
   assert.doesNotMatch(markup, new RegExp(SENTENCE));
 });

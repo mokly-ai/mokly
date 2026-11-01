@@ -18,7 +18,7 @@ const packages = releasePackages().map(({ name, artifact }) => ({
   },
 }));
 
-test("publication verifies platforms, viewer and CLI in order and skips matching versions", async () => {
+test("publication verifies platforms, UI package, viewer and CLI in order and skips matching versions", async () => {
   const events: string[] = [];
   await publishPackages("/checkout", packages, {
     verify: async ({ mode, localReport, distTag }) => {
@@ -45,8 +45,8 @@ test("publication verifies platforms, viewer and CLI in order and skips matching
     ]),
   );
   assert.deepEqual(
-    packages.slice(-2).map(({ report }) => report.name),
-    ["@mokly/viewer", "@mokly/mokly"],
+    packages.slice(-3).map(({ report }) => report.name),
+    ["@mokly/ui", "@mokly/viewer", "@mokly/mokly"],
   );
 });
 

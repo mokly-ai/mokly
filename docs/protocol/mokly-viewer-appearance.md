@@ -103,9 +103,9 @@ unavailable routes, and at narrow widths, and preserves catalogue search and
 menu access.
 
 Choosing a value applies the interface appearance and the effective preview
-scheme together: the document's scheme mark, every screen and flow frame's
-light or dark document swap, component samples and comparison frames. The
-swap rules apply unchanged, including the light-only fallback caption.
+scheme together: the shell root's appearance mark, every screen and flow
+frame's light or dark document swap, component samples and comparison frames.
+The swap rules apply unchanged, including the light-only fallback caption.
 In-shell navigation, Back and Forward keep the current reader choice, even
 when the destination URL contains an older or conflicting `scheme` pin.
 Before any reader choice, a scheme-bearing in-shell destination applies its
@@ -129,12 +129,12 @@ stored values are ignored. Read, write and remove failures do not break
 navigation or show a catalogue error. No credentials or cookies are involved.
 
 The shell bundle resolves the effective appearance before its first render,
-as the [shell delivery contract](./mokly-shell-delivery.md) requires: it sets
-the scheme mark on the document root, then renders the shell and mounts every
-frame with the document of the effective preview scheme. No frame loads a
+as the [shell delivery contract](./mokly-shell-delivery.md) requires: the
+shell root carries the appearance mark from its first render, and every frame
+mounts with the document of the effective preview scheme. No frame loads a
 light document and swaps to dark at startup, and no pre-paint script exists.
 Under Auto the appearance follows system changes while the document is open.
-Later choices and system changes update the document root and the preview
+Later choices and system changes update the shell root and the preview
 selection together, and only the frame adapters navigate preview documents.
 Appearance changes never add iframe history entries or consume catalogue
 Back/Forward actions. A second installation of the appearance behaviour
@@ -144,20 +144,20 @@ detail updates and Serve publications carry the current effective appearance
 forward rather than a separate preview state.
 
 Before the bundle runs, and without JavaScript, the stub shows only its
-`<noscript>` sentence, and the shell stylesheet gives that document the Auto
-interface appearance through `prefers-color-scheme`. The selector exists only
-once the bundle installs its behaviour, so no control without a change
-handler is ever shown. Persisted overrides need the bundle.
+`<noscript>` sentence. The shell stylesheet gives the stub's `mbk-document` class
+the Auto interface appearance through `prefers-color-scheme`. The selector
+exists only once the bundle installs its behaviour, so no control without a
+change handler is ever shown. Persisted overrides need the bundle.
 
 ## Palette And Ownership
 
-One package-owned semantic palette supplies both the standalone shell
-stylesheet and the scoped embedded stylesheet. Dark interface backgrounds,
-text and boundaries align with Mokly Cloud's warm neutral Folio palette, with
-sage reserved for accents and status. The
-[semantic palette](./mokly-viewer-palette.md#cloud-alignment) records the
-role mapping, the approved swatches and their recorded contrast; the cloud
-repository is a design reference, not a runtime dependency.
+The [shared UI package](./mokly-ui-package.md#theme-and-host-pages) owns the
+one semantic palette, which supplies both the standalone shell stylesheet and
+the embedded stylesheet. Dark interface backgrounds, text and boundaries align
+with Mokly Cloud's warm neutral Folio palette, with sage reserved for accents
+and status. The [semantic palette](./mokly-viewer-palette.md#cloud-alignment)
+records the role mapping, the approved swatches and their recorded contrast;
+the cloud repository is a design reference, not a runtime dependency.
 
 Provide Light and Dark values for these responsibilities:
 
@@ -168,8 +168,8 @@ Provide Light and Dark values for these responsibilities:
 - Navigation guides, stage dots, browser toolbar/address controls, tooltips,
   backdrops, shadows, inspector tabs, native fields and scrollbars.
 
-Theme-dependent colours in the shell stylesheets and in package-owned overlay
-and control creation use semantic roles, not a dark-mode override sheet. A
+Theme-dependent colours in the components and stylesheets of the shared UI
+package use semantic roles, not a dark-mode override sheet. A
 theme-dependent colour literal appears only in a palette definition, including
 the roles of fixed device artwork.
 
@@ -180,8 +180,8 @@ stylesheet builder does not depend on one hardcoded Light fallback set.
 Internal tokens and selectors stay private; no general palette API exists.
 
 Embedded theme attributes and CSS stay on each `.mokly-viewer` root. Never
-mutate the host's `html`/`body`, neighbouring viewers or slot content. Scope
-exclusions apply; ordinary CSS inheritance into slots still applies, and
+mutate the host's `html`/`body`, neighbouring viewers or slot content. No
+rule matches slot content, but CSS inheritance into slots still applies, and
 hosts can set their slot content's own appearance. Explicitly themed host
 content keeps its styles, including host-owned markers.
 

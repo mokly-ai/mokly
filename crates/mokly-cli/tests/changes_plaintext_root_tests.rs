@@ -2,7 +2,7 @@
 
 use std::fs;
 
-use mokly_model::public_detail::EntryDetailV3;
+use mokly_model::public_detail::EntryDetailV4;
 use mokly_model::usage::{CatalogueUsage, ComponentRangeTarget};
 
 mod changes_support;
@@ -24,7 +24,7 @@ fn static_plaintext_component_owns_its_root_after_browser_repair() {
             String::from_utf8_lossy(&output.stderr)
         );
         let site = root.path().join("mokly-static");
-        let detail: EntryDetailV3 =
+        let detail: EntryDetailV4 =
             serde_json::from_slice(&fs::read(site.join("mokly-viewer/entries/note.json")).unwrap())
                 .unwrap();
         assert!(!detail.views.is_empty());

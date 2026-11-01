@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 
+import { shellRoot } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
 import { chooseScheme, expectFrameSource } from "./workspace_actions.js";
 
@@ -16,7 +17,7 @@ for (const width of [390, 1280]) {
     await expect(page.getByLabel("Viewport", { exact: true })).toHaveCount(0);
     for (const scheme of ["light", "dark"] as const) {
       await chooseScheme(page, scheme);
-      await expect(page.locator("body")).toHaveAttribute(
+      await expect(page.locator(shellRoot)).toHaveAttribute(
         "data-mokly-color-scheme",
         scheme,
       );
@@ -85,7 +86,7 @@ for (const width of [390, 1280]) {
       .click();
     await expect(page).toHaveURL(/\/view\/example\/team\/invite\/$/u);
     await expect(page.locator("#mb-main h2")).toHaveText("New invitation");
-    await expect(page.locator("body")).toHaveAttribute(
+    await expect(page.locator(shellRoot)).toHaveAttribute(
       "data-mokly-color-scheme",
       "dark",
     );

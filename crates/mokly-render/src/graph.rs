@@ -78,6 +78,7 @@ impl JavaScriptGraph {
         let mut side = self.runtime.side(config)?;
         let mut inputs = DeliveryInputs {
             resources: self.runtime.resources.clone(),
+            closures: self.runtime.closures.clone(),
             dependency_aliases: side.dependency_aliases.clone(),
             ..Default::default()
         };
@@ -186,6 +187,7 @@ impl JavaScriptGraph {
             let modules: Vec<_> = entry_modules.values().cloned().collect();
             inputs = DeliveryInputs {
                 resources: self.runtime.resources.clone(),
+                closures: self.runtime.closures.clone(),
                 dependency_aliases: side.dependency_aliases.clone(),
                 render_keys: Some(keys),
                 stylesheet_roots: stylesheets::roots(

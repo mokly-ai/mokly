@@ -12,7 +12,7 @@ import {
   heldDetails,
   indexFixture,
   shellModelFixture,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 
 const HOME = "product/browse/home";
 const RETIRED =

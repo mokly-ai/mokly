@@ -1,16 +1,24 @@
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
-import { MockLink } from "@mokly/mokly";
+import { mockLink } from "@mokly/mokly";
 
+import { ComparisonEvidence } from "../../../../../packages/ui/src/comparison-evidence/comparison-evidence.js";
+import { DetailsBody as DetailsBodyView } from "../../../../../packages/ui/src/details-panel/details-panel.js";
+import {
+  EntryChip,
+  MetadataChips,
+  MetadataCode,
+  MetadataLink,
+} from "../../../../../packages/ui/src/metadata-row/metadata-row.js";
 import { useDesignInstance } from "../library/composition.js";
 import { inspector } from "../library/inspector/inspector.js";
 
 import { DESTINATIONS, type DesignDestination } from "./destinations.js";
-import { FlowIcon } from "./icons.js";
 import { MetaRow } from "./metadata_row.js";
 import { SUBJECTS, type ScreenSubject } from "./subjects.js";
 import { TagChips } from "./tag_filter.js";
 
+/** A depicted entry's description and its metadata rows in the shipped body. */
 function DetailsBody({
   activeTag,
   changedViews,
@@ -22,64 +30,69 @@ function DetailsBody({
 }) {
   const metadata = SUBJECTS[subject];
   return (
-    <div className="mbk-details-body">
-      <div>
-        <p className="mbk-details-desc">{metadata.description}</p>
-        <p className="mbk-details-rationale">
-          <span className="k">Why this screen — </span>
-          {metadata.rationale}
-        </p>
-      </div>
-      <div className="mbk-meta">
-        <MetaRow name="source" label="Source">
-          <code className="mbk-code">{metadata.source}</code>
+    <DetailsBodyView
+      description={metadata.description}
+      rationale={{ noun: "screen", text: metadata.rationale }}
+    >
+      <MetaRow name="source" label="Source">
+        <MetadataCode>{metadata.source}</MetadataCode>
+      </MetaRow>
+      {metadata.previousPath ? (
+        <MetaRow name="moved-from" label="Moved from">
+          <MetadataCode>{metadata.previousPath}</MetadataCode>
         </MetaRow>
-        {metadata.previousPath ? (
-          <MetaRow name="moved-from" label="Moved from">
-            <code className="mbk-code">{metadata.previousPath}</code>
-          </MetaRow>
-        ) : null}
-        <MetaRow name="schemes" label="Schemes">
-          {metadata.schemes}
+      ) : null}
+      <MetaRow name="schemes" label="Schemes">
+        {metadata.schemes}
+      </MetaRow>
+      {changedViews ? (
+        <MetaRow name="changed-views" label="Changed views">
+          {changedViews}
         </MetaRow>
-        {changedViews ? (
-          <MetaRow name="changed-views" label="Changed views">
-            {changedViews}
-          </MetaRow>
-        ) : null}
-        {metadata.tags.length > 0 ? (
-          <MetaRow name="tags" label="Tags">
-            <TagChips activeTag={activeTag} tags={metadata.tags} />
-          </MetaRow>
-        ) : null}
-        {metadata.relatedDocument ? (
-          <MetaRow name="related-docs" label="Related docs">
-            <MockLink
-              to={metadata.relatedDocument.to}
-              className="mbk-meta-link"
-            >
+      ) : null}
+      {metadata.tags.length > 0 ? (
+        <MetaRow name="tags" label="Tags">
+          <TagChips activeTag={activeTag} tags={metadata.tags} />
+        </MetaRow>
+      ) : null}
+      {metadata.relatedDocument ? (
+        <MetaRow name="related-docs" label="Related docs">
+          <MetadataChips>
+            <MetadataLink href={mockLink(metadata.relatedDocument.to)}>
               {metadata.relatedDocument.title}
-            </MockLink>
-          </MetaRow>
-        ) : metadata.relatedDocs ? (
-          <MetaRow name="related-docs" label="Related docs">
-            <span className="mbk-meta-link">Example notes</span>
-          </MetaRow>
-        ) : null}
-        {metadata.tour ? (
-          <MetaRow name="used-by" label="Used by">
-            <span className="mbk-chips">
-              <MockLink to={DESTINATIONS.tour} className="mbk-chip flow">
-                <FlowIcon size={11} />
-                Example tour
-              </MockLink>
-            </span>
-          </MetaRow>
-        ) : null}
-      </div>
-    </div>
+            </MetadataLink>
+          </MetadataChips>
+        </MetaRow>
+      ) : metadata.relatedDocs ? (
+        <MetaRow name="related-docs" label="Related docs">
+          <MetadataChips>
+            <MetadataCode>Example notes</MetadataCode>
+          </MetadataChips>
+        </MetaRow>
+      ) : null}
+      {metadata.tour ? (
+        <MetaRow name="used-by" label="Used by">
+          <MetadataChips>
+            <EntryChip
+              href={mockLink(DESTINATIONS.tour)}
+              kind="use-case"
+              title="Example tour"
+            />
+          </MetadataChips>
+        </MetaRow>
+      ) : null}
+    </DetailsBodyView>
   );
 }
+
+/**
+ * The comparison facts of a depicted entry, which the shipped evidence draws
+ * after the heading and the branch point inside the approved card.
+ */
+export type CardEvidence = Omit<
+  ComponentProps<typeof ComparisonEvidence>,
+  "base" | "hidden" | "mark"
+>;
 
 type DetailsPanelProps = {
   destination?: DesignDestination | undefined;
@@ -88,7 +101,7 @@ type DetailsPanelProps = {
   /** Views whose render changed, listed when the change misses the shown one. */
   changedViews?: ReactNode;
   open?: boolean;
-  comparisonEvidence?: ReactNode;
+  comparisonEvidence?: CardEvidence | undefined;
 } & (
   | { subject: ScreenSubject; children?: never }
   | { subject?: never; children: ReactNode }
@@ -96,7 +109,8 @@ type DetailsPanelProps = {
 
 /**
  * Existing screen metadata, or an authored metadata body such as a document
- * page's, in the shared icon inspector. Comparison evidence follows either.
+ * page's, in the shared icon inspector. The shipped comparison evidence
+ * follows either, in the approved bordered card.
  */
 export function DetailsPanel({
   destination,
@@ -127,9 +141,15 @@ export function DetailsPanel({
           className="mbk-comparison-details"
           aria-label="Comparison details"
         >
-          <h3>Comparison details</h3>
-          <p>Compared with the branch point on origin/main.</p>
-          {comparisonEvidence}
+          <ComparisonEvidence
+            base="origin/main"
+            mark={
+              subject === undefined
+                ? "data-page-evidence"
+                : "data-workspace-evidence"
+            }
+            {...comparisonEvidence}
+          />
         </section>
       </>
     );

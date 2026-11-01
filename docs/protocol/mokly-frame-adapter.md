@@ -95,10 +95,10 @@ An inspection request applies only to the frames that it names. A sibling
 frame's missing evidence cannot fail a scoped request, and the viewer does not
 await pending unrelated mounts. The viewer clears an unrelated mounted frame
 with `highlight([], "off")`, which requires no available usage.
-`listInstanceBoundaries()` supplies both labels and marker placement. A failed
-highlight removes its partially applied masks and labels. After a replacement,
-obsolete caller promises reject with `disposed`, including when a custom
-adapter settles late. Obsolete refreshes and errors cannot change the
+`listInstanceBoundaries()` supplies the masks, the labels, and marker
+placement. A failed highlight removes its partially applied masks and labels.
+After a replacement, obsolete caller promises reject with `disposed`, including
+when a custom adapter settles late. Obsolete refreshes and errors cannot change the
 replacement's picking, labels or host events. A geometry event that arrives
 while host presentation activates or a measurement runs causes one trailing
 refresh of the current session. It starts no competing boundary list and is
@@ -111,7 +111,7 @@ events are triggered by ordinary pointer input. Both adapters share this rule;
 explicit inspection requests still reject unavailable usage normally.
 
 Both built-in adapters implement optional `updateUsage` for validated evidence
-on the same document. It clears that frame's old inspection presentation,
+on the same document. It clears that frame's old inspection state,
 replaces the usage snapshot and updates its event subscription. A
 pending/unavailable-to-ready update enables hover/click inspection without a
 document load or new session; the reverse transition disables it while preserving
@@ -150,13 +150,22 @@ effective across a fixed-position escape. This follows the
 `scrollTo` scrolls the first rendered range into nearest view, including inner
 scroll containers; null output is a successful no-op, an absent key is an error.
 
-Highlighting uses the [highlight visuals](./mokly-component-explorer.md#highlight-components),
-preserves consumer pixels/layout/styles, and restores normal link activation
-when off. Pick intercepts instance selection before product links; Escape emits
-`pick-end`. Subscriptions share one installation and return idempotent cleanup.
-Disposal removes overlays, listeners, observers and scheduled work, rejects
-pending operations, and is idempotent. Host-side errors use the codes above;
-diagnostics are not extracted from consumer text.
+An adapter draws nothing in the host document or in the preview. Its
+`highlight` sets the keys and the mode of its pick listeners. The shell
+draws the mask and the labels of the
+[highlight visuals](./mokly-component-explorer.md#highlight-components) with
+components of the [shared UI package](./mokly-ui-package.md), from the boxes
+of `listInstanceBoundaries()`. A cross-origin mask redraws after one message
+round trip, as its labels do. Decision: the shell draws every mask, not an
+adapter or the in-frame inspector, because each of those drawings is a second
+implementation outside the shell's React tree.
+
+Highlighting preserves consumer pixels/layout/styles, and `off` restores
+normal link activation. Pick intercepts instance selection before product
+links; Escape emits `pick-end`. Subscriptions share one installation and
+return idempotent cleanup. Disposal removes listeners, observers and scheduled
+work, rejects pending operations, and is idempotent. Host-side errors use the
+codes above; diagnostics are not extracted from consumer text.
 
 ## Same-Origin Documents
 
@@ -169,7 +178,7 @@ validated fragment. An authenticated document reload renews every
 document-scoped listener and observer without replacing the outer frame
 session. Range authentication, including a component page's markerless root
 region, follows the [range markers](./mokly-published-inspector.md#range-markers);
-ownership, clipping, highlighting, scroll restoration and logical-link
+ownership, clipping, pick handling, scroll restoration and logical-link
 classification match the inspector. Ready usage is required for instance
 inspection; absent usage does not disable valid navigation.
 
@@ -231,6 +240,6 @@ in-frame inspector script that the static build injects.
 ## Related Docs
 
 - [Inspector handshake and wire protocol](./mokly-inspector-wire.md)
-- [Published inspector and overlay](./mokly-published-inspector.md)
+- [Published inspector](./mokly-published-inspector.md)
 - [Frame link navigation](./mokly-frame-link-navigation.md)
 - [Viewer markers and multi-instance highlights](./mokly-viewer-markers.md)

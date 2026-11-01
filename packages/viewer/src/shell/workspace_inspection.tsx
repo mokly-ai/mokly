@@ -287,6 +287,12 @@ export function useWorkspaceInspection(
     toggle,
     reveal,
     stop,
-    overlay: <WorkspaceInspectionOverlay labels={labels} onSelect={select} />,
+    overlay: (
+      <WorkspaceInspectionOverlay
+        labels={labels}
+        measured={measured}
+        onSelect={select}
+      />
+    ),
   };
 }

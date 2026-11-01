@@ -3,6 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
+use mokly_compare::comparison_types::ComparisonResult;
 use mokly_compare::projection_index;
 use mokly_graph::types::{RenderGeneration, RenderGenerationMock};
 use mokly_model::canonical;
@@ -26,13 +27,20 @@ use super::support::{
 
 /// Append one generation with a removed page and return the index and its files.
 fn small_generation() -> (CatalogueReadModel, Vec<File>) {
+    append_generation(comparison_result())
+}
+
+fn comparison_result() -> ComparisonResult {
     let after = Unimock::new((
         generation_clauses("home", 0, true),
         RenderGenerationMock::generation_key
             .each_call(matching!())
             .returns("after"),
     ));
-    let result = result_with(generation("old", 0, true), Arc::new(after));
+    result_with(generation("old", 0, true), Arc::new(after))
+}
+
+fn append_generation(result: ComparisonResult) -> (CatalogueReadModel, Vec<File>) {
     let publication = projection_index::publication("mokly.config.json".into(), "base");
     let mut index = projection::index(&result.after.catalogue().model, &[], &publication).unwrap();
     let cancellation = Unimock::new(
@@ -51,6 +59,31 @@ fn small_generation() -> (CatalogueReadModel, Vec<File>) {
     )
     .unwrap();
     (index, inventory.into_files())
+}
+
+#[test]
+fn removed_detail_keeps_id_and_bytes_when_generation_context_changes() {
+    let (first_index, first_files) = append_generation(comparison_result());
+    let mut changed = comparison_result();
+    changed.snapshot.base_commit = "c".repeat(40);
+    let (second_index, second_files) = append_generation(changed);
+    assert_ne!(first_index.comparison_url, second_index.comparison_url);
+    let first = first_files
+        .iter()
+        .find(|file| file.path.ends_with("/entries/old.json"))
+        .unwrap();
+    let second = second_files
+        .iter()
+        .find(|file| file.path.ends_with("/entries/old.json"))
+        .unwrap();
+    assert_eq!(first.bytes, second.bytes);
+    let first_detail = readers::detail(std::str::from_utf8(&first.bytes).unwrap()).unwrap();
+    let second_detail = readers::detail(std::str::from_utf8(&second.bytes).unwrap()).unwrap();
+    assert_eq!(first_detail.detail_id, second_detail.detail_id);
+    assert_eq!(
+        first_detail.detail_id,
+        canonical::detail_id(&first_detail).unwrap()
+    );
 }
 
 #[test]

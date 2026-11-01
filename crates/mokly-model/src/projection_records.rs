@@ -21,6 +21,7 @@ pub(crate) fn metadata(entry: &ModelEntry, status: ChangesStatus) -> CatalogueEn
     let metadata = &entry.metadata;
     CatalogueEntry {
         path: metadata.path.clone(),
+        detail_id: String::new(),
         previous_path: None,
         title: metadata.title.clone(),
         tags: metadata.tags.clone(),

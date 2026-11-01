@@ -61,9 +61,9 @@ standalone views are `<path>/index.mobile.html` and
 `<path>/index.desktop.html`, and gallery
 membership is the entry's folder. All fifty-one component
 screens and their two variants opt into light documents, as the shell mockups do. Their
-depicted preview caption names the artboard's own scheme, and the toolbar has
-no scheme switch: the catalogue's one Appearance control, drawn in their top
-bar like every other artboard's, sets it. Links use
+depicted preview captions name the viewport only, as the shell's do. The
+toolbar has no scheme switch: the catalogue's one Appearance control, drawn in
+their top bar like every other artboard's, sets the scheme. Links use
 the path-addressed [link contract](./mokly-authoring.md#links) so they work
 both directly from disk and in Browse. State links demonstrate navigation between mockups; static
 depictions of shell controls are not the separate runtime inspector.
@@ -81,6 +81,6 @@ selected mode stays a pressed button. Every other eligible depiction, including
 the tall Checklist, keeps all four modes as buttons. No mode control links into
 the Checklist, because it depicts another component; readers reach it beside
 Overlay and Difference in its owning Stacked comparisons gallery.
-The shared selection control preserves native anchor semantics when an authored
+The comparison mode control preserves native anchor semantics when an authored
 transition exists. Browse and Changes artboards keep their non-link spans for
 unsupported controls.

@@ -1,8 +1,8 @@
-/** The shell's working catalogue: the index v8 with usage from held details. */
+/** The shell's working catalogue: the index v9 with usage from held details. */
 
 import type {
   CatalogueComponent,
-  EntryDetailV3,
+  EntryDetailV4,
   CatalogueDocument,
   CataloguePage,
   CatalogueReadModel,
@@ -73,5 +73,5 @@ export interface ShellCatalogueReadModel extends Omit<
   components: readonly ShellCatalogueComponent[];
   removedEntries: readonly ShellRemovedEntry[];
   /** The accepted details by `detailKey`, each fenced against this index. */
-  details: ReadonlyMap<string, EntryDetailV3>;
+  details: ReadonlyMap<string, EntryDetailV4>;
 }

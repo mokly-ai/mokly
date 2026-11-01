@@ -125,7 +125,7 @@ test("repeated installation is idempotent and each disposes cleanly", () => {
 
 test("final disposal removes selector listeners before a later installation", () => {
   const world = environment();
-  world.attach({ body: true, select: true });
+  world.attach({ select: true });
   const first = installAppearance(world.document, world.window);
   const second = installAppearance(world.document, world.window);
   first.refresh();
@@ -212,18 +212,19 @@ test("a storage failure never loses the choice the reader made", () => {
   assert.equal(world.root.attributes["data-mokly-theme"], "light");
 });
 
-test("the root is set before the body exists, and the rest follows later", () => {
+test("the root is set before the frames exist, and the rest follows later", () => {
   const dual = frame("welcome.html", "welcome.dark.html");
   const world = environment({ search: "?scheme=dark" });
-  // At head time there is no body and no frame yet, so only the root can be
-  // marked; the appearance must still be right before the first paint.
+  // At head time there is no frame and no control yet, so only the root can
+  // be marked; the appearance must still be right before the first paint, and
+  // the shell's first render reads the effective scheme for its own root.
   const handle = installAppearance(world.document, world.window);
   assert.equal(world.root.attributes["data-mokly-theme"], "dark");
-  assert.equal(world.body.attributes["data-mokly-color-scheme"], undefined);
+  assert.deepEqual(handle.current(), { theme: "dark", scheme: "dark" });
 
-  world.attach({ frames: [dual], body: true, select: true });
+  world.attach({ frames: [dual], select: true });
   handle.refresh();
-  assert.equal(world.body.attributes["data-mokly-color-scheme"], "dark");
+  assert.equal(handle.current().scheme, "dark");
   assert.deepEqual(dual.loads, ["welcome.dark.html"]);
   assert.equal(world.select.value, "dark", "the control shows the appearance");
   assert.equal(world.select.hidden, false, "the control is revealed");
@@ -233,12 +234,12 @@ test("choosing through the control applies and stores the appearance", () => {
   const dual = frame("welcome.html", "welcome.dark.html");
   const world = environment({});
   const handle = installAppearance(world.document, world.window);
-  world.attach({ frames: [dual], body: true, select: true });
+  world.attach({ frames: [dual], select: true });
   handle.refresh();
   world.select.value = "dark";
   world.select.fire();
   assert.equal(world.root.attributes["data-mokly-theme"], "dark");
-  assert.equal(world.body.attributes["data-mokly-color-scheme"], "dark");
+  assert.equal(handle.current().scheme, "dark");
   assert.equal(world.stored(), "dark");
   assert.deepEqual(dual.loads, ["welcome.dark.html"]);
 });
@@ -247,17 +248,17 @@ test("a light-only catalogue never captions a fallback under Dark", () => {
   const lightOnly = frame("details.html");
   const world = environment({ search: "?scheme=dark" });
   const handle = installAppearance(world.document, world.window);
-  world.attach({ frames: [lightOnly], body: true, select: true });
+  world.attach({ frames: [lightOnly], select: true });
   handle.refresh();
-  // The frame keeps its source, and the body still reports dark, so the
+  // The frame keeps its source, and the appearance still reports dark, so the
   // fallback caption rule keys off the frame rather than the appearance.
   assert.deepEqual(lightOnly.loads, []);
-  assert.equal(world.body.attributes["data-mokly-color-scheme"], "dark");
+  assert.equal(handle.current().scheme, "dark");
 });
 
 test("the control names the appearance it set", () => {
   const environmentUnderTest = environment({ stored: "dark" });
-  environmentUnderTest.attach({ body: true, select: true });
+  environmentUnderTest.attach({ select: true });
   const handle = installAppearance(
     environmentUnderTest.document,
     environmentUnderTest.window,

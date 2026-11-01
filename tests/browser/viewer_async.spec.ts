@@ -54,11 +54,18 @@ test("concurrent pick is idempotent and cancellation rejects pending activation"
   ]);
   const cancelled = await page.evaluate(async () => {
     const host = window.viewerHarness.get("one");
+    let attempted!: () => void;
+    const attempt = new Promise<void>((resolve) => {
+      attempted = resolve;
+    });
     host.props.frameAdapter = {
-      mount: () => new Promise<MountedFrame>(() => {}),
+      mount: () => {
+        attempted();
+        return new Promise<MountedFrame>(() => {});
+      },
     };
     host.render();
-    await new Promise(requestAnimationFrame);
+    await attempt;
     const pending = host.ref.current.startPick().then(
       () => false,
       () => true,
@@ -129,6 +136,10 @@ test("another deployment keeps the stage loading until the host replaces the ind
   page,
 }) => {
   const other = "1".repeat(64);
+  let deploymentId = fixture.index.deploymentId;
+  await page.route("**/mokly-viewer/deployment.json", (route) =>
+    route.fulfill({ json: { schemaVersion: 1, deploymentId } }),
+  );
   await page.evaluate((deploymentId) => {
     const seen = { unavailable: false };
     (window as unknown as { stageSeen: typeof seen }).stageSeen = seen;
@@ -141,7 +152,7 @@ test("another deployment keeps the stage loading until the host replaces the ind
       subtree: true,
     });
     const host = window.viewerHarness.start("one");
-    host.details["home"] = { ...host.details["home"]!, deploymentId };
+    host.details["home"] = { ...host.details["home"]!, detailId: deploymentId };
   }, other);
   const errors = () =>
     page.evaluate(() =>
@@ -159,6 +170,7 @@ test("another deployment keeps the stage loading until the host replaces the ind
   await expect(
     viewer.getByRole("status").filter({ hasText: "Loading preview…" }),
   ).toBeVisible();
+  deploymentId = other;
   await page.evaluate((deploymentId) => {
     const host = window.viewerHarness.get("one");
     host.props = {
