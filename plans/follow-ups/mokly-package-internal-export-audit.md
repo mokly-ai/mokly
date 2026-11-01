@@ -1,6 +1,6 @@
 # Audit internal exports in the Mokly package
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** Yes.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #226 and its completed plan, which put the
   problem outside the scope of its review.
@@ -48,15 +48,15 @@
     the baseline pattern. Replace the workspace root with `packages/mokly`
     in `PACKAGE_ROOTS`. Delete each unused export that the audit then
     finds, because the baseline may not grow. The count of such exports is
-    not known. Effort: Small (estimate).
+    not known. Effort: Small.
   - **C.** Apply B through one shared list of source roots and package roots
     that both ratchets import, so that a moved package cannot leave one
     ratchet behind. Fix the root of the file-length ratchet with it. Effort:
-    Medium (estimate).
+    Medium.
 - **Left out:** Deriving the roots from the workspaces of the root
   `package.json`. It would add `packages/ui/src`, which the protocol does
   not name, so it widens the gate beyond the requirement.
-- **Wider fix:** C (estimate). One list removes the copies that let the
+- **Wider fix:** C. One list removes the copies that let the
   roots drift.
 - **Previous examples:** The file-length ratchet in
   `scripts/verification/ratchets/typescript-length.mjs:7` has the same stale
@@ -69,11 +69,11 @@
     whether the same audit should also scan `tests/browser`, `tests/helpers`,
     and `packages/viewer/tests`. It changes the same `SOURCE_ROOTS` line,
     but it widens the check for other trees and needs its own decision.
-- **Recommendation:** C (estimate). It restores the documented roots in both
+- **Recommendation:** C. It restores the documented roots in both
   ratchets and keeps them in one place.
-- **Action:** ask the user, because condition 3 holds (estimate): C
-  restores the roots that `docs/protocol/verification-ratchets.md:21`
-  names, but it makes the repository gate stricter than the code is today,
-  and the repository rules reserve a stricter gate for the user.
+- **Action:** ask the user, because C restores the roots that
+  `docs/protocol/verification-ratchets.md:21` names, but it makes the repository
+  gate stricter than the code is today, and the repository rules reserve a
+  stricter gate for the user.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/esbuild-resolve-fast-path.md?plain=1#L427).

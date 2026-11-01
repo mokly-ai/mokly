@@ -1,6 +1,6 @@
 # Restore the protocol fixture pattern in prettierignore
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #221 and its completed plan, which put the
   problem outside the scope of its second review.
@@ -45,9 +45,9 @@
 - **Wider fix:** None. The file has one stale comment, and no class of
   repeated defect was found.
 - **Previous examples:** None found.
-- **Recommendation:** A (estimate). The current fixtures are already
+- **Recommendation:** A. The current fixtures are already
   Prettier-formatted, and the test found reads them as parsed JSON.
-- **Action:** fix after merge, apply A (estimate), because the comment
+- **Action:** fix after merge, apply A, because the comment
   contradicts the configuration, and A keeps the current formatting.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/gzip-blob-uploads.md?plain=1#L387).

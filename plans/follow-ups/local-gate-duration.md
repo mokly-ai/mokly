@@ -1,6 +1,6 @@
 # Keep the local gate within its run limit
 
-- **Severity:** Low. **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 188.
@@ -40,9 +40,9 @@
   - **A.** Raise the detach limit for local gates in the delegate rules to
     three hours. A rule alone cannot do this, because 120 minutes is the
     maximum of the agent's tool. A needs a setting of that tool, if the tool
-    has one. Effort: Small (estimate).
+    has one. Effort: Small.
   - **B.** Find the slowest suite and reduce its cost below the current
-    limit. Effort: Medium (estimate).
+    limit. Effort: Medium.
 - **Left out:** Remove the detach limit. It loses the guard against a hung
   run. Fewer than three approaches exist, because the run either gets more
   time or takes less.
@@ -53,7 +53,7 @@
   gate, so one measurement of suite times serves both.
 - **Recommendation:** B. It improves the gate instead of only moving its
   limit.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user ruled that new review items wait for the user after the merge.
+- **Action:** ask the user, because on 2026-10-21 the user ruled that new review
+  items wait for the user after the merge.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6461).

@@ -1,11 +1,13 @@
 # React fails in Playwright workers on Node 22
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-30, from the branch `calummoore/mokly-ui-controls`, during the second review fix round of the shell views plan.
 - **Location:** `tests/browser/shell_styles_page.ts`, which renders package components in the page to avoid the failure, and its rule in `tests/browser/README.md`; `.github/workflows/blacksmith-testbox.yml:39`, which runs the remote gate on Node 22.15.0.
 - **Reason:** The cause lies in how Playwright's loader and Node 22 load React, outside the product, and the browser specs avoid it.
 
+- **Source:** Implementation.
+- **Category:** Test.
 - **Terms:**
   - **Playwright worker:** the Node process that runs the browser specs.
     Playwright loads each spec file and its imports through its own module

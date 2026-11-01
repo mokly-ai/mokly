@@ -1,6 +1,6 @@
 # Share the longest package alias rule
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #226 and its completed plan, which put the
   problem outside the scope of its review.
@@ -46,20 +46,19 @@
   - **A.** Change nothing. Effort: Small.
   - **B.** Add one helper, for example `applyAlias` beside `bareSpecifier` in
     `packages/mokly/src/sidecar/specifier.ts`. Use it in the two modules
-    that the review named. Effort: Medium (estimate).
+    that the review named. Effort: Medium.
   - **C.** Apply B in every copy, also in `style-adapters-plugin.ts`, and
-    use its matching test in `importer-resolution.ts`. Effort: Medium
-    (estimate).
+    use its matching test in `importer-resolution.ts`. Effort: Medium.
 - **Left out:** A lint that rejects inline alias code. A helper removes the
   copies, and a new lint needs the user.
-- **Wider fix:** C (estimate). One helper then holds the rule for every
+- **Wider fix:** C. One helper then holds the rule for every
   caller.
 - **Previous examples:** PR #226, merged on 2026-10-28 as `3192b19b`, moved
   the inline copies of the bare-specifier rule into `bareSpecifier` in
   `packages/mokly/src/sidecar/specifier.ts`.
-- **Recommendation:** C (estimate). It removes every copy in one change of
+- **Recommendation:** C. It removes every copy in one change of
   one package.
-- **Action:** ask the user, because condition 6 holds (estimate): this is a
-  code structure finding.
+- **Action:** fix after merge, apply C, because the repeated alias rule lies
+  outside the change that found it.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/esbuild-resolve-fast-path.md?plain=1#L424).

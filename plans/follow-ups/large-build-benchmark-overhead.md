@@ -1,6 +1,6 @@
 # Explain the large build benchmark overhead
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #220 and its completed plan, which put the
   problem outside the scope of its review.
@@ -29,6 +29,13 @@
   - Large HTML fixture: 166.2 s against 86.0 s for the old binary, and
     44.1 s against 39.9 s for the new binary.
   - The source of the overhead was not found or recorded.
+  - On 2026-10-28, with the release binary in both runs on a quiet
+    eight-CPU machine, the harness and a direct run took about the same
+    time: 39.1 s against 42.7 s for the large HTML fixture, and 125.6 s
+    against 127.2 s for the large React fixture. Before 2026-11-01 the
+    build scenario timed whichever binary the host package held, often the
+    debug binary that `npm run build` installs. So a part of the measured
+    gap can come from two different binaries.
 - **Impact if no action:** Harness measurements overstate build times, most
   for slow builds. A before and after comparison can show a gain that a
   direct run does not show.
@@ -38,23 +45,24 @@
   - **A.** Change nothing, and compare only direct runs. Effort: Small.
   - **B.** Profile one harness run against a direct run of the same binary.
     Name the source, for example memory sampling or output parsing, and
-    remove it. Effort: Small (estimate).
+    remove it. Effort: Small.
   - **C.** Record a direct-run control with each harness run, and report the
-    overhead beside each build time. Effort: Medium (estimate).
+    overhead beside each build time. Effort: Medium.
 - **Left out:** A time limit in a required test. The harness is an opt-in
   benchmark outside the test tree.
-- **Wider fix:** C (estimate). Every later report then shows its own
-  overhead.
+- **Wider fix:** C would expose overhead in every benchmark report. It adds
+  report content that no recorded requirement covers, so it needs a decision. B
+  can find and remove the existing overhead first.
 - **Previous examples:** None found.
 - **Related:** [large-benchmark-liveness.md](./large-benchmark-liveness.md)
-  concerns the 300-second deadline of the same build scenario, at
-  `scripts/large/benchmark.ts:68`. Both items change the build scenario of
-  this harness, so one branch can handle both. Their causes differ: that
-  deadline stops healthy builds, and this item is time that the harness
-  adds.
-- **Recommendation:** B (estimate). It explains the measured gap before the
+  concerns the fixed waits of the same harness. Its build part is fixed:
+  since 2026-11-01, each output line restarts the 300-second build
+  deadline, and the build scenario builds and installs the release binary.
+  Its Changes wait stays open. The causes differ: a fixed wait stops a
+  healthy run, and this item is time that the harness adds.
+- **Recommendation:** B. It explains the measured gap before the
   harness gets more measurement duties.
-- **Action:** ask the user, because condition 6 holds (estimate): this is a
-  performance finding about an opt-in tool.
+- **Action:** fix after merge, apply B, because the benchmark harness lies
+  outside the render-once change that found the overhead.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/build-head-capture.md?plain=1#L209).

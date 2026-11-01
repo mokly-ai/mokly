@@ -1,6 +1,6 @@
 # Remove parser mechanics from the HTML screens protocol
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a problem outside the scope of the re-review of the HTML pipeline
@@ -46,9 +46,9 @@
 - **Related:** [ci-timing-protocol-mechanics.md](ci-timing-protocol-mechanics.md)
   records the same class on another protocol page. One docs branch can fix
   both, and each item stays valid alone.
-- **Recommendation:** A (estimate). Line 70 and the rest of line 71 already
+- **Recommendation:** A. Line 70 and the rest of line 71 already
   state the observable rules.
-- **Action:** fix after merge, apply A (estimate), because the content is
+- **Action:** fix after merge, apply A, because the content is
   implementation detail, and the page is outside the reviewed change.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5619).
