@@ -154,23 +154,26 @@ below use text, boolean, number and primitive enum selections only.
     a prop panel reads the same in every host.
     Label, input, and error associations hold, and repeated forms use unique
     ids. This is reusable field framing, not a forms or schema engine.
-12. **Device frame:** device `phone/browser`, optional caption, a `scheme`
-    flag that adds the rendered scheme to the caption, depicted dark state,
-    light-only note, compact-phone and expandable flags, browser address;
-    `children` is the screen-content slot. Controls: device, scheme in caption,
-    dark state, compact frame and address. The component explorer previews
-    caption their frames through the `scheme` flag, so no screen draws its own
-    frame caption. Depicted device is independent of render viewport. Saved
-    phone samples use compact sizing so the whole phone fits both viewports.
-    Turning compact sizing off preserves the full-size frame in a scrolling
-    host.
-13. **Comparison pane:** side `before/after`, label, state `present/missing`,
-    optional missing message and `children` slot. Controls: label, state and
-    optional message. Missing state hides the content slot and shows the
-    explicit missing pane; comparison-grid layout remains caller-owned.
+12. **Device frame:** device `phone/browser`, depicted dark state, light-only
+    note, compact-phone and expandable flags, browser address; `children` is
+    the screen-content slot. Controls: device, dark state, compact frame and
+    address. Where a frame stands decides its caption, as in the shell: on a
+    stage it names its viewport above the chrome, and in a flow step or a
+    comparison pane it has none. No screen draws its own frame caption.
+    Depicted device is independent of render viewport. Saved phone samples use
+    compact sizing so the whole phone fits both viewports. Turning compact
+    sizing off preserves the full-size frame in a scrolling host.
+13. **Comparison pane:** side `before/after`, state `present/missing`,
+    optional missing message and `children` slot. The pane names its side,
+    Before or Current, as the shell does. Controls: state and optional
+    message. Missing state hides the content slot and shows the explicit
+    missing pane; comparison-grid layout remains caller-owned.
 14. **Empty state:** no required prop: an optional title, body, code, action
     label, destination, and busy flag. The busy flag marks a loading state,
-    sets `aria-busy`, and makes the body a status.
+    sets `aria-busy`, and makes the body a status. Where it stands decides
+    whether it takes the place of the viewer root, as in the shell: on a page
+    that the shell draws before it has a catalogue, it is the root, in the
+    root's appearance.
     Controls: title, body, loading and action label. It keeps the canonical
     recovery links and non-interactive cases and adds no library-specific
     navigation.

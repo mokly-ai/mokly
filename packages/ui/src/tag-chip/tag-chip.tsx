@@ -39,7 +39,7 @@ export function TagChip({
   /** The tag, which the chip shows and carries in `data-mokly-tag`. */
   tag: string;
 }) {
-  const className = `mbk-chip tag${selected ? " active" : ""}`;
+  const className = `mbk-chip tag${selected ? " active" : ""} mbk-reset`;
   if (href !== undefined)
     return (
       <a

@@ -62,7 +62,9 @@ function FilterOption({
 }) {
   const depicted = {
     "aria-current": shown ? ("page" as const) : undefined,
-    className: shown ? "mbk-nav-filter-opt active" : "mbk-nav-filter-opt",
+    className: shown
+      ? "mbk-nav-filter-opt active mbk-reset"
+      : "mbk-nav-filter-opt mbk-reset",
     "data-filter": FILTER_NAMES[view],
   };
   if (href !== undefined)
@@ -75,7 +77,7 @@ function FilterOption({
   return (
     <button
       aria-pressed={shown}
-      className="mbk-nav-filter-opt"
+      className="mbk-nav-filter-opt mbk-reset"
       data-filter={FILTER_NAMES[view]}
       onClick={() => onView?.(view)}
       type="button"
@@ -105,7 +107,7 @@ export function FilterGroup({
   return (
     <div
       aria-label="Catalogue filter"
-      className="mbk-nav-filter"
+      className="mbk-nav-filter mbk-reset"
       data-mokly-filter=""
       data-changes-status={status}
       role="group"
@@ -127,14 +129,16 @@ export function FilterGroup({
         view="changes"
       >
         Changes
-        <span className="mbk-nav-filter-count">
+        <span className="mbk-nav-filter-count mbk-reset">
           {status === "ready" ? (
             filter.count
           ) : status === "unavailable" ? (
-            <span aria-label="Changes unavailable">—</span>
+            <span aria-label="Changes unavailable" className="mbk-reset">
+              —
+            </span>
           ) : (
             <span
-              className="mbk-nav-spinner"
+              className="mbk-nav-spinner mbk-reset"
               role="status"
               aria-label={CHANGES_MESSAGES[status].spinner}
             />
@@ -154,24 +158,24 @@ export function StatusLine({ status }: { status: NavigationStatus }) {
   const preparing = message === "preparing";
   return (
     <div
-      className="mbk-nav-status"
+      className="mbk-nav-status mbk-reset"
       data-nav-status=""
       hidden={status.hidden}
       role="status"
     >
       {preparing || message === "pending" ? (
-        <span className="mbk-nav-spinner" aria-hidden="true" />
+        <span className="mbk-nav-spinner mbk-reset" aria-hidden="true" />
       ) : null}
       <span
         data-nav-status-text=""
-        className={preparing ? "mbk-nav-status-text" : undefined}
+        className={preparing ? "mbk-nav-status-text mbk-reset" : "mbk-reset"}
       >
         {preparing ? (
           <>
-            <span className="mbk-nav-status-title">
+            <span className="mbk-nav-status-title mbk-reset">
               {CHANGES_MESSAGES.preparing.title}
             </span>
-            <span className="mbk-nav-status-detail">
+            <span className="mbk-nav-status-detail mbk-reset">
               {CHANGES_MESSAGES.preparing.detail}
             </span>
           </>

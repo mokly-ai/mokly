@@ -4,7 +4,12 @@ import { PreviewWorkspace } from "./components/parts/workspace.js";
 import { changesDesignMetadata } from "./metadata.js";
 import { useDarkPreview } from "./parts/appearance.js";
 import { artboards } from "./parts/artboards.js";
-import { CompareGrid, ComparisonStage, Pane } from "./parts/compare.js";
+import {
+  CompareGrid,
+  ComparisonStage,
+  ComparisonView,
+  Pane,
+} from "./parts/compare.js";
 import { FramedShot } from "./parts/compare_page.js";
 import { ScrolledPage } from "./parts/compare_scroll.js";
 import { ComparisonStack, deviceChrome } from "./parts/compare_stack.js";
@@ -17,7 +22,8 @@ import { DetailsPanel } from "./parts/details.js";
 import { ENTRY_PATHS } from "./parts/entry_paths.js";
 import { MiniWelcomeApp } from "./parts/mini_app_shell.js";
 import { MiniWelcome, MiniWelcomePage } from "./parts/mini_screens.js";
-import { ReasonSentences } from "./parts/reason_sentences.js";
+import { miniView } from "./parts/mini_views.js";
+import { reasonEvidence } from "./parts/reason_sentences.js";
 import { ReviewNav } from "./parts/review.js";
 import {
   ScreenHead,
@@ -112,7 +118,7 @@ function OverlayPreview({
 function ApartPreview({ viewport }: { viewport: ArtboardViewport }) {
   const dark = useDarkPreview();
   const version = (side: "after" | "before") => (
-    <Pane label={side === "before" ? "Before" : "Current"} side={side}>
+    <Pane side={side}>
       <FramedShot
         address="example.test/welcome"
         dark={dark}
@@ -150,27 +156,27 @@ function ChangesScreen({
       viewport={viewport}
       nav={<ReviewNav activeTitle="Welcome" />}
     >
-      <ScreenHead
-        comparisons
-        comparisonMode={mode}
-        scrollTogether={state !== "side-by-side-apart"}
-        action={
-          <ViewSwitch
-            active={viewport}
-            highlight={mode === "current" ? "available" : "comparison"}
+      <PreviewWorkspace
+        header={
+          <ScreenHead
+            comparisons
+            comparisonMode={mode}
+            scrollTogether={state !== "side-by-side-apart"}
+            action={<ViewSwitch active={viewport} />}
+            crumbs={["Example", "Screens"]}
+            path={ENTRY_PATHS.welcome}
+            title="Welcome"
           />
         }
-        crumbs={["Example", "Screens"]}
-        path={ENTRY_PATHS.welcome}
-        title="Welcome"
-      />
-      <PreviewWorkspace
+        view={
+          mode === "current" ? miniView("welcome") : { highlight: "comparison" }
+        }
         viewport={viewport}
         stage={!comparing}
         inspector={
           <DetailsPanel
             subject="welcome"
-            comparisonEvidence={<ReasonSentences reasons={["material"]} />}
+            comparisonEvidence={{ reasons: reasonEvidence(["material"]) }}
             open={state === "overlay"}
           />
         }
@@ -178,14 +184,23 @@ function ChangesScreen({
           state === "current" ? (
             <CurrentPreview viewport={previewViewport} />
           ) : (
-            <ComparisonStage state="changed" viewport={previewViewport}>
+            <ComparisonView state="changed" viewport={previewViewport}>
               {state === "side-by-side-apart" ? (
                 <ApartPreview viewport={previewViewport} />
               ) : (
                 <OverlayPreview state={state} viewport={previewViewport} />
               )}
-            </ComparisonStage>
+            </ComparisonView>
           )
+        }
+        wrap={
+          comparing
+            ? (previews) => (
+                <ComparisonStage path={ENTRY_PATHS.welcome}>
+                  {previews}
+                </ComparisonStage>
+              )
+            : undefined
         }
       />
     </Shell>

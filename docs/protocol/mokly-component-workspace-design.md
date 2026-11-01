@@ -49,9 +49,11 @@ scroll region. The inspector's icon strip stays visible while its content scroll
 On desktop, use the navigation divider's centered short-line handle, rotated to
 resize vertically. The grip center sits on the divider border, with no vertical gap.
 There is no diagonal corner grip or thick colored border. Both dividers share one
-affordance: a 32×2px rounded strong-border grip at rest that turns accent-colored
-with a soft accent halo while hovered, keyboard-focused, or being dragged, fading
-between those states. Keyboard focus also draws an accent bar along the divider's
+affordance: a 32×2px rounded grip that turns accent-colored with a soft accent
+halo while hovered, keyboard-focused, or being dragged, fading between those
+states. The palette contract sets each grip's resting color: the
+[inspector grip's](./mokly-viewer-palette.md#role-use) and the
+[navigation grip's](./mokly-viewer-palette.md#recorded-contrast). Keyboard focus also draws an accent bar along the divider's
 outer edge instead of a ring around the hit area. While a drag is in progress the
 pointer keeps the resize cursor everywhere and preview frames ignore pointer input,
 so the gesture cannot be interrupted by the content underneath.
@@ -198,7 +200,7 @@ only the reasons that fit, so that a recoverable mismatch never hides the entry.
 | `metadata`       | “Page details or saved examples changed.”                |
 
 The `implementation` sentence describes actual-instance impact. The
-component's own view states and comparison captions stay unchanged. The
+component's own view states and comparison headings stay unchanged. The
 `design/components/states/shared-impact/style-changed` artboard depicts it: a
 markup change shows only where screens use Action, so Details read the
-sentence while the Default caption still names only the changed styles.
+sentence while the comparison headings still name only the changed styles.

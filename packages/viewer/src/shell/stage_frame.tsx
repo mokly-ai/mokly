@@ -1,6 +1,13 @@
-/** Live React frame chrome over the transport adapters. */
+/**
+ * Live React frame chrome over the transport adapters. This container mounts
+ * the frame and derives its sources; `@mokly/ui/preview-frame` draws the
+ * frame, its label, and its error, and `@mokly/ui/device-frame` the phone.
+ */
 
 import { useContext, useMemo } from "react";
+
+import { PhoneFrame } from "@mokly/ui/device-frame";
+import { PreviewFrame, PreviewIframe } from "@mokly/ui/preview-frame";
 
 import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
 import type {
@@ -18,7 +25,7 @@ import {
   type ShellFrameIdentity,
 } from "./frame_registry.js";
 import { useFrameGeneration, useFrameSource } from "./frame_source_hook.js";
-import { BrowserFrame, PhoneFrame } from "./frames.js";
+import { BrowserFrame } from "./frames.js";
 import {
   frameSource,
   generatedFrameSource,
@@ -116,30 +123,27 @@ export function StageFrame({
     generation,
   );
   const component = entry.kind === "component";
+  const fallback = hasDarkFragments && !previewDark && !dark;
   const frame = source ? (
-    <iframe
-      aria-busy={mounted.status === "loading" ? true : undefined}
-      className="mbk-frag"
-      data-mokly-fragment-frame={!flow || stepIndex === 0 ? "" : undefined}
-      data-mokly-frame-state={mounted.status}
-      data-workspace-frame={flow ? undefined : viewport}
-      key={generation}
-      data-fragment-light={
-        hasDarkFragments
+    <PreviewIframe
+      busy={mounted.status === "loading"}
+      data={{
+        "data-mokly-fragment-frame": !flow || stepIndex === 0 ? "" : undefined,
+        "data-mokly-frame-state": mounted.status,
+        "data-workspace-frame": flow ? undefined : viewport,
+        "data-fragment-light": hasDarkFragments
           ? previewLight
             ? generatedFrameSource(previewLight, fragment, stepIndex)
             : frameSource(entry, light, fragment, stepIndex)
-          : undefined
-      }
-      data-fragment-dark={
-        hasDarkFragments
+          : undefined,
+        "data-fragment-dark": hasDarkFragments
           ? previewDark
             ? generatedFrameSource(previewDark, fragment, stepIndex)
             : frameSource(entry, dark, fragment, stepIndex)
-          : undefined
-      }
+          : undefined,
+      }}
+      key={generation}
       ref={mounted.frameRef}
-      sandbox="allow-same-origin"
       src={initialSource}
       title={`${entry.title} — ${viewport}`}
     />
@@ -157,49 +161,18 @@ export function StageFrame({
     </BrowserFrame>
   );
   return (
-    <div
-      className={
+    <PreviewFrame
+      error={mounted.status === "error"}
+      fallback={fallback}
+      placement={
         flow
-          ? "mbk-flow-screen"
-          : `${component ? "mbk-component-canvas" : "mbk-frame-wrap"} mbk-frame-${viewport}`
+          ? { kind: "flow" }
+          : { kind: component ? "canvas" : "frame", viewport }
       }
-      data-color-scheme-fallback={
-        hasDarkFragments && !previewDark && !dark ? "" : undefined
-      }
-      data-preview-color-scheme={
-        preview?.colorScheme ?? selected?.colorScheme ?? "light"
-      }
+      scheme={preview?.colorScheme ?? selected?.colorScheme ?? "light"}
     >
-      {!flow ? (
-        <FrameLabel
-          fallback={hasDarkFragments && !previewDark && !dark}
-          viewport={viewport}
-        />
-      ) : null}
-      {framed ?? <p className="mbk-empty">This preview is unavailable.</p>}
-      {mounted.status === "error" ? (
-        <p className="mbk-frame-error" role="status">
-          This preview could not be loaded.
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
-function FrameLabel({
-  fallback,
-  viewport,
-}: {
-  fallback: boolean;
-  viewport: "desktop" | "mobile";
-}) {
-  return (
-    <p className="mbk-frame-label">
-      {viewport === "mobile" ? "Mobile" : "Desktop"}
-      {fallback ? (
-        <span className="mbk-frame-scheme-note">{" — Light only"}</span>
-      ) : null}
-    </p>
+      {framed}
+    </PreviewFrame>
   );
 }
 

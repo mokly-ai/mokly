@@ -13,6 +13,7 @@ export function IconSvg(props: { children: ReactNode; size: number }) {
   return (
     <svg
       aria-hidden="true"
+      className="mbk-reset"
       fill="none"
       height={props.size}
       stroke="currentColor"
@@ -35,7 +36,13 @@ export function IconSvg(props: { children: ReactNode; size: number }) {
 export function BrandIcon(props: { size?: number }) {
   const size = props.size ?? 22;
   return (
-    <svg aria-hidden="true" height={size} viewBox="0 0 32 32" width={size}>
+    <svg
+      aria-hidden="true"
+      className="mbk-reset"
+      height={size}
+      viewBox="0 0 32 32"
+      width={size}
+    >
       <rect
         fill="currentColor"
         height={21}
@@ -126,6 +133,7 @@ export function ComponentVariantIcon(props: { size?: number }) {
   return (
     <svg
       aria-hidden="true"
+      className="mbk-reset"
       fill="none"
       height={size}
       stroke="currentColor"

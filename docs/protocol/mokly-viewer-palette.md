@@ -126,19 +126,24 @@ validation alert are labels rather than controls: each names its own state in
 information and is held to the decorative hairline standard. The badges draw
 `--chrome-border`, and the alert draws `--mbk-danger-edge`.
 
-Four controls keep a hairline boundary. The segmented control group, such as
+Seven controls keep a hairline boundary. The segmented control group, such as
 the viewport switch and the comparison modes, draws `--chrome-border`, and the
 resting navigation resize grip draws `--chrome-border-strong`. A pressed icon
 control, such as the pressed Highlight components toggle or a selected
-inspector tab, draws `--chrome-border`, and so does a resting tag chip. The
-group shows its value through the filled selected segment, and the grip draws
-the accent on hover and focus. A pressed icon control fills with the accent
-tint and draws its glyph in the accent, and a selected tag chip fills with the
-accent. Decision: the shipped hairlines, not the control edge, because each
-control already shows its state through a fill or the accent, and the design
-mockups render these shipped controls. No other boundary may claim these
-exceptions; a control state that draws a boundary must reach 3:1 against its
-own fill or the surface around it.
+inspector tab, draws `--chrome-border`, and so do a resting tag chip and a
+selected instance of the Components tab. The address pill and the expand
+toggle of a browser frame's bar draw `--chrome-border`, and the toggle draws
+`--chrome-border-strong` on hover. The group shows its value through the
+filled selected segment, and the grip draws the accent on hover and focus. A
+pressed icon control fills with the accent tint and draws its glyph in the
+accent, a selected instance fills with the accent tint and draws its text in
+the accent, and a selected tag chip fills with the accent. On hover, the
+address pill draws its copy glyph in the accent, and the toggle draws its
+glyph in the accent. Decision: the shipped hairlines, not the control edge,
+because each control already shows its state through a fill or the accent,
+and the design mockups render these shipped controls. No other boundary may
+claim these exceptions; a control state that draws a boundary must reach 3:1
+against its own fill or the surface around it.
 
 Disabled controls are outside the contrast minimums, as WCAG allows. They use
 `--chrome-disabled-bg`, `--chrome-disabled-edge` and `--chrome-disabled-ink`
@@ -171,6 +176,9 @@ surfaces, ink and status indicators.
 | `--mbk-screen-border`      | `#e3e5e0`     | 12% ink mixed into the dark surface |
 | `--mbk-screen-link`        | `#4f7864`     | `#7fae95`                           |
 | `--mbk-screen-link-strong` | `#2f5945`     | `#a4c9b3`                           |
+| `--mbk-screen-danger-bg`   | `#fdf1ef`     | `#fdf1ef`                           |
+| `--mbk-screen-danger-edge` | `#e7c3bb`     | `#e7c3bb`                           |
+| `--mbk-screen-danger-ink`  | `#8a3423`     | `#8a3423`                           |
 
 These values are the authored fragment's own colors, not the viewer interface.
 Each device screen also sets its own CSS `color-scheme`, so native controls and
@@ -187,6 +195,15 @@ appearances, and are named so no stylesheet repeats them:
 | `--mbk-device-light-minimise` | `#dba43d`               |
 | `--mbk-device-light-expand`   | `#50a86d`               |
 
+The highlight mask over a preview dims the preview around the highlighted
+component instances and outlines each instance. It marks the preview, not the
+interface, so its two roles keep their values in both appearances:
+
+| Role                    | Both appearances            |
+| ----------------------- | --------------------------- |
+| `--mbk-highlight-scrim` | `rgba(244, 246, 244, 0.72)` |
+| `--mbk-highlight-edge`  | `#336249`                   |
+
 A comparison in Difference mode paints an opaque base behind the compared
 frames, taken from the compared preview scheme, so the blended result is
 identical in both appearances.
@@ -199,20 +216,19 @@ the interface, so they stay Light in both appearances, exactly as the preview
 tokens above do. A stylesheet that needs one of these reads the token rather
 than repeating its value.
 
-| Role             | Both appearances   |
-| ---------------- | ------------------ |
-| `--ce-surface`   | `white`            |
-| `--ce-text`      | `#252e28`          |
-| `--ce-secondary` | `#647068`          |
-| `--ce-soft`      | `#f3f6f3`          |
-| `--ce-edge`      | `#dce5de`          |
-| `--ce-mask`      | `var(--chrome-bg)` |
+| Role             | Both appearances |
+| ---------------- | ---------------- |
+| `--ce-surface`   | `white`          |
+| `--ce-text`      | `#252e28`        |
+| `--ce-secondary` | `#647068`        |
+| `--ce-soft`      | `#f3f6f3`        |
+| `--ce-edge`      | `#dce5de`        |
 
-`--ce-mask` is the exception: the highlight scrim covers the catalogue around a
-depicted component rather than the component itself, so it follows the interface
-background. The explorer's own artboards render in Light only, so these roles
-have no Dark counterpart; a dark component canvas would need this table extended
-before those artboards could publish a dark render.
+The explorer's own artboards render in Light only, so these roles have no Dark
+counterpart; a dark component canvas would need this table extended before
+those artboards could publish a dark render. The explorer highlights a depicted
+component with the shell's highlight mask, in the two highlight roles of the
+preview tokens.
 
 ## Related Docs
 

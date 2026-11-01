@@ -154,17 +154,17 @@ export function TagPicker<Tag extends TagPickerTag>({
       {open || button ? (
         <div
           aria-label="Tags"
-          className="mbk-tag-picker"
+          className="mbk-tag-picker mbk-reset"
           data-mokly-tag-picker=""
           hidden={!open}
           id={id}
           ref={panel}
           role="group"
         >
-          <div className="mbk-tag-picker-head">Tags</div>
+          <div className="mbk-tag-picker-head mbk-reset">Tags</div>
           <span
             aria-label="Tag filters"
-            className="mbk-chips"
+            className="mbk-chips mbk-reset"
             onKeyDown={onKeyDown}
             role="toolbar"
           >

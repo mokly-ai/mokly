@@ -1,8 +1,14 @@
-/** On-demand React comparison controls inside the catalogue. */
+/**
+ * On-demand React comparison controls inside the catalogue. This container
+ * reads the comparison controller and its documents;
+ * `@mokly/ui/comparison-stage` draws the comparison and
+ * `@mokly/ui/comparison-toolbar` its band.
+ */
 
 import { useMemo } from "react";
 import type { ReactNode } from "react";
 
+import { ComparisonFailure, ComparisonStage } from "@mokly/ui/comparison-stage";
 import { ComparisonToolbar } from "@mokly/ui/comparison-toolbar";
 
 import type { ViewRouteKind } from "../navigation/routes.js";
@@ -59,39 +65,14 @@ export function ControlledDiffScreen({
     comparison.failure ??
     (documents.status === "failed" ? documents.message : undefined);
   return (
-    <section
-      className="mbk-diff-screen"
-      data-diff-component={entryKind === "component" ? "" : undefined}
-      data-diff-screen={entryId}
-    >
-      <ComparisonToolbar
-        current={current}
-        eligible={eligible}
-        loaded={comparison.loaded !== undefined}
-        mode={comparison.mode}
-        onMode={comparison.selectMode}
-        onRefresh={comparison.refresh}
-        onTogether={together.set}
-        together={together.on}
-      />
-      <div
-        className="mbk-current-screen"
-        data-current-screen=""
-        hidden={!current}
-      >
-        {children}
-      </div>
-      <div
-        aria-busy={
-          comparison.busy || documents.status === "loading" ? true : undefined
-        }
-        aria-live="polite"
-        className="mbk-diff-stage"
-        data-diff-stage=""
-        hidden={current}
-      >
-        {failure ? (
-          <ComparisonFailure details={failure} retry={comparison.retry} />
+    <ComparisonStage
+      busy={comparison.busy || documents.status === "loading"}
+      component={entryKind === "component"}
+      current={current}
+      entryId={entryId}
+      stage={
+        failure ? (
+          <ComparisonFailure details={failure} onRetry={comparison.retry} />
         ) : comparison.presentation && documents.status === "ready" ? (
           <ComparisonViews
             entryId={entryId}
@@ -101,39 +82,22 @@ export function ControlledDiffScreen({
             together={together.on}
             views={views}
           />
-        ) : (
-          "Loading comparison…"
-        )}
-      </div>
-    </section>
-  );
-}
-
-/** A comparison that could not load offers Try again. */
-export function ComparisonFailure({
-  details,
-  retry,
-}: {
-  details: string;
-  retry(): void;
-}) {
-  return (
-    <>
-      <p>
-        The comparison could not be loaded.{" "}
-        <button
-          className="mbk-empty-link"
-          data-diff-refresh=""
-          onClick={retry}
-          type="button"
-        >
-          Try again
-        </button>
-      </p>
-      <details data-comparison-failure="">
-        <summary>Comparison details</summary>
-        <p>{details}</p>
-      </details>
-    </>
+        ) : undefined
+      }
+      toolbar={
+        <ComparisonToolbar
+          current={current}
+          eligible={eligible}
+          loaded={comparison.loaded !== undefined}
+          mode={comparison.mode}
+          onMode={comparison.selectMode}
+          onRefresh={comparison.refresh}
+          onTogether={together.set}
+          together={together.on}
+        />
+      }
+    >
+      {children}
+    </ComparisonStage>
   );
 }

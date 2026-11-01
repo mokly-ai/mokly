@@ -36,7 +36,7 @@ export function registerComponentDesignSelection(
         );
         await page.getByRole("button", { name: "Usage", exact: true }).click();
         await page
-          .getByRole("region", { name: "Used by", exact: true })
+          .locator('[data-usage-section="used-by"]')
           .getByRole("link", { name: "Welcome" })
           .click();
         await expect(

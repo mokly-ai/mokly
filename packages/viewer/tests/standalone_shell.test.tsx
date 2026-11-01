@@ -15,17 +15,40 @@ function storage(values: Record<string, string>) {
   return { getItem: (key: string) => values[key] ?? null };
 }
 
-test("the standalone shell paints its loading state before the index arrives", () => {
-  const win = {
+/** A window whose index never arrives, with an appearance when one is given. */
+function pendingWindow(theme?: "dark"): ShellWindow {
+  return {
     location: { href: "http://localhost:4810/view/guide/", reload() {} },
     fetch: () => new Promise<Response>(() => {}),
+    ...(theme
+      ? { __moklyAppearance: { current: () => ({ theme, scheme: theme }) } }
+      : {}),
   } as unknown as ShellWindow;
+}
+
+test("the standalone shell paints its loading state before the index arrives", () => {
   const html = renderToStaticMarkup(
-    <StandaloneShell preferences={{ colorScheme: "light" }} win={win} />,
+    <StandaloneShell
+      preferences={{ colorScheme: "light" }}
+      win={pendingWindow()}
+    />,
   );
   assert.equal(
     html,
-    '<div aria-busy="true" class="mbk mbk-empty" tabindex="-1"><p role="status">Loading catalogue…</p></div>',
+    '<div aria-busy="true" class="mbk mbk-empty mbk-reset" tabindex="-1" data-mokly-theme="auto"><p class="mbk-reset" role="status">Loading catalogue…</p></div>',
+  );
+});
+
+test("the loading root states the document's appearance", () => {
+  const html = renderToStaticMarkup(
+    <StandaloneShell
+      preferences={{ colorScheme: "dark" }}
+      win={pendingWindow("dark")}
+    />,
+  );
+  assert.match(
+    html,
+    /^<div[^>]* class="mbk mbk-empty mbk-reset"[^>]* data-mokly-theme="dark">/u,
   );
 });
 
@@ -34,6 +57,7 @@ test("a version failure shows the one headline and Reload", () => {
     <VersionFailure
       error={new MoklyVersionError("catalogue", 10, 9)}
       reload={() => undefined}
+      root={{ kind: "standalone", theme: "dark" }}
     />,
   );
   assert.equal(
@@ -42,7 +66,7 @@ test("a version failure shows the one headline and Reload", () => {
   );
   assert.equal(
     html,
-    '<div class="mbk mbk-empty" data-mokly-version-error="" role="alert"><h2>This catalogue needs a compatible viewer</h2><button class="mbk-empty-link" type="button">Reload</button></div>',
+    '<div class="mbk mbk-empty mbk-reset" data-mokly-version-error="" role="alert" data-mokly-theme="dark"><h2 class="mbk-reset">This catalogue needs a compatible viewer</h2><button class="mbk-empty-link mbk-reset" type="button">Reload</button></div>',
   );
 });
 

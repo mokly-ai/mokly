@@ -98,30 +98,30 @@ pub(crate) fn check() {
                 .collect::<Vec<_>>(),
             ["Changed"]
         );
-        let inspector = dom::class(&document.tree, "ce-inspector");
+        let inspector = dom::class(&document.tree, "mbk-inspector");
         assert_eq!(inspector.len(), 1);
         let panels = dom::elements(&inspector[0].children);
         let open: Vec<_> = panels
             .iter()
             .filter(|element| element.name == "details" && element.get("open").is_some())
-            .map(|element| element.get("data-panel").unwrap())
+            .map(|element| element.get("data-inspector-tab").unwrap())
             .collect();
-        assert_eq!(open, ["info"]);
+        assert_eq!(open, ["details"]);
         let usage = panels
             .iter()
-            .find(|element| element.get("data-panel") == Some("usage"))
+            .find(|element| element.get("data-inspector-tab") == Some("usage"))
             .unwrap();
         let usage_text = dom::text(&usage.children);
         assert!(
-            usage_text.contains("No screens or components use Checklist yet."),
+            usage_text.contains("No recorded consumers."),
             "{usage_text}"
         );
         assert!(!usage_text.contains("Affected screens"), "{usage_text}");
         let previews = dom::class(&document.tree, "ce-preview-view");
         assert_eq!(previews.len(), 2);
         for preview in previews {
-            let before = dom::class(&preview.children, "mbk-stack-layer--before");
-            let after = dom::class(&preview.children, "mbk-stack-layer--after");
+            let before = dom::class(&preview.children, "mb-pane--before");
+            let after = dom::class(&preview.children, "mb-pane--after");
             assert_eq!((before.len(), after.len()), (1, 1));
             let labels = |nodes: &[Node]| {
                 dom::class(nodes, "ce-checklist-label")
@@ -131,7 +131,7 @@ pub(crate) fn check() {
             };
             let before_labels = labels(&before[0].children);
             let after_labels = labels(&after[0].children);
-            assert_eq!((before_labels.len(), after_labels.len()), (10, 10));
+            assert_eq!((before_labels.len(), after_labels.len()), (24, 24));
             let changed: Vec<_> = before_labels
                 .iter()
                 .zip(&after_labels)

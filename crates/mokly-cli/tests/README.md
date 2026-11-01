@@ -19,20 +19,20 @@ verification gate exclude this target. Its runner and hang guards follow the
 [CI workflow contract](../../../docs/protocol/ci-workflow.md#design-attribution-matrix).
 
 The design behaviour target checks parents' own-props views, stacked frames,
-captions tied to recorded changes, and the Checklist's Changes in the default
-workspace suite. It renders an isolated copy of the example catalogue and of
-those `@mokly/ui` sources.
+comparison headings tied to recorded changes, and the Checklist's Changes in
+the default workspace suite. It renders an isolated copy of the example
+catalogue and of those `@mokly/ui` sources.
 Set `MOKLY_TEST_DESIGN_MUTATION` to inject one defect into that copy. Each
 value must fail its corresponding behaviour check:
 
 | Value            | Injected defect                                      |
 | ---------------- | ---------------------------------------------------- |
 | `own-props`      | Replace a parent's own destination prop.             |
-| `stack`          | Remove the Current layer's class marker.             |
-| `caption`        | Replace a comparison caption with incorrect text.    |
+| `stack`          | Mark the Current layer as a Before layer.            |
+| `heading`        | Replace a comparison heading with incorrect text.    |
 | `checklist`      | Replace the Checklist's Changes with Action's story. |
 | `stack-swap`     | Swap Before and Current content in stacked previews. |
-| `caption-record` | Change a recorded reason without changing a caption. |
+| `heading-record` | Change a recorded reason without changing a heading. |
 
 ```bash
 cargo test -p mokly-cli

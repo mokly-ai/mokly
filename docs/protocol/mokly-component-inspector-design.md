@@ -18,9 +18,11 @@ mockup includes its factual branch evidence in Details while remaining
 current-only and initially closed; an artboard must explicitly choose whether
 Details starts open.
 Components contains the nested instance tree and explicit empty/unavailable
-states. Props contains the selected variant or instance's supplied values,
-slot ownership, and Open component/Highlight actions. On an editable entry,
-the Props panel holds the [controls](./mokly-component-controls-design.md).
+states. Props contains the selected variant's supplied values, or a selected
+instance's contents as the
+[explorer contract](./mokly-component-explorer.md#components-in-the-screen-inspector)
+states. On an editable entry, the Props panel holds the
+[controls](./mokly-component-controls-design.md).
 Usage contains Used by and, when relevant, Affected screens, with independent
 screen Changes membership preserved. Never combine the entire tree, all props,
 and all usage lists into one panel.

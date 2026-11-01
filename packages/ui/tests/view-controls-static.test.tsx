@@ -43,7 +43,7 @@ test("a static group draws Highlight components as a native switch at its state"
     "Inspect component regions and their supplied props.",
   );
   const label = control.closest("label");
-  assert.equal(label?.className, "mbk-icon-button");
+  assert.equal(label?.className, "mbk-icon-button mbk-reset");
   assert.equal(label?.getAttribute("title"), "Highlight components");
   // The reader's check acts in place and reaches no callback.
   fireEvent.click(control);

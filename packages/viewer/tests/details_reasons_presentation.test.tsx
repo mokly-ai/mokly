@@ -29,10 +29,11 @@ import {
 
 const HOME = "product/browse/home";
 const ACTION = "components/action";
-const MATERIAL = "<p>Rendered content changed.</p>";
+const MATERIAL = '<p class="mbk-reset">Rendered content changed.</p>';
 const IMPLEMENTATION =
-  "<p>Rendered content changed where this component is used.</p>";
-const BRANCH_POINT = "<p>Compared with the branch point on main.</p>";
+  '<p class="mbk-reset">Rendered content changed where this component is used.</p>';
+const BRANCH_POINT =
+  '<p class="mbk-reset">Compared with the branch point on main.</p>';
 const RETIRED_PATH = "product/browse/home/retired";
 const RETIRED =
   "9222f823b4a0d8a23e201436f42c7d624b675f318bc496b635d18fb9f5a4806e";
@@ -85,7 +86,7 @@ test("Details show the detail's reasons before a comparison loads", () => {
   const markup = renderToStaticMarkup(<WorkspaceEvidence data={data} />);
   assert.match(
     markup,
-    /^<section class="mbk-comparison-evidence" data-workspace-evidence=""><h3>Comparison details<\/h3><p>Compared with the branch point on main\.<\/p><p>Rendered content changed\.<\/p>/,
+    /^<section class="mbk-comparison-evidence mbk-reset" data-workspace-evidence=""><h3 class="mbk-reset">Comparison details<\/h3><p class="mbk-reset">Compared with the branch point on main\.<\/p><p class="mbk-reset">Rendered content changed\.<\/p>/,
   );
   assert.equal(count(markup, MATERIAL), 1);
 });
@@ -96,10 +97,13 @@ test("each reason reads as its one sentence after the branch point", () => {
     const markup = renderToStaticMarkup(
       <WorkspaceEvidence data={{ ...data, reasons: [reason] }} />,
     );
-    assert.ok(markup.includes(`${BRANCH_POINT}<p>${sentence}</p>`), sentence);
+    assert.ok(
+      markup.includes(`${BRANCH_POINT}<p class="mbk-reset">${sentence}</p>`),
+      sentence,
+    );
     for (const [, other] of SENTENCES)
       assert.equal(
-        count(markup, `<p>${other}</p>`),
+        count(markup, `<p class="mbk-reset">${other}</p>`),
         other === sentence ? 1 : 0,
         `${reason.kind}: ${other}`,
       );
@@ -129,7 +133,11 @@ test("a removed snapshot's Details read its removed reason once", () => {
   assert.equal(data.status, "Removed");
   assert.deepEqual(data.reasons, [{ kind: "removed" }]);
   const markup = renderToStaticMarkup(<WorkspaceEvidence data={data} />);
-  assert.ok(markup.includes(`${BRANCH_POINT}<p>Removed on this branch.</p>`));
+  assert.ok(
+    markup.includes(
+      `${BRANCH_POINT}<p class="mbk-reset">Removed on this branch.</p>`,
+    ),
+  );
   assert.equal(count(markup, "Removed on this branch."), 1);
 });
 
@@ -141,7 +149,10 @@ test("a loaded comparison and Current keep each reason once", () => {
     <WorkspaceEvidence compared data={data} />,
   );
   assert.equal(count(loaded, MATERIAL), 1);
-  assert.equal(count(loaded, "<h3>Comparison details</h3>"), 1);
+  assert.equal(
+    count(loaded, '<h3 class="mbk-reset">Comparison details</h3>'),
+    1,
+  );
   assert.equal(loaded, current);
 });
 

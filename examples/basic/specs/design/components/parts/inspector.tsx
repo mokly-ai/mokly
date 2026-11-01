@@ -1,9 +1,13 @@
 import type { ReactNode } from "react";
 
 import { useDesignInstance } from "../../library/composition.js";
-import { inspector } from "../../library/inspector/inspector.js";
+import {
+  inspector,
+  type InspectorProps,
+} from "../../library/inspector/inspector.js";
 
-import type { InspectorTab } from "./inspector_icons.js";
+/** A tab of the shared inspector, by its saved name. */
+export type InspectorTab = InspectorProps["tabs"][number]["id"];
 
 export interface InspectorPanel {
   id: InspectorTab;

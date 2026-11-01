@@ -1,19 +1,19 @@
+import { MetadataRow } from "../../../../../../packages/ui/src/metadata-row/metadata-row.js";
+
 import type { MetadataRowProps } from "./metadata-row.js";
 
+/**
+ * The shipped metadata row: a row of the details' metadata column, or a `dt`
+ * and `dd` pair inside the caller's `dl`.
+ */
 export function MetadataRowView({
   label,
   presentation,
   children,
 }: MetadataRowProps) {
-  return presentation === "props" ? (
-    <div>
-      <dt>{label}</dt>
-      <dd>{children}</dd>
-    </div>
-  ) : (
-    <div className="mbk-meta-row">
-      <span className="mbk-meta-k">{label}</span>
-      <span className="mbk-meta-v">{children}</span>
-    </div>
+  return (
+    <MetadataRow label={label} presentation={presentation}>
+      {children}
+    </MetadataRow>
   );
 }

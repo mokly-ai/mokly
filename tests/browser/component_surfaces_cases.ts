@@ -28,13 +28,13 @@ export function registerComponentSurfaces(
         "desktop",
       ),
     );
-    const divider = page.locator(".ce-inspector-resize");
+    const divider = page.locator(".mbk-inspector-resize");
     await expect(divider).toBeVisible();
-    const region = page.locator(".ce-preview-region");
-    const inspector = page.locator(".ce-inspector");
+    const region = page.locator(".mbk-preview-pane");
+    const inspector = page.locator(".mbk-inspector");
     const before = (await inspector.boundingBox())!;
     const grip = (await divider.boundingBox())!;
-    const mark = await divider.locator(".mbk-nav-resize").evaluate((node) => {
+    const mark = await divider.evaluate((node) => {
       const style = getComputedStyle(node, "::after");
       return (
         node.getBoundingClientRect().y +
@@ -46,7 +46,7 @@ export function registerComponentSurfaces(
       before.y + 0.5,
       0,
     );
-    const shell = (await page.locator(".ce-workspace").boundingBox())!;
+    const shell = (await page.locator(".mbk-workspace-panes").boundingBox())!;
     expect(grip.x + grip.width / 2).toBeCloseTo(shell.x + shell.width / 2, 0);
     await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
     await page.mouse.down();
@@ -66,9 +66,10 @@ export function registerComponentSurfaces(
     expect(await region.boundingBox()).toEqual(resized);
     await expect(page.locator(".ce-preview-pane")).toHaveCSS("resize", "none");
     await page.setViewportSize({ width: 1440, height: 600 });
-    const smaller = (await page.locator(".ce-workspace").boundingBox())!;
+    const smaller = (await page.locator(".mbk-workspace-panes").boundingBox())!;
     const bounded = (await region.boundingBox())!;
-    expect(bounded.height).toBeGreaterThanOrEqual(96);
+    // The shipped preview pane keeps 100px, as the shell's does.
+    expect(bounded.height).toBeGreaterThanOrEqual(100);
     expect(bounded.height).toBeLessThanOrEqual(smaller.height - 120);
     const nextGrip = (await divider.boundingBox())!;
     const x = nextGrip.x + nextGrip.width / 2;
@@ -77,7 +78,7 @@ export function registerComponentSurfaces(
     await page.mouse.down();
     await page.mouse.move(x, smaller.y + 20, { steps: 10 });
     await page.mouse.up();
-    expect((await region.boundingBox())!.height).toBe(96);
+    expect((await region.boundingBox())!.height).toBe(100);
   });
 
   test.describe("mobile inspector sheet", () => {
@@ -93,9 +94,11 @@ export function registerComponentSurfaces(
         ),
       );
       const dock = page.locator(".ce-inspector-dock");
-      const inspector = page.locator(".ce-inspector");
+      const inspector = page.locator(".mbk-inspector");
       const preview = page.locator(".ce-preview-pane");
-      const workspace = (await page.locator(".ce-workspace").boundingBox())!;
+      const workspace = (await page
+        .locator(".mbk-workspace-panes")
+        .boundingBox())!;
       const toggle = page.getByRole("switch", { name: "Expanded inspector" });
       await expect(toggle).toBeVisible();
       const previewBounds = (await preview.boundingBox())!;
@@ -108,7 +111,7 @@ export function registerComponentSurfaces(
       expect(compact.width).toBeCloseTo(workspace.width, 0);
       await expect(dock).toHaveCSS("border-top-left-radius", "0px");
       await expect(dock).toHaveCSS("box-shadow", "none");
-      await expect(inspector).toHaveCSS("border-top-left-radius", "20px");
+      await expect(inspector).toHaveCSS("border-top-left-radius", "14px");
       await expect(inspector).not.toHaveCSS("box-shadow", "none");
       const label = page.getByRole("textbox", { name: "label", exact: true });
       await label.fill("Keep my edits");
@@ -124,11 +127,11 @@ export function registerComponentSurfaces(
       expect(await dock.boundingBox()).toEqual(compact);
       await page.locator("details[open] [data-inspector-close]").click();
       await expect(toggle).toBeHidden();
-      await expect(page.locator(".ce-inspector details[open]")).toHaveCount(0);
+      await expect(page.locator(".mbk-inspector details[open]")).toHaveCount(0);
       await page.getByRole("button", { name: "Props", exact: true }).tap();
       await expect(label).toHaveValue("Keep my edits");
       expect(await preview.boundingBox()).toEqual(previewBounds);
-      const panel = page.locator("details[open] .ce-inspector-panel");
+      const panel = page.locator("details[open] .mbk-inspector-content");
       await panel.evaluate((node) => {
         node.scrollTop = node.scrollHeight;
       });
@@ -155,20 +158,24 @@ export function registerComponentSurfaces(
       await page.goto(
         componentDesignUrl("design/components/overview", viewport),
       );
-      const usage = page.locator('[data-panel="usage"] > summary > svg');
-      const ink = await usage.evaluate((node) => {
+      const usage = page.locator(
+        '[data-inspector-tab="usage"] > summary > svg',
+      );
+      // The ink keeps a margin of one unit inside the glyph's view box.
+      const margin = await usage.evaluate((node) => {
         const box = (node as SVGGraphicsElement).getBBox();
+        const view = (node as SVGSVGElement).viewBox.baseVal;
         return {
-          x: box.x,
-          y: box.y,
-          right: box.x + box.width,
-          bottom: box.y + box.height,
+          left: box.x - view.x,
+          top: box.y - view.y,
+          right: view.x + view.width - (box.x + box.width),
+          bottom: view.y + view.height - (box.y + box.height),
         };
       });
-      expect(ink.x).toBeGreaterThanOrEqual(1);
-      expect(ink.y).toBeGreaterThanOrEqual(1);
-      expect(ink.right).toBeLessThanOrEqual(15);
-      expect(ink.bottom).toBeLessThanOrEqual(15);
+      expect(margin.left).toBeGreaterThanOrEqual(1);
+      expect(margin.top).toBeGreaterThanOrEqual(1);
+      expect(margin.right).toBeGreaterThanOrEqual(1);
+      expect(margin.bottom).toBeGreaterThanOrEqual(1);
       const chevron = page.locator(".mbk-icon-select svg").last();
       await expect(chevron).toBeVisible();
       const icon = await page

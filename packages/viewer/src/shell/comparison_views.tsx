@@ -1,6 +1,15 @@
-/** React rendering for the aligned Before and Current comparison panes. */
+/**
+ * React rendering for the aligned Before and Current comparison panes. These
+ * containers own each section's scroll controller and wording;
+ * `@mokly/ui/comparison-stage` draws the sections.
+ */
 
 import { useEffect, useState } from "react";
+
+import {
+  ComparisonSection as ComparisonSectionView,
+  ComparisonUnavailable,
+} from "@mokly/ui/comparison-stage";
 
 import { entryRoute, type ViewRouteKind } from "../navigation/routes.js";
 import type { SnapshotPresentation } from "../previews/presentation.js";
@@ -51,11 +60,11 @@ export function ComparisonViews({
   const [owner] = useState(createScrollOwner);
   if (!views)
     return (
-      <p>
-        {entryWording(props.entryKind).label(
+      <ComparisonUnavailable
+        message={entryWording(props.entryKind).label(
           "This screen has no comparison available.",
         )}
-      </p>
+      />
     );
   return (
     <>
@@ -108,16 +117,11 @@ function ComparisonSection({
   const after = pane("after");
   const chrome = comparisonChrome(component, viewport, entryRoute(entryId));
   return (
-    <section
-      className={`mbk-diff-view mbk-diff-${viewport}`}
-      data-diff-viewport={viewport}
+    <ComparisonSectionView
+      label={label}
+      lightOnly={presentation.requestedColorScheme !== view.colorScheme}
+      viewport={viewport}
     >
-      <h3>
-        {viewport === "mobile" ? "Mobile" : "Desktop"} · {label}
-        {presentation.requestedColorScheme !== view.colorScheme
-          ? " · Light only"
-          : ""}
-      </h3>
       {mode !== "side" && before && after ? (
         <StackedComparison
           after={after}
@@ -136,6 +140,6 @@ function ComparisonSection({
           wording={wording}
         />
       )}
-    </section>
+    </ComparisonSectionView>
   );
 }

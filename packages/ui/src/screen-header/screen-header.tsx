@@ -34,14 +34,14 @@ function Crumb<Item extends ScreenHeaderCrumb>({
   const { folder, href, label } = item;
   if (href !== undefined)
     return (
-      <a className="mbk-crumb-link" href={href}>
+      <a className="mbk-crumb-link mbk-reset" href={href}>
         {label}
       </a>
     );
   if (folder === undefined || !interactive) return label;
   return (
     <button
-      className="mbk-crumb-link"
+      className="mbk-crumb-link mbk-reset"
       data-crumb-folder={folder.path}
       onClick={() => onRevealFolder?.(item)}
       type="button"
@@ -85,12 +85,12 @@ export function ScreenHeader<Item extends ScreenHeaderCrumb>({
   status?: ReactNode;
 }) {
   return (
-    <div className="mbk-screen-head">
-      <div className="mbk-screen-head-copy">
-        <p aria-label="Catalogue location" className="mbk-crumbs">
+    <div className="mbk-screen-head mbk-reset">
+      <div className="mbk-screen-head-copy mbk-reset">
+        <p aria-label="Catalogue location" className="mbk-crumbs mbk-reset">
           {crumbs.map((item, index) => (
-            <span key={`${item.label}-${index}`}>
-              {index > 0 ? <span className="sep">›</span> : null}
+            <span className="mbk-reset" key={`${item.label}-${index}`}>
+              {index > 0 ? <span className="sep mbk-reset">›</span> : null}
               <Crumb
                 interactive={interactive}
                 item={item}
@@ -99,13 +99,13 @@ export function ScreenHeader<Item extends ScreenHeaderCrumb>({
             </span>
           ))}
         </p>
-        <div className="mbk-title-row">
-          <h2>{heading}</h2>
+        <div className="mbk-title-row mbk-reset">
+          <h2 className="mbk-reset">{heading}</h2>
           {path ? (
             interactive ? (
               <button
                 aria-label={`Copy path ${path}`}
-                className="mbk-pathchip"
+                className="mbk-pathchip mbk-reset"
                 data-copy-path={path}
                 onClick={() => onCopyPath?.(path)}
                 type="button"
@@ -113,7 +113,7 @@ export function ScreenHeader<Item extends ScreenHeaderCrumb>({
                 {path}
               </button>
             ) : (
-              <span className="mbk-pathchip" data-copy-path={path}>
+              <span className="mbk-pathchip mbk-reset" data-copy-path={path}>
                 {path}
               </span>
             )

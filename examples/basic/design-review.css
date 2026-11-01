@@ -1,19 +1,9 @@
-.mbk-comparison-stage {
-  background: radial-gradient(circle, var(--mbk-dot) 1px, transparent 1px) 0 0 /
-    22px 22px;
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  padding: 24px;
-}
-
-/* Only the stage's own heading; a depicted screen's headings keep its ink. */
-.mbk-comparison-stage > h3 {
-  color: var(--chrome-ink-2);
-  font-size: 12px;
-  font-weight: 600;
-  margin: 0 0 12px;
-}
+/* The shipped comparison evidence, which the approved card below draws
+   without the shell's separator, and the shipped comparison stage, panes,
+   viewports, and layers, in the package's order. */
+@import "../../packages/ui/src/comparison-evidence/comparison-evidence.css";
+@import "../../packages/ui/src/comparison-pane/comparison-pane.css";
+@import "../../packages/ui/src/comparison-stage/comparison-stage.css";
 
 .mbk-comparison-details {
   background: var(--chrome-surface);
@@ -24,100 +14,58 @@
   padding: 12px;
 }
 
+.mbk-comparison-details > .mbk-comparison-evidence {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
 .mbk-comparison-details summary {
   cursor: pointer;
   font-weight: 600;
 }
 
-/* The inspector-scoped copies outrank the later `.ce-inspector p` rule, which
-   otherwise wins on equal specificity and takes the card's authored spacing. */
+/* The card keeps its authored spacing inside the inspector's content. */
 .mbk-comparison-details p,
-.mbk-comparison-details ul,
-.ce-inspector .mbk-comparison-details p,
-.ce-inspector .mbk-comparison-details ul {
+.mbk-comparison-details ul {
   margin: 8px 0 0;
 }
 
-.mbk-comparison-details ul + p,
-.ce-inspector .mbk-comparison-details ul + p {
+.mbk-comparison-details ul + p {
   margin-top: 14px;
 }
 
 /* A changed file's outcome sentences and style lists sit under that file,
-   with the card's spacing in the shell card and in the component inspector. */
+   with the card's spacing. */
 .mbk-evidence-files p,
-.mbk-evidence-files ul,
-.ce-inspector .mbk-evidence-files p,
-.ce-inspector .mbk-evidence-files ul {
+.mbk-evidence-files ul {
   margin: 8px 0 0;
 }
 
-.mbk-evidence-files ul + p,
-.ce-inspector .mbk-evidence-files ul + p {
+.mbk-evidence-files ul + p {
   margin-top: 14px;
 }
 
-.mbk-compare {
-  align-items: start;
-  display: grid;
-  gap: 24px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  isolation: isolate;
-}
-
-.mbk-compare .browser-frame {
+/* A comparison's browser window is shorter than the shell's, so a whole
+   comparison fits an artboard. */
+.mb-panes .browser-frame {
   height: 470px;
-  width: 100%;
 }
 
-/* Overlay and Difference draw one device chrome holding both versions. */
-.mbk-compare:is(
-  [data-compare-mode="overlay"],
-  [data-compare-mode="difference"]
-) {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-/* The chrome's viewport, below the browser bar or the phone's status band, is
-   the only scroll container, so both versions always share one offset. */
-.mbk-stack-viewport {
-  flex: 1 1 auto;
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
-  position: relative;
-}
-
-/* Both layers fill the viewport at device size and share one scroll offset. */
-.mbk-stack {
+/* Each layer's surface holds the depicted document, at least the viewport's
+   height and as tall as its content. */
+.mbk-stack-document {
   display: grid;
-  isolation: isolate;
   min-height: 100%;
 }
 
-/* Each version paints its own opaque screen background in its own scheme, so
-   the Current layer only ever composites with the Before layer below it. */
-.mbk-stack-layer {
-  background-color: var(--mbk-screen-bg);
-  grid-area: 1 / 1;
-  min-width: 0;
-}
-
-.mbk-compare[data-compare-mode="overlay"] .mbk-stack-layer--after {
-  opacity: 0.5;
-}
-
-.mbk-compare[data-compare-mode="difference"] .mbk-stack-layer--after {
-  mix-blend-mode: difference;
-}
-
-/* A long screen depicted part-way down: the shared stack moves as one, and
-   the viewport draws its scrollbar at the matching position. */
-.mbk-stack-viewport[data-scrolled] > .mbk-stack {
+/* A long screen depicted part-way down: both layers' documents move by one
+   offset, and the viewport draws its scrollbar at the matching position. */
+.mbk-stack-document[data-scrolled] {
   transform: translateY(-234px);
 }
 
-.phone-screen .mbk-stack-viewport[data-scrolled] > .mbk-stack {
+.phone-screen .mbk-stack-document[data-scrolled] {
   transform: translateY(-326px);
 }
 
@@ -182,9 +130,13 @@
   text-align: center;
   white-space: nowrap;
 }
-.mbk-shell--mobile .mbk-comparison-stage {
+/* A mobile render draws the narrow comparison stage at every width. Below
+   the layout breakpoint the package stylesheet draws it on its own, as the
+   shell does. */
+.mbk-shell--mobile .mbk-diff-stage {
   padding: 16px;
 }
-.mbk-shell--mobile .mbk-compare {
+.mbk-shell--mobile .mb-panes[data-compare-mode="side"],
+.mbk-shell--mobile .mbk-diff-mobile .mb-panes {
   grid-template-columns: minmax(0, 1fr);
 }

@@ -3,6 +3,12 @@
 // active-route helpers the document scaffold and progressive navigation use.
 
 import { ChangeStatus } from "@mokly/ui/change-status";
+import {
+  HomeState,
+  MissingRouteState,
+  RemovedState,
+} from "@mokly/ui/empty-state";
+import { MainRegion } from "@mokly/ui/shell-layout";
 
 import { canonicalJson } from "../components/data.js";
 import { sha256 } from "../data/sha256.js";
@@ -21,7 +27,7 @@ import { useShellIdentifier } from "./identifier_context.js";
 import { PageEvidence } from "./page_evidence.js";
 import { pageComparisonEvidence } from "./page_evidence_data.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
-import { EmptyStage, TargetStage } from "./stages.js";
+import { TargetStage } from "./stages.js";
 import type { RouteTarget } from "./target.js";
 import { ComponentWorkspace } from "./workspace.js";
 import { workspaceKey } from "./workspace_entry.js";
@@ -79,10 +85,7 @@ function TargetView(props: {
   const stage = preview ? (
     <RemovedPreviewStage data={preview} />
   ) : removed ? (
-    <div className="mbk-empty" data-mokly-stage="" data-viewport="both">
-      <h2>This user flow was removed</h2>
-      <p>This flow is no longer in the catalogue.</p>
-    </div>
+    <RemovedState kind="flow" />
   ) : (
     <TargetStage
       catalogue={props.catalogue}
@@ -115,32 +118,6 @@ function TargetView(props: {
   );
 }
 
-function HomeView(props: { catalogue: Catalogue }) {
-  const summary = homeSummary(props.catalogue.manifest.entries);
-  return (
-    <EmptyStage heading="Mokly">
-      <p>
-        Browse the mockup catalogue: expand folders and choose an item from the
-        navigation.
-      </p>
-      {summary ? <p className="mbk-empty-note">{summary}</p> : null}
-    </EmptyStage>
-  );
-}
-
-function MissingView(props: { requested: string }) {
-  return (
-    <EmptyStage heading="Item not found">
-      <p>
-        Nothing in the catalogue matches <code>{props.requested}</code>
-      </p>
-      <a className="mbk-empty-link" href="/">
-        Go to the catalogue home
-      </a>
-    </EmptyStage>
-  );
-}
-
 /** The active catalogue route for a shell view, when it has one. */
 function activeIdForView(view: ShellView): string | undefined {
   if (view.kind !== "target") {
@@ -161,20 +138,15 @@ export function ShellMain(props: {
     ({ entry }) => entry.path === activeId,
   );
   return (
-    <main
-      className="mbk-main"
-      data-mokly-view=""
-      data-mokly-baseline={
-        baseline ? sha256(canonicalJson(baseline)) : undefined
-      }
+    <MainRegion
+      baseline={baseline ? sha256(canonicalJson(baseline)) : undefined}
       id={mainId}
-      tabIndex={-1}
     >
       {props.view.kind === "home" ? (
-        <HomeView catalogue={props.catalogue} />
+        <HomeState summary={homeSummary(props.catalogue.manifest.entries)} />
       ) : null}
       {props.view.kind === "missing" ? (
-        <MissingView requested={props.view.requested} />
+        <MissingRouteState requested={props.view.requested} />
       ) : null}
       {props.view.kind === "target" ? (
         props.view.target.kind === "entry" &&
@@ -197,6 +169,6 @@ export function ShellMain(props: {
           />
         )
       ) : null}
-    </main>
+    </MainRegion>
   );
 }

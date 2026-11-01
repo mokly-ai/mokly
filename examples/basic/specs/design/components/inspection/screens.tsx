@@ -41,7 +41,7 @@ export const inspectionDetailsScreen = defineScreen({
   title: "Screen component details",
   colorSchemes: ["light"],
   description:
-    "Actual-view instances grouped by component, repeated selection, supplied props, and a hidden instance.",
+    "Actual-view instances by owner, repeated selection, supplied props, and a hidden instance.",
   ...artboards({
     desktop: <ScreenDetailsDesktop />,
     mobile: <ScreenDetailsMobile />,

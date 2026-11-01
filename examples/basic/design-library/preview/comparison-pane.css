@@ -1,29 +1,10 @@
-/* Exclusive shared-component styles. Global and layout rules stay shared. */
+/* The shipped pane of one version in Side by side: the @mokly/ui stylesheet
+   of the pane, then a mockup rule. */
+@import "../../../../packages/ui/src/comparison-pane/comparison-pane.css";
 
-.mbk-compare-side {
-  min-width: 0;
-}
-
-.mbk-compare-label {
-  color: var(--chrome-muted);
-  font-size: 12px;
-  margin: 0 0 8px;
-}
-
-.mbk-pane-missing {
-  align-items: center;
-  background: var(--chrome-surface);
-  border: 1px dashed var(--chrome-border-strong);
-  border-radius: 12px;
-  color: var(--chrome-muted);
-  display: flex;
-  font-size: 12.5px;
-  justify-content: center;
-  min-height: 240px;
-  padding: 20px;
-  text-align: center;
-}
-
-.mbk-shell--mobile .mbk-pane-missing {
-  width: 100%;
+/* The shell's base rules start a paragraph without a top margin, and the
+   catalogue has no such base rule, so the missing pane's message keeps the
+   shell's place here. */
+.mb-pane-missing {
+  margin-top: 0;
 }

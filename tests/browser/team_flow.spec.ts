@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 
-import { hasMarker, markPage } from "./browse_assertions.js";
+import { hasMarker, markPage, shellRoot } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
 import { chooseScheme, expectFrameSource } from "./workspace_actions.js";
 
@@ -74,7 +74,7 @@ for (const width of [390, 1280])
         .getByRole("link", { name: "Invite teammate", exact: true })
         .click();
       await expect(page).toHaveURL(/\/view\/example\/team\/invite\/$/u);
-      await expect(page.locator("body")).toHaveAttribute(
+      await expect(page.locator(shellRoot)).toHaveAttribute(
         "data-mokly-color-scheme",
         scheme,
       );
@@ -113,10 +113,10 @@ test("an expanded step leaves no scrim once a narrow window shows phones", async
   await page.goto("/view/example/team/invite-teammate/");
   await page.locator(".mbk-flow-screen .browser-expand").first().click();
   await expect(page.locator(".browser-frame.is-expanded")).toBeVisible();
-  await expect(page.locator("body")).toHaveClass(scrim);
+  await expect(page.locator(shellRoot)).toHaveClass(scrim);
   await page.setViewportSize({ width: 760, height: 900 });
   await expect(page.locator(".mbk-flow-screen > .phone-frame")).toHaveCount(3);
-  await expect(page.locator("body")).not.toHaveClass(scrim);
+  await expect(page.locator(shellRoot)).not.toHaveClass(scrim);
   // Widening again shows every step's browser frame collapsed.
   await page.setViewportSize({ width: 1280, height: 900 });
   await expect(page.locator(".mbk-flow-screen > .browser-frame")).toHaveCount(

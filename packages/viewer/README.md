@@ -20,8 +20,6 @@
   <a href="#development">Development</a>
 </p>
 
-Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
-
 `@mokly/viewer` is an open-source React library that renders a Mokly catalogue
 inside another product. It reads the catalogue that `mokly serve` serves or
 `mokly build` writes, and it renders the same Browse shell as the standalone
@@ -234,8 +232,8 @@ and Review regressions against `mokly serve` of the example catalogue.
 - [`src/viewer/host_bridge.tsx`](./src/viewer/host_bridge.tsx) and
   [`src/viewer/host_bridge_highlight.ts`](./src/viewer/host_bridge_highlight.ts) —
   the public handle and its highlight requests, geometry, and cancellation
-- [`src/shell`](./src/shell) — the Browse shell tree and its scoped styles,
-  shared by the embedded viewer and the browser entry
+- [`src/shell`](./src/shell) — the Browse shell tree, shared by the embedded
+  viewer and the browser entry; it holds no style rule
 - [`src/shell/top_bar.tsx`](./src/shell/top_bar.tsx),
   [`src/shell/nav.tsx`](./src/shell/nav.tsx), and
   [`src/shell/head.tsx`](./src/shell/head.tsx) — the containers of the top
@@ -246,6 +244,49 @@ and Review regressions against `mokly serve` of the example catalogue.
   the containers of the tag picker, the tag chips of the details, and the
   view controls; `tag_selection.ts` returns focus to the picker's button
   after a tag of the details, and `view_marks.ts` decides the change marks
+- [`src/shell/inspector.tsx`](./src/shell/inspector.tsx) and
+  [`src/shell/details.tsx`](./src/shell/details.tsx) — the containers of the
+  inspector and the Details: the tabs, Escape anywhere in the shell root, and
+  the metadata rows, whose catalogue lookups live in `details_rows.tsx`;
+  `inspector_resize.ts` sizes the inspector and its mobile sheet
+- [`src/shell/component_controls_panel.tsx`](./src/shell/component_controls_panel.tsx),
+  [`src/shell/workspace_props.tsx`](./src/shell/workspace_props.tsx),
+  [`src/shell/workspace_usage.tsx`](./src/shell/workspace_usage.tsx),
+  [`src/shell/workspace_instances.tsx`](./src/shell/workspace_instances.tsx),
+  and [`src/shell/workspace_evidence.tsx`](./src/shell/workspace_evidence.tsx)
+  — the containers of the inspector's panels, which turn the controls state,
+  the usage links, the instance records, and the comparison evidence into the
+  records and the wording of the package components
+- [`src/shell/stage_frame.tsx`](./src/shell/stage_frame.tsx),
+  [`src/shell/document_stage_frame.tsx`](./src/shell/document_stage_frame.tsx),
+  [`src/shell/public_stage.tsx`](./src/shell/public_stage.tsx), and
+  [`src/shell/previews.tsx`](./src/shell/previews.tsx) — the containers of the
+  preview frames, the stages, a user flow's steps, and a removed entry's
+  previous version: they mount each frame, derive its sources, and pass its
+  `ref` and attributes to the package's `<iframe>`; `frames.tsx` holds the
+  expanded browser frame in the store
+- [`src/shell/views.tsx`](./src/shell/views.tsx),
+  [`src/shell/workspace.tsx`](./src/shell/workspace.tsx),
+  [`src/shell/embedded_viewer.tsx`](./src/shell/embedded_viewer.tsx), and
+  [`src/standalone/shell.tsx`](./src/standalone/shell.tsx) — the containers of
+  the shell layout: the main region, the workspace, an embedded root with its
+  host slots, and the standalone root, which carries the appearance, the
+  preview scheme, and the expanded window's mark; `src/viewer/component.tsx`
+  shows an
+  embedded root's loading and failure states, and
+  `src/viewer/marker_layer.tsx` and `src/viewer/inspection_layer.tsx` place
+  the host's markers and inspection labels
+- [`src/shell/comparison_views.tsx`](./src/shell/comparison_views.tsx) and
+  [`src/shell/comparison_viewport.tsx`](./src/shell/comparison_viewport.tsx) —
+  the containers of the comparison sections and panes, which own each
+  section's scroll controller and attach the viewport, its spacer, and each
+  surface to it through refs
+- [`scripts/styles.mjs`](./scripts/styles.mjs) — writes the standalone
+  `shell.css` and the embedded `styles.css` from the `@font-face` rule of
+  [`src/shell/assets/fonts/inter.css`](./src/shell/assets/fonts/inter.css) and
+  the UI package's `styles.css`: the font's address in each delivery, the
+  embedded font family, and the fallbacks that let a host's accent overrides
+  inherit
 - [`src/catalogue`](./src/catalogue) — the readers of the catalogue index and
   the entry detail, and the public catalogue types
 - [`src/data.ts`](./src/data.ts) — the `./data` entry: path functions,

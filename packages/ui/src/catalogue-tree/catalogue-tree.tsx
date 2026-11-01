@@ -41,7 +41,7 @@ function Folder({
   const handlers = disclosureHandlers(actions, folder);
   return (
     <details
-      className="mbk-nav-group"
+      className="mbk-nav-group mbk-reset"
       data-filter-open={filterMark(folder.filterOpen)}
       data-nav-folder={folder.key}
       data-nav-disclosure={folder.disclosure}
@@ -50,17 +50,17 @@ function Folder({
       open={folder.open}
     >
       <summary
-        className="mbk-nav-row"
+        className="mbk-nav-row mbk-reset"
         onClick={handlers.onSummaryClick}
         style={rowStyle(folder.depth)}
       >
-        <span className="mbk-nav-ico folder">
+        <span className="mbk-nav-ico folder mbk-reset">
           <FolderIcon />
           <FolderOpenIcon />
         </span>
-        <span className="mbk-nav-label">{folder.label}</span>
+        <span className="mbk-nav-label mbk-reset">{folder.label}</span>
         {folder.count > 0 ? (
-          <span className="mbk-nav-count">{folder.count}</span>
+          <span className="mbk-nav-count mbk-reset">{folder.count}</span>
         ) : null}
       </summary>
       <Rows actions={actions} rows={folder.rows} />
@@ -86,13 +86,13 @@ function Leaf({
   const noun = list.rows.length > 0 ? "contents" : "variants";
   return (
     <>
-      <div className="mbk-nav-leaf" hidden={list.hidden}>
+      <div className="mbk-nav-leaf mbk-reset" hidden={list.hidden}>
         <RowLink link={leaf.link} variant={false} />
         <button
           aria-controls={list.id}
           aria-expanded={list.open ? "true" : "false"}
           aria-label={`${list.open ? "Hide" : "Show"} ${noun} of ${list.title}`}
-          className="mbk-nav-variants-toggle"
+          className="mbk-nav-variants-toggle mbk-reset"
           data-nav-variants-label={list.title}
           data-nav-variants-noun={noun}
           data-nav-variants-toggle={list.id}
@@ -103,7 +103,7 @@ function Leaf({
         </button>
       </div>
       <div
-        className="mbk-nav-variants"
+        className="mbk-nav-variants mbk-reset"
         data-filter-open={filterMark(list.filterOpen)}
         data-nav-disclosure={list.disclosure}
         data-nav-variants=""
@@ -151,7 +151,7 @@ function Section({
   const handlers = disclosureHandlers(actions, section);
   return (
     <details
-      className="mbk-nav-section"
+      className="mbk-nav-section mbk-reset"
       data-filter-open={filterMark(section.filterOpen)}
       data-nav-disclosure={section.disclosure}
       data-nav-section={section.id}
@@ -160,10 +160,10 @@ function Section({
       open={section.open}
     >
       <summary
-        className="mbk-nav-section-head"
+        className="mbk-nav-section-head mbk-reset"
         onClick={handlers.onSummaryClick}
       >
-        <span aria-hidden="true" className="mbk-nav-section-chevron">
+        <span aria-hidden="true" className="mbk-nav-section-chevron mbk-reset">
           <ChevronIcon />
         </span>
         {section.label}

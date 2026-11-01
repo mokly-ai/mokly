@@ -1,0 +1,35 @@
+/* The supplied props: a list of rows, each with the name in a muted column and
+   the value in code, and the line that says why the tab shows no props. */
+.mbk-props {
+  margin: 0 0 14px;
+  font-size: 12px;
+}
+
+.mbk-props > div {
+  display: grid;
+  grid-template-columns: minmax(60px, 0.7fr) minmax(0, 1fr);
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--chrome-border);
+}
+
+.mbk-props dt {
+  color: var(--chrome-muted);
+}
+
+.mbk-props dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.mbk-props code {
+  font-family: var(--mono);
+  font-size: 11px;
+  white-space: pre-wrap;
+}
+
+.mbk-empty-copy {
+  max-width: 310px;
+  color: var(--chrome-ink-2);
+  font-size: 12px;
+}

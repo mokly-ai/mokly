@@ -7,6 +7,7 @@ import { DESTINATIONS, type DesignDestination } from "./parts/destinations.js";
 import { DetailsPanel } from "./parts/details.js";
 import { ENTRY_PATHS } from "./parts/entry_paths.js";
 import { MiniWelcome } from "./parts/mini_screens.js";
+import { miniView } from "./parts/mini_views.js";
 import type { ChangesStatus } from "./parts/nav.js";
 import { AvailabilityNav } from "./parts/review.js";
 import {
@@ -53,15 +54,18 @@ function AvailabilityScreen({
         ) : null
       }
     >
-      <ScreenHead
-        action={<ViewSwitch active={viewport} highlight="available" />}
-        crumbs={["Example", "Screens"]}
-        path={ENTRY_PATHS.welcome}
-        title="Welcome"
-      />
       <PreviewWorkspace
+        header={
+          <ScreenHead
+            action={<ViewSwitch active={viewport} />}
+            crumbs={["Example", "Screens"]}
+            path={ENTRY_PATHS.welcome}
+            title="Welcome"
+          />
+        }
         viewport={viewport}
         inspector={<DetailsPanel subject="welcome" />}
+        view={miniView("welcome")}
         render={(previewViewport) => <WelcomeShot viewport={previewViewport} />}
       />
     </Shell>

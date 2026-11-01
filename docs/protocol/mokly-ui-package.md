@@ -1,7 +1,5 @@
 # Shared UI Package
 
-Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
-
 This continues the [embeddable viewer contract](./mokly-viewer.md).
 
 ## Package And Components
@@ -59,10 +57,12 @@ The theme names the font family with system fallbacks.
 
 The theme declares the tokens and the Light and Dark
 [palette](./mokly-viewer-appearance.md#palette-and-ownership) on the viewer
-root class and on the document class of the standalone stub. No package rule
-declares them through a `:root`, `html`, or `body` selector. Each package
-component puts the reset class on its own elements that need a reset. A reset
-rule never overrides a component rule.
+root class `mbk` and on the document class `mbk-document` of the standalone
+stub. Every viewer root carries the root class, also while it shows a loading,
+failure, or unavailable state, and states its appearance. No package rule
+declares the tokens through a `:root`, `html`, or `body` selector. Each package
+component puts the reset class `mbk-reset` on its own elements that need a
+reset. A reset rule never overrides a component rule.
 
 No package rule matches an element of a host page outside a viewer root, and
 no package rule matches host slot content. The rules that style the page
@@ -75,4 +75,5 @@ page of every host that imports it, and a bare element rule under the root
 class reaches host slot content.
 
 A page that renders package components without the viewer puts them inside an
-element with the viewer root class, or declares the theme's tokens itself.
+element with the viewer root class `mbk`, or declares the theme's tokens
+itself.

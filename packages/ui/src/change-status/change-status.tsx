@@ -23,7 +23,7 @@ export function ChangeStatus({
 }) {
   return (
     <span
-      className="mbk-entry-status"
+      className="mbk-entry-status mbk-reset"
       data-status={status}
       {...(mark === undefined ? {} : { [mark]: "" })}
       hidden={status === undefined}

@@ -24,7 +24,7 @@ test("the brand links to its address, and to the catalogue home without one", ()
   rerender(<TopBar {...IDS} brandHref="../home/" drawerOpen={false} />);
   const brand = screen.getByRole("link", { name: "Mokly" });
   assert.equal(brand.getAttribute("href"), "../home/");
-  assert.equal(brand.className, "mbk-brand");
+  assert.equal(brand.className, "mbk-brand mbk-reset");
   assert.equal(brand.textContent, "mokly.");
 });
 
@@ -40,7 +40,7 @@ test("a menu with an address is a link named for the drawer state it shows", () 
   );
   const open = screen.getByRole("link", { name: "Open catalogue navigation" });
   assert.equal(open.getAttribute("href"), "../navigation/");
-  assert.equal(open.className, "mbk-menu");
+  assert.equal(open.className, "mbk-menu mbk-reset");
   assert.equal(open.getAttribute("data-mokly-menu"), "");
   // A link reports no expanded state and controls no element of its own.
   assert.equal(open.getAttribute("aria-expanded"), null);
@@ -78,9 +78,9 @@ test("a bar that is not interactive draws its controls as pictures and keeps its
     name: "Close catalogue navigation",
   });
   assert.equal(menu.tagName, "SPAN");
-  assert.equal(menu.className, "mbk-menu");
+  assert.equal(menu.className, "mbk-menu mbk-reset");
   const brand = within(header).getByRole("img", { name: "Mokly" });
-  assert.equal(brand.className, "mbk-brand");
+  assert.equal(brand.className, "mbk-brand mbk-reset");
   assert.equal(brand.textContent, "mokly.");
   // The compact search needs a script, so its toggle and Close search go.
   assert.equal(header.querySelector(".mbk-search-toggle"), null);

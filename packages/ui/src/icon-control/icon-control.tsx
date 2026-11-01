@@ -56,7 +56,7 @@ export function IconButton({
   return (
     <button
       type="button"
-      className="mbk-icon-button"
+      className="mbk-icon-button mbk-reset"
       aria-label={label}
       aria-describedby={describedBy}
       aria-description={description}
@@ -103,8 +103,9 @@ export function IconSwitch({
   title: string;
 }) {
   return (
-    <label className="mbk-icon-button" title={title}>
+    <label className="mbk-icon-button mbk-reset" title={title}>
       <input
+        className="mbk-reset"
         type="checkbox"
         role="switch"
         aria-label={label}
@@ -152,13 +153,14 @@ export function IconSelect<Value extends string>({
   value: Value;
 }) {
   return (
-    <label className="mbk-icon-select" title={title}>
+    <label className="mbk-icon-select mbk-reset" title={title}>
       {glyph}
       <ChevronDownIcon size={18} />
       <select
         aria-describedby={describedBy}
         aria-label={label}
         {...dataMark(mark)}
+        className="mbk-reset"
         onChange={(event) => {
           const choice = options.find(
             ([option]) => option === event.currentTarget.value,
@@ -168,7 +170,7 @@ export function IconSelect<Value extends string>({
         value={value}
       >
         {options.map(([option, text]) => (
-          <option key={option} value={option}>
+          <option className="mbk-reset" key={option} value={option}>
             {text}
           </option>
         ))}

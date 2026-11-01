@@ -4,13 +4,14 @@ import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
 
+/** Preview surfaces as the package draws them, each carrying the reset class. */
 const layouts = [
-  '<div class="phone-screen"><iframe class="mbk-frag"></iframe></div>',
-  '<div class="browser-viewport"><iframe class="mbk-frag"></iframe></div>',
-  '<div class="mbk-stage-embed"><iframe class="mbk-frag"></iframe></div>',
-  '<div class="mbk-component-canvas"><iframe class="mbk-frag"></iframe></div>',
-  '<div class="mb-pane-chrome" data-preview-color-scheme="light"><div class="browser-viewport"><div class="mb-viewport"><div class="mb-viewport-box"><div class="mb-pane mb-pane--before"><div class="mb-pane-doc"><iframe class="mbk-frag"></iframe></div></div></div></div></div></div>',
-  '<div class="mbk-diff-screen" data-diff-component><div class="mb-pane-chrome" data-preview-color-scheme="light"><div class="mb-component-frame"><div class="mb-viewport"><div class="mb-viewport-box"><div class="mb-pane-doc"><iframe class="mbk-frag"></iframe></div></div></div></div></div></div>',
+  '<div class="phone-screen mbk-reset"><iframe class="mbk-frag mbk-reset"></iframe></div>',
+  '<div class="browser-viewport mbk-reset"><iframe class="mbk-frag mbk-reset"></iframe></div>',
+  '<div class="mbk-stage-embed mbk-reset"><iframe class="mbk-frag mbk-reset"></iframe></div>',
+  '<div class="mbk-component-canvas mbk-reset"><iframe class="mbk-frag mbk-reset"></iframe></div>',
+  '<div class="mb-pane-chrome mbk-reset" data-preview-color-scheme="light"><div class="browser-viewport mbk-reset"><div class="mb-viewport mbk-reset"><div class="mb-viewport-box mbk-reset"><div class="mb-pane mb-pane--before mbk-reset"><div class="mb-pane-doc mbk-reset"><iframe class="mbk-frag mbk-reset"></iframe></div></div></div></div></div></div>',
+  '<div class="mbk-diff-screen mbk-reset" data-diff-component><div class="mb-pane-chrome mbk-reset" data-preview-color-scheme="light"><div class="mb-component-frame mbk-reset"><div class="mb-viewport mbk-reset"><div class="mb-viewport-box mbk-reset"><div class="mb-pane-doc mbk-reset"><iframe class="mbk-frag mbk-reset"></iframe></div></div></div></div></div></div>',
 ];
 
 for (const mode of ["standalone", "embedded"] as const) {
@@ -22,8 +23,13 @@ for (const mode of ["standalone", "embedded"] as const) {
       new URL(`../../packages/viewer/dist/${stylesheet}`, import.meta.url),
       "utf8",
     );
+    // The standalone stub's document holds the theme, and an embedded root
+    // holds its own.
+    const documentClass = mode === "standalone" ? ' class="mbk-document"' : "";
+    const rootClass =
+      mode === "standalone" ? "mokly-viewer" : "mbk mokly-viewer";
     await page.setContent(
-      `<html data-mokly-theme="light"><head><style>${css}</style></head><body><main class="mokly-viewer" data-mokly-theme="light">${layouts
+      `<html${documentClass} data-mokly-theme="light"><head><style>${css}</style></head><body><main class="${rootClass}" data-mokly-theme="light">${layouts
         .map(
           (layout, index) =>
             `<section id="preview-${index}" data-preview-color-scheme="light">${layout}</section>`,

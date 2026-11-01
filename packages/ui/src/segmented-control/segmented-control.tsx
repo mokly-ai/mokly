@@ -39,13 +39,22 @@ function SegmentItem<Value extends string>({
   const data = { [attribute]: value };
   if (href !== undefined)
     return (
-      <a aria-current={shown ? "page" : undefined} {...data} href={href}>
+      <a
+        aria-current={shown ? "page" : undefined}
+        {...data}
+        className="mbk-reset"
+        href={href}
+      >
         {label}
       </a>
     );
   if (!interactive)
     return (
-      <span aria-current={shown ? "page" : undefined} {...data}>
+      <span
+        aria-current={shown ? "page" : undefined}
+        className="mbk-reset"
+        {...data}
+      >
         {label}
       </span>
     );
@@ -53,6 +62,7 @@ function SegmentItem<Value extends string>({
     <button
       aria-pressed={shown}
       {...data}
+      className="mbk-reset"
       onClick={() => onChange?.(value)}
       type="button"
     >
@@ -102,7 +112,7 @@ export function SegmentedControl<Value extends string>({
   return (
     <span
       aria-label={label}
-      className="mbk-seg"
+      className="mbk-seg mbk-reset"
       {...(mark === undefined ? {} : { [mark]: "" })}
       role="group"
     >

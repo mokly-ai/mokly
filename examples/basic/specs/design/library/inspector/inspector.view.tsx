@@ -1,71 +1,56 @@
-import { useId, type CSSProperties } from "react";
+import { useId } from "react";
 
-import { MockLink } from "@mokly/mokly";
+import { mockLink } from "@mokly/mokly";
 
 import {
-  CloseInspectorIcon,
-  InspectorIcon,
-} from "../../components/parts/inspector_icons.js";
+  Inspector,
+  type InspectorTabId,
+} from "../../../../../../packages/ui/src/inspector/inspector.js";
 
 import type { InspectorProps } from "./inspector.js";
 
+/** The shipped name of each saved tab. */
+const TAB_IDS = {
+  info: "details",
+  components: "components",
+  props: "props",
+  usage: "usage",
+} as const satisfies Record<
+  InspectorProps["tabs"][number]["id"],
+  InspectorTabId
+>;
+
+/**
+ * The shipped inspector. A static artboard runs no script, so each tab is a
+ * native disclosure that opens its panel and closes it again by itself, one
+ * tab at a time, and the sheet's grab is a native switch. A tab with a
+ * destination links to the artboard that shows the inspector open or closed.
+ */
 export function InspectorView({
   tabs,
   initial,
   sheetSize,
   ...content
 }: InspectorProps) {
-  const group = useId();
+  const id = useId();
+  const open = initial !== "closed";
   return (
-    <section className="ce-inspector" aria-label="Inspector">
-      <input
-        type="checkbox"
-        role="switch"
-        className="ce-sheet-expand"
-        aria-label="Expanded inspector"
-        title="Expand or collapse inspector"
-        defaultChecked={sheetSize === "expanded"}
-      />
-      {tabs.map((tab, index) => (
-        <details
-          key={tab.id}
-          name={`component-inspector-${group}`}
-          data-panel={tab.id}
-          open={initial === tab.id}
-          style={{ "--tab-column": index + 1 } as CSSProperties}
-        >
-          <summary
-            // A linked tab's anchor is its one keyboard stop.
-            {...(tab.destination
-              ? { tabIndex: -1 }
-              : { role: "button", "aria-label": tab.label })}
-            title={tab.label}
-          >
-            {tab.destination ? (
-              <MockLink
-                to={tab.destination}
-                className="ce-inspector-link"
-                aria-label={tab.label}
-              >
-                <InspectorIcon tab={tab.id} />
-              </MockLink>
-            ) : (
-              <InspectorIcon tab={tab.id} />
-            )}
-            <span
-              className="ce-inspector-close"
-              data-inspector-close=""
-              aria-hidden="true"
-              title="Close inspector"
-            >
-              <CloseInspectorIcon />
-            </span>
-          </summary>
-          <section className="ce-inspector-panel" aria-label={tab.label}>
-            {content[tab.id]}
-          </section>
-        </details>
-      ))}
-    </section>
+    <Inspector
+      active={open ? TAB_IDS[initial] : undefined}
+      contentId={`${id}-inspector`}
+      disclosures
+      expanded={sheetSize === "expanded"}
+      interactive={false}
+      open={open}
+      tabs={tabs.map((tab) => ({
+        href:
+          tab.destination === undefined ? undefined : mockLink(tab.destination),
+        id: TAB_IDS[tab.id],
+        panel: content[tab.id],
+        panelId: `${id}-panel-${tab.id}`,
+        tabId: `${id}-tab-${tab.id}`,
+        title: tab.label,
+      }))}
+    />
   );
 }

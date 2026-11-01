@@ -1,7 +1,15 @@
-import { DesignLink } from "../../parts/design_navigation.js";
+import { mockLink } from "@mokly/mokly";
+
+import { FlowStep } from "../../../../../../packages/ui/src/flow-step/flow-step.js";
 
 import type { FlowStepProps } from "./flow-step.js";
+import { FrameSettingScope } from "./frame_placement.js";
 
+/**
+ * The shipped step of a user flow: its number, title and description, the
+ * link to the owning screen's artboard, and the frame of its slot as the
+ * step's screen.
+ */
 export function FlowStepView({
   children,
   description,
@@ -11,20 +19,13 @@ export function FlowStepView({
   title,
 }: FlowStepProps) {
   return (
-    <section className="flow-step">
-      <div className="flow-step-head">
-        <span className="flow-step-num">{number}</span>
-        <div>
-          <h3>{title}</h3>
-          <p>{description}</p>
-          <DesignLink to={screenPath}>
-            <span className="flow-step-link">
-              This screen in the catalogue: {screenTitle} →
-            </span>
-          </DesignLink>
-        </div>
-      </div>
-      <div className="mbk-flow-screen">{children}</div>
-    </section>
+    <FlowStep
+      description={description}
+      number={number}
+      screen={{ href: mockLink(screenPath), title: screenTitle }}
+      title={title}
+    >
+      <FrameSettingScope setting="flow">{children}</FrameSettingScope>
+    </FlowStep>
   );
 }

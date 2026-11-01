@@ -33,7 +33,7 @@ export function TagPickerToggle({
     return (
       <a
         aria-label={name}
-        className="mbk-search-tag"
+        className="mbk-search-tag mbk-reset"
         data-mokly-tag-toggle=""
         href={href}
       >
@@ -44,7 +44,7 @@ export function TagPickerToggle({
     return (
       <span
         aria-label={name}
-        className="mbk-search-tag"
+        className="mbk-search-tag mbk-reset"
         data-mokly-tag-toggle=""
         role="img"
       >
@@ -56,7 +56,7 @@ export function TagPickerToggle({
       aria-controls={pickerId}
       aria-expanded={open}
       aria-label="Filter by tag"
-      className="mbk-search-tag"
+      className="mbk-search-tag mbk-reset"
       data-mokly-tag-toggle=""
       onClick={onToggle}
       ref={ref}

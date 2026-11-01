@@ -18,6 +18,10 @@ const designViews = (catalogue: ServedCatalogue) =>
 
 const label = (view: ServedView) => view.route;
 
+/** Whether an element's class list names a class, beside any reset class. */
+const hasClass = (element: Parameters<typeof attribute>[0], name: string) =>
+  (attribute(element, "class") ?? "").split(/\s+/u).includes(name);
+
 /**
  * Catalogue-wide link validation: every marked link opens an existing entry,
  * a design entry from a design view, through a portable relative href for
@@ -86,7 +90,7 @@ export function linkViolations(catalogue: ServedCatalogue): string[] {
         entryPath === view.path &&
         view.path.startsWith("design/") &&
         attribute(element, "aria-current") === undefined &&
-        attribute(element, "class") !== "mbk-brand"
+        !hasClass(element, "mbk-brand")
       )
         violations.push(`${where} links to its own entry without aria-current`);
     }
@@ -108,7 +112,7 @@ export function keyboardStopViolations(catalogue: ServedCatalogue): string[] {
       if (
         element.tagName === "button" &&
         attribute(element, "disabled") === undefined &&
-        attribute(element, "class") !== "mbk-nav-variants-toggle"
+        !hasClass(element, "mbk-nav-variants-toggle")
       )
         violations.push(`${label(view)}: button "${accessibleName(element)}"`);
       else if (

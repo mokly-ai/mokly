@@ -71,7 +71,7 @@ export function TopBar({
   }, [compactSearchOpen]);
   return (
     <header
-      className="mbk-topbar"
+      className="mbk-topbar mbk-reset"
       data-compact-search={compactSearchOpen ? "open" : "closed"}
       data-search=""
     >
@@ -88,7 +88,7 @@ export function TopBar({
           aria-controls={searchId}
           aria-expanded={compactSearchOpen}
           aria-label="Search catalogue"
-          className="mbk-search-toggle"
+          className="mbk-search-toggle mbk-reset"
           onClick={() => setCompactSearchOpen(true)}
           ref={searchToggle}
           type="button"
@@ -96,10 +96,11 @@ export function TopBar({
           <SearchIcon />
         </button>
       ) : null}
-      <div className="mbk-search">
+      <div className="mbk-search mbk-reset">
         <SearchIcon />
         <input
           aria-label="Search catalogue"
+          className="mbk-reset"
           data-mokly-search=""
           id={searchId}
           onChange={(event) => onSearch?.(event.currentTarget.value)}
@@ -116,7 +117,7 @@ export function TopBar({
       {interactive ? (
         <button
           aria-label="Close search"
-          className="mbk-search-close"
+          className="mbk-search-close mbk-reset"
           onClick={() => setCompactSearchOpen(false)}
           type="button"
         >

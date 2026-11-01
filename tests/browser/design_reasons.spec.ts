@@ -177,7 +177,9 @@ for (const viewport of ["desktop", "mobile"] as const)
     }
     // A moved screen names its earlier side before its reason.
     await openDesign(page, "design/changes/outcomes/moved", viewport);
-    await expect(page.locator(".mbk-comparison-details > p")).toHaveText([
+    await expect(
+      page.locator(".mbk-comparison-details .mbk-comparison-evidence > p"),
+    ).toHaveText([
       BRANCH_POINT,
       /^The previous version is at .+, where it was before the move\.$/u,
       REASON_SENTENCES.material,

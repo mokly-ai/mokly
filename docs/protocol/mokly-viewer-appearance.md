@@ -1,7 +1,5 @@
 # Viewer Appearance
 
-Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
-
 ## One Control In Standalone, Two Inputs When Embedded
 
 The model has two inputs: the interface appearance around previews and the
@@ -146,7 +144,7 @@ detail updates and Serve publications carry the current effective appearance
 forward rather than a separate preview state.
 
 Before the bundle runs, and without JavaScript, the stub shows only its
-`<noscript>` sentence. The shell stylesheet gives the stub's document class
+`<noscript>` sentence. The shell stylesheet gives the stub's `mbk-document` class
 the Auto interface appearance through `prefers-color-scheme`. The selector
 exists only once the bundle installs its behaviour, so no control without a
 change handler is ever shown. Persisted overrides need the bundle.

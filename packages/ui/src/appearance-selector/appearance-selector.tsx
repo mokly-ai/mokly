@@ -73,7 +73,7 @@ export function AppearanceSelector(props: {
 }) {
   return (
     <label
-      className="mbk-appearance"
+      className="mbk-appearance mbk-reset"
       data-appearance-value={props.value}
       data-mokly-appearance-control=""
       hidden={props.hidden}
@@ -83,12 +83,12 @@ export function AppearanceSelector(props: {
         const OptionGlyph = GLYPHS[option];
         return (
           <span
-            className="mbk-appearance-option"
+            className="mbk-appearance-option mbk-reset"
             data-appearance-option={option}
             key={option}
           >
             <OptionGlyph />
-            <span className="mbk-appearance-value">{label}</span>
+            <span className="mbk-appearance-value mbk-reset">{label}</span>
           </span>
         );
       })}
@@ -96,6 +96,7 @@ export function AppearanceSelector(props: {
       <select
         aria-describedby={props.changed ? props.changedId : undefined}
         aria-label="Appearance"
+        className="mbk-reset"
         data-mokly-appearance-select=""
         defaultValue={props.value}
         onChange={(event) => {
@@ -104,7 +105,7 @@ export function AppearanceSelector(props: {
         }}
       >
         {OPTIONS.map(([option, label]) => (
-          <option key={option} value={option}>
+          <option className="mbk-reset" key={option} value={option}>
             {label}
           </option>
         ))}
