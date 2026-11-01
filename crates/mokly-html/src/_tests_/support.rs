@@ -188,6 +188,29 @@ pub(super) fn prepared_html(body: &str, component: &str) -> PreparedCatalogue {
     )
 }
 
+/// Prepare an HTML component with an integer `count` prop and optional screen props.
+pub(super) fn prepared_html_count(
+    body: &str,
+    component: &str,
+    screen_props: &str,
+) -> PreparedCatalogue {
+    prepare(
+        BTreeMap::from([
+            (
+                PathBuf::from("/repo/specs/home.screen.html"),
+                format!("---\ntitle: Home\n{screen_props}---\n{body}"),
+            ),
+            (
+                PathBuf::from("/repo/specs/note.component.html"),
+                format!(
+                    "---\ntitle: Note\nelement: ui-note\npropSchema: {{type: object, additionalProperties: false, properties: {{count: {{type: integer}}}}}}\n---\n{component}"
+                ),
+            ),
+        ]),
+        Arc::new(Unimock::new(())),
+    )
+}
+
 fn prepare(
     files: BTreeMap<PathBuf, String>,
     definitions: Arc<dyn DefinitionProvider>,

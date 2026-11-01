@@ -23,15 +23,20 @@ pub fn validate<'a>(input: impl Into<HtmlInput<'a>>, fragment_markers: bool) -> 
                     .get(error.span.start..error.span.end)
                     .unwrap_or("")
                     .to_ascii_lowercase();
-                if matches!(
+                let navigation = matches!(
                     name.as_str(),
                     "href" | "data-nav-href" | "data-mokly-link" | "data-mokly-target"
-                ) || name.starts_with("data-mokly-link-control")
-                    || fragment_markers
-                {
+                ) || name.starts_with("data-mokly-link-control");
+                if navigation {
                     return Err(invalid(
                         Code::BuildInvalid,
                         format!("duplicate navigation attribute {name}"),
+                    ));
+                }
+                if fragment_markers {
+                    return Err(invalid(
+                        Code::BuildInvalid,
+                        format!("duplicate attribute {name} in consumer output"),
                     ));
                 }
             }
