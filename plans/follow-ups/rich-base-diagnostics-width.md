@@ -146,6 +146,9 @@
     exception changes once. The D work does not wait for this answer,
     because the user chose D for a later small pull request. Every option
     here keeps the scripts hint whole, as that D requires.
+  - [base-diagnostic-location-lines.md](./base-diagnostic-location-lines.md)
+    changes the same code, `changes_output::diagnostics`, so one branch can
+    do both. The rich width of its following lines follows the answer here.
 - **Recommendation:** A. It is the smallest option that makes the contract
   match the full diagnostics on `origin/main`. E best protects the codebase.
 - **Action:** ask the user, because A changes the width rule for each base
