@@ -54,10 +54,11 @@
   [coalesce-document-composition.md](./coalesce-document-composition.md) owns
   the document and stylesheet cache follow-ups of the same acceptance decision.
   It removes repeated cache work.
-  [large-react-startup.md](./large-react-startup.md) targets usable startup of
-  large React catalogues, where JavaScript compilation dominates. Both startup
-  items touch Serve and the pool, but this item concerns the first background
-  renders after readiness.
+  The
+  [large React startup item at its last commit](https://github.com/mokly-ai/mokly/blob/75bacb9d016205c804633b79ff0e8496c6c07929/plans/follow-ups/large-react-startup.md)
+  targeted usable startup of large React catalogues. It closed on 2026-11-01,
+  when large React startup measured about 3.7 s, cold and warm. This item
+  concerns the first background renders after readiness.
 - **Recommendation:** C. Pool-level acquisition removes the wait on a starting
   sidecar for every request while keeping on-demand startup. The record first
   recommended B.
