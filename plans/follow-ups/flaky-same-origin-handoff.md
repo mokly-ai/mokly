@@ -68,6 +68,13 @@
     that does not hold the link yet. Another possible source is an empty
     document that the same-origin adapter shows during a handoff. Nobody
     confirmed either source.
+  - Third failure: on 2026-11-01 the test failed in remote browser shard 2
+    of 4 of the complete gate run `20261101T134937Z-449298`, on the branch
+    `conductor/rust-rebuild-59-performance-follow-ups` at `f70d9693`, with
+    the same failure text at line 246, called from line 206. That branch
+    changes no browser, viewer, or adapter code. A local rerun of the spec
+    file passed both of its tests, and the next complete gate on the same
+    commit passed.
 - **Impact if no action:** The browser suite can fail at random on a correct
   change, and each failure costs a rerun. A real handoff defect can hide
   behind a flake label.

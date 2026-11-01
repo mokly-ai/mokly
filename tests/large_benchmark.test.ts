@@ -173,6 +173,16 @@ test("a failed CLI preserves a failed measurement and its diagnostic", async (t)
       },
       ["build"],
       1,
+      {
+        acceptanceForFixture: async () => ({
+          profile: "release",
+          target: "test-target",
+          binarySha256: "c".repeat(64),
+          sourceCommit: "test-commit",
+          sourceTree: "test-tree",
+          dirty: false,
+        }),
+      },
     ),
     /exited with 3/,
   );
