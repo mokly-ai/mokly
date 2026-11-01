@@ -12,19 +12,171 @@
       "types": "./dist/appearance-selector/appearance-selector.d.ts",
       "import": "./dist/appearance-selector/appearance-selector.js"
     },
+    "./browser-bar": {
+      "types": "./dist/browser-bar/browser-bar.d.ts",
+      "import": "./dist/browser-bar/browser-bar.js"
+    },
+    "./catalogue-navigation": {
+      "types": "./dist/catalogue-navigation/catalogue-navigation.d.ts",
+      "import": "./dist/catalogue-navigation/catalogue-navigation.js"
+    },
+    "./catalogue-tree": {
+      "types": "./dist/catalogue-tree/catalogue-tree.d.ts",
+      "import": "./dist/catalogue-tree/catalogue-tree.js"
+    },
     "./change-mark": {
       "types": "./dist/change-mark/change-mark.d.ts",
       "import": "./dist/change-mark/change-mark.js"
+    },
+    "./change-status": {
+      "types": "./dist/change-status/change-status.d.ts",
+      "import": "./dist/change-status/change-status.js"
+    },
+    "./comparison-evidence": {
+      "types": "./dist/comparison-evidence/comparison-evidence.d.ts",
+      "import": "./dist/comparison-evidence/comparison-evidence.js"
+    },
+    "./comparison-pane": {
+      "types": "./dist/comparison-pane/comparison-pane.d.ts",
+      "import": "./dist/comparison-pane/comparison-pane.js"
+    },
+    "./comparison-stage": {
+      "types": "./dist/comparison-stage/comparison-stage.d.ts",
+      "import": "./dist/comparison-stage/comparison-stage.js"
     },
     "./comparison-toolbar": {
       "types": "./dist/comparison-toolbar/comparison-toolbar.d.ts",
       "import": "./dist/comparison-toolbar/comparison-toolbar.js"
     },
+    "./controls-panel": {
+      "types": "./dist/controls-panel/controls-panel.d.ts",
+      "import": "./dist/controls-panel/controls-panel.js"
+    },
+    "./details-panel": {
+      "types": "./dist/details-panel/details-panel.d.ts",
+      "import": "./dist/details-panel/details-panel.js"
+    },
+    "./device-frame": {
+      "types": "./dist/device-frame/device-frame.d.ts",
+      "import": "./dist/device-frame/device-frame.js"
+    },
+    "./edit-status": {
+      "types": "./dist/edit-status/edit-status.d.ts",
+      "import": "./dist/edit-status/edit-status.js"
+    },
+    "./embedded-layout": {
+      "types": "./dist/embedded-layout/embedded-layout.d.ts",
+      "import": "./dist/embedded-layout/embedded-layout.js"
+    },
+    "./empty-state": {
+      "types": "./dist/empty-state/empty-state.d.ts",
+      "import": "./dist/empty-state/empty-state.js"
+    },
+    "./flow-step": {
+      "types": "./dist/flow-step/flow-step.d.ts",
+      "import": "./dist/flow-step/flow-step.js"
+    },
+    "./highlight-label": {
+      "types": "./dist/highlight-label/highlight-label.d.ts",
+      "import": "./dist/highlight-label/highlight-label.js"
+    },
+    "./highlight-mask": {
+      "types": "./dist/highlight-mask/highlight-mask.d.ts",
+      "import": "./dist/highlight-mask/highlight-mask.js"
+    },
+    "./icon-control": {
+      "types": "./dist/icon-control/icon-control.d.ts",
+      "import": "./dist/icon-control/icon-control.js"
+    },
     "./icons": {
       "types": "./dist/icons/icons.d.ts",
       "import": "./dist/icons/icons.js"
     },
-    "./styles.css": "./dist/styles.css"
+    "./inspector": {
+      "types": "./dist/inspector/inspector.d.ts",
+      "import": "./dist/inspector/inspector.js"
+    },
+    "./instance-tree": {
+      "types": "./dist/instance-tree/instance-tree.d.ts",
+      "import": "./dist/instance-tree/instance-tree.js"
+    },
+    "./metadata-row": {
+      "types": "./dist/metadata-row/metadata-row.d.ts",
+      "import": "./dist/metadata-row/metadata-row.js"
+    },
+    "./preview-frame": {
+      "types": "./dist/preview-frame/preview-frame.d.ts",
+      "import": "./dist/preview-frame/preview-frame.js"
+    },
+    "./preview-state": {
+      "types": "./dist/preview-state/preview-state.d.ts",
+      "import": "./dist/preview-state/preview-state.js"
+    },
+    "./previous-version": {
+      "types": "./dist/previous-version/previous-version.d.ts",
+      "import": "./dist/previous-version/previous-version.js"
+    },
+    "./prop-field": {
+      "types": "./dist/prop-field/prop-field.d.ts",
+      "import": "./dist/prop-field/prop-field.js"
+    },
+    "./props-panel": {
+      "types": "./dist/props-panel/props-panel.d.ts",
+      "import": "./dist/props-panel/props-panel.js"
+    },
+    "./scheme-fallback": {
+      "types": "./dist/scheme-fallback/scheme-fallback.d.ts",
+      "import": "./dist/scheme-fallback/scheme-fallback.js"
+    },
+    "./screen-header": {
+      "types": "./dist/screen-header/screen-header.d.ts",
+      "import": "./dist/screen-header/screen-header.js"
+    },
+    "./segmented-control": {
+      "types": "./dist/segmented-control/segmented-control.d.ts",
+      "import": "./dist/segmented-control/segmented-control.js"
+    },
+    "./shell-layout": {
+      "types": "./dist/shell-layout/shell-layout.d.ts",
+      "import": "./dist/shell-layout/shell-layout.js"
+    },
+    "./stage": {
+      "types": "./dist/stage/stage.d.ts",
+      "import": "./dist/stage/stage.js"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./tag-chip": {
+      "types": "./dist/tag-chip/tag-chip.d.ts",
+      "import": "./dist/tag-chip/tag-chip.js"
+    },
+    "./tag-picker": {
+      "types": "./dist/tag-picker/tag-picker.d.ts",
+      "import": "./dist/tag-picker/tag-picker.js"
+    },
+    "./text-button": {
+      "types": "./dist/text-button/text-button.d.ts",
+      "import": "./dist/text-button/text-button.js"
+    },
+    "./top-bar": {
+      "types": "./dist/top-bar/top-bar.d.ts",
+      "import": "./dist/top-bar/top-bar.js"
+    },
+    "./usage-list": {
+      "types": "./dist/usage-list/usage-list.d.ts",
+      "import": "./dist/usage-list/usage-list.js"
+    },
+    "./variant-bar": {
+      "types": "./dist/variant-bar/variant-bar.d.ts",
+      "import": "./dist/variant-bar/variant-bar.js"
+    },
+    "./view-controls": {
+      "types": "./dist/view-controls/view-controls.d.ts",
+      "import": "./dist/view-controls/view-controls.js"
+    },
+    "./workspace-layout": {
+      "types": "./dist/workspace-layout/workspace-layout.d.ts",
+      "import": "./dist/workspace-layout/workspace-layout.js"
+    }
   },
   "peerDependencies": {
     "react": ">=19.0.0",

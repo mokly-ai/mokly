@@ -1,0 +1,19 @@
+/* The Light-only note is hidden until a Dark shell reveals it in a container
+   that keeps a light render: a frame label, the previous-version label, or
+   the band above a current document. Each container's stylesheet reveals
+   it. */
+.mbk-frame-scheme-note {
+  display: none;
+  font-weight: 500;
+}
+
+/* A document with no dark render keeps its light page. The current
+   document's band and the removed document's label are always rendered, and
+   name that fallback only while Dark. */
+.mbk-previous.mbk-scheme-fallback {
+  display: none;
+}
+
+.mbk[data-mokly-color-scheme="dark"] .mbk-previous.mbk-scheme-fallback {
+  display: block;
+}

@@ -1,63 +1,19 @@
 /** The comparison band: its modes, Scroll together and Refresh. */
 
+import {
+  SegmentedControl,
+  type Segment,
+} from "../segmented-control/segmented-control.js";
+
 /** A comparison presentation: Current, or one of the three diff modes. */
 export type ComparisonMode = "current" | "side" | "overlay" | "difference";
 
-const modes: readonly [ComparisonMode, string][] = [
+const modes: readonly Segment<ComparisonMode>[] = [
   ["current", "Current"],
   ["side", "Side by side"],
   ["overlay", "Overlay"],
   ["difference", "Difference"],
 ];
-
-/**
- * One mode of the group. A mode with an address is a link. A mode without
- * one is a toggle button that reports the choice, or inert text when the band
- * is not interactive. A link or inert text names the shown mode as the
- * current page, because each mode of a static depiction is its own page.
- */
-function Mode({
-  href,
-  interactive,
-  label,
-  onMode,
-  shown,
-  value,
-}: {
-  href: string | undefined;
-  interactive: boolean;
-  label: string;
-  onMode: (mode: ComparisonMode) => void;
-  shown: boolean;
-  value: ComparisonMode;
-}) {
-  if (href !== undefined)
-    return (
-      <a
-        aria-current={shown ? "page" : undefined}
-        data-diff-mode={value}
-        href={href}
-      >
-        {label}
-      </a>
-    );
-  if (!interactive)
-    return (
-      <span aria-current={shown ? "page" : undefined} data-diff-mode={value}>
-        {label}
-      </span>
-    );
-  return (
-    <button
-      aria-pressed={shown}
-      data-diff-mode={value}
-      onClick={() => onMode(value)}
-      type="button"
-    >
-      {label}
-    </button>
-  );
-}
 
 /** Refresh, or its picture in a band that is not interactive. */
 function Refresh({
@@ -73,26 +29,30 @@ function Refresh({
     return (
       <span
         aria-label="Refresh comparison"
-        className="mbk-diff-refresh"
+        className="mbk-diff-refresh mbk-reset"
         data-diff-refresh=""
         hidden={hidden}
         role="img"
         title="Refresh comparison"
       >
-        <span aria-hidden="true">↻</span>
+        <span aria-hidden="true" className="mbk-reset">
+          ↻
+        </span>
       </span>
     );
   return (
     <button
       aria-label="Refresh comparison"
-      className="mbk-diff-refresh"
+      className="mbk-diff-refresh mbk-reset"
       data-diff-refresh=""
       hidden={hidden}
       onClick={onRefresh}
       title="Refresh comparison"
       type="button"
     >
-      <span aria-hidden="true">↻</span>
+      <span aria-hidden="true" className="mbk-reset">
+        ↻
+      </span>
     </button>
   );
 }
@@ -140,29 +100,26 @@ export function ComparisonToolbar({
   together: boolean;
 }) {
   return (
-    <div className="mbk-diff-toolbar" hidden={!eligible}>
-      <span aria-label="Comparison mode" className="mbk-seg" role="group">
-        {modes.map(([value, label]) => (
-          <Mode
-            href={modeHref?.(value)}
-            interactive={interactive}
-            key={value}
-            label={label}
-            onMode={onMode}
-            shown={mode === value}
-            value={value}
-          />
-        ))}
-      </span>
-      <label className="mbk-diff-sync" hidden={current}>
+    <div className="mbk-diff-toolbar mbk-reset" hidden={!eligible}>
+      <SegmentedControl
+        attribute="data-diff-mode"
+        href={modeHref}
+        interactive={interactive}
+        label="Comparison mode"
+        onChange={onMode}
+        segments={modes}
+        value={mode}
+      />
+      <label className="mbk-diff-sync mbk-reset" hidden={current}>
         <input
           checked={together}
+          className="mbk-reset"
           data-diff-scroll-together=""
           onChange={(event) => onTogether(event.currentTarget.checked)}
           role="switch"
           type="checkbox"
         />
-        <span aria-hidden="true" className="mbk-diff-sync-track" />
+        <span aria-hidden="true" className="mbk-diff-sync-track mbk-reset" />
         Scroll together
       </label>
       <Refresh

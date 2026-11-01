@@ -2,7 +2,8 @@
  * Restores the standalone catalogue's Appearance on the document root and keeps
  * every frame showing the matching fragment. The browser entry installs it
  * before the shell's first render, so a dark reader never sees a light first
- * frame; the React bridge then follows it through `appearance_host.ts`.
+ * frame; the React bridge then follows it through `appearance_host.ts` and
+ * marks the shell root with the same appearance and preview scheme.
  */
 
 import { normalizeTheme, THEME_ATTRIBUTE } from "../viewer/theme.js";
@@ -41,8 +42,6 @@ interface AppearanceControl {
 
 /** The document surface this module touches, so a test can supply its own. */
 export interface AppearanceDocument {
-  /** Absent while the asset runs ahead of the stylesheet, in the head. */
-  body?: { setAttribute(name: string, value: string): void } | null | undefined;
   documentElement: {
     getAttribute(name: string): string | null;
     setAttribute(name: string, value: string): void;
@@ -67,17 +66,26 @@ export interface AppearanceWindow {
     ((theme: ViewerTheme, scheme: "dark" | "light") => void) | undefined;
 }
 
+/** The appearance that a document shows: the reader's choice and its scheme. */
+export interface EffectiveAppearance {
+  theme: ViewerTheme;
+  /** The preview scheme, which resolves Auto through the system. */
+  scheme: "dark" | "light";
+}
+
 /** A live installation: choose an appearance, or remove what it installed. */
 export interface AppearanceHandle {
   choose(theme: ViewerTheme): void;
   /** Apply a route pin without persisting it or overriding a reader choice. */
   applyRoute(scheme: "dark" | "light" | undefined): void;
   /**
-   * Re-applies once the document has a body, frames and controls. The asset
-   * runs in the head so the root is right before the first paint, and calls
-   * this when the DOM is ready to finish the job.
+   * Re-applies once the document has frames and controls. The asset runs in
+   * the head so the root is right before the first paint, and calls this when
+   * the DOM is ready to finish the job.
    */
   refresh(): void;
+  /** The appearance and preview scheme in force, which a first render reads. */
+  current(): EffectiveAppearance;
   dispose(): void;
 }
 
@@ -96,6 +104,7 @@ const INERT: AppearanceHandle = {
   choose: () => {},
   applyRoute: () => {},
   refresh: () => {},
+  current: () => ({ theme: "auto", scheme: "light" }),
   dispose: () => {},
 };
 
@@ -108,6 +117,7 @@ interface Controller {
   theme: ViewerTheme;
   chosen: boolean;
   handles: number;
+  current(): EffectiveAppearance;
   apply(): void;
   bind(): void;
   choose(theme: ViewerTheme): void;
@@ -169,12 +179,15 @@ function createController(
     }),
     chosen: false,
     handles: 0,
+    current: () => ({
+      theme: controller.theme,
+      scheme: effectiveScheme(controller.theme, media.matches),
+    }),
     apply() {
       root.setAttribute(THEME_ATTRIBUTE, controller.theme);
-      const scheme = effectiveScheme(controller.theme, media.matches);
-      // The preview scheme is the same choice, so the document mark the shell
-      // already keys its frames and captions off follows the appearance.
-      document.body?.setAttribute("data-mokly-color-scheme", scheme);
+      // The preview scheme is the same choice. The shell root shows it through
+      // the bridge, and until the bridge mounts, the frames follow it here.
+      const { scheme } = controller.current();
       if (!window.onAppearance) applyFrames(document, scheme);
       for (const select of document.querySelectorAll(SELECT_SELECTOR))
         select.value = controller.theme;
@@ -251,6 +264,7 @@ export function installAppearance(
       controller.bind();
       controller.apply();
     },
+    current: () => controller.current(),
     dispose() {
       if (!live) return;
       live = false;

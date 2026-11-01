@@ -74,9 +74,9 @@ export function registerComparisonDesign(
           viewport,
         ),
       );
-      await expect(page.locator('[data-change-status="changed"]')).toHaveText(
-        "Changed",
-      );
+      await expect(
+        page.locator('.mbk-entry-status[data-status="Changed"]'),
+      ).toHaveText("Changed");
       const controls = page.getByRole("group", { name: "Comparison mode" });
       await expect(controls).toBeVisible();
       await expect(controls.locator('[aria-current="page"]')).toHaveText(
@@ -87,7 +87,9 @@ export function registerComparisonDesign(
       await expect(controls).toContainText("Difference");
       if (viewport === "desktop")
         await expect(
-          page.locator(".mbk-nav-row.active .mbk-nav-changed-text"),
+          page.locator(
+            '.mbk-nav-row[aria-current="page"][data-changed="true"] .mbk-nav-changed-text',
+          ),
         ).toHaveText("Changed");
     }
   });
@@ -119,12 +121,12 @@ export function registerComparisonDesign(
         );
       await expect(page.locator(".mbk-screen-head h2")).toHaveText("Details");
       await expect(
-        page.locator('[data-change-status="unmodified"]'),
+        page.locator('.mbk-entry-status[data-status="Unmodified"]'),
       ).toHaveText("Unmodified");
       await expect(
         page.getByRole("group", { name: "Comparison mode" }),
       ).toHaveCount(0);
-      await expect(page.locator(".mbk-comparison-stage")).toHaveCount(0);
+      await expect(page.locator(".mbk-diff-screen")).toHaveCount(0);
       await expect(page.locator(".mbk-comparison-details")).toContainText(
         /Examined and excluded:\s*generated\/excluded\.css\s*No changes to this screen\.$/,
       );
@@ -176,7 +178,7 @@ export function registerComparisonDesign(
         });
         if (route === "outcomes/added") {
           await expect(
-            page.locator('details[data-panel="info"]'),
+            page.locator('details[data-inspector-tab="details"]'),
           ).not.toHaveAttribute("open", "");
           await page
             .getByRole("button", { name: "Details", exact: true })
@@ -209,13 +211,11 @@ export function registerComparisonDesign(
         await expect(page.locator(".mbk-nav .mbk-nav-resize")).toHaveCount(
           viewport === "desktop" ? 1 : 0,
         );
-        await expect(page.locator(".ce-inspector-resize:visible")).toHaveCount(
+        await expect(page.locator(".mbk-inspector-resize:visible")).toHaveCount(
           viewport === "desktop" ? 1 : 0,
         );
         if (route === "outcomes/removed") {
-          await expect(page.locator("[data-change-status]")).toHaveText(
-            "Removed",
-          );
+          await expect(page.locator(".mbk-entry-status")).toHaveText("Removed");
           await expect(
             page.getByText("Farewell was removed from the catalogue.", {
               exact: true,
@@ -251,7 +251,7 @@ export function registerComparisonDesign(
       await page.goto(
         design("design/changes/outcomes/previous-version/no-view", viewport),
       );
-      await expect(page.locator("[data-change-status]")).toHaveText("Removed");
+      await expect(page.locator(".mbk-entry-status")).toHaveText("Removed");
       await expect(page.locator(".mbk-previous")).toHaveText(
         "Showing previous version",
       );
@@ -262,7 +262,7 @@ export function registerComparisonDesign(
       const hint = page.locator(".mbk-preview-switch");
       const captured = page.locator(".ce-preview-view:visible .browser-frame");
       const selection = page.getByRole("combobox", {
-        name: "Preview viewport",
+        name: "Viewport",
       });
       await expect(selection).toHaveValue("mobile");
       await expect(note).toBeVisible();

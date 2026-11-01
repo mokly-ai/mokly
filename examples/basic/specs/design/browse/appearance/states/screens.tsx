@@ -1,14 +1,17 @@
 import { defineScreen } from "@mokly/mokly";
 
+import { DetailsBody } from "../../../../../../../packages/ui/src/details-panel/details-panel.js";
+import { MetadataCode } from "../../../../../../../packages/ui/src/metadata-row/metadata-row.js";
+import { LightOnlyBand } from "../../../../../../../packages/ui/src/scheme-fallback/scheme-fallback.js";
 import { appearanceDesignMetadata } from "../../../metadata.js";
 import { artboards } from "../../../parts/artboards.js";
 import { DESTINATIONS } from "../../../parts/destinations.js";
 import { DetailsPanel } from "../../../parts/details.js";
 import { ENTRY_PATHS } from "../../../parts/entry_paths.js";
-import { LightOnlyBand, MarkdownStage } from "../../../parts/markdown.js";
+import { MarkdownStage } from "../../../parts/markdown.js";
 import { MetaRow } from "../../../parts/metadata_row.js";
 import { NavTree, type NavNode } from "../../../parts/nav.js";
-import { PreviousVersionLabel } from "../../../parts/removed_preview.js";
+import { PreviousVersionStage } from "../../../parts/removed_preview.js";
 import { ScreenHead, type ArtboardViewport } from "../../../parts/shell.js";
 import { PaymentTerms } from "../../../parts/spec_documents.js";
 import {
@@ -25,12 +28,17 @@ function LightOnlyScreen({ viewport }: { viewport: ArtboardViewport }) {
       design={DESTINATIONS.appearanceLightOnly}
       viewport={viewport}
     >
-      <AppearanceHead
-        path={ENTRY_PATHS.details}
-        title="Details"
+      <AppearanceWorkspace
+        header={
+          <AppearanceHead
+            path={ENTRY_PATHS.details}
+            title="Details"
+            viewport={viewport}
+          />
+        }
+        subject="details"
         viewport={viewport}
       />
-      <AppearanceWorkspace subject="details" viewport={viewport} />
     </AppearanceShell>
   );
 }
@@ -43,12 +51,17 @@ function AutoAppearance({ viewport }: { viewport: ArtboardViewport }) {
       design={DESTINATIONS.appearanceAuto}
       viewport={viewport}
     >
-      <AppearanceHead
-        path={ENTRY_PATHS.welcome}
-        title="Welcome"
+      <AppearanceWorkspace
+        header={
+          <AppearanceHead
+            path={ENTRY_PATHS.welcome}
+            title="Welcome"
+            viewport={viewport}
+          />
+        }
+        subject="welcome"
         viewport={viewport}
       />
-      <AppearanceWorkspace subject="welcome" viewport={viewport} />
     </AppearanceShell>
   );
 }
@@ -85,20 +98,11 @@ function LightOnlyCurrentDocument({
         <PaymentTerms />
       </MarkdownStage>
       <DetailsPanel>
-        <div className="mbk-details-body">
-          <div>
-            <p className="mbk-details-desc">
-              When an invoice is due, and what happens once it is late.
-            </p>
-          </div>
-          <div className="mbk-meta">
-            <MetaRow name="source" label="Source">
-              <code className="mbk-code">
-                specs/account/billing/payment-terms.md
-              </code>
-            </MetaRow>
-          </div>
-        </div>
+        <DetailsBody description="When an invoice is due, and what happens once it is late.">
+          <MetaRow name="source" label="Source">
+            <MetadataCode>specs/account/billing/payment-terms.md</MetadataCode>
+          </MetaRow>
+        </DetailsBody>
       </DetailsPanel>
     </AppearanceShell>
   );
@@ -141,24 +145,28 @@ function LightOnlyDocument({ viewport }: { viewport: ArtboardViewport }) {
         status="removed"
         title="Payment terms"
       />
-      <PreviousVersionLabel lightOnly />
-      <MarkdownStage lightOnly>
-        <PaymentTerms />
-      </MarkdownStage>
+      <PreviousVersionStage
+        entry={{
+          kind: "document",
+          path: ENTRY_PATHS.paymentTerms,
+          title: "Payment terms",
+        }}
+        lightOnly
+        viewport={viewport}
+      >
+        <MarkdownStage lightOnly>
+          <PaymentTerms />
+        </MarkdownStage>
+      </PreviousVersionStage>
       <DetailsPanel>
-        <div className="mbk-details-body">
-          <div>
-            <p className="mbk-details-desc">
-              When an invoice is due, and what happens once it is late.
-            </p>
-            <p>Location: Account › Billing &amp; Payments</p>
-          </div>
-          <div className="mbk-meta">
-            <MetaRow name="source" label="Source">
-              Previous version
-            </MetaRow>
-          </div>
-        </div>
+        <DetailsBody description="When an invoice is due, and what happens once it is late.">
+          <MetaRow name="source" label="Source">
+            Previous version
+          </MetaRow>
+          <MetaRow name="location" label="Location">
+            Account › Billing &amp; Payments
+          </MetaRow>
+        </DetailsBody>
       </DetailsPanel>
     </AppearanceShell>
   );

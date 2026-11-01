@@ -6,6 +6,7 @@ use mokly_cli::build::BuildChanges;
 use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
 use mokly_cli::static_build::{Phase, Phases};
+use mokly_compare::comparison_steps::Step;
 use mokly_compare::comparison_types::ComparisonResult;
 use mokly_model::review::ReviewResultV8;
 use mokly_model::snapshot::CatalogueChangeSnapshotV4;
@@ -94,6 +95,7 @@ fn ready_and_unavailable_comparisons_settle_once_with_their_measured_duration() 
                 animate: false,
             };
             output.start(Phase::Comparing("base".into()));
+            output.step(Step::Installing);
             output.changes(&changes);
             output.clear();
             let text = written.lock().unwrap().join("");
@@ -106,4 +108,53 @@ fn ready_and_unavailable_comparisons_settle_once_with_their_measured_duration() 
             assert!(state.label.is_none() && state.started.is_none());
         }
     }
+}
+
+#[test]
+fn animated_steps_relabel_the_comparison_and_never_reach_its_completion_line() {
+    let written = Arc::new(Mutex::new(Vec::new()));
+    let capture = written.clone();
+    let (stop, _) = mpsc::channel();
+    let output = super::Lines {
+        clock: Arc::new(Unimock::new((
+            ClockMock::now_ms.next_call(matching!()).returns(1_000_u64),
+            ClockMock::now_ms.next_call(matching!()).returns(4_200_u64),
+        ))),
+        cwd: "/repo".into(),
+        style: Style {
+            mode: Mode::Rich,
+            color: false,
+            ascii: true,
+            columns: 200,
+        },
+        redactor: Arc::new(Redactor::default()),
+        terminal: Arc::new(Unimock::new((
+            TerminalMock::stdout
+                .each_call(matching!(_))
+                .answers_arc(Arc::new(move |_, text| {
+                    capture.lock().unwrap().push(text.to_owned())
+                })),
+            TerminalMock::stderr.next_call(matching!("")).returns(()),
+        ))),
+        state: Arc::new(Mutex::new(super::State::default())),
+        stop,
+        timer: Mutex::new(None),
+        animate: true,
+    };
+    output.start(Phase::Comparing("origin/main".into()));
+    output.step(Step::Reading);
+    output.step(Step::Comparing);
+    output.changes(&ready());
+    output.step(Step::Rendering);
+    assert_eq!(
+        *written.lock().unwrap(),
+        [
+            "\r\x1b[2K",
+            "\r\x1b[2K  | Comparing with origin/main",
+            "\r\x1b[2K  | Comparing with origin/main · reading base catalogue",
+            "\r\x1b[2K  | Comparing with origin/main · finding changes",
+            "\r\x1b[2K",
+            "  + Changes ready · 0 changes (3.2s)\n",
+        ]
+    );
 }

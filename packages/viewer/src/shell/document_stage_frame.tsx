@@ -1,6 +1,13 @@
-/** The frame of a whole-document page or Markdown document. */
+/**
+ * The frame of a whole-document page or Markdown document. This container
+ * mounts the frame and derives its sources; `@mokly/ui/preview-frame` draws
+ * the frame and `@mokly/ui/scheme-fallback` the Light-only band.
+ */
 
 import { useContext, useMemo } from "react";
+
+import { DocumentFrame, PreviewIframe } from "@mokly/ui/preview-frame";
+import { LightOnlyBand } from "@mokly/ui/scheme-fallback";
 
 import { currentDocumentPath } from "../catalogue/delivery_paths.js";
 import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
@@ -13,7 +20,7 @@ import {
   type ShellFrameIdentity,
 } from "./frame_registry.js";
 import { useFrameGeneration, useFrameSource } from "./frame_source_hook.js";
-import { documentLightOnly, LightOnlyBand } from "./scheme_fallback.js";
+import { documentLightOnly } from "./scheme_fallback.js";
 import { framePath, unavailableUsage } from "./stage_sources.js";
 import { useOptionalShellStore } from "./store_context.js";
 
@@ -61,48 +68,35 @@ export function DocumentStageFrame({
   return (
     <>
       {documentLightOnly(entry, hasDarkFragments) ? <LightOnlyBand /> : null}
-      <div
-        className="mbk-stage-embed"
-        data-mokly-scroll="embed"
-        data-preview-color-scheme={scheme}
-      >
+      <DocumentFrame error={mounted.status === "error"} scheme={scheme}>
         {source ? (
-          <iframe
-            aria-busy={mounted.status === "loading" ? true : undefined}
-            className="mbk-frag"
-            data-mokly-fragment-frame=""
-            data-mokly-frame-state={mounted.status}
+          <PreviewIframe
+            busy={mounted.status === "loading"}
+            data={{
+              "data-mokly-fragment-frame": "",
+              "data-mokly-frame-state": mounted.status,
+              "data-fragment-light":
+                entry.kind === "document"
+                  ? framePath(
+                      currentDocumentPath(documentRoute(entry.path, "light")),
+                      fragment,
+                    )
+                  : undefined,
+              "data-fragment-dark":
+                entry.kind === "document" && entry.colorSchemes.includes("dark")
+                  ? framePath(
+                      currentDocumentPath(documentRoute(entry.path, "dark")),
+                      fragment,
+                    )
+                  : undefined,
+            }}
             key={generation}
-            data-fragment-light={
-              entry.kind === "document"
-                ? framePath(
-                    currentDocumentPath(documentRoute(entry.path, "light")),
-                    fragment,
-                  )
-                : undefined
-            }
-            data-fragment-dark={
-              entry.kind === "document" && entry.colorSchemes.includes("dark")
-                ? framePath(
-                    currentDocumentPath(documentRoute(entry.path, "dark")),
-                    fragment,
-                  )
-                : undefined
-            }
             ref={mounted.frameRef}
-            sandbox="allow-same-origin"
             src={initialSource}
             title={entry.title}
           />
-        ) : (
-          <p className="mbk-empty">This preview is unavailable.</p>
-        )}
-        {mounted.status === "error" ? (
-          <p className="mbk-frame-error" role="status">
-            This preview could not be loaded.
-          </p>
         ) : null}
-      </div>
+      </DocumentFrame>
     </>
   );
 }

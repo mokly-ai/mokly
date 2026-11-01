@@ -1,0 +1,49 @@
+/* Frames centre only while they fit: plain centring would push the start of a
+   row wider than the stage left of the scroll origin, out of reach. */
+.mbk-stage {
+  flex: 1;
+  display: flex;
+  justify-content: safe center;
+  align-items: flex-start;
+  gap: 40px;
+  min-height: 0;
+  padding: 28px;
+  overflow: auto;
+  background: radial-gradient(
+      circle at center,
+      var(--mbk-dot) 1px,
+      transparent 1px
+    )
+    0 0 / 22px 22px;
+}
+
+/* A live stage shows the frame of the selected viewport only. */
+.mbk-live[data-viewport="mobile"] .mbk-frame-desktop {
+  display: none;
+}
+
+.mbk-live[data-viewport="desktop"] .mbk-frame-mobile {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  /* Stacked frames start at the top: centring a column taller than the
+     stage would push its first frame above the scroll origin. A frame wider
+     than the stage starts at its left edge for the same reason. */
+  .mbk-stage {
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: safe center;
+  }
+}
+
+.mbk-component-stage {
+  align-items: flex-start;
+  overflow: auto;
+}
+
+/* With both viewports shown, a viewport that was not captured needs no
+   switch. */
+.mbk-live[data-viewport="both"] .mbk-preview-switch {
+  display: none;
+}

@@ -1,5 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
+import { MetadataCode } from "../../../../../../../packages/ui/src/metadata-row/metadata-row.js";
+import { PropFields } from "../../../../../../../packages/ui/src/prop-field/prop-field.js";
 import { CONTROLS_COPY } from "../../../components/controls/parts/copy.js";
 import { PreviewWorkspace } from "../../../components/parts/workspace.js";
 import { useDesignInstance } from "../../../library/composition.js";
@@ -10,6 +12,7 @@ import { artboards } from "../../../parts/artboards.js";
 import { DESTINATIONS } from "../../../parts/destinations.js";
 import { ENTRY_PATHS } from "../../../parts/entry_paths.js";
 import { MetaRow } from "../../../parts/metadata_row.js";
+import { miniView } from "../../../parts/mini_views.js";
 import type { ArtboardViewport } from "../../../parts/shell.js";
 import {
   AppearanceHead,
@@ -19,7 +22,7 @@ import {
 
 function PropsBody() {
   return (
-    <>
+    <PropFields>
       <propField.Component
         moklyInstance={useDesignInstance("label")}
         label="label"
@@ -62,7 +65,7 @@ function PropsBody() {
           </select>
         }
       />
-    </>
+    </PropFields>
   );
 }
 
@@ -73,12 +76,14 @@ function PropsValidation({ viewport }: { viewport: ArtboardViewport }) {
       design={DESTINATIONS.appearanceProps}
       viewport={viewport}
     >
-      <AppearanceHead
-        path={ENTRY_PATHS.welcome}
-        title="Welcome"
-        viewport={viewport}
-      />
       <PreviewWorkspace
+        header={
+          <AppearanceHead
+            path={ENTRY_PATHS.welcome}
+            title="Welcome"
+            viewport={viewport}
+          />
+        }
         inspector={
           <inspector.Component
             moklyInstance={useDesignInstance("inspector")}
@@ -93,6 +98,7 @@ function PropsValidation({ viewport }: { viewport: ArtboardViewport }) {
           />
         }
         viewport={viewport}
+        view={miniView("welcome")}
         render={(previewViewport) => <WelcomeShot viewport={previewViewport} />}
       />
     </AppearanceShell>
@@ -106,13 +112,13 @@ function InstanceBody() {
         Action
       </MetaRow>
       <MetaRow name="instance" label="Instance">
-        <code className="mbk-code">welcome-primary</code>
+        <MetadataCode>welcome-primary</MetadataCode>
       </MetaRow>
       <MetaRow name="variant" label="Variant">
         Default
       </MetaRow>
       <MetaRow name="source" label="Source">
-        <code className="mbk-code">src/components/action/action.mokly.tsx</code>
+        <MetadataCode>src/components/action/action.mokly.tsx</MetadataCode>
       </MetaRow>
     </div>
   );
@@ -125,12 +131,14 @@ function SelectedInstance({ viewport }: { viewport: ArtboardViewport }) {
       design={DESTINATIONS.appearanceInstance}
       viewport={viewport}
     >
-      <AppearanceHead
-        path={ENTRY_PATHS.welcome}
-        title="Welcome"
-        viewport={viewport}
-      />
       <PreviewWorkspace
+        header={
+          <AppearanceHead
+            path={ENTRY_PATHS.welcome}
+            title="Welcome"
+            viewport={viewport}
+          />
+        }
         inspector={
           <inspector.Component
             moklyInstance={useDesignInstance("inspector")}
@@ -145,6 +153,7 @@ function SelectedInstance({ viewport }: { viewport: ArtboardViewport }) {
           />
         }
         viewport={viewport}
+        view={miniView("welcome")}
         render={(previewViewport) => <WelcomeShot viewport={previewViewport} />}
       />
     </AppearanceShell>

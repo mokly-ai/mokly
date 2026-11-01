@@ -11,6 +11,7 @@ mod entry_publish;
 mod entry_serve;
 mod interrupts;
 mod one_shot;
+mod one_shot_summary;
 mod publication_runtime;
 mod render_runtime;
 mod serve_candidates;

@@ -1,18 +1,13 @@
-import type { ReactNode } from "react";
-
 import { defineScreen } from "@mokly/mokly";
 
-import { PreviewWorkspace } from "../../components/parts/workspace.js";
 import { designMetadata } from "../../metadata.js";
 import { PROFILE_CHANGES_ROWS } from "../../parts/account_nav_data.js";
 import { artboards } from "../../parts/artboards.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
-import { DetailsPanel } from "../../parts/details.js";
 import { ENTRY_PATHS } from "../../parts/entry_paths.js";
-import { MiniProfile, MiniSecurity } from "../../parts/mini_account.js";
 import { NavTree } from "../../parts/nav.js";
 import { NAV_TREE_PROFILE_OPEN } from "../../parts/nav_data.js";
-import { ReasonSentences } from "../../parts/reason_sentences.js";
+import { reasonEvidence } from "../../parts/reason_sentences.js";
 import {
   ScreenHead,
   Shell,
@@ -20,7 +15,8 @@ import {
   type ArtboardViewport,
   type ChangedView,
 } from "../../parts/shell.js";
-import { BrowserFrame, PhoneFrame } from "../../parts/stage.js";
+
+import { ProfileWorkspace, viewSwitch } from "./parts/profile_workspace.js";
 
 /** Only Security changed on the branch these four states depict. */
 const CHANGED_COUNT = 1;
@@ -33,63 +29,6 @@ const SECURITY_VIEWS: readonly ChangedView[] = [
   { viewport: "mobile", scheme: "light" },
   { viewport: "desktop", scheme: "light" },
 ];
-
-type ProfileSubject = "profile" | "profileSecurity";
-
-/**
- * The selected Profile or Security screen in both previews, Details closed. A
- * changed screen's Details add its comparison details.
- */
-function ProfileWorkspace({
-  comparisonEvidence,
-  subject,
-  viewport,
-}: {
-  comparisonEvidence?: ReactNode;
-  subject: ProfileSubject;
-  viewport: ArtboardViewport;
-}) {
-  return (
-    <PreviewWorkspace
-      viewport={viewport}
-      inspector={
-        <DetailsPanel
-          comparisonEvidence={comparisonEvidence}
-          subject={subject}
-        />
-      }
-      render={(previewViewport) => {
-        const compact = previewViewport === "mobile";
-        const content =
-          subject === "profile" ? (
-            <MiniProfile compact={compact} />
-          ) : (
-            <MiniSecurity compact={compact} />
-          );
-        return previewViewport === "mobile" ? (
-          <PhoneFrame label="Mobile" small={viewport === "mobile"}>
-            {content}
-          </PhoneFrame>
-        ) : (
-          <BrowserFrame
-            address={
-              subject === "profile"
-                ? "example.test/account/profile"
-                : "example.test/account/profile/security"
-            }
-            label="Desktop"
-          >
-            {content}
-          </BrowserFrame>
-        );
-      }}
-    />
-  );
-}
-
-function viewSwitch(viewport: ArtboardViewport) {
-  return <ViewSwitch active={viewport === "mobile" ? "mobile" : "both"} />;
-}
 
 /**
  * The Profile screen is its folder's own page, so its row is the folder's row:
@@ -111,13 +50,18 @@ function FolderScreen({ viewport }: { viewport: ArtboardViewport }) {
         ) : null
       }
     >
-      <ScreenHead
-        action={viewSwitch(viewport)}
-        crumbs={["Account"]}
-        path={ENTRY_PATHS.profile}
-        title="Profile"
+      <ProfileWorkspace
+        header={
+          <ScreenHead
+            action={viewSwitch(viewport)}
+            crumbs={["Account"]}
+            path={ENTRY_PATHS.profile}
+            title="Profile"
+          />
+        }
+        subject="profile"
+        viewport={viewport}
       />
-      <ProfileWorkspace subject="profile" viewport={viewport} />
     </Shell>
   );
 }
@@ -138,13 +82,21 @@ function FolderMember({ viewport }: { viewport: ArtboardViewport }) {
         ) : null
       }
     >
-      <ScreenHead
-        action={viewSwitch(viewport)}
-        crumbs={["Account", { label: "Profile", to: DESTINATIONS.indexEntry }]}
-        path={ENTRY_PATHS.profileSecurity}
-        title="Security"
+      <ProfileWorkspace
+        header={
+          <ScreenHead
+            action={viewSwitch(viewport)}
+            crumbs={[
+              "Account",
+              { label: "Profile", to: DESTINATIONS.indexEntry },
+            ]}
+            path={ENTRY_PATHS.profileSecurity}
+            title="Security"
+          />
+        }
+        subject="profileSecurity"
+        viewport={viewport}
       />
-      <ProfileWorkspace subject="profileSecurity" viewport={viewport} />
     </Shell>
   );
 }
@@ -170,14 +122,19 @@ function FolderScreenChanges({ viewport }: { viewport: ArtboardViewport }) {
         ) : null
       }
     >
-      <ScreenHead
-        action={viewSwitch(viewport)}
-        crumbs={["Account"]}
-        path={ENTRY_PATHS.profile}
-        status="unmodified"
-        title="Profile"
+      <ProfileWorkspace
+        header={
+          <ScreenHead
+            action={viewSwitch(viewport)}
+            crumbs={["Account"]}
+            path={ENTRY_PATHS.profile}
+            status="unmodified"
+            title="Profile"
+          />
+        }
+        subject="profile"
+        viewport={viewport}
       />
-      <ProfileWorkspace subject="profile" viewport={viewport} />
     </Shell>
   );
 }
@@ -205,17 +162,21 @@ function MemberChanges({ viewport }: { viewport: ArtboardViewport }) {
         ) : null
       }
     >
-      <ScreenHead
-        comparisons
-        action={<ViewSwitch active="mobile" changedViews={SECURITY_VIEWS} />}
-        comparisonMode="current"
-        crumbs={["Account", "Profile"]}
-        path={ENTRY_PATHS.profileSecurity}
-        status="changed"
-        title="Security"
-      />
       <ProfileWorkspace
-        comparisonEvidence={<ReasonSentences reasons={["material"]} />}
+        header={
+          <ScreenHead
+            comparisons
+            action={
+              <ViewSwitch active="mobile" changedViews={SECURITY_VIEWS} />
+            }
+            comparisonMode="current"
+            crumbs={["Account", "Profile"]}
+            path={ENTRY_PATHS.profileSecurity}
+            status="changed"
+            title="Security"
+          />
+        }
+        comparisonEvidence={{ reasons: reasonEvidence(["material"]) }}
         subject="profileSecurity"
         viewport={viewport}
       />

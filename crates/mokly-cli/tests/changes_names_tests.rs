@@ -17,6 +17,7 @@ use mokly_cli::grammar::{Build, Common};
 use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
 use mokly_cli::static_build::{Phase, Phases};
+use mokly_compare::comparison_steps::Step;
 use mokly_sidecar::workers::Diagnostics;
 use mokly_static::fingerprint::InputTreeMock;
 use tempfile::TempDir;
@@ -235,6 +236,7 @@ impl Phases for ProbeDiagnostics {
     fn start(&self, phase: Phase) {
         assert!(matches!(phase, Phase::Comparing(_)));
     }
+    fn step(&self, _: Step) {}
     fn diagnostic(&self, message: &str) {
         eprintln!("{message}");
     }

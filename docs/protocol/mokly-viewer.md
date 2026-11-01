@@ -17,10 +17,11 @@ The package has four entry points:
   `data-mokly-shell` element of the stub that the
   [shell delivery contract](./mokly-shell-delivery.md) defines. Serve and
   `build` deliver it as `/mokly-viewer/client/shell.js`.
-- `./data` exports, with no React dependency, the pure path functions and directory names of the [artifact path contract](./mokly-artifact-paths.md), the path grammar of the [path contract](./mokly-paths.md), the link grammar of the [authoring links contract](./mokly-authoring.md#links), and the prop schema validators of the [entry props contract](./mokly-entry-props.md#prop-schema-profile); `./styles.css` is the scoped stylesheet of an embedded root.
+- `./data` exports, with no React dependency, the pure path functions and directory names of the [artifact path contract](./mokly-artifact-paths.md), the path grammar of the [path contract](./mokly-paths.md), the link grammar of the [authoring links contract](./mokly-authoring.md#links), and the prop schema validators of the [entry props contract](./mokly-entry-props.md#prop-schema-profile); `./styles.css` is the stylesheet of an embedded root.
 
-The viewer depends on the [shared UI package](./mokly-ui-package.md) for the
-presentational components of its shell.
+The viewer renders every element of its shell with the components of the
+[shared UI package](./mokly-ui-package.md), and every style rule of its shell
+comes from that package.
 
 Every delivery renders the shell from data in the browser.
 
@@ -138,16 +139,26 @@ values under the [appearance contract](./mokly-viewer-appearance.md).
 
 Import `@mokly/viewer/styles.css` once. Its public accent surface and internal
 ownership follow the [shell design](./mokly-shell-design.md) and
-[brand contract](./mokly-shell-brand.md). Scoped styles exclude the host page
-and slot content; do not inject host CSS into frames. The rules of the shared
-UI package are unlayered and come before the shell's own rules, so a host rule
-competes with them as it does with a shell rule. Decision: unlayered rules, not
-a cascade layer, because a host reset or a host layer declared later would
+[brand contract](./mokly-shell-brand.md).
+
+Every rule of `styles.css` comes from the
+[shared UI package](./mokly-ui-package.md#stylesheets), apart from the
+`@font-face` rule of the shell font. The rules are unlayered, so a host rule
+competes with them by specificity and order. Decision: unlayered rules, not a
+cascade layer, because a host reset or a host layer declared later would
 otherwise restyle the package components, and one cascade then serves hosts,
-direct users of the package, and the design mockups. The host must give
-the viewer's containing element a definite height. The viewer fills that height,
-clips its outer shell and owns scrolling within the stage and other bounded
-shell regions; the embedding document must not be the stage scroll container.
+direct users of the package, and the design mockups.
+
+The rules exclude the host page and slot content without an `@scope` rule,
+under the [theme rules](./mokly-ui-package.md#theme-and-host-pages) of the
+package. Decision: no `@scope` rule, because a browser without `@scope`
+support drops the whole block and shows an unstyled viewer. Do not inject host
+CSS into frames.
+
+The host must give the viewer's containing element a definite height. The
+viewer fills that height, clips its outer shell and owns scrolling within the
+stage and other bounded shell regions; the embedding document must not be the
+stage scroll container.
 
 ## Shell Tree And State
 

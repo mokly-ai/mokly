@@ -1,0 +1,90 @@
+/* The Props tab's controls: the heading with the entry's title and Reset, the
+   notices and alerts, the reset status, and the fieldset of the fields. The
+   Reset of a static depiction is a link with the button's look. */
+.mbk-component-controls {
+  max-width: 680px;
+}
+
+.mbk-controls-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.mbk-controls-heading p {
+  margin: 0;
+  color: var(--chrome-muted);
+  font-size: 11px;
+}
+
+.mbk-controls-edited {
+  margin-left: 4px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: var(--mbk-status-changed-bg);
+  color: var(--mbk-status-changed-ink);
+}
+
+.mbk-controls-reset,
+a.mbk-controls-reset {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--mbk-accent-deep);
+  font: inherit;
+  font-size: 11px;
+  text-decoration: underline;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.mbk-controls-reset:disabled {
+  color: var(--chrome-muted);
+  text-decoration: none;
+  cursor: default;
+}
+
+.mbk-controls-notice {
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--chrome-hover);
+  color: var(--chrome-ink-2);
+  font-size: 12px;
+}
+
+.mbk-control-alert {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--mbk-danger-edge);
+  border-radius: 6px;
+  background: var(--mbk-danger-bg);
+  color: var(--mbk-danger-ink);
+  font-size: 12px;
+}
+
+.mbk-control-alert p {
+  margin: 4px 0 6px;
+}
+
+.mbk-control-alert .mbk-text-button {
+  text-decoration: underline;
+}
+
+.mbk-controls-restored {
+  margin: 0 0 8px;
+  color: var(--mbk-accent-deep);
+  font-size: 11px;
+}
+
+.mbk-controls-restored:empty {
+  margin: 0;
+}
+
+.mbk-control-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}

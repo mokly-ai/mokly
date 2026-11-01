@@ -14,7 +14,9 @@ esbuild outputs. Serve and `build` deliver them as
 
 ## Same-origin frames
 
-`sameOriginAdapter` keeps script-disabled frames and parent-owned overlays.
+`sameOriginAdapter` keeps script-disabled frames and reports their geometry.
+Both adapters draw nothing. The shell draws the masks and labels with
+`@mokly/ui` components from the reported instance boundaries.
 Its private current-document capabilities support the synchronous local shell,
 scroll restoration, and authenticated temporary control previews. Workspace,
 Browse state, and controls never read a frame document directly.
@@ -82,8 +84,8 @@ cargo xtask check --suite viewer
 - [`same_origin_access.ts`](./same_origin_access.ts) holds `localFrameAccess`,
   the only same-origin adapter code that reads a frame's document or window.
 - [`same_origin_highlight.ts`](./same_origin_highlight.ts) holds
-  `installLocalHighlight`, which draws the parent-owned mask, labels, and
-  selection.
+  `installLocalHighlight`, which tracks selected regions and reports picks
+  and Escape without drawing in either document.
 - [`component_geometry.ts`](./component_geometry.ts) holds `authenticateRanges`
   and `rangeBounds`, which measure clipped boxes with the clipping rules of
   [`../inspector/clipping.ts`](../inspector/clipping.ts).

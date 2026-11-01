@@ -1,5 +1,14 @@
 import type { ReactNode } from "react";
 
+import {
+  ComparisonLayer,
+  ComparisonSurface,
+  ComparisonViewport,
+  type ComparisonSide,
+} from "../../../../../packages/ui/src/comparison-pane/comparison-pane.js";
+import { ComparisonPanes } from "../../../../../packages/ui/src/comparison-stage/comparison-stage.js";
+import { FrameSettingScope } from "../library/preview/frame_placement.js";
+
 import { FramedShot, type CompareViewport } from "./compare_page.js";
 
 /** The comparison modes that stack both versions in one chrome. */
@@ -19,42 +28,67 @@ interface ComparisonStackProps {
 }
 
 /**
+ * One version's layer: the shipped opaque surface, which holds the depicted
+ * document at the drawn scroll position.
+ */
+function StackedVersion({
+  children,
+  scrolled,
+  side,
+}: {
+  children: ReactNode;
+  scrolled: boolean;
+  side: ComparisonSide;
+}) {
+  return (
+    <ComparisonLayer side={side}>
+      <ComparisonSurface>
+        <div
+          className="mbk-stack-document"
+          data-scrolled={scrolled ? "" : undefined}
+        >
+          {children}
+        </div>
+      </ComparisonSurface>
+    </ComparisonLayer>
+  );
+}
+
+/**
  * Overlay and Difference draw one chrome, a device for a screen or the bordered
- * frame for a saved component variant, whose viewport is the only scroll
- * container. Both versions therefore always sit at one scroll position:
- * Current on top at half opacity in Overlay, or blended by difference over the
- * opaque Before layer.
+ * frame for a saved component variant, whose shipped viewport holds both
+ * versions' layers. Both versions therefore always sit at one scroll
+ * position: Current on top at half opacity in Overlay, or blended by
+ * difference over the opaque Before layer. A static artboard cannot scroll,
+ * so a scrolled stack draws the viewport's scrollbar.
  */
 export function ComparisonStack({
   after,
   before,
   chrome,
   mode,
-  scrolled,
+  scrolled = false,
 }: ComparisonStackProps) {
   return (
-    <div className="mbk-compare" data-compare-mode={mode}>
-      {chrome(
-        <div
-          className="mbk-stack-viewport"
-          data-scrolled={scrolled ? "" : undefined}
-        >
-          <div className="mbk-stack">
-            <div className="mbk-stack-layer mbk-stack-layer--before">
+    <ComparisonPanes mode={mode}>
+      <FrameSettingScope setting="pane">
+        {chrome(
+          <ComparisonViewport>
+            <StackedVersion scrolled={scrolled} side="before">
               {before}
-            </div>
-            <div className="mbk-stack-layer mbk-stack-layer--after">
+            </StackedVersion>
+            <StackedVersion scrolled={scrolled} side="after">
               {after}
-            </div>
-          </div>
-          {scrolled ? (
-            <span className="mbk-stack-scrollbar" aria-hidden="true">
-              <span className="mbk-stack-thumb" />
-            </span>
-          ) : null}
-        </div>,
-      )}
-    </div>
+            </StackedVersion>
+            {scrolled ? (
+              <span className="mbk-stack-scrollbar" aria-hidden="true">
+                <span className="mbk-stack-thumb" />
+              </span>
+            ) : null}
+          </ComparisonViewport>,
+        )}
+      </FrameSettingScope>
+    </ComparisonPanes>
   );
 }
 

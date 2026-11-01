@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { designStyleRules, type ColorReference } from "./design_styles.js";
 import { repositoryRoot } from "./fixture.js";
 
 /** The two interface palettes the design mockups select between. */
@@ -41,6 +42,41 @@ export async function designPalette(): Promise<
   return { light: readTokens(light[1]), dark: readTokens(dark[1]) };
 }
 
+const PREVIEW_BLOCK = /:root\s*\{([^}]*)\}/;
+
+/**
+ * The preview tokens of the stage stylesheet: the screen, device, and traffic
+ * light colours, which stay independent of the interface appearance.
+ */
+export async function designPreviewTokens(): Promise<Map<string, string>> {
+  const source = await fs.readFile(
+    path.join(repositoryRoot, "examples/basic/design-stage.css"),
+    "utf8",
+  );
+  const block = PREVIEW_BLOCK.exec(source)?.[1];
+  if (!block) throw new Error("design-stage.css is missing its preview tokens");
+  return readTokens(block);
+}
+
+/** The shipped theme of `@mokly/ui`, by its repository path. */
+export const SHIPPED_THEME = "packages/ui/src/theme/theme.css";
+
+/**
+ * The tokens that the shipped theme declares on the viewer root class, which
+ * every artboard's and sample's root carries, when a design stylesheet
+ * imports the theme: its Light half, which the Dark half redeclares.
+ */
+export async function designThemeTokens(): Promise<Map<string, string>> {
+  const tokens = new Map<string, string>();
+  for (const rule of await designStyleRules())
+    if (rule.file === SHIPPED_THEME && rule.selector === ".mbk, .mbk-document")
+      for (const [, name, value] of rule.body.matchAll(
+        /(--[\w-]+)\s*:\s*([^;]+);/gu,
+      ))
+        tokens.set(name!, value!.replace(/\s+/gu, " ").trim());
+  return tokens;
+}
+
 function channel(value: number): number {
   const ratio = value / 255;
   return ratio <= 0.04045 ? ratio / 12.92 : ((ratio + 0.055) / 1.055) ** 2.4;
@@ -72,6 +108,39 @@ export function contrast(foreground: string, background: string): number {
   const ratio =
     (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
   return Math.floor(ratio * 100) / 100;
+}
+
+/** Resolves a reference to the colour it paints in one appearance. */
+function resolve(
+  reference: ColorReference,
+  tokens: Map<string, string>,
+): string | undefined {
+  return reference.token ? tokens.get(reference.token) : reference.literal;
+}
+
+/** Whether a palette value is an opaque `#rgb` or `#rrggbb` colour. */
+function isOpaque(color: string): boolean {
+  return /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/iu.test(color.trim());
+}
+
+/**
+ * A boundary sits between its own fill and the surface around it, so it only
+ * has to reach 3:1 against one of them to read as an edge. A translucent fill,
+ * such as the accent tint of a pressed icon button, shows the surface through
+ * it, so the surface decides.
+ */
+export function boundaryContrast(
+  boundary: ColorReference,
+  fill: ColorReference | undefined,
+  tokens: Map<string, string>,
+): number | undefined {
+  const edge = resolve(boundary, tokens);
+  if (!edge) return undefined;
+  const behind = fill ? resolve(fill, tokens) : undefined;
+  return Math.max(
+    behind && isOpaque(behind) ? contrast(edge, behind) : 0,
+    contrast(edge, tokens.get("--chrome-surface")!),
+  );
 }
 
 /** The CSS `rgb()` form of an opaque `#rgb` or `#rrggbb` colour. */

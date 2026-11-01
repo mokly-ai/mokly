@@ -20,12 +20,17 @@ function AppearanceOverview({ viewport }: { viewport: ArtboardViewport }) {
       design={DESTINATIONS.appearance}
       viewport={viewport}
     >
-      <AppearanceHead
-        path={ENTRY_PATHS.welcome}
-        title="Welcome"
+      <AppearanceWorkspace
+        header={
+          <AppearanceHead
+            path={ENTRY_PATHS.welcome}
+            title="Welcome"
+            viewport={viewport}
+          />
+        }
+        subject="welcome"
         viewport={viewport}
       />
-      <AppearanceWorkspace subject="welcome" viewport={viewport} />
     </AppearanceShell>
   );
 }

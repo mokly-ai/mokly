@@ -18,9 +18,25 @@ registration. Its public stylesheet imports the package stylesheets of the
 component and of each package component that it renders. The component keeps
 no copy of that markup or CSS. Decision: the mockup renders
 the package component, not its own copy kept aligned by tests, because two
-implementations drift and one serves the product and its mockups. The
-Example Action and Toolbar components, the miniature subject screens and the
-pictured usage fixtures keep their separate roles. Usage in the outer
+implementations drift and one serves the product and its mockups.
+
+A desktop render follows the shell's
+[layout breakpoint](./mokly-shell-device-chrome.md#responsive-behavior), so
+below it the chrome draws the shell's narrow form. Decision: no mockup rule
+holds the desktop form at that width, because the mockups show what the shell
+draws.
+
+Every other artboard part that a package component provides renders that
+component too, such as an artboard's shell and workspace layout, its panels
+and lists, and its highlight mask. The sheet that styles such a part imports
+the package stylesheets by repository path, and the artboard keeps no copy of
+that markup or CSS. Decision: the rule covers the artboard scaffolds, not only
+the inventory components, because an artboard copy drifts as an inventory copy
+does. Those parts stay unregistered, because a gallery group holds at most
+five components.
+
+The Example Action and Toolbar components, the miniature subject screens and
+the pictured usage fixtures keep their separate roles. Usage in the outer
 inspector comes from the entry detail Mokly records, not from those pictured
 fixtures. Samples and artboards add no consumer scripts.
 
@@ -75,10 +91,12 @@ Each inventory component has one markup and style implementation. Screens
 render it through its registered `.Component`, and no story-only copy exists.
 
 Shells, page layouts, preview workspaces, stage and grid layout helpers, and
-owning screen components stay ordinary composition. Their meaningful
-constituent controls, panels and frames are registered components. A
-whole-artboard component would make initial highlighting select nearly the
-entire screen and would obscure the screen's independent content boundary.
+owning screen components stay ordinary composition. Where the shared UI
+package provides one of these parts, the composition renders the package
+component. Their meaningful constituent controls, panels and frames are
+registered components. A whole-artboard component would make initial
+highlighting select nearly the entire screen and would obscure the screen's
+independent content boundary.
 
 Browse and Changes share the same bounded preview/inspector layout as component
 designs. Desktop keeps the divider resize grip; mobile uses the same icon strip
@@ -88,13 +106,14 @@ stays in the catalogue. The Details slot holds the descriptions, metadata,
 tags and comparison evidence.
 
 Selected-screen view options appear once in the header: a viewport dropdown
-and highlighting where relevant. The top-bar Appearance selector owns the
-catalogue-wide scheme; there is no second scheme icon in the header and no
-authored light/dark link pair. Unsupported transitions stay disabled. Viewport changes select the actual
-mobile/desktop previews without scrolling the whole page. Simultaneous previews
-reserve their intrinsic minimum width and wrap when needed; full-size phone
-frames must never overlap adjacent desktop content. Comparison mode
-segments stay comparison controls.
+and the Highlight components toggle, which every screen and component page
+draws in the state that the shell shows for its view. The top-bar Appearance
+selector owns the catalogue-wide scheme; there is no second scheme icon in the
+header and no authored light/dark link pair. Unsupported transitions stay
+disabled. Viewport changes select the actual mobile/desktop previews without
+scrolling the whole page. Simultaneous previews reserve their intrinsic minimum
+width and wrap when needed; full-size phone frames must never overlap adjacent
+desktop content. Comparison mode segments stay comparison controls.
 
 Every owning screen has separate desktop and mobile React components. Flows
 compose their owning screen components, with links back to those screens. No

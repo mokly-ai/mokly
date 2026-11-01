@@ -46,7 +46,10 @@ function counts(selection: Partial<ViewerSelection>) {
       const summary = html
         .slice(html.indexOf(`data-nav-folder="${folder}"`))
         .split("</summary>")[0]!;
-      return [folder, /class="mbk-nav-count">(\d+)</u.exec(summary)?.[1]];
+      return [
+        folder,
+        /class="mbk-nav-count mbk-reset">(\d+)</u.exec(summary)?.[1],
+      ];
     }),
   );
 }

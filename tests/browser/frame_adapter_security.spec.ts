@@ -29,7 +29,9 @@ test("inspector ignores wrong-origin/source/nonce, unknown fields and oversized 
         (message) => message.type === "ready",
       )!.nonce as string,
   );
-  const key = fixture.usage.instances[0]!.key;
+  const key = fixture.usage.instances.find(
+    (instance) => instance.id === "action",
+  )!.key;
   const request = {
     channel: "mokly-inspector",
     version: 2,
@@ -90,7 +92,17 @@ test("inspector ignores wrong-origin/source/nonce, unknown fields and oversized 
   );
   await expect(
     page.frameLocator("#frame").locator("[data-mokly-overlay]"),
-  ).toHaveCount(1);
+  ).toHaveCount(0);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as unknown as FrameTestWindow).wire.filter(
+            (message) => message.type === "ack" && message.requestId === 100,
+          ).length,
+      ),
+    )
+    .toBe(1);
   await page.evaluate(
     ({ request, origin }) =>
       document
@@ -103,7 +115,29 @@ test("inspector ignores wrong-origin/source/nonce, unknown fields and oversized 
   );
   await expect(
     page.frameLocator("#frame").locator("[data-mokly-overlay]"),
-  ).toHaveCount(1);
+  ).toHaveCount(0);
+  await page
+    .frameLocator("#frame")
+    .getByRole("button", { name: "Visible", exact: true })
+    .click();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as unknown as FrameTestWindow).frameEvents.filter(
+            (event) => event.type === "click",
+          ).length,
+      ),
+    )
+    .toBe(1);
+  expect(
+    await page.evaluate(
+      () =>
+        (window as unknown as FrameTestWindow).wire.filter(
+          (message) => message.type === "ack" && message.requestId === 100,
+        ).length,
+    ),
+  ).toBe(1);
   await page.evaluate(() =>
     (window as unknown as FrameTestWindow).mounted.dispose(),
   );

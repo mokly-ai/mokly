@@ -122,6 +122,7 @@ The development server, on-demand rendering, the watcher, live controls, termina
 
 - [CLI Terminal Compatibility And Errors](./mokly-terminal-errors.md)
 - [CLI Terminal Output](./mokly-terminal-output.md)
+- [CLI Comparison Steps](./mokly-terminal-steps.md)
 - [CLI Help And Version Bytes](./mokly-terminal-help.md)
 - [Component Controls](./mokly-component-controls.md)
 - [Mokly Build And Browse Runtime](./mokly-runtime.md)
@@ -165,7 +166,7 @@ The Browse shell: the embeddable viewer, appearance, navigation, frames, inspect
 - [Mokly Catalogue Navigation Contract](./mokly-navigation.md)
 - [Mokly Shell Brand](./mokly-shell-brand.md)
 - [Navigation Disclosure Persistence](./mokly-disclosure-persistence.md)
-- [Published Inspector And Overlay](./mokly-published-inspector.md)
+- [Published Inspector](./mokly-published-inspector.md)
 - [Shared UI Package](./mokly-ui-package.md)
 - [Shell Destination Queries](./mokly-shell-destinations.md)
 - [Shell Device Chrome And Preview Scheme](./mokly-shell-device-chrome.md)

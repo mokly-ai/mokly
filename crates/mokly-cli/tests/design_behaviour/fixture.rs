@@ -88,23 +88,23 @@ fn mutate(root: &Path, mutation: &str) {
         ),
         "stack" => (
             "parts/compare_stack.tsx",
-            "className=\"mbk-stack-layer mbk-stack-layer--after\"",
-            "className=\"mbk-stack-layer\"",
+            "<StackedVersion scrolled={scrolled} side=\"after\">",
+            "<StackedVersion scrolled={scrolled} side=\"before\">",
         ),
-        "caption" => (
+        "heading" => (
             "components/parts/preview.tsx",
-            "change = \"Appearance changed\"",
-            "change = \"Wrong recorded change\"",
+            "changed: \"Variant changed\",",
+            "changed: \"Wrong recorded change\",",
         ),
         "stack-swap" => (
             "components/parts/preview.tsx",
             "after={<ComparedVersion before={false} subject={subject} />}\n          before={<ComparedVersion before subject={subject} />}",
             "after={<ComparedVersion before subject={subject} />}\n          before={<ComparedVersion before={false} subject={subject} />}",
         ),
-        "caption-record" => (
+        "heading-record" => (
             "components/parts/comparison_fixtures.ts",
-            "export const actionComparison = {\n  status: \"changed\",\n  reason: \"output\",",
-            "export const actionComparison = {\n  status: \"changed\",\n  reason: \"styles\",",
+            "export const actionComparison = {\n  status: \"changed\",\n  reasons: [\"material\"],",
+            "export const actionComparison = {\n  status: \"changed\",\n  reasons: [\"removed\"],",
         ),
         "checklist" => (
             "components/parts/component_page.tsx",

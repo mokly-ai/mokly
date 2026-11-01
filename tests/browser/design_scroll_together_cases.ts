@@ -138,9 +138,9 @@ export function registerDesignScrollTogether(
               };
             });
           expect(facts.order, where).toEqual([
-            "mbk-seg",
-            "mbk-diff-sync",
-            "mbk-diff-refresh",
+            "mbk-seg mbk-reset",
+            "mbk-diff-sync mbk-reset",
+            "mbk-diff-refresh mbk-reset",
           ]);
           expect(facts.label, where).toBe("Scroll together");
           expect(facts.track, `${where}: the drawn state`).toBe(

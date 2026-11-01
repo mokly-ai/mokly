@@ -11,6 +11,8 @@ import {
 } from "../src/appearance-selector/appearance-selector.js";
 import { ChevronDownIcon } from "../src/icons/icons.js";
 
+import { assertSameElement } from "./dom-assertions.js";
+
 const MARK = {
   changedId: "root-mb-view-changed-scheme",
   changedText: "Other theme changed",
@@ -20,7 +22,10 @@ const MARK = {
 function appearanceSelect(): HTMLSelectElement {
   const select = screen.getByLabelText("Appearance", { exact: true });
   assert.ok(select instanceof HTMLSelectElement);
-  assert.equal(screen.getByRole("combobox", { name: "Appearance" }), select);
+  assertSameElement(
+    screen.getByRole("combobox", { name: "Appearance" }),
+    select,
+  );
   return select;
 }
 
@@ -153,7 +158,7 @@ test("a hidden control leaves nothing to choose", () => {
   const control = container.querySelector("[data-mokly-appearance-control]");
   assert.ok(control);
   assert.equal(control.hasAttribute("hidden"), true);
-  assert.equal(screen.queryByRole("combobox"), null);
+  assertSameElement(screen.queryByRole("combobox"), null);
 
   rerender(
     <AppearanceSelector {...MARK} changed hidden={false} value="dark" />,

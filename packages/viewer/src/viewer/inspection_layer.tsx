@@ -1,4 +1,4 @@
-/** Declarative labels for registry-backed public viewer inspection. */
+/** Declarative masks and labels for registry-backed public viewer inspection. */
 
 import {
   useEffect,
@@ -8,8 +8,12 @@ import {
   useSyncExternalStore,
 } from "react";
 
+import { HighlightLabel, LabelLayer } from "@mokly/ui/highlight-label";
+import { HighlightMask } from "@mokly/ui/highlight-mask";
+
 import type { Box } from "../client/frame_adapter.js";
 import { SupersededFrameGeometry } from "../shell/frame_geometry.js";
+import { frameInspectionMask } from "../shell/frame_inspection_mask.js";
 import {
   frameEntryKeys,
   frameHasInstance,
@@ -121,37 +125,50 @@ export function ViewerInspectionLayer({
     }
   });
 
+  const measured = current
+    ? sessions.map((session) => ({
+        session,
+        keys: sessionKeys(session, current),
+      }))
+    : [];
+  const masks = layer.current
+    ? measured.flatMap(({ session, keys }) => {
+        const result = registry.geometry.snapshot(session).result;
+        const mask =
+          result?.kind === "ready"
+            ? frameInspectionMask(
+                session,
+                result.boundaries,
+                keys,
+                layer.current!.getBoundingClientRect(),
+              )
+            : undefined;
+        return mask ? [mask] : [];
+      })
+    : [];
   const labels =
     current && layer.current
-      ? inspectionLabels(
-          model,
-          layer.current,
-          sessions.map((session) => ({
-            session,
-            keys: sessionKeys(session, current),
-          })),
-          registry,
-        )
+      ? inspectionLabels(model, layer.current, measured, registry)
       : [];
   return (
-    <div
-      data-mokly-label-layer=""
-      ref={layer}
-      style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
-    >
-      {labels.map((label) => (
-        <button
-          className="mbk-highlight-label"
-          data-mokly-label-key={label.id}
-          key={label.id}
-          onClick={() => onSelect(label.session, label.key, label.boxes)}
-          style={{ left: label.left, pointerEvents: "auto", top: label.top }}
-          type="button"
-        >
-          {label.text}
-        </button>
+    <>
+      <LabelLayer placement="root" ref={layer}>
+        {labels.map((label) => (
+          <HighlightLabel
+            key={label.id}
+            labelKey={label.id}
+            left={label.left}
+            onSelect={() => onSelect(label.session, label.key, label.boxes)}
+            pointerEvents="auto"
+            text={label.text}
+            top={label.top}
+          />
+        ))}
+      </LabelLayer>
+      {masks.map(({ generation, ...mask }) => (
+        <HighlightMask key={generation} {...mask} />
       ))}
-    </div>
+    </>
   );
 }
 

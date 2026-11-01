@@ -66,8 +66,8 @@ test("a scheme mark names its axis", () => {
         span.getAttribute("data-view-changed-text"),
     ]),
     [
-      ["mbk-view-changed", "scheme"],
-      ["mbk-view-changed-text", "scheme"],
+      ["mbk-view-changed mbk-reset", "scheme"],
+      ["mbk-view-changed-text mbk-reset", "scheme"],
     ],
   );
 });

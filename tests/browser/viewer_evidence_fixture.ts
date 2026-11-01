@@ -66,26 +66,23 @@ export async function presentation(page: Page, cross: boolean, count: number) {
   await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
     count,
   );
+  const overlays = page.locator(".mbk-highlight-layer");
+  await expect(overlays).toHaveCount(count);
   if (cross) {
-    for (const [index, viewport] of ["mobile", "desktop"].entries()) {
+    for (const viewport of ["mobile", "desktop"]) {
       const overlay = page
         .frameLocator(`iframe[data-workspace-frame="${viewport}"]`)
         .locator("[data-mokly-overlay]");
-      await expect(overlay).toHaveCount(index < count ? 1 : 0);
-      if (index < count)
-        await expect(overlay.locator("rect[stroke]")).not.toHaveCount(0);
+      await expect(overlay).toHaveCount(0);
     }
-  } else {
-    const overlays = page.locator(".mbk-highlight-layer");
-    await expect(overlays).toHaveCount(count);
-    for (let index = 0; index < count; index++) {
-      await expect(overlays.nth(index)).toHaveAttribute(
-        "data-highlight-viewport",
-        index === 0 ? "mobile" : "desktop",
-      );
-      await expect(overlays.nth(index).locator("rect[stroke]")).not.toHaveCount(
-        0,
-      );
-    }
+  }
+  for (let index = 0; index < count; index++) {
+    await expect(overlays.nth(index)).toHaveAttribute(
+      "data-highlight-viewport",
+      index === 0 ? "mobile" : "desktop",
+    );
+    await expect(
+      overlays.nth(index).locator(".mbk-highlight-outline"),
+    ).not.toHaveCount(0);
   }
 }

@@ -11,6 +11,9 @@ import noArtifactPathLiterals from "./scripts/eslint/no-artifact-path-literals.m
 import noDirectoryLiterals from "./scripts/eslint/no-directory-literals.mjs";
 import noEagerFixtureSetup from "./scripts/eslint/no-eager-fixture-setup.mjs";
 import noLateFixtureTeardown from "./scripts/eslint/no-late-fixture-teardown.mjs";
+import noViewerIntrinsicElements, {
+  viewerIntrinsicExemptions,
+} from "./scripts/eslint/no-viewer-intrinsic-elements.mjs";
 
 const gitignorePath = path.join(import.meta.dirname, ".gitignore");
 const uiPackage = path.join(import.meta.dirname, "packages/ui");
@@ -43,6 +46,7 @@ export default tseslint.config(
           "no-directory-literals": noDirectoryLiterals,
           "no-eager-fixture-setup": noEagerFixtureSetup,
           "no-late-fixture-teardown": noLateFixtureTeardown,
+          "no-viewer-intrinsic-elements": noViewerIntrinsicElements,
         },
       },
     },
@@ -188,6 +192,11 @@ export default tseslint.config(
     rules: {
       "mokly/kebab-case-file-names": ["error", { root: uiPackage }],
     },
+  },
+  {
+    files: ["packages/viewer/src/**/*.tsx"],
+    ignores: viewerIntrinsicExemptions,
+    rules: { "mokly/no-viewer-intrinsic-elements": "error" },
   },
   {
     files: ["packages/viewer/src/**/*.{ts,tsx}"],
