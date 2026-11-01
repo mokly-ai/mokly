@@ -1,6 +1,6 @@
 {
   "name": "mokly-workspace",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "description": "App-independent static mockup catalogues, development browsing, and on-demand visual comparisons.",
   "type": "module",
   "license": "MIT",
@@ -46,8 +46,8 @@
     "@firna/ui": "^0.14.0",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@happy-dom/global-registrator": "^21.0.4",
-    "@mokly/ui": "0.17.0",
-    "@mokly/viewer": "0.17.0",
+    "@mokly/ui": "0.18.0",
+    "@mokly/viewer": "0.18.0",
     "@playwright/test": "^1.61.1",
     "@storybook/react": "^10.6.2",
     "@tailwindcss/postcss": "^4.3.3",
@@ -97,6 +97,18 @@
     "yarn": "1.22.22"
   },
   "overrides": {
+    "@google-automations/git-file-utils": {
+      "minimatch": "11.0.3"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "11.0.3"
+    },
+    "code-suggester": {
+      "minimatch": "11.0.3"
+    },
+    "eslint": {
+      "minimatch": "11.0.3"
+    },
     "miniflare": {
       "undici": "7.30.1"
     }
