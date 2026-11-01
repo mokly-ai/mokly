@@ -72,8 +72,8 @@ updated outcome rules of the shared skills:
   records are follow-up items, so Milestone 4 does not hold this pull
   request. Item 1 keeps option D: wording plus file, line, and column on
   body failures, without a new rejection.
-- Item 8, option C of re-review finding 2, stays a question for Cal. The
-  coordinator asked on 2026-10-28 to keep it.
+- Option C of re-review finding 2, a shared-skill rule, is outside the
+  scope of this closeout. Its record stays, with no option chosen.
 - Cal authorized the pull request for the completed milestones. The
   coordinator merges it.
 
@@ -237,8 +237,8 @@ screens contract, and delete the comment without a pattern from
 
 ## Open decisions
 
-These items wait for Cal. Each has a complete follow-up item, so it does not
-hold the pull request. "New gate" marks an option that adds a build error,
+Items 128, 1, and 6 wait for Cal. Each has a complete follow-up item, so it
+does not hold the pull request. "New gate" marks an option that adds a build error,
 a rejection, or stricter validation.
 
 - Item 128, saved variant slot element checks. Severity Medium, effort
@@ -258,9 +258,13 @@ a rejection, or stricter validation.
   Alternatives: A, run the source checks on saved slots; C, state the skip
   in the protocol. A and B: new gate. Follow-up item:
   `plans/follow-ups/saved-slot-duplicate-navigation.md`.
-- Item 8, a review rule for missed plan ticks in the shared skills.
-  Severity Low, effort Small. Recommended: C, add the rule. Alternative: D,
-  change nothing. Follow-up item: `plans/follow-ups/review-missed-tick-rule.md`.
+
+Outside the scope of this closeout, per the coordinator on 2026-11-01:
+
+- Option C of re-review finding 2 proposes a rule in the shared
+  `implementation-review` skill of `futex-ai/skills`. It changes no Mokly
+  behaviour and blocks no milestone. It stays pending, with no option
+  chosen. Follow-up item: `plans/follow-ups/review-missed-tick-rule.md`.
 
 ## Milestone 1: Documentation and protocol
 
