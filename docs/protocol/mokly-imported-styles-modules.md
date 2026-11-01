@@ -59,15 +59,24 @@ never a CSS Modules transform; browserslist targets are the consumer's
 PostCSS concern.
 
 At every nesting level outside a descriptor block, the scoper reads each
-statement that the bundler keeps with the same start and kind. Before a
-stylesheet statement, both skip the HTML comment tokens `<!--` and `-->`. Text
-that the bundler drops or rejects can read as other statements for the scoper,
-and an `@value` that starts one of them fails. For example, in a rule list
-such as the stylesheet or a keyframes block, a `;` also ends a statement for
-the scoper, but the bundler ends a style rule or a keyframe only at its `{}`
-block. Aligning that boundary with the bundler was not chosen: no realistic
-stylesheet reaches it, and the change would alter the diagnostics of
-stylesheets that fail today.
+statement that the bundler keeps with the same start and kind. The one
+exception is an `@-moz-document` block outside a style rule. The scoper reads
+that block as the block of a style rule. The bundler reads it as a rule list,
+as it reads an `@media` block. So a statement that the bundler keeps there can
+scope differently than in an `@media` block. For example, the scoper keeps
+`@-khtml-keyframes :local(k);` as authored in `@-moz-document url-prefix(){…}`,
+but it scopes `k` in `@media all{…}`.
+
+Before a stylesheet statement, the scoper and the bundler both skip the HTML
+comment tokens `<!--` and `-->`. Text that the bundler drops or rejects can
+read as other statements for the scoper, and an `@value` that starts one of
+them fails. For example, in a rule list such as the stylesheet or a keyframes
+block, a `;` also ends a statement for the scoper, but the bundler ends a style
+rule or a keyframe only at its `{}` block. Aligning that boundary with the
+bundler was not chosen: no realistic stylesheet reaches it, and alignment would
+alter the diagnostics of stylesheets that fail today. Alignment would also make
+stylesheets fail that build today, such as a composition after a `;` in an
+`@document` block.
 
 A descriptor block is the block of a declaration-only at-rule, such as
 `@font-face`. There, the scoper ends a statement that is not a custom property
