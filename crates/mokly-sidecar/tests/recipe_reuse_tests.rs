@@ -68,7 +68,9 @@ fn pool(root: &Path, counts: Arc<Counts>) -> Pool {
     )
 }
 
+/// Use the real source identity that Node and catalogue configuration retain.
 fn settings(root: &Path) -> Bundle {
+    let root = dunce::canonicalize(root).unwrap();
     Bundle {
         evaluation: None,
         entry_files: vec!["entry.ts".into()],
