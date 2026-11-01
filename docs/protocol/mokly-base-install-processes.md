@@ -32,11 +32,10 @@ Mokly removes every other inherited variable. Windows matches a variable name
 without case. Mokly passes no inherited `MOKLY_` variable to a package manager
 or a lifecycle script.
 
-Mokly cannot stop code that runs as the same user from reading the environment
-of Mokly, or of the shell and launcher that started it, through
-`/proc/{pid}/environ`, `ps -E`, or the Windows process block. Decision: the
-scripts mode does not depend on a token. Rejected: scripts off when a token is
-present, because every publish needs a token and would lose the opt-in.
+The [token exposure rule](./mokly-upload.md#token-exposure) states the limit
+of this protection for code that runs as the same user. Decision: the scripts
+mode does not depend on a token. Rejected: scripts off when a token is present,
+because every publish needs a token and would lose the opt-in.
 
 ## Manager Executables
 

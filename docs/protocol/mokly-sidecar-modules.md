@@ -19,7 +19,7 @@ environment values are inherited. The
 the publish token and the limit of this protection.
 
 Decision: one removed prefix keeps every other variable. An allowed list as
-for [base installs](./mokly-base-dependencies.md#installation-and-bundle-settings)
+for [base installs](./mokly-base-install-processes.md#environment)
 was rejected, because consumer PostCSS settings and render code read other
 variables.
 
