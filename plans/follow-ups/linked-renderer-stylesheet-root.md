@@ -1,6 +1,6 @@
 # Linked renderer path drops its stylesheet root
 
-- **Severity:** High (estimate). **Likelihood:** Rare (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #240 and its completed plan, which put the
   problem outside the scope of its first review.
@@ -39,19 +39,17 @@
   path spelling reaches the renderer module?
 - **Options:**
   - **A.** Resolve the configured renderer path to its real path before the
-    stylesheet walk, as the module graph names modules. Effort: Small
-    (estimate).
+    stylesheet walk, as the module graph names modules. Effort: Small.
   - **B.** Warn when the configured renderer is not in the module graph, and
     keep the current roots. The build still lacks the styles. This adds a
-    warning. Effort: Small (estimate).
+    warning. Effort: Small.
   - **C.** Give every configured module path, the renderer and the PostCSS
     module included, one resolved form at configuration load, so that no
-    consumer compares a link path with a real path. Effort: Medium
-    (estimate).
+    consumer compares a link path with a real path. Effort: Medium.
 - **Left out:** Rejecting a renderer path that goes through a link. Links to
   modules inside the repository are valid input for the sidecar, so the
   rejection would remove a working layout.
-- **Wider fix:** C (estimate). One resolved form removes the link and real
+- **Wider fix:** C. One resolved form removes the link and real
   path difference for every consumer.
 - **Previous examples:** PR #240 fixed the renderer spellings with `.`, `..`,
   and empty segments on 2026-10-28, which had the same symptom.
@@ -63,9 +61,9 @@
     asks which configured paths, the renderer included, name an unresolved
     symbolic link when they fail in the base tree of Changes. It is the same
     class of link handling in another reader.
-- **Recommendation:** C (estimate). It removes the cause for the renderer
+- **Recommendation:** C. It removes the cause for the renderer
   and for every other configured module path.
-- **Action:** fix after merge, apply C (estimate), because a silent loss of
+- **Action:** fix after merge, apply C, because a silent loss of
   styles is a product bug outside the reviewed diff, and C is not blocked.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/normalize-config-relative-paths.md?plain=1#L327).

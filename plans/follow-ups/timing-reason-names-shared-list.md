@@ -1,6 +1,6 @@
 # Share timing reason names with their producers
 
-- **Severity:** Low (estimate). **Effort:** Large (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from the step B review round 1 of PR #242.
 - **Location:** `crates/mokly-cli/src/serve_trace.rs:75` and line 78,
@@ -51,21 +51,20 @@
   - **B.** Export each producer's list of names, and let the timing layer
     check the value against that list. The exports and their consumer
     change `mokly-sidecar`, `mokly-render`, and `mokly-cli`. This crosses
-    three crates, even if each change is short. Effort: Large (estimate).
+    three crates. Review the exports and keep the existing timing names and tests. Effort: Medium.
   - **C.** Add producer-driven scenarios to the existing CLI integration
     tests for every current reason name. Check that the timing output
     keeps each name. A new reason without a scenario stays uncovered.
-    Effort: Small (estimate).
+    Effort: Small.
 - **Left out:** Copying any reason value into the record. The allow list
   keeps paths and other free text out of the output.
-- **Wider fix:** B (estimate). One list of names for each producer removes
+- **Wider fix:** B. One list of names for each producer removes
   the copies.
 - **Previous examples:** None found.
-- **Recommendation:** B (estimate). It removes the copies for future names
-  as well as current names. It remains a proposal beyond the recorded test
-  choice.
-- **Action:** ask the user, because condition 6 holds (estimate): this is a
-  code structure finding. Condition 3 also holds, because B is Large.
+- **Recommendation:** B. One producer-owned list removes the copies without
+  changing the chosen reason names or the existing producer-driven tests.
+- **Action:** fix after merge, apply B, because the repeated name lists lie
+  outside the stylesheet-bundle change that found them.
 
 The full historical record is in the [PR #242 commit](https://github.com/mokly-ai/mokly/commit/ee7d8ea739bd103aacd001f8e75e5aa144929348).
 

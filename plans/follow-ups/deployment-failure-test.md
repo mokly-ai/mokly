@@ -54,8 +54,7 @@
   keeps the use case loading".
 - **Recommendation:** A. It makes the test state only the behaviour that
   its scenario can prove. B best protects failure delivery.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user deferred the open review items past the merge to decide each one
-  later.
+- **Action:** ask the user, because on 2026-10-21 the user deferred the open
+  review items past the merge to decide each one later.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6090).

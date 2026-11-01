@@ -1,6 +1,6 @@
 # Redact publish tokens from Debug output
 
-- **Severity:** Low. **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 181, delta review 6.
 - **Location:** `crates/mokly-cli/src/grammar.rs:107`,
@@ -33,10 +33,9 @@
 - **Root question:** How should Mokly make every value that holds the
   publish token safe to format?
 - **Options:**
-  - **A.** Implement a redacting `Debug` for `Publish`. Effort: Small
-    (estimate).
+  - **A.** Implement a redacting `Debug` for `Publish`. Effort: Small.
   - **B.** Use one secret type with a redacting `Debug` for every token
-    field, the raw ones and the validated one. Effort: Medium (estimate).
+    field, the raw ones and the validated one. Effort: Medium.
 - **Left out:** Relying on callers to avoid `Debug` keeps a raw secret in a
   printable type. Only two distinct approaches exist: redact in each type
   that holds the token, or redact in the type of the token itself.
@@ -51,7 +50,7 @@
   so each item needs its own change.
 - **Recommendation:** B. It protects every type that holds the token, not
   only the current CLI struct.
-- **Action:** ask the user, because condition 5 holds: the user reserved
-  the choice for each open review item of the rebuild.
+- **Action:** ask the user, because the user reserved the choice for each open
+  review item of the rebuild.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6395).

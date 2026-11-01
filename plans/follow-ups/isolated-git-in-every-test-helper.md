@@ -1,6 +1,6 @@
 # Isolate Git in every Rust test helper
 
-- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-01, from branch
   `conductor/rust-rebuild-166-windows-paths-and-links`: the wider fix of user
@@ -129,10 +129,11 @@
     without input and a form that writes standard input from a separate
     thread while it reads the output, as `support::git_input` does. Move
     every Git call of the Rust tests to it, and delete the local helpers.
-    Keep the product Git runner unchanged. Effort: Medium.
+    Keep the product Git runner unchanged. Effort: Large, because it adds a
+    test support crate and moves callers in five crates.
   - **C.** Do B, and add a repository check that rejects
     `Command::new("git")` in Rust tests outside the shared crate. The check is
-    a new gate, which only the user can approve. Effort: Medium.
+    a new gate, which only the user can approve. Effort: Large.
 - **Left out:**
   - Set the two variables for every test process in the `[env]` table of
     `.cargo/config.toml`. `cargo run` and `cargo xtask` read the same table,
@@ -153,4 +154,4 @@
   test.
 
 The earlier item is
-[isolated-git-test-helper.md at the commit before its deletion](https://github.com/mokly-ai/mokly/blob/1066bc769eb018068f1d0821595dc0ae8daaff56/plans/follow-ups/isolated-git-test-helper.md).
+[isolated-git-test-helper.md at the commit before its deletion](https://github.com/mokly-ai/mokly/blob/75bacb9d016205c804633b79ff0e8496c6c07929/plans/follow-ups/isolated-git-test-helper.md).

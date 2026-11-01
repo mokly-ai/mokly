@@ -1,6 +1,6 @@
 # Resolve base template imports from the base
 
-- **Severity:** Medium (estimate). **Likelihood:** Rare (estimate). **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #226 and its completed plan, which put the
   problem outside the scope of its review.
@@ -46,26 +46,26 @@
   - **B.** After the base compile, fail the bundle with `bundle-failed` when
     a loaded file maps through `paths.resolve` to another file. The user
     then sees the gap instead of a silent head read. This adds a failure.
-    Effort: Small (estimate).
+    Effort: Small.
   - **C.** Map each loaded file through `paths.resolve` in the `file` load
     hook, and read the bytes of the mapped base copy. The module keeps the
-    logical name of its matched path. Effort: Medium (estimate).
+    logical name of its matched path. Effort: Medium.
   - **D.** Rewrite a template-literal `import()` of a base-side dependency
     in the load hook into dynamic imports that the resolve callbacks see,
     for example through a generated module that lists the matched files.
-    Effort: Large (estimate).
+    Effort: Large.
 - **Left out:** A separate dependency installation for each base. The
   comparison tiers decide when the base shares the head installation, and
   this item does not change them.
-- **Wider fix:** C (estimate). Every loaded file then passes the mapping
+- **Wider fix:** C. Every loaded file then passes the mapping
   rule, whatever path esbuild used to find it.
 - **Previous examples:** On 2026-10-27 the user chose, for PR #226, a second
   compile through the resolve callbacks whenever a native import would skip
   the base mapping. The template-literal case is the same class, but it
   skips the callbacks in every compile.
-- **Recommendation:** C (estimate). It keeps the base bytes for every module
+- **Recommendation:** C. It keeps the base bytes for every module
   without a new failure.
-- **Action:** fix after merge, apply C (estimate), because head bytes in a
+- **Action:** fix after merge, apply C, because head bytes in a
   base bundle are a product bug, and C is not blocked.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/esbuild-resolve-fast-path.md?plain=1#L417).

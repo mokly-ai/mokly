@@ -1,14 +1,14 @@
 # Use the fixed clock in exchange integration tests
 
-- **Severity:** Low (estimate). **Effort:** Medium. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #221 and its completed plan, the wider fix
   that its first review split off finding 1.
 - **Location:** `crates/mokly-publish/tests/exchange_tests.rs:135` and line
   186, `crates/mokly-publish/tests/gzip_upload_tests.rs:27`, and
   `crates/mokly-publish/tests/support/mod.rs:1`.
-- **Reason:** The review split this test-design change off a fixed finding
-  of PR #221, and no dated user choice approves it.
+- **Reason:** PR #221 split the shared test clock from its upload fix, so a
+  later branch can remove the date dependence.
 
 - **Source:** Review.
 - **Category:** Test.
@@ -27,7 +27,7 @@
   - So the Plan answers of `exchange_tests.rs` set the fixed expiry
     `2099-01-01T00:00:00.000Z`, at line 93, to stay in the future.
   - The shared test support lives in `crates/mokly-publish/tests/support/`.
-  - The `deterministic-tests` skill bars real clocks in unit tests. It lets
+  - The `testing` skill bars real clocks in unit tests. It lets
     integration tests use real implementations for end-to-end behaviour, so
     the real clock of these integration tests is allowed.
   - A finding of the first review of PR #221 was fixed in that pull
@@ -47,13 +47,11 @@
   - **A.** Move the `FixedClock` into `crates/mokly-publish/tests/support/`.
     Use it in `exchange_tests.rs` and `gzip_upload_tests.rs`, and give the
     Plan answers expiries relative to the fixed time. Effort: Medium.
-  - **B.** Change nothing, and keep the 2099 expiry. Effort: Small
-    (estimate).
+  - **B.** Change nothing, and keep the 2099 expiry. Effort: Small.
   - **C.** Add a fixed clock to the library's test support, so that every
-    integration test of `mokly-publish` can import it. Effort: Medium
-    (estimate).
+    integration test of `mokly-publish` can import it. Effort: Medium.
 - **Left out:** A lint against `SystemClock` in tests. The
-  `deterministic-tests` skill allows the real clock in integration tests,
+  `testing` skill allows the real clock in integration tests,
   and a new lint needs the user.
 - **Wider fix:** A. One shared clock in the test support removes the real
   date from every exchange integration test.
@@ -64,8 +62,7 @@
   run, with the clock that the gzip tests already use. B stays valid,
   because the skill allows the real clock here and the 2099 expiry holds for
   decades.
-- **Action:** ask the user, because condition 6 holds (estimate): the item is
-  a test-design change that a review split off, and no dated user choice
-  approves it.
+- **Action:** fix after merge, apply A, because PR #221 left the shared
+  test-clock change for a separate branch.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/gzip-blob-uploads.md?plain=1#L378).

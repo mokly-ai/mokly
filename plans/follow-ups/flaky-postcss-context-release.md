@@ -1,6 +1,6 @@
 # Stabilize the PostCSS context release test
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #225 and its completed plan, which put the
   failure outside the scope of its review.
@@ -46,21 +46,21 @@
     the source. Then make the test wait for an explicit stop signal of the
     context instead of a polled count. Keep every assertion. Effort: Small.
   - **B.** Change nothing until the test fails again, and record the panic
-    text then. Effort: Small (estimate).
+    text then. Effort: Small.
   - **C.** If the reproduction shows that a context can stay alive after its
     generation drops, add a failing test first. Then fix the release in the
-    render runtime. Effort: Medium (estimate).
+    render runtime. Effort: Medium.
 - **Left out:** A longer wait, a retry, or a sleep. The
-  `deterministic-tests` skill forbids them, because they hide the source.
-- **Wider fix:** None. The `deterministic-tests` skill already requires an
+  `testing` skill forbids them, because they hide the source.
+- **Wider fix:** None. The `testing` skill already requires an
   explicit readiness signal, and the fix is specific to this release path.
 - **Previous examples:** PR #222 fixed another Windows-only failure of a
   timing-layer test on 2026-10-28. Its cache mock was released on another
   thread. That failure had a different cause.
-- **Recommendation:** A (estimate). It removes the race and keeps every
+- **Recommendation:** A. It removes the race and keeps every
   assertion.
-- **Action:** ask the user, because condition 6 holds (estimate): the
-  failure was not reproduced and its source is not confirmed, so the
-  `deterministic-tests` skill gives `ask the user`.
+- **Action:** ask the user, because the failure has not been reproduced with a
+  confirmed cause. No fix is clearly best until reproduction identifies the
+  source, as the flaky-test rule requires.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/parallel-background-pass.md?plain=1#L399).

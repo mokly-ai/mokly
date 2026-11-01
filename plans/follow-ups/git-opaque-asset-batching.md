@@ -49,7 +49,7 @@
   - **A.** Measure the workload first. Then batch the digests and stream the
     delivery, and keep every current bound, including the 64 MiB Git read
     bound. Effort: Large.
-  - **B.** Keep the measured adapter. Effort: Small (estimate).
+  - **B.** Keep the measured adapter. Effort: Small.
 - **Left out:** Remove the bounds to simplify the code. It breaks the
   comparison memory contract. Fewer than three approaches exist, because
   the choice is whether the measured cost is worth a redesign.
@@ -68,8 +68,7 @@
     two items change different code and can land in either order.
 - **Recommendation:** A. It removes both measured costs and keeps the
   existing limits.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user deferred the open review items past the merge to decide each one
-  later.
+- **Action:** ask the user, because on 2026-10-21 the user deferred the open
+  review items past the merge to decide each one later.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5834).

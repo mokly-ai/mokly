@@ -1,6 +1,6 @@
 # Name authored templates in navigation diagnostics
 
-- **Severity:** Low (estimate). **Likelihood:** Rare (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of the implementation review of 2026-10-28.
 - **Location:** `crates/mokly-html/src/source_checks.rs:15`,
@@ -10,7 +10,7 @@
   outside its change, so a separate branch fixes it.
 
 - **Source:** Review.
-- **Category:** Product bug (estimate).
+- **Category:** Product bug.
 - **Terms:**
   - **Reserved navigation metadata:** the attributes `data-mokly-link` and
     `data-mokly-link-control…`, which only Mokly's link adapter may write.
@@ -31,17 +31,19 @@
   input that holds the attribute?
 - **Options:**
   - **A.** Pass the input kind to `validate`, and name "authored HTML" or
-    "consumer output" in the message. Effort: Small (estimate).
+    "consumer output" in the message. Effort: Small.
   - **B.** Fail reserved navigation names in authored HTML during catalogue
     validation, with the attribute's file, line, and column. Keep the
-    render-time check for callback output. Effort: Medium (estimate).
+    render-time check for callback output. Limit this move to authored bodies that already fail the reserved-name check. Keep the saved-slot warning. A failed watched candidate keeps the last good catalogue, as the watch contract requires. Effort: Medium.
 - **Left out:** Removing the check lets authored metadata change
   navigation, which the screens contract forbids. Only two distinct
   approaches exist: fix the message at render time, or move the authored
   check to validation.
-- **Wider fix:** B. One validation rule for authored HTML names the file
-  and position of each reserved attribute.
+- **Wider fix:** B. One authored-body validation boundary supplies the input
+  location before rendering. It moves the existing rejection and adds no invalid
+  input.
 - **Previous examples:** None found.
+- **Requirements:** `docs/protocol/mokly-html-screens.md:139` already rejects reserved names in authored bodies. `docs/protocol/mokly-runtime.md:33-36` requires validation errors before rendering. `docs/protocol/mokly-watch-runtime.md:25` keeps the last good catalogue after candidate validation fails.
 - **Related:**
   - [saved-slot-reserved-metadata.md](./saved-slot-reserved-metadata.md):
     the same reserved names on a saved-slot wrapper only warn. Its wider
@@ -53,9 +55,11 @@
     the duplicate-attribute message of the same `source_checks::validate`
     names every duplicate in callback output a navigation attribute. Both
     items correct wrong wording in one function, so one branch can fix both.
-- **Recommendation:** A. (estimate) It corrects the wrong input name with
-  the smallest change. B best protects the codebase.
-- **Action:** fix after merge, apply A (estimate), because a diagnostic
-  that names the wrong input is a product bug, and A keeps every rule.
+- **Recommendation:** B. It applies the existing requirement for validation
+  errors before rendering and preserves the separate saved-slot rule. The record
+  first recommended A.
+- **Action:** fix after merge, apply B, because the diagnostic defect lies
+  outside the change that found it. The authored-body move adds no rejection
+  beyond the current screens contract.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5602).

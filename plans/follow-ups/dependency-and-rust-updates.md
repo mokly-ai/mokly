@@ -1,6 +1,6 @@
 # Redo dependency updates and the Rust toolchain move
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** Yes.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user decision 65 A of 2026-10-21.

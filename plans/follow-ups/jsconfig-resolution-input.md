@@ -1,6 +1,6 @@
 # Include jsconfig paths in resolution inputs
 
-- **Severity:** Medium (estimate). **Likelihood:** Rare (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #226 and its completed plan, which put the
   problem outside the scope of its review.
@@ -63,23 +63,22 @@
     render input keys as a `tsconfig.json` edit does. Update
     `docs/protocol/mokly-watch.md:70`. B changes one name list in each of two
     code files, about two lines, and adds no code or test file. It changes
-    no message between the core and the sidecar, so it fits the Small band
-    across the two packages. It also changes the exhaustive watch-input
-    requirement, which needs the user's choice. Effort: Small (estimate).
+    no message between the core and the sidecar. The two name-list changes and their targeted checks fit within an hour. It also changes the exhaustive watch-input
+    requirement, which needs the user's choice. Effort: Small.
   - **C.** Let the sidecar report the resolution file names that it records
     in each bundle result, and make the Rust chain use the reported names.
-    One list then serves both sides. Effort: Large (estimate).
+    One list then serves both sides. Effort: Large.
 - **Left out:** Change nothing. A stale compilation breaks the reuse rule
   that a compilation stays only while its inputs stay unchanged.
-- **Wider fix:** C (estimate). One reported list keeps the sidecar inputs
+- **Wider fix:** C. One reported list keeps the sidecar inputs
   and the render input keys equal.
 - **Previous examples:** None found.
-- **Recommendation:** B. (estimate) It makes both caches react to bytes that
+- **Recommendation:** B. It makes both caches react to bytes that
   already shape the output, with one list entry on each side.
   The record first recommended A, while it graded B Large. C best protects
   the codebase.
-- **Action:** ask the user, because condition 1 holds (estimate): B changes
-  the explicit watch-input requirement. The general reuse and runtime rules
-  do not authorize overriding that exhaustive list without a recorded choice.
+- **Action:** ask the user, because B changes the explicit watch-input
+  requirement. The general reuse and runtime rules do not authorize overriding
+  that exhaustive list without a recorded choice.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/esbuild-resolve-fast-path.md?plain=1#L421).

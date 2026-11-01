@@ -1,6 +1,6 @@
 # Align shell breakpoint source claims
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of the F18 review of 2026-10-20.
 - **Location:** `packages/viewer/src/shell/layout_breakpoint.ts:4`,
@@ -12,7 +12,7 @@
   change did not touch, so a separate branch corrects it.
 
 - **Source:** Review.
-- **Category:** Docs or spec (estimate).
+- **Category:** Docs or spec.
 - **Terms:**
   - **`NARROW_SHELL`:** the media query `(width < 56.25rem)` in
     `layout_breakpoint.ts`, the shell's layout breakpoint at 900px.
@@ -44,18 +44,17 @@
   switch its layouts?
 - **Options:**
   - **A.** Narrow the claim in the header and the README: name each width,
-    900px, 760px, and 560px, and what it switches. Effort: Small
-    (estimate).
+    900px, 760px, and 560px, and what it switches. Effort: Small.
   - **B.** Apply A, and give each width a named constant in one breakpoint
-    module that every rule reads. Effort: Medium (estimate).
+    module that every rule reads. Effort: Medium.
 - **Left out:** Making every rule read `NARROW_SHELL` moves the phone frame
   and the compact search to 900px, which changes the product's layouts.
 - **Wider fix:** None. The `documentation` skill already requires docs that
   match the code.
 - **Previous examples:** None found.
-- **Recommendation:** A. (estimate) It corrects the docs without a code
+- **Recommendation:** A. It corrects the docs without a code
   change.
-- **Action:** fix after merge, apply A (estimate), because a comment and a
+- **Action:** fix after merge, apply A, because a comment and a
   README that contradict the code are docs drift.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L4839).

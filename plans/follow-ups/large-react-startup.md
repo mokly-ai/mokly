@@ -1,14 +1,15 @@
 # Bring large React startup under five seconds
 
-- **Severity:** Medium (estimate). **Effort:** Large (estimate). **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Severity:** Medium. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   option A of decision 57, which the user deferred on 2026-10-19.
 - **Location:** `docs/protocol/mokly-on-demand.md:22-25`,
   `docs/protocol/mokly-timings.md:187` and `:201-204`, and the esbuild
   compilation in `packages/mokly/src/sidecar/bundle.ts`.
-- **Reason:** On 2026-10-19 the user accepted a 15-second React budget for
-  the merge and deferred the compilation redesign without choosing it.
+- **Reason:** The user deferred the compilation redesign after accepting the
+  15-second merge budget. The existing five-second target and complete-catalogue
+  readiness rule still apply.
 
 - **Source:** Design.
 - **Category:** Performance.
@@ -60,13 +61,13 @@
     esbuild work. The plan gives no design. Measure first with
     `npm run benchmark:large -- --root {fixture} --scenario startup` on a
     React fixture from `npm run fixture:large -- --variant react`. Effort:
-    Large (estimate).
+    Large.
   - **B.** Keep the current design, and make the 15-second React budget
     the target in `docs/protocol/mokly-on-demand.md`. This drops the
     five-second React target. Effort: Small.
   - **C.** Open Browse before every React entry is ready. This reverses the
     recorded choice in `mokly-timings.md:201-204`, and it needs pending
-    entries and delayed errors. Effort: Large (estimate).
+    entries and delayed errors. Effort: Large.
 - **Left out:** Skip validation to start sooner. The on-demand page forbids
   it.
 - **Wider fix:** A. Less repeated compilation also helps watch rebuilds and
@@ -80,9 +81,10 @@
     include it, so decide the two together.
   - [serve-sidecar-prestart.md](serve-sidecar-prestart.md) moves sidecar
     start before the background pass. It covers work after Serve is ready.
-- **Recommendation:** A (estimate). It keeps the five-second target and the
+- **Recommendation:** A. It keeps the five-second target and the
   recorded readiness decision. B or C changes one of them.
-- **Action:** ask the user, because condition 3 holds (estimate): A is
-  Large, and the decision of 2026-10-19 deferred it without approving it.
+- **Action:** fix after merge, apply A, because the user deferred the
+  compilation work after accepting the merge budget. Keep the existing startup
+  and readiness requirements.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5430).
