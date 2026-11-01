@@ -29,9 +29,13 @@ guard releases the lock and leaves the lock file intact.
 guard immediately after spawn. The caller retains the child and its pipes.
 On Unix, the child starts a new session, so it leads its own process group.
 On Linux, it also becomes a subreaper, so an orphan inside the owned tree
-keeps a parent link to it while it runs. The guard records the child's
-identity, its PID and start time, before the caller can reap the child. A
-reused PID therefore never receives a signal.
+keeps a parent link to it while it runs.
+
+The guard records the child's identity, its PID and start time, before the
+caller can reap the child. A reused PID therefore never receives a signal. The
+guard records this identity also when the child has already exited. The Linux
+and macOS readers of the process table keep an exited process readable until
+its parent reaps it.
 
 A Unix stop first sends `SIGSTOP` to the group. It then follows parent links
 from the child and from the descendants that an earlier stop found, and stops
@@ -90,9 +94,11 @@ cargo clippy -p mokly-platform --all-targets -- -D warnings
 ```
 
 Real OS tests live in `tests/` and use isolated temporary directories. The
-process-tree tests start real helper processes. They re-run the test binary
-as a helper that calls `setsid()`, because macOS has no `setsid` command, and
-they treat a zombie process as gone.
+process-tree tests start real helper processes. They treat a zombie process as
+gone. The tests of escaped sessions re-run the test binary as a helper that
+calls `setsid()`, because macOS has no `setsid` command. The attachment test
+observes the exit of `sh -c 'exit 23'` with `waitid` and `WNOWAIT`, then
+attaches to the unreaped child and stops it.
 Consumers enable the `mock` feature to use every public trait with unimock.
 
 ### Key Code
