@@ -1,7 +1,7 @@
 # Use progress as the large benchmark liveness signal
 
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
-- **Kind:** Fix after merge.
+- **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 162, from the harness note of integration batch 25. Updated on
   2026-11-01 with the Changes wait, from an open item of the closed
@@ -12,8 +12,8 @@
 - **Location:** `scripts/large/delivery.ts:114` and `:145`,
   `scripts/large/benchmark.ts:185`, and
   `tests/fixtures/large/README.md:96-97`.
-- **Reason:** The build deadline is fixed, and the remaining Changes wait
-  needs a separate benchmark branch.
+- **Reason:** The remaining Changes wait grows from 60 seconds to the build
+  scenario's restarting window, which defaults to 300 seconds and needs approval.
 - **Source:** Design.
 - **Category:** Test.
 - **Terms:**
@@ -83,8 +83,7 @@
 - **Recommendation:** B. Serve already writes a line at least every few
   seconds, so the window that the build scenario uses tells slow progress
   from a stuck run.
-- **Action:** fix after merge, apply B, because the opt-in benchmark lies
-  outside the test suite and the gate, and B reuses the build scenario's
-  liveness helper to keep a guard against a stuck run.
+- **Action:** ask the user, because B replaces the 60 second Changes wait with a
+  restarting 300 second default, and time limit increases need approval.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6197).
