@@ -82,9 +82,9 @@
     - The scripts resolve the scratch root with `pwd -P`. On macOS, `/tmp`
       is a symbolic link to `/private/tmp`.
   - The Linux proof of this recipe on 2026-11-01:
-    - It used Yarn Classic 1.22.22, Node 24.21.0, and a build of the item
-      150 change. A Python monitor ran the same checks as `run-case.sh`
-      below.
+    - It used Yarn Classic 1.22.22, Node 24.21.0, and a build of the change
+      that stops every process of a base install's tree. A Python monitor
+      ran the same checks as `run-case.sh` below.
     - Before each stop, Yarn and its script each ran in a session of their
       own. The `sleep 1000` child ran in the process group of the script.
       The process list before the cancellation, with shortened commands:
@@ -109,13 +109,13 @@
     - After each stop, no process of the tree was left: not `mokly`, the
       sidecar, esbuild, Yarn, the script, or its child.
     - Later that day, the blocks of the task below ran as written on Linux,
-      with the Linux binary in step 4. Both cases printed `PASS`.
+      with the `native-linux-x64-gnu` binary. Both cases printed `PASS`.
     - The proof shows that the recipe reaches a live script, and that the
       stop works on Linux. The macOS stop is still unproved.
 - **Task:**
-  1. After the item 150 change is on `main`, start a hosted macOS runner.
-     For example, use a temporary workflow job on
-     `blacksmith-6vcpu-macos-26`. The runner needs Git.
+  1. After the change that stops every process of a base install's tree
+     reaches `main`, start a hosted macOS runner. For example, use a temporary
+     workflow job on `blacksmith-6vcpu-macos-26`. The runner needs Git.
   2. Check out `main`. Install a Node version that the `engines` field of
      the root `package.json` allows, such as Node 22.15 or Node 24.21.0.
   3. Run `npm ci` and then `npm run build` in the checkout. `npm ci`
@@ -278,17 +278,20 @@
 
   8. Check that each case prints `PASS`, and read both process lists. An
      exit code alone is not enough.
-  9. On macOS, Mokly ignores `XDG_CACHE_HOME` and uses the user cache
-     directory. Read the `Mokly cache:` line of each `stdout.log`. After
-     the checks, remove those two directories and `/tmp/mokly-smoke`.
-  10. Save the commands, the process lists, and the logs of each case, for
-      example as a workflow artifact. To run again, start at step 4 with no
-      `/tmp/mokly-smoke` folder.
+  9. Save the commands, the process lists, and the logs of each case, for
+     example as a workflow artifact. Keep `/tmp/mokly-smoke` until the saved
+     evidence is available.
+  10. On macOS, Mokly ignores `XDG_CACHE_HOME` and uses the user cache
+      directory. Read the `Mokly cache:` line of each `stdout.log`. After the
+      evidence is saved, remove those two directories and `/tmp/mokly-smoke`.
+      To run again, start at the step that links Yarn and the Mokly binary,
+      with no `/tmp/mokly-smoke` folder.
 - **Impact if no action:** A macOS-only defect of the stop, for example in
   the libproc reader, stays unseen until a user meets surviving scripts on a
   Mac. Such scripts keep running after Mokly exits.
-- **Needs:** The item 150 change on `main`, and a hosted macOS runner with
-  Git and a supported Node version. No credentials.
+- **Needs:** The change that stops every process of a base install's tree,
+  on `main`. A hosted macOS runner with Git and a supported Node version. No
+  credentials.
 - **Done when:**
   - Both cases print `PASS` on macOS, and no process of the script or its
     child stays after either stop.

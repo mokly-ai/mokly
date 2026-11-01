@@ -93,14 +93,14 @@
 - **Options:**
   - **A.** Bound the wait after a stop. After the last signal of the stop,
     wait a short grace period for the manager and both pipes. Then stop
-    waiting, leave the reader threads detached, and return the result that
+    waiting. Leave the reader threads detached. Return the result that
     the stop already gives, such as `Cancelled` or `InstallTimeout`. Count
     the grace period with the `Clock` of `TimedCommands`, so that a test can
     use a fake clock. Give `Drop` the same bound. A detached reader thread
     and its pipe stay until the survivor exits. A adds no new error.
     Effort: Medium.
   - **B.** Do A. Also, when the manager exits by itself and a pipe stays
-    open, stop waiting after the grace period, and use the manager's own
+    open, stop waiting after the grace period. Use the manager's own
     exit status. Such a base then gets tier two, not the time-limit
     fallback after 120 seconds. The survivor keeps running, as the
     normal-finish limit allows. This changes the dependency tier of these
@@ -111,10 +111,10 @@
     bound becomes a size check of the files in the poll loop, so output can
     pass the bound between two checks. A survivor can keep writing to the
     files after the stop. Effort: Large.
-  - **D.** Do A, but fail with a new typed error after the grace period,
-    with a `base-dependencies` reason that names the held output. This adds
-    a new failure at the boundary that no requirement covers. Effort:
-    Medium.
+  - **D.** Do A, but fail with a new typed error after the grace period.
+    Give the error a `base-dependencies` reason that names the held output.
+    This adds a new failure at the boundary that no requirement covers.
+    Effort: Medium.
 - **Left out:**
   - Kill the group before the joins in `finish`. On each path that can
     block, a kill already runs before `finish`, so the order alone does not

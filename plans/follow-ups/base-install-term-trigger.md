@@ -63,7 +63,7 @@
     above. Add the **Dependency inputs** term and the facts that an item
     needs from the **Background** above. Skip an item that a branch has
     already deleted. Effort: Small.
-  - **B.** Cut the condition from the term of each item, so that it says
+  - **B.** Cut the condition from the term of each item. Each term then says
     only "the private install of the base commit's dependencies". No item
     then holds a condition that can become stale. A reader who sets up a
     real install must find the conditions in the code. Effort: Small.
@@ -90,6 +90,5 @@
   HTML-only catalogue, which starts no install.
 - **Recommendation:** A. It makes each item true and keeps the conditions
   that a real run needs, at the same effort as B.
-- **Action:** fix after merge, apply A, because the three items lie outside
-  the diff of the branch that found the problem, and A corrects records
-  with no new requirement.
+- **Action:** fix after merge, apply A, because the branch that found the
+  problem does not change the three items, and A adds no requirement.

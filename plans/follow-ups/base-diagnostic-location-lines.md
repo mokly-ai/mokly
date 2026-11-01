@@ -41,7 +41,8 @@
   - `changes_output::diagnostics` at `crates/mokly-cli/src/changes_output.rs:104`
     prints each Changes unavailable detail through `Redactor::safe`.
   - So a base with duplicate paths or a case collision prints its location
-    list as one line with literal `\u000a` text, in plain and in rich mode.
+    list as one line. The line shows literal `\u000a` text, in plain and in
+    rich mode.
   - `docs/protocol/mokly-base-preparation.md` says that base diagnostics are
     detail lines that name the full base commit and the original terminal
     code.
@@ -57,16 +58,16 @@
     the codes whose text lists locations, and indent each following line
     under its detail. The plain bytes of these details change from one line
     to several lines. Effort: Small.
-  - **B.** Keep one line for each detail, and add the escaped form to
+  - **B.** Keep one line for each detail. Add the escaped form to
     `docs/protocol/mokly-terminal-errors.md` as an exception for the Changes
     unavailable details. This changes a requirement. Effort: Small.
   - **C.** Do A through one helper that `build_output` and `changes_output`
     both use. The helper owns the list of codes whose text lists locations,
     so a new such code keeps its lines on both paths. Effort: Small.
-  - **D.** Print one detail line for each location, each with the full base
-    commit and the code, after one detail line with the heading. Each line
-    then names the commit, but the commit and the code repeat on every line,
-    and the format differs from the head error. Effort: Small.
+  - **D.** After one detail line with the heading, print one detail line for
+    each location. Give each location line the full base commit and the
+    code. Each line then names the commit, but the commit and the code repeat
+    on every line, and the format differs from the head error. Effort: Small.
 - **Left out:** Change nothing. The details keep breaking the rule for
   location lists, so it fails the goal.
 - **Wider fix:** C. One helper decides which diagnostics keep their lines,
@@ -79,6 +80,6 @@
   that item.
 - **Recommendation:** C. It prints the locations as following lines, as the
   requirement asks, and one helper keeps the head and the base alike.
-- **Action:** fix after merge, apply C, because it is a product bug outside
+- **Action:** fix after merge, apply C, because this product bug lies outside
   the reviewed diff, and C follows the requirement in force at
-  `docs/protocol/mokly-terminal-errors.md:54` to line 56.
+  `docs/protocol/mokly-terminal-errors.md:54`.

@@ -28,9 +28,10 @@
   - `terminal_size()` checks stdout, then stderr, then stdin, and returns the
     size of the first stream that is a terminal. Its source is
     `src/unix.rs:9` to line 19 of that crate.
-  - The same page says that forced-rich output through a pipe keeps its
-    starting line and its durable completion lines observable and
-    deterministic, at `docs/protocol/mokly-terminal-output.md:73` to line 75.
+  - The same page also covers forced-rich output through a pipe, at
+    `docs/protocol/mokly-terminal-output.md:73` to line 75. It says that such
+    output keeps its starting line and its durable completion lines
+    observable and deterministic.
   - In debug builds, `test_faults::columns` in
     `crates/mokly-cli/src/test_faults/mod.rs` can replace the width for
     tests.
@@ -50,10 +51,9 @@
     stdout, then stderr, then stdin. The page then matches the code, and
     forced-rich output keeps depending on the size of another terminal.
     Effort: Small.
-  - **C.** Bound each line by the width of the stream that it goes to:
-    stdout lines by stdout, and stderr lines by stderr, each with 80 as the
-    fallback. `Style` then carries two widths, and the width rule names both.
-    Effort: Medium.
+  - **C.** Bound each line by the width of the stream that it goes to,
+    stdout or stderr. Use 80 as the fallback for each stream. `Style` then
+    carries two widths, and the width rule names both. Effort: Medium.
 - **Left out:** Change nothing. The contract and the code keep disagreeing,
   so it fails the goal.
 - **Wider fix:** None. One place in `entry.rs` sets the width for every rich
@@ -61,6 +61,5 @@
 - **Previous examples:** None found.
 - **Recommendation:** A. It makes the code follow the width rule in force,
   so forced-rich output into a pipe always uses 80 columns.
-- **Action:** fix after merge, apply A, because it is a product bug outside
-  the reviewed diff, and A follows the width rule in force with no new
-  requirement.
+- **Action:** fix after merge, apply A, because this product bug lies outside
+  the reviewed diff, and A follows the width rule with no new requirement.
