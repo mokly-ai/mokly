@@ -1,5 +1,7 @@
 # Remote Verification: Testbox Execution
 
+Status: In progress under the [required Bun typechecking plan](../../plans/bun-ci-typechecking.md).
+
 Continuation of [Remote Verification](./remote-verification.md).
 
 ## Workflow
@@ -140,7 +142,14 @@ The suite wrapper runs these steps on each box, in this order:
    `npx playwright install chromium`, and fails if either command fails. It
    writes the new digest stamp only after both commands succeed. An equal
    digest requires neither command.
-5. It sets `MOKLY_VERIFICATION_REPORT` to
+5. For the viewer command only, it reads the
+   [Bun pin](./developer-type-checks.md#required-type-check) from the synced
+   `.bun-version`. It runs `npm install --global --prefix <prefix> bun@<pin>`
+   with a new `<prefix>` directory under `.context/`. npm checks the registry
+   integrity of each package. An invalid pin or a failed install fails the
+   command before the suite starts. Only the viewer suite gets that prefix,
+   first on its `PATH`.
+6. It sets `MOKLY_VERIFICATION_REPORT` to
    `.context/verification-reports/remote/<command>.json` and runs
    `cargo xtask check --executor local --suite <suite>`, with
    `--shard INDEX/4` for a browser shard. Explicit local mode prevents
@@ -148,8 +157,12 @@ The suite wrapper runs these steps on each box, in this order:
    `npm run build`, then `npm run test:delivery:prepared` instead. A failed or
    interrupted build prevents delivery. The wrapper validates both delivery
    reports before it exits.
-6. It returns the suite's exit code. A wrapper preparation failure returns
+7. It returns the suite's exit code. A wrapper preparation failure returns
    nonzero.
+
+The workflow installs no Bun. A warmup install would not serve a warmup ref
+without Bun or a branch that changes the pin. Each run warms new boxes, so
+every viewer command installs the pin once.
 
 The wrapper streams the child's standard output and standard error. It
 forwards SIGINT and SIGTERM to the running child. An interrupted command must

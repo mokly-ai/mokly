@@ -1,6 +1,6 @@
 # Required Bun typechecking
 
-Status: Active. [PR #275](https://github.com/mokly-ai/mokly/pull/275) is open on branch `calummoore/bun-typescript-performance`. Decision 1 is resolved as B. This CI extension awaits implementation approval. The PR deletes this plan when the work is complete.
+Status: Active. [PR #275](https://github.com/mokly-ai/mokly/pull/275) is open on branch `calummoore/bun-typescript-performance`. Decision 1 is resolved as B. The user approved implementation on 2026-11-01. The PR deletes this plan when the work is complete.
 
 Mokly checks five TypeScript projects before its Node tests. The user chose
 Bun's native checker for required CI typechecking on 2026-11-01. Node continues
@@ -121,17 +121,21 @@ Contract owners:
 
 Depends on: none
 
+Status: Complete.
+
 Document the chosen authority and the tool preparation before changing code.
 
-- [ ] Update the developer command contract with standard, fast, and required modes.
-- [ ] Move Type Checks to `developer-type-checks.md` and retain the old heading as a forwarding link.
-- [ ] Update the protocol index and current links to the typecheck contract.
-- [ ] State the required pin and the required mode's failure behavior.
-- [ ] State that Bun decides required typecheck results, including tests and examples.
-- [ ] Keep TypeScript 6 package builds, declarations, and Node runtime coverage explicit.
-- [ ] Align the local, hosted, remote, and release gate contracts and setup guides.
-- [ ] Preserve older release refs and current report inventories and runtime profiles.
-- [ ] Add linked pending status lines until each documented behavior works.
+- [x] Update the developer command contract with standard, fast, and required modes.
+- [x] Move Type Checks to `developer-type-checks.md` and retain the old heading as a forwarding link.
+- [x] Update the protocol index and current links to the typecheck contract.
+- [x] State the required pin and the required mode's failure behavior.
+- [x] State that Bun decides required typecheck results, including tests and examples.
+- [x] Keep TypeScript 6 package builds, declarations, and Node runtime coverage explicit.
+- [x] Align the local, hosted, remote, and release gate contracts and setup guides.
+- [x] Preserve older release refs and current report inventories and runtime profiles.
+- [x] Add linked pending status lines until each documented behavior works.
+
+Evidence: `.context/bun-ci-typechecking/docs-m1-report.md`.
 
 ## Milestone 2: Add the pinned required command
 

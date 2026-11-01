@@ -1,5 +1,7 @@
 # CI Verification: Dependency Cache And Security
 
+Status: In progress under the [required Bun typechecking plan](../../plans/bun-ci-typechecking.md).
+
 Continuation of [CI Verification](./ci-verification.md).
 
 ## Dependency Cache And Security
@@ -9,6 +11,10 @@ keys the npm cache from the committed `package-lock.json`. `npm ci` always
 runs, including after a cache hit, and every platform's optional native
 package remains available. A cache miss is an ordinary cold install or build
 and never permits a skipped command.
+
+The Bun setup of the CI viewer jobs and of release preparation sets
+`no-cache: true`. Each of these jobs downloads the pinned Bun. The Bun setup
+therefore adds no cache to CI. Release preparation stays uncached.
 
 The [Rust build cache](#rust-build-cache) section gives the rules for Rust.
 

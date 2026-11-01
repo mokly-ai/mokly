@@ -1,5 +1,7 @@
 # CI Verification
 
+Status: In progress under the [required Bun typechecking plan](../../plans/bun-ci-typechecking.md).
+
 ## Verification Boundary
 
 `cargo xtask check` is the complete repository and release gate. The local
@@ -38,13 +40,13 @@ starts.
 
 ## Gate Ownership
 
-| Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                   |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Repository       | Every check of the [repository gate list](./ci-verification-repository.md#repository-boundary), in the listed order.                                                                                                                                                                                          |
-| Viewer           | The TypeScript typecheck of every project, then every discovered Node test file, including the inspector size test of the [published inspector contract](./mokly-published-inspector.md), with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. The suite has no shard. |
-| Browser          | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with `fullyParallel: false`, the [shared worker count](./ci-suite-evidence.md#test-concurrency), the configured Playwright timeouts, and zero retries. A shard runs its whole-file partition.                            |
-| Native platforms | On macOS and Windows, build the `mokly` binary once, check Rust formatting and workspace Clippy with warnings denied, and run the Rust tests of every crate.                                                                                                                                                  |
-| Required CI      | Evaluate the results of the runtime profile job, the repository job, the viewer job, every browser shard, and the static-delivery job on each runtime selected for the event, and of both native platforms. Validate the viewer and browser report evidence.                                                  |
+| Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                                                                    |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repository       | Every check of the [repository gate list](./ci-verification-repository.md#repository-boundary), in the listed order.                                                                                                                                                                                                                                           |
+| Viewer           | The [required type check](./developer-type-checks.md#required-type-check) of every project, then every discovered Node test file, including the inspector size test of the [published inspector contract](./mokly-published-inspector.md), with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. The suite has no shard. |
+| Browser          | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with `fullyParallel: false`, the [shared worker count](./ci-suite-evidence.md#test-concurrency), the configured Playwright timeouts, and zero retries. A shard runs its whole-file partition.                                                                             |
+| Native platforms | On macOS and Windows, build the `mokly` binary once, check Rust formatting and workspace Clippy with warnings denied, and run the Rust tests of every crate.                                                                                                                                                                                                   |
+| Required CI      | Evaluate the results of the runtime profile job, the repository job, the viewer job, every browser shard, and the static-delivery job on each runtime selected for the event, and of both native platforms. Validate the viewer and browser report evidence.                                                                                                   |
 
 Complete and selected local suites share gate definitions. Every Native
 command has local coverage; `npm run build` covers `cargo xtask build-native`.
@@ -58,6 +60,13 @@ Viewer and Browser build the binary and viewer bundle first through
 `cargo xtask build-native`. No suite prepares a baseline, a compiled example, a generated
 tree, or a packed archive. Serve renders the example catalogue from its sources
 into the render cache, and the tests read nothing back from the repository.
+
+The Viewer suite needs a `bun` executable on the `PATH` at the version that
+`.bun-version` pins. Without that version, the suite fails at its type check,
+also in a local complete gate. No other suite needs Bun. No suite command
+installs it. The
+[provisioning rules](./developer-type-checks.md#bun-provisioning) say where
+each host installs it.
 
 The [repository ratchets](./verification-ratchets.md) define their comparison
 commits, scopes, and shrink-only baselines. The
@@ -157,6 +166,10 @@ the test process exits on success or failure, then validates it. A discovery or
 build failure before execution may leave no report; the job and the aggregate
 still fail. Reporter callback failures or missing output can therefore never
 turn into success.
+
+A report's runtime names the Node version that runs its tests. The Bun type
+check of the Viewer suite adds no report, report field, runtime, or inventory
+entry.
 
 For an unsharded report for a complete suite, the observed file set must equal
 independent discovery exactly. For the sharded browser suite, the aggregate

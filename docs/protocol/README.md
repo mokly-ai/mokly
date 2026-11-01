@@ -213,6 +213,7 @@ The repository gate, remote verification, dependency audits, test rules, and the
 - [Deterministic Test Repository Inputs](./ci-test-repository-inputs.md)
 - [Developer Test Commands](./developer-test-commands.md)
 - [Developer Browser Commands](./developer-browser-commands.md)
+- [Developer Type Checks](./developer-type-checks.md)
 - [Packed Consumer Smoke](./packed-consumer-smoke.md)
 - [GitHub Publishing Protections](./npm-github-protections.md)
 - [Mokly CI And Npm Release Contract](./npm-release.md)
