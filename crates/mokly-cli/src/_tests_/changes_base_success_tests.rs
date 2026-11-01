@@ -30,10 +30,14 @@ fn tree() -> Unimock {
         SourceTreeMock::project
             .each_call(matching!(_))
             .answers(&|_, path| {
-                let kind = match path.to_str().unwrap() {
-                    "/repo" | "/repo/specs" => FileKind::Directory,
-                    "/repo/mokly.config.json" | "/repo/specs/card.mockup.ts" => FileKind::File,
-                    _ => return Ok(None),
+                let kind = if path == Path::new("/repo") || path == Path::new("/repo/specs") {
+                    FileKind::Directory
+                } else if path == Path::new("/repo/mokly.config.json")
+                    || path == Path::new("/repo/specs/card.mockup.ts")
+                {
+                    FileKind::File
+                } else {
+                    return Ok(None);
                 };
                 Ok(Some(Node {
                     identity: path.into(),
@@ -78,7 +82,7 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
     let pool = Unimock::new((
         PoolMock::request
             .next_call(matching!((call) if matches!(call, Call::Bundle(bundle)
-                if bundle.source_root == "/base"
+                if Path::new(&bundle.source_root) == Path::new("/base")
                     && bundle.entry_files == ["specs/card.mockup.ts"])))
             .returns(Ok(MethodResult::Bundle(Bundle {
                 unmapped_dependency_directories: None,

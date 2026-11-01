@@ -7,8 +7,8 @@
 - **Location:** `crates/mokly-css/src/attribution.rs:19` (`OwnPageMatches`),
   `crates/mokly-compare/src/owned_styles.rs:115`, and
   `crates/mokly-compare/src/owned_style_instances.rs:120`.
-- **Reason:** On 2026-10-21 the user deferred the open review items until
-  after the merge and kept each choice for a later decision.
+- **Reason:** On 2026-10-21 the user accepted the earlier default choices of the
+  rebuild, except this one, which stays open for the user's own answer.
 
 - **Source:** Review.
 - **Category:** Product bug.
@@ -50,11 +50,13 @@
   mixed pages too.
 - **Previous examples:** None found.
 - **Related:** [owned-proof-memory.md](owned-proof-memory.md) is about the
-  memory of the same own-page proof. Both items change the proof data, so
-  decide them in the same branch.
+  memory of the same own-page proof. Its compaction keeps the unfiltered
+  `Attribution.own_pages` of exact instance proof, so it does not wait for this
+  answer. One branch may do both.
 - **Recommendation:** B. It gives classification the exact own-page
   evidence, and it is the code today.
-- **Action:** ask the user, because on 2026-10-21 the user deferred the open
-  review items past the merge to decide each one later.
+- **Action:** ask the user, because on 2026-10-21, when the user accepted the
+  other default choices of the rebuild, the user kept this choice open for the
+  user's own answer.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5938).

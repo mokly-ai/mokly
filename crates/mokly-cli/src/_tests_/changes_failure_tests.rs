@@ -22,6 +22,8 @@ use crate::serve_errors::changes_reason;
 
 use super::build_tests::{capture_head, config, graphs, options, prepared};
 
+const HINT: &str = "If this base needs lifecycle scripts, enable `review.baseInstallScripts` or use `--base-install-scripts`.";
+
 #[test]
 fn strict_reports_head_and_base_preparation_warnings_after_classification() {
     let head = Warning {
@@ -97,6 +99,8 @@ fn failed_base_install_diagnostic_names_the_scripts_opt_in() {
     let message = changes_diagnostics::failure_detail(&error);
     assert!(message.contains("review.baseInstallScripts"));
     assert!(message.contains("--base-install-scripts"));
+    let expected = format!("base {}: render failed. {HINT}", "a".repeat(40));
+    assert_eq!(message, expected);
 }
 
 #[test]
@@ -107,7 +111,7 @@ fn capture_failure_with_scripts_off_base_keeps_the_hint_in_each_detail_path() {
         source: Box::new(Error::Graph {
             source: mokly_graph::error::GraphError::Invalid {
                 route: "base/index.html".into(),
-                message: "render failed".into(),
+                message: "render failed.".into(),
                 code: mokly_html::diagnostic_code::Code::BuildInvalid,
             },
         }),
@@ -116,6 +120,8 @@ fn capture_failure_with_scripts_off_base_keeps_the_hint_in_each_detail_path() {
     assert!(detail.contains(&format!("base {}", "a".repeat(40))));
     assert!(detail.ends_with("--base-install-scripts`."));
     assert!(!detail.contains(".."));
+    let expected = format!("base {}: render failed. {HINT}", "a".repeat(40));
+    assert_eq!(detail, expected);
     let Some(BuildChanges::Unavailable {
         base_ref,
         base_commit,

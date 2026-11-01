@@ -1,15 +1,15 @@
 # CSS differential test uses a fragile stylesheet list
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   finding 1 of the final review of `rebuild/port-111c` at `b152d0dc`.
 - **Location:** `crates/mokly-css/src/_tests_/token_differential_tests.rs:187-200`
   and the fixture lists in
   `crates/mokly-css/src/_tests_/token_differential_fixtures_1.rs`,
   `_2.rs`, and `_3.rs`.
-- **Reason:** The plan recorded this finding after the user's rule of
-  2026-10-21 that new review findings wait for the user after the merge.
+- **Reason:** The Rust rebuild merged with this finding open, and the removal
+  changes only the tests of `mokly-css`, so it needs a separate branch.
 
 - **Source:** Review.
 - **Category:** Test.
@@ -46,8 +46,7 @@
   - The `testing` skill of 2026-10-30 lists output equivalence and
     migrations under "What never gets a test". Its removal rule 3 lets an
     agent remove such a test without the user. Before the removal, each
-    product assertion of the test moves to a test of its requirement. The
-    user's rule of 2026-10-21 still reserves the choice of this item.
+    product assertion of the test moves to a test of its requirement.
   - Other tests protect the statement rule of
     `docs/protocol/mokly-imported-styles-modules.md`: the CSS Modules
     scanners read each statement that `lightningcss` keeps with the same
@@ -112,7 +111,8 @@
   break on a moved stylesheet, the copy of the old statement reader, and the
   assertion that cannot fail. The recommendation was C before the `testing`
   skill of 2026-10-30.
-- **Action:** ask the user, because on 2026-10-21 the user ruled that new review
-  findings wait for the user after the merge.
+- **Action:** fix after merge, apply D, because the removal touches only the
+  `mokly-css` test files, and the removal rule of the `testing` skill covers
+  this one-time equivalence test.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6701).
