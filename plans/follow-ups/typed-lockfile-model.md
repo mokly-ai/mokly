@@ -34,8 +34,10 @@
 - **Options:**
   - **A.** Keep the scalar scans with the targeted fixes. Effort: Small.
   - **B.** Parse pnpm and Yarn lockfiles into one typed model with importer
-    and locator context. Check only its path fields, and test it with a
-    differential corpus against Yarn's parser. Effort: Large.
+    and locator context. Check only its path fields. Run the differential
+    corpus against Yarn's parser once, outside the test suite. Save its
+    output under `.context/`. Name the output file in the pull request.
+    Effort: Large.
 - **Left out:** Running each package manager as the parser adds tool
   startup and version coupling to base validation. Only two distinct
   approaches exist without a runtime parser: scan scalars, or type them.
@@ -48,6 +50,7 @@
   larger cost.
 - **Action:** fix after merge, apply B, because the typed model follows the
   lockfile path rules of `docs/protocol/mokly-base-dependencies.md:80-94`, and
-  it stays in the comparison crate.
+  it stays in the comparison crate. Its differential check runs once outside
+  the test suite.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6009).
