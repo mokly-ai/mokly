@@ -5,7 +5,8 @@
 - **Added:** 2026-10-29, from PR #217 and its completed plan, which put the
   failure outside the scope of its review.
 - **Location:** `tests/browser/large_watch.spec.ts:14`, with the runner time
-  limit at line 17.
+  limit at line 17. `scripts/large/delivery.ts:75` holds the wait that
+  failed, called by `scripts/large/watch.ts:45` for ready Changes.
 - **Reason:** The test timed out once in the remote gate of PR #217, which
   did not change it, and it passed on the rerun.
 
@@ -14,6 +15,14 @@
 - **Terms:**
   - **Large benchmark harness:** the opt-in scripts under `scripts/large/`.
     The test runs their `watch` scenario on a small generated fixture.
+  - **Complete gate:** `cargo xtask check`. Its remote run spreads browser
+    specs over four shards on separate Blacksmith Testbox machines.
+  - **Runner timeout:** the Playwright limit for one whole test. It stops a
+    test that hangs.
+  - **Serve:** `mokly serve`, the development server. It watches sources and
+    publishes each new catalogue state to the browser.
+  - **Changes:** Mokly's comparison of each entry with the base commit.
+    Serve publishes the new state first and its ready Changes later.
 - **Background:**
   - `tests/browser/large_watch.spec.ts:14` defines "large watch delivers
     browser evidence for html" and "large watch delivers browser evidence
@@ -37,15 +46,20 @@
     the combined journey took 185 to 218 s, about 155 s of them in twelve
     JavaScript compilations. One busy process per CPU pushed it past 300 s.
 - **Problem:**
-  - Failure: the React test timed out once after 300 s in remote browser
-    shard 1 of 4 during PR #217, on or before 2026-10-27.
-  - Failure text: the test timeout of 300 s. The step that waited was not
-    recorded.
-  - Rerun outcome: the test passed on the rerun.
-  - Suspected source: not recorded for this run.
-    `docs/protocol/ci-test-timing.md:31` names CPU contention on a small
-    runner as the accepted cause of such timeouts. Without the waiting
-    step, a lost watch event is not excluded.
+  - On 2026-10-26, remote complete gate run `20261026T221539Z-992801`
+    failed in browser shard 1 of 4 during PR #217.
+  - The failure text was `Test timeout of 300000ms exceeded.` and
+    `Error: page.waitForFunction: Test ended.`, at
+    `scripts/large/delivery.ts:75:29`.
+  - The test was in the second wait of one edit: the `delivered` call at
+    `scripts/large/watch.ts:45`. That wait expects the publication whose
+    Changes are ready after the edit.
+  - The local rerun passed both tests in 4.7 minutes on eight CPUs. The
+    test also passed in later remote gate runs.
+  - CPU contention on the remote machine is the suspected source.
+    `docs/protocol/ci-test-timing.md:31` accepts rare timeouts from that
+    cause. The waiting step does not prove the cause or exclude a lost
+    watch event.
 - **Impact if no action:** The browser suite can still fail at random on a
   correct change, as the timing contract accepts. A real lost watch event
   can hide behind such a timeout.
@@ -61,16 +75,25 @@
   - **C.** Make the harness report the last finished step of each edit when
     a run ends early, so that the next failure names its step. Effort:
     Small (estimate).
+  - **D.** Run this test alone on its own browser shard or on a larger
+    machine. This changes CI and remote gate configuration and costs an
+    extra job or a larger runner. Effort: Medium (estimate).
+  - **E.** Reuse compiled JavaScript across the three edits to reduce the
+    twelve compilations. This needs a new compile cache in the render and
+    sidecar crates. Effort: Large (estimate).
 - **Left out:** A longer time limit, a retry, or a sleep. The
   `deterministic-tests` skill forbids them, because they hide the source.
-- **Wider fix:** C (estimate). Each later failure of a harness journey then
-  names its own step.
+  One test per edit kind conflicts with the user's decision of 2026-10-20.
+- **Wider fix:** E reduces the compile cost that can exhaust the guard.
+  C records the last finished step of each later harness failure.
 - **Previous examples:** The 404 failures of the same test, fixed by PR #222
   and PR #244. Before the user's choice of 2026-10-20, the React test also
   timed out twice in gate runs of the Rust rebuild with
   `Test timeout of 300000ms exceeded`, once with
   `page.waitForFunction: Test ended` too. A later gate run and an isolated
   rerun passed.
+  Remote gate run `20261020T153816Z-385781` failed in browser shard 2 of 4
+  on 2026-10-20 with the same timeout. Its isolated rerun passed.
   [flaky-same-origin-handoff.md](./flaky-same-origin-handoff.md) records
   another browser test that failed once and passed on the rerun.
 - **Related:**
@@ -82,10 +105,12 @@
   - [flaky-same-origin-handoff.md](./flaky-same-origin-handoff.md) is a
     separate case of the same recorded class: a browser test that failed
     once and passed on the rerun. It has its own test and suspected source.
-- **Recommendation:** C (estimate). The failure text does not name a step,
-  so the next failure must name it before A can find the source.
-- **Action:** ask the user, because condition 6 holds (estimate): the
-  failure was not reproduced and its source is not confirmed for this run,
-  so the `deterministic-tests` skill gives `ask the user`.
+- **Recommendation:** C (estimate). The failed wait is known, but its cause
+  is not confirmed. The last finished step can help distinguish CPU
+  contention from a lost event. E best reduces the compile cost, but it is
+  Large.
+- **Action:** ask the user, because the evidence does not show which cause
+  needs a fix. The failure was not reproduced, and no option is clearly
+  best until its cause is confirmed.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/remove-review-json.md?plain=1#L185).
