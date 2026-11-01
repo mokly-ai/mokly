@@ -254,7 +254,6 @@ independently from the preview colour scheme; see the
 - [Variants](./docs/protocol/mokly-variants.md)
 - [Rust core architecture](./docs/architecture/rust-core.md)
 - [Package and consumer boundary](./docs/architecture/package-boundary.md)
-- [Implementation plans and follow-up items](./plans/)
 - [Agent and contributor rules](./AGENTS.md), which name the shared skills that hold the detailed procedures
 - [Changelog](./CHANGELOG.md)
 
