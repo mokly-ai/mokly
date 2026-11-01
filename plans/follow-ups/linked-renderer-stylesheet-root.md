@@ -60,6 +60,12 @@
   - [base-symlink-package-root.md](./base-symlink-package-root.md) concerns
     linked package roots in the base tree of Changes. It is the same class
     of link handling in another reader.
+  - [fallback-keys-checkout-folder.md](./fallback-keys-checkout-folder.md)
+    has the same cause in render keys. A linked renderer is not in the
+    module graph, so every entry module other than a stories file uses the
+    whole-bundle fallback key, which depends on the checkout folder. Option
+    C here removes that trigger. Option A of that item fixes the fallback
+    key for every trigger.
 - **Recommendation:** C. It removes the cause for the renderer
   and for every other configured module path.
 - **Action:** fix after merge, apply C, because a silent loss of

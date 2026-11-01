@@ -1,5 +1,7 @@
 # Shell Delivery And Read Model Routes
 
+Status: Follow-up work remains in the [fallback keys item](../../plans/follow-ups/fallback-keys-checkout-folder.md).
+
 ## Purpose And Boundary
 
 The browser renders Browse from a stub, an index, and entry details. The index
