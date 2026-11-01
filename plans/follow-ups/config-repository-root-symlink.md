@@ -53,9 +53,11 @@
   - [linked-renderer-stylesheet-root.md](./linked-renderer-stylesheet-root.md)
     is the second linked-path problem that the same review found. It loses
     a renderer's styles when the renderer path goes through a link.
-  - [base-symlink-package-root.md](./base-symlink-package-root.md) concerns
-    linked package roots in the base tree of Changes. It is the same class
-    of link handling in another reader.
+  - [base-symlink-package-root.md at its last version on `main`](https://github.com/mokly-ai/mokly/blob/c7e7d9b88efc84152eb33539ed8ed7ca2ad2bb93/plans/follow-ups/base-symlink-package-root.md)
+    concerned linked package roots in the base tree of Changes. It is the
+    same class of link handling in another reader. The 2026-10-28 decision
+    closed it: for roots and package roots, the base failure stays, and the
+    message names the link.
 - **Recommendation:** D. It fixes the difference and keeps every
   later field on the same rule.
 - **Action:** fix after merge, apply D, because the inconsistent
