@@ -1,6 +1,6 @@
 # Authored HTML reports reserved navigation names inconsistently
 
-- **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan, as
   two items outside the scope of round 2 of the HTML decision work review:
@@ -11,7 +11,7 @@
 - **Location:** `crates/mokly-catalogue/src/html_tokens.rs:91-102`,
   `crates/mokly-html/src/elements.rs:30-48`,
   `crates/mokly-html/src/source_checks.rs:15-19`, and
-  `docs/protocol/mokly-html-screens.md:144` and `:194`.
+  `docs/protocol/mokly-html-screens.md:142` and `:192`.
 - **Reason:** On 2026-11-01 the diagnostics branch left this choice to the
   user, because each option changes a protocol rule or adds a build error.
 
@@ -31,14 +31,14 @@
   - **Callback output:** the HTML that a JavaScript render callback returns
     through the render sidecar. Failure messages call it "consumer output".
 - **Background:**
-  - `docs/protocol/mokly-html-screens.md:137-140` says that `mokly-ignore`
+  - `docs/protocol/mokly-html-screens.md:135-138` says that `mokly-ignore`
     accepts `id` and `material-key`, and that `mokly-ignore-scope` accepts
     `enabled`. Both accept `mokly-if` and `mokly-viewport`. Other wrapper
     attributes are unknown: they warn, and their values are not evaluated.
-  - Line 144 of that page says that reserved navigation names are not
+  - Line 142 of that page says that reserved navigation names are not
     unknown attributes. A body or callback output that supplies one fails. A
     saved slot warns that the name is rejected.
-  - Line 194 of that page defines that warning. Its code is
+  - Line 192 of that page defines that warning. Its code is
     `html-ignore-attribute`. Its message is
     `reserved navigation metadata <name> on <mokly-ignore> is rejected`,
     with `<mokly-ignore-scope>` on a scope wrapper.

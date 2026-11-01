@@ -246,7 +246,7 @@ a rejection, or stricter validation.
   state that saved slots skip them; C, warn instead. A: new gate. C: a
   warning that strict builds count. Follow-up item:
   `plans/follow-ups/saved-variant-slot-checks.md`.
-- Item 1, reserved navigation names in authored HTML. Severity Low, effort
+- Item 1, reserved navigation names in authored HTML. Severity Medium, effort
   Medium. Recommended: C, one validation rule for all authored HTML.
   Alternatives: A, wording only; D, A plus file, line, and column on body
   failures; B, A plus value evaluation on saved-slot `mokly-ignore-scope`.
