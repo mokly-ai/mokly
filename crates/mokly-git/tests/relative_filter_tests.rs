@@ -44,6 +44,19 @@ fn relative_filters_match_for_bytes_batches_digests_and_extraction() {
         .map(|byte| format!("{byte:02x}"))
         .collect::<String>();
     assert_eq!(repository.digest(&base, &entries[0]).unwrap(), digest);
+    for (result, expected) in repository
+        .digest_many(&base, &entries)
+        .into_iter()
+        .zip([expected.as_slice(), b"from checkout\nb\n".as_slice()])
+    {
+        let result = result.unwrap();
+        let hash: String = Sha256::digest(expected)
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect();
+        assert_eq!(result.digest, hash);
+        assert_eq!(result.length, expected.len());
+    }
     let temporary = tempfile::tempdir().unwrap();
     let destination = temporary.path().join("sources");
     repository

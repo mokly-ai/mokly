@@ -33,8 +33,37 @@ pub(crate) fn source_node(
     aliases: &BTreeMap<String, String>,
     path: &str,
 ) -> Result<Option<(PathBuf, Node)>> {
+    source_node_with(&|path| tree.project(path), root, aliases, path)
+}
+
+/// Resolve one candidate through the same metadata selector used by batches.
+pub(crate) fn source_node_with(
+    project: &Projection<'_>,
+    root: &Path,
+    aliases: &BTreeMap<String, String>,
+    path: &str,
+) -> Result<Option<(PathBuf, Node)>> {
+    for candidate in source_candidates(root, aliases, path) {
+        if let Some(node) = project(&candidate)?
+            && node.identity.starts_with(root)
+        {
+            return Ok(Some((node.identity.clone(), node)));
+        }
+    }
+    Ok(None)
+}
+
+/// One metadata-only projection boundary.
+pub(crate) type Projection<'a> = dyn Fn(&Path) -> Result<Option<Node>> + 'a;
+
+/// Ordered repository aliases considered by source selection.
+pub(crate) fn source_candidates(
+    root: &Path,
+    aliases: &BTreeMap<String, String>,
+    path: &str,
+) -> Vec<PathBuf> {
     if path.starts_with(INSTALLED_INPUT_PREFIX) || dependency_directory(path).is_none() {
-        return Ok(None);
+        return Vec::new();
     }
     let prefix = aliases
         .values()
@@ -57,12 +86,8 @@ pub(crate) fn source_node(
         None => vec![path.into()],
     };
     candidates.sort_by_key(|path| Reverse(path.len()));
-    for candidate in candidates {
-        if let Some(node) = tree.project(&root.join(candidate))?
-            && node.identity.starts_with(root)
-        {
-            return Ok(Some((node.identity.clone(), node)));
-        }
-    }
-    Ok(None)
+    candidates
+        .into_iter()
+        .map(|candidate| root.join(candidate))
+        .collect()
 }

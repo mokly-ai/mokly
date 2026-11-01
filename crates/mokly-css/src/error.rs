@@ -69,6 +69,8 @@ pub enum AssetFailure {
     Absolute,
     /// Missing, escaping, symbolic-link, or non-file target.
     File,
+    /// Historical conversion could not supply the asset.
+    Unavailable,
     /// Unsupported asset extension.
     Extension,
     /// Non-portable route.

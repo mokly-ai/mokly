@@ -75,6 +75,11 @@ pub trait SourceTree: Send + Sync {
     }
     /// Resolve a repository, root, or candidate identity once per pass.
     fn project(&self, path: &Path) -> Result<Option<Node>>;
+    /// Project metadata without reading source contents, with one result per path.
+    /// The default preserves request order and continues after each projection error.
+    fn project_batch(&self, paths: &[PathBuf]) -> Vec<Result<Option<Node>>> {
+        paths.iter().map(|path| self.project(path)).collect()
+    }
     /// List direct children of a projected directory identity without following links.
     fn children(&self, path: &Path) -> Result<Vec<Child>>;
     /// Read the bytes of one confined, inventoried source.
@@ -99,6 +104,13 @@ pub trait SourceTree: Send + Sync {
     fn digest_unretained(&self, path: &Path) -> Result<String> {
         self.digest(path)
     }
+    /// Hash opaque inputs while keeping one result for each requested path.
+    fn digest_unretained_batch(&self, paths: &[PathBuf]) -> Vec<Result<String>> {
+        paths
+            .iter()
+            .map(|path| self.digest_unretained(path))
+            .collect()
+    }
     /// Read immutable bytes without copying a retained source on cache hits.
     fn read_shared(&self, path: &Path) -> Result<Arc<[u8]>> {
         Ok(self.read(path)?.into())
@@ -111,3 +123,7 @@ pub trait SourceTree: Send + Sync {
             .collect())
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/tree_batch_tests.rs"]
+mod tree_batch_tests;

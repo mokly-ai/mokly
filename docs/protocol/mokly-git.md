@@ -1,5 +1,7 @@
 # Git Command Runtime
 
+Status: Follow-up work remains in the [base asset conversion item](../../plans/follow-ups/base-asset-conversion-unavailable.md).
+
 Mokly runs Git with an explicit checkout directory and argument vector. It
 starts no shell. Standard output and standard error have independent capture
 bounds of at most 64 MiB each. Standard error has a 1 MiB bound by default,
@@ -115,6 +117,18 @@ The destination must not exist. A partial extraction is removed on failure.
 Git metadata directories are never extracted. A name unsupported by the host
 is skipped with a trace: Windows cannot store colon or backslash names,
 reserved device names, or names with trailing dots or spaces.
+
+When base reads go through Git, the
+[opaque assets](./mokly-imported-styles-assets.md) that one stylesheet file
+references form one batch. The batch runs their lookups, attribute checks, and
+digests together. Each digest is the SHA-256 of the converted bytes of its
+asset, the same as a digest of that asset alone. The batch keeps the batch
+byte bound, and each asset keeps a 64 MiB byte bound. A digest batch follows
+the time limit and the retry rule of a conversion batch above. An asset is
+then unavailable only when its own digest fails. Decision: one batch serves the
+opaque assets of a stylesheet file. Rejected: separate Git reads for each
+asset, because process start-up dominated the base preparation of a
+stylesheet with many assets.
 
 The [base preparation contract](./mokly-base-preparation.md) owns base source
 reads and extraction. The [base cache](./mokly-base-cache.md) owns leases, and

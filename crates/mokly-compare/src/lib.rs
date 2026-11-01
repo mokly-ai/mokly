@@ -15,8 +15,10 @@ pub mod inputs;
 pub mod locations;
 pub mod process;
 mod source_cache;
+pub mod source_digest;
 mod source_index;
 pub mod sources;
+mod sources_assets;
 mod sources_extraction;
 pub mod storage;
 mod storage_tree;
@@ -131,6 +133,7 @@ pub mod source_failures;
 
 mod git_failures;
 mod git_prefetch;
+mod git_projection;
 
 mod owned_style_instances;
 mod owned_styles;
@@ -151,6 +154,7 @@ pub mod projection_detail;
 pub mod projection_removed;
 
 mod git_asset_io;
+mod git_asset_stream;
 
 #[cfg(test)]
 #[path = "_tests_/manager_tests.rs"]

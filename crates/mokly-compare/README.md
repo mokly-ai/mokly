@@ -32,33 +32,48 @@ both sides. `mokly-server` and `mokly-static` publish the retained result.
 It indexes configured roots and exact requested paths and retains every tree
 mode. `GitTree` implements `dyn SourceTree` over that index, so the catalogue
 applies its roots, globs, and source rules to base files. Exact projections use
-cached metadata and bounded path queries. Catalogue inventories and planning
+cached metadata and bounded path queries. A projection of a directory that
+holds an indexed file starts no Git lookup. Catalogue inventories and planning
 inputs request generation-wide prefetch sets before reading bytes. Reads retain
 a byte-bounded file LRU, and a miss reads only its requested path. Links and
-submodules supply no regular source bytes. HTML reads need no extraction or
-package manager. `Sources::attach` gives `GitSources` a leased extraction of
-the same commit: it lists the whole tree once, and later reads and digests use
-the extracted files, with Git for each file that the extraction lacks or that
-changed since its first fingerprint in the process. `GitSources::sharing` and
+submodules supply no regular source bytes. `Sources::attach` gives
+`GitSources` a leased extraction of the same commit: it lists the whole tree
+once, and later reads and digests use the extracted files, with the Git
+fallback of the base preparation contract. `GitSources::sharing` and
 `GitSourceFactory` share one `dyn Snapshots`, `ProcessSnapshots` in the CLI,
 which keeps the first fingerprints of each extraction for the process.
 Conversion failures become `SourceError::Unavailable` and
 `base-conversion` warnings. The resource memo keeps unavailable bytes distinct
 from missing paths. The
 [base preparation contract](../../docs/protocol/mokly-base-preparation.md)
-owns the read bounds and the failure outcomes. Opaque Git assets use the same
-commit-pinned conversion context and byte bounds. Hash-only preparation does
-not fill the source-byte LRU.
+owns the read bounds and the failure outcomes.
+
+`GitTree::digest_unretained_batch` hashes a batch of opaque assets, such as the
+new assets of one stylesheet file. Hash-only preparation does not fill the
+source-byte LRU. The batch looks up only the paths that the index lacks, and an
+asset whose bytes the LRU holds starts no Git process. The other assets hash
+through one `Sources::digest_with_length` call into `Repository::digest_many`.
+Each `SourceDigest` keeps the SHA-256 and, for a Git digest, the converted
+length. `GitTree::project_batch` looks up its paths through one
+`Sources::ensure` call before the CSS confinement walk. The lookup, attribute,
+and digest processes of a stylesheet then stay one batch, constant at 4 and 16
+assets in a count test of mokly-render. The digest cache keeps hash-only
+`digest` records apart from completed opaque records. An opaque digest
+upgrades a hash-only record and reuses a completed one, also in
+`GitTree::open_stream`. A digest that failed on its 64 MiB bound stays
+unavailable for the base preparation, and a smaller batch-bound failure stays
+retryable. With a converted length, `copy_verified` streams the file from one
+Git process through `Sources::stream`, in chunks of at most 64 KiB. A digest or
+a length that differs from the digest pass, or a stream above 64 MiB, returns
+`SourceError::Changed`. A leased extraction keeps a buffered delivery, because
+its digests carry no length.
 
 `CachedExtraction` implements `dyn Extraction`. It extracts one commit into
 the source cache only when JavaScript, a renderer module, or consumer PostCSS
-needs files on disk. Its `review.base-extraction` span times the source key,
-the cache lookup, and a build, and records `action`: `reuse` for a complete
-entry and `extract` for a build. `Extraction::existing` and `Cache::lease`
-lease a complete entry without a build, so base preparation can read an
-earlier extraction before it knows whether the base needs one. `DiskCache` keeps the source and dependency namespaces
-under the directory that `SystemLocations` selects, with OS locks for
-namespace mutation and entry leases. When `SystemLocations` checks that the
+needs files on disk. `Extraction::existing` and `Cache::lease` lease a
+complete entry without a build. `DiskCache` keeps the source and dependency
+namespaces under the directory that `SystemLocations` selects, with OS locks
+for namespace mutation and entry leases. When `SystemLocations` checks that the
 cache lies outside the repository, it compares both paths in one form,
 without a Windows verbatim drive or network prefix. The
 [base cache contract](../../docs/protocol/mokly-base-cache.md) owns the
@@ -103,28 +118,21 @@ paths.
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
 `Comparison::capture_base` validates and captures the base through one ordered
 collector. `Comparison::capture_head` uses the same collector for the build
-head. Each view supplies its validated document and closure without a second
-render. `Comparison::compare_prepared` classifies the prepared base and head.
-An uncaptured fallback uses the source generation, so a summary that exceeds
-the capture bound does not start another pass. The capture keeps exact document
-bytes, generated CSS, and trusted annotations in compressed form. Inputs that
-do not fit the capture budget read from their side's source. Serve head reads
-use the bounded render cache and render again on the head root only after
-cache eviction. Build head reads use the head capture. Each result holds at
-most one base capture, and a build result also holds one head capture. The
+head. `Comparison::compare_prepared` classifies the prepared base and head.
+The capture keeps exact document bytes, generated CSS, and trusted annotations
+in compressed form. The
 [comparison serving contract](../../docs/protocol/mokly-comparison-serving.md)
-owns the capture budget and its overlap with the render cache. Capture checks
-cancellation before each view and each encoding. Its timing spans contain no
-source data or error payloads.
+owns the capture budget, the source fallback, and its overlap with the render
+cache. Capture checks cancellation before each view and each encoding. Its
+timing spans contain no source data or error payloads.
 
 The [comparison contract](../../docs/protocol/mokly-comparison.md) owns
 materiality, style ownership, resources, and Changes membership. Both sides
-retain trusted sidecar style owners. Authored owner attributes supply no
-trusted proof. Owned rules enter the same catalogue-wide evidence reducer of
-`mokly-css` as linked and ownerless head CSS, under the
+retain trusted sidecar style owners. Owned rules enter the same catalogue-wide
+evidence reducer of `mokly-css` as linked and ownerless head CSS, under the
 [CSS attribution contract](../../docs/protocol/mokly-css-attribution.md).
-Registry rule ownership stays separate from delivery style groups. Both the
-private capture codec and the head comparison retain these rule records.
+Both the private capture codec and the head comparison retain the owned rule
+records.
 Saved prop edits retain their view records without marking unchanged
 consumers affected. Own CSS states and dependency reasons use kept own-page
 source proof. Actual-instance implementation reasons preserve own view states.
@@ -137,18 +145,15 @@ metadata.
 `Lookup` indexes kind-aware, case-folded identities once per projection batch
 under the [branch-point lookup contract](../../docs/protocol/mokly-branch-point-lookup.md).
 It resolves explicit before and after references, accepted moves, removed
-records, counterparts, and variant parents. Metadata comparison keeps schema,
-controls, and declared slots on the parent. Variants compare their own
-metadata, props, and supplied slots independently.
+records, counterparts, and variant parents.
 
 `GitBaseLookup` implements `dyn BaseLookup` and pins one repository, ref, and
 merge base. Static commands retain that `PinnedBase` before current rendering.
 `Changes` implements `dyn ChangesService` and reuses the pin when supplied.
 The CLI implements `BaseProvider`, which supplies the base render generation
 through the common graph. A JavaScript provider uses the same request's source
-and repository handles for extraction and dependency leases. The CLI supplies
-`mokly_render::runtime::Runtime` for both sides, sharing its render cache,
-sidecar pool, and cancellation.
+and repository handles for extraction and dependency leases. Both sides share
+the render runtime that the [CLI](../mokly-cli/README.md) composes.
 
 `Changes` announces each comparison `Step` through its `dyn Steps` as the step
 starts, so a command can name the running step on its progress line. It
@@ -164,22 +169,19 @@ commit. `projection_detail::apply_evidence` supplies included entry reasons,
 each view's state, ignore ids, and resource evidence, and a current screen's or
 component's base side, for current and removed details. These records carry
 every public fact of the review result, which no file holds.
-`projection_workspace::apply`
-joins ready usage with indexed affected links and caller-owned input changes.
-An absent workspace stays absent. An absent list stays absent until the caller
-proves usage.
+`projection_workspace::apply` joins ready usage with indexed affected links and
+caller-owned input changes under the
+[workspace evidence rules](../../docs/protocol/mokly-live-evidence.md#workspace-evidence).
 `projection_removed` assembles historical records, details with base usage,
 and typed preview metadata. Its `workspaces` initializer prepares removed
 visual details after the caller proves base usage. The static caller owns file
 inventory and identity. The engine owns classification, removal selection, and
 historical snapshot IDs.
 
-Affected Usage links resolve each evidence entry from its own side. They keep
-current variants through accepted moves and retain selected historical
-variants. Each link's destination is the entry whose views its evidence names.
-A variant groups under its own resolved destination when its original parent
-has none, and no group links to a different-kind replacement at the parent's
-path. The [Changes controls contract](../../docs/protocol/mokly-changes-controls.md)
+Affected Usage links resolve each evidence entry from its own side, and each
+link's destination is the entry whose views its evidence names, under the
+[branch-point lookup contract](../../docs/protocol/mokly-branch-point-lookup.md#reference-sides).
+The [Changes controls contract](../../docs/protocol/mokly-changes-controls.md)
 owns link eligibility.
 
 ## Quick Start
@@ -206,7 +208,8 @@ cargo test -p mokly-compare --test pnpm_modules_purge_tests
 Consumers enable the `mock` feature to use every public trait with unimock.
 Unit tests use `unimock` for IO, processes, and clocks. Integration tests use
 isolated Git repositories, OS locks, and local packages. Command tests pin
-every manager's complete scripts-off argument list.
+every manager's complete scripts-off argument list. A counted test pins the
+Git processes of one opaque asset batch at 4 and at 16 assets.
 
 On Unix, `tests/pnpm_modules_purge_tests.rs` installs the dependencies of a
 base commit that tracks a pnpm `node_modules` state, which pnpm must recreate.
@@ -245,6 +248,11 @@ development dependencies, and no test uses the internet.
 - [`src/sources.rs`](./src/sources.rs) and
   [`src/git_tree.rs`](./src/git_tree.rs) define `GitSources` and `GitTree`,
   the commit-pinned source reader and its `SourceTree` adapter.
+- [`src/git_asset_io.rs`](./src/git_asset_io.rs),
+  [`src/git_asset_stream.rs`](./src/git_asset_stream.rs), and
+  [`src/sources_assets.rs`](./src/sources_assets.rs) batch opaque digests and
+  stream base assets. [`src/source_digest.rs`](./src/source_digest.rs)
+  defines `SourceDigest` and the `CachedDigest` record of the digest cache.
 - [`src/extraction.rs`](./src/extraction.rs) defines `Extraction` and
   `CachedExtraction`, the on-demand commit extraction.
 - [`src/cache.rs`](./src/cache.rs) and

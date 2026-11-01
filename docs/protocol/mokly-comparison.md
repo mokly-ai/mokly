@@ -1,5 +1,7 @@
 # Tree Comparison And Changes
 
+Status: Follow-up work remains in the [base asset conversion item](../../plans/follow-ups/base-asset-conversion-unavailable.md).
+
 ## Purpose And Inputs
 
 Comparison decides, for every entry and view, whether the base and the head

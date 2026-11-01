@@ -58,6 +58,16 @@ mod runtime_serialization_tests;
 #[path = "_tests_/source_forwarding_tests.rs"]
 mod source_forwarding_tests;
 
+mod source_asset_io;
 #[cfg(test)]
 #[path = "_tests_/source_precedence_tests.rs"]
 mod source_precedence_tests;
+mod source_projection;
+
+#[cfg(test)]
+#[path = "_tests_/css_asset_batch_tests.rs"]
+mod css_asset_batch_tests;
+
+#[cfg(test)]
+#[path = "_tests_/side_projection_tests.rs"]
+mod side_projection_tests;
