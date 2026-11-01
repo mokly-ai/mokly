@@ -1,6 +1,6 @@
 # Make tracing captures safe in parallel tests
 
-- **Severity:** Medium. **Effort:** Small. **Confidence:** Medium. **Harder later:** Yes.
+- **Severity:** Medium. **Effort:** Large. **Confidence:** Medium. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 196, the wider class of user item 193.
 - **Location:** `crates/mokly-cli/src/_tests_/serve_trace_tests.rs:87`,
@@ -57,8 +57,9 @@
 - **Previous examples:** The sidecar stop span loss above, fixed in
   `298ede89`. An earlier CI-gates run also saw zero stop spans in
   `cleanup_retirement_keeps_only_the_cause_after_active_or_idle_failure`.
-- **Recommendation:** A. It applies the proven deterministic fix in a
-  separate branch.
+- **Recommendation:** C. One shared capture owns the existing interest guard for
+  all three crates. Its wider migration affects effort, not approval. The user's
+  reserved choice still waits for an answer.
 - **Action:** ask the user, because the user reserved the choice for each open
   review item of the rebuild.
 

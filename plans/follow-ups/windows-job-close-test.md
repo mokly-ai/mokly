@@ -1,6 +1,6 @@
 # Make the Windows job-close test effective
 
-- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 176, delta review 1.
 - **Location:** `crates/mokly-platform/tests/process_tests.rs:86` and
@@ -34,8 +34,9 @@
 - **Wider fix:** B. One proof based on events prevents false passes in
   every job-close test.
 - **Previous examples:** None found.
-- **Recommendation:** A. It makes the current test fail when the child
-  survives. B best protects all job-close cases.
+- **Recommendation:** B. One event-based helper makes every existing job-close
+  test prove termination without an elapsed-time assertion. The user's reserved
+  choice still waits for an answer.
 - **Action:** ask the user, because the user reserved the choice for each open
   review item of the rebuild.
 

@@ -1,6 +1,6 @@
 # npm run dev misses a partial build
 
-- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-30, from the branch `calummoore/npm-run-dev-automation`,
   review finding 1.
@@ -92,11 +92,13 @@
   Serve runs. A rebuild and a restart after Serve fails, because C is
   better on every point. A change to the docs only, because it fails the
   goal.
-- **Wider fix:** B, which is Large. E covers every stage of the root
-  build at Medium effort.
+- **Wider fix:** B. Build-produced inventories give dev preparation the complete
+  runtime output list for every package. E also covers every root-build stage,
+  but changes the recorded build trigger.
 - **Previous examples:** None found.
-- **Recommendation:** D. It is a Small structural fix of the viewer case.
-  E best protects the codebase, because it covers every stage, but it
-  changes the requirement and needs the user's decision.
-- **Action:** fix after merge, apply D, because only an interrupted build
-  causes the problem, and one `npm run build` recovers from it.
+- **Recommendation:** B. It detects incomplete runtime output under the existing
+  dev-preparation requirement. Its wider package-build work affects effort, not
+  approval. The record first recommended D.
+- **Action:** fix after merge, apply B, because an interrupted build is
+  recoverable with one manual build. Preserve the existing dev trigger and every
+  existing gate check.

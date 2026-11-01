@@ -1,4 +1,4 @@
-# Start sidecars before the background pass
+# Avoid sidecar startup waits during background renders
 
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
@@ -6,9 +6,8 @@
   three follow-ups of its acceptance decision.
 - **Location:** `crates/mokly-sidecar/src/pool.rs:75` and line 119, and
   `crates/mokly-cli/src/serve_pool.rs:49`.
-- **Reason:** On 2026-10-28 the orchestrator accepted the missed targets of
-  PR #225 and deferred the pre-start without choosing between its two
-  approaches, because the startup cost lies in the sidecar pool.
+- **Reason:** On 2026-10-28 the coordinating agent accepted the missed targets
+  of PR #225 and deferred pool startup work outside its pass scheduler.
 
 - **Source:** Review.
 - **Category:** Performance.
@@ -52,15 +51,13 @@
   a wait for one starting sidecar.
 - **Previous examples:** None found.
 - **Related:**
-  - [coalesce-stylesheet-bundles.md](./coalesce-stylesheet-bundles.md) and
-    [coalesce-document-composition.md](./coalesce-document-composition.md)
-    are the other two follow-ups of the same acceptance decision. Each
-    removes a different part of the pass time.
-  - [large-react-startup.md](./large-react-startup.md) targets the usable
-    startup of large React catalogues, where JavaScript compilation takes
-    most of the time. Both items touch Serve startup and the sidecar pool,
-    but this item removes only the sidecar start wait of the first
-    background renders. The work differs, so the items stay separate.
+  [coalesce-document-composition.md](./coalesce-document-composition.md) owns
+  the document and stylesheet cache follow-ups of the same acceptance decision.
+  It removes repeated cache work.
+  [large-react-startup.md](./large-react-startup.md) targets usable startup of
+  large React catalogues, where JavaScript compilation dominates. Both startup
+  items touch Serve and the pool, but this item concerns the first background
+  renders after readiness.
 - **Recommendation:** C. Pool-level acquisition removes the wait on a starting
   sidecar for every request while keeping on-demand startup. The record first
   recommended B.

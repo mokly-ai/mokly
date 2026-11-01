@@ -1,6 +1,6 @@
 # Bring the shell README under its length target
 
-- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 95, F9b item 7 and decision 23.
 - **Location:** `packages/viewer/src/shell/README.md:1`.
@@ -44,9 +44,9 @@
   before it. An earlier decision kept the browser test guide,
   `tests/browser/README.md`, as one page with a heading for each subject and
   a recorded exception.
-- **Recommendation:** A. A split by subject needs doc-only folders in the
-  source tree, and module mechanics belong in code comments. D best protects
-  long-term ownership.
+- **Recommendation:** D. Module comments keep mechanics beside their owners and
+  leave the README as an entry-point index, as the documentation rules require.
+  The user's reserved choice still waits for an answer.
 - **Action:** ask the user, because the user reserved the choice for each open
   review item of the rebuild.
 
