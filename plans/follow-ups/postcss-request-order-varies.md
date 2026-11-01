@@ -1,6 +1,6 @@
 # PostCSS request order varies between runs
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from the step A review round 2 of PR #228 and the
   step B review round 2 of PR #242.
@@ -42,24 +42,23 @@
   - **A.** State in the PostCSS contract that the request order within a
     context is not fixed, and that a plugin must not keep state across
     stylesheets. Make the protected-file diagnostic name the first
-    stylesheet in root order. Effort: Small (estimate).
+    stylesheet in root order. Effort: Small.
   - **B.** Fix the request order of each context: each root waits for its
     turn in root order, and the read inventories still overlap. It gives
     back part of the parallel gain, which the orchestrator rejected for the
-    generation key on 2026-10-28 for that reason. Effort: Medium
-    (estimate).
+    generation key on 2026-10-28 for that reason. Effort: Medium.
   - **C.** Apply A. Also give each result of a context the evidence of the
     whole context, so that the cumulative module evidence does not depend
-    on the order. Effort: Medium (estimate).
+    on the order. Effort: Medium.
 - **Left out:** A separate PostCSS process for each stylesheet loses shared
   plugin and module evidence.
 - **Wider fix:** B. A fixed order removes the class, but it costs the gain.
 - **Previous examples:** On 2026-10-28 the orchestrator made the generation
   key independent of the request order, for the same parallel bundling.
-- **Recommendation:** A (estimate). It keeps the parallel gain and turns the
+- **Recommendation:** A. It keeps the parallel gain and turns the
   open behaviour into a stated rule. B best protects output equality for a
   stateful plugin.
-- **Action:** ask the user, because condition 1 holds (estimate): A adds a
-  rule to the PostCSS contract that no recorded user decision covers.
+- **Action:** ask the user, because A adds a rule to the PostCSS contract that
+  no recorded user decision covers.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/ee7d8ea739bd103aacd001f8e75e5aa144929348/plans/stylesheet-bundle-performance.md?plain=1#L632).

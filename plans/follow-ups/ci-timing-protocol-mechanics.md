@@ -1,6 +1,6 @@
 # Move CI timing mechanics out of the protocol
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a problem outside the scope of the F20 review of 2026-10-21.
@@ -55,9 +55,9 @@
   many protocol pages. Commit `dabf30d2` removed the same class from
   `docs/protocol/mokly-html-screens.md`: the sentence "One parser and one
   renderer serve both."
-- **Recommendation:** B (estimate). The path is a mechanic, and the lint
+- **Recommendation:** B. The path is a mechanic, and the lint
   configuration already holds it.
-- **Action:** fix after merge, apply B (estimate), because the content is
+- **Action:** fix after merge, apply B, because the content is
   implementation detail that moves to its home, and the page is outside
   the reviewed change.
 

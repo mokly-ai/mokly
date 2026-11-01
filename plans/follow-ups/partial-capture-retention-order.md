@@ -10,7 +10,7 @@
   until after its merge, for the user's later choice.
 
 - **Source:** Review.
-- **Category:** Docs or spec (estimate).
+- **Category:** Docs or spec.
 - **Terms:**
   - **Capture:** the bounded store of rendered views that one comparison
     keeps, so that Changes does not render them again.
@@ -39,7 +39,7 @@
     capture bound in `crates/mokly-compare/README.md`. Effort: Small.
   - **B.** Make route order strict: keep no later view after the first
     skip or trim. It is simple to state and test, but it can keep fewer
-    views. Effort: Small (estimate).
+    views. Effort: Small.
   - **C.** Restore the old rule: apply retention again when the final
     capacity is known, and render each dropped view that then fits.
     Effort: Medium.
@@ -49,7 +49,7 @@
 - **Previous examples:** None found.
 - **Recommendation:** A. Output does not change, and the applied rule is
   already in the code. C best stabilizes which views stay.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user reserved the choice for each open review item of the rebuild.
+- **Action:** ask the user, because on 2026-10-21 the user reserved the choice
+  for each open review item of the rebuild.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5892).

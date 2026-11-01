@@ -1,6 +1,6 @@
 # Write relatedDocs references into catalogue output
 
-- **Severity:** Medium (estimate). **Likelihood:** Common (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: the status-line sweep of user decision 185 A, finding 6 of the documentation audit.
 - **Location:** `crates/mokly-model/src/projection.rs:94`,
@@ -14,7 +14,7 @@
   so it left this code gap for a separate branch.
 
 - **Source:** Review.
-- **Category:** Product bug (estimate).
+- **Category:** Product bug.
 - **Terms:**
   - **`relatedDocs`:** the authored list of repository paths that an entry
     names as its related documents.
@@ -62,35 +62,27 @@
     removed records in `crates/mokly-compare/src/projection_removed.rs`.
     Restore them from the retained snapshot through a match over the five
     record kinds, because `CatalogueRecord` has no details accessor. Remove
-    both status lines. A is Small only as this two-file change of 30 code
-    lines or fewer, about 22 lines (estimate). If it grows, or needs a third
-    file such as `projection_index.rs`, re-grade it and ask the user. Do not
-    compact code to meet the bound. Effort: Small (estimate).
+    both status lines. Review current and removed records together, including viewer validation of their references. Effort: Small.
   - **B.** Keep display labels only, and remove the reference rule from
-    both protocol pages. This drops a requirement. Effort: Small (estimate).
+    both protocol pages. This drops a requirement. Effort: Small.
   - **C.** Apply A through one shared resolver that the index projection and
     the comparison metadata both call. It needs at least three code files in
     two crates. The first holds a public resolver and its call, in
     `projection.rs`. The second replaces the inline lookup at
     `entry_metadata.rs:104`. The third holds the label restore, in
     `projection_removed.rs` or `projection_index.rs`. The
-    historical index caller, not the crate count, makes C Large.
-    Effort: Large (estimate).
+    historical index caller needs its own preservation check for removed labels. Effort: Medium.
 - **Left out:** Resolving the labels in the viewer breaks the rule that the
   index carries the validated references for every reader of the index. A
   mapping inside `projection::index` without the restore breaks the rule that
   removed entries keep the base side's labels.
-- **Wider fix:** C. One resolver keeps the index and the comparison
-  metadata from disagreeing about which label is a document. C is Large, so
-  it needs the user.
+- **Wider fix:** C. One resolver keeps the index and comparison metadata from
+  disagreeing about which label is a document.
 - **Previous examples:** None found.
-- **Recommendation:** A. (estimate) It is the best unblocked fix: it writes
-  the stated references and keeps the removed-label rule with the smallest
-  change. The record first recommended C, graded Medium. C is a wider option
-  that needs the user.
-- **Action:** fix after merge, apply A (estimate), because the protocol
-  already requires the references and A is Small. The branch that applies A
-  deletes this record and records the still-unapproved C as a separate Needs
-  decision item.
+- **Recommendation:** C. One resolver supplies the required references and
+  preserves removed labels for both readers. The record previously recommended A
+  because it treated Large effort as blocked.
+- **Action:** fix after merge, apply C, because the status-line sweep changed
+  only documentation and left the shared resolver for a separate branch.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6434).

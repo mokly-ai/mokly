@@ -10,7 +10,7 @@
   until after its merge, for the user's later choice.
 
 - **Source:** Review.
-- **Category:** Performance (estimate).
+- **Category:** Performance.
 - **Terms:**
   - **Owned rule:** a CSS rule that a component supplies with its own
     styles, such as CSS-in-JS from the sidecar.
@@ -42,12 +42,12 @@
   without holding whole-document data for every view until collection ends?
 - **Options:**
   - **A.** Keep the current state, which a fix round of the rebuild
-    already changed to pass by value. Effort: Small (estimate).
+    already changed to pass by value. Effort: Small.
   - **B.** Keep compact candidates. Keep instance chains without duplicates
     for each owner and rule identity, and candidates only for owners with
     changed rules. Keep one address pair for each view. Effort: Medium.
   - **C.** Add a counted test at two catalogue sizes, and keep the current
-    retention. Effort: Medium (estimate).
+    retention. Effort: Medium.
 - **Left out:** A proof that each view resolves alone breaks the decision of
   2026-10-20, because it cannot see the own-page proof of other pages.
   Dropping the candidate proofs loses the owned-instance evidence.
@@ -65,8 +65,7 @@
 - **Recommendation:** B. It removes a memory regression that the
   catalogue-wide wait added, and the counted test of C can be its
   regression test.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user reserved the choice for each open review item of the rebuild.
-  Condition 6 also holds, because the item concerns performance.
+- **Action:** ask the user, because on 2026-10-21 the user reserved the choice
+  for each open review item of the rebuild.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5878).

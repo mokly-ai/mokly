@@ -1,6 +1,6 @@
 # Name the failed path in batch conversion errors
 
-- **Severity:** Low (estimate). **Likelihood:** Rare (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from the review of PR #229, the batch conversion
   change, recorded in the completed plan of PR #236.
@@ -57,22 +57,21 @@
     batch failure without a path, so that `Conversion` names only a file
     that failed alone. The dependency input read then loses the path. A
     pathless failure changes what the user sees, so it needs the user.
-    Effort: Small (estimate).
+    Effort: Small.
   - **C.** When a batch fails, convert each of its files alone inside
     `convert_entries`, as the deadline path already does. Every caller then
     follows the protocol rule, and every failure names its own file. Remove
     the retry loops of the extraction and the prefetch. Each file of a
     failed batch still costs about three Git processes. It changes
     `checkout_batch.rs` and removes the loops in `extraction.rs` and
-    `crates/mokly-compare/src/git_prefetch.rs`. Three files exceed the Small
-    limit, and two crates exclude Medium. Effort: Large (estimate).
+    `crates/mokly-compare/src/git_prefetch.rs`. Verify the failure, cancellation, and byte-limit paths in both crates. Effort: Medium.
   - **D.** When a batch fails, split it in halves inside `convert_entries`
     and convert each half again, until the failing file converts alone. The
     error then names that file, and one failing file costs a few batch
     processes for each halving. Keep the per-file retry after a deadline,
     because each halving would wait for a new 120-second deadline. Update
     the mechanism sentence at `docs/protocol/mokly-git.md:106`. This changes
-    a stated rule, so it needs the user. Effort: Medium (estimate).
+    a stated rule, so it needs the user. Effort: Medium.
   - **E.** When `convert_entries` returns a batch failure for a call of two
     or more files, convert each file of the call alone inside
     `checkout_read`. Then `read_many` follows the rule of
@@ -82,20 +81,14 @@
     files, each file's own deadline, and the record of a file whose own
     conversion timed out. Leave the loops of the extraction and the
     prefetch. After a failed batch, the prefetch then converts each file
-    alone a second time, and its output stays correct. E is Small only as a
-    change to `crates/mokly-git/src/checkout.rs` of 30 code lines or fewer.
-    If it grows or needs a second module, re-grade it. A Medium fix within
-    `mokly-git` can still follow the review-fix rule. Ask the user if it
-    becomes Large or another decision condition holds.
-    Effort: Small (estimate).
+    alone a second time, and its output stays correct. Review the remaining byte limit and each failure path when grading the whole fix. Effort: Small.
 - **Left out:** Reading the failing path from the Git diagnostic.
   `CheckoutFailed` keeps only the bounded standard error of Git, and a
   parser of that text depends on Git's wording. A retry only in the
   dependency input read repeats the loop in a third caller and leaves the
   next caller of `read_many` without it.
-- **Wider fix:** C (estimate). One place converts the files of a failed
-  batch again, so no caller can skip the retry or report the wrong path. C
-  is Large, so it needs the user.
+- **Wider fix:** C. One place converts the files of a failed batch again, so no
+  caller can skip the retry or report the wrong path.
 - **Previous examples:** On 2026-10-28 the review of PR #229 changed the
   deadline path of `convert_entries`: each file of a timed-out batch
   converts again alone with its own deadline. Such a failure names its own
@@ -107,15 +100,11 @@
     it too, and after a failed batch the prefetch pays it twice.
   - [base-batch-byte-limit.md](./base-batch-byte-limit.md) concerns the same
     batch code. Its batch helper can hold the split of D.
-- **Recommendation:** E. (estimate) It is the best unblocked fix: one file of
-  `mokly-git` gives every caller of `read_many` the per-file retry and the
-  right path. The record first recommended C, graded Medium. C best protects
-  the codebase, but it is Large and needs the user. D also lowers the
-  process count, but it changes the retry mechanism that the protocol
-  states.
-- **Action:** fix after merge, apply E (estimate), because the wrong path is
-  a product bug outside the reviewed diff, and E is Small. The branch that
-  applies E deletes this record and records the still-unapproved C as a
-  separate Needs decision item.
+- **Recommendation:** C. One retry owner gives every caller the required
+  per-file fallback without repeated caller loops. The record previously
+  recommended E because it treated Large effort as blocked. D changes the stated
+  retry rule and still needs approval.
+- **Action:** fix after merge, apply C, because the shared retry correction lies
+  outside the batch change that found the wrong diagnostic path.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/batched-base-reads.md?plain=1#L396).

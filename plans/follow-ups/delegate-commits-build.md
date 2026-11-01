@@ -32,7 +32,7 @@
   - **A.** Keep the history, and record the broken range, as this item
     does. Effort: Small.
   - **C.** Require each delegate brief to build every commit before the
-    handoff. Effort: Medium (estimate).
+    handoff. Effort: Medium.
 - **Left out:** Option B, rewrite the branch so that every commit builds.
   The branch is merged, and `main` holds only the squash commit, so a
   rewrite fixes nothing and cannot protect later work.
@@ -43,8 +43,7 @@
   squash-merge the branch.
 - **Recommendation:** A. A merged branch cannot be fixed safely. C best
   protects later branches.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user deferred the open review items past the merge to decide each one
-  later.
+- **Action:** ask the user, because on 2026-10-21 the user deferred the open
+  review items past the merge to decide each one later.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6043).

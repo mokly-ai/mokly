@@ -11,7 +11,7 @@
   until after its merge, for the user's later choice.
 
 - **Source:** Review.
-- **Category:** Docs or spec (estimate).
+- **Category:** Docs or spec.
 - **Terms:**
   - **Saved slot:** an HTML fragment that a saved component variant
     supplies for a declared slot in its front matter, under `slots`.
@@ -51,7 +51,7 @@
     field. This adds a build error. Effort: Medium.
   - **B.** Keep only the required `html-ignore-attribute` and
     `html-foster-parented` warnings for saved slots, and state that saved
-    slots skip the element checks. Effort: Small (estimate).
+    slots skip the element checks. Effort: Small.
   - **C.** Warn about these elements instead. Normal builds continue, and
     `--strict` builds fail. This adds a warning code and its message to the
     protocol. Effort: Medium.

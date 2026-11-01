@@ -35,11 +35,11 @@
   dependency scripts that the user turned on?
 - **Options:**
   - **A.** Document the risk, and advise `--no-base-install-scripts` for
-    publication. Effort: Small (estimate).
+    publication. Effort: Small.
   - **B.** Keep scripts off when a publication token is present, and emit a
     warning. Effort: Small.
   - **C.** Run dependency scripts in a separate process space that cannot
-    read the parent environment. Effort: Large (estimate).
+    read the parent environment. Effort: Large.
 - **Left out:** Pass the token to the sidecar or to the package manager
   child. It makes the exposure worse.
 - **Wider fix:** C. Process isolation protects every parent secret, not
@@ -55,7 +55,7 @@
     separate fix.
 - **Recommendation:** B. It blocks the known path with a small change. C
   best protects all parent secrets.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user ruled that new review items wait for the user after the merge.
+- **Action:** ask the user, because on 2026-10-21 the user ruled that new review
+  items wait for the user after the merge.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6118).

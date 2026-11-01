@@ -1,6 +1,6 @@
 # Separate plain-text link existence from content identity
 
-- **Severity:** Low (estimate). **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: option C of finding 2 of the decision work review of 2026-10-26, kept as a possible later change.
 - **Location:** `crates/mokly-graph/src/planning_resources.rs:75`,
@@ -10,7 +10,7 @@
   and left option C undecided as a possible later change.
 
 - **Source:** Review.
-- **Category:** Performance (estimate).
+- **Category:** Performance.
 - **Terms:**
   - **Document key:** the identity of one rendered document. Serve and the
     static output reuse a render while its key stays the same.
@@ -53,10 +53,10 @@
   a removed plan kept a warm Serve render while a fresh build failed with
   `link target ... does not exist`. The user's fix of 2026-10-28, in
   `e236ea78`, keyed each linked plan by existence.
-- **Recommendation:** C. (estimate) It removes the path special case. The
+- **Recommendation:** C. It removes the path special case. The
   review that found the problem named C as the best protection.
-- **Action:** ask the user, because condition 1 holds: C changes the rule
-  of `docs/protocol/mokly-documents.md` that edits of a linked source file
-  render the document again.
+- **Action:** ask the user, because C changes the rule of
+  `docs/protocol/mokly-documents.md` that edits of a linked source file render
+  the document again.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5543).

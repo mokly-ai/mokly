@@ -1,11 +1,13 @@
 # Serve stops answering generated pages under load
 
-- **Severity:** High (estimate). **Likelihood:** Rare (estimate). **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-31, from the branches `calummoore/mokly-ui-inspector` and `calummoore/mokly-ui-preview`, during the mockup milestones of the shell views plan, which do not change the server.
 - **Location:** the watched Serve of `crates/mokly-server`: the render workers (`mokly-render-0` to `mokly-render-5`) and the temporary render of a local edit, whose deadline error is `[mokly/build-invalid] The temporary render exceeded its ten-second deadline.`
 - **Reason:** Nobody reproduced the hang on demand, and the stack that found it does not change the server.
 
+- **Source:** Implementation.
+- **Category:** Product bug.
 - **Terms:**
   - **Watched Serve:** `mokly serve` with watching, which `npm run dev` starts.
     It renders the catalogue's generated documents under
@@ -51,7 +53,9 @@
     past a limit, with the route and the elapsed time. Effort: Medium.
 - **Left out:** A longer deadline, because it hides the stall. A restart on
   timeout, because it drops the reader's state and hides the cause.
-- **Wider fix:** B.
+- **Wider fix:** B adds watchdog output that no recorded requirement covers, so
+  it needs approval. A can reproduce and fix the existing failure without that
+  new diagnostic behaviour.
 - **Previous examples:** None found.
 - **Recommendation:** A. The two cases point at a release missing on a
   timeout path, and a reproduction names it.

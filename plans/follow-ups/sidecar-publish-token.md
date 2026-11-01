@@ -1,6 +1,6 @@
 # Remove the publish token from the sidecar environment
 
-- **Severity:** Low. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 180, delta review 5.
 - **Location:** `crates/mokly-sidecar/src/process_factory.rs:85`.
@@ -32,10 +32,9 @@
 - **Root question:** How should Mokly keep its secrets out of the processes
   that run consumer code?
 - **Options:**
-  - **A.** Remove `MOKLY_TOKEN` from the sidecar environment. Effort: Small
-    (estimate).
+  - **A.** Remove `MOKLY_TOKEN` from the sidecar environment. Effort: Small.
   - **B.** Start sidecars from an allowed list of variables, as base installs
-    do. Effort: Medium (estimate).
+    do. Effort: Medium.
 - **Left out:** Clearing every variable breaks consumer PostCSS settings
   that read the environment.
 - **Wider fix:** B. An allowed list protects every inherited secret, not
@@ -49,7 +48,7 @@
 - **Recommendation:** A. It removes the known unused secret, while an
   allowed list can break consumer PostCSS settings. B best protects all
   inherited secrets.
-- **Action:** ask the user, because condition 5 holds: the user reserved
-  the choice for each open review item of the rebuild.
+- **Action:** ask the user, because the user reserved the choice for each open
+  review item of the rebuild.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6384).

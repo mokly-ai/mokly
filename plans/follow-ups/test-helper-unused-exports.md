@@ -8,7 +8,7 @@
   until after its merge, for the user's later choice.
 
 - **Source:** Review.
-- **Category:** Process (estimate).
+- **Category:** Process.
 - **Terms:**
   - **Internal-export ratchet:** the repository check in
     `scripts/verification/ratchets/internal-exports.mjs` that fails on an
@@ -27,7 +27,7 @@
 - **Root question:** How should the repository keep test helper trees free
   of unused exports?
 - **Options:**
-  - **A.** Keep the current product-only scope. Effort: Small (estimate).
+  - **A.** Keep the current product-only scope. Effort: Small.
   - **B.** Check `tests/browser`, `tests/helpers`, and
     `packages/viewer/tests`, and leave the catalogue fixtures out. This is a
     stricter check. Effort: Medium.
@@ -46,8 +46,7 @@
   the roots of one check.
 - **Recommendation:** B. The helper trees started with no baseline entries
   after the cleanup, so the check can start clean.
-- **Action:** ask the user, because condition 5 holds: the user reserved
-  the choice for each open review item of the rebuild. Condition 3 also
-  holds, because B is a stricter check.
+- **Action:** ask the user, because the user reserved the choice for each open
+  review item of the rebuild. B is a stricter check.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5953).

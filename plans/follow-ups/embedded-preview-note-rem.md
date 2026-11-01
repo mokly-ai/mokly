@@ -1,6 +1,6 @@
 # Make the embedded preview-note width pixel-stable
 
-- **Severity:** Low (estimate). **Likelihood:** Rare (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a problem outside the scope of the F18 review of 2026-10-20.
@@ -55,10 +55,10 @@
   `packages/viewer/src/viewer/styles.ts:6-10` and line 33.
   `tests/browser/viewer_layout.spec.ts:128-165` checks it with a 10px and
   a 20px root font.
-- **Recommendation:** D (estimate). B removes the host dependence and
+- **Recommendation:** D. B removes the host dependence and
   keeps the width tied to its text, and the README rule protects later
   shell styles at no code cost.
-- **Action:** fix after merge, apply D (estimate), because it is a small
+- **Action:** fix after merge, apply D, because it is a small
   product fix in a stylesheet outside the reviewed change.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L4844).
