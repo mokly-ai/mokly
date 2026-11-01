@@ -1,13 +1,13 @@
 # Redact publish tokens from Debug output
 
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 181, delta review 6.
 - **Location:** `crates/mokly-cli/src/grammar.rs:107`,
   `crates/mokly-cli/src/grammar.rs:116`, and
   `crates/mokly-cli/src/options.rs:19`.
-- **Reason:** A user rule of 2026-10-21 deferred each new review item of
-  PR #199 until after its merge, for the user's later choice.
+- **Reason:** The Rust rebuild merged with this finding open, and the secret
+  type reaches the CLI and publish crates, so it needs a separate branch.
 
 - **Source:** Review.
 - **Category:** Security.
@@ -50,7 +50,7 @@
   so each item needs its own change.
 - **Recommendation:** B. It protects every type that holds the token, not
   only the current CLI struct.
-- **Action:** ask the user, because the user reserved the choice for each open
-  review item of the rebuild.
+- **Action:** fix after merge, apply B, because the secret type changes no
+  output at the boundary, and it reaches the token fields of two crates.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6395).

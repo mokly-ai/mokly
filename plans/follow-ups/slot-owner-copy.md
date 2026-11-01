@@ -5,8 +5,8 @@
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 161, W2 decision 2.
 - **Location:** `packages/viewer/src/shell/workspace_props.tsx:166`, which
   writes the slot line that `@mokly/ui`'s `PropsPanel` shows.
-- **Reason:** A user rule of 2026-10-21 deferred each new review item of
-  PR #199 until after its merge, for the user's later choice.
+- **Reason:** Option B adds a new fact to user-visible text, and no protocol
+  page or current mockup states the slot line.
 
 - **Source:** Review.
 - **Category:** UX wording.
@@ -47,7 +47,8 @@
   noun source per entry kind would serve both.
 - **Recommendation:** B. It gives the user the specific owner, as the
   earlier design did. C best protects the wording class.
-- **Action:** ask the user, because the user reserved the choice for each open
-  review item of the rebuild.
+- **Action:** ask the user, because B adds the owner's title to the slot line,
+  and the copy rules treat a fix that adds a fact as a change beyond the
+  contract.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6189).

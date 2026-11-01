@@ -72,11 +72,15 @@
   containment-list copies of the CSS matching tree, whose retention grew
   with element count times nesting depth. Shared parent links replaced them.
 - **Related:** [nested-own-preview-matches.md](./nested-own-preview-matches.md)
-  decides the grain of the same own-page proof: per page, or per stylesheet
-  path. Both items change the proof data that `owned_styles::Changes::proofs`
-  resolves with `OwnPageMatches`, so decide them in one branch. Their scopes
-  differ: that item fixes which matches count as own, and this item fixes
-  how long the candidates stay in memory.
+  decides whether view classification reads own-page evidence per page or per
+  stylesheet path, through `Attribution.own_page_sources` in
+  `crates/mokly-css/src/attribution.rs:81-82`. Exact instance proof reads the
+  separate unfiltered `Attribution.own_pages`, at
+  `crates/mokly-compare/src/comparison_attribution.rs:35`. So this compaction
+  does not wait for that answer. Both items touch the own-page proof code, so
+  one branch may do both. Their scopes differ: that item fixes which matches
+  count as own for classification, and this item fixes how long the candidates
+  stay in memory.
 - **Recommendation:** B, with the counted test of C. It removes the memory
   regression and keeps every proof result.
 - **Action:** fix after merge, apply B with the counted test of C, because

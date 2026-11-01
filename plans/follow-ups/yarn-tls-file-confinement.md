@@ -6,8 +6,8 @@
 - **Location:** `crates/mokly-compare/src/manager_yarnrc.rs:15`,
   `crates/mokly-compare/src/manager_plan.rs:142`, and
   `crates/mokly-compare/src/manager.rs:66`.
-- **Reason:** A user rule of 2026-10-21 deferred each new review item of
-  PR #199 until after its merge, for the user's later choice.
+- **Reason:** Each option hardens base installs beyond the project's own
+  install, which a decision of the base dependencies contract rejects.
 
 - **Source:** Review.
 - **Category:** Security.
@@ -46,7 +46,8 @@
 - **Recommendation:** A. It closes the read at once with the existing
   fallback tier. C best keeps the confined use. The rebuild asked for a
   decision before the first npm release of the new core.
-- **Action:** ask the user, because the user reserved the choice for each open
-  review item of the rebuild. Each option makes base validation stricter.
+- **Action:** ask the user, because each option adds a stricter check of Yarn
+  TLS settings, and `docs/protocol/mokly-base-dependencies.md:116-123` says that
+  base installs add no hardening beyond the project's own install.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6133).
