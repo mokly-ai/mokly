@@ -2,7 +2,7 @@
 
 use crate::config::relative;
 use crate::config_types::ResolvedConfig;
-use crate::diagnostic::{Warning, WarningSubject};
+use crate::diagnostic::{Warning, WarningSubject, json_quoted};
 
 /// Warn about extglob-shaped matchers without changing their globset meaning.
 pub(crate) fn collect(config: &ResolvedConfig) -> Vec<Warning> {
@@ -21,7 +21,7 @@ pub(crate) fn collect(config: &ResolvedConfig) -> Vec<Warning> {
             subject: WarningSubject::Configuration(path.clone()),
             message: format!(
                 "stylesheet match {} uses unsupported extglob syntax. Use brace alternatives such as \"{{a,b}}\" instead.",
-                quote(&rule.r#match)
+                json_quoted(&rule.r#match)
             ),
         })
         .collect()
@@ -52,20 +52,4 @@ fn has_extglob(pattern: &str) -> bool {
         }
     }
     false
-}
-
-fn quote(pattern: &str) -> String {
-    let mut output = String::from("\"");
-    for character in pattern.chars() {
-        match character {
-            '"' => output.push_str("\\\""),
-            '\\' => output.push_str("\\\\"),
-            character if character.is_control() => {
-                output.push_str(&format!("\\u{:04x}", character as u32));
-            }
-            character => output.push(character),
-        }
-    }
-    output.push('"');
-    output
 }

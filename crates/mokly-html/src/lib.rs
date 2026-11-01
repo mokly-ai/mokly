@@ -63,6 +63,9 @@ mod tree_traits;
 mod tree_transform;
 
 #[cfg(test)]
+#[path = "_tests_/callback_diagnostics_tests.rs"]
+mod callback_diagnostics_tests;
+#[cfg(test)]
 #[path = "_tests_/control_output_sweep_tests.rs"]
 mod control_output_sweep_tests;
 #[cfg(test)]
@@ -86,6 +89,9 @@ mod navigation_sweep_tests;
 #[cfg(test)]
 #[path = "_tests_/noscript_tests.rs"]
 mod noscript_tests;
+#[cfg(test)]
+#[path = "_tests_/numeric_warning_tests.rs"]
+mod numeric_warning_tests;
 #[cfg(test)]
 #[path = "_tests_/parser_tests.rs"]
 mod parser_tests;

@@ -20,7 +20,9 @@ renamed anchor fails `build-invalid` with the referring route. A target that nam
 ## Document Checks
 
 An authored reserved marker and a duplicate navigation attribute fail
-validation. A document with an activatable logical link cannot contain
+validation. Callback output, the HTML that a JavaScript render returns, fails
+on every duplicate attribute on one element, although HTML parsing would keep
+only the first value. A document with an activatable logical link cannot contain
 `<base href>`; `<base target>` is supported. Markers never grant source or
 resource access: a rewritten target is a document route of the
 [shell delivery contract](./mokly-shell-delivery.md#routes) or a file of the
