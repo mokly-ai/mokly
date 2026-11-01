@@ -59,7 +59,7 @@ struct Extraction {
 
 impl Disk for SystemDisk {
     fn canonicalize(&self, path: &Path) -> Result<PathBuf> {
-        fs::canonicalize(path).git()
+        dunce::canonicalize(path).git()
     }
 
     fn read(&self, root: &Path, path: &RepoPath, limit: usize) -> Result<Option<Vec<u8>>> {

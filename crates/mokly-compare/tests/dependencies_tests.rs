@@ -87,6 +87,7 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
             ]
             .map(Into::into)
             .to_vec(),
+            scripts: false,
             directory: root.clone(),
             timeout: Duration::from_secs(120),
             byte_limit: None,

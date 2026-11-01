@@ -18,6 +18,8 @@ pub struct Command {
     pub program: OsString,
     /// Exact arguments.
     pub args: Vec<OsString>,
+    /// Whether lifecycle scripts run. Only an install command sets it.
+    pub scripts: bool,
     /// Private installation directory.
     pub directory: PathBuf,
     /// Monotonic deadline allowance.

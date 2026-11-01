@@ -6,13 +6,13 @@
 //! off unless the working tree or the command line opts in, keeps hooks, Git
 //! transports, and Corepack downloads off, and starts each install from an
 //! allowed list of variables, so no base configuration or lifecycle script
-//! can read an inherited secret.
+//! receives an inherited secret from Mokly's parent process.
 
 use std::ffi::OsString;
 use std::path::Path;
 
 use crate::commands::Command;
-use crate::manager::{Manager, Root};
+use crate::manager::{Manager, Root, version_major};
 
 pub(crate) fn arguments(root: &Root, destination: &Path, scripts: bool) -> Vec<OsString> {
     let directory = destination.join(&root.directory);
@@ -45,6 +45,9 @@ pub(crate) fn arguments(root: &Root, destination: &Path, scripts: bool) -> Vec<O
         Manager::YarnBerry => &["install", "--immutable", "--mode=skip-build"],
     };
     let mut args = flags.iter().map(OsString::from).collect::<Vec<_>>();
+    if root.manager == Manager::Pnpm && matches!(version_major(&root.version), Some(10 | 11)) {
+        args.push("--config.confirm-modules-purge=false".into());
+    }
     if scripts {
         args.retain(|arg| arg != "--ignore-scripts" && arg != "--mode=skip-build");
     }
@@ -120,19 +123,12 @@ pub(crate) fn caches(manager: Manager) -> &'static [&'static str] {
 /// Variables that the install receives. Each replaces every inherited
 /// spelling of its name.
 pub(crate) fn variables(request: &Command) -> Vec<(&'static str, OsString)> {
-    let scripts = request.args.first().is_some_and(|arg| {
-        matches!(arg.to_string_lossy().as_ref(), "ci" | "install")
-            && request
-                .args
-                .iter()
-                .all(|arg| arg != "--ignore-scripts" && arg != "--mode=skip-build")
-    });
     let mut variables = fixed(&[
         ("npm_config_audit", "false"),
         ("npm_config_fund", "false"),
         ("npm_config_update_notifier", "false"),
     ]);
-    if !scripts {
+    if !request.scripts {
         variables.push(("npm_config_ignore_scripts", "true".into()));
     }
     if request.program != "pnpm" && request.program != "yarn" {
@@ -168,7 +164,7 @@ pub(crate) fn variables(request: &Command) -> Vec<(&'static str, OsString)> {
             ("YARN_NODE_LINKER", "node-modules"),
             ("YARN_NM_MODE", "classic"),
         ]));
-        if !scripts {
+        if !request.scripts {
             variables.push(("YARN_ENABLE_SCRIPTS", "0".into()));
         }
         let cache = request.cache.clone();

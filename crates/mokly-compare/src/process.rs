@@ -34,10 +34,10 @@ impl Spawner for SystemSpawner {
         let mut command = command(request)?;
         let variables = manager_command::variables(request);
         // Start each install from an allowed list of variables, not the
-        // inherited environment, so no base configuration can read an
-        // inherited secret such as MOKLY_TOKEN or GITHUB_TOKEN. Mokly's own
-        // fixed names follow, and the sanitized PATH that `programs` set
-        // overrides the inherited one.
+        // inherited environment, so no base configuration or lifecycle script
+        // receives an inherited secret such as MOKLY_TOKEN or GITHUB_TOKEN.
+        // Mokly's own fixed names follow, and the sanitized PATH that
+        // `programs` set overrides the inherited one.
         for (inherited, _) in env::vars_os() {
             if !manager_environment::allowed(&inherited) {
                 command.env_remove(inherited);
