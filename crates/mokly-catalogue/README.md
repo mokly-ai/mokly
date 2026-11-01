@@ -21,6 +21,9 @@ definition provider boundary.
 `Loader` implements `ConfigLoader`. It searches upward or loads an explicit
 JSON file. The editor schema ships in `@mokly/mokly/config.schema.json`.
 Filesystem checks resolve symlinks and keep local inputs inside `repoRoot`.
+Some source trees, such as the base Git tree, report symlinks without
+resolving them. In such a tree, a root or package root through a symlink
+fails its check, and the `config-invalid` message names the symlink.
 Config-relative parent segments are accepted when their lexical and physical
 targets stay inside `repoRoot`. PostCSS path, suffix, and regular-file checks
 use the catalogued `config-invalid` diagnostics before a sidecar starts. Git
@@ -199,6 +202,8 @@ The property test of the source maps over the vendored HTML corpus lives in
 - [`src/config_paths.rs`](./src/config_paths.rs) confines local inputs and
   gives `ResolvedConfig::repository_path`, the one resolver of
   config-relative paths, with `renderer`, `postcss`, and `package_roots`.
+- [`src/config_links.rs`](./src/config_links.rs) provides `link_error`, which
+  names the symlink that keeps a failed root or package root from resolving.
 - [`src/discovery.rs`](./src/discovery.rs) defines `Discovery` and
   `Discoverer`, which walk the roots once and return the source `Inventory`.
 - [`src/preparation.rs`](./src/preparation.rs) defines `CatalogueBuilder` and

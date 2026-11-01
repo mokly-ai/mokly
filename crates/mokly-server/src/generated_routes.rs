@@ -6,6 +6,7 @@ use axum::http::StatusCode;
 use axum::response::Response;
 
 use crate::application::Application;
+use crate::asset_response;
 use crate::response;
 use crate::snapshot::Snapshot;
 
@@ -17,7 +18,7 @@ pub(crate) async fn route(app: &Application, snapshot: &Arc<Snapshot>, route: &s
             .asset(snapshot.documents.clone(), route.into())
             .await
         {
-            Ok(Some(file)) => response::stream(file),
+            Ok(Some(file)) => asset_response::stream(file),
             Ok(None) => response::missing(),
             Err(error) => {
                 app.diagnostics.failed(&error);
