@@ -64,13 +64,13 @@
     option C moves the per-file retry into one place and keeps its cost.
   - [base-batch-byte-limit.md](./base-batch-byte-limit.md) concerns the same
     two modules. Its batch helper can hold the split of B.
-  - The
-    [opaque asset batching item at its last commit](https://github.com/mokly-ai/mokly/blob/c7e7d9b88efc84152eb33539ed8ed7ca2ad2bb93/plans/follow-ups/git-opaque-asset-batching.md)
-    concerned the Git processes of each opaque asset in the base, the same
-    cost class in another reader. It closed on 2026-11-01, when the branch
-    `conductor/rust-rebuild-64-opaque-asset-digests` batched the base digests
-    of the opaque assets of each stylesheet file. A failed digest batch of
-    that branch also digests each asset again alone, in
+  - [git-opaque-asset-batching.md](./git-opaque-asset-batching.md) concerned
+    the Git processes of each opaque asset in the base, the same cost class
+    in another reader. Its Git process part closed with the branch
+    `conductor/rust-rebuild-64-opaque-asset-digests` on 2026-11-01, which
+    batched the base digests of the opaque assets of each stylesheet file.
+    Its delivery part for extracted assets stays open. A failed digest batch
+    of that branch also digests each asset again alone, in
     `crates/mokly-git/src/checkout_digest.rs`.
 - **Recommendation:** B. It keeps every failure with its file and
   bounds the process count.
