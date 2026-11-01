@@ -72,10 +72,13 @@ Yarn Classic, or Yarn Berry dependencies into the dependency cache. In every
 tier, the sidecar maps resolved repository-owned paths into that side's
 sources. The
 [base dependencies contract](../../docs/protocol/mokly-base-dependencies.md)
-owns the supported managers, registry access, the install environment,
-lifecycle scripts, cache keys, and fallback reasons. `NodeExecutable` resolves
-the shim-supplied Node or searches absolute `PATH` entries. The CLI uses the
-same resolver for rendering and for the scripts-on runtime probe.
+owns the supported managers, registry access, lifecycle scripts, cache keys,
+and fallback reasons. The
+[base install processes contract](../../docs/protocol/mokly-base-install-processes.md)
+owns the install environment, the manager executables, the bounds, and the
+stops. `NodeExecutable` resolves the shim-supplied Node or searches absolute
+`PATH` entries. The CLI uses the same resolver for rendering and for the
+scripts-on runtime probe.
 
 `Resolved` returns the primary `node_modules` path, the complete
 `ModuleResolution` value, and typed `repository_roots` for sidecar mapping.
@@ -195,12 +198,21 @@ cargo test -p mokly-compare --test dependencies_tests
 
 ```bash
 cargo clippy -p mokly-compare --all-targets -- -D warnings
+cargo test -p mokly-compare --test pnpm_modules_purge_tests
 ```
 
 Consumers enable the `mock` feature to use every public trait with unimock.
 Unit tests use `unimock` for IO, processes, and clocks. Integration tests use
 isolated Git repositories, OS locks, and local packages. Command tests pin
 every manager's complete scripts-off argument list.
+
+On Unix, `tests/pnpm_modules_purge_tests.rs` installs the dependencies of a
+base commit that tracks a pnpm `node_modules` state, which pnpm must recreate.
+It runs the pinned pnpm 10.34.7, 11.20.0, and 12.14.0 CLIs from the
+repository's development dependencies, with and without `CI` and
+`GITHUB_ACTIONS` in the parent environment. Run `npm ci` at the repository
+root before you run the crate tests. The test fails when a pinned CLI is
+missing.
 
 The Node tests in `tests/static_base_managers.test.ts` run cold builds with
 pnpm and both Yarn families from local archives.
@@ -219,8 +231,9 @@ development dependencies, and no test uses the internet.
 - [`src/comparison.rs`](./src/comparison.rs) defines `Engine`, the one
   catalogue-wide comparison for build, Serve, and static projection.
 - [`src/base_render.rs`](./src/base_render.rs) defines `ChangesService`,
-  `Changes`, and `BaseProvider`, which pin the base, prepare its sources, and
-  compare it with the head.
+  `Changes`, `BaseProvider`, `PreparedBase`, and `BasePreparationError`, which
+  pin the base, prepare its sources, report whether its tier-two install ran
+  with lifecycle scripts off, and compare it with the head.
 - [`src/comparison_steps.rs`](./src/comparison_steps.rs) defines `Step`,
   `Steps`, and `StepCache`, the comparison steps that a command shows while
   Changes runs.
@@ -246,6 +259,9 @@ development dependencies, and no test uses the internet.
   root among the configuration directory, the package roots, and their
   ancestors, and returns each root with its package manager. The other
   `manager_*.rs` files hold the per-manager rules.
+- [`src/commands.rs`](./src/commands.rs) defines `Commands`, `TimedCommands`,
+  and `Command`, the bounded install supervisor and one manager invocation,
+  whose `scripts` field selects the scripts mode of the install environment.
 - [`src/lookup.rs`](./src/lookup.rs) and [`src/moves.rs`](./src/moves.rs)
   define `Lookup` and the move `Detector`.
 - [`src/projection_index.rs`](./src/projection_index.rs),
@@ -254,15 +270,17 @@ development dependencies, and no test uses the internet.
   [`src/projection_removed.rs`](./src/projection_removed.rs) hold the shared
   projections that Serve and static output call.
 - [`src/error.rs`](./src/error.rs) defines `Error`, the typed failure of base
-  preparation and its IO boundaries.
+  preparation and its IO boundaries, and `Error::Base` records whether a
+  tier-two install with lifecycle scripts off came before the failure.
 
 ### Related Docs
 
 - [Comparison](../../docs/protocol/mokly-comparison.md).
 - [Comparison serving](../../docs/protocol/mokly-comparison-serving.md).
 - [Base preparation](../../docs/protocol/mokly-base-preparation.md),
-  [base cache](../../docs/protocol/mokly-base-cache.md), and
-  [dependency installation](../../docs/protocol/mokly-base-dependencies.md).
+  [base cache](../../docs/protocol/mokly-base-cache.md),
+  [dependency installation](../../docs/protocol/mokly-base-dependencies.md),
+  and [install processes](../../docs/protocol/mokly-base-install-processes.md).
 - [Package selection](../../docs/protocol/mokly-comparison-packages.md).
 - [CSS change attribution](../../docs/protocol/mokly-css-attribution.md).
 - [Moves](../../docs/protocol/mokly-moves.md) and

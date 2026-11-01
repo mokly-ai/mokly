@@ -11,7 +11,9 @@ use mokly_catalogue::preparation::{Builder, CatalogueBuilder};
 use mokly_cli::cancellation::Cancellation;
 use mokly_cli::cancelled_work::CancellableTree;
 use mokly_cli::version::VERSION;
-use mokly_compare::base_render::{BaseProvider, BaseRequest};
+use mokly_compare::base_render::{
+    BasePreparationError, BasePreparationResult, BaseProvider, BaseRequest, PreparedBase,
+};
 use mokly_compare::cache_types::Lease;
 use mokly_compare::comparison_steps::Step;
 use mokly_compare::dependency_paths;
@@ -36,7 +38,24 @@ pub(super) struct NativeBase {
 }
 
 impl BaseProvider for NativeBase {
-    fn prepare(&self, request: &BaseRequest<'_>) -> Result<Arc<dyn RenderGeneration>> {
+    fn prepare(&self, request: &BaseRequest<'_>) -> BasePreparationResult {
+        let mut scripts_off = false;
+        match self.prepare_generation(request, &mut scripts_off) {
+            Ok(generation) => Ok(PreparedBase {
+                generation,
+                scripts_off,
+            }),
+            Err(source) => Err(BasePreparationError::new(scripts_off, source)),
+        }
+    }
+}
+
+impl NativeBase {
+    fn prepare_generation(
+        &self,
+        request: &BaseRequest<'_>,
+        scripts_off: &mut bool,
+    ) -> Result<Arc<dyn RenderGeneration>> {
         if self.cancellation.requested() {
             return Err(Error::Cancelled);
         }
@@ -81,12 +100,12 @@ impl BaseProvider for NativeBase {
         } else {
             None
         };
+        *scripts_off = base.as_ref().is_some_and(|base| {
+            base.dependencies.tier == Tier::Installed && !request.install_scripts
+        });
         if let Some(base) = &base {
             request.sources.sources.attach(base.sources.clone())?;
         }
-        let scripts_hint = base.as_ref().is_some_and(|base| {
-            base.dependencies.tier == Tier::Installed && !request.install_scripts
-        });
         let warning = if needs_sidecar {
             None
         } else {
@@ -122,16 +141,7 @@ impl BaseProvider for NativeBase {
         };
         let mut catalogue = match builder.prepare(&config, None) {
             Ok(catalogue) => catalogue,
-            Err(source) => {
-                let error = Error::Catalogue { source };
-                return Err(if scripts_hint {
-                    Error::BaseInstallScripts {
-                        source: Box::new(error),
-                    }
-                } else {
-                    error
-                });
-            }
+            Err(source) => return Err(Error::Catalogue { source }),
         };
         catalogue.warnings.extend(warning);
         if self.cancellation.requested() {
@@ -140,34 +150,14 @@ impl BaseProvider for NativeBase {
         let factory: &dyn GraphFactory = runtime.as_ref();
         let graph = match factory.create(&config) {
             Ok(graph) => graph,
-            Err(source) => {
-                let error = Error::Graph { source };
-                return Err(if scripts_hint {
-                    Error::BaseInstallScripts {
-                        source: Box::new(error),
-                    }
-                } else {
-                    error
-                });
-            }
+            Err(source) => return Err(Error::Graph { source }),
         };
         match graph.prepare(config, catalogue, None) {
             Ok(generation) => Ok(generation),
-            Err(source) => {
-                let error = Error::Graph { source };
-                Err(if scripts_hint {
-                    Error::BaseInstallScripts {
-                        source: Box::new(error),
-                    }
-                } else {
-                    error
-                })
-            }
+            Err(source) => Err(Error::Graph { source }),
         }
     }
-}
 
-impl NativeBase {
     /// Before the base configuration loads, leases an existing complete extraction
     /// and attaches it to the base sources, when the working configuration names a
     /// renderer or PostCSS. This optional step never builds an extraction, and a
@@ -240,3 +230,7 @@ impl Discovery for Discovered {
 #[cfg(test)]
 #[path = "_tests_/changes_base_tests.rs"]
 mod changes_base_tests;
+
+#[cfg(test)]
+#[path = "_tests_/changes_base_success_tests.rs"]
+mod changes_base_success_tests;

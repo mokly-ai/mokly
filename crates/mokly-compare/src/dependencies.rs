@@ -70,6 +70,7 @@ impl Dependencies for DependencyTiers {
                 let version = self.commands.run(&Command {
                     program: root.manager.program().into(),
                     args: vec!["--version".into()],
+                    scripts: false,
                     directory: request.source_root.join(&root.directory),
                     timeout,
                     byte_limit: None,
@@ -83,6 +84,7 @@ impl Dependencies for DependencyTiers {
                 Some(install_node::decode(&self.commands.run(&Command {
                     program: "node".into(),
                     args: vec!["--print".into(), install_node::PROBE.into()],
+                    scripts: false,
                     directory: request.head_root.clone(),
                     timeout: deadline.saturating_sub(self.clock.now()),
                     byte_limit: None,

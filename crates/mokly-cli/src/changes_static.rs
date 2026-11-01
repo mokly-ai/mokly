@@ -2,10 +2,11 @@
 
 use std::sync::Arc;
 
-use mokly_compare::base_render::{BaseProvider, BaseRequest};
-use mokly_compare::error::{Error, Result};
+use mokly_compare::base_render::{
+    BasePreparationError, BasePreparationResult, BaseProvider, BaseRequest,
+};
+use mokly_compare::error::Error;
 use mokly_graph::error::{GraphError, InternalError};
-use mokly_graph::types::RenderGeneration;
 use mokly_static::error;
 use mokly_static::fingerprint::InputTree;
 
@@ -15,18 +16,24 @@ pub(super) struct StaticBase {
 }
 
 impl BaseProvider for StaticBase {
-    fn prepare(&self, request: &BaseRequest<'_>) -> Result<Arc<dyn RenderGeneration>> {
-        let generation = self.inner.prepare(request)?;
+    fn prepare(&self, request: &BaseRequest<'_>) -> BasePreparationResult {
+        let prepared = self.inner.prepare(request)?;
         match self.inputs.verify() {
-            Ok(()) => Ok(generation),
-            Err(error::Error::InputsChanged { path }) => Err(Error::Graph {
-                source: GraphError::InputsChanged { path },
-            }),
-            Err(source) => Err(Error::Graph {
-                source: GraphError::Internal(InternalError::Provider {
-                    source: Box::new(source),
-                }),
-            }),
+            Ok(()) => Ok(prepared),
+            Err(error::Error::InputsChanged { path }) => Err(BasePreparationError::new(
+                prepared.scripts_off,
+                Error::Graph {
+                    source: GraphError::InputsChanged { path },
+                },
+            )),
+            Err(source) => Err(BasePreparationError::new(
+                prepared.scripts_off,
+                Error::Graph {
+                    source: GraphError::Internal(InternalError::Provider {
+                        source: Box::new(source),
+                    }),
+                },
+            )),
         }
     }
 }
