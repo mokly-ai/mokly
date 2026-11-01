@@ -54,7 +54,7 @@ import {open,readFile} from 'node:fs/promises';
 export default {plugins:[{postcssPlugin:'identity',async Once(root,{result}){
 ${read}
 root.walkDecls('color',declaration=>{declaration.value=value});
-if(process.env.MOKLY_TEST_RETARGET){fs.unlinkSync('tokens.txt');fs.symlinkSync('b.txt','tokens.txt','file');}
+if(process.env.FIXTURE_RETARGET){fs.unlinkSync('tokens.txt');fs.symlinkSync('b.txt','tokens.txt','file');}
 result.messages.push({type:'dependency',file:'tokens.txt'});
 }}]};`,
       );
@@ -67,7 +67,7 @@ result.messages.push({type:'dependency',file:'tokens.txt'});
         "build",
         args,
         "plain",
-        { MOKLY_TEST_RETARGET: "1" },
+        { FIXTURE_RETARGET: "1" },
         context.signal,
       ).result;
       assert.equal(changed.code, 1, changed.stderr);
