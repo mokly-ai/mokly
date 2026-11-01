@@ -32,8 +32,10 @@
     base side of a removed entry. An eligible view offers Side by side,
     Overlay, or Difference. With Both viewports selected, one eligible view
     makes the whole comparison eligible.
-  - No host reads the snapshots of current page and Markdown documents.
-    Only screen and component views have comparison panes.
+  - Only screen and component views have comparison panes. A pane can
+    still load another catalogue document of any kind, which it embeds
+    through `iframe`, `object`, or `embed`.
+    `crates/mokly-graph/tests/url_tests.rs:63` tests that input.
   - On 2026-11-01, `main` at `c553bd6f` built `examples/basic` with the
     base equal to `HEAD`. No view of 580 was comparable. The build still
     wrote 1,262 snapshot files: 1,180 documents of 24,621,400 bytes and 82
@@ -45,7 +47,9 @@
   - In the browser comparison fixture, 19 of 32 entries were comparable on
     2026-10-27. Writing only comparable entries saved 30,464 bytes there.
   - Serve captures only the entry that a reviewer selects, so Serve has no
-    such waste.
+    such waste. Its selected generations already miss embedded documents,
+    as [embedded-document-closures.md](./embedded-document-closures.md)
+    says.
 - **Problem:** A build with Changes writes both snapshot sides of every
   view, also of views that offer no comparison.
 - **Impact if no action:** In the example, unread snapshots are 44% of the
@@ -57,8 +61,11 @@
   - **A.** Change nothing. A deployment that needs no Changes builds with
     `--no-changes`, which removes the Changes view. Effort: Small.
   - **B.** Write snapshot documents only for every view of a comparable
-    entry and for removed entries. Keep every snapshot resource. Update the
-    generation rule of the two protocol pages. Effort: Medium (estimate).
+    entry and for removed entries. Also keep each catalogue document that a
+    kept document embeds, on the same side and transitively. Keep every
+    snapshot resource. Update the generation rule of the two protocol pages.
+    Without a list of embedded documents, a catalogue that embeds one keeps
+    every document. Effort: Medium (estimate).
   - **C.** B, and write only the resources that the kept documents use.
     Effort: Large (estimate).
 - **Left out:** Decide eligibility in the viewer only. The writer already
@@ -76,6 +83,8 @@
     Cloud must accept a generation without a snapshot for each view.
   - [snapshot-resource-copies.md](./snapshot-resource-copies.md): the after
     side also repeats the current resource files.
+  - [embedded-document-closures.md](./embedded-document-closures.md): its
+    option C records the embedded documents that options B and C keep.
 - **Recommendation:** B. It removes the largest unread part for the least
   code, and the resources that it keeps are 130,210 bytes for each side
   here.

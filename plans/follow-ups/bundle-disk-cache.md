@@ -54,6 +54,23 @@
   - The recipe does not record `jsconfig.json` candidates, tsconfig
     `extends` targets, or peer manifests other than React. In-process reuse
     already misses changes to them. A restart clears the gap today.
+  - The plan's design calls, of 2026-10-30:
+    - The `reuse` check digests the consumed files in parallel: about 0.2 s
+      instead of 0.4 s on the slow machine, also for in-process reuse.
+    - The pool stores an entry before it returns the result, so tests stay
+      deterministic and no write stays in flight at exit. A store cost above
+      100 ms on a miss reopens this call.
+    - Each entry carries a SHA-256 digest of its payload, and a hit checks
+      it. One 3 MB file hashes in about 10 ms.
+    - The key is the SHA-256 digest of the bundle parameters without
+      `evaluation`. The parameters include the source root, so each side and
+      each extraction gets its own key.
+    - A failed bundle stores no entry.
+    - The work adds the bundle cache to the OS cache sentence of
+      `docs/protocol/mokly-runtime.md:62`.
+    - `crates/mokly-catalogue/src/preparation.rs` does not change. The core
+      sends `bundle` and `describe` from `crates/mokly-render/src/bundle.rs`
+      and `bundle_attempt.rs`.
   - `docs/protocol/mokly-timings.md:42` lists a `catalogue.describe` span,
     and `crates/mokly-cli/src/serve_trace_stages.rs:13` allows it. No code
     emits it. Decision 8 settles the row.

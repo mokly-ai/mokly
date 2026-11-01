@@ -10,7 +10,7 @@
   `crates/mokly-cli/src/changes_base.rs:32`,
   `crates/mokly-cli/src/serve_changes_native.rs:106`, and
   `crates/mokly-compare/src/git_failures.rs:15`.
-- **Reason:** The user has not answered the five open decisions of the
+- **Reason:** The user has not answered the six open decisions of the
   plan, and the plan starts no milestone before the answers.
 
 - **Source:** Design.
@@ -62,6 +62,17 @@
     or a fallback that a retry can fix. A reuse publishes no `preparing`
     status and captures nothing again. `review.base-tree` gets an `action`
     field, `reuse` or `prepare`.
+  - The plan's other design calls, of 2026-10-30:
+    - Serve keeps a tier-3 base that fell back for a lasting reason, such
+      as an unsupported package manager. A manager that the user installs
+      during the session takes effect at the next preparation.
+    - A reuse that meets a changed frozen resource, or a bundle reload that
+      fails, releases the kept base. The classification then prepares once
+      more.
+    - Serve also reuses a base whose capture did not fit. Its uncaptured
+      views render through the kept graph.
+    - A failed reference lookup keeps the base until the next successful
+      classification or until Serve stops.
   - A base request switches one sidecar pool worker to the base source root.
     The pool stops a head worker and starts a new one, about 0.33 s.
   - The plan predates PR #248, which added comparison steps to the base
@@ -72,7 +83,7 @@
   the baseline machine.
 - **Root question:** How does Serve reuse the prepared base side between
   classifications, and still give the result of a fresh preparation?
-- **Options:** The user chose the approach. Five decisions stay open.
+- **Options:** The user chose the approach. Six decisions stay open.
   Answer each by number and letter, for example "1C, 2B".
   1. **Working-install changes** (High). When does a kept base still give
      the result of a fresh preparation, when it reads working-install files?
@@ -125,6 +136,27 @@
      to it. Base capture then runs only on a fresh preparation. Under 2B, a
      replaced reader cannot cancel a kept-base render at the admission gate.
      **C.** Do that item in the same branch. Effort: Small, Small, Large.
+  6. **Git checkout settings** (Medium). The source identity hashes the
+     commit, the full Git configuration, and the effective attributes of
+     each file, in `crates/mokly-git/src/source_key.rs`. At line 40 it adds
+     a salt for each preparation when a file has a `filter` attribute.
+     `docs/protocol/mokly-base-cache.md:57` makes a settings change
+     invalidate a source entry. Line 63 makes a later preparation run
+     external filters again. Today a settings change takes effect at the
+     next classification.
+     - **A.** Keep the conversion of the preparation until the next
+       preparation. This is the plan's call. A base without an extraction
+       still reads later files through Git with the new settings, at
+       `crates/mokly-compare/src/sources.rs:185`. Effort: Small.
+     - **B.** Check the identity, without its salt, before each reuse. Keep
+       no base whose files use an external filter. Effort: Small
+       (estimate).
+     - **C.** B, but keep a filtered base and its earlier filter output.
+       This changes the filter rule of the cache contract. Effort: Small
+       (estimate).
+     - **D.** Release the base on a watch event of the Git files. The
+       watcher skips `.git`, at `crates/mokly-watch/src/pattern.rs:32`, so
+       this changes the watch code. Effort: Medium (estimate).
 - **Left out:**
   - A disk copy of the capture: the user chose option A over it on
     2026-10-27.
@@ -132,8 +164,9 @@
     both sides use the working install in tiers 1 and 3.
   - A fresh base runtime for each reader: it prepares the graph again and
     misses the 0.5 s target.
-- **Wider fix:** 1F and 2C. 1F reuses the input stamps that the runtime
-  already checks. 2C stops every later cancellation from poisoning a base.
+- **Wider fix:** 1F, 2C, and 6B. 1F reuses the input stamps that the
+  runtime already checks. 2C stops every later cancellation from poisoning
+  a base. 6B checks the checkout identity that a fresh preparation uses.
 - **Previous examples:** PR #220 captures the head once in `build`, the
   same class of repeated work.
 - **Related:**
@@ -147,7 +180,7 @@
     stamps of 1F miss.
   - [jsconfig-resolution-input.md](./jsconfig-resolution-input.md): one of
     the inputs that the stamps of 1F miss.
-- **Recommendation:** 1F, 2B, 3A, 4A, 5B.
+- **Recommendation:** 1F, 2B, 3A, 4A, 5B, 6B.
   - 1F: of the options that a reuse can check, it covers the most inputs,
     and a reuse must give the result of a fresh preparation. Measure its
     check against the 0.5 s target first. The plan recommended 1C, because
@@ -156,6 +189,9 @@
   - 2B: it is the only option that keeps the base across replacements
     without a new race. Choose 2C if the capture-abort rule must stay.
   - 3A, 4A, 5B: each is the smallest option that meets the goal.
+  - 6B: it keeps the cache contract. Measure it against the 0.5 s target
+    first. The plan measured `review.base-extraction`, which computes the
+    identity, at 0.3 s on the slower machine.
 - **Action:** ask the user, because the recommended option 2B changes two
   protocol rules that no user decision covers.
 
