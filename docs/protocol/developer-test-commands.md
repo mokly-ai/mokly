@@ -24,9 +24,6 @@ current sources, including after a change to the viewer, the shim, the sidecar,
 or a crate. The build runs before the developer runner starts; argument
 rejection still happens before any test process starts.
 
-`npm run typecheck` resolves public authoring declarations from package
-output. Run `npm run build` first. The viewer suite supplies this preparation.
-
 The raw commands `node --import tsx --test <file>` and
 `npx playwright test <spec>` skip the build and test the last build. After a
 source change, run `npm run build` before using either raw command. One build
@@ -149,6 +146,69 @@ the developer allowance for skips and todos.
 
 The [browser command contract](./developer-browser-commands.md#browser-selection)
 defines selected browser runs and the required static-delivery check.
+
+## Type Checks
+
+`npm run typecheck` and `npm run typecheck:fast` check the same five TypeScript
+projects in this order:
+
+1. `packages/mokly/tsconfig.json`: the `@mokly/mokly` package.
+2. `tsconfig.json`: the repository root project.
+3. `packages/ui/tsconfig.json`: the `@mokly/ui` package.
+4. `packages/viewer/tsconfig.json`: the `@mokly/viewer` package.
+5. `tsconfig.scripts-declarations.json`: the declaration files of the
+   repository scripts.
+
+Both commands resolve public authoring declarations from package output. Run
+`npm run build` first. Neither command builds. The viewer suite supplies this
+preparation for its type check. Neither command writes compiled output.
+
+A command stops at the first failed project and exits unsuccessfully. It shows
+every diagnostic of that project. The UI and viewer projects report paths
+relative to their package directories. The other projects report paths
+relative to the repository root.
+
+`npm run typecheck`, the standard check, runs the installed TypeScript 6
+compiler under Node. It is the authoritative type check. The viewer suite runs
+it in the complete gate. The package builds write their public declarations
+with the same compiler. No required package command, `cargo xtask check` suite,
+or CI workflow runs Bun or `npm run typecheck:fast`.
+
+### Fast Local Type Check
+
+`npm run typecheck:fast` is an optional local command for faster feedback. It
+is not verification evidence. Before the first project, it selects one checker
+for the run:
+
+- When a `bun` executable on the PATH reports version 1.4.4 or newer, Bun's
+  native checker checks each project. A package `check` script never runs in
+  its place.
+- When no `bun` executable is on the PATH, or it reports an older version, the
+  command prints a warning on standard error. The warning gives the reason. It
+  shows the optional installation command `npm install --global bun@1.4.4`.
+  Then the command runs the standard check. That result sets the exit status.
+
+Version 1.4.4 is the tested version. An older Bun can lack the native checker
+and treat `check` as a script or file name. The fallback gives a developer
+without Bun a complete check instead of a failure or a pass without a check.
+The command never installs or downloads Bun.
+
+Every other Bun outcome is final. Type errors, another launch failure, a crash,
+or a signal fail the command. The standard check does not run after them. A
+retry would hide which checker failed and add the slow check to each failed
+run.
+
+Bun 1.4.4's checker matches TypeScript 7.0.2, so its diagnostics can differ from
+the TypeScript 6 result. When the two commands disagree, the result of
+`npm run typecheck` decides. A fast pass does not prove a standard pass. An
+error that only the fast checker reports does not fail the gate. The standard
+check stays the authority instead of Bun, because the gate and the declaration
+builds use TypeScript 6.
+
+Bun is an optional developer installation, outside the npm dependencies and
+without a Bun lockfile. A Bun dev dependency would make the fast check work
+after every install, but it would add a native binary to each required
+install, CI included.
 
 ## Partial Verification
 

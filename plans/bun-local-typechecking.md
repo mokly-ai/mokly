@@ -1,6 +1,6 @@
 # Bun for local TypeScript checks
 
-Status: Active. On branch `calummoore/bun-typescript-performance`, no pull request yet. This plan awaits implementation approval. The pull request that completes the work deletes this plan.
+Status: Active. On branch `calummoore/bun-typescript-performance`, no pull request yet. The user approved implementation of every milestone and task on 2026-11-01. Implementation is in progress. The pull request that completes the work deletes this plan.
 
 Mokly uses Node and npm for development and verification. Its packages use
 TypeScript to check source files and write public declarations. Add an optional
@@ -12,6 +12,10 @@ The recommended first step was local type checking. The alternatives were a
 unit runner migration and a complete toolchain migration. Those changes need
 separate work because the current test reporter and render sidecar failed
 under Bun. This request authorizes planning, not implementation.
+
+On 2026-11-01, the user instructed the agent to implement every milestone and
+task. That instruction approves the design calls below and their documentation
+changes. Tick each task after its implementation and checks pass.
 
 ## Scope
 
@@ -29,8 +33,8 @@ prove complete verification. This work has no screen or mockup changes.
 
 ## Design calls
 
-These calls are proposed as part of this plan. They do not change current
-requirements before implementation approval.
+The user approved these design calls with the implementation request on
+2026-11-01.
 
 1. **Local command first.** Agent call, 2026-11-01. Add an optional entry point
    instead of replacing the existing checker. The tested Bun 1.4.4 checker
@@ -86,58 +90,64 @@ Contract owners:
 - [Base dependency selection](../docs/protocol/mokly-base-dependencies.md).
 - [Verification script README](../scripts/verification/README.md).
 
-## Milestone 1: Document the local workflow
+## Milestone 1: Document the local workflow — completed
 
 Depends on: none
 
 Define the optional command before implementation. Keep the current required
 workflow complete for a developer who does not install Bun.
 
-- [ ] Document `typecheck:fast` in the developer command contract.
-- [ ] State its project coverage, preparation, fallback, and failure behavior.
-- [ ] State that standard Node checking owns the gate and declaration builds.
-- [ ] Document optional Bun 1.4.4 installation in the development guide.
-- [ ] State that fresh workspaces use the fallback until Bun is installed.
-- [ ] Explain the TypeScript 6 and 7 distinction and how to assess disagreement.
-- [ ] Preserve the existing requirement to build public declarations first.
-- [ ] Add the required linked status line while documented behavior is pending.
-- [ ] Keep raw benchmark logs outside the plan and product documentation.
+- [x] Document `typecheck:fast` in the developer command contract.
+- [x] State its project coverage, preparation, fallback, and failure behavior.
+- [x] State that standard Node checking owns the gate and declaration builds.
+- [x] Document optional Bun 1.4.4 installation in the development guide.
+- [x] State that fresh workspaces use the fallback until Bun is installed.
+- [x] Explain the TypeScript 6 and 7 distinction and how to assess disagreement.
+- [x] Preserve the existing requirement to build public declarations first.
+- [x] Add the required linked status line while documented behavior is pending.
+- [x] Keep raw benchmark logs outside the plan and product documentation.
 
-## Milestone 2: Share the existing project inventory
+Evidence: `.context/bun-local-typechecking/milestone-1/report.md`.
+
+## Milestone 2: Share the existing project inventory — completed
 
 Depends on: 1
 
 Prepare the existing checker to share its project coverage with the optional
 command. Its compiler and verification result stay the same.
 
-- [ ] Read the verification script README and existing process helpers.
-- [ ] Give one verification module ownership of the ordered project list.
-- [ ] Route the standard root typecheck through that inventory under Node.
-- [ ] Keep workspace typecheck commands and `typecheck:script-declarations` usable.
-- [ ] Preserve configuration options, working directories, diagnostics, order, and failure exit.
-- [ ] Check behavior through the public runner with an injected process boundary.
-- [ ] Run standard type checking, lint, and the early Repository suite.
+- [x] Read the verification script README and existing process helpers.
+- [x] Give one verification module ownership of the ordered project list.
+- [x] Route the standard root typecheck through that inventory under Node.
+- [x] Keep workspace typecheck commands and `typecheck:script-declarations` usable.
+- [x] Preserve configuration options, working directories, diagnostics, order, and failure exit.
+- [x] Check behavior through the public runner with an injected process boundary.
+- [x] Run standard type checking, lint, and the early Repository suite.
 
-## Milestone 3: Add the optional Bun command
+Evidence: `.context/bun-local-typechecking/milestone-2/report.md`.
+
+## Milestone 3: Add the optional Bun command — completed
 
 Depends on: 2
 
 Add the local command without making Bun a required dependency of a build,
 test, release, or verification job.
 
-- [ ] Add `typecheck:fast` to the root package scripts.
-- [ ] Reuse the shared project inventory for native Bun checking.
-- [ ] Pass `--no-script` and `--all` in every native checker invocation.
-- [ ] Preserve the required declaration preparation and checker diagnostics.
-- [ ] Use the standard fallback when Bun is missing or older than 1.4.4.
-- [ ] Show the optional installation command in the fallback warning.
-- [ ] Propagate Bun diagnostics and other failures without a fallback retry.
-- [ ] Add focused runner tests for project selection and failure propagation.
-- [ ] Test missing and older Bun cases without depending on the host's Bun.
-- [ ] Keep tests independent of real process speed and network access.
-- [ ] Add no permanent benchmark, third-party checker test, or timing threshold.
-- [ ] Update the verification script README with the new entry points.
-- [ ] Remove pending-behavior status lines when their commands work.
+- [x] Add `typecheck:fast` to the root package scripts.
+- [x] Reuse the shared project inventory for native Bun checking.
+- [x] Pass `--no-script` and `--all` in every native checker invocation.
+- [x] Preserve the required declaration preparation and checker diagnostics.
+- [x] Use the standard fallback when Bun is missing or older than 1.4.4.
+- [x] Show the optional installation command in the fallback warning.
+- [x] Propagate Bun diagnostics and other failures without a fallback retry.
+- [x] Add focused runner tests for project selection and failure propagation.
+- [x] Test missing and older Bun cases without depending on the host's Bun.
+- [x] Keep tests independent of real process speed and network access.
+- [x] Add no permanent benchmark, third-party checker test, or timing threshold.
+- [x] Update the verification script README with the new entry points.
+- [x] Remove pending-behavior status lines when their commands work.
+
+Evidence: `.context/bun-local-typechecking/milestone-3/report.md`.
 
 ## Milestone 4: Verify and deliver
 
@@ -146,24 +156,26 @@ Depends on: 1, 2, 3
 Prove the optional workflow and preserve the current verification boundary.
 Report a pre-existing gate failure with its output if it still blocks the gate.
 
-- [ ] Build the packages and run standard type checking under Node.
-- [ ] Run fast type checking with the documented Bun version.
-- [ ] Run the fast command without Bun and confirm the standard fallback.
-- [ ] Check deliberate temporary type errors with both commands.
-- [ ] Save that one-time diagnostic comparison under `.context/bun-local-typechecking/`.
-- [ ] Confirm both commands check all five projects and write no compiled files.
-- [ ] Measure repeated standard and fast runs on the same machine.
-- [ ] Save timing evidence without making it a required threshold.
-- [ ] Run focused runner tests and repeat each new asynchronous test ten times.
-- [ ] Run formatting, lint, and Markdown links.
-- [ ] Confirm required package commands, xtask suites, and workflows do not invoke Bun or the fast command.
-- [ ] Run the complete local gate on a host with no Bun executable on its PATH.
+- [x] Build the packages and run standard type checking under Node.
+- [x] Run fast type checking with the documented Bun version.
+- [x] Run the fast command without Bun and confirm the standard fallback.
+- [x] Check deliberate temporary type errors with both commands.
+- [x] Save that one-time diagnostic comparison under `.context/bun-local-typechecking/`.
+- [x] Confirm both commands check all five projects and write no compiled files.
+- [x] Measure repeated standard and fast runs on the same machine.
+- [x] Save timing evidence without making it a required threshold.
+- [x] Run focused runner tests and repeat each new asynchronous test ten times.
+- [x] Run formatting, lint, and Markdown links.
+- [x] Confirm required package commands, xtask suites, and workflows do not invoke Bun or the fast command.
+- [x] Run the complete local gate on a host with no Bun executable on its PATH.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` after the push with
       the `implementation-review` skill. Apply the fix rule, record follow-up
       items for remaining findings, and re-review once.
 - [ ] Delete this plan under the `plans` skill when the implementation is complete.
 - [ ] Open the pull request with the dated decisions, design calls, and plan permalink.
+
+Evidence: `.context/bun-local-typechecking/complete-gate-after-main-result.json`.
 
 ## Evidence and later work
 

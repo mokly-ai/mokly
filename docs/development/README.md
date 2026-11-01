@@ -48,6 +48,40 @@ argument and report rules, the [xtask README](../../xtask/README.md) for focused
 suites, and [CI test timing](../../docs/protocol/ci-test-timing.md) for the rule
 that tests never assert elapsed time.
 
+`npm run typecheck` checks the five TypeScript projects of the repository with
+the TypeScript 6 compiler that `npm ci` installs. The complete gate runs this
+standard check. For faster local feedback, run `npm run typecheck:fast`. It
+checks the same projects with the native checker of Bun. Bun is optional and is
+not an npm dependency. Install the tested version once on each machine, and
+build before either check:
+
+```bash
+npm install --global bun@1.4.4
+npm run build
+npm run typecheck:fast
+```
+
+The fast command uses Bun 1.4.4 or newer from the PATH. A fresh workspace, such
+as a new cloud machine, has no Bun until you install it. Until then, and with
+an older Bun, the command prints a warning with the installation command and
+runs the standard check.
+
+The two checkers implement different TypeScript versions. Bun 1.4.4 matches
+TypeScript 7.0.2, a native implementation of the compiler. The repository
+checks and writes its public declarations with TypeScript 6. The two versions
+can report different diagnostics for the same code. When the fast and standard
+results disagree:
+
+1. Look for the fallback warning. A run with that warning used the standard
+   checker.
+2. Run `npm run typecheck` on the same sources and build. Its result decides.
+3. Fix each error that the standard check reports, also after a fast pass.
+4. An error that only the fast check reports does not fail the gate. A change
+   for it must also pass the standard check.
+
+The [type check contract](../../docs/protocol/developer-test-commands.md#type-checks)
+defines both commands.
+
 The [remote verification contract](../../docs/protocol/remote-verification.md)
 defines the Testbox gate, which runs the same suites on Blacksmith boxes:
 
