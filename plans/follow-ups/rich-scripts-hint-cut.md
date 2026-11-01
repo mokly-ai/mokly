@@ -122,10 +122,16 @@
   chose only the final period, because it cost less. Commit `d935e6a6`
   added the recovery-path exception to the width rule.
 - **Related:**
-  [rich-base-diagnostics-width.md](./rich-base-diagnostics-width.md)
-  concerns the same width rule for the Changes unavailable details of
-  `build` and `publish`, which carry the hint as a separate line. A fix
-  there must not cut the hint.
+  [rich-base-diagnostics-width.md](./rich-base-diagnostics-width.md) has the
+  same code and the same width rule. Option D here and each option of that
+  item change the same sentence of the width rule in
+  `docs/protocol/mokly-terminal-output.md`. When that item has an answer
+  before this work starts, one pull request applies both, so that the
+  exception of the width rule changes once. This work does not wait for that
+  answer, because the user chose D on 2026-10-29 for a later small pull
+  request, and that choice stands. Every option of that item keeps the
+  scripts hint whole, which the Changes unavailable details of `build` and
+  `publish` carry as a separate line.
 - **Recommendation:** D. At the same effort as A, it shows the full hint in
   every rich path and keeps one rich hint line for each error.
 - **Action:** fix after merge, apply D, because on 2026-10-29 the user chose

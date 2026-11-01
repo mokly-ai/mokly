@@ -1,6 +1,6 @@
 # Make tracing captures safe in parallel tests
 
-- **Severity:** Medium. **Effort:** Large. **Confidence:** Medium. **Harder later:** Yes.
+- **Severity:** Medium. **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 196, the wider class of user item 193.
 - **Location:** `crates/mokly-cli/src/_tests_/serve_trace_tests.rs:87`,
@@ -38,7 +38,30 @@
   many other tests. While parallel tests
   register and drop their subscribers, a thread without a capture can
   register a callsite first and cache `never`. The span then disappears
-  from the capture.
+  from the capture. The first recorded failure of
+  `stylesheet_trace_tests.rs` matches this cause:
+  - On 2026-11-01 the test
+    `stylesheet_cache::stylesheet_trace_tests::finding_4_real_bundles_report_each_miss_reason_and_hits_are_silent`
+    failed in the CI job "Native (blacksmith-8vcpu-windows-2025)".
+  - The job ran for pull request #265, in run 41329654962 and job
+    124916923950, at the head `6cfc3ae1`.
+  - The failure text, at
+    `crates/mokly-render/src/_tests_/stylesheet_trace_tests.rs:103`, is:
+
+    ```text
+    assertion `left == right` failed
+      left: []
+     right: [Some("no-record")]
+    ```
+
+  - The capture saw no span. That pull request changes no file under
+    `crates/mokly-render/`.
+  - The same test passed in the Native Windows job on the head before,
+    `90c383d6`. It also passed in the remote complete gate on `6cfc3ae1`.
+  - The rerun of the job was cancelled, because a newer head of the pull
+    request started its own CI run.
+  - The confidence is High since 2026-11-01, because this log shows the
+    problem.
 - **Impact if no action:** Both tests can fail at random without a product
   change, as the sidecar test did.
 - **Root question:** How should every span capture in the test suites see
