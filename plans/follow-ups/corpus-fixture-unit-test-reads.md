@@ -72,9 +72,10 @@
   - **B.** Keep the two older tests as unit tests, and embed the fixtures at
     compile time through a build script that lists the files. The
     integration test reads the same list. Effort: Medium. It needs a
-    generated list, and a hand-kept list went stale before:
-    `css-differential-fixture-discovery.md` found 11 of 62 stylesheets
-    missing.
+    generated list, and a hand-kept list went stale before: the hand-kept
+    fixture lists of the CSS differential test of `mokly-css` missed 11 of
+    62 stylesheets, until commit `9e57d861` replaced them with every
+    stylesheet that Git lists.
   - **C.** Put only the loader into one shared file now, and include it in
     the unit tests and the integration test with a `#[path]` module. It
     removes the copies of the reader, but the unit tests still read files.
@@ -90,7 +91,11 @@
   rule for one file-format helper are in force, so no other wider fix.
 - **Previous examples:** Commit `02eec937` added both older tests.
   `crates/mokly-cli/tests/static_output_tests.rs:68` reads the fixtures of
-  another crate from an integration test.
+  another crate from an integration test. Commit `9e57d861` moved the CSS
+  differential test of `mokly-css` out of the library unit tests into
+  `crates/mokly-css/tests/token_differential_tests.rs`, with a
+  `test-support` feature that exposes both of its readers. That is the
+  pattern of option A.
 - **Recommendation:** A. It applies both rules: every corpus test becomes an
   integration test, and one loader serves all three.
 - **Action:** fix after merge, apply A, because the two older tests are on
