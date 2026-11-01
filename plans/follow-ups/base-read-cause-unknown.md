@@ -39,8 +39,15 @@
     56 to line 62. So a failed base read gives "mokly.config.json: unknown".
   - The issue holds only that text, so its cause is lost.
   - More catalogue callers build the same text from `code()`:
-    - `config.rs:218` and `config_paths.rs:85`, `:178`, and `:212` run in
-      each base load. They receive base Git failures.
+    - `config.rs:218` runs in each base load. It receives base Git failures.
+    - `config_paths.rs:178` and `:212` receive base Git failures only when
+      the base configuration has a setting that they check.
+    - Line 178 checks `watch.rules[].paths`. Line 212 checks `renderer`,
+      `moduleResolution.packageRoots`, and each local path of a `stylesheets`
+      rule. A local path is not a URL and does not start with `$`.
+    - `config_paths.rs:85` receives no base read. `GitTree::project` returns
+      its input path unchanged, so `configuration_alias` returns at
+      `config_paths.rs:70` to line 71 before any read.
     - `config.rs:194` runs only without an explicit file. The base load in
       `crates/mokly-cli/src/changes_base.rs:77` passes one, so only the test
       fixture below reaches it.
@@ -53,12 +60,27 @@
   - In a build, `crates/mokly-compare/src/base_render.rs:215` to line 223
     reports the stored failure before the catalogue error. A genuine Git
     failure then fails the command as `git-failed`, with its cause.
-  - A conversion failure is not the stored failure. So
-    `crates/mokly-cli/src/changes_policy.rs:20` to line 25 makes Changes
-    unavailable with the reason "base validation failed".
-  - `crates/mokly-cli/src/changes_diagnostics.rs:28` to line 33 prints the
-    issue as a detail: "base {commit}: [mokly/config-invalid]
-    mokly.config.json: unknown". The safe conversion message is lost.
+  - A conversion failure is not the stored failure. In `build` and
+    `publish`, `crates/mokly-cli/src/changes_policy.rs:20` to line 25 then
+    makes Changes unavailable with the reason "base validation failed".
+  - `crates/mokly-cli/src/changes_diagnostics.rs:28` to line 33 builds the
+    detail, and `crates/mokly-cli/src/changes_output.rs:104` to line 108
+    prints it: "base {commit}: [mokly/config-invalid] mokly.config.json:
+    unknown". The safe conversion message is lost.
+  - `build` and `publish` print that detail line with no hint, at
+    `changes_output.rs:104` to line 116. This follows
+    `docs/protocol/mokly-base-preparation.md:91` to line 93, which makes
+    base diagnostics detail lines.
+  - Serve prints the same failure as a `review-invalid` error block, at
+    `crates/mokly-cli/src/serve_changes.rs:166` to line 171. Its detail holds
+    the same "unknown" text.
+  - In rich mode, that block ends with the hint "Fix the reported comparison
+    input and retry.", at `crates/mokly-cli/src/output.rs:170`.
+  - Serve rich mode also prints a `! Changes unavailable` line with that
+    detail, at `crates/mokly-cli/src/serve_output.rs:187` to line 196.
+  - Serve gives no "base validation failed" reason. Only
+    `crates/mokly-cli/src/build_changes.rs:58` reaches
+    `changes_policy::unavailable`.
   - That path shows no `base-conversion` warning, because `base_render.rs:273`
     adds those warnings only to a successful result.
   - `crates/mokly-cli/src/build_output.rs:206` to line 212 prints a
@@ -98,9 +120,8 @@
     - `docs/protocol/mokly-terminal-errors.md:124`: the hint of
       `config-invalid` is "Fix the reported configuration value and retry."
 - **Problem:** A catalogue caller reduces a failed base read to "unknown".
-  For a conversion failure, a user sees a `config-invalid` detail with no
-  cause and a misleading hint. A compare test that fails on a Git read shows
-  no cause either.
+  For a conversion failure, `build`, `publish`, and Serve then show no cause.
+  A compare test that fails on a Git read shows no cause either.
 - **Impact if no action:** A user cannot tell why Changes is unavailable when
   a base file fails conversion. The next CI failure of a base Git read needs a
   new trace to find its cause.
@@ -122,10 +143,10 @@
     - Effort: Medium.
   - **C.** Keep the typed `SourceError` inside the catalogue error, not only
     its code.
-    - The base path then reports a conversion failure as "base resource
-      unavailable", with its safe message.
+    - In `build` and `publish`, the base path then reports a conversion
+      failure as "base resource unavailable", with its safe message.
     - `changes_policy.rs:17` to line 19 already gives that reason to a typed
-      conversion error.
+      conversion error. Serve never uses that reason policy.
     - A compare test then shows the Git cause in its error.
     - It changes the code and the reason that a user sees for a failed
       conversion of a base catalogue file.
