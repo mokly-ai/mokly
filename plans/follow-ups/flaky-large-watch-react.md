@@ -1,6 +1,6 @@
 # Stabilize the large React watch test
 
-- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #217 and its completed plan, which put the
   failure outside the scope of its review.
@@ -93,8 +93,11 @@
   rerun passed.
   Remote gate run `20261020T153816Z-385781` failed in browser shard 2 of 4
   on 2026-10-20 with the same timeout. Its isolated rerun passed.
-  [flaky-same-origin-handoff.md](./flaky-same-origin-handoff.md) records
-  another browser test that failed once and passed on the rerun.
+  [flaky-same-origin-handoff.md at its last commit](https://github.com/mokly-ai/mokly/blob/c7e7d9b88efc84152eb33539ed8ed7ca2ad2bb93/plans/follow-ups/flaky-same-origin-handoff.md)
+  records another browser test that failed once and passed on the rerun,
+  the same-origin handoff test. Its confirmed source: the preparation poll
+  accepted the committed URL while the document still loaded. The fix of
+  2026-11-01 also waits for a complete document and its action link.
 - **Related:**
   - The
     [compiled recipe cache item at its last commit](https://github.com/mokly-ai/mokly/blob/c7e7d9b88efc84152eb33539ed8ed7ca2ad2bb93/plans/follow-ups/compiled-recipe-cache.md)
@@ -105,9 +108,6 @@
     started to keep the last released recipe of each set of bundle settings,
     so a later bundle whose inputs equal an earlier compile can skip
     esbuild.
-  - [flaky-same-origin-handoff.md](./flaky-same-origin-handoff.md) is a
-    separate case of the same recorded class: a browser test that failed
-    once and passed on the rerun. It has its own test and suspected source.
 - **Recommendation:** C. The failed wait is known, but its cause
   is not confirmed. The last finished step can help distinguish CPU
   contention from a lost event. E reduces compile cost if compilation causes
