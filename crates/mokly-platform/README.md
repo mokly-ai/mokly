@@ -10,9 +10,9 @@ other workspace crate.
 
 - Rename files and directories atomically without replacing a destination.
 - Acquire nonblocking shared and exclusive file locks with handle-scoped release.
-- Own child process trees: a Unix process group with each descendant that
-  its parent links reach, also in a new session, and a Windows kill-on-close
-  job object.
+- Own child process trees. On Unix, own a process group and each descendant
+  that its parent links reach, also in a new session. On Windows, own a
+  kill-on-close job object.
 - Flush cache data with a filesystem barrier or plain file synchronization.
 - Expose typed errors that callers can handle without string matching.
 
