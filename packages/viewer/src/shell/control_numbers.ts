@@ -1,36 +1,8 @@
 /** The bounds and step that a number control offers, and its HTML bounds. */
 
 import type { ComponentControl } from "../components/control_types.js";
-import { schemaTypes } from "../components/profile_schema.js";
-import { propertySchema } from "../components/props.js";
-
-import type { ControlTarget } from "./control_values.js";
 
 export type NumberControl = Extract<ComponentControl, { kind: "number" }>;
-
-/**
- * A number control with the schema's bounds where it declares none, and the
- * schema's `multipleOf`, else 1 for an integer, where it declares no step.
- */
-export function effectiveNumberControl(
-  target: ControlTarget,
-  key: string,
-  control: NumberControl,
-): NumberControl {
-  const property = propertySchema(target.propSchema, key);
-  const minimum = control.minimum ?? property?.minimum;
-  const maximum = control.maximum ?? property?.maximum;
-  const step =
-    control.step ??
-    property?.multipleOf ??
-    (property && schemaTypes(property).has("integer") ? 1 : undefined);
-  return {
-    ...control,
-    ...(minimum === undefined ? {} : { minimum }),
-    ...(maximum === undefined ? {} : { maximum }),
-    ...(step === undefined ? {} : { step }),
-  };
-}
 
 /**
  * The HTML bounds that offer only multiples of the step counted from zero:

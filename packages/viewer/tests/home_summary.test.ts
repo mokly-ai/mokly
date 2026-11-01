@@ -4,7 +4,7 @@ import test from "node:test";
 import type { CatalogueReadModel } from "../src/catalogue/types.js";
 import { homeSummary } from "../src/shell/home_summary.js";
 
-import { indexFixture } from "./catalogue_v9_fixture.js";
+import { indexFixture, shellModelFixture } from "./catalogue_v9_fixture.js";
 import { standaloneMarkup } from "./shell_markup.js";
 
 /** The summary line the home page renders, or undefined without one. */
@@ -39,15 +39,27 @@ test("home omits kinds with no current entries", () => {
 });
 
 test("the summary lists kinds in order, says one entry in the singular, and needs entries", () => {
-  const entries = (...kinds: string[]) =>
-    kinds.map((kind) => ({ kind })) as Parameters<typeof homeSummary>[0];
+  const model = shellModelFixture();
+  const empty = {
+    ...model,
+    screens: [],
+    components: [],
+    useCases: [],
+    pages: [],
+    documents: [],
+  };
   assert.equal(
-    homeSummary(entries("document", "component", "component", "screen")),
+    homeSummary({
+      ...empty,
+      screens: model.screens.slice(0, 1),
+      components: model.components,
+      documents: model.documents,
+    }),
     "1 screen · 2 components · 1 document",
   );
   assert.equal(
-    homeSummary(entries("use-case", "page")),
+    homeSummary({ ...empty, useCases: model.useCases, pages: model.pages }),
     "1 user flow · 1 catalogue page",
   );
-  assert.equal(homeSummary([]), undefined);
+  assert.equal(homeSummary(empty), undefined);
 });

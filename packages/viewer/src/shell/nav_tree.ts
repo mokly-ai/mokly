@@ -135,20 +135,7 @@ export function buildNavSections(
         ? leaf.entryKind === "component"
         : leaf.entryKind !== "component",
     );
-    const children = [
-      ...current,
-      ...additional.sort((left, right) =>
-        left.entryKind < right.entryKind
-          ? -1
-          : left.entryKind > right.entryKind
-            ? 1
-            : left.entryId < right.entryId
-              ? -1
-              : left.entryId > right.entryId
-                ? 1
-                : 0,
-      ),
-    ];
+    const children = [...current, ...additional];
     if (children.length === 0) return [];
     return [
       id === "specs"

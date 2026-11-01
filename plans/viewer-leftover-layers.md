@@ -141,7 +141,7 @@ Depends on: 2
       `shell/workspace_usage_data.ts`. Apply design call 9.
 - [x] Stop rebuilding the whole catalogue for each accepted batch of
       details, in `shell/data_commit.ts:40,57-65`.
-- [ ] Move the tests that build manifest shapes to the generated shapes, with
+- [x] Move the tests that build manifest shapes to the generated shapes, with
       every assertion of live behaviour. Examples are
       `tests/helpers/current_manifest.ts` and
       `packages/viewer/tests/moved_catalogue.test.ts`. Remove a test only
@@ -152,20 +152,20 @@ Depends on: 2
 
 Depends on: 3
 
-- [ ] Number controls use the bounds and step of `controls`. Delete the
+- [x] Number controls use the bounds and step of `controls`. Delete the
       recalculation in `shell/control_numbers.ts:15-33`.
-- [ ] Views use `comparison.eligible` and `comparison.kind` as the index
+- [x] Views use `comparison.eligible` and `comparison.kind` as the index
       writes them. Delete the mapping back to review states in
       `viewer/public_workspace_views.ts:14-21`, and the recalculated
       eligibility of each view in `shell/view_status.ts`. Keep the combined
       status of the shown views, `shell/view_status.ts:118-127`, which the
       index does not hold.
-- [ ] Keep the view order and the view lists of the index. Delete the sorts
+- [x] Keep the view order and the view lists of the index. Delete the sorts
       in `shell/view_marks.ts:46-56` and `viewer/public_workspace_views.ts`,
       and the rebuilt lists in `components/views.ts` and `registry/views.ts`.
-- [ ] Use `identity.title` in `shell/view_title.ts`, and the lengths of the
+- [x] Use `identity.title` in `shell/view_title.ts`, and the lengths of the
       index arrays in `shell/home_summary.ts`.
-- [ ] Show flat removed rows in the order of `removedEntries`, under design
+- [x] Show flat removed rows in the order of `removedEntries`, under design
       call 7. Add a regression test with a removed parent, its removed
       variant, and a removed sibling whose path sorts between them.
 

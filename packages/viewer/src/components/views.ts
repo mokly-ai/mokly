@@ -5,7 +5,6 @@ import type {
 } from "../catalogue/scoped_types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 import { viewRoute } from "../navigation/routes.js";
-import { VIEWPORTS } from "../registry/views.js";
 
 import type { ComponentViewRecord } from "./view_types.js";
 
@@ -44,36 +43,31 @@ export function orderedInstances(usage?: ComponentViewRecord) {
   );
 }
 
-/** Derive current view artifacts from entry identity and retained axes. */
+/** Add routes and detail usage to the index's ordered view list. */
 function fragmentViews(
   entry: ShellCatalogueScreen | ShellCatalogueComponent,
   variantPath?: string,
 ): GeneratedComponentView[] {
-  return VIEWPORTS.flatMap((viewport) =>
-    entry.colorSchemes.map((colorScheme) => {
-      const view = entry.views.find(
-        (view) =>
-          view.viewport === viewport && view.colorScheme === colorScheme,
-      );
-      const usage: ComponentViewRecord | undefined =
-        view?.usage.status === "ready"
-          ? {
-              viewport,
-              colorScheme,
-              instances: view.usage.instances,
-              slots: view.usage.slots,
-              ranges: view.usage.ranges,
-              styles: [],
-              resources: [],
-            }
-          : undefined;
-      return {
-        viewport,
-        colorScheme,
-        path: viewRoute(entry.path, viewport, colorScheme),
-        ...(usage ? { usage } : {}),
-        ...(variantPath ? { variantPath } : {}),
-      };
-    }),
-  );
+  return entry.views.map((view) => {
+    const { viewport, colorScheme } = view;
+    const usage: ComponentViewRecord | undefined =
+      view.usage.status === "ready"
+        ? {
+            viewport,
+            colorScheme,
+            instances: view.usage.instances,
+            slots: view.usage.slots,
+            ranges: view.usage.ranges,
+            styles: [],
+            resources: [],
+          }
+        : undefined;
+    return {
+      viewport,
+      colorScheme,
+      path: viewRoute(entry.path, viewport, colorScheme),
+      ...(usage ? { usage } : {}),
+      ...(variantPath ? { variantPath } : {}),
+    };
+  });
 }

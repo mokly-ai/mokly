@@ -1,6 +1,9 @@
 /** The home page's count of the catalogue's current entries. */
 
-import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
+import type {
+  ShellCatalogueReadModel,
+  ShellCatalogueRoutedEntry,
+} from "../catalogue/scoped_types.js";
 
 type EntryKind = ShellCatalogueRoutedEntry["kind"];
 
@@ -21,12 +24,17 @@ const LABELS = {
  * omit kinds with none. A catalogue with no entries has no summary.
  */
 export function homeSummary(
-  entries: readonly Pick<ShellCatalogueRoutedEntry, "kind">[],
+  model: ShellCatalogueReadModel,
 ): string | undefined {
-  const counts = new Map<EntryKind, number>();
-  for (const { kind } of entries) counts.set(kind, (counts.get(kind) ?? 0) + 1);
+  const counts = {
+    screen: model.screens.length,
+    component: model.components.length,
+    "use-case": model.useCases.length,
+    page: model.pages.length,
+    document: model.documents.length,
+  } satisfies Record<EntryKind, number>;
   const parts = (Object.keys(LABELS) as EntryKind[]).flatMap((kind) => {
-    const count = counts.get(kind) ?? 0;
+    const count = counts[kind];
     const [one, many] = LABELS[kind];
     return count === 0 ? [] : [`${count} ${count === 1 ? one : many}`];
   });

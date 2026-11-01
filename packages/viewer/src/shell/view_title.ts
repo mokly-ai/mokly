@@ -21,9 +21,12 @@ export function variantHeading(
  * "Disabled · Button · Mokly".
  */
 export function viewTitle(catalogue: Catalogue, view: ShellView): string {
-  if (view.kind === "home") return "Mokly";
-  if (view.kind === "missing") return "Not found · Mokly";
+  const title = catalogue.publicModel.identity.title;
+  if (view.kind === "home") return title;
+  if (view.kind === "missing") return `Not found · ${title}`;
   const own = view.target.entry.title;
   const heading = variantHeading(catalogue, view.target.entry) ?? own;
-  return heading === own ? `${own} · Mokly` : `${own} · ${heading} · Mokly`;
+  return heading === own
+    ? `${own} · ${title}`
+    : `${own} · ${heading} · ${title}`;
 }

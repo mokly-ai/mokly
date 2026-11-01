@@ -4,10 +4,7 @@ import { test } from "node:test";
 import { encodeProps } from "../src/components/codec.js";
 import type { ComponentControl } from "../src/components/control_types.js";
 import type { PropSchema } from "../src/components/prop_types.js";
-import {
-  effectiveNumberControl,
-  numberInputBounds,
-} from "../src/shell/control_numbers.js";
+import { numberInputBounds } from "../src/shell/control_numbers.js";
 import {
   controlDraft,
   validateControlDraft,
@@ -225,12 +222,18 @@ test("a number inside the range of a step-1 field asks for a whole number", () =
   );
   assert.equal(error(radius, "2.5"), "Enter a whole number from 0 to 32.");
   assert.equal(error(radius, "40"), "Enter a number from 0 to 32.");
-  const above = single({ type: "integer", minimum: 0 }, { kind: "number" });
+  const above = single(
+    { type: "integer", minimum: 0 },
+    { kind: "number", minimum: 0, step: 1 },
+  );
   assert.equal(error(above, "2.5"), "Enter a whole number of 0 or more.");
   assert.equal(error(above, "-1"), "Enter a number of 0 or more.");
-  const below = single({ type: "integer", maximum: 9 }, { kind: "number" });
+  const below = single(
+    { type: "integer", maximum: 9 },
+    { kind: "number", maximum: 9, step: 1 },
+  );
   assert.equal(error(below, "2.5"), "Enter a whole number of 9 or less.");
-  const any = single({ type: "integer" }, { kind: "number" });
+  const any = single({ type: "integer" }, { kind: "number", step: 1 });
   assert.equal(error(any, "2.5"), "Enter a whole number.");
   const halves = single(
     { type: "number" },
@@ -242,38 +245,10 @@ test("a number inside the range of a step-1 field asks for a whole number", () =
   );
 });
 
-test("a control without bounds or a step takes them from the schema", () => {
+test("a number error uses the effective bounds and step of its control", () => {
   const seats = single(
     { type: "integer", minimum: 1, maximum: 9, multipleOf: 2 },
-    { kind: "number" },
+    { kind: "number", minimum: 1, maximum: 9, step: 2 },
   );
-  const control = seats.controls["value"] as NumberControl;
-  assert.deepEqual(effectiveNumberControl(seats, "value", control), {
-    kind: "number",
-    minimum: 1,
-    maximum: 9,
-    step: 2,
-  });
   assert.equal(error(seats, "11"), "Enter a number from 2 to 8 in steps of 2.");
-  const declared = single(
-    { type: "number", minimum: 0, maximum: 100 },
-    { kind: "number", minimum: 10, maximum: 20, step: 5 },
-  );
-  assert.deepEqual(
-    effectiveNumberControl(
-      declared,
-      "value",
-      declared.controls["value"] as NumberControl,
-    ),
-    { kind: "number", minimum: 10, maximum: 20, step: 5 },
-  );
-  const decimal = single({ type: "number" }, { kind: "number" });
-  assert.deepEqual(
-    effectiveNumberControl(
-      decimal,
-      "value",
-      decimal.controls["value"] as NumberControl,
-    ),
-    { kind: "number" },
-  );
 });

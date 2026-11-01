@@ -1,5 +1,5 @@
 // Per-view change evidence for the workspace view controls: the two axes that
-// name a generated view, the order those views are read in, and the rule that
+// name a generated view, their labels, and the rule that
 // decides whether the viewport and theme controls carry a mark. The shell
 // renders the controls from this rule and re-applies it whenever the shown
 // viewport or scheme changes, so every render agrees without a second state
@@ -31,33 +31,13 @@ export const VIEW_CHANGED_TEXT = {
   viewport: "Other viewport changed",
 } as const;
 
-const VIEW_ORDER: readonly ChangedView[] = [
-  { viewport: "mobile", colorScheme: "light" },
-  { viewport: "mobile", colorScheme: "dark" },
-  { viewport: "desktop", colorScheme: "light" },
-  { viewport: "desktop", colorScheme: "dark" },
-];
 const VIEWPORT_LABELS = { desktop: "Desktop", mobile: "Mobile" } as const;
 /** Each colour scheme named for the reader. */
 export const SCHEME_LABELS = { dark: "Dark", light: "Light" } as const;
 
-/** The same views in one canonical order, deduplicated: mobile before desktop
- * and light before dark, so two catalogues never name them differently. */
-export function orderChangedViews(
-  views: readonly ChangedView[],
-): readonly ChangedView[] {
-  return VIEW_ORDER.filter((candidate) =>
-    views.some(
-      (view) =>
-        view.viewport === candidate.viewport &&
-        view.colorScheme === candidate.colorScheme,
-    ),
-  );
-}
-
 /** The changed views named for a reader, for example `Mobile · Dark, Desktop · Dark`. */
 export function changedViewsLabel(views: readonly ChangedView[]): string {
-  return orderChangedViews(views)
+  return views
     .map(
       (view) =>
         `${VIEWPORT_LABELS[view.viewport]} · ${SCHEME_LABELS[view.colorScheme]}`,

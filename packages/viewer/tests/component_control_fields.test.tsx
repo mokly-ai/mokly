@@ -174,7 +174,7 @@ test("an optional toggle names its value check box; a required one keeps its lab
   assert.doesNotMatch(required, /mbk-control-check|Optional/);
 });
 
-test("help reads negative bounds with words and takes missing bounds from the schema", () => {
+test("help reads negative bounds with words and uses effective control bounds", () => {
   const help = (property: Record<string, unknown>, control: object) =>
     /<small class="mbk-reset"( hidden="")? id="[^"]*-help">([^<]*)<\/small>/.exec(
       fields({
@@ -198,10 +198,16 @@ test("help reads negative bounds with words and takes missing bounds from the sc
     "-5 to 5",
   );
   assert.equal(
-    help({ type: "integer", minimum: 1, maximum: 9, multipleOf: 2 }, {}),
+    help(
+      { type: "integer", minimum: 1, maximum: 9, multipleOf: 2 },
+      { minimum: 1, maximum: 9, step: 2 },
+    ),
     "2–8 in steps of 2",
   );
-  assert.equal(help({ type: "integer", minimum: 0 }, {}), "0 or more");
+  assert.equal(
+    help({ type: "integer", minimum: 0 }, { minimum: 0, step: 1 }),
+    "0 or more",
+  );
 });
 
 test("each field is a row: its name in the label column, then its value", () => {

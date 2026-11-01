@@ -5,32 +5,20 @@ import type {
   ShellCatalogueScreen,
   ShellCatalogueView,
 } from "../catalogue/scoped_types.js";
-import type { ReviewState, ViewResourceEvidence } from "../review/types.js";
+import type { ViewResourceEvidence } from "../review/types.js";
 import { viewEvidenceReasons } from "../review/view_evidence.js";
-import { orderChangedViews, type ChangedView } from "../shell/view_marks.js";
+import type { ChangedView } from "../shell/view_marks.js";
 import type { ViewState, ViewStatesBySelection } from "../shell/view_status.js";
 import type { ChangedViewsBySelection } from "../shell/workspace_views_data.js";
-
-const reviewStates: Readonly<
-  Record<"added" | "changed" | "removed" | "unmodified", ReviewState>
-> = {
-  added: "added",
-  changed: "changed",
-  removed: "removed",
-  unmodified: "unchanged",
-};
 
 /** Published per-view comparisons name the same changed views the shell derives. */
 function publishedChangedViews(
   views: readonly ShellCatalogueView[],
 ): readonly ChangedView[] {
-  return orderChangedViews(
-    views.flatMap((view) =>
-      view.comparison.status === "ready" &&
-      view.comparison.kind !== "unmodified"
-        ? [{ colorScheme: view.colorScheme, viewport: view.viewport }]
-        : [],
-    ),
+  return views.flatMap((view) =>
+    view.comparison.status === "ready" && view.comparison.kind !== "unmodified"
+      ? [{ colorScheme: view.colorScheme, viewport: view.viewport }]
+      : [],
   );
 }
 
@@ -58,7 +46,7 @@ function publishedViewStates(
       ? [
           {
             colorScheme: view.colorScheme,
-            state: reviewStates[view.comparison.kind],
+            comparison: view.comparison,
             viewport: view.viewport,
           },
         ]

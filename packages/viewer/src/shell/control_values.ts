@@ -21,10 +21,7 @@ import { propertySchema, validateProps } from "../components/props.js";
 import type { ComponentOverride } from "../components/render_types.js";
 
 import { CONTROLS_COPY } from "./component_controls_copy.js";
-import {
-  effectiveNumberControl,
-  numberInputBounds,
-} from "./control_numbers.js";
+import { numberInputBounds } from "./control_numbers.js";
 
 /** The shown entry whose props the controls edit: an entry's own or merged props. */
 export interface ControlTarget {
@@ -165,17 +162,16 @@ function fieldError(
       (control.kind === "text" ? control.maxLength : undefined) ??
         property?.maxLength,
     );
-  const number = effectiveNumberControl(target, key, control);
-  const { min, max } = numberInputBounds(number);
+  const { min, max } = numberInputBounds(control);
   const value = Number(field.value);
   const inside =
     String(field.value).trim() !== "" &&
     Number.isFinite(value) &&
     (min === undefined || value >= min) &&
     (max === undefined || value <= max);
-  return inside && number.step === 1 && !Number.isInteger(value)
+  return inside && control.step === 1 && !Number.isInteger(value)
     ? CONTROLS_COPY.wholeNumberError(min, max)
-    : CONTROLS_COPY.numberError(min, max, number.step);
+    : CONTROLS_COPY.numberError(min, max, control.step);
 }
 
 function fieldValue(

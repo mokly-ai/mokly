@@ -143,7 +143,7 @@ export function ShellMain(props: {
       id={mainId}
     >
       {props.view.kind === "home" ? (
-        <HomeState summary={homeSummary(props.catalogue.entries)} />
+        <HomeState summary={homeSummary(props.catalogue.publicModel)} />
       ) : null}
       {props.view.kind === "missing" ? (
         <MissingRouteState requested={props.view.requested} />

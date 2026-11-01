@@ -99,7 +99,6 @@ export function resolveWorkspaceView(
     displayedViews: resolved.views,
     fallbackComparisonEligible: selection.comparisonEligible,
     fallbackStatus: selection.variant?.status ?? data.status,
-    kind: data.entry.kind,
     states,
   });
   // The routed entry's detail decides; a parent route selects its own row.
@@ -133,7 +132,7 @@ function affectedViewShown(
         (state) =>
           state.viewport === view.viewport &&
           state.colorScheme === view.colorScheme &&
-          (state.state === "unchanged" || state.state === "ignored-only"),
+          state.comparison.kind === "unmodified",
       ) === true,
   );
 }

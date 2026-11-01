@@ -15,10 +15,7 @@ import type { ComponentControl } from "../components/control_types.js";
 import { optionalProperty } from "../components/props.js";
 
 import { CONTROLS_COPY } from "./component_controls_copy.js";
-import {
-  effectiveNumberControl,
-  numberInputBounds,
-} from "./control_numbers.js";
+import { numberInputBounds } from "./control_numbers.js";
 import {
   controlEntries,
   type ControlDraft,
@@ -73,22 +70,18 @@ export function ComponentControlFields({
         const field = draft[key]!;
         const label =
           control.label ?? target.propSchema.properties?.[key]?.title ?? key;
-        const shown =
-          control.kind === "number"
-            ? effectiveNumberControl(target, key, control)
-            : control;
         const bounds =
-          shown.kind === "number" ? numberInputBounds(shown) : undefined;
+          control.kind === "number" ? numberInputBounds(control) : undefined;
         const help =
           control.description ??
           target.propSchema.properties?.[key]?.description ??
-          (shown.kind === "number"
-            ? CONTROLS_COPY.range(bounds?.min, bounds?.max, shown.step)
+          (control.kind === "number"
+            ? CONTROLS_COPY.range(bounds?.min, bounds?.max, control.step)
             : "");
         const error = errors[key];
         return (
           <PropField
-            control={fieldControl(shown)}
+            control={fieldControl(control)}
             description={help}
             disabled={disabled}
             error={error}

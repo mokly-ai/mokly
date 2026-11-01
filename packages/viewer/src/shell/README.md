@@ -79,9 +79,9 @@ removing the row from flat fallback, so a former parent that is now a variant
 or another kind cannot make its historical child disappear and every removed
 entry remains represented once. A removed page or document is a flat row
 that only Changes shows; All and search hide it. Current section nodes use the
-shared folder-first comparator; flat removed rows use the combined ordering in
-the
-[variant navigation contract](../../../../docs/protocol/mokly-variant-navigation.md).
+shared folder-first comparator. Flat removed rows keep `removedEntries` order,
+with each removed parent's variants directly after it, under the
+[serialization contract](../../../../docs/protocol/mokly-catalogue-serialization.md#canonical-bytes).
 Specs and Components keep independent section roots even when they reuse the
 same folder paths. `filterHierarchy` orders each section again by the rows it
 shows, applying the `order` each folder node carries, so a screen or component
@@ -90,8 +90,8 @@ that is its folder's own page sorts as a folder row in the other section.
 using resolved titles from `registry/folder_titles.ts`. Row visibility,
 Changes activation and route reveals all use that shared query and row, and
 `nav_rows.ts` counts each folder's child rows with the same visibility.
-`home_summary.ts` builds the home summary from a type-checked label for every
-entry kind. The [shell layout contract](../../../../docs/protocol/mokly-shell-design.md#layout)
+`home_summary.ts` uses each index entry array's length and a type-checked label
+for every entry kind. The [shell layout contract](../../../../docs/protocol/mokly-shell-design.md#layout)
 owns both rules.
 `crumbs.ts` derives breadcrumbs from the same tree: a folder with its own page
 links to it, a visible folder without one becomes a button that
@@ -135,7 +135,7 @@ static build, the source path of a current document; a removed entry keeps
 plain labels.
 
 `view_marks.ts` is the shared vocabulary for per-view change evidence: the two
-axes that name a view, their canonical order and reader label, and the rule
+axes that name a view, their reader labels, and the rule
 that decides whether the theme and viewport controls carry a mark.
 `workspace_views.ts` resolves the requested axes to the views actually shown,
 including Dark-to-Light fallback, and carries the matching status, comparison
@@ -151,12 +151,15 @@ those lists by component variant path or screen path, and
 reader selects the evidence that belongs to the preview;
 `@mokly/ui/change-mark` draws the dot and clips its wording, and
 `@mokly/ui/view-controls` mutes the dot on a disabled control.
-The parallel `viewStates` map stores `{ viewport, colorScheme, state }` for each
-ready view under the same key, while a missing key means per-view status is
+The parallel `viewStates` map keeps each ready view's axes and index
+`comparison`, including `kind` and `eligible`, in index order under the same
+key. A missing key means per-view status is
 unknown. `workspace_views.ts` resolves documents actually displayed after
 Light fallback. `view_status.ts` returns status, eligibility, and evidence
-provenance together; missing or partial matching evidence retains the selected
-entry's fallback status and eligibility. `publicWorkspace` sets
+provenance together. It combines the shown comparisons in Changed, Added,
+Removed, Unmodified order and uses the chosen comparison's eligibility.
+Missing or partial matching evidence retains the selected entry's fallback
+status and eligibility. `publicWorkspace` sets
 `affectedComparison` when the routed entry's detail marks it
 comparison-eligible and names the changed components that affect it, in or out
 of Changes. `workspace_views.ts` then keeps the comparison eligible for each
@@ -443,8 +446,9 @@ and `component_control_fields.tsx` derives each control's field, which
 `@mokly/ui/prop-field` lays out as a row, its name in
 a label column and then its value, help, and error, as the
 [controls design](../../../../docs/protocol/mokly-component-controls-design.md)
-draws them;
-the focused `workspace_*` containers turn evidence, usage, instances and
+draws them. Numeric fields use the effective bounds and step of the index's `controls`.
+`control_numbers.ts` aligns those bounds with the HTML input's zero-based step.
+The focused `workspace_*` containers turn evidence, usage, instances and
 supplied props into the records of the package's panels. `@mokly/ui/inspector`
 owns the tab keys and returns focus from Close to the tab pressed last.
 `inspector.tsx` closes the inspector the same way on Escape anywhere in its
