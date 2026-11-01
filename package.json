@@ -97,6 +97,18 @@
     "yarn": "1.22.22"
   },
   "overrides": {
+    "@google-automations/git-file-utils": {
+      "minimatch": "11.0.3"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "11.0.3"
+    },
+    "code-suggester": {
+      "minimatch": "11.0.3"
+    },
+    "eslint": {
+      "minimatch": "11.0.3"
+    },
     "miniflare": {
       "undici": "7.30.1"
     }
