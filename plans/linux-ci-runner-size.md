@@ -466,14 +466,19 @@ Depends on: every other milestone
       runs on that tier.
 - [x] Delete `plans/follow-ups/linux-ci-runner-size.md`, and name it in the
       commit message.
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`. The
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`. The
       remote gate of milestone 3 counts when it ran on the final tree.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+  - The remote gate passed at `cc9e7450`. The later commits change only
+    Markdown under `plans/`, so the `finish-work` skill needs no new gate.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+  - Round 1 at `654db1c4` found no finding, so no fix round ran. Its one
+    problem outside the scope is the item
+    `flaky-static-delivery-catalogue-request.md`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives these parts:
