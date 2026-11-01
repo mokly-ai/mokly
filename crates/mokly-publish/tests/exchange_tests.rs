@@ -8,6 +8,7 @@ use mokly_model::output::validation::{MARKER, digest};
 use mokly_publish::completion::Outcome;
 use mokly_publish::exchange::{Client, Exchange};
 use mokly_publish::http::ReqwestHttp;
+use mokly_publish::redaction::Secret;
 use mokly_publish::runtime::{CommandCancellation, SilentReporter, SystemClock};
 use mokly_publish::settings::Settings;
 use mokly_publish::snapshot::Prepared;
@@ -126,7 +127,7 @@ async fn finalized_output_is_uploaded_and_a_second_publication_keeps_the_first()
         }));
         let settings = Settings::new(
             &format!("{}/custom/plan?query=kept=2", server.origin),
-            "secret/a==".to_owned(),
+            Secret::new("secret/a=="),
             2,
         )
         .unwrap();
@@ -177,7 +178,7 @@ async fn failed_upload_keeps_the_complete_installed_byte_snapshot() {
     }));
     let settings = Settings::new(
         &format!("{}/plan", server.origin),
-        "secret/a==".to_owned(),
+        Secret::new("secret/a=="),
         8,
     )
     .unwrap();

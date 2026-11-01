@@ -27,7 +27,7 @@ the pinned commit's attributes.
 
 ## Cancellation And Fetch
 
-Cancellation requests SIGTERM for the whole process group, then SIGKILL after
+Cancellation requests SIGTERM for the owned process tree, then SIGKILL after
 one second if it remains. Windows uses the owned job. A command settles after
 the process and its pipes close. A Git helper process never outlives its
 command. The

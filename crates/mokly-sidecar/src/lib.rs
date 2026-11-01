@@ -33,6 +33,7 @@ mod presentation;
 pub mod process_clock;
 mod process_completion;
 mod process_control;
+mod process_environment;
 pub mod process_factory;
 mod process_io;
 pub mod process_memory;

@@ -1,6 +1,7 @@
 //! Public grammar acceptance and command restrictions.
 
 use clap::CommandFactory;
+use mokly_publish::redaction::Secret;
 
 use crate::errors::Failure;
 use crate::grammar::{Cli, Verb};
@@ -21,59 +22,71 @@ fn clap_grammar_is_consistent_and_help_is_plain() {
 
 #[test]
 fn every_command_accepts_its_complete_option_set() {
-    for arguments in [
-        vec![
-            "mokly",
-            "--config=a.json",
-            "--base=-topic",
-            "--port=0",
-            "--watch",
-            "--open",
-            "--base-install-scripts",
-            "--sidecars=1",
-            "--debug-timings",
-        ],
-        vec![
-            "mokly",
-            "serve",
-            "--config",
-            "a.json",
-            "--base",
-            "origin/main",
-            "--port",
-            "65535",
-            "--no-watch",
-            "--open",
-            "--no-base-install-scripts",
-            "--sidecars",
-            "1",
-            "--debug-timings",
-        ],
-        vec![
-            "mokly",
-            "build",
-            "--config=a.json",
-            "--out=-directory",
-            "--base=main",
-            "--strict",
-            "--base-install-scripts",
-            "--sidecars=1",
-            "--debug-timings",
-        ],
-        vec!["mokly", "build", "--no-changes"],
-        vec![
-            "mokly",
-            "publish",
-            "--endpoint=https://example.com/plan?a=b=c",
-            "--token=-TOKEN==",
-            "--repository=git.example.com/group/project",
-            "--upload-concurrency=32",
-            "--strict",
-            "--no-changes",
-            "--no-base-install-scripts",
-            "--sidecars=1",
-            "--debug-timings",
-        ],
+    for (arguments, expected_scripts_override) in [
+        (
+            vec![
+                "mokly",
+                "--config=a.json",
+                "--base=-topic",
+                "--port=0",
+                "--watch",
+                "--open",
+                "--base-install-scripts",
+                "--sidecars=1",
+                "--debug-timings",
+            ],
+            Some(true),
+        ),
+        (
+            vec![
+                "mokly",
+                "serve",
+                "--config",
+                "a.json",
+                "--base",
+                "origin/main",
+                "--port",
+                "65535",
+                "--no-watch",
+                "--open",
+                "--no-base-install-scripts",
+                "--sidecars",
+                "1",
+                "--debug-timings",
+            ],
+            Some(false),
+        ),
+        (
+            vec![
+                "mokly",
+                "build",
+                "--config=a.json",
+                "--out=-directory",
+                "--base=main",
+                "--strict",
+                "--base-install-scripts",
+                "--sidecars=1",
+                "--debug-timings",
+            ],
+            Some(true),
+        ),
+        (vec!["mokly", "build", "--no-changes"], None),
+        (
+            vec![
+                "mokly",
+                "publish",
+                "--endpoint=https://example.com/plan?a=b=c",
+                "--token=-TOKEN==",
+                "--repository=git.example.com/group/project",
+                "--upload-concurrency=32",
+                "--strict",
+                "--no-changes",
+                "--no-base-install-scripts",
+                "--sidecars=1",
+                "--debug-timings",
+            ],
+            Some(false),
+        ),
     ] {
         let mut cli = try_parse(&arguments).unwrap();
         validate(
@@ -84,6 +97,11 @@ fn every_command_accepts_its_complete_option_set() {
             },
         )
         .unwrap();
+        assert_eq!(
+            cli.common().base_install_scripts_override(),
+            expected_scripts_override,
+            "arguments={arguments:?}",
+        );
     }
     let environment = Environment {
         cores: 4,
@@ -94,6 +112,7 @@ fn every_command_accepts_its_complete_option_set() {
     validate(&mut default, &environment).unwrap();
     assert!(default.serve.watch);
     assert_eq!(default.serve.port, Some(4173));
+    assert_eq!(default.common().base_install_scripts_override(), None);
     let mut snapshot = try_parse(["mokly", "serve", "--no-watch", "--port=0"]).unwrap();
     validate(&mut snapshot, &environment).unwrap();
     let Some(Verb::Serve(snapshot)) = snapshot.command else {
@@ -142,14 +161,14 @@ fn environment_fallbacks_and_resource_limits_are_validated() {
         sidecars: Some("2".into()),
         sidecar_timeout_ms: None,
         endpoint: Some("https://example.com/plan".into()),
-        token: Some("secret==".into()),
+        token: Some(Secret::new("secret==")),
     };
     validate(&mut cli, &environment).unwrap();
     assert_eq!(cli.common().sidecars, Some(2));
     let Some(Verb::Publish(publish)) = cli.command else {
         panic!()
     };
-    assert_eq!(publish.token.as_deref(), Some("secret=="));
+    assert_eq!(publish.token.as_ref().map(Secret::expose), Some("secret=="));
     for (name, value) in [
         ("--token", "bad token"),
         ("--token", "=abc"),
@@ -213,4 +232,44 @@ fn timeout_environment_is_parsed_once_and_retained_for_the_pool() {
             Err(Failure::SidecarTimeoutEnvironment)
         ));
     }
+}
+
+#[test]
+fn cli_publish_debug_does_not_expose_raw_tokens() {
+    let mut cli = try_parse(["mokly", "publish", "--token=probe-secret-181"]).unwrap();
+    assert!(!format!("{cli:?}").contains("probe-secret-181"));
+    let Some(Verb::Publish(publish)) = &cli.command else {
+        panic!()
+    };
+    assert!(!format!("{publish:?}").contains("probe-secret-181"));
+
+    validate(
+        &mut cli,
+        &Environment {
+            endpoint: Some("https://example.com/plan".into()),
+            cores: 1,
+            ..Environment::default()
+        },
+    )
+    .unwrap();
+    let Some(Verb::Publish(publish)) = &cli.command else {
+        panic!()
+    };
+    assert!(!format!("{publish:?}").contains("probe-secret-181"));
+
+    let mut environment_cli = try_parse(["mokly", "publish"]).unwrap();
+    validate(
+        &mut environment_cli,
+        &Environment {
+            endpoint: Some("https://example.com/plan".into()),
+            token: Some(Secret::new("probe-secret-181")),
+            cores: 1,
+            ..Environment::default()
+        },
+    )
+    .unwrap();
+    let Some(Verb::Publish(publish)) = &environment_cli.command else {
+        panic!()
+    };
+    assert!(!format!("{publish:?}").contains("probe-secret-181"));
 }

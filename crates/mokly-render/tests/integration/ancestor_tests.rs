@@ -133,6 +133,7 @@ fn base_alias_and_bare_imports_use_the_base_ancestor_copy_for_javascript_and_css
         head.runtime.workers.clone(),
         head.runtime.version.clone(),
         Some(Arc::new(BaseSide {
+            working_root: head.repository(),
             sources: Arc::new(Lease {
                 directory: base.root().into(),
                 guard: Box::new(Unimock::new(())),
@@ -152,6 +153,7 @@ fn base_alias_and_bare_imports_use_the_base_ancestor_copy_for_javascript_and_css
                 lease: None,
                 repository_roots: vec![head.root().into(), installed.root().into()],
             },
+            cache_namespace: None,
             identity: "base".into(),
         })),
     ));

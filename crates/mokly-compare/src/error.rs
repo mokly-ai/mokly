@@ -55,13 +55,9 @@ pub enum Error {
     Base {
         /// Pinned historical commit.
         commit: String,
+        /// Dependencies came from a tier-two install with lifecycle scripts off.
+        scripts_off: bool,
         /// Typed validation or preparation failure.
-        source: Box<Error>,
-    },
-    /// Base rendering failed after a scripts-off tier-two install.
-    #[error("{source}")]
-    BaseInstallScripts {
-        /// Original base preparation failure.
         source: Box<Error>,
     },
     /// Catalogue configuration or historical sources failed current validation.

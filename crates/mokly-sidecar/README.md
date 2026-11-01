@@ -81,9 +81,12 @@ recycles under the render-count and resident-memory rules of the
 PostCSS timeout diagnostics include phase timings for child spawn,
 configuration load, plugin construction, and the latest stylesheet run.
 
-`NodeFactory` uses the selected source working directory and sets `PWD` to it.
-It omits `INIT_CWD`, `npm_package_json`, and `npm_config_local_prefix`. Other
-environment values are inherited. The source directory uses
+`NodeFactory` uses the selected source working directory. It removes every
+inherited variable whose name starts with `MOKLY_`, matched without case on
+Windows, and `INIT_CWD`, `npm_package_json`, and `npm_config_local_prefix`.
+Then it sets `PWD` to that directory and `MOKLY_POSTCSS_PHASES=1`. Other
+environment values are inherited, and PostCSS children inherit this
+environment. The source directory uses
 `dunce::canonicalize` for Windows path compatibility. A missing source
 directory names that directory in the unavailable result. It uses a persistent
 launch thread for Linux parent-death signals. The Node watchdog observes
@@ -213,6 +216,8 @@ spawn the built sidecar and render a component, screen, story, and page. The
   of each `bundle` call.
 - [`src/process_factory.rs`](./src/process_factory.rs) defines `NodeFactory`,
   the `WorkerFactory` that starts Node with whole-tree ownership.
+- [`src/process_environment.rs`](./src/process_environment.rs) holds the pure
+  environment rule that `NodeFactory` applies to each sidecar command.
 - [`src/workers.rs`](./src/workers.rs) defines the injected `WorkerFactory`,
   `Worker`, `Clock`, and `Diagnostics` traits.
 - [`src/process_clock.rs`](./src/process_clock.rs) and

@@ -8,9 +8,20 @@ are resolved to real filesystem paths before identity and confinement checks.
 
 Each process keeps one source working directory for its whole lifetime,
 including delayed callbacks. The working directory and `PWD` name the
-canonical source directory. Sidecars and PostCSS children omit `INIT_CWD`,
-`npm_package_json`, and `npm_config_local_prefix`. Other environment values
-are inherited.
+canonical source directory.
+
+Sidecars and PostCSS children omit every inherited variable whose name starts
+with `MOKLY_`, and `INIT_CWD`, `npm_package_json`, and
+`npm_config_local_prefix`. Mokly then sets its own names, such as
+`MOKLY_POSTCSS_PHASES`. Windows matches the prefix without case. Other
+environment values are inherited. The
+[token exposure rule](./mokly-upload.md#token-exposure) states the result for
+the publish token and the limit of this protection.
+
+Decision: one removed prefix keeps every other variable. An allowed list as
+for [base installs](./mokly-base-install-processes.md#environment)
+was rejected, because consumer PostCSS settings and render code read other
+variables.
 
 A process serves one source root. A request for another root replaces the
 process before replay, and a debug event records the slot and both roots. All

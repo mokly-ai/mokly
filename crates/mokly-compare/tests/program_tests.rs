@@ -32,6 +32,7 @@ fn relative_path_probe() {
     let result = spawner.spawn(&mokly_compare::commands::Command {
         program: "npm".into(),
         args: vec!["--version".into()],
+        scripts: false,
         directory: temporary.path().to_owned(),
         timeout: std::time::Duration::from_secs(120),
         byte_limit: None,
@@ -78,6 +79,7 @@ fn interpreter_probe() {
         .spawn(&mokly_compare::commands::Command {
             program: "npm".into(),
             args: vec!["--version".into()],
+            scripts: false,
             directory: temporary.path().to_owned(),
             timeout: std::time::Duration::from_secs(120),
             byte_limit: None,
@@ -130,6 +132,7 @@ fn install_environment_removes_mokly_token() {
         .spawn(&mokly_compare::commands::Command {
             program: "npm".into(),
             args: vec!["--version".into()],
+            scripts: false,
             directory: temporary.to_owned(),
             timeout: std::time::Duration::from_secs(120),
             byte_limit: None,
@@ -210,6 +213,7 @@ fn cancellation_kills_a_script_child_tree() {
     let command = mokly_compare::commands::Command {
         program: script.into_os_string(),
         args: Vec::new(),
+        scripts: false,
         directory: temporary.path().to_owned(),
         timeout: std::time::Duration::from_secs(120),
         byte_limit: None,

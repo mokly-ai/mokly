@@ -98,6 +98,7 @@ fn frontend_installs_with_or_without_an_independent_root_install() {
                     ]
                     .map(Into::into)
                     .to_vec(),
+                    scripts: false,
                     directory: root.join(package_root),
                     timeout: Duration::from_secs(120),
                     byte_limit: None,

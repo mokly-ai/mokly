@@ -7,10 +7,59 @@ use std::time::Duration;
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
 use mokly_catalogue::working_tree::WorkingTree;
+use mokly_watch::backend::{NativeEvents, NotifyFactory, WatchFactory};
 use mokly_watch::event::{Action, Event};
 use mokly_watch::native::NativeObserver;
 use mokly_watch::observer::Observer;
 use mokly_watch::plan::Plan;
+use tokio::sync::mpsc;
+
+struct CapturedEvents(mpsc::UnboundedSender<notify::Result<notify::Event>>);
+
+impl NativeEvents for CapturedEvents {
+    fn send(&self, event: notify::Result<notify::Event>) {
+        let _ = self.0.send(event);
+    }
+}
+
+#[tokio::test]
+async fn path_update_skips_a_vanished_directory_and_attaches_later_directories() {
+    let root = tempfile::tempdir().unwrap();
+    let first = root.path().join("01-first");
+    let vanished = root.path().join("02-vanished");
+    let last = root.path().join("03-last");
+    fs::create_dir(&first).unwrap();
+    fs::create_dir(&vanished).unwrap();
+    fs::create_dir(&last).unwrap();
+    fs::remove_dir(&vanished).unwrap();
+
+    let factory = NotifyFactory {
+        tree: Arc::new(WorkingTree),
+    };
+    let (events_tx, mut events_rx) = mpsc::unbounded_channel();
+    let mut watcher = factory.create(Arc::new(CapturedEvents(events_tx))).unwrap();
+    let attached = watcher
+        .update(
+            &BTreeSet::from([first.clone(), vanished, last.clone()]),
+            &BTreeSet::new(),
+        )
+        .unwrap();
+
+    assert_eq!(attached, BTreeSet::from([first, last.clone()]));
+    let source = last.join("after-vanished");
+    fs::write(&source, "observed").unwrap();
+    let event = tokio::time::timeout(Duration::from_secs(15), async {
+        loop {
+            let event = events_rx.recv().await.unwrap().unwrap();
+            if event.paths.contains(&source) {
+                return event;
+            }
+        }
+    })
+    .await
+    .expect("the directory after the vanished path must deliver events");
+    assert!(event.paths.contains(&source));
+}
 
 async fn wait(observer: &dyn Observer, suffix: &str) -> Event {
     tokio::time::timeout(Duration::from_secs(15), async {

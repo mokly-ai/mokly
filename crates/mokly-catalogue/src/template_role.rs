@@ -69,4 +69,20 @@ impl<'a> TemplateRole<'a> {
             Self::SavedSlot { source, .. } => source.clone(),
         }
     }
+
+    /// Locate an HTML substitution without changing other diagnostic coordinates.
+    pub(crate) fn substitution_location(
+        self,
+        template: &Template,
+        offset: usize,
+    ) -> SourceLocation {
+        match self {
+            Self::EntryBody { .. } => crate::locations::html_at(
+                &template.source_path,
+                &template.source,
+                template.body_offset + offset,
+            ),
+            Self::SavedSlot { source, .. } => source.clone(),
+        }
+    }
 }
