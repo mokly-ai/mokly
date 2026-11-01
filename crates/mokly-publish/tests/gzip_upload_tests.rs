@@ -15,6 +15,7 @@ use mokly_model::output::validation::{MANIFEST, MARKER};
 use mokly_publish::completion::Outcome;
 use mokly_publish::exchange::{Client, Exchange};
 use mokly_publish::http::ReqwestHttp;
+use mokly_publish::redaction::Secret;
 use mokly_publish::runtime::{Clock, CommandCancellation, SilentReporter, Timer};
 use mokly_publish::settings::Settings;
 use mokly_publish::snapshot::Prepared;
@@ -132,7 +133,7 @@ async fn run_receiver(list_gzip: bool) -> (Vec<Request>, BTreeMap<String, Bytes>
         Response::json(200, serde_json::to_vec(&document).unwrap())
     }));
     let settings =
-        Settings::new(&format!("{}/plan", server.origin), "secret".to_owned(), 2).unwrap();
+        Settings::new(&format!("{}/plan", server.origin), Secret::new("secret"), 2).unwrap();
     let client = Client {
         http: Arc::new(ReqwestHttp::new().unwrap()),
         clock: Arc::new(FixedClock),

@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use mokly_source_interface::tree::{FileKind, SourceTree};
 
 use crate::config::{invalid_path_text, normalize, relative};
+use crate::config_links;
 use crate::config_postcss;
 use crate::config_types::ResolvedConfig;
 use crate::config_validation::invalid;
@@ -97,7 +98,14 @@ pub(crate) fn validate_inputs(
 ) -> Result<Vec<PathBuf>> {
     let mut sources = config_postcss::validate(tree, config)?;
     if let Some(path) = &config.input.renderer {
-        sources.extend(confined(tree, config, "renderer", path, false)?);
+        sources.extend(confined(
+            tree,
+            config,
+            "renderer",
+            path,
+            false,
+            LinkDiagnostic::KeepExisting,
+        )?);
     }
     for (index, rule) in config.input.stylesheets.iter().flatten().enumerate() {
         for list in [
@@ -116,6 +124,7 @@ pub(crate) fn validate_inputs(
                         &format!("stylesheets[{index}]"),
                         path,
                         false,
+                        LinkDiagnostic::KeepExisting,
                     )?);
                 }
             }
@@ -128,6 +137,7 @@ pub(crate) fn validate_inputs(
             &format!("moduleResolution.packageRoots[{index}]"),
             path,
             true,
+            LinkDiagnostic::NameLink,
         )?;
         if !has_manifest(tree, config, path) {
             return Err(invalid(format!(
@@ -174,12 +184,22 @@ pub(crate) fn validate_inputs(
     Ok(sources)
 }
 
+/// Only package roots name unresolved links under user decision 174 C.
+#[derive(Clone, Copy)]
+enum LinkDiagnostic {
+    /// Keep the existing messages for renderer modules and local stylesheets.
+    KeepExisting,
+    /// Name the unresolved link when a package root fails validation.
+    NameLink,
+}
+
 fn confined(
     tree: &dyn SourceTree,
     config: &ResolvedConfig,
     setting: &str,
     value: &str,
     directory: bool,
+    link_diagnostic: LinkDiagnostic,
 ) -> Result<Vec<PathBuf>> {
     if invalid_path_text(value) || value.contains(':') {
         return Err(invalid(format!(
@@ -192,6 +212,12 @@ fn confined(
         Err(error) => return Err(invalid(format!("{setting}: {value}: {}", error.code()))),
     };
     let Some(node) = node else {
+        if matches!(link_diagnostic, LinkDiagnostic::NameLink)
+            && let Some(error) =
+                config_links::link_error(tree, &path, &config.repo_root, setting, value)
+        {
+            return Err(error);
+        }
         return Err(invalid(format!("{setting}: {value} does not exist")));
     };
     let expected = if directory {
@@ -203,6 +229,12 @@ fn confined(
         return Err(invalid(format!("{setting}: {value} is outside repoRoot")));
     }
     if node.kind != expected {
+        if matches!(link_diagnostic, LinkDiagnostic::NameLink)
+            && let Some(error) =
+                config_links::link_error(tree, &path, &config.repo_root, setting, value)
+        {
+            return Err(error);
+        }
         return Err(invalid(format!(
             "{setting}: {value} must be a {}",
             if directory {

@@ -2,9 +2,10 @@
 
 use mokly_model::catalogue::{EntryContent, ModelEntry};
 use mokly_model::controls;
+use mokly_model::limits::pointer;
 use mokly_model::validation::accepts;
 
-use crate::diagnostic::{Warning, WarningSubject};
+use crate::diagnostic::{Warning, WarningSubject, json_quoted};
 
 pub(crate) fn collect(entries: &[ModelEntry]) -> Vec<Warning> {
     let mut warnings = Vec::new();
@@ -28,13 +29,21 @@ pub(crate) fn collect(entries: &[ModelEntry]) -> Vec<Warning> {
                 && let Some(property) = properties.get(key)
                 && !accepts(property, value)
             {
+                let path = pointer("", key);
                 warnings.push(Warning {
                     code: "props-control-bounds",
                     subject: subject.clone(),
-                    message: format!("saved prop {key:?} is outside its control bounds"),
+                    message: format!(
+                        "saved prop {} is outside its control bounds",
+                        json_quoted(&path)
+                    ),
                 });
             }
         }
     }
     warnings
 }
+
+#[cfg(test)]
+#[path = "_tests_/control_warnings_tests.rs"]
+mod control_warnings_tests;

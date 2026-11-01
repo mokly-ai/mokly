@@ -6,6 +6,7 @@ use std::sync::Arc;
 
 use mokly_source_interface::tree::{FileKind, Node, SourceTree};
 
+use crate::config_links;
 use crate::config_paths::{configuration_alias, validate_inputs};
 use crate::config_types::{ResolvedConfig, ResolvedRoot, RootConfig};
 use crate::config_validation::{invalid, parse};
@@ -136,6 +137,15 @@ impl ConfigLoader for Loader {
         let mut roots = Vec::new();
         for (index, (root, path, node)) in projected.into_iter().enumerate() {
             let Some(node) = node.filter(|node| node.kind == FileKind::Directory) else {
+                if let Some(error) = config_links::link_error(
+                    self.tree.as_ref(),
+                    &path,
+                    &repository,
+                    &format!("roots[{index}].dir"),
+                    &root.dir,
+                ) {
+                    return Err(error);
+                }
                 return Err(invalid(format!(
                     "roots[{index}].dir: root is not an existing directory: {}",
                     root.dir

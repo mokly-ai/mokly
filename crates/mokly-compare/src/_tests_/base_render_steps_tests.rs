@@ -8,6 +8,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::base_render::{
     BaseProviderMock, BaseSourceFactoryMock, Changes, ChangesService, HistoricalSources,
+    PreparedBase,
 };
 use crate::base_selection::PinnedBase;
 use crate::comparison_steps::{Step, StepsMock};
@@ -32,7 +33,12 @@ fn reading_starts_before_base_preparation_and_comparing_after_the_base_capture()
             }),
         BaseProviderMock::prepare
             .next_call(matching!(_))
-            .answers(&|boundaries, _| Ok(Arc::new(boundaries.clone()))),
+            .answers(&|boundaries, _| {
+                Ok(PreparedBase {
+                    generation: Arc::new(boundaries.clone()),
+                    scripts_off: false,
+                })
+            }),
         SourceFailuresMock::failure
             .next_call(matching!())
             .returns(None),
