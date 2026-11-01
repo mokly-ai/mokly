@@ -38,7 +38,7 @@ fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/mokly\"" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo test --workspace" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run typecheck" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run typecheck:ci" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run test:viewer:prepared" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run test:browser:prepared" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run test:delivery:prepared" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
@@ -61,7 +61,7 @@ fn selected_viewer_builds_then_checks_and_tests() {
             .next_call(matching!((command) if command.display() == "npm run build" && command.working_directory() == Some(Path::new("/workspace"))))
             .returns(Ok(())),
         CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "npm run typecheck"))
+            .next_call(matching!((command) if command.display() == "npm run typecheck:ci"))
             .returns(Ok(())),
         CommandRunnerRunMock
             .next_call(matching!((command) if command.display() == "npm run test:viewer:prepared"))

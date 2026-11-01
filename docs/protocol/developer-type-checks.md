@@ -1,7 +1,5 @@
 # Developer Type Checks
 
-Status: In progress under the [required Bun typechecking plan](../../plans/bun-ci-typechecking.md).
-
 Continuation of [Developer Test Commands](./developer-test-commands.md).
 
 ## Commands And Projects
@@ -32,9 +30,10 @@ relative to the repository root.
 
 ## Required Type Check
 
-`.bun-version` at the repository root holds the pin. The pin is the one exact
-Bun version that the required check accepts: `1.4.4`. The pin is invalid when
-the file is missing or unreadable, or when it holds no exact version.
+[`.bun-version`](../../.bun-version) at the repository root holds the pin.
+The pin is the one exact Bun version that the required check accepts: `1.4.4`.
+The pin is invalid when the file is missing or unreadable, or when it holds no
+exact version.
 
 `npm run typecheck:ci` is the type check of the Viewer suite. Every gate runs
 it through that suite: the local and remote complete gates, hosted CI, and the
@@ -127,16 +126,16 @@ disagree with the required check.
 ## Bun Provisioning
 
 Bun stays outside the npm dependencies and has no Bun lockfile. No type check
-command installs or downloads Bun. Each host installs the pinned version before
+command installs or downloads Bun. Each host sets up the pinned version before
 it runs the Viewer suite:
 
 - A developer installs it on each machine, and again after a pin change, as
   the [development guide](../development/README.md) shows.
-- Each hosted viewer job installs it under the
+- Each hosted viewer job sets it up under the
   [CI workflow contract](./ci-workflow.md#job-execution).
 - Each remote viewer command installs it on its box under the
   [suite wrapper contract](./remote-verification-testbox.md#suite-wrapper).
-- Release preparation installs it before a complete gate under the
+- Release preparation sets it up before a complete gate under the
   [release evidence contract](./npm-release-evidence.md#verification-modes).
 
 A Bun dev dependency would give every install the pinned Bun. It was rejected,

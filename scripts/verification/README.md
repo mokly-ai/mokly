@@ -1,7 +1,5 @@
 # Verification scripts
 
-Status: In progress under the [required Bun typechecking plan](../../plans/bun-ci-typechecking.md).
-
 The Cargo task runner calls these scripts for repository, viewer, browser, and
 dependency verification. The [development guide](../../docs/development/README.md)
 describes the complete gate and focused commands.
@@ -12,14 +10,21 @@ Public test commands and strict evidence rules live in the
 
 - [`run-viewer.mjs`](./run-viewer.mjs) runs the viewer suite for `npm test`
   and, with `--strict`, for `npm run test:viewer:prepared`.
-- [`typecheck.mjs`](./typecheck.mjs) runs the standard `npm run typecheck`,
-  the fast `npm run typecheck:fast`, and the required `npm run typecheck:ci`,
-  under the [type check contract](../../docs/protocol/developer-type-checks.md).
+- [`typecheck.mjs`](./typecheck.mjs) runs `npm run typecheck`,
+  `npm run typecheck:fast` with `--fast`, and `npm run typecheck:ci` with
+  `--ci`, under the
+  [type check contract](../../docs/protocol/developer-type-checks.md).
 - [`typecheck-runner.mjs`](./typecheck-runner.mjs) holds `runTypecheck` and the
   ordered project inventory that every type check command checks.
+- [`typecheck-ci-runner.mjs`](./typecheck-ci-runner.mjs) holds
+  `runRequiredTypecheck`, which accepts only the pinned Bun and never falls
+  back to the standard check.
 - [`typecheck-fast-runner.mjs`](./typecheck-fast-runner.mjs) holds
   `runFastTypecheck`, which selects Bun's native checker or the standard
   fallback.
+- [`bun-pin.mjs`](./bun-pin.mjs) holds `readBunPin`, the one reader of the
+  exact version in [`.bun-version`](../../.bun-version). The required check,
+  the fast fallback hint, and the Testbox wrapper use it.
 - [`browser-developer.mjs`](./browser-developer.mjs) runs the selected
   Playwright specs of `npm run test:browser` after it checks the build.
 - [`run-browser.mjs`](./run-browser.mjs) runs the strict browser suite, or one
@@ -34,8 +39,9 @@ Public test commands and strict evidence rules live in the
   `runRepositoryRatchets`, which runs every maintainability ratchet of the
   Repository suite.
 - [`testbox-suite.mjs`](./testbox-suite.mjs) runs one suite command on a remote
-  Testbox. For the viewer command, it first installs the synced Bun pin into a
-  private prefix under `.context/`.
+  Testbox. For the viewer command, it first installs the synced Bun pin with
+  npm into `.context/testbox-bun`. Only the viewer suite gets that prefix's
+  `bin` directory, first on its `PATH`.
 
 ## Workflow syntax
 

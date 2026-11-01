@@ -15,6 +15,8 @@ test("staging runs after the fingerprint and before history and suite preparatio
     "git rev-parse --is-shallow-repository",
     "read:/repo/package-lock.json",
     `read:${harness.stamp}`,
+    "read:/repo/.bun-version",
+    `npm install --global --prefix ${harness.bunPrefix} bun@1.8.2`,
     "cargo xtask check --executor local --suite viewer",
   ]);
   assert.deepEqual(harness.commands[0], {

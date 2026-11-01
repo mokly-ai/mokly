@@ -1,7 +1,5 @@
 # CI Verification
 
-Status: In progress under the [required Bun typechecking plan](../../plans/bun-ci-typechecking.md).
-
 ## Verification Boundary
 
 `cargo xtask check` is the complete repository and release gate. The local

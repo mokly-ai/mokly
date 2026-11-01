@@ -25,8 +25,10 @@ export function testboxHarness() {
   );
   const files = new Map([
     [path.join("/repo", "package-lock.json"), lockfile],
+    [path.join("/repo", ".bun-version"), Buffer.from("1.8.2\n")],
     [stamp, Buffer.from(`${digest}\n`)],
   ]);
+  const bunPrefix = path.join("/repo", ".context", "testbox-bun");
   const commands: TestboxCommand[] = [];
   const events: string[] = [];
   const writes: Array<{ file: string; contents: string }> = [];
@@ -72,5 +74,6 @@ export function testboxHarness() {
     files,
     digest,
     stamp,
+    bunPrefix,
   };
 }

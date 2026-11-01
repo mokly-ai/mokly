@@ -1,7 +1,5 @@
 # CI Workflow Graph
 
-Status: In progress under the [required Bun typechecking plan](../../plans/bun-ci-typechecking.md).
-
 ## Workflow Boundary
 
 `.github/workflows/ci.yml` runs on pull requests, pushes to `main`, and manual
@@ -84,12 +82,12 @@ event-selected runtime profiles.
 
 Matrix jobs use `fail-fast: false`, so one failing shard does not erase evidence
 from its peers. Chromium is installed only in the browser and static-delivery
-jobs. In this workflow, Bun is installed only in the viewer jobs. Each viewer
-job installs it before the viewer suite with the official `oven-sh/setup-bun`
-action. The action reads the version from `.bun-version`, so the workflow
-holds no second copy of the pin. The
+jobs. In this workflow, only the viewer jobs set up Bun. Each viewer job sets
+it up before the viewer suite with the official `oven-sh/setup-bun` action.
+The action reads the version from `.bun-version`, so the workflow holds no
+second copy of the pin. The
 [cache rules](./ci-verification-security.md#dependency-cache-and-security)
-keep its download cache off. Every job that runs
+keep its workflow cache off. Every job that runs
 the binary builds it for its host from `rust-toolchain.toml`; Rust formatting,
 Clippy, and the complete Rust tests run in the repository job and in the native
 jobs. Native jobs build the checked-out `@mokly/mokly` sidecar package after

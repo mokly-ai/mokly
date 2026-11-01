@@ -1,7 +1,5 @@
 # Remote Verification: Testbox Execution
 
-Status: In progress under the [required Bun typechecking plan](../../plans/bun-ci-typechecking.md).
-
 Continuation of [Remote Verification](./remote-verification.md).
 
 ## Workflow
@@ -145,10 +143,10 @@ The suite wrapper runs these steps on each box, in this order:
 5. For the viewer command only, it reads the
    [Bun pin](./developer-type-checks.md#required-type-check) from the synced
    `.bun-version`. It runs `npm install --global --prefix <prefix> bun@<pin>`
-   with a new `<prefix>` directory under `.context/`. npm checks the registry
-   integrity of each package. An invalid pin or a failed install fails the
-   command before the suite starts. Only the viewer suite gets that prefix,
-   first on its `PATH`.
+   with a private `<prefix>` under the repository's `.context/`. npm checks the
+   registry integrity of each package. An invalid pin or a failed install fails
+   the command before the suite starts. Only the viewer suite gets the
+   prefix's `bin` directory, first on its `PATH`.
 6. It sets `MOKLY_VERIFICATION_REPORT` to
    `.context/verification-reports/remote/<command>.json` and runs
    `cargo xtask check --executor local --suite <suite>`, with

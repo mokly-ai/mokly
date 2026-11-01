@@ -179,17 +179,24 @@ Evidence: `.context/bun-ci-typechecking/hosted-m3-report.md`.
 
 Depends on: 2, 3
 
+Status: Complete.
+
 Make every required Viewer check use the new command with matching tools.
 
-- [ ] Install the synced pin before each remote Viewer command, using its private prefix.
-- [ ] Cover install success, install failure before the suite starts, and Viewer-only tool exposure.
-- [ ] Keep provisioning outside the typecheck commands and outside npm's root lockfile.
-- [ ] Route the Viewer gate to `typecheck:ci` after the existing build.
-- [ ] Preserve Node test entrypoints, inventory, evidence, runtime labels, and suite order.
-- [ ] Keep Repository, Browser, Native, and delivery gates on their existing runtimes.
-- [ ] Test gate routing and remote command preparation at their existing public boundaries.
-- [ ] Update the area READMEs and remove completed pending-behavior status lines.
-- [ ] Run focused checks and the early Repository suite.
+- [x] Install the synced pin before each remote Viewer command, using its private prefix.
+- [x] Cover install success, install failure before the suite starts, and Viewer-only tool exposure.
+- [x] Keep provisioning outside the typecheck commands and outside npm's root lockfile.
+- [x] Route the Viewer gate to `typecheck:ci` after the existing build.
+- [x] Preserve Node test entrypoints, inventory, evidence, runtime labels, and suite order.
+- [x] Keep Repository, Browser, Native, and delivery gates on their existing runtimes.
+- [x] Test gate routing and remote command preparation at their existing public boundaries.
+- [x] Update the area READMEs and remove completed pending-behavior status lines.
+- [x] Run focused checks and the early Repository suite.
+
+Code evidence: `.context/bun-ci-typechecking/remote-m4-report.md`.
+
+Docs evidence: `.context/bun-ci-typechecking/docs-m4-report.md`.
+Gate evidence: `.context/bun-ci-typechecking/early-repository.json`.
 
 ## Milestone 5: Verify and deliver
 
@@ -197,14 +204,14 @@ Depends on: 1, 2, 3, 4
 
 Verify the required checker and all gate consumers before the PR merges.
 
-- [ ] Build and smoke-test standard, optional fast, and pinned required commands.
-- [ ] Prove the local fallback still works when Bun is absent.
-- [ ] Prove the required command fails when the pinned checker is unavailable or different.
-- [ ] Check temporary type errors and preserve diagnostic paths and first-failure behavior.
-- [ ] Confirm native checking writes no compiled files and uses all five projects.
-- [ ] Save one-time timing and command evidence under `.context/bun-ci-typechecking/`.
-- [ ] Repeat each new asynchronous test ten times without adding retries to tests.
-- [ ] Check an older warmup preparation and older release-ref conditions without publishing.
+- [x] Build and smoke-test standard, optional fast, and pinned required commands.
+- [x] Prove the local fallback still works when Bun is absent.
+- [x] Prove the required command fails when the pinned checker is unavailable or different.
+- [x] Check temporary type errors and preserve diagnostic paths and first-failure behavior.
+- [x] Confirm native checking writes no compiled files and uses all five projects.
+- [x] Save one-time timing and command evidence under `.context/bun-ci-typechecking/`.
+- [x] Repeat each new asynchronous test ten times without adding retries to tests.
+- [x] Check an older warmup preparation and older release-ref conditions without publishing.
 - [ ] Run a real remote complete gate against the main warmup without Bun, or report the missing access.
 - [ ] Run formatting, lint, Markdown links, actionlint, and the complete gate with the pin.
 - [ ] Verify hosted Viewer logs actually run the pinned native checker under Node test profiles.
@@ -215,6 +222,9 @@ Verify the required checker and all gate consumers before the PR merges.
       findings as follow-up items, and re-review once after fixes.
 - [ ] Delete this plan under the `plans` skill after the required work and reviews finish.
 - [ ] Update PR #275 with the final CI behavior, dated decisions, and plan permalink.
+
+Smoke evidence: `.context/bun-ci-typechecking/smoke/`.
+Repeat evidence: `.context/bun-ci-typechecking/combined-repeats.json`.
 
 ## Evidence
 

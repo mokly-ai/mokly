@@ -1,7 +1,5 @@
 # Mokly CI And Npm Release Contract
 
-Status: In progress under the [required Bun typechecking plan](../../plans/bun-ci-typechecking.md).
-
 Breaking changes and their upgrade steps: the
 [upgrade guide](../guides/start/upgrade.md). The root `CHANGELOG.md` records
 every release.
@@ -188,7 +186,7 @@ under the [remote verification contract](./remote-verification.md). Its default
 `evidence` mode may instead consume a validated aggregate that proves the same
 tree under the
 [release verification evidence contract](./npm-release-evidence.md). That
-contract also says when preparation installs the pinned Bun before a complete
+contract also says when preparation sets up the pinned Bun before a complete
 gate.
 
 ## Continuous Integration

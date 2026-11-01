@@ -1,7 +1,5 @@
 # Npm Release Verification Evidence
 
-Status: In progress under the [required Bun typechecking plan](../../plans/bun-ci-typechecking.md).
-
 ## Verification Modes
 
 The npm release workflow has two verification modes. A release push and a manual
@@ -14,10 +12,10 @@ sets `GITHUB_SHA` to the checked-out tag commit. A manual retry dispatches from
 reports to name the checked-out commit.
 
 A complete gate needs the Bun version that the release checkout's
-`.bun-version` pins. Preparation installs it before the gate, with the setup
+`.bun-version` pins. Preparation sets it up before the gate, with the setup
 action of the CI viewer jobs. A checkout without `.bun-version` predates the
-required Bun check. Preparation then installs no Bun and adds no Bun
-requirement to that checkout's gate. Evidence mode installs no Bun.
+required Bun check. Preparation then sets up no Bun and adds no Bun
+requirement to that checkout's gate. Evidence mode sets up no Bun.
 
 Both modes run the live npm and Rust audits in read-only preparation after
 dependency installation. Evidence mode

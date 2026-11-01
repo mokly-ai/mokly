@@ -1,7 +1,5 @@
 # CI Verification: Dependency Cache And Security
 
-Status: In progress under the [required Bun typechecking plan](../../plans/bun-ci-typechecking.md).
-
 Continuation of [CI Verification](./ci-verification.md).
 
 ## Dependency Cache And Security
@@ -13,7 +11,8 @@ package remains available. A cache miss is an ordinary cold install or build
 and never permits a skipped command.
 
 The Bun setup of the CI viewer jobs and of release preparation sets
-`no-cache: true`. Each of these jobs downloads the pinned Bun. The Bun setup
+`no-cache: true`, so it neither restores nor saves a workflow cache. It can
+still reuse a matching Bun that the runner already holds. The Bun setup
 therefore adds no cache to CI. Release preparation stays uncached.
 
 The [Rust build cache](#rust-build-cache) section gives the rules for Rust.

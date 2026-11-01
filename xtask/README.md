@@ -1,7 +1,5 @@
 # Mokly xtask
 
-Status: In progress under the [required Bun typechecking plan](../plans/bun-ci-typechecking.md).
-
 `xtask` owns repository-local verification for the Mokly workspace. It is an
 internal binary and is not published to npm or crates.io.
 
@@ -190,7 +188,7 @@ cargo xtask source-file-length-lint --all
 Remote checks need `blacksmith`, `rsync`, and `ssh` on `PATH`, and a pushed
 ancestor in the local origin refs. Set `BLACKSMITH_ORG_TOKEN` for org-key
 login. A local complete gate and `--suite viewer` need the Bun version in
-`.bun-version` on `PATH`. Xtask never installs it. The
+[`.bun-version`](../.bun-version) on `PATH`. Xtask never installs it. The
 [development guide](../docs/development/README.md) shows the installation.
 For targeted test runs during development, use the
 [developer test commands](../docs/protocol/developer-test-commands.md).

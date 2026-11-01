@@ -1,7 +1,5 @@
 # Remote Verification
 
-Status: In progress under the [required Bun typechecking plan](../../plans/bun-ci-typechecking.md).
-
 ## Executor Selection
 
 `cargo xtask check` accepts `--executor auto|local|remote`. The flag overrides
