@@ -44,9 +44,9 @@ pub(super) fn artifact(comparison: bool) -> Artifact {
     ];
     let index = match &inventory.comparison {
         Some(comparison) => {
-            json!({"schemaVersion":8,"base":comparison.base_ref,"baseCommit":comparison.base_sha})
+            json!({"schemaVersion":9,"base":comparison.base_ref,"baseCommit":comparison.base_sha})
         }
-        None => json!({"schemaVersion":8}),
+        None => json!({"schemaVersion":9}),
     };
     files.push(file(INDEX, &serde_json::to_vec(&index).unwrap()));
     Artifact::finalize(

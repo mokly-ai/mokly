@@ -131,3 +131,10 @@ the entry's direct Tailwind import is pruned and `@apply` needs `@reference`.
 
 Processed CSS and its dependency metadata count toward the PostCSS cache's
 64 MiB byte bound; an oversized result is returned without cache retention.
+A stylesheet bundle is reused across preparations while its sources, its
+assets, each plugin-reported file, the file list and the file contents of each
+reported directory, and its PostCSS module evidence are unchanged. Decision:
+the module evidence of one PostCSS context is kept and checked once for all
+bundles of that context. A larger stylesheet cache bound was rejected, because
+a copy of that evidence in each bundle fills any fixed bound at a few hundred
+stylesheet roots.

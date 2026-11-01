@@ -11,7 +11,7 @@ import {
   rawDetailFixtures,
   rawIndexFixture,
   shellModelFixture,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 
 test("a removed component variant keeps its own workspace lists", () => {
   const snapshotId = "f".repeat(64);
@@ -36,9 +36,8 @@ test("a removed component variant keeps its own workspace lists", () => {
     },
   ];
   const historical = Object.values(rawDetails.removed)[0]!;
-  assert.ok(historical.generation);
+  assert.ok(historical.detailId);
   const removedDetail = structuredClone(rawDetails.current[variant.path]!);
-  delete removedDetail.deploymentId;
   delete removedDetail.revision;
   delete removedDetail.before;
   removedDetail.entry = {
@@ -46,7 +45,7 @@ test("a removed component variant keeps its own workspace lists", () => {
     path: "components/action/retired",
     snapshotId,
   };
-  removedDetail.generation = historical.generation;
+  removedDetail.detailId = historical.detailId;
   removedDetail.workspace = {
     ...removedDetail.workspace!,
     usedBy: [

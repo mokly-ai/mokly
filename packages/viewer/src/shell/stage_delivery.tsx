@@ -1,4 +1,9 @@
-/** The stage while the route's details load, or after one route detail fails. */
+/**
+ * The stage while the route's details load, or after one route detail fails.
+ * `@mokly/ui/preview-state` draws both states.
+ */
+
+import { StageFailure, StageLoading } from "@mokly/ui/preview-state";
 
 import type { CatalogueRecord } from "../catalogue/types.js";
 
@@ -21,23 +26,6 @@ export function StageDelivery({
   kind: CatalogueRecord["kind"];
 }) {
   if (delivery.status === "loading" || delivery.status === "replaced")
-    return (
-      <div
-        aria-busy="true"
-        className="mbk-empty"
-        data-mokly-stage=""
-        data-viewport="both"
-      >
-        <p role="status">Loading preview…</p>
-      </div>
-    );
-  return (
-    <div className="mbk-empty" role="alert">
-      <h2>{`This ${NOUNS[kind]} could not be shown`}</h2>
-      <p>The catalogue is still available while you try again.</p>
-      <button className="mbk-empty-link" onClick={delivery.retry} type="button">
-        Try again
-      </button>
-    </div>
-  );
+    return <StageLoading />;
+  return <StageFailure noun={NOUNS[kind]} onRetry={delivery.retry} />;
 }

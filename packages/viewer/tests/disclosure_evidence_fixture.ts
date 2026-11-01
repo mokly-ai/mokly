@@ -20,7 +20,7 @@ import type { ShellState } from "../src/shell/store_state.js";
 import { viewerContext } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 
-import { indexFixture, rawIndexFixture } from "./catalogue_v8_fixture.js";
+import { indexFixture, rawIndexFixture } from "./catalogue_v9_fixture.js";
 
 /** Disclosure identity introduced only by the retained Removed variant. */
 export const variantKey = "variants:product/browse/home";

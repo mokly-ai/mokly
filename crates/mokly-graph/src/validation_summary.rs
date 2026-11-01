@@ -41,7 +41,10 @@ impl Summary {
         }
     }
 
-    pub(crate) fn finish(mut self, session: &Session) -> Result<RenderSummary> {
+    pub(crate) fn finish(
+        mut self,
+        session: &Session,
+    ) -> Result<(RenderSummary, BTreeMap<String, ValidatedView>)> {
         if !self.failures.is_empty() {
             return Err(GraphError::Attempt {
                 failures: self.failures,
@@ -64,6 +67,6 @@ impl Summary {
             }
         }
         normalize_warnings(&mut self.value.warnings);
-        Ok(self.value)
+        Ok((self.value, self.views))
     }
 }

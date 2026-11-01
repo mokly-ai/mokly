@@ -34,14 +34,14 @@ of the
 [published inspector contract](../../../../docs/protocol/mokly-published-inspector.md)
 define the map format and the markers.
 
-## Overlay
+## Geometry and picking
 
-The overlay host sits after the authored body, outside the range and occlusion
-candidates. Its shadow root isolates the SVG styling and the redraw mutations.
-The host resets consumer presentation with inline important styles, and the
-shadow SVG resets inherited styles before it draws the mask and the outlines.
-Text-only ranges scroll their real rectangles through inner containers and the
-document viewport.
+The inspector draws nothing in the preview document. It reports instance
+boundaries and geometry changes so the shell can draw masks, outlines, and
+labels with `@mokly/ui` components above the frame. Highlight requests set the
+keys and mode of the pick listeners. Hover, pick, Escape, and navigation reports
+keep the same wire messages. Text-only ranges scroll their real rectangles
+through inner containers and the document viewport.
 
 ## Development
 
@@ -55,7 +55,7 @@ cargo xtask check --suite viewer
 - [`index.ts`](./index.ts) is the IIFE entry, which installs only the bounded
   handshake listener and starts the runtime after the first valid `hello`.
 - [`runtime.ts`](./runtime.ts) holds `inspectorRuntime`, which owns the
-  observers, the input handling, the presentation, and the ordered requests of
+  observers, the input handling, and the ordered requests of
   one session.
 - [`schema.ts`](./schema.ts) and [`values.ts`](./values.ts) validate the wire
   messages of both transports.
@@ -67,8 +67,6 @@ cargo xtask check --suite viewer
 - [`inspection.ts`](./inspection.ts) and [`geometry.ts`](./geometry.ts) list
   the instance boundaries, measure their clipped boxes, and scroll to an
   instance.
-- [`overlay.ts`](./overlay.ts) holds `drawOverlay`, which draws the SVG mask
-  union and the outlines.
 - [`clipping.ts`](./clipping.ts) holds the clipping rules that the same-origin
   measurer of [the client](../client/README.md) shares.
 - [`links.ts`](./links.ts) holds `inspectorNavigation`, which turns a marked

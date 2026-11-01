@@ -8,7 +8,7 @@ import {
   VERSION_ERROR_MESSAGE,
 } from "../src/catalogue/version_error.js";
 
-import { rawIndexFixture } from "./catalogue_v8_fixture.js";
+import { rawIndexFixture } from "./catalogue_v9_fixture.js";
 
 const HASH = "a".repeat(64);
 
@@ -37,7 +37,7 @@ function screens(raw: Record<string, unknown>) {
 test("the index reader accepts the protocol fixture field for field", () => {
   const raw = rawIndexFixture();
   const index = readCatalogueIndex(structuredClone(raw));
-  assert.equal(index.schemaVersion, 8);
+  assert.equal(index.schemaVersion, 9);
   assert.deepEqual(index.identity, raw.identity);
   assert.equal(index.deploymentId, raw.deploymentId);
   assert.equal(index.revision, 0);
@@ -60,21 +60,23 @@ test("the version gate runs before any other field is read", () => {
   for (const value of [
     undefined,
     null,
-    "8",
+    "9",
     7,
     [],
     {},
     { schemaVersion: 6 },
-    { schemaVersion: 9, tree: "not a tree" },
-    { schemaVersion: "8" },
+    { schemaVersion: 8 },
+    { schemaVersion: 10, tree: "not a tree" },
+    { schemaVersion: "9" },
     { ...rawIndexFixture(), schemaVersion: 6 },
+    { ...rawIndexFixture(), schemaVersion: 8 },
   ])
     assert.throws(
       () => readCatalogueIndex(value),
       (error) =>
         error instanceof MoklyVersionError &&
         error.boundary === "catalogue" &&
-        error.supported === 8 &&
+        error.supported === 9 &&
         error.code === "unsupported-mokly-version",
     );
   assert.equal(

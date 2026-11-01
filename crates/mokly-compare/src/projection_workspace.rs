@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 
 use mokly_model::axes::EntryKind;
-use mokly_model::public_detail::EntryDetailV3;
+use mokly_model::public_detail::EntryDetailV4;
 
 use crate::comparison_types::ComparisonResult;
 use crate::error::Result;
@@ -17,7 +17,7 @@ use crate::{projection_affected, projection_inputs};
 /// caller proves its usage inputs.
 /// Metadata, counterparts, removals, and consumer links are indexed once for the batch.
 pub fn apply(
-    details: &mut BTreeMap<String, EntryDetailV3>,
+    details: &mut BTreeMap<String, EntryDetailV4>,
     result: &ComparisonResult,
 ) -> Result<()> {
     let context = Context::new(result);

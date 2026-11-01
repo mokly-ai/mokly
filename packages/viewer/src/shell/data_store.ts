@@ -90,7 +90,8 @@ export function useShellDataStore(input: {
   );
 
   useEffect(() => {
-    if (input.interactive) controller.request(requests);
+    if (!input.interactive) return;
+    controller.request(requests);
   }, [controller, input.interactive, requests]);
   useEffect(() => () => controller.abortLoads(), [controller]);
   useEffect(() => {

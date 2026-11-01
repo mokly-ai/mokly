@@ -1,5 +1,10 @@
+import type { ReactNode } from "react";
+
+import { HighlightLayer } from "../components/parts/highlight.js";
+
 import { DesignLink } from "./design_navigation.js";
 import { DESTINATIONS } from "./destinations.js";
+import { MiniInstances, type MiniForm } from "./mini_views.js";
 
 interface MiniScreenProps {
   compact?: boolean;
@@ -64,34 +69,68 @@ function WelcomeSections({ revised }: { revised?: boolean | undefined }) {
   );
 }
 
+/** Welcome's link to the Details screen, which a comparison draws inert. */
+function WelcomeLink({ inert }: { inert?: boolean | undefined }) {
+  return (
+    <DesignLink to={inert ? undefined : DESTINATIONS.details}>
+      <span className="mbk-shot-link">Open the details screen</span>
+    </DesignLink>
+  );
+}
+
+/** Welcome's heading and the revision's new introduction. */
+function WelcomeHeading({ revised }: { revised?: boolean | undefined }) {
+  return (
+    <>
+      <h2>{revised ? "Welcome to the Mokly example" : "Welcome to Mokly"}</h2>
+      {revised ? <p>A short introduction now welcomes new readers.</p> : null}
+    </>
+  );
+}
+
 /** Welcome's heading, the revision's new introduction, and its one link. */
 function WelcomeIntroduction({
-  empty,
   inert,
   revised,
 }: {
-  empty?: boolean | undefined;
   inert?: boolean | undefined;
   revised?: boolean | undefined;
 }) {
   return (
     <>
-      <h2>{revised ? "Welcome to the Mokly example" : "Welcome to Mokly"}</h2>
-      {revised ? <p>A short introduction now welcomes new readers.</p> : null}
-      {empty ? (
-        <>
-          <div className="mbk-shot-field">Workspace name</div>
-          <span className="mbk-shot-action">Create workspace</span>
-        </>
-      ) : null}
-      <DesignLink to={inert ? undefined : DESTINATIONS.details}>
-        <span className="mbk-shot-link">Open the details screen</span>
-      </DesignLink>
+      <WelcomeHeading revised={revised} />
+      <WelcomeLink inert={inert} />
     </>
   );
 }
 
-/** Miniature depiction of the example Welcome fragment. */
+/**
+ * A mini screen's sheet: the screen's surface, which a phone marks compact,
+ * and the highlight of the depicted view over it.
+ */
+function Shot({
+  children,
+  compact,
+  restyled,
+}: {
+  children: ReactNode;
+  compact?: boolean | undefined;
+  restyled?: boolean | undefined;
+}) {
+  const flags = `${compact ? " mbk-shot--compact" : ""}${restyled ? " mbk-shot--restyled" : ""}`;
+  return (
+    <div className={`mbk-shot${flags}`}>
+      <div className="mbk-shot-pad">{children}</div>
+      <HighlightLayer viewport={compact ? "mobile" : "desktop"} />
+    </div>
+  );
+}
+
+/**
+ * Miniature depiction of the example Welcome fragment, with the Action and
+ * the Toolbar that the real screen renders. A long Welcome, which only a
+ * scrolled comparison draws, continues with sections instead.
+ */
 export function MiniWelcome({
   compact,
   empty,
@@ -101,30 +140,36 @@ export function MiniWelcome({
   restyled,
   revised,
 }: MiniScreenProps) {
-  const introduction = (
-    <WelcomeIntroduction empty={empty} inert={inert} revised={revised} />
-  );
+  const form: MiniForm = empty
+    ? "welcome-empty"
+    : error
+      ? "welcome-error"
+      : "welcome";
   return (
-    <div className={restyled ? "mbk-shot mbk-shot--restyled" : "mbk-shot"}>
-      <div className="mbk-shot-pad">
-        <div className="mbk-shot-nav">
-          {compact ? "Menu" : "Example navigation"}
-        </div>
-        {error ? (
-          <p className="mbk-shot-error">
-            Couldn’t save this workspace. Try again.
-          </p>
-        ) : null}
-        {long ? (
-          <>
-            <div className="mbk-shot-hero">{introduction}</div>
-            <WelcomeSections revised={revised} />
-          </>
-        ) : (
-          introduction
-        )}
+    <Shot compact={compact} restyled={restyled}>
+      <div className="mbk-shot-nav">
+        {compact ? "Menu" : "Example navigation"}
       </div>
-    </div>
+      {error ? (
+        <p className="mbk-shot-error">
+          Couldn’t save this workspace. Try again.
+        </p>
+      ) : null}
+      {long ? (
+        <>
+          <div className="mbk-shot-hero">
+            <WelcomeIntroduction inert={inert} revised={revised} />
+          </div>
+          <WelcomeSections revised={revised} />
+        </>
+      ) : (
+        <>
+          <WelcomeHeading revised={revised} />
+          {empty ? <div className="mbk-shot-field">Workspace name</div> : null}
+          <MiniInstances form={form} link={<WelcomeLink inert={inert} />} />
+        </>
+      )}
+    </Shot>
   );
 }
 
@@ -164,17 +209,25 @@ export function MiniWelcomePage({
   );
 }
 
-/** Miniature depiction of the example Details fragment. */
+/**
+ * Miniature depiction of the example Details fragment, with the Action and
+ * the Toolbar that the real screen renders.
+ */
 export function MiniDetails({ compact }: MiniScreenProps) {
   return (
-    <div className="mbk-shot">
-      <div className="mbk-shot-pad">
-        <h2>{compact ? "Details" : "Example catalogue details"}</h2>
-        <p>This screen is synthetic and belongs only to the package example.</p>
-        <DesignLink to={DESTINATIONS.welcome}>
-          <span className="mbk-shot-link">Return to welcome</span>
-        </DesignLink>
-      </div>
-    </div>
+    <Shot compact={compact}>
+      <h2>{compact ? "Details" : "Example catalogue details"}</h2>
+      <p className="mbk-shot-text">
+        This screen is synthetic and belongs only to the package example.
+      </p>
+      <MiniInstances
+        form="details"
+        link={
+          <DesignLink to={DESTINATIONS.welcome}>
+            <span className="mbk-shot-link">Return to welcome</span>
+          </DesignLink>
+        }
+      />
+    </Shot>
   );
 }

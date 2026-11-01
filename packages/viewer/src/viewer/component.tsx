@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
-import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
+import { RootState } from "@mokly/ui/shell-layout";
+
 import {
   MoklyVersionError,
   VERSION_ERROR_MESSAGE,
@@ -15,7 +16,7 @@ import {
 } from "./host_bridge_failure.js";
 import { useIndexSource } from "./index_source.js";
 import { ReadyViewer } from "./ready.js";
-import { themeAttributes } from "./theme.js";
+import { normalizeTheme } from "./theme.js";
 import type { MoklyViewerProps } from "./types.js";
 
 /** Mount a validated catalogue with host-owned slots and isolated runtime state. */
@@ -122,43 +123,26 @@ export function MoklyViewer(props: MoklyViewerProps) {
   }, [failed, source.key, invalidMode, versionError]);
   if (bridgeFailure?.drained) throw bridgeFailure.error;
   if (bridgeFailure) return null;
+  const root = {
+    kind: "embedded",
+    theme: normalizeTheme(props.theme),
+  } as const;
   if (failed || invalidMode)
-    return (
-      <div
-        className={`${VIEWER_DIRECTORY} mbk-empty`}
-        role="alert"
-        {...themeAttributes(props.theme)}
-      >
-        {!invalidMode && versionError ? (
-          <h2>{VERSION_ERROR_MESSAGE}</h2>
-        ) : (
-          <>
-            <h2>The catalogue could not be loaded</h2>
-            <button
-              className="mbk-empty-link"
-              onClick={() => {
-                focus.request("loading");
-                source.retry();
-              }}
-              type="button"
-            >
-              Try again
-            </button>
-          </>
-        )}
-      </div>
+    return !invalidMode && versionError ? (
+      <RootState message={VERSION_ERROR_MESSAGE} root={root} state="version" />
+    ) : (
+      <RootState
+        onRetry={() => {
+          focus.request("loading");
+          source.retry();
+        }}
+        root={root}
+        state="failed"
+      />
     );
   if (!source.loaded)
     return (
-      <div
-        aria-busy="true"
-        className={`${VIEWER_DIRECTORY} mbk-empty`}
-        ref={focus.ref("loading")}
-        tabIndex={-1}
-        {...themeAttributes(props.theme)}
-      >
-        <p role="status">Loading catalogue…</p>
-      </div>
+      <RootState focusRef={focus.ref("loading")} root={root} state="loading" />
     );
   return (
     <ReadyViewer

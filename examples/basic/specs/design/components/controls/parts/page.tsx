@@ -1,3 +1,4 @@
+import { EditStatus } from "../../../../../../../packages/ui/src/edit-status/edit-status.js";
 import { COMPONENT_NAVIGATION } from "../../../parts/component_nav_data.js";
 import type { ArtboardViewport } from "../../../parts/shell.js";
 import type { ActionEntry } from "../../parts/action_props.js";
@@ -5,7 +6,7 @@ import { ComparisonDetails } from "../../parts/comparison_details.js";
 import { actionComparison } from "../../parts/comparison_fixtures.js";
 import { ComponentInfo } from "../../parts/component_info.js";
 import { ComponentLayout } from "../../parts/component_layout.js";
-import { UsedBy } from "../../parts/component_usage.js";
+import { ComponentUsage } from "../../parts/component_usage.js";
 import { CONTROLS_PAGES } from "../../parts/destinations.js";
 import { Inspector } from "../../parts/inspector.js";
 import { COMPONENT_ENTRIES } from "../../parts/metadata.js";
@@ -24,6 +25,13 @@ import {
 } from "./fixtures.js";
 import { ControlsPanel } from "./panel.js";
 
+/** The path of each Action entry that a controls story shows. */
+const ENTRY_PATHS: Record<ActionEntry, string> = {
+  parent: COMPONENT_ENTRIES.action.path,
+  default: COMPONENT_ENTRIES.actionDefault.path,
+  disabled: COMPONENT_ENTRIES.actionDisabled.path,
+};
+
 /**
  * Action's own entry first, then its saved variants. Each option opens that
  * entry's controls in the same context. No artboard depicts the parent's own
@@ -40,7 +48,12 @@ function ControlsVariants({ state }: { state: ControlsState }) {
   ) => {
     const current = fixture.variant === entry;
     const to = current ? CONTROLS_PAGES[state] : published ? readonly : local;
-    return { label, ...(to ? { to } : {}), ...(current ? { current } : {}) };
+    return {
+      label,
+      path: ENTRY_PATHS[entry],
+      ...(to ? { to } : {}),
+      ...(current ? { current } : {}),
+    };
   };
   return (
     <VariantBar
@@ -58,7 +71,7 @@ function ControlsVariants({ state }: { state: ControlsState }) {
           CONTROLS_PAGES.variant,
           CONTROLS_PAGES["readonly-variant"],
         ),
-        { label: "Secondary" },
+        { label: "Secondary", path: "example/components/action/secondary" },
       ]}
     />
   );
@@ -123,7 +136,7 @@ export function ControlsPage({
             {
               id: "usage",
               label: "Usage",
-              content: <UsedBy state="default" />,
+              content: <ComponentUsage affected={false} state="default" />,
             },
           ]}
         />
@@ -140,12 +153,9 @@ export function ControlsPage({
                 <ActionExample {...fixture.preview} />
               </ComponentCanvas>
             </div>
-            {state === "pending" ? (
-              <p className="ce-preview-status" role="status">
-                <span aria-hidden="true" className="ce-pending-dot" />
-                {CONTROLS_COPY.updating}
-              </p>
-            ) : null}
+            <EditStatus
+              status={state === "pending" ? CONTROLS_COPY.updating : undefined}
+            />
           </div>
         )
       }

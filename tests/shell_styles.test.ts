@@ -1,58 +1,73 @@
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
 import test from "node:test";
-
-import { SHELL_CSS } from "../packages/viewer/dist/shell/css.js";
 
 import { flatCss } from "./helpers/shell_assertions.js";
 
+/** The built stylesheets that a delivery and an embedded host receive. */
+const [STANDALONE_CSS, EMBEDDED_CSS] = await Promise.all([
+  fs.readFile(
+    new URL("../packages/viewer/dist/shell.css", import.meta.url),
+    "utf8",
+  ),
+  fs.readFile(
+    new URL("../packages/viewer/dist/styles.css", import.meta.url),
+    "utf8",
+  ),
+]);
+
 test("shell stylesheet stays aligned with the design contract", () => {
-  assert.match(SHELL_CSS, /--_mokly-private-accent-default: #4f7864/);
-  assert.match(SHELL_CSS, /--mb-added: var\(--mbk-accent-deep\)/);
-  assert.match(SHELL_CSS, /--mbk-dark-screen-bg: #121514/);
-  assert.match(SHELL_CSS, /--mbk-dark-screen-ink: #eef1ef/);
-  assert.match(SHELL_CSS, /color-scheme: light/);
-  assert.match(SHELL_CSS, /width: 390px/);
-  assert.match(SHELL_CSS, /max-width: 1180px/);
-  assert.match(SHELL_CSS, /@media \(width < 56\.25rem\)/);
-  assert.doesNotMatch(SHELL_CSS, /max-width: 56\.25rem/);
-  assert.match(SHELL_CSS, /width: var\(--mbk-nav-width, 248px\)/);
+  assert.match(STANDALONE_CSS, /--_mokly-private-accent-default: #4f7864/);
+  assert.match(STANDALONE_CSS, /--mb-added: var\(--mbk-accent-deep\)/);
+  assert.match(STANDALONE_CSS, /--mbk-dark-screen-bg: #121514/);
+  assert.match(STANDALONE_CSS, /--mbk-dark-screen-ink: #eef1ef/);
+  assert.match(STANDALONE_CSS, /color-scheme: light/);
+  assert.match(STANDALONE_CSS, /width: 390px/);
+  assert.match(STANDALONE_CSS, /max-width: 1180px/);
+  assert.match(STANDALONE_CSS, /@media \(width < 56\.25rem\)/);
+  for (const styles of [STANDALONE_CSS, EMBEDDED_CSS])
+    assert.doesNotMatch(styles, /max-width: 56\.25rem/);
+  assert.match(STANDALONE_CSS, /width: var\(--mbk-nav-width, 248px\)/);
   assert.match(
-    SHELL_CSS,
+    STANDALONE_CSS,
     /\.mbk-nav-section-head \{[^}]*text-transform: uppercase;[^}]*cursor: pointer;/,
   );
   assert.match(
-    SHELL_CSS,
+    STANDALONE_CSS,
     /\.mbk-nav-section\[open\][^{]*\.mbk-nav-section-chevron \{[^}]*transform: rotate\(90deg\);/,
   );
   assert.match(
-    SHELL_CSS,
+    STANDALONE_CSS,
     /\.mbk-nav\[data-resize-ready\] \.mbk-nav-resize \{[\s\S]*display: block;/,
   );
   assert.match(
-    SHELL_CSS,
+    STANDALONE_CSS,
     /@media \(width < 56\.25rem\) \{[\s\S]*\.mbk-nav-resize \{[\s\S]*display: none;/,
   );
   assert.match(
-    SHELL_CSS,
-    /\.phone-status \{[\s\S]*flex: 0 0 44px;[\s\S]*padding: 14px 28px 0;/,
+    STANDALONE_CSS,
+    /\.phone-status:where\(\.mbk-reset\) \{[\s\S]*flex: 0 0 44px;[\s\S]*padding: 14px 28px 0;/,
   );
-  assert.match(SHELL_CSS, /\.phone-screen \{[\s\S]*flex-direction: column;/);
   assert.match(
-    SHELL_CSS,
+    STANDALONE_CSS,
+    /\.phone-screen:where\(\.mbk-reset\) \{[\s\S]*flex-direction: column;/,
+  );
+  assert.match(
+    STANDALONE_CSS,
     /\.phone-screen \.mbk-frag \{[\s\S]*border-radius: 0 0 36px 36px;/,
   );
 
-  assert.match(SHELL_CSS, /prefers-reduced-motion/);
-  assert.match(SHELL_CSS, /InterVariable\.woff2/);
-  assert.match(SHELL_CSS, /\.mbk-pathchip \{[\s\S]*cursor: pointer;/);
+  assert.match(STANDALONE_CSS, /prefers-reduced-motion/);
+  assert.match(STANDALONE_CSS, /InterVariable\.woff2/);
+  assert.match(STANDALONE_CSS, /\.mbk-pathchip \{[\s\S]*cursor: pointer;/);
   assert.match(
-    SHELL_CSS,
+    STANDALONE_CSS,
     /\.mbk-pathchip:active \{[\s\S]*transform: translateY\(1px\);/,
   );
 });
 
-test("both split dividers share one grip affordance", () => {
-  const css = flatCss(SHELL_CSS);
+test("both split dividers share one grip shape and pointer look, and rest in their palette colours", () => {
+  const css = flatCss(STANDALONE_CSS);
   for (const grip of [
     '.mbk-nav-resize::after { content: ""; position: absolute; ' +
       "top: calc(50% - 16px); left: 3px; width: 2px; height: 32px; " +
@@ -60,7 +75,7 @@ test("both split dividers share one grip affordance", () => {
       "transition: background 120ms ease, box-shadow 120ms ease; }",
     '.mbk-inspector-resize::after { content: ""; position: absolute; ' +
       "top: 7px; left: calc(50% - 16px); width: 32px; height: 2px; " +
-      "border-radius: 999px; background: var(--chrome-border-strong); " +
+      "border-radius: 999px; background: var(--chrome-control-edge); " +
       "transition: background 120ms ease, box-shadow 120ms ease; }",
   ])
     assert.ok(css.includes(grip), grip);
@@ -75,7 +90,7 @@ test("both split dividers share one grip affordance", () => {
     for (const state of [
       `.mbk-${handle}-resize:hover::after,`,
       `.mbk-${handle}-resize:focus-visible::after,`,
-      `[data-mokly-shell].mbk-${handle}-resizing ` +
+      `.mbk.mbk-${handle}-resizing ` +
         `.mbk-${handle}-resize::after ` +
         "{ background: var(--mokly-accent); " +
         "box-shadow: 0 0 0 3px var(--mokly-accent-soft); }",
@@ -87,37 +102,38 @@ test("both split dividers share one grip affordance", () => {
         "{ box-shadow: inset 0 2px 0 var(--mokly-accent); }",
     ),
   );
-  assert.equal(
-    css.includes(".mbk-inspector-resize:focus-visible { outline"),
-    false,
-  );
+  for (const styles of [STANDALONE_CSS, EMBEDDED_CSS])
+    assert.equal(
+      flatCss(styles).includes(".mbk-inspector-resize:focus-visible { outline"),
+      false,
+    );
   for (const axis of ["col", "row"]) {
     const scope = axis === "col" ? "nav" : "inspector";
     assert.ok(
       css.includes(
-        `[data-mokly-shell].mbk-${scope}-resizing * ` +
+        `.mbk.mbk-${scope}-resizing .mbk-reset ` +
           `{ cursor: ${axis}-resize !important; }`,
       ),
       scope,
     );
     assert.ok(
       css.includes(
-        `[data-mokly-shell].mbk-${scope}-resizing iframe ` +
+        `.mbk.mbk-${scope}-resizing iframe.mbk-reset ` +
           "{ pointer-events: none; }",
       ),
       scope,
     );
   }
   assert.match(
-    SHELL_CSS,
+    STANDALONE_CSS,
     /@media \(width < 56\.25rem\) \{[\s\S]*\.mbk-inspector\[data-open="true"\] \.mbk-inspector-resize \{[\s\S]*display: none;/,
   );
 });
 
 test("tag chips select in the accent and the bar clears the scrim", () => {
-  const css = flatCss(SHELL_CSS);
+  const css = flatCss(STANDALONE_CSS);
   assert.match(
-    SHELL_CSS,
+    STANDALONE_CSS,
     /\.mbk-chip\.tag:is\(a, button\) \{[^}]*font: inherit;[^}]*cursor: pointer;/,
   );
   assert.ok(
@@ -127,19 +143,19 @@ test("tag chips select in the accent and the bar clears the scrim", () => {
   );
   assert.ok(
     css.includes(
-      ".mbk-chip.tag:is(a, button):hover { background: var(--mokly-accent-soft); }",
+      ".mbk-chip.tag:is(a, button):not(.active):hover { background: var(--mokly-accent-soft); }",
     ),
   );
   assert.ok(
     css.includes(
-      ".mbk-chip.tag:is(a, button).active { background: var(--mokly-accent); " +
+      ".mbk-chip.tag.active { background: var(--mokly-accent); " +
         "border-color: var(--mokly-accent); " +
         "color: var(--mokly-accent-contrast); }",
     ),
   );
   assert.ok(
     css.includes(
-      ".mbk-chip.tag:is(a, button).active svg { color: var(--mokly-accent-contrast); }",
+      ".mbk-chip.tag.active svg { color: var(--mokly-accent-contrast); }",
     ),
   );
   assert.ok(
@@ -149,32 +165,33 @@ test("tag chips select in the accent and the bar clears the scrim", () => {
     ),
   );
   assert.match(
-    SHELL_CSS,
+    STANDALONE_CSS,
     /\.mbk-topbar \{[^}]*position: relative;[^}]*z-index: 11;/,
   );
-  assert.match(SHELL_CSS, /\.mbk-skip-link \{[^}]*z-index: 20;/);
-  assert.match(SHELL_CSS, /\.mbk-nav \{[^}]*z-index: 10;/);
+  assert.match(STANDALONE_CSS, /\.mbk-skip-link \{[^}]*z-index: 20;/);
+  assert.match(STANDALONE_CSS, /\.mbk-nav \{[^}]*z-index: 10;/);
 });
 
 test("the tag picker drops from the field and sheets under the bar", () => {
-  const css = flatCss(SHELL_CSS);
-  assert.match(SHELL_CSS, /\.mbk-search \{[^}]*position: relative;/);
+  const css = flatCss(STANDALONE_CSS);
+  assert.match(STANDALONE_CSS, /\.mbk-search \{[^}]*position: relative;/);
   assert.match(
-    SHELL_CSS,
-    /\.mbk-search-tag \{[^}]*width: 20px;[^}]*height: 20px;[^}]*cursor: pointer;/,
+    STANDALONE_CSS,
+    /\.mbk-search-tag \{[^}]*width: 20px;[^}]*height: 20px;/,
   );
+  assert.ok(css.includes(".mbk-search-tag:is(a, button) { cursor: pointer; }"));
   assert.ok(
     css.includes(
-      ".mbk-search-tag:hover { background: var(--chrome-border); " +
+      ".mbk-search-tag:is(a, button):hover { background: var(--chrome-border); " +
         "color: var(--chrome-ink-2); }",
     ),
   );
   assert.match(
-    SHELL_CSS,
+    STANDALONE_CSS,
     /\.mbk-tag-picker \{[^}]*position: absolute;[^}]*top: calc\(100% \+ 7px\);[^}]*border-radius: 10px;[^}]*background: var\(--chrome-surface\);[^}]*box-shadow: var\(--chrome-shadow\);/,
   );
   assert.match(
-    SHELL_CSS,
+    STANDALONE_CSS,
     /\.mbk-tag-picker-head \{[^}]*font-size: 11px;[^}]*text-transform: uppercase;/,
   );
   assert.ok(

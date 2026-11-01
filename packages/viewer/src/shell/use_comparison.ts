@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 
+import { DeploymentChangedError } from "../viewer/sources.js";
+
 import { useComparisonEnvironment } from "./comparison_context.js";
 import { useComparisonIntent } from "./comparison_intent.js";
 import {
@@ -18,10 +20,7 @@ import {
 } from "./comparison_request.js";
 import { useOptionalShellStore } from "./store_context.js";
 
-export type {
-  ComparisonMode,
-  ComparisonPresentation,
-} from "./comparison_presentation.js";
+export type { ComparisonPresentation } from "./comparison_presentation.js";
 
 interface LoadedState {
   scopeKey: string;
@@ -192,6 +191,10 @@ export function useComparison({
           if (controller.signal.aborted || pendingRef.current !== operation)
             return;
           pendingRef.current = undefined;
+          if (error instanceof DeploymentChangedError) {
+            toggleBusy(false);
+            return;
+          }
           const latest = latestDemand.current;
           if (!latest || latest.scopeKey !== operation.scopeKey) return;
           const nextFailure = {

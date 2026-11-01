@@ -14,7 +14,7 @@ import {
   heldDetails,
   rawDetailFixtures,
   shellModelFixture,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
 
 const { catalogue, model, source, sourceVariant } = componentWorkspaceFixture();
@@ -187,9 +187,12 @@ test("a published screen keeps its catalogue view evidence in Current", () => {
   const markup = renderToStaticMarkup(<WorkspaceEvidence data={data} />);
   assert.match(
     markup,
-    /<p>This stylesheet changed, but none of the changed styles apply to this screen\.<\/p><p>Examined and excluded:<\/p><ul><li>mockups\/action\.css<\/li><\/ul>/,
+    /<p class="mbk-reset">This stylesheet changed, but none of the changed styles apply to this screen\.<\/p><p class="mbk-reset">Examined and excluded:<\/p><ul class="mbk-reset"><li class="mbk-reset">mockups\/action\.css<\/li><\/ul>/,
   );
-  assert.match(markup, /<p>No changes to this screen\.<\/p><\/section>$/);
+  assert.match(
+    markup,
+    /<p class="mbk-reset">No changes to this screen\.<\/p><\/section>$/,
+  );
 });
 
 test("a published component keeps its selected saved view's evidence", () => {
@@ -221,9 +224,12 @@ test("a published component keeps its selected saved view's evidence", () => {
     );
     assert.match(
       markup,
-      /<p>This stylesheet changed, but none of the changed styles apply to this variant\.<\/p>/,
+      /<p class="mbk-reset">This stylesheet changed, but none of the changed styles apply to this variant\.<\/p>/,
     );
-    assert.match(markup, /<p>No changes to this variant\.<\/p><\/section>$/);
+    assert.match(
+      markup,
+      /<p class="mbk-reset">No changes to this variant\.<\/p><\/section>$/,
+    );
   }
 });
 

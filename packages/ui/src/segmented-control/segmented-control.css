@@ -1,0 +1,35 @@
+/* The segmented control: segments on the shell background in a hairline
+   frame, the shown one raised on the surface. A segment that is a link or
+   inert text reads exactly like a segment button. */
+.mbk-seg {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 8px;
+  background: var(--chrome-bg);
+  border: 1px solid var(--chrome-border);
+}
+
+.mbk-seg span,
+.mbk-seg a,
+.mbk-seg button {
+  padding: 4px 12px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--chrome-muted);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.mbk-seg span.active,
+.mbk-seg a.active,
+.mbk-seg button.active,
+.mbk-seg [aria-pressed="true"],
+.mbk-seg [aria-current="page"] {
+  background: var(--chrome-surface);
+  color: var(--chrome-ink);
+  box-shadow: var(--chrome-shadow-soft);
+}

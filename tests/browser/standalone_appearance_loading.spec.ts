@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 
+import { shellRoot } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
 import { chooseScheme, expectFrameLoaded } from "./workspace_actions.js";
 
@@ -104,7 +105,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
         ),
       );
       await expect(frame).toHaveAttribute("data-mokly-frame-state", "ready");
-      await expect(page.locator("body")).toHaveAttribute(
+      await expect(page.locator(shellRoot)).toHaveAttribute(
         "data-mokly-color-scheme",
         "light",
       );

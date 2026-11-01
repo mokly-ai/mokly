@@ -5,7 +5,7 @@ branches. The first is `conductor/rust-rebuild-59-performance-follow-ups`.
 No pull request exists yet. The plan closes when the last of its pull
 requests merges.
 
-The [Rust rebuild plan](./rust-rebuild.md) left performance items open in its
+The [Rust rebuild plan](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md) left performance items open in its
 post-merge section: user items 59, 61, 64, 97, 99, 134, and 162, the
 measurement TODO under item 64, and the checks of items 57, 133, and 165.
 The perf wave of 2026-10-28 (#222, #225 to #229, #235, and #236) changed the
@@ -292,6 +292,8 @@ design call of 2026-10-28.
 
 Items 162, 99, 57, and 165. Pull request 1, on
 `conductor/rust-rebuild-59-performance-follow-ups`.
+
+Merge evidence of 2026-11-01: `.context/main-sync-2026-11-01/merge-resolution.md`.
 
 - [ ] Item 162: add failing tests to the large harness tests: a run that
       keeps printing past the window passes, a silent run fails with the

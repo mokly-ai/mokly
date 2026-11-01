@@ -33,6 +33,36 @@
         {
           "type": "json",
           "path": "/package.json",
+          "jsonpath": "$['devDependencies']['@mokly/ui']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/ui/package.json",
+          "jsonpath": "$['version']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['']['devDependencies']['@mokly/ui']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/ui']['version']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/viewer/package.json",
+          "jsonpath": "$['dependencies']['@mokly/ui']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/viewer']['dependencies']['@mokly/ui']"
+        },
+        {
+          "type": "json",
+          "path": "/package.json",
           "jsonpath": "$['devDependencies']['@mokly/viewer']"
         },
         {
@@ -127,6 +157,10 @@
         {
           "type": "generic",
           "path": "/docs/guides/ci/github-action.md"
+        },
+        {
+          "type": "generic",
+          "path": "/packages/ui/CHANGELOG.md"
         },
         {
           "type": "generic",

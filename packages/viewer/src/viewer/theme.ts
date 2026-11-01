@@ -14,8 +14,3 @@ export function normalizeTheme(theme: unknown): ViewerTheme {
     ? theme
     : "auto";
 }
-
-/** Root attributes stating the appearance, spread onto every viewer root. */
-export function themeAttributes(theme: unknown): { [THEME_ATTRIBUTE]: string } {
-  return { [THEME_ATTRIBUTE]: normalizeTheme(theme) };
-}

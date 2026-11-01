@@ -6,7 +6,8 @@ This page belongs to the [`@mokly/viewer` README](../../README.md). It explains 
 
 `MoklyViewer` reads two shapes of the
 [shell delivery contract](../../../../docs/protocol/mokly-shell-delivery.md): the
-catalogue index, read model v8, and one entry detail v3 per entry.
+catalogue index, read model v9, and one entry detail v4 per entry. Each index
+record carries the detail's content `detailId`.
 
 | Prop     | Accepts                                                 | Rule                                                                                |
 | -------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------- |
@@ -14,7 +15,12 @@ catalogue index, read model v8, and one entry detail v3 per entry.
 | `index`  | A `CatalogueReadModel` object                           | Requires `baseUrl`, the origin root of the catalogue files                          |
 | `detail` | `(entryPath, snapshotId?) => detail, URL, or a promise` | Called once per entry the viewer does not hold; a URL must be on the origin root    |
 
-The viewer validates the index and each detail before it reads a field. It
+The viewer validates the index and each detail before it reads a field. An
+embedded viewer checks `mokly-viewer/deployment.json` only when its index came
+from a URL. It checks with each detail request of an in-shell navigation and
+before a comparison or removed-entry request. An object index does not request
+the file. The standalone shell keeps the same check for static catalogues. A
+missing or unreadable file changes nothing. It
 fetches a URL with a plain GET, `credentials: "omit"`, and no custom header, and
 it rejects a redirect outside the origin. When another deployment replaces the
 files, the viewer emits one `onError` and keeps its state. A React host
@@ -157,7 +163,7 @@ instance regions in the live page from them.
 
 ## Live controls
 
-Entry detail v3 supplies control declaration order. The Props tab follows it
+Entry detail v4 supplies control declaration order. The Props tab follows it
 for editable fields and saved values. Saved props remain visible while the
 detail loads.
 

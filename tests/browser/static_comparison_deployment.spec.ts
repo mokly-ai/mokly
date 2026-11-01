@@ -6,8 +6,12 @@ import { comparisonPaths } from "./comparison_test.js";
 import { staticRequests } from "./static_delivery_assertions.js";
 
 let fixture: Awaited<ReturnType<typeof comparisonDeployments>>;
+let changedGenerationFixture: Awaited<ReturnType<typeof comparisonDeployments>>;
 test.beforeAll(async () => {
   fixture = await comparisonDeployments();
+  changedGenerationFixture = await comparisonDeployments({
+    changeGeneration: true,
+  });
 });
 
 test("a new deployment reloads an old tab while its non-null comparison URL stays unchanged", async ({
@@ -24,6 +28,7 @@ test("a new deployment reloads an old tab while its non-null comparison URL stay
   await page.goto(
     `${fixture.url}/view/${comparisonPaths.changed}/?viewport=desktop&comparison=side`,
   );
+  await page.locator('[data-diff-mode="side"]').click();
   await expect(page.locator("iframe[data-mokly-comparison-frame]")).toHaveCount(
     2,
   );
@@ -53,4 +58,32 @@ test("a new deployment reloads an old tab while its non-null comparison URL stay
   ).href;
   expect(requests.urls.filter((url) => url === document)).toHaveLength(2);
   requests.assert();
+});
+
+test("a deployment check reloads before opening a changed comparison", async ({
+  page,
+}) => {
+  const [before, after] = changedGenerationFixture.indexes;
+  expect(before!.comparisonUrl).not.toBe(after!.comparisonUrl);
+  await page.goto(
+    `${changedGenerationFixture.url}/view/${comparisonPaths.changed}/?viewport=desktop`,
+  );
+  await expect(page.locator("#mb-main h2").first()).toHaveText(
+    "Changed screen",
+  );
+  await page.locator("html").evaluate((html) => {
+    html.setAttribute("data-test-old-tab", "true");
+  });
+  await changedGenerationFixture.replace();
+  const reloaded = page.waitForEvent("load");
+  await page.locator('[data-diff-mode="side"]').click();
+  await reloaded;
+  await expect(page.locator("html")).not.toHaveAttribute(
+    "data-test-old-tab",
+    "true",
+  );
+  await page.locator('[data-diff-mode="side"]').click();
+  await expect(page.locator("iframe[data-mokly-comparison-frame]")).toHaveCount(
+    2,
+  );
 });

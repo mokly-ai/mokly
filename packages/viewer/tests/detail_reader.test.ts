@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { readEntryDetail } from "../src/catalogue/detail_reader.js";
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
 
-import { rawDetailFixtures } from "./catalogue_v8_fixture.js";
+import { rawDetailFixtures } from "./catalogue_v9_fixture.js";
 
 const HASH = "b".repeat(64);
 const RETIRED =
@@ -50,16 +50,18 @@ test("the detail version gate runs before any other field is read", () => {
     [],
     { schemaVersion: 1 },
     { schemaVersion: 2 },
-    { schemaVersion: 4 },
+    { schemaVersion: 3 },
+    { schemaVersion: 5 },
     { schemaVersion: 0, entry: "not an entry" },
     { ...current("guide"), schemaVersion: "1" },
+    { ...current("guide"), schemaVersion: 3 },
   ])
     assert.throws(
       () => readEntryDetail(value),
       (error) =>
         error instanceof MoklyVersionError &&
         error.boundary === "detail" &&
-        error.supported === 3,
+        error.supported === 4,
     );
 });
 
@@ -75,16 +77,16 @@ test("visual details require a unique control order and other kinds omit it", ()
   rejects(page, /control order/);
 });
 
-test("version 3 permits a current variant without workspace lists", () => {
+test("version 4 permits a current variant without workspace lists", () => {
   const variant = current("components/action/default");
   assert.equal((variant.workspace as Raw).usedBy, undefined);
   assert.equal((variant.workspace as Raw).affected, undefined);
   assert.ok(readEntryDetail(variant).workspace);
   const old = current("components/action");
-  old.schemaVersion = 2;
+  old.schemaVersion = 3;
   assert.throws(
     () => readEntryDetail(old),
-    (error) => error instanceof MoklyVersionError && error.supported === 3,
+    (error) => error instanceof MoklyVersionError && error.supported === 4,
   );
 });
 
@@ -97,10 +99,10 @@ test("removed visual details require both workspace lists", () => {
   rejects(missing, /removed visual details require workspace lists/);
 });
 
-test("a current detail has deployment and revision, a removed one generation and snapshot", () => {
+test("a current detail has revision, a removed one snapshot and no deployment fence", () => {
   const withGeneration = current("product/browse/home");
   withGeneration.generation = HASH;
-  rejects(withGeneration, /current and removed fences are exclusive/);
+  assert.doesNotThrow(() => readEntryDetail(withGeneration));
   const withoutRevision = current("product/browse/home");
   delete withoutRevision.revision;
   rejects(withoutRevision, /current and removed fences are exclusive/);
@@ -115,7 +117,7 @@ test("a current detail has deployment and revision, a removed one generation and
   rejects(removedWithoutSnapshot, /current and removed fences are exclusive/);
   const removedDeployment = removed();
   removedDeployment.deploymentId = HASH;
-  rejects(removedDeployment, /current and removed fences are exclusive/);
+  assert.doesNotThrow(() => readEntryDetail(removedDeployment));
 });
 
 test("views, the workspace and entry evidence belong to their kinds", () => {

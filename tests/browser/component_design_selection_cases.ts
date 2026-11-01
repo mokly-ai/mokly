@@ -36,7 +36,7 @@ export function registerComponentDesignSelection(
         );
         await page.getByRole("button", { name: "Usage", exact: true }).click();
         await page
-          .getByRole("region", { name: "Used by", exact: true })
+          .locator('[data-usage-section="used-by"]')
           .getByRole("link", { name: "Welcome" })
           .click();
         await expect(
@@ -87,7 +87,9 @@ export function registerComponentDesignSelection(
             "Compact · Removed",
           ]);
           await expect(
-            page.locator(".mbk-nav-scroll .mbk-nav-changed"),
+            page.locator(
+              '.mbk-nav-scroll [data-nav-row][data-changed="true"]:not([data-nav-removed]):visible',
+            ),
           ).toHaveCount(1);
         }
       }

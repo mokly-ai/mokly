@@ -11,7 +11,7 @@ import { createInitialShellState } from "../src/shell/store_initial.js";
 import { viewerContext } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 
-import { detailFixture, indexFixture } from "./catalogue_v8_fixture.js";
+import { detailFixture, indexFixture } from "./catalogue_v9_fixture.js";
 import { controllerFixture } from "./data_controller_fixture.js";
 import { flush } from "./data_fakes.js";
 

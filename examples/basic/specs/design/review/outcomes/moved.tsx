@@ -9,17 +9,6 @@ import { DESTINATIONS } from "../../parts/destinations.js";
 import { ENTRY_PATHS, PREVIOUS_PATHS } from "../../parts/entry_paths.js";
 import { MiniInvoice } from "../../parts/mini_invoice.js";
 
-/** The comparison's earlier side is the version at the entry's previous path. */
-function MovedEvidence() {
-  return (
-    <p>
-      The previous version is at{" "}
-      <code className="mbk-code">{PREVIOUS_PATHS.invoice}</code>, where it was
-      before the move.
-    </p>
-  );
-}
-
 /**
  * Invoice moved under Account with edits. Changes keeps one row for it at its
  * new place, labelled Moved, and Overlay compares it with its previous version
@@ -34,6 +23,7 @@ function MovedOverlay({ viewport }: { viewport: CompareViewport }) {
       design={DESTINATIONS.moved}
       mode="overlay"
       path={ENTRY_PATHS.invoice}
+      previousPath={PREVIOUS_PATHS.invoice}
       reasons={["material"]}
       render={(previewViewport) => (
         <ComparisonStack
@@ -47,7 +37,6 @@ function MovedOverlay({ viewport }: { viewport: CompareViewport }) {
           mode="overlay"
         />
       )}
-      source={<MovedEvidence />}
       state="changed"
       subject="invoice"
       title="Invoice"

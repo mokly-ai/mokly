@@ -61,7 +61,9 @@ function headings(
       views={views}
     />,
   );
-  return [...markup.matchAll(/<h3>(.*?)<\/h3>/g)].map((match) => match[1]!);
+  return [...markup.matchAll(/<h3 class="mbk-reset">(.*?)<\/h3>/g)].map(
+    (match) => match[1]!,
+  );
 }
 
 const cardRule = {

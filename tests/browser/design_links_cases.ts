@@ -19,7 +19,7 @@ export function registerDesignLinks(
       ? 'script:not([src="/mokly-viewer/client/inspector.js"])'
       : servedScripts();
   async function tabTo(page: Page, link: Locator): Promise<void> {
-    for (let step = 0; step < 35; step += 1) {
+    for (let step = 0; step < 50; step += 1) {
       await page.keyboard.press("Tab");
       if (await link.evaluate((node) => node === document.activeElement))
         return;
@@ -126,7 +126,9 @@ export function registerDesignLinks(
       await expect(page).toHaveURL(
         /\/view\/design\/browse\/views\/screen\/tag-forms\/$/,
       );
-      await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
+      await expect(
+        frame.getByRole("searchbox", { name: "Search catalogue" }),
+      ).toHaveValue("tag:forms");
       await frame.locator(".mbk-search-tag").click();
       await expect(page).toHaveURL(
         /\/view\/design\/browse\/states\/tag-filter\/$/,
@@ -188,8 +190,8 @@ export function registerDesignLinks(
       /\/view\/design\/browse\/states\/navigation\/$/,
     );
     await frame
-      .locator(".mbk-nav-row")
-      .filter({ hasText: /^Details$/ })
+      .locator("nav.mbk-nav")
+      .getByRole("link", { name: "Details", exact: true })
       .click();
     await expect(page).toHaveURL(
       /\/view\/design\/browse\/views\/details-screen\/$/,

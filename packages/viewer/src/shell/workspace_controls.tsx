@@ -1,11 +1,21 @@
-/** Grouped, compact viewport, theme and inspection controls. */
+/**
+ * The workspace's view controls. This container reads the store and the
+ * identifier scope and applies the change-mark rule of `view_marks.ts`, and
+ * `@mokly/ui/view-controls` renders the viewport select, the Dark preview
+ * toggle, and the Highlight components toggle.
+ */
+import { ViewControls } from "@mokly/ui/view-controls";
+
 import type { ColorScheme } from "../data/axes.js";
 
 import { useShellIdentifier } from "./identifier_context.js";
 import { useOptionalShellStore } from "./store_context.js";
-import { ViewChangedMark } from "./view_changed_mark.js";
-import { VIEW_CHANGED_IDS, viewMarks, type ChangedView } from "./view_marks.js";
-import { WorkspaceIcon } from "./workspace_icons.js";
+import {
+  VIEW_CHANGED_IDS,
+  VIEW_CHANGED_TEXT,
+  viewMarks,
+  type ChangedView,
+} from "./view_marks.js";
 
 export function WorkspaceControls({
   changedViews,
@@ -30,70 +40,37 @@ export function WorkspaceControls({
   const schemeChangedId = useShellIdentifier(VIEW_CHANGED_IDS.scheme);
   const viewportChangedId = useShellIdentifier(VIEW_CHANGED_IDS.viewport);
   return (
-    <div className="mbk-view-tools" role="group" aria-label="View options">
-      <label className="mbk-icon-select" title="Viewport">
-        <WorkspaceIcon name="viewport" />
-        <WorkspaceIcon name="caret" />
-        <select
-          aria-describedby={marks.viewport ? viewportChangedId : undefined}
-          aria-label="Viewport"
-          data-workspace-viewport=""
-          onChange={(event) =>
-            store?.selectViewport(
-              event.currentTarget.value as "mobile" | "desktop" | "both",
-            )
-          }
-          value={viewport}
-        >
-          <option value="mobile">Mobile</option>
-          <option value="desktop">Desktop</option>
-          <option value="both">Both</option>
-        </select>
-        <ViewChangedMark
-          id={viewportChangedId}
-          kind="viewport"
-          marked={marks.viewport}
-        />
-      </label>
-      {dark ? (
-        <button
-          type="button"
-          className="mbk-icon-button"
-          aria-label="Dark preview"
-          aria-describedby={marks.scheme ? schemeChangedId : undefined}
-          aria-pressed={scheme === "dark"}
-          title="Dark preview"
-          data-workspace-scheme=""
-          onClick={() =>
-            store?.selectColorScheme(
-              store.state.selection.colorScheme === "dark" ? "light" : "dark",
-            )
-          }
-        >
-          <WorkspaceIcon name="scheme" />
-          <ViewChangedMark
-            id={schemeChangedId}
-            kind="scheme"
-            marked={marks.scheme}
-          />
-        </button>
-      ) : null}
-      <button
-        type="button"
-        className="mbk-icon-button"
-        aria-label="Highlight components"
-        aria-description={
-          highlight?.reason ??
-          "Inspect component regions and their supplied props."
-        }
-        aria-pressed={highlight?.active ?? false}
-        title={highlight?.reason ?? "Highlight components"}
-        data-workspace-highlight=""
-        disabled={!highlight?.available}
-        onClick={highlight?.toggle}
-      >
-        <WorkspaceIcon name="highlight" />
-      </button>
-    </div>
+    <ViewControls
+      darkPreview={
+        dark
+          ? {
+              mark: {
+                id: schemeChangedId,
+                marked: marks.scheme,
+                text: VIEW_CHANGED_TEXT.scheme,
+              },
+              scheme,
+            }
+          : undefined
+      }
+      highlight={
+        highlight
+          ? {
+              active: highlight.active,
+              available: highlight.available,
+              reason: highlight.reason,
+            }
+          : undefined
+      }
+      onHighlight={highlight?.toggle}
+      onScheme={(next) => store?.selectColorScheme(next)}
+      onViewport={(next) => store?.selectViewport(next)}
+      viewport={viewport}
+      viewportMark={{
+        id: viewportChangedId,
+        marked: marks.viewport,
+        text: VIEW_CHANGED_TEXT.viewport,
+      }}
+    />
   );
 }

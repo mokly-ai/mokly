@@ -176,12 +176,15 @@ configuration.
 
 ## Responsibilities
 
-`@mokly/viewer` owns the readers of the catalogue index and the entry detail,
-the Browse presentation, the selection model, navigation, comparison
-presentation, inspection, instance resolution, the frame adapters, the in-frame
-inspector, and the browser entry. It makes no analytics or discovery request,
-reads no cookie, and uses no ambient credential. Consumer code never enters the
-browser through the viewer.
+`@mokly/viewer` owns the shell state, the readers of the catalogue index and the
+entry detail, the selection model, navigation, the comparison and inspection
+logic, instance resolution, the preview frames with the frame adapters and the
+in-frame inspector, and the browser entry. `@mokly/ui` owns every element and
+every style rule of the Browse shell. The viewer's containers read the shell
+state and render the package components with props and callbacks, so the
+viewer renders no element of its own. The viewer makes no analytics or
+discovery request, reads no cookie, and uses no ambient credential. Consumer
+code never enters the browser through the viewer.
 
 The embedding application owns catalogue delivery, authentication, its URL and
 route mapping, the surrounding product UI, slot content, markers, and
@@ -194,9 +197,10 @@ catalogue.
 
 The repository is an npm workspace. The Rust core is a Cargo workspace under
 `crates/`. `packages/mokly` holds the `@mokly/mokly` shim, the render sidecar,
-and the authoring API. `packages/viewer` holds this package; its shared shapes
-are the generated TypeScript types of the Rust model crate. From the repository
-root:
+and the authoring API. `packages/ui` holds `@mokly/ui`, every element and
+every stylesheet of the shell. `packages/viewer` holds this package; its
+shared shapes are the generated TypeScript types of the Rust model crate. From
+the repository root:
 
 ```bash
 npm ci
@@ -206,23 +210,83 @@ npm run test:browser
 cargo xtask check
 ```
 
-`npm run build` builds the host native target, the shim, the sidecar, and the
-viewer. The viewer build records every browser output in the browser module
-inventory; `mokly build` copies exactly those files, and Serve serves exactly
-them. `npm test -- packages/viewer/tests/<file> --test-name-pattern=<regex>`
+`npm run build` builds the host native target, the shim, the sidecar, the UI
+package, and the viewer. The viewer build writes `shell.css` and `styles.css`
+from the `@font-face` rule of the shell font and the UI package's `styles.css`,
+whose rules keep the cascade order that `packages/ui/src/styles.css` lists.
+The embedded `styles.css` needs no `@scope` rule, because no package rule
+reaches the host page or host slot content. The build records every browser
+output in the browser module inventory; `mokly build` copies exactly those
+files, and Serve serves exactly them.
+`npm test -- packages/viewer/tests/<file> --test-name-pattern=<regex>`
 runs one viewer test. `cargo xtask check` is the complete repository gate; it
 runs the viewer typecheck, the viewer's Node tests, and the Playwright Browse
 and Review regressions against `mokly serve` of the example catalogue.
 
 ### Key Code
 
+- [`../ui/src`](../ui/src) — the `@mokly/ui` presentational components the
+  shell composes, one directory per component with its CSS beside it
 - [`src/viewer`](./src/viewer) — the embedded `MoklyViewer`: React lifecycle,
   selection, host integration, and instance operations
 - [`src/viewer/host_bridge.tsx`](./src/viewer/host_bridge.tsx) and
   [`src/viewer/host_bridge_highlight.ts`](./src/viewer/host_bridge_highlight.ts) —
   the public handle and its highlight requests, geometry, and cancellation
-- [`src/shell`](./src/shell) — the Browse shell tree and its scoped styles,
-  shared by the embedded viewer and the browser entry
+- [`src/shell`](./src/shell) — the Browse shell tree, shared by the embedded
+  viewer and the browser entry; it holds no style rule
+- [`src/shell/top_bar.tsx`](./src/shell/top_bar.tsx),
+  [`src/shell/nav.tsx`](./src/shell/nav.tsx), and
+  [`src/shell/head.tsx`](./src/shell/head.tsx) — the containers of the top
+  bar, the catalogue navigation, and the screen header; `nav_rows.ts` and
+  `nav_leaf_rows.ts` build the navigation's records from the shell state
+- [`src/shell/tags.tsx`](./src/shell/tags.tsx) and
+  [`src/shell/workspace_controls.tsx`](./src/shell/workspace_controls.tsx) —
+  the containers of the tag picker, the tag chips of the details, and the
+  view controls; `tag_selection.ts` returns focus to the picker's button
+  after a tag of the details, and `view_marks.ts` decides the change marks
+- [`src/shell/inspector.tsx`](./src/shell/inspector.tsx) and
+  [`src/shell/details.tsx`](./src/shell/details.tsx) — the containers of the
+  inspector and the Details: the tabs, Escape anywhere in the shell root, and
+  the metadata rows, whose catalogue lookups live in `details_rows.tsx`;
+  `inspector_resize.ts` sizes the inspector and its mobile sheet
+- [`src/shell/component_controls_panel.tsx`](./src/shell/component_controls_panel.tsx),
+  [`src/shell/workspace_props.tsx`](./src/shell/workspace_props.tsx),
+  [`src/shell/workspace_usage.tsx`](./src/shell/workspace_usage.tsx),
+  [`src/shell/workspace_instances.tsx`](./src/shell/workspace_instances.tsx),
+  and [`src/shell/workspace_evidence.tsx`](./src/shell/workspace_evidence.tsx)
+  — the containers of the inspector's panels, which turn the controls state,
+  the usage links, the instance records, and the comparison evidence into the
+  records and the wording of the package components
+- [`src/shell/stage_frame.tsx`](./src/shell/stage_frame.tsx),
+  [`src/shell/document_stage_frame.tsx`](./src/shell/document_stage_frame.tsx),
+  [`src/shell/public_stage.tsx`](./src/shell/public_stage.tsx), and
+  [`src/shell/previews.tsx`](./src/shell/previews.tsx) — the containers of the
+  preview frames, the stages, a user flow's steps, and a removed entry's
+  previous version: they mount each frame, derive its sources, and pass its
+  `ref` and attributes to the package's `<iframe>`; `frames.tsx` holds the
+  expanded browser frame in the store
+- [`src/shell/views.tsx`](./src/shell/views.tsx),
+  [`src/shell/workspace.tsx`](./src/shell/workspace.tsx),
+  [`src/shell/embedded_viewer.tsx`](./src/shell/embedded_viewer.tsx), and
+  [`src/standalone/shell.tsx`](./src/standalone/shell.tsx) — the containers of
+  the shell layout: the main region, the workspace, an embedded root with its
+  host slots, and the standalone root, which carries the appearance, the
+  preview scheme, and the expanded window's mark; `src/viewer/component.tsx`
+  shows an
+  embedded root's loading and failure states, and
+  `src/viewer/marker_layer.tsx` and `src/viewer/inspection_layer.tsx` place
+  the host's markers and inspection labels
+- [`src/shell/comparison_views.tsx`](./src/shell/comparison_views.tsx) and
+  [`src/shell/comparison_viewport.tsx`](./src/shell/comparison_viewport.tsx) —
+  the containers of the comparison sections and panes, which own each
+  section's scroll controller and attach the viewport, its spacer, and each
+  surface to it through refs
+- [`scripts/styles.mjs`](./scripts/styles.mjs) — writes the standalone
+  `shell.css` and the embedded `styles.css` from the `@font-face` rule of
+  [`src/shell/assets/fonts/inter.css`](./src/shell/assets/fonts/inter.css) and
+  the UI package's `styles.css`: the font's address in each delivery, the
+  embedded font family, and the fallbacks that let a host's accent overrides
+  inherit
 - [`src/catalogue`](./src/catalogue) — the readers of the catalogue index and
   the entry detail, and the public catalogue types
 - [`src/data.ts`](./src/data.ts) — the `./data` entry: path functions,

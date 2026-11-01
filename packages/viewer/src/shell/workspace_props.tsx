@@ -1,6 +1,18 @@
-/** Supplied props and slots for a saved view or selected component instance. */
+/**
+ * Supplied props and slots for a saved view or a selected component
+ * instance. These containers decode the props, word their values, and choose
+ * the line that says why the tab has none. `@mokly/ui/props-panel` renders
+ * them.
+ */
 
 import type { ReactNode } from "react";
+
+import {
+  PropsMessage,
+  PropsPanel,
+  PropsStatus,
+  type PropValue,
+} from "@mokly/ui/props-panel";
 
 import { decodeProps } from "../components/codec.js";
 import type {
@@ -9,7 +21,7 @@ import type {
 } from "../components/manifest_types.js";
 import type {
   ComponentWireProps,
-  PropValue,
+  PropValue as WirePropValue,
 } from "../components/prop_types.js";
 import { viewHref } from "../navigation/routes.js";
 
@@ -28,7 +40,7 @@ export interface WorkspaceInspectorSelection {
 }
 
 /** Human-readable supplied values preserve negative zero and nested data. */
-export function propText(value: PropValue): string {
+export function propText(value: WirePropValue): string {
   if (value === null) return "null";
   if (typeof value === "number")
     return Object.is(value, -0) ? "-0" : String(value);
@@ -37,6 +49,20 @@ export function propText(value: PropValue): string {
   return `{${Object.entries(value)
     .map(([key, item]) => `${JSON.stringify(key)}: ${propText(item)}`)
     .join(", ")}}`;
+}
+
+/** Each named prop with its value as text, or Not set. */
+export function propValues(
+  names: readonly string[],
+  values: Readonly<Record<string, WirePropValue>>,
+): PropValue[] {
+  return names.map((name) => {
+    const value = values[name];
+    return {
+      name,
+      value: value === undefined ? CONTROLS_COPY.notSet : propText(value),
+    };
+  });
 }
 
 /**
@@ -52,45 +78,6 @@ function emptyProps(
   if (!usage && data.entry.kind === "screen")
     return CONTROLS_COPY.propsUnavailable;
   return "Select a component instance to see its supplied props.";
-}
-
-/** The one list of supplied props: each name and its value, or Not set. */
-export function PropValues({
-  names,
-  values,
-}: {
-  names: readonly string[];
-  values: Readonly<Record<string, PropValue>>;
-}) {
-  return (
-    <dl aria-label="Supplied props" className="mbk-props">
-      {names.map((name) => {
-        const value = values[name];
-        return (
-          <div key={name}>
-            <dt>{name}</dt>
-            <dd>
-              <code>
-                {value === undefined ? CONTROLS_COPY.notSet : propText(value)}
-              </code>
-            </dd>
-          </div>
-        );
-      })}
-    </dl>
-  );
-}
-
-/** Supplied slots under their own heading, below the props. */
-export function PropSlots({ slots }: { slots: readonly string[] | undefined }) {
-  return slots?.length ? (
-    <>
-      <h4>Slots</h4>
-      {slots.map((slot) => (
-        <p key={slot}>{slot}</p>
-      ))}
-    </>
-  ) : null;
 }
 
 /**
@@ -126,38 +113,19 @@ export function WorkspacePropsTab({
     return delivery.status === "ready" ? (
       controls
     ) : (
-      <PropsDelivery delivery={delivery} />
+      // A replaced catalogue brings new details, so the fields keep waiting
+      // for them.
+      <PropsStatus
+        onRetry={delivery.status === "failed" ? delivery.retry : undefined}
+        status={delivery.status === "failed" ? "failed" : "loading"}
+        wording={{
+          failed: CONTROLS_COPY.loadFailed,
+          loading: CONTROLS_COPY.loading,
+          retry: CONTROLS_COPY.retry,
+        }}
+      />
     );
   return <WorkspaceProps data={data} selection={usage ? { usage } : {}} />;
-}
-
-/**
- * Props while the route's details load, or after one load fails. A
- * replaced catalogue brings new details, so the fields keep waiting for them.
- */
-function PropsDelivery({
-  delivery,
-}: {
-  delivery: Exclude<DetailDelivery, { status: "ready" }>;
-}) {
-  return (
-    <section aria-label="Props status" data-props-section="status">
-      {delivery.status === "failed" ? (
-        <>
-          <p role="alert">{CONTROLS_COPY.loadFailed}</p>
-          <button
-            className="mbk-text-button"
-            onClick={delivery.retry}
-            type="button"
-          >
-            {CONTROLS_COPY.retry}
-          </button>
-        </>
-      ) : (
-        <p role="status">{CONTROLS_COPY.loading}</p>
-      )}
-    </section>
-  );
 }
 
 /** A screen shows its own props when it has controls, saved props, or slots. */
@@ -180,21 +148,17 @@ export function WorkspaceProps({
   const props = selection.instance?.props ?? selection.props;
   if (!props)
     return (
-      <p
-        className={data.viewUsagePending ? undefined : "mbk-empty-copy"}
-        role={data.viewUsagePending ? "status" : undefined}
-      >
+      <PropsMessage pending={data.viewUsagePending}>
         {emptyProps(data, selection.usage)}
-      </p>
+      </PropsMessage>
     );
-  const component = selection.instance
-    ? data.components.find(
-        (item) => item.path === selection.instance?.componentId,
-      )
+  const instance = selection.instance;
+  const component = instance
+    ? data.components.find((item) => item.path === instance.componentId)
     : undefined;
-  const slots = selection.instance
+  const slots = instance
     ? selection.usage?.slots
-        .filter((slot) => slot.instanceKey === selection.instance?.key)
+        .filter((slot) => slot.instanceKey === instance.key)
         .map(
           (slot) =>
             `${slot.name} · ${
@@ -206,24 +170,18 @@ export function WorkspaceProps({
     : selection.slots;
   const values = decodeProps(props);
   return (
-    <>
-      {selection.instance ? (
-        <>
-          <h3>
-            {component?.title ?? selection.instance.componentId}
-            {` · ${selection.instance.id}`}
-          </h3>
-          {component ? (
-            <a href={viewHref(component.path)}>Open component</a>
-          ) : null}
-        </>
-      ) : null}
-      {Object.keys(values).length ? (
-        <PropValues names={Object.keys(values)} values={values} />
-      ) : (
-        <p>No data props supplied.</p>
-      )}
-      <PropSlots slots={slots} />
-    </>
+    <PropsPanel
+      instance={
+        instance
+          ? {
+              ...(component ? { href: viewHref(component.path) } : {}),
+              id: instance.id,
+              title: component?.title ?? instance.componentId,
+            }
+          : undefined
+      }
+      slots={slots}
+      values={propValues(Object.keys(values), values)}
+    />
   );
 }

@@ -1,5 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 
+import { shellRoot } from "./browse_assertions.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { awaitRoutedDetail, modeButton, showMode } from "./comparison_ui.js";
 import {
@@ -47,7 +48,7 @@ test("a dark-only change marks the views it hides and opens on one", async ({
   });
   await page.goto(`/view/${comparisonPaths.darkOnly}/?comparison=side`);
   const scheme = page.getByLabel("Appearance", { exact: true });
-  await expect(page.locator("body")).toHaveAttribute(
+  await expect(page.locator(shellRoot)).toHaveAttribute(
     "data-mokly-color-scheme",
     "light",
   );
@@ -71,7 +72,7 @@ test("a dark-only change marks the views it hides and opens on one", async ({
   expect(diffs).toEqual([]);
 
   await scheme.selectOption("dark");
-  await expect(page.locator("body")).toHaveAttribute(
+  await expect(page.locator(shellRoot)).toHaveAttribute(
     "data-mokly-color-scheme",
     "dark",
   );
@@ -130,7 +131,7 @@ test("a light fallback rejects an ineligible comparison deep link", async ({
   await page.goto(
     `/view/${comparisonPaths.unchanged}/?viewport=mobile&scheme=dark&comparison=side`,
   );
-  await expect(page.locator("body")).toHaveAttribute(
+  await expect(page.locator(shellRoot)).toHaveAttribute(
     "data-mokly-color-scheme",
     "dark",
   );
