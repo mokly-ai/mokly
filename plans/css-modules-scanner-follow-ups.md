@@ -537,13 +537,20 @@ Merge notes: `.context/css-modules-scanner-follow-ups/main-sync-2026-11-01.md`.
     `css-module-custom-property-rules.md` for 113, and
     `moz-document-statement-kind.md` for the `@-moz-document` change, which
     keeps the coordinator's letters A and D of item 5.
-- [ ] Merge `origin/main`. Run the targeted tests and the complete gate
+- [x] Merge `origin/main`. Run the targeted tests and the complete gate
       `cargo xtask check --executor local`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+  - The complete gate passed on `5e7aa4b2` on 2026-11-01. Log:
+    `.context/css-modules-scanner-follow-ups/gate/`. The later merge of
+    `main` at `c7e7d9b8` passed the crate tests and the Markdown checks. The
+    pull request CI checks the final head.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings, then
       apply the review-fix rule: fix the `Auto-fix: yes` findings, re-review
       once, and report the rest.
+  - Round 2 reviewed `5e7aa4b2` and found no new finding and nothing outside
+    the scope, so no fix round and no re-review were due. Report:
+    `.context/reviews/conductor/rust-rebuild-112-css-modules-follow-ups/`.
 - [ ] Delete this plan in the last commit before the pull request. Name it in
       the commit message. The pull request description keeps each dated
       decision and design call, with a permalink to this plan.
