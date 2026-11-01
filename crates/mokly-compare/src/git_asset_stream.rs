@@ -17,7 +17,8 @@ use crate::git_tree::{GitTree, adapter, failure};
 use crate::sources::Sources;
 
 const COPY_BYTES: usize = 64 * 1024;
-const OPAQUE_LIMIT: usize = 64 * 1024 * 1024;
+/// Each opaque asset retains its own conversion bound.
+pub(crate) const OPAQUE_LIMIT: usize = 64 * 1024 * 1024;
 
 impl GitTree {
     pub(crate) fn opaque_stream(&self, path: &Path) -> Result<Box<dyn SourceStream>> {

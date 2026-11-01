@@ -2,7 +2,7 @@
 
 use mokly_catalogue::error::CatalogueError;
 use mokly_compare::error::Error;
-use mokly_css::error::CssError;
+use mokly_css::error::{AssetFailure, CssError};
 use mokly_graph::error::GraphError;
 use mokly_html::error::HtmlError;
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
@@ -111,4 +111,30 @@ fn a_fatal_runtime_failure_takes_precedence_over_historical_validation() {
     };
     assert!(changes_diagnostics::unavailable(&error, "fixture-base").is_none());
     assert!(changes_diagnostics::failure_detail(&error).contains("bad frame"));
+}
+
+#[test]
+fn unavailable_css_asset_reports_base_resource_unavailable() {
+    let error = Error::Base {
+        commit: "a".repeat(40),
+        source: Box::new(Error::Graph {
+            source: GraphError::Css {
+                source: CssError::Asset {
+                    kind: AssetFailure::Unavailable,
+                    message: "source bytes exceed 67108864 bytes".into(),
+                },
+            },
+        }),
+    };
+    let result = changes_diagnostics::unavailable(&error, "fixture-base").unwrap();
+    let BuildChanges::Unavailable {
+        reason,
+        diagnostics,
+        ..
+    } = result
+    else {
+        panic!("expected unavailable Changes");
+    };
+    assert_eq!(reason, "base resource unavailable");
+    assert_eq!(diagnostics[0].message, "source bytes exceed 67108864 bytes");
 }

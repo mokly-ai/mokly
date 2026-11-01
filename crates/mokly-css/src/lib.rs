@@ -104,3 +104,7 @@ mod deep_scanner_tests;
 #[cfg(test)]
 #[path = "_tests_/asset_failures_tests.rs"]
 mod asset_failures_tests;
+
+#[cfg(test)]
+#[path = "_tests_/asset_digest_errors_tests.rs"]
+mod asset_digest_errors_tests;

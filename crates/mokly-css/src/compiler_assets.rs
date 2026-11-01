@@ -1,8 +1,11 @@
 //! Confined CSS assets and physical alias inventory.
 
-use mokly_model::routes;
-use mokly_source_interface::tree::{FileKind, Node};
 use std::collections::BTreeSet;
+
+use mokly_model::routes;
+use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
+use mokly_source_interface::error::SourceError;
+use mokly_source_interface::tree::{FileKind, Node};
 
 use crate::compiler::AssetCandidate;
 use crate::compiler::Preparation;
@@ -156,6 +159,20 @@ impl Preparation<'_> {
             let node = candidate.node;
             let digest = match digest {
                 Ok(digest) => digest,
+                Err(SourceError::Unavailable { message, .. }) => {
+                    return Err(CssError::Asset {
+                        kind: AssetFailure::Unavailable,
+                        message,
+                    });
+                }
+                Err(SourceError::Cancelled { .. }) => {
+                    return Err(CssError::Runtime {
+                        source: RuntimeDiagnostic {
+                            code: RuntimeCode::Cancelled,
+                            message: "build cancelled".into(),
+                        },
+                    });
+                }
                 Err(_) => return Err(failure()),
             };
             let mut aliases = Vec::new();
