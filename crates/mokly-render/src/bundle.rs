@@ -92,7 +92,19 @@ pub(crate) fn describe(
         record_usage(runtime, &side, &result);
         modules = bundle_attempt::modules(&result);
     }
-    let render = render_environment::derive(&params, &result, &maps)?;
+    let render = render_environment::derive(
+        &params,
+        &result,
+        &maps,
+        runtime
+            .base
+            .as_ref()
+            .map_or(&config.repo_root, |base| &base.working_root),
+        runtime
+            .base
+            .as_ref()
+            .and_then(|base| base.cache_namespace.as_deref()),
+    )?;
     let stamp = bundle_attempt::stamp(&result, &config.repo_root);
     let module_digests = result
         .modules

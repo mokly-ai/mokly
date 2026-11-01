@@ -1,6 +1,7 @@
 //! Apply shared CSS reduction and unchanged-input implementation proof to each view.
 
 use std::collections::BTreeSet;
+use std::mem;
 
 use mokly_css::attribution::Attribution;
 use mokly_model::evidence::{EvidenceOwner, RuleStatus};
@@ -32,7 +33,7 @@ pub(crate) fn apply(
         .cloned()
         .unwrap_or_default();
     instance_proofs.append(&mut view.proofs);
-    instance_proofs.extend(view.owned.proofs(&input.attributed.own_pages));
+    instance_proofs.extend(mem::take(&mut view.owned).proofs(&input.attributed.own_pages));
     if let Some(component) = input.component
         && input.same_inputs
     {

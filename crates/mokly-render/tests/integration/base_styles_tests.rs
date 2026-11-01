@@ -52,6 +52,7 @@ fn historical(head: &Consumer, base: &Consumer) -> Arc<dyn RenderGeneration> {
         head.runtime.workers.clone(),
         super::support::package_version::read(),
         Some(Arc::new(BaseSide {
+            working_root: head.repository(),
             sources: Arc::new(Lease {
                 directory: base.root().into(),
                 guard: Box::new(Unimock::new(())),
@@ -67,6 +68,7 @@ fn historical(head: &Consumer, base: &Consumer) -> Arc<dyn RenderGeneration> {
                 lease: None,
                 repository_roots: vec![head.root().into(), root],
             },
+            cache_namespace: None,
             identity: "historical".into(),
         })),
     ));
