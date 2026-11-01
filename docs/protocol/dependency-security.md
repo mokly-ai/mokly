@@ -201,12 +201,12 @@ The current maintenance choices are:
 
 - `minimatch` 11.0.3 is an override scoped to `eslint`,
   `@typescript-eslint/typescript-estree`, `@google-automations/git-file-utils`,
-  and `code-suggester`. Their ranges select `minimatch` 10 or 3, which have
-  GHSA-g3hv-75wg-m249. Release 11.0.1 is the first patched release, and no
-  release of these parents accepts it yet. The `code-suggester` scope reaches
-  its `glob` 7, which cannot use `minimatch` 11, but `code-suggester` never
-  loads `glob`. Remove each scope when its parent resolves `minimatch` 11.0.1
-  or newer.
+  and `code-suggester`. Packages under these parents declare `minimatch` 10
+  or 3, which have GHSA-g3hv-75wg-m249. Release 11.0.1 is the first patched
+  release, and no current release of these packages accepts it. The
+  `code-suggester` scope reaches its `glob` 7, which cannot use `minimatch`
+  11, but `code-suggester` never loads `glob`. Remove a scope when, without
+  it, every `minimatch` under its parent resolves to 11.0.1 or newer.
 
 - `eslint-plugin-import-x` keeps `minimatch` 10.2.6 through a reviewed
   exception for GHSA-g3hv-75wg-m249. The plugin fails to load with `minimatch`
