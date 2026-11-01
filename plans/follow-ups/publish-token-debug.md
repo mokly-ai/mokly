@@ -25,6 +25,11 @@
   and its `Debug` output is `Token([redacted])`. The review found this older
   than the change it reviewed. No current code formats `Publish` with
   `Debug`.
+  - A lifecycle script of a base install can read the same token from
+    Mokly's own process environment. On 2026-10-28 the user chose to
+    document that limit in
+    `docs/protocol/mokly-base-install-processes.md#environment`. That path
+    needs a different change, so this item does not cover it.
 - **Problem:** The type permits a debug print of the raw secret. A later
   debug log, panic message, or error that formats `Publish` prints the
   token.
@@ -45,13 +50,9 @@
 - **Previous examples:** A final review of the rebuild found that
   `SecretMatcher` derived `Debug` and printed the bearer token. Its fix in
   `035b94bb` gave it the output `SecretMatcher([redacted])`.
-- **Related:** [base-script-publish-token.md](./base-script-publish-token.md)
-  concerns the same publish token on another path: a base install script can
-  read it from Mokly's own process environment. The code and the fix differ,
-  so each item needs its own change.
 - **Recommendation:** B. It protects every type that holds the token, not
   only the current CLI struct.
-- **Action:** ask the user, because condition 5 holds: the user reserved
-  the choice for each open review item of the rebuild.
+- **Action:** ask the user, because the user reserved the choice for each
+  open review item of the rebuild.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6395).

@@ -1,6 +1,6 @@
 # Mokly Build And Browse Runtime
 
-Status: In progress under the [Base Install Process Tree Stops plan](../../plans/base-install-process-tree-stops.md).
+Status: Follow-up work remains in the [Yarn Classic script stop item](../../plans/follow-ups/yarn-classic-script-stop.md).
 
 This page is the runtime contract of `mokly serve` and `mokly build`: how a
 catalogue is discovered, rendered, cached, served, written, and shut down. The
