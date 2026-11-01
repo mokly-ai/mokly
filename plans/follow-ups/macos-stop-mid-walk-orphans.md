@@ -6,7 +6,7 @@
   `conductor/rust-rebuild-150-process-tree-stops`. The Milestone 1 check of
   its plan found the gap. A design call of the same day reworded the limit,
   and the coordinator's review withdrew that call.
-- **Location:** `docs/protocol/mokly-base-install-processes.md:66` to line 69,
+- **Location:** `docs/protocol/mokly-base-install-processes.md:67` to line 70,
   `docs/protocol/mokly-runtime.md:231` to line 232,
   `crates/mokly-platform/src/unix_process_tree/group.rs:50` to line 68,
   `crates/mokly-platform/src/unix_process_tree/walk.rs:39` to line 70,
