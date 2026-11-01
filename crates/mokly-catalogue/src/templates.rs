@@ -6,7 +6,7 @@ use mokly_model::catalogue::SourceLocation;
 use mokly_model::prop_schema::PropSchema;
 
 use crate::diagnostic::{Code, Issue, Warning, json_quoted};
-use crate::html_tokens::{self, StartTag, Token};
+use crate::html_tokens::{self, Spanned, StartTag, Token};
 use crate::references::{boolean, reference, substitutions, use_reference};
 use crate::template_role::TemplateRole;
 use crate::template_types::{ElementRegistry, Template};
@@ -16,6 +16,10 @@ pub(crate) struct Validation {
     pub(crate) warnings: Vec<Warning>,
     pub(crate) components: BTreeSet<String>,
 }
+
+#[cfg(test)]
+#[path = "_tests_/template_offset_tests.rs"]
+mod template_offset_tests;
 
 pub(crate) fn validate(
     template: &Template,
@@ -68,7 +72,7 @@ pub(crate) fn validate(
             }
             Token::String(text) => {
                 let text_value = String::from_utf8_lossy(&text.value);
-                checker.substitutions(&text_value, text.span.start);
+                checker.substitutions(&text_value, &text);
                 if !text_value.trim().is_empty() {
                     checker.slot_content("children", text.span.start);
                 }
@@ -127,10 +131,15 @@ impl Checker<'_> {
             .issues
             .push(Issue::new(code, message).at(self.location(offset)));
     }
-    fn substitutions(&mut self, text: &str, offset: usize) {
+    fn substitutions(&mut self, text: &str, value: &Spanned) {
         for (start, name) in substitutions(text) {
             if let Err(message) = use_reference(self.schema, name, true, &mut self.used) {
-                self.fail(Code::HtmlProps, message, offset + start);
+                let location = self
+                    .role
+                    .substitution_location(self.template, value.source_offset(start));
+                self.result
+                    .issues
+                    .push(Issue::new(Code::HtmlProps, message).at(location));
             }
         }
     }
@@ -214,7 +223,7 @@ impl Checker<'_> {
         for (attribute, value) in &tag.attributes {
             let attribute = String::from_utf8_lossy(attribute);
             let text = String::from_utf8_lossy(&value.value);
-            self.substitutions(&text, value.span.start);
+            self.substitutions(&text, value);
             if attribute == "mokly-if" {
                 match text
                     .strip_prefix('$')

@@ -22,6 +22,30 @@ pub(crate) fn at(path: &str, text: &str, offset: usize) -> SourceLocation {
     }
 }
 
+/// Locate a decoded HTML substitution with LF, CRLF, and CR line endings.
+pub(crate) fn html_at(path: &str, text: &str, offset: usize) -> SourceLocation {
+    let mut location = at(path, text, offset);
+    let mut characters = text
+        .get(..offset.min(text.len()))
+        .unwrap_or_default()
+        .chars()
+        .peekable();
+    location.line = 1;
+    location.column = 1;
+    while let Some(character) = characters.next() {
+        if matches!(character, '\r' | '\n') {
+            if character == '\r' && characters.peek() == Some(&'\n') {
+                characters.next();
+            }
+            location.line += 1;
+            location.column = 1;
+        } else {
+            location.column += 1;
+        }
+    }
+    location
+}
+
 /// Locate JSON object fields and values by JSON Pointer. JSON is validated separately.
 pub(crate) fn json_positions(text: &str) -> BTreeMap<String, usize> {
     let mut scanner = JsonPositions {

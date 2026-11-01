@@ -105,6 +105,9 @@ mod raw_text_context_tests;
 #[path = "_tests_/safety_tests.rs"]
 mod safety_tests;
 #[cfg(test)]
+#[path = "_tests_/source_map_corpus_tests.rs"]
+mod source_map_corpus_tests;
+#[cfg(test)]
 #[path = "_tests_/substitution_tests.rs"]
 mod substitution_tests;
 #[cfg(test)]

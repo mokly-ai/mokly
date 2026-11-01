@@ -56,6 +56,7 @@ fn reference(source: &str) -> Vec<String> {
                 crate::html_token_types::Spanned {
                     value: value.value.0,
                     span: span(value.span),
+                    source_map: Default::default(),
                 }
             };
             describe(match token {
