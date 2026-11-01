@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { expect } from "@playwright/test";
+import { expect, type Locator } from "@playwright/test";
 
 import { viewRoute } from "../../packages/viewer/dist/data.js";
 import { repositoryRoot } from "../helpers/fixture.js";
@@ -58,7 +58,7 @@ export function registerDesignLibrary(
         await page.goto(fileUrl(viewRoute(entry.path, viewport, "light")));
         await expect(page.locator(".mbk-library-host")).toBeVisible();
         for (const panel of await page
-          .locator(".ce-workspace details[open] > .ce-inspector-panel")
+          .locator(".mbk-workspace details[open] > .mbk-inspector-content")
           .all()) {
           await expect(panel).toHaveCSS("overflow-y", "auto");
         }
@@ -127,9 +127,12 @@ export function registerDesignLibrary(
     }) => {
       const logo = () =>
         page.locator(".mbk-brand").evaluate((brand) => {
+          // A wordmark that the narrow bar hides reads as absent.
           const color = (selector: string) => {
             const node = brand.querySelector(selector);
-            return node && getComputedStyle(node).color;
+            return node && getComputedStyle(node).display !== "none"
+              ? getComputedStyle(node).color
+              : null;
           };
           return {
             brand: getComputedStyle(brand).color,
@@ -164,16 +167,13 @@ export function registerDesignLibrary(
       );
       const steps = page.locator(".flow-step");
       await expect(steps).toHaveCount(2);
-      expect(
-        await steps
-          .first()
-          .evaluate((node) => getComputedStyle(node, "::before").display),
-      ).not.toBe("none");
-      expect(
-        await steps
-          .last()
-          .evaluate((node) => getComputedStyle(node, "::before").display),
-      ).toBe("none");
+      const connector = (step: Locator) =>
+        step.evaluate((node) => getComputedStyle(node, "::before").display);
+      // A mobile render draws the shipped narrow flow, which joins no steps.
+      expect(await connector(steps.first())).toBe(
+        viewport === "desktop" ? "block" : "none",
+      );
+      expect(await connector(steps.last())).toBe("none");
     });
 
     test("standalone inline components retain their intrinsic width", async ({
@@ -181,7 +181,7 @@ export function registerDesignLibrary(
     }) => {
       for (const [slug, selector] of [
         ["tag-chip", ".mbk-chip"],
-        ["change-status", ".ce-change-status"],
+        ["change-status", ".mbk-entry-status"],
       ]) {
         const entry = manifest.entries.find(
           (entry) =>
@@ -249,9 +249,9 @@ export function registerDesignLibrary(
       if (entry?.kind !== "component" || !("variantOf" in entry))
         throw new Error("Missing footer panel");
       await page.goto(fileUrl(viewRoute(entry.path, "mobile", "light")));
-      const workspace = page.locator(".ce-workspace");
+      const workspace = page.locator(".mbk-workspace-panes");
       const dock = page.locator(".ce-inspector-dock");
-      const inspector = page.locator(".ce-inspector");
+      const inspector = page.locator(".mbk-inspector");
       const [workspaceBounds, dockBounds] = await Promise.all([
         workspace.boundingBox(),
         dock.boundingBox(),
@@ -264,7 +264,7 @@ export function registerDesignLibrary(
       await expect(dock).toHaveCSS("border-top-left-radius", "0px");
       await expect(dock).toHaveCSS("box-shadow", "none");
       await expect(inspector).toHaveCSS("border-top-width", "1px");
-      await expect(inspector).toHaveCSS("border-top-left-radius", "20px");
+      await expect(inspector).toHaveCSS("border-top-left-radius", "14px");
       await expect(inspector).not.toHaveCSS("box-shadow", "none");
     });
   }

@@ -164,7 +164,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
         afterList: spacing.afterList,
       });
       await expect(
-        page.locator(".mbk-screen-head .ce-change-status"),
+        page.locator(".mbk-screen-head .mbk-entry-status"),
       ).toHaveText("Changed");
       expect(await titleLines(page)).toBe(1);
     });

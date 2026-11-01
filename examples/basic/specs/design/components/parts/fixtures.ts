@@ -1,6 +1,12 @@
 /** Synthetic component usage shared by the design screens, never product data. */
 export const toolbarPrompt = "Ready for your next step?";
 
+/**
+ * The Action that the depicted Toolbar renders, as the Toolbar page names it
+ * in its nested components and on its highlight region.
+ */
+export const toolbarAction = "Action · Main action";
+
 export const componentUses = [
   {
     title: "Welcome",

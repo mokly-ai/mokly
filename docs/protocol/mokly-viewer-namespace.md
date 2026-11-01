@@ -10,9 +10,10 @@ fixed.
 
 | Path below `mokly-viewer/`                                   | Purpose                                                         | Where         |
 | ------------------------------------------------------------ | --------------------------------------------------------------- | ------------- |
-| `index.json`                                                 | the catalogue index v8                                          | Serve, output |
-| `entries/<entry path>.json`                                  | one entry detail v3 per current entry                           | Serve, output |
-| `diffs/generations/<generation>/entries/<entry path>.json`   | the entry detail v3 of a removed entry                          | Serve, output |
+| `index.json`                                                 | the catalogue index v9                                          | Serve, output |
+| `deployment.json`                                            | the deployment file v1                                          | output only   |
+| `entries/<entry path>.json`                                  | one entry detail v4 per current entry                           | Serve, output |
+| `diffs/generations/<generation>/entries/<entry path>.json`   | the entry detail v4 of a removed entry                          | Serve, output |
 | `diffs/generations/<generation>/snapshots/**`, `previews/**` | snapshot documents and resources, removed page preview metadata | Serve, output |
 | `diffs/generations/<generation>/`                            | the generation root, which renews a retained generation         | Serve only    |
 | `client/**`, `shell.css`, `fonts/**`                         | the shell bundle, the inspector, styles, and fonts              | Serve, output |
@@ -22,7 +23,7 @@ fixed.
 | `components/**`                                              | live controls and transient component renders                   | Serve only    |
 
 The [shell delivery contract](./mokly-shell-delivery.md#routes) owns the
-first two rows and the stub routes `/`, `/view/<route>`, and `/404.html`; the
+first three rows and the stub routes `/`, `/view/<route>`, and `/404.html`; the
 [comparison serving](./mokly-comparison-serving.md),
 [removed previews](./mokly-removed-previews.md),
 [on-demand](./mokly-on-demand.md), and
@@ -42,6 +43,7 @@ slash; HTTP URLs prepend `/`:
 
 ```text
 mokly-viewer/index.json
+mokly-viewer/deployment.json
 mokly-viewer/entries/<entry path>.json
 mokly-viewer/diffs/generations/<64 lowercase hex>/entries/<entry path>.json
 static/mokly-generated/<document route>
@@ -64,6 +66,7 @@ index.
 ## Public Paths
 
 The public paths of a catalogue are `mokly-viewer/index.json`,
+`mokly-viewer/deployment.json`,
 `mokly-viewer/entries/**`, `static/**`, `mokly-viewer/client/**`,
 `mokly-viewer/shell.css`, `mokly-viewer/fonts/**`, and the immutable
 generations under `mokly-viewer/diffs/generations/**`. Serve answers
@@ -75,10 +78,12 @@ access to sources, controls, or the watcher.
 
 Versions identify meaning before a reader interprets any path. The
 [format inventory](./mokly-format-versions.md) lists the supported version of
-every boundary and the reader of each. Unknown versions fail closed. No other
-envelope exists.
+every boundary and the reader of each. Unknown versions fail closed. An
+unreadable deployment file, including one with another version, changes
+nothing. The deployment file requires schema version 1 and is static-only;
+Serve never writes or answers it. No other envelope exists.
 
-Index v8 carries identity-only entries: no layout prefix, per-entry route,
+Index v9 carries identity-only entries: no layout prefix, per-entry route,
 `documentPath`, or `fragmentPath`. A reader derives every file from the
 entry's path, viewport, and scheme through the artifact path contract. The
 index carries no `usage` and no `resourceEvidence`, and its reader rejects

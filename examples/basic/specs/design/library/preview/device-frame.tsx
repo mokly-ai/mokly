@@ -12,8 +12,6 @@ const propSchema = {
   required: ["device", "dark", "lightOnly", "small", "expandable", "address"],
   properties: {
     device: { enum: ["phone", "browser"] },
-    label: text,
-    scheme: flag,
     dark: flag,
     lightOnly: flag,
     small: flag,
@@ -25,7 +23,6 @@ const slots = ["children"] as const;
 export type DeviceFrameProps = LibraryProps<typeof propSchema, typeof slots>;
 const sample = {
   device: "phone",
-  label: "Mobile",
   dark: false,
   lightOnly: false,
   small: true,
@@ -52,7 +49,6 @@ export const deviceFrame = defineComponent({
         { label: "Browser", value: "browser" },
       ],
     },
-    scheme: { kind: "boolean", label: "Scheme in caption" },
     dark: { kind: "boolean", label: "Dark preview" },
     small: { kind: "boolean", label: "Compact frame" },
     address: { kind: "text", label: "Address" },
@@ -63,7 +59,7 @@ export const deviceFrame = defineComponent({
     {
       slug: "browser",
       title: "Browser",
-      props: { ...sample, device: "browser", label: "Desktop" },
+      props: { ...sample, device: "browser" },
       slots: { children: <MiniWelcome /> },
     },
     {

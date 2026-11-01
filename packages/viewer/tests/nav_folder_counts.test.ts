@@ -7,7 +7,7 @@ import { renderToString } from "react-dom/server";
 import { MoklyViewer } from "../src/viewer/component.js";
 import type { ViewerSelection } from "../src/viewer/types.js";
 
-import { detailFixture, rawIndexFixture } from "./catalogue_v8_fixture.js";
+import { detailFixture, rawIndexFixture } from "./catalogue_v9_fixture.js";
 
 /**
  * The protocol catalogue with Details neither moved nor changed, so Browse
@@ -46,7 +46,10 @@ function counts(selection: Partial<ViewerSelection>) {
       const summary = html
         .slice(html.indexOf(`data-nav-folder="${folder}"`))
         .split("</summary>")[0]!;
-      return [folder, /class="mbk-nav-count">(\d+)</u.exec(summary)?.[1]];
+      return [
+        folder,
+        /class="mbk-nav-count mbk-reset">(\d+)</u.exec(summary)?.[1],
+      ];
     }),
   );
 }

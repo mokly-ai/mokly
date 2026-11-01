@@ -54,19 +54,19 @@ export function registerDesignModernControls(
               ).toHaveCount(0);
               if (withoutInspector.has(screen.path)) continue;
               await expect(
-                page.locator(".ce-inspector"),
+                page.locator(".mbk-inspector"),
                 screen.path,
               ).toHaveCount(1);
               await expect(
-                page.getByRole("toolbar", { name: "Preview options" }),
+                page.getByRole("group", { name: "View options" }),
                 screen.path,
               ).toHaveCount(1);
               await expect(
-                page.locator(".mbk-topbar .ce-view-controls"),
+                page.locator(".mbk-topbar .mbk-view-tools"),
               ).toHaveCount(0);
               for (const selection of ["mobile", "desktop", "both"]) {
                 await page
-                  .getByLabel("Preview viewport", { exact: true })
+                  .getByLabel("Viewport", { exact: true })
                   .selectOption(selection);
                 await expect(
                   page.locator(".ce-preview-view:visible"),
@@ -90,7 +90,7 @@ export function registerDesignModernControls(
         );
         const header = page.locator(".mbk-screen-head");
         const initialHeader = await header.boundingBox();
-        const options = page.getByLabel("Preview viewport", { exact: true });
+        const options = page.getByLabel("Viewport", { exact: true });
         for (const selection of ["mobile", "desktop", "both"]) {
           await options.selectOption(selection);
           await expect(page.locator(".ce-preview-view:visible")).toHaveCount(
@@ -98,13 +98,13 @@ export function registerDesignModernControls(
           );
         }
         const details = page.locator(
-          '.ce-inspector details[data-panel="info"]',
+          '.mbk-inspector details[data-inspector-tab="details"]',
         );
         await details
           .getByRole("button", { name: "Details", exact: true })
           .click();
         await expect(details).toHaveAttribute("open", "");
-        await expect(details.locator(".ce-inspector-panel")).toHaveCSS(
+        await expect(details.locator(".mbk-inspector-content")).toHaveCSS(
           "overflow-y",
           "auto",
         );
@@ -121,11 +121,11 @@ export function registerDesignModernControls(
             compact!.height,
           );
         }
-        await details.locator(".ce-inspector-close").click();
+        await details.locator("[data-inspector-close]").click();
         await expect(details).not.toHaveAttribute("open", "");
-        await expect(page.locator(".ce-inspector > details[open]")).toHaveCount(
-          0,
-        );
+        await expect(
+          page.locator(".mbk-inspector > details[open]"),
+        ).toHaveCount(0);
         expect((await header.boundingBox())!.y).toBe(initialHeader!.y);
         expect(
           await page.evaluate(() => document.documentElement.scrollHeight),
@@ -152,9 +152,9 @@ export function registerDesignModernControls(
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto(fileUrl("design/browse/views/screen/index.desktop.html"));
     await page.getByRole("button", { name: "Details", exact: true }).click();
-    const panel = page.locator(".ce-inspector");
+    const panel = page.locator(".mbk-inspector");
     const before = (await panel.boundingBox())!;
-    const grip = (await page.locator(".ce-inspector-resize").boundingBox())!;
+    const grip = (await page.locator(".mbk-inspector-resize").boundingBox())!;
     const x = grip.x + grip.width / 2;
     const y = grip.y + grip.height / 2;
     await page.mouse.move(x, y);

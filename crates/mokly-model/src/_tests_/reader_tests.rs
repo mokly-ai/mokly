@@ -1,37 +1,72 @@
 //! Version gates must run before any current-format payload decoding.
 
-use crate::readers::{ReadError, detail, index, live};
+use crate::readers::{ReadError, deployment, detail, index, live};
 use crate::versions;
 
 #[test]
-fn all_three_boundaries_reject_versions_before_payloads() {
-    for version in [
-        0,
-        1,
-        2,
-        6,
-        7,
-        8,
-        999,
-        versions::CATALOGUE_INDEX.saturating_sub(1),
-        versions::ENTRY_DETAIL.saturating_sub(1),
-        versions::LIVE_DESCRIPTOR.saturating_sub(1),
-    ] {
-        let text =
-            format!(r#"{{"schemaVersion":{version},"identity":false,"entry":42,"render":null}}"#);
-        if version != versions::CATALOGUE_INDEX {
-            assert!(matches!(index(&text), Err(ReadError::Version { .. })));
+fn all_versioned_boundaries_reject_versions_before_payloads() {
+    enum Reader {
+        Index,
+        Deployment,
+        Detail,
+        Live,
+    }
+    let readers = [
+        ("catalogue index", versions::CATALOGUE_INDEX, Reader::Index),
+        (
+            "deployment file",
+            versions::DEPLOYMENT_FILE,
+            Reader::Deployment,
+        ),
+        ("entry detail", versions::ENTRY_DETAIL, Reader::Detail),
+        ("live descriptor", versions::LIVE_DESCRIPTOR, Reader::Live),
+    ];
+    for (boundary, expected, reader) in readers {
+        for version in (0..expected).chain([expected + 1, 999]) {
+            let text = format!(
+                r#"{{"schemaVersion":{version},"identity":false,"entry":42,"render":null}}"#
+            );
+            let error = match reader {
+                Reader::Index => index(&text).map(|_| ()),
+                Reader::Deployment => deployment(&text).map(|_| ()),
+                Reader::Detail => detail(&text).map(|_| ()),
+                Reader::Live => live(&text).map(|_| ()),
+            };
+            assert!(matches!(
+                error,
+                Err(ReadError::Version { boundary: actual, expected: found, .. })
+                    if actual == boundary && found == expected
+            ));
         }
-        if version != versions::ENTRY_DETAIL {
-            assert!(matches!(detail(&text), Err(ReadError::Version { .. })));
-        }
-        if version != versions::LIVE_DESCRIPTOR {
-            assert!(matches!(live(&text), Err(ReadError::Version { .. })));
+        for text in [
+            "{}".to_owned(),
+            format!(r#"{{"schemaVersion":"{expected}"}}"#),
+            format!(r#"{{"schemaVersion":{expected}.0}}"#),
+        ] {
+            let error = match reader {
+                Reader::Index => index(&text).map(|_| ()),
+                Reader::Deployment => deployment(&text).map(|_| ()),
+                Reader::Detail => detail(&text).map(|_| ()),
+                Reader::Live => live(&text).map(|_| ()),
+            };
+            assert!(matches!(error, Err(ReadError::Version { .. })));
         }
     }
-    for text in ["{}", r#"{"schemaVersion":"8"}"#, r#"{"schemaVersion":8.0}"#] {
-        assert!(matches!(index(text), Err(ReadError::Version { .. })));
-    }
+}
+
+#[test]
+fn deployment_file_gates_and_validates_its_identity() {
+    let id = "a".repeat(64);
+    let text = format!(r#"{{"schemaVersion":1,"deploymentId":"{id}"}}"#);
+    assert_eq!(deployment(&text).unwrap().deployment_id, id);
+    assert!(matches!(
+        deployment(r#"{"schemaVersion":2,"deploymentId":42}"#),
+        Err(ReadError::Version { .. })
+    ));
+    assert!(matches!(
+        deployment(r#"{"schemaVersion":1,"deploymentId":"bad"}"#),
+        Err(ReadError::Contract { .. })
+    ));
 }
 
 #[test]
@@ -39,7 +74,7 @@ fn version_errors_print_the_number_without_rust_debug_wrapping() {
     let error = index(r#"{"schemaVersion":6}"#).unwrap_err().to_string();
     assert_eq!(
         error,
-        "[mokly-model/version] catalogue index requires schemaVersion 8; received 6"
+        "[mokly-model/version] catalogue index requires schemaVersion 9; received 6"
     );
     let missing = index("{}").unwrap_err().to_string();
     assert!(missing.ends_with("received missing or not an integer"));

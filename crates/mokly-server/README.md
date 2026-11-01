@@ -30,8 +30,9 @@ through sidecar shutdown and final release. The CLI reporter receives the
 first accept resource failure and the recovery once per backoff period.
 
 `Projector` implements `dyn SnapshotFactory`. It projects the initial revision
-from graph plans without rendering a document. Every JSON response has
-canonical bytes. `Publications` supplies one complete snapshot per read and
+from graph plans without rendering a document. It computes each detail's
+content id before publishing the index that lists those ids. Every JSON response
+has canonical bytes. `Publications` supplies one complete snapshot per read and
 update, including its matching document backend. `FixedPublication` retains
 revision 1. `SharedPublication` installs later revisions in one step and emits
 each update in order. A superseded revision admits no queued live render.
@@ -41,8 +42,10 @@ publications.
 Evidence revisions share the generation's assets, routes, backend, and shell.
 Unchanged detail payloads and index bytes also stay shared. Only changed
 details are validated and encoded. Source replacements retain ready usage when
-its document key is equal. `Snapshot::detail` supplies the matching revision
-to typed consumers.
+its document key is equal. Public membership reads that document's shared
+closure records with the replacement's own policy. This includes a render
+that completes after the replacement is prepared. `Snapshot::detail` supplies
+the matching revision to typed consumers.
 
 `UsagePass` and `ChangesPass` run the background work of the
 [on-demand Serve contract](../../docs/protocol/mokly-on-demand.md): current

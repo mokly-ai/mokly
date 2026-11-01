@@ -1,5 +1,10 @@
 import type { ReactNode } from "react";
 
+import {
+  ComparisonPanes,
+  ComparisonSection,
+  ComparisonStage as ComparisonStageView,
+} from "../../../../../packages/ui/src/comparison-stage/comparison-stage.js";
 import { useDesignInstance } from "../library/composition.js";
 import { comparisonToolbar } from "../library/controls/comparison-toolbar.js";
 import { comparisonPane } from "../library/preview/comparison-pane.js";
@@ -39,8 +44,34 @@ const STATE_LABELS: Record<ReviewState, string> = {
   "styles-changed": SCREEN_STYLE_COPY.stylesChanged,
 };
 
-/** The scrollable stage of a loaded comparison, headed by its outcome. */
+/**
+ * The shipped stage of a loaded comparison, which scrolls the depicted views
+ * on the dotted surface, for the `wrap` of `PreviewWorkspace`. The screen
+ * header draws the comparison band, so the stage holds only its sections.
+ */
 export function ComparisonStage({
+  children,
+  component = false,
+  path,
+}: {
+  children: ReactNode;
+  /** Whether the compared entry is a component, which the stage marks. */
+  component?: boolean;
+  /** The compared entry's path, which the comparison carries. */
+  path: string;
+}) {
+  return (
+    <ComparisonStageView
+      component={component}
+      current={false}
+      entryId={path}
+      stage={children}
+    />
+  );
+}
+
+/** One viewport's shipped section of a comparison, headed by its outcome. */
+export function ComparisonView({
   children,
   state,
   viewport,
@@ -50,41 +81,32 @@ export function ComparisonStage({
   viewport: "mobile" | "desktop";
 }) {
   return (
-    <section className="mbk-comparison-stage">
-      <h3>
-        {viewport === "mobile" ? "Mobile" : "Desktop"} · {STATE_LABELS[state]}
-      </h3>
+    <ComparisonSection label={STATE_LABELS[state]} viewport={viewport}>
       {children}
-    </section>
+    </ComparisonSection>
   );
 }
 
 /**
- * Side by side keeps one device chrome per version in a two-column grid on the
- * dotted stage; Overlay and Difference use `ComparisonStack` instead.
+ * Side by side keeps one device chrome per version in the shipped grid of
+ * panes; Overlay and Difference use `ComparisonStack` instead.
  */
 export function CompareGrid({ children }: { children: ReactNode }) {
-  return (
-    <div className="mbk-compare" data-compare-mode="side">
-      {children}
-    </div>
-  );
+  return <ComparisonPanes mode="side">{children}</ComparisonPanes>;
 }
 
+/** One version's pane, which names its side as the shell does. */
 export function Pane({
   children,
-  label,
   side,
 }: {
   children: ReactNode;
-  label: string;
   side: "after" | "before";
 }) {
   return (
     <comparisonPane.Component
       moklyInstance={useDesignInstance(side)}
       side={side}
-      label={label}
       state="present"
     >
       {children}
@@ -92,12 +114,11 @@ export function Pane({
   );
 }
 
+/** The pane of a version that has no document, with the message saying why. */
 export function MissingPane({
-  label,
   message,
   side,
 }: {
-  label: string;
   message: string;
   side: "after" | "before";
 }) {
@@ -105,7 +126,6 @@ export function MissingPane({
     <comparisonPane.Component
       moklyInstance={useDesignInstance(side)}
       side={side}
-      label={label}
       state="missing"
       message={message}
     />

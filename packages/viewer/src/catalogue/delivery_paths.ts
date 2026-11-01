@@ -40,6 +40,9 @@ export function generatedResourceRoute(route: string): string | undefined {
 /** The catalogue index route, relative to the artifact origin root. */
 export const INDEX_PATH = `${VIEWER_DIRECTORY}/index.json` as const;
 
+/** The static deployment identity route, relative to the artifact origin root. */
+export const DEPLOYMENT_PATH = `${VIEWER_DIRECTORY}/deployment.json` as const;
+
 /** The live descriptor route that only Serve answers. */
 export const LIVE_PATH = `${VIEWER_DIRECTORY}/live.json` as const;
 

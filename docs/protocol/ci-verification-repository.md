@@ -18,7 +18,8 @@ The repository suite runs these checks in this order:
 8. Rust formatting.
 9. Workspace Clippy with warnings denied.
 10. Clippy with warnings denied for the `mokly-cli` `design-matrix` feature.
-11. The `@mokly/viewer` build, then the `@mokly/mokly` build.
+11. The `@mokly/ui` build, then the `@mokly/viewer` build, then the
+    `@mokly/mokly` build.
 12. The Rust tests of every crate.
 13. The Rust file-length audit.
 

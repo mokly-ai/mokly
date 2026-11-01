@@ -1,0 +1,82 @@
+/* The shell root: the top bar above the body, in the shell's type. */
+.mbk {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--chrome-bg);
+  color: var(--chrome-ink);
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The skip link stays above the root until it takes keyboard focus. */
+.mbk-skip-link {
+  position: absolute;
+  top: -100%;
+  left: 12px;
+  z-index: 20;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--chrome-ink);
+  color: var(--_mokly-private-on-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.mbk-skip-link:focus-visible {
+  top: 8px;
+}
+
+.mbk-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* The route status speaks to a screen reader only. */
+.mbk-route-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* While the reader drags the navigation separator, the drag marks the shell
+   root, and every element of the shell follows the drag. Only the package's
+   own elements carry the reset class, so host slot content keeps its own
+   cursor and frames. */
+.mbk.mbk-nav-resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+.mbk.mbk-nav-resizing .mbk-reset {
+  cursor: col-resize !important;
+}
+
+.mbk.mbk-nav-resizing iframe.mbk-reset {
+  pointer-events: none;
+}
+
+/* The main region, which holds the routed view. */
+.mbk-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* A workspace's view controls hold the scheme toggle, so the top bar hides
+   its scheme switch while a workspace shows. */
+.mbk:has(.mbk-workspace) .mbk-topbar [data-mokly-schemeswitch] {
+  display: none;
+}

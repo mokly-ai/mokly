@@ -18,7 +18,7 @@ test.afterAll(async () => {
   await fixture?.close();
 });
 
-test("cross-origin handshake measures null/multi-root ranges and reuses highlight visuals", async ({
+test("cross-origin handshake measures null/multi-root ranges without drawing highlights", async ({
   page,
 }) => {
   await mountCrossFrame(page, fixture);
@@ -61,11 +61,9 @@ test("cross-origin handshake measures null/multi-root ranges and reuses highligh
       ),
     fixture.usage.instances.find((item) => item.id === "action")!.key,
   );
-  await expect(frame.locator("[data-mokly-overlay] mask")).toHaveCount(1);
+  await expect(frame.locator("[data-mokly-overlay]")).toHaveCount(0);
+  await expect(page.locator(".mbk-highlight-layer")).toHaveCount(0);
   expect(await page.screenshot({ clip })).toEqual(before);
-  await expect(
-    frame.locator("[data-mokly-overlay] rect[stroke]").first(),
-  ).toHaveAttribute("stroke", "#336249");
   await page.evaluate(() =>
     (window as unknown as FrameTestWindow).mounted.highlight([], "off"),
   );

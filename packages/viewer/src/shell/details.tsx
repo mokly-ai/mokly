@@ -1,8 +1,18 @@
-// The served collapsible details inspector: a native <details> bar above a
-// two-column body with prose on the left and metadata rows on the right —
-// populated from the manifest entry for the selected route.
+/**
+ * The Details of the routed entry: its description, rationale, and metadata
+ * rows, read from the manifest entry, and the collapsible panel that shows
+ * them below a page's stage. These containers read the catalogue and the
+ * store. `@mokly/ui/details-panel` renders the panel and the body, and
+ * `@mokly/ui/metadata-row` the rows.
+ */
 
 import type { ReactNode } from "react";
+
+import {
+  DetailsBody,
+  DetailsPanel as DetailsPanelView,
+} from "@mokly/ui/details-panel";
+import { MetadataCode, MetadataRow } from "@mokly/ui/metadata-row";
 
 import type { ManifestScreen } from "../registry/types.js";
 
@@ -10,14 +20,12 @@ import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
 import {
   ChangedViewsRow,
-  MetaRow,
   RelatedDocChips,
   TagChips,
   UsedByChips,
   VariantChips,
   VariantOfChip,
 } from "./details_rows.js";
-import { ChevronIcon } from "./icons.js";
 import { useOptionalShellStore } from "./store_context.js";
 import type { RouteTarget } from "./target.js";
 import { SCHEME_LABELS, type ChangedView } from "./view_marks.js";
@@ -40,61 +48,60 @@ export function EntryDetailsBody(props: {
     ? undefined
     : branchPoints(props.catalogue).previousPath(entry);
   return (
-    <div className="mbk-details-body">
-      <div>
-        <p className="mbk-details-desc">{entry.description}</p>
-        {entry.rationale ? (
-          <p className="mbk-details-rationale">
-            <span className="k">
-              Why this {entry.kind === "use-case" ? "flow" : entry.kind} —{" "}
-            </span>
-            {entry.rationale}
-          </p>
-        ) : null}
-      </div>
-      <div className="mbk-meta">
-        {entry.kind === "component" ? (
-          <MetaRow label="Path">
-            <code className="mbk-code">{entry.path}</code>
-          </MetaRow>
-        ) : null}
-        <MetaRow label="Source">
-          <code className="mbk-code">{entry.sourcePath}</code>
-        </MetaRow>
-        {movedFrom ? (
-          <MetaRow label="Moved from">
-            <code className="mbk-code">{movedFrom}</code>
-          </MetaRow>
-        ) : null}
-        {entry.kind === "screen" && props.catalogue.hasDarkFragments ? (
-          <MetaRow label="Schemes">{schemeNames(entry)}</MetaRow>
-        ) : null}
-        {entry.kind === "screen" || entry.kind === "component" ? (
-          <ChangedViewsRow views={props.changedViews ?? []} />
-        ) : null}
-        {removed?.folderTitles.length ? (
-          <MetaRow label="Location">{removed.folderTitles.join(" › ")}</MetaRow>
-        ) : null}
-        <VariantOfChip catalogue={props.catalogue} entry={entry} />
-        <VariantChips catalogue={props.catalogue} entry={entry} />
-        <TagChips values={entry.tags ?? []} />
-        {entry.relatedDocs.length > 0 ? (
-          <MetaRow label="Related docs">
-            <RelatedDocChips
-              catalogue={props.catalogue}
-              removed={removed !== undefined}
-              values={entry.relatedDocs}
-            />
-          </MetaRow>
-        ) : null}
-        {entry.kind === "screen" ? (
-          <UsedByChips
+    <DetailsBody
+      description={entry.description}
+      {...(entry.rationale
+        ? {
+            rationale: {
+              noun: entry.kind === "use-case" ? "flow" : entry.kind,
+              text: entry.rationale,
+            },
+          }
+        : {})}
+    >
+      {entry.kind === "component" ? (
+        <MetadataRow label="Path">
+          <MetadataCode>{entry.path}</MetadataCode>
+        </MetadataRow>
+      ) : null}
+      <MetadataRow label="Source">
+        <MetadataCode>{entry.sourcePath}</MetadataCode>
+      </MetadataRow>
+      {movedFrom ? (
+        <MetadataRow label="Moved from">
+          <MetadataCode>{movedFrom}</MetadataCode>
+        </MetadataRow>
+      ) : null}
+      {entry.kind === "screen" && props.catalogue.hasDarkFragments ? (
+        <MetadataRow label="Schemes">{schemeNames(entry)}</MetadataRow>
+      ) : null}
+      {entry.kind === "screen" || entry.kind === "component" ? (
+        <ChangedViewsRow views={props.changedViews ?? []} />
+      ) : null}
+      {removed?.folderTitles.length ? (
+        <MetadataRow label="Location">
+          {removed.folderTitles.join(" › ")}
+        </MetadataRow>
+      ) : null}
+      <VariantOfChip catalogue={props.catalogue} entry={entry} />
+      <VariantChips catalogue={props.catalogue} entry={entry} />
+      <TagChips values={entry.tags ?? []} />
+      {entry.relatedDocs.length > 0 ? (
+        <MetadataRow label="Related docs">
+          <RelatedDocChips
             catalogue={props.catalogue}
-            useCasePaths={entry.useCasePaths}
+            removed={removed !== undefined}
+            values={entry.relatedDocs}
           />
-        ) : null}
-      </div>
-    </div>
+        </MetadataRow>
+      ) : null}
+      {entry.kind === "screen" ? (
+        <UsedByChips
+          catalogue={props.catalogue}
+          useCasePaths={entry.useCasePaths}
+        />
+      ) : null}
+    </DetailsBody>
   );
 }
 
@@ -108,31 +115,18 @@ export function DetailsPanel(props: {
   target: RouteTarget;
 }) {
   const store = useOptionalShellStore();
-  const open = store?.state.detailsOpen ?? false;
   return (
-    <details
-      className="mbk-details"
-      data-mokly-details=""
-      onToggle={(event) => {
-        if (store?.interactive && event.currentTarget.open !== open)
-          store.setDetails(event.currentTarget.open);
-      }}
-      open={open}
+    <DetailsPanelView
+      onOpenChange={
+        store?.interactive ? (open) => store.setDetails(open) : undefined
+      }
+      open={store?.state.detailsOpen ?? false}
     >
-      <summary className="mbk-details-bar">
-        <span className="chev">
-          <ChevronIcon size={12} />
-        </span>
-        Details
-        <span className="mbk-details-hint">
-          Description, rationale, source, related docs, and use cases
-        </span>
-      </summary>
       <EntryDetailsBody
         catalogue={props.catalogue}
         entry={props.target.entry}
       />
       {props.children}
-    </details>
+    </DetailsPanelView>
   );
 }

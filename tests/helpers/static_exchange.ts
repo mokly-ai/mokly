@@ -103,7 +103,7 @@ export async function exchange(
           base?: string;
           baseCommit?: string;
         };
-        assert.equal(index.schemaVersion, 8);
+        assert.equal(index.schemaVersion, 9);
         assert.equal(index.baseCommit ?? null, envelope.baseSha);
         if (envelope.baseSha) assert.equal(index.base, envelope.baseRef);
         metadata.push(envelope);

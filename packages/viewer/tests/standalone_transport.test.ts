@@ -12,7 +12,7 @@ import {
   indexFixture,
   rawDetailFixtures,
   rawIndexFixture,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 
 const ORIGIN = "http://localhost:4810";
 const RETIRED =
@@ -49,7 +49,7 @@ test("the standalone shell reads the index at the stub's origin", async () => {
     "/mokly-viewer/index.json": rawIndexFixture(),
   });
   const index = await fetchStandaloneIndex(win, signal);
-  assert.equal(index.schemaVersion, 8);
+  assert.equal(index.schemaVersion, 9);
   assert.deepEqual(requests, [
     {
       url: `${ORIGIN}/mokly-viewer/index.json`,
@@ -99,6 +99,22 @@ test("current details live under entries and removed ones under their generation
       signal,
     ),
   );
+});
+
+test("static source reads the deployment file from the catalogue root", async () => {
+  const index = indexFixture();
+  const { win, requests } = fakeWindow({
+    "/mokly-viewer/deployment.json": {
+      schemaVersion: 1,
+      deploymentId: index.deploymentId,
+    },
+  });
+  const deployment = await standaloneDataSource(win).loadDeployment!(signal);
+  assert.deepEqual(deployment, {
+    schemaVersion: 1,
+    deploymentId: index.deploymentId,
+  });
+  assert.equal(requests[0]!.url, `${ORIGIN}/mokly-viewer/deployment.json`);
 });
 
 test("another deployment reloads the requested page", () => {

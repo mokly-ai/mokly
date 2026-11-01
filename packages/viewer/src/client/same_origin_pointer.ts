@@ -79,10 +79,13 @@ export function localPointer(
   };
   doc.addEventListener("click", click, { signal });
   doc.addEventListener("auxclick", click, { signal });
+  // The signal aborts when the frame shows another document. A document of
+  // another origin makes `win` throw on any read, and the old document then
+  // has no window and runs no frame callback, so nothing is left to cancel.
   signal.addEventListener(
     "abort",
     () => {
-      if (pending) win.cancelAnimationFrame(pending);
+      if (pending) doc.defaultView?.cancelAnimationFrame(pending);
     },
     { once: true },
   );

@@ -18,7 +18,7 @@ use mokly_source_interface::tree::{FileKind, Node, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::runtime::Runtime;
-use crate::stylesheet_cache::StylesheetCache;
+use crate::stylesheet_store::StylesheetCache;
 
 #[test]
 fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction() {

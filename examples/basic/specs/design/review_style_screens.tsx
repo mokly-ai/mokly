@@ -11,7 +11,7 @@ import {
 } from "./parts/document_page.js";
 import { ENTRY_PATHS } from "./parts/entry_paths.js";
 import { NavTree } from "./parts/nav.js";
-import { PageStyleCard } from "./parts/review.js";
+import { PAGE_STYLES } from "./parts/review.js";
 import { ScreenHead, Shell, type ArtboardViewport } from "./parts/shell.js";
 
 /**
@@ -40,7 +40,7 @@ function PageStyles({ viewport }: { viewport: ArtboardViewport }) {
         title="Getting started"
       />
       <HandbookStage />
-      <PageDetails evidence={<PageStyleCard />} open />
+      <PageDetails evidence={PAGE_STYLES} open />
     </Shell>
   );
 }

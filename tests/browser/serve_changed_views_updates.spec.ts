@@ -12,6 +12,7 @@ import {
   viewerStatePaths,
 } from "../helpers/viewer_state_sources.js";
 
+import { shellRoot } from "./browse_assertions.js";
 import { awaitRoutedDetail, chooseFilter, navRow } from "./comparison_ui.js";
 import { test } from "./serve_comparison_test.js";
 import {
@@ -107,7 +108,7 @@ test("Changes lands on the first changed view and every other arrival stays stic
 }) => {
   const dusk = changes.paths.darkOnly;
   const stable = changes.paths.unchanged;
-  const scheme = page.locator("body");
+  const scheme = page.locator(shellRoot);
   const viewport = page.getByLabel("Viewport", { exact: true });
   const mobileFrame = page.locator('[data-workspace-frame="mobile"]');
   await page.goto(`/view/${stable}/`);

@@ -1,4 +1,4 @@
-# Published Inspector And Overlay
+# Published Inspector
 
 ## Publication Boundary
 
@@ -52,27 +52,27 @@ region nests in it, so a top-level marked range names index 0 as its parent.
 A slot always has a parent, so no other tuple is `[null, null]`. A screen has
 no root region; content outside every region belongs to the screen.
 
-## Overlay
+## Presentation
 
-On request the script draws the dimming mask and outlines of
+The script draws nothing in the preview document: no mask, no outline, and no
+label. It reports instance boundaries, geometry notifications, hovers, and
+picks, under the [wire protocol](./mokly-inspector-wire.md#wire-protocol-v2).
+The shell draws the
 [Highlight components](./mokly-component-explorer.md#highlight-components)
-in-frame; host labels and keyboard-accessible instance lists use public
-catalogue titles and returned boxes. Pick reuses Highlight components visuals.
-Do not clone or restyle consumer content. No overlay exists without a highlight
-or pick request. Range and occlusion measurements exclude the overlay. Disposal
-removes all package-owned overlay nodes.
+visuals from the reported boxes, for highlights and picks alike, as the
+[frame adapter contract](./mokly-frame-adapter.md) requires. Host labels and
+keyboard-accessible instance lists use public catalogue titles. Do not clone
+or restyle consumer content.
 
-The overlay is fixed over the frame viewport and pointer-inert. Consumer CSS
-cannot restyle its shapes: universal and element selectors, backgrounds, box-model
-rules, display, color, and opacity from consumer CSS cannot repaint the cutouts
-or hide the overlay. Outgoing fields contain only validated ASCII
-identities/control values and numeric geometry.
+Outgoing fields contain only validated ASCII identities/control values and
+numeric geometry.
 
 ## Delivery Constraints
 
 Served documents and comparison snapshots stay byte-unmodified. Snapshots never
-embed the script or negotiate a session. Local script-disabled frames retain
-parent-owned highlighting even when published copies contain the inert script.
+embed the script or negotiate a session. Local script-disabled frames keep the
+same-origin adapter's inspection even when published copies contain the inert
+script.
 No React, server module, cookie, network request, or host-specific integration is
 included in the IIFE. The built `client/inspector.js` stays within a
 **9 KiB (9,216 bytes) minified, uncompressed** script budget. The budget

@@ -3,7 +3,6 @@ export function selectTag(
   target: HTMLElement,
   select: () => void,
   openDetailsPicker: boolean,
-  afterSelect?: () => void,
 ): void {
   const toggle = openDetailsPicker
     ? target
@@ -11,6 +10,5 @@ export function selectTag(
         ?.querySelector<HTMLButtonElement>("[data-mokly-tag-toggle]")
     : undefined;
   select();
-  afterSelect?.();
   if (toggle) queueMicrotask(() => toggle.focus());
 }

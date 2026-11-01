@@ -7,7 +7,7 @@ that need no approval. The second ships items 112 and 113 and the
 second pull request merges.
 
 This plan resolves user items 112 and 113 of the
-[Rust rebuild plan](./rust-rebuild.md#open-user-items-deferred-by-the-user-on-2026-10-21).
+[Rust rebuild plan](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md#open-user-items-deferred-by-the-user-on-2026-10-21).
 It also resolves the open lines that
 [PR #241](https://github.com/mokly-ai/mokly/pull/241) added there for user
 decision 111 C:
@@ -518,18 +518,23 @@ First pull request. The behaviour changes only for stylesheets that fail today.
 
 ## Milestone 4: Verification, commit, review, and the first pull request
 
+Merge notes: `.context/css-modules-scanner-follow-ups/main-sync-2026-11-01.md`.
+
 - [ ] Describe the integration test and the `test-support` feature in the
       README section Development.
 - [ ] Rerun the probes on the build. Save the results under
       `.context/css-modules-scanner-follow-ups/`.
-- [ ] Update `plans/rust-rebuild.md` with the smallest edit.
-  - Tick the `;` follow-up line and finding 1 of the final review. Give each
-    its decision, its date, and a link to this plan.
-  - Under the open problem line and the two lines outside the
-    `rebuild/port-111c` review scope, add one line with the outcome and a link
-    to this plan.
-  - Under items 112 and 113, add one line that says they wait for Cal, with a
-    link to this plan.
+- [ ] Update the extracted Rust rebuild records in `plans/follow-ups/` with
+      the smallest edit.
+  - Record item 4 C in `css-module-semicolon-boundary.md` and decided C in
+    `css-differential-fixture-discovery.md`. Give each its decision, its
+    date, and a link to this plan.
+  - Record item 3 B in `css-differential-fixture-discovery.md` and item 2 B
+    in `font-face-statement-doc.md`, with a link to this plan.
+  - Record item 1 F in `moz-document-statement-kind.md`. Keep item 1 D open.
+  - In `css-module-bare-wrapper-kind.md` and
+    `css-module-custom-property-rules.md`, say that items 112 and 113 wait
+    for Cal, with a link to this plan.
 - [ ] Merge `origin/main`. Run the targeted tests and the complete gate
       `cargo xtask check --executor local`.
 - [ ] Commit with Conventional Commits and push the branch.
@@ -608,8 +613,10 @@ code, and the documented exception stays.
 
 - [ ] Rerun every probe on the fixed build. Save the results under
       `.context/css-modules-scanner-follow-ups/`.
-- [ ] In `plans/rust-rebuild.md`, tick items 112 and 113 with their decisions,
-      their dates, and a link to this plan. Use the smallest edit.
+- [ ] In `plans/follow-ups/css-module-bare-wrapper-kind.md` and
+      `plans/follow-ups/css-module-custom-property-rules.md`, record the
+      outcomes of items 112 and 113 with their decisions, their dates, and a
+      link to this plan. Use the smallest edit.
 - [ ] Merge `origin/main`. Run the targeted tests and the complete gate named
       in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.

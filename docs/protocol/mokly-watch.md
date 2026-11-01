@@ -190,7 +190,17 @@ port stays stable for the life of the process.
 
 The repository's `npm run dev` command runs watched Serve on
 `examples/basic/mokly.config.json`; arguments after `--` are forwarded to Serve,
-for example `npm run dev -- --port 0`.
+for example `npm run dev -- --port 0`. Before Serve starts, the command runs
+`npm ci` when no install completed or `package-lock.json` changed after the
+last install. It then runs `npm run build` when an output that Serve needs is
+missing or an install completed after the last build. Each step prints its
+reason first. A failed step stops the command with exit status 1, and Serve
+does not start. A change to Mokly's own sources does not start a build; run
+`npm run build` after it.
+Decision: the command builds only when an output is missing or older than the
+install. A build on every start was rejected, because every start then waits
+for a complete build, and the build cannot replace the binary that another
+Serve runs.
 
 Rebuild actions, configuration changes, Git observation, publication, and
 shutdown continue in [Watch Runtime And Recovery](./mokly-watch-runtime.md).

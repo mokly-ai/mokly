@@ -21,11 +21,7 @@ export function mountMoklyShell(doc: Document = document): void {
   const win = doc.defaultView as ShellWindow | null;
   if (!mount || !win || mounted.has(mount)) return;
   mounted.add(mount);
-  installStandaloneAppearance(doc, win);
-  const scheme =
-    doc.body.getAttribute("data-mokly-color-scheme") === "dark"
-      ? "dark"
-      : "light";
+  const { scheme } = installStandaloneAppearance(doc, win).current();
   createRoot(mount).render(
     <StandaloneShell
       preferences={readStandalonePreferences(win, scheme)}

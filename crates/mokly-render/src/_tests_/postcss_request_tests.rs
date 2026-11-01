@@ -64,6 +64,7 @@ fn timeout_labels_use_the_logical_source_even_with_external_dependency_roots() {
             cache: Arc::new(Mutex::new(CssCache::default())),
             resolver: Arc::new(Unimock::new(())),
             turns: Default::default(),
+            module_digests: Default::default(),
         };
         let error = postcss.process_css(path, "a {}").unwrap_err();
         assert_eq!(

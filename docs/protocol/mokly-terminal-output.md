@@ -67,7 +67,8 @@ an immediate phase-label update, so a shorter label replaces every character
 of a longer one. Before any event, warning, diagnostic, error, or success
 line, the reporter performs the same erase. Completing a phase replaces the
 spinner with one durable line; failing or abandoning a phase clears it first.
-Shutdown always clears the timer and the current line.
+Shutdown always clears the timer and the current line. The comparing label
+also names the current [comparison step](./mokly-terminal-steps.md#comparison-steps).
 
 When output is forced rich through a non-TTY pipe, progress frames are not
 animated. The starting line and the durable completion lines stay observable

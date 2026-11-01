@@ -11,7 +11,7 @@ use mokly_model::catalogue::CatalogueModel;
 use mokly_model::error::ModelError;
 use mokly_model::namespace::viewer;
 use mokly_model::projection::{self, Publication, ViewKey};
-use mokly_model::public_detail::EntryDetailV3;
+use mokly_model::public_detail::EntryDetailV4;
 use mokly_model::public_detail::{LiveDescriptorV3, RenderCapability};
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::public_metadata::ChangesStatus;
@@ -39,7 +39,7 @@ pub struct Snapshot {
     /// Shared routes, assets, and backend for this generation.
     pub generation: Arc<Generation>,
     /// Validated payloads; their wire revision is supplied by this snapshot.
-    pub details: BTreeMap<String, Arc<EntryDetailV3>>,
+    pub details: BTreeMap<String, Arc<EntryDetailV4>>,
     /// Completed visual usage; a recorded route is never published twice.
     pub completed: BTreeMap<String, Completion>,
     /// Validity of live work admitted under this revision.
@@ -67,7 +67,7 @@ impl Snapshot {
     }
 
     /// Materialize one detail with this publication's revision for typed consumers.
-    pub fn detail(&self, path: &str) -> Option<EntryDetailV3> {
+    pub fn detail(&self, path: &str) -> Option<EntryDetailV4> {
         self.details.get(path).map(|detail| {
             let mut detail = detail.as_ref().clone();
             detail.revision = Some(self.index.revision);
@@ -153,9 +153,9 @@ impl Projector {
             changes_status: ChangesStatus::Pending,
             live_generation: Some(live_generation.clone()),
         };
-        let (index, encoded) = build_index(&generation.catalogue().model, &keys, &state)?;
+        let mut index = build_index(&generation.catalogue().model, &keys, &state)?;
         let mut assets = input.assets;
-        let mut files = BTreeMap::from([(viewer("index.json"), RevisionFile::new(encoded)?)]);
+        let mut files = BTreeMap::new();
         let document_keys = generation
             .plans()
             .iter()
@@ -163,8 +163,17 @@ impl Projector {
             .collect();
         let mut details = projection::pending_details(&generation.catalogue().model, &index, &keys);
         let completed = replacement::reuse_usage(&mut details, &index, &document_keys, previous);
-        let details =
-            replacement::encode_details(details, &index, previous, &mut files, &ValidatedDetails)?;
+        let details = replacement::encode_details(
+            details,
+            &mut index,
+            previous,
+            &mut files,
+            &ValidatedDetails,
+        )?;
+        files.insert(
+            viewer("index.json"),
+            RevisionFile::new(checked_index(&index)?)?,
+        );
         let render_token = self.render_token.clone();
         let descriptor = LiveDescriptorV3 {
             schema_version: 3,
@@ -240,20 +249,19 @@ fn json_file(text: std::result::Result<String, ModelError>) -> Result<File> {
     }
 }
 
-#[tracing::instrument(name = "index.build", skip_all, err)]
 fn build_index(
     model: &CatalogueModel,
     keys: &[ViewKey],
     state: &Publication,
-) -> Result<(CatalogueReadModel, File)> {
+) -> Result<CatalogueReadModel> {
     let index = match projection::index(model, keys, state) {
         Ok(index) => index,
         Err(source) => return Err(InternalError::Model { source }.into()),
     };
-    let file = checked_index(&index)?;
-    Ok((index, file))
+    Ok(index)
 }
 
+#[tracing::instrument(name = "index.build", skip_all, err)]
 pub(crate) fn checked_index(index: &CatalogueReadModel) -> Result<File> {
     let encoded = encode(index)?;
     if let Err(source) = readers::index(&String::from_utf8_lossy(&encoded.bytes)) {

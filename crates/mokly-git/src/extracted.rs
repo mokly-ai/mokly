@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 
 use crate::checkout::{admit, bounded};
 use crate::checkout_output::conversion;
-use crate::error::{Error, Result};
+use crate::error::{Error, InternalError, Result};
 use crate::fingerprint::Fingerprint;
 use crate::identity::{ObjectId, RepoPath};
 use crate::repository::GitRepository;
@@ -46,7 +46,7 @@ impl ExtractedFiles {
 
 impl GitRepository {
     /// Fingerprints each confined regular file of `entries` under `root`. A
-    /// file that the extraction does not hold as a regular file gets none.
+    /// file that the extraction does not hold or cannot read gets none.
     pub(crate) fn extracted_fingerprints(
         &self,
         root: &Path,
@@ -59,6 +59,13 @@ impl GitRepository {
                     fingerprints.insert(entry.path.clone(), fingerprint);
                 }
                 Ok(None) | Err(Error::NotRegular { .. }) => {}
+                Err(Error::Internal(InternalError::Io { source })) => {
+                    tracing::debug!(
+                        path = %entry.path,
+                        error = %source,
+                        "extraction file cannot be read; reading through Git"
+                    );
+                }
                 Err(error) => return Err(error),
             }
         }
@@ -69,8 +76,8 @@ impl GitRepository {
     }
 
     /// Reads `entries` from the extraction. A file without a fingerprint, or
-    /// whose fingerprint changed, reads through Git. The count and byte bounds
-    /// and their errors equal those of a read through Git.
+    /// whose fingerprint changed or cannot be read, reads through Git. The
+    /// count and byte bounds and their errors equal those of a read through Git.
     pub(crate) fn extracted_read(
         &self,
         commit: &ObjectId,
@@ -92,6 +99,15 @@ impl GitRepository {
             match pinned {
                 Ok(Some(bytes)) => files.push(bytes),
                 Ok(None) | Err(Error::NotRegular { .. }) => {
+                    files.push(Vec::new());
+                    lacking.push(index);
+                }
+                Err(Error::Internal(InternalError::Io { source })) => {
+                    tracing::debug!(
+                        path = %entry.path,
+                        error = %source,
+                        "extraction file cannot be read; reading through Git"
+                    );
                     files.push(Vec::new());
                     lacking.push(index);
                 }
@@ -120,7 +136,7 @@ impl GitRepository {
     }
 
     /// Hashes one file of the extraction, or through Git when the extraction
-    /// cannot prove its bytes.
+    /// cannot prove or read its bytes.
     pub(crate) fn extracted_digest(
         &self,
         commit: &ObjectId,
@@ -141,7 +157,19 @@ impl GitRepository {
         match pinned {
             Ok(Some(hash)) => Ok(hash),
             Ok(None) | Err(Error::NotRegular { .. }) => self.checkout_digest(commit, entry),
+            Err(Error::Internal(InternalError::Io { source })) => {
+                tracing::debug!(
+                    path = %entry.path,
+                    error = %source,
+                    "extraction file cannot be read; reading through Git"
+                );
+                self.checkout_digest(commit, entry)
+            }
             Err(error) => Err(error),
         }
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/extracted_fallback_tests.rs"]
+mod extracted_fallback_tests;

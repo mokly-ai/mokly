@@ -28,12 +28,17 @@ function SchemeVariant({
       }
       viewport={viewport}
     >
-      <AppearanceHead
-        path={details ? ENTRY_PATHS.details : ENTRY_PATHS.welcome}
-        title={details ? "Details" : "Welcome"}
+      <AppearanceWorkspace
+        header={
+          <AppearanceHead
+            path={details ? ENTRY_PATHS.details : ENTRY_PATHS.welcome}
+            title={details ? "Details" : "Welcome"}
+            viewport={viewport}
+          />
+        }
+        subject={subject}
         viewport={viewport}
       />
-      <AppearanceWorkspace subject={subject} viewport={viewport} />
     </AppearanceShell>
   );
 }

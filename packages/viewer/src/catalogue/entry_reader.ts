@@ -1,4 +1,4 @@
-/** Field readers for the entry records of the catalogue index v8. */
+/** Field readers for the entry records of the catalogue index v9. */
 
 import { invalidData } from "../components/data.js";
 import type { ComponentWireProps } from "../components/prop_types.js";
@@ -42,7 +42,7 @@ const KINDS = ["added", "changed", "removed", "unmodified"] as const;
 const SCHEMES = ["light", "dark"] as const;
 
 /**
- * Read one current or historical entry record of any kind: the fields v8
+ * Read one current or historical entry record of any kind: the fields v9
  * defines, ignoring any other field a newer writer adds.
  */
 export function readEntry(value: unknown): CatalogueRecord {
@@ -146,6 +146,7 @@ function common(input: Record<string, unknown>): CatalogueEntry {
   const details = object(input.details);
   return {
     path: entryPath(input.path),
+    detailId: hash(input.detailId),
     title: text(input.title),
     tags: array(input.tags).map(tag),
     ...(input.previousPath === undefined

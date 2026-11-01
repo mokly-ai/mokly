@@ -15,7 +15,7 @@ import { ENTRY_PATHS } from "./parts/entry_paths.js";
 import { ExampleWorkspace } from "./parts/example_workspace.js";
 import { MiniWelcome } from "./parts/mini_screens.js";
 import { REMOVED_SCREENS } from "./parts/nav_data.js";
-import { ReasonSentences } from "./parts/reason_sentences.js";
+import { reasonEvidence } from "./parts/reason_sentences.js";
 import { RemovedScreen, RemovedView } from "./parts/removed_screen.js";
 import { MiniFarewell } from "./parts/removed_shots.js";
 import { ReviewNav } from "./parts/review.js";
@@ -35,7 +35,7 @@ function ChangedCompare({ viewport }: { viewport: CompareViewport }) {
       viewport={viewport}
       render={(previewViewport) => (
         <CompareGrid>
-          <Pane label="Before" side="before">
+          <Pane side="before">
             <FramedShot
               address="example.test/welcome"
               dark={dark}
@@ -44,7 +44,7 @@ function ChangedCompare({ viewport }: { viewport: CompareViewport }) {
               <MiniWelcome compact={previewViewport === "mobile"} inert />
             </FramedShot>
           </Pane>
-          <Pane label="Current" side="after">
+          <Pane side="after">
             <FramedShot
               address="example.test/welcome"
               dark={dark}
@@ -70,17 +70,19 @@ function AddedCurrent({ viewport }: { viewport: CompareViewport }) {
       viewport={viewport}
       nav={viewport === "desktop" ? <ReviewNav activeTitle="Details" /> : null}
     >
-      <ScreenHead
-        action={<ViewSwitch active={viewport} />}
-        crumbs={["Example", "Screens"]}
-        path={ENTRY_PATHS.details}
-        status="added"
-        title="Details"
-      />
       <ExampleWorkspace
+        header={
+          <ScreenHead
+            action={<ViewSwitch active={viewport} />}
+            crumbs={["Example", "Screens"]}
+            path={ENTRY_PATHS.details}
+            status="added"
+            title="Details"
+          />
+        }
         subject="details"
         viewport={viewport}
-        comparisonEvidence={<ReasonSentences reasons={["added"]} />}
+        comparisonEvidence={{ reasons: reasonEvidence(["added"]) }}
       />
     </Shell>
   );

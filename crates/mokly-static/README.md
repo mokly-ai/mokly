@@ -23,7 +23,8 @@ dependency on the upload client in `mokly-publish`.
 and the matching viewer package bytes, plus the command's retained `dyn ChangeState`. It omits only logical links that cannot cross the inspector wire boundary.
 Other ranges and links stay inspectable. Inspector failures carry a typed reason
 and the document route. It builds the canonical index and entry detail files
-with revision zero and no live capability. The
+with revision zero and no live capability, then writes the static deployment
+file after computing the deployment identity. The
 [format inventory](../../docs/protocol/mokly-format-versions.md) gives their
 versions. The shared model writer adds publication metadata when requested and
 writes the ownership marker last. Ready Changes supplies the base commit, the
@@ -31,8 +32,8 @@ generation root, detail-root reasons, each view's state, ignore ids, and
 evidence, the base side, workspace lists, and removed records from the same
 comparison result. The review result and the change snapshot stay private; no
 generation file holds them. Both pinned graph sides supply immutable documents
-and resources. Removed details carry their historical snapshot ID and
-generation. Removed page and document previews carry typed preview metadata.
+and resources. Removed details carry their historical snapshot ID and content
+id. Removed page and document previews carry typed preview metadata.
 `mokly_compare::projection_removed` owns these records, details, and metadata.
 The caller uses its shared workspace initializer for removed visual details
 before applying the comparison workspace projection.
