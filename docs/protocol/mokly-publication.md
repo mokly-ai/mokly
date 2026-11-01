@@ -1,5 +1,7 @@
 # Optional Changes In Published Catalogues
 
+Status: Follow-up work remains in the [scripts flag document key item](../../plans/follow-ups/scripts-mode-remaining-copies.md).
+
 ## Publication Option
 
 A published catalogue is the output of `mokly build`, deployed by the consumer
