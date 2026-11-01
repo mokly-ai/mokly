@@ -8,7 +8,7 @@
   until after its merge, for the user's later choice.
 
 - **Source:** Review.
-- **Category:** Repository rule (estimate).
+- **Category:** Repository rule.
 - **Background:** `packages/viewer/src/shell/README.md` documents the Browse
   shell, a flat directory of 186 entries since PR #249, and 192 before it.
   The contributor rules target about 200 lines for a file and ask to split a
@@ -30,9 +30,9 @@
     guide. Effort: Small.
   - **B.** Move the standalone paragraphs into
     `packages/viewer/src/standalone/README.md`, and record the exception for
-    the rest. Effort: Small (estimate).
+    the rest. Effort: Small.
   - **C.** Split the page into `packages/viewer/src/shell/docs/{subject}/README.md`
-    pages, which the link check reads. Effort: Small (estimate).
+    pages, which the link check reads. Effort: Small.
   - **D.** Move the mechanics into module doc comments, and keep a short
     index of entry points. Effort: Large.
 - **Left out:** Deleting the mechanics loses the only current explanation of
@@ -47,7 +47,7 @@
 - **Recommendation:** A. A split by subject needs doc-only folders in the
   source tree, and module mechanics belong in code comments. D best protects
   long-term ownership.
-- **Action:** ask the user, because condition 5 holds: the user reserved
-  the choice for each open review item of the rebuild.
+- **Action:** ask the user, because the user reserved the choice for each open
+  review item of the rebuild.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5863).

@@ -1,6 +1,6 @@
 # Stabilize the large React watch test
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #217 and its completed plan, which put the
   failure outside the scope of its review.
@@ -54,16 +54,15 @@
 - **Options:**
   - **A.** Reproduce the timeout by repeating the React test, and name the
     step that waits. Then make that step wait for an explicit readiness
-    signal. Keep every assertion. Effort: Medium (estimate).
+    signal. Keep every assertion. Effort: Medium.
   - **B.** Change nothing until the test fails again. Then record the step,
-    the failure text, and the CI run in this item. Effort: Small
-    (estimate).
+    the failure text, and the CI run in this item. Effort: Small.
   - **C.** Make the harness report the last finished step of each edit when
     a run ends early, so that the next failure names its step. Effort:
-    Small (estimate).
+    Small.
 - **Left out:** A longer time limit, a retry, or a sleep. The
-  `deterministic-tests` skill forbids them, because they hide the source.
-- **Wider fix:** C (estimate). Each later failure of a harness journey then
+  `testing` skill forbids them, because they hide the source.
+- **Wider fix:** C. Each later failure of a harness journey then
   names its own step.
 - **Previous examples:** The 404 failures of the same test, fixed by PR #222
   and PR #244. Before the user's choice of 2026-10-20, the React test also
@@ -82,10 +81,10 @@
   - [flaky-same-origin-handoff.md](./flaky-same-origin-handoff.md) is a
     separate case of the same recorded class: a browser test that failed
     once and passed on the rerun. It has its own test and suspected source.
-- **Recommendation:** C (estimate). The failure text does not name a step,
+- **Recommendation:** C. The failure text does not name a step,
   so the next failure must name it before A can find the source.
-- **Action:** ask the user, because condition 6 holds (estimate): the
-  failure was not reproduced and its source is not confirmed for this run,
-  so the `deterministic-tests` skill gives `ask the user`.
+- **Action:** ask the user, because the failure has not been reproduced with a
+  confirmed cause. No fix is clearly best until reproduction identifies the
+  source, as the flaky-test rule requires.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/remove-review-json.md?plain=1#L185).

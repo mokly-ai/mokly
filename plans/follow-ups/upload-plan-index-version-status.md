@@ -1,6 +1,6 @@
 # No upload status for an unsupported index version
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #217 and its completed plan, which put the
   gap outside the scope of its review.
@@ -53,7 +53,7 @@
 - **Left out:** A new CLI category for an index version. The CLI maps
   statuses by value, and 426 already has a category for unsupported
   versions.
-- **Wider fix:** A (estimate). One rule then covers every versioned document
+- **Wider fix:** A. One rule then covers every versioned document
   of the Plan archive.
 - **Previous examples:** The table already gives 426 for an unsupported
   envelope and for an unsupported ownership version.

@@ -1,6 +1,6 @@
 # Stabilize verification registry cleanup
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of a verification round of the rebuild.
 - **Location:** `tests/serve_process.test.ts:75` and
@@ -9,7 +9,7 @@
   isolated rerun, so a separate branch investigates it.
 
 - **Source:** Review.
-- **Category:** Test (estimate).
+- **Category:** Test.
 - **Terms:**
   - **Verification registry:** the record of process owners that the
     verification scripts keep, so that a gate can name and stop every
@@ -28,18 +28,18 @@
 - **Root question:** How should the test read the registry while another
   cleanup can remove a parent?
 - **Options:**
-  - **A.** Drop the item unless the failure recurs. Effort: Small
-    (estimate).
+  - **A.** Drop the item unless the failure recurs. Effort: Small.
   - **B.** Repeat the test to reproduce the failure, then isolate the
     registry state of the test, or wait on an explicit drain signal. Keep
-    every assertion, and record the pass counts. Effort: Small (estimate).
+    every assertion, and record the pass counts. Effort: Small.
 - **Left out:** A retry, a sleep, or a longer timeout breaks the
   deterministic-test rule.
 - **Wider fix:** B. Isolated registry state stops other cleanups from
   changing the snapshot that a test reads.
 - **Previous examples:** None found.
-- **Recommendation:** B. (estimate) It finds the source before any change.
-- **Action:** ask the user (estimate), because the failure has not been
-  reproduced, and the flaky-test rule asks the user for an unknown source.
+- **Recommendation:** B. It finds the source before any change.
+- **Action:** ask the user, because the failure has not been reproduced with a
+  confirmed cause. No fix is clearly best until reproduction identifies the
+  source, as the flaky-test rule requires.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L4436).

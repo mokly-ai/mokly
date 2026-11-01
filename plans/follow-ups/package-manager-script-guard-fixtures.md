@@ -1,6 +1,6 @@
 # Add fixtures for package-manager script guards
 
-- **Severity:** Medium. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 121, finding 7 of the pnpm and Yarn review, joined by fix round 2 finding 5.
 - **Location:** `crates/mokly-compare/src/manager_command.rs:25`,
@@ -47,7 +47,7 @@
   scripts-off base install?
 - **Options:**
   - **A.** Assert each guard flag and variable in the manager command tests.
-    Effort: Small (estimate).
+    Effort: Small.
   - **C.** Apply A. Then check these points once, outside the test suite,
     and save the output under `.context/`:
     - Run cold base installs with a `.pnpmfile.cjs`, a `.pnpmfile.mjs`, a
@@ -60,7 +60,7 @@
       install. When `tests/static_base_managers.test.ts:96-107` reads other
       paths, correct those paths in the suite.
     - Risk: each check covers only the manager versions of that run.
-    - Effort: Small (estimate).
+    - Effort: Small.
 - **Left out:**
   - One generic marker cannot reach the different hook locations of pnpm
     and Yarn.
@@ -85,8 +85,7 @@
   package-manager checks out of the suite. The recommendation was former
   option B before the `testing` skill of 2026-10-30. It was then A, which
   does not cover the lifecycle checks that the Problem names.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user reserved the choice for each open review item of the rebuild.
-  Condition 6 also holds, because the item concerns missing tests.
+- **Action:** ask the user, because on 2026-10-21 the user reserved the choice
+  for each open review item of the rebuild.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5996).

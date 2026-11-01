@@ -39,7 +39,7 @@
   helper can fix its wording there.
 - **Recommendation:** A. It fixes the copy defect without changing the
   meaning.
-- **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
-  user ruled that new review items wait for the user after the merge.
+- **Action:** ask the user, because on 2026-10-21 the user ruled that new review
+  items wait for the user after the merge.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6150).

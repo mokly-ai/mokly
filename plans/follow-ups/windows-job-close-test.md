@@ -1,6 +1,6 @@
 # Make the Windows job-close test effective
 
-- **Severity:** Medium. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 176, delta review 1.
 - **Location:** `crates/mokly-platform/tests/process_tests.rs:86` and
@@ -26,9 +26,9 @@
   the child?
 - **Options:**
   - **A.** Append `&echo leaked` to the command, and assert that `leaked`
-    never prints. Effort: Small (estimate).
+    never prints. Effort: Small.
   - **B.** Create one shared test helper that proves job termination, and
-    use it in every job-close test. Effort: Medium (estimate).
+    use it in every job-close test. Effort: Medium.
 - **Left out:** An elapsed-time assertion makes the test depend on machine
   speed.
 - **Wider fix:** B. One proof based on events prevents false passes in
@@ -36,7 +36,7 @@
 - **Previous examples:** None found.
 - **Recommendation:** A. It makes the current test fail when the child
   survives. B best protects all job-close cases.
-- **Action:** ask the user, because condition 5 holds: the user reserved
-  the choice for each open review item of the rebuild.
+- **Action:** ask the user, because the user reserved the choice for each open
+  review item of the rebuild.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6348).

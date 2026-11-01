@@ -13,6 +13,8 @@
 - **Reason:** Only an interrupted `npm run build` causes the problem, and
   one `npm run build` recovers from it.
 
+- **Source:** Review.
+- **Category:** Product bug.
 - **Terms:**
   - **Serve:** the `mokly serve` command. It needs the native binary, the
     viewer build in `packages/viewer/dist`, and the shim and the sidecar in

@@ -1,7 +1,7 @@
 # Start sidecars before the background pass
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #225 and its completed plan, one of the
   three follow-ups of its acceptance decision.
 - **Location:** `crates/mokly-sidecar/src/pool.rs:75` and line 119, and
@@ -43,12 +43,12 @@
 - **Options:**
   - **A.** Change nothing. Effort: Small.
   - **B.** Start the sidecars of the window and replay the generation before
-    the pass begins. Effort: Medium (estimate).
+    the pass begins. Effort: Medium.
   - **C.** Let a waiting render take the first sidecar that becomes ready,
-    instead of a sidecar that still starts. Effort: Medium (estimate).
+    instead of a sidecar that still starts. Effort: Medium.
 - **Left out:** A larger render window. The window already equals the
   sidecar count, and more renders would only queue.
-- **Wider fix:** C (estimate). Every request, not only the pass, then avoids
+- **Wider fix:** C. Every request, not only the pass, then avoids
   a wait for one starting sidecar.
 - **Previous examples:** None found.
 - **Related:**
@@ -61,9 +61,10 @@
     most of the time. Both items touch Serve startup and the sidecar pool,
     but this item removes only the sidecar start wait of the first
     background renders. The work differs, so the items stay separate.
-- **Recommendation:** B (estimate). PR #225 expected a gain of about 0.8 s
-  for each pass from it.
-- **Action:** ask the user, because condition 6 holds (estimate): this is a
-  performance finding, and no recorded user choice selects an option.
+- **Recommendation:** C. Pool-level acquisition removes the wait on a starting
+  sidecar for every request while keeping on-demand startup. The record first
+  recommended B.
+- **Action:** fix after merge, apply C, because the pool scheduling change lies
+  outside the pass scheduler that found the startup wait.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/parallel-background-pass.md?plain=1#L93).

@@ -1,6 +1,6 @@
 # Document scripts flags with no Changes build
 
-- **Severity:** Low. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 157, finding 53 of the review of user decision 135 B.
 - **Location:** `crates/mokly-cli/src/grammar.rs:44`,
@@ -10,7 +10,7 @@
   PR #199 until after its merge, for the user's later choice.
 
 - **Source:** Review.
-- **Category:** Docs or spec (estimate).
+- **Category:** Docs or spec.
 - **Terms:**
   - **Scripts flags:** `--base-install-scripts` and
     `--no-base-install-scripts`, which turn dependency lifecycle scripts on
@@ -29,9 +29,9 @@
   do nothing without Changes?
 - **Options:**
   - **A.** Document in the build and publish guides that the scripts flags
-    have no effect with `--no-changes`. Effort: Small (estimate).
+    have no effect with `--no-changes`. Effort: Small.
   - **B.** Reject the pair with a CLI error. This adds a rejection.
-    Effort: Small (estimate).
+    Effort: Small.
 - **Left out:** Applying the flags is impossible, because no base install
   runs. The review record that held the other options of this item is not
   available.
@@ -45,7 +45,7 @@
   `--no-changes`, and that item removes repeated copies of the mode.
 - **Recommendation:** A. It states the current behaviour without a new
   rejection.
-- **Action:** ask the user, because condition 5 holds: the user reserved
-  the choice for each open review item of the rebuild.
+- **Action:** ask the user, because the user reserved the choice for each open
+  review item of the rebuild.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6154).

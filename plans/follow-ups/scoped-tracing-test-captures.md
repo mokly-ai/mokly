@@ -1,6 +1,6 @@
 # Make tracing captures safe in parallel tests
 
-- **Severity:** Medium. **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** Yes.
+- **Severity:** Medium. **Effort:** Small. **Confidence:** Medium. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 196, the wider class of user item 193.
 - **Location:** `crates/mokly-cli/src/_tests_/serve_trace_tests.rs:87`,
@@ -44,12 +44,12 @@
   its spans while other tests run in parallel?
 - **Options:**
   - **A.** Install the same once-per-process interest guard in both
-    captures. Effort: Small (estimate).
+    captures. Effort: Small.
   - **B.** Keep the scoped subscribers until one of the tests flakes.
-    Effort: Small (estimate).
+    Effort: Small.
   - **C.** Move the trace capture and its guard into one shared test
     support crate that all three crates use. This adds a crate.
-    Effort: Large (estimate).
+    Effort: Large.
 - **Left out:** Running the suites one test at a time hides the shared
   state and slows verification.
 - **Wider fix:** C. One shared capture gives every crate the guard. A
@@ -59,7 +59,7 @@
   `cleanup_retirement_keeps_only_the_cause_after_active_or_idle_failure`.
 - **Recommendation:** A. It applies the proven deterministic fix in a
   separate branch.
-- **Action:** ask the user, because condition 5 holds: the user reserved
-  the choice for each open review item of the rebuild.
+- **Action:** ask the user, because the user reserved the choice for each open
+  review item of the rebuild.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6531).

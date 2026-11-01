@@ -1,6 +1,6 @@
 # Classify moz-document blocks consistently
 
-- **Severity:** Low (estimate). **Likelihood:** Rare (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a problem outside the scope of the review of the `rebuild/port-111c`
@@ -50,9 +50,9 @@
 - **Related:** [font-face-statement-doc.md](font-face-statement-doc.md) is
   another difference between the scanner reading and lightningcss from the
   same review series. One branch can settle both.
-- **Recommendation:** A (estimate). It applies the protocol rule to this
+- **Recommendation:** A. It applies the protocol rule to this
   at-rule.
-- **Action:** fix after merge, apply A (estimate), because it aligns the
+- **Action:** fix after merge, apply A, because it aligns the
   code with the protocol rule, and the code is outside the reviewed change.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6675).

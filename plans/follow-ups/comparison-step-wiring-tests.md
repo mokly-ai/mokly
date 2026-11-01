@@ -1,11 +1,14 @@
 # Test the wiring of the comparison step labels
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-30, from branch `calummoore/loading-status-updates`, review round 1, finding 1 and two problems that its check found.
 - **Location:** `crates/mokly-cli/src/base_dependencies.rs:141`, `crates/mokly-cli/src/changes_runtime.rs:89`, `crates/mokly-cli/src/serve_changes_native.rs:151`, `crates/mokly-cli/tests/changes_names_tests.rs:239`.
-- **Reason:** The review rules send each missing-test finding to the user, so the test waits for a decision.
+- **Reason:** The comparison-label change merged without tests of its three
+  composition wires.
 
+- **Source:** Review.
+- **Category:** Test.
 - **Terms:**
   - **Changes:** The Mokly feature that compares the current catalogue with the catalogue of a Git base commit.
   - **Comparison step:** One of the five labels that the `Comparing with <base>` spinner shows while Changes runs, defined in `docs/protocol/mokly-terminal-steps.md`.
@@ -24,7 +27,10 @@
   - **F.** Give `DiskCache` a required `steps` field instead, and delete `StepCache`. It gives the guard of E in fewer files, but the generic cache then maps cache kinds to terminal steps. Effort: Large.
   - **G.** Do A. Also add a Serve unit test that runs `Source::classify` with a Git runner that fails at the first command and a `Progress` mock. Assert that `Progress::step` receives the reading step with the same cancellation token as the classification. Both tests are in-process and add no command run. Effort: Small.
 - **Left out:** More tests that construct `StepCache` directly fail the goal, because they never run a composition. Changing nothing fails the goal. A build method on the cache `Reporter` trait is worse than F on every point.
-- **Wider fix:** E. It removes the silent drop of the cache steps for every composition, but it is Large and covers neither `PhaseSteps` nor `RunSteps`.
+- **Wider fix:** E protects cache-step wiring only. It adds compile-time
+  enforcement and leaves PhaseSteps and RunSteps untested. That enforcement
+  needs approval before implementation.
 - **Previous examples:** None found.
 - **Recommendation:** G. It covers all three wires, including the token match of Serve, at the lowest level that fails, and adds no command run. E best protects the cache steps against a future composition.
-- **Action:** ask the user, because the review rules send each missing-test finding to the user (decision-test condition 6).
+- **Action:** fix after merge, apply G, because the comparison-label change
+  merged before the review added these requirement tests.

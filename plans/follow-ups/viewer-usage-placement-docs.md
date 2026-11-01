@@ -1,6 +1,6 @@
 # Align the documented location of Used by
 
-- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #223 and its completed plan, which put the
   problem outside the scope of its review.
@@ -93,7 +93,7 @@
       `mokly-component-inspector-design.md:24`, and
       `mokly-component-design.md:56` change. `mokly-viewer.md:54` changes
       when Usage goes.
-    - Effort: Large (estimate), because the shell code and the mockup code
+    - Effort: Large, because the shell code and the mockup code
       change in two packages.
   - **C.** Change nothing. Effort: Small.
   - **D.** Keep in the two viewer pages the rule that the lists show in every
@@ -101,22 +101,22 @@
     contract, and do not repeat the panel names. The viewer pages then hold
     no second copy of the placement fact. The two design pages keep their
     own statement for the mockups. This changes the requirement text of the
-    viewer contract. Effort: Small (estimate).
+    viewer contract. Effort: Small.
 - **Left out:**
   - Showing the lists in both Details and Usage. The inspector contracts
     give each group of content its own panel.
   - A new check that compares panel names across pages. It cannot tell a
     placement fact from other text, and a new check needs the user.
-- **Wider fix:** D (estimate). It applies the rule of the `documentation`
+- **Wider fix:** D. It applies the rule of the `documentation`
   skill that each fact lives in one place. The viewer pages then cannot
   drift from the component contracts again. The rule is already in force,
   so no new rule or check is needed.
 - **Previous examples:** None found.
-- **Recommendation:** D (estimate). It removes the contradiction, and the
+- **Recommendation:** D. It removes the contradiction, and the
   viewer pages then hold no copy of the panel names that can drift. A is
   the smallest correction, but it keeps the second copy that drifted.
-- **Action:** ask the user, because condition 1 holds (estimate): options A,
-  B, and D each change a requirement in a protocol doc. No recorded user
-  decision chooses the placement, and this branch approves none.
+- **Action:** ask the user, because options A, B, and D each change a
+  requirement in a protocol doc. No recorded user decision chooses the
+  placement, and this branch approves none.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/usage-list-in-parent-detail.md?plain=1#L386).

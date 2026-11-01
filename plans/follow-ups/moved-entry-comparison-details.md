@@ -44,12 +44,12 @@
 - **Root question:** What should Details say for a pure move whose views use
   changed components?
 - **Options:**
-  - **A.** Keep the terminal line. Effort: Small (estimate).
+  - **A.** Keep the terminal line. Effort: Small.
   - **B.** For an entry that Changes lists only as a move, show the
     shared-component sentence, which no longer says "no independent entry
     in Changes". Draw the design first. Effort: Large.
   - **C.** Leave out the terminal line when a shown view uses a changed
-    component. Draw the design first. Effort: Large (estimate).
+    component. Draw the design first. Effort: Large.
 - **Left out:** Change the copy without a design. The mockup rule requires
   the design state first.
 - **Wider fix:** B. The design gives the state one positive explanation.

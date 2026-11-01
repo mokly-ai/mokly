@@ -1,7 +1,7 @@
 # Coalesce concurrent composition of one document key
 
-- **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #225 and its completed plan, one of the
   three follow-ups of its acceptance decision.
 - **Location:** `crates/mokly-graph/src/session_render.rs:42`.
@@ -41,13 +41,12 @@
   - **A.** Change nothing. Effort: Small.
   - **B.** Coalesce concurrent misses of one document key in the graph
     session. The first miss composes, and the other requests wait for its
-    artifact. Effort: Medium (estimate).
+    artifact. Effort: Medium.
   - **C.** Share one in-flight map between document keys and stylesheet
-    roots, so that both caches coalesce through one helper. Effort: Medium
-    (estimate).
+    roots, so that both caches coalesce through one helper. Effort: Medium.
 - **Left out:** Rendering every document before the pass. It repeats the
   serial pass that PR #225 replaced.
-- **Wider fix:** C (estimate). One helper removes the repeated work of both
+- **Wider fix:** C. One helper removes the repeated work of both
   caches.
 - **Previous examples:** `GraphDocuments` in `crates/mokly-server` already
   coalesces requests for the same document route.
@@ -56,9 +55,9 @@
     the same cause in the stylesheet cache and the same wider fix.
   - [serve-sidecar-prestart.md](./serve-sidecar-prestart.md) is the third
     follow-up of the same acceptance decision.
-- **Recommendation:** B (estimate). It removes the repeated compositions in
-  the one place that composes them. C best protects the codebase.
-- **Action:** ask the user, because condition 6 holds (estimate): this is a
-  performance finding, and no recorded user choice selects an option.
+- **Recommendation:** C. One shared owner coalesces both caches without changing
+  their rendered output. The record first recommended B.
+- **Action:** fix after merge, apply C, because the shared cache change lies
+  outside the pass scheduler that found the repeated work.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/parallel-background-pass.md?plain=1#L100).

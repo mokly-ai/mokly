@@ -1,6 +1,6 @@
 # Classify duplicate callback attributes correctly
 
-- **Severity:** Low (estimate). **Likelihood:** Rare (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a problem outside the scope of round 2 of the HTML pipeline decision work
@@ -39,8 +39,7 @@
     Effort: Small.
   - **B.** Keep the message. Effort: Small.
   - **C.** Classify each duplicate through one shared table of attribute
-    classes, which the check and its message both read. Effort: Medium
-    (estimate).
+    classes, which the check and its message both read. Effort: Medium.
 - **Left out:** Accept ordinary duplicates in callback output. It removes a
   failure that the code raises today, and the message is the defect.
 - **Wider fix:** C. One table keeps the rule and the message in step for
@@ -50,9 +49,10 @@
   is about the message of the reserved-navigation check in the same
   function, at line 18. Both items fix wrong wording in one function, so
   one branch can fix both.
-- **Recommendation:** A (estimate). It corrects the message with the
-  smallest change.
-- **Action:** fix after merge, apply A (estimate), because the message is a
-  product defect in code outside the reviewed change.
+- **Recommendation:** C. One attribute classification supplies both the existing
+  check and its message, so their meanings stay equal. The record first
+  recommended A.
+- **Action:** fix after merge, apply C, because the shared diagnostic correction
+  lies outside the change that found it.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5591).
