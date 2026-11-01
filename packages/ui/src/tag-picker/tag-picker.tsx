@@ -16,8 +16,10 @@ import {
   useRef,
   type KeyboardEvent,
   type ReactNode,
+  type Ref,
 } from "react";
 
+import { useMergedRef } from "../merged-ref/merged-ref.js";
 import { TagChip } from "../tag-chip/tag-chip.js";
 
 import { TagPickerToggle } from "./tag-picker-toggle.js";
@@ -60,9 +62,11 @@ export function TagPicker<Tag extends TagPickerTag>({
   onSelect,
   open,
   operable = true,
+  pickerRef,
   renderChip,
   tags,
   toggleHref,
+  toggleRef,
 }: {
   /** The index of the chip that holds focus while the picker is open. */
   focusedIndex: number;
@@ -91,6 +95,11 @@ export function TagPicker<Tag extends TagPickerTag>({
    */
   operable?: boolean;
   /**
+   * Receives the picker that the button opens, such as for a host that tells
+   * a click outside the picker from a click in it.
+   */
+  pickerRef?: Ref<HTMLDivElement> | undefined;
+  /**
    * Draws each chip in place of the package chip, for a host that renders
    * every chip through its own component, such as a mockup that records each
    * chip. A host's chip takes no roving tab stop and returns no focus.
@@ -103,9 +112,16 @@ export function TagPicker<Tag extends TagPickerTag>({
    * the picker opened or closed. A button with an address is a link.
    */
   toggleHref?: string | undefined;
+  /**
+   * Receives the button, such as for a host that returns focus to it after
+   * Escape anywhere in its shell.
+   */
+  toggleRef?: Ref<HTMLButtonElement> | undefined;
 }) {
   const toggle = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
+  const toggleElement = useMergedRef(toggle, toggleRef);
+  const panelElement = useMergedRef(panel, pickerRef);
   useEffect(() => {
     if (!open) return;
     const chips =
@@ -149,7 +165,7 @@ export function TagPicker<Tag extends TagPickerTag>({
         open={open}
         operable={operable}
         pickerId={id}
-        ref={toggle}
+        ref={toggleElement}
       />
       {open || button ? (
         <div
@@ -158,7 +174,7 @@ export function TagPicker<Tag extends TagPickerTag>({
           data-mokly-tag-picker=""
           hidden={!open}
           id={id}
-          ref={panel}
+          ref={panelElement}
           role="group"
         >
           <div className="mbk-tag-picker-head mbk-reset">Tags</div>

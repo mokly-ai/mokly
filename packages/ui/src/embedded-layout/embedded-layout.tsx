@@ -16,17 +16,22 @@ import type {
 
 import type { Appearance } from "../appearance-selector/appearance-selector.js";
 import { LabelLayer } from "../highlight-label/highlight-label.js";
+import { rootClassName } from "../shell-layout/root-marks.js";
 import {
   RouteStatus,
   ShellBody,
   SkipLink,
+  type ShellResizing,
 } from "../shell-layout/shell-layout.js";
 
 import {
   HostSlot,
   StageOverlay,
+  type HostSlotName,
   type StageOverlayContent,
 } from "./host-slot.js";
+
+export type { HostSlotName } from "./host-slot.js";
 
 /** The content that a host places in the slots of its root. */
 export interface EmbeddedSlots {
@@ -46,6 +51,7 @@ export function EmbeddedLayout({
   colorScheme,
   drawerOpen,
   emptyStateShown,
+  frameExpanded,
   labelLayer,
   main,
   mainHref,
@@ -54,6 +60,8 @@ export function EmbeddedLayout({
   onClick,
   onKeyDown,
   ref,
+  resizing,
+  slotRef,
   slots,
   statusId,
   theme,
@@ -67,6 +75,12 @@ export function EmbeddedLayout({
   drawerOpen: boolean;
   /** Whether the empty state slot shows its content. */
   emptyStateShown: boolean;
+  /**
+   * Whether a browser window is expanded over the shell, which marks the root
+   * with `frame-expanded`: the scrim shows below the window, and the marker
+   * and label layers stay above it.
+   */
+  frameExpanded?: boolean | undefined;
   /** The label layer, such as a host inspection's. An empty one by default. */
   labelLayer?: ReactNode;
   /** The main region with the routed view. */
@@ -80,6 +94,20 @@ export function EmbeddedLayout({
   onKeyDown?: ((event: KeyboardEvent<HTMLDivElement>) => void) | undefined;
   /** Receives the root. */
   ref?: Ref<HTMLDivElement> | undefined;
+  /**
+   * The separator that the reader drags, which marks the root with
+   * `mbk-inspector-resizing` or `mbk-nav-resizing`: the whole shell keeps the
+   * drag's cursor, and no frame takes the pointer.
+   */
+  resizing?: ShellResizing | undefined;
+  /**
+   * Names the container of each host slot for the host, such as for a host
+   * that tells a click on its own content from a click on the shell. Keep the
+   * ref of each name the same across renders. The `ref` of `MarkerLayer`
+   * names the container of the markers.
+   */
+  slotRef?:
+    ((name: HostSlotName) => Ref<HTMLDivElement> | undefined) | undefined;
   slots?: EmbeddedSlots | undefined;
   statusId: string;
   /** The appearance that the root states, as `data-mokly-theme`. */
@@ -88,7 +116,7 @@ export function EmbeddedLayout({
 }) {
   return (
     <div
-      className="mbk mokly-viewer mbk-reset"
+      className={rootClassName("mbk mokly-viewer", { frameExpanded, resizing })}
       data-drawer={drawerOpen ? "open" : "closed"}
       data-mokly-color-scheme={colorScheme}
       data-mokly-shell=""
@@ -100,24 +128,43 @@ export function EmbeddedLayout({
     >
       <SkipLink href={mainHref} />
       <div className="mokly-top-host mbk-reset">
-        <HostSlot name="topBarStart">{slots?.topBarStart}</HostSlot>
+        <HostSlot name="topBarStart" ref={slotRef?.("topBarStart")}>
+          {slots?.topBarStart}
+        </HostSlot>
         {topBar}
-        <HostSlot name="topBarEnd">{slots?.topBarEnd}</HostSlot>
+        <HostSlot name="topBarEnd" ref={slotRef?.("topBarEnd")}>
+          {slots?.topBarEnd}
+        </HostSlot>
       </div>
       <ShellBody>
         <div className="mokly-rail-host mbk-reset">
-          <HostSlot name="railStart">{slots?.railStart}</HostSlot>
+          <HostSlot name="railStart" ref={slotRef?.("railStart")}>
+            {slots?.railStart}
+          </HostSlot>
           {navigation}
-          <HostSlot name="railEnd">{slots?.railEnd}</HostSlot>
+          <HostSlot name="railEnd" ref={slotRef?.("railEnd")}>
+            {slots?.railEnd}
+          </HostSlot>
         </div>
         <div className="mokly-stage-host mbk-reset">
           {main}
-          <HostSlot hidden={!emptyStateShown} name="emptyState">
+          <HostSlot
+            hidden={!emptyStateShown}
+            name="emptyState"
+            ref={slotRef?.("emptyState")}
+          >
             {slots?.emptyState}
           </HostSlot>
-          <StageOverlay value={slots?.stageOverlay} />
+          <StageOverlay
+            ref={slotRef?.("stageOverlay")}
+            value={slots?.stageOverlay}
+          />
         </div>
-        <HostSlot name="sidePanel" style={{ width: slots?.sidePanel?.width }}>
+        <HostSlot
+          name="sidePanel"
+          ref={slotRef?.("sidePanel")}
+          style={{ width: slots?.sidePanel?.width }}
+        >
           {slots?.sidePanel?.content}
         </HostSlot>
       </ShellBody>

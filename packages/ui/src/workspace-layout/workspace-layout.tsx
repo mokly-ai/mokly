@@ -11,7 +11,9 @@ export function WorkspaceLayout({
   header,
   inspector,
   overlay,
+  panesRef,
   preview,
+  previewRef,
   previewStatus,
   ref,
   variantBar,
@@ -23,8 +25,15 @@ export function WorkspaceLayout({
   inspector: ReactNode;
   /** Content over the whole workspace, such as the highlight labels. */
   overlay?: ReactNode;
+  /** Receives the panes, whose height bounds the inspector's height. */
+  panesRef?: Ref<HTMLDivElement> | undefined;
   /** The preview: the stage, or the comparison around it. */
   preview: ReactNode;
+  /**
+   * Receives the preview pane, against which the host measures and clips the
+   * frames on it.
+   */
+  previewRef?: Ref<HTMLDivElement> | undefined;
   /** The status of a render, which shows over the preview. */
   previewStatus?: ReactNode;
   /** Receives the workspace, which the host sizes and searches. */
@@ -36,8 +45,12 @@ export function WorkspaceLayout({
     <section className="mbk-workspace mbk-reset" data-workspace="" ref={ref}>
       {header}
       {variantBar}
-      <div className="mbk-workspace-panes mbk-reset">
-        <div className="mbk-preview-pane mbk-reset" data-workspace-preview="">
+      <div className="mbk-workspace-panes mbk-reset" ref={panesRef}>
+        <div
+          className="mbk-preview-pane mbk-reset"
+          data-workspace-preview=""
+          ref={previewRef}
+        >
           <div
             aria-busy={busy ? true : undefined}
             className="mbk-preview-busy mbk-reset"

@@ -4,9 +4,10 @@
  * shows. The arrow keys, Home, and End move focus between the tabs. Close
  * returns focus to the tab that the reader pressed last. A host closes the
  * inspector the same way through the handle, such as on Escape anywhere in
- * its shell. The resize separator and the sheet grab carry the attributes
- * through which the host sizes the inspector. A static depiction that runs no
- * script draws each tab as a native disclosure instead.
+ * its shell, and moves focus to a tab through it. The host sizes the
+ * inspector through the resize separator and the sheet grab of
+ * `inspector-sizer.tsx`. A static depiction that runs no script draws each
+ * tab as a native disclosure instead.
  */
 
 import {
@@ -20,7 +21,14 @@ import {
 import { WorkspaceIcon } from "../icons/icons.js";
 
 import { InspectorDisclosures } from "./inspector-disclosures.js";
+import {
+  InspectorSizer,
+  sizeStyle,
+  type InspectorSize,
+} from "./inspector-sizer.js";
 import { onTabKeyDown } from "./tab-keys.js";
+
+export type { InspectorSize } from "./inspector-sizer.js";
 
 /** The tabs of the inspector, each with its glyph. */
 export type InspectorTabId = "details" | "components" | "props" | "usage";
@@ -53,32 +61,38 @@ export interface InspectorHandle {
    * pressed last.
    */
   close(): void;
+  /**
+   * Move focus to a tab, such as Props when the reader picks an instance.
+   * Nothing opens or closes.
+   */
+  focusTab(id: InspectorTabId): void;
 }
 
 export function Inspector({
   active,
   contentId,
+  contentRef,
   disclosures = false,
-  expanded = false,
   interactive,
   onOpenChange,
   open,
   ref,
   tabs,
-}: {
+  ...size
+}: InspectorSize & {
   /** The tab that the host shows while the inspector is open. */
   active?: string | undefined;
   /** The id of the panels' region, unique in the document. */
   contentId: string;
+  /** Receives the panels' region, whose scroll position the host keeps. */
+  contentRef?: Ref<HTMLDivElement> | undefined;
   /**
    * Whether each tab is a native disclosure, for a static depiction that runs
    * no script. A tab then opens its panel and closes it again by itself, one
    * tab at a time, and the sheet's grab is a native switch. `contentId` names
-   * the tabs' group.
+   * the tabs' group. Of the size, such an inspector takes only `expanded`.
    */
   disclosures?: boolean;
-  /** Whether the sheet of a static depiction starts expanded. */
-  expanded?: boolean;
   /**
    * Whether a script runs, which marks the inspector with its open state for
    * the stylesheet.
@@ -97,6 +111,7 @@ export function Inspector({
 }) {
   const section = useRef<HTMLElement>(null);
   const previousTab = useRef<HTMLElement | null>(null);
+  const tabButtons = useRef(new Map<InspectorTabId, HTMLButtonElement>());
   const close = useCallback(() => {
     onOpenChange?.(false);
     previousTab.current?.focus({ preventScroll: true });
@@ -108,6 +123,9 @@ export function Inspector({
         return section.current;
       },
       close,
+      focusTab(id) {
+        tabButtons.current.get(id)?.focus({ preventScroll: true });
+      },
     }),
     [close],
   );
@@ -120,7 +138,7 @@ export function Inspector({
       <InspectorDisclosures
         active={active}
         contentId={contentId}
-        expanded={expanded}
+        expanded={size.expanded ?? false}
         open={open}
         tabs={tabs}
       />
@@ -129,32 +147,16 @@ export function Inspector({
     <section
       aria-label="Inspector"
       className="mbk-inspector mbk-reset"
+      data-expanded={
+        size.expanded === undefined ? undefined : String(size.expanded)
+      }
       data-open={interactive ? String(open) : undefined}
       data-workspace-inspector=""
       onKeyDown={(event) => onTabKeyDown(event, tabs.length)}
       ref={section}
+      style={sizeStyle(size)}
     >
-      <div
-        aria-controls={contentId}
-        aria-label="Resize inspector"
-        aria-orientation="horizontal"
-        aria-valuemax={600}
-        aria-valuemin={160}
-        aria-valuenow={260}
-        className="mbk-inspector-resize mbk-reset"
-        data-inspector-resize=""
-        role="separator"
-        tabIndex={0}
-      />
-      <button
-        aria-expanded="false"
-        aria-label="Expand inspector"
-        className="mbk-sheet-grab mbk-reset"
-        data-inspector-size=""
-        type="button"
-      >
-        <span className="mbk-reset" />
-      </button>
+      <InspectorSizer contentId={contentId} {...size} />
       <div
         aria-label="Inspector panels"
         className="mbk-inspector-tabs mbk-reset"
@@ -170,6 +172,13 @@ export function Inspector({
             id={tab.tabId}
             key={tab.id}
             onClick={(event) => select(tab.id, event.currentTarget)}
+            ref={(button) => {
+              if (!button) return;
+              tabButtons.current.set(tab.id, button);
+              return () => {
+                tabButtons.current.delete(tab.id);
+              };
+            }}
             role="tab"
             title={tab.title}
             type="button"
@@ -197,6 +206,7 @@ export function Inspector({
         data-mokly-scroll="inspector"
         hidden={!open}
         id={contentId}
+        ref={contentRef}
       >
         {tabs.map((tab) => (
           <section

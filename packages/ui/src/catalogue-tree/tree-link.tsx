@@ -1,6 +1,6 @@
 /** One catalogue row link, with its glyph, its indent, and its changed mark. */
 
-import type { CSSProperties } from "react";
+import type { CSSProperties, Ref } from "react";
 
 import {
   ComponentVariantIcon,
@@ -92,9 +92,12 @@ function LinkGlyph({
  * address draws the same row as a picture that opens nothing.
  */
 export function RowLink({
+  currentRef,
   link,
   variant,
 }: {
+  /** Receives the link while it is the current page's row. */
+  currentRef?: Ref<HTMLAnchorElement> | undefined;
   link: NavigationLink;
   /** Whether the row is a variant in an entry's list. */
   variant: boolean;
@@ -131,7 +134,12 @@ export function RowLink({
       </span>
     );
   return (
-    <a {...row} href={link.href} style={rowStyle(link.depth)}>
+    <a
+      {...row}
+      href={link.href}
+      ref={link.current ? currentRef : undefined}
+      style={rowStyle(link.depth)}
+    >
       {content}
     </a>
   );
