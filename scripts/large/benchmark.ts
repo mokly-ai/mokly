@@ -5,9 +5,14 @@ import v8 from "node:v8";
 import { chromium } from "@playwright/test";
 import type { Browser } from "@playwright/test";
 
-import { acceptanceForFixture } from "./acceptance_build.js";
+import {
+  acceptanceForFixture,
+  type AcceptanceBuild,
+} from "./acceptance_build.js";
 import { browse } from "./browse.js";
 import { browserMeasurement } from "./browser_measurement.js";
+import { buildLiveness } from "./build_liveness.js";
+import type { LivenessTimer } from "./build_liveness.js";
 import { changes } from "./changes.js";
 import { comparisonProfile } from "./comparison_profile.js";
 import { inputProfile } from "./input_profile.js";
@@ -44,6 +49,10 @@ export async function benchmark(
     sidecarTimeoutMs?: number;
     buildChanges?: boolean;
     buildDeadlineMs?: number;
+    acceptanceForFixture?: (
+      fixture: PreparedFixture,
+    ) => Promise<AcceptanceBuild>;
+    buildLivenessTimer?: LivenessTimer;
     browser?: Browser;
   } = {},
 ) {
@@ -81,10 +90,12 @@ export async function benchmark(
   let active: Scenario | undefined;
   const completedEdits: WatchMeasurement[] = [];
   try {
+    const accept = options.acceptanceForFixture ?? acceptanceForFixture;
     const acceptanceBuild = selected.some(
-      (scenario) => scenario === "serve" || scenario === "startup",
+      (scenario) =>
+        scenario === "build" || scenario === "serve" || scenario === "startup",
     )
-      ? await acceptanceForFixture(fixture)
+      ? await accept(fixture)
       : undefined;
     for (const scenario of selected) {
       active = scenario;
@@ -105,27 +116,33 @@ export async function benchmark(
           fixture.root,
           memoryStopKiB,
           options.sidecarTimeoutMs,
+          () => liveness.line(),
         );
-        let expired = false;
-        const timer = setTimeout(() => {
-          expired = true;
-          void stop(running).catch(() => {});
-        }, options.buildDeadlineMs ?? 300_000);
+        const liveness = buildLiveness(
+          running,
+          fixture.root,
+          options.buildDeadlineMs ?? 300_000,
+          () => stop(running),
+          options.buildLivenessTimer,
+        );
         try {
-          await running.done;
-          if (expired || running.child.signalCode !== null)
+          await liveness.wait();
+          if (running.child.signalCode !== null)
             throw new Error("Build exceeded the harness liveness deadline");
           const memory = await running.finishMemory();
           results.push({
             scenario,
             status: "measured",
+            ...(acceptanceBuild ? { acceptanceBuild } : {}),
             elapsedMs: performance.now() - beginning,
             ...memory,
             inputProfile: inputProfile(running.timings, memory.observations),
           });
         } finally {
-          clearTimeout(timer);
-          await finishRun(fixture.root, "build", running);
+          liveness.finish();
+          await finishRun(fixture.root, "build", running).catch((error) => {
+            if (!liveness.expired) throw error;
+          });
         }
         continue;
       }
