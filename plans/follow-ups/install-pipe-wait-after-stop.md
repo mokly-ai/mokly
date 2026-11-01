@@ -15,8 +15,8 @@
 - **Category:** Product bug.
 - **Terms:**
   - **Base install:** the private install of the base commit's
-    dependencies that Changes runs when the base lockfile differs from the
-    working tree.
+    dependencies when the base needs JavaScript rendering and its
+    dependency inputs differ from the working tree.
   - **Stop:** Mokly ends a package manager because of cancellation, the
     time limit, the byte bound, or the bound on its output. It signals the
     manager's process group and each descendant that it finds through
@@ -27,6 +27,13 @@
   - **Survivor:** a process that descends from the manager and outlives the
     stop.
 - **Background:**
+  - The base needs JavaScript rendering when its catalogue has a JavaScript
+    entry module or a stories file, or its configuration names a renderer
+    or PostCSS. `crates/mokly-cli/src/changes_base.rs:87` to line 102
+    prepares base dependencies only then. An HTML-only catalogue needs no
+    install. The dependency inputs are the tracked package manifests and
+    lockfiles. With pnpm or Yarn lockfiles, they also hold the manager
+    configuration files.
   - `TimedCommands::run` in `crates/mokly-compare/src/commands.rs` runs
     each manager command of a base install. Its loop, at lines 103 to 144,
     calls `Child::poll` and pauses 5 ms between calls.
@@ -54,9 +61,9 @@
     `crates/mokly-cli/src/base_dependencies.rs:170`.
   - `docs/protocol/mokly-base-install-processes.md#bounds-and-stops`
     states two limits of a stop. On macOS, a stop does not signal a
-    descendant outside the manager's process group whose parent exited
-    before the stop. After a normal finish, Mokly signals only the manager's
-    process group.
+    descendant outside the manager's process group whose parent exits before
+    the stop reaches that parent. After a normal finish, Mokly signals only
+    the manager's process group.
   - The same page requires one monotonic deadline for version discovery and
     every install. `docs/protocol/mokly-base-dependencies.md:201` says that
     cancellation stops preparation.
