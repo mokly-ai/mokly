@@ -408,27 +408,33 @@ the answers.
 
 The decided offset maps and finding 3 A in `mokly-catalogue`.
 
-- [ ] Tests that fail on `main`, one per evidence case: attribute values,
+- [x] Tests that fail on `main`, one per evidence case: attribute values,
       character references in text and in values, CRLF and CR in text and
       in values, and a `{{` from `&lbrace;&lbrace;` after another
       reference. Add cases that pass on `main` and must keep passing: a NUL
       in a value, multi-byte UTF-8, a leading byte order mark, and
       unquoted, single-quoted, and double-quoted values.
-- [ ] Add the value span and the source offset map to the token types.
-- [ ] Record the breakpoints in a new module beside the driver.
-- [ ] Map each `{{...}}` offset in `templates.rs`.
-- [ ] Add a property test over the vendored html5lib corpus and the
+- [x] Add the value span and the source offset map to the token types.
+- [x] Record the breakpoints in a new module beside the driver.
+- [x] Map each `{{...}}` offset in `templates.rs`.
+- [x] Add a property test over the vendored html5lib corpus and the
       differential fixtures. Each map is monotonic, each aligned byte equals
       its source byte or a CR, and each chunk end matches html5gum.
-- [ ] Item 7, option B: keep the tokenizer compatibility spans, and bound
+- [x] Item 7, option B: keep the tokenizer compatibility spans, and bound
       each map by the actual source interval of its value. Add a named test
       for `<!doctype html><script><`: the decoded `<` maps to byte 23, with
       the interval from 23 to 24.
-- [ ] Time three runs of the parser corpus benchmark before and after the
+- [x] Time three runs of the parser corpus benchmark before and after the
       change. Save the numbers under
       `.context/diagnostics-and-html-messages/`. If parsing slows by more
       than 2%, record maps only for the checks' sink.
-- [ ] Run the crate tests, `cargo clippy`, and `cargo fmt --all -- --check`.
+- [x] Run the crate tests, `cargo clippy`, and `cargo fmt --all -- --check`.
+- [ ] Review of `2e6d62a1`: make the two corpus assertions inside `if`
+      blocks unconditional, with the same meaning.
+- Done in `2e6d62a1`. The corpus timing median fell from 1337.466 ms to
+  1088.449 ms, so maps stay on for both sinks. Evidence:
+  `.context/diagnostics-and-html-messages/m5-measure.md`, `m5-item7-red.log`,
+  `m5-corpus-mutation-red.log`, and `m5-green.log`.
 
 ## Milestone 6: READMEs and cleanup
 
