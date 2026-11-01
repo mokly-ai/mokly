@@ -3,7 +3,8 @@
 This page defines dependency preparation for the [comparison sides](./mokly-comparison.md#sides).
 [Base preparation](./mokly-base-preparation.md) owns sources and cancellation.
 The [base cache](./mokly-base-cache.md) owns cache bounds, leases, and
-completion.
+completion. [Base install processes](./mokly-base-install-processes.md) owns
+the environment, the executables, the bounds, and the stops of each manager.
 
 ## Dependency Identity
 
@@ -126,8 +127,9 @@ shell. Lifecycle scripts do not run by default, including workspace scripts and
 scripts that dependency metadata would otherwise enable. The working-tree
 `review.baseInstallScripts` setting or its command-line override enables them
 for one invocation. Enabled scripts run as children of the manager and receive
-the same allowed environment as the manager. Installs do not read or change the
-working installation or a shared package store.
+the same [allowed environment](./mokly-base-install-processes.md#environment)
+as the manager. Installs do not read or change the working installation or a
+shared package store.
 
 Every manager may download packages from the registry that the base and user
 configuration select, as npm does. Installs use registry access rather than
@@ -149,45 +151,35 @@ configuration, Berry `npmAuthToken` or Classic `_authToken`, to the registry
 that the base configuration selects, and Berry sends a scope's token to the
 registry that the base configuration sets for that scope. npm 9 and later and
 pnpm send only tokens that the configuration scopes to a registry address.
-Each install starts from an allowed list of
-environment variables, not the inherited environment, so no base configuration
-can read an inherited secret such as `MOKLY_TOKEN`, `GITHUB_TOKEN`, or
-`NPM_TOKEN`. The allowed list holds no secret:
+Because each install starts from the
+[allowed environment](./mokly-base-install-processes.md#environment), a
+private registry whose token comes only from the environment, for example
+`NODE_AUTH_TOKEN` or a user `.npmrc` that reads `${NPM_TOKEN}`, does not
+authenticate in a base install, so that base uses the fallback tier with the
+install-failed reason.
 
-- `PATH` and `HOME`.
-- The proxy variables `HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`, and `ALL_PROXY`,
-  in upper and lower case.
-- The certificate variables `NODE_EXTRA_CA_CERTS`, `SSL_CERT_FILE`, and
-  `SSL_CERT_DIR`.
-- The variables that a process needs to start. Unix uses `TMPDIR`, `LANG`,
-  `LC_ALL`, every `LC_*`, `TZ`, `USER`, and `LOGNAME`. Windows uses
-  `SystemRoot`, `windir`, `ComSpec`, `PATHEXT`, `TEMP`, `TMP`, `USERPROFILE`,
-  `APPDATA`, `LOCALAPPDATA`, `HOMEDRIVE`, `HOMEPATH`, `NUMBER_OF_PROCESSORS`,
-  and `PROCESSOR_ARCHITECTURE`.
-- The names that Mokly fixes, with the values that Mokly sets.
+Yarn Classic needs rules that npm does not have, because its configuration
+files can move folders that it creates: Mokly fixes its working folder, cache,
+global, link, modules, and offline cache folders, its offline mirror, and its
+lock file inside the private entry. A confined committed offline mirror stays
+in use. The Classic self-update check stays off.
 
-Mokly removes every other inherited variable. Windows matches a variable name
-without case. A private registry whose token comes only from the environment,
-for example `NODE_AUTH_TOKEN` or a user `.npmrc` that reads `${NPM_TOKEN}`, does
-not authenticate in a base install, so that base uses the fallback tier
-with the install-failed reason. Yarn Classic needs rules that npm does not
-have, because its configuration files can move folders that it creates: Mokly
-fixes its working folder, cache, global, link, modules, and offline cache
-folders, its offline mirror, and its lock file inside the private entry. A
-confined committed offline mirror stays in use. The Classic self-update check
-stays off.
-
-| Manager            | Locked install policy                                                                                                           |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| npm                | `ci --ignore-scripts --no-audit --no-fund` by default; omit `--ignore-scripts` when enabled                                     |
-| pnpm 10 through 12 | `install --frozen-lockfile --ignore-scripts` by default; omit it when enabled; disable pnpmfile hooks and manager switching     |
-| Yarn Classic 1     | `install --frozen-lockfile --ignore-scripts --non-interactive` by default; omit it when enabled; fix its folders and mirror     |
-| Yarn Berry 4       | `install --immutable --mode=skip-build` by default; omit `--mode=skip-build` when enabled; disable telemetry and shared mirrors |
+| Manager            | Locked install policy                                                                                                                                                                  |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| npm                | `ci --ignore-scripts --no-audit --no-fund` by default; omit `--ignore-scripts` when enabled                                                                                            |
+| pnpm 10 through 12 | `install --frozen-lockfile --ignore-scripts` by default; omit it when enabled; pnpm 10 and 11 add `--config.confirm-modules-purge=false`; disable pnpmfile hooks and manager switching |
+| Yarn Classic 1     | `install --frozen-lockfile --ignore-scripts --non-interactive` by default; omit it when enabled; fix its folders and mirror                                                            |
+| Yarn Berry 4       | `install --immutable --mode=skip-build` by default; omit `--mode=skip-build` when enabled; disable telemetry and shared mirrors                                                        |
 
 All install caches, logs, stores, module directories, and installation state
 stay inside the private entry. The retained entry keeps no temporary download
-cache. Installed pnpm links continue to
-resolve inside their private `node_modules` store. Yarn node modules use the
+cache. When the copied base sources hold a tracked `node_modules` state that
+the selected pnpm must recreate, the install recreates it inside the private
+entry without a prompt. pnpm 12 does this on a plain install and gets no extra
+setting. Decision: recreate without a prompt, so that local and CI runs get the
+same tier. Rejected: a documented tier difference between local and CI runs.
+Installed pnpm links continue to resolve inside their private
+`node_modules` store. Yarn node modules use the
 same selected-directory mapping as npm. Yarn path redirection is disabled.
 Yarn Berry reads no project environment file: Mokly replaces Berry's
 environment-file list with one optional path above the private entry, so an
@@ -201,18 +193,6 @@ committed archive or a downloaded package can still run on Yarn Berry 4.0 to
 4.13. Yarn 4.14 and later refuse generators while scripts are off, unless the
 root manifest allows one with `dependenciesMeta.{name}.built`. Berry `catalog`, `catalogs`, and `packageExtensions`
 ranges get the manifest path checks from their configuration folder.
-
-Resolve managers in the parent through absolute PATH entries only. The child
-also receives only absolute PATH entries, so a script interpreter cannot
-select historical code. On Windows a native launcher runs directly. Standard
-npm-installed and Corepack `.cmd` layouts use their Node CLI. A source
-directory or relative PATH entry never supplies the manager. Unsupported
-launchers fall back.
-
-Version discovery and every selected install share one monotonic deadline.
-The byte bound applies while an install runs. Vanished files or directories
-do not stop the install. Only a failed spawn or unavailable executable has the
-typed command-unavailable result.
 
 Base package roots name the configuration ancestors, then the explicit package
 roots, all inside the selected tier, in Node's order. Repository roots include

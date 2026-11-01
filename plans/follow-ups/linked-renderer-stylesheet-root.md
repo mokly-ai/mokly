@@ -57,9 +57,11 @@
   - [config-repository-root-symlink.md](./config-repository-root-symlink.md)
     is the second linked-path problem that the same review found. It
     concerns the containment checks of the configuration.
-  - [base-symlink-package-root.md](./base-symlink-package-root.md) concerns
-    linked package roots in the base tree of Changes. It is the same class
-    of link handling in another reader.
+  - [base-symlink-package-root.md at its last version on `main`](https://github.com/mokly-ai/mokly/blob/208205c24cb0b6d9f78bfe507ef0373af25f11ba/plans/follow-ups/base-symlink-package-root.md)
+    concerned linked package roots in the base tree of Changes. It is the
+    same class of link handling in another reader. The 2026-10-28 decision
+    closed it: for roots and package roots, the base failure stays, and the
+    message names the link.
   - [fallback-keys-checkout-folder.md](./fallback-keys-checkout-folder.md)
     has the same cause in render keys. A linked renderer is not in the
     module graph, so every entry module other than a stories file uses the

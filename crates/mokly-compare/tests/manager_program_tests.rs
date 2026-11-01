@@ -37,6 +37,7 @@ fn manager_path_probe() {
     let request = Command {
         program: manager,
         args: vec!["--version".into()],
+        scripts: false,
         directory: source.path().to_owned(),
         timeout: Duration::from_secs(120),
         byte_limit: None,

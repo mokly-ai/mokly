@@ -2,8 +2,6 @@
 
 use std::fs::{self, OpenOptions};
 use std::io::{Seek, SeekFrom, Write};
-use std::path::Path;
-use std::process::{Command, Stdio};
 
 use mokly_git::identity::ObjectId;
 
@@ -14,24 +12,11 @@ use mokly_git::identity::ObjectId;
 mod engine_support;
 use engine_support::Fixture;
 
-fn git(root: &Path, args: &[&str], input: &[u8]) -> Vec<u8> {
-    let mut child = Command::new("git")
-        .current_dir(root)
-        .args(args)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .unwrap();
-    child.stdin.take().unwrap().write_all(input).unwrap();
-    let result = child.wait_with_output().unwrap();
-    assert!(
-        result.status.success(),
-        "{}",
-        String::from_utf8_lossy(&result.stderr)
-    );
-    result.stdout
-}
+#[expect(
+    dead_code,
+    reason = "The shared host fixtures also support cache and install tests."
+)]
+mod support;
 
 #[test]
 fn a_hundred_thousand_unrelated_tracked_files_are_not_indexed() {
@@ -39,7 +24,7 @@ fn a_hundred_thousand_unrelated_tracked_files_are_not_indexed() {
         "specs/home.screen.html",
         "---\ntitle: Home\n---\n<p>Before</p>",
     )]);
-    let object = String::from_utf8(git(
+    let object = String::from_utf8(support::git_input(
         fixture.directory.path(),
         &["hash-object", "-w", "--stdin"],
         b"unrelated",
@@ -48,7 +33,7 @@ fn a_hundred_thousand_unrelated_tracked_files_are_not_indexed() {
     let index: String = (0..100_001)
         .map(|i| format!("100644 {}\tunrelated/{i}\n", object.trim()))
         .collect();
-    git(
+    support::git_input(
         fixture.directory.path(),
         &["update-index", "--index-info"],
         index.as_bytes(),
@@ -73,7 +58,7 @@ fn a_seventy_megabyte_video_compares_by_streamed_digest() {
         .unwrap()
         .set_len(70 * 1024 * 1024)
         .unwrap();
-    git(fixture.directory.path(), &["add", "movie.mp4"], b"");
+    support::git(fixture.directory.path(), &["add", "movie.mp4"]);
     fixture.refresh_base();
     let stable = fixture.compare().unwrap();
     assert!(stable.snapshot.changed_entries.is_empty());
@@ -88,7 +73,7 @@ fn a_seventy_megabyte_video_compares_by_streamed_digest() {
 
 impl Fixture {
     fn refresh_base(&mut self) {
-        git(
+        support::git(
             self.directory.path(),
             &[
                 "-c",
@@ -100,10 +85,9 @@ impl Fixture {
                 "-m",
                 "additional base inputs",
             ],
-            b"",
         );
         self.commit = ObjectId::parse(
-            String::from_utf8(git(self.directory.path(), &["rev-parse", "HEAD"], b""))
+            String::from_utf8(support::git(self.directory.path(), &["rev-parse", "HEAD"]))
                 .unwrap()
                 .trim(),
         )

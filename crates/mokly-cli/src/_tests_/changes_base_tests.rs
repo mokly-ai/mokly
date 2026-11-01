@@ -5,7 +5,9 @@ use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::config_types::{Config, ResolvedConfig};
 use mokly_cli::cancellation::BuildCancellation;
-use mokly_compare::base_render::{BaseProvider, BaseRequest, HistoricalSources};
+use mokly_compare::base_render::{
+    BasePreparationError, BaseProvider, BaseRequest, HistoricalSources,
+};
 use mokly_compare::cache_types::Lease;
 use mokly_compare::comparison_steps::{Step, StepsMock};
 use mokly_compare::dependency_types::{Resolved, Tier};
@@ -99,11 +101,15 @@ fn lease() -> Arc<Lease> {
 }
 
 fn side(sources: Arc<Lease>) -> Arc<BaseSide> {
+    side_with_tier(sources, Tier::Working)
+}
+
+fn side_with_tier(sources: Arc<Lease>, tier: Tier) -> Arc<BaseSide> {
     Arc::new(BaseSide {
         working_root: "/repo".into(),
         sources,
         dependencies: Resolved {
-            tier: Tier::Working,
+            tier,
             node_modules: "/deps/node_modules".into(),
             module_resolution: ModuleResolution::default(),
             warning: None,
@@ -121,8 +127,9 @@ fn prepare(
     dependencies: Unimock,
     tree: Unimock,
     sources: Unimock,
+    install_scripts: bool,
     steps: Unimock,
-) -> Error {
+) -> BasePreparationError {
     let head = Arc::new(Runtime::new(
         Arc::new(Unimock::new(())), Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(PoolMock::request.next_call(matching!((call) if matches!(call,
@@ -151,7 +158,7 @@ fn prepare(
         working_config: &config,
         repository: Arc::new(Unimock::new(())),
         commit: ObjectId::parse(&"a".repeat(40)).unwrap(),
-        install_scripts: false,
+        install_scripts,
         sources: HistoricalSources {
             tree: Arc::new(tree),
             sources: Arc::new(sources),
@@ -176,10 +183,37 @@ fn native_base_uses_the_head_pool_and_the_leased_base_source_root() {
         dependencies,
         tree(events.clone()),
         sources(events.clone(), 1),
+        false,
         steps(events.clone()),
     );
-    assert!(matches!(error, Error::Catalogue { .. }));
+    assert!(matches!(*error.source, Error::Catalogue { .. }));
     assert!(events.lock().unwrap().ends_with(&["attach", "rendering"]));
+}
+
+#[test]
+fn native_base_reports_scripts_off_after_a_tier_two_install() {
+    for (tier, install_scripts, expected) in [
+        (Tier::Working, false, false),
+        (Tier::Installed, true, false),
+        (Tier::Installed, false, true),
+        (Tier::Fallback, false, false),
+    ] {
+        let events = Events::default();
+        let dependencies = Unimock::new(
+            BaseDependenciesMock::prepare
+                .next_call(matching!(_, _, _, _, _))
+                .returns(Ok(side_with_tier(lease(), tier))),
+        );
+        let error = prepare(
+            Config::default(),
+            dependencies,
+            tree(events.clone()),
+            sources(events.clone(), 1),
+            install_scripts,
+            steps(events),
+        );
+        assert_eq!(error.scripts_off, expected);
+    }
 }
 
 #[test]
@@ -202,9 +236,10 @@ fn a_renderer_configuration_attaches_an_existing_extraction_before_the_configura
         dependencies,
         tree(events.clone()),
         sources(events.clone(), 2),
+        false,
         steps(events.clone()),
     );
-    assert!(matches!(error, Error::Catalogue { .. }));
+    assert!(matches!(*error.source, Error::Catalogue { .. }));
     let events = events.lock().unwrap();
     assert_eq!(events.first(), Some(&"attach"));
     assert!(events.contains(&"read configuration"));
@@ -232,9 +267,10 @@ fn a_failed_early_lookup_keeps_the_base_reads_on_git() {
         dependencies,
         tree(events.clone()),
         sources(events.clone(), 1),
+        false,
         steps(events.clone()),
     );
-    assert!(matches!(error, Error::Catalogue { .. }));
+    assert!(matches!(*error.source, Error::Catalogue { .. }));
     let events = events.lock().unwrap();
     assert_eq!(events.first(), Some(&"read configuration"));
     assert!(events.ends_with(&["attach", "rendering"]));

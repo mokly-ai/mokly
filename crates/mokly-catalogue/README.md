@@ -21,6 +21,9 @@ definition provider boundary.
 `Loader` implements `ConfigLoader`. It searches upward or loads an explicit
 JSON file. The editor schema ships in `@mokly/mokly/config.schema.json`.
 Filesystem checks resolve symlinks and keep local inputs inside `repoRoot`.
+Some source trees, such as the base Git tree, report symlinks without
+resolving them. In such a tree, a root or package root through a symlink
+fails its check, and the `config-invalid` message names the symlink.
 Config-relative parent segments are accepted when their lexical and physical
 targets stay inside `repoRoot`. PostCSS path, suffix, and regular-file checks
 use the catalogued `config-invalid` diagnostics before a sidecar starts. Git
@@ -78,7 +81,9 @@ schemas. The [component controls contract](../../docs/protocol/mokly-component-c
 owns control bounds, steps, and the `props-control-bounds` warning. The
 [entry props contract](../../docs/protocol/mokly-entry-props.md) owns
 binary64 rounding and the `props-unsafe-integer` warning for props, schemas,
-and controls. Shared schema preparation also normalizes numbers received
+and controls. For a component invocation, `mokly-html` reports this warning
+during composition, and its message names the component path and the instance
+id. Shared schema preparation also normalizes numbers received
 through JSON, so JavaScript's decimal spelling keeps its binary64 identity in
 the core. Preparation captures explicit control order, schema property order,
 or first-seen inferred prop order before it creates canonical lookup maps.
@@ -112,6 +117,17 @@ token and span types, and it is the only html5gum user: other code must not
 construct an `html5gum::Tokenizer`. `html_driver::drive` runs html5gum under
 the html5ever tree builder for any `DriverSink`: the token checks pass a sink
 that records tokens, and `mokly-html` passes its tree arena.
+Each text token and each attribute value is a `Spanned` with a `SourceMap`.
+The map gives the source byte of each decoded byte, and its `span` is the
+source interval that the tokenizer consumed for the value. The map anchors at
+html5gum's own chunk ends, so Mokly has no second character-reference decoder.
+In a chunk that does not align with its source bytes, such as a character
+reference, each decoded byte maps to the first source byte of the chunk. The
+token's own `span` stays html5gum's compatibility span, and the other checks
+keep using it. In a body, catalogue validation maps each `{{...}}` failure
+through `Spanned::source_offset` to its own `{{`, also inside an attribute
+value, after a character reference, and after CRLF or CR line ends. A saved
+slot failure keeps the location of its front matter field.
 Composition owns literal attribute coercion, rendered document safety, assets,
 and anchors. `SourcePolicy` classifies root matches, reserved basenames, and
 inventoried inputs in that precedence order, including physical aliases.
@@ -173,6 +189,10 @@ the `mock` feature for the public unimock boundaries.
 YAML that each path survives on a 2 MiB worker stack. Run it with
 `--nocapture` to print the limits, and with `--release` for release builds.
 
+The property test of the source maps over the vendored HTML corpus lives in
+[`mokly-html`](../mokly-html/README.md#development) and runs with
+`cargo test -p mokly-html --test source_map_corpus_tests`.
+
 ### Key Code
 
 - [`src/config.rs`](./src/config.rs) defines `ConfigLoader` and `Loader`,
@@ -182,6 +202,8 @@ YAML that each path survives on a 2 MiB worker stack. Run it with
 - [`src/config_paths.rs`](./src/config_paths.rs) confines local inputs and
   gives `ResolvedConfig::repository_path`, the one resolver of
   config-relative paths, with `renderer`, `postcss`, and `package_roots`.
+- [`src/config_links.rs`](./src/config_links.rs) provides `link_error`, which
+  names the symlink that keeps a failed root or package root from resolving.
 - [`src/discovery.rs`](./src/discovery.rs) defines `Discovery` and
   `Discoverer`, which walk the roots once and return the source `Inventory`.
 - [`src/preparation.rs`](./src/preparation.rs) defines `CatalogueBuilder` and
@@ -200,11 +222,20 @@ YAML that each path survives on a 2 MiB worker stack. Run it with
 - [`src/html_driver.rs`](./src/html_driver.rs) provides `drive` and
   `DriverSink`, which run html5gum under the html5ever tree builder for the
   checks and for the tree.
-- [`src/numeric_warnings.rs`](./src/numeric_warnings.rs) provides `for_entry`,
-  which reports each unsafe integer in the complete props of one entry.
+- [`src/html_driver_emitter.rs`](./src/html_driver_emitter.rs) defines
+  `DriverEmitter`, which forwards the html5gum emitter calls to the driver and
+  records the source position of each emitted chunk.
+- [`src/html_source_map.rs`](./src/html_source_map.rs) defines `SourceMap`,
+  which maps each decoded byte of a text token or an attribute value to its
+  source byte and holds the value's consumed source interval.
+- [`src/numeric_warnings.rs`](./src/numeric_warnings.rs) provides
+  `for_invocation`, which reports each unsafe integer in the props of one
+  component invocation, with the component path and the instance id.
 - [`src/diagnostic.rs`](./src/diagnostic.rs) and
   [`src/error.rs`](./src/error.rs) define the `Code`, `Issue`, and `Warning`
-  records and `CatalogueError`.
+  records and `CatalogueError`. `diagnostic::json_quoted` is the one JSON
+  quoting helper for catalogue warning messages, with the escapes of the build
+  warnings contract.
 
 ### Related Docs
 

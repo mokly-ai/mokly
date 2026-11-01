@@ -4,8 +4,9 @@ use serde_json::json;
 
 use mokly_model::catalogue::ModelEntry;
 
-use crate::diagnostic::normalize_warnings;
-use crate::numeric_warnings::{for_controls, schema_paths};
+use crate::diagnostic::{json_quoted, normalize_warnings};
+use crate::numeric_warnings::{for_controls, for_invocation};
+use crate::schema_warnings::schema_paths;
 
 #[test]
 fn nested_schema_keywords_warn_while_safe_numbers_and_annotations_do_not() {
@@ -80,4 +81,61 @@ fn control_warnings_keep_code_escaped_pointers_and_exact_duplicate_identity() {
             )
         );
     }
+}
+
+#[test]
+fn invocation_warnings_name_the_component_instance_and_nested_pointer() {
+    let props = serde_json::from_value(json!({
+        "badge": {"count": 9007199254740993_u64}
+    }))
+    .unwrap();
+    let entry: ModelEntry = serde_json::from_value(json!({
+        "metadata":{"path":"home","title":"Home","description":"",
+            "tags":[],"relatedDocs":[],"isIndex":false,"rootIndex":0,
+            "source":{"path":"home.screen.html","line":1,"column":1}},
+        "content":{"kind":"screen","visual":{"colorSchemes":["light"],
+            "propSchema":{"type":"object","additionalProperties":false},
+            "props":{},"controls":{},"controlOrder":[]},"useCasePaths":[]}
+    }))
+    .unwrap();
+    let warnings = for_invocation(&props, &entry, "components/card", "second");
+    assert_eq!(warnings.len(), 1);
+    assert_eq!(warnings[0].printed_subject(), "entry \"home\"");
+    assert_eq!(
+        warnings[0].message,
+        "component \"components/card\" instance \"second\" prop \"/badge/count\" is outside the JavaScript safe integer range and uses the nearest binary64 value"
+    );
+}
+
+#[test]
+fn invocation_warnings_json_quote_control_characters_in_prop_pointers() {
+    let props = serde_json::from_value(json!({
+        "a\u{1}b": 9007199254740993_u64,
+        "c\u{85}d": 9007199254740993_u64
+    }))
+    .unwrap();
+    let entry: ModelEntry = serde_json::from_value(json!({
+        "metadata":{"path":"home","title":"Home","description":"",
+            "tags":[],"relatedDocs":[],"isIndex":false,"rootIndex":0,
+            "source":{"path":"home.screen.html","line":1,"column":1}},
+        "content":{"kind":"screen","visual":{"colorSchemes":["light"],
+            "propSchema":{"type":"object","additionalProperties":false},
+            "props":{},"controls":{},"controlOrder":[]},"useCasePaths":[]}
+    }))
+    .unwrap();
+    let messages: Vec<_> = for_invocation(&props, &entry, "components/card", "second")
+        .into_iter()
+        .map(|warning| warning.message)
+        .collect();
+    assert!(
+        messages
+            .iter()
+            .any(|message| message.contains("/a\\u0001b"))
+    );
+    assert!(
+        messages
+            .iter()
+            .any(|message| message.contains("/c\\u0085d"))
+    );
+    assert_eq!(json_quoted("a\u{1}b\u{85}c"), "\"a\\u0001b\\u0085c\"");
 }

@@ -68,7 +68,7 @@ undeclared prop, an array, or an object without a path fails with
 `html-props`; `{{` that does not close is ordinary text. Every other
 attribute is ordinary HTML and is never interpreted. A component body uses
 this template language with its own props and adds slot placeholders under the [HTML components contract](./mokly-html-components.md#body).
-One parser and one renderer serve both. Checks and warnings read each body in the parser's text modes, with scripting disabled, so raw text holds no elements.
+Checks and warnings read each body in the parser's text modes, with scripting disabled, so raw text holds no elements.
 
 Substitutions accept ASCII whitespace around the prop path: `{{ name }}` equals
 `{{name}}` in text and attributes. Whitespace inside a dotted path fails.
@@ -136,6 +136,9 @@ Ignore ids use lowercase kebab-case. `mokly-ignore` accepts `id` and
 `material-key`; `mokly-ignore-scope` accepts `enabled`. Both accept `mokly-if`
 and `mokly-viewport`. Invalid ids fail with `html-element`. Unknown attributes
 warn once per shared body and attribute. Their values are not evaluated and do not enter document keys.
+When several wrappers carry the same unknown attribute, its warning names the wrapper whose start tag comes first in the HTML text. This rule applies also when HTML parsing moves a wrapper.
+A page callback document is the HTML that a JavaScript `definePage` callback returns. Unknown attributes on its wrappers warn in the same way, once per page document and attribute, with the page's `entry` subject and the message of an authored body.
+The core reports these warnings, also when the document then fails another check. Leaving callback documents without these warnings was rejected, because a misspelled wrapper attribute would then pass without a message.
 Strict builds fail. The reserved navigation names `data-mokly-link` and `data-mokly-link-control…` are not unknown attributes: a body or callback output that supplies one fails, and a saved slot warns that the name is rejected.
 In referenced authored HTML files and `srcdoc` values, elements named `mokly-ignore` or `mokly-ignore-scope` keep every attribute for resource and style checks.
 The [public closure](./mokly-public-closure.md) and Changes never see unknown attributes on wrappers in authored bodies or in sidecar output.
@@ -172,25 +175,32 @@ starts a sidecar.
 
 ## Diagnostics
 
-| Code                   | Meaning                                                                                                                                                                                 |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `html-front-matter`    | missing block, YAML error, unknown or invalid key                                                                                                                                       |
-| `html-element`         | forbidden element, unknown hyphenated element, component cycle                                                                                                                          |
-| `html-attribute`       | a value the prop schema rejects, or a reserved prop name                                                                                                                                |
-| `html-props`           | a `$name`, `{{name}}`, or `mokly-if` reference to an undeclared prop, `{{name}}` on an array or an object without a path, or `mokly-if` on a prop whose `type` is not exactly `boolean` |
-| `html-slot`            | content for an undeclared slot, or an unrendered placeholder                                                                                                                            |
-| `html-unused-props`    | warning: a prop no reference in the body reads                                                                                                                                          |
-| `html-foster-parented` | warning: HTML5 parsing moved component content                                                                                                                                          |
+| Code                    | Meaning                                                                                                                                                                                 |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `html-front-matter`     | missing block, YAML error, unknown or invalid key                                                                                                                                       |
+| `html-element`          | forbidden element, unknown hyphenated element, component cycle                                                                                                                          |
+| `html-attribute`        | a value the prop schema rejects, or a reserved prop name                                                                                                                                |
+| `html-props`            | a `$name`, `{{name}}`, or `mokly-if` reference to an undeclared prop, `{{name}}` on an array or an object without a path, or `mokly-if` on a prop whose `type` is not exactly `boolean` |
+| `html-slot`             | content for an undeclared slot, or an unrendered placeholder                                                                                                                            |
+| `html-unused-props`     | warning: a prop no reference in the body reads                                                                                                                                          |
+| `html-foster-parented`  | warning: HTML5 parsing moved component content                                                                                                                                          |
+| `html-ignore-attribute` | warning: an unknown attribute or a reserved navigation name on an ignore wrapper                                                                                                        |
 
 The warning messages are exactly
 `prop "<name>" is not read by the body` for `html-unused-props` and
 `component element <element> is moved out of <parent> by HTML parsing` for `html-foster-parented`.
+On a `mokly-ignore` wrapper, the `html-ignore-attribute` message is exactly `unknown attribute <name> on <mokly-ignore> is ignored` for an unknown attribute and `reserved navigation metadata <name> on <mokly-ignore> is rejected` for a reserved navigation name.
+The wrapper tag in angle brackets is literal text: on a `mokly-ignore-scope` wrapper, `<mokly-ignore-scope>` takes the place of `<mokly-ignore>`.
+In these messages, `<name>` is the attribute name in ASCII lowercase. For example, `<mokly-ignore-scope enabled="true" Typo="x">` gives `unknown attribute typo on <mokly-ignore-scope> is ignored`.
 Discovery checks each shared body once. Discovery and render warnings name the
 parent entry, including for variants, and equal warnings are reported once.
 Component bodies use a component subject; screen bodies use an entry subject.
 
 Errors are `build-invalid` failures with the repository-relative file and
 one-based line and column. Warnings use the [build warning record](./mokly-build-warnings.md).
+In a body, a `{{…}}` failure names the line and column of its own `{{`, also in an attribute value, after character references, and after CRLF or CR line ends.
+When a character reference produces the first brace, the location is the `&` that starts that reference.
+Other failures in an attribute value name the start of the attribute. When only rendering finds the failure, such as a value the prop schema rejects, it names the start of the element.
 
 ## Example
 

@@ -9,11 +9,11 @@ use std::ffi::OsStr;
 
 /// Whether an inherited variable is on the allowed list that every install
 /// starts from. Mokly removes every other inherited variable, so a base
-/// cannot read a secret such as `MOKLY_TOKEN`, `GITHUB_TOKEN`, or `NPM_TOKEN`
-/// through its configuration. Mokly adds its own fixed names separately, with
-/// the values that `manager_command::variables` sets. This is the single rule
-/// for the install environment. Windows reads a variable name without case,
-/// so the names match without case there.
+/// configuration and its lifecycle scripts receive no secret such as
+/// `MOKLY_TOKEN`, `GITHUB_TOKEN`, or `NPM_TOKEN`. Mokly adds its own fixed
+/// names separately, with the values that `manager_command::variables` sets.
+/// This is the single rule for the install environment. Windows reads a
+/// variable name without case, so the names match without case there.
 pub(crate) fn allowed(inherited: &OsStr) -> bool {
     const NAMES: &[&str] = &[
         "PATH",

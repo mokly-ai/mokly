@@ -39,10 +39,13 @@ Progress counts a digest once even when `missing` overlaps a Plan-archive digest
 When a Plan lists gzip, each Blob uses gzip only when the compressed body is
 smaller than the file. Otherwise it sends the exact file bytes. Progress size
 counts decoded file bytes.
-Credentials have a redacted debug representation. Transport failures and
-receiver rejections use fixed safe messages. Completion URLs and CLI output
-redaction match literal and percent-encoded credentials without depending on
-the case of percent digits.
+
+`Secret` holds every credential value as supplied, valid or not, and its
+`Debug` output is redacted. Redaction matches each byte literally or as a
+`%HH` escape in either hex case. A `%` in the text matches a literal `%` and
+also starts an escape, and the longer match wins. The viewer URL check also
+matches the parsed host without regard to ASCII case. Transport failures and
+receiver rejections keep their fixed safe messages.
 
 `mokly-git` supplies bounded process execution and cancellation. `GitCheckout`
 checks committed HEAD and complete fixed-argv status. It excludes only pinned
@@ -91,8 +94,9 @@ trait mocks to downstream tests.
 - [`src/index_identity.rs`](./src/index_identity.rs) defines `IndexIdentity`,
   which streams the catalogue index and keeps its base and base commit for the
   check against the upload metadata.
-- [`src/settings.rs`](./src/settings.rs) defines `Settings` and `Token`, the
-  validated endpoint, credential, and concurrency.
+- [`src/settings.rs`](./src/settings.rs) defines `Settings`, the validated
+  endpoint, credential, and concurrency, and `Token`, which wraps a `Secret`
+  after the bearer-token grammar check. `Settings::new` takes a `Secret`.
 - [`src/http.rs`](./src/http.rs) defines `Http` and `ReqwestHttp`, the
   one-attempt HTTP boundary and its rustls adapter.
 - [`src/blob_body.rs`](./src/blob_body.rs) prepares a deterministic gzip Blob
@@ -103,8 +107,9 @@ trait mocks to downstream tests.
   which check committed `HEAD` and a clean checkout.
 - [`src/accounting.rs`](./src/accounting.rs) defines `Receipt` and
   `Progress`, the digest-based upload accounting.
-- [`src/redaction.rs`](./src/redaction.rs) defines `SecretMatcher`, which
-  matches literal and percent-encoded credentials.
+- [`src/redaction.rs`](./src/redaction.rs) defines `Secret`, which holds a
+  credential with redacted `Debug` output, and `SecretMatcher`, which matches
+  literal and percent-encoded credentials in text and URLs.
 - [`../mokly-cli/src/publication/mod.rs`](../mokly-cli/src/publication/mod.rs)
   holds the CLI orchestration that calls this crate.
 
