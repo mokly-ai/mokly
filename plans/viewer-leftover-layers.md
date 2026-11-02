@@ -260,11 +260,12 @@ Depends on: every other milestone
       after the change. Save the numbers under
       `.context/viewer-leftover-layers/`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
+      once, and report. Round 1 on `ff86753d` found no finding:
+      `.context/reviews/calummoore/mokly-viewer-responsibilities/`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the

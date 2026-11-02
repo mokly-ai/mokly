@@ -1,0 +1,33 @@
+# Select controls from Storybook skip the option checks
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-01, from the branch `calummoore/mokly-viewer-responsibilities`: the second options check of the plan for the viewer's leftover layers, decision 3, option E.
+- **Location:** `crates/mokly-catalogue/src/provided_entries.rs:55-67`, `crates/mokly-model/src/controls.rs:74-130`, and `packages/viewer/src/components/controls.ts:87-104`.
+- **Reason:** The user chose option D on 2026-11-01, and option E came after that answer, so only the user can choose it.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Derived control:** a Props field that the core makes from a prop's schema when the author declares no control, in `crates/mokly-model/src/controls.rs`.
+- **Background:**
+  - The core makes a select control from a prop's `enum` values, its `oneOf` constants, or Storybook `argTypes.options`.
+  - `docs/protocol/mokly-component-controls.md:48-49` requires select options that are non-empty and unique, with values that the schema accepts.
+  - The viewer checks each select and rejects the whole catalogue when one is bad, in `packages/viewer/src/components/controls.ts:87-104`.
+  - On 2026-11-01 the core started to derive each `enum` or `oneOf` value once, to compare numbers by value, and to derive no control when no option is left. That was option D.
+- **Problem:**
+  - Storybook `argTypes.options` become select options with no check for repeats, emptiness, or schema acceptance, in `crates/mokly-catalogue/src/provided_entries.rs:55-67`.
+  - An `enum` or `oneOf` value that the property's type or a bound rejects still becomes an option.
+  - Each case makes every viewer reject the catalogue, with no error at build time.
+- **Impact if no action:** A Storybook catalogue or a schema with such a value stays unreadable in every viewer.
+- **Root question:** Which select controls does the core write, so that every viewer accepts them?
+- **Options:** The letters follow the options of decision 3.
+  - **D.** Keep the change of 2026-11-01 only. Effort: Small.
+  - **E.** One option builder in `crates/mokly-model` makes every select, also from Storybook. It keeps each value once and only values that the property schema accepts. A schema with no value left gets no control, and the Storybook path keeps its derived control. It edits `docs/protocol/mokly-sidecar.md:195-196`. Effort: Medium.
+  - **F.** The Rust read-model reader checks each select as the viewer does. This is stricter validation, a new build error. Effort: Medium.
+- **Left out:** The viewer drops a bad control: it fails the goal, because the core still writes it.
+- **Wider fix:** E, because one builder then makes every select.
+- **Previous examples:** `plans/follow-ups/reserved-navigation-names-in-authored-html.md` holds another check that differs between two places.
+- **Related:** `plans/follow-ups/viewer-checks-from-rust.md`: a shared reader does not check control options, so it does not fix this.
+- **Recommendation:** E. It covers every source of options with no new build error.
+- **Action:** ask the user, because the user chose D, and E adds work and changes a protocol sentence.
