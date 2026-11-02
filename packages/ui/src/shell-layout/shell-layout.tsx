@@ -11,6 +11,10 @@ import type { ReactNode, Ref } from "react";
 import type { Appearance } from "../appearance-selector/appearance-selector.js";
 import { EmptyState, type EmptyStateRoot } from "../empty-state/empty-state.js";
 
+import { rootClassName, type ShellResizing } from "./root-marks.js";
+
+export type { ShellResizing } from "./root-marks.js";
+
 /** The link that takes a keyboard reader past the chrome to the main region. */
 export function SkipLink({ href }: { href: string }) {
   return (
@@ -55,11 +59,14 @@ export function MainRegion({
   baseline,
   children,
   id,
+  ref,
 }: {
   /** The digest of a removed entry's record, as `data-mokly-baseline`. */
   baseline?: string | undefined;
   children?: ReactNode;
   id: string;
+  /** Receives the region, which the host focuses after a navigation. */
+  ref?: Ref<HTMLElement> | undefined;
 }) {
   return (
     <main
@@ -67,6 +74,7 @@ export function MainRegion({
       data-mokly-view=""
       data-mokly-baseline={baseline}
       id={id}
+      ref={ref}
       tabIndex={-1}
     >
       {children}
@@ -76,16 +84,19 @@ export function MainRegion({
 
 /**
  * The root of the standalone shell. It carries the shell's root class, which
- * holds the theme, and states its appearance and its preview scheme.
+ * holds the theme, and states its appearance and its preview scheme. It marks
+ * a drag of a separator and an expanded browser window for the stylesheets.
  */
 export function ShellLayout({
   announcement,
   colorScheme,
   drawerOpen,
+  frameExpanded,
   main,
   mainHref,
   navigation,
   ref,
+  resizing,
   statusId,
   theme,
   topBar,
@@ -96,6 +107,11 @@ export function ShellLayout({
   colorScheme: "dark" | "light";
   /** Whether the navigation drawer of a narrow shell is open. */
   drawerOpen: boolean;
+  /**
+   * Whether a browser window is expanded over the shell, which marks the root
+   * with `frame-expanded` and shows the scrim below the window.
+   */
+  frameExpanded?: boolean | undefined;
   /** The main region with the routed view. */
   main: ReactNode;
   /** The address of the main region, for the skip link. */
@@ -103,6 +119,12 @@ export function ShellLayout({
   navigation: ReactNode;
   /** Receives the shell root. */
   ref?: Ref<HTMLDivElement> | undefined;
+  /**
+   * The separator that the reader drags, which marks the root with
+   * `mbk-inspector-resizing` or `mbk-nav-resizing`: the whole shell keeps the
+   * drag's cursor, and no frame takes the pointer.
+   */
+  resizing?: ShellResizing | undefined;
   statusId: string;
   /** The appearance that the root states, as `data-mokly-theme`. */
   theme: Appearance;
@@ -110,7 +132,7 @@ export function ShellLayout({
 }) {
   return (
     <div
-      className="mbk mbk-reset"
+      className={rootClassName("mbk", { frameExpanded, resizing })}
       data-drawer={drawerOpen ? "open" : "closed"}
       data-mokly-color-scheme={colorScheme}
       data-mokly-shell=""

@@ -9,10 +9,15 @@ import type {
   FrameEvent,
   MountedFrame,
 } from "../client/frame_adapter.js";
+import {
+  registerFrameSession,
+  releaseFrameSession,
+} from "../client/frame_session.js";
 import { sameOriginAdapter } from "../client/same_origin_adapter.js";
 
 import { ShellFrameGeometryController } from "./frame_geometry_controller.js";
 import { ShellInspectionController } from "./frame_inspection_controller.js";
+import type { FrameLayout } from "./frame_layout_context.js";
 
 /** Complete identity of one frame rendered by the current shell route. */
 export interface ShellFrameIdentity {
@@ -29,6 +34,8 @@ export interface ShellFrameSession {
   readonly element: HTMLIFrameElement;
   readonly generation: number;
   identity: ShellFrameIdentity;
+  layout?: FrameLayout;
+  sources?: readonly string[];
   mounted?: MountedFrame;
   ready: Promise<MountedFrame>;
   source: string;
@@ -90,6 +97,7 @@ export class ShellFrameRegistry {
 
   add(session: ShellFrameSession): void {
     this.sessions.add(session);
+    registerFrameSession(session.element, session);
     this.changed();
   }
 
@@ -99,6 +107,7 @@ export class ShellFrameRegistry {
   }
 
   remove(session: ShellFrameSession): void {
+    releaseFrameSession(session.element, session);
     if (this.sessions.delete(session)) this.changed();
   }
 

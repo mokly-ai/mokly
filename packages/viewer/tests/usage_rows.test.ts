@@ -7,7 +7,7 @@ import { usageRows } from "../src/shell/workspace_usage.js";
 /** One Used by link of the consumer screen, with chosen fields replaced. */
 function link(overrides: Partial<UsageLink> = {}): UsageLink {
   return {
-    entryId: "screens/consumer",
+    entryPath: "screens/consumer",
     entryKind: "screen",
     title: "Consumer screen",
     viewport: "mobile",
@@ -54,11 +54,11 @@ test("a removed row keeps its key alone and beside the current row of its entry"
 test("a row keeps its key with and without another entry's row before it", () => {
   const [alone] = usageRows([link()]);
   const after = usageRows([
-    link({ entryId: "screens/changed", title: "Changed screen" }),
+    link({ entryPath: "screens/changed", title: "Changed screen" }),
     link(),
   ]);
   assert.deepEqual(
-    after.map((row) => row.links[0]!.entryId),
+    after.map((row) => row.links[0]!.entryPath),
     ["screens/changed", "screens/consumer"],
   );
   assert.equal(after[1]!.key, alone!.key);
@@ -74,11 +74,11 @@ test("a row keeps its key when another instance of its entry comes first", () =>
 test("a row keeps its key beside another entry with the same title", () => {
   const [alone] = usageRows([link()]);
   const after = usageRows([
-    link({ entryId: "screens/twin", title: "Consumer screen" }),
+    link({ entryPath: "screens/twin", title: "Consumer screen" }),
     link(),
   ]);
   assert.deepEqual(
-    after.map((row) => row.links[0]!.entryId),
+    after.map((row) => row.links[0]!.entryPath),
     ["screens/twin", "screens/consumer"],
   );
   assert.equal(after[1]!.key, alone!.key);

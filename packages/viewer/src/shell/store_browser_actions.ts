@@ -5,15 +5,18 @@ import type { FrameNavigation } from "../client/frame_adapter.js";
 import type { Catalogue } from "./catalogue.js";
 import { changesActivation } from "./changes_activation.js";
 import type { ShellContext } from "./context.js";
+import type { ShellElements } from "./root_context.js";
 import { routeFromUrl, routeHref } from "./routes.js";
 import {
   eligibleShellAnchor,
   type ShellClickEvent,
   type ShellKeyEvent,
 } from "./store_browser_routes.js";
+import { shellKeyDown } from "./store_interactions.js";
 import type { ShellState } from "./store_state.js";
 
 interface ShellBrowserActionInput {
+  elements?: ShellElements | undefined;
   catalogue: Catalogue;
   context: ShellContext;
   navigate(href: string): Promise<void>;
@@ -45,7 +48,8 @@ export function shellBrowserActions(
     },
     openFrame: (href, target) => window.open(href, target, "noopener"),
     onShellClick: (event) => handleShellClick(event, input),
-    onShellKeyDown: (event) => handleShellKeyDown(event, input),
+    onShellKeyDown: (event) =>
+      shellKeyDown(event, input.setState, input.state(), input.elements),
   };
 }
 
@@ -56,22 +60,13 @@ function handleShellClick(
   const target = event.target instanceof Element ? event.target : undefined;
   if (!target) return;
   const state = input.state();
-  if (
-    state.tagPickerOpen &&
-    !target.closest("[data-mokly-tag-toggle], [data-mokly-tag-picker]")
-  ) {
-    input.setState((current) => ({ ...current, tagPickerOpen: false }));
-  }
-  if (target.closest("[data-mokly-tag-toggle], [data-mokly-tag-picker]"))
-    return;
-  if (state.expandedFrame && !target.closest(".browser-frame.is-expanded"))
-    input.setState((current) => ({ ...current, expandedFrame: undefined }));
+  if (input.elements?.inTagPicker(target)) return;
   const anchor = target.closest<HTMLAnchorElement>("a[href]");
   if (!anchor || !eligibleShellAnchor(event, anchor, window.location)) return;
   event.preventDefault();
   const requested = new URL(anchor.href, window.location.href);
   const route = routeFromUrl(input.catalogue, requested);
-  const activated = anchor.hasAttribute("data-nav-row")
+  const activated = input.elements?.navigation.current?.contains(anchor)
     ? changesActivation(input.catalogue, input.context, state.selection, route)
     : route;
   if (activated === route || activated.view.kind !== "target") {
@@ -84,21 +79,4 @@ function handleShellClick(
     ...(activated.snapshot ? { snapshot: activated.snapshot } : {}),
   });
   void input.transition(new URL(href, requested), true, {}, activated);
-}
-
-function handleShellKeyDown(
-  event: ShellKeyEvent,
-  input: ShellBrowserActionInput,
-): void {
-  if (event.key !== "Escape") return;
-  if (input.state().tagPickerOpen) {
-    event.preventDefault();
-    input.setState((state) => ({ ...state, tagPickerOpen: false }));
-    const root = event.currentTarget;
-    if (root instanceof Element)
-      root.querySelector<HTMLElement>("[data-mokly-tag-toggle]")?.focus();
-  } else if (input.state().expandedFrame) {
-    event.preventDefault();
-    input.setState((state) => ({ ...state, expandedFrame: undefined }));
-  }
 }

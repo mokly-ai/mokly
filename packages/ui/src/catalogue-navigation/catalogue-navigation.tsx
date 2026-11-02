@@ -2,7 +2,8 @@
  * The catalogue navigation column: its head with Collapse all, the All and
  * Changes filter, the status line and the catalogue tree in one scrolling
  * pane, and the separator that resizes the column. The host builds the tree
- * as plain records and receives each choice through a callback.
+ * as plain records and receives each choice through a callback, and the rows
+ * that it moves focus or scroll to through the tree's refs.
  */
 
 import type { CSSProperties, Ref } from "react";
@@ -10,6 +11,7 @@ import type { CSSProperties, Ref } from "react";
 import {
   CatalogueTree,
   type NavigationSection,
+  type NavigationTargets,
 } from "../catalogue-tree/catalogue-tree.js";
 
 import { FilterGroup, StatusLine } from "./navigation-filter.js";
@@ -28,6 +30,7 @@ export type {
 
 export function CatalogueNavigation({
   busy,
+  currentRowRef,
   filter,
   filterHref,
   id,
@@ -46,8 +49,9 @@ export function CatalogueNavigation({
   scrollRef,
   sections,
   status,
+  summaryRef,
   width,
-}: {
+}: NavigationTargets & {
   /** Whether the tree waits for change detection, which `aria-busy` reports. */
   busy: boolean;
   /** The All and Changes filter; absent where the catalogue has no Changes. */
@@ -153,9 +157,11 @@ export function CatalogueNavigation({
       >
         {status ? <StatusLine status={status} /> : null}
         <CatalogueTree
+          currentRowRef={currentRowRef}
           interactive={interactive}
           onDisclosure={onDisclosure}
           sections={sections}
+          summaryRef={summaryRef}
         />
       </div>
       <ResizeHandle

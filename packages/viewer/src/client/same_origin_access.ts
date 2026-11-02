@@ -1,3 +1,4 @@
+import { frameSession } from "./frame_session.js";
 import { sameFrameResource } from "./same_origin_identity.js";
 
 /** Private local transport. Cross-origin mounts never enter this module. */
@@ -21,7 +22,7 @@ export function recordedFrameResource(
 ): boolean {
   try {
     const expected = new URL(documentUrl);
-    return [frame.dataset["fragmentLight"], frame.dataset["fragmentDark"]].some(
+    return (frameSession(frame)?.sources ?? []).some(
       (source) =>
         source !== undefined &&
         sameFrameResource(

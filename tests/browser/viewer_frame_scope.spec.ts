@@ -133,16 +133,10 @@ for (const cross of [false, true]) {
         expect(new URL(frame!.url()).hash).toBe(
           i === 0 ? "#example-anchor" : "",
         );
-        for (const attribute of [
-          "src",
-          "data-fragment-light",
-          "data-fragment-dark",
-        ]) {
-          const source = await frames.nth(i).getAttribute(attribute);
-          expect(new URL(source!, fixture.host.url).hash).toBe(
-            i === 0 ? "#example-anchor" : "",
-          );
-        }
+        const source = await frames.nth(i).getAttribute("src");
+        expect(new URL(source!, fixture.host.url).hash).toBe(
+          i === 0 ? "#example-anchor" : "",
+        );
       }
     }
   });

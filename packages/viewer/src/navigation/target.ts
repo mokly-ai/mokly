@@ -24,14 +24,3 @@ export function parseBrowsingTarget(
   if (NAMED_TARGET_PATTERN.test(value)) return { kind: "named", name: value };
   return { kind: "invalid" };
 }
-
-/** Serialize a valid non-self target for trusted inert metadata. */
-export function serializeBrowsingTarget(
-  target: BrowsingTarget,
-): string | undefined {
-  if (target.kind === "top") return "_top";
-  if (target.kind === "parent") return "_parent";
-  if (target.kind === "blank") return "_blank";
-  if (target.kind === "named") return target.name;
-  return undefined;
-}

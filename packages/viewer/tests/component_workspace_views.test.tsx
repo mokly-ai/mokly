@@ -94,12 +94,20 @@ test("workspace view selection uses exact contexts and light fallback", () => {
         {
           viewport: "mobile" as const,
           colorScheme: "light" as const,
-          state: "unchanged" as const,
+          comparison: {
+            status: "ready" as const,
+            kind: "unmodified" as const,
+            eligible: false,
+          },
         },
         {
           viewport: "desktop" as const,
           colorScheme: "light" as const,
-          state: "changed" as const,
+          comparison: {
+            status: "ready" as const,
+            kind: "changed" as const,
+            eligible: true,
+          },
         },
       ],
     },

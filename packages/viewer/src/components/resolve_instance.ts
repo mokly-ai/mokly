@@ -1,4 +1,4 @@
-import type { ComponentInstanceRecord } from "./manifest_types.js";
+import type { ComponentInstanceRecord } from "./view_types.js";
 
 /** Record-only resolution within one catalogue entry/variant/view scope. */
 export type InstanceResolution = "present" | "moved" | "missing";

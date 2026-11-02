@@ -2,11 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
-import {
-  EntryUnavailableError,
-  viewerFailures,
-} from "../src/viewer/failures.js";
-import type { ViewerError } from "../src/viewer/types.js";
+import { EntryUnavailableError, viewerFailures } from "../src/host/failures.js";
+import type { ViewerError } from "../src/host/types.js";
 
 function reporter() {
   const errors: ViewerError[] = [];

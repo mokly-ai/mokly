@@ -1,59 +1,19 @@
-import {
-  VIEWER_DIRECTORY,
-  currentDocumentPath,
-  currentDocumentRoute,
-} from "../catalogue/delivery_paths.js";
+import { currentDocumentRoute } from "../catalogue/delivery_paths.js";
 import type { CatalogueUsage } from "../catalogue/types.js";
-import type { ComponentViewRecord } from "../components/manifest_types.js";
+import type { ComponentViewRecord } from "../components/view_types.js";
 import { inspection } from "../inspector/inspection.js";
 
-import { authenticateRanges, rangeBounds } from "./component_geometry.js";
 import type { FrameAdapter } from "./frame_adapter.js";
 import { FrameError } from "./frame_error.js";
 import { frameUrl, temporaryFrameUrl } from "./frame_mount.js";
+import { frameSession } from "./frame_session.js";
 import { frameEvents, frameUsage } from "./frame_usage.js";
 import { localFrameAccess } from "./same_origin_access.js";
 import { installLocalHighlight } from "./same_origin_highlight.js";
-import { normalizedHtmlPath } from "./same_origin_identity.js";
 import { mountLocalDocument } from "./same_origin_mount.js";
 
-/** Current-document capability used by the synchronous local shell. */
-export function localInspection(
-  frame: HTMLIFrameElement,
-  path: string,
-  usage: ComponentViewRecord,
-) {
-  const authenticated = authenticateRanges(frame, path, usage);
-  if (!authenticated) return;
-  return {
-    measure: (keys: ReadonlySet<string>) =>
-      rangeBounds(frame, authenticated, keys),
-    reveal: (key: string) => {
-      const range = authenticated.ranges.get(key)?.[0];
-      const node = range?.startContainer.childNodes[range.startOffset];
-      const target =
-        node?.nodeType === 1 ? (node as Element) : node?.parentElement;
-      target?.scrollIntoView({ block: "nearest", inline: "nearest" });
-    },
-  };
-}
-export function replaceLocalFrame(frame: HTMLIFrameElement, url: URL): void {
-  localFrameAccess(frame).replace(url);
-}
 export function localFramePath(frame: HTMLIFrameElement): string | undefined {
   return localFrameAccess(frame).pathname();
-}
-export function localFrameReady(
-  frame: HTMLIFrameElement,
-  path: string,
-): boolean {
-  const pathname = localFramePath(frame);
-  return (
-    localFrameAccess(frame).document()?.readyState === "complete" &&
-    pathname !== undefined &&
-    normalizedHtmlPath(decodeURIComponent(pathname)) ===
-      normalizedHtmlPath(`/${currentDocumentPath(path)}`)
-  );
 }
 
 /** Script-disabled local mounts report geometry and picks without drawing. */
@@ -105,8 +65,7 @@ function localAdapter(resolveUrl: typeof frameUrl): FrameAdapter {
               selecting = mode !== "off";
               if (mode === "off" || !record) return;
               stop = installLocalHighlight(
-                frame.closest<HTMLElement>(`.${VIEWER_DIRECTORY}`) ??
-                  frame.ownerDocument.body,
+                frame.ownerDocument.body,
                 [
                   {
                     frame,
@@ -149,8 +108,7 @@ function localRecord(
   return usage.status === "ready"
     ? {
         ...usage,
-        viewport:
-          frame.dataset["workspaceFrame"] === "mobile" ? "mobile" : "desktop",
+        viewport: frameSession(frame)?.identity.viewport ?? "desktop",
         colorScheme: "light",
         styles: [],
         resources: [],

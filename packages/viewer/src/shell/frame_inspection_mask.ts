@@ -51,7 +51,7 @@ export function frameInspectionMask(
     generation: session.generation,
     height: visible ? visible.bottom - visible.top : 0,
     placement: {
-      expanded: Boolean(frame.closest(".browser-frame.is-expanded")),
+      expanded: session.layout?.expanded ?? false,
       hidden: !visible,
       left: left - (origin?.left ?? 0),
       top: top - (origin?.top ?? 0),

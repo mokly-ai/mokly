@@ -2,9 +2,9 @@
 
 import type { EvidenceReasons } from "../review/types.js";
 import { viewEvidenceReasons } from "../review/view_evidence.js";
-import { publicEntryStatus } from "../viewer/public_workspace.js";
 
 import type { Catalogue } from "./catalogue.js";
+import { publicEntryStatus } from "./public_workspace.js";
 import type { EntryStatus } from "./view_status.js";
 
 /** The comparison facts known for one current whole-document page. */

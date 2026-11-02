@@ -1,30 +1,30 @@
 /** Accessible inspector divider and mobile sheet sizing owned by React. */
 
-import { useEffect, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
+
+import type { InspectorHandle, InspectorSizing } from "@mokly/ui/inspector";
 
 import { NARROW_SHELL } from "./layout_breakpoint.js";
+import { useShellRoot } from "./root_context.js";
 
 /** Install scoped pointer, keyboard, and resize behavior for one inspector. */
 export function useInspectorResize(
-  root: RefObject<HTMLElement | null>,
+  handle: RefObject<InspectorHandle | null>,
+  panesRef: RefObject<HTMLDivElement | null>,
   interactive: boolean,
-): void {
+) {
+  const resizeRef = useRef<HTMLDivElement>(null);
+  const grabRef = useRef<HTMLButtonElement>(null);
+  const [size, setSize] = useState<InspectorSizing>({ expanded: false });
+  const setResizing = useShellRoot()?.setResizing;
   useEffect(() => {
-    const workspace = root.current;
-    if (!interactive || !workspace) return;
-    const win = workspace.ownerDocument.defaultView;
-    const inspector = workspace.querySelector<HTMLElement>(
-      "[data-workspace-inspector]",
-    );
-    const divider = workspace.querySelector<HTMLElement>(
-      "[data-inspector-resize]",
-    );
-    const grab = workspace.querySelector<HTMLButtonElement>(
-      "[data-inspector-size]",
-    );
-    const panes = workspace.querySelector<HTMLElement>(".mbk-workspace-panes");
-    const shell = workspace.closest<HTMLElement>("[data-mokly-shell]");
-    if (!win || !inspector || !divider || !grab || !panes || !shell) return;
+    const inspector = handle.current?.element;
+    const win = inspector?.ownerDocument.defaultView;
+    const divider = resizeRef.current;
+    const grab = grabRef.current;
+    const panes = panesRef.current;
+    if (!interactive || !win || !inspector || !divider || !grab || !panes)
+      return;
     const controller = new AbortController();
     const { signal } = controller;
     let height = 260;
@@ -41,18 +41,15 @@ export function useInspectorResize(
       const { min, max } = bounds();
       const minimum = Math.max(46, min);
       height = Math.min(max, Math.max(minimum, height));
-      inspector.style.setProperty("--inspector-height", `${height}px`);
-      divider.setAttribute("aria-valuemin", String(minimum));
-      divider.setAttribute("aria-valuemax", String(max));
-      divider.setAttribute("aria-valuenow", String(Math.round(height)));
+      setSize((current) => ({
+        ...current,
+        height,
+        minimumHeight: minimum,
+        maximumHeight: max,
+      }));
     };
     const expand = (value: boolean) => {
-      inspector.dataset["expanded"] = String(value);
-      grab.setAttribute("aria-expanded", String(value));
-      grab.setAttribute(
-        "aria-label",
-        value ? "Make inspector compact" : "Expand inspector",
-      );
+      setSize((current) => ({ ...current, expanded: value }));
     };
     const begin = (event: PointerEvent) => {
       if (event.button !== 0) return;
@@ -66,18 +63,19 @@ export function useInspectorResize(
       target.setPointerCapture(event.pointerId);
       if (narrow()) return;
       event.preventDefault();
-      shell.classList.add("mbk-inspector-resizing");
+      setResizing?.("inspector");
     };
     const move = (event: PointerEvent) => {
       if (!drag || drag.pointer !== event.pointerId) return;
       const delta = drag.y - event.clientY;
       drag.moved ||= Math.abs(delta) > 5;
-      if (narrow())
-        inspector.style.height = `${Math.min(
+      if (narrow()) {
+        const sheetHeight = Math.min(
           panes.clientHeight - 36,
           Math.max(190, drag.height + delta),
-        )}px`;
-      else {
+        );
+        setSize((current) => ({ ...current, sheetHeight }));
+      } else {
         height = drag.height + delta;
         clamp();
       }
@@ -86,11 +84,12 @@ export function useInspectorResize(
       if (!drag || drag.pointer !== event.pointerId) return;
       if (narrow() && drag.moved) expand(drag.y - event.clientY > 0);
       suppressClick = drag.moved;
-      inspector.style.removeProperty("height");
+      setSize((current) => ({ ...current, sheetHeight: undefined }));
       drag = undefined;
-      shell.classList.remove("mbk-inspector-resizing");
+      setResizing?.(undefined);
     };
-    for (const handle of [divider, grab]) {
+    const handles: HTMLElement[] = [divider, grab];
+    for (const handle of handles) {
       handle.addEventListener("pointerdown", begin, { signal });
       handle.addEventListener("pointermove", move, { signal });
       handle.addEventListener("pointerup", end, { signal });
@@ -100,7 +99,8 @@ export function useInspectorResize(
     grab.addEventListener(
       "click",
       () => {
-        if (!suppressClick) expand(inspector.dataset["expanded"] !== "true");
+        if (!suppressClick)
+          setSize((current) => ({ ...current, expanded: !current.expanded }));
         suppressClick = false;
       },
       { signal },
@@ -127,7 +127,8 @@ export function useInspectorResize(
     return () => {
       controller.abort();
       observer.disconnect();
-      shell.classList.remove("mbk-inspector-resizing");
+      setResizing?.(undefined);
     };
-  }, [interactive, root]);
+  }, [handle, interactive, panesRef, setResizing]);
+  return { ...size, resizeRef, grabRef };
 }

@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 
 import { BrowserFrame as BrowserFrameView } from "@mokly/ui/device-frame";
 
+import { useShellRoot } from "./root_context.js";
 import { useOptionalShellStore } from "./store_context.js";
 
 /** A desktop browser window whose viewport hosts the desktop fragment. */
@@ -16,6 +17,7 @@ export function BrowserFrame(props: {
   expandable?: boolean;
   frameKey?: string;
 }) {
+  const elements = useShellRoot()?.elements;
   const store = useOptionalShellStore();
   const latestStore = useRef(store);
   latestStore.current = store;
@@ -33,6 +35,7 @@ export function BrowserFrame(props: {
       address={props.address}
       expandable={props.expandable !== false}
       expanded={expanded}
+      ref={expanded ? elements?.expandedBrowser : undefined}
       onCopy={() => store?.copy(props.address)}
       onExpandedChange={(next) =>
         store?.setExpandedFrame(next ? frameKey : undefined)

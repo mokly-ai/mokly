@@ -14,11 +14,11 @@ import {
   withIndex,
   type ShellDataSnapshot,
 } from "../src/shell/data_commit.js";
+import { shellContext } from "../src/shell/projection.js";
 import { routeFromUrl } from "../src/shell/routes.js";
+import { defaultSelection } from "../src/shell/selection.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
 import type { ShellState } from "../src/shell/store_state.js";
-import { viewerContext } from "../src/viewer/projection.js";
-import { defaultSelection } from "../src/viewer/selection.js";
 
 import { indexFixture, rawIndexFixture } from "./catalogue_v9_fixture.js";
 
@@ -112,7 +112,7 @@ export function initialState(
   const selected = route === "/" ? null : "product/browse/home";
   return createInitialShellState(
     catalogue,
-    viewerContext(catalogue.publicModel, {
+    shellContext(catalogue.publicModel, {
       ...defaultSelection,
       screenPath: selected,
     }),

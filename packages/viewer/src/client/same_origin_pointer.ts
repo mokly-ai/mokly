@@ -1,5 +1,6 @@
 import type { FrameEvent, InstanceBoundary } from "./frame_adapter.js";
 import { FrameError } from "./frame_error.js";
+import { containsPoint } from "./geometry.js";
 
 /** Pointer subscriptions share one listener set with the local mount lifecycle. */
 export function localPointer(
@@ -20,12 +21,8 @@ export function localPointer(
       const boundary = event
         ? read().find((item) =>
             item.ranges.some((range) =>
-              range.boxes.some(
-                (box) =>
-                  event.clientX >= box.x &&
-                  event.clientX <= box.x + box.width &&
-                  event.clientY >= box.y &&
-                  event.clientY <= box.y + box.height,
+              range.boxes.some((box) =>
+                containsPoint(box, event.clientX, event.clientY),
               ),
             ),
           )

@@ -182,7 +182,10 @@ logic, instance resolution, the preview frames with the frame adapters and the
 in-frame inspector, and the browser entry. `@mokly/ui` owns every element and
 every style rule of the Browse shell. The viewer's containers read the shell
 state and render the package components with props and callbacks, so the
-viewer renders no element of its own. The viewer makes no analytics or
+viewer renders no element of its own. The containers reach measured and focused
+elements through package refs. A root context shares those refs across the shell.
+Comparison and appearance state reach package components through props.
+The viewer makes no analytics or
 discovery request, reads no cookie, and uses no ambient credential. Consumer
 code never enters the browser through the viewer.
 
@@ -228,12 +231,20 @@ and Review regressions against `mokly serve` of the example catalogue.
 - [`../ui/src`](../ui/src) — the `@mokly/ui` presentational components the
   shell composes, one directory per component with its CSS beside it
 - [`src/viewer`](./src/viewer) — the embedded `MoklyViewer`: React lifecycle,
-  selection, host integration, and instance operations
+  source loading, host integration, and instance operations; it imports the
+  shared shell, which has no dependency on this directory
+- [`src/host/types.ts`](./src/host/types.ts) — the public viewer contract,
+  shared by the shell and the embedded host
 - [`src/viewer/host_bridge.tsx`](./src/viewer/host_bridge.tsx) and
   [`src/viewer/host_bridge_highlight.ts`](./src/viewer/host_bridge_highlight.ts) —
   the public handle and its highlight requests, geometry, and cancellation
 - [`src/shell`](./src/shell) — the Browse shell tree, shared by the embedded
   viewer and the browser entry; it holds no style rule
+- [`src/shell/root_context.tsx`](./src/shell/root_context.tsx) — the root ref,
+  named scroll regions, focus targets, host slots, and resizing state
+- [`src/standalone/startup.ts`](./src/standalone/startup.ts) and
+  [`src/standalone/use_appearance.ts`](./src/standalone/use_appearance.ts) —
+  the appearance resolved before the first render and its React state owner
 - [`src/shell/top_bar.tsx`](./src/shell/top_bar.tsx),
   [`src/shell/nav.tsx`](./src/shell/nav.tsx), and
   [`src/shell/head.tsx`](./src/shell/head.tsx) — the containers of the top
@@ -257,6 +268,8 @@ and Review regressions against `mokly serve` of the example catalogue.
   — the containers of the inspector's panels, which turn the controls state,
   the usage links, the instance records, and the comparison evidence into the
   records and the wording of the package components
+- [`src/shell/control_values.ts`](./src/shell/control_values.ts) — the control
+  targets, drafts, and validation shared by the controls and their fields
 - [`src/shell/stage_frame.tsx`](./src/shell/stage_frame.tsx),
   [`src/shell/document_stage_frame.tsx`](./src/shell/document_stage_frame.tsx),
   [`src/shell/public_stage.tsx`](./src/shell/public_stage.tsx), and
@@ -274,7 +287,7 @@ and Review regressions against `mokly serve` of the example catalogue.
   preview scheme, and the expanded window's mark; `src/viewer/component.tsx`
   shows an
   embedded root's loading and failure states, and
-  `src/viewer/marker_layer.tsx` and `src/viewer/inspection_layer.tsx` place
+  `src/shell/marker_layer.tsx` and `src/viewer/inspection_layer.tsx` place
   the host's markers and inspection labels
 - [`src/shell/comparison_views.tsx`](./src/shell/comparison_views.tsx) and
   [`src/shell/comparison_viewport.tsx`](./src/shell/comparison_viewport.tsx) —
@@ -289,42 +302,60 @@ and Review regressions against `mokly serve` of the example catalogue.
   inherit
 - [`src/catalogue`](./src/catalogue) — the readers of the catalogue index and
   the entry detail, and the public catalogue types
+- [`src/catalogue/sources.ts`](./src/catalogue/sources.ts) — the shared object
+  and URL source validation and the index, detail, and deployment transports
 - [`src/data.ts`](./src/data.ts) — the `./data` entry: path functions,
   directory names, the path and link grammar, and the prop schema validators
 - [`src/navigation/routes.ts`](./src/navigation/routes.ts) — entry, view,
   snapshot, preview, and shell URL derivation
-- [`src/registry/nav_paths.ts`](./src/registry/nav_paths.ts) and
-  [`src/registry/hierarchy.ts`](./src/registry/hierarchy.ts) — folder keys,
-  labels, sibling order, and the path tree of each section
+- [`src/shell/catalogue.ts`](./src/shell/catalogue.ts) — the shell's lookups of
+  generated current and removed records, tags, schemes, and accepted moves
+- [`src/registry/catalogue_hierarchy.ts`](./src/registry/catalogue_hierarchy.ts)
+  and [`src/registry/hierarchy.ts`](./src/registry/hierarchy.ts) — the index
+  tree's navigation records and the Specs and Components sections
+- [`src/registry/nav_paths.ts`](./src/registry/nav_paths.ts) — the shared
+  comparator for each section's sibling order
 - [`src/client`](./src/client) — the frame adapters, message transport, and
   geometry
 - [`src/inspector`](./src/inspector) — the React-free in-frame inspector
 - [`src/previews`](./src/previews) — the removed-entry previews
+- [`src/previews/descriptor.ts`](./src/previews/descriptor.ts) — the identity
+  key of a route-owned previous-version request
 - [`src/shell/use_comparison.ts`](./src/shell/use_comparison.ts),
+  [`src/shell/comparison_mode.tsx`](./src/shell/comparison_mode.tsx),
   [`src/shell/comparison_presentation.ts`](./src/shell/comparison_presentation.ts),
   and [`src/shell/diffs.tsx`](./src/shell/diffs.tsx) — the comparison-mode
   owner, request identity, and current and comparison presentation
+- [`src/shell/view_status.ts`](./src/shell/view_status.ts) — the combined
+  status and eligibility of the displayed views from their index comparisons
 - [`src/shell/frame_instances.ts`](./src/shell/frame_instances.ts) — exact
   `InstanceRef` matching against mounted preview frames
 - [`src/shell/store_host.ts`](./src/shell/store_host.ts) and
   [`src/shell/store_host_routes.ts`](./src/shell/store_host_routes.ts) —
   controlled and uncontrolled selection commits, frame-link misses, and
   navigation events
+- [`src/shell/store_routes.ts`](./src/shell/store_routes.ts) and
+  [`src/shell/store_interactions.ts`](./src/shell/store_interactions.ts) — the
+  shared route installation, Escape priority, outside-click dismissal, and
+  input listeners of both roots
+- [`src/shell/selection.ts`](./src/shell/selection.ts) and
+  [`src/shell/projection.ts`](./src/shell/projection.ts) — selection changes,
+  query equality, and the catalogue context; root options alone set `embedded`
 - [`src/shell/workspace_data.ts`](./src/shell/workspace_data.ts) and
-  [`src/viewer/public_workspace.ts`](./src/viewer/public_workspace.ts) — the
+  [`src/shell/public_workspace.ts`](./src/shell/public_workspace.ts) — the
   routed workspace data and its projection from the index, entry detail, and
   parent detail for current component variant lists
 - [`src/shell/comparison_request.ts`](./src/shell/comparison_request.ts) — the
   generation root of a comparison: the pinned root a static catalogue names,
   or the root that Serve's selection redirects to and its renewal
 - [`src/catalogue/detail_comparison.ts`](./src/catalogue/detail_comparison.ts)
-  and [`src/viewer/public_compared.ts`](./src/viewer/public_compared.ts) — the
+  and [`src/shell/public_compared.ts`](./src/shell/public_compared.ts) — the
   detail's view states, ignore ids, and base side, and the routed entry's
   comparison facts that the panes and Details read from them
 - [`src/catalogue/detail_reasons.ts`](./src/catalogue/detail_reasons.ts) and
   [`src/catalogue/reason_order.ts`](./src/catalogue/reason_order.ts) — the
   entry detail's `reasons` and the reason order it shares with review v8
-- [`src/viewer/public_reasons.ts`](./src/viewer/public_reasons.ts) — the
+- [`src/shell/public_reasons.ts`](./src/shell/public_reasons.ts) — the
   detail reasons that Details shows: listed records only, without the reasons
   that contradict the record
 - [`tests`](./tests) — package-level conformance tests

@@ -1,7 +1,6 @@
 /** Deterministic shell-state initialization from a route and stored preferences. */
 
 import { resolveCatalogueEntry } from "../catalogue/entry_selection.js";
-import { defaultSelection } from "../viewer/selection.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
@@ -12,6 +11,7 @@ import {
   disclosurePath,
 } from "./nav_model.js";
 import { routeScreenId, type ShellRoute } from "./routes.js";
+import { defaultSelection } from "./selection.js";
 import {
   openDisclosures,
   type ShellInitialState,

@@ -9,6 +9,7 @@ import { TagChip as TagChipView } from "@mokly/ui/tag-chip";
 import { TagPicker } from "@mokly/ui/tag-picker";
 
 import { useShellIdentifier } from "./identifier_context.js";
+import { useShellRoot } from "./root_context.js";
 import { useOptionalShellStore, type ShellStore } from "./store_context.js";
 import { selectTag } from "./tag_selection.js";
 
@@ -24,11 +25,12 @@ function tagSelected(store: ShellStore | undefined, tag: string): boolean {
  */
 export function TagChip({ tag }: { tag: string }) {
   const store = useOptionalShellStore();
+  const elements = useShellRoot()?.elements;
   return (
     <TagChipView
-      onSelect={(chosen, chip) =>
+      onSelect={(chosen) =>
         selectTag(
-          chip,
+          elements?.tagToggle.current,
           () => store?.toggleTag(chosen),
           Boolean(store?.state.tagPickerOpen),
         )
@@ -42,6 +44,7 @@ export function TagChip({ tag }: { tag: string }) {
 /** The search field's tag button and the picker that it opens. */
 export function SearchTagPicker({ tags }: { tags: readonly string[] }) {
   const store = useOptionalShellStore();
+  const elements = useShellRoot()?.elements;
   const pickerId = useShellIdentifier("mb-tag-picker");
   return (
     <TagPicker
@@ -52,6 +55,8 @@ export function SearchTagPicker({ tags }: { tags: readonly string[] }) {
       onOpenChange={(open, index) => store?.setTagPicker(open, index)}
       onSelect={(tag) => store?.toggleTag(tag)}
       open={store?.state.tagPickerOpen ?? false}
+      toggleRef={elements?.tagToggle}
+      pickerRef={elements?.tagPicker}
       tags={tags.map((tag) => ({ selected: tagSelected(store, tag), tag }))}
     />
   );

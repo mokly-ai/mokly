@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { publishedViewStatesBySelection } from "../src/viewer/public_workspace_views.js";
+import { publishedViewStatesBySelection } from "../src/shell/public_workspace_views.js";
 
 import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
 

@@ -1,29 +1,30 @@
 /** Route-owned workspace entry and its component evidence parent. */
 
-import {
-  isManifestComponentVariant,
-  type ManifestComponent,
-  type ManifestComponentVariant,
-} from "../components/manifest_types.js";
-import type { ManifestScreen } from "../registry/types.js";
+import type {
+  ShellCatalogueComponent,
+  ShellCatalogueVariant,
+  ShellCatalogueScreen,
+  ShellCatalogueRoutedEntry,
+} from "../catalogue/scoped_types.js";
+import { isComponentVariant } from "../catalogue/variants.js";
 
-import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
+import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
 import type { WorkspaceData } from "./workspace_data.js";
 
 /** A routed entry that renders through the shared workspace. */
 export type WorkspaceEntry = Extract<
-  CatalogueManifestEntry,
+  ShellCatalogueRoutedEntry,
   { kind: "component" | "screen" }
 >;
 export type WorkspaceEvidenceEntry =
-  ManifestComponent | ManifestComponentVariant | ManifestScreen;
+  ShellCatalogueComponent | ShellCatalogueVariant | ShellCatalogueScreen;
 
 /** A variant's eligible current or removed parent entry, if the lookup has one. */
 function parentEntry(
   catalogue: Catalogue,
-  entry: CatalogueManifestEntry,
-): CatalogueManifestEntry | undefined {
+  entry: ShellCatalogueRoutedEntry,
+): ShellCatalogueRoutedEntry | undefined {
   const parent = branchPoints(catalogue).parentOf(entry);
   return parent && parent.source !== "title" ? parent.entry : undefined;
 }
@@ -36,9 +37,9 @@ function parentEntry(
  */
 export function workspaceKey(
   catalogue: Catalogue,
-  entry: CatalogueManifestEntry,
+  entry: ShellCatalogueRoutedEntry,
 ): string {
-  if (entry.kind !== "component" || !isManifestComponentVariant(entry))
+  if (entry.kind !== "component" || !isComponentVariant(entry))
     return entry.path;
   return parentEntry(catalogue, entry)?.path ?? entry.path;
 }
@@ -50,7 +51,7 @@ export function workspaceEvidenceEntry(
   if (data.component) return data.component;
   if (
     data.entry.kind === "screen" ||
-    (data.entry.kind === "component" && isManifestComponentVariant(data.entry))
+    (data.entry.kind === "component" && isComponentVariant(data.entry))
   )
     return data.entry;
   throw new Error("The workspace evidence entry is unavailable.");

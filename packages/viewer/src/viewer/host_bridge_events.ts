@@ -5,6 +5,7 @@ import type { MutableRefObject } from "react";
 
 import type { Box, FrameEvent } from "../client/frame_adapter.js";
 import { FrameError } from "../client/frame_error.js";
+import type { MoklyViewerProps, PickEnd } from "../host/types.js";
 import type { ShellInspectionController } from "../shell/frame_inspection_controller.js";
 import {
   frameHasInstance,
@@ -14,7 +15,6 @@ import {
 import type { ShellFrameSession } from "../shell/frame_registry.js";
 
 import type { ViewerInspectionGeometryOwnership } from "./inspection_geometry_ownership.js";
-import type { MoklyViewerProps, PickEnd } from "./types.js";
 
 interface HostBridgeEventInput {
   callbacks: MutableRefObject<MoklyViewerProps>;

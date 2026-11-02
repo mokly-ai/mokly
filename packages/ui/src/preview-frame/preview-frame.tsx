@@ -117,12 +117,18 @@ export function PreviewFrame({
 export function DocumentFrame({
   children,
   error = false,
+  ref,
   scheme,
 }: {
   /** The document's frame. Without it, the preview is unavailable. */
   children?: ReactNode;
   /** Whether the frame's document failed to load. */
   error?: boolean;
+  /**
+   * Receives the document's stage, against which the host measures its
+   * frame, and whose scroll position it keeps.
+   */
+  ref?: Ref<HTMLDivElement> | undefined;
   /** The scheme of the shown render. */
   scheme: FrameScheme;
 }) {
@@ -131,6 +137,7 @@ export function DocumentFrame({
       className="mbk-stage-embed mbk-reset"
       data-mokly-scroll="embed"
       data-preview-color-scheme={scheme}
+      ref={ref}
     >
       <FrameContent error={error}>{children}</FrameContent>
     </div>

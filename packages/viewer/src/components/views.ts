@@ -1,12 +1,12 @@
+import type {
+  ShellCatalogueRoutedEntry,
+  ShellCatalogueScreen,
+  ShellCatalogueComponent,
+} from "../catalogue/scoped_types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 import { viewRoute } from "../navigation/routes.js";
-import type { ManifestEntry, ManifestScreen } from "../registry/types.js";
-import { VIEWPORTS } from "../registry/views.js";
 
-import type {
-  ComponentViewRecord,
-  ManifestComponent,
-} from "./manifest_types.js";
+import type { ComponentViewRecord } from "./view_types.js";
 
 export interface GeneratedComponentView {
   viewport: Viewport;
@@ -20,7 +20,9 @@ export interface GeneratedComponentView {
  * Derive the view documents of a screen or component entry. A component
  * parent renders its own props, so it has views like each of its variants.
  */
-export function generatedViews(entry: ManifestEntry): GeneratedComponentView[] {
+export function generatedViews(
+  entry: ShellCatalogueRoutedEntry,
+): GeneratedComponentView[] {
   if (entry.kind === "component") return fragmentViews(entry, entry.path);
   if (entry.kind === "screen") return fragmentViews(entry);
   return [];
@@ -41,24 +43,31 @@ export function orderedInstances(usage?: ComponentViewRecord) {
   );
 }
 
-/** Derive current view artifacts from entry identity and retained axes. */
+/** Add routes and detail usage to the index's ordered view list. */
 function fragmentViews(
-  entry: ManifestScreen | ManifestComponent,
+  entry: ShellCatalogueScreen | ShellCatalogueComponent,
   variantPath?: string,
 ): GeneratedComponentView[] {
-  return VIEWPORTS.flatMap((viewport) =>
-    entry.colorSchemes.map((colorScheme) => {
-      const usage = entry.componentViews?.find(
-        (view) =>
-          view.viewport === viewport && view.colorScheme === colorScheme,
-      );
-      return {
-        viewport,
-        colorScheme,
-        path: viewRoute(entry.path, viewport, colorScheme),
-        ...(usage ? { usage } : {}),
-        ...(variantPath ? { variantPath } : {}),
-      };
-    }),
-  );
+  return entry.views.map((view) => {
+    const { viewport, colorScheme } = view;
+    const usage: ComponentViewRecord | undefined =
+      view.usage.status === "ready"
+        ? {
+            viewport,
+            colorScheme,
+            instances: view.usage.instances,
+            slots: view.usage.slots,
+            ranges: view.usage.ranges,
+            styles: [],
+            resources: [],
+          }
+        : undefined;
+    return {
+      viewport,
+      colorScheme,
+      path: viewRoute(entry.path, viewport, colorScheme),
+      ...(usage ? { usage } : {}),
+      ...(variantPath ? { variantPath } : {}),
+    };
+  });
 }

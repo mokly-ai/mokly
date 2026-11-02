@@ -45,7 +45,6 @@ export class ShellFrameGeometry {
   private demand: () => readonly ShellFrameSession[] = () => [];
   private readonly resize: ResizeObserver;
   private resizeTargets = new Set<Element>();
-  private readonly expansion: MutationObserver;
   private cycle = 0;
   private disposed = false;
   private readonly win: Window & typeof globalThis;
@@ -53,28 +52,11 @@ export class ShellFrameGeometry {
   constructor(private readonly root: HTMLElement) {
     this.win = root.ownerDocument.defaultView! as Window & typeof globalThis;
     this.resize = new this.win.ResizeObserver(() => this.invalidate());
-    this.expansion = new this.win.MutationObserver((records) => {
-      if (
-        records.some(
-          ({ target }) =>
-            target instanceof this.win.Element &&
-            target.matches(".browser-frame"),
-        )
-      ) {
-        this.updateExpanded();
-        this.invalidate();
-      }
-    });
     root.addEventListener("scroll", this.invalidate, {
       capture: true,
       passive: true,
     });
     this.win.addEventListener("resize", this.invalidate);
-    this.expansion.observe(root, {
-      attributes: true,
-      attributeFilter: ["class"],
-      subtree: true,
-    });
   }
 
   subscribe(listener: (cycle: number) => void): () => void {
@@ -105,16 +87,15 @@ export class ShellFrameGeometry {
       if (!retained.has(session)) this.cancel(entry);
     this.entries = retained;
     this.syncResizeTargets(sessions);
-    this.updateExpanded();
   }
 
   private syncResizeTargets(sessions: readonly ShellFrameSession[]): void {
     const targets = new Set<Element>([this.root]);
-    for (const stage of this.root.querySelectorAll(
-      "[data-workspace-preview], .mbk-flow, .mbk-stage-embed",
-    ))
-      targets.add(stage);
-    for (const session of sessions) targets.add(session.element);
+    for (const session of sessions) {
+      targets.add(session.element);
+      const stage = session.layout?.stage?.current;
+      if (stage) targets.add(stage);
+    }
     if (
       targets.size === this.resizeTargets.size &&
       [...targets].every((target) => this.resizeTargets.has(target))
@@ -257,13 +238,6 @@ export class ShellFrameGeometry {
     if (!this.disposed) void this.refresh().catch(() => undefined);
   };
 
-  private updateExpanded(): void {
-    this.root.classList.toggle(
-      "frame-expanded",
-      Boolean(this.root.querySelector(".browser-frame.is-expanded")),
-    );
-  }
-
   private cancel(entry: GeometryEntry): void {
     entry.generation += 1;
     if (entry.frame !== undefined) this.win.cancelAnimationFrame(entry.frame);
@@ -279,8 +253,6 @@ export class ShellFrameGeometry {
     this.win.removeEventListener("resize", this.invalidate);
     this.resize.disconnect();
     this.resizeTargets.clear();
-    this.expansion.disconnect();
-    this.root.classList.remove("frame-expanded");
     for (const entry of this.entries.values()) this.cancel(entry);
     this.entries.clear();
     this.listeners.clear();

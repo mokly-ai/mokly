@@ -1,5 +1,5 @@
 import type { FrameNavigation } from "../client/frame_adapter.js";
-import type { ComponentRangeRecord } from "../components/manifest_types.js";
+import type { ComponentRangeRecord } from "../components/view_types.js";
 
 import { array, boundedJson, identity, key, object, shape } from "./values.js";
 /**

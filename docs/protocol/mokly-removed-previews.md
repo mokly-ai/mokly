@@ -124,18 +124,25 @@ validate `preview.kind`, tolerate an absent `preview`, and reject a preview on
 a current entry or when `comparisonUrl` is null.
 
 The viewer first resolves the selected snapshot and removed record from the
-index, then fetches the removed entry's detail only from the advertised
-generation, resolved against the source origin root for object and URL
-sources, and accepts it under the
+index. It resolves the advertised generation against the source origin root
+for object and URL sources. A removed screen's preview takes its views from
+the removed entry's detail that the route loads and accepts under the
 [fences](./mokly-shell-delivery.md#fetch-and-fences) of the shell delivery
-contract. Validated views may then name a historical document only on that
-source origin beneath the advertised generation's before-side directory. The
-viewer never discovers the selected comparison endpoint, runs Git, or fetches
-a removed entry's path as current output. A catalogue with
-`comparisonUrl: null` shows the unavailable state without a request. Neither
-frame adapter mounts a preview frame: previews are viewer-owned documents, so
-no adapter handshake or inspection, marker, or navigation message exists for
-them.
+contract. The preview does not read that detail again. The standalone shell
+fetches that detail from the advertised generation. An embedded viewer takes
+it from its host's `detail` source under the
+[embeddable viewer contract](./mokly-viewer.md#package-and-props). Decision:
+one read serves the route and the preview, not a second read with its own
+checks, because one read applies the fetch rule and the fence once and gives
+the detail one source. A removed page or document reads its preview metadata
+only from the advertised generation. Validated views may then name a
+historical document only on the source origin beneath the advertised
+generation's before-side directory. The viewer never discovers the selected
+comparison endpoint, runs Git, or fetches a removed entry's path as current
+output. A catalogue with `comparisonUrl: null` shows the unavailable state
+without a request. Neither frame adapter mounts a preview frame: previews are
+viewer-owned documents, so no adapter handshake or inspection, marker, or
+navigation message exists for them.
 
 ## Frames And Lifecycle
 

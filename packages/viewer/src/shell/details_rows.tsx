@@ -14,11 +14,12 @@ import {
   MetadataRow,
 } from "@mokly/ui/metadata-row";
 
+import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
+import type { CatalogueUseCase } from "../catalogue/types.js";
 import { parseLogicalTarget } from "../navigation/logical.js";
 import { viewHref } from "../navigation/routes.js";
-import type { ManifestUseCase } from "../registry/types.js";
 
-import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
+import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
 import { TagChip } from "./tags.js";
 import { changedViewsLabel, type ChangedView } from "./view_marks.js";
@@ -72,22 +73,22 @@ export function RelatedDocChips(props: {
 
 /**
  * The current document a related-doc value names, if it names one: a public
- * `mock:<path>` reference, or the repository source path the served manifest
+ * `mock:<path>` reference, or the repository source path the catalogue index
  * keeps.
  */
 function relatedDocument(
   catalogue: Catalogue,
   value: string,
-): CatalogueManifestEntry | undefined {
+): ShellCatalogueRoutedEntry | undefined {
   const target = parseLogicalTarget(value);
-  const current = (entry: CatalogueManifestEntry | undefined) =>
+  const current = (entry: ShellCatalogueRoutedEntry | undefined) =>
     entry?.kind === "document" &&
     !catalogue.removedEntries.some(({ entry: removed }) => removed === entry)
       ? entry
       : undefined;
   if (target) return current(catalogue.byPath.get(target.path));
   for (const entry of catalogue.byPath.values())
-    if (entry.sourcePath === value && current(entry)) return entry;
+    if (entry.details.sourcePath === value && current(entry)) return entry;
   return undefined;
 }
 
@@ -119,7 +120,7 @@ export function UsedByChips(props: {
   const useCases = props.useCasePaths
     .map((id) => props.catalogue.byPath.get(id))
     .filter(
-      (entry): entry is ManifestUseCase =>
+      (entry): entry is CatalogueUseCase =>
         entry !== undefined && entry.kind === "use-case",
     );
   if (useCases.length === 0) {
@@ -141,10 +142,10 @@ export function UsedByChips(props: {
   );
 }
 
-/** The variants a screen or component declares, in manifest order. */
+/** The variants a screen or component declares, in index order. */
 export function VariantChips(props: {
   catalogue: Catalogue;
-  entry: CatalogueManifestEntry;
+  entry: ShellCatalogueRoutedEntry;
 }) {
   if (props.entry.kind !== "screen" && props.entry.kind !== "component") {
     return null;
@@ -179,7 +180,7 @@ export function VariantChips(props: {
 /** The parent a variant belongs to, resolved for current and removed entries. */
 export function VariantOfChip(props: {
   catalogue: Catalogue;
-  entry: CatalogueManifestEntry;
+  entry: ShellCatalogueRoutedEntry;
 }) {
   const parent = branchPoints(props.catalogue).parentOf(props.entry);
   if (parent === undefined || parent.source === "title") {
@@ -200,7 +201,7 @@ export function VariantOfChip(props: {
 
 function entryHref(
   catalogue: Catalogue,
-  entry: CatalogueManifestEntry,
+  entry: ShellCatalogueRoutedEntry,
 ): string {
   const snapshotId = catalogue.removedEntries.find(
     ({ entry: candidate }) => candidate.path === entry.path,

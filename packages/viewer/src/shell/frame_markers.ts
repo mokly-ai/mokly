@@ -1,15 +1,13 @@
 /** Host marker placement over registry-owned frame sessions. */
 
 import { visibleFrameBox } from "../client/component_geometry.js";
-import { markerRect, markerStatus } from "../viewer/marker_geometry.js";
-import type { CoordinateRect } from "../viewer/marker_geometry.js";
-import type { MarkerPlacement, MarkerStore } from "../viewer/marker_store.js";
+import { intersectRectangles } from "../client/geometry.js";
 import type {
   InstanceRef,
   MarkerState,
   ViewerEvents,
   ViewerMarker,
-} from "../viewer/types.js";
+} from "../host/types.js";
 
 import type { ShellGeometrySnapshot } from "./frame_geometry.js";
 import type { ShellFrameGeometryController } from "./frame_geometry_controller.js";
@@ -19,6 +17,8 @@ import {
   validFrameUsage,
 } from "./frame_instances.js";
 import type { ShellFrameSession } from "./frame_registry.js";
+import { markerRect, markerStatus } from "./marker_geometry.js";
+import type { MarkerPlacement, MarkerStore } from "./marker_store.js";
 
 interface MarkerTarget {
   id: string;
@@ -41,6 +41,7 @@ export class ShellFrameMarkers {
     private store: MarkerStore,
     private events: () => ViewerEvents,
     private report: (error: unknown) => Error,
+    private presentation: { current(): boolean; layer(): HTMLElement | null },
   ) {}
 
   update(markers: readonly ViewerMarker[]): void {
@@ -92,13 +93,8 @@ export class ShellFrameMarkers {
 
   private evaluate(): void {
     if (!this.initialized || this.disposed || this.invalid) return;
-    const mode = this.root
-      .querySelector('[data-diff-mode][aria-pressed="true"]')
-      ?.getAttribute("data-diff-mode");
-    const current = mode === undefined || mode === "current";
-    const layer = this.root.querySelector<HTMLElement>(
-      "[data-mokly-marker-layer]",
-    );
+    const current = this.presentation.current();
+    const layer = this.presentation.layer();
     const placements: MarkerPlacement[] = [];
     for (const target of this.targets) {
       const session = this.sessions().find((candidate) =>
@@ -168,17 +164,13 @@ export class ShellFrameMarkers {
     const frame = session.element;
     const visible = visibleFrameBox(frame);
     if (!visible || !frame.offsetWidth || !frame.offsetHeight) return;
-    const stage = frame.closest<HTMLElement>(
-      "[data-workspace-preview], .mbk-flow, .mbk-stage-embed",
-    );
+    const stage = session.layout?.stage?.current;
     const layerBounds = layer.getBoundingClientRect();
     const stageBounds = (
-      frame.closest(".browser-frame.is-expanded")
-        ? this.root
-        : (stage ?? this.root)
+      session.layout?.expanded ? this.root : (stage ?? this.root)
     ).getBoundingClientRect();
-    const clip = intersect(visible, stageBounds);
-    const bounded = clip && intersect(clip, layerBounds);
+    const clip = intersectRectangles(visible, stageBounds);
+    const bounded = clip && intersectRectangles(clip, layerBounds);
     if (!bounded) return;
     const frameBounds = frame.getBoundingClientRect();
     return markerRect(boxes, {
@@ -215,21 +207,6 @@ export class ShellFrameMarkers {
     this.disposed = true;
     this.targets = [];
   }
-}
-
-function intersect(
-  first: CoordinateRect,
-  second: CoordinateRect,
-): CoordinateRect | undefined {
-  const result = {
-    left: Math.max(first.left, second.left),
-    top: Math.max(first.top, second.top),
-    right: Math.min(first.right, second.right),
-    bottom: Math.min(first.bottom, second.bottom),
-  };
-  return result.right > result.left && result.bottom > result.top
-    ? result
-    : undefined;
 }
 
 function sameStates(

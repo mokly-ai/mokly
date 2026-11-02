@@ -5,7 +5,7 @@ import type {
   ComponentSlotRecord,
   ComponentViewRecord,
   ComponentSchemaRecord,
-} from "./manifest_types.js";
+} from "./view_types.js";
 
 /** Input ownership and physical range placement have separate validated graphs. */
 export function validateViewReferences(

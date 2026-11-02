@@ -6,8 +6,8 @@ import {
   RENDERS_PATH,
 } from "../catalogue/delivery_paths.js";
 import { readLiveDescriptor } from "../catalogue/live_reader.js";
+import { fetchJson } from "../catalogue/sources.js";
 import type { ShellLiveSource } from "../shell/data_source.js";
-import { fetchJson } from "../viewer/sources.js";
 
 import type { StandaloneWindow } from "./data_source.js";
 import {

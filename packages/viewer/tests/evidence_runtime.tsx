@@ -8,15 +8,18 @@ import type {
   ShellCatalogueScreen,
   ShellCatalogueView,
 } from "../src/catalogue/scoped_types.js";
+import type { LoadedIndex } from "../src/catalogue/sources.js";
 import type { CatalogueUsage } from "../src/catalogue/types.js";
-import { ShellFrameMarkerLayer } from "../src/shell/frame_marker_layer.js";
-import { ViewerHostBridge } from "../src/viewer/host_bridge.js";
-import type { LoadedIndex } from "../src/viewer/sources.js";
 import type {
   MoklyViewerHandle,
   MoklyViewerProps,
   ViewerMarker,
-} from "../src/viewer/types.js";
+} from "../src/host/types.js";
+import { ElementRefs } from "../src/shell/element_refs.js";
+import { FrameStageContext } from "../src/shell/frame_layout_context.js";
+import { ShellFrameMarkerLayer } from "../src/shell/frame_marker_layer.js";
+import { useShellRoot } from "../src/shell/root_context.js";
+import { ViewerHostBridge } from "../src/viewer/host_bridge.js";
 
 import type {
   EvidenceRuntimeProbe,
@@ -37,7 +40,12 @@ export function EvidenceRuntime({
   probe: EvidenceRuntimeProbe;
   views: readonly ShellCatalogueView[];
 }) {
-  const root = useRef<HTMLDivElement>(null);
+  const shell = useShellRoot();
+  const localRoot = useRef<HTMLDivElement>(null);
+  const root = shell?.elements.root ?? localRoot;
+  const [stages] = useState(
+    () => new ElementRefs<EvidenceViewport, HTMLDivElement>(),
+  );
   const handle = useRef<MoklyViewerHandle>(null);
   const failureOwner = useRef({});
   const navigationEnd = useRef<(() => void) | undefined>(undefined);
@@ -79,7 +87,7 @@ export function EvidenceRuntime({
     <div
       className="mokly-viewer"
       data-mokly-shell=""
-      ref={root}
+      ref={shell?.ref ?? root}
       style={{ height: 320, position: "relative", width: 800 }}
       tabIndex={-1}
     >
@@ -89,18 +97,23 @@ export function EvidenceRuntime({
         }
       </style>
       {selected.map((view) => (
-        <div
-          data-workspace-preview=""
+        <FrameStageContext
           key={view.viewport}
-          style={{ display: "inline-block", height: 300, width: 390 }}
+          value={stages.ref(view.viewport)}
         >
-          <RegistryHarnessFrame
-            entry={home}
-            onEvent={() => undefined}
-            usage={usages[view.viewport]}
-            view={view}
-          />
-        </div>
+          <div
+            data-workspace-preview=""
+            ref={stages.ref(view.viewport)}
+            style={{ display: "inline-block", height: 300, width: 390 }}
+          >
+            <RegistryHarnessFrame
+              entry={home}
+              onEvent={() => undefined}
+              usage={usages[view.viewport]}
+              view={view}
+            />
+          </div>
+        </FrameStageContext>
       ))}
       <ShellFrameMarkerLayer
         markers={markers}

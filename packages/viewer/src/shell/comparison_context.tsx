@@ -3,8 +3,8 @@
 import { createContext, useContext } from "react";
 import type { ReactNode } from "react";
 
+import type { DeploymentCheck } from "../catalogue/sources.js";
 import type { SnapshotPresentationEnvironment } from "../previews/presentation.js";
-import type { DeploymentCheck } from "../viewer/sources.js";
 
 import type { ScrollTogetherPreference } from "./comparison_scroll_preference.js";
 

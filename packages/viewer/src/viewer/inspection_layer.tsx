@@ -12,6 +12,7 @@ import { HighlightLabel, LabelLayer } from "@mokly/ui/highlight-label";
 import { HighlightMask } from "@mokly/ui/highlight-mask";
 
 import type { Box } from "../client/frame_adapter.js";
+import type { InstanceRef } from "../host/types.js";
 import { SupersededFrameGeometry } from "../shell/frame_geometry.js";
 import { frameInspectionMask } from "../shell/frame_inspection_mask.js";
 import {
@@ -23,8 +24,7 @@ import type {
   ShellFrameRegistry,
   ShellFrameSession,
 } from "../shell/frame_registry.js";
-
-import type { InstanceRef } from "./types.js";
+import { useShellRoot } from "../shell/root_context.js";
 
 export type ViewerInspectionPresentation =
   | {
@@ -66,6 +66,7 @@ export function ViewerInspectionLayer({
   presentation?: ViewerInspectionPresentation;
   registry: ShellFrameRegistry;
 }) {
+  const elements = useShellRoot()?.elements;
   const layer = useRef<HTMLDivElement>(null);
   const owner = useRef({});
   const demand = useRef<readonly ShellFrameSession[]>([]);
@@ -89,7 +90,7 @@ export function ViewerInspectionLayer({
   demand.current = sessions;
 
   useEffect(() => {
-    const root = layer.current?.closest<HTMLElement>("[data-mokly-shell]");
+    const root = elements?.root.current;
     if (!root) return;
     const geometry = registry.geometry;
     const release = geometry.acquire(owner.current, root, () => demand.current);
@@ -98,7 +99,7 @@ export function ViewerInspectionLayer({
       unsubscribe();
       release();
     };
-  }, [registry]);
+  }, [elements, registry]);
 
   useEffect(() => {
     if (!sessions.length) return;

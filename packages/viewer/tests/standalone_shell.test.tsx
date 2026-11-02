@@ -16,13 +16,10 @@ function storage(values: Record<string, string>) {
 }
 
 /** A window whose index never arrives, with an appearance when one is given. */
-function pendingWindow(theme?: "dark"): ShellWindow {
+function pendingWindow(): ShellWindow {
   return {
     location: { href: "http://localhost:4810/view/guide/", reload() {} },
     fetch: () => new Promise<Response>(() => {}),
-    ...(theme
-      ? { __moklyAppearance: { current: () => ({ theme, scheme: theme }) } }
-      : {}),
   } as unknown as ShellWindow;
 }
 
@@ -43,7 +40,8 @@ test("the loading root states the document's appearance", () => {
   const html = renderToStaticMarkup(
     <StandaloneShell
       preferences={{ colorScheme: "dark" }}
-      win={pendingWindow("dark")}
+      initialAppearance={{ theme: "dark", scheme: "dark" }}
+      win={pendingWindow()}
     />,
   );
   assert.match(

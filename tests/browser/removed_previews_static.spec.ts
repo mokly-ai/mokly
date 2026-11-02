@@ -10,6 +10,8 @@
 
 import { expect, type Page } from "@playwright/test";
 
+import { readCatalogueIndex, readEntryDetail } from "@mokly/viewer";
+
 import { accentColor } from "../helpers/comparison_catalogue.js";
 
 import { comparisonPaths, test } from "./comparison_test.js";
@@ -135,10 +137,10 @@ for (const width of [390, 1280])
           "Historical screen",
         );
       // The page's preview reads its preview file once. The screen's preview
-      // reads the removed detail that Details also reads.
+      // uses the removed detail that the route reads once for Details too.
       for (const [file, reads] of [
         [`previews/${comparisonPaths.removedPage}/index.json`, 1],
-        [`entries/${comparisonPaths.removedScreen}.json`, 2],
+        [`entries/${comparisonPaths.removedScreen}.json`, 1],
       ] as const)
         expect(
           paths.filter((path) => path === `${generation}${file}`),
@@ -153,23 +155,28 @@ for (const width of [390, 1280])
     });
   });
 
-/** Only the fields that this case rewrites; the rest passes through. */
-interface CapturedDetail {
-  views: { viewport: string }[];
-}
-
 test("a viewport with no captured previous view says so", async ({
   page,
   request,
   baseURL,
 }) => {
   const index = await comparisonIndex(request, baseURL);
-  // Deliver the removed detail as if the screen had only desktop views.
+  // Both records describe a generation with only desktop views.
+  await page.route("**/mokly-viewer/index.json", async (route) => {
+    const response = await route.fetch();
+    const model = readCatalogueIndex(await response.json());
+    const entry = model.removedEntries
+      .map(({ entry }) => entry)
+      .find((entry) => entry.path === comparisonPaths.removedScreen);
+    if (entry?.kind !== "screen") throw new Error("Missing removed screen");
+    entry.views = entry.views.filter((view) => view.viewport !== "mobile");
+    await route.fulfill({ response, json: model });
+  });
   await page.route(
     `**/${index.comparisonUrl}entries/${comparisonPaths.removedScreen}.json`,
     async (route) => {
       const response = await route.fetch();
-      const detail = (await response.json()) as CapturedDetail;
+      const detail = readEntryDetail(await response.json());
       detail.views = detail.views.filter((view) => view.viewport !== "mobile");
       await route.fulfill({ response, json: detail });
     },

@@ -4,9 +4,11 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
+import { DisplaySelection } from "../packages/viewer/dist/shell/display_context.js";
 import { routeFromUrl } from "../packages/viewer/dist/shell/routes.js";
+import { defaultSelection } from "../packages/viewer/dist/shell/selection.js";
 import { TargetStage } from "../packages/viewer/dist/shell/stages.js";
-import { viewerCatalogue } from "../packages/viewer/dist/viewer/projection.js";
 
 import { catalogueModel } from "./helpers/viewer_catalogue.js";
 
@@ -45,9 +47,30 @@ test("preview fragment routes update every applicable frame source", () => {
     `/static/mokly-generated/product/browse/home/index.desktop.html#${ENCODED_FRAGMENT}`,
   ];
   assert.deepEqual(attributeValues(markup, "src"), expected);
-  assert.deepEqual(attributeValues(markup, "data-fragment-light"), expected);
-  assert.deepEqual(attributeValues(markup, "data-fragment-dark"), [
+  const lightMarkup = renderRoute(
+    `https://example.test/view/product/browse/home/?fragment=${ENCODED_FRAGMENT}`,
+    FRAGMENT,
+    model,
+    "light",
+  );
+  assert.deepEqual(attributeValues(lightMarkup, "src"), expected);
+  const darkMarkup = renderRoute(
+    `https://example.test/view/product/browse/home/?fragment=${ENCODED_FRAGMENT}`,
+    FRAGMENT,
+    model,
+    "dark",
+  );
+  assert.deepEqual(
+    attributeValues(darkMarkup, "src").filter((source) =>
+      source.includes(".dark.html"),
+    ),
+    [
+      `/static/mokly-generated/product/browse/home/index.mobile.dark.html#${ENCODED_FRAGMENT}`,
+    ],
+  );
+  assert.deepEqual(attributeValues(darkMarkup, "src"), [
     `/static/mokly-generated/product/browse/home/index.mobile.dark.html#${ENCODED_FRAGMENT}`,
+    `/static/mokly-generated/product/browse/home/index.desktop.html#${ENCODED_FRAGMENT}`,
   ]);
 });
 
@@ -90,7 +113,7 @@ test("preview fragment routes fail closed before stage rendering", () => {
     const url = new URL(
       `https://example.test/view/product/browse/home/${search}`,
     );
-    const catalogue = viewerCatalogue(catalogueModel());
+    const catalogue = createCatalogue(catalogueModel());
     const route = routeFromUrl(catalogue, url);
     assert.equal(route.fragment, undefined, search);
     assert.doesNotMatch(renderTarget(catalogue, route), /#[^"]+/, search);
@@ -112,24 +135,29 @@ function renderRoute(
   href: string,
   expectedFragment: string,
   model = catalogueModel(),
+  colorScheme: "dark" | "light" = "light",
 ): string {
-  const catalogue = viewerCatalogue(model);
+  const catalogue = createCatalogue(model);
   const route = routeFromUrl(catalogue, new URL(href));
   assert.equal(route.fragment, expectedFragment);
-  return renderTarget(catalogue, route);
+  return renderTarget(catalogue, route, colorScheme);
 }
 
 function renderTarget(
-  catalogue: ReturnType<typeof viewerCatalogue>,
+  catalogue: ReturnType<typeof createCatalogue>,
   route: ReturnType<typeof routeFromUrl>,
+  colorScheme: "dark" | "light" = "light",
 ): string {
   assert.equal(route.view.kind, "target");
   if (route.view.kind !== "target") throw new Error("Expected target route.");
   return renderToStaticMarkup(
-    createElement(TargetStage, {
-      catalogue,
-      target: route.view.target,
-      ...(route.fragment ? { fragment: route.fragment } : {}),
+    createElement(DisplaySelection.Provider, {
+      value: { ...defaultSelection, colorScheme },
+      children: createElement(TargetStage, {
+        catalogue,
+        target: route.view.target,
+        ...(route.fragment ? { fragment: route.fragment } : {}),
+      }),
     }),
   );
 }

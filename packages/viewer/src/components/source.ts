@@ -1,7 +1,7 @@
 import { isSafeRepositoryPath } from "../navigation/logical.js";
 
 import { exactKeys, invalidData } from "./data.js";
-import type { ComponentSourceLocation } from "./manifest_types.js";
+import type { ComponentSourceLocation } from "./view_types.js";
 
 /** Validate normalized invocation metadata at both wrapper and manifest boundaries. */
 export function validateComponentSource(

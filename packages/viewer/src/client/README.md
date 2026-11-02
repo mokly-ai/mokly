@@ -17,8 +17,8 @@ esbuild outputs. Serve and `build` deliver them as
 `sameOriginAdapter` keeps script-disabled frames and reports their geometry.
 Both adapters draw nothing. The shell draws the masks and labels with
 `@mokly/ui` components from the reported instance boundaries.
-Its private current-document capabilities support the synchronous local shell,
-scroll restoration, and authenticated temporary control previews. Workspace,
+Its mounts authenticate the current document and support scroll restoration
+and temporary control previews. Workspace,
 Browse state, and controls never read a frame document directly.
 
 `normalizedHtmlPath` in `same_origin_identity.ts` treats a page's `index.html`
@@ -71,8 +71,9 @@ cargo xtask check --suite viewer
   `FrameMount`, `MountedFrame`, and `FrameEvent` types that `@mokly/viewer`
   exports.
 - [`same_origin_adapter.ts`](./same_origin_adapter.ts) holds
-  `sameOriginAdapter`, the default adapter for script-disabled frames, and the
-  private capabilities of the local shell and the temporary control previews.
+  `sameOriginAdapter`, the default adapter for script-disabled frames,
+  `temporaryPreviewAdapter` for control previews, and `localFramePath` for
+  preview expiration checks.
 - [`same_origin_mount.ts`](./same_origin_mount.ts) holds `mountLocalDocument`,
   which owns the load and the session of one same-origin mount.
 - [`same_origin_identity.ts`](./same_origin_identity.ts) holds

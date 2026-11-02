@@ -3,27 +3,24 @@
 import { useEffect, useRef } from "react";
 import type { RefObject } from "react";
 
+import { useShellRoot } from "./root_context.js";
 import { useOptionalShellStore, type ShellStore } from "./store_context.js";
-
-/** The class that marks a shell root while the reader drags the separator. */
-const RESIZING_CLASS = "mbk-nav-resizing";
 
 /**
  * The resize props of the catalogue column: the store's width and bounds, and
  * the callbacks of the separator. A drag marks the shell root, so the cursor
- * and the frames of the whole root follow it; `ref` locates that root from
- * the column. A render without a store keeps the default width and an inert
+ * and the frames of the whole root follow it. The root context holds that
+ * state. A render without a store keeps the default width and an inert
  * separator, and only an interactive store makes the column resizable.
  */
 export function useNavigationResize(store: ShellStore | undefined) {
+  const root = useShellRoot();
   const ref = useRef<HTMLElement>(null);
   return {
     maximumWidth: store?.state.navigationMaximum ?? 480,
     onResizing: store
       ? (resizing: boolean) =>
-          ref.current
-            ?.closest<HTMLElement>("[data-mokly-shell]")
-            ?.classList.toggle(RESIZING_CLASS, resizing)
+          root?.setResizing(resizing ? "navigation" : undefined)
       : undefined,
     onWidth: store
       ? (width: number) => store.setNavigationWidth(width)
@@ -31,7 +28,7 @@ export function useNavigationResize(store: ShellStore | undefined) {
     onWidthCommit: store
       ? (width: number) => store.persistNavigationWidth(width)
       : undefined,
-    ref,
+    ref: root?.elements.navigation ?? ref,
     resizable: store?.interactive ?? false,
     width: store?.state.navigationWidth ?? 248,
   };
@@ -57,7 +54,6 @@ export function useNavigationBounds(root: RefObject<HTMLElement | null>): void {
     resize();
     return () => {
       observer.disconnect();
-      element.classList.remove(RESIZING_CLASS);
     };
   }, [root, store?.interactive]);
 }

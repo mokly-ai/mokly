@@ -1,14 +1,16 @@
 /** Pure identity lookup for one validated catalogue and its accepted pairs. */
 
-import type { ManifestEntry } from "../registry/types.js";
+import type {
+  ShellCatalogueRoutedEntry,
+  ShellRemovedEntry,
+} from "../catalogue/scoped_types.js";
 
-import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
-import type { RemovedEntrySnapshot } from "./metadata.js";
+import type { Catalogue } from "./catalogue.js";
 
 /** Kind is part of identity; paths compare under case folding. */
 export interface EntryIdentity {
   readonly path: string;
-  readonly kind: ManifestEntry["kind"];
+  readonly kind: ShellCatalogueRoutedEntry["kind"];
 }
 
 /** Evidence keeps its original path and states which catalogue side owns it. */
@@ -18,11 +20,11 @@ export interface EntryReference extends EntryIdentity {
 
 /** A removed destination retains its snapshot and former display context. */
 export type EntryResolution =
-  | { readonly source: "current"; readonly entry: CatalogueManifestEntry }
+  | { readonly source: "current"; readonly entry: ShellCatalogueRoutedEntry }
   | {
       readonly source: "removed";
-      readonly entry: CatalogueManifestEntry;
-      readonly record: RemovedEntrySnapshot;
+      readonly entry: ShellCatalogueRoutedEntry;
+      readonly record: ShellRemovedEntry;
     };
 
 /** A title fallback has no destination or workspace identity. */
@@ -40,26 +42,29 @@ export interface BranchPointLookup {
   /** The previous path of a paired current entry only. */
   previousPath(current: EntryIdentity): string | undefined;
   /** Removed variants whose parent resolves to `parent`, in record order. */
-  removedVariants(parent: EntryIdentity): readonly RemovedEntrySnapshot[];
+  removedVariants(parent: EntryIdentity): readonly ShellRemovedEntry[];
 }
 
 /** The validated inputs one catalogue generation contributes. */
 type BranchPointInputs = Pick<
   Catalogue,
-  "manifest" | "removedEntries" | "previousPaths"
+  "entries" | "removedEntries" | "previousPaths" | "hierarchy"
 >;
 
-const lookups = new WeakMap<BranchPointInputs, BranchPointLookup>();
+const lookups = new WeakMap<
+  BranchPointInputs["hierarchy"],
+  BranchPointLookup
+>();
 
 /**
  * The one lookup of a catalogue generation, built on first use. Every shell
  * reaches branch-point identities through it rather than its own index.
  */
 export function branchPoints(catalogue: BranchPointInputs): BranchPointLookup {
-  const known = lookups.get(catalogue);
+  const known = lookups.get(catalogue.hierarchy);
   if (known) return known;
   const lookup = createBranchPointLookup(catalogue);
-  lookups.set(catalogue, lookup);
+  lookups.set(catalogue.hierarchy, lookup);
   return lookup;
 }
 
@@ -68,7 +73,7 @@ function createBranchPointLookup(
   catalogue: BranchPointInputs,
 ): BranchPointLookup {
   const current = new Map(
-    catalogue.manifest.entries.map((entry) => [identityKey(entry), entry]),
+    catalogue.entries.map((entry) => [identityKey(entry), entry]),
   );
   const removed = new Map(
     catalogue.removedEntries.map((record) => [
@@ -76,9 +81,9 @@ function createBranchPointLookup(
       record,
     ]),
   );
-  const moved = new Map<string, CatalogueManifestEntry>();
+  const moved = new Map<string, ShellCatalogueRoutedEntry>();
   const previous = new Map<string, string>();
-  for (const entry of catalogue.manifest.entries) {
+  for (const entry of catalogue.entries) {
     const previousPath = catalogue.previousPaths.get(entry.path);
     if (previousPath === undefined) continue;
     moved.set(identityKey({ kind: entry.kind, path: previousPath }), entry);
@@ -127,7 +132,7 @@ function createBranchPointLookup(
       ? { source: "title", title: variant.record.parentTitle }
       : undefined;
   };
-  const adopted = new Map<string, RemovedEntrySnapshot[]>();
+  const adopted = new Map<string, ShellRemovedEntry[]>();
   for (const record of catalogue.removedEntries) {
     const owner = parent({ source: "removed", entry: record.entry, record });
     if (owner === undefined || owner.source === "title") continue;

@@ -7,7 +7,7 @@
  * native viewport select does.
  */
 
-import type { ComponentProps } from "react";
+import type { ComponentProps, Ref } from "react";
 
 import { ChangeMark } from "../change-mark/change-mark.js";
 import {
@@ -53,6 +53,7 @@ const VIEWPORTS: readonly IconSelectOption<PreviewViewport>[] = [
 export function ViewControls({
   darkPreview,
   highlight,
+  highlightRef,
   interactive = true,
   onHighlight,
   onScheme,
@@ -68,6 +69,11 @@ export function ViewControls({
   darkPreview?: { mark: ViewMark; scheme: PreviewScheme } | undefined;
   /** The Highlight components toggle. Without it, the toggle is disabled. */
   highlight?: ViewHighlight | undefined;
+  /**
+   * Receives the Highlight components button, such as for a host that returns
+   * focus to it when a pick in a preview ends.
+   */
+  highlightRef?: Ref<HTMLButtonElement> | undefined;
   /**
    * Whether each toggle is a button that reports its presses, as it is by
    * default. A static depiction that runs no script sets `false`, which draws
@@ -142,6 +148,7 @@ export function ViewControls({
         mark="data-workspace-highlight"
         onClick={onHighlight}
         pressed={highlight?.active ?? false}
+        ref={highlightRef}
         title={highlight?.reason ?? "Highlight components"}
       >
         <WorkspaceIcon name="highlight" />
@@ -152,18 +159,22 @@ export function ViewControls({
 
 /**
  * One toggle of the group: a button that reports its presses, or the native
- * switch of a static depiction, which starts at the pressed state.
+ * switch of a static depiction, which starts at the pressed state. Only the
+ * button takes the ref, because a static depiction runs no script.
  */
 function Toggle({
   interactive,
   onClick,
   pressed,
+  ref,
   ...control
 }: Omit<ComponentProps<typeof IconButton>, "pressed"> & {
   interactive: boolean;
   pressed: boolean;
 }) {
   if (interactive)
-    return <IconButton {...control} onClick={onClick} pressed={pressed} />;
+    return (
+      <IconButton {...control} onClick={onClick} pressed={pressed} ref={ref} />
+    );
   return <IconSwitch {...control} checked={pressed} />;
 }

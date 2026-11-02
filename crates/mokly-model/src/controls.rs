@@ -77,10 +77,17 @@ pub fn derive(schema: &PropSchema) -> BTreeMap<String, ComponentControl> {
         .iter()
         .flat_map(|props| props.iter())
         .filter_map(|(name, schema)| {
-            let options = if let Some(choices) = &schema.one_of {
+            let options: Option<Vec<ControlOption>> = if let Some(choices) = &schema.one_of {
                 Some(
                     choices
                         .iter()
+                        .filter(|choice| {
+                            choices
+                                .iter()
+                                .filter(|other| same_value(&choice.value, &other.value))
+                                .count()
+                                == 1
+                        })
                         .map(|choice| ControlOption {
                             label: choice.title.clone().unwrap_or_else(|| label(&choice.value)),
                             value: choice.value.clone(),
@@ -91,7 +98,13 @@ pub fn derive(schema: &PropSchema) -> BTreeMap<String, ComponentControl> {
                 schema.enumeration.as_ref().map(|choices| {
                     choices
                         .iter()
-                        .map(|value| ControlOption {
+                        .enumerate()
+                        .filter(|(index, value)| {
+                            !choices[..*index]
+                                .iter()
+                                .any(|other| same_value(value, other))
+                        })
+                        .map(|(_, value)| ControlOption {
                             label: label(value),
                             value: value.clone(),
                         })
@@ -99,6 +112,9 @@ pub fn derive(schema: &PropSchema) -> BTreeMap<String, ComponentControl> {
                 })
             };
             let input = if let Some(options) = options {
+                if options.is_empty() {
+                    return None;
+                }
                 ControlInput::Select { options }
             } else {
                 match schema.types.as_ref()? {
@@ -128,6 +144,16 @@ pub fn derive(schema: &PropSchema) -> BTreeMap<String, ComponentControl> {
             ))
         })
         .collect()
+}
+
+fn same_value(left: &Primitive, right: &Primitive) -> bool {
+    match (left, right) {
+        (Primitive::Number(left), Primitive::Number(right)) => left.as_f64() == right.as_f64(),
+        (Primitive::String(left), Primitive::String(right)) => left == right,
+        (Primitive::Boolean(left), Primitive::Boolean(right)) => left == right,
+        (Primitive::Null, Primitive::Null) => true,
+        _ => false,
+    }
 }
 
 fn label(value: &Primitive) -> String {
@@ -186,3 +212,7 @@ pub fn with_bounds(
 #[cfg(test)]
 #[path = "_tests_/control_bounds_tests.rs"]
 mod control_bounds_tests;
+
+#[cfg(test)]
+#[path = "_tests_/derived_controls_tests.rs"]
+mod derived_controls_tests;

@@ -3,8 +3,8 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { loadIndexSource, sourceUrl } from "../src/catalogue/sources.js";
 import { MoklyViewer } from "../src/viewer/component.js";
-import { loadIndexSource, sourceUrl } from "../src/viewer/sources.js";
 
 import {
   detailPairs,

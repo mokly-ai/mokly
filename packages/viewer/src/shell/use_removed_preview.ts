@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
+import { detailKey } from "../catalogue/detail_fences.js";
+import { DeploymentChangedError } from "../catalogue/sources.js";
+import type { EntryDetailV4 } from "../catalogue/types.js";
 import { previewKey } from "../previews/descriptor.js";
 import {
   createSnapshotPresentationLoader,
@@ -14,13 +17,14 @@ import {
   requestPreview,
   type LoadedPreview,
 } from "../previews/request.js";
-import { DeploymentChangedError } from "../viewer/sources.js";
 
 import {
   snapshotPresentationEnvironment,
   useComparisonEnvironment,
 } from "./comparison_context.js";
+import { useReloadDetail, useRouteDelivery } from "./data_context.js";
 import type { RemovedPreviewData } from "./previews.js";
+import { schemeValue } from "./scheme_fallback.js";
 import { useOptionalShellStore } from "./store_context.js";
 
 /** Display state for one route-owned previous-version request. */
@@ -41,6 +45,7 @@ interface OwnedState {
 }
 
 interface LoadedOwner {
+  detail: EntryDetailV4 | undefined;
   environment: NonNullable<ReturnType<typeof useComparisonEnvironment>>;
   key: string;
   loader: SnapshotPresentationLoader;
@@ -56,9 +61,10 @@ function selectedAddresses(
   if (loaded.content.kind === "page") return [loaded.content.url];
   if (loaded.content.kind === "document")
     return [
-      (
-        loaded.content.views.find((view) => view.colorScheme === colorScheme) ??
-        loaded.content.views[0]!
+      schemeValue(
+        colorScheme,
+        loaded.content.views[0]!,
+        loaded.content.views.find((view) => view.colorScheme === "dark"),
       ).url,
     ];
   const viewports =
@@ -67,16 +73,17 @@ function selectedAddresses(
       : ([viewport] as const);
   return viewports.flatMap((selected) => {
     if (loaded.content.kind !== "screen") return [];
-    const view =
-      loaded.content.views.find(
-        (candidate) =>
-          candidate.viewport === selected &&
-          candidate.colorScheme === colorScheme,
-      ) ??
+    const view = schemeValue(
+      colorScheme,
       loaded.content.views.find(
         (candidate) =>
           candidate.viewport === selected && candidate.colorScheme === "light",
-      );
+      ),
+      loaded.content.views.find(
+        (candidate) =>
+          candidate.viewport === selected && candidate.colorScheme === "dark",
+      ),
+    );
     return view ? [view.url] : [];
   });
 }
@@ -94,8 +101,20 @@ export function useRemovedPreview({
   viewport: "both" | "desktop" | "mobile";
 }): { retry(): void; state: RemovedPreviewState } {
   const environment = useComparisonEnvironment();
-  const comparisonUrl =
-    useOptionalShellStore()?.catalogue.publicModel.comparisonUrl;
+  const model = useOptionalShellStore()?.catalogue.publicModel;
+  const comparisonUrl = model?.comparisonUrl;
+  const delivery = useRouteDelivery();
+  const reloadDetail = useReloadDetail();
+  const deliveryStatus = data.kind === "screen" ? delivery?.status : undefined;
+  const detail =
+    data.kind === "screen"
+      ? model?.details.get(
+          detailKey({
+            path: data.path,
+            ...(data.snapshotId ? { snapshotId: data.snapshotId } : {}),
+          }),
+        )
+      : undefined;
   const key = previewKey(data);
   const selection = `${viewport}:${colorScheme}`;
   const [attempt, bumpAttempt] = useReducer((value: number) => value + 1, 0);
@@ -103,12 +122,15 @@ export function useRemovedPreview({
   const loaded = useRef<LoadedOwner | undefined>(undefined);
   const retryRequested = useRef(false);
   const retry = useCallback(() => {
+    if (data.kind === "screen" && delivery?.status === "failed")
+      delivery.retry();
     retryRequested.current = true;
     bumpAttempt();
-  }, []);
+  }, [data.kind, delivery]);
 
   useEffect(() => {
     if (!interactive || !environment) return;
+    if (deliveryStatus !== undefined && deliveryStatus !== "ready") return;
     const controller = new AbortController();
     const refresh = retryRequested.current;
     const owns = () => !controller.signal.aborted;
@@ -129,6 +151,7 @@ export function useRemovedPreview({
       let owner =
         !refresh &&
         loaded.current?.key === key &&
+        loaded.current.detail === detail &&
         loaded.current.environment === environment &&
         loaded.current.request === requestKey
           ? loaded.current
@@ -138,8 +161,19 @@ export function useRemovedPreview({
           owner.value,
           environment,
           controller.signal,
-        );
+        ).catch(() => false);
         if (!owns()) return;
+        if (!renewed && data.kind === "screen") {
+          loaded.current = undefined;
+          setOwned({ key, selection, value: { status: "loading" } });
+          if (!reloadDetail)
+            throw new Error("The previous version is unavailable.");
+          reloadDetail({
+            path: data.path,
+            ...(data.snapshotId ? { snapshotId: data.snapshotId } : {}),
+          });
+          return;
+        }
         if (!renewed) owner = undefined;
       }
       if (!owner) {
@@ -151,9 +185,11 @@ export function useRemovedPreview({
           request,
           environment,
           controller.signal,
+          detail,
         );
         if (!owns()) return;
         owner = {
+          detail,
           environment,
           key,
           loader: createSnapshotPresentationLoader(
@@ -205,9 +241,12 @@ export function useRemovedPreview({
     attempt,
     colorScheme,
     comparisonUrl,
+    deliveryStatus,
+    detail,
     environment,
     interactive,
     key,
+    reloadDetail,
     selection,
     viewport,
   ]);
@@ -215,12 +254,18 @@ export function useRemovedPreview({
   return {
     retry,
     state:
-      owned?.key === key
-        ? owned.selection === selection
-          ? owned.value
-          : { status: "loading" }
-        : interactive && environment
-          ? { status: "loading" }
-          : { status: "unavailable" },
+      data.kind === "screen" && delivery?.status === "failed"
+        ? { status: "failed" }
+        : data.kind === "screen" &&
+            delivery &&
+            (delivery.status !== "ready" || !detail)
+          ? { status: delivery.status === "ready" ? "failed" : "loading" }
+          : owned?.key === key
+            ? owned.selection === selection
+              ? owned.value
+              : { status: "loading" }
+            : interactive && environment
+              ? { status: "loading" }
+              : { status: "unavailable" },
   };
 }

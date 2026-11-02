@@ -17,8 +17,9 @@ import type {
 import { temporaryPreviewAdapter } from "../client/same_origin_adapter.js";
 import type { GeneratedComponentView } from "../components/views.js";
 import { entryRoute } from "../navigation/routes.js";
-import { DisplaySelection } from "../viewer/display_context.js";
 
+import { DisplaySelection } from "./display_context.js";
+import { FrameStageContext } from "./frame_layout_context.js";
 import { useMountedShellFrame } from "./frame_mount_hook.js";
 import {
   useOptionalShellFrameRegistry,
@@ -26,6 +27,7 @@ import {
 } from "./frame_registry.js";
 import { useFrameGeneration, useFrameSource } from "./frame_source_hook.js";
 import { BrowserFrame } from "./frames.js";
+import { schemeValue } from "./scheme_fallback.js";
 import {
   frameSource,
   generatedFrameSource,
@@ -58,6 +60,7 @@ export function StageFrame({
   views: readonly ShellCatalogueView[];
   viewport: "desktop" | "mobile";
 }) {
+  const stage = useContext(FrameStageContext);
   const selection = useContext(DisplaySelection);
   const store = useOptionalShellStore();
   const registry = useOptionalShellFrameRegistry();
@@ -79,11 +82,8 @@ export function StageFrame({
     viewport,
     "dark",
   );
-  const selected = selection.colorScheme === "dark" ? (dark ?? light) : light;
-  const preview =
-    selection.colorScheme === "dark"
-      ? (previewDark ?? previewLight)
-      : previewLight;
+  const selected = schemeValue(selection.colorScheme, light, dark);
+  const preview = schemeValue(selection.colorScheme, previewLight, previewDark);
   const source = preview
     ? generatedFrameSource(preview, fragment, stepIndex)
     : frameSource(entry, selected, fragment, stepIndex);
@@ -112,6 +112,20 @@ export function StageFrame({
     enabled: store?.interactive ?? false,
     generation,
     identity,
+    layout: {
+      stage,
+      expanded: store?.state.expandedFrame === frameIdentityKey(identity),
+    },
+    sources: hasDarkFragments
+      ? [
+          previewLight
+            ? generatedFrameSource(previewLight, fragment, stepIndex)
+            : frameSource(entry, light, fragment, stepIndex),
+          previewDark
+            ? generatedFrameSource(previewDark, fragment, stepIndex)
+            : frameSource(entry, dark, fragment, stepIndex),
+        ].filter((value): value is string => value !== undefined)
+      : [],
     source,
     usage: preview ? generatedUsage(preview) : shellFrameUsage(selected?.usage),
   });
@@ -131,16 +145,6 @@ export function StageFrame({
         "data-mokly-fragment-frame": !flow || stepIndex === 0 ? "" : undefined,
         "data-mokly-frame-state": mounted.status,
         "data-workspace-frame": flow ? undefined : viewport,
-        "data-fragment-light": hasDarkFragments
-          ? previewLight
-            ? generatedFrameSource(previewLight, fragment, stepIndex)
-            : frameSource(entry, light, fragment, stepIndex)
-          : undefined,
-        "data-fragment-dark": hasDarkFragments
-          ? previewDark
-            ? generatedFrameSource(previewDark, fragment, stepIndex)
-            : frameSource(entry, dark, fragment, stepIndex)
-          : undefined,
       }}
       key={generation}
       ref={mounted.frameRef}

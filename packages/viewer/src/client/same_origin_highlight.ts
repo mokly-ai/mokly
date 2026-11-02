@@ -1,11 +1,12 @@
 /** Pick listeners and their measured regions; consumer DOM remains unchanged. */
-import type { ComponentViewRecord } from "../components/manifest_types.js";
+import type { ComponentViewRecord } from "../components/view_types.js";
 
 import {
   authenticateRanges,
   rangeBounds,
   type ComponentBounds,
 } from "./component_geometry.js";
+import { containsPoint } from "./geometry.js";
 
 export interface HighlightFrame {
   frame: HTMLIFrameElement;
@@ -42,12 +43,8 @@ export function installLocalHighlight(
     };
     measurements.push(measure);
     const activate = (event: MouseEvent) => {
-      const match = bounds.find(
-        (box) =>
-          event.clientX >= box.x &&
-          event.clientX <= box.x + box.width &&
-          event.clientY >= box.y &&
-          event.clientY <= box.y + box.height,
+      const match = bounds.find((box) =>
+        containsPoint(box, event.clientX, event.clientY),
       );
       if (!match) return;
       event.preventDefault();

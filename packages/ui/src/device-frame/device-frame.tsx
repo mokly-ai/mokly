@@ -5,7 +5,7 @@
  * is expanded.
  */
 
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 
 import { BrowserBar } from "../browser-bar/browser-bar.js";
 
@@ -28,8 +28,9 @@ export function PhoneFrame({ children }: { children?: ReactNode }) {
 /**
  * A desktop browser window whose viewport hosts a desktop preview. An
  * expanded window covers the shell, and the host marks the shell root
- * meanwhile, which shows the scrim below the window. A static depiction that
- * runs no script draws its bar as a picture of itself.
+ * meanwhile through the root's `frameExpanded`, which shows the scrim below
+ * the window. A static depiction that runs no script draws its bar as a
+ * picture of itself.
  */
 export function BrowserFrame({
   address,
@@ -39,6 +40,7 @@ export function BrowserFrame({
   interactive = true,
   onCopy,
   onExpandedChange,
+  ref,
 }: {
   /** The address that the window shows and copies. */
   address: string;
@@ -56,9 +58,17 @@ export function BrowserFrame({
   onCopy?: (() => void) | undefined;
   /** Receives the expanded state that the toggle asks for. */
   onExpandedChange?: ((expanded: boolean) => void) | undefined;
+  /**
+   * Receives the window, such as for a host that closes the expanded window
+   * on a click outside it, or that measures the frames in it.
+   */
+  ref?: Ref<HTMLDivElement> | undefined;
 }) {
   return (
-    <div className={`browser-frame${expanded ? " is-expanded" : ""} mbk-reset`}>
+    <div
+      className={`browser-frame${expanded ? " is-expanded" : ""} mbk-reset`}
+      ref={ref}
+    >
       <BrowserBar
         address={address}
         expandable={expandable}

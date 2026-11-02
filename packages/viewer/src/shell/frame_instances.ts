@@ -3,7 +3,7 @@
 import { FrameError } from "../client/frame_error.js";
 import { frameUsage } from "../client/frame_usage.js";
 import type { GeneratedComponentView } from "../components/views.js";
-import type { InstanceRef } from "../viewer/types.js";
+import type { InstanceRef } from "../host/types.js";
 
 import type {
   ShellFrameRegistry,

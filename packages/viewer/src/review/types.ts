@@ -13,7 +13,6 @@ import type { RuleEvidence } from "../generated/catalogue/RuleEvidence.js";
 
 export type { EntryChangeReason } from "../generated/catalogue/EntryChangeReason.js";
 export type { RemovedPagePreview } from "../generated/catalogue/RemovedPagePreview.js";
-export type { ReviewEntryAddress } from "../generated/catalogue/ReviewEntryAddress.js";
 export type { ReviewState } from "../generated/catalogue/ReviewState.js";
 
 /** One ready view of a compared entry, from its detail: axes, state, ignore ids, and evidence. */

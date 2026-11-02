@@ -6,12 +6,12 @@ import {
   catalogueNavSections,
   disclosurePath,
 } from "../src/shell/nav_model.js";
+import { shellContext } from "../src/shell/projection.js";
 import { routeFromUrl } from "../src/shell/routes.js";
+import { defaultSelection } from "../src/shell/selection.js";
 import { currentContext } from "../src/shell/store.js";
 import { withFilterSelection, withRoute } from "../src/shell/store_filters.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
-import { viewerContext } from "../src/viewer/projection.js";
-import { defaultSelection } from "../src/viewer/selection.js";
 
 import { catalogue, model } from "./shell_state_fixture.js";
 
@@ -20,7 +20,7 @@ const route = routeFromUrl(
   new URL("https://example.test/view/product/browse/home/"),
 );
 const context = {
-  ...viewerContext(model, defaultSelection),
+  ...shellContext(model, defaultSelection),
   activeId: "product/browse/home",
 };
 const sections = catalogueNavSections(catalogue);

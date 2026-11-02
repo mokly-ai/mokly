@@ -2,15 +2,16 @@
 
 import { removedEntryDetailPath } from "../catalogue/delivery_paths.js";
 import { historicalSnapshotId } from "../catalogue/snapshot_identity.js";
-import type { CatalogueReadModel } from "../catalogue/types.js";
-import type { ColorScheme, Viewport } from "../data/axes.js";
-import { encodeUrlPath } from "../data/paths.js";
-import { previewMetadataPath, snapshotSidePath } from "../navigation/routes.js";
-import type { RemovedPreviewData } from "../shell/previews.js";
 import {
   DeploymentChangedError,
+  fetchJson,
   type DeploymentCheck,
-} from "../viewer/sources.js";
+} from "../catalogue/sources.js";
+import type { EntryDetailV4 } from "../catalogue/types.js";
+import type { ColorScheme, Viewport } from "../data/axes.js";
+import { encodeUrlPath } from "../data/paths.js";
+import { previewMetadataPath } from "../navigation/routes.js";
+import type { RemovedPreviewData } from "../shell/previews.js";
 
 import { pageContent, screenContent, type ParsedPreview } from "./content.js";
 
@@ -36,7 +37,7 @@ export interface LoadedPreview {
   content: PreviewContent;
   /** Absolute generation root that owns every historical document. */
   generation: string;
-  /** Final metadata response URL used to renew a live generation. */
+  /** Route detail or preview metadata address used for live renewal. */
   url: string;
 }
 
@@ -63,14 +64,6 @@ export interface PreviewRequestEnvironment {
   deploymentCheck?: DeploymentCheck;
 }
 
-/** Exact files and directory prefixes in the documented embedded fetch set. */
-export interface AdvertisedPreviewPaths {
-  /** Metadata files that catalogue descriptors advertise. */
-  files: readonly string[];
-  /** Snapshot prefixes advertised by the comparison generation. */
-  prefixes: readonly string[];
-}
-
 /**
  * The address to request, or `undefined` when the delivery advertises nothing
  * for this entry. Static delivery loads only advertised addresses, so an older
@@ -93,31 +86,6 @@ export function previewEndpoint(
       ? removedEntryDetailPath(comparisonPath, data.path)
       : `${comparisonPath}${encodeUrlPath(previewMetadataPath(data.path))}`;
   return { endpoint: new URL(`/${path}`, base), generation };
-}
-
-/**
- * The documented embedded fetch set for one catalogue, relative to the
- * artifact root. Tests verify this description; presentation loaders enforce
- * their own generation and snapshot-side boundaries at runtime.
- */
-export function advertisedPreviewPaths(
-  model: CatalogueReadModel,
-): AdvertisedPreviewPaths {
-  const comparison = model.comparisonUrl;
-  if (comparison === null) return { files: [], prefixes: [] };
-  return {
-    files: model.removedEntries.flatMap((removed) =>
-      removed.preview?.kind === "screen"
-        ? [removedEntryDetailPath(comparison, removed.entry.path)]
-        : removed.preview?.kind === "page" ||
-            removed.preview?.kind === "document"
-          ? [`${comparison}${previewMetadataPath(removed.entry.path)}`]
-          : [],
-    ),
-    prefixes: (["before", "after"] as const).map(
-      (side) => `${comparison}${snapshotSidePath(side)}`,
-    ),
-  };
 }
 
 function unavailable(): never {
@@ -151,35 +119,37 @@ export async function requestPreview(
   request: PreviewRequest,
   environment: PreviewRequestEnvironment,
   signal: AbortSignal,
+  detail?: EntryDetailV4,
 ): Promise<LoadedPreview> {
   if (
     environment.deploymentCheck &&
     !(await environment.deploymentCheck(signal))
   )
     throw new DeploymentChangedError();
-  const response = await environment.fetch(request.endpoint.href, {
-    signal,
-    headers: { accept: "application/json" },
-  });
-  if (!response.ok) unavailable();
-  const payload: unknown = await response.json();
   const base = request.generation.href;
   const parsed =
     data.kind === "screen"
-      ? screenContent(data, payload, base)
-      : pageContent(data, payload, base);
+      ? screenContent(data, detail, base)
+      : pageContent(
+          data,
+          (
+            await fetchJson(request.endpoint, signal, (input, init) =>
+              environment.fetch(input, init),
+            )
+          ).value,
+          base,
+        );
   if (!snapshotMatches(data, parsed)) unavailable();
   return {
     content: parsed.content,
     generation: new URL(".", base).href,
-    url: response.url,
+    url: request.endpoint.href,
   };
 }
 
 /**
- * Extend a development generation's retention before reusing its documents.
- * A generation that expired while the entry stayed open resolves elsewhere, so
- * its documents are requested again rather than rendered from stale addresses.
+ * Renew the loaded detail or metadata address before reusing its documents.
+ * A failed renewal makes the shell reacquire before it loads another view.
  */
 export async function renewPreview(
   loaded: LoadedPreview,
@@ -188,6 +158,7 @@ export async function renewPreview(
 ): Promise<boolean> {
   const renewal = await environment.fetch(loaded.url, {
     cache: "no-store",
+    credentials: "omit",
     method: "HEAD",
     signal,
   });

@@ -11,17 +11,19 @@ import { PreviewLoading, PreviewNotCaptured } from "@mokly/ui/preview-state";
 import { PreviousVersion } from "@mokly/ui/previous-version";
 import { Stage } from "@mokly/ui/stage";
 
+import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
 import type { RemovedEntryPreview } from "../catalogue/types.js";
 import { entryRoute } from "../navigation/routes.js";
 import type { SnapshotPresentation } from "../previews/presentation.js";
 import type { LoadedPreview, PreviewScreenView } from "../previews/request.js";
 
-import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
+import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { BrowserFrame } from "./frames.js";
 import { SnapshotFrame } from "./preview_frame.js";
 import { PreviewUnavailable } from "./preview_unavailable.js";
-import { documentLightOnly } from "./scheme_fallback.js";
+import { useShellRoot } from "./root_context.js";
+import { schemeValue, documentLightOnly } from "./scheme_fallback.js";
 import { useOptionalShellStore } from "./store_context.js";
 import { useRemovedPreview } from "./use_removed_preview.js";
 
@@ -52,7 +54,7 @@ export interface RemovedPreviewData {
 export function removedPreviewData(
   catalogue: Catalogue,
   context: ShellContext,
-  entry: CatalogueManifestEntry,
+  entry: ShellCatalogueRoutedEntry,
 ): RemovedPreviewData | undefined {
   if (
     entry.kind !== "page" &&
@@ -128,18 +130,24 @@ export function ReadyPreview(props: {
   retry(): void;
   viewport: "both" | "desktop" | "mobile";
 }) {
+  const elements = useShellRoot()?.elements;
   const content = props.loaded.content;
   if (content.kind === "page" || content.kind === "document") {
     const view =
       content.kind === "document"
-        ? (content.views.find(
-            (view) => view.colorScheme === props.colorScheme,
-          ) ?? content.views[0]!)
+        ? schemeValue(
+            props.colorScheme,
+            content.views[0]!,
+            content.views.find((view) => view.colorScheme === "dark"),
+          )
         : { url: content.url, colorScheme: "light" as const };
     const presentation = presentationFor(props.presentations, view.url);
     if (!presentation) return <PreviewUnavailable retry={props.retry} />;
     return (
-      <DocumentFrame scheme={view.colorScheme}>
+      <DocumentFrame
+        ref={elements?.scrolls.ref("embed")}
+        scheme={view.colorScheme}
+      >
         <SnapshotFrame presentation={presentation} title={props.data.title} />
       </DocumentFrame>
     );
@@ -149,14 +157,15 @@ export function ReadyPreview(props: {
       ? (["mobile", "desktop"] as const)
       : ([props.viewport] as const);
   const frames = viewports.map((viewport) => {
-    const view =
-      content.views.find(
-        (item) =>
-          item.viewport === viewport && item.colorScheme === props.colorScheme,
-      ) ??
+    const view = schemeValue(
+      props.colorScheme,
       content.views.find(
         (item) => item.viewport === viewport && item.colorScheme === "light",
-      );
+      ),
+      content.views.find(
+        (item) => item.viewport === viewport && item.colorScheme === "dark",
+      ),
+    );
     if (!view) return <PreviewNotCaptured key={viewport} viewport={viewport} />;
     const presentation = presentationFor(props.presentations, view.url);
     return presentation ? (
@@ -173,7 +182,11 @@ export function ReadyPreview(props: {
   if (frames.some((frame) => frame === undefined))
     return <PreviewUnavailable retry={props.retry} />;
   return (
-    <Stage kind="live" viewport={props.viewport}>
+    <Stage
+      kind="live"
+      ref={elements?.scrolls.ref("stage")}
+      viewport={props.viewport}
+    >
       {frames}
     </Stage>
   );
@@ -228,7 +241,7 @@ export function RemovedPreviewStage(props: { data: RemovedPreviewData }) {
   const viewport = store?.state.selection.viewport ?? "both";
   return (
     <PreviousVersion
-      descriptor={JSON.stringify(props.data)}
+      descriptor=""
       lightOnly={props.data.lightOnly === true}
       viewport={viewport}
     >

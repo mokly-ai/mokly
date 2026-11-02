@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { ViewerMarker } from "../src/host/types.js";
 import { initializeMarkerRuntime } from "../src/shell/frame_marker_layer.js";
-import type { ViewerMarker } from "../src/viewer/types.js";
 
 test("an initial host callback exception disposes marker ownership and stays unchanged", () => {
   const original = new Error("Host callback failed");

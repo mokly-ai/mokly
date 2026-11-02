@@ -4,7 +4,7 @@
  * `@mokly/ui/flow-step` a user flow's steps.
  */
 
-import { useContext } from "react";
+import { useContext, useRef } from "react";
 
 import { FlowStage, FlowStep } from "@mokly/ui/flow-step";
 import { Stage } from "@mokly/ui/stage";
@@ -18,10 +18,12 @@ import type {
 import type { GeneratedComponentView } from "../components/views.js";
 import { viewHref } from "../navigation/routes.js";
 import { VIEWPORTS } from "../registry/views.js";
-import { DisplaySelection } from "../viewer/display_context.js";
 
+import { DisplaySelection } from "./display_context.js";
 import { DocumentStageFrame } from "./document_stage_frame.js";
+import { FrameStageContext } from "./frame_layout_context.js";
 import { useNarrowLayout } from "./narrow_layout.js";
+import { useShellRoot } from "./root_context.js";
 import { StageFrame } from "./stage_frame.js";
 
 /** Render current frames without giving consumer documents script capability. */
@@ -40,6 +42,7 @@ export function PublicStage({
   previewViews?: readonly GeneratedComponentView[];
   variantPath?: string;
 }) {
+  const elements = useShellRoot()?.elements;
   const selection = useContext(DisplaySelection);
   if (entry.kind === "page" || entry.kind === "document")
     return (
@@ -79,6 +82,7 @@ export function PublicStage({
       key={`${entry.path}:${effectiveVariant ?? ""}`}
       kind={entry.kind === "component" ? "component" : "live"}
       routed
+      ref={elements?.scrolls.ref("stage")}
       viewport={selection.viewport}
     >
       {VIEWPORTS.map((viewport) => (
@@ -114,40 +118,45 @@ function UseCaseFlow({
   fragment?: string;
   hasDarkFragments: boolean;
 }) {
+  const elements = useShellRoot()?.elements;
+  const localStage = useRef<HTMLDivElement>(null);
+  const stage = elements?.scrolls.ref("flow") ?? localStage;
   const viewport = useNarrowLayout() ? "mobile" : "desktop";
   return (
-    <FlowStage>
-      {entry.steps.map((step, index) => {
-        const screen = catalogue.screens.find(
-          (candidate) => candidate.path === step.screenPath,
-        );
-        return (
-          <FlowStep
-            description={step.description ?? screen?.details.description}
-            key={`${step.screenPath}-${index}`}
-            number={index + 1}
-            screen={
-              screen
-                ? { href: viewHref(screen.path), title: screen.title }
-                : undefined
-            }
-            title={step.title ?? screen?.title ?? step.screenPath}
-          >
-            {screen ? (
-              <StageFrame
-                entry={screen}
-                flow
-                hasDarkFragments={hasDarkFragments}
-                key={`${screen.path}:${index}:${viewport}`}
-                stepIndex={index}
-                views={screen.views}
-                viewport={viewport}
-                {...(index === 0 && fragment ? { fragment } : {})}
-              />
-            ) : null}
-          </FlowStep>
-        );
-      })}
-    </FlowStage>
+    <FrameStageContext value={stage}>
+      <FlowStage ref={stage}>
+        {entry.steps.map((step, index) => {
+          const screen = catalogue.screens.find(
+            (candidate) => candidate.path === step.screenPath,
+          );
+          return (
+            <FlowStep
+              description={step.description ?? screen?.details.description}
+              key={`${step.screenPath}-${index}`}
+              number={index + 1}
+              screen={
+                screen
+                  ? { href: viewHref(screen.path), title: screen.title }
+                  : undefined
+              }
+              title={step.title ?? screen?.title ?? step.screenPath}
+            >
+              {screen ? (
+                <StageFrame
+                  entry={screen}
+                  flow
+                  hasDarkFragments={hasDarkFragments}
+                  key={`${screen.path}:${index}:${viewport}`}
+                  stepIndex={index}
+                  views={screen.views}
+                  viewport={viewport}
+                  {...(index === 0 && fragment ? { fragment } : {})}
+                />
+              ) : null}
+            </FlowStep>
+          );
+        })}
+      </FlowStage>
+    </FrameStageContext>
   );
 }

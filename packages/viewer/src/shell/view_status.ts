@@ -1,15 +1,12 @@
-import type { ColorScheme, Viewport } from "../data/axes.js";
-import type { ReviewState } from "../review/types.js";
+import type { CatalogueView, ComparisonSelection } from "../catalogue/types.js";
 
 /** Product-facing state shown beside a workspace title. */
 export type EntryStatus = "Added" | "Changed" | "Removed" | "Unmodified";
 
-/** Review state for one generated viewport and color-scheme view. */
-export interface ViewState {
-  viewport: Viewport;
-  colorScheme: ColorScheme;
-  state: ReviewState;
-}
+/** The ready comparison of one index view, with its original axes. */
+export type ViewState = Pick<CatalogueView, "viewport" | "colorScheme"> & {
+  comparison: Extract<ComparisonSelection, { status: "ready" }>;
+};
 
 /** Per-view states keyed by screen or saved-component-variant path. */
 export type ViewStatesBySelection = Readonly<
@@ -23,21 +20,28 @@ export interface ViewPresentation {
   status: EntryStatus | undefined;
 }
 
+const STATUS_LABELS = {
+  changed: "Changed",
+  added: "Added",
+  removed: "Removed",
+  unmodified: "Unmodified",
+} as const satisfies Record<ViewState["comparison"]["kind"], EntryStatus>;
+
 /**
- * Use per-view evidence only when it covers every displayed view. Otherwise
+ * Use index comparisons only when they cover every displayed view. Otherwise
  * retain route/saved-variant status and eligibility as one fallback decision.
+ * Both uses Changed, Added, Removed, Unmodified priority and reads eligibility
+ * from the comparison that supplies that status.
  */
 export function resolveViewPresentation({
   displayedViews,
   fallbackComparisonEligible,
   fallbackStatus,
-  kind,
   states,
 }: {
   displayedViews: readonly Pick<ViewState, "colorScheme" | "viewport">[];
   fallbackComparisonEligible: boolean;
   fallbackStatus: EntryStatus | undefined;
-  kind: "component" | "screen";
   states: readonly ViewState[] | undefined;
 }): ViewPresentation {
   const selected = displayedViews.map((displayed) =>
@@ -56,72 +60,12 @@ export function resolveViewPresentation({
       evidence: "fallback",
       status: fallbackStatus,
     };
-  const status = aggregateStatus(
-    selected.map((state) => entryStatus(state!.state)),
-    fallbackStatus,
-  );
+  const comparison = (["changed", "added", "removed", "unmodified"] as const)
+    .map((kind) => selected.find((view) => view?.comparison.kind === kind))
+    .find((view) => view !== undefined)!.comparison;
   return {
-    comparisonEligible: shownComparisonEligible(status, kind),
+    comparisonEligible: comparison.eligible,
     evidence: "matching",
-    status,
+    status: STATUS_LABELS[comparison.kind],
   };
-}
-
-/**
- * Resolve the status for the shown view. Missing evidence preserves the
- * route-level fallback; Both aggregates Changed, Added, Removed, Unmodified.
- */
-export function shownStatus(
-  states: readonly ViewState[] | undefined,
-  viewport: "both" | Viewport,
-  scheme: ColorScheme,
-  fallback: EntryStatus | undefined,
-): EntryStatus | undefined {
-  if (states === undefined || states.length === 0) return fallback;
-  const selected = states.filter(
-    (view) =>
-      view.colorScheme === scheme &&
-      (viewport === "both" || view.viewport === viewport),
-  );
-  if (selected.length === 0) return fallback;
-  return aggregateStatus(
-    selected.map(({ state }) => entryStatus(state)),
-    fallback,
-  );
-}
-
-/** Aggregate a complete set of shown view states in product priority order. */
-export function aggregateViewStatus(
-  states: readonly ViewState[],
-): EntryStatus | undefined {
-  return aggregateStatus(
-    states.map(({ state }) => entryStatus(state)),
-    undefined,
-  );
-}
-
-/** Apply the shared comparison rule to a route-level or shown-view status. */
-export function shownComparisonEligible(
-  status: EntryStatus | undefined,
-  kind: "component" | "screen",
-): boolean {
-  return status === "Changed" || (kind === "component" && status === "Removed");
-}
-
-function entryStatus(state: ReviewState): EntryStatus {
-  if (state === "changed") return "Changed";
-  if (state === "added") return "Added";
-  if (state === "removed") return "Removed";
-  return "Unmodified";
-}
-
-function aggregateStatus(
-  statuses: readonly EntryStatus[],
-  fallback: EntryStatus | undefined,
-): EntryStatus | undefined {
-  return (
-    (["Changed", "Added", "Removed", "Unmodified"] as const).find((status) =>
-      statuses.includes(status),
-    ) ?? fallback
-  );
 }

@@ -4,7 +4,7 @@
  * position across navigation; a bare stage holds a state, such as loading.
  */
 
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 
 /** The viewports that a stage shows. */
 export type StageViewport = "both" | "desktop" | "mobile";
@@ -12,6 +12,7 @@ export type StageViewport = "both" | "desktop" | "mobile";
 export function Stage({
   children,
   kind,
+  ref,
   routed = false,
   viewport,
 }: {
@@ -22,6 +23,8 @@ export function Stage({
    * holds a state.
    */
   kind?: "component" | "live" | undefined;
+  /** Receives the stage, whose scroll position the host keeps. */
+  ref?: Ref<HTMLDivElement> | undefined;
   /**
    * Whether it is the routed entry's stage, which a host and its tests find
    * by `data-mokly-stage`.
@@ -40,6 +43,7 @@ export function Stage({
       data-mokly-scroll={kind === undefined ? undefined : "stage"}
       data-mokly-stage={routed ? "" : undefined}
       data-viewport={viewport}
+      ref={ref}
     >
       {children}
     </div>

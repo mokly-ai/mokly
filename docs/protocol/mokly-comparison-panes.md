@@ -135,12 +135,12 @@ expansion is unavailable outside Current.
 
 The comparison reports ready only when every selected pane document has an
 accepted presentation, so a stack never appears with one layer missing; until
-then the stage shows “Loading comparison…” and is busy. A fetch, validation,
-read, parse, or presentation failure renders “The comparison could not be
-loaded.” with Try again, and its details show the
-loader's “The comparison is unavailable.”; an embedded host also receives the
-comparison error. Refresh and Try again fetch the comparison again and present
-its documents anew.
+then the stage shows “Loading comparison…” and is busy. A failed comparison
+request, or a fetch, validation, read, parse, or presentation failure, renders
+“The comparison could not be loaded.” with Try again. Its details show “The
+comparison is unavailable.” for each of these failures. An embedded host also
+receives the comparison error. Refresh and Try again fetch the comparison
+again and present its documents anew.
 
 Presentations are cached per address for one loaded comparison. Mode, viewport
 and scheme switches keep that comparison and its cache, after live delivery

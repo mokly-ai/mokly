@@ -49,6 +49,13 @@ test("an embedded root lays out the shell's parts between its host slots", () =>
   );
 });
 
+test("the embedded root marks a separator drag and an expanded window for the stylesheets", () => {
+  assert.match(
+    renderToString(layout({ frameExpanded: true, resizing: "navigation" })),
+    /^<div class="mbk mokly-viewer mbk-nav-resizing frame-expanded mbk-reset" /u,
+  );
+});
+
 test("each host slot holds the host's own content in its place", () => {
   const start = createRef<HTMLButtonElement>();
   const { container } = render(

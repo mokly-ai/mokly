@@ -6,6 +6,7 @@ import { localFramePath } from "../client/same_origin_adapter.js";
 import type { ComponentRenderSuccess } from "../components/render_types.js";
 
 import type { TemporaryPreviews } from "./data_context.js";
+import { useOptionalShellFrameRegistry } from "./frame_registry.js";
 
 /** Report when a mounted temporary preview has been evicted by Serve. */
 export function useComponentPreviewExpiration({
@@ -19,6 +20,7 @@ export function useComponentPreviewExpiration({
   temporaryPreviews: TemporaryPreviews | undefined;
   workspaceRef: RefObject<HTMLElement | null>;
 }): void {
+  const registry = useOptionalShellFrameRegistry();
   useEffect(() => {
     const root = workspaceRef.current;
     if (!root || !previews.size || !temporaryPreviews) return;
@@ -38,11 +40,16 @@ export function useComponentPreviewExpiration({
         return;
       }
     };
-    const frames = [
-      ...root.querySelectorAll<HTMLIFrameElement>(
-        "iframe[data-workspace-frame]",
-      ),
-    ];
+    const frames =
+      registry
+        ?.values()
+        .filter(
+          (session) =>
+            session.identity.viewport &&
+            session.identity.stepIndex === undefined &&
+            root.contains(session.element),
+        )
+        .map((session) => session.element) ?? [];
     const listeners = frames.map((frame) => {
       const listener = () => void check(frame);
       frame.addEventListener("load", listener);
@@ -53,5 +60,5 @@ export function useComponentPreviewExpiration({
       for (const { frame, listener } of listeners)
         frame.removeEventListener("load", listener);
     };
-  }, [onExpired, previews, temporaryPreviews, workspaceRef]);
+  }, [onExpired, previews, registry, temporaryPreviews, workspaceRef]);
 }

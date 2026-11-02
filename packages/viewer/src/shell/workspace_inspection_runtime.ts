@@ -1,6 +1,6 @@
 /** Asynchronous frame operations behind workspace inspection state. */
 
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 
 import type { FrameEvent } from "../client/frame_adapter.js";
 import type { GeneratedComponentView } from "../components/views.js";
@@ -29,6 +29,8 @@ export interface WorkspaceInspectionContext {
 }
 
 export interface WorkspaceInspectionInput extends WorkspaceInspectionContext {
+  workspaceRef: RefObject<HTMLElement | null>;
+  highlightRef: RefObject<HTMLButtonElement | null>;
   onSelect(
     key: string,
     viewport: "desktop" | "mobile",
@@ -194,14 +196,9 @@ export function receiveWorkspaceFrameEvent(
 }
 
 export function focusWorkspaceHighlightControl(
-  frame: HTMLIFrameElement | undefined,
+  toggle: HTMLButtonElement | null,
 ): void {
-  queueMicrotask(() =>
-    frame
-      ?.closest<HTMLElement>("[data-workspace]")
-      ?.querySelector<HTMLButtonElement>("[data-workspace-highlight]")
-      ?.focus({ preventScroll: true }),
-  );
+  queueMicrotask(() => toggle?.focus({ preventScroll: true }));
 }
 
 function ignoreFrameOperation(

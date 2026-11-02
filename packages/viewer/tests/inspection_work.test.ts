@@ -2,18 +2,19 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { FrameError } from "../src/client/frame_error.js";
-import { viewerFailures } from "../src/viewer/failures.js";
 import {
-  InspectionOwnership,
+  InspectionWork,
   ObsoleteInspection,
-} from "../src/viewer/inspection_work.js";
+} from "../src/client/inspection_work.js";
+import { viewerFailures } from "../src/host/failures.js";
 
 for (const fail of [true, false]) {
   test(`obsolete ${fail ? "failure" : "success"} settles before a custom adapter finishes`, async () => {
-    const owner = new InspectionOwnership(() => true);
+    const cancellation = new AbortController();
+    const work = new InspectionWork(cancellation.signal, () => true);
     let finish!: () => void;
     const failures: unknown[] = [];
-    const pending = owner.work().run(
+    const pending = work.run(
       () =>
         new Promise<void>((resolve, reject) => {
           finish = () =>
@@ -25,9 +26,11 @@ for (const fail of [true, false]) {
       },
     );
     const rejected = assert.rejects(pending, { code: "disposed" });
-    owner.reset();
+    cancellation.abort();
     await rejected;
-    await owner.work().run(async () => "replacement");
+    await new InspectionWork(new AbortController().signal, () => true).run(
+      async () => "replacement",
+    );
     finish();
     await Promise.resolve();
     assert.deepEqual(failures, []);
@@ -35,8 +38,8 @@ for (const fail of [true, false]) {
 }
 
 test("ownership fences errors queued before a replacement and blocks later stages", async () => {
-  const owner = new InspectionOwnership(() => true);
-  const work = owner.work();
+  const cancellation = new AbortController();
+  const work = new InspectionWork(cancellation.signal, () => true);
   let measured = false;
   const pending = work.run(async () => {
     await Promise.resolve();
@@ -44,7 +47,7 @@ test("ownership fences errors queued before a replacement and blocks later stage
     measured = true;
   });
   const rejected = assert.rejects(pending, { code: "disposed" });
-  owner.reset();
+  cancellation.abort();
   await rejected;
   assert.equal(measured, false);
   assert.equal(work.current(), false);
@@ -52,7 +55,7 @@ test("ownership fences errors queued before a replacement and blocks later stage
 
 test("only internal obsolescence suppresses reports; current adapter errors still report once", async () => {
   const errors: unknown[] = [];
-  const owner = new InspectionOwnership(() => true);
+  const work = new InspectionWork(new AbortController().signal, () => true);
   const report = viewerFailures(
     () => ({ onError: (error) => errors.push(error) }),
     () => true,
@@ -61,7 +64,7 @@ test("only internal obsolescence suppresses reports; current adapter errors stil
   assert.equal(report(obsolete, "frame"), obsolete);
   const failure = new FrameError("disposed");
   await assert.rejects(
-    owner.work().run(
+    work.run(
       async () => {
         throw failure;
       },

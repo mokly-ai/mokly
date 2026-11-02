@@ -6,7 +6,7 @@
  * draws a toggle as a native switch with the button's look.
  */
 
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 
 import { ChevronDownIcon } from "../icons/icons.js";
 import type { DataAttribute } from "../segmented-control/segmented-control.js";
@@ -35,6 +35,7 @@ export function IconButton({
   mark,
   onClick,
   pressed,
+  ref,
   title,
 }: {
   /** The glyph, and the change mark of a control that carries one. */
@@ -51,6 +52,8 @@ export function IconButton({
   onClick?: (() => void) | undefined;
   /** The pressed state of a toggle. Without it, the button is no toggle. */
   pressed?: boolean | undefined;
+  /** Receives the button, such as for a host that moves focus to it. */
+  ref?: Ref<HTMLButtonElement> | undefined;
   title: string;
 }) {
   return (
@@ -65,6 +68,7 @@ export function IconButton({
       {...dataMark(mark)}
       disabled={disabled}
       onClick={() => onClick?.()}
+      ref={ref}
     >
       {children}
     </button>

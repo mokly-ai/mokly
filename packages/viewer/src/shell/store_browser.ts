@@ -3,11 +3,10 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
-import { standaloneAppearanceHost } from "../standalone/appearance_host.js";
-
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import type { NavSectionNode } from "./nav_tree.js";
+import { useShellRoot } from "./root_context.js";
 import { routeDocumentKey, routeFromUrl, routeHref } from "./routes.js";
 import {
   shellBrowserActions,
@@ -26,6 +25,8 @@ import type { ShellState } from "./store_state.js";
 import { viewTitle } from "./view_title.js";
 
 interface BrowserStoreInput {
+  onAppearanceRoute?:
+    ((scheme: "dark" | "light" | undefined) => void) | undefined;
   catalogue: Catalogue;
   context: ShellContext;
   interactive: boolean;
@@ -38,6 +39,7 @@ export type { ShellBrowserActions } from "./store_browser_actions.js";
 
 /** Bind one store to standalone history, focus and scroll. */
 export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
+  const elements = useShellRoot()?.elements;
   const stateRef = useRef(input.state);
   stateRef.current = input.state;
   // The catalogue changes in place when details arrive or a publication is
@@ -63,7 +65,7 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       const { catalogue, sections, setState } = latest.current;
       const route = activated ?? routeFromUrl(catalogue, url);
       if (push) {
-        persistScroll(win, captureScrolls(document));
+        persistScroll(win, captureScrolls(elements?.scrolls));
         win.history.pushState({ scrolls: {} }, "", url);
       } else if (win.location.href !== url.href) {
         win.history.replaceState(win.history.state, "", url);
@@ -73,10 +75,10 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
         pendingScroll.current = scrolls;
         pendingFocus.current = true;
       }
-      standaloneAppearanceHost(win)?.applyRoute(route.colorScheme);
+      latest.current.onAppearanceRoute?.(route.colorScheme);
       setState((state) => withRoute(state, route, catalogue, sections));
     },
-    [],
+    [elements],
   );
 
   const transition = useCallback(
@@ -117,7 +119,7 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
           );
         } else if (push && win.location.href !== requested.href)
           win.location.assign(requested.href);
-        else if (!push) restoreScrolls(document, scrolls);
+        else if (!push) restoreScrolls(elements?.scrolls, scrolls);
         if (sequence.current === controller) sequence.current = undefined;
         return;
       }
@@ -150,8 +152,8 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       initialRoute = routeFromUrl(catalogue, initialUrl);
     }
     installedDocumentKey.current = routeDocumentKey(initialUrl);
-    persistScroll(win, captureScrolls(document));
-    restoreScrolls(document, stateRef.current.regionScrolls);
+    persistScroll(win, captureScrolls(elements?.scrolls));
+    restoreScrolls(elements?.scrolls, stateRef.current.regionScrolls);
     if (!sameShellRoute(stateRef.current.route, initialRoute))
       install(initialUrl, false, {}, false);
     const controller = new AbortController();
@@ -160,7 +162,7 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       "scroll",
       () => {
         if (scrollFrame) return;
-        const scrolls = captureScrolls(document);
+        const scrolls = captureScrolls(elements?.scrolls);
         persistScroll(win, scrolls);
         latest.current.setState((state) => ({
           ...state,
@@ -186,26 +188,25 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       sequence.current?.abort();
       if (scrollFrame) win.cancelAnimationFrame(scrollFrame);
     };
-  }, [input.interactive, install, navigateHistory]);
+  }, [elements, input.interactive, install, navigateHistory]);
 
   useLayoutEffect(() => {
     if (!input.interactive) return;
     document.title = viewTitle(input.catalogue, input.state.route.view);
     const scrolls = pendingScroll.current;
     if (scrolls) {
-      restoreScrolls(document, scrolls);
+      restoreScrolls(elements?.scrolls, scrolls);
       pendingScroll.current = undefined;
-      requestAnimationFrame(() => restoreScrolls(document, scrolls));
+      requestAnimationFrame(() => restoreScrolls(elements?.scrolls, scrolls));
     }
     if (pendingFocus.current) {
       pendingFocus.current = false;
-      document
-        .querySelector<HTMLElement>("[data-mokly-view]")
-        ?.focus({ preventScroll: true });
+      elements?.main.current?.focus({ preventScroll: true });
     }
-  }, [input.catalogue, input.interactive, input.state.route]);
+  }, [elements, input.catalogue, input.interactive, input.state.route]);
 
   return shellBrowserActions({
+    elements,
     catalogue: input.catalogue,
     context: input.context,
     navigate,

@@ -1,12 +1,10 @@
 /** Changes-filter navigation shared by standalone and embedded shells. */
 
-import type { ViewerSelection } from "../viewer/types.js";
+import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
+import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
+import type { ViewerSelection } from "../host/types.js";
 
-import {
-  catalogueSelectionEntry,
-  type Catalogue,
-  type CatalogueManifestEntry,
-} from "./catalogue.js";
+import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { catalogueNavSections, navLeafVisible } from "./nav_model.js";
 import type { NavLeafNode, NavNode } from "./nav_tree.js";
@@ -16,7 +14,7 @@ import { workspaceEvidenceEntry } from "./workspace_entry.js";
 import { selectedChangedViews } from "./workspace_views_data.js";
 
 interface ChangedDestination {
-  entry: CatalogueManifestEntry;
+  entry: ShellCatalogueRoutedEntry;
   snapshotId?: string;
 }
 
@@ -81,11 +79,11 @@ function selectionHasChangedRoute(
   selection: ViewerSelection,
 ): boolean {
   const current = selection.screenPath
-    ? catalogueSelectionEntry(
-        catalogue,
+    ? resolveCatalogueSelection(
+        catalogue.publicModel,
         selection.screenPath,
         selection.snapshotId,
-      )
+      )?.entry
     : undefined;
   return current !== undefined
     ? context.changedEntries?.includes(current.path) === true
@@ -102,7 +100,7 @@ function firstVisibleChangedEntry(
   catalogue: Catalogue,
   context: ShellContext,
   selection: ViewerSelection,
-  container: CatalogueManifestEntry,
+  container: ShellCatalogueRoutedEntry,
 ): ChangedDestination | undefined {
   const row = containerRow(
     catalogueNavSections(catalogue).flatMap(({ children }) => children),
@@ -110,11 +108,11 @@ function firstVisibleChangedEntry(
   );
   for (const listed of row ? listedRows(row) : []) {
     if (!navLeafVisible(listed, selection, context)) continue;
-    const entry = catalogueSelectionEntry(
-      catalogue,
+    const entry = resolveCatalogueSelection(
+      catalogue.publicModel,
       listed.entryId,
       listed.snapshotId,
-    );
+    )?.entry;
     if (entry)
       return {
         entry,

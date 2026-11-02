@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 
-import { DeploymentChangedError } from "../viewer/sources.js";
+import { DeploymentChangedError } from "../catalogue/sources.js";
 
 import { useComparisonEnvironment } from "./comparison_context.js";
 import { useComparisonIntent } from "./comparison_intent.js";
+import { useComparisonModeState } from "./comparison_mode.js";
 import {
   comparisonDemand,
   type ComparisonDemand,
@@ -13,6 +14,7 @@ import {
   type ComparisonPresentation,
 } from "./comparison_presentation.js";
 import {
+  COMPARISON_UNAVAILABLE,
   renewComparison,
   requestComparison,
   type ComparisonScope,
@@ -87,13 +89,7 @@ export function useComparison({
   );
   const scopeKey = useMemo(() => JSON.stringify(scope), [scope]);
   const ownerKey = `${owner ?? entryId}\u0000${evidenceKey}`;
-  const [modeState, setModeState] = useReducer(
-    (
-      _current: { mode: ComparisonMode; ownerKey: string },
-      next: { mode: ComparisonMode; ownerKey: string },
-    ) => next,
-    { mode: "current", ownerKey },
-  );
+  const [modeState, setModeState] = useComparisonModeState(ownerKey);
   const mode = modeState.ownerKey === ownerKey ? modeState.mode : "current";
   const [loadedState, setLoadedState] = useReducer(
     (_current: LoadedState | undefined, next: LoadedState | undefined) => next,
@@ -199,11 +195,7 @@ export function useComparison({
           if (!latest || latest.scopeKey !== operation.scopeKey) return;
           const nextFailure = {
             key: latest.key,
-            message: environment.reportError
-              ? "Comparison unavailable"
-              : error instanceof Error
-                ? error.message
-                : "Comparison unavailable",
+            message: COMPARISON_UNAVAILABLE,
           };
           loadedRef.current = undefined;
           failureRef.current = nextFailure;

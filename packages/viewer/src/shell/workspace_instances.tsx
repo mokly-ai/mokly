@@ -14,7 +14,7 @@ import {
 import type {
   ComponentInstanceRecord,
   ComponentViewRecord,
-} from "../components/manifest_types.js";
+} from "../components/view_types.js";
 import { orderedInstances } from "../components/views.js";
 import type { GeneratedComponentView } from "../components/views.js";
 

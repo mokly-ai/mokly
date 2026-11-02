@@ -1,20 +1,76 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { readPreviewDescriptor } from "../src/previews/descriptor.js";
+import { DeliveryFetchError } from "../src/catalogue/sources.js";
 import { previewEndpoint, requestPreview } from "../src/previews/request.js";
+import { removedPreviewData } from "../src/shell/previews.js";
 
-import { indexFixture, rawDetailFixtures } from "./catalogue_v9_fixture.js";
+import {
+  catalogueFixture,
+  indexFixture,
+  rawDetailFixtures,
+} from "./catalogue_v9_fixture.js";
+
+test("removed preview metadata rejects a response from another origin", async () => {
+  const data = {
+    path: "guide",
+    kind: "document" as const,
+    title: "Guide",
+    colorSchemes: ["light"] as const,
+    published: { kind: "document" as const },
+  };
+  const request = previewEndpoint(
+    data,
+    { comparisonUrl: "mokly-viewer/diffs/generations/preview/" },
+    "https://example.test",
+  );
+  assert.ok(request);
+  await assert.rejects(
+    requestPreview(
+      data,
+      request,
+      {
+        fetch: async () => {
+          const response = Response.json({
+            schemaVersion: 3,
+            path: "guide",
+            baseCommit: "b".repeat(40),
+            baseRef: "main",
+          });
+          Object.defineProperty(response, "url", {
+            value: "https://elsewhere.test/preview.json",
+          });
+          return response;
+        },
+      },
+      new AbortController().signal,
+    ),
+    DeliveryFetchError,
+  );
+});
 
 test("removed document descriptors and requests retain historical schemes", async () => {
-  const data = readPreviewDescriptor(
-    JSON.stringify({
-      path: "guide",
-      kind: "document",
-      title: "Guide",
-      colorSchemes: ["light", "dark"],
-      published: { kind: "document" },
-    }),
+  const index = indexFixture();
+  const catalogue = catalogueFixture({
+    ...index,
+    removedEntries: [
+      {
+        entry: {
+          ...index.documents[0]!,
+          path: "guide",
+          title: "Guide",
+          colorSchemes: ["light", "dark"],
+          changes: { included: true, kind: "removed", status: "ready" },
+        },
+        folderTitles: [],
+        preview: { kind: "document" },
+      },
+    ],
+  });
+  const data = removedPreviewData(
+    catalogue,
+    { base: "main" },
+    catalogue.removedEntries[0]!.entry,
   );
   assert.ok(data);
   const comparisonUrl = `mokly-viewer/diffs/generations/${"a".repeat(64)}/`;
@@ -75,20 +131,9 @@ test("removed document descriptors and requests retain historical schemes", asyn
     previewEndpoint(data, { comparisonUrl: null }, "https://example.test"),
     undefined,
   );
-  for (const colorSchemes of [
-    undefined,
-    [],
-    ["dark"],
-    ["light", "other"],
-    ["light", "light"],
-  ])
-    assert.equal(
-      readPreviewDescriptor(JSON.stringify({ ...data, colorSchemes })),
-      undefined,
-    );
 });
 
-test("a removed screen's preview reads its removed detail inside the generation", async () => {
+test("a removed screen's preview uses its held detail without another read", async () => {
   const fixtures = rawDetailFixtures();
   const [snapshotId, detail] = Object.entries(fixtures.removed).find(
     ([, candidate]) => candidate.entry.kind === "screen",
@@ -114,18 +159,20 @@ test("a removed screen's preview reads its removed detail inside the generation"
     `https://example.test/${root}entries/${path}.json`,
   );
   assert.equal(request.generation.href, `https://example.test/${root}`);
-  const fetch = async (payload: unknown) => {
-    const response = Response.json(payload);
-    Object.defineProperty(response, "url", { value: request.endpoint.href });
-    return response;
+  const environment = {
+    fetch: async () => {
+      throw new Error("The screen detail is already held");
+    },
   };
   const loaded = await requestPreview(
     data,
     request,
-    { fetch: () => fetch(detail) },
+    environment,
     new AbortController().signal,
+    detail,
   );
   assert.ok(loaded.content.kind === "screen");
+  assert.equal(loaded.url, request.endpoint.href);
   assert.deepEqual(
     loaded.content.views.map((view) => new URL(view.url).pathname),
     detail.views.map(
@@ -137,8 +184,9 @@ test("a removed screen's preview reads its removed detail inside the generation"
     requestPreview(
       { ...data, snapshotId: "c".repeat(64) },
       request,
-      { fetch: () => fetch(detail) },
+      environment,
       new AbortController().signal,
+      detail,
     ),
     /The previous version is unavailable/,
   );

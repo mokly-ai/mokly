@@ -1,8 +1,11 @@
 /**
  * The catalogue tree: sections and folders as native `<details>`, and entry
  * rows with the list that their toggle discloses. The host builds the tree
- * as plain records and receives each disclosure choice through a callback.
+ * as plain records and receives each disclosure choice through a callback,
+ * and the elements that it moves focus or scroll to through refs.
  */
+
+import type { Ref } from "react";
 
 import { ChevronIcon, FolderIcon, FolderOpenIcon } from "../icons/icons.js";
 
@@ -30,13 +33,31 @@ export type {
   NavigationSection,
 } from "./tree-records.js";
 
+/** The elements of the tree that a host moves focus or scroll to. */
+export interface NavigationTargets {
+  /**
+   * Receives the link of the current page's row, such as for a host that
+   * scrolls it into view after a navigation.
+   */
+  currentRowRef?: Ref<HTMLAnchorElement> | undefined;
+  /**
+   * Names the summary of each section and folder by its disclosure key, such
+   * as for a host that focuses a folder that it reveals. Keep the ref of each
+   * key the same across renders.
+   */
+  summaryRef?:
+    ((disclosure: string) => Ref<HTMLElement> | undefined) | undefined;
+}
+
 /** An authored folder row and the rows that it holds. */
 function Folder({
   actions,
   folder,
+  targets,
 }: {
   actions: DisclosureActions;
   folder: NavigationFolder;
+  targets: NavigationTargets;
 }) {
   const handlers = disclosureHandlers(actions, folder);
   return (
@@ -52,6 +73,7 @@ function Folder({
       <summary
         className="mbk-nav-row mbk-reset"
         onClick={handlers.onSummaryClick}
+        ref={targets.summaryRef?.(folder.disclosure)}
         style={rowStyle(folder.depth)}
       >
         <span className="mbk-nav-ico folder mbk-reset">
@@ -63,7 +85,7 @@ function Folder({
           <span className="mbk-nav-count mbk-reset">{folder.count}</span>
         ) : null}
       </summary>
-      <Rows actions={actions} rows={folder.rows} />
+      <Rows actions={actions} rows={folder.rows} targets={targets} />
     </details>
   );
 }
@@ -77,17 +99,23 @@ function Folder({
 function Leaf({
   actions,
   leaf,
+  targets,
 }: {
   actions: DisclosureActions;
   leaf: NavigationLeaf;
+  targets: NavigationTargets;
 }) {
   const list = leaf.list;
-  if (list === undefined) return <RowLink link={leaf.link} variant={false} />;
+  const { currentRowRef } = targets;
+  if (list === undefined)
+    return (
+      <RowLink currentRef={currentRowRef} link={leaf.link} variant={false} />
+    );
   const noun = list.rows.length > 0 ? "contents" : "variants";
   return (
     <>
       <div className="mbk-nav-leaf mbk-reset" hidden={list.hidden}>
-        <RowLink link={leaf.link} variant={false} />
+        <RowLink currentRef={currentRowRef} link={leaf.link} variant={false} />
         <button
           aria-controls={list.id}
           aria-expanded={list.open ? "true" : "false"}
@@ -111,9 +139,14 @@ function Leaf({
         id={list.id}
       >
         {list.variants.map((variant) => (
-          <RowLink key={variant.key} link={variant} variant />
+          <RowLink
+            currentRef={currentRowRef}
+            key={variant.key}
+            link={variant}
+            variant
+          />
         ))}
-        <Rows actions={actions} rows={list.rows} />
+        <Rows actions={actions} rows={list.rows} targets={targets} />
       </div>
     </>
   );
@@ -123,17 +156,29 @@ function Leaf({
 function Rows({
   actions,
   rows,
+  targets,
 }: {
   actions: DisclosureActions;
   rows: readonly NavigationRow[];
+  targets: NavigationTargets;
 }) {
   return (
     <>
       {rows.map((row) =>
         row.kind === "folder" ? (
-          <Folder actions={actions} folder={row} key={row.key} />
+          <Folder
+            actions={actions}
+            folder={row}
+            key={row.key}
+            targets={targets}
+          />
         ) : (
-          <Leaf actions={actions} key={row.link.key} leaf={row} />
+          <Leaf
+            actions={actions}
+            key={row.link.key}
+            leaf={row}
+            targets={targets}
+          />
         ),
       )}
     </>
@@ -144,9 +189,11 @@ function Rows({
 function Section({
   actions,
   section,
+  targets,
 }: {
   actions: DisclosureActions;
   section: NavigationSection;
+  targets: NavigationTargets;
 }) {
   const handlers = disclosureHandlers(actions, section);
   return (
@@ -162,13 +209,14 @@ function Section({
       <summary
         className="mbk-nav-section-head mbk-reset"
         onClick={handlers.onSummaryClick}
+        ref={targets.summaryRef?.(section.disclosure)}
       >
         <span aria-hidden="true" className="mbk-nav-section-chevron mbk-reset">
           <ChevronIcon />
         </span>
         {section.label}
       </summary>
-      <Rows actions={actions} rows={section.rows} />
+      <Rows actions={actions} rows={section.rows} targets={targets} />
     </details>
   );
 }
@@ -179,10 +227,12 @@ function Section({
  * `<details>` keeps its native toggle. An entry's toggle always reports.
  */
 export function CatalogueTree({
+  currentRowRef,
   interactive,
   onDisclosure,
   sections,
-}: {
+  summaryRef,
+}: NavigationTargets & {
   interactive: boolean;
   /**
    * Receives a disclosure key and the open state that the reader chose for a
@@ -192,10 +242,16 @@ export function CatalogueTree({
   sections: readonly NavigationSection[];
 }) {
   const actions = { interactive, onDisclosure };
+  const targets = { currentRowRef, summaryRef };
   return (
     <>
       {sections.map((section) => (
-        <Section actions={actions} key={section.disclosure} section={section} />
+        <Section
+          actions={actions}
+          key={section.disclosure}
+          section={section}
+          targets={targets}
+        />
       ))}
     </>
   );

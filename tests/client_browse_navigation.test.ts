@@ -15,11 +15,11 @@ import type {
   NavSectionNode,
 } from "../packages/viewer/dist/shell/nav_tree.js";
 import { parseSearchQuery } from "../packages/viewer/dist/shell/search_query.js";
-import { openDisclosures } from "../packages/viewer/dist/shell/store_state.js";
 import {
   defaultSelection,
   revealSelection,
-} from "../packages/viewer/dist/viewer/selection.js";
+} from "../packages/viewer/dist/shell/selection.js";
+import { openDisclosures } from "../packages/viewer/dist/shell/store_state.js";
 
 import {
   catalogueModel,

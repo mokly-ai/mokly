@@ -5,6 +5,7 @@ import { keepsComponentRecord, viewAxesKey } from "../review/shared_impact.js";
 import type { ComparedEntry, ReviewView } from "../review/types.js";
 
 import type { LoadedComparison } from "./comparison_request.js";
+import { schemeValue } from "./scheme_fallback.js";
 import type { ComparisonPresentation } from "./use_comparison.js";
 import { isStyleOnlyView } from "./workspace_style_evidence.js";
 
@@ -58,16 +59,17 @@ export function selectedComparisonViews(
   return (["mobile", "desktop"] as const).flatMap((viewport) => {
     if (presentation.viewport !== "both" && presentation.viewport !== viewport)
       return [];
-    const view =
-      entry.views.find(
-        (candidate) =>
-          candidate.viewport === viewport &&
-          candidate.colorScheme === presentation.colorScheme,
-      ) ??
+    const view = schemeValue(
+      presentation.colorScheme,
       entry.views.find(
         (candidate) =>
           candidate.viewport === viewport && candidate.colorScheme === "light",
-      );
+      ),
+      entry.views.find(
+        (candidate) =>
+          candidate.viewport === viewport && candidate.colorScheme === "dark",
+      ),
+    );
     if (!view) return [];
     const before = view.state !== "added";
     const after = view.state !== "removed";

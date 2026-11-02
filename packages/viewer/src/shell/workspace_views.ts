@@ -4,6 +4,7 @@ import type { GeneratedComponentView } from "../components/views.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 import { viewAxesKey, viewsUsingComponents } from "../review/shared_impact.js";
 
+import { schemeValue } from "./scheme_fallback.js";
 import {
   resolveViewPresentation,
   type EntryStatus,
@@ -40,14 +41,15 @@ export function resolveWorkspaceViews(
   const views = (["mobile", "desktop"] as const)
     .filter((size) => viewport === "both" || viewport === size)
     .flatMap((size) => {
-      const view =
-        variants.find(
-          (item) =>
-            item.viewport === size && item.colorScheme === requestedScheme,
-        ) ??
+      const view = schemeValue(
+        requestedScheme,
         variants.find(
           (item) => item.viewport === size && item.colorScheme === "light",
-        );
+        ),
+        variants.find(
+          (item) => item.viewport === size && item.colorScheme === "dark",
+        ),
+      );
       return view ? [view] : [];
     });
   return {
@@ -99,7 +101,6 @@ export function resolveWorkspaceView(
     displayedViews: resolved.views,
     fallbackComparisonEligible: selection.comparisonEligible,
     fallbackStatus: selection.variant?.status ?? data.status,
-    kind: data.entry.kind,
     states,
   });
   // The routed entry's detail decides; a parent route selects its own row.
@@ -133,7 +134,7 @@ function affectedViewShown(
         (state) =>
           state.viewport === view.viewport &&
           state.colorScheme === view.colorScheme &&
-          (state.state === "unchanged" || state.state === "ignored-only"),
+          state.comparison.kind === "unmodified",
       ) === true,
   );
 }

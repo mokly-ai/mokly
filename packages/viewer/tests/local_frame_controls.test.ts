@@ -1,12 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  localInspection,
-  replaceLocalFrame,
-} from "../src/client/same_origin_adapter.js";
+import { authenticateRanges } from "../src/client/component_geometry.js";
+import { localFrameAccess } from "../src/client/same_origin_access.js";
 import { installLocalHighlight } from "../src/client/same_origin_highlight.js";
-import type { ComponentViewRecord } from "../src/components/manifest_types.js";
+import type { ComponentViewRecord } from "../src/components/view_types.js";
 
 test("local inspection stays unavailable when the immediate document cannot authenticate", () => {
   const frame = { contentDocument: null } as unknown as HTMLIFrameElement;
@@ -20,7 +18,7 @@ test("local inspection stays unavailable when the immediate document cannot auth
     resources: [],
   } as ComponentViewRecord;
   assert.equal(
-    localInspection(frame, "screen/index.desktop.html", usage),
+    authenticateRanges(frame, "screen/index.desktop.html", usage),
     undefined,
   );
 });
@@ -33,7 +31,7 @@ test("replacing a local frame preserves the exact query and fragment", () => {
     },
   } as unknown as HTMLIFrameElement;
   const url = new URL("https://app.test/static/screen.html?revision=2#summary");
-  replaceLocalFrame(frame, url);
+  localFrameAccess(frame).replace(url);
   assert.deepEqual(replacements, [url.href]);
 });
 

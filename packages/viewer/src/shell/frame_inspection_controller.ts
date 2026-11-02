@@ -1,8 +1,8 @@
 /** One cancellable inspection owner shared by a React shell root. */
 
 import { FrameError } from "../client/frame_error.js";
-import { InspectionWork } from "../viewer/inspection_work.js";
-import type { InstanceRef } from "../viewer/types.js";
+import { InspectionWork } from "../client/inspection_work.js";
+import type { InstanceRef } from "../host/types.js";
 
 import type {
   ShellHighlightActivation,

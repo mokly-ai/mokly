@@ -52,8 +52,8 @@ for (const width of [390, 1280]) {
         "data-mokly-preview-source",
         documentUrl,
       );
-      // A page's preview reads its metadata; a screen's preview reads the
-      // removed detail that Details also reads.
+      // A page's preview reads its metadata; a screen's preview uses the
+      // removed detail that the route reads once for Details too.
       const detailUrl = `${generation}entries/${entryPath}.json`;
       if (metadata === "page")
         expect(
@@ -61,9 +61,7 @@ for (const width of [390, 1280]) {
             (url) => url === `${generation}previews/${entryPath}/index.json`,
           ),
         ).toHaveLength(1);
-      expect(traffic.urls.filter((url) => url === detailUrl)).toHaveLength(
-        metadata === "page" ? 1 : 2,
-      );
+      expect(traffic.urls.filter((url) => url === detailUrl)).toHaveLength(1);
       expect(traffic.urls.filter((url) => url === documentUrl)).toHaveLength(1);
       expect(
         traffic.urls.filter((url) => url.includes("/snapshots/after/")),

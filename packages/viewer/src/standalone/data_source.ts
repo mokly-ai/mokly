@@ -6,15 +6,15 @@ import {
   removedEntryDetailPath,
 } from "../catalogue/delivery_paths.js";
 import { readCatalogueIndex } from "../catalogue/index_reader.js";
-import type { CatalogueReadModel } from "../catalogue/types.js";
-import type { ShellDataSource } from "../shell/data_source.js";
 import {
   DeliveryFetchError,
   loadDeploymentFile,
   fetchJson,
   loadDetailResult,
   type JsonFetch,
-} from "../viewer/sources.js";
+} from "../catalogue/sources.js";
+import type { CatalogueReadModel } from "../catalogue/types.js";
+import type { ShellDataSource } from "../shell/data_source.js";
 
 import { standaloneLiveSource } from "./live_source.js";
 

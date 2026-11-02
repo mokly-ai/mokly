@@ -10,6 +10,7 @@ import type { NavLeafNode, NavNode } from "../src/shell/nav_tree.js";
 
 import {
   publishedCatalogue,
+  publishedComponent,
   publishedDocument,
   publishedPage,
   publishedScreen,
@@ -68,4 +69,36 @@ test("removed documents are Changes-only rows, like removed pages", () => {
   assert.equal(found.get("removed:guide/terms")?.entryKind, "document");
   assert.equal(found.get("removed:guide/terms")?.label, "Terms · Removed");
   assert.equal(visible("removed:guide/farewell", "all"), true);
+});
+
+test("flat removed rows keep a parent's variant before the next sibling", () => {
+  const component = (path: string, title: string, variantOf?: string) => {
+    const record = publishedComponent(path, title, "removed");
+    return removedEntry(
+      {
+        ...record,
+        ...(variantOf ? { variantOf } : {}),
+        views: record.views.map((view) => ({
+          ...view,
+          comparison: record.comparison,
+        })),
+      },
+      ["A"],
+      variantOf ? "Parent" : undefined,
+    );
+  };
+  const catalogue = publishedCatalogue({
+    removedEntries: [
+      component("a/b", "Parent"),
+      component("a/b/c", "Variant", "a/b"),
+      component("a/b-x", "Sibling"),
+    ],
+    tree: [],
+  });
+  assert.deepEqual(
+    catalogueNavSections(catalogue)[0]?.children.map((node) =>
+      node.kind === "leaf" ? node.entryId : node.key,
+    ),
+    ["a/b", "a/b/c", "a/b-x"],
+  );
 });

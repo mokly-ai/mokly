@@ -4,12 +4,22 @@
  * screen's preview.
  */
 
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 
 /** The stage of a user flow: its steps in one column, which keeps its scroll. */
-export function FlowStage({ children }: { children?: ReactNode }) {
+export function FlowStage({
+  children,
+  ref,
+}: {
+  children?: ReactNode;
+  /**
+   * Receives the column, against which the host measures the frames of the
+   * steps, and whose scroll position it keeps.
+   */
+  ref?: Ref<HTMLDivElement> | undefined;
+}) {
   return (
-    <div className="mbk-flow mbk-reset" data-mokly-scroll="flow">
+    <div className="mbk-flow mbk-reset" data-mokly-scroll="flow" ref={ref}>
       <div className="flow-track mbk-reset">{children}</div>
     </div>
   );

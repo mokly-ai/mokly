@@ -232,6 +232,15 @@ test("the handle names the inspector and closes it with the same focus return", 
   assertSameElement(document.activeElement, tabButton("Usage"));
 });
 
+test("the handle moves focus to the tab that the host names, and opens nothing", () => {
+  const reports: Report[] = [];
+  const handle = createRef<InspectorHandle>();
+  render(<Host handle={handle} reports={reports} />);
+  handle.current?.focusTab("props");
+  assertSameElement(document.activeElement, tabButton("Props"));
+  assert.deepEqual(reports, []);
+});
+
 test("the arrow keys step and wrap between the tabs, and Home and End choose the ends", () => {
   render(<Host reports={[]} />);
   tabButton("Details").focus();

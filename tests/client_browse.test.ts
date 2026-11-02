@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { ShellCatalogueReadModel } from "../packages/viewer/dist/catalogue/scoped_types.js";
+import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { routeFromUrl } from "../packages/viewer/dist/shell/routes.js";
 import { eligibleShellAnchor } from "../packages/viewer/dist/shell/store_browser_routes.js";
-import { viewerCatalogue } from "../packages/viewer/dist/viewer/projection.js";
 
 import {
   catalogueModel,
@@ -12,7 +12,7 @@ import {
 } from "./helpers/viewer_catalogue.js";
 
 test("shell route resolution accepts catalogue routes and rejects other paths", () => {
-  const catalogue = viewerCatalogue(catalogueModel());
+  const catalogue = createCatalogue(catalogueModel());
   for (const path of [
     "/",
     "/view/product/browse/home/",

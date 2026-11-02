@@ -12,21 +12,21 @@ import type {
   CatalogueReadModel,
   EntryDetailV4,
 } from "../src/catalogue/types.js";
-import { EmbeddedViewerShell } from "../src/shell/embedded_viewer.js";
-import { ShellStoreProvider } from "../src/shell/store.js";
-import { viewRoute } from "../src/shell/store_initial.js";
-import { MoklyViewer } from "../src/viewer/component.js";
-import { viewerShellEnvironment } from "../src/viewer/environment.js";
-import { viewerView } from "../src/viewer/projection.js";
-import {
-  defaultSelection,
-  normalizeSelection,
-} from "../src/viewer/selection.js";
 import type {
   ViewerSelection,
   ViewerSlots,
   ViewerTheme,
-} from "../src/viewer/types.js";
+} from "../src/host/types.js";
+import { EmbeddedViewerShell } from "../src/shell/embedded_viewer.js";
+import {
+  defaultSelection,
+  normalizeSelection,
+} from "../src/shell/selection.js";
+import { ShellStoreProvider } from "../src/shell/store.js";
+import { hostRoute } from "../src/shell/store_host_routes.js";
+import { viewRoute } from "../src/shell/store_initial.js";
+import { MoklyViewer } from "../src/viewer/component.js";
+import { viewerShellEnvironment } from "../src/viewer/environment.js";
 
 import {
   detailFixture,
@@ -117,7 +117,7 @@ export function heldEmbeddedMarkup(
       route={(catalogue) =>
         viewRoute(
           catalogue,
-          viewerView(catalogue, selection),
+          hostRoute(catalogue, selection).view,
           selection.snapshotId,
         )
       }

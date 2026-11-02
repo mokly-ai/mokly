@@ -6,6 +6,8 @@
 import { useLayoutEffect, useRef } from "react";
 import type { CSSProperties, ReactNode, Ref } from "react";
 
+import { useMergedRef } from "../merged-ref/merged-ref.js";
+
 /** The slots of an embedded root that hold host content in the layout. */
 export type HostSlotName =
   | "emptyState"
@@ -54,11 +56,15 @@ const STAGE_SELECTOR = "[data-workspace-preview], .mbk-flow, .mbk-stage-embed";
  * resizes.
  */
 export function StageOverlay({
+  ref,
   value,
 }: {
+  /** Receives the slot's container. */
+  ref?: Ref<HTMLDivElement> | undefined;
   value?: StageOverlayContent | undefined;
 }) {
   const overlay = useRef<HTMLDivElement>(null);
+  const slot = useMergedRef(overlay, ref);
   useLayoutEffect(() => {
     const element = overlay.current;
     const host = element?.parentElement;
@@ -92,7 +98,7 @@ export function StageOverlay({
     <HostSlot
       hidden
       name="stageOverlay"
-      ref={overlay}
+      ref={slot}
       style={{ pointerEvents: value?.pointerEvents ?? "none" }}
     >
       {value?.content}

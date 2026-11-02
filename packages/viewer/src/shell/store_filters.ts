@@ -1,16 +1,16 @@
 /** Atomic filtering and active-route disclosure transitions. */
 
+import type { ViewerSelection } from "../host/types.js";
 import { folderTitleLookup } from "../registry/folder_titles.js";
-import { revealSelection, selectionQuery } from "../viewer/selection.js";
-import type { ViewerSelection } from "../viewer/types.js";
 
 import type { Catalogue } from "./catalogue.js";
-import { disclosurePath, navigationFiltering } from "./nav_model.js";
+import { navigationFiltering } from "./nav_model.js";
 import type { NavSectionNode } from "./nav_tree.js";
 import type { ShellRoute } from "./routes.js";
 import { routeScreenId } from "./routes.js";
-import { openDisclosures, type ShellState } from "./store_state.js";
-import { viewTitle } from "./view_title.js";
+import { revealSelection, sameQuery, selectionQuery } from "./selection.js";
+import { installShellRoute } from "./store_routes.js";
+import type { ShellState } from "./store_state.js";
 
 /** Reveal matching groups only when the selection's filters actually change. */
 export function withFilterSelection(
@@ -39,28 +39,13 @@ export function withRoute(
     folderTitleLookup(catalogue.hierarchy),
     selection,
   );
-  let next = withSelection(state, selection, false);
-  if (route.view.kind === "target") {
-    const path = disclosurePath(sections, route.view.target.entry.path);
-    next = {
-      ...next,
-      disclosures: openDisclosures(next.disclosures, path),
-      filterBaseline: next.filterBaseline
-        ? openDisclosures(next.filterBaseline, path)
-        : undefined,
-    };
-  }
-  return {
-    ...next,
-    announcement: `Loaded ${viewTitle(catalogue, route.view)}`,
-    comparisonIntent: route.comparison === "side",
-    drawerOpen: false,
-    expandedFrame: undefined,
+  return installShellRoute(
+    withSelection(state, selection, false),
     route,
-    routeInstallation: state.routeInstallation + 1,
-    selection,
-    tagPickerOpen: false,
-  };
+    catalogue,
+    sections,
+    "standalone",
+  );
 }
 
 function withSelection(
@@ -91,12 +76,4 @@ function withSelection(
     query,
     selection,
   };
-}
-
-function sameQuery(left: ViewerSelection, right: ViewerSelection): boolean {
-  return (
-    left.search === right.search &&
-    left.tags.length === right.tags.length &&
-    left.tags.every((tag, index) => tag === right.tags[index])
-  );
 }

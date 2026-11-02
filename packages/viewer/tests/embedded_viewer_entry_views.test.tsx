@@ -8,10 +8,10 @@ import type {
   CatalogueReadModel,
   EntryDetailV4,
 } from "../src/catalogue/types.js";
+import { createCatalogue } from "../src/shell/catalogue.js";
 import { routeDetailRequests } from "../src/shell/data_requests.js";
 import { routeFromUrl } from "../src/shell/routes.js";
 import { embeddedDataSource } from "../src/viewer/index_source.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
 
 import {
   detailPairs,
@@ -111,7 +111,7 @@ test("the embedded viewer requests a variant parent and shows its usage", async 
   const route = routeFromUrl(
     // The route resolver needs the same validated index that the source holds.
     // Its details are not needed to resolve a current selection.
-    viewerCatalogue(shellCatalogueModel(index, new Map())),
+    createCatalogue(shellCatalogueModel(index, new Map())),
     new URL("/view/components/action/default/", "https://catalogue.example"),
   );
   const requests = routeDetailRequests(index, route);

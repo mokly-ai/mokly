@@ -1,14 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { registerFrameSession } from "../packages/viewer/dist/client/frame_session.js";
 import { recordedFrameResource } from "../packages/viewer/dist/client/same_origin_access.js";
-import { localFrameReady } from "../packages/viewer/dist/client/same_origin_adapter.js";
 import {
   assignedFrameResource,
   createMountAuthentication,
   normalizedHtmlPath,
   sameFrameResource,
 } from "../packages/viewer/dist/client/same_origin_identity.js";
+import { initialFrameLoad } from "../packages/viewer/dist/client/same_origin_load.js";
 
 test("resource identity retains origin, path and query while excluding hash", () => {
   const expected = new URL(
@@ -55,11 +56,12 @@ for (const suffix of ["/index.html", "/", ""]) {
     );
     const fixture = fakeFrame();
     fixture.attributes.set("src", pathname);
-    Object.assign(fixture.frame, {
-      dataset: { fragmentLight: expected.href },
-      contentDocument: { readyState: "complete" },
-      contentWindow: { location: { pathname } },
+    registerFrameSession(fixture.frame, {
+      identity: {},
+      sources: [expected.href],
     });
+    const current = fakeDocument(fixture.frame, `https://app.test${pathname}`);
+    Object.assign(current, { readyState: "complete" });
     assert.equal(
       sameFrameResource(`https://app.test${pathname}`, expected),
       true,
@@ -69,7 +71,15 @@ for (const suffix of ["/index.html", "/", ""]) {
       recordedFrameResource(fixture.frame, `https://app.test${pathname}`),
       true,
     );
-    assert.equal(localFrameReady(fixture.frame, "docs/guide/index.html"), true);
+    assert.equal(
+      initialFrameLoad(
+        fixture.frame,
+        current,
+        expected,
+        createMountAuthentication(fixture.frame, current, expected),
+      ) === "adopt",
+      true,
+    );
     assert.equal(
       sameFrameResource(
         "https://app.test/static/mokly-generated/docs/guide/index",

@@ -15,7 +15,7 @@ import type {
   EntryDetailV4,
 } from "../src/catalogue/types.js";
 import type { Catalogue } from "../src/shell/catalogue.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
+import { createCatalogue } from "../src/shell/catalogue.js";
 
 /** The detail fixtures: current entries by path, removed ones by snapshot id. */
 export interface DetailFixtures {
@@ -110,5 +110,5 @@ export function catalogueFixture(
   index: CatalogueReadModel = indexFixture(),
   details: ReadonlyMap<string, EntryDetailV4> = heldDetails(),
 ): Catalogue {
-  return viewerCatalogue(shellModelFixture(index, details));
+  return createCatalogue(shellModelFixture(index, details));
 }

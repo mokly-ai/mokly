@@ -4,6 +4,8 @@ import { useCallback } from "react";
 import type { MutableRefObject } from "react";
 
 import { FrameError } from "../client/frame_error.js";
+import { ObsoleteInspection } from "../client/inspection_work.js";
+import type { InstanceRef, PickEnd } from "../host/types.js";
 import type { ShellInspectionController } from "../shell/frame_inspection_controller.js";
 import { matchesFrameInstance } from "../shell/frame_instances.js";
 import type {
@@ -13,9 +15,7 @@ import type {
 
 import type { ViewerInspectionGeometryOwnership } from "./inspection_geometry_ownership.js";
 import type { ViewerInspectionPresentation } from "./inspection_layer.js";
-import { ObsoleteInspection } from "./inspection_work.js";
 import type { Picking } from "./picking.js";
-import type { InstanceRef, PickEnd } from "./types.js";
 
 interface EvidenceRestorationHookInput {
   active: MutableRefObject<boolean>;

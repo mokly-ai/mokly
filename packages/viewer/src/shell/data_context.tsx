@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 
+import type { DetailRequest } from "../catalogue/detail_fences.js";
 import type {
   ComponentRenderRequest,
   ComponentRenderSuccess,
@@ -38,6 +39,7 @@ interface ShellDataContextValue {
   capabilities?: ViewerCapabilities;
   editingStart?: LiveEditingStart;
   routeDelivery?: DetailDelivery;
+  reloadDetail?: (request: DetailRequest) => void;
 }
 
 const ShellDataContext = createContext<ShellDataContextValue>({});
@@ -81,8 +83,9 @@ export function ShellDataBoundary({
       ...(capabilities ? { capabilities } : {}),
       ...(editingStart ? { editingStart } : {}),
       ...(store.routeDelivery ? { routeDelivery: store.routeDelivery } : {}),
+      reloadDetail: store.reloadDetail,
     }),
-    [capabilities, editingStart, store.routeDelivery],
+    [capabilities, editingStart, store.routeDelivery, store.reloadDetail],
   );
   return <ShellDataContext value={value}>{children}</ShellDataContext>;
 }
@@ -106,4 +109,9 @@ export function useLiveEditingStart(): LiveEditingStart | undefined {
 /** The delivery of the route's details; absent on home and missing routes. */
 export function useRouteDelivery(): DetailDelivery | undefined {
   return useContext(ShellDataContext).routeDelivery;
+}
+
+/** Reload a held route detail through the shell's data owner. */
+export function useReloadDetail(): ShellDataContextValue["reloadDetail"] {
+  return useContext(ShellDataContext).reloadDetail;
 }

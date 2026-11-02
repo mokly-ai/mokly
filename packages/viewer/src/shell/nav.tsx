@@ -33,12 +33,14 @@ export function CatalogueNav({
   const navigationId = useShellIdentifier("mb-nav");
   const identifier = useShellIdentifierScope();
   const sections = store?.sections ?? catalogueNavSections(catalogue);
-  const scroll = useNavigationScroll(store, store?.state.route);
+
   const resize = useNavigationResize(store);
   const changesStatus = context.changedEntries
     ? "ready"
     : context.changesStatus;
   const source = { context, identifier, store };
+  const rows = sections.map((section) => navSection(section, source));
+  const scroll = useNavigationScroll(store, store?.state.route, rows);
   return (
     <CatalogueNavigation
       busy={
@@ -60,8 +62,8 @@ export function CatalogueNav({
       onWidthCommit={resize.onWidthCommit}
       ref={resize.ref}
       resizable={resize.resizable}
-      scrollRef={scroll}
-      sections={sections.map((section) => navSection(section, source))}
+      {...scroll}
+      sections={rows}
       status={navStatus(context, store)}
       width={resize.width}
     />

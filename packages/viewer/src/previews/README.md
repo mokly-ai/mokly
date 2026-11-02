@@ -7,20 +7,31 @@ Changes baseline, for the shell of Serve, of a static build and of an embedded
 
 ## Requests
 
-`previewEndpoint` resolves the descriptor to one address inside the
+`previewEndpoint` resolves the preview data to one address inside the
 comparison generation that the catalogue's `comparisonUrl` names: the removed
 entry's detail, `entries/{path}.json`, for a screen, and
-`previewMetadataPath(path)` for a page or document. Pages use the light
+`previewMetadataPath(path)` for a page or document. The screen uses the
+route's held detail after the shell accepts its fence. It never fetches that
+detail again. Pages and documents fetch their metadata through `fetchJson`.
+Pages use the light
 `snapshotDocumentPath`, and Markdown documents use each historical scheme.
 Selection loads only the requested document scheme. A screen uses only the
-detail's views whose state is `removed`. Before it accepts a screen,
-`requestPreview` compares the detail's `snapshotId` with the selected one.
+detail's views whose state is `removed`. The preview waits for the route's
+detail. A failed or rejected detail shows the unavailable state, and Retry
+loads that route detail again. `requestPreview` also checks the selected
+snapshot identity.
 Before it accepts a page or document, it recomputes the selected historical
 identity from the metadata's baseline commit. This keeps a late response or
 Retry from replacing an open historical record after the baseline changes.
-`renewPreview` extends a live generation's retention before reusing it,
-exactly as comparisons do. `advertisedPreviewPaths` describes the documented
-embedded fetch set for tests and has no runtime consumer.
+`renewPreview` extends a live generation's retention with a non-cached HEAD at
+the removed detail's address for a screen, or the metadata address for a page
+or document. It omits credentials and rejects a different final address.
+A failed screen renewal asks the shell data layer to discard and reload that
+route detail under its fences. The preview waits for acceptance before it
+requests documents for the new viewport or scheme. A rejected reload shows the
+unavailable state with Retry. A successful renewal keeps the held detail and
+does not read it again. Pinned previews keep their deployment check and do not
+renew.
 
 ## Presentation
 
@@ -50,8 +61,8 @@ cargo xtask check --suite viewer
 ### Key Code
 
 - [`request.ts`](./request.ts) holds `previewEndpoint`, `requestPreview`, and
-  `renewPreview`, which resolve, fetch, check, and renew the preview metadata
-  of one removed entry.
+  `renewPreview`, which resolve one removed entry's preview, fetch page and
+  document metadata, use a screen's held detail, and renew a live generation.
 - [`content.ts`](./content.ts) holds `screenContent` and `pageContent`, which
   derive the historical document addresses inside the accepted generation.
 - [`presentation.ts`](./presentation.ts) holds
@@ -68,8 +79,7 @@ cargo xtask check --suite viewer
   `followPresentedDocument`, which finds a frame's viewer-owned `srcdoc`
   document as soon as it commits.
 - [`descriptor.ts`](./descriptor.ts) holds `previewKey`, the identity of one
-  preview request, and `readPreviewDescriptor`, which parses the
-  `data-mokly-preview` attribute of a stage.
+  route-owned preview request. The shell passes preview data through props.
 - [`copy.ts`](./copy.ts) holds `PREVIEW_UNAVAILABLE`, the unavailable copy and
   the Retry control of the shell.
 - [`../shell/use_removed_preview.ts`](../shell/use_removed_preview.ts) is the

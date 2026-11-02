@@ -1,7 +1,13 @@
 /** Catalogue scroll restoration, active-row visibility, and folder reveal. */
 
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
+import type {
+  NavigationRow,
+  NavigationSection,
+} from "@mokly/ui/catalogue-tree";
+
+import { ElementRefs } from "./element_refs.js";
 import { sameNavFilters } from "./nav_reveal.js";
 import type { ShellStore } from "./store_context.js";
 
@@ -9,7 +15,11 @@ import type { ShellStore } from "./store_context.js";
 export function useNavigationScroll(
   store: ShellStore | undefined,
   route: ShellStore["state"]["route"] | undefined,
+  sections: readonly NavigationSection[],
 ) {
+  const currentRow = useRef<HTMLAnchorElement>(null);
+  const [summaries] = useState(() => new ElementRefs<string, HTMLElement>());
+  const visible = visibleSummaries(sections);
   const scroll = useRef<HTMLDivElement>(null);
   const initialScroll = useRef(store?.state.navScroll ?? 0);
   const mounted = useRef(false);
@@ -25,38 +35,45 @@ export function useNavigationScroll(
       pane.scrollTop = initialScroll.current;
       return;
     }
-    pane
-      .querySelector<HTMLElement>('[data-nav-row][aria-current="page"]')
-      ?.scrollIntoView({ block: "nearest" });
+    currentRow.current?.scrollIntoView({ block: "nearest" });
   }, [interactive, route]);
   useLayoutEffect(() => {
     const pane = scroll.current;
     if (!interactive || !pane || !revealed || !selection) return;
     if (settled.current === revealed) return;
-    const summary = shownFolderSummary(pane, revealed.key);
+    const summary = visible.has(revealed.key)
+      ? summaries.ref(revealed.key).current
+      : undefined;
     if (summary) {
       summary.focus({ preventScroll: true });
       summary.scrollIntoView({ block: "nearest" });
     }
     if (summary || !sameNavFilters(selection, revealed.selection))
       settled.current = revealed;
-  }, [interactive, revealed, selection]);
-  return scroll;
+  }, [interactive, revealed, selection, summaries, visible]);
+  return {
+    scrollRef: scroll,
+    currentRowRef: currentRow,
+    summaryRef: summaries.ref,
+  };
 }
 
-/**
- * The summary of a revealed folder once its row shows. An application-owned
- * host can commit the reveal's cleared filters after the request, so the row
- * may still be hidden when the reveal starts. Only sections and folders are
- * `<details>`; a variant list shares `data-nav-disclosure` but is a `div`.
- */
-function shownFolderSummary(
-  pane: HTMLElement,
-  key: string,
-): HTMLElement | undefined {
-  const folder = [
-    ...pane.querySelectorAll<HTMLElement>("details[data-nav-disclosure]"),
-  ].find((candidate) => candidate.dataset["navDisclosure"] === key);
-  if (!folder || folder.closest("[hidden]")) return undefined;
-  return folder.querySelector<HTMLElement>(":scope > summary") ?? undefined;
+/** Filter visibility comes from the same records the package renders. */
+function visibleSummaries(sections: readonly NavigationSection[]): Set<string> {
+  const visible = new Set<string>();
+  const visit = (rows: readonly NavigationRow[]) => {
+    for (const row of rows) {
+      if (row.kind === "folder") {
+        if (row.hidden) continue;
+        visible.add(row.disclosure);
+        visit(row.rows);
+      } else if (row.list?.open && !row.list.hidden) visit(row.list.rows);
+    }
+  };
+  for (const section of sections) {
+    if (section.hidden) continue;
+    visible.add(section.disclosure);
+    visit(section.rows);
+  }
+  return visible;
 }

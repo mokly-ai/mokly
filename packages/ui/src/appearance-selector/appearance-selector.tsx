@@ -54,8 +54,9 @@ function appearanceOf(value: string): Appearance | undefined {
  * A native select laid over the face of the current appearance and the down
  * chevron of a select. Every face is rendered and the stylesheet reveals the
  * one `data-appearance-value` names, so a script that applies a choice changes
- * the face by setting one attribute. The select is uncontrolled: `value` is
- * its first choice, and `onChange` reports each choice the reader makes.
+ * the face by setting one attribute. By default the select is uncontrolled:
+ * `value` is its first choice, and `onChange` reports each choice the reader
+ * makes. A controlled select shows `value` at every render.
  */
 export function AppearanceSelector(props: {
   /** The appearance the control shows. */
@@ -66,6 +67,11 @@ export function AppearanceSelector(props: {
   changedId: string;
   /** The mark's wording, such as `Other theme changed`. */
   changedText: string;
+  /**
+   * Whether the select shows `value` at every render, for a host that keeps
+   * the appearance in its state and passes each choice back as `value`.
+   */
+  controlled?: boolean | undefined;
   /** Hide the control, for example until a script that applies a choice runs. */
   hidden?: boolean;
   /** Receives each appearance the reader chooses. */
@@ -98,11 +104,12 @@ export function AppearanceSelector(props: {
         aria-label="Appearance"
         className="mbk-reset"
         data-mokly-appearance-select=""
-        defaultValue={props.value}
+        defaultValue={props.controlled ? undefined : props.value}
         onChange={(event) => {
           const choice = appearanceOf(event.currentTarget.value);
           if (choice) props.onChange?.(choice);
         }}
+        value={props.controlled ? props.value : undefined}
       >
         {OPTIONS.map(([option, label]) => (
           <option className="mbk-reset" key={option} value={option}>

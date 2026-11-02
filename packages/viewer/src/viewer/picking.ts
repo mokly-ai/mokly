@@ -1,5 +1,5 @@
-import { ObsoleteInspection } from "./inspection_work.js";
-import type { PickEnd, ViewerEvents } from "./types.js";
+import { ObsoleteInspection } from "../client/inspection_work.js";
+import type { PickEnd, ViewerEvents } from "../host/types.js";
 
 /** A single cancellable activation shared by all concurrent start requests. */
 export class Picking {

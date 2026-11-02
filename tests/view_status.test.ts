@@ -2,18 +2,53 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  aggregateViewStatus,
   resolveViewPresentation,
-  shownComparisonEligible,
-  shownStatus,
   type ViewState,
 } from "../packages/viewer/dist/shell/view_status.js";
 
+const comparisons = {
+  changed: { status: "ready", kind: "changed", eligible: true },
+  added: { status: "ready", kind: "added", eligible: false },
+  removed: { status: "ready", kind: "removed", eligible: false },
+  unchanged: { status: "ready", kind: "unmodified", eligible: false },
+  "ignored-only": { status: "ready", kind: "unmodified", eligible: false },
+} as const;
+
 const view = (
-  state: ViewState["state"],
+  state: keyof typeof comparisons,
   viewport: ViewState["viewport"] = "mobile",
   colorScheme: ViewState["colorScheme"] = "light",
-): ViewState => ({ colorScheme, state, viewport });
+): ViewState => ({ colorScheme, comparison: comparisons[state], viewport });
+
+/** The caller's view presentation for requested axes, with route fallback. */
+function status(
+  states: readonly ViewState[] | undefined,
+  viewport: "both" | ViewState["viewport"],
+  colorScheme: ViewState["colorScheme"],
+  fallbackStatus: Parameters<
+    typeof resolveViewPresentation
+  >[0]["fallbackStatus"],
+) {
+  const displayedViews = (
+    viewport === "both" ? (["mobile", "desktop"] as const) : [viewport]
+  ).map((viewport) => ({ viewport, colorScheme }));
+  return resolveViewPresentation({
+    displayedViews,
+    fallbackComparisonEligible: false,
+    fallbackStatus,
+    states,
+  }).status;
+}
+
+/** All supplied views are shown, including the empty-selection fallback. */
+function completeStatus(states: readonly ViewState[]) {
+  return resolveViewPresentation({
+    displayedViews: states,
+    fallbackComparisonEligible: false,
+    fallbackStatus: undefined,
+    states,
+  }).status;
+}
 
 test("single-view status follows the selected view state", () => {
   for (const [state, expected] of [
@@ -23,15 +58,12 @@ test("single-view status follows the selected view state", () => {
     ["unchanged", "Unmodified"],
     ["ignored-only", "Unmodified"],
   ] as const)
-    assert.equal(
-      shownStatus([view(state)], "mobile", "light", "Added"),
-      expected,
-    );
+    assert.equal(status([view(state)], "mobile", "light", "Added"), expected);
 });
 
 test("Both aggregates Changed, Added, Removed, then Unmodified", () => {
   assert.equal(
-    shownStatus(
+    status(
       [view("removed", "mobile"), view("changed", "desktop")],
       "both",
       "light",
@@ -40,7 +72,7 @@ test("Both aggregates Changed, Added, Removed, then Unmodified", () => {
     "Changed",
   );
   assert.equal(
-    shownStatus(
+    status(
       [view("removed", "mobile"), view("added", "desktop")],
       "both",
       "light",
@@ -49,7 +81,7 @@ test("Both aggregates Changed, Added, Removed, then Unmodified", () => {
     "Added",
   );
   assert.equal(
-    shownStatus(
+    status(
       [view("unchanged", "mobile"), view("removed", "desktop")],
       "both",
       "light",
@@ -58,7 +90,7 @@ test("Both aggregates Changed, Added, Removed, then Unmodified", () => {
     "Removed",
   );
   assert.equal(
-    shownStatus(
+    status(
       [view("ignored-only", "mobile"), view("unchanged", "desktop")],
       "both",
       "light",
@@ -69,27 +101,33 @@ test("Both aggregates Changed, Added, Removed, then Unmodified", () => {
 });
 
 test("missing evidence preserves the route-level fallback", () => {
-  assert.equal(shownStatus(undefined, "mobile", "light", "Changed"), "Changed");
-  assert.equal(shownStatus([], "both", "light", "Removed"), "Removed");
+  assert.equal(status(undefined, "mobile", "light", "Changed"), "Changed");
+  assert.equal(status([], "both", "light", "Removed"), "Removed");
   assert.equal(
-    shownStatus(
-      [view("changed", "mobile", "dark")],
-      "mobile",
-      "light",
-      "Added",
-    ),
+    status([view("changed", "mobile", "dark")], "mobile", "light", "Added"),
     "Added",
   );
 });
 
-test("comparison eligibility follows shown status and entry kind", () => {
-  assert.equal(shownComparisonEligible("Changed", "screen"), true);
-  assert.equal(shownComparisonEligible("Changed", "component"), true);
-  assert.equal(shownComparisonEligible("Removed", "screen"), false);
-  assert.equal(shownComparisonEligible("Removed", "component"), true);
-  assert.equal(shownComparisonEligible("Added", "component"), false);
-  assert.equal(shownComparisonEligible("Unmodified", "screen"), false);
-  assert.equal(shownComparisonEligible(undefined, "component"), false);
+test("comparison eligibility uses the shown index comparison", () => {
+  const eligible = (comparison: ViewState["comparison"] | undefined) => {
+    const states = comparison
+      ? [{ ...view("unchanged"), comparison }]
+      : undefined;
+    return resolveViewPresentation({
+      displayedViews: [view("unchanged")],
+      fallbackComparisonEligible: false,
+      fallbackStatus: undefined,
+      states,
+    }).comparisonEligible;
+  };
+  assert.equal(eligible(comparisons.changed), true);
+  assert.equal(eligible(comparisons.changed), true);
+  assert.equal(eligible(comparisons.removed), false);
+  assert.equal(eligible({ ...comparisons.removed, eligible: true }), true);
+  assert.equal(eligible(comparisons.added), false);
+  assert.equal(eligible(comparisons.unchanged), false);
+  assert.equal(eligible(undefined), false);
 });
 
 test("matching view evidence owns status and eligibility together", () => {
@@ -98,7 +136,6 @@ test("matching view evidence owns status and eligibility together", () => {
       displayedViews: [{ viewport: "mobile", colorScheme: "light" }],
       fallbackComparisonEligible: false,
       fallbackStatus: "Changed",
-      kind: "screen",
       states: [view("unchanged")],
     }),
     {
@@ -112,8 +149,12 @@ test("matching view evidence owns status and eligibility together", () => {
       displayedViews: [{ viewport: "mobile", colorScheme: "light" }],
       fallbackComparisonEligible: false,
       fallbackStatus: "Unmodified",
-      kind: "component",
-      states: [view("removed")],
+      states: [
+        {
+          ...view("removed"),
+          comparison: { ...comparisons.removed, eligible: true },
+        },
+      ],
     }),
     {
       comparisonEligible: true,
@@ -138,7 +179,6 @@ test("missing, partial, or nonmatching evidence preserves fallback eligibility",
         ],
         fallbackComparisonEligible: false,
         fallbackStatus: "Changed",
-        kind: "screen",
         states,
       }),
       {
@@ -157,34 +197,28 @@ test("complete single-view status follows the selected view state", () => {
     ["unchanged", "Unmodified"],
     ["ignored-only", "Unmodified"],
   ] as const)
-    assert.equal(aggregateViewStatus([view(state)]), expected);
+    assert.equal(completeStatus([view(state)]), expected);
 });
 
 test("complete Both aggregates Changed, Added, Removed, then Unmodified", () => {
   assert.equal(
-    aggregateViewStatus([
-      view("removed", "mobile"),
-      view("changed", "desktop"),
-    ]),
+    completeStatus([view("removed", "mobile"), view("changed", "desktop")]),
     "Changed",
   );
   assert.equal(
-    aggregateViewStatus([view("removed", "mobile"), view("added", "desktop")]),
+    completeStatus([view("removed", "mobile"), view("added", "desktop")]),
     "Added",
   );
   assert.equal(
-    aggregateViewStatus([
-      view("unchanged", "mobile"),
-      view("removed", "desktop"),
-    ]),
+    completeStatus([view("unchanged", "mobile"), view("removed", "desktop")]),
     "Removed",
   );
   assert.equal(
-    aggregateViewStatus([
+    completeStatus([
       view("ignored-only", "mobile"),
       view("unchanged", "desktop"),
     ]),
     "Unmodified",
   );
-  assert.equal(aggregateViewStatus([]), undefined);
+  assert.equal(completeStatus([]), undefined);
 });

@@ -11,7 +11,7 @@ keeps the sentence during loading; an index without a `base` omits it.
 
 ## Scope
 
-`metadata.ts` carries accepted move evidence privately. `comparison_selection.ts`
+`comparison_selection.ts`
 uses each side's original path for snapshot URLs, including moved variants.
 `catalogue.ts` keeps each paired current entry's branch-point path in
 `previousPaths`, read from the index's `previousPath`. No shell module
@@ -32,8 +32,8 @@ counterparts for workspace inputs, variants and nested component instances.
 
 `catalogue_branch_point.ts` implements that pure lookup beside `createCatalogue`.
 `branchPoints(catalogue)` is its one construction point: it indexes a catalogue
-generation on first use and returns the same lookup for that catalogue object
-afterwards. `resolve` requires an explicit before/after side and kind.
+generation on first use and returns the same lookup while that index stays
+installed, including when held details change. `resolve` requires an explicit before/after side and kind.
 `parent` gives an eligible parent of a resolved variant or a stored title
 without a link, and `parentOf` locates a current entry or removed record first.
 `removedVariants(parent)` lists the removed variants whose parent resolves to
@@ -79,9 +79,9 @@ removing the row from flat fallback, so a former parent that is now a variant
 or another kind cannot make its historical child disappear and every removed
 entry remains represented once. A removed page or document is a flat row
 that only Changes shows; All and search hide it. Current section nodes use the
-shared folder-first comparator; flat removed rows use the combined ordering in
-the
-[variant navigation contract](../../../../docs/protocol/mokly-variant-navigation.md).
+shared folder-first comparator. Flat removed rows keep `removedEntries` order,
+with each removed parent's variants directly after it, under the
+[serialization contract](../../../../docs/protocol/mokly-catalogue-serialization.md#canonical-bytes).
 Specs and Components keep independent section roots even when they reuse the
 same folder paths. `filterHierarchy` orders each section again by the rows it
 shows, applying the `order` each folder node carries, so a screen or component
@@ -90,8 +90,8 @@ that is its folder's own page sorts as a folder row in the other section.
 using resolved titles from `registry/folder_titles.ts`. Row visibility,
 Changes activation and route reveals all use that shared query and row, and
 `nav_rows.ts` counts each folder's child rows with the same visibility.
-`home_summary.ts` builds the home summary from a type-checked label for every
-entry kind. The [shell layout contract](../../../../docs/protocol/mokly-shell-design.md#layout)
+`home_summary.ts` uses each index entry array's length and a type-checked label
+for every entry kind. The [shell layout contract](../../../../docs/protocol/mokly-shell-design.md#layout)
 owns both rules.
 `crumbs.ts` derives breadcrumbs from the same tree: a folder with its own page
 links to it, a visible folder without one becomes a button that
@@ -107,7 +107,7 @@ empty path segments and every earlier key form on restore.
 `disclosure_storage.ts` owns the v4 map codec and its storage key; the
 stored preferences the browser entry reads and the shell store share its
 validation. Earlier storage versions are never read, translated, or removed.
-`routes.ts` resolves URL paths to current or retained manifest entries;
+`routes.ts` resolves URL paths to current or retained catalogue records;
 `target.ts` wraps a found entry as a route target without an extra routing
 filter. The [folder contract](../../../../docs/protocol/mokly-folders.md)
 owns the shared folder ordering and identity used by this shell.
@@ -135,7 +135,7 @@ static build, the source path of a current document; a removed entry keeps
 plain labels.
 
 `view_marks.ts` is the shared vocabulary for per-view change evidence: the two
-axes that name a view, their canonical order and reader label, and the rule
+axes that name a view, their reader labels, and the rule
 that decides whether the theme and viewport controls carry a mark.
 `workspace_views.ts` resolves the requested axes to the views actually shown,
 including Dark-to-Light fallback, and carries the matching status, comparison
@@ -144,19 +144,22 @@ applies the rule to that effective scheme while retaining the requested scheme
 as the control state, so navigation and controlled-host updates cannot leave
 stale indicators, and it passes the marks, their ids, and their wording to
 `@mokly/ui/view-controls`.
-`../viewer/public_workspace_views.ts` derives the changed views themselves from
+`public_workspace_views.ts` derives the changed views themselves from
 the published catalogue's ready per-view comparisons. Workspace data keys
 those lists by component variant path or screen path, and
 `workspace_views_data.ts` reads the list of the shown selection, so every
 reader selects the evidence that belongs to the preview;
 `@mokly/ui/change-mark` draws the dot and clips its wording, and
 `@mokly/ui/view-controls` mutes the dot on a disabled control.
-The parallel `viewStates` map stores `{ viewport, colorScheme, state }` for each
-ready view under the same key, while a missing key means per-view status is
+The parallel `viewStates` map keeps each ready view's axes and index
+`comparison`, including `kind` and `eligible`, in index order under the same
+key. A missing key means per-view status is
 unknown. `workspace_views.ts` resolves documents actually displayed after
 Light fallback. `view_status.ts` returns status, eligibility, and evidence
-provenance together; missing or partial matching evidence retains the selected
-entry's fallback status and eligibility. `publicWorkspace` sets
+provenance together. It combines the shown comparisons in Changed, Added,
+Removed, Unmodified order and uses the chosen comparison's eligibility.
+Missing or partial matching evidence retains the selected entry's fallback
+status and eligibility. `publicWorkspace` sets
 `affectedComparison` when the routed entry's detail marks it
 comparison-eligible and names the changed components that affect it, in or out
 of Changes. `workspace_views.ts` then keeps the comparison eligible for each
@@ -172,7 +175,10 @@ pinned catalogue's advertised root without a request, or the root that
 Serve's selection endpoint redirects to, which a HEAD request renews. A failed
 request shows the comparison failure with Try again; Current remains
 available.
-`use_comparison.ts` is the single owner of comparison mode: component sibling
+Every failed comparison uses the details sentence "The comparison is
+unavailable.". The shell never shows server or browser error text there.
+`use_comparison.ts` owns comparison mode through `comparison_mode.tsx`,
+which shares that state with host inspection and markers: component sibling
 navigation keeps that owner mounted, and the workspace reads its mode directly
 so Props and highlighting remain read-only until Current is selected.
 `views.tsx` keys the workspace with `workspaceKey`, the parent the lookup
@@ -245,26 +251,37 @@ shell font.
 The theme gives the stub's document class the Auto appearance before the
 bundle runs. The standalone shell sets its appearance, scheme, and state marks
 on its own root, as an embedded root does, and never on `body`. The appearance
-controller also writes the appearance on `<html>`, so the stub page around the
+state also supplies the appearance on `<html>`, so the stub page around the
 shell takes the same appearance as the root. The
 embedded stylesheet uses packaged relative font URLs and keeps the
 fallbacks that let a host's accent value inherit. It needs no `@scope` block,
 because no package rule reaches the host page or host slot content. The
 standalone shell keeps the original font paths.
 
-`catalogue.ts` owns pure display indexing. Its `byPath` index contains current and
-removed entries whose paths are unique across both sets; an explicit snapshot
-selects its exact removed record. The `Catalogue` type requires `publicModel`:
-`createCatalogue` builds the lookup, and `viewerCatalogue` adds the published
-records that complete it.
+`catalogue.ts` indexes the generated records of `ShellCatalogueReadModel`.
+Its `entries` holds current records, and `removedEntries` holds `ShellRemovedEntry`
+records. Its `byPath` index contains both sets, whose paths are unique across them.
+An explicit snapshot selects its exact removed record. `createCatalogue` builds
+these lookups, tags, Dark availability, and accepted move pairs once per index.
+`registry/catalogue_hierarchy.ts` reads the index `tree` for folders, titles,
+hidden flags, and ancestor titles. `filterHierarchy` derives and orders each
+navigation section. The catalogue's `publicModel` joins held details separately.
+A detail commit replaces that model and retains the index lookups and sections.
 `tag_selection.ts` captures the open picker before a tag changes the search state.
 An inspector tag then returns focus to the toggle in its own shell. Picker
 chips keep the focus return of `@mokly/ui/tag-picker`.
 
-`store.tsx` and the focused `store_*` modules own standalone route/history,
-selection, disclosure, drawer, details and scroll state. `routes.ts`,
+`store.tsx` and the focused `store_*` modules own the shared route,
+selection, disclosure, drawer, details and scroll state. `store_browser.ts`
+owns standalone history, and `store_host.ts` owns host selection commits.
+`store_routes.ts` installs each route's display for both roots.
+`store_interactions.ts` binds both roots to clicks and Escape. It dismisses
+the picker and expanded frame on an outside click, including a click outside
+an embedded root. It returns picker focus only when the panel held focus.
+`routes.ts`,
 `nav_model.ts`, `search_query.ts` and `entry_wording.ts` are deterministic
-helpers. `store_browser_actions.ts` owns DOM interaction and
+helpers. `selection.ts` owns selection changes and query equality.
+`store_browser_actions.ts` owns standalone link navigation, and
 `store_browser_urls.ts` owns provider-normalized URL policy. Frame documents
 remain static while `frame_event_router.tsx` routes authenticated logical-link
 events from visible sessions in the owning `frame_registry.tsx`.
@@ -287,7 +304,10 @@ time for the controller and keeps the route whose refresh failed.
 `data_commit.ts` adopts a new index and its details as one snapshot and
 rebinds the route and the disclosures to it;
 `data_store.ts` binds the controller to the store, and `data_context.tsx`
-exposes the routed delivery and the live render capability. The stage renders
+exposes the routed delivery, the route-detail reload action, and the live render
+capability. A failed live removed-preview renewal
+uses that action to discard the held detail and request it under the same
+fences. The catalogue keeps its index lookups while the detail loads. The stage renders
 the frames once the routed details arrive; until then `stage_delivery.tsx`
 shows the loading state, or the unavailable state with retry, which
 `@mokly/ui/preview-state` draws. A use case
@@ -321,7 +341,8 @@ stylesheets cannot import either query, so they repeat them, and the viewer's
 [styles test](../../tests/styles.test.ts) holds them to both.
 
 Static route parsing accepts the canonical slash, extensionless, and
-`index.html` forms; the shared parser resolves each path through `byPath`. Historical
+`index.html` forms; the shared parser resolves each selection through
+`catalogue/entry_selection.ts`. Historical
 resolution binds that route to its published snapshot; an explicit query must
 match, while an inferred identity is canonicalized into the URL. Entry
 destinations come from the shared route helpers.
@@ -386,12 +407,12 @@ when its usage holds a changed component that the detail names:
 `workspace_context.tsx` collects those views with `viewsUsingComponents`. The heading names
 the branch point only when its name is known; an empty or blank name leaves the
 heading alone. An index without a
-`base` has no name, because `viewerContext` supplies an empty one, so its
+`base` has no name, because `shellContext` supplies an empty one, so its
 Details keep the rest of the evidence without that sentence. `workspace_data.ts`
 passes the shell's known name to `publicWorkspace`, so a workspace keeps the
 sentence while its entry detail loads. The workspace projects the selected
 views' `resourceEvidence` from the held entry detail through
-`../viewer/public_workspace_views.ts` and `../review/view_evidence.ts`. A
+`public_workspace_views.ts` and `../review/view_evidence.ts`. A
 whole-document page has no workspace: `page_evidence_data.ts` reads its status
 from the index record and its evidence record from the page's entry detail,
 and `page_evidence.tsx` passes them with the page wording to
@@ -437,13 +458,18 @@ and `component_control_fields.tsx` derives each control's field, which
 `@mokly/ui/prop-field` lays out as a row, its name in
 a label column and then its value, help, and error, as the
 [controls design](../../../../docs/protocol/mokly-component-controls-design.md)
-draws them;
-the focused `workspace_*` containers turn evidence, usage, instances and
+draws them. Numeric fields use the effective bounds and step of the index's `controls`.
+`control_numbers.ts` aligns those bounds with the HTML input's zero-based step.
+The focused `workspace_*` containers turn evidence, usage, instances and
 supplied props into the records of the package's panels. `@mokly/ui/inspector`
 owns the tab keys and returns focus from Close to the tab pressed last.
 `inspector.tsx` closes the inspector the same way on Escape anywhere in its
 shell root. `inspector_resize.ts` owns the divider and the mobile sheet,
-because they read the workspace panes and the shell root. Each shell root
+through Inspector sizing props and the refs of its handles and workspace
+panes. `root_context.tsx` shares the root ref, drag state, focus targets,
+host slots, and named scroll regions. Containers use package refs for focus
+and measurement. Frame sessions carry their source choices, stage refs,
+and expanded state, so geometry never reads package selectors. Each shell root
 owns one `frame_registry.tsx` instance, so frame
 path-keyed identity, readiness, validated usage revisions and disposal cannot cross an
 independent embedded viewer. `frame_mount_hook.ts` mounts each frame, and
@@ -473,18 +499,20 @@ identities follow the [folder contract](../../../../docs/protocol/mokly-folders.
 and persisted values follow the
 [disclosure persistence contract](../../../../docs/protocol/mokly-disclosure-persistence.md).
 
-Appearance follows the same order: the browser entry installs the appearance
-controller of [`../standalone/startup.ts`](../standalone/startup.ts) before the
-first render, so it resolves Auto/Light/Dark from the stored choice or the
-system before the shell paints.
-[`appearance_bridge.ts`](../standalone/appearance_bridge.ts) adopts that theme
-and the controller's effective scheme into the live shell, marks the shell root
-with both, and independently asks the store for matching preview files. A light-only catalogue can therefore keep
-Light previews under a Dark interface. Embedded roots skip the bridge and
-receive `theme` from their host while retaining independent preview controls.
-Standalone route installation sends scheme pins to that controller; it never
-changes preview selection separately. A reader's choice wins over later pins
-through navigation and browser history. Each preview wrapper records its actual
+Appearance follows the same order: the browser entry resolves the theme and
+scheme through [`../standalone/startup.ts`](../standalone/startup.ts) before
+it creates the React root. It writes the stub document's theme at that point.
+[`../standalone/use_appearance.ts`](../standalone/use_appearance.ts) holds the
+appearance in React state for loading, failed, version, and ready states.
+The ready shell passes the theme, scheme, and change callback to its layout
+and controlled Appearance selector. It selects the same scheme in the store.
+A light-only catalogue keeps Light previews under a Dark interface.
+Embedded roots receive `theme` from their host and keep independent preview
+controls. Their entry graph imports no standalone appearance code.
+Standalone route installation passes scheme pins to the React appearance
+owner through a callback. It never changes preview selection separately.
+A reader's choice wins over later pins through navigation and browser history.
+Each preview wrapper records its actual
 file's scheme for iframe media queries, native controls, device colors and
 comparison backgrounds, including globally light-only catalogues.
 `scheme_fallback.ts` decides when a document keeps its light file under Dark
@@ -497,8 +525,8 @@ surface background and iframe color scheme from the wrapper's scheme.
 Transparent content therefore keeps its selected Light or Dark base in screen,
 page, component, historical and comparison frames, independently of interface
 appearance.
-React's frame adapters exclusively own source changes; the appearance
-controller only reports the effective scheme, avoiding iframe history entries
+React's frame adapters exclusively own source changes. Appearance state
+supplies the effective scheme, avoiding iframe history entries
 during manual or automatic appearance changes. The frame-source hook keeps the
 first source and updates sources only for frames without an active adapter; it
 must not race adapter-owned history-replacing navigation.
@@ -573,12 +601,16 @@ contracts own the scroll behavior.
 
 `previews.tsx` renders the one previous-version presentation a removed page and
 a removed screen share: the "Showing previous version" label, the stage host
-carrying the descriptor the React request lifecycle validates, and the shared
+marked by `data-mokly-preview`, and the shared
 device chrome around captured screen views, which `@mokly/ui/previous-version`
-and `@mokly/ui/device-frame` draw. It advertises a packaged address only when the accepted
+and `@mokly/ui/device-frame` draw. The React request lifecycle reads preview
+data directly from props. It advertises a packaged address only when the accepted
 public catalogue publishes one, so a delivery without that descriptor stays
-quiet. The stage shows the loading state while its request runs and adds Retry
-only if that request fails. The request fencing lives in
+quiet. A removed screen uses the route's held, fenced detail. Its stage waits
+for that detail and shows the unavailable state with Retry if the detail fails
+or is rejected. Retry requests the route detail again. Page and document
+previews fetch their own metadata. The stage also waits for its historical
+documents and offers Retry if that request fails. The request fencing lives in
 `use_removed_preview.ts`; it creates the
 shared snapshot-presentation loader for the loaded generation with only the
 `before` side enabled, then fetches and validates the historical documents

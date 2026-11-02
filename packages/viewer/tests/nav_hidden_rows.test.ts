@@ -1,8 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { analyzeHierarchy } from "../src/registry/hierarchy.js";
-import type { ManifestEntry } from "../src/registry/types.js";
 import type { ShellContext } from "../src/shell/context.js";
 import { navLeafVisible, navNodeVisible } from "../src/shell/nav_model.js";
 import {
@@ -11,13 +9,12 @@ import {
   type NavSectionNode,
 } from "../src/shell/nav_tree.js";
 
-const entry = (
-  path: string,
-  kind: string,
-  title: string,
-  variantOf?: string,
-): ManifestEntry =>
-  ({ path, kind, title, ...(variantOf ? { variantOf } : {}) }) as ManifestEntry;
+import {
+  treeRecord as entry,
+  treeHierarchy,
+  entryNode as e,
+  folderNode as f,
+} from "./tree_fixture.js";
 
 const all = { view: "all", search: "", tags: [] } as const;
 const changes = { view: "changes", search: "", tags: [] } as const;
@@ -52,15 +49,22 @@ for (const [kind, section] of [
   ["component", "components"],
 ] as const) {
   test(`a hidden folder's own ${kind} hides its variants and members in All and search`, () => {
-    const hierarchy = analyzeHierarchy(
+    const hierarchy = treeHierarchy(
       [
         entry("fx/open", kind, "Open"),
         entry("fx/vault", kind, "Vault"),
-        entry("fx/vault/sealed", kind, "Sealed", "fx/vault"),
+        entry("fx/vault/sealed", kind, "Sealed", { variantOf: "fx/vault" }),
         entry("fx/vault/item", kind, "Item"),
       ],
-      [{ path: "fx/vault", hidden: true, sourcePath: "specs/fx/vault.ts" }],
-    ).hierarchy;
+      [
+        f("fx", "Fx", [
+          e("fx/open"),
+          e("fx/vault", [e("fx/vault/sealed"), e("fx/vault/item")], {
+            hidden: true,
+          }),
+        ]),
+      ],
+    );
     const row = hiddenIndexRow(
       buildNavSections(hierarchy),
       section,

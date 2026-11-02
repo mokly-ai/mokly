@@ -1,5 +1,7 @@
 /** Pure route comparisons and link eligibility for standalone navigation. */
 
+import { eligibleAnchor } from "../navigation/activation.js";
+
 import { routeDocumentKey } from "./routes.js";
 import type { ShellState } from "./store_state.js";
 
@@ -31,14 +33,7 @@ export function eligibleShellAnchor(
 ): boolean {
   const url = new URL(anchor.href, location.href);
   return (
-    !event.defaultPrevented &&
-    event.button === 0 &&
-    !event.metaKey &&
-    !event.ctrlKey &&
-    !event.shiftKey &&
-    !event.altKey &&
-    !anchor.hasAttribute("download") &&
-    (!anchor.target || anchor.target === "_self") &&
+    eligibleAnchor(event, anchor) &&
     url.origin === location.origin &&
     !(
       routeDocumentKey(url) === routeDocumentKey(new URL(location.href)) &&

@@ -1,6 +1,6 @@
 /** Saved component variant selection derived from the routed entry. */
 
-import { isManifestComponentVariant } from "../components/manifest_types.js";
+import { isComponentVariant } from "../catalogue/variants.js";
 
 import type { WorkspaceData, WorkspaceVariant } from "./workspace_data.js";
 
@@ -17,7 +17,7 @@ export function selectedVariant(
   if (data.entry.kind !== "component")
     return { comparisonEligible: data.comparisonEligible };
   const requested =
-    data.entry.kind === "component" && isManifestComponentVariant(data.entry)
+    data.entry.kind === "component" && isComponentVariant(data.entry)
       ? data.entry.path
       : undefined;
   const variant = requested

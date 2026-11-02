@@ -5,7 +5,7 @@
 
 import { RemovedState, RemovedVariantState } from "@mokly/ui/empty-state";
 
-import { isManifestComponentVariant } from "../components/manifest_types.js";
+import { isComponentVariant } from "../catalogue/variants.js";
 import type { GeneratedComponentView } from "../components/views.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -18,7 +18,7 @@ import type { WorkspaceData } from "./workspace_data.js";
 function removedSubject(
   entry: WorkspaceData["entry"],
 ): "component" | "screen" | "variant" {
-  return entry.kind === "component" && isManifestComponentVariant(entry)
+  return entry.kind === "component" && isComponentVariant(entry)
     ? "variant"
     : entry.kind;
 }

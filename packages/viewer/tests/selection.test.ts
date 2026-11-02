@@ -7,7 +7,7 @@ import {
   normalizeSelection,
   revealSelection,
   sameSelection,
-} from "../src/viewer/selection.js";
+} from "../src/shell/selection.js";
 
 import { shellModelFixture } from "./catalogue_v9_fixture.js";
 

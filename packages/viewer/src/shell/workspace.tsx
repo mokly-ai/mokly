@@ -1,8 +1,9 @@
 /** One bounded component/screen workspace with saved previews and an inspector. */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 
 import { ChangeStatus } from "@mokly/ui/change-status";
+import type { InspectorHandle } from "@mokly/ui/inspector";
 import { WorkspaceLayout } from "@mokly/ui/workspace-layout";
 
 import type { Catalogue } from "./catalogue.js";
@@ -12,6 +13,7 @@ import { useComponentControls } from "./component_controls.js";
 import type { ShellContext } from "./context.js";
 import { controlTarget } from "./control_values.js";
 import { ControlledDiffScreen } from "./diffs.js";
+import { FrameStageContext } from "./frame_layout_context.js";
 import { ScreenHead, targetHead } from "./head.js";
 import { Inspector } from "./inspector.js";
 import { useInspectorResize } from "./inspector_resize.js";
@@ -24,6 +26,7 @@ import type { WorkspaceData } from "./workspace_data.js";
 import { workspaceEvidenceEntry } from "./workspace_entry.js";
 import { WorkspaceEvidence } from "./workspace_evidence.js";
 import { useWorkspaceInspection } from "./workspace_inspection.js";
+import { useWorkspaceInstanceSelection } from "./workspace_instance_selection.js";
 import { WorkspaceInstances } from "./workspace_instances.js";
 import { WorkspacePropsTab } from "./workspace_props.js";
 import { WorkspaceStage } from "./workspace_stage.js";
@@ -44,6 +47,10 @@ export function ComponentWorkspace({
 }) {
   const store = useOptionalShellStore();
   const workspaceRef = useRef<HTMLElement>(null);
+  const panesRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const inspectorRef = useRef<InspectorHandle>(null);
+  const highlightRef = useRef<HTMLButtonElement>(null);
   const workspace = useActiveWorkspace();
   if (!workspace) throw new Error("The active workspace is unavailable.");
   const { data, selection, resolvedView, presentation } = workspace;
@@ -96,65 +103,22 @@ export function ComponentWorkspace({
       ),
     [colorScheme, controls.previewViews, data, variantPath, viewport],
   );
-  const [activeViewport, setActiveViewport] = useState<"desktop" | "mobile">(
-    viewport === "mobile" ? "mobile" : "desktop",
+  const sizing = useInspectorResize(
+    inspectorRef,
+    panesRef,
+    store?.interactive ?? false,
   );
-  const [selectedKey, setSelectedKey] = useState<string | undefined>(
-    store?.state.route.instance,
-  );
-  const openedInstance = useRef<string | undefined>(undefined);
-  const resolvedViewport = views.some(
-    (view) => view.viewport === activeViewport,
-  )
-    ? activeViewport
-    : (views[0]?.viewport ?? activeViewport);
-  const activeView =
-    views.find((view) => view.viewport === resolvedViewport) ?? views[0];
-  const selectedInstance = activeView?.usage?.instances.find(
-    (instance) => instance.key === selectedKey,
-  );
-
-  useInspectorResize(workspaceRef, store?.interactive ?? false);
-
-  useEffect(() => {
-    setActiveViewport(
-      store?.state.route.viewport === "mobile" ? "mobile" : "desktop",
-    );
-    setSelectedKey(store?.state.route.instance);
-  }, [entry.path, store?.state.route.instance, store?.state.route.viewport]);
-
-  useEffect(() => {
-    if (selectedKey && activeView?.usage && !selectedInstance)
-      setSelectedKey(undefined);
-  }, [activeView?.usage, selectedInstance, selectedKey]);
-
-  useEffect(() => {
-    if (!selectedInstance) {
-      openedInstance.current = undefined;
-      return;
-    }
-    if (openedInstance.current === selectedInstance.key) return;
-    openedInstance.current = selectedInstance.key;
-    store?.setDetails(true, "props");
-  }, [selectedInstance, store]);
-
-  const selectInstance = useCallback(
-    (key: string, nextViewport: "desktop" | "mobile", openProps = true) => {
-      openedInstance.current = key;
-      setActiveViewport(nextViewport);
-      setSelectedKey(key);
-      if (!openProps) return;
-      store?.setExpandedFrame(undefined);
-      store?.setDetails(true, "props");
-      queueMicrotask(() =>
-        workspaceRef.current
-          ?.querySelector<HTMLElement>('[data-inspector-tab="props"]')
-          ?.focus({ preventScroll: true }),
-      );
-    },
-    [store],
-  );
+  const {
+    selectedInstance,
+    selectedKey,
+    resolvedViewport,
+    activeView,
+    setActiveViewport,
+    selectInstance,
+  } = useWorkspaceInstanceSelection(entry.path, views, inspectorRef);
   const inspection = useWorkspaceInspection({
+    workspaceRef,
+    highlightRef,
     comparisonActive: comparing,
     data,
     invalidSelection: Boolean(data.removed || variant?.removed),
@@ -211,6 +175,7 @@ export function ComponentWorkspace({
               dark={Boolean(context.embedded) && catalogue.hasDarkFragments}
               effectiveColorScheme={resolvedView.colorScheme}
               highlight={highlight}
+              highlightRef={highlightRef}
             />
           }
           crumbs={head.crumbs}
@@ -225,6 +190,8 @@ export function ComponentWorkspace({
         <Inspector
           catalogue={catalogue}
           data={data}
+          inspectorRef={inspectorRef}
+          sizing={sizing}
           panels={{
             ...(showComponents
               ? {
@@ -259,23 +226,27 @@ export function ComponentWorkspace({
         />
       }
       overlay={inspection.overlay}
+      panesRef={panesRef}
+      previewRef={previewRef}
       preview={
-        preview ? (
-          <RemovedPreviewStage data={preview} />
-        ) : data.comparisons ? (
-          <ControlledDiffScreen
-            compared={data.compared}
-            comparison={comparison}
-            entryId={variantPath ?? entry.path}
-            entryKind={entry.kind}
-            eligible={presentation.comparisonEligible}
-            usingChanged={presentation.usingChanged}
-          >
-            {stage}
-          </ControlledDiffScreen>
-        ) : (
-          stage
-        )
+        <FrameStageContext value={previewRef}>
+          {preview ? (
+            <RemovedPreviewStage data={preview} />
+          ) : data.comparisons ? (
+            <ControlledDiffScreen
+              compared={data.compared}
+              comparison={comparison}
+              entryId={variantPath ?? entry.path}
+              entryKind={entry.kind}
+              eligible={presentation.comparisonEligible}
+              usingChanged={presentation.usingChanged}
+            >
+              {stage}
+            </ControlledDiffScreen>
+          ) : (
+            stage
+          )}
+        </FrameStageContext>
       }
       previewStatus={controls.previewStatus}
       ref={workspaceRef}

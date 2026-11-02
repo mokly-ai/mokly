@@ -10,9 +10,6 @@ import {
 } from "@mokly/ui/empty-state";
 import { MainRegion } from "@mokly/ui/shell-layout";
 
-import { canonicalJson } from "../components/data.js";
-import { sha256 } from "../data/sha256.js";
-
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { DetailsPanel } from "./details.js";
@@ -27,6 +24,7 @@ import { useShellIdentifier } from "./identifier_context.js";
 import { PageEvidence } from "./page_evidence.js";
 import { pageComparisonEvidence } from "./page_evidence_data.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
+import { useShellRoot } from "./root_context.js";
 import { TargetStage } from "./stages.js";
 import type { RouteTarget } from "./target.js";
 import { ComponentWorkspace } from "./workspace.js";
@@ -118,32 +116,18 @@ function TargetView(props: {
   );
 }
 
-/** The active catalogue route for a shell view, when it has one. */
-function activeIdForView(view: ShellView): string | undefined {
-  if (view.kind !== "target") {
-    return undefined;
-  }
-  return view.target.entry.path;
-}
-
 /** Render the only region replaced by client-side Browse navigation. */
 export function ShellMain(props: {
   catalogue: Catalogue;
   context: ShellContext;
   view: ShellView;
 }) {
+  const elements = useShellRoot()?.elements;
   const mainId = useShellIdentifier("mb-main");
-  const activeId = activeIdForView(props.view);
-  const baseline = props.catalogue.removedEntries.find(
-    ({ entry }) => entry.path === activeId,
-  );
   return (
-    <MainRegion
-      baseline={baseline ? sha256(canonicalJson(baseline)) : undefined}
-      id={mainId}
-    >
+    <MainRegion id={mainId} ref={elements?.main}>
       {props.view.kind === "home" ? (
-        <HomeState summary={homeSummary(props.catalogue.manifest.entries)} />
+        <HomeState summary={homeSummary(props.catalogue.publicModel)} />
       ) : null}
       {props.view.kind === "missing" ? (
         <MissingRouteState requested={props.view.requested} />

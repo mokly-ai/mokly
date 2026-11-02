@@ -1,5 +1,2 @@
-/** Light or dark color-scheme rendering target. */
-export type ColorScheme = "dark" | "light";
-
-/** Mobile or desktop rendering target. */
-export type Viewport = "desktop" | "mobile";
+export type { ColorScheme } from "../generated/catalogue/ColorScheme.js";
+export type { Viewport } from "../generated/catalogue/Viewport.js";

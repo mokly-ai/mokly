@@ -150,10 +150,7 @@ test("a restored dark appearance swaps each frame at most once", async ({
     const light = requests.filter((path) =>
       path.endsWith(`example/screens/welcome/index.${viewport}.html`),
     );
-    expect(
-      light.length,
-      `${viewport} swapped more than once`,
-    ).toBeLessThanOrEqual(1);
+    expect(light, `${viewport} started with its dark document`).toHaveLength(0);
   }
 });
 

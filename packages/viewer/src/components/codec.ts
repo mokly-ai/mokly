@@ -38,11 +38,6 @@ export function encodeValue(value: PropValue): ComponentWireValue {
   ];
 }
 
-/** Decode only canonical tuples; validating schemas remains the caller's duty. */
-export function decodeValue(value: unknown): PropValue {
-  return decode(value, "$wire", new DataBudget(), 0);
-}
-
 export function decodeProps(value: unknown): ComponentPropsData {
   const budget = new DataBudget();
   budget.visit(0, "$props");

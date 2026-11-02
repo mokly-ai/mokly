@@ -1,0 +1,222 @@
+/** Workspace values derived only from the validated public catalogue. */
+
+import {
+  detailKey,
+  workspaceDetailRequest,
+} from "../catalogue/detail_fences.js";
+import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
+import type {
+  ShellCatalogueComponent,
+  ShellCatalogueReadModel,
+  ShellCatalogueRoutedEntry,
+} from "../catalogue/scoped_types.js";
+import { isComponentVariant } from "../catalogue/variants.js";
+import { generatedViews } from "../components/views.js";
+import { keepsComponentRecord } from "../review/shared_impact.js";
+
+import type { Catalogue } from "./catalogue.js";
+import { publicComparedEntry } from "./public_compared.js";
+import { shownReasons } from "./public_reasons.js";
+import { publicParent, publicVariants } from "./public_variants.js";
+import {
+  publishedChangedViewsBySelection,
+  publishedResourceEvidence,
+  publishedViewStatesBySelection,
+} from "./public_workspace_views.js";
+import type {
+  EntryStatus,
+  WorkspaceData,
+  WorkspaceVariant,
+} from "./workspace_data.js";
+
+const statuses = {
+  added: "Added",
+  changed: "Changed",
+  removed: "Removed",
+  unmodified: "Unmodified",
+} as const;
+
+/** The status beside a published entry's title, once its Changes are ready. */
+export function publicEntryStatus(
+  entry: ShellCatalogueRoutedEntry,
+): EntryStatus | undefined {
+  return entry.changes.status === "ready"
+    ? statuses[entry.changes.kind]
+    : undefined;
+}
+
+/**
+ * A variant's status from its compared views, unless they show no change:
+ * then its entry's change decides, so a metadata-only edit reads Changed and
+ * a pure move Unmodified.
+ */
+function variantStatus(
+  entry: ShellCatalogueComponent,
+): EntryStatus | undefined {
+  const compared =
+    entry.comparison.status === "ready"
+      ? statuses[entry.comparison.kind]
+      : undefined;
+  return compared === undefined || compared === "Unmodified"
+    ? (publicEntryStatus(entry) ?? compared)
+    : compared;
+}
+
+/**
+ * The routed entry's workspace from the index and the route's held details.
+ * `base` is the index's branch name; it stays empty when the index names none.
+ * The detail's direct reasons that fit the record reach Details before any
+ * comparison loads.
+ */
+export function publicWorkspace(
+  catalogue: Catalogue,
+  model: ShellCatalogueReadModel,
+  entry: WorkspaceData["entry"],
+  comparisons = model.comparisonUrl !== null,
+  snapshotId?: string,
+  base = "",
+): WorkspaceData {
+  const selected = resolveCatalogueSelection(model, entry.path, snapshotId);
+  const original =
+    selected?.entry.kind === entry.kind ? selected.entry : undefined;
+  if (
+    !original ||
+    (original.kind !== "screen" && original.kind !== "component")
+  )
+    throw new Error("The selected item is unavailable.");
+  const removed = model.removedEntries.some((item) => item.entry === original);
+  const held = model.details.get(
+    detailKey({
+      path: original.path,
+      ...(selected?.snapshotId ? { snapshotId: selected.snapshotId } : {}),
+    }),
+  );
+  const detail = held?.workspace;
+  const workspaceDetail = model.details.get(
+    detailKey(workspaceDetailRequest(original, !removed, selected?.snapshotId)),
+  );
+  const workspace = workspaceDetail?.workspace;
+  const publicComponent: ShellCatalogueComponent | undefined =
+    original.kind === "component"
+      ? original.variantOf !== undefined
+        ? publicParent(catalogue, model, original)
+        : original
+      : undefined;
+  const component =
+    publicComponent && !isComponentVariant(publicComponent)
+      ? publicComponent
+      : undefined;
+  if (publicComponent && !component)
+    throw new Error("The component parent is unavailable.");
+  const orphanVariant =
+    original.kind === "component" &&
+    original.variantOf !== undefined &&
+    publicComponent === undefined;
+  const parentRemoved = publicComponent
+    ? model.removedEntries.some(({ entry }) => entry === publicComponent)
+    : false;
+  const rowSources: readonly ShellCatalogueComponent[] = publicComponent
+    ? [
+        publicComponent,
+        ...publicVariants(catalogue, model, publicComponent, parentRemoved),
+      ]
+    : orphanVariant
+      ? [original]
+      : [];
+  const viewUsagePending = (
+    original.kind === "screen" ? [original] : rowSources
+  ).some((source) =>
+    source.views.some((view) => view.usage.status === "omitted"),
+  );
+  const entryStatus = publicEntryStatus(original);
+  const reasons = shownReasons(original, removed, held?.reasons);
+  const variants = rowSources.map((source) =>
+    workspaceRow(model, source, parentRemoved),
+  );
+  const selectedVariant =
+    entry.kind === "component"
+      ? variants.find((variant) => variant.value.path === entry.path)
+      : undefined;
+  const workspaceStatus = selectedVariant?.status ?? entryStatus;
+  const resourceEvidence = publishedResourceEvidence(original.views);
+  const compared = publicComparedEntry(original, held);
+  const componentRecords = original.views.some(
+    (view) =>
+      view.resourceEvidence !== undefined &&
+      keepsComponentRecord(view.resourceEvidence),
+  );
+  return {
+    entry: original,
+    ...(component ? { component } : {}),
+    components: [
+      ...model.components,
+      ...model.removedEntries.flatMap(({ entry }) =>
+        entry.kind === "component" ? [entry] : [],
+      ),
+    ]
+      .filter((candidate) => candidate.variantOf === undefined)
+      .map(({ path, title }) => ({ path, title })),
+    views:
+      component || orphanVariant
+        ? variants.flatMap(({ value }) => generatedViews(value))
+        : generatedViews(original),
+    changedViews: publishedChangedViewsBySelection(
+      publicComponent ?? original,
+      rowSources,
+    ),
+    viewStates: publishedViewStatesBySelection(
+      publicComponent ?? original,
+      rowSources,
+    ),
+    variants,
+    ...(held?.controlOrder ? { controlOrder: held.controlOrder } : {}),
+    usedBy: workspace?.usedBy ?? [],
+    affected: workspace?.affected ?? [],
+    base,
+    comparisons,
+    comparisonEligible:
+      detail?.comparisonEligible ??
+      (original.kind === "screen"
+        ? original.views.some(
+            (view) =>
+              view.comparison.status === "ready" && view.comparison.eligible,
+          )
+        : (selectedVariant?.comparisonEligible ?? false)),
+    affectedComparison:
+      original.changes.status === "ready" &&
+      detail?.comparisonEligible === true &&
+      detail.relatedComponents.length > 0,
+    removed,
+    relatedComponents: detail?.relatedComponents ?? [],
+    inputChanges: detail?.inputChanges ?? [],
+    ...(workspace ? {} : { usageComplete: false }),
+    ...(viewUsagePending ? { viewUsagePending: true } : {}),
+    ...(workspaceStatus ? { status: workspaceStatus } : {}),
+    ...(original.changes.status === "ready"
+      ? { included: original.changes.included }
+      : {}),
+    ...(reasons ? { reasons } : {}),
+    ...(componentRecords ? { componentRecords } : {}),
+    ...(resourceEvidence.length ? { resourceEvidence } : {}),
+    ...(compared ? { compared } : {}),
+  };
+}
+
+function workspaceRow(
+  model: ShellCatalogueReadModel,
+  source: ShellCatalogueComponent,
+  parentRemoved: boolean,
+): WorkspaceVariant {
+  const record = model.removedEntries.find(
+    ({ entry: candidate }) => candidate === source,
+  );
+  const shown = variantStatus(source);
+  return {
+    value: source,
+    removed: parentRemoved || record !== undefined,
+    comparisonEligible:
+      source.comparison.status === "ready" && source.comparison.eligible,
+    ...(record?.snapshotId ? { snapshotId: record.snapshotId } : {}),
+    ...(shown ? { status: shown } : {}),
+  };
+}
