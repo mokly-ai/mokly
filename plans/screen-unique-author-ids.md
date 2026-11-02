@@ -115,11 +115,13 @@ brainstorm.
    - Rejected: registered components only. Reviewers often comment on copy
      and images, and screens usually draw them as plain elements.
 
-On 2026-11-02 the user also sent a correction through the Mokly Cloud
-session. It changed design call 2, added the limits of moved-entry pairing,
-and changed the reason for leaving out catalogue-wide ids. It also asked that
-any cheap way to cover moves between entries come as a decision. Decision 9
-is that decision.
+On 2026-11-02 the Mokly Cloud session that started this workspace sent a
+correction. It sent it after its own review found that a design call
+overstated moved-entry pairing. The correction changed design call 2, added
+the limits of moved-entry pairing, and changed the reason for leaving out
+catalogue-wide ids. It also asked that any cheap way to cover moves between
+entries come as a decision, not as a design call. Decision 9 is that
+decision. The user made only the two decisions above.
 
 ## Approaches That The Brainstorm Left Out
 
@@ -731,15 +733,15 @@ The reports are under `.context/screen-unique-author-ids/`.
   option can come later without a new format number. If the user wants cover
   now, G is the cheapest option, and E is the automatic option with the least
   author and host work.
-- **Action:** ask the user, because the user asked that a way to cover moves
-  between entries come to them as a decision.
+- **Action:** ask the user, because each option except A adds behaviour that
+  no requirement covers, so the plan raises this cover for the user.
 
 ## Design Calls
 
 Calls 1 and 2 come from the brainstorm of 2026-11-02. They are not user
-decisions. The user's correction of 2026-11-02 set the text of call 2. Each
-other call is the orchestrator's own, made on 2026-11-02. A call that rests on
-an open decision follows its recommended option.
+decisions. The Mokly Cloud session's correction of 2026-11-02 set the text of
+call 2. Each other call is the orchestrator's own, made on 2026-11-02. A call
+that rests on an open decision follows its recommended option.
 
 1. **Separate id.** The author id is separate from `moklyInstance` and
    `mokly-instance`. Those keep their meaning, so existing keys do not change.
