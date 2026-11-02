@@ -304,7 +304,10 @@ time for the controller and keeps the route whose refresh failed.
 `data_commit.ts` adopts a new index and its details as one snapshot and
 rebinds the route and the disclosures to it;
 `data_store.ts` binds the controller to the store, and `data_context.tsx`
-exposes the routed delivery and the live render capability. The stage renders
+exposes the routed delivery, the route-detail reload action, and the live render
+capability. A failed live removed-preview renewal
+uses that action to discard the held detail and request it under the same
+fences. The catalogue keeps its index lookups while the detail loads. The stage renders
 the frames once the routed details arrive; until then `stage_delivery.tsx`
 shows the loading state, or the unavailable state with retry, which
 `@mokly/ui/preview-state` draws. A use case

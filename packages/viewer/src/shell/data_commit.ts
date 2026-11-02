@@ -60,6 +60,23 @@ export function withDetails(
   const details = new Map(snapshot.details);
   for (const [request, detail] of accepted)
     details.set(detailKey(request), detail);
+  return withHeldDetails(snapshot, details);
+}
+
+/** Forget route details so their next load applies the installed index's fences. */
+export function withoutDetails(
+  snapshot: ShellDataSnapshot,
+  keys: readonly string[],
+): ShellDataSnapshot {
+  const details = new Map(snapshot.details);
+  for (const key of keys) details.delete(key);
+  return withHeldDetails(snapshot, details);
+}
+
+function withHeldDetails(
+  snapshot: ShellDataSnapshot,
+  details: HeldDetails,
+): ShellDataSnapshot {
   return {
     ...snapshot,
     details,

@@ -23,9 +23,15 @@ snapshot identity.
 Before it accepts a page or document, it recomputes the selected historical
 identity from the metadata's baseline commit. This keeps a late response or
 Retry from replacing an open historical record after the baseline changes.
-`renewPreview` extends a live generation's retention with HEAD at its root
-before reusing it. It omits credentials and rejects a different final address.
-Static previews keep their deployment check and never request the root.
+`renewPreview` extends a live generation's retention with a non-cached HEAD at
+the removed detail's address for a screen, or the metadata address for a page
+or document. It omits credentials and rejects a different final address.
+A failed screen renewal asks the shell data layer to discard and reload that
+route detail under its fences. The preview waits for acceptance before it
+requests documents for the new viewport or scheme. A rejected reload shows the
+unavailable state with Retry. A successful renewal keeps the held detail and
+does not read it again. Pinned previews keep their deployment check and do not
+renew.
 
 ## Presentation
 

@@ -1,6 +1,7 @@
 /** React ownership of one shell root's data controller. */
 
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -10,6 +11,7 @@ import {
   type SetStateAction,
 } from "react";
 
+import type { DetailRequest } from "../catalogue/detail_fences.js";
 import type { LiveDescriptorV3 } from "../catalogue/types.js";
 import type { MoklyVersionError } from "../catalogue/version_error.js";
 
@@ -43,6 +45,8 @@ export interface ShellDataStore {
   snapshot: ShellDataSnapshot;
   routeDelivery: DetailDelivery | undefined;
   live: ShellLiveState;
+  /** Reload one held route detail, including its normal fence and failure state. */
+  reloadDetail(request: DetailRequest): void;
 }
 
 interface Current<T> {
@@ -87,6 +91,10 @@ export function useShellDataStore(input: {
   const requests = useMemo(
     () => routeDetailRequests(snapshot.index, input.state.route),
     [snapshot.index, input.state.route],
+  );
+  const reloadDetail = useCallback(
+    (request: DetailRequest) => controller.reload([request]),
+    [controller],
   );
 
   useEffect(() => {
@@ -133,5 +141,5 @@ export function useShellDataStore(input: {
     }),
     [controller, descriptor, editing, version],
   );
-  return { snapshot, routeDelivery, live };
+  return { snapshot, routeDelivery, live, reloadDetail };
 }

@@ -37,7 +37,7 @@ export interface LoadedPreview {
   content: PreviewContent;
   /** Absolute generation root that owns every historical document. */
   generation: string;
-  /** Generation root used to renew a live generation. */
+  /** Route detail or preview metadata address used for live renewal. */
   url: string;
 }
 
@@ -143,14 +143,13 @@ export async function requestPreview(
   return {
     content: parsed.content,
     generation: new URL(".", base).href,
-    url: base,
+    url: request.endpoint.href,
   };
 }
 
 /**
- * Extend a development generation's retention before reusing its documents.
- * A generation that expired while the entry stayed open resolves elsewhere, so
- * its documents are requested again rather than rendered from stale addresses.
+ * Renew the loaded detail or metadata address before reusing its documents.
+ * A failed renewal makes the shell reacquire before it loads another view.
  */
 export async function renewPreview(
   loaded: LoadedPreview,

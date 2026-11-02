@@ -5,20 +5,21 @@
  * with fakes.
  */
 
-import type { DetailRequest } from "../catalogue/detail_fences.js";
+import { detailKey, type DetailRequest } from "../catalogue/detail_fences.js";
 import type { LiveDescriptorV3 } from "../catalogue/types.js";
 import type { MoklyVersionError } from "../catalogue/version_error.js";
 
 import {
   withDetails,
   withIndex,
+  withoutDetails,
   type ShellDataSnapshot,
 } from "./data_commit.js";
 import { LiveDescriptor, type LiveEditingStatus } from "./data_descriptor.js";
 import { DetailLoader } from "./data_detail_loader.js";
 import { staleAwareLiveSource } from "./data_live_transport.js";
 import { PublicationRefresh } from "./data_refresh.js";
-import type { DetailOutcome } from "./data_requests.js";
+import { routeDetailRequests, type DetailOutcome } from "./data_requests.js";
 import type { ShellDataSource, ShellLiveSource } from "./data_source.js";
 import type { ShellRoute } from "./routes.js";
 
@@ -137,6 +138,20 @@ export class ShellDataController {
 
   /** Forget the failures of these keys and load the wanted details again. */
   retry(keys: readonly string[]): void {
+    this.#details.retry(keys);
+  }
+
+  /** Discard held route details and load them again under the same fences. */
+  reload(requests: readonly DetailRequest[]): void {
+    if (this.#replaced || !this.#source) return;
+    const wanted = new Set(
+      routeDetailRequests(this.#snapshot.index, this.#host.route()).map(
+        detailKey,
+      ),
+    );
+    const keys = requests.map(detailKey).filter((key) => wanted.has(key));
+    if (!keys.length) return;
+    this.#commit(withoutDetails(this.#snapshot, keys));
     this.#details.retry(keys);
   }
 

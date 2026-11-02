@@ -22,7 +22,7 @@ import {
   snapshotPresentationEnvironment,
   useComparisonEnvironment,
 } from "./comparison_context.js";
-import { useRouteDelivery } from "./data_context.js";
+import { useReloadDetail, useRouteDelivery } from "./data_context.js";
 import type { RemovedPreviewData } from "./previews.js";
 import { schemeValue } from "./scheme_fallback.js";
 import { useOptionalShellStore } from "./store_context.js";
@@ -104,6 +104,7 @@ export function useRemovedPreview({
   const model = useOptionalShellStore()?.catalogue.publicModel;
   const comparisonUrl = model?.comparisonUrl;
   const delivery = useRouteDelivery();
+  const reloadDetail = useReloadDetail();
   const deliveryStatus = data.kind === "screen" ? delivery?.status : undefined;
   const detail =
     data.kind === "screen"
@@ -160,8 +161,19 @@ export function useRemovedPreview({
           owner.value,
           environment,
           controller.signal,
-        );
+        ).catch(() => false);
         if (!owns()) return;
+        if (!renewed && data.kind === "screen") {
+          loaded.current = undefined;
+          setOwned({ key, selection, value: { status: "loading" } });
+          if (!reloadDetail)
+            throw new Error("The previous version is unavailable.");
+          reloadDetail({
+            path: data.path,
+            ...(data.snapshotId ? { snapshotId: data.snapshotId } : {}),
+          });
+          return;
+        }
         if (!renewed) owner = undefined;
       }
       if (!owner) {
@@ -234,6 +246,7 @@ export function useRemovedPreview({
     environment,
     interactive,
     key,
+    reloadDetail,
     selection,
     viewport,
   ]);

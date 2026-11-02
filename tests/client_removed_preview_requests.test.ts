@@ -34,7 +34,7 @@ test("a screen preview renders only its captured previous views", async () => {
     detail,
   );
   assert.deepEqual(calls, []);
-  assert.equal(loaded.url, generation.href);
+  assert.equal(loaded.url, endpoint.href);
   assert.equal(
     loaded.generation,
     `https://catalogue.test/mokly-viewer/diffs/generations/${GENERATION}/`,

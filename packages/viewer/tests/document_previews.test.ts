@@ -172,6 +172,7 @@ test("a removed screen's preview uses its held detail without another read", asy
     detail,
   );
   assert.ok(loaded.content.kind === "screen");
+  assert.equal(loaded.url, request.endpoint.href);
   assert.deepEqual(
     loaded.content.views.map((view) => new URL(view.url).pathname),
     detail.views.map(
