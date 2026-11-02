@@ -247,14 +247,19 @@ Depends on: 7
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Run the mockup check of `AGENTS.md`. Smoke-test Browse, Changes, a
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+      The gate passed on `5e5f5723`, after one fix round:
+      `.context/viewer-leftover-layers/m9/gate.log`.
+- [x] Run the mockup check of `AGENTS.md`. Smoke-test Browse, Changes, a
       comparison, inspection, prop editing, a removed entry, and an
-      embedded host through `npm run dev`.
-- [ ] Measure the source lines and the gzip size of `shell.js` before and
+      embedded host through `npm run dev`. The example had no changed or
+      removed entry, so the dev smoke covered Browse, inspection, prop
+      editing, a use case, Dark, and the narrow layout, and the gate's
+      browser suite covered the rest: `.context/viewer-leftover-layers/m9/`.
+- [x] Measure the source lines and the gzip size of `shell.js` before and
       after the change. Save the numbers under
       `.context/viewer-leftover-layers/`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
