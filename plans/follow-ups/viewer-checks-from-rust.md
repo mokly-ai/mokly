@@ -103,6 +103,9 @@
   - `plans/follow-ups/reserved-navigation-names-in-authored-html.md` holds
     the saved-slot reserved-name check, another
     reserved-name check that differs between two places.
+- **Related:** `plans/follow-ups/select-option-builder.md`: the Rust index
+  reader checks no control options, so a shared reader does not fix the
+  select options that it covers.
 - **Recommendation:** F. Start with a measured trial. Build the readers for
   `wasm32-unknown-unknown`, run `wasm-opt -Oz` and wasm2js, and compare the
   gzip size and the parse time of the large fixture's index with the
