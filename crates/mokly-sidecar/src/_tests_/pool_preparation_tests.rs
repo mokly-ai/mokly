@@ -97,9 +97,15 @@ fn fresh_worker_retains_complete_replay_inputs() {
     let (state, slot) = fixture();
     let replay = Preparation::snapshot(&state, &slot, "g", true, true, true);
     assert_eq!(replay.epoch, 7);
-    assert_eq!(replay.bundle.unwrap().entry_files, ["entry.ts"]);
-    assert_eq!(replay.modules[0].imports, ["shared.ts"]);
-    assert_eq!(replay.compiled.unwrap().code, "code");
+    assert_eq!(
+        replay.recipe.as_ref().unwrap().params.entry_files,
+        ["entry.ts"]
+    );
+    assert_eq!(
+        replay.recipe.as_ref().unwrap().modules[0].imports,
+        ["shared.ts"]
+    );
+    assert_eq!(replay.recipe.as_ref().unwrap().compiled.code, "code");
     assert_eq!(
         replay.maps.unwrap().class_maps["entry.module.css"]["class"],
         "scoped"
@@ -119,9 +125,8 @@ fn prepared_worker_does_not_materialize_catalogue_replay_inputs() {
     slot.bindings = state.bindings.clone();
     for _ in 0..4 {
         let replay = Preparation::snapshot(&state, &slot, "g", true, true, true);
-        assert!(replay.bundle.is_none());
-        assert!(replay.modules.is_empty());
-        assert!(replay.compiled.is_none());
+        assert!(replay.recipe.is_none());
+
         assert!(replay.maps.is_none());
         assert!(replay.bindings.is_none());
     }
@@ -131,9 +136,9 @@ fn prepared_worker_does_not_materialize_catalogue_replay_inputs() {
 fn replay_omits_prerequisites_that_the_request_does_not_need() {
     let (state, slot) = fixture();
     let replay = Preparation::snapshot(&state, &slot, "g", false, false, false);
-    assert!(replay.bundle.is_some());
-    assert_eq!(replay.modules.len(), 1);
-    assert!(replay.compiled.is_some());
+    assert!(replay.recipe.is_some());
+    assert_eq!(replay.recipe.as_ref().unwrap().modules.len(), 1);
+
     assert!(replay.maps.is_none());
     assert!(replay.bindings.is_none());
 }
@@ -152,7 +157,7 @@ fn new_binding_revision_replays_without_copying_other_inputs() {
     let bindings = replay.bindings.unwrap();
     assert!(Arc::ptr_eq(&bindings, &state.bindings["g"]));
     assert_eq!(bindings.entries["entry.ts#default"].title, "Updated");
-    assert!(replay.bundle.is_none());
-    assert!(replay.modules.is_empty());
+    assert!(replay.recipe.is_none());
+
     assert!(replay.maps.is_none());
 }

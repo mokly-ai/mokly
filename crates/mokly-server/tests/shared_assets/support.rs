@@ -3,14 +3,15 @@
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
+
 use std::sync::atomic::{AtomicUsize, Ordering};
+use unimock::Unimock;
 
 use axum::Router;
 use axum::body::Body;
 use axum::http::{Method, Request};
 use axum::response::Response;
 use mokly_catalogue::config::{ConfigLoader, Loader};
-use mokly_catalogue::definition_provider::DeferredDefinitions;
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::preparation::{Builder, CatalogueBuilder};
 use mokly_catalogue::working_tree::WorkingTree;
@@ -81,7 +82,7 @@ pub(super) fn generation(root: &Path) -> Arc<dyn RenderGeneration> {
     let prepared = Builder {
         tree: tree.clone(),
         discovery: Arc::new(Discoverer { tree: tree.clone() }),
-        definitions: Arc::new(DeferredDefinitions),
+        definitions: Arc::new(Unimock::new(())),
     }
     .prepare(&config, None)
     .unwrap();

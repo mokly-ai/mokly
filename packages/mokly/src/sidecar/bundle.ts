@@ -11,7 +11,6 @@ import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration
 import type { Definitions } from "../generated/sidecar/Definitions.js";
 import type { EntryBinding } from "../generated/sidecar/EntryBinding.js";
 import type { Module } from "../generated/sidecar/Module.js";
-import type { Warning } from "../generated/sidecar/Warning.js";
 
 import { entryModule } from "./bundle-entry.js";
 import { bundleDetail } from "./bundle-errors.js";
@@ -47,7 +46,6 @@ export interface Generation {
   savedSlots: Map<string, unknown>;
   sources: Map<string, string>;
   stories: Map<string, unknown>;
-  warnings: Warning[];
   require: NodeJS.Require;
 }
 export interface BundleExports {
@@ -129,18 +127,6 @@ export async function bundleWith(
         ([extension]) => extension !== ".css" && extension !== ".module.css",
       ),
     );
-    for (const extension of [".css", ".module.css"]) {
-      const value = settings.loaders[extension];
-      if (value !== undefined && value !== "empty")
-        throw new Error(
-          `moduleResolution.loaders[${extension}] is package-owned; only "empty" is allowed to opt out of imported CSS delivery`,
-        );
-    }
-    for (const [extension, loader] of Object.entries(loaders))
-      if (loader === "css")
-        throw new Error(
-          `moduleResolution.loaders[${extension}] cannot use "css"; rename the stylesheet to .css or use a JavaScript-safe loader`,
-        );
     const options = {
       absWorkingDir: path.resolve(
         params.sourceRoot,

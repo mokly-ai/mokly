@@ -5,7 +5,6 @@ use std::path::Path;
 use std::sync::Arc;
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
-use mokly_catalogue::definition_provider::DeferredDefinitions;
 use mokly_catalogue::diagnostic::Warning;
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::preparation::{Builder, CatalogueBuilder};
@@ -22,6 +21,9 @@ use mokly_html::composition::{ComposeRequest, Composed, Composer, HtmlComposer};
 use mokly_html::error::Result as HtmlResult;
 use mokly_html::fragment::DeferredFragments;
 use mokly_source_interface::tree::SourceTree;
+
+#[path = "support/definitions.rs"]
+mod definitions;
 
 const ROUTE: &str = "home/index.mobile.html";
 
@@ -44,7 +46,7 @@ fn generation(root: &Path) -> Arc<dyn RenderGeneration> {
     let prepared = Builder {
         tree: tree.clone(),
         discovery: Arc::new(Discoverer { tree: tree.clone() }),
-        definitions: Arc::new(DeferredDefinitions),
+        definitions: Arc::new(definitions::EmptyDefinitions),
     }
     .prepare(&config, None)
     .unwrap();

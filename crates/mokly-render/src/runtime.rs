@@ -23,7 +23,6 @@ use mokly_source_interface::tree::SourceTree;
 
 use crate::bundle::BundleState;
 use crate::dependency_usage::{DependencyUsage, UsedDependencies};
-use crate::error::Result;
 use crate::graph::JavaScriptGraph;
 use crate::leases::PreparedLease;
 use crate::postcss_cache::CssCache;
@@ -113,12 +112,12 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn side(&self, config: &ResolvedConfig) -> Result<SideInputs> {
+    pub(crate) fn side(&self, config: &ResolvedConfig) -> SideInputs {
         let mut side = side::inputs(
             config,
             self.base.as_ref(),
             CONTEXT_SEQUENCE.fetch_add(1, Ordering::Relaxed),
-        )?;
+        );
         let mut roots = Vec::new();
         let ancestors = ancestor_roots::directories(&side.configuration_directory);
         for (original, root) in side.dependency_roots.into_iter().enumerate() {
@@ -154,7 +153,7 @@ impl Runtime {
             }
         }
         side.dependency_roots = roots;
-        Ok(side)
+        side
     }
 }
 

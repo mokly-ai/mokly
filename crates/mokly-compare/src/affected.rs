@@ -38,7 +38,7 @@ pub(crate) fn collect(
             (ReviewSide::Before, before, pair.before),
             (ReviewSide::After, after, pair.after),
         ] {
-            let Some(entry) = index.and_then(|index| model.entries.get(index)) else {
+            let Some(entry) = index.map(|index| &model.entries[index]) else {
                 continue;
             };
             let kind = match entry.content {
@@ -87,19 +87,10 @@ pub(crate) fn collect(
             }
             let mut chain = vec![instance];
             let mut next = &instance.owner;
-            let mut visited = BTreeSet::from([instance.key.as_str()]);
             while let ComponentInputOwner::Instance { instance_key } = next {
-                let Some(parent) = index.get(instance_key.as_str()) else {
-                    break;
-                };
-                if !visited.insert(parent.key.as_str()) {
-                    break;
-                }
+                let parent = index[instance_key.as_str()];
                 chain.push(parent);
                 next = &parent.owner;
-            }
-            if !matches!(next, ComponentInputOwner::Entry) {
-                continue;
             }
             chain.reverse();
             let context_kind = if view.component {

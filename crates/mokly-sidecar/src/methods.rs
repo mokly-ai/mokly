@@ -11,13 +11,11 @@ use crate::compiled::RestoreGeneration;
 
 /// A request with no method parameters.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
-#[serde(deny_unknown_fields)]
 #[ts(rename = "EmptyParams")]
 pub struct Empty {}
 
 /// A loaded bundle generation.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(deny_unknown_fields)]
 #[ts(rename = "GenerationParams")]
 pub struct Generation {
     /// Content-addressed generation id.
@@ -26,7 +24,7 @@ pub struct Generation {
 
 /// Consumer module resolution settings; list order is meaningful.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct ModuleResolution {
     /// Selected installation repository for per-importer Node lookup.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -54,7 +52,7 @@ pub struct ModuleResolution {
 
 /// Inputs compiled into one unevaluated bundle.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 #[ts(rename = "BundleParams")]
 pub struct Bundle {
     /// Core input digest that isolates resolved bindings and CSS Modules lifetimes.
@@ -132,7 +130,7 @@ pub struct RenderComponent {
 
 /// Render a composed Storybook story with data args overlaid.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 #[ts(rename = "RenderStoryParams")]
 pub struct RenderStory {
     /// Loaded bundle generation.
@@ -149,7 +147,6 @@ pub struct RenderStory {
 
 /// Render a synchronous complete page document.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(deny_unknown_fields)]
 #[ts(rename = "RenderPageParams")]
 pub struct RenderPage {
     /// Loaded bundle generation.
@@ -160,7 +157,7 @@ pub struct RenderPage {
 
 /// Consumer PostCSS transformation inputs.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 #[ts(rename = "ProcessCssParams")]
 pub struct ProcessCss {
     /// Physical repositories whose local packages map into this side.
@@ -181,7 +178,7 @@ pub struct ProcessCss {
 
 /// Core-generated CSS Modules maps supplied before evaluation.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 #[ts(rename = "CssModulesParams")]
 pub struct CssModules {
     /// Loaded bundle generation.
@@ -192,7 +189,6 @@ pub struct CssModules {
 
 /// Optional process diagnostics selected by the core during hello.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
-#[serde(deny_unknown_fields)]
 #[ts(rename = "HelloParams")]
 pub struct Hello {
     /// Enable process-local timing records on standard error for this session.
@@ -207,12 +203,7 @@ fn disabled(value: &bool) -> bool {
 
 /// Every protocol method, encoded as method and params.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(
-    tag = "method",
-    content = "params",
-    rename_all = "camelCase",
-    deny_unknown_fields
-)]
+#[serde(tag = "method", content = "params", rename_all = "camelCase")]
 pub enum Call {
     /// Exchange package versions.
     Hello(Hello),

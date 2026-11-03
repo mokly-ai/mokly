@@ -152,7 +152,7 @@ pub(super) fn generation(
         elements: BTreeMap::new(),
         javascript: Default::default(),
         dependency_directories: Default::default(),
-        deferred_modules: vec![],
+
         warnings: vec![],
     };
     let routes = resources

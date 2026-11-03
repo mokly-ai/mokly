@@ -10,11 +10,10 @@ use crate::controls::{Control, StoryHints};
 use crate::definition_metadata::{EntryMetadata, EntryReference, UseCaseStep};
 use crate::diagnostics::DefinitionDiagnostic;
 use crate::methods::ColorScheme;
-use crate::results::Warning;
 
 /// A saved props set with typed metadata overrides.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Variant {
     /// Non-data inference exclusions, before catalogue path derivation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -65,7 +64,7 @@ pub struct Variant {
 
 /// An exported definition with all declarative fields represented explicitly.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Definition {
     /// Non-data inference exclusions, before catalogue path derivation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -141,7 +140,7 @@ pub struct Definition {
 
 /// Story inventory after non-data args have been excluded.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Story {
     /// File and export name.
     pub id: String,
@@ -156,7 +155,7 @@ pub struct Story {
 
 /// Every definition and every source diagnostic of a bundle generation.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Definitions {
     /// React screens.
     pub screens: Vec<Definition>,
@@ -173,8 +172,6 @@ pub struct Definitions {
     /// Source-attributed authoring diagnostics; these do not invalidate framing.
     #[serde(default)]
     pub diagnostics: Vec<DefinitionDiagnostic>,
-    /// Generation diagnostics from excluded non-data props.
-    pub warnings: Vec<Warning>,
 }
 
 fn schema_value<'de, D: serde::Deserializer<'de>>(

@@ -170,7 +170,7 @@ pub struct ReviewDiagnostic {
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ReviewResultV8 {
-    /// Exactly 8, checked before other payload fields.
+    /// Exactly 8.
     #[ts(type = "8")]
     pub schema_version: u32,
     /// Pinned merge base.
@@ -182,3 +182,7 @@ pub struct ReviewResultV8 {
     /// Comparison diagnostics, including moves.
     pub diagnostics: Vec<ReviewDiagnostic>,
 }
+
+#[cfg(test)]
+#[path = "_tests_/review_encoding_tests.rs"]
+mod review_encoding_tests;

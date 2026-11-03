@@ -109,7 +109,6 @@ impl Fixture {
             },
             fallback(),
         )
-        .unwrap()
     }
 
     fn digest(&mut self, path: &str) {

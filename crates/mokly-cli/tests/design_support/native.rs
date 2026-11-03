@@ -107,7 +107,7 @@ impl Session {
         Self {
             service: Box::new(service),
             pool: services.pool,
-            identity: catalogue_key(&relative(&config.file, &config.repo_root)).unwrap(),
+            identity: catalogue_key(&relative(&config.file, &config.repo_root)),
             comparison: Box::new(Engine {
                 moves: Arc::new(Detector),
                 css: Arc::new(MemoryParsedCss::new(64 * 1024 * 1024)),
@@ -132,7 +132,7 @@ impl Session {
                 .load(root, self.options.common.config.as_deref())
                 .unwrap();
             let prepared = self.catalogue.prepare(&config, None).unwrap();
-            assert!(prepared.deferred_modules.is_empty());
+
             assert!(prepared.warnings.is_empty());
             let graph = self.graphs.create(&config).unwrap();
             let after = graph.prepare(config, prepared, None).unwrap();

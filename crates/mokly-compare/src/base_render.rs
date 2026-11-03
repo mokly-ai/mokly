@@ -13,7 +13,6 @@ use mokly_model::material::catalogue_key;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::base_selection::{BaseLookup, PinnedBase};
-use crate::comparison_error::CompareResult;
 use crate::comparison_steps::{Step, Steps};
 use crate::comparison_types::{Comparison, ComparisonRequest, ComparisonResult};
 use crate::error::{Error, Result};
@@ -256,8 +255,7 @@ impl ChangesService for Changes {
             &ComparisonRequest {
                 base_ref: base.into(),
                 base_commit: commit.to_string(),
-                catalogue_identity: catalogue_key(&relative(&config.file, &config.repo_root))
-                    .compare()?,
+                catalogue_identity: catalogue_key(&relative(&config.file, &config.repo_root)),
             },
             before,
             head,

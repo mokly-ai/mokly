@@ -8,7 +8,7 @@ use ts_rs::TS;
 
 /// Original input owner, independent of physical placement.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
+#[serde(tag = "kind", rename_all = "camelCase")]
 pub enum InputOwner {
     /// Inputs belong to the rendered entry.
     Entry,
@@ -22,7 +22,6 @@ pub enum InputOwner {
 
 /// Optional JSX invocation location.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(deny_unknown_fields)]
 pub struct InvocationSource {
     /// Repository-relative POSIX file path.
     pub path: String,
@@ -34,7 +33,7 @@ pub struct InvocationSource {
 
 /// One rendered placement of a logical component instance.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct InstanceDraft {
     /// Fragment-local placement id, also present in the marker.
     pub region_id: String,
@@ -64,7 +63,7 @@ pub struct InstanceDraft {
 
 /// One supplied slot, including slots that the adapter does not render.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct SlotDraft {
     /// Canonical receiving slot key.
     pub key: String,

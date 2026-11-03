@@ -7,10 +7,9 @@ exact wire shapes.
 
 ## Results
 
-A fragment result is `{ html, styles, markers, resources, instances, slots, warnings }`.
+A fragment result is `{ html, styles, markers, resources, instances, slots }`.
 Styles keep first-appearance order. Resources are the non-CSS public seeds the
 consumer renderer declares. Instance and slot drafts describe actual usage.
-Warnings belong only to that render.
 
 A collected style keeps its original `css` bytes and delivery owner grouping.
 Its optional `attribution` list holds rendered CSS with registered component
@@ -52,7 +51,7 @@ Generated placement ids avoid collisions with authored ignore ids. Root output
 must satisfy the [root-range rules](./mokly-component-usage-records.md#root-output-boundary).
 
 `renderPage` runs a synchronous `definePage` callback. It returns
-`{ html, resources, warnings }`, with a complete document and no styles.
+`{ html, resources }`, with a complete document and no styles.
 The sidecar permits authored ignore wrappers in `renderPage` HTML for the
 core page rules. The core converts them into ignore regions. Other reserved
 `<mokly-…>` elements remain rejected, and component or screen output must use
@@ -79,8 +78,7 @@ metadata.
 ## Instance Drafts
 
 A fragment result includes `instances` and `slots` beside its HTML, styles,
-resources, and render warnings. The core reconciles the drafts with the
-markers and builds the
+and resources. The core reconciles the drafts with the markers and builds the
 [usage records](./mokly-component-usage-records.md). Drafts do not authorize
 registration of a definition or bypass core schema validation.
 

@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use unimock::{MockFn, Unimock, matching};
 
+use crate::compiled_fixture::compiled;
 use crate::methods::{Bundle, Call, CssModules};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
@@ -37,10 +38,9 @@ fn a_late_old_epoch_release_preserves_the_same_ids_new_lifetime() {
                 Ok(MethodResult::Bundle(results::Bundle {
                     unmapped_dependency_directories: None,
                     epoch: 0,
-                    compiled: None,
+                    compiled: compiled("g"),
                     generation: "g".into(),
                     modules: vec![],
-                    warnings: vec![],
                 }))
             })
             .n_times(2),
@@ -88,19 +88,19 @@ fn a_late_old_epoch_release_preserves_the_same_ids_new_lifetime() {
     assert_ne!(old.epoch, new.epoch);
     pool.release_generation("g", old.epoch);
     pool.synchronize_releases();
-    assert!(pool.lock().unwrap().bundles.contains_key("g"));
+    assert!(pool.lock().bundles.contains_key("g"));
     pool.request(Call::CssModules(CssModules {
         generation: "g".into(),
         class_maps: BTreeMap::new(),
     }))
     .unwrap();
     pool.release_generation("g", old.epoch);
-    assert!(pool.lock().unwrap().maps.contains_key("g"));
+    assert!(pool.lock().maps.contains_key("g"));
     pool.release_generation("g", new.epoch);
     pool.synchronize_releases();
-    assert!(pool.lock().unwrap().bundles.is_empty());
+    assert!(pool.lock().bundles.is_empty());
     assert!(
-        pool.lock().unwrap().slots[0]
+        pool.lock().slots[0]
             .as_ref()
             .unwrap()
             .generations

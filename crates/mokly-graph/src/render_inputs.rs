@@ -9,7 +9,6 @@ use mokly_catalogue::render_sources::{
 use mokly_model::material::digest;
 use serde_json::{Value, json};
 
-use crate::error::{InternalError, Result};
 use crate::key::{NodeKey, NodeKind, data_key};
 use crate::render_closure::{chain, closure, handle_module};
 
@@ -63,7 +62,7 @@ impl RenderKeys {
     /// which modules read them. A preview digest stays only for a preview that the graph
     /// does not name. The stories then use `fallback`, which covers the preview, and the
     /// shared part leaves the digest out.
-    pub fn build(inputs: &RenderInputs<'_>, fallback: NodeKey) -> Result<Self> {
+    pub fn build(inputs: &RenderInputs<'_>, fallback: NodeKey) -> Self {
         let generation = inputs.generation;
         let graph = &generation.modules;
         let stories: BTreeSet<_> = inputs
@@ -72,7 +71,7 @@ impl RenderKeys {
             .filter(|source| source.method == RenderMethod::Story)
             .filter_map(|source| handle_module(graph, &source.handle))
             .collect();
-        let records = records(generation)?;
+        let records = records(generation);
         let chains: BTreeMap<_, _> = graph.keys().map(|path| (path, chain(path))).collect();
         let chained: BTreeSet<&String> = chains.values().flatten().collect();
         let shared: Vec<_> = generation
@@ -90,7 +89,7 @@ impl RenderKeys {
             .filter(|(handle, _)| generation.unattributed.contains(*handle))
             .map(|(handle, binding)| json!([handle, binding.path, binding.title]))
             .collect();
-        let shared = text_digest(&json!([generation.environment, shared, unattributed]))?;
+        let shared = text_digest(&json!([generation.environment, shared, unattributed]));
         let preview = PREVIEWS
             .iter()
             .find(|candidate| graph.contains_key(**candidate))
@@ -159,10 +158,10 @@ impl RenderKeys {
                     "resolution": resolution,
                     "bindings": exported,
                 }),
-            )?;
+            );
             modules.insert(module.to_owned(), key);
         }
-        Ok(Self { modules, fallback })
+        Self { modules, fallback }
     }
 
     /// The whole-bundle key, which every module without its own key uses.
@@ -223,7 +222,7 @@ fn dependency_root(prefix: &str) -> bool {
 }
 
 /// One digest per module: its path, its ordered imports, and its content value.
-fn records(generation: &JavaScriptGeneration) -> Result<BTreeMap<&String, String>> {
+fn records(generation: &JavaScriptGeneration) -> BTreeMap<&String, String> {
     let mut records = BTreeMap::new();
     for (path, imports) in &generation.modules {
         let content = if path.ends_with(".module.css") {
@@ -233,16 +232,15 @@ fn records(generation: &JavaScriptGeneration) -> Result<BTreeMap<&String, String
         } else {
             generation.module_digests.get(path).cloned().flatten()
         };
-        records.insert(path, text_digest(&json!([path, imports, content]))?);
+        records.insert(path, text_digest(&json!([path, imports, content])));
     }
-    Ok(records)
+    records
 }
 
-fn text_digest(value: &Value) -> Result<String> {
-    match serde_json::to_vec(value) {
-        Ok(bytes) => Ok(digest(&bytes)),
-        Err(source) => Err(InternalError::Json { source }.into()),
-    }
+fn text_digest(value: &Value) -> String {
+    let bytes =
+        serde_json::to_vec(value).expect("JSON values with string object keys always serialize");
+    digest(&bytes)
 }
 
 #[cfg(test)]

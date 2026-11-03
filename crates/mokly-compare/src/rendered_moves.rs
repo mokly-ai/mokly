@@ -30,9 +30,10 @@ impl MoveEvidence for RenderedMoves<'_> {
         let mut unignored = Vec::new();
         for (key, plan) in self.plans(side, index) {
             let artifact = generation.comparison_document(&plan.route).compare()?;
-            let Some(document) = &artifact.document else {
-                continue;
-            };
+            let document = artifact
+                .document
+                .as_ref()
+                .expect("the graph composes a document for every move candidate plan");
             let ignores = material::ignores(&document.tree);
             ignored.extend(material::ignore_contract(&document.tree));
             let instances = material::instances(&document.tree, paths)
@@ -53,13 +54,13 @@ impl MoveEvidence for RenderedMoves<'_> {
             views.push((
                 key.viewport,
                 key.color_scheme,
-                material_traits::fingerprint(&material::canonical(&document.tree, &projection))?,
+                material_traits::fingerprint(&material::canonical(&document.tree, &projection)),
             ));
             projection.ignored.clear();
             unignored.push((
                 key.viewport,
                 key.color_scheme,
-                material_traits::fingerprint(&material::canonical(&document.tree, &projection))?,
+                material_traits::fingerprint(&material::canonical(&document.tree, &projection)),
             ));
         }
         let steps = match &entry.content {
@@ -79,7 +80,8 @@ impl MoveEvidence for RenderedMoves<'_> {
             EntryContent::Component { visual, slots, .. }
                 if entry.metadata.variant_of.is_none() =>
             {
-                canonical::to_string(&(&visual.prop_schema, &visual.controls, slots)).compare()?
+                canonical::to_string(&(&visual.prop_schema, &visual.controls, slots))
+                    .expect("component schemas, controls, and slots contain only JSON data")
             }
             _ => String::new(),
         };
@@ -100,12 +102,12 @@ impl MoveEvidence for RenderedMoves<'_> {
         Ok(MoveSignature {
             unignored_hash: digest(
                 canonical::to_string(&(unignored, &steps, &extra, unignored_variants))
-                    .compare()?
+                    .expect("move preimages contain only strings and typed view axes")
                     .as_bytes(),
             ),
             hash: digest(
                 canonical::to_string(&(views, steps, extra, variants))
-                    .compare()?
+                    .expect("move preimages contain only strings and typed view axes")
                     .as_bytes(),
             ),
             ignores: ignored,
@@ -149,11 +151,14 @@ impl MoveEvidence for RenderedMoves<'_> {
                 .after
                 .comparison_document(&right_plan.route)
                 .compare()?;
-            let (Some(left_document), Some(right_document)) =
-                (&left_artifact.document, &right_artifact.document)
-            else {
-                return Ok(false);
-            };
+            let left_document = left_artifact
+                .document
+                .as_ref()
+                .expect("the graph composes a document for every base move candidate plan");
+            let right_document = right_artifact
+                .document
+                .as_ref()
+                .expect("the graph composes a document for every current move candidate plan");
             let resources = closures(
                 self.before.clone(),
                 self.after.clone(),
@@ -252,9 +257,10 @@ impl MoveEvidence for RenderedMoves<'_> {
             && before.metadata.variant_of.is_none()
             && after.metadata.variant_of.is_none()
         {
-            if canonical::to_string(&(&left.prop_schema, &left.controls, left_slots)).compare()?
+            if canonical::to_string(&(&left.prop_schema, &left.controls, left_slots))
+                .expect("component schemas, controls, and slots contain only JSON data")
                 != canonical::to_string(&(&right.prop_schema, &right.controls, right_slots))
-                    .compare()?
+                    .expect("component schemas, controls, and slots contain only JSON data")
             {
                 return Ok(false);
             }

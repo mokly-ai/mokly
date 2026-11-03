@@ -117,7 +117,7 @@ fn declared_numeric_controls_publish_effective_bounds_for_parents_and_variants()
             changes_status: ChangesStatus::Disabled,
             live_generation: None,
         };
-        let index = projection::index(&model, &[], &state).unwrap();
+        let index = projection::index(&model, &[], &state);
         let json = serde_json::to_value(index).unwrap();
         let entries = if kind == EntryKind::Screen {
             &json["screens"]

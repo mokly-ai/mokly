@@ -1,5 +1,6 @@
 //! A successful sidecar base keeps the scripts mode from its installed dependency tier.
 
+use std::collections::BTreeMap;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -89,14 +90,26 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
             .returns(Ok(MethodResult::Bundle(Bundle {
                 unmapped_dependency_directories: None,
                 epoch: 0,
-                compiled: None,
+                compiled: mokly_sidecar::compiled::CompiledGeneration {
+                    identity: "base-bundle".into(),
+                    code: "module.exports={}".into(),
+                    runtime_key: "fixture-runtime".into(),
+                    dependency_roots: Vec::new(),
+                    css_modules: Vec::new(),
+                    sources: BTreeMap::new(),
+                    peers: BTreeMap::new(),
+                    inputs: BTreeMap::new(),
+                    metadata_inputs: BTreeMap::new(),
+                    input_directories: BTreeMap::new(),
+                    metadata_directories: BTreeMap::new(),
+                    unmapped_dependency_directories: None,
+                },
                 generation: "base-bundle".into(),
                 modules: vec![Module {
                     path: "specs/card.mockup.ts".into(),
                     imports: Vec::new(),
                     digest: Some("source".into()),
                 }],
-                warnings: Vec::new(),
             }))),
         PoolMock::request
             .next_call(matching!((call) if matches!(call, Call::CssModules(params) if params.generation == "base-bundle")))
@@ -111,7 +124,6 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
                 components: Vec::new(),
                 stories: Vec::new(),
                 diagnostics: Vec::new(),
-                warnings: Vec::new(),
             }))),
         PoolMock::request
             .next_call(matching!((call) if matches!(call, Call::Bindings(params) if params.generation == "base-bundle")))

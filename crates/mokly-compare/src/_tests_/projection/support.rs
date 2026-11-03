@@ -63,7 +63,6 @@ fn generation(model: CatalogueModel) -> Arc<dyn RenderGeneration> {
                 elements: BTreeMap::new(),
                 javascript: Default::default(),
                 dependency_directories: Default::default(),
-                deferred_modules: vec![],
                 warnings: vec![],
             }),
     ))
@@ -160,12 +159,10 @@ fn finish_result(
         &after,
         &pairing,
         &entries,
-    )
-    .unwrap();
+    );
     ComparisonResult {
         resource_work: Default::default(),
         affected_lookups: 0,
-        validation_lookups: 0,
         warnings: vec![],
         review: ReviewResultV8 {
             schema_version: 8,
@@ -185,7 +182,7 @@ fn finish_result(
 
 pub(super) fn details(model: &CatalogueModel) -> BTreeMap<String, EntryDetailV4> {
     let state = projection_index::publication("mokly.config.json".into(), "base");
-    let index = projection::index(model, &[], &state).unwrap();
+    let index = projection::index(model, &[], &state);
     let mut details = projection::pending_details(model, &index, &[]);
     let workspaces = {
         let workspace_details = details
@@ -261,17 +258,4 @@ pub(super) fn transferred_variant_result(remove_donor: bool) -> ComparisonResult
             diagnostics: vec![],
         },
     )
-}
-
-/// Supply the generation fence only to tests that project affected workspaces.
-pub(super) fn with_lookup(result: &mut ComparisonResult) {
-    let catalogue = result.after.catalogue().clone();
-    result.after = Arc::new(Unimock::new((
-        RenderGenerationMock::generation_key
-            .each_call(matching!())
-            .returns("projection-generation"),
-        RenderGenerationMock::catalogue
-            .each_call(matching!())
-            .returns(catalogue),
-    )));
 }

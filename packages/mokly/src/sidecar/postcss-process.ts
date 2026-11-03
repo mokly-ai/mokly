@@ -42,12 +42,13 @@ export class PostcssProcess {
       this.fail(new Error("PostCSS worker disconnected")),
     );
     child.on("message", (message: Reply | PhaseMessage) => {
+      // A child can reply after a process failure rejected and cleared its work.
+      if (this.failure) return;
       if (!("id" in message)) {
         this.phase(message.line);
         return;
       }
-      const pending = this.pending.get(message.id);
-      if (!pending) return;
+      const pending = this.pending.get(message.id)!;
       this.pending.delete(message.id);
       if (message.error)
         pending.reject(

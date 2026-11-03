@@ -34,7 +34,7 @@ pub enum CatalogueError {
         /// Warnings raised before the failure.
         warnings: Vec<Warning>,
     },
-    /// An unhandled serialization failure retains its source.
+    /// An internal adapter failure retains its source.
     #[error("[mokly-catalogue/internal] {0}")]
     Internal(#[from] InternalError),
 }
@@ -47,11 +47,5 @@ pub enum InternalError {
     Provider {
         /// Original typed provider failure.
         source: Box<dyn std::error::Error + Send + Sync>,
-    },
-    /// Data encoding failed.
-    #[error("JSON encoding failed: {source}")]
-    Json {
-        /// Original JSON error.
-        source: serde_json::Error,
     },
 }

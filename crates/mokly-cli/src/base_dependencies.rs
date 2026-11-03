@@ -5,7 +5,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use mokly_catalogue::config::relative;
-use mokly_catalogue::config_types::ResolvedConfig;
+use mokly_catalogue::config_types::{ModuleLoader, ResolvedConfig};
 use mokly_compare::base_render::BaseRequest;
 use mokly_compare::cache::DiskCache;
 use mokly_compare::cache_types::{Cache, Lease, Reporter, Storage};
@@ -13,7 +13,7 @@ use mokly_compare::commands::TimedCommands;
 use mokly_compare::comparison_steps::StepCache;
 use mokly_compare::dependencies::{Dependencies, DependencyTiers};
 use mokly_compare::dependency_types::{Request, Tier};
-use mokly_compare::error::{Error, InternalError, Result};
+use mokly_compare::error::{Error, Result};
 use mokly_compare::extraction::{CachedExtraction, Extraction};
 use mokly_compare::inputs::{InputReader, SourceInputs};
 use mokly_compare::locations::{Locations, SystemLocations};
@@ -195,7 +195,7 @@ impl NativeDependencies {
             install_scripts: request.install_scripts,
             head_root: config.repo_root.clone(),
             configuration,
-            resolution: resolution(config)?,
+            resolution: resolution(config),
         })?;
         span.record("tier", tier_number(dependencies.tier));
         span.record("status", "ok");
@@ -217,15 +217,30 @@ fn tier_number(tier: Tier) -> u64 {
     }
 }
 
-fn resolution(config: &ResolvedConfig) -> Result<ModuleResolution> {
+fn resolution(config: &ResolvedConfig) -> ModuleResolution {
     let authored = config.input.module_resolution.clone().unwrap_or_default();
-    let loaders = match serde_json::to_value(authored.loaders.unwrap_or_default())
-        .and_then(serde_json::from_value)
-    {
-        Ok(loaders) => loaders,
-        Err(source) => return Err(InternalError::Json { source }.into()),
-    };
-    Ok(ModuleResolution {
+    let loaders = authored
+        .loaders
+        .unwrap_or_default()
+        .into_iter()
+        .map(|(extension, loader)| {
+            let name = match loader {
+                ModuleLoader::Base64 => "base64",
+                ModuleLoader::Binary => "binary",
+                ModuleLoader::Dataurl => "dataurl",
+                ModuleLoader::Empty => "empty",
+                ModuleLoader::File => "file",
+                ModuleLoader::Js => "js",
+                ModuleLoader::Json => "json",
+                ModuleLoader::Jsx => "jsx",
+                ModuleLoader::Text => "text",
+                ModuleLoader::Ts => "ts",
+                ModuleLoader::Tsx => "tsx",
+            };
+            (extension, name.into())
+        })
+        .collect();
+    ModuleResolution {
         dependency_root: None,
         aliases: authored.aliases.unwrap_or_default(),
         conditions: authored.conditions.unwrap_or_default(),
@@ -233,7 +248,7 @@ fn resolution(config: &ResolvedConfig) -> Result<ModuleResolution> {
         main_fields: authored.main_fields.unwrap_or_default(),
         resolve_extensions: authored.resolve_extensions.unwrap_or_default(),
         package_roots: config.package_roots(),
-    })
+    }
 }
 
 #[cfg(test)]

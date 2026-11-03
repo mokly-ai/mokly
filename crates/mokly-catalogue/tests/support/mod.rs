@@ -6,12 +6,13 @@ use std::sync::Arc;
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
 use mokly_catalogue::config_types::ResolvedConfig;
-use mokly_catalogue::definition_provider::DeferredDefinitions;
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::error::Result;
 use mokly_catalogue::preparation::{Builder, CatalogueBuilder, PreparedCatalogue};
 use mokly_catalogue::working_tree::WorkingTree;
 use mokly_source_interface::tree::SourceTree;
+
+use crate::definitions::EmptyDefinitions;
 
 pub fn write(directory: &Path, path: &str, text: &str) {
     let path = directory.join(path);
@@ -25,7 +26,7 @@ pub fn prepare(directory: &Path, explicit: Option<&str>) -> Result<PreparedCatal
     let builder: &dyn CatalogueBuilder = &Builder {
         tree: tree.clone(),
         discovery: Arc::new(Discoverer { tree }),
-        definitions: Arc::new(DeferredDefinitions),
+        definitions: Arc::new(EmptyDefinitions),
     };
     builder.prepare(&config, None)
 }

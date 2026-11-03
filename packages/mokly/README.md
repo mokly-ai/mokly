@@ -175,6 +175,8 @@ the packed contents of the package.
   reads framed requests from the binary and writes one response for each.
 - [`src/sidecar/session.ts`](./src/sidecar/session.ts) holds `Session`, which
   dispatches each sidecar request to its method.
+- [`src/sidecar/transport.ts`](./src/sidecar/transport.ts) splits and decodes
+  the binary's typed requests and limits the size of each response.
 - [`src/sidecar/bundle.ts`](./src/sidecar/bundle.ts) holds `bundle`, which
   compiles the catalogue modules. esbuild resolves most imports itself, and
   [`src/sidecar/native-plan.ts`](./src/sidecar/native-plan.ts) classifies the

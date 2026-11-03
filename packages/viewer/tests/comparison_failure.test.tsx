@@ -4,11 +4,13 @@ import test from "node:test";
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { act, renderHook } from "@testing-library/react";
 
-import {
-  ComparisonEnvironmentProvider,
-  type ComparisonEnvironment,
-} from "../src/shell/comparison_context.js";
+import type { ComparisonEnvironment } from "../src/shell/comparison_context.js";
 import { useComparison } from "../src/shell/use_comparison.js";
+
+import { ShellStoreFixture } from "./shell_markup.js";
+
+/** The routed screen whose comparison the workspace requests. */
+const HOME = "product/browse/home";
 
 test("a comparison network failure keeps browser text out of its details in every host", async (t) => {
   GlobalRegistrator.register();
@@ -31,13 +33,16 @@ test("a comparison network failure keeps browser text out of its details in ever
         useComparison({
           eligible: true,
           eligibilityKnown: true,
-          entryId: "home",
+          entryId: HOME,
         }),
       {
         wrapper: ({ children }) => (
-          <ComparisonEnvironmentProvider environment={environment}>
+          <ShellStoreFixture
+            comparisonEnvironment={environment}
+            path={`/view/${HOME}/`}
+          >
             {children}
-          </ComparisonEnvironmentProvider>
+          </ShellStoreFixture>
         ),
       },
     );

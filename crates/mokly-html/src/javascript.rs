@@ -149,7 +149,7 @@ impl Engine<'_> {
             &mut result.instances,
             &mut result.slots,
             &context,
-        )?;
+        );
         for instance in result.instances {
             if let Ok(props) = wire_decode::decode(&instance.props) {
                 self.warnings.extend(numeric_warnings::for_invocation(

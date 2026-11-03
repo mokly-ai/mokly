@@ -6,11 +6,11 @@ use std::sync::Arc;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::error::Error;
-use crate::methods::{Bundle, Call, Generation, ModuleResolution, ProcessCss, RenderPage};
+use crate::methods::{Call, ModuleResolution, ProcessCss};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
 use crate::pool_state::Slot;
-use crate::results::{self, Css};
+use crate::results::Css;
 use crate::wire::MethodResult;
 use crate::workers::{ControlMock, WorkerMock};
 
@@ -42,7 +42,7 @@ fn pool(worker: Unimock, clock: Unimock) -> Pool {
         },
     );
     {
-        let mut state = pool.lock().unwrap();
+        let mut state = pool.lock();
         state.slots.push(Some(Slot {
             source_root: "/repo".into(),
             worker: Box::new(worker.clone()),
@@ -70,70 +70,6 @@ fn result() -> MethodResult {
 }
 
 #[test]
-fn an_unknown_generation_does_not_kill_a_healthy_process() {
-    let worker = Unimock::new((
-        WorkerMock::request
-            .next_call(matching!(_, 60_000))
-            .returns(Ok(result())),
-        WorkerMock::resident_bytes
-            .each_call(matching!())
-            .answers(&|_| Ok(0))
-            .n_times(2),
-    ));
-    let pool = pool(worker, Unimock::new(()));
-    assert!(matches!(
-        pool.request(Call::Describe(Generation {
-            generation: "missing".into()
-        })),
-        Err(Error::UnknownGeneration { .. })
-    ));
-    assert!(matches!(pool.request(css()).unwrap(), MethodResult::Css(_)));
-}
-
-#[test]
-fn a_changed_generation_does_not_kill_a_healthy_process() {
-    let worker = Unimock::new((
-        WorkerMock::request
-            .next_call(matching!((request,_) if matches!(request.call,Call::Bundle(_))))
-            .returns(Ok(MethodResult::Bundle(results::Bundle { unmapped_dependency_directories: None, epoch: 0, compiled: None,
-                generation: "changed".into(),
-                modules: Vec::new(),
-                warnings: Vec::new(),
-            }))),
-        WorkerMock::request.next_call(matching!((request,_) if matches!(&request.call,Call::Dispose(value) if value.generation == "changed"))).returns(Ok(MethodResult::Empty)),
-        WorkerMock::request
-            .next_call(matching!((request,_) if matches!(request.call,Call::ProcessCss(_))))
-            .returns(Ok(result())),
-        WorkerMock::resident_bytes
-            .each_call(matching!())
-            .answers(&|_| Ok(0))
-            .n_times(2),
-    ));
-    let pool = pool(worker, Unimock::new(()));
-    pool.lock().unwrap().bundles.insert(
-        "g".into(),
-        Bundle {
-            evaluation: None,
-            entry_files: Vec::new(),
-            renderer: None,
-            stories_files: Vec::new(),
-            module_resolution: ModuleResolution::default(),
-            source_root: "/repo".into(),
-            configuration_directory: ".".into(),
-            repository_roots: Vec::new(),
-        },
-    );
-    assert!(matches!(
-        pool.request(Call::RenderPage(RenderPage {
-            generation: "g".into(),
-            handle: "entry#default".into()
-        })),
-        Err(Error::GenerationChanged { .. })
-    ));
-    assert!(matches!(pool.request(css()).unwrap(), MethodResult::Css(_)));
-}
-
-#[test]
 fn recycle_shutdown_failure_cannot_replace_a_successful_result() {
     let worker = Unimock::new((
         WorkerMock::request
@@ -152,5 +88,5 @@ fn recycle_shutdown_failure_cannot_replace_a_successful_result() {
         panic!()
     };
     assert_eq!(result.text, "success");
-    assert!(pool.lock().unwrap().slots[0].is_none());
+    assert!(pool.lock().slots[0].is_none());
 }

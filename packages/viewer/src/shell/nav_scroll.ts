@@ -13,20 +13,18 @@ import type { ShellStore } from "./store_context.js";
 
 /** Bind the rail scroller to its stored offset, routes, and folder reveals. */
 export function useNavigationScroll(
-  store: ShellStore | undefined,
-  route: ShellStore["state"]["route"] | undefined,
+  store: ShellStore,
   sections: readonly NavigationSection[],
 ) {
   const currentRow = useRef<HTMLAnchorElement>(null);
   const [summaries] = useState(() => new ElementRefs<string, HTMLElement>());
   const visible = visibleSummaries(sections);
   const scroll = useRef<HTMLDivElement>(null);
-  const initialScroll = useRef(store?.state.navScroll ?? 0);
+  const initialScroll = useRef(store.state.navScroll);
   const mounted = useRef(false);
   const settled = useRef<ShellStore["state"]["revealedFolder"]>(undefined);
-  const interactive = store?.interactive ?? false;
-  const revealed = store?.state.revealedFolder;
-  const selection = store?.state.selection;
+  const { interactive } = store;
+  const { revealedFolder: revealed, route, selection } = store.state;
   useLayoutEffect(() => {
     const pane = scroll.current;
     if (!interactive || !pane) return;
@@ -39,7 +37,7 @@ export function useNavigationScroll(
   }, [interactive, route]);
   useLayoutEffect(() => {
     const pane = scroll.current;
-    if (!interactive || !pane || !revealed || !selection) return;
+    if (!interactive || !pane || !revealed) return;
     if (settled.current === revealed) return;
     const summary = visible.has(revealed.key)
       ? summaries.ref(revealed.key).current

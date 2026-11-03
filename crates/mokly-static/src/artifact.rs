@@ -1,54 +1,18 @@
-//! Validate immutable bytes before allowing an inventory to become write paths.
-
-use std::collections::BTreeMap;
+//! Check final inventory paths before they become filesystem write paths.
 
 use mokly_model::output::artifact::Artifact;
-use mokly_model::output::ownership::Ownership;
-use mokly_model::output::validation::{MARKER, digest};
+use mokly_model::output::validation::MARKER;
 
-use crate::error::{Error, Result};
+use crate::error::Result;
 use crate::inventory::Inventory;
 
-/// Checks the whole artifact before any byte is staged: unique paths, the
-/// portable-path rule and the 64 MiB file limit of the inventory, and a last
-/// marker whose entries match each file's size and digest.
+/// Check portable paths and path collisions before staging. The marker path
+/// is fixed by finalization. Its typed inventory and immutable bytes are trusted.
 pub(crate) fn validate(artifact: &Artifact) -> Result<()> {
-    let mut paths = BTreeMap::new();
     let mut inventory = Inventory::default();
     for file in &artifact.files {
-        if paths.insert(file.path.as_str(), file).is_some() {
-            return Err(Error::Collision {
-                path: file.path.clone(),
-                other: file.path.clone(),
-            });
-        }
         if file.path != MARKER {
-            inventory.insert(file.path.clone(), file.bytes.clone())?;
-        }
-    }
-    let marker = paths.get(MARKER).ok_or_else(|| Error::Invalid {
-        path: MARKER.into(),
-    })?;
-    let ownership = match Ownership::parse(&marker.bytes) {
-        Ok(ownership) => ownership,
-        Err(_) => {
-            return Err(Error::Ownership {
-                path: artifact.directory.clone(),
-            });
-        }
-    };
-    if ownership.files.len() + 1 != paths.len()
-        || artifact.files.last().map(|file| file.path.as_str()) != Some(MARKER)
-    {
-        return Err(Error::Invalid {
-            path: MARKER.into(),
-        });
-    }
-    for entry in ownership.files {
-        if !paths.get(entry.path.as_str()).is_some_and(|file| {
-            file.bytes.len() as u64 == entry.size && digest(&file.bytes) == entry.sha256
-        }) {
-            return Err(Error::Invalid { path: entry.path });
+            inventory.insert_path(&file.path)?;
         }
     }
     Ok(())

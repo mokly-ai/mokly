@@ -43,13 +43,10 @@ pub fn to_string(value: &impl Serialize) -> Result<String> {
         Ok(value) => value,
         Err(source) => return Err(ModelError::Internal(InternalError::Json { source })),
     };
-    match serde_json::to_string_pretty(&sorted(value)) {
-        Ok(mut text) => {
-            text.push('\n');
-            Ok(text)
-        }
-        Err(source) => Err(ModelError::Internal(InternalError::Json { source })),
-    }
+    let mut text = serde_json::to_string_pretty(&sorted(value))
+        .expect("JSON values contain only JSON data and string object keys");
+    text.push('\n');
+    Ok(text)
 }
 
 /// Hash a detail's canonical JSON with its id and current revision zeroed.
@@ -72,7 +69,9 @@ pub fn detail_id(value: &impl Serialize) -> Result<String> {
         }
         Err(source) => return Err(ModelError::Internal(InternalError::Json { source })),
     };
-    let bytes = to_string(&value)?.into_bytes();
+    let bytes = to_string(&value)
+        .expect("the detail hash preimage is a JSON object with string keys")
+        .into_bytes();
     Ok(Sha256::digest(bytes)
         .iter()
         .map(|byte| format!("{byte:02x}"))

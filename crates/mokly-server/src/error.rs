@@ -3,8 +3,6 @@
 use std::io;
 
 use mokly_graph::error::GraphError;
-use mokly_model::error::ModelError;
-use mokly_model::readers::ReadError;
 use thiserror::Error;
 
 /// Server operation result.
@@ -57,7 +55,7 @@ pub enum ServerError {
         /// Typed comparison failure.
         source: Box<mokly_compare::error::Error>,
     },
-    /// Internal IO, task, and serialization failures.
+    /// Internal IO, decoding, and task failures.
     #[error("[mokly-server/internal] {0}")]
     Internal(#[from] InternalError),
 }
@@ -77,23 +75,11 @@ pub enum InternalError {
         /// Original failure.
         source: io::Error,
     },
-    /// Model encoding failed.
-    #[error("model encoding failed: {source}")]
-    Model {
-        /// Original failure.
-        source: ModelError,
-    },
     /// JSON decoding failed.
     #[error("JSON failed: {source}")]
     Json {
         /// Original failure.
         source: serde_json::Error,
-    },
-    /// A projected record is invalid.
-    #[error("public state failed validation: {source}")]
-    Read {
-        /// Original failure.
-        source: ReadError,
     },
     /// A worker did not finish normally.
     #[error("worker failed: {source}")]

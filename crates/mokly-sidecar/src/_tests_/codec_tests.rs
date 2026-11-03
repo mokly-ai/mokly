@@ -1,10 +1,10 @@
-//! Framing, UTF-8 and fail-closed envelope checks.
+//! Framing, UTF-8 and JSON decoding.
 
 use serde_json::json;
 
 use crate::codec::{Decoder, MAX_FRAME_BYTES, encode};
 use crate::error::{Error, ProtocolError};
-use crate::methods::{Call, Hello};
+use crate::methods::{Call, Generation, Hello};
 use crate::wire::{Frame, Request, Response};
 
 #[test]
@@ -27,14 +27,12 @@ fn split_utf8_and_multiple_frames_decode_in_order() {
 }
 
 #[test]
-fn malformed_envelopes_unknown_methods_and_bad_utf8_fail() {
+fn invalid_json_bad_utf8_and_partial_frames_fail() {
     for bytes in [
         &b"\n"[..],
         &b"{}\n"[..],
         &b"\xff\n"[..],
         &b"{\"id\":1}\n"[..],
-        &b"{\"id\":1,\"result\":null,\"error\":{\"code\":\"render-failed\",\"message\":\"x\"}}\n"[..],
-        &b"{\"id\":1,\"event\":\"diagnostic\",\"params\":{\"message\":\"x\"}}\n"[..],
         &b"{\"id\":1,\"method\":\"unknown\",\"params\":{}}\n"[..],
         &b"{\"event\":\"unknown\",\"params\":{}}\n"[..],
     ] {
@@ -49,9 +47,6 @@ fn malformed_envelopes_unknown_methods_and_bad_utf8_fail() {
         decoder.finish(),
         Err(Error::Protocol(ProtocolError::Truncated))
     ));
-    assert!(
-        serde_json::from_value::<Request>(json!({"id":1,"method":"unknown","params":{}})).is_err()
-    );
 }
 
 #[test]
@@ -67,8 +62,18 @@ fn exact_frame_limit_is_accepted_and_excess_is_rejected_before_buffering() {
         Decoder::default().push(&bytes),
         Err(Error::Protocol(ProtocolError::Oversized { .. }))
     ));
-    let value = "x".repeat(MAX_FRAME_BYTES - envelope.len() + 1);
-    assert!(encode(&json!({"id":1,"result":value})).is_err());
+    let request = Request {
+        id: 1,
+        call: Call::Describe(Generation {
+            generation: "x".repeat(MAX_FRAME_BYTES - envelope.len() + 1),
+        }),
+    };
+    assert!(matches!(
+        encode(&request),
+        Err(Error::Protocol(ProtocolError::Oversized {
+            limit: MAX_FRAME_BYTES
+        }))
+    ));
 }
 
 #[test]

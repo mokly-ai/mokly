@@ -24,7 +24,7 @@ export function parentInput() {
     (message: { chunk?: Uint8Array; end?: boolean; error?: string }) => {
       if (message.error) stream.destroy(new Error(message.error));
       else if (message.end) stream.push(null);
-      else if (message.chunk) stream.push(Buffer.from(message.chunk));
+      else stream.push(Buffer.from(message.chunk!));
     },
   );
   return {

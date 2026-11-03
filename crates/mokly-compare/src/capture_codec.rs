@@ -13,7 +13,7 @@ use mokly_html::links::Reference;
 use mokly_model::usage::CatalogueUsage;
 use serde::{Deserialize, Serialize};
 
-use crate::capture_error::{CaptureDecode, CaptureResult, Result};
+use crate::capture_error::{CaptureResult, Result};
 use crate::capture_nodes::{self, FlatNode};
 use crate::capture_weight;
 
@@ -94,13 +94,16 @@ impl EncodedView {
     }
 
     /// Restore exact bytes and annotations without parsing authored HTML.
-    pub(crate) fn restore(&self) -> Result<Artifact> {
+    pub(crate) fn restore(&self) -> Artifact {
         let mut decoder = BufReader::new(ZlibDecoder::new(self.payload.as_ref()));
         let mut bytes = vec![0; self.bytes_len];
-        decoder.read_exact(&mut bytes).decode()?;
-        let payload: Payload = serde_json::from_reader(decoder).decode()?;
-        let tree = capture_nodes::restore(payload.tree)?;
-        Ok(Artifact {
+        decoder
+            .read_exact(&mut bytes)
+            .expect("the private capture retains the exact bytes encoded in memory");
+        let payload: Payload = serde_json::from_reader(decoder)
+            .expect("the private capture decodes the payload encoded in memory");
+        let tree = capture_nodes::restore(payload.tree);
+        Artifact {
             bytes,
             content_type: self.content_type.clone(),
             fragment: None,
@@ -112,7 +115,7 @@ impl EncodedView {
                 components: metadata.components.clone(),
                 links: metadata.links.clone(),
             }),
-        })
+        }
     }
 }
 

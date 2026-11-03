@@ -54,7 +54,6 @@ fn re_export(declarations: &BTreeMap<String, String>, badge: &str) -> RenderKeys
         },
         fallback(),
     )
-    .unwrap()
 }
 
 #[test]
@@ -117,7 +116,6 @@ fn unattributed(badge: &str) -> RenderKeys {
         },
         fallback(),
     )
-    .unwrap()
 }
 
 #[test]

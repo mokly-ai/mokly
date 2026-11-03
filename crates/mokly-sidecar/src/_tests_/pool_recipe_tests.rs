@@ -1,5 +1,8 @@
 //! Release retention, fixed seeding, byte eviction, and stop clearing.
 
+use std::panic::{AssertUnwindSafe, catch_unwind};
+use std::sync::Arc;
+
 use crate::pool::SidecarPool;
 
 use super::recipe_support::{Fixture, envelope_size};
@@ -14,6 +17,23 @@ fn seed_restores_the_highest_live_epoch_on_each_fresh_worker() {
     for slot in 1..4 {
         assert_eq!(fixture.probe("entry.ts", "probe", slot), ["z-new"]);
     }
+}
+
+#[test]
+fn a_live_seed_stays_usable_when_its_final_lease_ends_during_restore() {
+    let fixture = Arc::new(Fixture::new(usize::MAX));
+    fixture.release("entry.ts", "stored");
+    let live = fixture.bundle("entry.ts", "live");
+    let owner = Arc::downgrade(&fixture);
+    *fixture.before_restore.lock().unwrap() = Some(Box::new(move || {
+        owner
+            .upgrade()
+            .unwrap()
+            .pool
+            .release_generation(&live.generation, live.epoch);
+    }));
+    let restored = catch_unwind(AssertUnwindSafe(|| fixture.probe("entry.ts", "probe", 2)));
+    assert_eq!(restored.ok(), Some(vec!["stored".into(), "live".into()]));
 }
 
 #[test]

@@ -91,13 +91,7 @@ fn changing_source_roots_kills_the_old_process_before_spawning_in_the_new_root()
     for root in ["/head", "/head", "/base", "/base", "/head"] {
         pool.request(css(root)).unwrap();
     }
-    let affinities = pool
-        .lock()
-        .unwrap()
-        .affinity
-        .keys()
-        .cloned()
-        .collect::<Vec<_>>();
+    let affinities = pool.lock().affinity.keys().cloned().collect::<Vec<_>>();
     pool.abort().unwrap();
     assert_eq!(affinities, ["/head"]);
     assert_eq!(
@@ -120,7 +114,7 @@ fn changing_source_roots_kills_the_old_process_before_spawning_in_the_new_root()
 #[test]
 fn reloaded_generations_select_the_original_base_root() {
     let pool = pool(Unimock::new(()), 1);
-    pool.lock().unwrap().bundles.insert(
+    pool.lock().bundles.insert(
         "base".into(),
         Bundle {
             source_root: "/base".into(),
@@ -139,13 +133,10 @@ fn reloaded_generations_select_the_original_base_root() {
         }),
         Call::RenderPage(RenderPage {
             generation: "base".into(),
-            handle: "page".into(),
+            handle: "page#default".into(),
         }),
     ] {
-        assert_eq!(
-            pool.source_root(&call).unwrap().as_deref(),
-            Some(Path::new("/base"))
-        );
+        assert_eq!(pool.source_root(&call).as_deref(), Some(Path::new("/base")));
     }
 }
 

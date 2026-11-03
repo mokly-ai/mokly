@@ -4,13 +4,14 @@ import { isEntryPath } from "../navigation/logical.js";
 
 import type { NavSectionNode } from "./nav_tree.js";
 
-/** Derive a disclosure key from a folder group without parsing its labels. */
+/**
+ * Derive a disclosure key from a folder group's `folder:` key without parsing
+ * its labels.
+ */
 export function folderDisclosureKey(
   section: NavSectionNode["id"],
   groupKey: string,
 ): string {
-  if (!groupKey.startsWith("folder:"))
-    throw new Error(`expected a folder group key, got ${groupKey}`);
   return `folder:${section}:${groupKey.slice("folder:".length)}`;
 }
 

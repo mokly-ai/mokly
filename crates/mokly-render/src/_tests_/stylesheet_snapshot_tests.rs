@@ -1,6 +1,6 @@
 //! Evicted stylesheet results replay the sources captured before definition evaluation.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
@@ -9,6 +9,7 @@ use mokly_catalogue::config_types::{Config, ResolvedConfig};
 use mokly_catalogue::definition_provider::DefinitionProvider;
 use mokly_css::types::StylesheetRoot;
 use mokly_graph::cache::MemoryCache;
+use mokly_sidecar::compiled::CompiledGeneration;
 use mokly_sidecar::definitions::Definitions;
 use mokly_sidecar::methods::Call;
 use mokly_sidecar::pool::PoolMock;
@@ -69,9 +70,22 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
                     Call::Bundle(_) => MethodResult::Bundle(Bundle {
                         unmapped_dependency_directories: None,
                         epoch: 0,
-                        compiled: None,
+                        compiled: CompiledGeneration {
+                            identity: "bundle".into(),
+                            code: "module.exports={}".into(),
+                            runtime_key: "fixture-runtime".into(),
+                            dependency_roots: Vec::new(),
+                            css_modules: Vec::new(),
+                            sources: BTreeMap::new(),
+                            peers: BTreeMap::new(),
+                            inputs: BTreeMap::new(),
+                            metadata_inputs: BTreeMap::new(),
+                            input_directories: BTreeMap::new(),
+                            metadata_directories: BTreeMap::new(),
+                            unmapped_dependency_directories: None,
+                        },
                         generation: "bundle".into(),
-                        warnings: vec![],
+
                         modules: vec![
                             Module {
                                 path: "renderer.tsx".into(),
@@ -94,7 +108,6 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
                         components: vec![],
                         stories: vec![],
                         diagnostics: vec![],
-                        warnings: vec![],
                     }),
                     call => panic!("unexpected request {call:?}"),
                 })

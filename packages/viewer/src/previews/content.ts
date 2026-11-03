@@ -14,27 +14,22 @@ function unavailable(): never {
   throw new Error("The previous version is unavailable.");
 }
 
-/** One parsed preview and the identity its metadata proves. */
-export interface ParsedPreview {
-  identity:
-    | { kind: "snapshot"; snapshotId: string }
-    | { kind: "base"; baseCommit: string };
+/** One parsed page or document preview and the base commit its metadata names. */
+export interface ParsedPagePreview {
+  baseCommit: string;
   content: PreviewContent;
 }
 
-/** A removed screen's views from the route's accepted detail. */
+/**
+ * A removed screen's views from the route's held detail. The route's fences
+ * accepted that detail for this record, so it is not checked again.
+ */
 export function screenContent(
   data: RemovedPreviewData,
   detail: EntryDetailV4 | undefined,
   base: string,
-): ParsedPreview {
-  if (
-    !detail ||
-    detail.entry.kind !== "screen" ||
-    detail.entry.path !== data.path ||
-    detail.entry.snapshotId === undefined
-  )
-    unavailable();
+): PreviewContent {
+  if (!detail) unavailable();
   const views = detail.views.flatMap((view) =>
     view.state === "removed"
       ? [
@@ -57,23 +52,21 @@ export function screenContent(
       : [],
   );
   if (!views.length) unavailable();
-  return {
-    identity: { kind: "snapshot", snapshotId: detail.entry.snapshotId },
-    content: { kind: "screen", views },
-  };
+  return { kind: "screen", views };
 }
 
+/** A removed page's or document's documents from its preview metadata. */
 export function pageContent(
   data: RemovedPreviewData,
   payload: unknown,
   base: string,
-): ParsedPreview {
+): ParsedPagePreview {
   const preview = parseRemovedPagePreview(payload);
   if (preview.path !== data.path) unavailable();
   if (data.kind === "document") {
     if (!data.colorSchemes?.includes("light")) unavailable();
     return {
-      identity: { kind: "base", baseCommit: preview.baseCommit },
+      baseCommit: preview.baseCommit,
       content: {
         kind: "document",
         views: data.colorSchemes.map((colorScheme) => ({
@@ -89,7 +82,7 @@ export function pageContent(
     };
   }
   return {
-    identity: { kind: "base", baseCommit: preview.baseCommit },
+    baseCommit: preview.baseCommit,
     content: {
       kind: "page",
       url: new URL(

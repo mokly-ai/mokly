@@ -71,7 +71,7 @@ impl Graph {
         mut catalogue: PreparedCatalogue,
         output: Option<&Path>,
     ) -> Result<Arc<dyn RenderGeneration>> {
-        let config_key = config_key::resolved(&config, &self.version)?;
+        let config_key = config_key::resolved(&config, &self.version);
         let matchers = styles::Matchers::new(&config)?;
         let markdown_assets = markdown_assets::collect(&config, &catalogue, self.tree.as_ref())?;
         for entry in &mut catalogue.model.entries {
@@ -126,7 +126,7 @@ impl Graph {
                 return Err(GraphError::Css { source });
             }
             names.insert(&bundle.route, false)?;
-            let stylesheet_key = stylesheet_keys::input(&config_key, &root, &bundle)?;
+            let stylesheet_key = stylesheet_keys::input(&config_key, &root, &bundle);
             let document_key = stylesheet_keys::output(&bundle);
             self.cache.insert(
                 stylesheet_key.clone(),

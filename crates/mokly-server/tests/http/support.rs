@@ -4,11 +4,12 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
+
 use std::time::Duration;
+use unimock::Unimock;
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
 use mokly_catalogue::config_types::ResolvedConfig;
-use mokly_catalogue::definition_provider::DeferredDefinitions;
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::preparation::{Builder, CatalogueBuilder, PreparedCatalogue};
 use mokly_catalogue::working_tree::WorkingTree;
@@ -94,7 +95,7 @@ impl Harness {
         let prepared = Builder {
             tree: tree.clone(),
             discovery: Arc::new(Discoverer { tree: tree.clone() }),
-            definitions: Arc::new(DeferredDefinitions),
+            definitions: Arc::new(Unimock::new(())),
         }
         .prepare(&config, None)
         .unwrap();

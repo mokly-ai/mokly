@@ -56,7 +56,7 @@ fn oversized_usage_is_explicit_and_never_truncated() {
     assert!(html.contains("&quot;error&quot;:&quot;limit&quot;"));
 }
 #[test]
-fn reserved_authored_markers_and_invalid_parent_indices_fail() {
+fn reserved_authored_markers_and_missing_head_fail() {
     for (html, expected) in [
         (
             "<template data-mokly-inspector>{}</template>",
@@ -72,18 +72,6 @@ fn reserved_authored_markers_and_invalid_parent_indices_fail() {
         );
     }
     let mut document = document("<p>Body</p>");
-    document.usage = CatalogueUsage::Ready {
-        instances: vec![],
-        slots: vec![],
-        ranges: vec![ComponentRangeRecord {
-            id: "r-0".into(),
-            target: ComponentRangeTarget::Root,
-            parent_id: Some("r-0".into()),
-        }],
-    };
-    assert!(
-        matches!(inject(&document, "home/index.html"), Err(Error::Inspector { route, reason: InspectorFailure::Ranges }) if route == "home/index.html")
-    );
     document.tree.clear();
     document.usage = CatalogueUsage::Ready {
         instances: vec![],

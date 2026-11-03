@@ -113,16 +113,17 @@ impl WorkerFactory for NodeFactory {
             Err(source) => return Err(InternalError::Platform { source }.into()),
         };
         let pid = child.0.id();
-        let (Some(stdin), Some(stdout), Some(stderr)) = (
-            child.0.stdin.take(),
-            child.0.stdout.take(),
-            child.0.stderr.take(),
-        ) else {
-            let span = startup.stop();
-            let _scope = span.enter();
-            startup.observe(group.kill().is_ok());
-            return Err(InternalError::Synchronization.into());
-        };
+        let stdin = child.0.stdin.take().expect("stdin is configured as a pipe");
+        let stdout = child
+            .0
+            .stdout
+            .take()
+            .expect("stdout is configured as a pipe");
+        let stderr = child
+            .0
+            .stderr
+            .take()
+            .expect("stderr is configured as a pipe");
         let (outgoing, outgoing_frames) = mpsc::sync_channel(2);
         let (incoming_frames, incoming) = mpsc::sync_channel(2);
         let (exited_tx, exited) = mpsc::sync_channel(1);

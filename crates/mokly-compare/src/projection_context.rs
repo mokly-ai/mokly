@@ -24,10 +24,10 @@ impl<'a> Context<'a> {
         let mut paired = BTreeSet::new();
         let mut counterparts = BTreeMap::new();
         for pair in &result.pairing.entries {
-            let Some(left) = pair.before.and_then(|index| before.entries.get(index)) else {
+            let Some(left) = pair.before.map(|index| &before.entries[index]) else {
                 continue;
             };
-            let Some(right) = pair.after.and_then(|index| current.entries.get(index)) else {
+            let Some(right) = pair.after.map(|index| &current.entries[index]) else {
                 continue;
             };
             paired.insert(right.metadata.path.as_str());

@@ -40,8 +40,7 @@ export async function resolutionInputs(
     directories.add(directory);
     const root = inside(paths.sourceRoot, file)
       ? paths.sourceRoot
-      : paths.dependencyDirectory(file);
-    if (!root) throw new Error("consumed module is outside the selected roots");
+      : paths.dependencyDirectory(file)!;
     while (inside(root, directory)) {
       ancestors.add(directory);
       if (directory === root) break;

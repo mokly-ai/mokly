@@ -3,7 +3,7 @@
 use clap::Error;
 use thiserror::Error;
 
-/// Invalid input or a command whose subsystem is absent.
+/// Invalid command input.
 #[derive(Debug, Error)]
 pub enum Failure {
     /// Unknown public verb.
@@ -75,12 +75,6 @@ pub enum Failure {
         /// Original typed parser error.
         source: Error,
     },
-    /// A command subsystem is absent from this build.
-    #[error("[mokly/build-invalid] The {command} command is not available in this build.")]
-    Unavailable {
-        /// Public command name.
-        command: &'static str,
-    },
 }
 
 impl Failure {
@@ -109,9 +103,6 @@ impl Failure {
             Self::TokenRequired => "publish requires --token or MOKLY_TOKEN".into(),
             Self::TokenInvalid => "publish token must use the bearer-token grammar".into(),
             Self::Syntax { source } => syntax_detail(source),
-            Self::Unavailable { command } => {
-                format!("The {command} command is not available in this build.")
-            }
         }
     }
 }

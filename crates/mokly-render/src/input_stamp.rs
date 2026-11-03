@@ -6,8 +6,7 @@ use std::path::{Path, PathBuf};
 use mokly_css::dependencies::DirectoryDependency;
 use mokly_source_interface::tree::{FileKind, Node, SourceTree};
 
-use crate::error::RenderError;
-use crate::postcss_scan::Scan;
+use crate::postcss_scan::{Scan, glob};
 
 #[derive(Clone, Default, PartialEq, Eq)]
 pub(crate) struct InputStamp {
@@ -106,8 +105,9 @@ impl InputStamp {
         for directory in directories {
             let path = root.join(&directory.path);
             let files = scan
-                .matching_files(tree, &path, &directory.glob, &|| RenderError::ResultKind {
-                    method: "dependency glob",
+                .matching_files(tree, &path, &directory.glob, &|| {
+                    Ok(glob(&directory.glob)
+                        .expect("retained PostCSS directory globs passed dependency validation"))
                 })
                 .ok()
                 .map(|files| files.to_vec());
@@ -140,8 +140,9 @@ impl InputStamp {
         let mut scan = Scan::default();
         for (path, pattern) in self.directories.keys() {
             let files = scan
-                .matching_files(tree, path, pattern, &|| RenderError::ResultKind {
-                    method: "dependency glob",
+                .matching_files(tree, path, pattern, &|| {
+                    Ok(glob(pattern)
+                        .expect("retained PostCSS directory globs passed dependency validation"))
                 })
                 .ok()
                 .map(|files| files.to_vec());

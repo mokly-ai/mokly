@@ -106,7 +106,7 @@ component carries each view's `rules` and `resources` records as the view's
 document; the index carries none. A detail carries them only while Changes is
 `ready`; pending, unavailable, and disabled states omit them. A removed
 entry's detail inside a comparison generation keeps its before-side records.
-The static build copies the same validated records. The selected comparison
+The static build copies the same records. The selected comparison
 of Serve never reruns the analysis and never recomputes a smaller
 changed-component set from the selected entry alone.
 
@@ -135,7 +135,6 @@ exact text and grouping are in
   `publish` produce the same records for one view. A view's records depend on
   both sides' documents, both sides' stylesheet bytes, and the
   catalogue-wide own-page matches, not on the view's bytes alone.
-- A violation fails the result with `review-invalid`.
 
 ## Non-goals
 

@@ -88,9 +88,7 @@ export function EmbeddedViewerShell({
           {...(onMarkerChange ? { onMarkerChange } : {})}
         />
       }
-      navigation={
-        <CatalogueNav catalogue={store.catalogue} context={store.context} />
-      }
+      navigation={<CatalogueNav context={store.context} />}
       onClick={store.onShellClick}
       onKeyDown={store.onShellKeyDown}
       ref={ref}

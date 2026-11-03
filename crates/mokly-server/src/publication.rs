@@ -9,7 +9,7 @@ use tokio::sync::broadcast;
 use crate::changes::{self, Accepted, ChangeCancellation, ChangeCommit, Commit};
 use crate::changes_install::ChangeInstallation;
 
-use crate::detail_encoding::{DetailEncoder, ValidatedDetails};
+use crate::detail_encoding::{DetailEncoder, EncodedDetails};
 use crate::error::Result;
 use crate::evidence;
 use crate::snapshot::Snapshot;
@@ -131,7 +131,7 @@ impl SharedPublication {
     pub fn new(snapshot: Arc<Snapshot>) -> Self {
         Self {
             build: Mutex::new(()),
-            encoder: Arc::new(ValidatedDetails),
+            encoder: Arc::new(EncodedDetails),
             state: Mutex::new(State {
                 closed: false,
                 snapshot,
@@ -181,7 +181,7 @@ impl Publications for SharedPublication {
                 }
                 state.snapshot.clone()
             };
-            let Some(next) = evidence::complete(&current, &updates, self.encoder.as_ref())? else {
+            let Some(next) = evidence::complete(&current, &updates, self.encoder.as_ref()) else {
                 return Ok(());
             };
             let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());

@@ -90,8 +90,6 @@ pub mod comparison;
 
 pub mod lookup;
 
-mod source_validation;
-
 mod move_fingerprint;
 
 mod move_inventory;
@@ -122,8 +120,6 @@ mod inline_styles;
 mod instance_proof;
 
 mod implementation;
-
-mod impact_validation;
 
 mod use_case_impact;
 

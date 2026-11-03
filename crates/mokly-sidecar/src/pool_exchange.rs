@@ -1,6 +1,6 @@
 //! Request execution, retries, recycling, and release publication.
 
-use crate::error::{Error, FailureKind, ProtocolError, Result};
+use crate::error::{Error, FailureKind, Result};
 use crate::methods::Call;
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_releases::Release;
@@ -26,19 +26,16 @@ impl SidecarPool for Pool {
             self.shutdown()?;
             return Ok(MethodResult::Empty);
         }
-        if matches!(call, Call::Hello(_)) {
-            return Err(Error::Protocol(ProtocolError::Handshake));
-        }
-        let source_root = self.source_root(&call)?;
+        let source_root = self.source_root(&call);
         let (index, mut slot) = self.acquire(&call, source_root.as_deref())?;
         if let Err(error) = self.isolate(index, &mut slot, source_root.as_deref()) {
-            self.release(index, slot)?;
+            self.release(index, slot);
             return Err(error);
         }
         let deadline = self.options.timeout_ms.unwrap_or_else(|| call.timeout_ms());
         let mut outcome = Err(Error::Crashed);
         for attempt in 0..2 {
-            if self.lock()?.stopped {
+            if self.lock().stopped {
                 outcome = Err(Error::Cancelled);
                 break;
             }
@@ -62,15 +59,11 @@ impl SidecarPool for Pool {
             outcome = self.execute(&mut current, &call, deadline);
             let retryable = matches!(&outcome, Err(Error::Crashed | Error::Timeout { .. }));
             let reusable = outcome.is_ok()
-                || matches!(
-                    &outcome,
-                    Err(Error::UnknownGeneration { .. } | Error::GenerationChanged { .. })
-                )
                 || matches!(&outcome, Err(Error::Remote { code, .. }) if code.reusable())
                 || matches!(&outcome, Err(Error::Postcss { .. }));
             if !reusable {
                 let stopped = {
-                    let mut state = self.lock()?;
+                    let mut state = self.lock();
                     state.replacement_reasons.insert(index, Reason::Replacement);
                     state.stopped
                 };
@@ -91,9 +84,9 @@ impl SidecarPool for Pool {
             }
             break;
         }
-        self.recycle(index, &mut slot)?;
-        let cancelled = self.lock()?.stopped;
-        self.release(index, slot)?;
+        self.recycle(index, &mut slot);
+        let cancelled = self.lock().stopped;
+        self.release(index, slot);
         if matches!(outcome, Err(Error::Crashed)) {
             let kind = FailureKind::for_call(&call);
             outcome = Err(Error::RequestCrashed {

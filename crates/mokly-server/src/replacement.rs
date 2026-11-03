@@ -9,10 +9,8 @@ use mokly_model::public_detail::EntryDetailV4;
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::routes;
 use mokly_model::usage::CatalogueUsage;
-use mokly_model::usage_schemas::UsageSchemas;
 
 use crate::detail_encoding::{DetailEncoder, detail_id};
-use crate::error::Result;
 use crate::evidence::Completion;
 use crate::revision_file::RevisionFile;
 use crate::snapshot::Snapshot;
@@ -73,7 +71,7 @@ pub(crate) fn encode_details(
     previous: Option<&Snapshot>,
     files: &mut BTreeMap<String, RevisionFile>,
     encoder: &dyn DetailEncoder,
-) -> Result<BTreeMap<String, Arc<EntryDetailV4>>> {
+) -> BTreeMap<String, Arc<EntryDetailV4>> {
     let mut result = BTreeMap::new();
     for (path, detail) in details.iter_mut() {
         if let Some(previous) = previous
@@ -83,15 +81,14 @@ pub(crate) fn encode_details(
             detail.detail_id = old.detail_id.clone();
             if detail != old.as_ref() {
                 detail.revision = Some(index.revision);
-                detail.detail_id = detail_id(detail)?;
+                detail.detail_id = detail_id(detail);
             }
         } else {
             detail.revision = Some(index.revision);
-            detail.detail_id = detail_id(detail)?;
+            detail.detail_id = detail_id(detail);
         }
         mokly_model::projection::set_detail_id(index, path, &detail.detail_id);
     }
-    let mut schemas = UsageSchemas::new(&index.components);
     for (path, mut detail) in details {
         let route = viewer(&format!("entries/{path}.json"));
         if let Some(previous) = previous
@@ -104,8 +101,8 @@ pub(crate) fn encode_details(
             continue;
         }
         detail.revision = Some(index.revision);
-        files.insert(route, encoder.encode(&detail, index, &mut schemas)?);
+        files.insert(route, encoder.encode(&detail));
         result.insert(path, Arc::new(detail));
     }
-    Ok(result)
+    result
 }

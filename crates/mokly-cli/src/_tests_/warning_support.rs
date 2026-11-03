@@ -58,7 +58,7 @@ pub(crate) fn catalogue(warnings: Vec<Warning>) -> PreparedCatalogue {
         documents: BTreeMap::new(),
         slot_fragments: BTreeMap::new(),
         elements: BTreeMap::new(),
-        deferred_modules: vec![],
+
         javascript: Default::default(),
         dependency_directories: Default::default(),
         warnings,

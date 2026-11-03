@@ -6,7 +6,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::backend::DocumentsMock;
-use crate::detail_encoding::{DetailEncoder, DetailEncoderMock, ValidatedDetails};
+use crate::detail_encoding::{DetailEncoder, DetailEncoderMock, EncodedDetails};
 use crate::publication::{Publications, SharedPublication};
 use crate::publication_support::{ready, snapshot};
 
@@ -27,12 +27,12 @@ fn publication_reads_and_encodes_each_changed_detail_once_at_one_to_four_scale()
                     }
                 })),
             DetailEncoderMock::encode
-                .each_call(matching!(_, _, _))
+                .each_call(matching!(_))
                 .answers_arc(Arc::new({
                     let encodes = encodes.clone();
-                    move |_, detail, index, schemas| {
+                    move |_, detail| {
                         encodes.fetch_add(1, Ordering::SeqCst);
-                        ValidatedDetails.encode(detail, index, schemas)
+                        EncodedDetails.encode(detail)
                     }
                 })),
         ));

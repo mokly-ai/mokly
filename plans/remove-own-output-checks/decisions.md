@@ -94,3 +94,20 @@ asked me to send the scope note to workspace 461.
 12. The other plan keeps the `@mokly/viewer/data` exports `validateProps`,
     `isLinkPath`, and `isLogicalFragment`, because `@mokly/mokly` uses them
     to check author input.
+
+13. Retain typed ownership and upload metadata in each finalized artifact.
+    Publication reuses those records instead of parsing its own bytes.
+    Parsing of persisted output directories stays.
+14. Capture a compilation seed's complete recipe under the pool lock.
+    The seed can receive its final release before restoration finishes.
+    The retained snapshot keeps this real race safe without a guard.
+15. Expose owned-style instance selection on its production attribution
+    path. Tests keep exact component and instance assertions there.
+    Impact records retain only component and reason after self-validation
+    metadata becomes unused.
+16. Keep generic serializers fallible when their public contract accepts
+    arbitrary Rust serializers. Concrete Mokly callers state their proven
+    invariant. Keep the bundle cache key's filesystem-path failure.
+17. Apply the approved narrow guards in shared delivery files here.
+    Workspace 461 owns their reader rewrites and merges this branch before
+    its final gate. The integration note names the shared files.

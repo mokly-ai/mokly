@@ -356,8 +356,7 @@ and Review regressions against `mokly serve` of the example catalogue.
   [`src/catalogue/reason_order.ts`](./src/catalogue/reason_order.ts) — the
   entry detail's `reasons` and the reason order it shares with review v8
 - [`src/shell/public_reasons.ts`](./src/shell/public_reasons.ts) — the
-  detail reasons that Details shows: listed records only, without the reasons
-  that contradict the record
+  detail reasons that Details shows, for a record that Changes lists
 - [`tests`](./tests) — package-level conformance tests
 
 ### Related Docs

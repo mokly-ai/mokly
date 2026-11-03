@@ -45,9 +45,6 @@ pub struct Style {
 impl Style {
     /// Render a typed CLI failure without changing its fixed code prefix.
     pub fn failure(&self, failure: &Failure, redactor: &Redactor) -> String {
-        if let Failure::Unavailable { .. } = failure {
-            return format!("[mokly/build-invalid] {}\n", failure.detail());
-        }
         let (_, headline, hint) = Code::CliInvalid.presentation();
         match failure {
             Failure::UnknownCommand { candidate } => {
