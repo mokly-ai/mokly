@@ -323,11 +323,13 @@ Depends on: every other milestone
       normalization. Keep positive counts and the original input validation.
 - [x] Supply normalized sidecar counts in the two integration fixtures
       that call the private runtime directly. Keep the real CLI boundary.
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [x] Merge `origin/main`, with the branch of the other plan when it merged
       first, and resolve the shared lines of `mokly-component-props.md`,
       `mokly-catalogue-serialization.md`, and `crates/mokly-model`.
 - [x] Commit with Conventional Commits and push the branch.
+      Evidence: `.context/remove-own-output-checks/complete-gate-final.log`.
+
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
