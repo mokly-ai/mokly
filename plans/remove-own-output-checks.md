@@ -312,7 +312,7 @@ a marker that the next build cannot read.
 
 Evidence: `.context/remove-own-output-checks/marker-limit-report.md`.
 
-## Milestone 12: Review corrections
+## Milestone 12: Review corrections — completed
 
 Depends on: 6, 7, 11
 
@@ -324,7 +324,9 @@ admission. Correct the remaining Git integration advice.
       before finalization. Keep earlier admissions and all encoded bytes.
 - [x] Name the supported Git interfaces and correct the batching paragraph.
 - [x] Record the shared admitted-file-set API as a separate follow-up.
-- [ ] Run focused tests, the complete gate, and one fresh review of the fix.
+- [x] Run focused tests, the complete gate, and one fresh review of the fix.
+
+Review evidence: `.context/reviews/calummoore/remove-own-output-checks/round-2-review.md`.
 
 ## Milestone 13: Verification, commit, review, and pull request
 
@@ -344,7 +346,7 @@ Depends on: every other milestone
 - [x] Commit with Conventional Commits and push the branch.
       Evidence: `.context/remove-own-output-checks/complete-gate-final.log`.
 
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
