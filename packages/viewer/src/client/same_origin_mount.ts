@@ -16,15 +16,13 @@ import {
 } from "./same_origin_identity.js";
 import { initialFrameLoad } from "./same_origin_load.js";
 import { listenForFrameActivations } from "./same_origin_navigation.js";
-import { localPointer } from "./same_origin_pointer.js";
 
 interface LocalOperations {
   updateUsage(usage: CatalogueUsage): void;
-  inspectable(): boolean;
   list(): readonly InstanceBoundary[];
   highlight(keys: readonly string[], mode: "off" | "highlight" | "pick"): void;
   scroll(key: string): void;
-  selecting(): boolean;
+  subscribe(enabled: boolean): void;
   dispose(): void;
 }
 
@@ -49,15 +47,12 @@ export function mountLocalDocument(
     let initialSubscription = initialListener;
     let activationController: AbortController | undefined;
     let activationDocument: AuthenticatedDocument | undefined;
-    let operationsController: AbortController | undefined;
     let operationsDocument: AuthenticatedDocument | undefined;
     let documentWatch: number | undefined;
     let mountAuthentication: MountAuthentication | undefined;
     let operations: LocalOperations | undefined;
     let disposed = false;
     let release = () => {};
-    let pending = 0;
-    const cleanups: (() => void)[] = [];
     const emit = (event: FrameEvent) => {
       for (const listener of [...listeners]) listener(event);
     };
@@ -79,12 +74,9 @@ export function mountLocalDocument(
       );
     };
     const disposeOperations = () => {
-      operationsController?.abort();
-      operationsController = undefined;
       operations?.dispose();
       operations = undefined;
       operationsDocument = undefined;
-      for (const cleanup of cleanups.splice(0)) cleanup();
     };
     const stopDocumentWatch = () => {
       if (documentWatch === undefined) return;
@@ -123,7 +115,6 @@ export function mountLocalDocument(
       cancellation?.removeEventListener("abort", dispose);
       disposeDocument();
       win.clearTimeout(timer);
-      if (pending) win.cancelAnimationFrame(pending);
       listeners.clear();
       initialSubscription = undefined;
       release();
@@ -181,55 +172,11 @@ export function mountLocalDocument(
       }
       stopDocumentWatch();
       disposeOperations();
-      adoptActivationDocument(authenticated);
+      disposeActivation();
       win.clearTimeout(timer);
-      operationsController = new AbortController();
-      const documentSignal = operationsController.signal;
       operations = create(authenticated, emit);
       operationsDocument = authenticated;
-      const inspecting = () => listeners.size > 0 && operations!.inspectable();
-      localPointer(
-        authenticated,
-        () => operations!.list(),
-        emit,
-        inspecting,
-        () => operations!.selecting(),
-        documentSignal,
-      );
-      const changed = () => {
-        if (inspecting() && !pending)
-          pending = win.requestAnimationFrame(() => {
-            pending = 0;
-            if (inspecting()) emit({ type: "geometry" });
-          });
-      };
-      authenticated.addEventListener("scroll", changed, {
-        capture: true,
-        passive: true,
-        signal: documentSignal,
-      });
-      authenticated.addEventListener("load", changed, {
-        capture: true,
-        signal: documentSignal,
-      });
-      authenticated.fonts.addEventListener("loadingdone", changed, {
-        signal: documentSignal,
-      });
-      win.addEventListener("resize", changed, { signal: documentSignal });
-      const resize = new ResizeObserver(changed),
-        mutations = new MutationObserver(changed);
-      resize.observe(frame);
-      if (authenticated.body) resize.observe(authenticated.body);
-      mutations.observe(authenticated, {
-        attributes: true,
-        childList: true,
-        subtree: true,
-        characterData: true,
-      });
-      cleanups.push(() => {
-        resize.disconnect();
-        mutations.disconnect();
-      });
+      operations.subscribe(listeners.size > 0);
       resolve({
         updateUsage: (usage) => run(() => operations!.updateUsage(usage)),
         listInstanceBoundaries: () => run(() => operations!.list()),
@@ -241,12 +188,15 @@ export function mountLocalDocument(
             initialSubscription = undefined;
             return () => {
               listeners.delete(listener);
+              operations?.subscribe(listeners.size > 0);
             };
           }
           const subscription = (event: FrameEvent) => listener(event);
           listeners.add(subscription);
+          operations?.subscribe(true);
           return () => {
             listeners.delete(subscription);
+            operations?.subscribe(listeners.size > 0);
           };
         },
         dispose,

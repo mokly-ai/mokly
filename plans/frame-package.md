@@ -285,14 +285,14 @@ Depends on: 2.
 
 The same-origin adapter uses the core, and the duplicated code goes.
 
-- [ ] Run the core from `same_origin_mount.ts` and `same_origin_adapter.ts`
+- [x] Run the core from `same_origin_mount.ts` and `same_origin_adapter.ts`
       with the link classifier and the viewer window.
-- [ ] Move the tests of the old same-origin event code to the core, with
+- [x] Move the tests of the old same-origin event code to the core, with
       every assertion. Move `tests/browser/frame_clipping.spec.ts` from
       `rangeBounds` to the shared reader.
-- [ ] Delete the same-origin event code of the **Replaced ways** list.
+- [x] Delete the same-origin event code of the **Replaced ways** list.
       Record the searches that prove each part unused.
-- [ ] Add a browser test for hover and nested instances during a highlight
+- [x] Add a browser test for hover and nested instances during a highlight
       and a pick on both adapters. Run it 10 times.
 
 ## Milestone 4: Model package

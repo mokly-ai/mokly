@@ -1,7 +1,7 @@
 import { expect } from "@playwright/test";
 
-import type * as ComponentGeometry from "../../packages/viewer/dist/client/component_geometry.js";
-import type * as LocalAdapter from "../../packages/viewer/dist/client/same_origin_adapter.js";
+import type * as FrameUsage from "../../packages/viewer/src/client/frame_usage.js";
+import type * as Inspection from "../../packages/viewer/src/inspector/inspection.js";
 import type { BrowserUsage } from "../../packages/viewer/tests/browser_documents.js";
 
 import { test } from "./browser_test.js";
@@ -10,6 +10,7 @@ import {
   mountCrossFrame,
   type FrameTestWindow,
 } from "./frame_adapter_fixture.js";
+import { mountLocalFrame } from "./frame_adapter_local_fixture.js";
 
 let fixture: Awaited<ReturnType<typeof crossOriginFixture>>;
 test.beforeAll(async () => {
@@ -32,28 +33,7 @@ for (const transport of ["same-origin", "postMessage"] as const) {
       page,
     }) => {
       if (transport === "postMessage") await mountCrossFrame(page, fixture);
-      else {
-        await page.goto(fixture.host.url);
-        await page.evaluate(async (json) => {
-          const usage = JSON.parse(json) as BrowserUsage;
-          const { sameOriginAdapter } = (await import(
-            `${location.origin}/test-adapters.js`
-          )) as typeof LocalAdapter;
-          const frame = document.querySelector<HTMLIFrameElement>("#frame")!;
-          frame.dataset["moklyGeneratedPrefix"] = "mokly-generated";
-          (window as unknown as FrameTestWindow).mounted =
-            await sameOriginAdapter().mount(
-              document.querySelector<HTMLIFrameElement>("#frame")!,
-              {
-                url: new URL(
-                  "/static/mokly-generated/home/index.mobile.html",
-                  location.origin,
-                ),
-                usage: usage,
-              },
-            );
-        }, JSON.stringify(fixture.usage));
-      }
+      else await mountLocalFrame(page, fixture);
       const child = page
         .frames()
         .find((frame) =>
@@ -108,16 +88,22 @@ for (const transport of ["same-origin", "postMessage"] as const) {
       if (transport === "same-origin") {
         const local = await page.evaluate(
           async ({ usageJson, key }) => {
-            const { authenticateRanges, rangeBounds } = (await import(
+            const { inspection, frameUsage } = (await import(
               `${location.origin}/test-adapters.js`
-            )) as typeof ComponentGeometry;
+            )) as typeof Inspection & typeof FrameUsage;
             const frame = document.querySelector<HTMLIFrameElement>("#frame")!;
-            const ranges = authenticateRanges(
-              frame,
-              "home/index.mobile.html",
-              JSON.parse(usageJson) as BrowserUsage,
-            )!;
-            return rangeBounds(frame, ranges, new Set([key]));
+            const reader = inspection(
+              frame.contentDocument!,
+              frameUsage(JSON.parse(usageJson) as BrowserUsage),
+            );
+            return reader
+              .__list()
+              .filter((boundary) => boundary.key === key)
+              .flatMap(({ key, ranges }) =>
+                ranges.flatMap(({ boxes }) =>
+                  boxes.map((box) => ({ key, ...box })),
+                ),
+              );
           },
           { usageJson: JSON.stringify(fixture.usage), key },
         );

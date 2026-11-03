@@ -57,7 +57,6 @@ for (const suffix of ["/index.html", "/", ""]) {
     const fixture = fakeFrame();
     fixture.attributes.set("src", pathname);
     registerFrameSession(fixture.frame, {
-      identity: {},
       sources: [expected.href],
     });
     const current = fakeDocument(fixture.frame, `https://app.test${pathname}`);

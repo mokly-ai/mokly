@@ -2,6 +2,7 @@
 
 The inspector is a dependency-free browser IIFE for the optional cross-origin
 frame adapter. The viewer package build emits `dist/browser/inspector.js`.
+The same-origin adapter runs its shared event core directly with viewer callbacks.
 Serve and the static build deliver it at `/mokly-viewer/client/inspector.js`,
 and the static build injects it into the current documents that it writes.
 [`inspector_budget.test.ts`](../../tests/inspector_budget.test.ts) checks the
@@ -72,7 +73,8 @@ cargo xtask check --suite viewer
   the instance boundaries, measure their clipped boxes, and scroll to an
   instance.
 - [`clipping.ts`](./clipping.ts) holds the clipping rules that the same-origin
-  measurer of [the client](../client/README.md) shares.
+  and cross-origin adapters share through the core. The shell also uses these
+  rules to clip the frame to its host ancestors.
 - [`links.ts`](./links.ts) holds `inspectorNavigation`, which turns a marked
   link activation into a logical navigation.
 - [`../../scripts/inspector-bundle.mjs`](../../scripts/inspector-bundle.mjs)

@@ -118,7 +118,6 @@ function fakeFrame(source: URL): HTMLIFrameElement {
     ownerDocument: { baseURI: "https://app.test/" },
   } as unknown as HTMLIFrameElement;
   registerFrameSession(frame, {
-    identity: {},
     sources: [light.href, dark.href],
   });
   return frame;

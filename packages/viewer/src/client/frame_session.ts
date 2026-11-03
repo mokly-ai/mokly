@@ -1,7 +1,6 @@
 /** Private metadata shared by a shell session and its same-origin adapter. */
 
 interface FrameSession {
-  identity: { viewport?: "desktop" | "mobile" };
   sources?: readonly string[];
 }
 

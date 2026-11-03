@@ -77,12 +77,24 @@ export function runtimeFixture(
   };
   const frames = new Map<number, FrameRequestCallback>();
   const events: InspectorRuntimeEvent[] = [];
+  const signals: AbortSignal[] = [];
+  const cancelled: number[] = [];
   const observed: Node[] = [];
   const notifications: (() => void)[] = [];
   let next = 0,
     time = 0,
     disconnected = 0,
     disposed = 0;
+  const listen = win.addEventListener.bind(win);
+  win.addEventListener = (
+    name: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions,
+  ) => {
+    if (typeof options === "object" && options.signal)
+      signals.push(options.signal);
+    listen(name, listener, options);
+  };
   const environment: InspectorEnvironment = {
     AbortController,
     ResizeObserver: class {
@@ -116,7 +128,10 @@ export function runtimeFixture(
       return next;
     },
     cancelAnimationFrame(handle) {
-      if (handle != null) frames.delete(handle);
+      if (handle != null) {
+        cancelled.push(handle);
+        frames.delete(handle);
+      }
     },
   };
   for (const name of Object.keys(environment))
@@ -141,6 +156,8 @@ export function runtimeFixture(
     doc,
     runtime,
     events,
+    signals,
+    cancelled,
     frames,
     observed,
     facts: () => ({ disconnected, disposed }),

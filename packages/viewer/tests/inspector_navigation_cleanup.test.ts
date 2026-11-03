@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { localPointer } from "../src/client/same_origin_pointer.js";
+import { inspectorRuntime } from "../src/inspector/runtime.js";
+import type { InspectorEnvironment } from "../src/inspector/runtime_types.js";
 
 /**
  * A frame's document whose window turns cross-origin when the frame
@@ -11,9 +12,30 @@ import { localPointer } from "../src/client/same_origin_pointer.js";
 function navigableFrame() {
   let navigated = false;
   const listeners = new Map<string, (event: Event) => void>();
-  const aborts: (() => void)[] = [];
+  const environment: InspectorEnvironment = {
+    AbortController,
+    ResizeObserver: class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+    MutationObserver: class {
+      observe() {}
+      takeRecords() {
+        return [];
+      }
+      disconnect() {}
+    },
+    requestAnimationFrame: () => 7,
+    cancelAnimationFrame: () => {},
+  };
   const win = new Proxy(
-    { requestAnimationFrame: () => 7, cancelAnimationFrame: () => {} },
+    {
+      get document() {
+        return doc;
+      },
+      addEventListener() {},
+    },
     {
       get(target, key) {
         if (navigated)
@@ -32,35 +54,28 @@ function navigableFrame() {
     addEventListener(type: string, listener: (event: Event) => void) {
       listeners.set(type, listener);
     },
+    fonts: new EventTarget(),
   } as unknown as Document;
-  const signal = {
-    addEventListener(_type: string, listener: () => void) {
-      aborts.push(listener);
-    },
-  } as unknown as AbortSignal;
+  const runtime = inspectorRuntime(
+    win as unknown as Window,
+    { ranges: [], links: [] },
+    environment,
+    () => undefined,
+    () => {},
+  );
+  runtime.__subscribe(["hover"]);
   return {
     doc,
-    signal,
     move: () => listeners.get("pointermove")!({} as Event),
     navigate: () => {
       navigated = true;
     },
-    abort: () => {
-      for (const abort of aborts) abort();
-    },
+    abort: runtime.__dispose,
   };
 }
 
-test("a pointer listener ends quietly after its frame navigates to another origin", () => {
+test("the core ends quietly after its frame navigates to another origin", () => {
   const frame = navigableFrame();
-  localPointer(
-    frame.doc,
-    () => [],
-    () => {},
-    () => true,
-    () => false,
-    frame.signal,
-  );
   // A pointer move schedules an animation frame that is still pending.
   frame.move();
   frame.navigate();

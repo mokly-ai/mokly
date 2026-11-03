@@ -15,6 +15,7 @@ esbuild outputs. Serve and `build` deliver them as
 ## Same-origin frames
 
 `sameOriginAdapter` keeps script-disabled frames and reports their geometry.
+It runs the shared inspector core with the viewer's callback environment.
 Both adapters draw nothing. The shell draws the masks and labels with
 `@mokly/ui` components from the reported instance boundaries.
 Its mounts authenticate the current document and support scroll restoration
@@ -84,12 +85,12 @@ cargo xtask check --suite viewer
   document.
 - [`same_origin_access.ts`](./same_origin_access.ts) holds `localFrameAccess`,
   the only same-origin adapter code that reads a frame's document or window.
-- [`same_origin_highlight.ts`](./same_origin_highlight.ts) holds
-  `installLocalHighlight`, which tracks selected regions and reports picks
-  and Escape without drawing in either document.
-- [`component_geometry.ts`](./component_geometry.ts) holds `authenticateRanges`
-  and `rangeBounds`, which measure clipped boxes with the clipping rules of
-  [`../inspector/clipping.ts`](../inspector/clipping.ts).
+- [`same_origin_navigation.ts`](./same_origin_navigation.ts) classifies served
+  logical links and owns their activation until the shared core starts.
+- [`../inspector/runtime.ts`](../inspector/runtime.ts) holds the shared core
+  for geometry, hover, click, picks, Escape, and navigation.
+- [`component_geometry.ts`](./component_geometry.ts) holds `visibleFrameBox`,
+  which clips the frame to the host viewport and its ancestors.
 - [`post_message_adapter.ts`](./post_message_adapter.ts) holds
   `postMessageAdapter`, the opt-in adapter for documents on a separate origin.
 - [`message_transport.ts`](./message_transport.ts) holds `messageTransport`,

@@ -44,7 +44,26 @@ export function classifyFrameActivation(
   };
 }
 
-/** Install native logical-link interception for one authenticated document. */
+/** Read the served marker without using a portable href as a logical route. */
+export function classifyLocalActivation(
+  event: MouseEvent,
+): FrameNavigation | undefined {
+  const link = (event.target as Element | null)?.closest?.("[data-mokly-link]");
+  if (!link || !["a", "area"].includes(link.localName)) return;
+  return classifyFrameActivation({
+    altKey: event.altKey,
+    button: event.button,
+    ctrlKey: event.ctrlKey,
+    metaKey: event.metaKey,
+    shiftKey: event.shiftKey,
+    download: link.hasAttribute("download"),
+    eventType: event.type === "click" ? "click" : "auxclick",
+    marker: link.getAttribute("data-mokly-link") ?? "",
+    target: link.getAttribute("data-mokly-target"),
+  });
+}
+
+/** Own navigation before the authenticated replacement finishes loading. */
 export function listenForFrameActivations(
   doc: AuthenticatedDocument,
   signal: AbortSignal,
@@ -52,22 +71,8 @@ export function listenForFrameActivations(
   emit: (event: FrameEvent) => void,
 ): void {
   const activate = (event: MouseEvent) => {
-    const link = (event.target as Element | null)?.closest?.(
-      "[data-mokly-link]",
-    );
-    if (!link || !enabled() || !["a", "area"].includes(link.localName)) return;
-    const marker = link.getAttribute("data-mokly-link") ?? "";
-    const navigation = classifyFrameActivation({
-      altKey: event.altKey,
-      button: event.button,
-      ctrlKey: event.ctrlKey,
-      metaKey: event.metaKey,
-      shiftKey: event.shiftKey,
-      download: link.hasAttribute("download"),
-      eventType: event.type === "click" ? "click" : "auxclick",
-      marker,
-      target: link.getAttribute("data-mokly-target"),
-    });
+    if (!enabled()) return;
+    const navigation = classifyLocalActivation(event);
     if (!navigation) return;
     event.preventDefault();
     emit({

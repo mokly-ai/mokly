@@ -2,10 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import type { CatalogueUsage } from "../src/catalogue/types.js";
-import {
-  authenticateDocumentRanges,
-  documentRangeRecords,
-} from "../src/client/document_ranges.js";
+import { inspection } from "../src/inspector/inspection.js";
 import { compactRanges } from "../src/inspector/metadata.js";
 import { documentRanges } from "../src/inspector/ranges.js";
 
@@ -19,7 +16,7 @@ import {
 
 type Ranges = Extract<CatalogueUsage, { status: "ready" }>["ranges"];
 
-/** The published inspector's reader, over the metadata the adapters build. */
+/** The shared reader, over the metadata that both frame adapters build. */
 function inspector(body: string, ranges: Ranges): Range[] {
   return documentRanges(markerDocument(body), {
     ranges: compactRanges(ranges)!,
@@ -27,20 +24,20 @@ function inspector(body: string, ranges: Ranges): Range[] {
   });
 }
 
-/** The parent-side reader, over the records the same-origin adapter builds. */
-function parent(body: string, ranges: Ranges) {
-  return authenticateDocumentRanges(
-    markerDocument(body),
-    documentRangeRecords(ranges),
-  );
-}
-
 function refused(body: string, ranges: Ranges = HOME_RANGES) {
   assert.throws(
     () => inspector(body, ranges),
     (error) => error === "invalid-boundary",
   );
-  assert.equal(parent(body, ranges), undefined);
+  // The core propagates a rejected forest before it reads any geometry.
+  assert.throws(
+    () =>
+      inspection(markerDocument(body), {
+        ranges: compactRanges(ranges)!,
+        links: [],
+      }).__list(),
+    (error) => error === "invalid-boundary",
+  );
 }
 
 const slotAction = HOME_RANGES[5]!.target;
@@ -70,13 +67,18 @@ test("a Serve screen's instances, nested instances and supplied slots authentica
     rangeText(ranges[2]!),
     /^Details Supplier .*Slot action Default$/,
   );
-  const authenticated = parent(HOME_BODY, HOME_RANGES)!;
-  assert.equal(authenticated.byPath.size, 8);
+  const authenticated = inspector(HOME_BODY, HOME_RANGES);
+  assert.equal(authenticated.length, 8);
   // The slot instance is placed twice, once in each `children` slot.
-  assert.deepEqual(authenticated.ranges.get(SLOT_ACTION)!.map(rangeText), [
-    "Slot action Default",
-    "Slot action Default",
-  ]);
+  assert.deepEqual(
+    authenticated
+      .filter((_, index) => {
+        const target = HOME_RANGES[index]!.target;
+        return target.kind === "instance" && target.instanceKey === SLOT_ACTION;
+      })
+      .map(rangeText),
+    ["Slot action Default", "Slot action Default"],
+  );
 });
 
 test("a component page's root region is the body content, without a marker", () => {
@@ -85,7 +87,7 @@ test("a component page's root region is the body content, without a marker", () 
     "Save 2 Default",
   );
   assert.equal(
-    rangeText(parent(BUTTON_BODY, BUTTON_RANGES)!.byPath.get("r-0")!),
+    rangeText(inspector(BUTTON_BODY, BUTTON_RANGES)[0]!),
     "Save 2 Default",
   );
   // A marked region inside the root names r-0 as its parent.
@@ -93,7 +95,7 @@ test("a component page's root region is the body content, without a marker", () 
   assert.equal(rangeText(ranges[0]!), "Go");
   assert.equal(rangeText(ranges[1]!), "Go");
   assert.deepEqual(
-    parent(NESTED_BODY, NESTED_RANGES)!.ranges.get(KEY)!.map(rangeText),
+    inspector(NESTED_BODY, NESTED_RANGES).slice(1).map(rangeText),
     ["Go"],
   );
 });
@@ -104,7 +106,7 @@ test("the contract's slot marker with its instance attribute authenticates", () 
     '<!--mokly-slot:start id="$1" instance="r-2" name',
   );
   assert.equal(inspector(body, HOME_RANGES).length, 8);
-  assert.equal(parent(body, HOME_RANGES)!.byPath.size, 8);
+  assert.equal(inspector(body, HOME_RANGES).length, 8);
 });
 
 test("markers that disagree with the usage are refused", () => {

@@ -1,16 +1,12 @@
-import { currentDocumentRoute } from "../catalogue/delivery_paths.js";
-import type { CatalogueUsage } from "../catalogue/types.js";
-import type { ComponentViewRecord } from "../components/view_types.js";
-import { inspection } from "../inspector/inspection.js";
+import { inspectorRuntime } from "../inspector/runtime.js";
 
 import type { FrameAdapter } from "./frame_adapter.js";
 import { FrameError } from "./frame_error.js";
 import { frameUrl, temporaryFrameUrl } from "./frame_mount.js";
-import { frameSession } from "./frame_session.js";
 import { frameEvents, frameUsage } from "./frame_usage.js";
 import { localFrameAccess } from "./same_origin_access.js";
-import { installLocalHighlight } from "./same_origin_highlight.js";
 import { mountLocalDocument } from "./same_origin_mount.js";
+import { classifyLocalActivation } from "./same_origin_navigation.js";
 
 export function localFramePath(frame: HTMLIFrameElement): string | undefined {
   return localFrameAccess(frame).pathname();
@@ -32,65 +28,39 @@ function localAdapter(resolveUrl: typeof frameUrl): FrameAdapter {
       const win = frame.ownerDocument.defaultView;
       if (!win) throw new FrameError("unavailable");
       const url = resolveUrl(frame, view, win.location.origin);
-      const pathname = decodeURIComponent(url.pathname);
-      const inspectionPath = currentDocumentRoute(pathname) ?? pathname;
       let usage = frameUsage(view.usage);
       view.signal?.throwIfAborted();
       const mounting = mountLocalDocument(
         frame,
         url,
         (doc, emit) => {
-          let reader = inspection(doc, usage);
-          let stop = () => {};
-          let selecting = false;
-          let record = localRecord(frame, view.usage);
+          const start = () =>
+            inspectorRuntime(
+              doc.defaultView,
+              usage,
+              win,
+              classifyLocalActivation,
+              emit,
+            );
+          let runtime = start();
+          let subscribed = false;
+          const subscribe = (enabled: boolean) => {
+            subscribed = enabled;
+            runtime.__subscribe(enabled ? frameEvents(usage) : []);
+          };
           return {
-            list: () => reader.__list(),
-            scroll: (key) => reader.__scroll(key),
-            inspectable: () => frameEvents(usage).includes("hover"),
+            list: () => runtime.__list(),
+            scroll: (key) => runtime.__scroll(key),
+            highlight: (keys, mode) => runtime.__highlight(keys, mode),
+            subscribe,
             updateUsage(next) {
               const metadata = frameUsage(next);
-              stop();
-              stop = () => {};
-              selecting = false;
+              runtime.__dispose();
               usage = metadata;
-              reader = inspection(doc, usage);
-              record = localRecord(frame, next);
+              runtime = start();
+              subscribe(subscribed);
             },
-            selecting: () => selecting,
-            highlight(keys, mode) {
-              if (mode !== "off") reader.__keys(keys);
-              stop();
-              stop = () => {};
-              selecting = mode !== "off";
-              if (mode === "off" || !record) return;
-              stop = installLocalHighlight(
-                frame.ownerDocument.body,
-                [
-                  {
-                    frame,
-                    path: inspectionPath,
-                    usage: record,
-                  },
-                ],
-                (key) =>
-                  emit({
-                    type: "click",
-                    key,
-                    boxes: reader
-                      .__list()
-                      .find((item) => item.key === key)!
-                      .ranges.flatMap((range) => range.boxes),
-                  }),
-                () => {
-                  selecting = false;
-                  stop();
-                  emit({ type: "pick-end", reason: "escape" });
-                },
-                new Set(keys),
-              );
-            },
-            dispose: () => stop(),
+            dispose: () => runtime.__dispose(),
           };
         },
         view.signal,
@@ -99,19 +69,4 @@ function localAdapter(resolveUrl: typeof frameUrl): FrameAdapter {
       return mounting;
     },
   };
-}
-
-function localRecord(
-  frame: HTMLIFrameElement,
-  usage: CatalogueUsage,
-): ComponentViewRecord | undefined {
-  return usage.status === "ready"
-    ? {
-        ...usage,
-        viewport: frameSession(frame)?.identity.viewport ?? "desktop",
-        colorScheme: "light",
-        styles: [],
-        resources: [],
-      }
-    : undefined;
 }
