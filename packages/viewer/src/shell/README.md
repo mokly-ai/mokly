@@ -1,5 +1,7 @@
 # Shared Browse shell
 
+Status: A cleanup error of host slot or marker content that the shell removes can still reach `CatalogueBoundary` as a catalogue failure, until the [host content cleanup item](../../../../plans/follow-ups/host-content-cleanup-errors.md) moves host content above it.
+
 Serve, the static build, and React hosts render this same tree in the
 browser.
 

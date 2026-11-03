@@ -1,5 +1,7 @@
 # Embeddable Mokly Viewer
 
+Status: A cleanup error of host slot or marker content that the viewer removes can still show the catalogue failure state, until the [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) moves host content above the catalogue catcher.
+
 ## Package And Props
 
 `@mokly/viewer` is an MIT, ESM npm package with declarations and React and React DOM

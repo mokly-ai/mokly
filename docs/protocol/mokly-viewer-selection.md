@@ -1,5 +1,7 @@
 # Viewer Selection, Events And Shell State
 
+Status: A cleanup error of host slot or marker content that a teardown removes can still become a catalogue error, until the [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) moves host content above the catalogue catcher.
+
 This continues the [embeddable viewer contract](./mokly-viewer.md), which
 defines the props and the types that this page uses.
 

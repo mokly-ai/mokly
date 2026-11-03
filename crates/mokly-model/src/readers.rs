@@ -12,6 +12,7 @@ use crate::public_detail::{EntryDetailV4, LiveDescriptorV3};
 use crate::public_index::CatalogueReadModel;
 use crate::public_privacy;
 use crate::read_contract::ContractViolation;
+use crate::read_decode::value;
 use crate::{public_validation, versions};
 
 /// Typed public read failure.
@@ -143,7 +144,7 @@ fn decode_with_mode<T: DeserializeOwned + Serialize>(
     if mode == Mode::Lenient {
         public_privacy::validate(&value, boundary)?;
     }
-    let decoded: T = match serde_json::from_value(value.clone()) {
+    let decoded: T = match value::from_value(value.clone()) {
         Ok(value) => value,
         Err(source) => return Err(ReadError::Invalid { boundary, source }),
     };
@@ -221,3 +222,7 @@ mod reader_union_tests;
 #[cfg(test)]
 #[path = "_tests_/reader_privacy_tests.rs"]
 mod reader_privacy_tests;
+
+#[cfg(test)]
+#[path = "_tests_/reader_null_tests.rs"]
+mod reader_null_tests;

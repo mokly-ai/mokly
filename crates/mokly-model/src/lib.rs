@@ -35,6 +35,7 @@ mod public_privacy;
 pub mod public_records;
 mod public_validation;
 pub mod read_contract;
+mod read_decode;
 pub mod readers;
 mod removed_validation;
 pub mod routes;

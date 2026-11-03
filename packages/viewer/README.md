@@ -20,6 +20,8 @@
   <a href="#development">Development</a>
 </p>
 
+Status: A cleanup error of host slot or marker content that the viewer removes can still show the catalogue failure state, until the [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) fixes it.
+
 `@mokly/viewer` is an open-source React library that renders a Mokly catalogue
 inside another product. It reads the catalogue that `mokly serve` serves or
 `mokly build` writes, and it renders the same Browse shell as the standalone

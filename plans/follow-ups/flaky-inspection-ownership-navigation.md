@@ -32,6 +32,14 @@
   - Locally the whole spec passed 170 of 170 runs on Node 24 and 170 of 170
     on Node 22.15.0, with `--repeat-each=5`. So the failure needs the load of
     a full remote shard.
+  - On 2026-11-03, the receiver-reader branch met the same error at line 79
+    in "postMessage obsolete highlight failure preserves request replacement
+    pick". Its complete remote gate passed six of seven jobs. Browser shard
+    four had this one failure. The test and its inspection fixture were
+    unchanged. A focused local rerun selected one test and passed it, with no
+    failure or skip. The test took about one second. No assertion, retry, or
+    time limit changed. The suspected source remains an asynchronous host
+    navigation during the awaited pick setup.
   - `plans/follow-ups/flaky-viewer-selection-navigation.md` records the same
     error in another spec, `tests/browser/viewer.spec.ts`.
 - **Problem:** A navigation of the host page can happen while the test's

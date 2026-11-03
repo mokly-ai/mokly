@@ -120,6 +120,9 @@ In these documents, and in the render route's answer of the
 descriptor's version, it reads the fields that the version defines and
 ignores any other field at every depth, so an older viewer reads a newer
 writer's additive optional fields. It checks no other rule of the content.
+The render answer's revision, render id, and preview URL must still match the
+request and the render route. That match is a delivery fence of the controls
+contract, not a check of catalogue content.
 
 ## Tree Validation
 

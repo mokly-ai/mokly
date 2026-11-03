@@ -211,28 +211,59 @@ Completed on 2026-11-03.
 
 Evidence: `.context/viewer-checks-from-rust/cleanup-implementation.md`.
 
-## Milestone 7: Verification, commit, review, and pull request
+## Milestone 7: Initial verification, commit, and review
 
-Depends on: every other milestone
+Depends on: 1, 2, 3, 4, 5, 6
 
-- [x] Measure `shell.js` and the first index read in Chrome on the example
-      and the large fixture. Save the numbers under
-      `.context/viewer-checks-from-rust/`.
-- [x] Run the mockup check of `AGENTS.md`. Smoke-test Browse, Changes, a
-      comparison, inspection, prop editing, a removed entry, and an embedded
-      host through `npm run dev`.
-- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
-      `implementation-review` skill after the push. Report the findings,
-      then apply the fix rule: fix the `fix now` findings, record
-      follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
+Completed on 2026-11-03.
+
+- [x] Measure the shell and first index read in Chrome on both fixtures.
+- [x] Run the strict example build and all seven real dev smoke surfaces.
+- [x] Run targeted checks and the complete gate.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete diff against `origin/main` with three fresh area
+      reviewers. Run one independent check for each finding and report the
+      final outcomes.
+
+Evidence: `.context/reviews/calummoore/rust-viewer-checks-plan/findings.md`.
+
+## Milestone 8: Apply the checked review outcomes
+
+Depends on: 7
+
+Completed on 2026-11-03.
+
+- [x] Fix finding 1 with the shared presence-aware reader decoder. Preserve
+      nullable data, unknown fields, and existing missing `comparisonUrl`
+      acceptance.
+- [x] Apply verified prerequisite finding 2 fix `f8860934`: admit all late
+      generated files through the existing Inventory once.
+- [x] Fix finding 3 by binding the private live render sender to its fixed
+      endpoint on the captured origin.
+- [x] Record finding 4's complete host-content ownership fix as a separate
+      follow-up under the checked Rare fix rule. Keep its intended contract
+      and mark the missing behavior in the docs.
+- [x] Apply verified prerequisite finding 5 fix `271519b9`: correct the two
+      stale Git README statements.
+- [x] Obtain assertion-failure proof and passing targeted tests for each
+      code fix. Repeat each new asynchronous test ten times.
+- [x] Record the independent checks' new problems for re-review.
+      Add no new rejection without the user's answer.
+
+## Milestone 9: Final verification, review, and pull request
+
+Depends on: 8
+
+- [x] Run the complete gate on the fixed combined tree.
+- [x] Commit with Conventional Commits and push the fixes.
+- [ ] Re-review the full diff once with the `implementation-review` skill.
+      Check each new finding, apply the fix rule once more, and record each
+      deferred or open item as a follow-up. Stop after the permitted rounds.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
-- [ ] Open the pull request. Its description gives the decisions and the
-      design calls of this plan with their dates, a permalink to this plan,
-      and the follow-up items that the change adds.
+- [ ] Open the pull request. Its description records each dated decision
+      and design call, links to the plan before deletion, and lists the
+      follow-up items that the change adds.
 
 ## Post-merge follow-up (non-blocking)
 

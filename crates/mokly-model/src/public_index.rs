@@ -8,6 +8,7 @@ use crate::public_records::{
     CatalogueComponent, CatalogueDocument, CataloguePage, CatalogueRecord, CatalogueScreen,
     CatalogueUseCase,
 };
+use crate::read_decode::nullable;
 
 /// Public tree nodes. Entry children hold variants and index-folder members.
 #[derive(Serialize, TS)]
@@ -144,6 +145,7 @@ pub struct CatalogueReadModel {
     /// Comparison preparation state.
     pub changes_status: ChangesStatus,
     /// Root of the generation-pinned comparison, or null.
+    #[serde(default, deserialize_with = "nullable::read")]
     pub comparison_url: Option<String>,
     /// One tree containing each current entry exactly once.
     pub tree: Vec<CatalogueNode>,

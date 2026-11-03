@@ -4,6 +4,8 @@ use serde::de::{DeserializeOwned, Error};
 use serde::{Deserialize, Deserializer};
 use serde_json::{Map, Value};
 
+use crate::read_decode::value;
+
 #[derive(Deserialize)]
 #[serde(transparent)]
 pub(super) struct Record(Map<String, Value>);
@@ -28,7 +30,7 @@ impl Record {
         key: &'static str,
     ) -> Result<Option<T>, E> {
         match self.0.remove(key) {
-            None | Some(Value::Null) => Ok(None),
+            None => Ok(None),
             Some(value) => Ok(Some(decode(value)?)),
         }
     }
@@ -54,7 +56,7 @@ impl Record {
 }
 
 fn decode<T: DeserializeOwned, E: Error>(value: Value) -> Result<T, E> {
-    match serde_json::from_value(value) {
+    match value::from_value(value) {
         Ok(value) => Ok(value),
         Err(error) => Err(E::custom(error)),
     }

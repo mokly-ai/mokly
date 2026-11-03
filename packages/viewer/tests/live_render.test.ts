@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { readLiveDescriptor } from "../src/catalogue/live_reader.js";
 import { encodeProps } from "../src/components/codec.js";
 import {
   ComponentRenderError,
@@ -78,9 +79,16 @@ function fakeServe(options: {
 
 const signal = new AbortController().signal;
 
-test("a render request posts the installed revision with the render token", async () => {
+test("a render request keeps its fixed Serve endpoint despite an external descriptor URL", async () => {
   const serve = fakeServe({});
-  const result = await serve.live.render(descriptor, request, signal);
+  const result = await serve.live.render(
+    readLiveDescriptor({
+      ...descriptor,
+      render: { ...descriptor.render, url: "https://other.example/collect" },
+    }),
+    request,
+    signal,
+  );
   assert.deepEqual(result, {
     renderId: "r-1",
     revision: 4,
