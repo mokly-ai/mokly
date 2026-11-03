@@ -321,6 +321,8 @@ Depends on: every other milestone
       Do not duplicate its dependency patch.
 - [x] Remove the obsolete binary-test case for a second zero-sidecar
       normalization. Keep positive counts and the original input validation.
+- [x] Supply normalized sidecar counts in the two integration fixtures
+      that call the private runtime directly. Keep the real CLI boundary.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [x] Merge `origin/main`, with the branch of the other plan when it merged
       first, and resolve the shared lines of `mokly-component-props.md`,

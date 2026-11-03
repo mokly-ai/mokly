@@ -45,6 +45,7 @@ impl Session {
         let common = Common {
             config: Some("examples/basic/mokly.config.json".into()),
             base: Some("fixture-base".into()),
+            sidecars: Some(1),
             ..Common::default()
         };
         let tree = Arc::new(WorkingTree);
