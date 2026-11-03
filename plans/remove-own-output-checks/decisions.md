@@ -55,6 +55,19 @@ parallel work in workspaces 461 and 463, split by area, because the parts
 change different files apart from three shared points. The user agreed and
 asked me to send the scope note to workspace 461.
 
+### 2026-11-03: Implement every milestone and task
+
+The user requested implementation of every plan milestone and task. This
+approval covers the listed removals and proven-invariant conversions. It
+supersedes the earlier wait for the shared Rust skill update for this work.
+The shared skill files stay outside this repository's scope.
+
+### 2026-11-03: Integrate the shared Rust security fix
+
+The user directed integration of exact checkpoint `9447445` from PR #282.
+That shared patch owns the dependency version and checksum change. This
+branch merges the same commit and creates no duplicate dependency patch.
+
 ## My design calls, 2026-11-03
 
 1. Keep the version gates, the fences, the sidecar hello and version gate,
