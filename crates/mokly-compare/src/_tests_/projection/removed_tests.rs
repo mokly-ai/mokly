@@ -44,9 +44,9 @@ fn removed_records_and_previews_share_the_pinned_identity_and_metadata() {
         removed.folder_titles = vec!["Historical folder".into()];
     }
     let state = projection_index::publication("mokly.config.json".into(), "base");
-    let mut index = projection::index(&result.before.catalogue().model, &[], &state).unwrap();
+    let mut index = projection::index(&result.before.catalogue().model, &[], &state);
     projection_index::apply(&mut index, &result);
-    let records = projection_removed::records(&result, index).unwrap();
+    let records = projection_removed::records(&result, index);
     assert_eq!(records.len(), 5);
     for (record, removed) in records.iter().zip(&result.snapshot.removed_entries) {
         assert_eq!(record.folder_titles, removed.folder_titles);
@@ -126,7 +126,7 @@ fn historical_details_use_base_plans_without_inventing_workspace_or_view_evidenc
             }))),
     )));
     let state = projection_index::publication("mokly.config.json".into(), "base");
-    let index = projection_index::base_index(&result, &state).unwrap();
+    let index = projection_index::base_index(&result, &state);
     let mut details = projection_removed::details(&result, &index).unwrap();
     assert_eq!(details.len(), 1);
     let detail = &details["removed"];

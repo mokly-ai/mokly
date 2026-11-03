@@ -5,7 +5,7 @@ use std::mem;
 
 use mokly_css::attribution::Attribution;
 use mokly_model::evidence::{EvidenceOwner, RuleStatus};
-use mokly_model::review::ReviewState;
+use mokly_model::review::{EntryChangeReason, ReviewState};
 
 use crate::comparison_views::PendingView;
 use crate::implementation::OwnImpact;
@@ -33,7 +33,15 @@ pub(crate) fn apply(
         .cloned()
         .unwrap_or_default();
     instance_proofs.append(&mut view.proofs);
-    instance_proofs.extend(mem::take(&mut view.owned).proofs(&input.attributed.own_pages));
+    instance_proofs.extend(
+        mem::take(&mut view.owned)
+            .instances(&input.attributed.own_pages)
+            .into_iter()
+            .map(|(component, _)| InstanceProof {
+                component,
+                reason: EntryChangeReason::Implementation,
+            }),
+    );
     if let Some(component) = input.component
         && input.same_inputs
     {

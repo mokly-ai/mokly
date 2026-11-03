@@ -181,10 +181,10 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
                 .previews
                 .insert(preview, &validated.props, request.revision)
             {
-                Ok(response) => match crate::snapshot::encode(&response) {
-                    Ok(file) => response::bytes(StatusCode::OK, &file.content_type, file.bytes),
-                    Err(_) => response::reject(Rejection::RenderFailed),
-                },
+                Ok(response) => {
+                    let file = crate::snapshot::encode(&response);
+                    response::bytes(StatusCode::OK, &file.content_type, file.bytes)
+                }
                 Err(rejection) => response::reject(rejection),
             },
             Err(rejection) => response::reject(rejection),

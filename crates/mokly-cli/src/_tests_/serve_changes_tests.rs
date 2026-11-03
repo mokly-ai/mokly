@@ -104,7 +104,6 @@ fn refresh_uses_current_and_cancelled_attempts_print_no_warnings_or_result() {
     let result = ComparisonResult {
         resource_work: Default::default(),
         affected_lookups: 0,
-        validation_lookups: 0,
         warnings: vec![warning("Do not report base composition."), dependency],
         review: ReviewResultV8 {
             schema_version: 8,

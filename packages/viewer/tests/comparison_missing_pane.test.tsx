@@ -1,8 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { renderToStaticMarkup } from "react-dom/server";
-
 import type { ViewRouteKind } from "../src/navigation/routes.js";
 import type { ReviewView } from "../src/review/types.js";
 import type { ComparisonScrollSync } from "../src/shell/comparison_scroll_types.js";
@@ -11,9 +9,11 @@ import { ComparisonViews } from "../src/shell/comparison_views.js";
 import { entryWording } from "../src/shell/entry_wording.js";
 import type { ComparisonPresentation } from "../src/shell/use_comparison.js";
 
+import { storeMarkup } from "./shell_markup.js";
+
 /** The messages of a Side by side comparison with neither document present. */
 function missingMessages(kind: ViewRouteKind): string[] {
-  const markup = renderToStaticMarkup(
+  const markup = storeMarkup(
     <SideBySideComparison
       chrome={(node) => node}
       documents={{}}
@@ -29,7 +29,7 @@ function missingMessages(kind: ViewRouteKind): string[] {
 
 /** The message of a comparison whose review has no record for the entry. */
 function unavailableMessage(kind: ViewRouteKind): string {
-  return renderToStaticMarkup(
+  return storeMarkup(
     <ComparisonViews
       entryId="entry"
       entryKind={kind}

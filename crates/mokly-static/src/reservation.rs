@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 use serde::Serialize;
 
-use crate::error::{Error, InternalError, Result};
+use crate::error::{Error, Result};
 use crate::filesystem::{Entry, Files};
 use crate::location;
 
@@ -47,13 +47,11 @@ pub(crate) fn acquire(files: &dyn Files, output: &Path) -> Result<PathBuf> {
     if files.mkdir(&reservation).is_err() {
         return Err(Error::Reserved { path: reservation });
     }
-    let bytes = match serde_json::to_vec(&Marker {
+    let bytes = serde_json::to_vec(&Marker {
         schema_version: 2,
         output: name,
-    }) {
-        Ok(bytes) => bytes,
-        Err(source) => return Err(InternalError::Json { source }.into()),
-    };
+    })
+    .expect("The reservation marker contains one integer and one string");
     if let Err(primary) = files.write(&reservation.join(TRANSACTION), &bytes) {
         return match cleanup(files, &reservation) {
             Ok(()) => Err(primary),

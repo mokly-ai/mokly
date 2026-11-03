@@ -16,7 +16,7 @@ use crate::comparison_types::{ComparisonResult, EntryClassification};
 use crate::move_types::{EntryPair, MovePair, Pairing};
 use crate::projection_workspace;
 
-use super::support::{classified, details, entry, paired_result, result, with_lookup};
+use super::support::{classified, details, entry, paired_result, result};
 
 /// One affected view of `path` on `side`, through one Badge instance.
 fn evidence(side: ReviewSide, kind: ConsumerKind, path: &str) -> AffectedUsageEvidence {
@@ -74,7 +74,6 @@ fn moved(path: &str, previous: &str, kind: EntryKind) -> EntryClassification {
 /// Project the current details and read each entry's eligibility and the
 /// changed components that its detail names.
 fn project(result: &mut ComparisonResult) -> BTreeMap<String, (bool, Vec<String>)> {
-    with_lookup(result);
     let mut current = details(&result.after.catalogue().model);
     projection_workspace::apply(&mut current, result).unwrap();
     current

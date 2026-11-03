@@ -6,6 +6,7 @@ use std::sync::Arc;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::bindings::Bindings;
+use crate::compiled_fixture::compiled;
 use crate::definitions::Definitions;
 use crate::methods::{
     Bundle, Call, CssModules, Generation, ModuleResolution, ProcessCss, RenderPage,
@@ -13,7 +14,7 @@ use crate::methods::{
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
 use crate::pool_state::Slot;
-use crate::results::{self, Page};
+use crate::results::Page;
 use crate::wire::MethodResult;
 
 use crate::workers::WorkerMock;
@@ -27,7 +28,6 @@ fn definitions() -> MethodResult {
         components: Vec::new(),
         stories: Vec::new(),
         diagnostics: Vec::new(),
-        warnings: Vec::new(),
     })
 }
 
@@ -47,7 +47,7 @@ fn seed(worker: Unimock, loaded: bool) -> Pool {
         },
     );
     {
-        let mut state = pool.lock().unwrap();
+        let mut state = pool.lock();
         state.slots.push(Some(Slot {
             source_root: "/repo".into(),
             worker: Box::new(worker.clone()),
@@ -66,6 +66,8 @@ fn seed(worker: Unimock, loaded: bool) -> Pool {
         }));
         state.available.push_back(0);
         state.epochs.insert("g".into(), 0);
+        state.modules.insert("g".into(), Vec::new());
+        state.compiled.insert("g".into(), Arc::new(compiled("g")));
         state.bundles.insert(
             "g".into(),
             Bundle {
@@ -115,13 +117,13 @@ fn maps_installed_on_another_worker_are_replayed_before_describe() {
 }
 
 #[test]
-fn render_reload_gives_bundle_and_evaluation_their_own_deadlines() {
+fn render_reload_gives_restore_and_evaluation_their_own_deadlines() {
     let worker = Unimock::new((
-        WorkerMock::request.next_call(matching!((request, deadline) if matches!(request.call, Call::Bundle(_)) && *deadline == 120_000)).returns(Ok(MethodResult::Bundle(results::Bundle { unmapped_dependency_directories: None, epoch: 0, compiled: None, generation: "g".into(), modules: Vec::new(), warnings: Vec::new() }))),
+        WorkerMock::request.next_call(matching!((request, deadline) if matches!(request.call, Call::RestoreGeneration(_)) && *deadline == 30_000)).returns(Ok(MethodResult::Empty)),
         WorkerMock::request.next_call(matching!((request, deadline) if matches!(request.call, Call::CssModules(_)) && *deadline == 30_000)).returns(Ok(MethodResult::Empty)),
         WorkerMock::request.next_call(matching!((request, deadline) if matches!(request.call, Call::Describe(_)) && *deadline == 120_000)).returns(Ok(definitions())),
         WorkerMock::request.next_call(matching!((request, deadline) if matches!(request.call, Call::Bindings(_)) && *deadline == 30_000)).returns(Ok(MethodResult::Empty)),
-        WorkerMock::request.next_call(matching!((request, deadline) if matches!(request.call, Call::RenderPage(_)) && *deadline == 30_000)).returns(Ok(MethodResult::Page(Page { html: "document".into(), resources: Vec::new(), warnings: Vec::new() }))),
+        WorkerMock::request.next_call(matching!((request, deadline) if matches!(request.call, Call::RenderPage(_)) && *deadline == 30_000)).returns(Ok(MethodResult::Page(Page { html: "document".into(), resources: Vec::new() }))),
         WorkerMock::resident_bytes.next_call(matching!()).returns(Ok(0)),
     ));
     let pool = seed(worker, false);
@@ -158,7 +160,7 @@ fn installing_bindings_on_a_fresh_worker_replays_describe_first() {
     }))
     .unwrap();
     assert!(
-        pool.lock().unwrap().slots[0]
+        pool.lock().slots[0]
             .as_ref()
             .unwrap()
             .described
@@ -175,7 +177,7 @@ fn retired_postcss_contexts_are_disposed_without_resetting_live_contexts() {
     ));
     let pool = seed(worker, true);
     {
-        let mut state = pool.lock().unwrap();
+        let mut state = pool.lock();
         state.contexts.insert("live".into());
         state.slots[0]
             .as_mut()
@@ -194,7 +196,7 @@ fn retired_postcss_contexts_are_disposed_without_resetting_live_contexts() {
     }))
     .unwrap();
     assert_eq!(
-        pool.lock().unwrap().slots[0].as_ref().unwrap().contexts,
+        pool.lock().slots[0].as_ref().unwrap().contexts,
         BTreeSet::from(["live".into()])
     );
 }

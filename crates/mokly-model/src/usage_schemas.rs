@@ -49,10 +49,8 @@ impl<'a> UsageSchemas<'a> {
             let component = self
                 .component(path)
                 .ok_or_else(|| invalid(ContractViolation::UsageReference))?;
-            let schema = match serde_json::to_value(&component.visual.prop_schema) {
-                Ok(schema) => schema,
-                Err(_) => return Err(invalid(ContractViolation::UsageProps)),
-            };
+            let schema = serde_json::to_value(&component.visual.prop_schema)
+                .expect("PropSchema contains only JSON data and string property keys");
             let validator = match PropValidator::compile(&schema, &context) {
                 Ok(validator) => validator,
                 Err(_) => return Err(invalid(ContractViolation::UsageProps)),
@@ -63,10 +61,8 @@ impl<'a> UsageSchemas<'a> {
                 self.compilations += 1;
             }
         }
-        let props = match serde_json::to_value(props) {
-            Ok(props) => props,
-            Err(_) => return Err(invalid(ContractViolation::UsageProps)),
-        };
+        let props = serde_json::to_value(props)
+            .expect("Props contains only JSON data and string object keys");
         if self.validators[path].validate(&props, &context).is_err() {
             return Err(invalid(ContractViolation::UsageProps));
         }

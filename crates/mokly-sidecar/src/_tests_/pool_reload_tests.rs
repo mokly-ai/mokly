@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::bindings::{Bindings, EntryBinding};
+use crate::compiled_fixture::compiled;
 use crate::definitions::Definitions;
 use crate::methods::{Bundle, Call, CssModules, Generation, ModuleResolution, RenderPage};
 use crate::pool::{Pool, SidecarPool};
@@ -19,6 +20,7 @@ fn label(call: &Call) -> String {
     match call {
         Call::Dispose(_) => "dispose".into(),
         Call::Bundle(_) => "bundle".into(),
+        Call::RestoreGeneration(_) => "restore".into(),
         Call::Describe(_) => "describe".into(),
         Call::CssModules(value) => format!("maps:{}", value.class_maps["card.module.css"]["card"]),
         Call::Bindings(value) => format!("bindings:{}", value.entries["entry#default"].path),
@@ -47,10 +49,9 @@ fn worker(expected: &[&str], calls: usize) -> Unimock {
                     Call::Bundle(_) => MethodResult::Bundle(results::Bundle {
                         unmapped_dependency_directories: None,
                         epoch: 0,
-                        compiled: None,
+                        compiled: compiled("g"),
                         generation: "g".into(),
                         modules: Vec::new(),
-                        warnings: Vec::new(),
                     }),
                     Call::Describe(_) => MethodResult::Definitions(Definitions {
                         screens: Vec::new(),
@@ -60,12 +61,10 @@ fn worker(expected: &[&str], calls: usize) -> Unimock {
                         components: Vec::new(),
                         stories: Vec::new(),
                         diagnostics: Vec::new(),
-                        warnings: Vec::new(),
                     }),
                     Call::RenderPage(_) => MethodResult::Page(results::Page {
                         html: "new-control".into(),
                         resources: Vec::new(),
-                        warnings: Vec::new(),
                     }),
                     _ => MethodResult::Empty,
                 })
@@ -130,7 +129,7 @@ fn pair(first: Unimock, second: Unimock) -> Pool {
         },
     );
     {
-        let mut state = pool.lock().unwrap();
+        let mut state = pool.lock();
         let retained = Arc::new(bindings("old/card"));
         for mock in [first, second] {
             state.slots.push(Some(Slot {
@@ -149,6 +148,8 @@ fn pair(first: Unimock, second: Unimock) -> Pool {
         state.available.push_back(0);
         state.bundles.insert("g".into(), bundle());
         state.epochs.insert("g".into(), 0);
+        state.modules.insert("g".into(), Vec::new());
+        state.compiled.insert("g".into(), Arc::new(compiled("g")));
         state.leases.insert("g".into(), BTreeSet::from([0]));
         state.maps.insert("g".into(), maps("old-control"));
         state.bindings.insert("g".into(), retained);
@@ -171,13 +172,28 @@ fn render(pool: &Pool) {
 fn a_busy_second_process_reloads_maps_after_release_and_rebundle() {
     let sequence = [
         "dispose",
-        "bundle",
+        "restore",
         "maps:new-control",
         "describe",
         "bindings:new/card",
         "render",
     ];
-    let pool = pair(worker(&sequence, 5), worker(&sequence, 1));
+    let pool = pair(
+        worker(
+            &[
+                "dispose",
+                "restore",
+                "bundle",
+                "dispose",
+                "maps:new-control",
+                "describe",
+                "bindings:new/card",
+                "render",
+            ],
+            5,
+        ),
+        worker(&sequence, 1),
+    );
     pool.release_generation("g", 0);
     pool.synchronize_releases();
     pool.request(Call::Bundle(bundle())).unwrap();
@@ -187,7 +203,7 @@ fn a_busy_second_process_reloads_maps_after_release_and_rebundle() {
     }))
     .unwrap();
     pool.request(Call::Bindings(bindings("new/card"))).unwrap();
-    pool.lock().unwrap().available.push_front(1);
+    pool.lock().available.push_front(1);
     render(&pool);
     render(&pool);
 }
@@ -199,7 +215,7 @@ fn an_updated_binding_table_is_replayed_on_the_second_process() {
         worker(&["bindings:new/card", "render"], 1),
     );
     pool.request(Call::Bindings(bindings("new/card"))).unwrap();
-    pool.lock().unwrap().available.push_front(1);
+    pool.lock().available.push_front(1);
     render(&pool);
 }
 
@@ -209,15 +225,15 @@ fn equal_bindings_keep_the_shared_revision_on_both_workers() {
         worker(&["bindings:old/card", "bindings:old/card"], 2),
         worker(&["render"], 1),
     );
-    let retained = pool.lock().unwrap().bindings["g"].clone();
+    let retained = pool.lock().bindings["g"].clone();
     for _ in 0..2 {
         pool.request(Call::Bindings(bindings("old/card"))).unwrap();
-        let state = pool.lock().unwrap();
+        let state = pool.lock();
         assert!(Arc::ptr_eq(&state.bindings["g"], &retained));
         for slot in state.slots.iter().flatten() {
             assert!(Arc::ptr_eq(&slot.bindings["g"], &retained));
         }
     }
-    pool.lock().unwrap().available.push_front(1);
+    pool.lock().available.push_front(1);
     render(&pool);
 }

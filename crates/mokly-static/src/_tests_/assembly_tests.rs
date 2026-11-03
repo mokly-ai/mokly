@@ -11,7 +11,7 @@ use mokly_model::readers;
 use unimock::{MockFn, Unimock, matching};
 
 use super::assembly_support::{
-    assembler, config, empty_assembler, graph_with_key, plan, prepared, request,
+    assembler, config, empty_assembler, graph_with_key, prepared, request,
 };
 use crate::assembly::Assembler;
 use crate::error::Error;
@@ -89,58 +89,16 @@ fn builds_complete_current_bytes_from_a_mocked_generation_without_disk_access() 
 }
 
 #[test]
-fn rejects_empty_and_inconsistent_generations_without_panics_or_side_effects() {
-    for empty in [true, false] {
-        let mut catalogue = prepared();
-        if empty {
-            catalogue.model.entries.clear();
-        }
-        let graph = if empty {
-            Unimock::new(
-                RenderGenerationMock::catalogue
-                    .each_call(matching!())
-                    .returns(catalogue),
-            )
-        } else {
-            Unimock::new((
-                RenderGenerationMock::catalogue
-                    .each_call(matching!())
-                    .returns(catalogue),
-                RenderGenerationMock::plans
-                    .each_call(matching!())
-                    .returns(plan(9)),
-            ))
-        };
-        let assembler = empty_assembler();
-        let error = assembler
-            .assemble(request(&config(), &graph), &Unimock::new(()))
-            .unwrap_err();
-        assert!(if empty {
-            matches!(error, Error::Empty)
-        } else {
-            matches!(error, Error::PlanEntry { entry: 9, .. })
-        });
-    }
-}
-
-#[test]
-fn malformed_published_index_preserves_the_reader_diagnostic() {
-    let graph = graph_with_key("bad");
-    let assembler: &dyn Assembler = &assembler();
-    let cancellation = Unimock::new(
-        CancellationMock::requested
+fn rejects_an_empty_catalogue_before_output() {
+    let mut catalogue = prepared();
+    catalogue.model.entries.clear();
+    let graph = Unimock::new(
+        RenderGenerationMock::catalogue
             .each_call(matching!())
-            .returns(false),
+            .returns(catalogue),
     );
-    let error = assembler
-        .assemble(request(&config(), &graph), &cancellation)
+    let error = empty_assembler()
+        .assemble(request(&config(), &graph), &Unimock::new(()))
         .unwrap_err();
-    assert!(
-        error.to_string().contains("invalid page document key"),
-        "{error}"
-    );
-    assert!(
-        error.to_string().contains("mokly-viewer/index.json"),
-        "{error}"
-    );
+    assert!(matches!(error, Error::Empty));
 }

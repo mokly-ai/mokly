@@ -9,9 +9,7 @@ use mokly_model::canonical;
 use mokly_model::public_detail::{RelatedComponent, UsageLink, VisualKind};
 use mokly_model::review_affected::{ConsumerKind, ReviewSide};
 
-use crate::comparison_error::CompareResult;
 use crate::comparison_types::ComparisonResult;
-use crate::error::Result;
 use crate::projection_context::Context;
 use crate::projection_reference::References;
 
@@ -22,15 +20,15 @@ pub(crate) struct Affected {
     pub(crate) links: BTreeMap<String, Vec<UsageLink>>,
 }
 
-pub(crate) fn index(result: &ComparisonResult, context: &Context<'_>) -> Result<Affected> {
+pub(crate) fn index(result: &ComparisonResult, context: &Context<'_>) -> Affected {
     let mut output = Affected::default();
-    let references = References::new(result)?;
+    let references = References::new(result);
     let mut related_seen = BTreeSet::new();
     let mut links_seen = BTreeSet::new();
     for effect in &result.review.affected {
         let mut projected = Vec::new();
         for evidence in &effect.evidence {
-            if let Some(target) = references.affected(effect, evidence)? {
+            if let Some(target) = references.affected(effect, evidence) {
                 projected.push((evidence, target));
             }
         }
@@ -109,7 +107,8 @@ pub(crate) fn index(result: &ComparisonResult, context: &Context<'_>) -> Result<
                     evidence.context.color_scheme,
                 ),
             };
-            let key = canonical::to_string(&link).compare()?;
+            let key = canonical::to_string(&link)
+                .expect("UsageLink contains only strings, booleans, and JSON enum values");
             if links_seen.insert((effect.changed_component_id.as_str(), key)) {
                 output
                     .links
@@ -119,5 +118,5 @@ pub(crate) fn index(result: &ComparisonResult, context: &Context<'_>) -> Result<
             }
         }
     }
-    Ok(output)
+    output
 }

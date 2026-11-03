@@ -6,7 +6,6 @@ use std::sync::{Arc, Weak};
 
 use mokly_sidecar::methods::{Bundle, Call};
 use mokly_sidecar::results;
-use mokly_sidecar::wire::MethodResult;
 
 use crate::bundle::BundleState;
 use crate::error::{RenderError, Result};
@@ -20,8 +19,7 @@ pub(crate) fn request(
     params: &Bundle,
 ) -> Result<(results::Bundle, Arc<BundleLease>)> {
     let result = match runtime.pool.request(Call::Bundle(params.clone())) {
-        Ok(MethodResult::Bundle(result)) => result,
-        Ok(_) => return Err(RenderError::ResultKind { method: "bundle" }),
+        Ok(result) => result.into_bundle(),
         Err(source) => return Err(RenderError::Sidecar { source }),
     };
     let lease = Arc::new(BundleLease {
@@ -61,22 +59,21 @@ pub(crate) fn modules(result: &results::Bundle) -> BTreeMap<String, Vec<String>>
 /// Capture every compiler digest and direct directory membership.
 pub(crate) fn stamp(result: &results::Bundle, repository: &Path) -> InputStamp {
     let mut stamp = InputStamp::default();
-    if let Some(compiled) = &result.compiled {
-        stamp
-            .memberships
-            .extend(compiled.metadata_directories.iter().map(|(path, names)| {
-                (
-                    repository.join(path),
-                    Some(names.iter().map(PathBuf::from).collect()),
-                )
-            }));
-        stamp.files.extend(
-            compiled
-                .metadata_inputs
-                .iter()
-                .map(|(path, hash)| (repository.join(path), hash.clone())),
-        );
-    }
+    let compiled = &result.compiled;
+    stamp
+        .memberships
+        .extend(compiled.metadata_directories.iter().map(|(path, names)| {
+            (
+                repository.join(path),
+                Some(names.iter().map(PathBuf::from).collect()),
+            )
+        }));
+    stamp.files.extend(
+        compiled
+            .metadata_inputs
+            .iter()
+            .map(|(path, hash)| (repository.join(path), hash.clone())),
+    );
     for module in result
         .modules
         .iter()

@@ -66,11 +66,7 @@ fn candidate_charges_are_exact_and_summary_growth_keeps_earlier_routes() {
     );
     assert_eq!(collector.retained, cost);
     assert_eq!(
-        collector.views["a/index.html"]
-            .document
-            .restore()
-            .unwrap()
-            .bytes,
+        collector.views["a/index.html"].document.restore().bytes,
         input().artifact.bytes
     );
 }

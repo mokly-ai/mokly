@@ -3,9 +3,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::sync::mpsc::{self, Sender};
-use std::sync::{Arc, Condvar, Mutex, MutexGuard};
+use std::sync::{Arc, Condvar, Mutex, MutexGuard, PoisonError};
 
-use crate::error::{Error, InternalError, Result};
+use crate::error::{Error, Result};
 use crate::methods::Call;
 use crate::pool_options::{Launch, PoolOptions};
 use crate::pool_releases::Notice;
@@ -65,11 +65,8 @@ impl Pool {
         pool
     }
 
-    pub(super) fn lock(&self) -> Result<MutexGuard<'_, State>> {
-        match self.state.lock() {
-            Ok(state) => Ok(state),
-            Err(_) => Err(InternalError::Synchronization.into()),
-        }
+    pub(super) fn lock(&self) -> MutexGuard<'_, State> {
+        pool_cleanup::lock(&self.state)
     }
 
     pub(super) fn acquire(
@@ -78,7 +75,7 @@ impl Pool {
         root: Option<&Path>,
     ) -> Result<(usize, Option<Slot>)> {
         let root = root.unwrap_or(&self.launch.repository);
-        let mut state = self.lock()?;
+        let mut state = self.lock();
         let ticket = state.ticket;
         state.ticket += 1;
         let context = match call {
@@ -109,25 +106,25 @@ impl Pool {
                     return Ok((index, slot));
                 }
             }
-            state = match self.ready.wait(state) {
-                Ok(state) => state,
-                Err(_) => return Err(InternalError::Synchronization.into()),
-            };
+            state = self
+                .ready
+                .wait(state)
+                .unwrap_or_else(PoisonError::into_inner);
         }
     }
 
     pub(super) fn spawn(&self, index: usize, source_root: &Path) -> Result<Slot> {
-        let reason = self.lock()?.replacement_reasons.get(&index).copied();
+        let reason = self.lock().replacement_reasons.get(&index).copied();
         let recycle = reason.map(Reason::replacement);
         let _recycle_scope = recycle.as_ref().map(tracing::Span::enter);
         let span = tracing::info_span!("sidecar.spawn", status = "error");
         let _scope = span.enter();
-        if self.lock()?.stopped {
+        if self.lock().stopped {
             return Err(Error::Cancelled);
         }
-        self.forget_other_roots(index, source_root)?;
+        self.forget_other_roots(index, source_root);
         {
-            let mut state = self.lock()?;
+            let mut state = self.lock();
             state.memory.entry(index).or_default().started();
             state.replacement_reasons.insert(index, Reason::Retry);
         }
@@ -137,7 +134,7 @@ impl Pool {
         };
         let mut spawned = self.factory.spawn(&launch)?;
         {
-            let mut state = self.lock()?;
+            let mut state = self.lock();
             if state.stopped {
                 spawned.control.kill()?;
                 return Err(Error::Cancelled);
@@ -148,14 +145,14 @@ impl Pool {
             .worker
             .handshake(self.options.timeout_ms.unwrap_or(30_000))
         {
-            if self.lock()?.stopped {
+            if self.lock().stopped {
                 spawned.control.kill()?;
             } else {
                 Reason::Retry.kill(spawned.control.as_ref())?;
             }
             return Err(error);
         }
-        self.lock()?.replacement_reasons.remove(&index);
+        self.lock().replacement_reasons.remove(&index);
         span.record("status", "ok");
         if let Some(recycle) = &recycle {
             recycle.record("status", "ok");
@@ -174,13 +171,13 @@ impl Pool {
         })
     }
 
-    pub(super) fn release(&self, index: usize, mut slot: Option<Slot>) -> Result<()> {
+    pub(super) fn release(&self, index: usize, mut slot: Option<Slot>) {
         if let Some(current) = &mut slot
             && let Err(error) = self.cleanup(current)
         {
             tracing::warn!(%error, "sidecar cleanup failed");
             let stopped = {
-                let mut state = self.lock()?;
+                let mut state = self.lock();
                 state.replacement_reasons.insert(index, Reason::Replacement);
                 state.stopped
             };
@@ -191,7 +188,7 @@ impl Pool {
             };
             slot = None;
         }
-        let mut state = self.lock()?;
+        let mut state = self.lock();
         state.slots[index] = if state.stopped { None } else { slot };
         if state.slots[index].is_none() {
             state.controls.remove(&index);
@@ -205,7 +202,6 @@ impl Pool {
             let _ = sender.send(Notice::Work);
         }
         self.ready.notify_all();
-        Ok(())
     }
 }
 

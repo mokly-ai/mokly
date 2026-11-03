@@ -50,7 +50,7 @@ fn release_cleanup_after_pool_drop_keeps_mock_verification_on_the_owner() {
         );
         {
             let control: Arc<dyn WorkerControl> = Arc::new(worker.clone());
-            let mut state = pool.lock().unwrap();
+            let mut state = pool.lock();
             state.slots.push(Some(Slot {
                 source_root: "/repo".into(),
                 worker: Box::new(worker.clone()),

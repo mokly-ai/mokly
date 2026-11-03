@@ -6,22 +6,19 @@ use axum::body::to_bytes;
 use mokly_graph::types::RenderGenerationMock;
 use mokly_model::public_metadata::{CatalogueChanges, ChangeKind, ChangesStatus};
 use mokly_model::readers;
-use mokly_model::usage_schemas::UsageSchemas;
 use serde_json::{Value, json};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::changes_detail;
 use crate::comparison_support::{accepted, historical_inputs};
-use crate::detail_encoding::{DetailEncoder, ValidatedDetails};
+use crate::detail_encoding::{DetailEncoder, EncodedDetails};
 use crate::publication_support;
 use crate::snapshot::Snapshot;
 
 async fn delivered(snapshot: &Snapshot) -> Value {
     let detail = &snapshot.details["screen-0"];
-    let mut schemas = UsageSchemas::new(&snapshot.index.components);
-    let encoded = ValidatedDetails
-        .encode(detail, &snapshot.index, &mut schemas)
-        .unwrap();
+
+    let encoded = EncodedDetails.encode(detail);
     let bytes = to_bytes(
         encoded.response(snapshot.index.revision).into_body(),
         usize::MAX,
@@ -37,14 +34,11 @@ async fn delivered(snapshot: &Snapshot) -> Value {
 async fn withdrawing_the_classification_removes_reasons_from_delivered_bytes() {
     let (mut catalogue, _) = historical_inputs();
     catalogue.model = publication_support::empty_model();
-    let graph = Unimock::new((
-        RenderGenerationMock::generation_key
-            .each_call(matching!())
-            .returns("after"),
+    let graph = Unimock::new(
         RenderGenerationMock::catalogue
             .each_call(matching!())
             .returns(catalogue),
-    ));
+    );
     let mut comparison = accepted(Arc::new(graph.clone()), Arc::new(graph.clone()));
     let result = &mut Arc::get_mut(&mut comparison).unwrap().result;
     result.entries.truncate(1);

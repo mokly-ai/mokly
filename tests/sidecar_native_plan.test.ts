@@ -94,8 +94,8 @@ const rows: Array<{
       );
     },
     check({ result }) {
-      assert.match(result.compiled!.code, /jsxDEV\(/);
-      assert.doesNotMatch(result.compiled!.code, /\bh\(/);
+      assert.match(result.compiled.code, /jsxDEV\(/);
+      assert.doesNotMatch(result.compiled.code, /\bh\(/);
     },
   },
   ...[{}, { main: "" }].map((main) => ({
@@ -179,8 +179,8 @@ const rows: Array<{
       return nativeParams(head);
     },
     check({ result }) {
-      assert.doesNotMatch(result.compiled!.code, /pureRan/);
-      assert.match(result.compiled!.code, /effectfulRan/);
+      assert.doesNotMatch(result.compiled.code, /pureRan/);
+      assert.match(result.compiled.code, /effectfulRan/);
     },
   },
 ];

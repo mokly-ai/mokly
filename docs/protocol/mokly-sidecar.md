@@ -1,7 +1,5 @@
 # Render Sidecar
 
-Status: Both sides still check frame fields that the transport decision trusts, until the [own-output checks plan](../../plans/remove-own-output-checks.md) removes these checks.
-
 ## Purpose And Boundary
 
 The sidecar runs JavaScript bundles, React, page and Storybook renders, and
@@ -48,28 +46,28 @@ both sides were rejected, because the copies drift and increase the code size.
 
 ```json
 {"id":12,"method":"renderComponent","params":{"generation":"3f9c…","handle":"specs/ui/button.mockup.tsx#Button","entry":{"path":"ui/button","title":"Button"},"props":{"label":"Save"},"slots":{},"viewport":"mobile","colorScheme":"light","ignoreScope":"enabled"}}
-{"id":12,"result":{"html":"<!--mokly-output:start id=\"r-1\"--><button class=\"css-1x2\">Save</button><!--mokly-output:end id=\"r-1\"-->","styles":[{"css":".css-1x2{color:red}","owners":["ui/button"]}],"markers":[{"id":"r-1","payload":{"kind":"output"}}],"resources":[],"instances":[],"slots":[],"warnings":[]}}
+{"id":12,"result":{"html":"<!--mokly-output:start id=\"r-1\"--><button class=\"css-1x2\">Save</button><!--mokly-output:end id=\"r-1\"-->","styles":[{"css":".css-1x2{color:red}","owners":["ui/button"]}],"markers":[{"id":"r-1","payload":{"kind":"output"}}],"resources":[],"instances":[],"slots":[]}}
 {"event":"diagnostic","params":{"message":"…"}}
 ```
 
 ## Methods
 
-| Method              | Params                                                                                                            | Result                                                                              |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `hello`             | optional `timings` boolean, default `false`                                                                       | `{ version }`                                                                       |
-| `bundle`            | entry files, renderer, stories files, resolution settings, source root, configuration directory, repository roots | `{ generation, modules, warnings, compiled }`                                       |
-| `restoreGeneration` | generation, original bundle params, module graph, immutable compiled recipe                                       | nothing                                                                             |
-| `describe`          | generation                                                                                                        | `{ screens, pages, useCases, folders, components, stories, diagnostics, warnings }` |
-| `renderScreen`      | generation, handle, effective entry, props, viewport, colour scheme                                               | render result                                                                       |
-| `renderComponent`   | generation, handle, effective entry, props, tagged slots, viewport, colour scheme, enclosing ignore scope         | render result                                                                       |
-| `renderStory`       | generation, story id, props, viewport, colour scheme                                                              | render result                                                                       |
-| `renderPage`        | generation, handle                                                                                                | `{ html, resources, warnings }`                                                     |
-| `processCss`        | context, source root, repository roots, resolution settings, PostCSS module, source path, text                    | `{ text, dependencies, readEvidence }`                                              |
-| `bindings`          | generation, handle-to-path-and-title table                                                                        | nothing                                                                             |
-| `disposeContext`    | PostCSS context                                                                                                   | nothing                                                                             |
-| `cssModules`        | generation, class maps by stylesheet path                                                                         | nothing                                                                             |
-| `dispose`           | generation                                                                                                        | nothing                                                                             |
-| `shutdown`          | none                                                                                                              | nothing                                                                             |
+| Method              | Params                                                                                                            | Result                                                                    |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `hello`             | optional `timings` boolean, default `false`                                                                       | `{ version }`                                                             |
+| `bundle`            | entry files, renderer, stories files, resolution settings, source root, configuration directory, repository roots | `{ generation, modules, compiled }`                                       |
+| `restoreGeneration` | generation, original bundle params, module graph, immutable compiled recipe                                       | nothing                                                                   |
+| `describe`          | generation                                                                                                        | `{ screens, pages, useCases, folders, components, stories, diagnostics }` |
+| `renderScreen`      | generation, handle, effective entry, props, viewport, colour scheme                                               | render result                                                             |
+| `renderComponent`   | generation, handle, effective entry, props, tagged slots, viewport, colour scheme, enclosing ignore scope         | render result                                                             |
+| `renderStory`       | generation, story id, props, viewport, colour scheme                                                              | render result                                                             |
+| `renderPage`        | generation, handle                                                                                                | `{ html, resources }`                                                     |
+| `processCss`        | context, source root, repository roots, resolution settings, PostCSS module, source path, text                    | `{ text, dependencies, readEvidence }`                                    |
+| `bindings`          | generation, handle-to-path-and-title table                                                                        | nothing                                                                   |
+| `disposeContext`    | PostCSS context                                                                                                   | nothing                                                                   |
+| `cssModules`        | generation, class maps by stylesheet path                                                                         | nothing                                                                   |
+| `dispose`           | generation                                                                                                        | nothing                                                                   |
+| `shutdown`          | none                                                                                                              | nothing                                                                   |
 
 The [render records contract](./mokly-sidecar-render-records.md) defines the
 render result, bindings, entry context, usage drafts, and slot inputs. Page results follow the [pages contract](./mokly-pages.md).
@@ -77,7 +75,7 @@ render result, bindings, entry context, usage drafts, and slot inputs. Page resu
 ## Definitions
 
 `describe` returns every exported definition with its handle and a
-`diagnostics` list and generation warnings. The [definition transport](./mokly-sidecar-definitions.md)
+`diagnostics` list. The [definition transport](./mokly-sidecar-definitions.md)
 defines typed metadata, raw authored schemas, and source-attributed authoring
 errors. These errors keep their own codes and do not invalidate the transport.
 The core validates schemas with its single schema validator before it

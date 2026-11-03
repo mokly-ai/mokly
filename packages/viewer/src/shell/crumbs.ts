@@ -37,13 +37,13 @@ export function structuredCrumbTrail(
   hierarchy: CatalogueHierarchy<ShellCatalogueRoutedEntry>,
   entryId: string,
 ): CatalogueCrumb[] {
-  const titles = hierarchy.ancestorsByPath.get(entryId) ?? [];
+  // The tree holds every current entry once, under one node for each title
+  // above it, so each title names the node at the matching path prefix.
+  const titles = hierarchy.ancestorsByPath.get(entryId)!;
   const owner = hierarchy.variantParentByPath.get(entryId)?.path ?? entryId;
   const segments = owner.split("/").slice(0, -1);
-  if (segments.length !== titles.length)
-    return titles.map((label) => ({ label }));
   const section =
-    hierarchy.byPath.get(entryId)?.kind === "component"
+    hierarchy.byPath.get(entryId)!.kind === "component"
       ? "components"
       : "specs";
   let nodes: readonly HierarchyNode<ShellCatalogueRoutedEntry>[] =
@@ -51,11 +51,11 @@ export function structuredCrumbTrail(
   let hidden = false;
   return titles.map((label, index) => {
     const path = segments.slice(0, index + 1).join("/");
-    const node = nodes.find((candidate) => candidate.key === path);
-    hidden ||= node?.hidden === true;
-    nodes = node?.children ?? [];
+    const node = nodes.find((candidate) => candidate.key === path)!;
+    hidden ||= node.hidden === true;
+    nodes = node.children ?? [];
     if (hierarchy.byPath.has(path)) return { href: viewHref(path), label };
-    if (node === undefined || hidden) return { label };
+    if (hidden) return { label };
     return { folder: { path, section }, label };
   });
 }

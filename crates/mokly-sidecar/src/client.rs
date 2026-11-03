@@ -34,15 +34,7 @@ pub struct Client {
     transport: Box<dyn Transport>,
     events: Box<dyn Events>,
     version: String,
-    state: State,
     timings: bool,
-}
-
-#[derive(Clone, Copy, PartialEq)]
-enum State {
-    New,
-    Ready,
-    Closed,
 }
 
 impl Client {
@@ -53,7 +45,6 @@ impl Client {
             transport,
             events,
             version,
-            state: State::New,
             timings: false,
         }
     }
@@ -67,13 +58,6 @@ impl Client {
 
 impl SidecarClient for Client {
     fn handshake(&mut self) -> Result<()> {
-        if self.state == State::Ready {
-            return Ok(());
-        }
-        if self.state == State::Closed {
-            return Err(Error::Protocol(ProtocolError::SessionClosed));
-        }
-        self.state = State::Closed;
         let request = Request {
             id: 0,
             call: Call::Hello(Hello {
@@ -84,46 +68,24 @@ impl SidecarClient for Client {
         let Frame::Response(response) = self.transport.receive()? else {
             return Err(Error::Protocol(ProtocolError::Handshake));
         };
-        let MethodResult::Hello(hello) = response.decode_result(&request)? else {
-            return Err(Error::Protocol(ProtocolError::Handshake));
-        };
+        let hello = response.decode_result(&request)?.into_hello();
         if hello.version != self.version {
             return Err(Error::Version {
                 expected: self.version.clone(),
                 actual: hello.version,
             });
         }
-        self.state = State::Ready;
         tracing::debug!("sidecar hello completed");
         Ok(())
     }
 
     fn request(&mut self, request: &Request) -> Result<MethodResult> {
-        if self.state == State::Closed {
-            return Err(Error::Protocol(ProtocolError::SessionClosed));
-        }
-        if self.state != State::Ready || matches!(request.call, Call::Hello(_)) {
-            return Err(Error::Protocol(ProtocolError::Handshake));
-        }
-        self.state = State::Closed;
         self.transport.send(request)?;
         tracing::trace!(request_id = request.id, "sidecar request sent");
         loop {
             match self.transport.receive()? {
                 Frame::Event(event) => self.events.emit(event),
-                Frame::Response(response) => {
-                    let result = response.decode_result(request);
-                    let reusable = match &result {
-                        Ok(_) => true,
-                        Err(Error::Remote { code, .. }) => code.reusable(),
-                        Err(Error::Postcss { .. }) => true,
-                        _ => false,
-                    };
-                    if reusable && !matches!(request.call, Call::Shutdown(_)) {
-                        self.state = State::Ready;
-                    }
-                    return result;
-                }
+                Frame::Response(response) => return response.decode_result(request),
             }
         }
     }

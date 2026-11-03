@@ -45,11 +45,11 @@ impl Pool {
         ) {
             slot.renders += 1;
         }
-        if self.lock()?.stopped {
+        if self.lock().stopped {
             return Err(Error::Cancelled);
         }
         if let Call::ProcessCss(params) = call {
-            self.lock()?.contexts.insert(params.context.clone());
+            self.lock().contexts.insert(params.context.clone());
             slot.contexts.insert(params.context.clone());
         }
         let mut result = slot.worker.request(
@@ -60,7 +60,7 @@ impl Pool {
             deadline,
         )?;
         {
-            let mut state = self.lock()?;
+            let mut state = self.lock();
             if state.stopped {
                 return Err(Error::Cancelled);
             }
@@ -78,17 +78,16 @@ impl Pool {
                         .entry(result.generation.clone())
                         .or_default()
                         .insert(epoch);
-                    if let Some(compiled) = &result.compiled {
-                        let restored = state.recipes.take_reused(bundle, compiled);
-                        let shared = state
-                            .compiled
-                            .values()
-                            .find(|value| value.same_recipe(compiled))
-                            .cloned()
-                            .or(restored)
-                            .unwrap_or_else(|| Arc::new(compiled.clone()));
-                        state.compiled.insert(result.generation.clone(), shared);
-                    }
+                    let compiled = &result.compiled;
+                    let restored = state.recipes.take_reused(bundle, compiled);
+                    let shared = state
+                        .compiled
+                        .values()
+                        .find(|value| value.same_recipe(compiled))
+                        .cloned()
+                        .or(restored)
+                        .unwrap_or_else(|| Arc::new(compiled.clone()));
+                    state.compiled.insert(result.generation.clone(), shared);
                     state
                         .bundles
                         .insert(result.generation.clone(), bundle.clone());

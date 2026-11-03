@@ -1,7 +1,5 @@
 import assert from "node:assert/strict";
 
-import { renderToStaticMarkup } from "react-dom/server";
-
 import {
   detailKey,
   type DetailRequest,
@@ -23,6 +21,7 @@ import {
   rawDetailFixtures,
   shellModelFixture,
 } from "./catalogue_v9_fixture.js";
+import { storeMarkup } from "./shell_markup.js";
 
 export const BASE = "origin/main";
 
@@ -134,7 +133,7 @@ export function published(
 export function renderPage(catalogue: Catalogue): string {
   const entry = catalogue.byPath.get("guide");
   assert.ok(entry?.kind === "page");
-  return renderToStaticMarkup(
+  return storeMarkup(
     <ShellMain
       catalogue={catalogue}
       context={{ base: BASE }}

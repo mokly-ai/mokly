@@ -11,9 +11,6 @@ pub enum InspectorFailure {
         /// Reserved attribute supplied by the author.
         attribute: &'static str,
     },
-    /// The composition range record is inconsistent.
-    #[error("[mokly-static/inspector] Inspector ranges are invalid.")]
-    Ranges,
     /// The document has no place for the inert metadata and script.
     #[error("[mokly-static/inspector] The rendered document has no head.")]
     Head,

@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import type { ShellCatalogueReadModel } from "../catalogue/scoped_types.js";
 
 import type { DetailDelivery } from "./data_requests.js";
-import { useOptionalShellStore } from "./store_context.js";
+import { useShellStore } from "./store_context.js";
 
 /**
  * Whether the routed view's comparison eligibility is final: the index
@@ -37,15 +37,15 @@ export function useComparisonIntent(
   eligibilityKnown: boolean,
   select: () => void,
 ): void {
-  const store = useOptionalShellStore();
-  const intent = store?.state.comparisonIntent
+  const store = useShellStore();
+  const intent = store.state.comparisonIntent
     ? store.state.routeInstallation
     : undefined;
   const latest = useRef({ eligible, select, store });
   latest.current = { eligible, select, store };
   useEffect(() => {
     if (intent === undefined || !eligibilityKnown) return;
-    latest.current.store?.settleComparisonIntent(intent);
+    latest.current.store.settleComparisonIntent(intent);
     if (latest.current.eligible) latest.current.select();
   }, [eligibilityKnown, intent]);
 }

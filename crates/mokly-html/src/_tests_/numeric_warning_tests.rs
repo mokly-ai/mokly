@@ -97,8 +97,8 @@ fn javascript_instance_drafts_name_their_component_and_id() {
         panic!("expected component entry");
     }
     let props = serde_json::from_value(json!({"count": 9007199254740993_u64})).unwrap();
-    let key = instance_key(&ComponentInputOwner::Entry, None, "draft").unwrap();
-    let props_key = props_key(&props).unwrap();
+    let key = instance_key(&ComponentInputOwner::Entry, None, "draft");
+    let props_key = props_key(&props);
     let renderer = Arc::new(Unimock::new(
         FragmentRendererMock::render
             .next_call(matching!(_))

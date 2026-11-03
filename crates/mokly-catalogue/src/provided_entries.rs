@@ -59,7 +59,8 @@ pub(crate) fn attach(
                             .map(|value| ControlOption {
                                 label: match value {
                                     Primitive::String(value) => value.clone(),
-                                    _ => serde_json::to_string(value).unwrap_or_default(),
+                                    _ => serde_json::to_string(value)
+                                        .expect("control options are JSON primitives"),
                                 },
                                 value: value.clone(),
                             })

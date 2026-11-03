@@ -1,5 +1,7 @@
 import fs from "node:fs";
 
+import { createElement, type ReactElement, type ReactNode } from "react";
+
 import { detailKey } from "../../packages/viewer/dist/catalogue/detail_fences.js";
 import { readEntryDetail } from "../../packages/viewer/dist/catalogue/detail_reader.js";
 import { readCatalogueIndex } from "../../packages/viewer/dist/catalogue/index_reader.js";
@@ -13,6 +15,7 @@ import { createCatalogue } from "../../packages/viewer/dist/shell/catalogue.js";
 import { shellContext } from "../../packages/viewer/dist/shell/projection.js";
 import { routeFromUrl } from "../../packages/viewer/dist/shell/routes.js";
 import { defaultSelection } from "../../packages/viewer/dist/shell/selection.js";
+import { ShellStoreProvider } from "../../packages/viewer/dist/shell/store.js";
 import { createInitialShellState } from "../../packages/viewer/dist/shell/store_initial.js";
 import type {
   ShellInitialState,
@@ -75,4 +78,20 @@ export function fixtureShellState({
     route.view.kind === "target" ? route.view.target.entry.path : null;
   const context = shellContext(model, { ...defaultSelection, screenPath });
   return createInitialShellState(catalogue, context, route, initial);
+}
+
+/**
+ * Wrap containers in the store of a non-interactive shell over the index
+ * fixture, as every mounted shell supplies one. On the home route, Details
+ * stay closed, both viewports show, and previews use the Light scheme.
+ */
+export function inShellStore(children: ReactNode): ReactElement {
+  return createElement(ShellStoreProvider, {
+    context: { embedded: false },
+    index: indexModel(),
+    interactive: false,
+    route: (catalogue) =>
+      routeFromUrl(catalogue, new URL("https://example.test/")),
+    children,
+  });
 }

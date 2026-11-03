@@ -85,7 +85,6 @@ fn planning_reuses_digests_without_pinning_resource_bytes() {
             .collect(),
         slot_fragments: BTreeMap::new(),
         elements: BTreeMap::new(),
-        deferred_modules: Vec::new(),
         warnings: Vec::new(),
     };
     let config = ResolvedConfig {

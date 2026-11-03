@@ -33,7 +33,7 @@ fn config() -> ResolvedConfig {
 #[test]
 fn a_working_tier_base_selects_the_same_package_roots_as_the_head() {
     let config = config();
-    let head = inputs(&config, None, 0).unwrap();
+    let head = inputs(&config, None, 0);
     let request = Request {
         base: Inputs::default(),
         head: Inputs::default(),
@@ -69,7 +69,7 @@ fn a_working_tier_base_selects_the_same_package_roots_as_the_head() {
         cache_namespace: None,
         identity: "commit".into(),
     });
-    let base = inputs(&config, Some(&side), 0).unwrap();
+    let base = inputs(&config, Some(&side), 0);
     assert_eq!(head.module_resolution, base.module_resolution);
     assert_eq!(head.dependency_roots, base.dependency_roots);
 }

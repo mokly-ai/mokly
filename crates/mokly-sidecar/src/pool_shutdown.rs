@@ -6,7 +6,7 @@ use crate::pool::Pool;
 impl Pool {
     pub(super) fn cancel_busy(&self) -> Result<()> {
         let controls = {
-            let mut state = self.lock()?;
+            let mut state = self.lock();
             state.stopped = true;
             state.recipes.clear();
             let busy: Vec<_> = state
@@ -41,7 +41,7 @@ impl Pool {
 
     pub(super) fn stop(&self, force: bool) -> Result<()> {
         let controls = {
-            let mut state = self.lock()?;
+            let mut state = self.lock();
             state.stopped = true;
             state.recipes.clear();
             self.ready.notify_all();

@@ -36,7 +36,7 @@ fn package_roots_are_normalized_before_selecting_dependency_tiers() {
         authored_inputs: Vec::new(),
         roots: Vec::new(),
     };
-    let selected = super::resolution(&config).unwrap();
+    let selected = super::resolution(&config);
     assert_eq!(selected.package_roots, ["packages/one", "config/other"]);
     assert_eq!(selected.aliases["react-native"], "react-native-web");
     assert_eq!(selected.conditions, ["react-native"]);

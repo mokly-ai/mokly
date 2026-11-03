@@ -89,8 +89,9 @@ strict-warning check for both `build` and `publish`.
 calls the CLI-owned `StaticOutput` adapter. It uses the same build check and
 head capture as `build` before Changes and output read the captured head. The
 adapter runs the same output transaction as `build` in a private directory
-outside the repository and returns the installed bytes to one cached upload
-preparation. `mokly-publish` owns the exchange. The
+outside the repository and returns the installed bytes with their typed
+ownership and upload metadata to one cached upload preparation.
+`mokly-publish` owns the exchange. The
 [upload contract](../../docs/protocol/mokly-upload.md) owns the checkout
 checks, the private directory, and its cleanup.
 

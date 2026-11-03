@@ -2208,7 +2208,6 @@ dependencies = [
  "mokly-model",
  "mokly-source-interface",
  "pulldown-cmark",
- "serde",
  "serde_json",
  "thiserror",
  "tracing",

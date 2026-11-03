@@ -65,10 +65,7 @@ pub(crate) fn publish_receipt(entry: &Path, receipt: &Receipt, durable: bool) ->
         bytes: receipt.bytes,
         used: receipt.used,
     };
-    let bytes = match serde_json::to_vec(&stored) {
-        Ok(bytes) => bytes,
-        Err(source) => return Err(InternalError::Json { source }.into()),
-    };
+    let bytes = serde_json::to_vec(&stored).expect("StoredReceipt contains only unsigned integers");
     let temporary = entry.join("receipt.tmp");
     match fs::remove_file(&temporary) {
         Ok(()) => {}

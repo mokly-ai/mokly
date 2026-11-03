@@ -1,11 +1,9 @@
 //! Stable material, instance, and receiving-slot digest preimages.
 
-use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 use crate::canonical::compare_utf16;
 use crate::data::Props;
-use crate::error::{InternalError, ModelError, Result};
 use crate::usage::ComponentInputOwner;
 use crate::wire_props;
 
@@ -18,34 +16,35 @@ pub fn digest(bytes: &[u8]) -> String {
 }
 
 /// Hash normalized props under the Review material encoding.
-pub fn props_key(props: &Props) -> Result<String> {
+pub fn props_key(props: &Props) -> String {
     let mut fields: Vec<_> = wire_props::encode(props).into_iter().collect();
     fields.sort_by(|a, b| compare_utf16(&a.0, &b.0));
-    hash_json(&("object", fields))
+    let bytes = serde_json::to_vec(&("object", fields))
+        .expect("tagged props contain only JSON data, string keys, and ordered field pairs");
+    digest(&bytes)
 }
 
 /// Hash an instance's input scope and validated local id.
-pub fn instance_key(owner: &ComponentInputOwner, slot: Option<&str>, id: &str) -> Result<String> {
+pub fn instance_key(owner: &ComponentInputOwner, slot: Option<&str>, id: &str) -> String {
     let (kind, key) = match owner {
         ComponentInputOwner::Entry => ("entry", None),
         ComponentInputOwner::Instance { instance_key } => ("instance", Some(instance_key.as_str())),
     };
-    hash_json(&("mokly-instance-v1", kind, key, slot, id))
+    let bytes = serde_json::to_vec(&("mokly-instance-v1", kind, key, slot, id))
+        .expect("instance key preimages contain only strings and optional strings");
+    digest(&bytes)
 }
 
 /// Hash a receiving instance and declared slot name.
-pub fn slot_key(instance: &str, name: &str) -> Result<String> {
-    hash_json(&("mokly-slot-v1", instance, name))
+pub fn slot_key(instance: &str, name: &str) -> String {
+    let bytes = serde_json::to_vec(&("mokly-slot-v1", instance, name))
+        .expect("slot key preimages contain only strings");
+    digest(&bytes)
 }
 
 /// Hash a historical record identity without metadata, time, or transient generations.
-pub fn historical_snapshot_key(
-    catalogue: &str,
-    commit: &str,
-    kind: &str,
-    path: &str,
-) -> Result<String> {
-    hash_json(&(
+pub fn historical_snapshot_key(catalogue: &str, commit: &str, kind: &str, path: &str) -> String {
+    let bytes = serde_json::to_vec(&(
         "mokly-historical-snapshot-v3",
         catalogue,
         "base",
@@ -53,16 +52,17 @@ pub fn historical_snapshot_key(
         kind,
         path,
     ))
+    .expect("historical snapshot key preimages contain only strings");
+    digest(&bytes)
 }
 
 /// Hash the stable origin-scoped configuration identity.
-pub fn catalogue_key(config_path: &str) -> Result<String> {
-    hash_json(&("mokly-catalogue-v1", config_path))
+pub fn catalogue_key(config_path: &str) -> String {
+    let bytes = serde_json::to_vec(&("mokly-catalogue-v1", config_path))
+        .expect("catalogue key preimages contain only strings");
+    digest(&bytes)
 }
 
-fn hash_json(value: &impl Serialize) -> Result<String> {
-    match serde_json::to_vec(value) {
-        Ok(bytes) => Ok(digest(&bytes)),
-        Err(source) => Err(ModelError::Internal(InternalError::Json { source })),
-    }
-}
+#[cfg(test)]
+#[path = "_tests_/material_tests.rs"]
+mod material_tests;

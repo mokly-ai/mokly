@@ -58,7 +58,7 @@ pub(super) fn catalogue() -> PreparedCatalogue {
         documents: Default::default(),
         slot_fragments: Default::default(),
         elements: Default::default(),
-        deferred_modules: vec![],
+
         javascript: Default::default(),
         dependency_directories: Default::default(),
         warnings: vec![],
@@ -73,7 +73,6 @@ pub(super) fn prepared(dir: &str, generation: Unimock) -> PreparedServe {
             documents: 0,
             counts: Default::default(),
             warnings: vec![],
-            deferred_modules: vec![],
         },
     }
 }

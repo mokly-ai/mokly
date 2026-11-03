@@ -25,14 +25,14 @@ fn every_returned_instance_is_rechecked_against_its_registered_schema() {
         let props = serde_json::from_value(value).unwrap();
         let id = format!("instance-{order}");
         ComponentInstanceRecord {
-            key: instance_key(&ComponentInputOwner::Entry, None, &id).unwrap(),
+            key: instance_key(&ComponentInputOwner::Entry, None, &id),
             id,
             component_id: "components/js".into(),
             owner: ComponentInputOwner::Entry,
             slot_key: None,
             order,
             props: wire_props::encode(&props),
-            props_key: props_key(&props).unwrap(),
+            props_key: props_key(&props),
             source: None,
         }
     };
@@ -173,9 +173,9 @@ fn nested_instance_and_slot_markers_rebase_under_the_core_invocation() {
         "<p>{{label}}</p><ui-js label=\"Receiver\" mokly-instance=\"outer\"></ui-js>",
     );
     let props = serde_json::from_value(json!({"label":"Nested"})).unwrap();
-    let original = instance_key(&ComponentInputOwner::Entry, None, "inner").unwrap();
-    let digest = props_key(&props).unwrap();
-    let slot = slot_key(&original, "children").unwrap();
+    let original = instance_key(&ComponentInputOwner::Entry, None, "inner");
+    let digest = props_key(&props);
+    let slot = slot_key(&original, "children");
     let result = Fragment {
         markers: vec![
             FragmentMarker {

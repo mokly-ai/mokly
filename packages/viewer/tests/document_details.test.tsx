@@ -1,8 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { renderToStaticMarkup } from "react-dom/server";
-
 import type { CatalogueNode } from "../src/catalogue/types.js";
 import { EntryDetailsBody } from "../src/shell/details.js";
 
@@ -13,28 +11,33 @@ import {
   publishedScreen,
   removedEntry,
 } from "./published_entries_fixture.js";
+import { storeMarkup } from "./shell_markup.js";
 
-/** The public fixture, with a screen that names the overview document. */
+/** The public fixture's index, with a screen that names the overview document. */
+function index() {
+  return indexFixture((model) => {
+    const details = model.screens.find(
+      (entry) => entry.path === "product/browse/details",
+    );
+    assert.ok(details);
+    details.details.relatedDocs = ["mock:product", "docs/notes.md"];
+    model.documents[0]!.tags = ["guide"];
+  });
+}
+
+/** The shell catalogue of that index. */
 function catalogue() {
-  return catalogueFixture(
-    indexFixture((model) => {
-      const details = model.screens.find(
-        (entry) => entry.path === "product/browse/details",
-      );
-      assert.ok(details);
-      details.details.relatedDocs = ["mock:product", "docs/notes.md"];
-      model.documents[0]!.tags = ["guide"];
-    }),
-  );
+  return catalogueFixture(index());
 }
 
 function details(path: string): string {
-  const shell = catalogue();
+  const model = index();
+  const shell = catalogueFixture(model);
   const entry = shell.byPath.get(path);
   assert.ok(entry, path);
-  return renderToStaticMarkup(
-    <EntryDetailsBody catalogue={shell} entry={entry} />,
-  );
+  return storeMarkup(<EntryDetailsBody catalogue={shell} entry={entry} />, {
+    index: model,
+  });
 }
 
 test("a related document opens its entry, labelled with its title", () => {
@@ -95,9 +98,7 @@ test("the catalogue record's source path links its current document", () => {
   const render = (path: string) => {
     const entry = shell.byPath.get(path);
     assert.ok(entry, path);
-    return renderToStaticMarkup(
-      <EntryDetailsBody catalogue={shell} entry={entry} />,
-    );
+    return storeMarkup(<EntryDetailsBody catalogue={shell} entry={entry} />);
   };
   const current = render("billing");
   assert.match(
@@ -120,7 +121,7 @@ test("a served document shows its source without the removed dependency list", (
   const published = shell.byPath.get("guide/terms");
   assert.ok(published);
   const document = published;
-  const markup = renderToStaticMarkup(
+  const markup = storeMarkup(
     <EntryDetailsBody catalogue={shell} entry={document} />,
   );
   assert.match(markup, /Source<\/span>.*specs\/guide\/terms\.md/u);

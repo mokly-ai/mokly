@@ -100,7 +100,6 @@ export function restore(
     registrations: new Map(),
     savedSlots: new Map(),
     stories: new Map(),
-    warnings: [],
     require,
   };
 }
@@ -111,7 +110,6 @@ export function bundleResult(generation: Generation): BundleResult {
     unmappedDependencyDirectories:
       generation.compiled.unmappedDependencyDirectories ?? [],
     modules: generation.modules,
-    warnings: [],
     compiled: generation.compiled,
   };
   checkRecipeSize(generation.params, result);

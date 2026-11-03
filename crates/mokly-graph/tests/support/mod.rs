@@ -4,7 +4,6 @@ use std::path::Path;
 use std::sync::Arc;
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
-use mokly_catalogue::definition_provider::DeferredDefinitions;
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::preparation::{Builder, CatalogueBuilder};
 use mokly_catalogue::working_tree::WorkingTree;
@@ -20,6 +19,8 @@ use mokly_graph::workers::ThreadWorkers;
 use mokly_html::composition::HtmlComposer;
 use mokly_html::fragment::DeferredFragments;
 use mokly_source_interface::tree::SourceTree;
+
+pub mod definitions;
 
 pub fn prepare(
     root: &Path,
@@ -60,7 +61,7 @@ pub fn prepare_with_cache_and_output(
     let prepared = Builder {
         tree: tree.clone(),
         discovery: Arc::new(Discoverer { tree: tree.clone() }),
-        definitions: Arc::new(DeferredDefinitions),
+        definitions: Arc::new(definitions::EmptyDefinitions),
     }
     .prepare(&config, None)
     .unwrap();

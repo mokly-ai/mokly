@@ -55,14 +55,12 @@ const ShellStoreContext = createContext<ShellStore | undefined>(undefined);
 /** Provider primitive kept separate so standalone composition stays small. */
 export const ShellStoreBoundary = ShellStoreContext.Provider;
 
-/** Read the live store when a shell is mounted under standalone React. */
-export function useOptionalShellStore(): ShellStore | undefined {
-  return useContext(ShellStoreContext);
-}
-
-/** Require the live store from a standalone-only bridge. */
+/**
+ * Read the store of the shell that renders this container. Every container
+ * renders under `ShellStoreProvider`.
+ */
 export function useShellStore(): ShellStore {
-  const store = useOptionalShellStore();
+  const store = useContext(ShellStoreContext);
   if (!store) throw new Error("The shell store is unavailable.");
   return store;
 }

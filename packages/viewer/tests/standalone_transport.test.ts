@@ -178,16 +178,6 @@ test("each stream message carries the revision as id and the deployment as data"
   assert.equal(stream.url.href, `${ORIGIN}/mokly-viewer/events`);
   const deployment = "ab".repeat(32);
   stream.send("3", deployment);
-  for (const [id, data] of [
-    ["", deployment],
-    ["03", deployment],
-    ["-1", deployment],
-    ["1.5", deployment],
-    ["99999999999999999999", deployment],
-    ["4", "not-a-deployment"],
-    ["4", deployment.toUpperCase()],
-  ])
-    stream.send(id!, data!);
   assert.deepEqual(messages, [[3, deployment]]);
   stream.onerror?.();
   stream.onerror?.();

@@ -50,6 +50,7 @@ pub(crate) fn records(fragment: &Fragment, catalogue: &PreparedCatalogue) -> Res
     let mut keys = BTreeSet::new();
     let mut scopes: BTreeMap<String, BTreeSet<u64>> = BTreeMap::new();
     for instance in &fragment.instances {
+        keys.insert(instance.key.clone());
         let props = wire_decode::decode(&instance.props).ok();
         let component = catalogue.model.entries.iter().find(|entry| {
             entry.metadata.path == instance.component_id && entry.metadata.variant_of.is_none()
@@ -61,17 +62,10 @@ pub(crate) fn records(fragment: &Fragment, catalogue: &PreparedCatalogue) -> Res
                 None
             }
         });
-        if !keys.insert(instance.key.clone())
-            || schema.is_none()
+        if schema.is_none()
             || instance_key(&instance.owner, instance.slot_key.as_deref(), &instance.id)
-                .ok()
-                .as_ref()
-                != Some(&instance.key)
-            || props
-                .as_ref()
-                .and_then(|props| props_key(props).ok())
-                .as_ref()
-                != Some(&instance.props_key)
+                != instance.key
+            || props.as_ref().map(props_key).as_ref() != Some(&instance.props_key)
         {
             return Err(invalid(
                 Code::BuildInvalid,
@@ -105,9 +99,9 @@ pub(crate) fn records(fragment: &Fragment, catalogue: &PreparedCatalogue) -> Res
     }
     let mut slots = BTreeSet::new();
     for slot in &fragment.slots {
-        if !slots.insert(slot.key.clone())
-            || !keys.contains(&slot.instance_key)
-            || slot_key(&slot.instance_key, &slot.name).ok().as_ref() != Some(&slot.key)
+        slots.insert(slot.key.clone());
+        if !keys.contains(&slot.instance_key)
+            || slot_key(&slot.instance_key, &slot.name) != slot.key
         {
             return Err(invalid(Code::BuildInvalid, "forged fragment slot metadata"));
         }

@@ -10,12 +10,12 @@ import { TagPicker } from "@mokly/ui/tag-picker";
 
 import { useShellIdentifier } from "./identifier_context.js";
 import { useShellRoot } from "./root_context.js";
-import { useOptionalShellStore, type ShellStore } from "./store_context.js";
+import { useShellStore, type ShellStore } from "./store_context.js";
 import { selectTag } from "./tag_selection.js";
 
 /** Whether a tag filters the catalogue; the parsed query holds lower case. */
-function tagSelected(store: ShellStore | undefined, tag: string): boolean {
-  return store?.state.selection.tags.includes(tag.toLowerCase()) ?? false;
+function tagSelected(store: ShellStore, tag: string): boolean {
+  return store.state.selection.tags.includes(tag.toLowerCase());
 }
 
 /**
@@ -24,15 +24,15 @@ function tagSelected(store: ShellStore | undefined, tag: string): boolean {
  * picker's button in the chip's own shell.
  */
 export function TagChip({ tag }: { tag: string }) {
-  const store = useOptionalShellStore();
+  const store = useShellStore();
   const elements = useShellRoot()?.elements;
   return (
     <TagChipView
       onSelect={(chosen) =>
         selectTag(
           elements?.tagToggle.current,
-          () => store?.toggleTag(chosen),
-          Boolean(store?.state.tagPickerOpen),
+          () => store.toggleTag(chosen),
+          store.state.tagPickerOpen,
         )
       }
       selected={tagSelected(store, tag)}
@@ -43,18 +43,18 @@ export function TagChip({ tag }: { tag: string }) {
 
 /** The search field's tag button and the picker that it opens. */
 export function SearchTagPicker({ tags }: { tags: readonly string[] }) {
-  const store = useOptionalShellStore();
+  const store = useShellStore();
   const elements = useShellRoot()?.elements;
   const pickerId = useShellIdentifier("mb-tag-picker");
   return (
     <TagPicker
-      focusedIndex={store?.state.tagPickerIndex ?? 0}
+      focusedIndex={store.state.tagPickerIndex}
       id={pickerId}
-      interactive={store?.interactive ?? false}
-      onFocusChange={(index) => store?.setTagPicker(true, index)}
-      onOpenChange={(open, index) => store?.setTagPicker(open, index)}
-      onSelect={(tag) => store?.toggleTag(tag)}
-      open={store?.state.tagPickerOpen ?? false}
+      interactive={store.interactive}
+      onFocusChange={(index) => store.setTagPicker(true, index)}
+      onOpenChange={(open, index) => store.setTagPicker(open, index)}
+      onSelect={(tag) => store.toggleTag(tag)}
+      open={store.state.tagPickerOpen}
       toggleRef={elements?.tagToggle}
       pickerRef={elements?.tagPicker}
       tags={tags.map((tag) => ({ selected: tagSelected(store, tag), tag }))}

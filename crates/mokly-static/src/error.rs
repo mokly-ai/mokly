@@ -142,14 +142,6 @@ pub enum Error {
         /// Typed metadata failure.
         reason: InspectorFailure,
     },
-    /// A document plan refers to an absent catalogue entry.
-    #[error("[mokly-static] Invalid document plan for {route}: entry {entry} is absent.")]
-    PlanEntry {
-        /// Planned route.
-        route: String,
-        /// Invalid entry index.
-        entry: usize,
-    },
     /// A package script cannot be parsed as a module.
     #[error("[mokly-static] Could not read module references: {path}:{line}:{column}.")]
     ModuleSyntax {
@@ -188,14 +180,6 @@ pub enum InternalError {
         /// Inventoried repository module.
         path: PathBuf,
     },
-    /// Index validation failed before publication, with the reader's diagnostic.
-    #[error("Invalid static output at {path}: {source}")]
-    Index {
-        /// Public catalogue index path.
-        path: String,
-        /// Original strict reader failure.
-        source: mokly_model::readers::ReadError,
-    },
     /// Shared comparison projection failed.
     #[error("comparison projection failed: {source}")]
     Comparison {
@@ -223,18 +207,6 @@ pub enum InternalError {
     Format {
         /// Shared format cause.
         source: FormatError,
-    },
-    /// JSON encoding failed.
-    #[error("JSON encoding failed: {source}")]
-    Json {
-        /// Serialization cause.
-        source: serde_json::Error,
-    },
-    /// Canonical projection failed.
-    #[error("catalogue projection failed: {source}")]
-    Model {
-        /// Shared model cause.
-        source: mokly_model::error::ModelError,
     },
     /// Source policy compilation failed.
     #[error("source policy failed: {source}")]

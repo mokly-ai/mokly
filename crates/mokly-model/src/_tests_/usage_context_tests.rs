@@ -21,7 +21,7 @@ fn fixture() -> (
     .unwrap();
     let component = &index.components[0];
     let props = wire_decode::decode(&component.visual.props).unwrap();
-    let key = material::instance_key(&ComponentInputOwner::Entry, None, "action").unwrap();
+    let key = material::instance_key(&ComponentInputOwner::Entry, None, "action");
     let usage = CatalogueUsage::Ready {
         instances: vec![ComponentInstanceRecord {
             key: key.clone(),
@@ -31,7 +31,7 @@ fn fixture() -> (
             slot_key: None,
             order: 0,
             props: component.visual.props.clone(),
-            props_key: material::props_key(&props).unwrap(),
+            props_key: material::props_key(&props),
             source: None,
         }],
         slots: vec![],
@@ -95,7 +95,7 @@ fn slot_forwarding_cycles_and_missing_input_owners_are_rejected() {
     };
     let mut second = instances[0].clone();
     second.id = "second".into();
-    second.key = material::instance_key(&second.owner, None, &second.id).unwrap();
+    second.key = material::instance_key(&second.owner, None, &second.id);
     second.order = 1;
     ranges.push(ComponentRangeRecord {
         id: "r-1".into(),
@@ -105,8 +105,8 @@ fn slot_forwarding_cycles_and_missing_input_owners_are_rejected() {
         parent_id: None,
     });
     instances.push(second);
-    let first_slot = material::slot_key(&instances[0].key, "content").unwrap();
-    let second_slot = material::slot_key(&instances[1].key, "content").unwrap();
+    let first_slot = material::slot_key(&instances[0].key, "content");
+    let second_slot = material::slot_key(&instances[1].key, "content");
     for (instance, key, earlier) in [
         (&instances[0], &first_slot, &second_slot),
         (&instances[1], &second_slot, &first_slot),
@@ -138,7 +138,7 @@ fn slot_forwarding_cycles_and_missing_input_owners_are_rejected() {
     instances[0].owner = ComponentInputOwner::Instance {
         instance_key: "d".repeat(64),
     };
-    instances[0].key = material::instance_key(&instances[0].owner, None, &instances[0].id).unwrap();
+    instances[0].key = material::instance_key(&instances[0].owner, None, &instances[0].id);
     ranges[0].target = ComponentRangeTarget::Instance {
         instance_key: instances[0].key.clone(),
     };

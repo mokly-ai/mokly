@@ -137,7 +137,7 @@ cache, or the bundler's implementation path.
 
 ## Compiled Recipes And Release
 
-The private `bundle` result carries `compiled`: code, runtime import key,
+Every private `bundle` result carries `compiled`: code, runtime import key,
 captured entry text, resolved peers, physical input digests,
 logical metadata digests, and the compilation identity. `restoreGeneration`
 installs that recipe with its original parameters, module graph, and evaluated generation id. The bundle result carries the graph once.

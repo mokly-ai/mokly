@@ -225,7 +225,7 @@ test("an answer's additive fields are ignored", async () => {
   });
 });
 
-test("expiry checks only the preview URLs Serve issued", async () => {
+test("expiry asks Serve for the preview without a cached answer", async () => {
   const serve = fakeServe({});
   assert.equal(
     await serve.live.previewExpired(
@@ -239,14 +239,6 @@ test("expiry checks only the preview URLs Serve issued", async () => {
       "/mokly-viewer/components/renders/r-1/index.html",
       signal,
     ),
-    false,
-  );
-  assert.equal(
-    await serve.live.previewExpired("https://elsewhere.test/x", signal),
-    false,
-  );
-  assert.equal(
-    await serve.live.previewExpired("/view/expired/", signal),
     false,
   );
   assert.deepEqual(

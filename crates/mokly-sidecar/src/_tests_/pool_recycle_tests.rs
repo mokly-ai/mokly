@@ -5,6 +5,8 @@ use std::sync::Arc;
 
 use unimock::{MockFn, Unimock, matching};
 
+use crate::bindings::Bindings;
+use crate::compiled_fixture::compiled;
 use crate::methods::{Bundle, Call, ModuleResolution, ProcessCss, RenderPage};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
@@ -31,9 +33,13 @@ fn pool(mock: Unimock) -> Pool {
 }
 
 fn seed(pool: &Pool, worker: Unimock) {
-    let mut state = pool.lock().unwrap();
+    let mut state = pool.lock();
     let request_worker = worker.clone();
     let control = Arc::new(worker);
+    let bindings = Arc::new(Bindings {
+        generation: "g".into(),
+        entries: BTreeMap::new(),
+    });
     state.slots.push(Some(Slot {
         source_root: "/repo".into(),
         worker: Box::new(request_worker),
@@ -41,7 +47,7 @@ fn seed(pool: &Pool, worker: Unimock) {
         generations: BTreeMap::from([("g".into(), 0)]),
         maps: BTreeSet::from(["g".into()]),
         described: BTreeSet::from(["g".into()]),
-        bindings: BTreeMap::new(),
+        bindings: BTreeMap::from([("g".into(), bindings.clone())]),
         contexts: BTreeSet::new(),
         renders: 0,
         requests: 1,
@@ -49,6 +55,9 @@ fn seed(pool: &Pool, worker: Unimock) {
     state.available.push_back(0);
     state.controls.insert(0, control);
     state.epochs.insert("g".into(), 0);
+    state.modules.insert("g".into(), Vec::new());
+    state.compiled.insert("g".into(), Arc::new(compiled("g")));
+    state.bindings.insert("g".into(), bindings);
     state.bundles.insert(
         "g".into(),
         Bundle {
@@ -73,7 +82,6 @@ fn render_500_recycles_after_the_inflight_result_returns() {
                 Ok(MethodResult::Page(Page {
                     html: "document".into(),
                     resources: Vec::new(),
-                    warnings: Vec::new(),
                 }))
             })
             .n_times(500),
@@ -100,13 +108,13 @@ fn render_500_recycles_after_the_inflight_result_returns() {
             MethodResult::Page(_)
         ));
     }
-    assert_eq!(pool.lock().unwrap().slots[0].as_ref().unwrap().renders, 499);
+    assert_eq!(pool.lock().slots[0].as_ref().unwrap().renders, 499);
     pool.request(Call::RenderPage(RenderPage {
         generation: "g".into(),
         handle: "x#page".into(),
     }))
     .unwrap();
-    assert!(pool.lock().unwrap().slots[0].is_none());
+    assert!(pool.lock().slots[0].is_none());
 }
 
 #[test]
@@ -143,9 +151,9 @@ fn resident_set_recycles_only_after_one_gib_is_exceeded() {
         })
     };
     pool.request(call()).unwrap();
-    assert!(pool.lock().unwrap().slots[0].is_some());
+    assert!(pool.lock().slots[0].is_some());
     pool.request(call()).unwrap();
-    assert!(pool.lock().unwrap().slots[0].is_none());
+    assert!(pool.lock().slots[0].is_none());
 }
 
 #[test]
@@ -206,11 +214,11 @@ fn a_fresh_oversized_worker_gets_one_request_before_memory_recycling() {
         for completed in 1..count {
             pool.request(call.clone()).unwrap();
             assert_eq!(
-                pool.lock().unwrap().slots[0].as_ref().unwrap().requests,
+                pool.lock().slots[0].as_ref().unwrap().requests,
                 completed as u64
             );
         }
         pool.request(call).unwrap();
-        assert!(pool.lock().unwrap().slots[0].is_none());
+        assert!(pool.lock().slots[0].is_none());
     }
 }

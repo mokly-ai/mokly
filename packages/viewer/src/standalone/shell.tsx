@@ -208,9 +208,7 @@ export function StandaloneShellContents({
         />
       }
       mainHref="#mb-main"
-      navigation={
-        <CatalogueNav catalogue={store.catalogue} context={store.context} />
-      }
+      navigation={<CatalogueNav context={store.context} />}
       ref={shellRoot?.ref ?? shell}
       statusId="mb-status"
       theme={appearance.theme}

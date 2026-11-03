@@ -1,11 +1,11 @@
-//! A valid error reply preserves the session unless the protocol failed.
+//! Remote error replies retain their diagnostics.
 
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::client::{Client, SidecarClient, TransportMock};
 use crate::diagnostics::DefinitionCode;
-use crate::error::{Error, ProtocolError, RemoteCode, RequestCode};
+use crate::error::{Error, RemoteCode, RequestCode};
 use crate::methods::{Call, Empty, Generation};
 use crate::wire::{Frame, MethodResult, RemoteError, Request, Response};
 
@@ -77,7 +77,7 @@ fn bundle_render_and_definition_errors_allow_another_request() {
 }
 
 #[test]
-fn a_remote_protocol_failure_closes_the_session() {
+fn a_remote_protocol_failure_retains_its_code() {
     let mock = Unimock::new((
         TransportMock::send.next_call(matching!(_)).returns(Ok(())),
         TransportMock::receive
@@ -114,9 +114,5 @@ fn a_remote_protocol_failure_closes_the_session() {
             code: RemoteCode::Request(RequestCode::SidecarProtocol),
             ..
         })
-    ));
-    assert!(matches!(
-        client.request(&request),
-        Err(Error::Protocol(ProtocolError::SessionClosed))
     ));
 }

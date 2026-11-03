@@ -148,16 +148,14 @@ fn valid_props(visual: &CatalogueVisual, props: &Props, path: &str) -> bool {
         variant: None,
         kind: AuthoringKind::Html,
     };
-    let Ok(props) = serde_json::to_value(props) else {
-        return false;
-    };
+    let props = serde_json::to_value(props)
+        .expect("Props has string keys and serializable DataValue values");
     for schema in [
         &visual.prop_schema,
         &controls::with_bounds(&visual.prop_schema, &visual.controls),
     ] {
-        let Ok(schema) = serde_json::to_value(schema) else {
-            return false;
-        };
+        let schema = serde_json::to_value(schema)
+            .expect("PropSchema contains typed schema fields and string map keys");
         let Ok(validator) = PropValidator::compile(&schema, &context) else {
             return false;
         };

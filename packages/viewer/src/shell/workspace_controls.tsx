@@ -11,7 +11,7 @@ import { ViewControls } from "@mokly/ui/view-controls";
 import type { ColorScheme } from "../data/axes.js";
 
 import { useShellIdentifier } from "./identifier_context.js";
-import { useOptionalShellStore } from "./store_context.js";
+import { useShellStore } from "./store_context.js";
 import {
   VIEW_CHANGED_IDS,
   VIEW_CHANGED_TEXT,
@@ -37,9 +37,8 @@ export function WorkspaceControls({
     toggle(): void;
   };
 }) {
-  const store = useOptionalShellStore();
-  const viewport = store?.state.selection.viewport ?? "both";
-  const scheme = store?.state.selection.colorScheme ?? "light";
+  const store = useShellStore();
+  const { colorScheme: scheme, viewport } = store.state.selection;
   const marks = viewMarks(changedViews, viewport, effectiveColorScheme);
   const schemeChangedId = useShellIdentifier(VIEW_CHANGED_IDS.scheme);
   const viewportChangedId = useShellIdentifier(VIEW_CHANGED_IDS.viewport);
@@ -68,8 +67,8 @@ export function WorkspaceControls({
           : undefined
       }
       onHighlight={highlight?.toggle}
-      onScheme={(next) => store?.selectColorScheme(next)}
-      onViewport={(next) => store?.selectViewport(next)}
+      onScheme={(next) => store.selectColorScheme(next)}
+      onViewport={(next) => store.selectViewport(next)}
       viewport={viewport}
       viewportMark={{
         id: viewportChangedId,

@@ -7,7 +7,7 @@ use ts_rs::TS;
 
 /// Expected PostCSS failure; all source fields are logical repository paths.
 #[derive(Clone, Debug, Deserialize, Serialize, TS, Error)]
-#[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
+#[serde(tag = "kind", rename_all = "camelCase")]
 #[error("[mokly-sidecar/postcss] consumer processor failed")]
 pub enum PostcssFailure {
     /// Module evaluation or default export failed.

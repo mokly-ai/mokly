@@ -62,8 +62,6 @@ export function serialize(
     : (dataProps(
         input.props,
         Object.hasOwn(input, "propSchema"),
-        handleLocation(record.handle),
-        generation.warnings,
         record.excludedProps,
       ) as Definition["props"]);
   record.useCasePaths = ((input.useCasePaths ?? []) as unknown[]).map((item) =>
@@ -107,8 +105,6 @@ export function serialize(
           : dataProps(
               variant.props,
               Object.hasOwn(input, "propSchema"),
-              `${handleLocation(record.handle)}/${variant.slug}`,
-              generation.warnings,
               excludedProps,
             ),
         excludedProps,

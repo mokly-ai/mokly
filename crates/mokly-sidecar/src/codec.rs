@@ -1,9 +1,7 @@
 //! Bounded newline-delimited UTF-8 JSON framing.
 
-use serde::Serialize;
-
 use crate::error::{Error, ProtocolError, Result};
-use crate::wire::Frame;
+use crate::wire::{Frame, Request};
 
 /// Maximum bytes of JSON in one frame, excluding its LF delimiter.
 pub const MAX_FRAME_BYTES: usize = 64 * 1024 * 1024;
@@ -55,11 +53,9 @@ impl Decoder {
 }
 
 /// Encode one frame and append LF after checking the UTF-8 byte size.
-pub fn encode(value: &impl Serialize) -> Result<Vec<u8>> {
-    let mut bytes = match serde_json::to_vec(value) {
-        Ok(bytes) => bytes,
-        Err(source) => return Err(Error::Protocol(ProtocolError::Json { source })),
-    };
+pub fn encode(request: &Request) -> Result<Vec<u8>> {
+    let mut bytes = serde_json::to_vec(request)
+        .expect("sidecar requests contain only JSON values and string-keyed maps");
     if bytes.len() > MAX_FRAME_BYTES {
         return Err(Error::Protocol(ProtocolError::Oversized {
             limit: MAX_FRAME_BYTES,

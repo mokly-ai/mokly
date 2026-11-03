@@ -14,8 +14,8 @@ depends on it. It has no internal crate dependency and performs no file IO.
   explicit empty values, omitted absent optionals, and a final LF.
 - Validate the JSON Schema 2020-12 prop profile and complete JSON props with
   one validator on `jsonschema`.
-- Own the review result and change snapshot, the in-memory comparison
-  records, the removed-preview shape, and their strict readers.
+- Own the review result, change snapshot, in-memory comparison records, and
+  removed-preview shape.
 - Generate TypeScript declarations for the viewer.
 
 ## What This Crate Does
@@ -29,10 +29,12 @@ JavaScript and stories use `component-schema` or `component-props`.
 
 `output` defines the ownership marker, upload metadata, repository identity,
 and immutable file inventory. `Artifact::finalize` accepts optional upload
-metadata and writes the marker last. Plain builds pass no metadata. Both
+metadata and writes the marker last. It retains the typed ownership inventory
+and upload metadata beside the finalized bytes. Plain builds pass no metadata. Both
 `mokly-static` and `mokly-publish` use these shapes without a dependency on
-each other. The marker parser checks format shape. The publication client
-separately checks complete artifact bytes and upload-only file-count limits.
+each other. The marker parser checks persisted ownership before an existing
+output directory can be replaced. The publication client reuses the finalized
+inventory and checks upload file-count and file-size limits.
 
 Canonical encoding preserves array order. Each shape owner supplies the entry
 kind/path order, authored variant order, instance/slot key order, and region
@@ -93,16 +95,10 @@ Serve and the static writer.
 `review` and `review_affected` define direct reasons, view states, and complete
 usage chains. A comparison keeps the review result in memory and publishes its
 facts through the index and the entry details. `review_order` supplies
-canonical order for producers and readers. `readers::review` gates the review
-version before validating sides, membership, order, and evidence.
-The reader requires current variants before base-only variants, exact
-`previousPath` on moved pairs, and UTF-16 order for reason targets.
-The classifier also validates source coverage and actual ownership proof.
-`readers::change_snapshot` gates the snapshot version before reading
-historical records. It rejects unknown flattened fields, invalid IDs, and
-snapshot-local order errors.
-`CatalogueChangeSnapshotV4::validate_sources` checks the full removed order
-against both catalogues, including base-authored variant order.
+canonical order for producers. Comparison producers retain current variants
+before base-only variants, exact `previousPath` on moved pairs, and UTF-16
+order for reason targets. Snapshot producers retain base-authored variant
+order. The comparison trusts these records from the same Mokly version.
 Component identity impact can come from an included parent or variant. An
 actual-instance `implementation` reason does not alter own view states.
 
@@ -166,8 +162,8 @@ cargo xtask generate-types
 - [`src/projection.rs`](./src/projection.rs) provides `index` and
   `pending_details`, which project a validated model into public records.
 - [`src/readers.rs`](./src/readers.rs) provides the strict readers `index`,
-  `deployment`, `detail`, `live`, `review`, and `change_snapshot`, which gate the format
-  number before they decode a payload.
+  `deployment`, `detail`, and `live`, which gate the format number before
+  they decode a payload.
 - [`src/review.rs`](./src/review.rs) and [`src/snapshot.rs`](./src/snapshot.rs)
   define `ReviewResultV8` and `CatalogueChangeSnapshotV4`.
 - [`src/output/mod.rs`](./src/output/mod.rs) holds the shared output shapes,

@@ -5,6 +5,8 @@ use mokly_model::catalogue::EntryContent;
 use serde_json::{Value, json};
 use tempfile::TempDir;
 
+#[path = "support/definitions.rs"]
+mod definitions;
 mod support;
 
 #[test]
