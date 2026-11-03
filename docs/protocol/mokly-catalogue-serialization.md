@@ -111,8 +111,7 @@ version defines and ignore any other field at every depth, so an older viewer
 reads a newer writer's additive optional fields. A field that contradicts its
 own record's kind, such as ready evidence on a pending state, stays invalid,
 and the privacy rules still reject private evidence anywhere and `usage` or
-`resourceEvidence` anywhere in the index. The core reads only its own output
-and rejects an unknown or misplaced field.
+`resourceEvidence` anywhere in the index.
 
 ## Tree Validation
 

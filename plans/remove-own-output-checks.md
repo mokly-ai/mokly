@@ -2,6 +2,10 @@
 
 Status: Active. On branch `calummoore/remove-own-output-checks`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
+The user approved all milestones and tasks on 2026-11-03. This request
+authorizes the listed removals and the proven-invariant serialization
+conversions. The shared skills remain outside this repository's scope.
+
 Mokly checks much of the data that its own code produced, often in two or
 three copies. An inventory of 2026-11-03 found about 6,300 lines of such
 checks and about 4,700 lines of tests for them, in
@@ -60,7 +64,7 @@ Each code milestone below follows the same rules:
 - Update each README that names removed code.
 - Run the targeted tests of each changed package and crate.
 
-## Milestone 1: Documentation and protocol
+## Milestone 1: Documentation and protocol — completed
 
 Depends on: none
 
@@ -68,30 +72,30 @@ The protocol pages stop requiring checks of data that the other side of the
 same version writes. The writer rules, the hello gate, the version gate, and
 the frame size limit stay.
 
-- [ ] `docs/protocol/mokly-sidecar.md`: remove "an unknown method" from the
+- [x] `docs/protocol/mokly-sidecar.md`: remove "an unknown method" from the
       `sidecar-protocol` row. Add the decision in force next to the frame
       rules: each side trusts the frames that the other side of the same
       version writes, and checks only author data. Name the rejected
       alternative, checks of every frame field on both sides, and its
       reason, drift and code size.
-- [ ] `docs/protocol/mokly-sidecar-modules.md`: remove the requirement to
+- [x] `docs/protocol/mokly-sidecar-modules.md`: remove the requirement to
       check the order of the class maps.
-- [ ] `docs/protocol/mokly-sidecar-render-records.md`: remove the render-time
+- [x] `docs/protocol/mokly-sidecar-render-records.md`: remove the render-time
       state checks and the slot check. Change "The core validates drafts,
       reconciles them" so that the core only reconciles the drafts with the
       markers.
-- [ ] `docs/protocol/mokly-sidecar-postcss.md`: remove the check of a
+- [x] `docs/protocol/mokly-sidecar-postcss.md`: remove the check of a
       PostCSS context's roots. `mokly-sidecar-lifecycle.md`: remove any
       guard rule against a closed session.
-- [ ] `docs/protocol/mokly-component-props.md`: in the wrapper sentences,
+- [x] `docs/protocol/mokly-component-props.md`: in the wrapper sentences,
       keep the copy of the props and the check of the props before the
       adapter runs. Remove the wrapper's check of the schema.
-- [ ] `docs/protocol/mokly-catalogue-serialization.md`: remove "The core
+- [x] `docs/protocol/mokly-catalogue-serialization.md`: remove "The core
       reads only its own output and rejects an unknown or misplaced field".
-- [ ] `docs/protocol/mokly-component-workspace-design.md`: remove the
+- [x] `docs/protocol/mokly-component-workspace-design.md`: remove the
       requirement that the shell filters reasons that contradict their
       record.
-- [ ] Run `npm run format:check` and `tests/markdown_links.test.ts`.
+- [x] Run `npm run format:check` and `tests/markdown_links.test.ts`.
 
 ## Milestone 2: Sidecar requests in TypeScript
 

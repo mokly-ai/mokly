@@ -7,7 +7,8 @@ The core selects `repositoryRoots` and `moduleResolution` for each context.
 `sourcePath` is a logical repository or dependency path. The child resolves
 it against `sourceRoot` or the selected dependency root before setting PostCSS
 `from`. Request labels keep the logical path. Each context and module pair has
-isolated plugin state and fixed source and resolution inputs. `disposeContext`
+isolated plugin state. The core sends the same source root, repository roots,
+and resolution settings in every request of one context. `disposeContext`
 kills and reaps only that context's process; bundle creation and disposal do not reset it.
 CSS-only catalogues need no bundle. The result
 contains transformed text, resolved packages, and plugin dependencies for watching.

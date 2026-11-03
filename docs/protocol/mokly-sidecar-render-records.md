@@ -65,7 +65,6 @@ After `describe`, the core resolves the catalogue paths and titles. It sends
 `bindings` with the generation and `entries`, a complete map from each
 described definition handle to `{ path, title }`. This includes the parent
 of each stories file. A variant has no handle and is not in this table.
-A render without the table fails closed with `bundle-failed`.
 
 The table supplies component paths and default instance ids, definition link
 targets, and parent identity. The core can replace the complete table when
@@ -80,8 +79,8 @@ metadata.
 ## Instance Drafts
 
 A fragment result includes `instances` and `slots` beside its HTML, styles,
-resources, and render warnings. The core validates drafts, reconciles them
-with the markers, and builds the
+resources, and render warnings. The core reconciles the drafts with the
+markers and builds the
 [usage records](./mokly-component-usage-records.md). Drafts do not authorize
 registration of a definition or bypass core schema validation.
 
@@ -122,8 +121,8 @@ composes the document. Physical placement never changes a logical key.
 
 - `{ kind: "placeholder", token }` supplies HTML content owned by the core.
   The sidecar returns the placeholder and its effective ignore scope.
-- `{ kind: "saved", handle }` selects a React value saved during `describe`.
-  The handle must exist in this generation, even when the saved value is null.
+- `{ kind: "saved", handle }` selects a React value that `describe` saved for
+  this generation. The saved value can be null.
 
 A placeholder token never selects a saved React value. Slots remain separate
 from data props, their encoding, and their material digest.
