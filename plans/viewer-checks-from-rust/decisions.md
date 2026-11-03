@@ -103,11 +103,19 @@ plan deletes this file with the plan.
     Effort: Large.
   - **G.** Check the read model once, with the Rust readers, where it
     enters: the core when it writes, and Mokly Cloud when it receives an
-    upload. The viewer keeps only the version gates and the fences. JSON that
-    no Rust reader checked can then break the embedded entry. It changes
-    `docs/protocol/mokly-viewer.md`,
-    `docs/protocol/mokly-catalogue-serialization.md`, and
-    `docs/protocol/mokly-upload-validation.md`. Effort: Large.
+    upload. The viewer keeps only the version gates and the fences.
+    - Mokly Cloud checks no index or detail today. Its contract crate,
+      `mkc-mokly-contract`, takes no dependency on Mokly crates. So Cloud
+      must depend on `mokly-model`, which is not published, or copy its
+      rules.
+    - JSON that no Rust reader checked can throw while the embedded entry
+      renders. The viewer has no error boundary, so the error reaches the
+      host's own boundary, or React unmounts the host's root.
+    - The wrapper keeps the TypeScript prop-schema checks of `./data`, so
+      the profile rules keep two copies.
+    - It changes `docs/protocol/mokly-viewer.md`,
+      `docs/protocol/mokly-catalogue-serialization.md`, and
+      `docs/protocol/mokly-upload-validation.md`. Effort: Large.
   - **H.** Make the TypeScript readers the one implementation, and run them
     in the core through the Node sidecar. They take about 1.5 s for the large
     fixture in Node. Every catalogue then starts a sidecar, also one without
