@@ -168,6 +168,13 @@
   `packages/viewer/src/viewer/host_bridge_lifecycle.ts` and
   `packages/viewer/src/viewer/host_bridge_failure.ts`. No earlier example of a
   slot deletion was found.
+- **Related:** [asynchronous-catalogue-failures.md](./asynchronous-catalogue-failures.md),
+  same code: both items change which errors reach `CatalogueBoundary`. This
+  item keeps host errors away from the catcher, and that item sends
+  catalogue errors of asynchronous loads to it. The options do not conflict.
+  Option B here moves host content above the catcher and keeps the shell
+  store below it, so the render-time rethrow of that item still reaches the
+  catcher. One later branch can take both items.
 - **Recommendation:** B. It is the only option that keeps every host content
   failure away from the catalogue catcher, whatever the viewer deletes with
   that content. If B turns out to need a change of behaviour, apply C, not A.

@@ -256,7 +256,7 @@ Depends on: 8
 
 - [x] Run the complete gate on the fixed combined tree.
 - [x] Commit with Conventional Commits and push the fixes.
-- [ ] Re-review the full diff once with the `implementation-review` skill.
+- [x] Re-review the full diff once with the `implementation-review` skill.
       Check each new finding, apply the fix rule once more, and record each
       deferred or open item as a follow-up. Stop after the permitted rounds.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
@@ -264,6 +264,10 @@ Depends on: 8
 - [ ] Open the pull request. Its description records each dated decision
       and design call, links to the plan before deletion, and lists the
       follow-up items that the change adds.
+
+Review evidence: `.context/reviews/calummoore/rust-viewer-checks-plan/round-2-checks.md`. The checked input-policy decision is in [receiver-comparison-url-absence.md](./follow-ups/receiver-comparison-url-absence.md). The checked Rare error paths have separate follow-up items.
+
+My call on 2026-11-03: open the final PR as a draft while the input-policy decision waits. This keeps a reviewable result without changing the accepted input.
 
 ## Post-merge follow-up (non-blocking)
 

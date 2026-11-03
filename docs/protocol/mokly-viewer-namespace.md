@@ -1,6 +1,6 @@
 # Portable Viewer Namespace And Version Gates
 
-Status: No receiver rejects an index that carries `usage` or `resourceEvidence` yet. The [receiver read-model validation item](../../plans/follow-ups/receiver-read-model-validation.md) adds that check to Mokly Cloud.
+Status: No receiver rejects `usage` or `resourceEvidence` in an index yet. The [receiver read-model validation item](../../plans/follow-ups/receiver-read-model-validation.md) adds that check to Mokly Cloud. Some asynchronous document failures still bypass the error and retry state. The [asynchronous catalogue failures item](../../plans/follow-ups/asynchronous-catalogue-failures.md) owns that fix.
 
 ## Paths And Single Ownership
 
