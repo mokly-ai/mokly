@@ -1,4 +1,4 @@
-# Frame package
+# Frame package and shared event runtime
 
 Status: Active. On branch `calummoore/viewer-inspector-purpose`, no pull
 request yet. The pull request that completes the work deletes this plan, as
@@ -7,22 +7,31 @@ the `plans` skill says.
 The frame code lives inside `@mokly/viewer`. It is the frame adapters under
 `packages/viewer/src/client` and the in-frame inspector under
 `packages/viewer/src/inspector`, about 3,300 lines. Nothing stops this code
-from importing viewer internals, so its boundary is only a convention. This
-change moves the frame code into a new lockstep package, `@mokly/frame`. It
-moves the catalogue rules and types that the frame code shares with the
-viewer into a second new lockstep package, the model package. It renames
-the in-frame inspector to the frame probe, published names included. The
-Rust half of the probe contract stays in `crates/mokly-static` and
-`crates/mokly-server`. The change does not merge the two event runtimes.
-[The frame event runtime plan](./frame-event-runtime.md) does that after
-this plan. The change does not accept new host origins, such as the
-`mokly-app://desktop` origin of Mokly Cloud.
+from importing viewer internals, so its boundary is only a convention. The
+two frame adapters also run two event runtimes, which already differ on
+hover.
+
+This change does four things, in this order:
+
+- It merges the two event runtimes into one shared event core, while the
+  code is still in the viewer.
+- It moves the catalogue rules and types that the frame code shares with the
+  viewer into a new lockstep package, the model package.
+- It moves the frame code into a new lockstep package, `@mokly/frame`.
+- It renames the in-frame inspector to the frame probe, published names
+  included.
+
+The Rust half of the probe contract stays in `crates/mokly-static` and
+`crates/mokly-server`. The change keeps both transports and the
+script-disabled sandbox of local frames. It does not accept new host
+origins, such as the `mokly-app://desktop` origin of Mokly Cloud.
 
 Contract owners:
 
 - `docs/protocol/mokly-frame-package.md` and the model package contract,
   which Milestone 1 adds.
 - The [viewer frame adapter](../docs/protocol/mokly-frame-adapter.md).
+- The [viewer selection contract](../docs/protocol/mokly-viewer-selection.md).
 - The [published inspector](../docs/protocol/mokly-published-inspector.md)
   and the [inspector wire protocol](../docs/protocol/mokly-inspector-wire.md),
   which Milestone 1 renames to the frame probe.
@@ -34,24 +43,31 @@ Contract owners:
 
 Replaced ways:
 
-- Frame code in `packages/viewer/src/client` and
-  `packages/viewer/src/inspector` → the `@mokly/frame` package. Consumers:
-  about 30 viewer source files, `packages/viewer/src/index.ts`, the viewer
-  build scripts, 13 files under `packages/viewer/tests`, 18 root tests,
-  helpers, and browser specs, four lint tests, and
-  `scripts/verification/prepared.mjs`. Moved in Milestones 4 and 5. Deleted
-  in Milestone 5.
+- The same-origin event code → the shared event core. The old way is
+  `same_origin_pointer.ts`, `same_origin_highlight.ts`, `rangeBounds` and
+  `authenticateRanges` in `component_geometry.ts`, `document_ranges.ts`,
+  `component_range_nodes.ts`, and `component_occlusion.ts`. Consumers:
+  `same_origin_mount.ts`, `same_origin_adapter.ts`, the unit tests of these
+  modules, and `tests/browser/frame_clipping.spec.ts`. Moved and deleted in
+  Milestone 3.
 - Model code in the viewer → the model package. Consumers: the frame code,
   the viewer files that use the path and link grammar, the delivery paths,
   the data paths, and the generated types, `@mokly/viewer/data`,
   `cargo xtask generate-types`, and `crates/mokly-model/src/typescript.rs`.
-  Moved and deleted in Milestone 2.
+  Moved and deleted in Milestone 4.
+- Frame code in `packages/viewer/src/client` and
+  `packages/viewer/src/inspector` → the `@mokly/frame` package. Consumers:
+  about 30 viewer source files, `packages/viewer/src/index.ts`, the viewer
+  build scripts, the frame tests under `packages/viewer/tests`, the root
+  tests, helpers, and browser specs that import the frame code, four lint
+  tests, and `scripts/verification/prepared.mjs`. Moved in Milestones 6
+  and 7. Deleted in Milestone 7.
 - The inspector names → the frame probe names of the **Design** section.
   Consumers: the static build in `crates/mokly-static`, the asset check in
   `crates/mokly-server/src/assets.rs`, the Rust tests and snapshots that
   name `inspector.js` or the markers, the TypeScript tests, the 13 files
   that link the two inspector protocol docs, and the build error for a
-  consumer-authored `data-mokly-inspector-link`. Renamed in Milestone 4.
+  consumer-authored `data-mokly-inspector-link`. Renamed in Milestone 6.
   There is no converter. Pages published before the rename must be
   published again, as decision 3 accepts.
 
@@ -73,17 +89,104 @@ Replaced ways:
   The user questioned the name `@mokly/model`. Decision 5 below asks for
   the name.
 - **Decision 1, 2026-11-03: share one event runtime between both frame
-  models.** The user chose B. The alternatives were A, change nothing, C
-  and D, always use `postMessageAdapter`, E, share only the pick path, and
-  F, find drift with a browser spec. Reason: one runtime removes the drift,
-  and the two runtimes already differ on hover. The work has its own plan,
-  [the frame event runtime plan](./frame-event-runtime.md), which runs after
-  this plan.
+  adapters.** The user chose B. The alternatives were A, change nothing, C,
+  always use `postMessageAdapter` with a second real origin, D, always use
+  `postMessageAdapter` with an opaque-origin sandbox, E, share only the pick
+  path, and F, find drift with a browser spec. Reason: one runtime removes
+  the drift, and the two runtimes already differ on hover.
 - **Decision 3, 2026-11-03: rename the in-frame inspector, published names
   included.** The user chose C, with the name "frame probe". The
   alternatives were A, keep the name, B, rename the code only, D, qualify
   both names, and E, rename the inspector panel. Reason: the project is not
   in production, and this plan already moves every file of the script.
+- **One plan, 2026-11-03.** The user asked for one plan. The shared event
+  runtime first had its own plan, which ran after the move. This plan now
+  holds both, and the runtime merge comes first.
+
+### 6. Hover during a highlight differs by adapter
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small.
+- **Source:** Review.
+- **Category:** Product bug.
+- **Location:** `packages/viewer/src/inspector/runtime.ts:57`,
+  `packages/viewer/src/client/same_origin_pointer.ts:22`, and
+  `docs/protocol/mokly-viewer-selection.md:91-94`.
+- **Terms:**
+  - **Highlight:** the viewer mode that masks and labels chosen component
+    instances in a preview frame. A host starts it with `highlightInstance`
+    or `highlightInstances`.
+  - **Pick:** the viewer mode in which the user chooses one instance. A host
+    starts it with `startPick`.
+- **Background:**
+  - The viewer passes each hover event of a frame to the public
+    `onInstanceHover` callback, in
+    `packages/viewer/src/viewer/host_bridge_events.ts:69`. No product host
+    passes this callback today. Mokly Cloud passes no instance callback,
+    and the standalone shell passes none. Only two test hosts use it.
+  - During a highlight or a pick, the frame probe reports hover only for the
+    highlighted or pickable keys. The filter
+    `(!active || keys.includes(key))` at `runtime.ts:57` applies to hover
+    and to click.
+  - The same-origin adapter reports hover for every instance in every mode,
+    from the full boundary list.
+  - Both adapters limit clicks to the highlighted or pickable keys while a
+    highlight or a pick is active, and cancel the default action of those
+    clicks.
+  - When instances nest, the frame probe names the first key in digest
+    order, so a pointer on a Button inside a Card can name either one. The
+    same-origin pick names the innermost instance.
+  - `docs/protocol/mokly-viewer-selection.md:91-94` says that every
+    current, visible frame with ready usage can emit hover and click
+    events, independent of an explicit highlight's mask and label scope.
+    The sentence came with the rule for unavailable sibling frames, so it
+    is about frames, not instances. No test covers hover during a highlight
+    or a pick.
+- **Problem:** A host gets different hover events from the same page,
+  because the two adapters use different rules. The protocol does not say
+  which rule is right. The shared runtime must use one rule.
+- **Impact if no action:** Milestone 2 cannot choose the hover rule of the
+  shared runtime.
+- **Root question:** Should hover name the instance that a click at the same
+  point would report, or the instance under the pointer?
+- **Options:**
+  - **A.** Every instance, in every mode. During a pick, hover then also
+    reports instances that the user cannot pick. Effort: Small.
+  - **B.** Only the highlighted or pickable keys while a highlight or a pick
+    is active. Hover then reports the same instances as a click. Effort:
+    Small.
+  - **C.** Every instance during an idle highlight, and only the pickable
+    keys during a pick. Clicks during an idle highlight stay limited to the
+    keys, so hover and click then differ. Effort: Small.
+  - **D.** An idle highlight is only a drawing. During an idle highlight,
+    hover and click report every instance, and the frame cancels no link.
+    Only a pick limits hover and click to the pickable keys. The click rule
+    of the adapter contract changes, and a host can no longer use an idle
+    highlight as a set of click targets. Effort: Medium.
+  - **E.** Remove hover: the `hover` frame event, its wire message, and
+    `onInstanceHover`. The shared runtime then needs no hover rule, and the
+    frame probe gets bytes back. It deletes a documented public callback,
+    so it needs your approval. A later host that wants hover must add it
+    again. Effort: Medium.
+  - **F.** B, and the hit test names the innermost instance under the
+    pointer, for hover and for click. Hover then names exactly the instance
+    that a click would report, also for nested instances. The frame probe
+    changes from digest order to the innermost instance. Effort: Small.
+- **Left out:** Keep the difference. It fails the goal of one runtime. A
+  host option for the rule adds public API that no host uses.
+- **Wider fix:** None that this decision can apply. The shared runtime of
+  this plan is the wider fix for the class.
+- **Previous examples:** None found.
+- **Related:** Decision 1 chose the shared runtime, which needs this rule.
+  The shared same-origin pick of the **Design** section needs the nesting
+  rule of F, or a nested local pick can select the outer instance.
+- **Recommendation:** F. The first recommendation was B. The frame probe
+  already uses the B rule, so F adds only the nesting rule, which the shared
+  runtime needs anyway. State the rule in
+  `docs/protocol/mokly-viewer-selection.md` and
+  `docs/protocol/mokly-frame-adapter.md`.
+- **Action:** ask the user, because the protocol doc does not say which
+  instances hover reports inside a highlighted frame, so each option adds a
+  rule.
 
 ### 5. The model package needs a name
 
@@ -111,7 +214,7 @@ Replaced ways:
     registration. A new name then needs a new package.
 - **Problem:** The plan calls the package `@mokly/model`, and the user
   questions that name.
-- **Impact if no action:** Milestones 1 and 2 cannot name the package.
+- **Impact if no action:** Milestones 1 and 4 cannot name the package.
 - **Root question:** Which name tells a reader what belongs in the package,
   and what does not?
 - **Options:**
@@ -160,7 +263,7 @@ Replaced ways:
 - **Previous examples:** `@mokly/ui` names its job and has one subpath for
   each component. Each Rust crate name starts with `mokly-` and names its
   job.
-- **Related:** Decision 4 chose the package. Milestones 1 and 2 wait for
+- **Related:** Decision 4 chose the package. Milestones 1 and 4 wait for
   this decision.
 - **Recommendation:** A. The TypeScript package and the Rust crate that
   writes its types then share one name. Each other word means another
@@ -172,6 +275,39 @@ Replaced ways:
 ## Design
 
 These are design calls of the planning agent, made on 2026-11-03.
+
+### Order
+
+- The runtime merge comes before the move. The move then carries one event
+  runtime, and the code that the merge deletes never moves. The merge also
+  deletes the last frame users of the hand-written `ComponentViewRecord`, so
+  the frame package needs no copy of that viewer type.
+- The runtime track, Milestones 2 and 3, waits for decision 6. The package
+  track, Milestones 4 and 5, waits for decision 5. The two tracks join at
+  Milestone 6.
+
+### Shared event runtime
+
+- The runtime splits into a transport-free core and a wire wrapper. The core
+  has direct methods for list, highlight, scroll-to, subscribe, and dispose,
+  and it reports events through a callback. The in-frame entry wraps the
+  core with the wire messages. The same-origin adapter calls the core
+  directly on the frame window.
+- The core takes the link classifier as a parameter. The in-frame entry
+  passes the classifier of its inert link map. The same-origin adapter
+  passes the `data-mokly-link` classifier of `same_origin_navigation.ts`,
+  because served pages stay byte-unmodified and have no link map.
+- The core takes its observer and timer constructors as a parameter. A
+  script-disabled frame may not run callbacks of its own realm, so the
+  same-origin adapter passes the viewer window.
+- The same-origin pick hit-tests the boundary list of the shared reader,
+  with the nesting rule of decision 6. `visibleFrameBox` stays in the
+  viewer.
+- The in-frame script stays within its 9,216-byte budget. It has 955 bytes
+  left on 2026-11-03. If the core does not fit, stop and ask the user,
+  because a larger budget changes a protocol requirement.
+
+### Packages
 
 - The frame package is `@mokly/frame` under `packages/frame`. The model
   package lives under `packages/{name}`, with the name of decision 5. The
@@ -187,16 +323,11 @@ These are design calls of the planning agent, made on 2026-11-03.
   paths, the namespace constants, and the generated types. The routes and
   the prop schema validators stay in the viewer. `@mokly/viewer/data` keeps
   every export and re-exports the moved ones from the model package only.
-- The frame package declares its own record type for the same-origin pick,
-  with only the ranges and the viewport that it reads. It does not import
-  the hand-written `ComponentViewRecord` of
-  `packages/viewer/src/components/view_types.ts`. The frame event runtime
-  plan later deletes this record.
 - The frame package holds both sides of the probe: the adapter interface,
   `sameOriginAdapter`, `temporaryPreviewAdapter`, `postMessageAdapter`, the
-  message transport, the wire schema, the measuring code, and the frame
-  probe. Both ends of the wire protocol and their shared measuring code
-  then stay together.
+  message transport, the wire schema, the measuring code, the shared event
+  core, and the frame probe. Both ends of the wire protocol and their shared
+  code then stay together.
 - The functions that only the frame code calls move with it:
   `frameLinkActivation`, `parseLogicalMarker`, `logicalMarker`, and all of
   `navigation/target.ts`. The shell keeps `eligibleAnchor`.
@@ -212,21 +343,6 @@ These are design calls of the planning agent, made on 2026-11-03.
   `frame_session.ts` intends.
 - Shell-only helpers stay in the viewer: `cleanup.ts`, `inspection_work.ts`,
   and `visibleFrameBox`. No frame code uses them.
-- The frame probe names:
-  - The source directory is `packages/frame/src/probe`. The entry functions
-    are `probeRuntime`, `probeNavigation`, and `bundleProbe`, and the
-    metadata type is `ProbeMetadata`.
-  - The published script is `mokly-viewer/client/frame-probe.js`.
-  - The message channel is `mokly-frame-probe`, and the wire version goes
-    from 2 to 3, so that an old page and a new viewer reject each other
-    clearly.
-  - The page markers are `template[data-mokly-frame-probe]` and
-    `data-mokly-frame-probe-link`.
-  - The Rust modules are `crates/mokly-static/src/frame_probe.rs` and
-    `frame_probe_error.rs`.
-  - The protocol docs become `docs/protocol/mokly-frame-probe.md` and
-    `docs/protocol/mokly-frame-probe-wire.md`.
-  - The inspection feature and the inspector panel keep their names.
 - The frame package builds `frame-probe.js`. The viewer build copies it into
   `packages/viewer/dist/browser` and its browser manifest.
 - Unit tests move with the code to the new packages. Root tests import the
@@ -235,12 +351,29 @@ These are design calls of the planning agent, made on 2026-11-03.
 - No new lint zone. The `tsc` build of each package sets `rootDir` to its
   `src`, so it rejects a relative import into another package.
 
+### Frame probe names
+
+- The source directory is `packages/frame/src/probe`. The entry functions
+  are `probeRuntime`, `probeNavigation`, and `bundleProbe`, and the metadata
+  type is `ProbeMetadata`.
+- The published script is `mokly-viewer/client/frame-probe.js`.
+- The message channel is `mokly-frame-probe`, and the wire version goes from
+  2 to 3, so that an old page and a new viewer reject each other clearly.
+- The page markers are `template[data-mokly-frame-probe]` and
+  `data-mokly-frame-probe-link`.
+- The Rust modules are `crates/mokly-static/src/frame_probe.rs` and
+  `frame_probe_error.rs`.
+- The protocol docs become `docs/protocol/mokly-frame-probe.md` and
+  `docs/protocol/mokly-frame-probe-wire.md`.
+- The inspection feature and the inspector panel keep their names.
+
 ## Milestone 1: Documentation and protocol
 
-Depends on: none. The model package parts wait for decision 5.
+Depends on: none. The model package parts wait for decision 5. The hover
+rule waits for decision 6.
 
-The docs state the packages, their boundaries, their release, and the frame
-probe names before the code moves.
+The docs state the shared runtime, the packages, their boundaries, their
+release, and the frame probe names before the code changes.
 
 - [ ] Add `docs/protocol/mokly-frame-package.md` and the contract of the
       model package, each with a status line that links this plan. State
@@ -252,8 +385,11 @@ probe names before the code moves.
       the new script path, channel, wire version 3, and page markers, with
       a status line. Update every link to them.
 - [ ] Update `docs/protocol/mokly-frame-adapter.md`: `@mokly/frame` defines
-      the interface and the built-in adapters, and `@mokly/viewer`
-      re-exports them.
+      the interface and the built-in adapters, `@mokly/viewer` re-exports
+      them, both built-in adapters run one event runtime, and every adapter
+      follows the hover rule of decision 6.
+- [ ] State the hover rule of decision 6 in
+      `docs/protocol/mokly-viewer-selection.md`.
 - [ ] Update `docs/architecture/package-boundary.md`, which says that the
       viewer owns the frame adapters and the in-frame inspector.
 - [ ] Update `docs/protocol/npm-bootstrap.md`, `npm-release.md`,
@@ -267,7 +403,35 @@ probe names before the code moves.
 - [ ] Update `AGENTS.md`, `README.md`, and `scripts/release/README.md` with
       the package list and the build order.
 
-## Milestone 2: Model package
+## Milestone 2: Shared event core
+
+Depends on: 1. It waits for decision 6.
+
+The in-frame inspector runs on the new core, with the same wire behaviour
+and the hover rule of decision 6. The code is still in the viewer.
+
+- [ ] Split `inspectorRuntime` in `packages/viewer/src/inspector/runtime.ts`
+      into the core and the wire wrapper of the **Design** section.
+- [ ] Apply the hover rule and the nesting rule of decision 6 in the core.
+- [ ] Keep the in-frame script within its budget. Run its budget test.
+
+## Milestone 3: Same-origin adapter on the core
+
+Depends on: 2.
+
+The same-origin adapter uses the core, and the duplicated code goes.
+
+- [ ] Run the core from `same_origin_mount.ts` and `same_origin_adapter.ts`
+      with the link classifier and the viewer window.
+- [ ] Move the tests of the old same-origin event code to the core, with
+      every assertion. Move `tests/browser/frame_clipping.spec.ts` from
+      `rangeBounds` to the shared reader.
+- [ ] Delete the same-origin event code of the **Replaced ways** list.
+      Record the searches that prove each part unused.
+- [ ] Add a browser test for hover and nested instances during a highlight
+      and a pick on both adapters. Run it 10 times.
+
+## Milestone 4: Model package
 
 Depends on: 1. It waits for decision 5.
 
@@ -288,25 +452,25 @@ The model code moves out of the viewer into its own package.
 - [ ] Move every viewer consumer to the package. Re-export the moved
       functions from `@mokly/viewer/data`. Delete the old modules.
 
-## Milestone 3: Frame package skeleton
+## Milestone 5: Frame package skeleton
 
-Depends on: 2.
+Depends on: 4.
 
 The empty frame package builds, tests, and packs with the other packages.
 
 - [ ] Create `packages/frame` with `package.json`, `tsconfig.json`,
       `tsconfig.build.json`, a build script, `README.md`, and `LICENSE`.
-- [ ] Wire it in the same places as the model package in Milestone 2.
+- [ ] Wire it in the same places as the model package in Milestone 4.
 
-## Milestone 4: Move the inspector and rename it to the frame probe
+## Milestone 6: Move the inspector and rename it to the frame probe
 
-Depends on: 3.
+Depends on: 3 and 5.
 
-The in-frame inspector, the wire schema, and the measuring code move into
-the frame package under the frame probe names. The Rust static build and
-server use the new names in the same milestone, so that the product works.
-The host adapters stay in the viewer for one milestone and import from
-`@mokly/frame/internal`.
+The in-frame inspector, the shared event core, the wire schema, and the
+measuring code move into the frame package under the frame probe names. The
+Rust static build and server use the new names in the same milestone, so
+that the product works. The host adapters stay in the viewer for one
+milestone and import from `@mokly/frame/internal`.
 
 - [ ] Move `packages/viewer/src/inspector`,
       `packages/viewer/src/client/frame_adapter.ts`, the frame-only
@@ -325,9 +489,9 @@ The host adapters stay in the viewer for one milestone and import from
       `tests/inspector_schema.test.ts`, and `tests/inspector_pool.test.ts`
       at the package, and rename them to the frame probe.
 
-## Milestone 5: Move the host adapters
+## Milestone 7: Move the host adapters
 
-Depends on: 4.
+Depends on: 6.
 
 The host adapters move into the frame package. The viewer imports the
 package only through its exports.
@@ -345,14 +509,14 @@ package only through its exports.
 - [ ] Move the client and inspector READMEs into the package README. Delete
       the old directories. Remove the status lines that Milestone 1 added.
 
-## Milestone 6: Verification, commit, review, and pull request
+## Milestone 8: Verification, commit, review, and pull request
 
 Depends on: every other milestone.
 
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Run the mockup check named in `AGENTS.md`, and smoke-test local Browse
-      through `npm run dev`: hover, pick, Escape, and catalogue links in a
-      screen and a component page.
+      through `npm run dev`: hover, pick, Escape, nested instances, and
+      catalogue links in a screen and a component page.
 - [ ] Commit with Conventional Commits and push the branch. Mark the rename
       of the published names as a breaking change, so that the release notes
       ask for a new publication of each catalogue.
