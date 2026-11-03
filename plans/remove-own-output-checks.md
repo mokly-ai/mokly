@@ -3,7 +3,7 @@
 Status: Active. On branch `calummoore/remove-own-output-checks`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Source implementation is ready. Verification, review, and the pull request
-remain in Milestone 11. The user requested a source checkpoint before the
+remain in Milestone 12. The user requested a source checkpoint before the
 full gate and review on 2026-11-03.
 
 The user approved all milestones and tasks on 2026-11-03. This request
@@ -170,7 +170,7 @@ sidecar milestones.
       required compiled recipes and removed warning lists.
 - [x] Regenerate the TypeScript wire types with `cargo xtask generate-types`.
 
-## Milestone 5: Comparison self-checks
+## Milestone 5: Comparison self-checks — completed
 
 Depends on: 1
 
@@ -199,7 +199,7 @@ right after it built them.
       range checks, the owner cycle check of `affected.rs`, the second git
       batch count, and the dead `Poisoned` variant.
 
-## Milestone 6: Pipeline self-checks
+## Milestone 6: Pipeline self-checks — completed
 
 Depends on: 1
 
@@ -220,7 +220,7 @@ run produced.
 - [x] `mokly-git`: remove the zero-budget check and `BoundedRunner`, which
       has no production caller.
 
-## Milestone 7: The core's second checks of its own output
+## Milestone 7: The core's second checks of its own output — completed
 
 Depends on: 1
 
@@ -245,7 +245,7 @@ earlier in the same process.
       `mokly-catalogue`, the dead `Failure::Unavailable`, and the repeated
       sidecar count checks.
 
-## Milestone 8: Viewer shell guards
+## Milestone 8: Viewer shell guards — completed
 
 Tags: ui
 
@@ -271,7 +271,7 @@ these edits before its final gate.
 - [x] Delete the dead rule rebuild in `shell/workspace_stylesheet_evidence.ts`
       and the test-only `initialDetails` fence of `ShellStoreProvider`.
 
-## Milestone 9: Shell store guards
+## Milestone 9: Shell store guards — completed
 
 Tags: ui
 
@@ -282,7 +282,7 @@ Depends on: 8
       `nav_rows.ts` and `nav_leaf_rows.ts`. Give each test that renders a
       container without a store a `ShellStoreProvider`.
 
-## Milestone 10: Serialization that cannot fail
+## Milestone 10: Serialization that cannot fail — completed
 
 Depends on: 3, 5, 6, 7
 
@@ -295,10 +295,30 @@ this repository.
       `mokly-model`, `mokly-static`, `mokly-server`, and `mokly-render`.
 - [x] Delete the error variants that then have no producer.
 
-## Milestone 11: Verification, commit, review, and pull request
+## Milestone 11: Preserve the ownership marker byte limit — completed
+
+Depends on: 7, 10
+
+The marker is a regular output file. Its existing 64 MiB limit must remain
+at the writer after the second parse goes. A large inventory must not write
+a marker that the next build cannot read.
+
+- [x] Keep the marker byte limit directly after encoding, without a parse
+      or a second hash.
+- [x] Add one regression with valid portable paths that exceed the existing
+      marker byte limit. Prove its failure before the fix and its pass after.
+- [x] Keep the fixture's unique prefix early so sorting avoids long shared
+      prefixes.
+
+Evidence: `.context/remove-own-output-checks/marker-limit-report.md`.
+
+## Milestone 12: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
+- [ ] Integrate shared security fix `9447445` from PR #282 before the
+      complete gate. The user directed this integration on 2026-11-03.
+      Do not duplicate its dependency patch.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Merge `origin/main`, with the branch of the other plan when it merged
       first, and resolve the shared lines of `mokly-component-props.md`,

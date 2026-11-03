@@ -107,7 +107,12 @@ asked me to send the scope note to workspace 461.
     metadata becomes unused.
 16. Keep generic serializers fallible when their public contract accepts
     arbitrary Rust serializers. Concrete Mokly callers state their proven
-    invariant. Keep the bundle cache key's filesystem-path failure.
+    invariant. Private application encoders trust their closed caller set.
+    Keep the bundle cache key's filesystem-path failure.
 17. Apply the approved narrow guards in shared delivery files here.
     Workspace 461 owns their reader rewrites and merges this branch before
     its final gate. The integration note names the shared files.
+
+18. Retain the existing 64 MiB ownership marker limit at its writer.
+    A large catalogue is an external resource boundary. Its marker must
+    remain readable on the next build without a second parse here.
