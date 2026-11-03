@@ -8,27 +8,24 @@ The frame code lives inside `@mokly/viewer`. It is the frame adapters under
 `packages/viewer/src/client` and the in-frame inspector under
 `packages/viewer/src/inspector`, about 3,300 lines. Nothing stops this code
 from importing viewer internals, so its boundary is only a convention. This
-change moves the frame code into a new lockstep package, `@mokly/frame`,
-under `packages/frame`. The Rust half of the inspector contract stays in
-`crates/mokly-static` and `crates/mokly-server`. The change keeps the
-behaviour of the frames. It does not merge the two event runtimes, and it
-does not accept new host origins, such as the `mokly-app://desktop` origin
-of Mokly Cloud. It renames the inspector only when decision 3 asks for a
-rename.
-
-Decision 2, 2026-11-03, by the user: move the frame code to a new lockstep
-package. The alternatives were to keep the code as it is, with the boundary
-as a convention, and to add an import-rule zone in the viewer. The reason: a
-package boundary stops each import of viewer internals at the compiler,
-which a lint only finds. The `@mokly/ui` package decision gives the same
-reason.
+change moves the frame code into a new lockstep package, `@mokly/frame`. It
+moves the catalogue rules and types that the frame code shares with the
+viewer into a second new lockstep package, the model package. It renames
+the in-frame inspector to the frame probe, published names included. The
+Rust half of the probe contract stays in `crates/mokly-static` and
+`crates/mokly-server`. The change does not merge the two event runtimes.
+[The frame event runtime plan](./frame-event-runtime.md) does that after
+this plan. The change does not accept new host origins, such as the
+`mokly-app://desktop` origin of Mokly Cloud.
 
 Contract owners:
 
-- `docs/protocol/mokly-frame-package.md`, which Milestone 1 adds.
+- `docs/protocol/mokly-frame-package.md` and the model package contract,
+  which Milestone 1 adds.
 - The [viewer frame adapter](../docs/protocol/mokly-frame-adapter.md).
-- The [published inspector](../docs/protocol/mokly-published-inspector.md).
-- The [inspector wire protocol](../docs/protocol/mokly-inspector-wire.md).
+- The [published inspector](../docs/protocol/mokly-published-inspector.md)
+  and the [inspector wire protocol](../docs/protocol/mokly-inspector-wire.md),
+  which Milestone 1 renames to the frame probe.
 - The [package boundary](../docs/architecture/package-boundary.md).
 - The [registry bootstrap](../docs/protocol/npm-bootstrap.md) and the
   [release contract](../docs/protocol/npm-release.md).
@@ -44,286 +41,216 @@ Replaced ways:
   helpers, and browser specs, four lint tests, and
   `scripts/verification/prepared.mjs`. Moved in Milestones 4 and 5. Deleted
   in Milestone 5.
-- Model code in the viewer → its home under decision 4. Consumers: the
-  frame code, the viewer files that use the path and link grammar, the
-  delivery paths, the data paths, and the generated types, and
-  `@mokly/viewer/data`. Moved and deleted in Milestone 3.
+- Model code in the viewer → the model package. Consumers: the frame code,
+  the viewer files that use the path and link grammar, the delivery paths,
+  the data paths, and the generated types, `@mokly/viewer/data`,
+  `cargo xtask generate-types`, and `crates/mokly-model/src/typescript.rs`.
+  Moved and deleted in Milestone 2.
+- The inspector names → the frame probe names of the **Design** section.
+  Consumers: the static build in `crates/mokly-static`, the asset check in
+  `crates/mokly-server/src/assets.rs`, the Rust tests and snapshots that
+  name `inspector.js` or the markers, the TypeScript tests, the 13 files
+  that link the two inspector protocol docs, and the build error for a
+  consumer-authored `data-mokly-inspector-link`. Renamed in Milestone 4.
+  There is no converter. Pages published before the rename must be
+  published again, as decision 3 accepts.
+
+## Decisions
+
+### Answered
+
+- **Decision 2, 2026-11-03: move the frame code to a new lockstep
+  package.** The user chose C. The alternatives were A, keep the code in the
+  viewer with the boundary as a convention, and B, add an import-rule zone
+  in the viewer. Reason: a package boundary stops each import of viewer
+  internals at the compiler, which a lint only finds.
+- **Decision 4, 2026-11-03: put the shared model code in a lockstep model
+  package.** The user chose B. The alternatives were A, move the model code
+  into `@mokly/frame`, C, give the frame package its own inputs, D, let the
+  viewer pass the rules in, and E, build one private source into each
+  package. The agent recommended A, because the shared code is small. The
+  user chose B, so that each rule has one home that later packages can use.
+  The user questioned the name `@mokly/model`. Decision 5 below asks for
+  the name.
+- **Decision 1, 2026-11-03: share one event runtime between both frame
+  models.** The user chose B. The alternatives were A, change nothing, C
+  and D, always use `postMessageAdapter`, E, share only the pick path, and
+  F, find drift with a browser spec. Reason: one runtime removes the drift,
+  and the two runtimes already differ on hover. The work has its own plan,
+  [the frame event runtime plan](./frame-event-runtime.md), which runs after
+  this plan.
+- **Decision 3, 2026-11-03: rename the in-frame inspector, published names
+  included.** The user chose C, with the name "frame probe". The
+  alternatives were A, keep the name, B, rename the code only, D, qualify
+  both names, and E, rename the inspector panel. Reason: the project is not
+  in production, and this plan already moves every file of the script.
+
+### 5. The model package needs a name
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Design.
+- **Category:** Code structure.
+- **Location:** None. The package does not exist yet.
+- **Terms:**
+  - **Model package:** the new lockstep package of decision 4. It holds the
+    generated catalogue types, the path and link grammar, the delivery
+    paths, and the data paths that the frame package and the viewer share.
+- **Background:**
+  - The Rust crate `mokly-model` writes every generated type and owns the
+    Rust path grammar in `crates/mokly-model/src/paths.rs`. Its README calls
+    its shapes pure data contracts. The crate is not published.
+  - The Rust crate `mokly-catalogue` loads the configuration and prepares a
+    catalogue. That is a different job.
+  - The protocol docs use "catalogue model" and "read model" for defined
+    things, and "contract" for a protocol doc, with about 860 uses in 157
+    docs.
+  - `@mokly/viewer/data` already exports the path grammar and the delivery
+    paths. `@mokly/mokly` imports them from there.
+  - The other new names are `@mokly/frame` and the frame probe.
+  - Each candidate name is free on npm. A name is public after the npm
+    registration. A new name then needs a new package.
+- **Problem:** The plan calls the package `@mokly/model`, and the user
+  questions that name.
+- **Impact if no action:** Milestones 1 and 2 cannot name the package.
+- **Root question:** Which name tells a reader what belongs in the package,
+  and what does not?
+- **Options:**
+  - **A.** `@mokly/model`. It mirrors the Rust crate `mokly-model`, which
+    owns the same shapes and grammar. The word is broad, and on npm it can
+    read as an AI model. Hosts keep importing `@mokly/viewer/data`, so few
+    readers see the name. Effort: Small.
+  - **B.** `@mokly/data`. It matches the public entry `@mokly/viewer/data`.
+    The word is generic. The package holds only part of that entry, so the
+    two names cover different sets. Effort: Small.
+  - **C.** `@mokly/catalogue`. It names the domain of the types and rules.
+    The Rust crate `mokly-catalogue` does a different job, and the catalogue
+    readers stay in the viewer, so the name promises more than the package
+    holds. Effort: Small.
+  - **D.** `@mokly/contract`. It names the role, the published data
+    contract. In this repository "contract" means a protocol doc, so the
+    name reads as "all the contracts". Mokly Cloud also uses it for its
+    upload validator crate `mkc-mokly-contract`. Effort: Small.
+  - **E.** `@mokly/model` with one subpath for each job and no root entry,
+    as `@mokly/ui` has one subpath for each component. For example,
+    `@mokly/model/paths` holds the grammar and the paths, and
+    `@mokly/model/types` holds the generated types. Each import then names
+    its job, and a new job needs a new subpath that a reviewer sees. The npm
+    name stays broad. Effort: Small.
+  - **F.** `@mokly/data`, and the package takes the whole
+    `@mokly/viewer/data` entry, with the routes and the prop schema
+    validators. The package then holds the same set as the entry that
+    `@mokly/mokly` imports today. About 760 more lines move with their
+    tests, and this reverses the design call that moves only what the frame
+    package needs. Effort: Medium.
+- **Left out:** Each of these fails the goal:
+  - `@mokly/core` collides with "the Rust core" of `AGENTS.md`.
+  - `@mokly/types` says types only, but the package holds runtime code.
+  - `@mokly/schema` collides with the prop schemas and
+    `config.schema.json`.
+  - `@mokly/shared` and `@mokly/common` name no job, so unrelated code
+    collects in them.
+  - `@mokly/format` collides with the `format` script.
+  - `@mokly/catalogue-model` and `@mokly/read-model` name defined things
+    of the protocol docs that the package does not hold.
+  - `@mokly/protocol`, `@mokly/wire`, and `@mokly/spec` collide with
+    `docs/protocol`, the frame probe wire, and the mockup `specs`
+    directories.
+  - `@mokly/paths` says paths only, but most of the package is types.
+- **Wider fix:** None. This is one name.
+- **Previous examples:** `@mokly/ui` names its job and has one subpath for
+  each component. Each Rust crate name starts with `mokly-` and names its
+  job.
+- **Related:** Decision 4 chose the package. Milestones 1 and 2 wait for
+  this decision.
+- **Recommendation:** A. The TypeScript package and the Rust crate that
+  writes its types then share one name. Each other word means another
+  defined thing here, or is generic. If "model" is too broad for you, E
+  keeps the name and names the job at each import.
+- **Action:** ask the user, because the user asked for the options, and the
+  name is public after the npm registration.
 
 ## Design
 
 These are design calls of the planning agent, made on 2026-11-03.
 
-- The package is `@mokly/frame` under `packages/frame`. The name matches
-  the frame adapter terms of the protocol docs. The user can change it
-  before the npm registration. Its file names stay snake_case, as
-  `AGENTS.md` says for every package except `@mokly/ui`.
-- The package releases in lockstep, and `@mokly/viewer` pins its exact
-  version, as for `@mokly/ui`. The viewer is compiled with `tsc`, so it can
-  depend only on a published package.
-- The package holds both sides: the adapter interface, `sameOriginAdapter`,
-  `temporaryPreviewAdapter`, `postMessageAdapter`, the message transport,
-  the wire schema, the measuring code, and the in-frame inspector. Both
-  ends of the wire protocol and their shared measuring code then stay
-  together.
+- The frame package is `@mokly/frame` under `packages/frame`. The model
+  package lives under `packages/{name}`, with the name of decision 5. The
+  user can change a name before the npm registration. File names stay
+  snake_case, as `AGENTS.md` says for every package except `@mokly/ui`.
+- Both packages release in lockstep. `@mokly/frame` pins the exact version
+  of the model package. `@mokly/viewer` pins the exact versions of both.
+  The viewer is compiled with `tsc`, so it can depend only on published
+  packages.
+- The model package holds only the model code that the frame package needs:
+  the path and link grammar of `logical.ts`, `currentDocumentPath` with its
+  inverse `currentDocumentRoute`, `RENDERS_PATH`, `RENDER_ID`, the data
+  paths, the namespace constants, and the generated types. The routes and
+  the prop schema validators stay in the viewer. `@mokly/viewer/data` keeps
+  every export and re-exports the moved ones from the model package only.
+- The frame package declares its own record type for the same-origin pick,
+  with only the ranges and the viewport that it reads. It does not import
+  the hand-written `ComponentViewRecord` of
+  `packages/viewer/src/components/view_types.ts`. The frame event runtime
+  plan later deletes this record.
+- The frame package holds both sides of the probe: the adapter interface,
+  `sameOriginAdapter`, `temporaryPreviewAdapter`, `postMessageAdapter`, the
+  message transport, the wire schema, the measuring code, and the frame
+  probe. Both ends of the wire protocol and their shared measuring code
+  then stay together.
 - The functions that only the frame code calls move with it:
-  `frameLinkActivation`, `parseLogicalMarker`, `logicalMarker`,
-  `currentDocumentRoute`, and all of `navigation/target.ts`. The shell keeps
-  `eligibleAnchor`. `@mokly/viewer/data` keeps exporting
-  `currentDocumentRoute`.
+  `frameLinkActivation`, `parseLogicalMarker`, `logicalMarker`, and all of
+  `navigation/target.ts`. The shell keeps `eligibleAnchor`.
 - `@mokly/viewer` re-exports the public adapters and frame types. Hosts
   import them only from the viewer. The frame code keeps state in
   module-level maps, such as `frame_mount.ts`, `frame_session.ts`, and
   `same_origin_identity.ts`. Two installed copies would split these maps.
-- The package has one internal subpath, `@mokly/frame/internal`, for the
-  parts that only the viewer uses: the frame session registry, `FrameError`,
-  `frameUsage`, `cancelFrameMount`, `localFramePath`,
+- The frame package has one internal subpath, `@mokly/frame/internal`, for
+  the parts that only the viewer uses: the frame session registry,
+  `FrameError`, `frameUsage`, `cancelFrameMount`, `localFramePath`,
   `temporaryPreviewAdapter`, `clipNode`, and the rectangle helpers. The
   shell's session data stays out of the public `FrameMount` interface, as
   `frame_session.ts` intends.
 - Shell-only helpers stay in the viewer: `cleanup.ts`, `inspection_work.ts`,
   and `visibleFrameBox`. No frame code uses them.
-- The package builds `inspector.js`. The viewer build copies it into
-  `packages/viewer/dist/browser` and its browser manifest. The CLI, the Rust
-  server, the static build, and the Mokly Cloud fixtures keep the same file.
-- Unit tests move with the code to `packages/frame/tests`. Root tests import
-  `packages/frame/dist`. Browser specs stay in `tests/browser`, because they
-  need the whole viewer.
+- The frame probe names:
+  - The source directory is `packages/frame/src/probe`. The entry functions
+    are `probeRuntime`, `probeNavigation`, and `bundleProbe`, and the
+    metadata type is `ProbeMetadata`.
+  - The published script is `mokly-viewer/client/frame-probe.js`.
+  - The message channel is `mokly-frame-probe`, and the wire version goes
+    from 2 to 3, so that an old page and a new viewer reject each other
+    clearly.
+  - The page markers are `template[data-mokly-frame-probe]` and
+    `data-mokly-frame-probe-link`.
+  - The Rust modules are `crates/mokly-static/src/frame_probe.rs` and
+    `frame_probe_error.rs`.
+  - The protocol docs become `docs/protocol/mokly-frame-probe.md` and
+    `docs/protocol/mokly-frame-probe-wire.md`.
+  - The inspection feature and the inspector panel keep their names.
+- The frame package builds `frame-probe.js`. The viewer build copies it into
+  `packages/viewer/dist/browser` and its browser manifest.
+- Unit tests move with the code to the new packages. Root tests import the
+  `dist` directory of the package. Browser specs stay in `tests/browser`,
+  because they need the whole viewer.
 - No new lint zone. The `tsc` build of each package sets `rootDir` to its
   `src`, so it rejects a relative import into another package.
 
-## Decisions
-
-Decision 2 is answered above. Decisions 4, 1, and 3 are open. On
-2026-11-03, a read-only options check reviewed them. Its report is in
-`.context/frame-package/options-check.md`. This section merges its result.
-
-### 4. The frame code needs viewer model code
-
-- **Severity:** High. **Effort:** Medium.
-- **Source:** Design.
-- **Category:** Code structure.
-- **Location:** `packages/viewer/src/navigation/logical.ts`,
-  `packages/viewer/src/catalogue/delivery_paths.ts`,
-  `packages/viewer/src/data/paths.ts`, and
-  `packages/viewer/src/generated/catalogue`.
-- **Terms:**
-  - **Model code:** the catalogue rules and types that both the frame code
-    and the viewer use. After the frame-only functions move, it is the path
-    and link grammar of `logical.ts`, about 60 lines, `currentDocumentPath`,
-    `RENDERS_PATH`, `RENDER_ID`, the data paths, the namespace constants,
-    and the usage types.
-  - **Generated types:** the TypeScript types that
-    `cargo xtask generate-types` writes from the Rust model.
-- **Background:**
-  - Many viewer files use the model code. 11 use the logical path grammar,
-    and 12 use the delivery paths.
-  - `@mokly/mokly` imports the grammar through `@mokly/viewer/data`, in
-    `src/authoring/links.ts` and `src/sidecar/session.ts`. Three protocol
-    docs require that entry. It must re-export the model code from its new
-    home.
-  - The generator already writes into two packages. The gate runs
-    `cargo xtask check-generated-types`, which compares each generated file
-    byte for byte.
-  - The generator adds an import of `catalogue/delivery_paths.js` to the
-    generated `RenderCapability.ts`, in
-    `crates/mokly-model/src/typescript.rs:58-62`.
-  - On 2026-11-01 the user chose to compile the Rust checks to JavaScript
-    later, in `plans/follow-ups/viewer-checks-from-rust.md`. The in-frame
-    script has 955 bytes left of its 9,216-byte budget, so it keeps a
-    TypeScript path check under every option.
-  - A package cannot import viewer source. `@mokly/ui` cannot hold the code,
-    because its contract allows no catalogue type.
-- **Problem:** The frame package and the viewer both need the model code.
-  The code has no home outside the viewer.
-- **Impact if no action:** Milestones 3 to 5 cannot start.
-- **Root question:** How does the frame package get the catalogue rules and
-  types that it uses, with one implementation of each rule and no import of
-  viewer source?
-- **Options:**
-  - **A.** Move the model code into `@mokly/frame`. The viewer and
-    `@mokly/viewer/data` import it from there. The generator writes the
-    usage types and the namespace constants into the frame package, and the
-    gate keeps each generated copy exact. The frame package then owns
-    catalogue rules that many viewer files use. Effort: Medium.
-  - **B.** Add a lockstep model package, such as `@mokly/model`, for the
-    model code and the generated types. The frame package and the viewer
-    depend on it. It would be the fifth JavaScript package, with its own
-    release wiring and npm registration. Effort: Large.
-  - **C.** Give the frame package its own inputs. It takes a frame instance
-    map instead of `CatalogueUsage`, and it holds its own wire checks for
-    paths, fragments, and targets. The viewer converts the catalogue usage
-    into that map, as `frame_usage.ts` does today. The public `FrameMount`
-    interface then changes for custom adapters. Mokly Cloud passes only
-    `postMessageAdapter`, so no known host breaks. Effort: Large.
-  - **D.** The viewer passes the rules in. The adapters and the wire
-    validators take the checks as a typed parameter. The viewer bundles
-    `inspector.js` with its own path check. No rule moves, and no package is
-    added. The frame package cannot build or test its in-frame script alone.
-    Effort: Large.
-  - **E.** One source, built into each package. A private workspace package,
-    such as `packages/model`, holds the model code. Before each `tsc` run, a
-    build step copies its sources into the frame package and the viewer as
-    Git-ignored files. The copies cannot drift. The costs are a copy step in
-    two builds, a second copy in `shell.js`, and the risk that people edit a
-    copy. Effort: Large.
-- **Left out:** Put the model code in `@mokly/mokly`, or let the frame
-  package import `@mokly/viewer/data`. Each makes a dependency cycle. Compile
-  the Rust grammar now. The in-frame script cannot hold the compiled module,
-  and the chosen follow-up already owns that work.
-- **Wider fix:** B. One home for the model code serves every later package.
-  E serves a later package too, without a registration.
-- **Previous examples:** `@mokly/ui` needed no model code, because its
-  components take props only, as
-  [the UI package contract](../docs/protocol/mokly-ui-package.md) says.
-- **Related:** Decision 2 chose the package. This decision blocks
-  Milestones 3 to 5. Option B of decision 1 makes the model code smaller,
-  because it deletes the only frame users of `currentDocumentPath` and
-  `VIEWER_DIRECTORY`. `plans/follow-ups/viewer-checks-from-rust.md` later
-  replaces the same grammar.
-- **Recommendation:** A. The first recommendation was B. The model code is
-  about 60 lines of grammar, a few constants, and generated types, which is
-  too small for a fifth package with its own registration. B protects the
-  codebase best, and it becomes the better choice when a third package
-  needs these rules without the frame code.
-- **Action:** ask the user, because the options have real trade-offs, and
-  the choice decides the package layout.
-
-### 1. Two frame models duplicate the event code
-
-- **Severity:** Medium. **Effort:** Large.
-- **Source:** Design.
-- **Category:** Code structure.
-- **Location:** `packages/viewer/src/inspector/runtime.ts`,
-  `packages/viewer/src/client/same_origin_pointer.ts`,
-  `packages/viewer/src/client/same_origin_highlight.ts`, and
-  `packages/viewer/src/client/component_geometry.ts:28-120`.
-- **Background:** `sameOriginAdapter` reads a local frame directly, with
-  page scripts off. `postMessageAdapter` talks to `inspector.js` inside a
-  cross-origin page. Both share the boundary listing, the box geometry, the
-  clipping rules, and the marker pattern. Each has its own event runtime for
-  hover, pick, Escape, link clicks, and layout changes. The same-origin pick
-  also has a second geometry path, `rangeBounds`, and a second marker
-  walker, `client/document_ranges.ts`.
-- **Problem:** Each change to the event handling must be made in two
-  runtimes. The runtimes already differ: during a highlight or a pick,
-  `inspector/runtime.ts:57` reports hover only for the highlighted keys, and
-  `client/same_origin_pointer.ts:22` reports hover for every instance.
-- **Impact if no action:** Hosts get different hover events from local and
-  cross-origin frames, and more differences can follow.
-- **Root question:** How should the viewer inspect preview frames, so that
-  we maintain the behaviour once and every hosting setup keeps working?
-- **Options:**
-  - **A.** Change nothing. Effort: Small.
-  - **B.** Keep both transports and share one event runtime. The same-origin
-    adapter calls `inspectorRuntime` directly on the frame window. The
-    runtime takes the link classifier as a parameter, so the in-frame script
-    keeps its link map and the local adapter keeps
-    `same_origin_navigation.ts`. Delete `same_origin_pointer.ts`,
-    `same_origin_highlight.ts`, `rangeBounds`, and the second marker walker.
-    The script has 955 bytes of budget left. Effort: Large.
-  - **C.** Always use `postMessageAdapter` with a second real origin. Serve
-    adds a second port and injects the script. Single-origin static hosts
-    lose inspection, page scripts run in local previews, and masks lag one
-    message round trip. Effort: Large.
-  - **D.** Always use `postMessageAdapter` with an opaque-origin sandbox.
-    The viewer must post with target `*`, fonts load with CORS checks, page
-    scripts run, and masks lag. This reverses the decision that cross-origin
-    frames need a real origin. Effort: Large.
-  - **E.** Share the pick path, and keep two runtimes. The same-origin pick
-    hit-tests the boundaries of the shared reader, as hover already does.
-    Delete `rangeBounds`, `document_ranges.ts`, `component_range_nodes.ts`,
-    and `component_occlusion.ts`. Hover, Escape, link clicks, and layout
-    changes stay in two runtimes. Effort: Medium.
-  - **F.** Find drift with a test. One browser spec drives hover, pick,
-    Escape, link clicks, and geometry on both transports over one fixture,
-    and compares the event streams. Each change is still made twice. It is
-    a test for the class, so it needs the user's approval. Effort: Medium.
-- **Left out:** Always use `sameOriginAdapter`, which fails the
-  cross-origin need of Mokly Cloud. Use the same-origin modules as the one
-  runtime, which would not fit in the 955 bytes. Allow page scripts in
-  local frames, which would let page scripts reach the viewer.
-- **Wider fix:** B. One runtime removes the drift for every later change.
-  F is a detection fix, which ranks below B.
-- **Previous examples:** PR #76 added `postMessageAdapter` for Mokly Cloud
-  and extracted `sameOriginAdapter` from the older direct-read code.
-- **Related:** `plans/follow-ups/frame-hover-during-highlight.md` asks which
-  instances hover reports during a highlight. B and E must apply its
-  answer. This plan does not wait for this decision. If you choose B, it
-  runs as its own change, inside the frame package after Milestone 5, or
-  before Milestone 5 when it starts first.
-- **Recommendation:** B. One runtime removes the class, and the two
-  runtimes already differ on hover.
-- **Action:** ask the user, because the options trade hosting setup, page
-  safety, and effort against each other.
-
-### 3. "Inspector" names two different things
-
-- **Severity:** Low. **Effort:** Large.
-- **Source:** Design.
-- **Category:** Code structure.
-- **Location:** `packages/viewer/src/inspector`,
-  `crates/mokly-static/src/inspector.rs`, and the two inspector protocol
-  docs.
-- **Background:** The shell's tabbed panel, `@mokly/ui/inspector`, has been
-  the inspector since PR #41. Its accessible name "Inspector" is user-facing
-  copy. PR #76 later named the in-frame script the inspector. The published
-  names are the path `mokly-viewer/client/inspector.js`, the message channel
-  `mokly-inspector`, and the page markers `data-mokly-inspector` and
-  `data-mokly-inspector-link`. Wire version 2 with these names shipped in
-  0.15.0, and the packages are at 0.18.0. The project is not in production.
-- **Problem:** One word names two different parts that both work with
-  component instances.
-- **Impact if no action:** People and agents keep confusing the two parts.
-- **Root question:** How do people and agents tell the in-frame script and
-  the inspector panel apart?
-- **Options:**
-  - **A.** Keep the name. Effort: Small.
-  - **B.** Rename the code only, for example to `frame probe`. The published
-    names stay, so the code and the pages use two names for one thing.
-    Effort: Medium.
-  - **C.** Rename the code and the published names. Pages published before
-    the rename must be published again. Mokly Cloud regenerates its contract
-    fixtures. Effort: Large.
-  - **D.** Qualify both names and rename nothing. Every README, protocol
-    doc, and code comment says "frame inspector" for the script and
-    "inspector panel" for the panel. `AGENTS.md` defines both terms. The
-    bare word stays in the code and in the published names. Effort: Medium.
-  - **E.** Rename the panel and keep every frame name. The panel's
-    accessible name, the `@mokly/ui/inspector` subpath, its components,
-    about 59 files under `examples/basic`, and
-    `docs/protocol/mokly-component-inspector-design.md` change. No page must
-    be published again. Effort: Large.
-- **Left out:** A compatibility period that accepts the old and the new
-  names is C with a shim, not a separate approach.
-- **Wider fix:** None. A terms list in `AGENTS.md`, which is part of D, is
-  the only step for the class, and nothing enforces it. A second case of
-  the class exists: `navigation/target.ts` and `shell/target.ts` name two
-  different targets.
-- **Previous examples:** The wire protocol already changed from version 1
-  to version 2. The 0.16.0 release asked for a rebuild of every published
-  catalogue, without a shim.
-- **Related:** If you choose B, C, or E before Milestone 4 starts,
-  Milestones 4 and 5 apply the rename, so that the files move once.
-- **Recommendation:** C, with the name `frame probe`. The first
-  recommendation was also C, for a reason that was wrong: the names already
-  shipped. The project is not in production, and the package move already
-  moves every file of the script. D is the low-cost choice if you do not
-  want a wire break.
-- **Action:** ask the user, because C changes the published path and the
-  message channel that the protocol docs require.
-
 ## Milestone 1: Documentation and protocol
 
-Depends on: none. The model code section waits for decision 4.
+Depends on: none. The model package parts wait for decision 5.
 
-The docs state the package, its boundary, and its release before the code
-moves.
+The docs state the packages, their boundaries, their release, and the frame
+probe names before the code moves.
 
-- [ ] Add `docs/protocol/mokly-frame-package.md` with a status line that
-      links this plan. State the package, its root entry, its internal
-      subpath, the re-export by the viewer, the rule that the package never
-      imports the viewer, the CLI, or consumer code, the exact lockstep
-      pin, the decision and its reason, and the home of the model code.
+- [ ] Add `docs/protocol/mokly-frame-package.md` and the contract of the
+      model package, each with a status line that links this plan. State
+      each package, its entries, the re-exports by the viewer, the rule that
+      a package never imports the viewer, the CLI, or consumer code, the
+      exact lockstep pins, and the decisions with their reasons.
+- [ ] Rename `docs/protocol/mokly-published-inspector.md` and
+      `docs/protocol/mokly-inspector-wire.md` to the frame probe docs. State
+      the new script path, channel, wire version 3, and page markers, with
+      a status line. Update every link to them.
 - [ ] Update `docs/protocol/mokly-frame-adapter.md`: `@mokly/frame` defines
       the interface and the built-in adapters, and `@mokly/viewer`
       re-exports them.
@@ -340,71 +267,70 @@ moves.
 - [ ] Update `AGENTS.md`, `README.md`, and `scripts/release/README.md` with
       the package list and the build order.
 
-## Milestone 2: Frame package skeleton
+## Milestone 2: Model package
 
-Depends on: 1.
+Depends on: 1. It waits for decision 5.
 
-The empty package builds, tests, and packs with the other packages.
+The model code moves out of the viewer into its own package.
 
-- [ ] Create `packages/frame` with `package.json`, `tsconfig.json`,
+- [ ] Create the package with `package.json`, `tsconfig.json`,
       `tsconfig.build.json`, a build script, `README.md`, and `LICENSE`.
-- [ ] Add the package to the root workspaces, the root build order, and the
-      root `devDependencies`.
-- [ ] Add it to `scripts/verification/run-viewer.mjs`, the typecheck runner,
-      and the checks in `xtask/src/check/commands.rs`.
-- [ ] Add it to the release scripts under `scripts/release`, including its
-      registration in `bootstrap.mjs`, to `release-please-config.json`, to
-      the release manifest, and to the packed-consumer smoke test.
-- [ ] Add it to `.github/workflows/ci.yml` and
-      `.github/workflows/release.yml`.
-
-## Milestone 3: Model code home
-
-Depends on: 2. It waits for decision 4. This milestone is written for
-option A. If decision 4 gets another answer, rewrite this milestone before
-it starts.
-
-The model code moves out of the viewer, so that the frame package can use
-it.
-
-- [ ] Move the frame-only functions of the **Design** section into the
-      package.
-- [ ] Move the path and link grammar of `logical.ts`, `currentDocumentPath`,
-      `RENDERS_PATH`, `RENDER_ID`, and the data paths into the package, with
-      their tests.
-- [ ] Point `cargo xtask generate-types` and its tests at the package for
-      the usage types and the namespace constants. Change the import that
-      `crates/mokly-model/src/typescript.rs` adds to `RenderCapability.ts`.
+      Wire it into the root workspaces, the build order, the test runner,
+      the typecheck runner, the checks in `xtask/src/check/commands.rs`,
+      the release scripts and their registration in `bootstrap.mjs`,
+      `release-please-config.json`, the release manifest, the
+      packed-consumer smoke test, and the two workflows under
+      `.github/workflows`.
+- [ ] Move the model code of the **Design** section, with its tests.
+- [ ] Point `cargo xtask generate-types` and its tests at the package.
+      Change the import that `crates/mokly-model/src/typescript.rs` adds to
+      `RenderCapability.ts`.
 - [ ] Move every viewer consumer to the package. Re-export the moved
       functions from `@mokly/viewer/data`. Delete the old modules.
 
-## Milestone 4: Move the in-frame inspector
+## Milestone 3: Frame package skeleton
+
+Depends on: 2.
+
+The empty frame package builds, tests, and packs with the other packages.
+
+- [ ] Create `packages/frame` with `package.json`, `tsconfig.json`,
+      `tsconfig.build.json`, a build script, `README.md`, and `LICENSE`.
+- [ ] Wire it in the same places as the model package in Milestone 2.
+
+## Milestone 4: Move the inspector and rename it to the frame probe
 
 Depends on: 3.
 
 The in-frame inspector, the wire schema, and the measuring code move into
-the package. The host adapters stay in the viewer for one milestone and
-import from `@mokly/frame/internal`.
+the frame package under the frame probe names. The Rust static build and
+server use the new names in the same milestone, so that the product works.
+The host adapters stay in the viewer for one milestone and import from
+`@mokly/frame/internal`.
 
 - [ ] Move `packages/viewer/src/inspector`,
-      `packages/viewer/src/client/frame_adapter.ts`, and the scripts
+      `packages/viewer/src/client/frame_adapter.ts`, the frame-only
+      functions of the **Design** section, and the scripts
       `inspector-bundle.mjs`, `inspector-pool.mjs`, and
-      `inspector-pool.d.mts` with `git mv`. The inspector imports the frame
-      types of `frame_adapter.ts`, so the types move first.
-- [ ] Build `inspector.js` in the package. Copy it in the viewer build into
-      `packages/viewer/dist/browser` and the browser manifest.
+      `inspector-pool.d.mts` with `git mv`. Rename them to the frame probe
+      names.
+- [ ] Build `frame-probe.js` in the package. Copy it in the viewer build
+      into `packages/viewer/dist/browser` and the browser manifest.
+- [ ] Rename the channel, the wire version, and the page markers. Rename the
+      Rust modules, the injected script path, the reserved-marker build
+      error, and the asset check in `crates/mokly-server/src/assets.rs`.
+      Update their tests and snapshots.
 - [ ] Move `packages/viewer/tests/inspector_budget.test.ts` and
       `marker_ranges.test.ts`. Point `tests/inspector_inert.test.ts`,
       `tests/inspector_schema.test.ts`, and `tests/inspector_pool.test.ts`
-      at the package.
-- [ ] Apply decision 3 here when it has an answer.
+      at the package, and rename them to the frame probe.
 
 ## Milestone 5: Move the host adapters
 
 Depends on: 4.
 
-The host adapters move into the package. The viewer imports the package
-only through its exports.
+The host adapters move into the frame package. The viewer imports the
+package only through its exports.
 
 - [ ] Move `packages/viewer/src/client` with `git mv`, except `cleanup.ts`,
       `inspection_work.ts`, and `visibleFrameBox`, which move to
@@ -417,17 +343,19 @@ only through its exports.
       `scripts/verification/prepared.mjs`, and the lint tests at the
       package.
 - [ ] Move the client and inspector READMEs into the package README. Delete
-      the old directories. Remove the status line of
-      `docs/protocol/mokly-frame-package.md`.
+      the old directories. Remove the status lines that Milestone 1 added.
 
 ## Milestone 6: Verification, commit, review, and pull request
 
 Depends on: every other milestone.
 
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Smoke-test local Browse through `npm run dev`: hover, pick, Escape,
-      and catalogue links in a screen and a component page.
-- [ ] Commit with Conventional Commits and push the branch.
+- [ ] Run the mockup check named in `AGENTS.md`, and smoke-test local Browse
+      through `npm run dev`: hover, pick, Escape, and catalogue links in a
+      screen and a component page.
+- [ ] Commit with Conventional Commits and push the branch. Mark the rename
+      of the published names as a breaking change, so that the release notes
+      ask for a new publication of each catalogue.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record follow-up
@@ -444,5 +372,6 @@ Depends on: every other milestone.
 - [ ] A maintainer registers each new package with
       `scripts/release/bootstrap.mjs` before the next release pull request
       merges.
-- [ ] Tell Mokly Cloud that its next pin bump brings `@mokly/frame` through
-      `@mokly/viewer`. Its imports do not change.
+- [ ] Tell Mokly Cloud about its next pin bump: `@mokly/viewer` brings both
+      new packages, its imports do not change, its contract fixtures must
+      name `frame-probe.js`, and each catalogue must be published again.
