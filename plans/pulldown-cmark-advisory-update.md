@@ -73,14 +73,17 @@ Prove the change with the complete gate, review it, and make the pull
 request ready for the user to merge. A lockfile change waits for the user's
 merge.
 
-- [ ] Run the complete gate, `cargo xtask check`.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the complete gate, `cargo xtask check`. It passed on the remote
+      Testboxes at `7f9c5890`. Evidence: `.context/rust-audit-0433/gate.log`.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
-- [ ] Send each later source fix commit to the sessions of workspaces 461
-      and 463.
+      once, and report. Round 1 at `7f9c5890` found no finding, so no
+      fix round ran. Evidence:
+      `.context/reviews/ci-fix/repository-rust-audit-0433/findings.md`.
+- [x] Send each later source fix commit to the sessions of workspaces 461
+      and 463. No later commit changed source, manifests, or the lockfile.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Update the title and the description of the pull request, mark it
