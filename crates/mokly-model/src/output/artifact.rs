@@ -4,10 +4,10 @@ use std::path::PathBuf;
 
 use bytes::Bytes;
 
-use crate::output::error::Result;
+use crate::output::error::{FormatError, Result};
 use crate::output::ownership::{Entry, Ownership};
 use crate::output::upload::UploadMetadata;
-use crate::output::validation::{MANIFEST, MARKER, digest};
+use crate::output::validation::{FILE_LIMIT, MANIFEST, MARKER, digest};
 use crate::versions::EXPORT_OWNERSHIP;
 
 /// One regular file's immutable final bytes.
@@ -62,6 +62,9 @@ impl Artifact {
         let mut marker = serde_json::to_vec_pretty(&ownership)
             .expect("Ownership contains only strings, integer sizes, and a list of entries");
         marker.push(b'\n');
+        if marker.len() > FILE_LIMIT {
+            return Err(FormatError::TooLarge);
+        }
         files.push(File {
             path: MARKER.to_owned(),
             bytes: marker.into(),
