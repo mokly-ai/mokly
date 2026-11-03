@@ -1,12 +1,12 @@
 /** Pure draft and validation rules of the Props controls. */
 
+import type { ComponentControl, EntryDetailV4, PropSchema } from "@mokly/model";
+
 import type {
   ShellCatalogueComponent,
   ShellCatalogueRoutedEntry,
 } from "../catalogue/scoped_types.js";
-import type { EntryDetailV4 } from "../catalogue/types.js";
 import { decodeProps } from "../components/codec.js";
-import type { ComponentControl } from "../components/control_types.js";
 import { validateControlledValues } from "../components/controls.js";
 import {
   isMultipleOf,
@@ -15,7 +15,6 @@ import {
 import type {
   ComponentWireProps,
   PropPrimitive,
-  PropSchema,
 } from "../components/prop_types.js";
 import { propertySchema, validateProps } from "../components/props.js";
 import type { ComponentOverride } from "../components/render_types.js";

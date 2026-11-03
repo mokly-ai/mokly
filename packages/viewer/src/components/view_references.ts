@@ -1,8 +1,11 @@
-import { canonicalJson, exactKeys, invalidData } from "./data.js";
 import type {
   ComponentInputOwner,
   ComponentInstanceRecord,
   ComponentSlotRecord,
+} from "@mokly/model";
+
+import { canonicalJson, exactKeys, invalidData } from "./data.js";
+import type {
   ComponentViewRecord,
   ComponentSchemaRecord,
 } from "./view_types.js";

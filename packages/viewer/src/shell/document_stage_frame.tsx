@@ -6,10 +6,10 @@
 
 import { useContext, useMemo, useRef } from "react";
 
+import { currentDocumentPath } from "@mokly/model";
 import { DocumentFrame, PreviewIframe } from "@mokly/ui/preview-frame";
 import { LightOnlyBand } from "@mokly/ui/scheme-fallback";
 
-import { currentDocumentPath } from "../catalogue/delivery_paths.js";
 import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
 import { documentRoute } from "../navigation/routes.js";
 

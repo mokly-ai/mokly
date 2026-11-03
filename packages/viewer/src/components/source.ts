@@ -1,7 +1,7 @@
-import { isSafeRepositoryPath } from "../navigation/logical.js";
+import { isSafeRepositoryPath } from "@mokly/model";
+import type { ComponentSourceLocation } from "@mokly/model";
 
 import { exactKeys, invalidData } from "./data.js";
-import type { ComponentSourceLocation } from "./view_types.js";
 
 /** Validate normalized invocation metadata at both wrapper and manifest boundaries. */
 export function validateComponentSource(

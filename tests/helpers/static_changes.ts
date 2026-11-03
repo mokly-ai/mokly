@@ -4,8 +4,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 
+import type { CatalogueReadModel } from "../../packages/model/dist/index.js";
 import { readCatalogueIndex } from "../../packages/viewer/src/catalogue/index_reader.js";
-import type { CatalogueReadModel } from "../../packages/viewer/src/generated/catalogue/CatalogueReadModel.js";
 
 import { command, publicationFixture } from "./static_publication.js";
 

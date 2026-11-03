@@ -1,8 +1,9 @@
 /** Read the optional static deployment file without affecting browsing. */
 
+import type { DeploymentFileV1 } from "@mokly/model";
+
 import { record } from "../components/data.js";
 
-import type { DeploymentFileV1 } from "./types.js";
 import { hash } from "./values.js";
 
 /** The only deployment file number this viewer reads. */

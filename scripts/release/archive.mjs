@@ -5,6 +5,7 @@ import path from "node:path";
 import { runCommand } from "./command.mjs";
 import {
   validateCliReport,
+  validateModelReport,
   validateNativeReport,
   validateUiReport,
 } from "./package_reports.mjs";
@@ -55,6 +56,7 @@ export function validatePackageReport(report, name = "@mokly/viewer") {
   assert.match(report.shasum, /^[a-f0-9]{40}$/);
   if (name === "@mokly/viewer") validateViewerReport(report);
   else if (name === "@mokly/ui") validateUiReport(report);
+  else if (name === "@mokly/model") validateModelReport(report);
   else if (name === "@mokly/mokly") validateCliReport(report);
   else validateNativeReport(report, name);
 }

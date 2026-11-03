@@ -1,17 +1,16 @@
 /** Build isolated browser inputs through the shim, then serve exact files. */
+
 import fs from "node:fs/promises";
 import path from "node:path";
 
 import { build } from "esbuild";
 
+import type { CatalogueReadModel, EntryDetailV4 } from "@mokly/model";
+
 import { buildStaticCatalogue } from "../../../tests/helpers/build_site.js";
 import { repositoryRoot } from "../../../tests/helpers/fixture.js";
 import { timeFixturePhase } from "../../../tests/helpers/fixture_timing.js";
 import { serveStaticFiles } from "../../../tests/helpers/static_server.js";
-import type {
-  CatalogueReadModel,
-  EntryDetailV4,
-} from "../src/catalogue/types.js";
 import { viewRoute } from "../src/data.js";
 
 import { ownBrowserCleanup } from "./browser_cleanup.js";

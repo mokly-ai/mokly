@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ComponentInstanceRecord } from "../packages/viewer/src/generated/catalogue/ComponentInstanceRecord.js";
+import type { ComponentInstanceRecord } from "../packages/model/dist/index.js";
 
 import {
   inventoryViolations,

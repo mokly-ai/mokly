@@ -34,6 +34,7 @@ export async function createHarness(): Promise<string> {
     await writeHarnessFile(root, name, contents);
   await fs.mkdir(path.join(root, "packages/viewer/tests"), { recursive: true });
   await fs.mkdir(path.join(root, "packages/ui/tests"), { recursive: true });
+  await fs.mkdir(path.join(root, "packages/model/tests"), { recursive: true });
   return root;
 }
 

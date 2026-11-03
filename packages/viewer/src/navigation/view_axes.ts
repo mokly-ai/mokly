@@ -1,8 +1,9 @@
 /** Typed parsing for explicit viewport and color-scheme route axes. */
 
-import type { ColorScheme, Viewport } from "../data/axes.js";
+import type { ColorScheme, Viewport } from "@mokly/model";
 
 /** Valid axes explicitly named by one route query. */
+
 export interface ExplicitViewAxes {
   colorScheme?: ColorScheme;
   viewport?: "both" | Viewport;

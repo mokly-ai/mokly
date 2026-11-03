@@ -1,5 +1,7 @@
 /** Pure adoption of a new index and its details into the shell's state. */
 
+import type { CatalogueReadModel, EntryDetailV4 } from "@mokly/model";
+
 import {
   currentEntry,
   detailKey,
@@ -8,7 +10,6 @@ import {
 } from "../catalogue/detail_fences.js";
 import type { HeldDetails } from "../catalogue/shell_model.js";
 import { shellCatalogueModel } from "../catalogue/shell_model.js";
-import type { CatalogueReadModel, EntryDetailV4 } from "../catalogue/types.js";
 
 import { createCatalogue, type Catalogue } from "./catalogue.js";
 import { reconcileDisclosures } from "./disclosure_storage.js";

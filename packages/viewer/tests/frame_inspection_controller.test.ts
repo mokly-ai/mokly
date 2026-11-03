@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { setImmediate } from "node:timers/promises";
 
-import type { CatalogueUsage } from "../src/catalogue/types.js";
+import type { CatalogueUsage } from "@mokly/model";
+
 import type {
   FrameAdapter,
   MountedFrame,

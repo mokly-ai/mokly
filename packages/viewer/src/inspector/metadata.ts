@@ -1,7 +1,9 @@
+import type { ComponentRangeRecord } from "@mokly/model";
+
 import type { FrameNavigation } from "../client/frame_adapter.js";
-import type { ComponentRangeRecord } from "../components/view_types.js";
 
 import { array, boundedJson, identity, key, object, shape } from "./values.js";
+
 /**
  * Range index n is r-n; null keys identify slots and null parents identify
  * top-level ranges. `[null, null]` at index 0 is a component page's root region.

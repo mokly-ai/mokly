@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { CatalogueReadModel } from "@mokly/model";
+
 import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
-import type { CatalogueReadModel } from "../src/catalogue/types.js";
 import {
   MoklyVersionError,
   VERSION_ERROR_MESSAGE,

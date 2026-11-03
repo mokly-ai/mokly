@@ -301,7 +301,7 @@ Depends on: 1.
 
 The model code moves out of the viewer into `@mokly/model`.
 
-- [ ] Create `packages/model` with `package.json`, `tsconfig.json`,
+- [x] Create `packages/model` with `package.json`, `tsconfig.json`,
       `tsconfig.build.json`, a build script, `README.md`, `LICENSE`, and the
       `CHANGELOG.md` stub of `@mokly/ui`.
       Wire it into the root workspaces, the build order, the test runner,
@@ -310,14 +310,14 @@ The model code moves out of the viewer into `@mokly/model`.
       `release-please-config.json`, the release manifest, the
       packed-consumer smoke test, and the two workflows under
       `.github/workflows`.
-- [ ] Move the model code of the **Design** section, with its tests.
-- [ ] Point `cargo xtask generate-types` and its tests at the package.
+- [x] Move the model code of the **Design** section, with its tests.
+- [x] Point `cargo xtask generate-types` and its tests at the package.
       Change the import that `crates/mokly-model/src/typescript.rs` adds to
       `RenderCapability.ts`.
-- [ ] Repoint the links of the protocol pages to the generated types, about
+- [x] Repoint the links of the protocol pages to the generated types, about
       22 links in 15 pages, and the output folder that
       `crates/mokly-model/README.md` names, to `packages/model`.
-- [ ] Move every viewer consumer to the package. Re-export the moved
+- [x] Move every viewer consumer to the package. Re-export the moved
       functions from `@mokly/viewer/data`. Delete the old modules.
 
 ## Milestone 5: Frame package skeleton

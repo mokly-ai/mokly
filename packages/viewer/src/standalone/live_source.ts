@@ -1,10 +1,8 @@
 /** The private Serve routes: the live descriptor, the event stream and renders. */
 
-import {
-  EVENTS_PATH,
-  LIVE_PATH,
-  RENDERS_PATH,
-} from "../catalogue/delivery_paths.js";
+import { RENDERS_PATH } from "@mokly/model";
+
+import { EVENTS_PATH, LIVE_PATH } from "../catalogue/delivery_paths.js";
 import { readLiveDescriptor } from "../catalogue/live_reader.js";
 import { fetchJson } from "../catalogue/sources.js";
 import type { ShellLiveSource } from "../shell/data_source.js";

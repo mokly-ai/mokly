@@ -1,14 +1,14 @@
 /** The fences that bind one entry detail to the installed catalogue index. */
 
-import { canonicalJson } from "../components/data.js";
-import type { PropSchema } from "../components/prop_types.js";
-import { validateComponentViewRecord } from "../components/view_validation.js";
-
 import type {
   CatalogueReadModel,
   CatalogueRecord,
   EntryDetailV4,
-} from "./types.js";
+  PropSchema,
+} from "@mokly/model";
+
+import { canonicalJson } from "../components/data.js";
+import { validateComponentViewRecord } from "../components/view_validation.js";
 
 /** One requested detail: a current path, or a removed record's identity. */
 export interface DetailRequest {

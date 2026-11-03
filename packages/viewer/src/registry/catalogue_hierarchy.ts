@@ -1,5 +1,6 @@
+import type { CatalogueNode } from "@mokly/model";
+
 import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
-import type { CatalogueNode } from "../catalogue/types.js";
 
 import {
   filterHierarchy,

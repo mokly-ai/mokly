@@ -10,7 +10,7 @@ import {
   releasePackages,
 } from "../scripts/release/targets.mjs";
 
-test("the release consumer installs the host platform, CLI, viewer, and UI archives", async (t) => {
+test("the release consumer installs the host platform, CLI, viewer, UI, and model archives", async (t) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-consumer-"));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const host = NATIVE_TARGETS.find(
@@ -48,7 +48,13 @@ test("the release consumer installs the host platform, CLI, viewer, and UI archi
   assert.deepEqual(
     manifest.dependencies,
     Object.fromEntries(
-      [host.name, "@mokly/ui", "@mokly/viewer", "@mokly/mokly"].map((name) => [
+      [
+        host.name,
+        "@mokly/ui",
+        "@mokly/model",
+        "@mokly/viewer",
+        "@mokly/mokly",
+      ].map((name) => [
         name,
         `file:${packages.find(({ report }) => report.name === name)!.archivePath}`,
       ]),

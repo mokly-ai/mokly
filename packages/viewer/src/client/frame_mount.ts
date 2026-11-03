@@ -1,8 +1,5 @@
-import {
-  RENDER_ID,
-  RENDERS_PATH,
-  currentDocumentRoute,
-} from "../catalogue/delivery_paths.js";
+import { RENDERS_PATH, RENDER_ID, currentDocumentRoute } from "@mokly/model";
+
 import { origin } from "../inspector/values.js";
 
 import type { FrameMount } from "./frame_adapter.js";

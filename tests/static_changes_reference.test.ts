@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import test from "node:test";
 
-import type { EntryDetailV4 } from "../packages/viewer/src/generated/catalogue/EntryDetailV4.js";
+import type { EntryDetailV4 } from "../packages/model/dist/index.js";
 
 import { build, git, json, write } from "./helpers/static_changes.js";
 import { files } from "./helpers/static_faults.js";

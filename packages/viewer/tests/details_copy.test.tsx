@@ -3,7 +3,8 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type { CatalogueReadModel } from "../src/catalogue/types.js";
+import type { CatalogueReadModel } from "@mokly/model";
+
 import { EntryDetailsBody } from "../src/shell/details.js";
 
 import { catalogueFixture, indexFixture } from "./catalogue_v9_fixture.js";

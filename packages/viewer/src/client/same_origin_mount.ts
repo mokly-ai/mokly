@@ -1,4 +1,4 @@
-import type { CatalogueUsage } from "../catalogue/types.js";
+import type { CatalogueUsage } from "@mokly/model";
 
 import type {
   FrameEvent,

@@ -8,7 +8,7 @@ Status: In progress under the [frame package plan](../../plans/frame-package.md)
 `>=19.0.0` peers. `@mokly/mokly` depends on its exact released version. The
 viewer never imports the CLI, Node built-ins, Git, or consumer code, and it
 renders only in the browser. Its shared shapes are the
-[generated types](../../packages/viewer/src/generated/catalogue/)
+[generated types](../../packages/model/src/generated/catalogue/)
 of the model.
 The package has four entry points:
 

@@ -25,6 +25,7 @@
     "./styles.css": "./dist/styles.css"
   },
   "dependencies": {
+    "@mokly/model": "0.18.0",
     "@mokly/ui": "0.18.0"
   },
   "peerDependencies": {

@@ -1,5 +1,8 @@
 /** Resolve and fetch one removed entry's previous version. */
 
+import { encodeUrlPath } from "@mokly/model";
+import type { ColorScheme, EntryDetailV4, Viewport } from "@mokly/model";
+
 import { removedEntryDetailPath } from "../catalogue/delivery_paths.js";
 import { historicalSnapshotId } from "../catalogue/snapshot_identity.js";
 import {
@@ -7,9 +10,6 @@ import {
   fetchJson,
   type DeploymentCheck,
 } from "../catalogue/sources.js";
-import type { EntryDetailV4 } from "../catalogue/types.js";
-import type { ColorScheme, Viewport } from "../data/axes.js";
-import { encodeUrlPath } from "../data/paths.js";
 import { previewMetadataPath } from "../navigation/routes.js";
 import type { RemovedPreviewData } from "../shell/previews.js";
 

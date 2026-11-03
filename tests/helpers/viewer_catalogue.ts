@@ -1,14 +1,14 @@
 import fs from "node:fs";
 
+import type {
+  CatalogueReadModel,
+  EntryDetailV4,
+} from "../../packages/model/dist/index.js";
 import { detailKey } from "../../packages/viewer/dist/catalogue/detail_fences.js";
 import { readEntryDetail } from "../../packages/viewer/dist/catalogue/detail_reader.js";
 import { readCatalogueIndex } from "../../packages/viewer/dist/catalogue/index_reader.js";
 import type { ShellCatalogueReadModel } from "../../packages/viewer/dist/catalogue/scoped_types.js";
 import { shellCatalogueModel } from "../../packages/viewer/dist/catalogue/shell_model.js";
-import type {
-  CatalogueReadModel,
-  EntryDetailV4,
-} from "../../packages/viewer/dist/catalogue/types.js";
 import { createCatalogue } from "../../packages/viewer/dist/shell/catalogue.js";
 import { shellContext } from "../../packages/viewer/dist/shell/projection.js";
 import { routeFromUrl } from "../../packages/viewer/dist/shell/routes.js";

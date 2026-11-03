@@ -10,11 +10,9 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type {
-  ComparedEntry,
-  EntryChangeReason,
-  ReviewView,
-} from "../src/review/types.js";
+import type { EntryChangeReason } from "@mokly/model";
+
+import type { ComparedEntry, ReviewView } from "../src/review/types.js";
 import { selectedComparisonViews } from "../src/shell/comparison_selection.js";
 import { ComparisonViews } from "../src/shell/comparison_views.js";
 import type { ComparisonPresentation } from "../src/shell/use_comparison.js";

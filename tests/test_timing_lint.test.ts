@@ -12,6 +12,8 @@ const testPaths = extensions.flatMap((extension) => [
   `packages/viewer/tests/nested/example.${extension}`,
   `packages/ui/tests/example.test.${extension}`,
   `packages/ui/tests/nested/example.${extension}`,
+  `packages/model/tests/example.test.${extension}`,
+  `packages/model/tests/nested/example.${extension}`,
 ]);
 const elapsedExpressions = [
   "performance.now() - started",
@@ -61,6 +63,7 @@ for (const filePath of [
   "tests/helpers/durations.ts",
   "packages/viewer/src/example.ts",
   "packages/ui/src/example/example.ts",
+  "packages/model/src/example.ts",
   "scripts/verification/example.mjs",
 ]) {
   test(`timing lint allows clock subtraction outside its scope in ${filePath}`, async () => {

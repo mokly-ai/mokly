@@ -98,8 +98,8 @@ number. The review result stays in memory under the
 [comparison contract](./mokly-comparison.md). The required `detailId` and the
 current and removed detail shapes use the detail version in the
 [format inventory](./mokly-format-versions.md). The generated
-[`CatalogueReadModel`](../../packages/viewer/src/generated/catalogue/CatalogueReadModel.ts)
-and [`EntryDetailV4`](../../packages/viewer/src/generated/catalogue/EntryDetailV4.ts)
+[`CatalogueReadModel`](../../packages/model/src/generated/catalogue/CatalogueReadModel.ts)
+and [`EntryDetailV4`](../../packages/model/src/generated/catalogue/EntryDetailV4.ts)
 types are the normative shapes. A reader validates a document against them
 before use.
 

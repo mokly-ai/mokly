@@ -56,7 +56,7 @@ components and variants, including the HTML and YAML file kinds of the
 derive their instance, slot and root regions from the composed trees under the
 [comparison contract](./mokly-comparison.md) and carry no text offsets.
 Resource owners exclude CSS. The read model v9 is the model's public form. The
-[generated TypeScript types](../../packages/viewer/src/generated/catalogue/)
+[generated TypeScript types](../../packages/model/src/generated/catalogue/)
 are the normative shapes.
 
 ## Rejection Before Interpretation

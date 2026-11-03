@@ -7,6 +7,7 @@ import { promisify } from "node:util";
 
 import { repositoryRoot } from "./fixture.js";
 import {
+  modelPackageReport,
   uiPackageReport,
   viewerPackageReport,
   type PackageReport,
@@ -55,8 +56,12 @@ export async function bootstrapFixture(
     type: "module",
     license: "MIT",
     private: true,
-    workspaces: ["packages/ui", "packages/viewer"],
-    devDependencies: { "@mokly/ui": "0.16.1", "@mokly/viewer": "0.1.0" },
+    workspaces: ["packages/ui", "packages/model", "packages/viewer"],
+    devDependencies: {
+      "@mokly/ui": "0.16.1",
+      "@mokly/model": "0.18.0",
+      "@mokly/viewer": "0.1.0",
+    },
     scripts: { prepack: "node build.mjs" },
   };
   const viewerPackage = {
@@ -75,7 +80,18 @@ export async function bootstrapFixture(
     files: ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
     scripts: { prepack: "node ../../build.mjs" },
   };
+  const modelPackage = {
+    name: "@mokly/model",
+    version: "0.18.0",
+    license: "MIT",
+    type: "module",
+    files: ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
+    scripts: { prepack: "node ../../build.mjs" },
+  };
   const distFiles = [
+    ...modelPackageReport()
+      .files.filter((file) => file.path.startsWith("dist/"))
+      .map((file) => `packages/model/${file.path}`),
     ...viewerPackageReport()
       .files.filter((file) => file.path.startsWith("dist/"))
       .map((file) => `packages/viewer/${file.path}`),
@@ -93,14 +109,20 @@ export async function bootstrapFixture(
       packages: {
         "": packageJson,
         "packages/ui": uiPackage,
+        "packages/model": modelPackage,
         "packages/viewer": viewerPackage,
         "node_modules/@mokly/ui": { resolved: "packages/ui", link: true },
+        "node_modules/@mokly/model": { resolved: "packages/model", link: true },
         "node_modules/@mokly/viewer": {
           resolved: "packages/viewer",
           link: true,
         },
       },
     }),
+    "packages/model/package.json": JSON.stringify(modelPackage),
+    "packages/model/README.md": "# Model package release fixture\n",
+    "packages/model/LICENSE": "MIT\n",
+    "packages/model/CHANGELOG.md": "# Model package test release\n",
     "packages/ui/package.json": JSON.stringify(uiPackage),
     "packages/ui/README.md": "# UI package release fixture\n",
     "packages/ui/LICENSE": "MIT\n",

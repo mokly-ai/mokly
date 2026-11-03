@@ -1,4 +1,4 @@
-import type { PropSchema } from "../generated/catalogue/PropSchema.js";
+import type { PropSchema } from "@mokly/model";
 
 import { assertPlainData } from "./data.js";
 import { validatePropSchema } from "./profile_schema.js";

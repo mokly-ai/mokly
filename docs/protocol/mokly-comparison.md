@@ -207,8 +207,8 @@ Entries are path-keyed: kind, path, `previousPath` on moved pairs, metadata
 reasons, views, and component variants grouped under their parent. Every
 evidence record names its owner. Serve, the static build, and publication
 project the same snapshot. The generated
-[`CatalogueReadModel`](../../packages/viewer/src/generated/catalogue/CatalogueReadModel.ts)
-and [`EntryDetailV4`](../../packages/viewer/src/generated/catalogue/EntryDetailV4.ts)
+[`CatalogueReadModel`](../../packages/model/src/generated/catalogue/CatalogueReadModel.ts)
+and [`EntryDetailV4`](../../packages/model/src/generated/catalogue/EntryDetailV4.ts)
 types define the index and the detail.
 
 `ignoredIds` lists the sorted unique ids of paired ignore regions removed for

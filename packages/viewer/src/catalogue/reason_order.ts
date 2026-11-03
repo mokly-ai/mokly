@@ -4,9 +4,10 @@
  * producer sorts them.
  */
 
-import type { EntryChangeReason } from "../generated/catalogue/EntryChangeReason.js";
+import type { EntryChangeReason } from "@mokly/model";
 
 /** One reason's sort key: its kind, a separator, then its target. */
+
 function reasonKey(reason: EntryChangeReason): string {
   return `${reason.kind}\u0000${
     reason.kind === "dependency"

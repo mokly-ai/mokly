@@ -1,6 +1,7 @@
-import type { CatalogueUsage } from "../catalogue/types.js";
+import type { CatalogueUsage } from "@mokly/model";
 
 /** Finite CSS pixels in the immediate frame's visible content viewport. */
+
 export interface Box {
   x: number;
   y: number;

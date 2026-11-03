@@ -3,13 +3,14 @@
  * nothing here enters catalogue data.
  */
 
+import { RENDERS_PATH, RENDER_ID } from "@mokly/model";
+
 import {
   readInstance,
   readProps,
   readRange,
   readSlot,
 } from "../catalogue/component_values.js";
-import { RENDER_ID, RENDERS_PATH } from "../catalogue/delivery_paths.js";
 import { array, counter, object, string } from "../catalogue/values.js";
 import {
   ComponentRenderError,

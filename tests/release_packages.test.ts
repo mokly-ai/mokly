@@ -9,7 +9,10 @@ import { validatePackageManifest } from "../scripts/release/manifest.mjs";
 import { checkViewerPackage } from "../scripts/release/viewer.mjs";
 
 import { repositoryRoot } from "./helpers/fixture.js";
-import { viewerPackageReport } from "./helpers/release_fixture.js";
+import {
+  modelPackageReport,
+  viewerPackageReport,
+} from "./helpers/release_fixture.js";
 
 const archive = (await import(
   pathToFileURL(
@@ -23,37 +26,56 @@ const archive = (await import(
   inspectRuntimeLicenses(root: string): Promise<void>;
 };
 
-test("the viewer archive requires its runtime, styles, declarations, and licence", () => {
-  const report = viewerPackageReport();
-  archive.validatePackageReport(report);
-  for (const file of [
-    "dist/index.js",
-    "dist/index.d.ts",
-    "dist/browser.js",
-    "dist/data.js",
-    "dist/styles.css",
-    "LICENSE",
-  ])
+for (const { name, createReport, required } of [
+  {
+    name: "@mokly/viewer",
+    createReport: viewerPackageReport,
+    required: [
+      "dist/index.js",
+      "dist/index.d.ts",
+      "dist/browser.js",
+      "dist/data.js",
+      "dist/styles.css",
+      "LICENSE",
+    ],
+  },
+  {
+    name: "@mokly/model",
+    createReport: modelPackageReport,
+    required: ["dist/index.js", "dist/index.d.ts", "LICENSE"],
+  },
+]) {
+  test(`${name} archive requires its public runtime, declarations, and licence`, () => {
+    const report = createReport();
+    archive.validatePackageReport(report, name);
+    for (const file of required)
+      assert.throws(
+        () =>
+          archive.validatePackageReport(
+            {
+              ...report,
+              files: report.files.filter((item) => item.path !== file),
+            },
+            name,
+          ),
+        /missing/,
+      );
     assert.throws(
       () =>
-        archive.validatePackageReport({
-          ...report,
-          files: report.files.filter((item) => item.path !== file),
-        }),
-      /missing/,
+        archive.validatePackageReport(
+          {
+            ...report,
+            files: [...report.files, { path: "src/private.ts", size: 1 }],
+          },
+          name,
+        ),
+      /non-allowlisted/,
     );
-  assert.throws(
-    () =>
-      archive.validatePackageReport({
-        ...report,
-        files: [...report.files, { path: "src/private.ts", size: 1 }],
-      }),
-    /non-allowlisted/,
-  );
-  assert.throws(() =>
-    archive.validatePackageReport({ ...report, name: "@mokly/mokly" }),
-  );
-});
+    assert.throws(() =>
+      archive.validatePackageReport({ ...report, name: "@mokly/mokly" }, name),
+    );
+  });
+}
 
 test("runtime licence inspection resolves workspace links and rejects missing licences", async (t) => {
   const root = await fs.mkdtemp(
@@ -82,8 +104,8 @@ test("runtime licence inspection resolves workspace links and rejects missing li
   }
 });
 
-test("the viewer manifest enforces its public release boundaries", async () => {
-  for (const relative of ["packages/viewer"]) {
+test("the viewer and model manifests enforce their public release boundaries", async () => {
+  for (const relative of ["packages/viewer", "packages/model"]) {
     const original = JSON.parse(
       await fs.readFile(
         path.join(repositoryRoot, relative, "package.json"),
@@ -108,21 +130,45 @@ test("the viewer manifest enforces its public release boundaries", async () => {
         value.files.push("src");
       },
       (value) => {
-        delete value.peerDependencies["react-dom"];
-      },
-      (value) => {
         value.dependencies = { other: "workspace:*" };
       },
       (value) => {
         value.dependencies = { other: "file:../other" };
       },
-      (value) => {
-        delete value.dependencies["@mokly/ui"];
-      },
-      (value) => {
-        value.dependencies["@mokly/ui"] = "^0.16.1";
-      },
     ];
+    if (relative === "packages/viewer")
+      invalid.push(
+        (value) => {
+          delete value.peerDependencies["react-dom"];
+        },
+        (value) => {
+          delete value.dependencies["@mokly/ui"];
+        },
+        (value) => {
+          value.dependencies["@mokly/ui"] = "^0.16.1";
+        },
+        (value) => {
+          delete value.dependencies["@mokly/model"];
+        },
+        (value) => {
+          value.dependencies["@mokly/model"] = "^0.18.0";
+        },
+      );
+    else
+      invalid.push(
+        (value) => {
+          value.optionalDependencies = { "@mokly/mokly": "0.18.0" };
+        },
+        (value) => {
+          value.dependencies = { "@mokly/frame": "0.18.0" };
+        },
+        (value) => {
+          value.peerDependencies = { "@mokly/viewer": "0.18.0" };
+        },
+        (value) => {
+          value.exports["./private"] = value.exports["."];
+        },
+      );
     for (const mutate of invalid) {
       const changed = structuredClone(original);
       mutate(changed);

@@ -78,7 +78,7 @@ each with the `removed` state. Pages and documents have no comparison
 record; their documents are delivered the same way. A removed page or
 document also carries the removed preview metadata at
 `previews/<path>/index.json` inside the generation. The
-[generated `RemovedPagePreview` type](../../packages/viewer/src/generated/catalogue/RemovedPagePreview.ts)
+[generated `RemovedPagePreview` type](../../packages/model/src/generated/catalogue/RemovedPagePreview.ts)
 is its shape. It names the entry's path and the base commit of the
 generation; readers accept only the version of the
 [format inventory](./mokly-format-versions.md).
@@ -101,8 +101,8 @@ current files never replace historical bytes.
 
 The removed record of the [catalogue index](./mokly-catalogue.md) carries
 `snapshotId` and the optional `preview` descriptor. The generated
-[`RemovedEntry`](../../packages/viewer/src/generated/catalogue/RemovedEntry.ts)
-and [`RemovedPreview`](../../packages/viewer/src/generated/catalogue/RemovedPreview.ts)
+[`RemovedEntry`](../../packages/model/src/generated/catalogue/RemovedEntry.ts)
+and [`RemovedPreview`](../../packages/model/src/generated/catalogue/RemovedPreview.ts)
 types are the shapes.
 
 `snapshotId` is the opaque identity the

@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
+import type { CatalogueReadModel } from "../packages/model/dist/index.js";
 import { readCatalogueIndex } from "../packages/viewer/src/catalogue/index_reader.js";
-import type { CatalogueReadModel } from "../packages/viewer/src/catalogue/types.js";
 import { ComponentValidationError } from "../packages/viewer/src/components/data.js";
 
 type Mutable<T> = T extends readonly (infer Item)[]

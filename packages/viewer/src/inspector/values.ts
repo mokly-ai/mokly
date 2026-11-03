@@ -1,9 +1,11 @@
+import { isEntryPath } from "@mokly/model";
+
 import type {
   Box,
   FrameNavigation,
   NavigationTarget,
 } from "../client/frame_adapter.js";
-import { isEntryPath } from "../navigation/logical.js";
+
 /** Small, shared validators; no DOM or server dependency enters the wire schema. */
 
 /**

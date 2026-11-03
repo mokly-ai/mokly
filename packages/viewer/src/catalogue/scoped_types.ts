@@ -2,7 +2,6 @@
 
 import type {
   CatalogueComponent,
-  EntryDetailV4,
   CatalogueDocument,
   CataloguePage,
   CatalogueReadModel,
@@ -10,12 +9,14 @@ import type {
   CatalogueUsage,
   CatalogueUseCase,
   CatalogueView,
+  EntryDetailV4,
   RemovedEntry,
   ReviewState,
   ViewEvidence,
-} from "./types.js";
+} from "@mokly/model";
 
 /** Detail usage, or `omitted` while the shell holds no detail for the entry. */
+
 export type ShellCatalogueUsage =
   CatalogueUsage | { readonly status: "omitted" };
 

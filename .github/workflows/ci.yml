@@ -257,6 +257,8 @@ jobs:
         run: npm ci
       - name: Build UI package
         run: npm run build --workspace @mokly/ui
+      - name: Build model package
+        run: npm run build --workspace @mokly/model
       - name: Build viewer package
         run: npm run build --workspace @mokly/viewer
       - name: Build sidecar package

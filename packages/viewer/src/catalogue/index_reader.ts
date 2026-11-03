@@ -1,17 +1,18 @@
 /** The catalogue index v9 reader: the version gate first, then every field. */
 
-import { invalidData, record } from "../components/data.js";
-
-import { CHANGE_STATUSES, readEntry } from "./entry_reader.js";
-import { assertPublicIndex } from "./privacy.js";
-import { validateCatalogueReferences } from "./references.js";
 import type {
   CatalogueNode,
   CatalogueReadModel,
   CatalogueRecord,
   RemovedEntry,
-  RemovedEntryPreview,
-} from "./types.js";
+} from "@mokly/model";
+
+import { invalidData, record } from "../components/data.js";
+
+import { CHANGE_STATUSES, readEntry } from "./entry_reader.js";
+import { assertPublicIndex } from "./privacy.js";
+import { validateCatalogueReferences } from "./references.js";
+import type { RemovedEntryPreview } from "./types.js";
 import {
   array,
   choice,

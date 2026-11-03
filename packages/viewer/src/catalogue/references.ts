@@ -1,17 +1,18 @@
 /** Relationship rules of the catalogue index v9, checked after every field. */
 
-import { canonicalJson, invalidData } from "../components/data.js";
-import { firstPathCaseCollision } from "../navigation/logical.js";
-import { VIEWPORTS } from "../registry/views.js";
-
-import { validateCatalogueTree } from "./tree_validation.js";
+import { firstPathCaseCollision } from "@mokly/model";
 import type {
   CatalogueComponent,
   CatalogueDocument,
   CatalogueReadModel,
   CatalogueRecord,
   CatalogueScreen,
-} from "./types.js";
+} from "@mokly/model";
+
+import { canonicalJson, invalidData } from "../components/data.js";
+import { VIEWPORTS } from "../registry/views.js";
+
+import { validateCatalogueTree } from "./tree_validation.js";
 import { unique } from "./values.js";
 
 /** Validate the index relationships, including current and removed records. */

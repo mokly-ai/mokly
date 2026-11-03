@@ -3,11 +3,12 @@
 import type {
   CatalogueComponent,
   CatalogueDetails,
-} from "../catalogue/types.js";
-import type { ColorScheme } from "../data/axes.js";
+  ColorScheme,
+  ComponentControl,
+  PropSchema,
+} from "@mokly/model";
 
-import type { ComponentControl } from "./control_types.js";
-import type { ComponentWireProps, PropSchema } from "./prop_types.js";
+import type { ComponentWireProps } from "./prop_types.js";
 import type { ComponentViewRecord } from "./view_types.js";
 
 /** Component metadata accepted by existing hosts. */

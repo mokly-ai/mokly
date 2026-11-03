@@ -6,11 +6,9 @@
 
 import { renderToStaticMarkup } from "react-dom/server";
 
+import type { CatalogueReadModel, EntryDetailV4 } from "@mokly/model";
+
 import type { DetailRequest } from "../src/catalogue/detail_fences.js";
-import type {
-  CatalogueReadModel,
-  EntryDetailV4,
-} from "../src/catalogue/types.js";
 import type { ShellContext } from "../src/shell/context.js";
 import { routeFromUrl } from "../src/shell/routes.js";
 import { ShellStoreProvider } from "../src/shell/store.js";

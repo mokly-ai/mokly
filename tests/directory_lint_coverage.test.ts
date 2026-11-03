@@ -82,11 +82,13 @@ for (const filePath of directoryProbes)
   });
 
 test("only the directory definition module is exempt for both names", async () => {
-  const owner = "packages/viewer/src/catalogue/delivery_paths.ts";
+  const owner = "packages/model/src/catalogue/delivery_paths.ts";
   await requireLintRule(owner, "import/first");
   const source = 'export const roots = ["mokly-generated", "mokly-viewer"];';
   assert.deepEqual((await lintProbe(source, owner)).messages, []);
   for (const file of [
+    "packages/model/src/lint-coverage-probe.ts",
+    "packages/viewer/src/catalogue/delivery_paths.ts",
     "packages/viewer/src/catalogue/lint-coverage-probe.ts",
     "packages/viewer/src/client/delivery_paths.ts",
   ]) {

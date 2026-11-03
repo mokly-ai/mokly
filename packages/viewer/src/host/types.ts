@@ -1,7 +1,8 @@
 import type { CSSProperties, ReactNode, Ref } from "react";
 
+import type { CatalogueReadModel } from "@mokly/model";
+
 import type { DetailSource, IndexSource } from "../catalogue/sources.js";
-import type { CatalogueReadModel } from "../catalogue/types.js";
 import type {
   Box,
   FrameAdapter,

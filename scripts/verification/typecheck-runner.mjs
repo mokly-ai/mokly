@@ -8,6 +8,7 @@ const projects = [
   { project: "packages/mokly/tsconfig.json", directory: "." },
   { project: "tsconfig.json", directory: "." },
   { project: "packages/ui/tsconfig.json", directory: "packages/ui" },
+  { project: "packages/model/tsconfig.json", directory: "packages/model" },
   { project: "packages/viewer/tsconfig.json", directory: "packages/viewer" },
   { project: "tsconfig.scripts-declarations.json", directory: "." },
 ];

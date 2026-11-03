@@ -52,3 +52,20 @@ export function uiPackageReport(): PackageReport {
     ].map((path) => ({ path, size: 1 })),
   };
 }
+
+export function modelPackageReport(): PackageReport {
+  return {
+    integrity: `sha512-${"e".repeat(12)}`,
+    shasum: "f".repeat(40),
+    name: "@mokly/model",
+    version: "0.18.0",
+    files: [
+      "dist/index.js",
+      "dist/index.d.ts",
+      "README.md",
+      "CHANGELOG.md",
+      "LICENSE",
+      "package.json",
+    ].map((path) => ({ path, size: 1 })),
+  };
+}

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import type { EntryDetailV4 } from "../../packages/viewer/dist/catalogue/types.js";
+import type { EntryDetailV4 } from "../../packages/model/dist/index.js";
 import type { ReviewView } from "../../packages/viewer/dist/review/types.js";
 import type { RemovedPreviewData } from "../../packages/viewer/dist/shell/previews.js";
 

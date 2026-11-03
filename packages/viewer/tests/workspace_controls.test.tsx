@@ -11,7 +11,8 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type { ColorScheme } from "../src/data/axes.js";
+import type { ColorScheme } from "@mokly/model";
+
 import { ShellIdentifierProvider } from "../src/shell/identifier_context.js";
 import type { ChangedView } from "../src/shell/view_marks.js";
 import { WorkspaceControls } from "../src/shell/workspace_controls.js";

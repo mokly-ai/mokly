@@ -1,19 +1,18 @@
-import { decodeProps, encodeProps } from "../components/codec.js";
-import type { ComponentControl } from "../components/control_types.js";
-import { validateControls } from "../components/controls.js";
-import { invalidData, plainKeys, record } from "../components/data.js";
-import { validatePropSchema } from "../components/profile_schema.js";
 import type {
-  ComponentWireProps,
-  PropSchema,
-} from "../components/prop_types.js";
-import { validateProps } from "../components/props.js";
-import type {
+  ComponentControl,
   ComponentInputOwner,
   ComponentInstanceRecord,
   ComponentRangeRecord,
   ComponentSlotRecord,
-} from "../components/view_types.js";
+  PropSchema,
+} from "@mokly/model";
+
+import { decodeProps, encodeProps } from "../components/codec.js";
+import { validateControls } from "../components/controls.js";
+import { invalidData, plainKeys, record } from "../components/data.js";
+import { validatePropSchema } from "../components/profile_schema.js";
+import type { ComponentWireProps } from "../components/prop_types.js";
+import { validateProps } from "../components/props.js";
 
 import {
   choice,

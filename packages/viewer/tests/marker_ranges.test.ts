@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { CatalogueUsage } from "../src/catalogue/types.js";
+import type { CatalogueUsage } from "@mokly/model";
+
 import { inspection } from "../src/inspector/inspection.js";
 import { compactRanges } from "../src/inspector/metadata.js";
 import { documentRanges } from "../src/inspector/ranges.js";

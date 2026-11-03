@@ -6,7 +6,12 @@ import { promisify } from "node:util";
 const execute = promisify(execFile);
 
 export async function discoverNodeFiles(repositoryRoot) {
-  const roots = ["tests", "packages/viewer/tests", "packages/ui/tests"];
+  const roots = [
+    "tests",
+    "packages/viewer/tests",
+    "packages/ui/tests",
+    "packages/model/tests",
+  ];
   const files = [];
   for (const root of roots)
     await collectFiles(path.join(repositoryRoot, root), repositoryRoot, files);

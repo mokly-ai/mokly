@@ -108,7 +108,7 @@ descriptor. A static build has no `live` field. The index is canonical JSON.
 One detail exists per entry: under `mokly-viewer/entries/` for a current
 entry, and under the comparison generation that records a removed entry.
 
-The [generated entry detail v4 type](../../packages/viewer/src/generated/catalogue/EntryDetailV4.ts)
+The [generated entry detail v4 type](../../packages/model/src/generated/catalogue/EntryDetailV4.ts)
 defines the detail, view, evidence, and workspace shapes.
 A screen or component detail includes `controlOrder`, listing every editable
 property exactly once in the [control declaration order](./mokly-component-controls.md).
@@ -167,7 +167,7 @@ is proven. Pending or unavailable consumer usage cannot prove a complete list.
 
 ## Live Descriptor
 
-The [generated `LiveDescriptorV3` type](../../packages/viewer/src/generated/catalogue/LiveDescriptorV3.ts)
+The [generated `LiveDescriptorV3` type](../../packages/model/src/generated/catalogue/LiveDescriptorV3.ts)
 defines the descriptor. Its `generation` equals the index's `live.generation`.
 
 Serve supplies the component controls contract's render generation and capability

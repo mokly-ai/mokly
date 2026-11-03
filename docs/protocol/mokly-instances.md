@@ -136,9 +136,9 @@ error, not a fourth resolution state.
 
 An instance record may carry its invocation site in its optional `source`
 field. The generated
-[`ComponentInstanceRecord`](../../packages/viewer/src/generated/catalogue/ComponentInstanceRecord.ts)
+[`ComponentInstanceRecord`](../../packages/model/src/generated/catalogue/ComponentInstanceRecord.ts)
 and
-[`ComponentSourceLocation`](../../packages/viewer/src/generated/catalogue/ComponentSourceLocation.ts)
+[`ComponentSourceLocation`](../../packages/model/src/generated/catalogue/ComponentSourceLocation.ts)
 types are the shapes.
 
 `path` is a nonempty repository-relative POSIX path to the invocation site,

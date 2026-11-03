@@ -6,10 +6,10 @@
 
 import { useContext, useMemo } from "react";
 
+import { VIEWER_DIRECTORY } from "@mokly/model";
 import { PhoneFrame } from "@mokly/ui/device-frame";
 import { PreviewFrame, PreviewIframe } from "@mokly/ui/preview-frame";
 
-import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
 import type {
   ShellCatalogueRoutedEntry,
   ShellCatalogueView,

@@ -1,9 +1,9 @@
 /** The removed page and document preview metadata v3 of a comparison generation. */
 
+import type { RemovedPagePreview } from "@mokly/model";
+
 import { commitId, entryPath, string } from "../catalogue/values.js";
 import { invalidData, record } from "../components/data.js";
-
-import type { RemovedPagePreview } from "./types.js";
 
 const FIELDS = ["schemaVersion", "baseRef", "baseCommit", "path"];
 

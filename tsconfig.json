@@ -30,6 +30,8 @@
     "tests/**/*.tsx",
     "examples/**/*.ts",
     "examples/**/*.tsx",
+    "packages/model/src/**/*.ts",
+    "packages/model/tests/**/*.ts",
     "packages/viewer/src/**/*.ts",
     "packages/viewer/src/**/*.tsx",
     "packages/viewer/tests/**/*.ts",

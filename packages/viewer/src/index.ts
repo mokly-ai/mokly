@@ -7,8 +7,9 @@ export type {
   isComponentVariantMetadata as isManifestComponentVariant,
 } from "./components/public_types.js";
 export type * from "./components/prop_types.js";
-export type * from "./components/control_types.js";
-export type * from "./data/axes.js";
+export type { ComponentControl, ColorScheme, Viewport } from "@mokly/model";
+export type { ComponentControlLabel } from "./components/control_types.js";
+
 export { readCatalogueIndex } from "./catalogue/index_reader.js";
 export { readEntryDetail } from "./catalogue/detail_reader.js";
 export { MoklyVersionError } from "./catalogue/version_error.js";

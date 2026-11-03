@@ -31,6 +31,25 @@ export function validateUiReport(report) {
     );
 }
 
+/** The model package: its root entry, declarations, metadata, and `dist` only. */
+export function validateModelReport(report) {
+  const files = report.files.map(({ path }) => path);
+  for (const file of [
+    ...METADATA,
+    "CHANGELOG.md",
+    "dist/index.js",
+    "dist/index.d.ts",
+  ])
+    assert.ok(files.includes(file), `model package is missing ${file}`);
+  for (const file of files)
+    assert.ok(
+      METADATA.includes(file) ||
+        file === "CHANGELOG.md" ||
+        file.startsWith("dist/"),
+      `model package contains non-allowlisted path ${file}`,
+    );
+}
+
 export function validateCliReport(report) {
   const files = report.files.map(({ path }) => path);
   for (const file of [

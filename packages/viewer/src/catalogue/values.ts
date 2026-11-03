@@ -1,11 +1,11 @@
-import { invalidData, record } from "../components/data.js";
 import {
+  VIEWER_DIRECTORY,
   isEntryPath,
   isKebabCase,
   isSafeRepositoryPath,
-} from "../navigation/logical.js";
+} from "@mokly/model";
 
-import { VIEWER_DIRECTORY } from "./delivery_paths.js";
+import { invalidData, record } from "../components/data.js";
 
 export function object(value: unknown): Record<string, unknown> {
   if (!record(value)) invalidData("$catalogue", "expected an object");

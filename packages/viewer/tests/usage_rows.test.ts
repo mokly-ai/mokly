@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { UsageLink } from "../src/shell/workspace_data.js";
+import type { UsageLink } from "@mokly/model";
+
 import { usageRows } from "../src/shell/workspace_usage.js";
 
 /** One Used by link of the consumer screen, with chosen fields replaced. */

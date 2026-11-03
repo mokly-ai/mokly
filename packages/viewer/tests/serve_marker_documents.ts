@@ -5,7 +5,7 @@
  * `components/button`.
  */
 
-import type { CatalogueUsage } from "../src/catalogue/types.js";
+import type { CatalogueUsage } from "@mokly/model";
 
 type Ranges = Extract<CatalogueUsage, { status: "ready" }>["ranges"];
 

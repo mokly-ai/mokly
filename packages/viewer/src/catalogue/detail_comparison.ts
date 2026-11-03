@@ -3,11 +3,12 @@
  * ignore ids, which travel with its evidence, and the base side's address.
  */
 
+import { isKebabCase } from "@mokly/model";
+import type { ReviewEntryAddress, ReviewState } from "@mokly/model";
+
 import { invalidData } from "../components/data.js";
-import { isKebabCase } from "../navigation/logical.js";
 
 import { readProps } from "./component_values.js";
-import type { ReviewEntryAddress, ReviewState } from "./types.js";
 import { array, choice, entryPath, object, string, text } from "./values.js";
 
 const STATES = [

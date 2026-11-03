@@ -2,7 +2,8 @@
 
 import type { Root } from "react-dom/client";
 
-import type { CatalogueUsage } from "../src/catalogue/types.js";
+import type { CatalogueUsage } from "@mokly/model";
+
 import type {
   FrameAdapter,
   MountedFrame,

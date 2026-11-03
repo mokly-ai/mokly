@@ -1,7 +1,8 @@
 /** Saved and temporary preview context selection for one workspace. */
 
+import type { ColorScheme, Viewport } from "@mokly/model";
+
 import type { GeneratedComponentView } from "../components/views.js";
-import type { ColorScheme, Viewport } from "../data/axes.js";
 import { viewAxesKey, viewsUsingComponents } from "../review/shared_impact.js";
 
 import { schemeValue } from "./scheme_fallback.js";

@@ -2,10 +2,10 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
+import type { CatalogueReadModel } from "@mokly/model";
 import { RootState, ShellLayout } from "@mokly/ui/shell-layout";
 
 import { deploymentCheck } from "../catalogue/sources.js";
-import type { CatalogueReadModel } from "../catalogue/types.js";
 import { MoklyVersionError } from "../catalogue/version_error.js";
 import type { ComparisonEnvironment } from "../shell/comparison_context.js";
 import { storedScrollTogether } from "../shell/comparison_scroll_preference.js";

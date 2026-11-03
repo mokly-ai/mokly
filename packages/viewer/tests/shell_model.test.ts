@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { ViewEvidence } from "@mokly/model";
+
 import type {
   ShellCatalogueScreen,
   ShellCatalogueReadModel,
 } from "../src/catalogue/scoped_types.js";
-import type { ViewEvidence } from "../src/catalogue/types.js";
 import { viewEvidenceReasons } from "../src/review/view_evidence.js";
 
 import {

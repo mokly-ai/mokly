@@ -21,7 +21,7 @@ fn exact_generated_bytes_pass_without_writes_or_native_host_lookup() {
                     .map(|(path, _)| path)
                     .filter(|path| path.parent() == Some(directory))
                     .collect();
-                if directory == Path::new("/workspace/packages/viewer/src/generated") {
+                if directory == Path::new("/workspace/packages/model/src/generated") {
                     paths.push(directory.join("catalogue"));
                 }
                 Ok(paths)
@@ -54,10 +54,10 @@ fn stale_generated_sources_fail_after_the_byte_comparison() {
     let files = Arc::new(Unimock::new((
         ReadMock.each_call(matching!(_)).answers(&generated_bytes),
         EntriesMock
-            .next_call(matching!((path) if *path == Path::new("/workspace/packages/viewer/src/generated")))
+            .next_call(matching!((path) if *path == Path::new("/workspace/packages/model/src/generated")))
             .returns(Ok(Vec::new())),
         EntriesMock
-            .next_call(matching!((path) if *path == Path::new("/workspace/packages/viewer/src/generated/catalogue")))
+            .next_call(matching!((path) if *path == Path::new("/workspace/packages/model/src/generated/catalogue")))
             .returns(Ok(Vec::new())),
         EntriesMock
             .next_call(matching!((path) if *path == Path::new("/workspace/packages/mokly/src/generated/sidecar")))
@@ -72,7 +72,7 @@ fn stale_generated_sources_fail_after_the_byte_comparison() {
 #[test]
 fn missing_catalogue_source_fails_the_byte_comparison() {
     let expected =
-        PathBuf::from("/workspace/packages/viewer/src/generated/catalogue/CatalogueReadModel.ts");
+        PathBuf::from("/workspace/packages/model/src/generated/catalogue/CatalogueReadModel.ts");
     let files = Arc::new(Unimock::new(ReadMock.each_call(matching!(_)).answers(
         &|mock, path| {
             if path.ends_with("catalogue/CatalogueReadModel.ts") {
@@ -90,17 +90,17 @@ fn missing_catalogue_source_fails_the_byte_comparison() {
 
 #[test]
 fn catalogue_directory_is_allowed_but_its_stale_sources_fail() {
-    let stale = PathBuf::from("/workspace/packages/viewer/src/generated/catalogue/stale.ts");
+    let stale = PathBuf::from("/workspace/packages/model/src/generated/catalogue/stale.ts");
     let files = Arc::new(Unimock::new((
         ReadMock.each_call(matching!(_)).answers(&generated_bytes),
         EntriesMock
             .each_call(matching!(_))
             .answers(&|_, directory| {
                 Ok(
-                    if directory == Path::new("/workspace/packages/viewer/src/generated") {
+                    if directory == Path::new("/workspace/packages/model/src/generated") {
                         vec![directory.join("catalogue")]
                     } else if directory
-                        == Path::new("/workspace/packages/viewer/src/generated/catalogue")
+                        == Path::new("/workspace/packages/model/src/generated/catalogue")
                     {
                         vec![directory.join("stale.ts")]
                     } else {

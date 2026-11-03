@@ -1,12 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { CatalogueReadModel, EntryDetailV4 } from "@mokly/model";
+
 import { fenceDetail } from "../src/catalogue/detail_fences.js";
 import { readEntryDetail } from "../src/catalogue/detail_reader.js";
-import type {
-  CatalogueReadModel,
-  EntryDetailV4,
-} from "../src/catalogue/types.js";
 import { loadFencedDetail } from "../src/shell/data_requests.js";
 import type { ShellDataSource } from "../src/shell/data_source.js";
 

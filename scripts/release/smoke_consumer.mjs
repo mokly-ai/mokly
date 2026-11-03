@@ -13,11 +13,15 @@ export async function installConsumer(root, packages, execute = runCommand) {
   );
   assert.ok(host, "consumer smoke requires a supported host");
   const selected = packages.filter(({ report }) =>
-    [host.name, "@mokly/mokly", "@mokly/viewer", "@mokly/ui"].includes(
-      report.name,
-    ),
+    [
+      host.name,
+      "@mokly/mokly",
+      "@mokly/viewer",
+      "@mokly/ui",
+      "@mokly/model",
+    ].includes(report.name),
   );
-  assert.equal(selected.length, 4);
+  assert.equal(selected.length, 5);
   await fs.writeFile(
     path.join(root, "package.json"),
     JSON.stringify(

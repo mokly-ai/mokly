@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 
-import type { CatalogueUsage } from "../../packages/viewer/src/catalogue/types.js";
+import type { CatalogueUsage } from "../../packages/model/dist/index.js";
 import type { MountedFrame } from "../../packages/viewer/src/client/frame_adapter.js";
 import type * as PostAdapter from "../../packages/viewer/src/client/post_message_adapter.js";
 import type * as LocalAdapter from "../../packages/viewer/src/client/same_origin_adapter.js";

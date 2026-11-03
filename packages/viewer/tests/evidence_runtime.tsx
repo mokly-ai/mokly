@@ -4,12 +4,13 @@ import type { RefObject } from "react";
 import { useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
+import type { CatalogueUsage } from "@mokly/model";
+
 import type {
   ShellCatalogueScreen,
   ShellCatalogueView,
 } from "../src/catalogue/scoped_types.js";
 import type { LoadedIndex } from "../src/catalogue/sources.js";
-import type { CatalogueUsage } from "../src/catalogue/types.js";
 import type {
   MoklyViewerHandle,
   MoklyViewerProps,

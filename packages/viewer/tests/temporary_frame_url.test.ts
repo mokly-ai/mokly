@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { CatalogueUsage } from "../src/catalogue/types.js";
+import type { CatalogueUsage } from "@mokly/model";
+
 import { FrameError } from "../src/client/frame_error.js";
 import { temporaryFrameUrl } from "../src/client/frame_mount.js";
 

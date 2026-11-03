@@ -1,9 +1,10 @@
 /** The live descriptor v3 reader: the version gate first, then the capability. */
 
+import { VIEWER_DIRECTORY } from "@mokly/model";
+import type { LiveDescriptorV3 } from "@mokly/model";
+
 import { invalidData, record } from "../components/data.js";
 
-import { VIEWER_DIRECTORY } from "./delivery_paths.js";
-import type { LiveDescriptorV3 } from "./types.js";
 import { hash, object, string } from "./values.js";
 import { MoklyVersionError } from "./version_error.js";
 

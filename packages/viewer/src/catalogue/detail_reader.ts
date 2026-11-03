@@ -1,5 +1,16 @@
 /** The entry detail v4 reader: the version gate first, then every field. */
 
+import type {
+  CatalogueUsage,
+  DetailView,
+  EntryDetailV4,
+  EvidenceOwner,
+  InputChange,
+  UsageLink,
+  ViewEvidence,
+  Workspace,
+} from "@mokly/model";
+
 import { invalidData, record } from "../components/data.js";
 
 import {
@@ -11,16 +22,6 @@ import {
 import { readBaseAddress, readViewComparison } from "./detail_comparison.js";
 import { readDetailReasons } from "./detail_reasons.js";
 import { assertPublicDetail } from "./privacy.js";
-import type {
-  CatalogueUsage,
-  DetailView,
-  EntryDetailV4,
-  EvidenceOwner,
-  InputChange,
-  UsageLink,
-  ViewEvidence,
-  Workspace,
-} from "./types.js";
 import {
   array,
   boolean,

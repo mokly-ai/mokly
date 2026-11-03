@@ -17,7 +17,7 @@ const sourceFiles = [
 ];
 
 /** Contract roots are independent of config contents so narrowed globs fail coverage. */
-export const directoryRoots = ["packages/viewer/src/"];
+export const directoryRoots = ["packages/viewer/src/", "packages/model/src/"];
 
 /** One matching extension per folder, including folders whose files need no literals. */
 export const directoryProbes = [
