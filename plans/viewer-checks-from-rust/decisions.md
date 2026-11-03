@@ -90,7 +90,8 @@ plan deletes this file with the plan.
   renders, at a cost that the viewer can carry? The options check widened the
   first question, which had each place run the rules itself.
 - **Options:** The letters A to H follow the follow-up item. The trial added
-  I, J, and K. The options check added L, M, and N.
+  I, J, and K. The options check added L, M, and N. Option O came from a
+  question about option G on 2026-11-03. No options check ran over it.
   - **A.** Change nothing, and keep two implementations. Effort: Small.
   - **D.** Ship the slim reader as a `.wasm` file. It adds about 240 KB
     gzip, and its reads in Node were faster than today's. Each host with a
@@ -155,6 +156,13 @@ plan deletes this file with the plan.
     sidecar starts, and the viewer keeps its size and speed. The engine adds
     C code to each of the five native builds. An interpreter without a JIT
     compiler runs the checks many times slower than Node. Effort: Large.
+  - **O.** Apply option G, and give the wrapper the slim Rust validator as a
+    `.wasm` file in `@mokly/mokly`. Node has no content security policy, and
+    it compiles the file synchronously. The prop-schema rules then have one
+    copy. It brings back the Rust-to-WebAssembly build. `./data` drops its
+    validators, which are published exports. Serve's live edits then lose
+    the instant field check in the browser, and they wait for the Rust check
+    of Serve's render route. Effort: Large.
 - **Left out:**
   - Trust the JSON everywhere: it breaks the check requirement for the
     embedded entry, whose reason holds, because Mokly Cloud renders uploaded
@@ -168,8 +176,8 @@ plan deletes this file with the plan.
     rules becomes a third programming language.
   - A worker thread for the check: the catalogue still waits for the check,
     so the size and the time to content stay the same.
-- **Wider fix:** Any option with one implementation: D, F, H, I, K, L, M, or
-  N. M also removes the second run of the rules on bytes that the core
+- **Wider fix:** Any option with one implementation: D, F, H, I, K, L, M, N,
+  or O. M also removes the second run of the rules on bytes that the core
   already checked. J only detects drift where a case exists.
 - **Previous examples:**
   - Default 12 C of the Rust rebuild plan, of 2026-10-20, kept the
