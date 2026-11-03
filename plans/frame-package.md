@@ -16,7 +16,7 @@ This change does four things, in this order:
 - It merges the two event runtimes into one shared event core, while the
   code is still in the viewer.
 - It moves the catalogue rules and types that the frame code shares with the
-  viewer into a new lockstep package, the model package.
+  viewer into a new lockstep package, `@mokly/model`.
 - It moves the frame code into a new lockstep package, `@mokly/frame`.
 - It renames the in-frame inspector to the frame probe, published names
   included.
@@ -28,8 +28,8 @@ origins, such as the `mokly-app://desktop` origin of Mokly Cloud.
 
 Contract owners:
 
-- `docs/protocol/mokly-frame-package.md` and the model package contract,
-  which Milestone 1 adds.
+- `docs/protocol/mokly-frame-package.md` and
+  `docs/protocol/mokly-model-package.md`, which Milestone 1 adds.
 - The [viewer frame adapter](../docs/protocol/mokly-frame-adapter.md).
 - The [viewer selection contract](../docs/protocol/mokly-viewer-selection.md).
 - The [published inspector](../docs/protocol/mokly-published-inspector.md)
@@ -86,8 +86,7 @@ Replaced ways:
   viewer pass the rules in, and E, build one private source into each
   package. The agent recommended A, because the shared code is small. The
   user chose B, so that each rule has one home that later packages can use.
-  The user questioned the name `@mokly/model`. Decision 5 below asks for
-  the name.
+  The user questioned the name `@mokly/model`, and decision 5 kept it.
 - **Decision 1, 2026-11-03: share one event runtime between both frame
   adapters.** The user chose B. The alternatives were A, change nothing, C,
   always use `postMessageAdapter` with a second real origin, D, always use
@@ -102,175 +101,22 @@ Replaced ways:
 - **One plan, 2026-11-03.** The user asked for one plan. The shared event
   runtime first had its own plan, which ran after the move. This plan now
   holds both, and the runtime merge comes first.
-
-### 6. Hover during a highlight differs by adapter
-
-- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small.
-- **Source:** Review.
-- **Category:** Product bug.
-- **Location:** `packages/viewer/src/inspector/runtime.ts:57`,
-  `packages/viewer/src/client/same_origin_pointer.ts:22`, and
-  `docs/protocol/mokly-viewer-selection.md:91-94`.
-- **Terms:**
-  - **Highlight:** the viewer mode that masks and labels chosen component
-    instances in a preview frame. A host starts it with `highlightInstance`
-    or `highlightInstances`.
-  - **Pick:** the viewer mode in which the user chooses one instance. A host
-    starts it with `startPick`.
-- **Background:**
-  - The viewer passes each hover event of a frame to the public
-    `onInstanceHover` callback, in
-    `packages/viewer/src/viewer/host_bridge_events.ts:69`. No product host
-    passes this callback today. Mokly Cloud passes no instance callback,
-    and the standalone shell passes none. Only two test hosts use it.
-  - During a highlight or a pick, the frame probe reports hover only for the
-    highlighted or pickable keys. The filter
-    `(!active || keys.includes(key))` at `runtime.ts:57` applies to hover
-    and to click.
-  - The same-origin adapter reports hover for every instance in every mode,
-    from the full boundary list.
-  - Both adapters limit clicks to the highlighted or pickable keys while a
-    highlight or a pick is active, and cancel the default action of those
-    clicks.
-  - When instances nest, the frame probe names the first key in digest
-    order, so a pointer on a Button inside a Card can name either one. The
-    same-origin pick names the innermost instance.
-  - `docs/protocol/mokly-viewer-selection.md:91-94` says that every
-    current, visible frame with ready usage can emit hover and click
-    events, independent of an explicit highlight's mask and label scope.
-    The sentence came with the rule for unavailable sibling frames, so it
-    is about frames, not instances. No test covers hover during a highlight
-    or a pick.
-- **Problem:** A host gets different hover events from the same page,
-  because the two adapters use different rules. The protocol does not say
-  which rule is right. The shared runtime must use one rule.
-- **Impact if no action:** Milestone 2 cannot choose the hover rule of the
-  shared runtime.
-- **Root question:** Should hover name the instance that a click at the same
-  point would report, or the instance under the pointer?
-- **Options:**
-  - **A.** Every instance, in every mode. During a pick, hover then also
-    reports instances that the user cannot pick. Effort: Small.
-  - **B.** Only the highlighted or pickable keys while a highlight or a pick
-    is active. Hover then reports the same instances as a click. Effort:
-    Small.
-  - **C.** Every instance during an idle highlight, and only the pickable
-    keys during a pick. Clicks during an idle highlight stay limited to the
-    keys, so hover and click then differ. Effort: Small.
-  - **D.** An idle highlight is only a drawing. During an idle highlight,
-    hover and click report every instance, and the frame cancels no link.
-    Only a pick limits hover and click to the pickable keys. The click rule
-    of the adapter contract changes, and a host can no longer use an idle
-    highlight as a set of click targets. Effort: Medium.
-  - **E.** Remove hover: the `hover` frame event, its wire message, and
-    `onInstanceHover`. The shared runtime then needs no hover rule, and the
-    frame probe gets bytes back. It deletes a documented public callback,
-    so it needs your approval. A later host that wants hover must add it
-    again. Effort: Medium.
-  - **F.** B, and the hit test names the innermost instance under the
-    pointer, for hover and for click. Hover then names exactly the instance
-    that a click would report, also for nested instances. The frame probe
-    changes from digest order to the innermost instance. Effort: Small.
-- **Left out:** Keep the difference. It fails the goal of one runtime. A
-  host option for the rule adds public API that no host uses.
-- **Wider fix:** None that this decision can apply. The shared runtime of
-  this plan is the wider fix for the class.
-- **Previous examples:** None found.
-- **Related:** Decision 1 chose the shared runtime, which needs this rule.
-  The shared same-origin pick of the **Design** section needs the nesting
-  rule of F, or a nested local pick can select the outer instance.
-- **Recommendation:** F. The first recommendation was B. The frame probe
-  already uses the B rule, so F adds only the nesting rule, which the shared
-  runtime needs anyway. State the rule in
-  `docs/protocol/mokly-viewer-selection.md` and
-  `docs/protocol/mokly-frame-adapter.md`.
-- **Action:** ask the user, because the protocol doc does not say which
-  instances hover reports inside a highlighted frame, so each option adds a
-  rule.
-
-### 5. The model package needs a name
-
-- **Severity:** Low. **Effort:** Small.
-- **Source:** Design.
-- **Category:** Code structure.
-- **Location:** None. The package does not exist yet.
-- **Terms:**
-  - **Model package:** the new lockstep package of decision 4. It holds the
-    generated catalogue types, the path and link grammar, the delivery
-    paths, and the data paths that the frame package and the viewer share.
-- **Background:**
-  - The Rust crate `mokly-model` writes every generated type and owns the
-    Rust path grammar in `crates/mokly-model/src/paths.rs`. Its README calls
-    its shapes pure data contracts. The crate is not published.
-  - The Rust crate `mokly-catalogue` loads the configuration and prepares a
-    catalogue. That is a different job.
-  - The protocol docs use "catalogue model" and "read model" for defined
-    things, and "contract" for a protocol doc, with about 860 uses in 157
-    docs.
-  - `@mokly/viewer/data` already exports the path grammar and the delivery
-    paths. `@mokly/mokly` imports them from there.
-  - The other new names are `@mokly/frame` and the frame probe.
-  - Each candidate name is free on npm. A name is public after the npm
-    registration. A new name then needs a new package.
-- **Problem:** The plan calls the package `@mokly/model`, and the user
-  questions that name.
-- **Impact if no action:** Milestones 1 and 4 cannot name the package.
-- **Root question:** Which name tells a reader what belongs in the package,
-  and what does not?
-- **Options:**
-  - **A.** `@mokly/model`. It mirrors the Rust crate `mokly-model`, which
-    owns the same shapes and grammar. The word is broad, and on npm it can
-    read as an AI model. Hosts keep importing `@mokly/viewer/data`, so few
-    readers see the name. Effort: Small.
-  - **B.** `@mokly/data`. It matches the public entry `@mokly/viewer/data`.
-    The word is generic. The package holds only part of that entry, so the
-    two names cover different sets. Effort: Small.
-  - **C.** `@mokly/catalogue`. It names the domain of the types and rules.
-    The Rust crate `mokly-catalogue` does a different job, and the catalogue
-    readers stay in the viewer, so the name promises more than the package
-    holds. Effort: Small.
-  - **D.** `@mokly/contract`. It names the role, the published data
-    contract. In this repository "contract" means a protocol doc, so the
-    name reads as "all the contracts". Mokly Cloud also uses it for its
-    upload validator crate `mkc-mokly-contract`. Effort: Small.
-  - **E.** `@mokly/model` with one subpath for each job and no root entry,
-    as `@mokly/ui` has one subpath for each component. For example,
-    `@mokly/model/paths` holds the grammar and the paths, and
-    `@mokly/model/types` holds the generated types. Each import then names
-    its job, and a new job needs a new subpath that a reviewer sees. The npm
-    name stays broad. Effort: Small.
-  - **F.** `@mokly/data`, and the package takes the whole
-    `@mokly/viewer/data` entry, with the routes and the prop schema
-    validators. The package then holds the same set as the entry that
-    `@mokly/mokly` imports today. About 760 more lines move with their
-    tests, and this reverses the design call that moves only what the frame
-    package needs. Effort: Medium.
-- **Left out:** Each of these fails the goal:
-  - `@mokly/core` collides with "the Rust core" of `AGENTS.md`.
-  - `@mokly/types` says types only, but the package holds runtime code.
-  - `@mokly/schema` collides with the prop schemas and
-    `config.schema.json`.
-  - `@mokly/shared` and `@mokly/common` name no job, so unrelated code
-    collects in them.
-  - `@mokly/format` collides with the `format` script.
-  - `@mokly/catalogue-model` and `@mokly/read-model` name defined things
-    of the protocol docs that the package does not hold.
-  - `@mokly/protocol`, `@mokly/wire`, and `@mokly/spec` collide with
-    `docs/protocol`, the frame probe wire, and the mockup `specs`
-    directories.
-  - `@mokly/paths` says paths only, but most of the package is types.
-- **Wider fix:** None. This is one name.
-- **Previous examples:** `@mokly/ui` names its job and has one subpath for
-  each component. Each Rust crate name starts with `mokly-` and names its
-  job.
-- **Related:** Decision 4 chose the package. Milestones 1 and 4 wait for
-  this decision.
-- **Recommendation:** A. The TypeScript package and the Rust crate that
-  writes its types then share one name. Each other word means another
-  defined thing here, or is generic. If "model" is too broad for you, E
-  keeps the name and names the job at each import.
-- **Action:** ask the user, because the user asked for the options, and the
-  name is public after the npm registration.
+- **Decision 6, 2026-11-03: hover names the instance that a click at the
+  same point would report.** The user chose F. During a highlight or a pick,
+  hover and click report only the highlighted or pickable keys. When
+  instances nest, the innermost instance under the pointer wins, for hover
+  and for click. The alternatives were A, hover reports every instance, B,
+  the same key rule without the nesting rule, C, every instance during an
+  idle highlight, D, an idle highlight is only a drawing, and E, remove
+  hover. Reason: hover then matches click in every mode, the in-frame
+  inspector already uses the key rule, and the shared runtime needs a
+  nesting rule.
+- **Decision 5, 2026-11-03: the model package is `@mokly/model`.** The user
+  chose A. The alternatives were B, `@mokly/data`, C, `@mokly/catalogue`,
+  D, `@mokly/contract`, E, `@mokly/model` with one subpath for each job,
+  and F, `@mokly/data` with the whole `@mokly/viewer/data` entry. Reason:
+  the package and the Rust crate `mokly-model`, which writes its types,
+  share one name.
 
 ## Design
 
@@ -282,9 +128,8 @@ These are design calls of the planning agent, made on 2026-11-03.
   runtime, and the code that the merge deletes never moves. The merge also
   deletes the last frame users of the hand-written `ComponentViewRecord`, so
   the frame package needs no copy of that viewer type.
-- The runtime track, Milestones 2 and 3, waits for decision 6. The package
-  track, Milestones 4 and 5, waits for decision 5. The two tracks join at
-  Milestone 6.
+- The runtime track, Milestones 2 and 3, and the package track, Milestones
+  4 and 5, do not depend on each other. They join at Milestone 6.
 
 ### Shared event runtime
 
@@ -310,9 +155,9 @@ These are design calls of the planning agent, made on 2026-11-03.
 ### Packages
 
 - The frame package is `@mokly/frame` under `packages/frame`. The model
-  package lives under `packages/{name}`, with the name of decision 5. The
-  user can change a name before the npm registration. File names stay
-  snake_case, as `AGENTS.md` says for every package except `@mokly/ui`.
+  package is `@mokly/model` under `packages/model`, as decision 5 says.
+  File names stay snake_case, as `AGENTS.md` says for every package except
+  `@mokly/ui`.
 - Both packages release in lockstep. `@mokly/frame` pins the exact version
   of the model package. `@mokly/viewer` pins the exact versions of both.
   The viewer is compiled with `tsc`, so it can depend only on published
@@ -369,14 +214,13 @@ These are design calls of the planning agent, made on 2026-11-03.
 
 ## Milestone 1: Documentation and protocol
 
-Depends on: none. The model package parts wait for decision 5. The hover
-rule waits for decision 6.
+Depends on: none.
 
 The docs state the shared runtime, the packages, their boundaries, their
 release, and the frame probe names before the code changes.
 
-- [ ] Add `docs/protocol/mokly-frame-package.md` and the contract of the
-      model package, each with a status line that links this plan. State
+- [ ] Add `docs/protocol/mokly-frame-package.md` and
+      `docs/protocol/mokly-model-package.md`, each with a status line that links this plan. State
       each package, its entries, the re-exports by the viewer, the rule that
       a package never imports the viewer, the CLI, or consumer code, the
       exact lockstep pins, and the decisions with their reasons.
@@ -405,7 +249,7 @@ release, and the frame probe names before the code changes.
 
 ## Milestone 2: Shared event core
 
-Depends on: 1. It waits for decision 6.
+Depends on: 1.
 
 The in-frame inspector runs on the new core, with the same wire behaviour
 and the hover rule of decision 6. The code is still in the viewer.
@@ -433,11 +277,11 @@ The same-origin adapter uses the core, and the duplicated code goes.
 
 ## Milestone 4: Model package
 
-Depends on: 1. It waits for decision 5.
+Depends on: 1.
 
-The model code moves out of the viewer into its own package.
+The model code moves out of the viewer into `@mokly/model`.
 
-- [ ] Create the package with `package.json`, `tsconfig.json`,
+- [ ] Create `packages/model` with `package.json`, `tsconfig.json`,
       `tsconfig.build.json`, a build script, `README.md`, and `LICENSE`.
       Wire it into the root workspaces, the build order, the test runner,
       the typecheck runner, the checks in `xtask/src/check/commands.rs`,
