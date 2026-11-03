@@ -1,6 +1,6 @@
 # Check the read model once, where it enters
 
-Status: Active. On branch `calummoore/rust-viewer-checks-plan`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says. Decision 3 waits for the user, and Milestone 5 waits for its answer.
+Status: Active. On branch `calummoore/rust-viewer-checks-plan`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says. The user answered every decision. The work starts when the user approves this plan.
 
 The core checks the read model with the Rust readers of `mokly-model` before
 it writes it. The viewer checks the same JSON again with about 4,500 lines of
@@ -139,9 +139,10 @@ Depends on: 3
 
 ## Milestone 5: The TypeScript checks that stay
 
-Depends on: 1, and the answer to decision 3
+Depends on: 1
 
-These TODOs follow option G of decision 3, the recommendation.
+These TODOs follow option G of decision 3, which the user chose on
+2026-11-03.
 
 - [ ] Write the shared cases for prop values and for the path, link, and
       fragment checks. Run them in the Rust tests and in the tests of

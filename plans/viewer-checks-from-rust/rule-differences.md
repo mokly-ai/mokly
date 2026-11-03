@@ -2,7 +2,7 @@
 
 This file holds decisions 2 and 3 of [the plan](../viewer-checks-from-rust.md)
 in full. [decisions.md](./decisions.md) holds decision 1 and the shared terms.
-Decision 2 is closed. Decision 3 waits for the user. The pull request of the
+Decision 2 is closed. The user answered decision 3 on 2026-11-03. The pull request of the
 plan deletes this file with the plan.
 
 ## 2. The core and the viewer apply different rules
@@ -246,3 +246,4 @@ plan deletes this file with the plan.
   build error and moves two rules away from their protocol docs.
 - **Action:** ask the user, because the options change protocol rules and
   have real trade-offs.
+- **Outcome:** the user chose G on 2026-11-03.
