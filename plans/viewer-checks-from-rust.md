@@ -17,7 +17,7 @@ The trial ran on 2026-11-02. The as-is readers cannot ship: they add about
 index.
 [Decision 1](./viewer-checks-from-rust/decisions.md#1-the-trial-shows-a-large-cost-for-option-f)
 gives the numbers and the options.
-[Decision 2](./viewer-checks-from-rust/decisions.md#2-the-core-and-the-viewer-apply-different-rules)
+[Decision 2](./viewer-checks-from-rust/rule-differences.md#2-the-core-and-the-viewer-apply-different-rules)
 asks which rule applies where the two copies differ. The options check of
 2026-11-02 added options to both and changed both recommendations. The
 milestones below follow the recommended answers:

@@ -4,7 +4,7 @@ This file holds my design calls for [the plan](../viewer-checks-from-rust.md),
 made on 2026-11-02. They hold under option M of
 [decision 1](./decisions.md#1-the-trial-shows-a-large-cost-for-option-f) and
 option D of
-[decision 2](./decisions.md#2-the-core-and-the-viewer-apply-different-rules).
+[decision 2](./rule-differences.md#2-the-core-and-the-viewer-apply-different-rules).
 The pull request of the plan deletes this file with the plan.
 
 1. No wasm-bindgen. The module has a small C ABI with JSON text in and out,
