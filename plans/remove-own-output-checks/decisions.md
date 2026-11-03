@@ -129,3 +129,8 @@ branch merges the same commit and creates no duplicate dependency patch.
 18. Retain the existing 64 MiB ownership marker limit at its writer.
     A large catalogue is an external resource boundary. Its marker must
     remain readable on the next build without a second parse here.
+
+19. Admit generated index, current detail, and deployment files through
+    the existing Inventory before finalization. This preserves the 64 MiB
+    file limit once for each ordinary file. A shared admitted-file-set API
+    remains a separate follow-up.

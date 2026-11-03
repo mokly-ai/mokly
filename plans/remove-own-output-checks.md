@@ -3,7 +3,7 @@
 Status: Active. On branch `calummoore/remove-own-output-checks`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Source implementation is ready. Verification, review, and the pull request
-remain in Milestone 12. The user requested a source checkpoint before the
+remain in Milestone 13. The user requested a source checkpoint before the
 full gate and review on 2026-11-03.
 
 The user approved all milestones and tasks on 2026-11-03. This request
@@ -312,7 +312,21 @@ a marker that the next build cannot read.
 
 Evidence: `.context/remove-own-output-checks/marker-limit-report.md`.
 
-## Milestone 12: Verification, commit, review, and pull request
+## Milestone 12: Review corrections
+
+Depends on: 6, 7, 11
+
+Keep the existing output limit for generated metadata at its first inventory
+admission. Correct the remaining Git integration advice.
+
+- [x] Prove the oversized generated-index regression before the fix.
+- [x] Admit index, current detail, and deployment files through Inventory
+      before finalization. Keep earlier admissions and all encoded bytes.
+- [x] Name the supported Git interfaces and correct the batching paragraph.
+- [x] Record the shared admitted-file-set API as a separate follow-up.
+- [ ] Run focused tests, the complete gate, and one fresh review of the fix.
+
+## Milestone 13: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
