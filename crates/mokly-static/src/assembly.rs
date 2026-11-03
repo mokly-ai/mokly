@@ -185,17 +185,18 @@ impl Assembler for CatalogueAssembler {
             .as_ref()
             .map(|publication| publication.metadata(input.changes))
             .transpose()?;
-        let mut files = inventory.into_files();
-        files.extend(identity::finalize(&mut index, &mut details, &files));
-        files.push(File {
-            path: namespace::viewer("deployment.json"),
-            bytes: identity::json(&DeploymentFileV1 {
+        for file in identity::finalize(&mut index, &mut details, inventory.files()) {
+            inventory.insert(file.path, file.bytes)?;
+        }
+        inventory.insert(
+            namespace::viewer("deployment.json"),
+            identity::json(&DeploymentFileV1 {
                 schema_version: versions::DEPLOYMENT_FILE,
                 deployment_id: index.deployment_id.clone(),
             })
             .into(),
-        });
-        match Artifact::finalize(input.directory, files, metadata) {
+        )?;
+        match Artifact::finalize(input.directory, inventory.into_files(), metadata) {
             Ok(artifact) => Ok(artifact),
             Err(source) => Err(InternalError::Format { source }.into()),
         }

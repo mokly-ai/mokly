@@ -5,13 +5,14 @@ use std::path::Path;
 
 use mokly_graph::types::RenderGenerationMock;
 use mokly_model::canonical;
+use mokly_model::namespace;
 use mokly_model::output::ownership::Ownership;
 use mokly_model::output::validation::digest;
 use mokly_model::readers;
 use unimock::{MockFn, Unimock, matching};
 
 use super::assembly_support::{
-    assembler, config, empty_assembler, graph_with_key, prepared, request,
+    assembler, config, empty_assembler, graph_with_catalogue, prepared, request,
 };
 use crate::assembly::Assembler;
 use crate::error::Error;
@@ -19,7 +20,7 @@ use crate::transaction::CancellationMock;
 
 #[test]
 fn builds_complete_current_bytes_from_a_mocked_generation_without_disk_access() {
-    let graph = graph_with_key(&"a".repeat(64));
+    let graph = graph_with_catalogue(prepared());
     let assembler: &dyn Assembler = &assembler();
     let cancellation = Unimock::new(
         CancellationMock::requested
@@ -101,4 +102,21 @@ fn rejects_an_empty_catalogue_before_output() {
         .assemble(request(&config(), &graph), &Unimock::new(()))
         .unwrap_err();
     assert!(matches!(error, Error::Empty));
+}
+
+#[test]
+fn rejects_a_current_index_above_the_output_file_limit() {
+    let mut catalogue = prepared();
+    catalogue.model.entries[0].metadata.description = "a".repeat(64 * 1024 * 1024);
+    let graph = graph_with_catalogue(catalogue);
+    let cancellation = Unimock::new(
+        CancellationMock::requested
+            .each_call(matching!())
+            .returns(false),
+    );
+    let result = assembler().assemble(request(&config(), &graph), &cancellation);
+    assert!(matches!(
+        result,
+        Err(Error::TooLarge { path }) if path == namespace::viewer("index.json")
+    ));
 }
