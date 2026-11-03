@@ -47,7 +47,7 @@ export function nativeTarget(target) {
   return value;
 }
 
-/** The nine packages of one release, in packing and publication order. */
+/** The ten packages of one release, in packing and publication order. */
 export function releasePackages() {
   return [
     ...NATIVE_TARGETS.map((value) => ({
@@ -56,6 +56,7 @@ export function releasePackages() {
     })),
     { name: "@mokly/ui", directory: "packages/ui", artifact: "ui" },
     { name: "@mokly/model", directory: "packages/model", artifact: "model" },
+    { name: "@mokly/frame", directory: "packages/frame", artifact: "frame" },
     { name: "@mokly/viewer", directory: "packages/viewer", artifact: "viewer" },
     { name: "@mokly/mokly", directory: "packages/mokly", artifact: "mokly" },
   ];

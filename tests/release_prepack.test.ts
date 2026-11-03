@@ -10,7 +10,7 @@ import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
 
-test("CLI prepack prepares UI, model, and viewer declarations before a clean consumer typechecks them", async (t) => {
+test("CLI prepack prepares UI, model, frame, and viewer declarations before a clean consumer typechecks them", async (t) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-prepack-"));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const write = async (file: string, content: string) => {
@@ -24,6 +24,7 @@ test("CLI prepack prepares UI, model, and viewer declarations before a clean con
       workspaces: [
         "packages/ui",
         "packages/model",
+        "packages/frame",
         "packages/viewer",
         "packages/mokly",
       ],
@@ -32,10 +33,11 @@ test("CLI prepack prepares UI, model, and viewer declarations before a clean con
   const declarations = {
     ui: "export {};\n",
     model: "export interface ModelView { path: string }\n",
-    viewer: 'export type { ModelView as View } from "@mokly/model";\n',
+    frame: 'export type { ModelView as FrameView } from "@mokly/model";\n',
+    viewer: 'export type { FrameView as View } from "@mokly/frame";\n',
     mokly: 'export type { View } from "@mokly/viewer";\n',
   };
-  for (const name of ["ui", "model", "viewer", "mokly"] as const) {
+  for (const name of ["ui", "model", "frame", "viewer", "mokly"] as const) {
     await write(
       `packages/${name}/package.json`,
       JSON.stringify({
@@ -53,8 +55,15 @@ test("CLI prepack prepares UI, model, and viewer declarations before a clean con
         ...(name === "mokly"
           ? { dependencies: { "@mokly/viewer": "0.0.1" } }
           : name === "viewer"
-            ? { dependencies: { "@mokly/model": "0.0.1" } }
-            : {}),
+            ? {
+                dependencies: {
+                  "@mokly/model": "0.0.1",
+                  "@mokly/frame": "0.0.1",
+                },
+              }
+            : name === "frame"
+              ? { dependencies: { "@mokly/model": "0.0.1" } }
+              : {}),
       }),
     );
     await write(
@@ -64,6 +73,8 @@ import fs from "node:fs";
 ${name === "mokly" ? 'fs.readFileSync("../viewer/dist/index.d.ts");' : ""}
 ${name === "viewer" ? 'fs.readFileSync("../ui/dist/index.js");' : ""}
 ${name === "viewer" ? 'fs.readFileSync("../model/dist/index.d.ts");' : ""}
+${name === "viewer" ? 'fs.readFileSync("../frame/dist/index.d.ts");' : ""}
+${name === "frame" ? 'fs.readFileSync("../model/dist/index.d.ts");' : ""}
 fs.mkdirSync("dist", { recursive: true });
 fs.writeFileSync("dist/index.js", "export {};\\n");
 fs.writeFileSync("dist/index.d.ts", ${JSON.stringify(declarations[name])});
@@ -90,9 +101,9 @@ fs.appendFileSync("../../order.txt", "${name}\\n");
   });
   assert.equal(
     await fs.readFile(path.join(root, "order.txt"), "utf8"),
-    "ui\nmodel\nviewer\nmokly\n",
+    "ui\nmodel\nframe\nviewer\nmokly\n",
   );
-  for (const name of ["model", "viewer"])
+  for (const name of ["model", "frame", "viewer"])
     await execute("npm", ["pack", "--pack-destination", archives], {
       cwd: path.join(root, "packages", name),
     });
@@ -105,6 +116,7 @@ fs.appendFileSync("../../order.txt", "${name}\\n");
         "@mokly/mokly": "file:../archives/mokly-mokly-0.0.1.tgz",
         "@mokly/viewer": "file:../archives/mokly-viewer-0.0.1.tgz",
         "@mokly/model": "file:../archives/mokly-model-0.0.1.tgz",
+        "@mokly/frame": "file:../archives/mokly-frame-0.0.1.tgz",
       },
     }),
   );
@@ -132,7 +144,7 @@ fs.appendFileSync("../../order.txt", "${name}\\n");
     ],
     { cwd: consumer },
   );
-  for (const name of ["model", "viewer", "mokly"])
+  for (const name of ["model", "frame", "viewer", "mokly"])
     assert.equal(
       (
         await fs.lstat(path.join(consumer, "node_modules/@mokly", name))

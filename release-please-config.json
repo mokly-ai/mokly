@@ -92,6 +92,46 @@
         },
         {
           "type": "json",
+          "path": "/packages/frame/package.json",
+          "jsonpath": "$['dependencies']['@mokly/model']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/frame']['dependencies']['@mokly/model']"
+        },
+        {
+          "type": "json",
+          "path": "/package.json",
+          "jsonpath": "$['devDependencies']['@mokly/frame']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/frame/package.json",
+          "jsonpath": "$['version']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['']['devDependencies']['@mokly/frame']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/frame']['version']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/viewer/package.json",
+          "jsonpath": "$['dependencies']['@mokly/frame']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/viewer']['dependencies']['@mokly/frame']"
+        },
+        {
+          "type": "json",
           "path": "/package.json",
           "jsonpath": "$['devDependencies']['@mokly/viewer']"
         },
@@ -195,6 +235,10 @@
         {
           "type": "generic",
           "path": "/packages/model/CHANGELOG.md"
+        },
+        {
+          "type": "generic",
+          "path": "/packages/frame/CHANGELOG.md"
         },
         {
           "type": "generic",

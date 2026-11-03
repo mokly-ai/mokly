@@ -1,13 +1,15 @@
 /**
  * The consumer module the release smoke runs against the installed viewer
- * archive. It names each public viewer entry and a few exports, the model
- * root entry, and the UI stylesheet the viewer depends on; a root
- * test checks every name against the built packages.
+ * archive. It loads both frame entries, the model root, each public viewer
+ * entry, and the UI stylesheet. A root test checks every named import
+ * against the built packages.
  */
 export const SMOKE_SOURCE = `
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { currentDocumentPath } from "@mokly/model";
+import "@mokly/frame";
+import "@mokly/frame/internal";
 import {
   MoklyViewer,
   readCatalogueIndex,
@@ -29,6 +31,8 @@ assert.equal(typeof isEntryPath, "function");
 assert.equal(typeof validatePropSchema, "function");
 assert.equal(typeof viewHref, "function");
 assert.equal(typeof currentDocumentPath, "function");
+assert.ok(fs.existsSync(new URL(import.meta.resolve("@mokly/frame"))));
+assert.ok(fs.existsSync(new URL(import.meta.resolve("@mokly/frame/internal"))));
 assert.ok(fs.existsSync(new URL(import.meta.resolve("@mokly/viewer/browser"))));
 assert.ok(fs.readFileSync(new URL(import.meta.resolve("@mokly/viewer/styles.css")), "utf8").length > 0);
 assert.ok(fs.existsSync(new URL(import.meta.resolve("@mokly/ui/styles.css"))));

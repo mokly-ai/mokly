@@ -4,4 +4,5 @@ export function verifyPackageVersions(root: string): Promise<{
   viewer: ViewerManifest;
   ui: ViewerManifest;
   model: ViewerManifest;
+  frame: ViewerManifest;
 }>;

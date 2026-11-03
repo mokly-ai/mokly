@@ -18,7 +18,7 @@
     "node": ">=22.15.0 <23.0.0 || >=24.0.0 <24.14.0 || >=24.19.0"
   },
   "scripts": {
-    "build": "cargo xtask build-native && npm run -s build --workspace @mokly/ui && npm run -s build --workspace @mokly/model && npm run -s build --workspace @mokly/viewer && npm run -s build --workspace @mokly/mokly",
+    "build": "cargo xtask build-native && npm run -s build --workspace @mokly/ui && npm run -s build --workspace @mokly/model && npm run -s build --workspace @mokly/frame && npm run -s build --workspace @mokly/viewer && npm run -s build --workspace @mokly/mokly",
     "clean": "node scripts/clean.mjs",
     "dependencies:check": "node scripts/verification/dependency-audit.mjs",
     "dependencies:check:rust": "node scripts/verification/audit-rust.mjs",
@@ -48,8 +48,9 @@
     "@firna/ui": "^0.14.0",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@happy-dom/global-registrator": "^21.0.4",
-    "@mokly/model": "0.18.0",
     "@mokly/ui": "0.18.0",
+    "@mokly/model": "0.18.0",
+    "@mokly/frame": "0.18.0",
     "@mokly/viewer": "0.18.0",
     "@playwright/test": "^1.61.1",
     "@storybook/react": "^10.6.2",
@@ -119,6 +120,7 @@
   "workspaces": [
     "packages/ui",
     "packages/model",
+    "packages/frame",
     "packages/viewer",
     "packages/mokly"
   ],

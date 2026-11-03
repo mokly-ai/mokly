@@ -21,7 +21,7 @@ function run(execute: NonNullable<TypecheckOptions["execute"]>) {
   });
 }
 
-test("standard type checking runs all six projects in order with their working directories", async () => {
+test("standard type checking runs all seven projects in order with their working directories", async () => {
   const calls: {
     program: string;
     args: readonly string[];
@@ -65,6 +65,12 @@ test("standard type checking runs all six projects in order with their working d
       program: node,
       args: [compiler, "--noEmit", "--project", "tsconfig.json"],
       cwd: path.join(root, "packages", "model"),
+      active: 1,
+    },
+    {
+      program: node,
+      args: [compiler, "--noEmit", "--project", "tsconfig.json"],
+      cwd: path.join(root, "packages", "frame"),
       active: 1,
     },
     {

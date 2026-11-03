@@ -19,9 +19,10 @@ export async function installConsumer(root, packages, execute = runCommand) {
       "@mokly/viewer",
       "@mokly/ui",
       "@mokly/model",
+      "@mokly/frame",
     ].includes(report.name),
   );
-  assert.equal(selected.length, 5);
+  assert.equal(selected.length, 6);
   await fs.writeFile(
     path.join(root, "package.json"),
     JSON.stringify(

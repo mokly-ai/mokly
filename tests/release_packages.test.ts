@@ -10,6 +10,7 @@ import { checkViewerPackage } from "../scripts/release/viewer.mjs";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 import {
+  framePackageReport,
   modelPackageReport,
   viewerPackageReport,
 } from "./helpers/release_fixture.js";
@@ -43,6 +44,17 @@ for (const { name, createReport, required } of [
     name: "@mokly/model",
     createReport: modelPackageReport,
     required: ["dist/index.js", "dist/index.d.ts", "LICENSE"],
+  },
+  {
+    name: "@mokly/frame",
+    createReport: framePackageReport,
+    required: [
+      "dist/index.js",
+      "dist/index.d.ts",
+      "dist/internal.js",
+      "dist/internal.d.ts",
+      "LICENSE",
+    ],
   },
 ]) {
   test(`${name} archive requires its public runtime, declarations, and licence`, () => {
@@ -104,8 +116,12 @@ test("runtime licence inspection resolves workspace links and rejects missing li
   }
 });
 
-test("the viewer and model manifests enforce their public release boundaries", async () => {
-  for (const relative of ["packages/viewer", "packages/model"]) {
+test("the viewer, model, and frame manifests enforce their public release boundaries", async () => {
+  for (const relative of [
+    "packages/viewer",
+    "packages/model",
+    "packages/frame",
+  ]) {
     const original = JSON.parse(
       await fs.readFile(
         path.join(repositoryRoot, relative, "package.json"),
@@ -153,8 +169,14 @@ test("the viewer and model manifests enforce their public release boundaries", a
         (value) => {
           value.dependencies["@mokly/model"] = "^0.18.0";
         },
+        (value) => {
+          delete value.dependencies["@mokly/frame"];
+        },
+        (value) => {
+          value.dependencies["@mokly/frame"] = "^0.18.0";
+        },
       );
-    else
+    else if (relative === "packages/model")
       invalid.push(
         (value) => {
           value.optionalDependencies = { "@mokly/mokly": "0.18.0" };
@@ -167,6 +189,24 @@ test("the viewer and model manifests enforce their public release boundaries", a
         },
         (value) => {
           value.exports["./private"] = value.exports["."];
+        },
+      );
+    else
+      invalid.push(
+        (value) => {
+          delete value.dependencies["@mokly/model"];
+        },
+        (value) => {
+          value.dependencies["@mokly/model"] = "^0.18.0";
+        },
+        (value) => {
+          delete value.exports["./internal"];
+        },
+        (value) => {
+          value.optionalDependencies = { "@mokly/mokly": "0.18.0" };
+        },
+        (value) => {
+          value.peerDependencies = { "@mokly/viewer": "0.18.0" };
         },
       );
     for (const mutate of invalid) {

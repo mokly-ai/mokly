@@ -15,6 +15,12 @@ export async function discoverNodeFiles(repositoryRoot) {
   const files = [];
   for (const root of roots)
     await collectFiles(path.join(repositoryRoot, root), repositoryRoot, files);
+  await collectFiles(
+    path.join(repositoryRoot, "packages/frame/tests"),
+    repositoryRoot,
+    files,
+    true,
+  );
   return files.filter((file) => /\.test\.tsx?$/.test(file)).sort();
 }
 
@@ -66,8 +72,14 @@ export async function readReport(file) {
   return JSON.parse(await fs.readFile(file, "utf8"));
 }
 
-async function collectFiles(root, repositoryRoot, files) {
-  for (const entry of await fs.readdir(root, { withFileTypes: true })) {
+async function collectFiles(root, repositoryRoot, files, optional = false) {
+  const entries = await fs
+    .readdir(root, { withFileTypes: true })
+    .catch((error) => {
+      if (optional && error.code === "ENOENT") return [];
+      throw error;
+    });
+  for (const entry of entries) {
     const target = path.join(root, entry.name);
     if (entry.isDirectory()) await collectFiles(target, repositoryRoot, files);
     else if (entry.isFile())

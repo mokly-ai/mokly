@@ -41,6 +41,8 @@ test("the release smoke resolves every entry it reads as a file", () => {
     ...SMOKE_SOURCE.matchAll(/import\.meta\.resolve\("([^"]+)"\)/g),
   ].map((match) => match[1]!);
   assert.deepEqual(resolved, [
+    "@mokly/frame",
+    "@mokly/frame/internal",
     "@mokly/viewer/browser",
     "@mokly/viewer/styles.css",
     "@mokly/ui/styles.css",

@@ -33,6 +33,7 @@ test("native package manifests match the root links and the CLI version pins", a
     new Set([
       "packages/ui",
       "packages/model",
+      "packages/frame",
       "packages/viewer",
       "packages/mokly",
     ]),

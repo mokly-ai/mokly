@@ -33,20 +33,28 @@ export function validateUiReport(report) {
 
 /** The model package: its root entry, declarations, metadata, and `dist` only. */
 export function validateModelReport(report) {
+  validateCodePackageReport(report, "model", ["index"]);
+}
+
+/** The frame package: both entries, declarations, metadata, and `dist` only. */
+export function validateFrameReport(report) {
+  validateCodePackageReport(report, "frame", ["index", "internal"]);
+}
+
+function validateCodePackageReport(report, label, entries) {
   const files = report.files.map(({ path }) => path);
   for (const file of [
     ...METADATA,
     "CHANGELOG.md",
-    "dist/index.js",
-    "dist/index.d.ts",
+    ...entries.flatMap((entry) => [`dist/${entry}.js`, `dist/${entry}.d.ts`]),
   ])
-    assert.ok(files.includes(file), `model package is missing ${file}`);
+    assert.ok(files.includes(file), `${label} package is missing ${file}`);
   for (const file of files)
     assert.ok(
       METADATA.includes(file) ||
         file === "CHANGELOG.md" ||
         file.startsWith("dist/"),
-      `model package contains non-allowlisted path ${file}`,
+      `${label} package contains non-allowlisted path ${file}`,
     );
 }
 

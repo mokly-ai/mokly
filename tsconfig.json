@@ -32,6 +32,8 @@
     "examples/**/*.tsx",
     "packages/model/src/**/*.ts",
     "packages/model/tests/**/*.ts",
+    "packages/frame/src/**/*.ts",
+    "packages/frame/tests/**/*.ts",
     "packages/viewer/src/**/*.ts",
     "packages/viewer/src/**/*.tsx",
     "packages/viewer/tests/**/*.ts",

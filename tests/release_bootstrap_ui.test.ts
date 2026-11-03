@@ -27,6 +27,15 @@ const registrations = [
     laterVersion: "0.19.0",
     error: /@mokly\/model@0\.18\.0/,
   },
+  {
+    name: "@mokly/frame",
+    directory: "frame",
+    version: "0.18.0",
+    filename: "mokly-frame-0.18.0.tgz",
+    required: "dist/internal.js",
+    laterVersion: "0.19.0",
+    error: /@mokly\/frame@0\.18\.0/,
+  },
 ];
 
 for (const registration of registrations) {

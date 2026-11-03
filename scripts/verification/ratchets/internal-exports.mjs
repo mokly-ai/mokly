@@ -10,7 +10,12 @@ import {
 
 const BASELINE = "xtask/unused-internal-exports.txt";
 const SOURCE_ROOTS = ["src", "packages/viewer/src", "scripts"];
-const PACKAGE_ROOTS = ["", "packages/model", "packages/viewer"];
+const PACKAGE_ROOTS = [
+  "",
+  "packages/model",
+  "packages/frame",
+  "packages/viewer",
+];
 
 /** Compare discovered unused exports with one exact shrinking baseline. */
 export function internalExportAudit({

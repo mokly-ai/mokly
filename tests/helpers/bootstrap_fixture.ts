@@ -7,6 +7,7 @@ import { promisify } from "node:util";
 
 import { repositoryRoot } from "./fixture.js";
 import {
+  framePackageReport,
   modelPackageReport,
   uiPackageReport,
   viewerPackageReport,
@@ -56,10 +57,16 @@ export async function bootstrapFixture(
     type: "module",
     license: "MIT",
     private: true,
-    workspaces: ["packages/ui", "packages/model", "packages/viewer"],
+    workspaces: [
+      "packages/ui",
+      "packages/model",
+      "packages/frame",
+      "packages/viewer",
+    ],
     devDependencies: {
       "@mokly/ui": "0.16.1",
       "@mokly/model": "0.18.0",
+      "@mokly/frame": "0.18.0",
       "@mokly/viewer": "0.1.0",
     },
     scripts: { prepack: "node build.mjs" },
@@ -88,10 +95,22 @@ export async function bootstrapFixture(
     files: ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
     scripts: { prepack: "node ../../build.mjs" },
   };
+  const framePackage = {
+    name: "@mokly/frame",
+    version: "0.18.0",
+    license: "MIT",
+    type: "module",
+    files: ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
+    dependencies: { "@mokly/model": "0.18.0" },
+    scripts: { prepack: "node ../../build.mjs" },
+  };
   const distFiles = [
     ...modelPackageReport()
       .files.filter((file) => file.path.startsWith("dist/"))
       .map((file) => `packages/model/${file.path}`),
+    ...framePackageReport()
+      .files.filter((file) => file.path.startsWith("dist/"))
+      .map((file) => `packages/frame/${file.path}`),
     ...viewerPackageReport()
       .files.filter((file) => file.path.startsWith("dist/"))
       .map((file) => `packages/viewer/${file.path}`),
@@ -110,9 +129,11 @@ export async function bootstrapFixture(
         "": packageJson,
         "packages/ui": uiPackage,
         "packages/model": modelPackage,
+        "packages/frame": framePackage,
         "packages/viewer": viewerPackage,
         "node_modules/@mokly/ui": { resolved: "packages/ui", link: true },
         "node_modules/@mokly/model": { resolved: "packages/model", link: true },
+        "node_modules/@mokly/frame": { resolved: "packages/frame", link: true },
         "node_modules/@mokly/viewer": {
           resolved: "packages/viewer",
           link: true,
@@ -123,6 +144,10 @@ export async function bootstrapFixture(
     "packages/model/README.md": "# Model package release fixture\n",
     "packages/model/LICENSE": "MIT\n",
     "packages/model/CHANGELOG.md": "# Model package test release\n",
+    "packages/frame/package.json": JSON.stringify(framePackage),
+    "packages/frame/README.md": "# Frame package release fixture\n",
+    "packages/frame/LICENSE": "MIT\n",
+    "packages/frame/CHANGELOG.md": "# Frame package test release\n",
     "packages/ui/package.json": JSON.stringify(uiPackage),
     "packages/ui/README.md": "# UI package release fixture\n",
     "packages/ui/LICENSE": "MIT\n",

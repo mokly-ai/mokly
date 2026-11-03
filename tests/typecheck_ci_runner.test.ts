@@ -77,7 +77,7 @@ function harness(
   };
 }
 
-test("required type checking reads the pin before probing Bun and checks all six projects with native flags", async () => {
+test("required type checking reads the pin before probing Bun and checks all seven projects with native flags", async () => {
   for (const { version, message } of [
     {
       version: "1.4.4",
@@ -107,6 +107,11 @@ test("required type checking reads the pin before probing Bun and checks all six
         program: "bun",
         args: [...nativeArgs, "tsconfig.json"],
         cwd: path.join(root, "packages", "model"),
+      },
+      {
+        program: "bun",
+        args: [...nativeArgs, "tsconfig.json"],
+        cwd: path.join(root, "packages", "frame"),
       },
       {
         program: "bun",

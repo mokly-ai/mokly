@@ -13,6 +13,7 @@ import {
 } from "../scripts/verification/viewer-selection.mjs";
 
 const inventory = [
+  "packages/frame/tests/frame.test.ts",
   "packages/model/tests/model.test.ts",
   "packages/ui/tests/ui.test.tsx",
   "packages/viewer/tests/viewer.test.tsx",
@@ -43,6 +44,17 @@ test("developer selection discovers fixture files and keeps no-argument runs com
   assert.deepEqual(selection.patterns, []);
   assert.deepEqual(await discoverNodeFiles(root), inventory);
   assert.deepEqual(selectViewerFiles(selection, inventory), inventory);
+
+  const frameTests = path.join(root, "packages/frame/tests");
+  const withoutFrame = inventory.filter(
+    (file) => !file.startsWith("packages/frame/tests/"),
+  );
+  await fs.rm(path.join(frameTests, "frame.test.ts"));
+  assert.deepEqual(await discoverNodeFiles(root), withoutFrame);
+  await fs.rmdir(frameTests);
+  await assert.doesNotReject(async () => {
+    assert.deepEqual(await discoverNodeFiles(root), withoutFrame);
+  });
 });
 
 test("developer selection accepts normalized and absolute file arguments once", async (context) => {

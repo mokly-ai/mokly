@@ -25,6 +25,7 @@ const UI_SUBPATH = /^\.\/([a-z0-9]+(?:-[a-z0-9]+)*)$/u;
 export function validatePackageManifest(metadata, name) {
   if (name === "@mokly/ui") return validateUiManifest(metadata);
   if (name === "@mokly/model") return validateModelManifest(metadata);
+  if (name === "@mokly/frame") return validateFrameManifest(metadata);
   if (name !== "@mokly/viewer") return validateCliOrNative(metadata, name);
   validateBrowserPackage(metadata, name, "packages/viewer");
   assert.deepEqual(metadata.peerDependencies, PEERS);
@@ -32,6 +33,7 @@ export function validatePackageManifest(metadata, name) {
   assert.deepEqual(metadata.exports, VIEWER_EXPORTS);
   assert.match(metadata.dependencies?.["@mokly/ui"] ?? "", VERSION);
   assert.match(metadata.dependencies?.["@mokly/model"] ?? "", VERSION);
+  assert.match(metadata.dependencies?.["@mokly/frame"] ?? "", VERSION);
   assert.deepEqual(metadata.sideEffects, [
     "./dist/browser.js",
     "./dist/styles.css",
@@ -53,6 +55,28 @@ function validateModelManifest(metadata) {
         metadata[field]?.[dependency],
         undefined,
         `@mokly/model must not depend on ${dependency}`,
+      );
+}
+
+/** The frame package has public and internal entries and one exact model pin. */
+function validateFrameManifest(metadata) {
+  validateBrowserPackage(metadata, "@mokly/frame", "packages/frame");
+  assert.equal(metadata.types, "./dist/index.d.ts");
+  assert.deepEqual(metadata.exports, {
+    ".": entry("index"),
+    "./internal": entry("internal"),
+  });
+  assert.match(metadata.dependencies?.["@mokly/model"] ?? "", VERSION);
+  for (const field of [
+    "dependencies",
+    "optionalDependencies",
+    "peerDependencies",
+  ])
+    for (const dependency of ["@mokly/mokly", "@mokly/viewer"])
+      assert.equal(
+        metadata[field]?.[dependency],
+        undefined,
+        `@mokly/frame must not depend on ${dependency}`,
       );
 }
 

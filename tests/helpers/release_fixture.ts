@@ -69,3 +69,22 @@ export function modelPackageReport(): PackageReport {
     ].map((path) => ({ path, size: 1 })),
   };
 }
+
+export function framePackageReport(): PackageReport {
+  return {
+    integrity: `sha512-${"g".repeat(12)}`,
+    shasum: "a".repeat(40),
+    name: "@mokly/frame",
+    version: "0.18.0",
+    files: [
+      "dist/index.js",
+      "dist/index.d.ts",
+      "dist/internal.js",
+      "dist/internal.d.ts",
+      "README.md",
+      "CHANGELOG.md",
+      "LICENSE",
+      "package.json",
+    ].map((path) => ({ path, size: 1 })),
+  };
+}

@@ -51,7 +51,8 @@ export default tseslint.config(
       },
     },
     settings: {
-      "import-x/internal-regex": "^@mokly/(?:mokly|model|ui|viewer)(?:/|$)",
+      "import-x/internal-regex":
+        "^@mokly/(?:mokly|model|frame|ui|viewer)(?:/|$)",
     },
     rules: {
       "import/first": "error",
@@ -93,6 +94,7 @@ export default tseslint.config(
       "packages/viewer/tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}",
       "packages/ui/tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}",
       "packages/model/tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}",
+      "packages/frame/tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}",
     ],
     ignores: ["tests/helpers/durations.ts"],
     rules: {
@@ -203,6 +205,7 @@ export default tseslint.config(
     files: [
       "packages/viewer/src/**/*.{ts,tsx}",
       "packages/model/src/**/*.{ts,tsx}",
+      "packages/frame/src/**/*.{ts,tsx}",
     ],
     ignores: [
       "packages/model/src/catalogue/delivery_paths.ts",

@@ -18,6 +18,7 @@ const JAVASCRIPT_REGISTRATIONS = {
   "@mokly/viewer": { relative: "packages/viewer", version: "0.1.0" },
   "@mokly/ui": { relative: "packages/ui", version: "0.16.1" },
   "@mokly/model": { relative: "packages/model", version: "0.18.0" },
+  "@mokly/frame": { relative: "packages/frame", version: "0.18.0" },
 };
 
 /** Build registration evidence from reviewed committed bytes, never local dist. */

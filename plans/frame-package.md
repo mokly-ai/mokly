@@ -326,10 +326,10 @@ Depends on: 4.
 
 The empty frame package builds, tests, and packs with the other packages.
 
-- [ ] Create `packages/frame` with `package.json`, `tsconfig.json`,
+- [x] Create `packages/frame` with `package.json`, `tsconfig.json`,
       `tsconfig.build.json`, a build script, `README.md`, `LICENSE`, and the
       `CHANGELOG.md` stub of `@mokly/ui`.
-- [ ] Wire it in the same places as the model package in Milestone 4.
+- [x] Wire it in the same places as the model package in Milestone 4.
 
 ## Milestone 6: Move the inspector and rename it to the frame probe
 

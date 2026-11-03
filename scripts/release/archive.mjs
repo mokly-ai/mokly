@@ -5,6 +5,7 @@ import path from "node:path";
 import { runCommand } from "./command.mjs";
 import {
   validateCliReport,
+  validateFrameReport,
   validateModelReport,
   validateNativeReport,
   validateUiReport,
@@ -57,6 +58,7 @@ export function validatePackageReport(report, name = "@mokly/viewer") {
   if (name === "@mokly/viewer") validateViewerReport(report);
   else if (name === "@mokly/ui") validateUiReport(report);
   else if (name === "@mokly/model") validateModelReport(report);
+  else if (name === "@mokly/frame") validateFrameReport(report);
   else if (name === "@mokly/mokly") validateCliReport(report);
   else validateNativeReport(report, name);
 }

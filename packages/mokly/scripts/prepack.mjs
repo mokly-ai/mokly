@@ -2,10 +2,11 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 // npm supplies its CLI path on all supported operating systems. The viewer
-// build reads the UI stylesheet and model declarations, so both build first.
+// build reads the UI stylesheet and model and frame declarations.
 for (const workspace of [
   "@mokly/ui",
   "@mokly/model",
+  "@mokly/frame",
   "@mokly/viewer",
   "@mokly/mokly",
 ]) {
