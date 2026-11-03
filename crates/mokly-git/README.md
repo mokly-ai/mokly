@@ -1,9 +1,12 @@
 # mokly-git
 
-`mokly-git` runs bounded Git commands for the Mokly core. Use the runner trait
-for Git IO and the batch trait for path queries. `mokly-platform` supplies
-process groups and Windows job objects. `mokly-compare` reads base sources
-through this crate, and `mokly-publish` checks the checkout with it.
+`mokly-git` runs bounded Git commands for the Mokly core. `Runner` runs one
+bounded Git command. `Repository` supplies path queries. `Repositories::open`
+returns that interface.
+
+`mokly-platform` supplies process groups and Windows job objects.
+`mokly-compare` reads base sources through this crate. `mokly-publish` checks
+the checkout with it.
 
 ## Responsibilities
 
@@ -31,8 +34,8 @@ keep their own category.
 Path batching uses default budgets of 128 path arguments and 16 KiB of
 conservative encoded argument cost. A path too large
 for one batch fails before any command runs. Empty path input issues no
-command. A failed batch stops the sequence. Merge-base, changed-path, tree,
-blob, and source archive operations build on this boundary.
+command. A failed batch stops the sequence. Tree, blob, and source archive
+operations build on this boundary.
 
 `GitRepositories::open` compares canonical filesystem identities with Git's
 checkout root. `SystemDisk` resolves these identities with `dunce`, so on
