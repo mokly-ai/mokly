@@ -122,16 +122,14 @@ pub(crate) fn request<'a>(
     }
 }
 
-pub(crate) fn graph_with_key(key: &str) -> Unimock {
-    let mut plans = plan(0);
-    plans.get_mut("home/index.html").unwrap().key = NodeKey(key.into());
+pub(crate) fn graph_with_catalogue(catalogue: PreparedCatalogue) -> Unimock {
     Unimock::new((
         RenderGenerationMock::catalogue
             .each_call(matching!())
-            .returns(prepared()),
+            .returns(catalogue),
         RenderGenerationMock::plans
             .each_call(matching!())
-            .returns(plans),
+            .returns(plan(0)),
         RenderGenerationMock::render
             .next_call(matching!("home/index.html"))
             .returns(Ok(Arc::new(Artifact {

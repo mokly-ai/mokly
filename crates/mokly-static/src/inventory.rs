@@ -73,4 +73,9 @@ impl Inventory {
     pub fn into_files(self) -> Vec<File> {
         self.files.into_values().collect()
     }
+
+    /// Borrow admitted files while computing the deployment identity.
+    pub(crate) fn files(&self) -> impl Iterator<Item = &File> {
+        self.files.values()
+    }
 }

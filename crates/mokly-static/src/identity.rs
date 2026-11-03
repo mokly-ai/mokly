@@ -23,10 +23,10 @@ pub(crate) fn detail_id(detail: &EntryDetailV4) -> String {
 }
 
 /// Stamp one deterministic identity before ownership or publication metadata is added.
-pub fn finalize(
+pub fn finalize<'a>(
     index: &mut CatalogueReadModel,
     details: &mut BTreeMap<String, EntryDetailV4>,
-    other: &[File],
+    other: impl IntoIterator<Item = &'a File>,
 ) -> Vec<File> {
     for detail in details.values_mut() {
         detail.detail_id = detail_id(detail);
@@ -34,10 +34,11 @@ pub fn finalize(
     projection::set_detail_ids(index, details);
     index.deployment_id = "0".repeat(64);
     let mut files = records(index, details);
+    let hash = |file: &File| (file.path.clone(), digest(&file.bytes));
     let mut hashes: Vec<_> = other
-        .iter()
-        .chain(files.iter())
-        .map(|file| (file.path.clone(), digest(&file.bytes)))
+        .into_iter()
+        .map(hash)
+        .chain(files.iter().map(hash))
         .collect();
     hashes.sort_by(|a, b| canonical::compare_utf16(&a.0, &b.0));
     index.deployment_id = digest(&json(&hashes));
