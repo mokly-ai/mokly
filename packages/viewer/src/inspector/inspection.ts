@@ -4,6 +4,12 @@ import { edges, viewport } from "./clipping.js";
 import { geometry } from "./geometry.js";
 import { metadataKeys, type InspectorMetadata } from "./metadata.js";
 import { documentRanges } from "./ranges.js";
+
+export const inspectionError = (error: unknown) =>
+  error === "limit" || error === "missing-instance" || error === "unavailable"
+    ? error
+    : "invalid-boundary";
+
 export const inspection = (doc: Document, metadata: InspectorMetadata) => {
   const keys = metadataKeys(metadata);
   const requireKeys = (requested: readonly string[]) => {

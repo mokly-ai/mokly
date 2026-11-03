@@ -1,4 +1,6 @@
-import { readMetadata } from "./metadata.js";
+import { inspectionError } from "./inspection.js";
+import { inspectorNavigation } from "./links.js";
+import { readMetadata, type InspectorMetadata } from "./metadata.js";
 import { inspectorRuntime } from "./runtime.js";
 import { encodeMessage, validHostMessage, type MessageBody } from "./schema.js";
 import { boundedJson, BYTE_LIMIT, origin } from "./values.js";
@@ -13,6 +15,7 @@ const host =
     : undefined;
 let nonce: string | undefined;
 let runtime: ReturnType<typeof inspectorRuntime> | undefined;
+let lastRequest = 0;
 const send = (body: MessageBody): void => {
   const json = encodeMessage(nonce!, body);
   parent.postMessage(
@@ -47,16 +50,40 @@ const receive = (event: MessageEvent<unknown>): void => {
         maps.length === 1
           ? readMetadata(maps[0]!.content.textContent)
           : undefined;
+      const accepted: InspectorMetadata = metadata ?? {
+        ranges: [],
+        links: [],
+        error: "unavailable",
+      };
       runtime = inspectorRuntime(
         win,
-        metadata ?? { ranges: [], links: [], error: "unavailable" },
-        send,
+        accepted,
+        win,
+        inspectorNavigation(accepted),
+        (event) =>
+          send(event.type === "error" ? { ...event, requestId: null } : event),
         () => win.removeEventListener("message", receive),
       );
     }
     send({ type: "ready" });
     return;
   }
-  runtime?.(message);
+  if (!runtime) return;
+  if (type === "dispose") return runtime.__dispose();
+  const { requestId } = message;
+  if (requestId <= lastRequest) return;
+  lastRequest = requestId;
+  try {
+    if (type === "list") {
+      send({ type: "boundaries", requestId, boundaries: runtime.__list() });
+      return;
+    }
+    if (type === "highlight") runtime.__highlight(message.keys, message.mode);
+    if (type === "scroll-to") runtime.__scroll(message.key);
+    if (type === "subscribe") runtime.__subscribe(message.events);
+    send({ type: "ack", requestId });
+  } catch (error) {
+    send({ type: "error", requestId, code: inspectionError(error) });
+  }
 };
 win.addEventListener("message", receive);

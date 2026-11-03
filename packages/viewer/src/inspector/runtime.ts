@@ -1,58 +1,68 @@
 import type { Box, InstanceBoundary } from "../client/frame_adapter.js";
 
-import { inspection } from "./inspection.js";
-import { inspectorNavigation } from "./links.js";
+import { inspection, inspectionError } from "./inspection.js";
 import type { InspectorMetadata } from "./metadata.js";
-import type { MessageBody, HostMessage } from "./schema.js";
-import type { InspectorEventType } from "./values.js";
-/** One handshake owns observers, input handling and ordered requests. */
+import type {
+  InspectorEnvironment,
+  InspectorNavigation,
+  InspectorRuntimeEvent,
+  InspectorSubscription,
+} from "./runtime_types.js";
+/** One document's event core, independent of its transport and callback realm. */
 export const inspectorRuntime = (
-  win: Window & typeof globalThis,
+  win: Window,
   metadata: InspectorMetadata,
-  send: (body: MessageBody) => void,
-  disposed: () => void,
+  environment: InspectorEnvironment,
+  navigate: InspectorNavigation,
+  send: (event: InspectorRuntimeEvent) => void,
+  disposed = () => {},
 ) => {
   const doc = win.document,
     reader = inspection(doc, metadata);
-  const navigate = inspectorNavigation(metadata),
-    controller = new win.AbortController();
+  const controller = new environment.AbortController();
   const options = { signal: controller.signal, capture: true };
-  let events: readonly InspectorEventType[] = [],
+  const depths: number[] = [];
+  for (const [, parent] of metadata.ranges)
+    depths.push(parent === null ? 0 : depths[parent]! + 1);
+  let events: readonly InspectorSubscription[] = [],
     keys: readonly string[] = [];
   let active = false,
     pending = 0,
     last = 0,
-    lastRequest = 0,
     dirty = false;
   let pointer: MouseEvent | null | false = false;
-  let regions: [string, readonly Box[]][] = [];
+  let regions: (readonly [InstanceBoundary, readonly Box[], number])[] = [];
   const measure = (): readonly InstanceBoundary[] => {
     const boundaries = reader.__list();
-    regions = boundaries.map(({ key, ranges }) => [
-      key,
-      ranges.flatMap(({ boxes }) => boxes),
-    ]);
+    // Rank physical ranges, since one key can occur at different depths.
+    regions = boundaries
+      .flatMap((boundary) =>
+        boundary.ranges.map(
+          ({ id, boxes }) =>
+            [boundary, boxes, depths[Number(id.slice(2))]!] as const,
+        ),
+      )
+      .sort((a, b) => b[2] - a[2]);
     return boundaries;
   };
-  const emit = (body: MessageBody) => {
-    if (events.includes(body.type as InspectorEventType)) send(body);
+  const emit = (event: Exclude<InspectorRuntimeEvent, { type: "error" }>) => {
+    if (events.includes(event.type)) send(event);
   };
-  const fail = (error: unknown, requestId: number | null = null) => {
+  const run = <T>(operation: () => T): T => {
+    try {
+      return operation();
+    } catch (error) {
+      active = false;
+      throw error;
+    }
+  };
+  const fail = (error: unknown) => {
     active = false;
-    send({
-      type: "error",
-      requestId,
-      code:
-        error === "limit" ||
-        error === "missing-instance" ||
-        error === "unavailable"
-          ? error
-          : "invalid-boundary",
-    });
+    send({ type: "error", code: inspectionError(error) });
   };
   const point = (event: MouseEvent | null, click = false) => {
-    const [key, boxes] = regions.find(
-      ([key, boxes]) =>
+    const boundary = regions.find(
+      ([{ key }, boxes]) =>
         event &&
         (!active || keys.includes(key)) &&
         boxes.some(
@@ -62,7 +72,9 @@ export const inspectorRuntime = (
             event.clientY >= y &&
             event.clientY <= y + height,
         ),
-    ) ?? [null, []];
+    )?.[0];
+    const key = boundary?.key ?? null,
+      boxes = boundary?.ranges.flatMap(({ boxes }) => boxes) ?? [];
     if (boxes.length > 64) throw "limit";
     if (click && key) emit({ type: "click", key, boxes });
     if (!click) emit({ type: "hover", key, boxes });
@@ -70,7 +82,7 @@ export const inspectorRuntime = (
   };
   const tick = (time: number) => {
     if (time - last < 1000 / 60) {
-      pending = win.requestAnimationFrame(tick);
+      pending = environment.requestAnimationFrame(tick);
       return;
     }
     pending = 0;
@@ -88,7 +100,7 @@ export const inspectorRuntime = (
     }
   };
   const schedule = () => {
-    pending ||= win.requestAnimationFrame(tick);
+    pending ||= environment.requestAnimationFrame(tick);
   };
   const changed = () => {
     dirty = true;
@@ -136,8 +148,8 @@ export const inspectorRuntime = (
   on("load", changed);
   win.addEventListener("resize", changed, options);
   doc.fonts.addEventListener("loadingdone", changed, options);
-  const resize = new win.ResizeObserver(changed),
-    mutations = new win.MutationObserver(changed);
+  const resize = new environment.ResizeObserver(changed),
+    mutations = new environment.MutationObserver(changed);
   if (doc.body) resize.observe(doc.body);
   mutations.observe(doc, {
     attributes: true,
@@ -146,36 +158,32 @@ export const inspectorRuntime = (
     subtree: true,
   });
   const dispose = () => {
+    if (controller.signal.aborted) return;
     controller.abort();
     resize.disconnect();
     mutations.disconnect();
-    win.cancelAnimationFrame(pending);
+    environment.cancelAnimationFrame(pending);
     disposed();
   };
   win.addEventListener("pagehide", dispose, options);
-  return (message: Exclude<HostMessage, { type: "hello" }>): void => {
-    if (message.type === "dispose") return dispose();
-    if (message.requestId <= lastRequest) return;
-    const { type, requestId } = message;
-    lastRequest = requestId;
-    try {
-      if (type === "list") {
-        send({ type: "boundaries", requestId, boundaries: measure() });
-        return;
-      }
-      if (type === "highlight") {
-        if (message.mode !== "off") {
-          reader.__keys(message.keys);
+  return {
+    __list: () => run(measure),
+    __highlight: (
+      requested: readonly string[],
+      mode: "off" | "highlight" | "pick",
+    ) =>
+      run(() => {
+        if (mode !== "off") {
+          reader.__keys(requested);
           measure();
         }
-        keys = message.keys;
-        active = message.mode !== "off";
-      }
-      if (type === "scroll-to") reader.__scroll(message.key);
-      if (type === "subscribe") events = message.events;
-      send({ type: "ack", requestId });
-    } catch (error) {
-      fail(error, requestId);
-    }
+        keys = requested;
+        active = mode !== "off";
+      }),
+    __scroll: (key: string) => run(() => reader.__scroll(key)),
+    __subscribe: (subscribed: readonly InspectorSubscription[]) => {
+      events = subscribed;
+    },
+    __dispose: dispose,
   };
 };

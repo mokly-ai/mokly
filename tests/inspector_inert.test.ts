@@ -238,3 +238,47 @@ test("top, parent and named navigation never access trapped outer windows", () =
   fixture.send(encodeMessage(nonce, { type: "dispose" }));
   assert.equal(fixture.activate(0), false);
 });
+
+test("wire errors retain request ids and consume them before a later request", () => {
+  const fixture = harness("?mokly-host=https%3A%2F%2Fapp.test");
+  fixture.send(encodeMessage(nonce, { type: "hello" }));
+  fixture.send(
+    encodeMessage(nonce, {
+      type: "highlight",
+      requestId: 1,
+      keys: ["f".repeat(64)],
+      mode: "pick",
+    }),
+  );
+  fixture.send(
+    encodeMessage(nonce, {
+      type: "subscribe",
+      requestId: 1,
+      events: ["navigation"],
+    }),
+  );
+  assert.equal(fixture.activate(0), false);
+  fixture.send(
+    encodeMessage(nonce, {
+      type: "subscribe",
+      requestId: 2,
+      events: ["navigation"],
+    }),
+  );
+  assert.equal(fixture.activate(0), true);
+  const replies = fixture.messages.map(({ data }) => JSON.parse(data));
+  assert.deepEqual(
+    replies.map((message) => message.type),
+    ["ready", "error", "ack", "navigation"],
+  );
+  assert.deepEqual(replies[1], {
+    channel: "mokly-inspector",
+    version: 2,
+    nonce,
+    type: "error",
+    requestId: 1,
+    code: "missing-instance",
+  });
+  assert.equal(replies[2].requestId, 2);
+  fixture.send(encodeMessage(nonce, { type: "dispose" }));
+});

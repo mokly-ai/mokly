@@ -54,9 +54,13 @@ cargo xtask check --suite viewer
 
 - [`index.ts`](./index.ts) is the IIFE entry, which installs only the bounded
   handshake listener and starts the runtime after the first valid `hello`.
+  It wraps direct core calls with ordered requests, replies, and wire errors.
 - [`runtime.ts`](./runtime.ts) holds `inspectorRuntime`, which owns the
-  observers, the input handling, and the ordered requests of
-  one session.
+  observers and input handling of one document. Its direct methods list,
+  highlight, scroll, subscribe, and dispose without wire messages.
+- [`runtime_types.ts`](./runtime_types.ts) defines the core's event callback,
+  link classifier, and observer and timer environment. The caller supplies
+  the callback realm separately from the measured window.
 - [`schema.ts`](./schema.ts) and [`values.ts`](./values.ts) validate the wire
   messages of both transports.
 - [`metadata.ts`](./metadata.ts) holds `readMetadata`, which reads the inert

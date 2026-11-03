@@ -274,10 +274,10 @@ Depends on: 1.
 The in-frame inspector runs on the new core, with the same wire behaviour
 and the hover rule of decision 6. The code is still in the viewer.
 
-- [ ] Split `inspectorRuntime` in `packages/viewer/src/inspector/runtime.ts`
+- [x] Split `inspectorRuntime` in `packages/viewer/src/inspector/runtime.ts`
       into the core and the wire wrapper of the **Design** section.
-- [ ] Apply the hover rule and the nesting rule of decision 6 in the core.
-- [ ] Keep the in-frame script within its budget. Run its budget test.
+- [x] Apply the hover rule and the nesting rule of decision 6 in the core.
+- [x] Keep the in-frame script within its budget. Run its budget test.
 
 ## Milestone 3: Same-origin adapter on the core
 
