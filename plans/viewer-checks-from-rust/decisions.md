@@ -1,10 +1,10 @@
 # Decisions of the viewer checks change
 
 This file holds decision 1 of [the plan](../viewer-checks-from-rust.md) in
-full. [rule-differences.md](./rule-differences.md) holds decision 2. Both wait
-for the user. The options check of 2026-11-02 added the
-options with the letters after the trial's letters, and it changed both
-recommendations. Its summary is in
+full. [rule-differences.md](./rule-differences.md) holds decisions 2 and 3.
+The user answered decision 1 on 2026-11-03 with option G. The options check of
+2026-11-02 added the options with the letters after the trial's letters, and
+it changed the recommendation. Its summary is in
 `.context/viewer-checks-from-rust/options-check.md`. The pull request of the
 plan deletes this file with the plan.
 
@@ -198,3 +198,6 @@ plan deletes this file with the plan.
     React host may allow `'wasm-unsafe-eval'`.
 - **Action:** ask the user, because the trial cost is large, and the user
   asked to see the numbers before the switch.
+- **Outcome:** the user chose G on 2026-11-03. The deciding question was
+  whether hosts other than Mokly Cloud make or change catalogue JSON
+  themselves. G fits when all catalogue JSON comes from Mokly.

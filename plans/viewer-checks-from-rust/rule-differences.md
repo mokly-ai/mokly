@@ -1,10 +1,9 @@
-# Decision 2 of the viewer checks change
+# Decisions 2 and 3 of the viewer checks change
 
-This file holds decision 2 of [the plan](../viewer-checks-from-rust.md) in
-full. [decisions.md](./decisions.md) holds decision 1 and the shared terms.
-The decision waits for the user. The options check of 2026-11-02 added option
-D and changed the recommendation. The pull request of the plan deletes this
-file with the plan.
+This file holds decisions 2 and 3 of [the plan](../viewer-checks-from-rust.md)
+in full. [decisions.md](./decisions.md) holds decision 1 and the shared terms.
+Decision 2 is closed. Decision 3 waits for the user. The pull request of the
+plan deletes this file with the plan.
 
 ## 2. The core and the viewer apply different rules
 
@@ -116,3 +115,131 @@ file with the plan.
   best.
 - **Action:** ask the user, because A and D add new build errors in the core,
   and A also adds new rejections in the viewer.
+- **Outcome:** closed on 2026-11-03. The user chose G for decision 1, so the
+  viewer checks no catalogue content, and the user confirmed that this
+  decision no longer applies. Decision 3 holds the part that stays: the
+  TypeScript checks that run outside the viewer's reading.
+
+## 3. The TypeScript checks that stay disagree with the core
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** Product bug.
+- **Location:** `packages/mokly/src/authoring/components.ts:38` and
+  `:80-88`, `packages/mokly/src/authoring/links.ts:19-31`,
+  `packages/mokly/src/sidecar/session.ts:140`,
+  `packages/viewer/src/shell/control_values.ts:137`,
+  `packages/viewer/src/components/data.ts:40-41`,
+  `packages/viewer/src/navigation/logical.ts`,
+  `crates/mokly-model/src/validation.rs:43`,
+  `crates/mokly-model/src/usage_context.rs:54-63`,
+  `crates/mokly-html/src/links.rs:272-284`, and
+  `crates/mokly-html/src/components.rs:53`.
+- **Terms:**
+  - **`./data` checks:** the prop-schema checks and the path, link, and
+    fragment checks that `@mokly/viewer/data` exports, in TypeScript.
+- **Background:**
+  - Under option G of decision 1, the viewer checks no catalogue content.
+  - Some TypeScript checks stay, because they check what an author writes:
+    - The wrapper checks the props of each render before the author's code
+      runs. `docs/protocol/mokly-component-props.md:91-93` requires that
+      props check. Today the wrapper also checks the schema again, which the
+      core already checked once, in
+      `crates/mokly-catalogue/src/prepare_parent.rs:80-81`.
+    - The wrapper checks an explicit instance id, with its own pattern at
+      `components.ts:38`.
+    - The link helpers of `@mokly/mokly` check link paths and fragments.
+    - The sidecar checks entry paths.
+    - Serve's prop editor checks each edit. It also checks the entry's
+      schema again, through `validateProps` at `control_values.ts:137`.
+  - These differences exist between the TypeScript checks and the core:
+    - A schema prop named `__proto__`, `constructor`, or `prototype`: the
+      TypeScript schema check rejects it. The core accepts it. Both reject
+      such a key in a props value, as
+      `docs/protocol/mokly-component-props.md:59-61` requires.
+    - Fragment characters: the core accepts symbols such as U+24B6, the
+      circled capital A. TypeScript rejects them, as
+      `docs/protocol/mokly-navigation.md:82-83` requires. Here the core
+      breaks the doc.
+    - An explicit instance id such as `con`: the core rejects it. The
+      wrapper accepts it, as `docs/protocol/mokly-instances.md:34-35`
+      allows. Here the core breaks the doc.
+    - The TypeScript value check counts the size of a value in another way
+      than the core, so a large or deep value can pass one and fail the
+      other.
+  - Under G, a difference can cause a confusing error at build time. It can
+    no longer make a catalogue unreadable in a viewer.
+- **Problem:** An author's component or link can pass one check and fail the
+  other. Each later rule change needs a Rust change and a TypeScript change.
+- **Impact if no action:** Authors keep getting errors from two checks that
+  disagree. For example, a component can pass the core's schema check and
+  then fail at every render.
+- **Root question:** How does each prop and each link that an author writes
+  get one clear answer, early, that the core's later check never reverses?
+  The options check of 2026-11-03 widened the first question, which assumed
+  that the TypeScript checks stay and that the core's rules win.
+- **Options:** The options check of 2026-11-03 added F to J.
+  - **A.** Change nothing. Effort: Small.
+  - **B.** Make each TypeScript check follow the core's rule where it can,
+    and run one shared set of test cases through both sides. The core also
+    rejects a schema prop named `__proto__`, `constructor`, or `prototype`,
+    which is a new build error. The fragment and instance id rules then
+    leave their protocol docs, which must change. Effort: Medium.
+  - **C.** Apply B without the new core rule. The TypeScript schema check
+    then accepts such a prop name. Effort: Medium.
+  - **D.** Drop the wrapper's early props check, and rely on the core's check
+    after each render. It changes `docs/protocol/mokly-component-props.md:91-93`.
+    Authors can get a crash in their own code in place of a clear prop
+    error. Effort: Medium.
+  - **E.** Give the wrapper the core's own prop checker in Node as a `.wasm`
+    file. That needs the trial's two `jsonschema` patches, or a second Rust
+    validator. It brings back the Rust-to-WebAssembly build. Effort: Large.
+  - **F.** Take the side that rejects less, where that is safe, and run B's
+    shared test cases through both sides. No build gets a new error.
+    Effort: Medium.
+    - The TypeScript schema check accepts a schema prop named `constructor`,
+      as the core does. Both sides still reject that key in a props value.
+    - TypeScript accepts the core's wider set of fragment characters, and
+      `docs/protocol/mokly-navigation.md:82-83` changes to match.
+    - The core accepts an explicit instance id such as `con`, as
+      `docs/protocol/mokly-instances.md:34-35` allows.
+  - **G.** Apply F. Also check each schema only once, in the core, when it
+    accepts the definition. The wrapper and Serve's prop editor then check
+    only the props value against that schema, with a new value check in
+    `./data`. The wrapper can then never reject a schema that the core
+    accepted. Effort: Medium.
+  - **H.** Apply D, but report the prop error first when a render fails. The
+    sidecar returns the instances that it recorded before the crash, and the
+    core checks their props before it reports the crash. The author's code
+    still runs with bad props, and the sidecar's error answer changes.
+    Effort: Medium.
+  - **I.** Apply E as a native Node addon in the five `@mokly/native-*`
+    packages. It runs the core's own validator with no patches. It adds a
+    native build for each platform. Serve's prop editor keeps its
+    TypeScript copy. Effort: Large.
+  - **J.** Apply I, and give Serve's prop editor the core's validator as a
+    module that only Serve loads. Every prop check then uses one copy. It
+    brings back the WebAssembly build and the two patches, for Serve only.
+    Effort: Large.
+- **Left out:**
+  - Ship the Rust checks to every browser delivery: J is better on every
+    point, because only Serve runs live edits.
+  - Generate the TypeScript checks from Rust: the differences are in the
+    logic and in where each rule runs, not in lists that a generator writes.
+  - Call the core from the wrapper during a render: React renders the
+    component synchronously, and the sidecar sends the core only answers and
+    events.
+- **Wider fix:** J for the prop rules, because one copy of the core's
+  validator cannot drift. The path and fragment grammar keep two copies
+  under every option.
+- **Previous examples:** Decision 2 of this plan, and
+  `plans/follow-ups/reserved-navigation-names-in-authored-html.md`.
+- **Related:** Decision 2, which the answer to decision 1 closed. This item
+  holds its leftover. `plans/follow-ups/wrapper-plain-data-error-code.md`
+  holds a bug that the options check found in the same wrapper code.
+- **Recommendation:** G, after the options check. The first recommendation
+  was B. G removes the real differences with no new build error, and the
+  wrapper can never again reject a schema that the core accepted. B adds a
+  build error and moves two rules away from their protocol docs.
+- **Action:** ask the user, because the options change protocol rules and
+  have real trade-offs.
