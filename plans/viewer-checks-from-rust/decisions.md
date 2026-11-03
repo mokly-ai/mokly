@@ -201,3 +201,7 @@ plan deletes this file with the plan.
 - **Outcome:** the user chose G on 2026-11-03. The deciding question was
   whether hosts other than Mokly Cloud make or change catalogue JSON
   themselves. G fits when all catalogue JSON comes from Mokly.
+- **Later choice:** in workspace 463, on 2026-11-03, the user chose option B
+  of that workspace: G, except that the core no longer checks its own output
+  before it writes it. The `mokly-model` readers stay only as the upload
+  check of a receiver.

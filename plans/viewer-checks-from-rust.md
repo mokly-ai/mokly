@@ -15,10 +15,14 @@ The trial of 2026-11-02 showed a large cost. The as-is readers add about
 reader still adds about 350 KB gzip and reads four to six times slower. On
 2026-11-03 the user chose option G of
 [decision 1](./viewer-checks-from-rust/decisions.md#1-the-trial-shows-a-large-cost-for-option-f):
-check the read model once, with the Rust readers, where it enters. The core
-checks it when it writes. A receiver, such as Mokly Cloud, checks each
-upload. The viewer keeps the version gates and the delivery fences, and it
-trusts the content. The decision record keeps every option and the trial
+check the read model once, with the Rust readers, where it enters. In
+workspace 463 the user then chose option B there: G, except that the core no
+longer checks its own output before it writes it. Workspace 463 removes those
+checks in `mokly-static`, `mokly-server`, and `mokly-publish`, and the viewer
+shell guards in files that this plan does not change. The `mokly-model`
+readers stay only as the upload check of a receiver, such as Mokly Cloud. The
+viewer keeps the version gates and the delivery fences, and it trusts the
+content. The decision record keeps every option and the trial
 numbers.
 [Decision 2](./viewer-checks-from-rust/rule-differences.md#2-the-core-and-the-viewer-apply-different-rules)
 closed with that answer, and
@@ -50,8 +54,8 @@ Replaced ways:
 
 - The viewer's content checks of the index, the details, the deployment
   file, the live descriptor, the render answer, and the removed page preview
-  → the version gates and the delivery fence in the viewer, the core's
-  checks when it writes, and the receiver's lenient Rust check. Consumers
+  → the version gates and the delivery fence in the viewer, and the
+  receiver's lenient Rust check. Consumers
   under `packages/viewer/src`: `catalogue/sources.ts`,
   `viewer/index_source.ts`, `standalone/data_source.ts`,
   `standalone/live_source.ts`, `standalone/live_render.ts`, and
@@ -69,9 +73,12 @@ Depends on: none
 
 - [ ] `docs/protocol/mokly-viewer.md:44-45` and `:63-66`: the viewer checks
       the version gates and the delivery fence, and it trusts the content.
-      Add the decision in force beside that rule: one check where JSON
-      enters, not a second check in the viewer, because of the trial's cost
-      and the drift of two copies.
+      Add the decision in force beside that rule: the receiver's upload check,
+      not a check in the viewer, because of the trial's cost and the drift of
+      two copies. Add no rule that the core checks its output before it
+      writes it.
+- [ ] Merge the branch of workspace 463 before this milestone, because it
+      edits the same protocol docs.
 - [ ] `docs/protocol/mokly-viewer.md`: bad JSON shows the failure state of
       design call 4.
 - [ ] `docs/protocol/mokly-catalogue-serialization.md:106-115`: the lenient
@@ -157,7 +164,9 @@ These TODOs follow option G of decision 3, the recommendation.
 Depends on: 3, 4, 5
 
 - [ ] Delete each viewer module that no consumer uses, under the dead-code
-      test of the `git-commit` skill. Save the searches under
+      test of the `git-commit` skill. Keep the `@mokly/viewer/data` exports
+      `validateProps`, `isLinkPath`, and `isLogicalFragment`, because
+      `@mokly/mokly` uses them to check author input. Save the searches under
       `.context/viewer-checks-from-rust/`.
 - [ ] Update the viewer README, the shell README, and the unused internal
       export baseline.

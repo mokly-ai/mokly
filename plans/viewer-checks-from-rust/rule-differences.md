@@ -167,6 +167,8 @@ plan deletes this file with the plan.
     - The TypeScript value check counts the size of a value in another way
       than the core, so a large or deep value can pass one and fail the
       other.
+  - `@mokly/mokly` keeps using the `./data` exports `validateProps`,
+    `isLinkPath`, and `isLogicalFragment` to check author input.
   - Under G, a difference can cause a confusing error at build time. It can
     no longer make a catalogue unreadable in a viewer.
 - **Problem:** An author's component or link can pass one check and fail the
@@ -190,7 +192,8 @@ plan deletes this file with the plan.
   - **D.** Drop the wrapper's early props check, and rely on the core's check
     after each render. It changes `docs/protocol/mokly-component-props.md:91-93`.
     Authors can get a crash in their own code in place of a clear prop
-    error. Effort: Medium.
+    error. Workspace 463 removes the core's check of its written output, so
+    D also needs a core check of recorded props that stays. Effort: Medium.
   - **E.** Give the wrapper the core's own prop checker in Node as a `.wasm`
     file. That needs the trial's two `jsonschema` patches, or a second Rust
     validator. It brings back the Rust-to-WebAssembly build. Effort: Large.
@@ -211,8 +214,8 @@ plan deletes this file with the plan.
   - **H.** Apply D, but report the prop error first when a render fails. The
     sidecar returns the instances that it recorded before the crash, and the
     core checks their props before it reports the crash. The author's code
-    still runs with bad props, and the sidecar's error answer changes.
-    Effort: Medium.
+    still runs with bad props, and the sidecar's error answer changes. Like
+    D, it needs a core check of recorded props that stays. Effort: Medium.
   - **I.** Apply E as a native Node addon in the five `@mokly/native-*`
     packages. It runs the core's own validator with no patches. It adds a
     native build for each platform. Serve's prop editor keeps its
