@@ -316,14 +316,16 @@ Evidence: `.context/remove-own-output-checks/marker-limit-report.md`.
 
 Depends on: every other milestone
 
-- [ ] Integrate shared security fix `9447445` from PR #282 before the
+- [x] Integrate shared security fix `9447445` from PR #282 before the
       complete gate. The user directed this integration on 2026-11-03.
       Do not duplicate its dependency patch.
+- [x] Remove the obsolete binary-test case for a second zero-sidecar
+      normalization. Keep positive counts and the original input validation.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Merge `origin/main`, with the branch of the other plan when it merged
+- [x] Merge `origin/main`, with the branch of the other plan when it merged
       first, and resolve the shared lines of `mokly-component-props.md`,
       `mokly-catalogue-serialization.md`, and `crates/mokly-model`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
