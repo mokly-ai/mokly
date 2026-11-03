@@ -1,16 +1,20 @@
 # Developer Type Checks
 
+Status: In progress under the [frame package plan](../../plans/frame-package.md).
+
 Continuation of [Developer Test Commands](./developer-test-commands.md).
 
 ## Commands And Projects
 
-Three commands check the same five TypeScript projects in this order:
+Three commands check the same seven TypeScript projects in this order:
 
 1. `packages/mokly/tsconfig.json`: the `@mokly/mokly` package.
 2. `tsconfig.json`: the repository root project.
 3. `packages/ui/tsconfig.json`: the `@mokly/ui` package.
-4. `packages/viewer/tsconfig.json`: the `@mokly/viewer` package.
-5. `tsconfig.scripts-declarations.json`: the declaration files of the
+4. `packages/model/tsconfig.json`: the `@mokly/model` package.
+5. `packages/frame/tsconfig.json`: the `@mokly/frame` package.
+6. `packages/viewer/tsconfig.json`: the `@mokly/viewer` package.
+7. `tsconfig.scripts-declarations.json`: the declaration files of the
    repository scripts.
 
 | Command                  | Mode     | Checker                                                         |
@@ -24,9 +28,9 @@ Every command resolves public authoring declarations from package output. Run
 preparation for its type check. No command writes compiled output.
 
 A command stops at the first failed project and exits unsuccessfully. It shows
-every diagnostic of that project. The UI and viewer projects report paths
-relative to their package directories. The other projects report paths
-relative to the repository root.
+every diagnostic of that project. The UI, model, frame, and viewer projects
+report paths relative to their package directories. The other projects report
+paths relative to the repository root.
 
 ## Required Type Check
 
@@ -60,7 +64,7 @@ The command never falls back to the standard check. It never installs or
 downloads Bun. The exact pin gives every gate host the same compiler rules. A
 fallback or a minimum version would let two hosts accept different code.
 
-Bun decides the required result for all five projects. That includes the
+Bun decides the required result for all seven projects. That includes the
 tests, the example catalogue, and the repository scripts. No package build
 compiles those files. An error that only Bun reports fails the gate. An error
 that only TypeScript 6 reports in those files does not fail the gate.

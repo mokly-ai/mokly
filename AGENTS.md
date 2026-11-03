@@ -6,11 +6,16 @@ Cargo workspace under `crates/`. The `@mokly/mokly` package, which holds the
 `mokly` shim, the render sidecar, and the authoring API, is under
 `packages/mokly`. The `@mokly/viewer` React viewer is under
 `packages/viewer`. The `@mokly/ui` shared UI package, every element and every
-stylesheet of the shell, is under `packages/ui`. The example
-catalogue is under `examples/basic`, the tooling tests and browser specs are
-under `tests/`, the viewer tests are under `packages/viewer/tests`, the UI
-package tests are under `packages/ui/tests`, and the Rust verification task
-runner is under `xtask/`. The protocol docs under `docs/protocol` are the spec.
+stylesheet of the shell, is under `packages/ui`. The `@mokly/model` package,
+the catalogue rules and generated types that the frame package and the viewer
+share, is under `packages/model`. The `@mokly/frame` package, the frame
+adapters and the frame probe script that runs inside published pages, is under
+`packages/frame`. The example catalogue is under `examples/basic`, the tooling
+tests and browser specs are under `tests/`, the viewer tests are under
+`packages/viewer/tests`, the UI, model, and frame package tests are under
+`packages/ui/tests`, `packages/model/tests`, and `packages/frame/tests`, and
+the Rust verification task runner is under `xtask/`. The protocol docs under
+`docs/protocol` are the spec.
 
 This file holds the rules that are specific to this repository. The
 always-on rules and the detailed procedures live in the shared skills from
@@ -58,14 +63,15 @@ the rule. Rules for one application, package, or feature live in the
 ## Commands
 
 - Build: `npm run build`. It builds the host native target, the UI package,
-  the viewer, and then the shim and the sidecar, in that order.
+  the model package, the frame package, the viewer, and then the shim and the
+  sidecar, in that order.
 - Dev server: `npm run dev` serves the example catalogue with watching. It
   runs `npm ci` and `npm run build` first when the install or the build is
   missing or out of date with `package-lock.json`. It does not rebuild after
   a source change, so run `npm run build` first.
 - Targeted tests: `npm test -- <file> --test-name-pattern=<regex>` for the
-  Node test files under `tests/`, `packages/viewer/tests/`, and
-  `packages/ui/tests/`,
+  Node test files under `tests/`, `packages/viewer/tests/`,
+  `packages/ui/tests/`, `packages/model/tests/`, and `packages/frame/tests/`,
   `cargo test -p <crate>` for one crate, and
   `npm run test:browser -- <spec> -g "<name>"` for browser specs. The npm
   commands build first. The

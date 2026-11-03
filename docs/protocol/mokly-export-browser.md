@@ -1,5 +1,7 @@
 # Static Build Browser And Identity
 
+Status: In progress under the [frame package plan](../../plans/frame-package.md).
+
 This page supplements [Static Delivery](./mokly-export-delivery.md) with the
 standalone browser inventory and the deployment identity algorithm that the
 [shell delivery contract](./mokly-shell-delivery.md#identity) names.
@@ -36,12 +38,12 @@ Removed-content requests are limited to the generation that the index's
 removed page or document, and the snapshot documents beneath that
 generation's permitted sides. There is no parallel vanilla Browse or preview runtime.
 
-The inspector is `client/inspector.js`: React-free, at the 9,216-byte cap of
-the [published inspector contract](./mokly-published-inspector.md). It runs
-inside consumer documents under the [frame adapter](./mokly-frame-adapter.md)
-and shares nothing with the shell bundle. No server module, watcher entry, or
-live-host module enters the inventory. Module changes alter the deployment
-identity as required below.
+The frame probe is `client/frame-probe.js`: React-free, at the 9,216-byte cap
+of the [frame probe contract](./mokly-frame-probe.md), and built by the
+[frame package](./mokly-frame-package.md). It runs inside consumer documents
+under the [frame adapter](./mokly-frame-adapter.md) and shares nothing with the
+shell bundle. No server module, watcher entry, or live-host module enters the
+inventory. Module changes alter the deployment identity as required below.
 
 ## Deployment Identity
 

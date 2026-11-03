@@ -1,9 +1,12 @@
 # Viewer Frame Adapter
 
+Status: In progress under the [frame package plan](../../plans/frame-package.md).
+
 ## Public Interface
 
-The viewer exports these types. `CatalogueUsage` is the generated type of the
-[usage records](./mokly-component-usage-records.md).
+The [frame package](./mokly-frame-package.md) defines these types and the
+built-in adapters, and `@mokly/viewer` re-exports them. `CatalogueUsage` is the
+generated type of the [usage records](./mokly-component-usage-records.md).
 
 ```ts
 interface Box {
@@ -131,7 +134,7 @@ Pending pick activation is cancelled with `disposed` and no start/end event; a
 fresh activation waits for the updated sessions. Unrelated updates do not
 cancel or redraw inspection. Updates are ordered per session; superseded
 success/failure has no current host effects. This coordination belongs to the
-viewer, not the inspector protocol.
+viewer, not the frame probe protocol.
 
 Boxes are finite CSS pixels relative to the frame's visible content viewport,
 after internal scrolling, clipping ancestors and occlusion, before host scaling.
@@ -140,13 +143,8 @@ boxes per range; hidden/null ranges have empty arrays. Report all authenticated
 instance boundaries, including empty ones, without invented geometry. Parent
 code translates/clips boxes to the outer frame and host viewport. Geometry
 changes invalidate measurements on scroll, resize, mutation and font/image load.
-Both the same-origin measurer and in-frame inspector share clipping rules.
-Viewport-fixed elements and their text escape ordinary overflow ancestors;
-clipping resumes at a fixed-position containing block (including transforms,
-perspective, filters, containment or relevant `will-change`). Inner scrollers
-still clip their own descendants. Ancestor visibility and opacity remain
-effective across a fixed-position escape. This follows the
-[CSS containing-block model](https://www.w3.org/TR/css-position-3/#def-cb).
+Both built-in adapters run one event runtime and one set of clipping rules,
+under the [frame package contract](./mokly-frame-package.md#built-in-adapters).
 `scrollTo` scrolls the first rendered range into nearest view, including inner
 scroll containers; null output is a successful no-op, an absent key is an error.
 
@@ -157,15 +155,21 @@ draws the mask and the labels of the
 components of the [shared UI package](./mokly-ui-package.md), from the boxes
 of `listInstanceBoundaries()`. A cross-origin mask redraws after one message
 round trip, as its labels do. Decision: the shell draws every mask, not an
-adapter or the in-frame inspector, because each of those drawings is a second
+adapter or the frame probe, because each of those drawings is a second
 implementation outside the shell's React tree.
 
 Highlighting preserves consumer pixels/layout/styles, and `off` restores
 normal link activation. Pick intercepts instance selection before product
-links; Escape emits `pick-end`. Subscriptions share one installation and
-return idempotent cleanup. Disposal removes listeners, observers and scheduled
-work, rejects pending operations, and is idempotent. Host-side errors use the
-codes above; diagnostics are not extracted from consumer text.
+links; Escape emits `pick-end`. Every adapter follows the hover rule of the
+[selection contract](./mokly-viewer-selection.md#selection-events-and-imperative-use):
+`hover` names the instance that a `click` at the same point would report.
+While the latest `highlight` call holds mode `highlight` or `pick`, hover and
+click report only its keys; in mode `off`, they report any instance. Of nested
+reportable instances under the pointer, the innermost wins. Subscriptions
+share one installation and return idempotent cleanup. Disposal removes
+listeners, observers and scheduled work, rejects pending operations, and is
+idempotent. Host-side errors use the codes above; diagnostics are not
+extracted from consumer text.
 
 ## Same-Origin Documents
 
@@ -177,9 +181,9 @@ adapter authenticates the document first and then applies a missing or changed
 validated fragment. An authenticated document reload renews every
 document-scoped listener and observer without replacing the outer frame
 session. Range authentication, including a component page's markerless root
-region, follows the [range markers](./mokly-published-inspector.md#range-markers);
+region, follows the [range markers](./mokly-frame-probe.md#range-markers);
 ownership, clipping, pick handling, scroll restoration and logical-link
-classification match the inspector. Ready usage is required for instance
+classification match the frame probe. Ready usage is required for instance
 inspection; absent usage does not disable valid navigation.
 
 While a same-origin replacement loads, valid marked activations in the
@@ -226,20 +230,21 @@ Historical [removed previews](./mokly-removed-previews.md) and
 [comparison panes](./mokly-comparison-panes.md) bypass this adapter as guarded,
 viewer-origin `srcdoc`; panes add only their documented scrolling behavior.
 Local memory previews use their authenticated private transport.
-No inspector handshake, extra badge, pick control, or visible affordance appears
-locally. Panes gain no inspection, geometry, markers, or navigation messages.
+No frame probe handshake, extra badge, pick control, or visible affordance
+appears locally. Panes gain no inspection, geometry, markers, or navigation messages.
 
 ## Cross-Origin Adapter
 
 `postMessageAdapter` mounts a frame on a separate origin. The
-[inspector handshake and wire protocol](./mokly-inspector-wire.md) define its
-mount, its handshake with the in-frame inspector, and wire protocol v2. The
-[published inspector contract](./mokly-published-inspector.md) defines the
-in-frame inspector script that the static build injects.
+[frame probe handshake and wire protocol](./mokly-frame-probe-wire.md) define
+its mount, its handshake with the frame probe, and wire protocol v3. The
+[frame probe contract](./mokly-frame-probe.md) defines the frame probe script
+that the static build injects.
 
 ## Related Docs
 
-- [Inspector handshake and wire protocol](./mokly-inspector-wire.md)
-- [Published inspector](./mokly-published-inspector.md)
+- [Frame package](./mokly-frame-package.md)
+- [Frame probe handshake and wire protocol](./mokly-frame-probe-wire.md)
+- [Frame probe](./mokly-frame-probe.md)
 - [Frame link navigation](./mokly-frame-link-navigation.md)
 - [Viewer markers and multi-instance highlights](./mokly-viewer-markers.md)

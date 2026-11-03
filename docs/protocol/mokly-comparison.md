@@ -1,5 +1,7 @@
 # Tree Comparison And Changes
 
+Status: In progress under the [frame package plan](../../plans/frame-package.md).
+
 ## Purpose And Inputs
 
 Comparison decides, for every entry and view, whether the base and the head
@@ -15,7 +17,7 @@ document. A fragment a sidecar returns carries its regions as the comment
 markers below, and the core reads them into node annotations when it grafts the
 fragment. Served and built documents keep the `mokly-instance` and `mokly-slot`
 markers of every region the core composed, whatever rendered the instance, so
-the [published inspector](./mokly-published-inspector.md) resolves each `r-n`
+the [frame probe](./mokly-frame-probe.md) resolves each `r-n`
 region in the live page. Ignore regions resolve at composition. Private
 `mokly-output` pairs mark adapter output inside renderer wrappers; the core
 consumes them when it attaches a component root. `mokly-link` pairs are consumed

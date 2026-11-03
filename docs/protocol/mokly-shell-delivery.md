@@ -1,6 +1,6 @@
 # Shell Delivery And Read Model Routes
 
-Status: Follow-up work remains in the [fallback keys item](../../plans/follow-ups/fallback-keys-checkout-folder.md).
+Status: Follow-up work remains in the [fallback keys item](../../plans/follow-ups/fallback-keys-checkout-folder.md), and work is in progress under the [frame package plan](../../plans/frame-package.md).
 
 ## Purpose And Boundary
 
@@ -57,7 +57,8 @@ catalogue data, no descriptor, and no route; the shell reads the route from
 render. Before the bundle runs, the shell stylesheet gives the stub the Auto
 interface appearance through the document class, under the
 [appearance contract](./mokly-viewer-appearance.md#standalone-appearance-control).
-The in-frame inspector script is the [frame adapter's](./mokly-frame-adapter.md).
+The [frame probe](./mokly-frame-probe.md) script is the
+[frame adapter's](./mokly-frame-adapter.md).
 
 ## Catalogue Index
 

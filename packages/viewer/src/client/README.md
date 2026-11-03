@@ -53,7 +53,7 @@ defines `updateUsage`, the usage rules, and the inspection ownership.
 
 Serve and the static build use the same-origin adapter. Only an embedding host
 selects `postMessageAdapter`. The
-[inspector handshake and wire protocol](../../../../docs/protocol/mokly-inspector-wire.md)
+[frame probe handshake and wire protocol](../../../../docs/protocol/mokly-frame-probe-wire.md)
 define the cross-origin session, and the
 [frame link navigation contract](../../../../docs/protocol/mokly-frame-link-navigation.md)
 defines the navigation events that the host resolves.

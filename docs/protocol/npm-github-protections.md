@@ -1,5 +1,7 @@
 # GitHub Publishing Protections
 
+Status: In progress under the [frame package plan](../../plans/frame-package.md).
+
 The [release workflow](../../.github/workflows/release.yml) runs on a push to
 `main` or a manual dispatch. Its publish job checks out a release tag, but GitHub
 environment rules evaluate the **workflow ref**, not that checkout. Permit only
@@ -23,10 +25,11 @@ dispatch authorizes a retry of those already-created immutable tags.
   can create new tags without a special bypass credential.
 - Preserve the existing protected `main` branch and verify it requires the
   exact `Required CI` check. Do not replace branch rules as part of this setup.
-- All eight npm packages need their own trusted-publisher and team-access
-  settings. They share environment `npm` and its main-only policy; a second
-  GitHub environment is unnecessary. The CLI's trust does not cover the UI
-  package, the viewer, or a native package.
+- All ten npm packages need their own trusted-publisher and team-access
+  settings, `@mokly/model` and `@mokly/frame` included. They share environment
+  `npm` and its main-only policy; a second GitHub environment is unnecessary.
+  The CLI's trust does not cover the UI, model, or frame package, the viewer,
+  or a native package.
 
 Publishing stays disabled until a read-back of the environment, its deployment
 branch policies, the tag ruleset, and the `main` branch protection confirms

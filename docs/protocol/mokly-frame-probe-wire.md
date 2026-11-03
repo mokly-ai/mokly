@@ -1,8 +1,10 @@
-# Inspector Handshake And Wire Protocol
+# Frame Probe Handshake And Wire Protocol
+
+Status: In progress under the [frame package plan](../../plans/frame-package.md).
 
 This continues the [viewer frame adapter contract](./mokly-frame-adapter.md).
 It defines how `postMessageAdapter` mounts a frame on a separate origin and
-exchanges messages with the in-frame inspector.
+exchanges messages with the [frame probe](./mokly-frame-probe.md).
 
 ## Cross-Origin Mount And Handshake
 
@@ -19,38 +21,39 @@ adopts this policy. Content hosting/isolation remains the host's responsibility.
 On each mount, generate 128 random bits using `crypto.getRandomValues` and
 encode them as 32 lowercase hex characters. Set one `mokly-host` query parameter
 to the app's exact serialized origin, using URL query encoding; preserve the
-view's validated hash and other approved parameters. The inspector requires
+view's validated hash and other approved parameters. The frame probe requires
 exactly one valid HTTP(S) host-origin parameter distinct from its own origin.
 The static host must ignore queries for file lookup. Never derive trust from
 `document.referrer`, a message-supplied origin, or a wildcard.
 
-After load, the adapter sends `hello` to the exact `frameOrigin`. The inspector
-accepts it only from `event.source === window.parent` and
+After load, the adapter sends `hello` to the exact `frameOrigin`. The frame
+probe accepts it only from `event.source === window.parent` and
 `event.origin === expectedHostOrigin`; it pins the first accepted nonce for that
 document and replies `ready` to that exact origin. Duplicate hello with the same
 nonce may resend ready; another nonce cannot replace the session. The adapter
 accepts replies only when `event.source === frame.contentWindow`,
 `event.origin === frameOrigin`, and channel, version and nonce match its active
 mount. Both sides use exact `targetOrigin` for every `postMessage`, never `"*"`.
-No `window.top` or `parent.location` reads/writes occur. The inspector is inert
-without handshake: no navigation interception, geometry collection or outgoing
-messages. Only its bounded handshake listener exists before activation.
+No `window.top` or `parent.location` reads/writes occur. The frame probe is
+inert without handshake: no navigation interception, geometry collection or
+outgoing messages. Only its bounded handshake listener exists before
+activation.
 
 Ready/requests time out after five seconds, disposing the session without retries.
 Disposal/unload clears all work; a fresh mount loads a new document and nonce.
 At most 16 requests are pending.
 
-## Wire Protocol v2
+## Wire Protocol v3
 
 Every message is a JSON string of at most 262,144 UTF-8 bytes; reject nonstrings
 or oversized strings before JSON parsing. The exact envelope is
-`{ channel: "mokly-inspector", version: 2, nonce, type, ...fields }`.
+`{ channel: "mokly-frame-probe", version: 3, nonce, type, ...fields }`.
 All objects must be plain JSON objects with exactly the fields for their
 discriminant; reject unknown keys recursively, unsupported versions/types,
 duplicates in key/range arrays, invalid numbers and broken references. Do not
 coerce strings to numbers or accept DOM nodes, transferable ports or binary data.
 
-All types/fields follow; `H` is the host adapter, `F` the immediate inspector.
+All types/fields follow; `H` is the host adapter, `F` the immediate frame probe.
 
 | Type         | Direction | Additional fields                                                                                         |
 | ------------ | --------- | --------------------------------------------------------------------------------------------------------- |
@@ -75,7 +78,7 @@ Subscribe replaces the event set; empty unsubscribes. Event messages require
 an active subscription. Request ids are strictly increasing positive safe
 integers within a mount; replies must match the outstanding request and expected
 response type. Ignore wrong-origin/source/nonce and malformed messages without
-reply. An authenticated invalid response fails its host operation; inspector
+reply. An authenticated invalid response fails its host operation; frame probe
 errors describe only valid requests it could not fulfill. No free-form errors
 cross the frame boundary.
 
@@ -92,16 +95,19 @@ Navigation paths follow the [path grammar](./mokly-paths.md), at most 256 ASCII
 characters; wire fragments match `/^[A-Za-z][A-Za-z0-9_:.-]*$/`, at most 256
 characters. Named targets use the [target grammar](./mokly-navigation.md#link-targets) and the same limit;
 all other target objects contain only `kind`. Navigation contains no URL, href,
-label or HTML. The inspector classifies only authenticated immediate native-link
-activations; the host revalidates paths against its catalogue and resolves URLs.
-Primary versus modified/middle activation follows the
+label or HTML. The frame probe classifies only authenticated immediate
+native-link activations; the host revalidates paths against its catalogue and
+resolves URLs. Primary versus modified/middle activation follows the
 [enhanced navigation rules](./mokly-navigation.md#enhanced-navigation-and-safe-degradation).
-The host owns navigation/new-context actions, using `noopener`; the inspector
+The host owns navigation/new-context actions, using `noopener`; the frame probe
 never navigates a top window. Ordinary unmarked/download/external links stay
 frame-owned. Asynchronous popup restrictions fail safely without granting the
 frame popup permission. Cross-origin inspection is not permission to inspect
 nested documents or trust arbitrary messages from consumer scripts.
 
+`hover` and `click` name instances under the hover rule of the
+[selection contract](./mokly-viewer-selection.md#selection-events-and-imperative-use),
+for the keys and the mode of the latest `highlight`.
 Hover/geometry updates coalesce to one of each per animation frame, at most
 60 of each per second; pointer exit reports `key: null, boxes: []`. Re-measure
 after geometry events. Inspection data contains keys and boxes only, plus range
@@ -112,15 +118,16 @@ keys even after a valid handshake; the nonce binds a mount, not content honesty.
 The viewer uses the same `geometry` notification and `list` response to redraw
 the highlight mask and the package labels and to refresh host marker placement.
 
-## Published Inspector
+## Frame Probe Script
 
 Static injection, inert document metadata, the rule that the script draws
 nothing, and the script budget are defined by the
-[published inspector contract](./mokly-published-inspector.md).
+[frame probe contract](./mokly-frame-probe.md).
 They do not change the handshake, the wire messages, or the same-origin adapter.
 
 ## Related Docs
 
 - [Viewer frame adapter](./mokly-frame-adapter.md)
-- [Published inspector](./mokly-published-inspector.md)
+- [Frame probe](./mokly-frame-probe.md)
+- [Frame package](./mokly-frame-package.md)
 - [Frame link navigation](./mokly-frame-link-navigation.md)

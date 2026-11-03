@@ -1,5 +1,7 @@
 # One-Time Mokly Registry Bootstrap
 
+Status: In progress under the [frame package plan](../../plans/frame-package.md).
+
 npm can configure a trusted publisher only for a package that already exists.
 The first publication of each package is therefore a one-time, reviewed,
 interactive registration. Every later version follows the
@@ -8,12 +10,13 @@ release-please state to recreate a version.
 
 ## Registered Packages
 
-`@mokly/mokly`, `@mokly/viewer`, `@mokly/ui`, and the five
-`@mokly/native-{target}` packages are registered. The `bootstrap` dist-tag
-stays on each registration version: `@mokly/mokly` 0.8.0, `@mokly/viewer`
-0.1.0, `@mokly/ui` 0.16.1, and each native package 0.0.0. Reviewed releases advance `latest`. Never repeat a registration,
-republish a registration version, remove `latest`, or unpublish a package to
-undo a registration.
+`@mokly/mokly`, `@mokly/viewer`, `@mokly/ui`, `@mokly/model`, `@mokly/frame`,
+and the five `@mokly/native-{target}` packages are registered. The `bootstrap`
+dist-tag stays on each registration version: `@mokly/mokly` 0.8.0,
+`@mokly/viewer` 0.1.0, `@mokly/ui` 0.16.1, `@mokly/model` and `@mokly/frame`
+0.18.0, and each native package 0.0.0. Reviewed releases advance `latest`.
+Never repeat a registration, republish a registration version, remove
+`latest`, or unpublish a package to undo a registration.
 
 Every registered package has its own trusted publisher: repository
 `mokly-ai/mokly`, workflow `release.yml`, environment `npm`, and direct
@@ -52,6 +55,29 @@ inventory holds only `LICENSE`, `README.md`, `CHANGELOG.md`, `package.json`,
 and files under `dist/`, and there is no `tls-dependencies.txt`, because the
 package has no native dependency. The release then publishes the package
 between the native packages and the viewer under the
+[publication order](./npm-release.md#release-build-matrix-and-publication-order).
+
+## Model And Frame Package Registration
+
+Register `@mokly/model` and `@mokly/frame` once each, before the first
+coordinated release that publishes them. From a clean checkout of the reviewed
+commit, after `npm ci --ignore-scripts`, a maintainer runs the bootstrap
+command for each package:
+
+```sh
+node scripts/release/bootstrap.mjs {sha} .context/model-bootstrap @mokly/model
+node scripts/release/bootstrap.mjs {sha} .context/frame-bootstrap @mokly/frame
+```
+
+Each command applies the rules of the
+[UI package registration](#ui-package-registration). It packs only the
+registration version `0.18.0`; it refuses a commit whose package version
+differs. Each registration meets the native requirements 2 to 4 below, with
+these differences: the report names the package and version `0.18.0`, its
+inventory holds only `LICENSE`, `README.md`, `CHANGELOG.md`, `package.json`,
+and files under `dist/`, and there is no `tls-dependencies.txt`, because
+neither package has a native dependency. The release then publishes both packages between the UI
+package and the viewer under the
 [publication order](./npm-release.md#release-build-matrix-and-publication-order).
 
 ## Native Package Registration
@@ -132,7 +158,7 @@ meets these requirements:
 
 4. The package has its own trusted publisher and the access settings of
    [every registered package](#registered-packages). The maintainer reads
-   back the CLI, UI package, and viewer publishers too.
+   back the CLI, UI, model, frame, and viewer publishers too.
 
 Then the coordinated release, or a retry under the
 [release recovery rules](./npm-release-management.md#release-recovery),

@@ -1,5 +1,7 @@
 # Frame Link Navigation
 
+Status: In progress under the [frame package plan](../../plans/frame-package.md).
+
 This continues the [navigation contract](./mokly-navigation.md).
 
 `sameOriginAdapter` preserves this behavior. The viewer package exposes the
@@ -10,10 +12,10 @@ target parsing, marker validation, modifier/target classification, canonical
 routes and safe degradation of the navigation contract. No adapter gains
 nested-frame access. The optional `postMessageAdapter` requires a separate,
 nonopaque frame origin and the
-[inspector handshake](./mokly-inspector-wire.md#cross-origin-mount-and-handshake).
+[frame probe handshake](./mokly-frame-probe-wire.md#cross-origin-mount-and-handshake).
 It carries bounded logical paths/fragments and activation/target states, never
 consumer hrefs, labels or arbitrary navigation URLs. The host revalidates the
-destination against its catalogue and owns the navigation action; the inspector
-never reads or changes `window.top` or `parent.location`. Cross-origin hosts
-grant `allow-same-origin allow-scripts` only under that explicit contract;
-default local Browse and all comparison snapshot restrictions apply.
+destination against its catalogue and owns the navigation action; the frame
+probe never reads or changes `window.top` or `parent.location`. Cross-origin
+hosts grant `allow-same-origin allow-scripts` only under that explicit
+contract; default local Browse and all comparison snapshot restrictions apply.

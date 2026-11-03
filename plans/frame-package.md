@@ -32,8 +32,8 @@ Contract owners:
   `docs/protocol/mokly-model-package.md`, which Milestone 1 adds.
 - The [viewer frame adapter](../docs/protocol/mokly-frame-adapter.md).
 - The [viewer selection contract](../docs/protocol/mokly-viewer-selection.md).
-- The [published inspector](../docs/protocol/mokly-published-inspector.md)
-  and the [inspector wire protocol](../docs/protocol/mokly-inspector-wire.md),
+- The [published inspector](../docs/protocol/mokly-frame-probe.md)
+  and the [inspector wire protocol](../docs/protocol/mokly-frame-probe-wire.md),
   which Milestone 1 renames to the frame probe.
 - The [package boundary](../docs/architecture/package-boundary.md).
 - The [registry bootstrap](../docs/protocol/npm-bootstrap.md) and the
@@ -212,6 +212,26 @@ These are design calls of the planning agent, made on 2026-11-03.
   `docs/protocol/mokly-frame-probe-wire.md`.
 - The inspection feature and the inspector panel keep their names.
 
+### Calls from Milestone 1
+
+These are design calls of the orchestrator, made on 2026-11-03, for the
+items that the Milestone 1 docs agent raised. None changes a requirement.
+
+- Milestone 4 repoints the protocol links to the generated types, because
+  the types move there.
+- The protocol pages that still name the in-frame inspector change in
+  Milestone 1. READMEs and follow-up items change with their code in
+  Milestone 6.
+- Milestone 6 adds the republish step to the upgrade guide, because the
+  release contract makes the guide the home of upgrade steps.
+- The status line of `docs/protocol/npm-bootstrap.md` stays after the
+  merge and links the registration follow-up item, because the
+  registration happens after the merge.
+- No rule for instances that overlap without nesting. The measured boxes
+  already exclude areas that other content covers, so only the visible
+  instance contains a point.
+- Each new package gets the `CHANGELOG.md` stub of `@mokly/ui`.
+
 ## Milestone 1: Documentation and protocol
 
 Depends on: none.
@@ -219,32 +239,32 @@ Depends on: none.
 The docs state the shared runtime, the packages, their boundaries, their
 release, and the frame probe names before the code changes.
 
-- [ ] Add `docs/protocol/mokly-frame-package.md` and
+- [x] Add `docs/protocol/mokly-frame-package.md` and
       `docs/protocol/mokly-model-package.md`, each with a status line that links this plan. State
       each package, its entries, the re-exports by the viewer, the rule that
       a package never imports the viewer, the CLI, or consumer code, the
       exact lockstep pins, and the decisions with their reasons.
-- [ ] Rename `docs/protocol/mokly-published-inspector.md` and
+- [x] Rename `docs/protocol/mokly-published-inspector.md` and
       `docs/protocol/mokly-inspector-wire.md` to the frame probe docs. State
       the new script path, channel, wire version 3, and page markers, with
       a status line. Update every link to them.
-- [ ] Update `docs/protocol/mokly-frame-adapter.md`: `@mokly/frame` defines
+- [x] Update `docs/protocol/mokly-frame-adapter.md`: `@mokly/frame` defines
       the interface and the built-in adapters, `@mokly/viewer` re-exports
       them, both built-in adapters run one event runtime, and every adapter
       follows the hover rule of decision 6.
-- [ ] State the hover rule of decision 6 in
+- [x] State the hover rule of decision 6 in
       `docs/protocol/mokly-viewer-selection.md`.
-- [ ] Update `docs/architecture/package-boundary.md`, which says that the
+- [x] Update `docs/architecture/package-boundary.md`, which says that the
       viewer owns the frame adapters and the in-frame inspector.
-- [ ] Update `docs/protocol/npm-bootstrap.md`, `npm-release.md`,
+- [x] Update `docs/protocol/npm-bootstrap.md`, `npm-release.md`,
       `npm-release-management.md`, and `npm-github-protections.md` with the
       registration, the publication order, and the trust of each new
       package.
-- [ ] Update `docs/protocol/packed-consumer-smoke.md`,
+- [x] Update `docs/protocol/packed-consumer-smoke.md`,
       `docs/protocol/developer-test-commands.md`,
       `docs/protocol/developer-type-checks.md`, and
       `docs/protocol/ci-verification-repository.md`.
-- [ ] Update `AGENTS.md`, `README.md`, and `scripts/release/README.md` with
+- [x] Update `AGENTS.md`, `README.md`, and `scripts/release/README.md` with
       the package list and the build order.
 
 ## Milestone 2: Shared event core
@@ -282,7 +302,8 @@ Depends on: 1.
 The model code moves out of the viewer into `@mokly/model`.
 
 - [ ] Create `packages/model` with `package.json`, `tsconfig.json`,
-      `tsconfig.build.json`, a build script, `README.md`, and `LICENSE`.
+      `tsconfig.build.json`, a build script, `README.md`, `LICENSE`, and the
+      `CHANGELOG.md` stub of `@mokly/ui`.
       Wire it into the root workspaces, the build order, the test runner,
       the typecheck runner, the checks in `xtask/src/check/commands.rs`,
       the release scripts and their registration in `bootstrap.mjs`,
@@ -293,6 +314,9 @@ The model code moves out of the viewer into `@mokly/model`.
 - [ ] Point `cargo xtask generate-types` and its tests at the package.
       Change the import that `crates/mokly-model/src/typescript.rs` adds to
       `RenderCapability.ts`.
+- [ ] Repoint the links of the protocol pages to the generated types, about
+      22 links in 15 pages, and the output folder that
+      `crates/mokly-model/README.md` names, to `packages/model`.
 - [ ] Move every viewer consumer to the package. Re-export the moved
       functions from `@mokly/viewer/data`. Delete the old modules.
 
@@ -303,7 +327,8 @@ Depends on: 4.
 The empty frame package builds, tests, and packs with the other packages.
 
 - [ ] Create `packages/frame` with `package.json`, `tsconfig.json`,
-      `tsconfig.build.json`, a build script, `README.md`, and `LICENSE`.
+      `tsconfig.build.json`, a build script, `README.md`, `LICENSE`, and the
+      `CHANGELOG.md` stub of `@mokly/ui`.
 - [ ] Wire it in the same places as the model package in Milestone 4.
 
 ## Milestone 6: Move the inspector and rename it to the frame probe
@@ -328,6 +353,11 @@ milestone and import from `@mokly/frame/internal`.
       Rust modules, the injected script path, the reserved-marker build
       error, and the asset check in `crates/mokly-server/src/assets.rs`.
       Update their tests and snapshots.
+- [ ] Add the republish step of the rename to
+      `docs/guides/start/upgrade.md`. Update the READMEs and follow-up items
+      that name the old script: `packages/viewer/docs/deployment/README.md`,
+      `packages/viewer/README.md`, and the items under `plans/follow-ups/`
+      that name `inspector.js`.
 - [ ] Move `packages/viewer/tests/inspector_budget.test.ts` and
       `marker_ranges.test.ts`. Point `tests/inspector_inert.test.ts`,
       `tests/inspector_schema.test.ts`, and `tests/inspector_pool.test.ts`
@@ -351,7 +381,9 @@ package only through its exports.
       `scripts/verification/prepared.mjs`, and the lint tests at the
       package.
 - [ ] Move the client and inspector READMEs into the package README. Delete
-      the old directories. Remove the status lines that Milestone 1 added.
+      the old directories. Remove the status lines that Milestone 1 added,
+      except on `docs/protocol/npm-bootstrap.md`, which stays until the
+      registration.
 
 ## Milestone 8: Verification, commit, review, and pull request
 
@@ -370,7 +402,8 @@ Depends on: every other milestone.
       items under `plans/follow-ups/` for the rest, re-review once, and
       report.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
-      plan".
+      plan". Point the status line of `docs/protocol/npm-bootstrap.md` at
+      the follow-up item of the registration.
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.

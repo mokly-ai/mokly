@@ -22,6 +22,8 @@
   <a href="./docs/protocol/README.md">Protocols</a>
 </p>
 
+Status: In progress under the [frame package plan](./plans/frame-package.md).
+
 Mokly is an open-source toolkit for turning product screens into a searchable
 static catalogue. A screen is an HTML file with YAML front matter, a React
 component, or a Storybook story. Mokly renders every screen at mobile and
@@ -236,6 +238,8 @@ self-hosted receivers.
 | `@mokly/native-<target>`                                     | The Rust binary for one platform; `@mokly/mokly` installs the one that matches                    |
 | [`@mokly/viewer`](./packages/viewer/README.md)               | Embeddable React catalogue viewer with navigation, inspection, markers, slots, and frame adapters |
 | [`@mokly/ui`](./packages/ui/README.md)                       | The presentational components of the Browse shell and their stylesheets; the viewer composes them |
+| [`@mokly/frame`](./docs/protocol/mokly-frame-package.md)     | The frame adapters and the frame probe script; hosts import the adapters from `@mokly/viewer`     |
+| [`@mokly/model`](./docs/protocol/mokly-model-package.md)     | The catalogue rules and generated types that the frame package and the viewer share               |
 
 Use `@mokly/mokly` to create and deliver a catalogue. Use `@mokly/viewer` when
 another React application owns the surrounding navigation, branding,

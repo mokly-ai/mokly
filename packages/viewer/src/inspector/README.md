@@ -6,7 +6,7 @@ Serve and the static build deliver it at `/mokly-viewer/client/inspector.js`,
 and the static build injects it into the current documents that it writes.
 [`inspector_budget.test.ts`](../../tests/inspector_budget.test.ts) checks the
 built script against the script budget of the
-[published inspector contract](../../../../docs/protocol/mokly-published-inspector.md).
+[frame probe contract](../../../../docs/protocol/mokly-frame-probe.md).
 
 The build uses esbuild, then [`scripts/inspector-pool.mjs`](../../scripts/inspector-pool.mjs) shares repeated strings
 and native references before Terser minification. The output is ordinary
@@ -22,7 +22,7 @@ fields. Outgoing fields are validated ASCII identities, control states, and
 numeric geometry, so their serialized character count also bounds their UTF-8
 bytes. Incoming messages and metadata always receive the full UTF-8 check
 before parsing. The
-[inspector handshake and wire protocol](../../../../docs/protocol/mokly-inspector-wire.md)
+[frame probe handshake and wire protocol](../../../../docs/protocol/mokly-frame-probe-wire.md)
 define the handshake, the messages, and their limits.
 
 ## Published map and markers
@@ -31,7 +31,7 @@ define the handshake, the messages, and their limits.
 current document, and `ranges.ts` reads the `mokly-instance` and `mokly-slot`
 markers of that document. The Publication Boundary and Range Markers sections
 of the
-[published inspector contract](../../../../docs/protocol/mokly-published-inspector.md)
+[frame probe contract](../../../../docs/protocol/mokly-frame-probe.md)
 define the map format and the markers.
 
 ## Geometry and picking
@@ -75,6 +75,6 @@ cargo xtask check --suite viewer
   holds `bundleInspector`, which runs esbuild, the string pool, and Terser.
 
 See the [normative frame protocol](../../../../docs/protocol/mokly-frame-adapter.md),
-[published inspector contract](../../../../docs/protocol/mokly-published-inspector.md),
-[inspector wire protocol](../../../../docs/protocol/mokly-inspector-wire.md),
+[frame probe contract](../../../../docs/protocol/mokly-frame-probe.md),
+[frame probe wire protocol](../../../../docs/protocol/mokly-frame-probe-wire.md),
 [client adapters](../client/README.md), and [publication boundary](../../../../docs/protocol/mokly-export-delivery.md).

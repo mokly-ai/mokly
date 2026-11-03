@@ -1,5 +1,7 @@
 # Embeddable Mokly Viewer
 
+Status: In progress under the [frame package plan](../../plans/frame-package.md).
+
 ## Package And Props
 
 `@mokly/viewer` is an MIT, ESM npm package with declarations and React and React DOM
@@ -172,7 +174,7 @@ The viewer fetches only the index, the details, documents, removed previews,
 and comparison generation files of its artifact origin root, under the fetch
 rules of the [shell delivery contract](./mokly-shell-delivery.md#fetch-and-fences).
 It sends no telemetry and reads no cookies. Consumer code never
-enters the browser through the viewer. The in-frame inspector script of the
-frame adapter contract is the one React-free part of the package. Several
-viewers can mount in one document with independent state, and each cleans up
-on unmount.
+enters the browser through the viewer. The
+[frame probe](./mokly-frame-probe.md) script is the one React-free part of the
+package. Several viewers can mount in one document with independent state, and
+each cleans up on unmount.

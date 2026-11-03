@@ -1,17 +1,22 @@
 # Developer Test Commands
 
+Status: In progress under the [frame package plan](../../plans/frame-package.md).
+
 ## Public Commands And Preparation
 
 - `npm test -- [<file> ...] [<pattern> ...]` builds first with `npm run build`,
   then calls the developer Node test runner. With no arguments, it runs the
   complete discovered Node test inventory under the developer skip policy and
   writes the evidence report. The inventory is the tooling tests under `tests/`,
-  the viewer tests under `packages/viewer/tests/`, and the UI package tests
-  under `packages/ui/tests/`.
+  the viewer tests under `packages/viewer/tests/`, the UI package tests under
+  `packages/ui/tests/`, the model package tests under `packages/model/tests/`,
+  and the frame package tests under `packages/frame/tests/`.
 - `cargo test -p <crate>` runs one crate's Rust tests, and
   `cargo test --workspace` runs the default targets. The repository suite runs the default
   set; a selected crate is partial verification. Sidecar integration tests
   require `npm run build --workspace @mokly/ui`, then
+  `npm run build --workspace @mokly/model`, then
+  `npm run build --workspace @mokly/frame`, then
   `npm run build --workspace @mokly/viewer`, then
   `npm run build --workspace @mokly/mokly` before a raw Cargo run.
 - Run the on-demand design matrix with `cargo test -p mokly-cli --features design-matrix --test design_attribution_tests`; the default workspace tests and the gate do not run it. The repository suite compiles and lints it with `cargo clippy -p mokly-cli --features design-matrix --all-targets -- -D warnings`.
