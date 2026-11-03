@@ -1,14 +1,14 @@
 # Stabilize the large React watch test
 
-- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Outside the scope.
+- **Severity:** Medium. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #217 and its completed plan, which put the
   failure outside the scope of its review.
 - **Location:** `tests/browser/large_watch.spec.ts:14`, with the runner time
   limit at line 17. `scripts/large/delivery.ts:75` holds the wait that
   failed, called by `scripts/large/watch.ts:45` for ready Changes.
-- **Reason:** The test timed out once in the remote gate of PR #217, which
-  did not change it, and it passed on the rerun.
+- **Reason:** On 2026-11-03 the user chose option E, the reuse of compiled
+  JavaScript across the edits, and asked for it in a later branch.
 
 - **Source:** Review.
 - **Category:** Test.
@@ -45,6 +45,7 @@
   - The measurement behind that choice, recorded on 2026-10-21: on two CPUs
     the combined journey took 185 to 218 s, about 155 s of them in twelve
     JavaScript compilations. One busy process per CPU pushed it past 300 s.
+  - On 2026-11-03 the user chose option E.
 - **Problem:**
   - On 2026-10-26, remote complete gate run `20261026T221539Z-992801`
     failed in browser shard 1 of 4 during PR #217.
@@ -108,12 +109,28 @@
     started to keep the last released recipe of each set of bundle settings,
     so a later bundle whose inputs equal an earlier compile can skip
     esbuild.
-- **Recommendation:** C. The failed wait is known, but its cause
-  is not confirmed. The last finished step can help distinguish CPU
-  contention from a lost event. E reduces compile cost if compilation causes
-  the timeout. The current evidence does not confirm that cause.
-- **Action:** ask the user, because the evidence does not show which cause
-  needs a fix. The failure was not reproduced, and no option is clearly
-  best until its cause is confirmed.
+  - [bundle-disk-cache.md](./bundle-disk-cache.md) and
+    [stylesheet-cache-across-restarts.md](./stylesheet-cache-across-restarts.md)
+    wait for the user's choice. They keep compiled output across restarts.
+    E keeps it across the edits of one process. One cache design can serve
+    all three, so the plan for E reads both items first.
+- **Recommendation:** E. The user chose it on 2026-11-03. The first
+  recommendation was C, which reports the last finished step of each edit.
+- **Action:** fix after merge, apply E, because the user chose E on
+  2026-11-03 and asked for it in a later branch.
+- **Work:**
+  - E is Large, so start with a plan under `plans/`, as the `plans` skill
+    says.
+  - Measure first. On two CPUs, record each of the twelve compilations of
+    the React journey, with its inputs and its time.
+  - Build on the retained recipes of commit `2ca57742`. The sidecar pool
+    keeps the last released recipe of each set of bundle settings. An edit
+    changes the inputs, so the reuse of whole bundles alone does not cover
+    the journey.
+  - Keep every assertion of the test and its 300-second guard.
+  - After E, measure the journey on two CPUs again. When it fits the
+    three-times rule of `docs/protocol/ci-test-timing.md`, propose the
+    removal of the exception at line 31 as a decision.
+  - Delete this item in the branch that applies E.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/remove-review-json.md?plain=1#L185).
