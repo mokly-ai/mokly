@@ -120,8 +120,8 @@ beyond those public in the index and the details. Readers validate each `snapsho
 a unique lowercase 64-hex identity. Every removed record requires
 `snapshotId` when `comparisonUrl` is non-null; readers never derive a missing
 identity. With a null comparison URL, the field may be absent. Readers
-validate `preview.kind`, tolerate an absent `preview`, and reject a preview on
-a current entry or when `comparisonUrl` is null.
+validate `preview.kind` and tolerate an absent `preview`. Only a removed
+record carries `preview`, and only when `comparisonUrl` is non-null.
 
 The viewer first resolves the selected snapshot and removed record from the
 index. It resolves the advertised generation against the source origin root

@@ -45,6 +45,70 @@ fn fixture() -> (
 }
 
 #[test]
+fn explicit_instance_ids_follow_shared_kebab_cases_without_device_restrictions() {
+    #[derive(serde::Deserialize)]
+    struct Cases {
+        instances: Vec<Case>,
+    }
+    #[derive(serde::Deserialize)]
+    struct Case {
+        value: String,
+        valid: bool,
+    }
+    let cases: Cases = serde_json::from_str(include_str!(
+        "../../../../packages/viewer/tests/fixtures/author-checks/navigation.json"
+    ))
+    .unwrap();
+    for case in cases.instances {
+        let (mut usage, components) = fixture();
+        let CatalogueUsage::Ready {
+            instances, ranges, ..
+        } = &mut usage
+        else {
+            unreachable!()
+        };
+        let instance = &mut instances[0];
+        instance.id = case.value.clone();
+        instance.key = material::instance_key(&instance.owner, None, &instance.id);
+        ranges[0].target = ComponentRangeTarget::Instance {
+            instance_key: instance.key.clone(),
+        };
+        let rejected = match validate(&usage, EntryKind::Screen, &components) {
+            Ok(()) => false,
+            Err(crate::readers::ReadError::Contract {
+                message: crate::read_contract::ContractViolation::UsageKey,
+                ..
+            }) => true,
+            Err(error) => panic!("unexpected rejection: {error}"),
+        };
+        assert_eq!(rejected, !case.valid, "{}", case.value);
+    }
+}
+
+#[test]
+fn derived_instance_ids_keep_the_component_path_spelling() {
+    let (mut usage, mut components) = fixture();
+    components[0].entry.path = "components/Action_Button".into();
+    let CatalogueUsage::Ready {
+        instances, ranges, ..
+    } = &mut usage
+    else {
+        unreachable!()
+    };
+    let instance = &mut instances[0];
+    instance.component_id = components[0].entry.path.clone();
+    instance.id = "Action_Button".into();
+    instance.key = material::instance_key(&instance.owner, None, &instance.id);
+    ranges[0].target = ComponentRangeTarget::Instance {
+        instance_key: instance.key.clone(),
+    };
+    assert_eq!(
+        validate(&usage, EntryKind::Screen, &components).map_err(|error| error.to_string()),
+        Ok(())
+    );
+}
+
+#[test]
 fn recorded_material_requires_matching_keys_schema_and_complete_regions() {
     let (usage, components) = fixture();
     validate(&usage, EntryKind::Screen, &components).unwrap();

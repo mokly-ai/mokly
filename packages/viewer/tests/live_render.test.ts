@@ -182,13 +182,6 @@ test("an answer for another revision or preview is refused", async () => {
       props: {},
       usage: { status: "ready", instances: [], slots: [], ranges: [] },
     }),
-    () => ({
-      renderId: "r-1",
-      revision: 4,
-      previewUrl: "/mokly-viewer/components/renders/r-1/index.html",
-      props: {},
-      usage: { status: "pending" },
-    }),
   ];
   for (const answer of answers)
     await assert.rejects(
@@ -199,30 +192,26 @@ test("an answer for another revision or preview is refused", async () => {
     );
 });
 
-test("an answer's additive fields are ignored", async () => {
-  const serve = fakeServe({
-    answer: (body) => ({
-      renderId: "r-1",
-      revision: body.revision,
-      previewUrl: "/mokly-viewer/components/renders/r-1/index.html",
-      props: {},
-      usage: {
-        status: "ready",
-        instances: [],
-        slots: [],
-        ranges: [],
-        later: true,
-      },
-      later: { added: true },
-    }),
-  });
-  assert.deepEqual(await serve.live.render(descriptor, request, signal), {
+test("an answer's additive fields stay in its owned copy", async () => {
+  const answer = {
     renderId: "r-1",
     revision: 4,
     previewUrl: "/mokly-viewer/components/renders/r-1/index.html",
     props: {},
-    usage: { status: "ready", instances: [], slots: [], ranges: [] },
-  });
+    usage: {
+      status: "ready",
+      instances: [],
+      slots: [],
+      ranges: [],
+      later: true,
+    },
+    later: { added: true },
+  };
+  const serve = fakeServe({ answer: () => answer });
+  const copy = await serve.live.render(descriptor, request, signal);
+  assert.deepEqual(copy, answer);
+  assert.notStrictEqual(copy, answer);
+  assert.notStrictEqual(copy.usage, answer.usage);
 });
 
 test("expiry asks Serve for the preview without a cached answer", async () => {

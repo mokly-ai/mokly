@@ -10,8 +10,8 @@ use crate::public_records::{
 };
 
 /// Public tree nodes. Entry children hold variants and index-folder members.
-#[derive(Deserialize, Serialize, TS)]
-#[serde(tag = "kind", rename_all = "lowercase", deny_unknown_fields)]
+#[derive(Serialize, TS)]
+#[serde(tag = "kind", rename_all = "lowercase")]
 pub enum CatalogueNode {
     /// A folder with no screen or component own page.
     Folder {
@@ -76,15 +76,15 @@ impl From<True> for bool {
 
 /// Serve render generation fence.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct LiveGeneration {
     /// Hash of all live render inputs.
     pub generation: String,
 }
 
 /// Historical preview descriptor, with no current route.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(tag = "kind", rename_all = "lowercase", deny_unknown_fields)]
+#[derive(Clone, Debug, Serialize, TS)]
+#[serde(tag = "kind", rename_all = "lowercase")]
 pub enum RemovedPreview {
     /// Removed screen view.
     Screen,
@@ -96,7 +96,7 @@ pub enum RemovedPreview {
 
 /// One removed entry and its historical breadcrumb data.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct RemovedEntry {
     /// Historical public record.
     pub entry: CatalogueRecord,
@@ -118,7 +118,7 @@ pub struct RemovedEntry {
 
 /// Complete public catalogue index v9.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct CatalogueReadModel {
     /// Must equal 9; readers gate it before decoding.
     #[ts(type = "9")]

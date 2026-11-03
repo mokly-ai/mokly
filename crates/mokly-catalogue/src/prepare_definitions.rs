@@ -2,6 +2,7 @@
 
 use std::collections::BTreeSet;
 use std::path::Path;
+use std::sync::Arc;
 
 use mokly_source_interface::tree::FileKind;
 
@@ -144,6 +145,14 @@ impl Builder {
                             &mut result.entries,
                             &definition.rendering,
                         );
+                        if let Some(validator) = result.validator {
+                            let validator = Arc::new(validator);
+                            for entry in &result.entries {
+                                prepared
+                                    .prop_validators
+                                    .insert(entry.metadata.path.clone(), validator.clone());
+                            }
+                        }
                         if result.failed {
                             failed.extend(
                                 result

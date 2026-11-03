@@ -157,7 +157,11 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
             Err(_) => return response::reject(Rejection::InvalidInput),
         };
         let snapshot = app.publications.current();
-        let validated = match render_request::validate(&request, &snapshot.index) {
+        let validated = match render_request::validate_prepared(
+            &request,
+            &snapshot.index,
+            &snapshot.prop_validators,
+        ) {
             Ok(validated) => validated,
             Err(rejection) => return response::reject(rejection),
         };

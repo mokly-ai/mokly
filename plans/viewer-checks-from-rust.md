@@ -1,6 +1,6 @@
 # Check the read model once, where it enters
 
-Status: Active. On branch `calummoore/rust-viewer-checks-plan`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says. The user answered every decision. The work starts when the user approves this plan.
+Status: Active. On branch `calummoore/rust-viewer-checks-plan`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says. The user approved all milestones and tasks on 2026-11-03. Implementation is in progress.
 
 The core checks the read model with the Rust readers of `mokly-model` before
 it writes it. The viewer checks the same JSON again with about 4,500 lines of
@@ -71,60 +71,76 @@ Replaced ways:
 
 Depends on: none
 
-- [ ] `docs/protocol/mokly-viewer.md:44-45` and `:63-66`: the viewer checks
+Completed on 2026-11-03.
+
+- [x] `docs/protocol/mokly-viewer.md:44-45` and `:63-66`: the viewer checks
       the version gates and the delivery fence, and it trusts the content.
       Add the decision in force beside that rule: the receiver's upload check,
       not a check in the viewer, because of the trial's cost and the drift of
       two copies. Add no rule that the core checks its output before it
       writes it.
-- [ ] Merge the branch of workspace 463 before this milestone, because it
+- [x] Merge the branch of workspace 463 before this milestone, because it
       edits the same protocol docs.
-- [ ] `docs/protocol/mokly-viewer.md`: bad JSON shows the failure state of
+- [x] `docs/protocol/mokly-viewer.md`: bad JSON shows the failure state of
       design call 4.
-- [ ] `docs/protocol/mokly-catalogue-serialization.md:106-115`: the lenient
+- [x] `docs/protocol/mokly-catalogue-serialization.md:106-115`: the lenient
       rule applies to a receiver's check. The viewer reads the fields of its
       version and ignores the others.
-- [ ] `docs/protocol/mokly-viewer-namespace.md:88-90` and `:122`: move the
+- [x] `docs/protocol/mokly-viewer-namespace.md:88-90` and `:122`: move the
       rule about `usage` and `resourceEvidence` to the receiver's check. A
       malformed document shows the failure state.
-- [ ] `docs/protocol/mokly-upload-validation.md`: a receiver checks the
+- [x] `docs/protocol/mokly-upload-validation.md`: a receiver checks the
       index and every entry detail with the core's lenient readers before it
       completes an upload. A failed check is `upload-invalid-bundle`.
-- [ ] `docs/protocol/mokly-component-props.md:93-96`: the receiver's check,
+- [x] `docs/protocol/mokly-component-props.md:93-96`: the receiver's check,
       not the viewer, checks the recorded props of a document that Rust did
       not write.
-- [ ] `docs/architecture/package-boundary.md`, the viewer README, and
+- [x] `docs/architecture/package-boundary.md`, the viewer README, and
       `packages/viewer/docs/`: the viewer owns the version gates and the
       fence, not the checks of the content.
+- [x] Remove the former viewer-only rejection statements from the other
+      read-model docs under design call 9. Keep producer requirements.
+
+Merge notes: `.context/viewer-checks-from-rust/docs-merge-justification.md`.
+
+Documentation evidence: `.context/viewer-checks-from-rust/docs-preparation.md`.
 
 ## Milestone 2: Lenient Rust readers for a receiver
 
 Depends on: 1
 
-- [ ] Give the index and detail readers a lenient mode, under design call 1.
-- [ ] Decode each tagged union through a raw record, and remove the
+Completed on 2026-11-03.
+
+- [x] Give the index and detail readers a lenient mode, under design call 1.
+- [x] Decode each tagged union through a raw record, and remove the
       `deny_unknown_fields` attributes, under design call 2.
-- [ ] Move the privacy walk of `packages/viewer/src/catalogue/privacy.ts`
+- [x] Move the privacy walk of `packages/viewer/src/catalogue/privacy.ts`
       into `mokly-model`, for the lenient mode.
-- [ ] Port each case of `packages/viewer/tests/reader_unknown_fields.test.ts`
+- [x] Port each case of `packages/viewer/tests/reader_unknown_fields.test.ts`
       to a Rust test of the lenient mode.
-- [ ] Move each Rust test that expects `ReadError::Invalid` for an unknown
+- [x] Move each Rust test that expects `ReadError::Invalid` for an unknown
       field to the strict-mode error. The field stays rejected.
-- [ ] Describe the receiver API and the Git dependency of design call 3 in
+- [x] Describe the receiver API and the Git dependency of design call 3 in
       the `mokly-model` README.
+
+Evidence: `.context/viewer-checks-from-rust/rust-implementation.md`.
 
 ## Milestone 3: The viewer trusts the content
 
 Depends on: 1
 
-- [ ] Make each reader check the version, then return a typed copy, under
+Completed on 2026-11-03.
+
+- [x] Make each reader check the version, then return a typed copy, under
       design call 6.
-- [ ] Keep the delivery fence of design call 5, and remove the content
+- [x] Keep the delivery fence of design call 5, and remove the content
       matching.
-- [ ] Remove each test of a removed check under the removal rule of the
+- [x] Remove each test of a removed check under the removal rule of the
       `testing` skill, with its proof. Keep the tests of the version gates
       and the fence.
-- [ ] Run the viewer tests and the browser specs.
+- [x] Run the viewer tests and the browser specs.
+
+Evidence: `.context/viewer-checks-from-rust/viewer-implementation.md` and the first remote gate reports.
 
 ## Milestone 4: The viewer's failure state for bad JSON
 
@@ -132,60 +148,80 @@ Tags: ui
 
 Depends on: 3
 
-- [ ] Add the error catcher of design call 4 around the embedded and the
+Completed on 2026-11-03.
+
+- [x] Add the error catcher of design call 4 around the embedded and the
       standalone shell. It renders the existing failure state of `@mokly/ui`.
-- [ ] Test that an index with a malformed entry shows the failure state with
+- [x] Test that an index with a malformed entry shows the failure state with
       Retry and reports one `onError`.
+- [x] Preserve host adapter cleanup errors when the catcher surrounds the
+      shell. Keep each mounted frame's identity.
+- [x] Catch only typed selection errors in the ready viewer. Let malformed
+      catalogue errors reach the catalogue failure state.
+- [x] Clarify that a document the shell cannot render shows the whole
+      catalogue failure state, under design call 4.
+
+Evidence: `.context/viewer-checks-from-rust/ui-implementation.md`.
 
 ## Milestone 5: The TypeScript checks that stay
 
 Depends on: 1
 
+Completed on 2026-11-03.
+
 These TODOs follow option G of decision 3, which the user chose on
 2026-11-03.
 
-- [ ] Write the shared cases for prop values and for the path, link, and
+- [x] Write the shared cases for prop values and for the path, link, and
       fragment checks. Run them in the Rust tests and in the tests of
       `@mokly/viewer/data`.
-- [ ] Add a value check to `@mokly/viewer/data`. The wrapper and Serve's prop
+- [x] Add a value check to `@mokly/viewer/data`. The wrapper and Serve's prop
       editor check only the props value, and the core checks each schema once.
-- [ ] Let the TypeScript schema check accept a schema prop named `__proto__`,
+- [x] Retain each prepared Rust schema validator and reuse it for invocation
+      and live-edit value checks under design call 10.
+- [x] Let the TypeScript schema check accept a schema prop named `__proto__`,
       `constructor`, or `prototype`. Both sides keep rejecting such a key in a
       props value.
-- [ ] Let TypeScript accept the core's fragment characters, and change
+- [x] Let TypeScript accept the core's fragment characters, and change
       `docs/protocol/mokly-navigation.md:82-83` to match.
-- [ ] Let the core accept an explicit instance id such as `con`, in
+- [x] Let the core accept an explicit instance id such as `con`, in
       `crates/mokly-model/src/usage_context.rs:54-63` and
       `crates/mokly-html/src/components.rs:53`.
-- [ ] Align the size limits of the TypeScript value check with
+- [x] Align the size limits of the TypeScript value check with
       `crates/mokly-model/src/limits.rs`.
+
+Evidence: `.context/viewer-checks-from-rust/author-checks-implementation.md`.
 
 ## Milestone 6: Delete the dead checks
 
 Depends on: 3, 4, 5
 
-- [ ] Delete each viewer module that no consumer uses, under the dead-code
+Completed on 2026-11-03.
+
+- [x] Delete each viewer module that no consumer uses, under the dead-code
       test of the `git-commit` skill. Keep the `@mokly/viewer/data` exports
       `validateProps`, `isLinkPath`, and `isLogicalFragment`, because
       `@mokly/mokly` uses them to check author input. Save the searches under
       `.context/viewer-checks-from-rust/`.
-- [ ] Update the viewer README, the shell README, and the unused internal
+- [x] Update the viewer README, the shell README, and the unused internal
       export baseline.
-- [ ] Delete `plans/follow-ups/viewer-checks-from-rust.md`. Update
+- [x] Delete `plans/follow-ups/viewer-checks-from-rust.md`. Update
       `plans/follow-ups/select-option-builder.md`, because the viewer no
       longer rejects a catalogue for its select options.
+
+Evidence: `.context/viewer-checks-from-rust/cleanup-implementation.md`.
 
 ## Milestone 7: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
-- [ ] Measure `shell.js` and the first index read in Chrome on the example
+- [x] Measure `shell.js` and the first index read in Chrome on the example
       and the large fixture. Save the numbers under
       `.context/viewer-checks-from-rust/`.
-- [ ] Run the mockup check of `AGENTS.md`. Smoke-test Browse, Changes, a
+- [x] Run the mockup check of `AGENTS.md`. Smoke-test Browse, Changes, a
       comparison, inspection, prop editing, a removed entry, and an embedded
       host through `npm run dev`.
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,

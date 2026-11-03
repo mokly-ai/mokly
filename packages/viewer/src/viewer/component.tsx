@@ -8,6 +8,11 @@ import {
 } from "../catalogue/version_error.js";
 import { sameOriginAdapter } from "../client/same_origin_adapter.js";
 import type { MoklyViewerProps } from "../host/types.js";
+import {
+  CatalogueBoundary,
+  hostErrors,
+  useHostProps,
+} from "../shell/catalogue_boundary.js";
 import { memoryScrollTogether } from "../shell/comparison_scroll_preference.js";
 import { useFocusAfter } from "../shell/focus_after.js";
 import { normalizeTheme } from "../shell/theme.js";
@@ -19,22 +24,29 @@ import {
 import { useIndexSource } from "./index_source.js";
 import { ReadyViewer } from "./ready.js";
 
-/** Mount a validated catalogue with host-owned slots and isolated runtime state. */
+/** Mount a catalogue with host-owned slots and isolated runtime state. */
 export function MoklyViewer(props: MoklyViewerProps) {
   const identifierPrefix = `mokly-${useId().replace(/[^A-Za-z0-9_-]/g, "")}-`;
   const source = useIndexSource(props.index, props.baseUrl);
+  const [errors] = useState(hostErrors);
+  const hosted = useHostProps(props, errors);
   const focus = useFocusAfter<"loading">();
   const [detailVersion, setDetailVersion] = useState<{
     key: unknown;
     error: MoklyVersionError;
   }>();
+  // A source that the shell cannot render fails until Try again reloads it.
+  const [renderFailure, setRenderFailure] = useState<{ key: unknown }>();
   const versionError =
     source.error?.cause instanceof MoklyVersionError
       ? source.error.cause
       : detailVersion?.key === source.key
         ? detailVersion.error
         : undefined;
-  const failed = source.error !== undefined || versionError !== undefined;
+  const failed =
+    source.error !== undefined ||
+    versionError !== undefined ||
+    renderFailure?.key === source.key;
   const [adapter] = useState(sameOriginAdapter);
   const [scrollTogether] = useState(memoryScrollTogether);
   const selectedAdapter = props.frameAdapter ?? adapter;
@@ -144,17 +156,25 @@ export function MoklyViewer(props: MoklyViewerProps) {
     return (
       <RootState focusRef={focus.ref("loading")} root={root} state="loading" />
     );
+  // Each generation gets a new catcher, so a replaced tree's cleanup failure
+  // reaches the host, as before.
   return (
-    <ReadyViewer
+    <CatalogueBoundary
+      hostThrew={errors.threw}
       key={generation.current.id}
-      {...props}
-      loaded={source.loaded}
-      adapter={selectedAdapter}
-      bridgeOwner={bridgeOwner.current}
-      identifierPrefix={identifierPrefix}
-      onVersionError={(error) => setDetailVersion({ key: source.key, error })}
-      replaced={replaced}
-      scrollTogether={scrollTogether}
-    />
+      markCleanup={props.frameAdapter ? errors.mark : undefined}
+      onFailure={() => setRenderFailure({ key: source.key })}
+    >
+      <ReadyViewer
+        {...hosted}
+        loaded={source.loaded}
+        adapter={selectedAdapter}
+        bridgeOwner={bridgeOwner.current}
+        identifierPrefix={identifierPrefix}
+        onVersionError={(error) => setDetailVersion({ key: source.key, error })}
+        replaced={replaced}
+        scrollTogether={scrollTogether}
+      />
+    </CatalogueBoundary>
   );
 }

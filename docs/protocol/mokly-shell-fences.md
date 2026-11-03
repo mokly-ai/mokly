@@ -23,15 +23,18 @@ their bytes across deployments. The rejected record-and-detail id misses
 viewer-only deployments and removed comparisons.
 
 The shell checks every current route detail, including a variant's parent
-detail, in this order: `revision`, then `detailId`, then identity and content.
-Revision comes first because newer Serve details have new ids. A revision
+detail, in this order: `revision`, then `detailId`, then identity.
+Revision comes first because newer Serve details have new ids. Decision: the
+fence compares no other field of a detail with its index record, because the
+`detailId` already binds the detail to that record, and a further comparison
+checks the content, which the viewer trusts. A revision
 mismatch refetches the index once. If the revision still disagrees, the entry
 shows its unavailable state with retry. If the revision matches but the
 `detailId` differs, the detail has the replaced status in a static build and in
 Serve. The standalone shell performs a full page load, and an embedded host
 receives one `onError` and keeps its state. From then on the shell loads no
 index or detail, closes the event stream, and reports no later failure. An
-identity or content mismatch leaves the entry unavailable with retry. A route
+identity mismatch leaves the entry unavailable with retry. A route
 shows that state only after each of its details has arrived, failed, or been
 replaced. Until then its stage keeps loading, and an embedded host still
 receives the `onError` of each failure at once. A failed parent detail makes

@@ -95,6 +95,15 @@ pub enum ContractViolation {
     /// Unknown or misplaced payload field.
     #[error("unknown or misplaced payload field")]
     UnknownField,
+    /// Private evidence is present outside authored data.
+    #[error("private payload field")]
+    PrivateField,
+    /// A public path escapes the repository-relative path grammar.
+    #[error("invalid public repository-relative path")]
+    PublicPath,
+    /// Public JSON exceeds the privacy walk's depth or visit budget.
+    #[error("public data limit exceeded")]
+    PublicDataLimit,
     /// Current entry cannot have removed aggregate changes.
     #[error("current entry cannot have removed aggregate changes")]
     CurrentRemoved,

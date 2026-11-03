@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { validateProps } from "@mokly/viewer/data";
+import { validatePropValues } from "@mokly/viewer/data";
 
 import type { InstanceDraft } from "../generated/sidecar/InstanceDraft.js";
 import type { SlotDraft } from "../generated/sidecar/SlotDraft.js";
@@ -76,10 +76,12 @@ export function componentWrapper(definition: object, data: DefinitionData) {
       else props[name] = value;
     }
     const normalized = copyData(props) as Record<string, unknown>;
-    // The core checked the schema before installing this generation's bindings.
-    const schema = data.input.propSchema as Parameters<typeof validateProps>[0];
+    // The core accepted this definition before it installed render bindings.
+    const schema = data.input.propSchema as Parameters<
+      typeof validatePropValues
+    >[0];
     try {
-      validateProps(schema, normalized, registered.path);
+      validatePropValues(schema, normalized, registered.path);
     } catch (error) {
       throw new SidecarError(
         "component-props",

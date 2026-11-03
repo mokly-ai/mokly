@@ -5,6 +5,7 @@ use std::sync::Arc;
 use mokly_catalogue::numeric_warnings;
 use mokly_catalogue::template_types::RegisteredElement;
 use mokly_model::data::Props;
+use mokly_model::diagnostic::AuthoringKind;
 use mokly_model::material::{instance_key, props_key};
 use mokly_model::paths::is_path_segment;
 use mokly_model::usage::{ComponentInputOwner, ComponentInstanceRecord, ComponentSourceLocation};
@@ -13,10 +14,10 @@ use mokly_model::wire_props;
 use crate::composition::Engine;
 use crate::context::Context;
 use crate::diagnostic_code::Code;
-use crate::error::{Result, invalid};
+use crate::error::{InternalError, Result, invalid};
 use crate::expansion::{After, Expansion};
 use crate::fragment::RenderKind;
-use crate::props::{camel_case, coerce, schema_at, validate, value_at};
+use crate::props::{camel_case, coerce, schema_at, validate_prepared_for, value_at};
 use crate::tree::{Element, Region, RegionKind};
 use crate::{conditions, relative_links, source_locations};
 
@@ -50,7 +51,8 @@ impl Engine<'_> {
         let id = explicit_id
             .as_deref()
             .unwrap_or_else(|| component.path.rsplit('/').next().unwrap_or(&component.path));
-        if (explicit_id.is_some() && !kebab(id)) || !is_path_segment(id) {
+        if (explicit_id.is_some() && !kebab(id)) || (explicit_id.is_none() && !is_path_segment(id))
+        {
             return Err(invalid(
                 Code::HtmlAttribute,
                 format!("invalid component instance id {id:?}"),
@@ -106,7 +108,15 @@ impl Engine<'_> {
             &component.path,
             id,
         ));
-        validate(&component.prop_schema, &props, &component.path)?;
+        let validator = self
+            .request
+            .catalogue
+            .prop_validators
+            .get(&component.path)
+            .ok_or_else(|| InternalError::MissingPropValidator {
+                entry: component.path.clone(),
+            })?;
+        validate_prepared_for(validator, &props, &component.path, AuthoringKind::Html)?;
         let key = instance_key(&context.owner, context.slot_key.as_deref(), id);
         let props_digest = props_key(&props);
         let existing = self.instances.get(&key);

@@ -5,6 +5,17 @@ import { validatePropSchema } from "./profile_schema.js";
 import { validateProfileValue } from "./profile_value.js";
 import type { ComponentPropsData } from "./prop_types.js";
 
+/** Validate complete props against a schema already accepted by the core. */
+export function validatePropValues(
+  schema: PropSchema,
+  value: unknown,
+  context = "Component",
+): ComponentPropsData {
+  assertPlainData(value, `${context} $`);
+  validateProfileValue(schema, value, `${context} $`);
+  return value as ComponentPropsData;
+}
+
 /** Validate a schema and one complete props value under the shared profile. */
 export function validateProps(
   schema: PropSchema,
@@ -12,9 +23,7 @@ export function validateProps(
   context = "Component",
 ): ComponentPropsData {
   validatePropSchema(schema, context);
-  assertPlainData(value, `${context} $`);
-  validateProfileValue(schema, value, `${context} $`);
-  return value as ComponentPropsData;
+  return validatePropValues(schema, value, context);
 }
 
 /** The schema of one declared top-level property, when the root declares it. */

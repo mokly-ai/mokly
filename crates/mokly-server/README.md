@@ -133,7 +133,9 @@ Temporary renders follow the
 [live controls contract](../../docs/protocol/mokly-component-controls.md),
 which owns the `Host`, `Origin`, and token checks and the preview store
 limits. They validate the installed revision, view, controls, and complete
-props, and use the graph's shared prop render path outside the HTTP event
+props. The props check uses the prepared validators that each snapshot copies
+from its generation's catalogue. They use the graph's shared prop render path
+outside the HTTP event
 loop. Body reads keep only the authorization token. Validation and render
 admission take the current snapshot after the body arrives, so a stalled body
 cannot retain a replaced snapshot or its comparison capture. The CLI supplies

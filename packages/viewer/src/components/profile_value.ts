@@ -2,13 +2,7 @@
 
 import type { PropSchema } from "../generated/catalogue/PropSchema.js";
 
-import {
-  ComponentValidationError,
-  DataBudget,
-  invalidData,
-  plainKeys,
-  record,
-} from "./data.js";
+import { invalidData, plainKeys, record } from "./data.js";
 import { schemaTypes } from "./profile_schema.js";
 
 /** Validate one complete JSON value against an already validated schema. */
@@ -16,10 +10,7 @@ export function validateProfileValue(
   schema: PropSchema,
   value: unknown,
   at: string,
-  budget: DataBudget = new DataBudget(),
-  depth = 0,
 ): void {
-  budget.visit(depth, at);
   const types = schemaTypes(schema);
   if (types.size && ![...types].some((type) => hasType(value, type)))
     invalidData(at, `expected ${[...types].join(" or ")}`);
@@ -32,20 +23,17 @@ export function validateProfileValue(
     schema.oneOf.filter((choice) => choice.const === value).length !== 1
   )
     invalidData(at, "value is not exactly one allowed choice");
-  if (
-    schema.anyOf &&
-    !schema.anyOf.some((member) => accepts(member, value, budget, depth))
-  )
+  if (schema.anyOf && !schema.anyOf.some((member) => accepts(member, value)))
     invalidData(at, "value does not match any allowed schema");
   if (typeof value === "string") checkString(schema, value, at);
   if (typeof value === "number") checkNumber(schema, value, at);
-  if (Array.isArray(value)) checkArray(schema, value, at, budget, depth);
-  else if (record(value)) checkObject(schema, value, at, budget, depth);
+  if (Array.isArray(value)) checkArray(schema, value, at);
+  else if (record(value)) checkObject(schema, value, at);
 }
 
 /** Whether a value satisfies a schema, without reporting the failure. */
 export function profileAccepts(schema: PropSchema, value: unknown): boolean {
-  return accepts(schema, value, new DataBudget(), 0);
+  return accepts(schema, value);
 }
 
 /**
@@ -67,21 +55,11 @@ export function isMultipleOf(value: number, multiple: number): boolean {
   );
 }
 
-function accepts(
-  schema: PropSchema,
-  value: unknown,
-  budget: DataBudget,
-  depth: number,
-): boolean {
+function accepts(schema: PropSchema, value: unknown): boolean {
   try {
-    validateProfileValue(schema, value, "$", budget, depth + 1);
+    validateProfileValue(schema, value, "$");
     return true;
-  } catch (error) {
-    if (
-      error instanceof ComponentValidationError &&
-      error.detail === "validation limit exceeded"
-    )
-      throw error;
+  } catch {
     return false;
   }
 }
@@ -110,8 +88,6 @@ function checkArray(
   schema: PropSchema,
   value: readonly unknown[],
   at: string,
-  budget: DataBudget,
-  depth: number,
 ): void {
   if (value.length < (schema.minItems ?? 0))
     invalidData(at, "array has too few items");
@@ -120,7 +96,7 @@ function checkArray(
   const items = schema.items;
   if (items)
     value.forEach((item, index) =>
-      validateProfileValue(items, item, `${at}[${index}]`, budget, depth + 1),
+      validateProfileValue(items, item, `${at}[${index}]`),
     );
 }
 
@@ -128,8 +104,6 @@ function checkObject(
   schema: PropSchema,
   value: Record<string, unknown>,
   at: string,
-  budget: DataBudget,
-  depth: number,
 ): void {
   if (!schemaTypes(schema).has("object")) return;
   const properties = schema.properties ?? {};
@@ -138,13 +112,7 @@ function checkObject(
       ? properties[key]
       : undefined;
     if (!property) invalidData(`${at}.${key}`, "unknown prop");
-    validateProfileValue(
-      property,
-      value[key],
-      `${at}.${key}`,
-      budget,
-      depth + 1,
-    );
+    validateProfileValue(property, value[key], `${at}.${key}`);
   }
   for (const key of schema.required ?? [])
     if (!Object.hasOwn(value, key))

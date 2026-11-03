@@ -17,7 +17,7 @@ import type {
   PropPrimitive,
   PropSchema,
 } from "../components/prop_types.js";
-import { propertySchema, validateProps } from "../components/props.js";
+import { propertySchema, validatePropValues } from "../components/props.js";
 import type { ComponentOverride } from "../components/render_types.js";
 
 import { CONTROLS_COPY } from "./component_controls_copy.js";
@@ -134,7 +134,7 @@ export function validateControlDraft(
   }
   if (!Object.keys(errors).length)
     try {
-      validateProps(target.propSchema, merged, target.path);
+      validatePropValues(target.propSchema, merged, target.path);
     } catch {
       return { errors: { [WHOLE_PROPS_ERROR]: CONTROLS_COPY.invalidTogether } };
     }

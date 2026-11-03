@@ -1,6 +1,7 @@
 //! Strict live prop request decoding and complete schema/control validation.
 
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::controls::{self, ControlInput};
@@ -80,6 +81,22 @@ pub fn validate(
     request: &RenderRequest,
     index: &CatalogueReadModel,
 ) -> Result<ValidatedRender, Rejection> {
+    validate_with(request, index, None)
+}
+
+pub(crate) fn validate_prepared(
+    request: &RenderRequest,
+    index: &CatalogueReadModel,
+    validators: &BTreeMap<String, Arc<PropValidator>>,
+) -> Result<ValidatedRender, Rejection> {
+    validate_with(request, index, Some(validators))
+}
+
+fn validate_with(
+    request: &RenderRequest,
+    index: &CatalogueReadModel,
+    validators: Option<&BTreeMap<String, Arc<PropValidator>>>,
+) -> Result<ValidatedRender, Rejection> {
     if request.revision != index.revision {
         return Err(Rejection::StaleRevision);
     }
@@ -133,7 +150,16 @@ pub fn validate(
             }
         }
     }
-    if !valid_props(visual, &props, &request.entry_path) {
+    let original = match validators {
+        Some(validators) => Some(
+            validators
+                .get(&request.entry_path)
+                .ok_or(Rejection::InvalidInput)?
+                .as_ref(),
+        ),
+        None => None,
+    };
+    if !valid_props(visual, &props, &request.entry_path, original) {
         return Err(Rejection::InvalidInput);
     }
     Ok(ValidatedRender {
@@ -142,7 +168,12 @@ pub fn validate(
     })
 }
 
-fn valid_props(visual: &CatalogueVisual, props: &Props, path: &str) -> bool {
+fn valid_props(
+    visual: &CatalogueVisual,
+    props: &Props,
+    path: &str,
+    original: Option<&PropValidator>,
+) -> bool {
     let context = Context {
         entry: path.into(),
         variant: None,
@@ -150,20 +181,28 @@ fn valid_props(visual: &CatalogueVisual, props: &Props, path: &str) -> bool {
     };
     let props = serde_json::to_value(props)
         .expect("Props has string keys and serializable DataValue values");
-    for schema in [
-        &visual.prop_schema,
-        &controls::with_bounds(&visual.prop_schema, &visual.controls),
-    ] {
-        let schema = serde_json::to_value(schema)
+    let admitted;
+    let validator = if let Some(original) = original {
+        original
+    } else {
+        let schema = serde_json::to_value(&visual.prop_schema)
             .expect("PropSchema contains typed schema fields and string map keys");
         let Ok(validator) = PropValidator::compile(&schema, &context) else {
             return false;
         };
-        if validator.validate(&props, &context).is_err() {
-            return false;
-        }
+        admitted = validator;
+        &admitted
+    };
+    if validator.validate(&props, &context).is_err() {
+        return false;
     }
-    true
+    let narrowed = controls::with_bounds(&visual.prop_schema, &visual.controls);
+    let schema = serde_json::to_value(narrowed)
+        .expect("PropSchema contains typed schema fields and string map keys");
+    let Ok(validator) = PropValidator::compile(&schema, &context) else {
+        return false;
+    };
+    validator.validate(&props, &context).is_ok()
 }
 
 fn controlled(control: &ControlInput, value: &DataValue) -> bool {

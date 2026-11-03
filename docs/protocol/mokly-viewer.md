@@ -41,8 +41,18 @@ for its shell URL.
 required and supplies the HTTP(S) artifact origin root. A URL or string source
 must be an absolute HTTP(S) URL; its validated final response URL establishes
 that root, and `baseUrl` is invalid for it. Do not resolve artifact paths
-relative to the embedding application. The viewer validates every index as
-[read model v9](./mokly-catalogue.md) before it renders.
+relative to the embedding application.
+
+The viewer checks the version of every index, detail, and live descriptor
+under the [version gates](./mokly-viewer-namespace.md#version-gates), and it
+fences every detail under the rules below. It does not check the other
+content of a document of a supported version. It reads that content as
+[read model v9](./mokly-catalogue.md) and entry detail v4. Decision: a
+receiver checks the read model once, when it accepts an upload under the
+[upload check](./mokly-upload-validation.md#catalogue-content), and no viewer
+checks it. A check in every viewer either ships the core's readers, which add
+at least 350 KB gzip and slow the first read of a large index, or keeps a
+second copy of the rules, and the two copies drift.
 
 `detail` supplies the entry detail v4 of one entry. The viewer calls it with the
 entry path, plus the `snapshotId` of a removed record, when it commits a
@@ -61,19 +71,25 @@ request when it fetched the index from a URL. An object index does not request
 the file. It does not request the file on the first load. The standalone shell
 keeps the same check for static catalogues.
 The viewer accepts a current detail only when its `revision`, then its
-`detailId`, then its identity and content fields match the installed index. It
-accepts a removed detail only when its identity, path record, `snapshotId`, and
-`detailId` match the index. On a revision mismatch, the embedded viewer
+`detailId`, then its identity match the installed index. It accepts a removed
+detail only when its identity, path record, `snapshotId`, and `detailId` match
+the index. On a revision mismatch, the embedded viewer
 requests the index once. If the revision still disagrees after that request,
 the entry is unavailable with retry. A deployment file with another
 `deploymentId`, or a current detail whose `detailId` differs from the index at
 the same revision, emits one `onError` and keeps the installed state and
-loading stage. A detail whose identity or other content fields do not match
-leaves the entry unavailable with retry. A missing or unreadable deployment file
+loading stage. A detail whose identity does not match leaves the entry
+unavailable with retry. A missing or unreadable deployment file
 changes nothing. Serve viewers do not request it. A detail that arrives after
 the selection moved on, or that a newer selection does not need, is discarded.
 Sources are host-supplied transports, not permission for viewer telemetry. A fetch failure
-renders an explicit error and retry state and emits `onError`. A version failure
+renders an explicit error and retry state and emits `onError`. A document of a
+supported version that the shell cannot render, an entry detail included,
+replaces the whole catalogue with its failure state and Try again, and the
+embedded viewer emits one `onError` with `code: "catalogue"`.
+That error does not reach the host's React tree. Decision: the viewer catches
+the error itself, because without a host error boundary an uncaught error
+unmounts the host's whole React root. A version failure
 shows the headline of the [version contract](./mokly-viewer-namespace.md)
 without an action and emits `onError` with `code: "version"`, the headline, and
 the details. Missing data is never replaced by examples or invented counts.

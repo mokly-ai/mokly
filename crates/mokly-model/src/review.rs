@@ -53,7 +53,7 @@ pub enum ReviewKind {
 
 /// One side's original address and inputs.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct ReviewEntryAddress {
     /// Original side path and case.
     pub path: String,
@@ -92,8 +92,8 @@ pub struct ReviewView {
 }
 
 /// Direct reasons. A pure move is included with no reason.
-#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize, TS)]
-#[serde(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, TS)]
+#[serde(tag = "kind", rename_all = "kebab-case")]
 pub enum EntryChangeReason {
     /// A new entry.
     Added,

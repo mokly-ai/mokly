@@ -43,6 +43,7 @@ pub(super) fn initial() -> Arc<Snapshot> {
         files: BTreeMap::new(),
         lease: Arc::new(RevisionLease::default()),
         generation: Arc::new(Generation {
+            prop_validators: Default::default(),
             model: Arc::new(CatalogueModel {
                 entries: Vec::new(),
                 folders: Vec::new(),
@@ -92,7 +93,7 @@ async fn serving_is_polled_during_projection_and_a_revision_race_does_not_recrea
         documents: BTreeMap::new(),
         slot_fragments: BTreeMap::new(),
         elements: BTreeMap::new(),
-
+        prop_validators: Default::default(),
         warnings: Vec::new(),
     };
     let rendered = Unimock::new(());

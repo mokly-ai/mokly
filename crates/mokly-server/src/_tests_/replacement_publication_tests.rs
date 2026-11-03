@@ -89,7 +89,7 @@ fn generation(title: &str) -> Arc<dyn RenderGeneration> {
         documents: BTreeMap::new(),
         slot_fragments: BTreeMap::new(),
         elements: BTreeMap::new(),
-
+        prop_validators: Default::default(),
         javascript: Default::default(),
         dependency_directories: Default::default(),
         warnings: Vec::new(),

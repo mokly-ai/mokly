@@ -6,8 +6,8 @@ use ts_rs::TS;
 use crate::wire_props::ComponentWireProps;
 
 /// Input ownership, scoped to one view.
-#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize, TS)]
-#[serde(tag = "kind", rename_all = "lowercase", deny_unknown_fields)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, TS)]
+#[serde(tag = "kind", rename_all = "lowercase")]
 pub enum ComponentInputOwner {
     /// The entry owns these inputs.
     Entry,
@@ -19,8 +19,8 @@ pub enum ComponentInputOwner {
     },
 }
 /// Region inspection target.
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
-#[serde(tag = "kind", rename_all = "lowercase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, Serialize, TS)]
+#[serde(tag = "kind", rename_all = "lowercase")]
 pub enum ComponentRangeTarget {
     /// Logical component instance.
     Instance {
@@ -40,7 +40,7 @@ pub enum ComponentRangeTarget {
 
 /// Optional invocation source metadata.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct ComponentSourceLocation {
     /// Repository-relative invocation path.
     pub path: String,
@@ -52,7 +52,7 @@ pub struct ComponentSourceLocation {
 
 /// One logical use, independent of physical placement.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct ComponentInstanceRecord {
     /// Validated instance identity digest.
     pub key: String,
@@ -80,7 +80,7 @@ pub struct ComponentInstanceRecord {
 
 /// One supplied logical slot, including unrendered slots.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct ComponentSlotRecord {
     /// Validated slot identity digest.
     pub key: String,
@@ -98,7 +98,7 @@ pub struct ComponentSlotRecord {
 
 /// One physical region in tree start order.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct ComponentRangeRecord {
     /// Sequential r-n region id.
     pub id: String,
@@ -111,8 +111,8 @@ pub struct ComponentRangeRecord {
 }
 
 /// Per-view usage readiness. Empty ready arrays mean proven empty usage.
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
-#[serde(tag = "status", rename_all = "lowercase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, Serialize, TS)]
+#[serde(tag = "status", rename_all = "lowercase")]
 pub enum CatalogueUsage {
     /// First render has not completed.
     Pending,

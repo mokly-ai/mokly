@@ -58,7 +58,7 @@ pub(super) fn catalogue() -> PreparedCatalogue {
         documents: Default::default(),
         slot_fragments: Default::default(),
         elements: Default::default(),
-
+        prop_validators: Default::default(),
         javascript: Default::default(),
         dependency_directories: Default::default(),
         warnings: vec![],

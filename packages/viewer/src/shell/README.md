@@ -228,7 +228,12 @@ embedded root and its host slots with `@mokly/ui/embedded-layout`, which
 places each slot's content and never reads it. The standalone shell's root
 and the loading, failure, and version states of both roots render
 `@mokly/ui/shell-layout`, and the highlight labels of the workspace and of a
-host's inspection render `@mokly/ui/highlight-label`. Both inspection layers
+host's inspection render `@mokly/ui/highlight-label`.
+`catalogue_boundary.tsx` wraps the ready shell of both roots. A document of the
+supported version that the shell cannot render, an entry detail included,
+moves the root to its failure state with Try again. A value that host code
+throws passes on to the host. Both
+inspection layers
 draw one `@mokly/ui/highlight-mask` over each highlighted frame from the same
 boundary snapshot as their labels, for same-origin and cross-origin frames.
 The mask clips to the visible frame and stays above an expanded frame.
@@ -369,11 +374,10 @@ routed screen, component parent, or component variant; component routes retain
 their parent schema separately for controls. A screen or component parent reads
 its lists from its own detail. A current component variant reads Used by and
 Affected from its parent's detail, while its own detail supplies its other
-workspace facts. Every value is projected only from validated index and detail
-records: every catalogue of a delivery carries its published records.
+workspace facts. Every value is projected only from the installed index and
+detail records: every catalogue of a delivery carries its published records.
 `comparison_views.tsx` renders
-React-owned frame chrome around the snapshots from validated comparison
-metadata.
+React-owned frame chrome around the snapshots from the comparison metadata.
 
 `workspace_evidence_data.ts` merges an entry's own reasons, which
 `publicWorkspace` reads from the routed entry detail's `reasons`, the selected

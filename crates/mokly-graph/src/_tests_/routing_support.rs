@@ -42,6 +42,7 @@ pub(super) fn catalogue(paths: &[String]) -> PreparedCatalogue {
         documents: BTreeMap::new(),
         slot_fragments: BTreeMap::new(),
         elements: BTreeMap::new(),
+        prop_validators: Default::default(),
         warnings: Vec::new(),
     }
 }

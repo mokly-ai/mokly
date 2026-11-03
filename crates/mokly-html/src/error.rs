@@ -123,6 +123,12 @@ impl HtmlError {
 /// Internal failures without stringified source wrappers.
 #[derive(Debug, Error)]
 pub enum InternalError {
+    /// A prepared visual entry lost its admitted prop validator.
+    #[error("prepared prop validator is missing for {entry}")]
+    MissingPropValidator {
+        /// Entry whose schema should remain retained for this generation.
+        entry: String,
+    },
     /// An injected runtime adapter failed.
     #[error("runtime adapter failed: {source}")]
     Provider {

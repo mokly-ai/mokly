@@ -102,7 +102,7 @@ async fn a_watcher_burst_during_an_action_runs_exactly_one_later_action() {
                     documents: Default::default(),
                     slot_fragments: Default::default(),
                     elements: Default::default(),
-
+                    prop_validators: Default::default(),
                     javascript: Default::default(),
                     dependency_directories: Default::default(),
                     warnings: vec![],

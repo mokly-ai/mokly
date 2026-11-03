@@ -38,3 +38,13 @@ request of the plan deletes this file with the plan.
    of live prop edits stay. They check what a user or an author enters, not
    catalogue JSON. Today the live-edit check also checks the entry's schema
    again. Decision 3 covers that, and how these checks agree with the core.
+9. On 2026-11-03, remove the former viewer-only read-time rejection
+   statements from the other protocol pages. Keep producer requirements and
+   existing Rust checks. Decision 1 G explicitly removes the viewer checks,
+   and the user closed decision 2 after its inventory named these differences.
+   Do not transfer that former rule set to Rust through a blanket doc rule.
+10. On 2026-11-03, retain prepared Rust schema validators through shared
+    references. Reuse them for invocation and live-edit values. Catalogue
+    preparation currently drops each validator after saved-variant checks.
+    Retention implements decision 3 G's schema-once rule without a second
+    schema compiler or a global cache.

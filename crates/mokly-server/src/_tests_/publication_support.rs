@@ -5,12 +5,14 @@ use std::sync::Arc;
 
 use mokly_model::axes::EntryKind;
 use mokly_model::catalogue::CatalogueModel;
+use mokly_model::diagnostic::{AuthoringKind, Context};
 use mokly_model::projection;
 use mokly_model::public_detail::{DetailEntry, DetailView, EntryDetailV4};
-use mokly_model::public_index::CatalogueNode;
+use mokly_model::public_index::{CatalogueNode, CatalogueReadModel};
 use mokly_model::public_metadata::{CatalogueChanges, ComparisonSelection};
 use mokly_model::readers;
 use mokly_model::usage::CatalogueUsage;
+use mokly_model::validation::PropValidator;
 
 use crate::backend::Documents;
 use crate::detail_encoding::{DetailEncoder, EncodedDetails};
@@ -108,6 +110,7 @@ pub(crate) fn snapshot(count: usize, documents: Arc<dyn Documents>) -> Arc<Snaps
         changes: None,
         document_keys: BTreeMap::new(),
         generation: Arc::new(Generation {
+            prop_validators: prop_validators(&index),
             model: Arc::new(empty_model()),
             view_keys: Vec::new(),
             config_path: "mokly.config.json".into(),
@@ -129,6 +132,41 @@ pub(crate) fn snapshot(count: usize, documents: Arc<dyn Documents>) -> Arc<Snaps
         completed: BTreeMap::new(),
         lease: Arc::new(RevisionLease::default()),
     })
+}
+
+fn prop_validators(index: &CatalogueReadModel) -> BTreeMap<String, Arc<PropValidator>> {
+    let mut schemas = BTreeMap::new();
+    index
+        .screens
+        .iter()
+        .map(|entry| (&entry.entry.path, &entry.visual.prop_schema))
+        .chain(
+            index
+                .components
+                .iter()
+                .map(|entry| (&entry.entry.path, &entry.visual.prop_schema)),
+        )
+        .map(|(path, schema)| {
+            let schema = serde_json::to_value(schema).unwrap();
+            let validator = schemas
+                .entry(schema.to_string())
+                .or_insert_with(|| {
+                    Arc::new(
+                        PropValidator::compile(
+                            &schema,
+                            &Context {
+                                entry: path.clone(),
+                                variant: None,
+                                kind: AuthoringKind::Html,
+                            },
+                        )
+                        .unwrap(),
+                    )
+                })
+                .clone();
+            (path.clone(), validator)
+        })
+        .collect()
 }
 
 pub(crate) fn ready() -> CatalogueUsage {

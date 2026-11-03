@@ -42,11 +42,17 @@
 - **Impact if no action:** Every publication from the release that holds
   PR #224 fails at Mokly Cloud.
 - **Needs:** That release on npm, and write and deploy access to
-  `mokly-ai/mokly-cloud`. The receiver parses no entry detail and no
-  `mokly-viewer/deployment.json`, so it needs no other format.
+  `mokly-ai/mokly-cloud`. Before adopting a viewer release that trusts
+  catalogue content, also complete the
+  [receiver content check](./receiver-read-model-validation.md). That check
+  reads entry detail version 4 before the viewer upgrade.
 - **Done when:** Mokly Cloud accepts a publication with index version 9, and
   its embedded viewer shows that catalogue.
 - **Related:**
+  - [receiver-read-model-validation.md](./receiver-read-model-validation.md)
+    adds the index and detail content checks before Cloud adopts a viewer
+    that trusts catalogue content. Coordinate that receiver work with this
+    version gate and viewer upgrade.
   - [release-detail-content-ids.md](./release-detail-content-ids.md) is the
     release that this task pins.
   - [cloud-without-review-json.md](./cloud-without-review-json.md) moves the

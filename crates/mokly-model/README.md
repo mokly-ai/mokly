@@ -72,6 +72,16 @@ Ready included entries carry it even when their usage workspace is unavailable.
 `ReadError::Contract` carries a typed `ContractViolation`. Version failures
 print the supplied integer or explain its absence.
 
+Receivers use `readers::index_lenient` and `readers::detail_lenient` before
+accepting an upload. These readers check versions, known field types,
+relationships, and union field placement. They ignore additive unknown
+fields in public records. Prop schemas still reject unknown keywords.
+The readers inspect the original JSON for private evidence and unsafe public
+paths before they discard unknown fields. The privacy walk permits authored
+props and schema property names. It limits depth to 128 and visits to
+5,000,000. The existing `index` and `detail` readers stay strict and reject
+unknown fields through their re-encode comparison.
+
 `detail_context::read` validates a current detail against its installed index.
 It checks identity, deployment, revision, kind, exact views, and reason presence
 against ready included membership in the matching index record.
@@ -123,6 +133,29 @@ as the same value.
 
 ## Quick Start
 
+The crate stays unpublished. An external receiver uses a Git dependency
+pinned to a reviewed, merged commit. Replace `{commit}` with that commit id:
+
+```toml
+[dependencies]
+mokly-model = { git = "https://github.com/mokly-ai/mokly", rev = "{commit}" }
+```
+
+Read a current detail with the receiver API, then check its index context:
+
+```rust
+use mokly_model::{detail_context, readers};
+use mokly_model::readers::ReadError;
+
+fn receive(index_json: &str, detail_json: &str) -> Result<(), ReadError> {
+    let index = readers::index_lenient(index_json)?;
+    let detail = readers::detail_lenient(detail_json)?;
+    detail_context::validate(&detail, &index)
+}
+```
+
+Encode canonical JSON:
+
 ```rust
 use mokly_model::canonical;
 use mokly_model::error::Result;
@@ -163,7 +196,14 @@ cargo xtask generate-types
   `pending_details`, which project a validated model into public records.
 - [`src/readers.rs`](./src/readers.rs) provides the strict readers `index`,
   `deployment`, `detail`, and `live`, which gate the format number before
-  they decode a payload.
+  they decode a payload. `index_lenient` and `detail_lenient` provide the
+  receiver's additive-field readers with privacy checks.
+- [`src/public_privacy.rs`](./src/public_privacy.rs) inspects the original
+  JSON of a lenient read for private evidence and unsafe public paths, before
+  decoding drops the unknown fields.
+- [`src/public_decode/`](./src/public_decode/) decodes each tagged union of the
+  public records through a raw record, so both reader modes reject the fields
+  of another variant.
 - [`src/review.rs`](./src/review.rs) and [`src/snapshot.rs`](./src/snapshot.rs)
   define `ReviewResultV8` and `CatalogueChangeSnapshotV4`.
 - [`src/output/mod.rs`](./src/output/mod.rs) holds the shared output shapes,

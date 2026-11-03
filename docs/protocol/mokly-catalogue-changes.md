@@ -72,9 +72,9 @@ every kind: select a base screen, page, document, component, or variant only
 when no current entry of any kind has its path and the move contract paired
 it with nothing. A kind change therefore yields one added current entry,
 never a simultaneous removed record, and a paired base entry yields one
-current entry carrying `previousPath`. The index reader rejects any model
-whose current entries and `removedEntries` share a case-folded path, and a
-current entry cannot carry a `removed` comparison state. Only records inside
+current entry carrying `previousPath`. No current entry shares a case-folded
+path with a record of `removedEntries`, and a current entry cannot carry a
+`removed` comparison state. Only records inside
 `removedEntries` are historical.
 
 Ordinary removed entries sort by kind then path. Snapshot decoding rejects

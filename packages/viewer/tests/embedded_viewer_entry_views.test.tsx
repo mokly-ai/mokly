@@ -204,17 +204,3 @@ test("the embedded viewer preserves comparison ineligibility while view evidence
   assert.match(html, /data-workspace-status="">Changed</);
   assert.match(html, /class="mbk-diff-toolbar mbk-reset" hidden=""/);
 });
-
-test("incomplete current view axes are rejected", () => {
-  const index = rawIndexFixture();
-  const screen = index.screens[0]!;
-  screen.views = [];
-  assert.throws(() => readCatalogueIndex(index), /views must match axes/);
-  const html = embeddedMarkup({
-    index,
-    defaultSelection: { screenPath: screen.path },
-  });
-  assert.match(html, /role="alert"/);
-  assert.match(html, /The catalogue could not be loaded/);
-  assert.doesNotMatch(html, /data-mokly-shell/);
-});

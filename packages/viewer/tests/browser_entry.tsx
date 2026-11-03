@@ -1,4 +1,5 @@
 import { StrictMode, createRef } from "react";
+import type { ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
 
@@ -188,6 +189,10 @@ const start = (id: string, options: HostOptions = {}) => {
   host.render();
   return host;
 };
+/** Host content that throws its error while it renders. */
+function Thrower({ error }: { error: unknown }): ReactNode {
+  throw error;
+}
 (window as unknown as { viewerHarness: unknown }).viewerHarness = {
   start,
   get: (id: string) => hosts.get(id),
@@ -196,5 +201,6 @@ const start = (id: string, options: HostOptions = {}) => {
     host?.root.unmount();
     document.getElementById(id)?.remove();
   },
+  thrower: (error: unknown) => <Thrower error={error} />,
 };
 installFrameHookHarness();

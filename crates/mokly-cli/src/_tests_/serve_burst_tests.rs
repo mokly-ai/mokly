@@ -80,7 +80,7 @@ async fn an_active_rebuild_and_a_burst_produce_exactly_two_actions() {
                     documents: Default::default(),
                     slot_fragments: Default::default(),
                     elements: Default::default(),
-
+                    prop_validators: Default::default(),
                     javascript: Default::default(),
                     dependency_directories: Default::default(),
                     warnings: vec![],

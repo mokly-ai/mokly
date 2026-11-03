@@ -23,6 +23,7 @@ const target: ControlTarget = {
     additionalProperties: false,
     required: ["label"],
     properties: {
+      constructor: { type: "null" },
       label: { type: "string", maxLength: 5 },
       count: { type: "integer", minimum: 1, maximum: 9, multipleOf: 2 },
       ratio: { type: "number", minimum: 0, maximum: 1, multipleOf: 0.1 },

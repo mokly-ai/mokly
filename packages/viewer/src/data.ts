@@ -39,4 +39,4 @@ export {
   isWindowsDeviceName,
 } from "./navigation/logical.js";
 export { validatePropSchema } from "./components/profile_schema.js";
-export { validateProps } from "./components/props.js";
+export { validateProps, validatePropValues } from "./components/props.js";

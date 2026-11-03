@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use mokly_html::error::HtmlError;
+use mokly_html::error::{self, HtmlError};
 use mokly_model::catalogue::EntryContent;
 use mokly_model::controls;
 use mokly_model::data::Props;
@@ -71,18 +71,19 @@ impl ArtifactWorker for PropsJob<'_> {
                 AuthoringKind::Html
             },
         };
-        let schema = serde_json::to_value(&visual.prop_schema)
-            .expect("prop schemas contain only JSON values and string property names");
         let props =
             serde_json::to_value(self.props).expect("props contain only JSON data and string keys");
-        let validator = match PropValidator::compile(&schema, &context) {
-            Ok(validator) => validator,
-            Err(source) => {
-                return Err(GraphError::Html {
-                    source: HtmlError::Props { source },
-                });
-            }
-        };
+        let validator = self
+            .session
+            .state
+            .catalogue
+            .prop_validators
+            .get(&entry.metadata.path)
+            .ok_or_else(|| GraphError::Html {
+                source: HtmlError::Internal(error::InternalError::MissingPropValidator {
+                    entry: entry.metadata.path.clone(),
+                }),
+            })?;
         if let Err(source) = validator.validate(&props, &context) {
             return Err(GraphError::Html {
                 source: HtmlError::Props { source },

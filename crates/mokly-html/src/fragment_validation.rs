@@ -10,7 +10,7 @@ use mokly_model::usage::ComponentInputOwner;
 use mokly_model::wire_decode;
 
 use crate::diagnostic_code::Code;
-use crate::error::{Result, invalid};
+use crate::error::{InternalError, Result, invalid};
 use crate::fragment::Fragment;
 use crate::props;
 use crate::tree::{self, Node, RegionKind};
@@ -72,9 +72,15 @@ pub(crate) fn records(fragment: &Fragment, catalogue: &PreparedCatalogue) -> Res
                 "forged fragment instance metadata",
             ));
         }
-        if let (Some(schema), Some(values)) = (schema, props.as_ref()) {
-            props::validate_for(
-                schema,
+        if let (Some(_), Some(values)) = (schema, props.as_ref()) {
+            let validator = catalogue
+                .prop_validators
+                .get(&instance.component_id)
+                .ok_or_else(|| InternalError::MissingPropValidator {
+                    entry: instance.component_id.clone(),
+                })?;
+            props::validate_prepared_for(
+                validator,
                 values,
                 &instance.component_id,
                 AuthoringKind::JavaScript,

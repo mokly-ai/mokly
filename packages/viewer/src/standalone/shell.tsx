@@ -7,6 +7,7 @@ import { RootState, ShellLayout } from "@mokly/ui/shell-layout";
 import { deploymentCheck } from "../catalogue/sources.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import { MoklyVersionError } from "../catalogue/version_error.js";
+import { CatalogueBoundary } from "../shell/catalogue_boundary.js";
 import type { ComparisonEnvironment } from "../shell/comparison_context.js";
 import { storedScrollTogether } from "../shell/comparison_scroll_preference.js";
 import { useFocusAfter } from "../shell/focus_after.js";
@@ -43,7 +44,10 @@ type IndexState =
 /** The browser surface of the standalone shell. */
 export type ShellWindow = Window & typeof globalThis & StandaloneWindow;
 
-/** Fetch the index, then render the shell; a version failure replaces it. */
+/**
+ * Fetch the index, then render the shell. A version failure replaces it, and
+ * an index that the shell cannot render shows the failure state.
+ */
 export function StandaloneShell({
   preferences,
   win,
@@ -103,13 +107,15 @@ export function StandaloneShell({
       <RootState focusRef={focus.ref("loading")} root={root} state="loading" />
     );
   return (
-    <ReadyShell
-      appearance={appearance}
-      index={state.index}
-      onVersionError={(error) => setState({ kind: "version", error })}
-      preferences={preferences}
-      win={win}
-    />
+    <CatalogueBoundary onFailure={() => setState({ kind: "failed" })}>
+      <ReadyShell
+        appearance={appearance}
+        index={state.index}
+        onVersionError={(error) => setState({ kind: "version", error })}
+        preferences={preferences}
+        win={win}
+      />
+    </CatalogueBoundary>
   );
 }
 

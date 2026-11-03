@@ -14,7 +14,7 @@ use crate::wire_props::ComponentWireProps;
 
 /// One document view key, available before rendering.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct CatalogueView {
     /// Viewport axis.
     pub viewport: Viewport,
@@ -28,7 +28,7 @@ pub struct CatalogueView {
 
 /// Public validated prop model and document views.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct CatalogueVisual {
     /// Effective schemes, light first.
     pub color_schemes: Vec<ColorScheme>,
@@ -51,7 +51,7 @@ pub enum CatalogueScreenKind {
 }
 
 /// Public screen entry.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct CatalogueScreen {
     /// Literal entry kind.
@@ -83,7 +83,7 @@ pub enum CatalogueComponentKind {
 }
 
 /// Public component entry.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct CatalogueComponent {
     /// Literal entry kind.
@@ -115,7 +115,7 @@ pub enum CataloguePageKind {
 }
 
 /// Public page entry.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct CataloguePage {
     /// Literal entry kind.
@@ -136,7 +136,7 @@ pub enum CatalogueDocumentKind {
 }
 
 /// Public document entry.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct CatalogueDocument {
     /// Literal entry kind.
@@ -159,7 +159,7 @@ pub enum CatalogueUseCaseKind {
 }
 
 /// Public use-case entry.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct CatalogueUseCase {
     /// Literal entry kind.
@@ -173,7 +173,7 @@ pub struct CatalogueUseCase {
 
 /// Document input hash for one scheme.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct DocumentKey {
     /// Color scheme axis.
     pub color_scheme: ColorScheme,
@@ -182,7 +182,7 @@ pub struct DocumentKey {
 }
 
 /// Every public current or removed entry kind.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, Serialize, TS)]
 #[serde(untagged)]
 pub enum CatalogueRecord {
     /// Screen, including screen variants.

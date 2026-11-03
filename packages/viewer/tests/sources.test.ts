@@ -61,10 +61,6 @@ test("deployment files accept one identity and ignore unreadable files", async (
     readDeploymentFile({ schemaVersion: 2, deploymentId }),
     undefined,
   );
-  assert.equal(
-    readDeploymentFile({ schemaVersion: 1, deploymentId: "bad" }),
-    undefined,
-  );
   const fetched = fakeFetch((url) =>
     url.pathname === "/mokly-viewer/deployment.json"
       ? { body: { schemaVersion: 1, deploymentId } }
