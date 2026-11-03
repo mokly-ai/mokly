@@ -1,5 +1,7 @@
 # Render Sidecar
 
+Status: Both sides still check frame fields that the transport decision trusts, until the [own-output checks plan](../../plans/remove-own-output-checks.md) removes these checks.
+
 ## Purpose And Boundary
 
 The sidecar runs JavaScript bundles, React, page and Storybook renders, and
@@ -38,6 +40,11 @@ per frame, excluding its LF delimiter. A request has `id`, `method`, and
 exactly one of `result` or `error`; a method without a return value uses
 `result: null`. An event has `event` and `params` and no `id`. Requests on one
 sidecar run in order; the pool spreads independent requests across sidecars. A request waiting for its affine slot does not block the first later request that can use another slot.
+
+Decision: each side trusts the frames that the other side of the same version
+writes, and checks only author data. JSON decoding, the hello and version
+check, and the frame size limit still apply. Checks of every frame field on
+both sides were rejected, because the copies drift and increase the code size.
 
 ```json
 {"id":12,"method":"renderComponent","params":{"generation":"3f9c…","handle":"specs/ui/button.mockup.tsx#Button","entry":{"path":"ui/button","title":"Button"},"props":{"label":"Save"},"slots":{},"viewport":"mobile","colorScheme":"light","ignoreScope":"enabled"}}
@@ -121,8 +128,7 @@ the consumer runtime and attaches invocation source only to Mokly wrappers.
 
 `bundle` evaluates nothing. `cssModules` must install all maps before
 `describe` evaluates the generation. A bundle or evaluation failure returns
-`bundle-failed` with its source and diagnostic. A render without installed
-bindings fails closed under the [render records](./mokly-sidecar-render-records.md).
+`bundle-failed` with its source and diagnostic.
 
 ## Style Collection
 
@@ -215,15 +221,15 @@ define deadlines, process replacement, and shutdown grace.
 
 ## Fail-Closed Rules
 
-| Code                  | Condition                                                            | Presentation                                                                   |
-| --------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `sidecar-unavailable` | Node or the sidecar entry cannot be started                          | `build-invalid` naming the missing part                                        |
-| `sidecar-version`     | the sidecar version differs from the CLI version                     | `build-invalid` with both versions                                             |
-| `sidecar-protocol`    | a malformed frame, an unknown method, or a frame over the size limit | `build-invalid`; the sidecar is replaced                                       |
-| `sidecar-crashed`     | the process exits during a request                                   | the request's own code after one retry                                         |
-| `bundle-failed`       | bundling or evaluation fails                                         | `build-invalid` with the module and diagnostic                                 |
-| `render-failed`       | a render throws or returns a non-string                              | `build-invalid` with the entry and, for a view render, the viewport and scheme |
-| `render-timeout`      | a deadline passed twice                                              | `build-invalid` with the entry and the deadline                                |
+| Code                  | Condition                                        | Presentation                                                                   |
+| --------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------ |
+| `sidecar-unavailable` | Node or the sidecar entry cannot be started      | `build-invalid` naming the missing part                                        |
+| `sidecar-version`     | the sidecar version differs from the CLI version | `build-invalid` with both versions                                             |
+| `sidecar-protocol`    | a malformed frame or a frame over the size limit | `build-invalid`; the sidecar is replaced                                       |
+| `sidecar-crashed`     | the process exits during a request               | the request's own code after one retry                                         |
+| `bundle-failed`       | bundling or evaluation fails                     | `build-invalid` with the module and diagnostic                                 |
+| `render-failed`       | a render throws or returns a non-string          | `build-invalid` with the entry and, for a view render, the viewport and scheme |
+| `render-timeout`      | a deadline passed twice                          | `build-invalid` with the entry and the deadline                                |
 
 There is no fallback render and no partial output. Commands that need neither
 JavaScript nor PostCSS never start a sidecar or fail for these reasons.
