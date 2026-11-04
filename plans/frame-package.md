@@ -389,14 +389,14 @@ package only through its exports.
 
 Depends on: every other milestone.
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Run the mockup check named in `AGENTS.md`, and smoke-test local Browse
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Run the mockup check named in `AGENTS.md`, and smoke-test local Browse
       through `npm run dev`: hover, pick, Escape, nested instances, and
       catalogue links in a screen and a component page.
-- [ ] Commit with Conventional Commits and push the branch. Mark the rename
+- [x] Commit with Conventional Commits and push the branch. Mark the rename
       of the published names as a breaking change, so that the release notes
       ask for a new publication of each catalogue.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record follow-up
       items under `plans/follow-ups/` for the rest, re-review once, and
