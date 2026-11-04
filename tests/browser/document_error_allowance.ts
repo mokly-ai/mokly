@@ -1,6 +1,6 @@
 import type { ErrorAllowance } from "./error_monitor.js";
 
-/** Native documents have no root favicon; the published inspector needs HTTP. */
+/** Native documents have no root favicon; the published frame probe needs HTTP. */
 export function documentFavicon(
   allow: (rule: ErrorAllowance) => void,
   origin: string,
@@ -9,7 +9,7 @@ export function documentFavicon(
     allow({
       kind: "console",
       message: /^Failed to load resource: net::ERR_FILE_NOT_FOUND$/u,
-      url: /^file:\/\/\/mokly-viewer\/client\/inspector\.js$/u,
+      url: /^file:\/\/\/mokly-viewer\/client\/frame-probe\.js$/u,
     });
   const url = new URL("/favicon.ico", origin).href.replace(
     /[.*+?^${}()|[\]\\]/g,

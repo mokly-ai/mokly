@@ -2,6 +2,13 @@
 
 import { createRoot } from "react-dom/client";
 
+import { postMessageAdapter, sameOriginAdapter } from "@mokly/frame";
+import type {
+  CatalogueReadModel,
+  CatalogueUsage,
+  EntryDetailV4,
+} from "@mokly/model";
+
 import {
   detailKey,
   type DetailRequest,
@@ -9,13 +16,6 @@ import {
 import type { ShellCatalogueView } from "../src/catalogue/scoped_types.js";
 import { shellCatalogueModel } from "../src/catalogue/shell_model.js";
 import type { LoadedIndex } from "../src/catalogue/sources.js";
-import type {
-  CatalogueReadModel,
-  CatalogueUsage,
-  EntryDetailV4,
-} from "../src/catalogue/types.js";
-import { postMessageAdapter } from "../src/client/post_message_adapter.js";
-import { sameOriginAdapter } from "../src/client/same_origin_adapter.js";
 import type {
   InstanceRef,
   MarkerState,

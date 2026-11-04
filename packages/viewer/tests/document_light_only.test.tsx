@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import test from "node:test";
 
+import type { ColorScheme } from "@mokly/model";
+
 import { shellCatalogueModel } from "../src/catalogue/shell_model.js";
-import type { ColorScheme } from "../src/data/axes.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { DocumentStageFrame } from "../src/shell/document_stage_frame.js";
 import {

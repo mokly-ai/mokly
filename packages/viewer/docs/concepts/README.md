@@ -162,8 +162,8 @@ marker container is pointer-inert; opt an interactive child in with its own
 `pointer-events` style. Geometry stays viewer-owned and is not a host API.
 
 Served and built documents keep the `mokly-instance` and `mokly-slot` comment
-markers of every region the core composed. The published inspector resolves
-instance regions in the live page from them.
+markers of every region the core composed. The frame probe resolves instance
+regions in the live page from them.
 
 ## Live controls
 

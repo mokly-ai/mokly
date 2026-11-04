@@ -1,4 +1,5 @@
-import type { ComponentControl } from "./control_types.js";
+import type { ComponentControl } from "@mokly/model";
+
 import { invalidData } from "./data.js";
 import type { ComponentPropsData } from "./prop_types.js";
 

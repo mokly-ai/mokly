@@ -84,7 +84,7 @@ comparison reads the separate metadata.
 Authored attributes cannot create these trusted records. The public annotation
 types have no serde decoding implementation; private comparison codecs own
 their in-process mirror records.
-`serialize::html` writes instance and slot comments for the inspector.
+`serialize::html` writes instance and slot comments for the frame probe.
 The authored HTML sink removes ordinary unknown ignore-wrapper attributes when
 it creates elements. The delivered sink keeps those attributes until
 composition filters them, with the same rule, directly after it parses callback
@@ -191,7 +191,7 @@ aligned byte must equal its source byte or be an LF from a CR.
 - [`src/html_sink.rs`](./src/html_sink.rs) implements the html5ever
   `TreeSink` and the `DriverSink` hooks for the tree arena.
 - [`src/serialize.rs`](./src/serialize.rs) provides `html`, which writes
-  deterministic document bytes with the inspector markers.
+  deterministic document bytes with the instance and slot markers.
 - [`src/props.rs`](./src/props.rs) provides `coerce`, `substitute`, and
   `validate`, the shared attribute coercion and template substitution.
 - [`src/links.rs`](./src/links.rs) provides `rewrite` and `references`, which

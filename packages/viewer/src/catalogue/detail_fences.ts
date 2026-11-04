@@ -4,7 +4,7 @@ import type {
   CatalogueReadModel,
   CatalogueRecord,
   EntryDetailV4,
-} from "./types.js";
+} from "@mokly/model";
 
 /** One requested detail: a current path, or a removed record's identity. */
 export interface DetailRequest {

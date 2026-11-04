@@ -1,6 +1,6 @@
 /** Exact current or historical entry resolution for public selection. */
 
-import type { CatalogueRecord } from "./types.js";
+import type { CatalogueRecord } from "@mokly/model";
 
 interface CatalogueIdentity {
   path: string;

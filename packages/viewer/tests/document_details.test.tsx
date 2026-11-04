@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { CatalogueNode } from "../src/catalogue/types.js";
+import type { CatalogueNode } from "@mokly/model";
+
 import { EntryDetailsBody } from "../src/shell/details.js";
 
 import { catalogueFixture, indexFixture } from "./catalogue_v9_fixture.js";

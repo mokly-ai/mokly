@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { EntryDetailV4 } from "@mokly/model";
+
 import { readDeploymentFile } from "../src/catalogue/deployment_reader.js";
 import {
   DeliveryFetchError,
@@ -11,7 +13,6 @@ import {
   sourceUrl,
   type JsonFetch,
 } from "../src/catalogue/sources.js";
-import type { EntryDetailV4 } from "../src/catalogue/types.js";
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
 import { viewerComparisonEnvironment } from "../src/viewer/environment.js";
 import { embeddedDataSource } from "../src/viewer/index_source.js";

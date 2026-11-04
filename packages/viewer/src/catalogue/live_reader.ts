@@ -1,8 +1,9 @@
 /** The live descriptor v3 reader: gate the version and copy the capability. */
 
+import type { LiveDescriptorV3 } from "@mokly/model";
+
 import { record } from "../components/data.js";
 
-import type { LiveDescriptorV3 } from "./types.js";
 import { MoklyVersionError } from "./version_error.js";
 
 /** The only live descriptor number this viewer reads. */

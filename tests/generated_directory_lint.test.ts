@@ -6,9 +6,10 @@ import { ESLint } from "eslint";
 const ruleId = "mokly/no-directory-literals";
 const eslint = new ESLint();
 const probes = [
+  "packages/model/src/generated-directory-lint-probe.ts",
   "packages/viewer/src/generated-directory-lint-probe.ts",
   "packages/viewer/src/generated-directory-lint-probe.tsx",
-  "packages/viewer/src/client/generated-directory-lint-probe.ts",
+  "packages/frame/src/adapters/generated-directory-lint-probe.ts",
 ];
 
 test("regular-expression directory names cannot bypass lint", async () => {
@@ -102,10 +103,13 @@ test("each offending template segment is reported only once", async () => {
 
 test("path builders and generated directory definitions are exempt", async () => {
   for (const [filePath, expected] of [
-    ["packages/viewer/src/catalogue/delivery_paths.ts", []],
-    ["packages/viewer/src/generated/catalogue/Namespace.ts", []],
+    ["packages/model/src/catalogue/delivery_paths.ts", []],
+    ["packages/model/src/generated/catalogue/Namespace.ts", []],
+    ["packages/model/src/other_paths.ts", [ruleId]],
+    ["packages/viewer/src/catalogue/delivery_paths.ts", [ruleId]],
+    ["packages/viewer/src/generated/catalogue/Namespace.ts", [ruleId]],
     ["packages/viewer/src/catalogue/other_paths.ts", [ruleId]],
-    ["packages/viewer/src/client/delivery_paths.ts", [ruleId]],
+    ["packages/frame/src/adapters/delivery_paths.ts", [ruleId]],
     ["tests/generated-directory-lint-probe.ts", []],
   ] as const) {
     const [result] = await eslint.lintText(

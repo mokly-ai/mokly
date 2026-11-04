@@ -4,7 +4,8 @@ import { StrictMode } from "react";
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 
-import type { CatalogueUsage } from "../src/catalogue/types.js";
+import type { CatalogueUsage } from "@mokly/model";
+
 import { useMountedShellFrame } from "../src/shell/frame_mount_hook.js";
 import {
   ShellFrameRegistryProvider,

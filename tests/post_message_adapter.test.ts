@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { FrameEvent } from "../packages/viewer/dist/client/frame_adapter.js";
-import { frameUsage } from "../packages/viewer/dist/client/frame_usage.js";
-import { postMessageAdapter } from "../packages/viewer/dist/client/post_message_adapter.js";
-import { encodeMessage } from "../packages/viewer/dist/inspector/schema.js";
+import { frameUsage } from "../packages/frame/dist/adapters/frame_usage.js";
+import { postMessageAdapter } from "../packages/frame/dist/adapters/post_message_adapter.js";
+import type { FrameEvent } from "../packages/frame/dist/frame_adapter.js";
+import { encodeMessage } from "../packages/frame/dist/probe/schema.js";
 
 import { fakeFrame, frameView, instanceKey } from "./helpers/fake_frame.js";
 

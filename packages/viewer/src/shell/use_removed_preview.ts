@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
+import type { EntryDetailV4 } from "@mokly/model";
+
 import { detailKey } from "../catalogue/detail_fences.js";
 import { DeploymentChangedError } from "../catalogue/sources.js";
-import type { EntryDetailV4 } from "../catalogue/types.js";
 import { previewKey } from "../previews/descriptor.js";
 import {
   createSnapshotPresentationLoader,

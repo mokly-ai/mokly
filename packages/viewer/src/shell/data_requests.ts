@@ -1,5 +1,11 @@
 /** The entry details one shell route needs, and how each request fares. */
 
+import type {
+  CatalogueReadModel,
+  DeploymentFileV1,
+  EntryDetailV4,
+} from "@mokly/model";
+
 import {
   currentEntry,
   detailKey,
@@ -7,11 +13,6 @@ import {
   workspaceDetailRequest,
   type DetailRequest,
 } from "../catalogue/detail_fences.js";
-import type {
-  CatalogueReadModel,
-  DeploymentFileV1,
-  EntryDetailV4,
-} from "../catalogue/types.js";
 import { MoklyVersionError } from "../catalogue/version_error.js";
 
 import type { ShellDataSource } from "./data_source.js";

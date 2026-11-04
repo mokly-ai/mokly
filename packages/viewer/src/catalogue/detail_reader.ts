@@ -1,8 +1,9 @@
 /** The entry detail v4 reader: gate the version and copy its content. */
 
+import type { EntryDetailV4 } from "@mokly/model";
+
 import { record } from "../components/data.js";
 
-import type { EntryDetailV4 } from "./types.js";
 import { MoklyVersionError } from "./version_error.js";
 
 /** The only entry detail number this viewer reads. */

@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import type { CatalogueReadModel } from "@mokly/model";
+
 import {
   isObjectSource,
   readObjectSource,
@@ -13,7 +15,6 @@ import {
   type IndexSource,
   type LoadedIndex,
 } from "../catalogue/sources.js";
-import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { ShellDataSource } from "../shell/data_source.js";
 
 /** The identity whose change remounts the shell: object, URL value, or origin. */

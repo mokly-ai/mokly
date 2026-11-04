@@ -1,7 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import type { CatalogueUsage } from "../src/catalogue/types.js";
+import type { CatalogueUsage } from "@mokly/model";
+
 import type { ComponentViewRecord } from "../src/components/view_types.js";
 
 export async function writeBrowserFile(

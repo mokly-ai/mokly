@@ -10,7 +10,7 @@
 | Review result                           | 8                         | In memory only: tree materiality, owner-attributed rule and resource evidence, moves; never written or read from a file.                                                                                                                            |
 | Catalogue change snapshot               | 4                         | In memory only: current private path/move/removal evidence paired with review v8 and the base commit.                                                                                                                                               |
 | Live descriptor                         | 3                         | A Serve JSON route with the render capability only; the index carries the one revision and the render generation.                                                                                                                                   |
-| Inspector wire envelope                 | 2                         | Navigation carries `screenPath`; both peers require 2 before message fields.                                                                                                                                                                        |
+| Frame probe wire envelope               | 3                         | The [frame probe wire](./mokly-frame-probe-wire.md#wire-protocol-v3) on channel `mokly-frame-probe`; navigation carries `screenPath`; both peers require 3 before message fields.                                                                   |
 | Removed page/document preview metadata  | 3                         | `{schemaVersion,baseRef,baseCommit,path}` shape.                                                                                                                                                                                                    |
 | Export ownership                        | 3                         | Exact `{path,sha256,size}` inventory, bounds and namespace; written by `build`.                                                                                                                                                                     |
 | Upload metadata                         | 3                         | Strict envelope without a comparison path; the Plan archive carries the index; Mokly Cloud implements it.                                                                                                                                           |
@@ -54,7 +54,7 @@ components and variants, including the HTML and YAML file kinds of the
 derive their instance, slot and root regions from the composed trees under the
 [comparison contract](./mokly-comparison.md) and carry no text offsets.
 Resource owners exclude CSS. The read model v9 is the model's public form. The
-[generated TypeScript types](../../packages/viewer/src/generated/catalogue/)
+[generated TypeScript types](../../packages/model/src/generated/catalogue/)
 are the normative shapes.
 
 ## Rejection Before Interpretation
@@ -65,7 +65,7 @@ review file is read. Unknown newer versions are invalid.
 
 Index, detail, and live descriptor readers use `MoklyVersionError` at their
 version gates. An unreadable deployment file, including one with another
-version, changes nothing. Inspector peers reject a mismatched wire version
+version, changes nothing. Frame probe peers reject a mismatched wire version
 before processing navigation. No field renaming or path conversion rescues an
 unsupported payload.
 

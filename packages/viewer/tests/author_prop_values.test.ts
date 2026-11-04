@@ -1,13 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { PropSchema } from "@mokly/model";
+
 import { ComponentValidationError } from "../src/components/data.js";
 import {
   validatePropSchema,
   validateProps,
   validatePropValues,
 } from "../src/data.js";
-import type { PropSchema } from "../src/generated/catalogue/PropSchema.js";
 
 import cases from "./fixtures/author-checks/props.json" with { type: "json" };
 

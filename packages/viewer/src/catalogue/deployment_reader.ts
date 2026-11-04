@@ -1,8 +1,8 @@
 /** Read the optional static deployment file without affecting browsing. */
 
-import { record } from "../components/data.js";
+import type { DeploymentFileV1 } from "@mokly/model";
 
-import type { DeploymentFileV1 } from "./types.js";
+import { record } from "../components/data.js";
 
 /** The only deployment file number this viewer reads. */
 const DEPLOYMENT_FILE_VERSION = 1;

@@ -1,7 +1,8 @@
 /** The reasons that Details shows for one routed record of the catalogue. */
 
+import type { EntryChangeReason } from "@mokly/model";
+
 import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
-import type { EntryChangeReason } from "../generated/catalogue/EntryChangeReason.js";
 
 /**
  * The routed detail's reasons that Details shows. Only a record that Changes

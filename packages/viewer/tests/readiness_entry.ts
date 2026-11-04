@@ -1,8 +1,6 @@
+import type { CatalogueReadModel, EntryDetailV4 } from "@mokly/model";
+
 import type { DetailRequest } from "../src/catalogue/detail_fences.js";
-import type {
-  CatalogueReadModel,
-  EntryDetailV4,
-} from "../src/catalogue/types.js";
 import type { InstanceRef } from "../src/host/types.js";
 
 import {

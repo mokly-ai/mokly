@@ -1,10 +1,11 @@
 /** Generated records and explicit index trees for navigation unit tests. */
 
+import type { CatalogueNode, EntryKind } from "@mokly/model";
+
 import type {
   ShellCatalogueReadModel,
   ShellCatalogueRoutedEntry,
 } from "../src/catalogue/scoped_types.js";
-import type { CatalogueNode, EntryKind } from "../src/catalogue/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 
 import { rawIndexFixture } from "./catalogue_v9_fixture.js";

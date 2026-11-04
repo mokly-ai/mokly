@@ -1,6 +1,8 @@
 /** Resolve historical documents only inside the accepted preview generation. */
-import type { EntryDetailV4 } from "../catalogue/types.js";
-import { encodeUrlPath } from "../data/paths.js";
+
+import { encodeUrlPath } from "@mokly/model";
+import type { EntryDetailV4 } from "@mokly/model";
+
 import {
   snapshotDocumentPath,
   snapshotViewPath,

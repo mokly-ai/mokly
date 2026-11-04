@@ -10,7 +10,7 @@ dependency on the upload client in `mokly-publish`.
 
 - Write every shell route, current detail, document, and reached resource.
 - Capture comparison documents, resources, removed records, and preview metadata.
-- Insert bounded inspector metadata into current document heads.
+- Insert bounded frame probe metadata into current document heads.
 - Validate package module requests against the exact browser inventory.
 - Compute deterministic deployment identities and finalize the ownership marker.
 - Reserve output and use exclusive moves for capture, installation, and recovery.
@@ -20,8 +20,8 @@ dependency on the upload client in `mokly-publish`.
 ## What This Crate Does
 
 `CatalogueAssembler` implements `dyn Assembler`. It consumes a render generation
-and the matching viewer package bytes, plus the command's retained `dyn ChangeState`. It omits only logical links that cannot cross the inspector wire boundary.
-Other ranges and links stay inspectable. Inspector failures carry a typed reason
+and the matching viewer package bytes, plus the command's retained `dyn ChangeState`. It omits only logical links that cannot cross the frame probe wire boundary.
+Other ranges and links stay inspectable. Frame probe failures carry a typed reason
 and the document route. It builds the canonical index and entry detail files
 with revision zero and no live capability, then writes the static deployment
 file after computing the deployment identity. The
@@ -126,8 +126,8 @@ exercise retained recovery bytes through debug-only fault adapters.
   deterministic deployment identity.
 - [`src/fingerprint.rs`](./src/fingerprint.rs) defines `CapturedTree`, which
   records selected input digests and checks them before installation.
-- [`src/inspector.rs`](./src/inspector.rs) provides `inject`, which writes the
-  inspector metadata into a document head.
+- [`src/frame_probe.rs`](./src/frame_probe.rs) provides `inject`, which writes
+  the frame probe metadata and script into a document head.
 - [`src/modules.rs`](./src/modules.rs) provides `validate`, which checks
   package module requests against the browser inventory at package input.
 - [`src/error.rs`](./src/error.rs) defines `Error`, the typed static-output

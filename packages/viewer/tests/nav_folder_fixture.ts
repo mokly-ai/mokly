@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 
+import type { CatalogueNode } from "@mokly/model";
+
 import type { ShellCatalogueRoutedEntry } from "../src/catalogue/scoped_types.js";
-import type { CatalogueNode } from "../src/catalogue/types.js";
 import type { ShellContext } from "../src/shell/context.js";
 import {
   buildNavSections,

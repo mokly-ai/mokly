@@ -3,9 +3,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { CatalogueReadModel, EntryChangeReason } from "@mokly/model";
+
 import type { ShellCatalogueRoutedEntry } from "../src/catalogue/scoped_types.js";
-import type { CatalogueReadModel } from "../src/catalogue/types.js";
-import type { EntryChangeReason } from "../src/review/types.js";
 import { shownReasons } from "../src/shell/public_reasons.js";
 
 import { indexFixture, shellModelFixture } from "./catalogue_v9_fixture.js";

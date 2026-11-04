@@ -181,7 +181,7 @@ test(
       await fetch(`${url}${preview.previewUrl}`, { signal })
     ).text();
     assert.match(html, /Edited/);
-    assert.doesNotMatch(html, /inspector\.js/);
+    assert.doesNotMatch(html, /frame-probe\.js/);
     child.kill("SIGINT");
     const [code] = await exited;
     assert.equal(code, 0, errors);

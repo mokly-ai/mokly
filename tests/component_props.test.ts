@@ -1,16 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { PropSchema } from "../packages/model/dist/index.js";
 import {
   encodeProps,
   decodeProps,
   encodeValue,
 } from "../packages/viewer/dist/components/codec.js";
 import { validatePropSchema } from "../packages/viewer/dist/components/profile_schema.js";
-import type {
-  PropSchema,
-  PropValue,
-} from "../packages/viewer/dist/components/prop_types.js";
+import type { PropValue } from "../packages/viewer/dist/components/prop_types.js";
 import { validateProps } from "../packages/viewer/dist/components/props.js";
 import { reviewMaterialKey } from "../packages/viewer/dist/data/material_key.js";
 

@@ -266,6 +266,26 @@ jobs:
       - name: Verify UI package registry package and provenance
         run: |
           node scripts/release/registry.mjs --mode verify --report .context/release-artifact/ui/pack-report.json --dist-tag latest
+      - name: Guard existing model package version
+        id: model_registry
+        run: node scripts/release/registry.mjs --mode guard --report .context/release-artifact/model/pack-report.json
+      - name: Publish model package with npm trusted publishing
+        if: steps.model_registry.outputs.published != 'true'
+        env:
+          ARCHIVE_PATH: ${{ steps.package.outputs.model_archive_path }}
+        run: npm publish "$ARCHIVE_PATH" --access public --ignore-scripts
+      - name: Verify model package registry package and provenance
+        run: node scripts/release/registry.mjs --mode verify --report .context/release-artifact/model/pack-report.json --dist-tag latest
+      - name: Guard existing frame package version
+        id: frame_registry
+        run: node scripts/release/registry.mjs --mode guard --report .context/release-artifact/frame/pack-report.json
+      - name: Publish frame package with npm trusted publishing
+        if: steps.frame_registry.outputs.published != 'true'
+        env:
+          ARCHIVE_PATH: ${{ steps.package.outputs.frame_archive_path }}
+        run: npm publish "$ARCHIVE_PATH" --access public --ignore-scripts
+      - name: Verify frame package registry package and provenance
+        run: node scripts/release/registry.mjs --mode verify --report .context/release-artifact/frame/pack-report.json --dist-tag latest
       - name: Guard existing viewer version
         id: viewer_registry
         run: node scripts/release/registry.mjs --mode guard --report .context/release-artifact/viewer/pack-report.json

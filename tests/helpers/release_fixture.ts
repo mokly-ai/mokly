@@ -23,7 +23,7 @@ export function viewerPackageReport(): PackageReport {
       "dist/data.d.ts",
       "dist/styles.css",
       "dist/shell.css",
-      "dist/browser/inspector.js",
+      "dist/browser/frame-probe.js",
       "dist/browser/shell.js",
       "dist/assets/fonts/Inter-OFL.txt",
       "README.md",
@@ -45,6 +45,43 @@ export function uiPackageReport(): PackageReport {
       "dist/top-bar/top-bar.js",
       "dist/top-bar/top-bar.d.ts",
       "dist/top-bar/top-bar.css",
+      "README.md",
+      "CHANGELOG.md",
+      "LICENSE",
+      "package.json",
+    ].map((path) => ({ path, size: 1 })),
+  };
+}
+
+export function modelPackageReport(): PackageReport {
+  return {
+    integrity: `sha512-${"e".repeat(12)}`,
+    shasum: "f".repeat(40),
+    name: "@mokly/model",
+    version: "0.18.0",
+    files: [
+      "dist/index.js",
+      "dist/index.d.ts",
+      "README.md",
+      "CHANGELOG.md",
+      "LICENSE",
+      "package.json",
+    ].map((path) => ({ path, size: 1 })),
+  };
+}
+
+export function framePackageReport(): PackageReport {
+  return {
+    integrity: `sha512-${"g".repeat(12)}`,
+    shasum: "a".repeat(40),
+    name: "@mokly/frame",
+    version: "0.18.0",
+    files: [
+      "dist/index.js",
+      "dist/index.d.ts",
+      "dist/internal.js",
+      "dist/internal.d.ts",
+      "dist/browser/frame-probe.js",
       "README.md",
       "CHANGELOG.md",
       "LICENSE",

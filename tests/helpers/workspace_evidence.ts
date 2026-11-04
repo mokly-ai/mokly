@@ -3,10 +3,12 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type { RuleEvidence } from "../../packages/viewer/dist/catalogue/types.js";
+import type {
+  EntryChangeReason,
+  RuleEvidence,
+} from "../../packages/model/dist/index.js";
 import type {
   ComparedEntry,
-  EntryChangeReason,
   ReviewView,
 } from "../../packages/viewer/dist/review/types.js";
 import type { WorkspaceData } from "../../packages/viewer/dist/shell/workspace_data.js";

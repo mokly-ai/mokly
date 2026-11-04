@@ -1,8 +1,9 @@
 /** Pure stylesheet path and view facts for the React Details panel. */
 
+import type { EntryChangeReason } from "@mokly/model";
+
 import type {
   ChangeReason,
-  EntryChangeReason,
   EvidenceReasons,
   ReviewView,
 } from "../review/types.js";

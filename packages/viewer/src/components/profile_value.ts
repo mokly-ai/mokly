@@ -1,6 +1,6 @@
 /** Value validation under the prop schema profile, with no generated code. */
 
-import type { PropSchema } from "../generated/catalogue/PropSchema.js";
+import type { PropSchema } from "@mokly/model";
 
 import { invalidData, plainKeys, record } from "./data.js";
 import { schemaTypes } from "./profile_schema.js";

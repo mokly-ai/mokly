@@ -4,12 +4,13 @@
  * address. `@mokly/ui/usage-list` renders the sections and their states.
  */
 
+import type { UsageLink } from "@mokly/model";
 import { UsageList, UsageStatus, type UsageRow } from "@mokly/ui/usage-list";
 
 import { viewHref } from "../navigation/routes.js";
 
 import type { DetailDelivery } from "./data_requests.js";
-import type { UsageLink, WorkspaceData } from "./workspace_data.js";
+import type { WorkspaceData } from "./workspace_data.js";
 
 /** The Usage sections: current uses, and the consumers a change affects. */
 export type UsageSectionName = "affected" | "used-by";

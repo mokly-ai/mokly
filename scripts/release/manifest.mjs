@@ -24,15 +24,60 @@ const UI_SUBPATH = /^\.\/([a-z0-9]+(?:-[a-z0-9]+)*)$/u;
 /** Validate the public contract in either source or packed package metadata. */
 export function validatePackageManifest(metadata, name) {
   if (name === "@mokly/ui") return validateUiManifest(metadata);
+  if (name === "@mokly/model") return validateModelManifest(metadata);
+  if (name === "@mokly/frame") return validateFrameManifest(metadata);
   if (name !== "@mokly/viewer") return validateCliOrNative(metadata, name);
   validateBrowserPackage(metadata, name, "packages/viewer");
+  assert.deepEqual(metadata.peerDependencies, PEERS);
   assert.equal(metadata.types, "./dist/index.d.ts");
   assert.deepEqual(metadata.exports, VIEWER_EXPORTS);
   assert.match(metadata.dependencies?.["@mokly/ui"] ?? "", VERSION);
+  assert.match(metadata.dependencies?.["@mokly/model"] ?? "", VERSION);
+  assert.match(metadata.dependencies?.["@mokly/frame"] ?? "", VERSION);
   assert.deepEqual(metadata.sideEffects, [
     "./dist/browser.js",
     "./dist/styles.css",
   ]);
+}
+
+/** The shared catalogue rules have one root entry and no upstream dependencies. */
+function validateModelManifest(metadata) {
+  validateBrowserPackage(metadata, "@mokly/model", "packages/model");
+  assert.equal(metadata.types, "./dist/index.d.ts");
+  assert.deepEqual(metadata.exports, { ".": entry("index") });
+  for (const field of [
+    "dependencies",
+    "optionalDependencies",
+    "peerDependencies",
+  ])
+    for (const dependency of ["@mokly/mokly", "@mokly/viewer", "@mokly/frame"])
+      assert.equal(
+        metadata[field]?.[dependency],
+        undefined,
+        `@mokly/model must not depend on ${dependency}`,
+      );
+}
+
+/** The frame package has public and internal entries and one exact model pin. */
+function validateFrameManifest(metadata) {
+  validateBrowserPackage(metadata, "@mokly/frame", "packages/frame");
+  assert.equal(metadata.types, "./dist/index.d.ts");
+  assert.deepEqual(metadata.exports, {
+    ".": entry("index"),
+    "./internal": entry("internal"),
+  });
+  assert.match(metadata.dependencies?.["@mokly/model"] ?? "", VERSION);
+  for (const field of [
+    "dependencies",
+    "optionalDependencies",
+    "peerDependencies",
+  ])
+    for (const dependency of ["@mokly/mokly", "@mokly/viewer"])
+      assert.equal(
+        metadata[field]?.[dependency],
+        undefined,
+        `@mokly/frame must not depend on ${dependency}`,
+      );
 }
 
 /**
@@ -41,6 +86,7 @@ export function validatePackageManifest(metadata, name) {
  */
 function validateUiManifest(metadata) {
   validateBrowserPackage(metadata, "@mokly/ui", "packages/ui");
+  assert.deepEqual(metadata.peerDependencies, PEERS);
   assert.equal(metadata.types, undefined, "@mokly/ui has no root entry");
   assert.equal(metadata.main, undefined, "@mokly/ui has no root entry");
   assert.equal(metadata.exports?.["./styles.css"], "./dist/styles.css");
@@ -68,14 +114,13 @@ function validateUiManifest(metadata) {
   assert.deepEqual(metadata.sideEffects, ["*.css"]);
 }
 
-/** The contract of an MIT ESM browser package with React peers. */
+/** The common contract of a published MIT ESM browser package. */
 function validateBrowserPackage(metadata, name, directory) {
   assert.equal(metadata.name, name);
   assert.match(metadata.version, VERSION);
   assert.equal(metadata.license, "MIT");
   assert.equal(metadata.type, "module");
   assert.notEqual(metadata.private, true);
-  assert.deepEqual(metadata.peerDependencies, PEERS);
   assert.deepEqual(metadata.publishConfig, {
     access: "public",
     registry: "https://registry.npmjs.org/",

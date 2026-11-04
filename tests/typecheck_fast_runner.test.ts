@@ -49,6 +49,16 @@ function expectedCheckerCalls(
     {
       program,
       args: [...args, "--project", "tsconfig.json"],
+      cwd: path.join(root, "packages", "model"),
+    },
+    {
+      program,
+      args: [...args, "--project", "tsconfig.json"],
+      cwd: path.join(root, "packages", "frame"),
+    },
+    {
+      program,
+      args: [...args, "--project", "tsconfig.json"],
       cwd: path.join(root, "packages", "viewer"),
     },
     {

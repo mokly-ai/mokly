@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { ComponentControl, PropSchema } from "@mokly/model";
+
 import { encodeProps } from "../src/components/codec.js";
-import type { ComponentControl } from "../src/components/control_types.js";
-import type { PropSchema } from "../src/components/prop_types.js";
 import { numberInputBounds } from "../src/shell/control_numbers.js";
 import {
   controlDraft,

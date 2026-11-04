@@ -8,7 +8,7 @@ Usage records derive from the ownership regions of the composed trees under
 the [comparison contract](./mokly-comparison.md#tree-model). A view's usage travels as the `usage` of that view in the
 [entry detail](./mokly-shell-delivery.md#entry-detail) and feeds the
 [comparison records](./mokly-component-comparison-records.md). The generated
-[`CatalogueUsage`](../../packages/viewer/src/generated/catalogue/CatalogueUsage.ts)
+[`CatalogueUsage`](../../packages/model/src/generated/catalogue/CatalogueUsage.ts)
 type and the record types that it imports define the shapes.
 
 References are local to one view except `componentId`, which names a

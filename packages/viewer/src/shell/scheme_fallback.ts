@@ -3,9 +3,10 @@
  * `@mokly/ui/scheme-fallback` draws the band and the note.
  */
 
-import type { ColorScheme } from "../data/axes.js";
+import type { ColorScheme } from "@mokly/model";
 
 /** Keep the requested scheme, with Light as the fallback for a missing Dark view. */
+
 export function schemeValue<T>(
   requested: ColorScheme,
   light: T,

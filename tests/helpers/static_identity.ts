@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 
-import { readCatalogueIndex } from "../../packages/viewer/src/catalogue/index_reader.js";
 import type {
   CatalogueReadModel,
   CatalogueRecord,
-} from "../../packages/viewer/src/catalogue/types.js";
+} from "../../packages/model/dist/index.js";
+import { readCatalogueIndex } from "../../packages/viewer/src/catalogue/index_reader.js";
 
 import { files } from "./static_faults.js";
 

@@ -1,13 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { CatalogueReadModel, EntryDetailV4 } from "@mokly/model";
+
 import type { DetailRequest } from "../src/catalogue/detail_fences.js";
 import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
 import { shellCatalogueModel } from "../src/catalogue/shell_model.js";
-import type {
-  CatalogueReadModel,
-  EntryDetailV4,
-} from "../src/catalogue/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { routeDetailRequests } from "../src/shell/data_requests.js";
 import { routeFromUrl } from "../src/shell/routes.js";

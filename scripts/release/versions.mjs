@@ -8,14 +8,17 @@ import { NATIVE_TARGETS } from "./targets.mjs";
 export async function verifyPackageVersions(root) {
   const json = async (file) =>
     JSON.parse(await fs.readFile(path.join(root, file), "utf8"));
-  const [workspace, lock, cli, viewer, ui, versions] = await Promise.all([
-    json("package.json"),
-    json("package-lock.json"),
-    json("packages/mokly/package.json"),
-    json("packages/viewer/package.json"),
-    json("packages/ui/package.json"),
-    json(".release-please-manifest.json"),
-  ]);
+  const [workspace, lock, cli, viewer, ui, model, frame, versions] =
+    await Promise.all([
+      json("package.json"),
+      json("package-lock.json"),
+      json("packages/mokly/package.json"),
+      json("packages/viewer/package.json"),
+      json("packages/ui/package.json"),
+      json("packages/model/package.json"),
+      json("packages/frame/package.json"),
+      json(".release-please-manifest.json"),
+    ]);
   assert.equal(workspace.private, true);
   for (const value of [
     workspace.version,
@@ -47,6 +50,34 @@ export async function verifyPackageVersions(root) {
     cli.version,
   ])
     assert.equal(value, ui.version, "UI package release versions must agree");
+  for (const value of [
+    workspace.devDependencies["@mokly/model"],
+    lock.packages[""].devDependencies["@mokly/model"],
+    viewer.dependencies["@mokly/model"],
+    lock.packages["packages/viewer"].dependencies["@mokly/model"],
+    frame.dependencies["@mokly/model"],
+    lock.packages["packages/frame"].dependencies["@mokly/model"],
+    lock.packages["packages/model"].version,
+    cli.version,
+  ])
+    assert.equal(
+      value,
+      model.version,
+      "model package release versions must agree",
+    );
+  for (const value of [
+    workspace.devDependencies["@mokly/frame"],
+    lock.packages[""].devDependencies["@mokly/frame"],
+    viewer.dependencies["@mokly/frame"],
+    lock.packages["packages/viewer"].dependencies["@mokly/frame"],
+    lock.packages["packages/frame"].version,
+    cli.version,
+  ])
+    assert.equal(
+      value,
+      frame.version,
+      "frame package release versions must agree",
+    );
   for (const { name, directory } of NATIVE_TARGETS) {
     assert.equal(
       (await json(`${directory}/package.json`)).version,
@@ -75,5 +106,5 @@ export async function verifyPackageVersions(root) {
       link: true,
     });
   }
-  return { cli, viewer, ui };
+  return { cli, viewer, ui, model, frame };
 }

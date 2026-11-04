@@ -1,17 +1,15 @@
 /** Serializable, source-derived state shared by every delivery's inspector. */
 
-import type { ShellCatalogueComponent } from "../catalogue/scoped_types.js";
 import type {
+  EntryChangeReason,
   EntryDetailV4,
   InputChange,
   UsageLink,
-} from "../catalogue/types.js";
+} from "@mokly/model";
+
+import type { ShellCatalogueComponent } from "../catalogue/scoped_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
-import type {
-  ComparedEntry,
-  EntryChangeReason,
-  ViewResourceEvidence,
-} from "../review/types.js";
+import type { ComparedEntry, ViewResourceEvidence } from "../review/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
@@ -23,7 +21,7 @@ import type { ChangedViewsBySelection } from "./workspace_views_data.js";
 
 export type { EntryStatus } from "./view_status.js";
 export type { WorkspaceVariant } from "./workspace_variants.js";
-export type { UsageLink } from "../catalogue/types.js";
+export type { UsageLink } from "@mokly/model";
 export interface WorkspaceData {
   controlOrder?: EntryDetailV4["controlOrder"];
   /** False when the detail that carries this entry's Usage lists is absent. */

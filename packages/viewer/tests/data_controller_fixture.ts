@@ -1,6 +1,7 @@
 /** One data controller over fake transports, with a mutable current route. */
 
-import type { CatalogueReadModel } from "../src/catalogue/types.js";
+import type { CatalogueReadModel } from "@mokly/model";
+
 import type { MoklyVersionError } from "../src/catalogue/version_error.js";
 import {
   initialSnapshot,

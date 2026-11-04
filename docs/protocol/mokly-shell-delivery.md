@@ -57,7 +57,8 @@ catalogue data, no descriptor, and no route; the shell reads the route from
 render. Before the bundle runs, the shell stylesheet gives the stub the Auto
 interface appearance through the document class, under the
 [appearance contract](./mokly-viewer-appearance.md#standalone-appearance-control).
-The in-frame inspector script is the [frame adapter's](./mokly-frame-adapter.md).
+The [frame probe](./mokly-frame-probe.md) script is the
+[frame adapter's](./mokly-frame-adapter.md).
 
 ## Catalogue Index
 
@@ -107,7 +108,7 @@ hash could miss an input and keep a stale descriptor. A static build has no
 One detail exists per entry: under `mokly-viewer/entries/` for a current
 entry, and under the comparison generation that records a removed entry.
 
-The [generated entry detail v4 type](../../packages/viewer/src/generated/catalogue/EntryDetailV4.ts)
+The [generated entry detail v4 type](../../packages/model/src/generated/catalogue/EntryDetailV4.ts)
 defines the detail, view, evidence, and workspace shapes.
 A screen or component detail includes `controlOrder`, listing every editable
 property exactly once in the [control declaration order](./mokly-component-controls.md).
@@ -165,7 +166,7 @@ is proven. Pending or unavailable consumer usage cannot prove a complete list.
 
 ## Live Descriptor
 
-The [generated `LiveDescriptorV3` type](../../packages/viewer/src/generated/catalogue/LiveDescriptorV3.ts)
+The [generated `LiveDescriptorV3` type](../../packages/model/src/generated/catalogue/LiveDescriptorV3.ts)
 defines the descriptor. Its `generation` equals the index's `live.generation`.
 
 Serve supplies the component controls contract's render generation and capability

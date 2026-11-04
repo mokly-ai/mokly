@@ -16,7 +16,7 @@ depends on it. It has no internal crate dependency and performs no file IO.
   one validator on `jsonschema`.
 - Own the review result, change snapshot, in-memory comparison records, and
   removed-preview shape.
-- Generate TypeScript declarations for the viewer.
+- Generate the TypeScript declarations of the `@mokly/model` package.
 
 ## What This Crate Does
 
@@ -47,9 +47,10 @@ guarantee does not extend the JSON reader or prop-schema nesting contracts.
 large integer types to TypeScript `number`, because JSON readers use numbers. It supports recursive
 schemas and Serde field names without a second hand-written type model.
 `typescript::generate` returns deterministic source. `cargo xtask generate-types`
-writes the schema module to `packages/viewer/src/generated/model.ts` and the
-catalogue types to `packages/viewer/src/generated/catalogue/`, one declaration
-per file. `catalogue::CatalogueModel` is private in-memory state. `SourceLocation`
+writes the schema module to `packages/model/src/generated/model.ts` and the
+catalogue types to `packages/model/src/generated/catalogue/`, one declaration
+per file. The [`@mokly/model`](../../packages/model/README.md) package ships
+them. `catalogue::CatalogueModel` is private in-memory state. `SourceLocation`
 coordinates are one-based; a zero line or column means the coordinate is
 unavailable. JavaScript diagnostics can use the module and export instead. The public
 roots are `CatalogueReadModel`, `DeploymentFileV1`, `EntryDetailV4`, and
@@ -225,5 +226,6 @@ cargo xtask generate-types
 - [Entry props](../../docs/protocol/mokly-entry-props.md).
 - [Component props](../../docs/protocol/mokly-component-props.md).
 - [Format inventory](../../docs/protocol/mokly-format-versions.md).
+- [Model package](../../docs/protocol/mokly-model-package.md).
 - [Static ownership](../../docs/protocol/mokly-export-ownership.md).
 - [Rust core architecture](../../docs/architecture/rust-core.md).

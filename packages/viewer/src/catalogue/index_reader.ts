@@ -1,8 +1,9 @@
 /** The catalogue index v9 reader: gate the version and copy its content. */
 
+import type { CatalogueReadModel } from "@mokly/model";
+
 import { record } from "../components/data.js";
 
-import type { CatalogueReadModel } from "./types.js";
 import { MoklyVersionError } from "./version_error.js";
 
 /** The only catalogue index number this viewer reads. */

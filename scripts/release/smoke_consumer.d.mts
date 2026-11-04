@@ -13,7 +13,7 @@ export type ConsumerCommand = (
   options: { cwd: string; env?: Readonly<Record<string, string>> },
 ) => Promise<{ stdout: string; stderr: string }>;
 
-/** Install the host native package, the CLI, the viewer, and the UI package. */
+/** Install the host native, CLI, viewer, UI, model, and frame archives. */
 export function installConsumer(
   root: string,
   packages: readonly ConsumerArchive[],

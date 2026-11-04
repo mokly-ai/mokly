@@ -114,7 +114,7 @@ Plain JSON numbers cannot preserve negative zero. The read model, the entry
 detail, the comparison records, and the instance markers therefore carry
 data values in a tagged representation, compatible with the
 `reviewMaterialKey` value encoding. The generated
-[`ComponentWireValue`](../../packages/viewer/src/generated/catalogue/ComponentWireValue.ts)
+[`ComponentWireValue`](../../packages/model/src/generated/catalogue/ComponentWireValue.ts)
 type defines the tagged form of one value. `ComponentWireProps` maps each prop
 name to one tagged value. The inspector decodes these values for display
 rather than exposing tuple tags to users.

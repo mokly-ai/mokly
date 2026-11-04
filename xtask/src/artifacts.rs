@@ -191,8 +191,8 @@ impl Artifacts for DefaultArtifacts {
             }
         }
         for directory in [
-            "packages/viewer/src/generated",
-            "packages/viewer/src/generated/catalogue",
+            "packages/model/src/generated",
+            "packages/model/src/generated/catalogue",
             "packages/mokly/src/generated/sidecar",
         ] {
             for path in self.files.entries(&self.workspace.join(directory))? {
@@ -211,7 +211,7 @@ impl Artifacts for DefaultArtifacts {
 /// One stable inventory shared by generation and byte comparison.
 fn generated_sources(workspace: &Path) -> Vec<(PathBuf, String)> {
     let mut sources = vec![(
-        workspace.join("packages/viewer/src/generated/model.ts"),
+        workspace.join("packages/model/src/generated/model.ts"),
         typescript::generate(),
     )];
     sources.extend(
@@ -220,7 +220,7 @@ fn generated_sources(workspace: &Path) -> Vec<(PathBuf, String)> {
             .map(|(name, text)| {
                 (
                     workspace
-                        .join("packages/viewer/src/generated/catalogue")
+                        .join("packages/model/src/generated/catalogue")
                         .join(name),
                     text,
                 )

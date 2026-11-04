@@ -46,7 +46,7 @@ worker has loaded `@mokly/viewer`.
   location is unstable or absent; their exact message must identify the
   expected failure.
 - Portable-document cases allow the absent root favicon on their own origin.
-  Manual file delivery also allows the fixed HTTP-only inspector URL to be
+  Manual file delivery also allows the fixed HTTP-only frame probe URL to be
   absent on disk. Private sandbox fixtures declare their exact denial notices.
   Test-owned host documents declare a favicon that loads, so they need no
   allowance: a `data:` favicon, or a served same-origin icon where a strict

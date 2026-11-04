@@ -4,11 +4,11 @@
  * `@mokly/ui/view-controls` renders the viewport select, the Dark preview
  * toggle, and the Highlight components toggle.
  */
+
 import type { Ref } from "react";
 
+import type { ColorScheme } from "@mokly/model";
 import { ViewControls } from "@mokly/ui/view-controls";
-
-import type { ColorScheme } from "../data/axes.js";
 
 import { useShellIdentifier } from "./identifier_context.js";
 import { useShellStore } from "./store_context.js";

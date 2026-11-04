@@ -1,6 +1,7 @@
 /** Comparison generation requests shared by the shell's comparison controller. */
 
-import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
+import { VIEWER_DIRECTORY } from "@mokly/model";
+
 import { DeploymentChangedError } from "../catalogue/sources.js";
 
 import type {

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { parseBrowsingTarget } from "../packages/viewer/dist/navigation/target.js";
+import { parseBrowsingTarget } from "../packages/frame/dist/navigation/target.js";
 
 test("browsing targets follow one strict shared grammar", () => {
   const cases = [

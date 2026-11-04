@@ -1,6 +1,7 @@
-import type { CatalogueNode } from "../src/catalogue/types.js";
+import type { CatalogueNode } from "@mokly/model";
 
 /** Keep synthetic entry removals consistent with their public tree references. */
+
 export function withoutTreeEntries(
   nodes: readonly CatalogueNode[],
   paths: readonly string[],

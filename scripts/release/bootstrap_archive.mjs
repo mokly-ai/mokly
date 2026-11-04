@@ -7,7 +7,7 @@ import path from "node:path";
 import { createPackageArchive, inspectRuntimeLicenses } from "./archive.mjs";
 import { runCommand } from "./command.mjs";
 import { packNative } from "./native.mjs";
-import { nativeTarget } from "./targets.mjs";
+import { nativeTarget, releasePackages } from "./targets.mjs";
 
 /**
  * The JavaScript packages a registration can pack, each pinned to the one
@@ -17,6 +17,8 @@ import { nativeTarget } from "./targets.mjs";
 const JAVASCRIPT_REGISTRATIONS = {
   "@mokly/viewer": { relative: "packages/viewer", version: "0.1.0" },
   "@mokly/ui": { relative: "packages/ui", version: "0.16.1" },
+  "@mokly/model": { relative: "packages/model", version: "0.18.0" },
+  "@mokly/frame": { relative: "packages/frame", version: "0.18.0" },
 };
 
 /** Build registration evidence from reviewed committed bytes, never local dist. */
@@ -78,6 +80,19 @@ export async function createBootstrapArchive(
       },
     );
     await inspectRuntimeLicenses(checkout);
+    if (registration) {
+      for (const prerequisite of releasePackages()) {
+        if (prerequisite.name === packageName) break;
+        if (prerequisite.triple) continue;
+        await runCommand(
+          "npm",
+          ["run", "build", "--workspace", prerequisite.name],
+          {
+            cwd: checkout,
+          },
+        );
+      }
+    }
     const packed = registration
       ? await createPackageArchive(
           path.join(checkout, relative),

@@ -1,7 +1,7 @@
 # Release tooling
 
-These scripts prepare, inspect, and publish the CLI, UI package, viewer, and
-native npm packages. The [release management contract](../../docs/protocol/npm-release-management.md)
+These scripts prepare, inspect, and publish the CLI, UI, model, frame, viewer,
+and native npm packages. The [release management contract](../../docs/protocol/npm-release-management.md)
 defines version selection and publication requirements.
 
 ## Key code
@@ -14,14 +14,14 @@ defines version selection and publication requirements.
 - `build-native.mjs` builds, or takes, one target's binary and packs its
   native package archive with a report.
 - `bootstrap.mjs` packs one registration archive from a reviewed commit:
-  `@mokly/viewer` by default, `@mokly/ui`, or a named `@mokly/native-{target}`
-  package on a host of that target. Each JavaScript package is pinned to its
-  registration version.
+  `@mokly/viewer` by default, `@mokly/ui`, `@mokly/model`, `@mokly/frame`, or a
+  named `@mokly/native-{target}` package on a host of that target. Each
+  JavaScript package is pinned to its registration version.
 
 ## Preparation and publication
 
-The root Release Please component owns the CLI, UI package, and viewer
-versions. The UI package has no tag of its own.
+The root Release Please component owns the CLI, UI, model, frame, and viewer
+versions. The UI, model, and frame packages have no tag of their own.
 The `release-tags` job creates `viewer-vX.Y.Z` at the root `vX.Y.Z` commit
 before native builds or preparation. It uses only the GitHub API with contents
 write permission, without a checkout or dependency builds. Reruns accept the
@@ -35,8 +35,8 @@ run and name, plus the exact Node version selected during preparation.
 
 The publish job waits for that result. It downloads the selected archive set,
 uses `npm ci --ignore-scripts`, and runs `pack.mjs --reuse` to inspect the bytes.
-It then rechecks tags before the native, UI package, viewer, and CLI registry
-sequence.
+It then rechecks tags before the native, UI, model, frame, viewer, and CLI
+registry sequence.
 Its `id-token: write` permission is confined to this publication job. A retry
 keeps the original saved archives and does not rebuild them.
 

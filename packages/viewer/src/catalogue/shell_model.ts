@@ -1,5 +1,14 @@
 /** Merge the held entry details into the index as the shell's working model. */
 
+import type {
+  CatalogueComponent,
+  CatalogueReadModel,
+  CatalogueRecord,
+  CatalogueScreen,
+  CatalogueView,
+  EntryDetailV4,
+} from "@mokly/model";
+
 import { detailKey } from "./detail_fences.js";
 import type {
   ShellCatalogueComponent,
@@ -9,14 +18,6 @@ import type {
   ShellCatalogueUsage,
   ShellCatalogueView,
 } from "./scoped_types.js";
-import type {
-  CatalogueComponent,
-  CatalogueReadModel,
-  CatalogueRecord,
-  CatalogueScreen,
-  CatalogueView,
-  EntryDetailV4,
-} from "./types.js";
 
 const OMITTED: ShellCatalogueUsage = { status: "omitted" };
 

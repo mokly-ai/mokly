@@ -8,7 +8,7 @@
 
 import { expect, type Locator, type Page } from "@playwright/test";
 
-import type { UsageLink } from "../../packages/viewer/src/generated/catalogue/UsageLink.js";
+import type { UsageLink } from "../../packages/model/dist/index.js";
 import { branchPointPaths as paths } from "../helpers/branch_point_sources.js";
 
 import {

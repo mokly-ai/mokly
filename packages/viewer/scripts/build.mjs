@@ -5,7 +5,6 @@ import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 
 import { writeBrowserManifest } from "./browser.mjs";
-import { bundleInspector } from "./inspector-bundle.mjs";
 import { embeddedStyles, standaloneStyles } from "./styles.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
@@ -40,9 +39,12 @@ await build({
   platform: "browser",
   target: "es2023",
 });
-await bundleInspector(
-  path.join(root, "src/inspector/index.ts"),
-  path.join(browser, "inspector.js"),
+await fs.copyFile(
+  path.join(
+    path.dirname(fileURLToPath(import.meta.resolve("@mokly/frame"))),
+    "browser/frame-probe.js",
+  ),
+  path.join(browser, "frame-probe.js"),
 );
 await writeBrowserManifest(browser);
 // The standalone stylesheet that Serve and `build` deliver as

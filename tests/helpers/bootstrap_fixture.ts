@@ -7,6 +7,8 @@ import { promisify } from "node:util";
 
 import { repositoryRoot } from "./fixture.js";
 import {
+  framePackageReport,
+  modelPackageReport,
   uiPackageReport,
   viewerPackageReport,
   type PackageReport,
@@ -55,8 +57,18 @@ export async function bootstrapFixture(
     type: "module",
     license: "MIT",
     private: true,
-    workspaces: ["packages/ui", "packages/viewer"],
-    devDependencies: { "@mokly/ui": "0.16.1", "@mokly/viewer": "0.1.0" },
+    workspaces: [
+      "packages/ui",
+      "packages/model",
+      "packages/frame",
+      "packages/viewer",
+    ],
+    devDependencies: {
+      "@mokly/ui": "0.16.1",
+      "@mokly/model": "0.18.0",
+      "@mokly/frame": "0.18.0",
+      "@mokly/viewer": "0.1.0",
+    },
     scripts: { prepack: "node build.mjs" },
   };
   const viewerPackage = {
@@ -65,7 +77,7 @@ export async function bootstrapFixture(
     license: "MIT",
     type: "module",
     files: ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
-    scripts: { prepack: "node ../../build.mjs" },
+    scripts: { build: "node ../../build.mjs viewer", prepack: "npm run build" },
   };
   const uiPackage = {
     name: "@mokly/ui",
@@ -73,9 +85,32 @@ export async function bootstrapFixture(
     license: "MIT",
     type: "module",
     files: ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
-    scripts: { prepack: "node ../../build.mjs" },
+    scripts: { build: "node ../../build.mjs ui", prepack: "npm run build" },
+  };
+  const modelPackage = {
+    name: "@mokly/model",
+    version: "0.18.0",
+    license: "MIT",
+    type: "module",
+    files: ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
+    scripts: { build: "node ../../build.mjs model", prepack: "npm run build" },
+  };
+  const framePackage = {
+    name: "@mokly/frame",
+    version: "0.18.0",
+    license: "MIT",
+    type: "module",
+    files: ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
+    dependencies: { "@mokly/model": "0.18.0" },
+    scripts: { build: "node ../../build.mjs frame", prepack: "npm run build" },
   };
   const distFiles = [
+    ...modelPackageReport()
+      .files.filter((file) => file.path.startsWith("dist/"))
+      .map((file) => `packages/model/${file.path}`),
+    ...framePackageReport()
+      .files.filter((file) => file.path.startsWith("dist/"))
+      .map((file) => `packages/frame/${file.path}`),
     ...viewerPackageReport()
       .files.filter((file) => file.path.startsWith("dist/"))
       .map((file) => `packages/viewer/${file.path}`),
@@ -93,14 +128,26 @@ export async function bootstrapFixture(
       packages: {
         "": packageJson,
         "packages/ui": uiPackage,
+        "packages/model": modelPackage,
+        "packages/frame": framePackage,
         "packages/viewer": viewerPackage,
         "node_modules/@mokly/ui": { resolved: "packages/ui", link: true },
+        "node_modules/@mokly/model": { resolved: "packages/model", link: true },
+        "node_modules/@mokly/frame": { resolved: "packages/frame", link: true },
         "node_modules/@mokly/viewer": {
           resolved: "packages/viewer",
           link: true,
         },
       },
     }),
+    "packages/model/package.json": JSON.stringify(modelPackage),
+    "packages/model/README.md": "# Model package release fixture\n",
+    "packages/model/LICENSE": "MIT\n",
+    "packages/model/CHANGELOG.md": "# Model package test release\n",
+    "packages/frame/package.json": JSON.stringify(framePackage),
+    "packages/frame/README.md": "# Frame package release fixture\n",
+    "packages/frame/LICENSE": "MIT\n",
+    "packages/frame/CHANGELOG.md": "# Frame package test release\n",
     "packages/ui/package.json": JSON.stringify(uiPackage),
     "packages/ui/README.md": "# UI package release fixture\n",
     "packages/ui/LICENSE": "MIT\n",
@@ -117,8 +164,11 @@ export async function bootstrapFixture(
     "build.mjs": `import fs from "node:fs/promises";
 import path from "node:path";
 process.chdir(import.meta.dirname);
+const workspace = process.argv[2];
+if (workspace === "frame") await fs.access("packages/model/dist/index.d.ts");
 const source = await fs.readFile("source.txt", "utf8");
 for (const file of ${JSON.stringify(distFiles)}) {
+  if (workspace && !file.startsWith(\`packages/\${workspace}/\`)) continue;
   await fs.mkdir(path.dirname(file), { recursive: true });
   await fs.writeFile(file, source);
 }
