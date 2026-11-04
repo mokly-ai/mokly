@@ -90,7 +90,7 @@ test("only the directory definition module is exempt for both names", async () =
     "packages/model/src/lint-coverage-probe.ts",
     "packages/viewer/src/catalogue/delivery_paths.ts",
     "packages/viewer/src/catalogue/lint-coverage-probe.ts",
-    "packages/viewer/src/client/delivery_paths.ts",
+    "packages/frame/src/adapters/delivery_paths.ts",
   ]) {
     await requireLintRule(file, rule);
     assert.deepEqual(

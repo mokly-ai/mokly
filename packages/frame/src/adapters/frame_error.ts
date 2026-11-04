@@ -1,4 +1,4 @@
-import type { FrameErrorCode } from "@mokly/frame";
+import type { FrameErrorCode } from "../frame_adapter.js";
 
 /** Host diagnostics carry a stable code, never consumer document text. */
 export class FrameError extends Error {

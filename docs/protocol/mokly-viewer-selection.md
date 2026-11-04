@@ -1,7 +1,5 @@
 # Viewer Selection, Events And Shell State
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 This continues the [embeddable viewer contract](./mokly-viewer.md), which
 defines the props and the types that this page uses.
 

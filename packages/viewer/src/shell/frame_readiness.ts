@@ -1,8 +1,7 @@
 /** Promise ownership for frame mount and evidence-update readiness. */
 
 import type { MountedFrame } from "@mokly/frame";
-
-import { FrameError } from "../client/frame_error.js";
+import { FrameError } from "@mokly/frame/internal";
 
 interface InitialFrameReadiness {
   promise: Promise<MountedFrame>;

@@ -1,7 +1,5 @@
 # Mokly CI And Npm Release Contract
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 Breaking changes and their upgrade steps: the
 [upgrade guide](../guides/start/upgrade.md). The root `CHANGELOG.md` records
 every release.

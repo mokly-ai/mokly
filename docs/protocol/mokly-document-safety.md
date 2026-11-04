@@ -1,7 +1,5 @@
 # Document Rendering Safety
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 This continues [Markdown Documents](./mokly-documents.md#rendering).
 The structural allowlist applies to Markdown documents. The URL policy also
 applies to composed HTML screens, components, and pages.

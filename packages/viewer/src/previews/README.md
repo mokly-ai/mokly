@@ -87,7 +87,7 @@ cargo xtask check --suite viewer
 - [`../shell/previews.tsx`](../shell/previews.tsx) renders the loading,
   unavailable, and loaded stages with the device chrome of current screens.
 
-Related boundaries: [the Browse client](../client/README.md), the
+Related boundaries: [the frame adapters](../../../frame/README.md#frames-without-an-adapter), the
 [shared shell](../shell/README.md), the
 [selected comparison contract](../../../../docs/protocol/mokly-selected-comparisons.md),
 the [comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md),

@@ -1,7 +1,5 @@
 # Package And Consumer Boundary
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 ## Rule
 
 Mokly owns the mechanics shared by any mockup catalogue. A consumer owns

@@ -22,8 +22,6 @@
   <a href="./docs/protocol/README.md">Protocols</a>
 </p>
 
-Status: In progress under the [frame package plan](./plans/frame-package.md).
-
 Mokly is an open-source toolkit for turning product screens into a searchable
 static catalogue. A screen is an HTML file with YAML front matter, a React
 component, or a Storybook story. Mokly renders every screen at mobile and

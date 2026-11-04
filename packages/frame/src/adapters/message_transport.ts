@@ -1,13 +1,12 @@
-import type { FrameErrorCode } from "@mokly/frame";
+import type { FrameErrorCode } from "../frame_adapter.js";
 import {
-  boundedJson,
-  BYTE_LIMIT,
   encodeMessage,
   envelope,
   validMessage,
   type Message,
   type MessageBody,
-} from "@mokly/frame/internal";
+} from "../probe/schema.js";
+import { boundedJson, BYTE_LIMIT } from "../probe/values.js";
 
 import { FrameError } from "./frame_error.js";
 

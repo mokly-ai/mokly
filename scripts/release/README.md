@@ -1,7 +1,5 @@
 # Release tooling
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 These scripts prepare, inspect, and publish the CLI, UI, model, frame, viewer,
 and native npm packages. The [release management contract](../../docs/protocol/npm-release-management.md)
 defines version selection and publication requirements.

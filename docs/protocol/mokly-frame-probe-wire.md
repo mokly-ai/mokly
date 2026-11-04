@@ -1,7 +1,5 @@
 # Frame Probe Handshake And Wire Protocol
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 This continues the [viewer frame adapter contract](./mokly-frame-adapter.md).
 It defines how `postMessageAdapter` mounts a frame on a separate origin and
 exchanges messages with the [frame probe](./mokly-frame-probe.md).

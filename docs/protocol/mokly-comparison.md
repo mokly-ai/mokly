@@ -1,7 +1,5 @@
 # Tree Comparison And Changes
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 ## Purpose And Inputs
 
 Comparison decides, for every entry and view, whether the base and the head

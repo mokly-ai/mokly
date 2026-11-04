@@ -1,7 +1,5 @@
 # Frame Link Navigation
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 This continues the [navigation contract](./mokly-navigation.md).
 
 `sameOriginAdapter` preserves this behavior. The viewer package exposes the

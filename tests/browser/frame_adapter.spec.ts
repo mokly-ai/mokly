@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 
-import type * as PostAdapter from "../../packages/viewer/dist/client/post_message_adapter.js";
+import type * as PostAdapter from "../../packages/frame/dist/adapters/post_message_adapter.js";
 import type { BrowserUsage } from "../../packages/viewer/tests/browser_documents.js";
 
 import { test } from "./browser_test.js";

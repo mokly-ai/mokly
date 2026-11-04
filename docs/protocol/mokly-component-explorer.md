@@ -1,7 +1,5 @@
 # Component Pages And Screen Inspection
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 ## Catalogue And Component Pages
 
 Components are a distinct entry kind in a dedicated collapsible Components

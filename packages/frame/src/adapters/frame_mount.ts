@@ -1,6 +1,7 @@
-import type { FrameMount } from "@mokly/frame";
-import { origin } from "@mokly/frame/internal";
 import { RENDERS_PATH, RENDER_ID, currentDocumentRoute } from "@mokly/model";
+
+import type { FrameMount } from "../frame_adapter.js";
+import { origin } from "../probe/values.js";
 
 import { FrameError } from "./frame_error.js";
 

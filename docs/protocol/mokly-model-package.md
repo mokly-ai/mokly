@@ -1,7 +1,5 @@
 # Model Package
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 This continues the [embeddable viewer contract](./mokly-viewer.md).
 
 ## Package And Entry

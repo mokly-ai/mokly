@@ -1,7 +1,5 @@
 # Component Instance Identity
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 ## Identity And Scope
 
 An instance is one logical use of a registered component inside an entry's

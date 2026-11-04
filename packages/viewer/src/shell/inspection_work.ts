@@ -1,4 +1,4 @@
-import { FrameError } from "./frame_error.js";
+import { FrameError } from "@mokly/frame/internal";
 
 /** Internal cancellation is distinct from a current adapter reporting disposal. */
 export class ObsoleteInspection extends FrameError {

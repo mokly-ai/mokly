@@ -1,15 +1,14 @@
-import type { InstanceBoundary } from "@mokly/frame";
+import type { CatalogueUsage } from "@mokly/model";
+
+import type { InstanceBoundary } from "../frame_adapter.js";
 import {
   readMetadata,
   metadataKeys,
   unavailableMetadata,
   compactRanges,
-  BYTE_LIMIT,
-  EVENTS,
-  type ProbeEventType,
   type ProbeMetadata,
-} from "@mokly/frame/internal";
-import type { CatalogueUsage } from "@mokly/model";
+} from "../probe/metadata.js";
+import { BYTE_LIMIT, EVENTS, type ProbeEventType } from "../probe/values.js";
 
 import { FrameError } from "./frame_error.js";
 

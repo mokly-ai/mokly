@@ -1,7 +1,5 @@
 # Frame Package
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 This continues the [viewer frame adapter contract](./mokly-frame-adapter.md).
 
 ## Package And Entries

@@ -1,7 +1,5 @@
 # Static Build
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 ## Scope
 
 `mokly build` validates the catalogue, renders every view in memory, and

@@ -25,7 +25,6 @@ export { readEntryDetail } from "./catalogue/detail_reader.js";
 export { MoklyVersionError } from "./catalogue/version_error.js";
 export { resolveInstance } from "./components/resolve_instance.js";
 export type { InstanceResolution } from "./components/resolve_instance.js";
-export { sameOriginAdapter } from "./client/same_origin_adapter.js";
-export { postMessageAdapter } from "./client/post_message_adapter.js";
+export { sameOriginAdapter, postMessageAdapter } from "@mokly/frame";
 export { MoklyViewer } from "./viewer/component.js";
 export type * from "./host/types.js";

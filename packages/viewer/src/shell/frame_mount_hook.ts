@@ -10,12 +10,10 @@ import {
 import type { RefObject } from "react";
 
 import type { FrameAdapter, FrameEvent } from "@mokly/frame";
+import { FrameError, cancelFrameMount } from "@mokly/frame/internal";
 import type { CatalogueUsage } from "@mokly/model";
 
-import { runCleanup } from "../client/cleanup.js";
-import { FrameError } from "../client/frame_error.js";
-import { cancelFrameMount } from "../client/frame_mount.js";
-
+import { runCleanup } from "./cleanup.js";
 import type { FrameLayout } from "./frame_layout_context.js";
 import { mountedFrameReadiness } from "./frame_readiness.js";
 import {

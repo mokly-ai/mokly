@@ -1,7 +1,5 @@
 # Developer Type Checks
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 Continuation of [Developer Test Commands](./developer-test-commands.md).
 
 ## Commands And Projects

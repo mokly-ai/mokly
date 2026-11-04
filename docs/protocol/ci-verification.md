@@ -1,7 +1,5 @@
 # CI Verification
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 ## Verification Boundary
 
 `cargo xtask check` is the complete repository and release gate. The local

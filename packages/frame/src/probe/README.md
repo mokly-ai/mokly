@@ -1,12 +1,8 @@
 # Frame probe
 
 The frame probe is a dependency-free browser IIFE for the optional cross-origin
-frame adapter. The package build emits `dist/browser/frame-probe.js`. The
-viewer build copies that file into `packages/viewer/dist/browser` and lists it
-in the viewer's browser module inventory. Serve and the static build deliver
-the script at `/mokly-viewer/client/frame-probe.js`, and the static build
-injects it into the current documents that it writes. The same-origin adapter
-runs the shared event core of the frame probe directly with viewer callbacks.
+frame adapter. The [package README](../../README.md#frame-probe) says how
+Serve and the static build deliver it.
 [`probe_budget.test.ts`](../../tests/probe_budget.test.ts) checks the
 built script against the script budget of the
 [frame probe contract](../../../../docs/protocol/mokly-frame-probe.md).
@@ -48,10 +44,8 @@ through inner containers and the document viewport.
 
 ## Development
 
-```bash
-npm run build
-cargo xtask check --suite viewer
-```
+The [package README](../../README.md#development) gives the build and check
+commands and the path of the built script.
 
 ### Key Code
 
@@ -85,4 +79,4 @@ cargo xtask check --suite viewer
 See the [normative frame protocol](../../../../docs/protocol/mokly-frame-adapter.md),
 [frame probe contract](../../../../docs/protocol/mokly-frame-probe.md),
 [frame probe wire protocol](../../../../docs/protocol/mokly-frame-probe-wire.md),
-[client adapters](../../../viewer/src/client/README.md), and [publication boundary](../../../../docs/protocol/mokly-export-delivery.md).
+[frame adapters](../../README.md), and [publication boundary](../../../../docs/protocol/mokly-export-delivery.md).

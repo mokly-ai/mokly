@@ -1,7 +1,5 @@
 # Npm Release Operations
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 This document supplements the [CI and npm release contract](./npm-release.md)
 with package registration, maintainer setup, and the evidence each release
 keeps.

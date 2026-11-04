@@ -1,12 +1,9 @@
 /** Pure classification for logical activations in same-origin frames. */
 
-import type { FrameEvent, FrameNavigation } from "@mokly/frame";
-import {
-  frameLinkActivation,
-  logicalMarker,
-  parseLogicalMarker,
-  parseBrowsingTarget,
-} from "@mokly/frame/internal";
+import type { FrameEvent, FrameNavigation } from "../frame_adapter.js";
+import { frameLinkActivation } from "../navigation/activation.js";
+import { logicalMarker, parseLogicalMarker } from "../navigation/logical.js";
+import { parseBrowsingTarget } from "../navigation/target.js";
 
 import type { AuthenticatedDocument } from "./same_origin_identity.js";
 

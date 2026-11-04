@@ -4,8 +4,7 @@ import type { InstanceBoundary } from "@mokly/frame";
 import { HighlightLabel, LabelLayer } from "@mokly/ui/highlight-label";
 import { HighlightMask } from "@mokly/ui/highlight-mask";
 
-import { visibleFrameBox } from "../client/component_geometry.js";
-
+import { visibleFrameBox } from "./component_geometry.js";
 import { frameInspectionMask } from "./frame_inspection_mask.js";
 import type { ShellFrameSession } from "./frame_registry.js";
 import type { WorkspaceData } from "./workspace_data.js";

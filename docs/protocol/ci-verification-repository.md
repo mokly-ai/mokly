@@ -1,7 +1,5 @@
 # Repository Gate And Length Audits
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 Continuation of [CI Verification](./ci-verification.md).
 
 ## Repository Boundary

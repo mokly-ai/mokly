@@ -1,7 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 
+import type * as LocalAdapter from "../../packages/frame/dist/adapters/same_origin_adapter.js";
 import type { MountedFrame } from "../../packages/frame/dist/frame_adapter.js";
-import type * as LocalAdapter from "../../packages/viewer/dist/client/same_origin_adapter.js";
 
 import { test } from "./browser_test.js";
 import {

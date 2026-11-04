@@ -1,7 +1,5 @@
 # Embeddable Mokly Viewer
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 ## Package And Props
 
 `@mokly/viewer` is an MIT, ESM npm package with declarations and React and React DOM

@@ -20,7 +20,7 @@
     reports its end as a `pick-end` event with a reason.
   - **Cross-origin adapter:** the viewer frame adapter that talks to
     preview frames of another origin through posted messages, in
-    `packages/viewer/src/client/post_message_adapter.ts`.
+    `packages/frame/src/adapters/post_message_adapter.ts`.
 - **Background:**
   - The test starts at `tests/browser/viewer_events.spec.ts:113`. It mounts
     the viewer with the cross-origin adapter, through

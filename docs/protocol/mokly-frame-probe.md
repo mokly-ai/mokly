@@ -1,7 +1,5 @@
 # Frame Probe
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 The frame probe is the in-frame script of the cross-origin
 [frame adapter](./mokly-frame-adapter.md). The
 [frame package](./mokly-frame-package.md) builds it. Decision: the script and

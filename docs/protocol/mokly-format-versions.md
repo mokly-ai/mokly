@@ -1,7 +1,5 @@
 # Combined Path And Output Format Versions
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 ## Version Inventory
 
 | Boundary                                | Version                   | Reason and reader                                                                                                                                                                                                                                   |

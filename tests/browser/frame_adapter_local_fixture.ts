@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 
-import type * as LocalAdapter from "../../packages/viewer/src/client/same_origin_adapter.js";
+import type * as LocalAdapter from "../../packages/frame/src/adapters/same_origin_adapter.js";
 import type { BrowserUsage } from "../../packages/viewer/tests/browser_documents.js";
 
 import type {

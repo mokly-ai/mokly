@@ -1,7 +1,5 @@
 # Packed Consumer Smoke
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 `npm run package:smoke` builds first, then packs `@mokly/ui`, `@mokly/model`,
 `@mokly/frame`, `@mokly/viewer`, `@mokly/mokly`, and the host's native package
 with `npm pack`, so the real `prepack` builds run. It installs the six archives

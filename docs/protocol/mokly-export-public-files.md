@@ -1,7 +1,5 @@
 # Static Build Public Files And Package Boundary
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 Continuation of [Static Build](./mokly-export.md).
 
 ## Output Inventory

@@ -3,8 +3,8 @@ import { test } from "node:test";
 
 import type { CatalogueUsage } from "@mokly/model";
 
-import { FrameError } from "../src/client/frame_error.js";
-import { temporaryFrameUrl } from "../src/client/frame_mount.js";
+import { FrameError } from "../src/adapters/frame_error.js";
+import { temporaryFrameUrl } from "../src/adapters/frame_mount.js";
 
 const ORIGIN = "http://127.0.0.1:4173";
 const frame = { hasAttribute: () => false } as unknown as HTMLIFrameElement;

@@ -1,5 +1,5 @@
-import type { FrameAdapter } from "@mokly/frame";
-import { probeRuntime } from "@mokly/frame/internal";
+import type { FrameAdapter } from "../frame_adapter.js";
+import { probeRuntime } from "../probe/runtime.js";
 
 import { FrameError } from "./frame_error.js";
 import { frameUrl, temporaryFrameUrl } from "./frame_mount.js";

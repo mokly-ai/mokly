@@ -3,8 +3,7 @@
 import type { Box, InstanceBoundary } from "@mokly/frame";
 import type { HighlightMaskPlacement } from "@mokly/ui/highlight-mask";
 
-import { visibleFrameBox } from "../client/component_geometry.js";
-
+import { visibleFrameBox } from "./component_geometry.js";
 import type { ShellFrameSession } from "./frame_registry.js";
 
 export interface FrameInspectionMask {

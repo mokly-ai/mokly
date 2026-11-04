@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { localFrameAccess } from "../src/client/same_origin_access.js";
-import { createMountAuthentication } from "../src/client/same_origin_identity.js";
+import { localFrameAccess } from "../src/adapters/same_origin_access.js";
+import { createMountAuthentication } from "../src/adapters/same_origin_identity.js";
 
 test("local inspection stays unavailable when the immediate document cannot authenticate", () => {
   const frame = { contentDocument: null } as unknown as HTMLIFrameElement;

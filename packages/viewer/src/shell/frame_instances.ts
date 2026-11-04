@@ -1,7 +1,7 @@
 /** Exact instance matching over React-owned frame sessions. */
 
-import { FrameError } from "../client/frame_error.js";
-import { frameUsage } from "../client/frame_usage.js";
+import { FrameError, frameUsage } from "@mokly/frame/internal";
+
 import type { GeneratedComponentView } from "../components/views.js";
 import type { InstanceRef } from "../host/types.js";
 

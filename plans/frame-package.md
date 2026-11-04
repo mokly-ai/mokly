@@ -38,8 +38,8 @@ Contract owners:
 - The [package boundary](../docs/architecture/package-boundary.md).
 - The [registry bootstrap](../docs/protocol/npm-bootstrap.md) and the
   [release contract](../docs/protocol/npm-release.md).
-- The [client README](../packages/viewer/src/client/README.md) and the
-  [inspector README](../packages/viewer/src/inspector/README.md).
+- The [frame package README](../packages/frame/README.md) and the
+  [frame probe README](../packages/frame/src/probe/README.md).
 
 Replaced ways:
 
@@ -370,17 +370,17 @@ Depends on: 6.
 The host adapters move into the frame package. The viewer imports the
 package only through its exports.
 
-- [ ] Move `packages/viewer/src/client` with `git mv`, except `cleanup.ts`,
+- [x] Move `packages/viewer/src/client` with `git mv`, except `cleanup.ts`,
       `inspection_work.ts`, and `visibleFrameBox`, which move to
       `packages/viewer/src/shell`.
-- [ ] Re-export the public adapters and frame types from
+- [x] Re-export the public adapters and frame types from
       `packages/viewer/src/index.ts`. Move each viewer consumer to
       `@mokly/frame` or `@mokly/frame/internal`.
-- [ ] Move the frame unit tests from `packages/viewer/tests` to
+- [x] Move the frame unit tests from `packages/viewer/tests` to
       `packages/frame/tests`. Point the root tests, helpers, browser specs,
       `scripts/verification/prepared.mjs`, and the lint tests at the
       package.
-- [ ] Move the client and inspector READMEs into the package README. Delete
+- [x] Move the client and inspector READMEs into the package README. Delete
       the old directories. Remove the status lines that Milestone 1 added,
       except on `docs/protocol/npm-bootstrap.md`, which stays until the
       registration.

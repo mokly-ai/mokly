@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   normalizedHtmlPath,
   sameFrameResource,
-} from "../packages/viewer/dist/client/same_origin_identity.js";
+} from "../packages/frame/dist/adapters/same_origin_identity.js";
 
 test("static host normalization preserves exact resource identity queries and containing directories", () => {
   for (const [canonical, equivalent] of [

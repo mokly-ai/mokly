@@ -1,7 +1,5 @@
 # Static Delivery
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 ## Hosting Contract
 
 Deploy the output directory's contents as the HTTP(S) origin's document root.

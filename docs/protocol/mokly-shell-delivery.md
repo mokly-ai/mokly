@@ -1,6 +1,6 @@
 # Shell Delivery And Read Model Routes
 
-Status: Follow-up work remains in the [fallback keys item](../../plans/follow-ups/fallback-keys-checkout-folder.md), and work is in progress under the [frame package plan](../../plans/frame-package.md).
+Status: Follow-up work remains in the [fallback keys item](../../plans/follow-ups/fallback-keys-checkout-folder.md).
 
 ## Purpose And Boundary
 

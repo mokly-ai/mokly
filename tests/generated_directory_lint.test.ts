@@ -9,7 +9,7 @@ const probes = [
   "packages/model/src/generated-directory-lint-probe.ts",
   "packages/viewer/src/generated-directory-lint-probe.ts",
   "packages/viewer/src/generated-directory-lint-probe.tsx",
-  "packages/viewer/src/client/generated-directory-lint-probe.ts",
+  "packages/frame/src/adapters/generated-directory-lint-probe.ts",
 ];
 
 test("regular-expression directory names cannot bypass lint", async () => {
@@ -109,7 +109,7 @@ test("path builders and generated directory definitions are exempt", async () =>
     ["packages/viewer/src/catalogue/delivery_paths.ts", [ruleId]],
     ["packages/viewer/src/generated/catalogue/Namespace.ts", [ruleId]],
     ["packages/viewer/src/catalogue/other_paths.ts", [ruleId]],
-    ["packages/viewer/src/client/delivery_paths.ts", [ruleId]],
+    ["packages/frame/src/adapters/delivery_paths.ts", [ruleId]],
     ["tests/generated-directory-lint-probe.ts", []],
   ] as const) {
     const [result] = await eslint.lintText(

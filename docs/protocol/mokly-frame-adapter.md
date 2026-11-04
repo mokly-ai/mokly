@@ -1,7 +1,5 @@
 # Viewer Frame Adapter
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 ## Public Interface
 
 The [frame package](./mokly-frame-package.md) defines these types and the

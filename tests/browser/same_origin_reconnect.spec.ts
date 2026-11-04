@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 
-import type * as LocalAdapter from "../../packages/viewer/dist/client/same_origin_adapter.js";
+import type * as LocalAdapter from "../../packages/frame/dist/adapters/same_origin_adapter.js";
 import type { BrowserUsage } from "../../packages/viewer/tests/browser_documents.js";
 
 import { test } from "./browser_test.js";

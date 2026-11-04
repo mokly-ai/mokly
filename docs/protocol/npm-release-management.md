@@ -1,7 +1,5 @@
 # npm Release Management
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 Continuation of [CI And npm Release Contract](./npm-release.md).
 
 ## Release Management

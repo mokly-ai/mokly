@@ -1,6 +1,6 @@
 # CI Test Timing
 
-Status: Follow-up work remains in the [viewer clock lint item](../../plans/follow-ups/viewer-clock-lint.md), and work is in progress under the [frame package plan](../../plans/frame-package.md).
+Status: Follow-up work remains in the [viewer clock lint item](../../plans/follow-ups/viewer-clock-lint.md).
 
 Required tests check correctness without depending on machine speed. This
 contract applies to every Node test file that the viewer suite discovers under

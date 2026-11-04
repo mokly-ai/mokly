@@ -1,7 +1,5 @@
 # GitHub Publishing Protections
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
-
 The [release workflow](../../.github/workflows/release.yml) runs on a push to
 `main` or a manual dispatch. Its publish job checks out a release tag, but GitHub
 environment rules evaluate the **workflow ref**, not that checkout. Permit only
