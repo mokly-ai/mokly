@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { RuleEvidence } from "../packages/viewer/dist/catalogue/types.js";
+import type { RuleEvidence } from "../packages/model/dist/index.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 
 import {

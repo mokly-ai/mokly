@@ -10,9 +10,9 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
+import type { CatalogueReadModel, EntryChangeReason } from "@mokly/model";
+
 import { detailKey } from "../src/catalogue/detail_fences.js";
-import type { CatalogueReadModel } from "../src/catalogue/types.js";
-import type { EntryChangeReason } from "../src/review/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { publicWorkspace } from "../src/shell/public_workspace.js";
 import { routeFromUrl, routeHref } from "../src/shell/routes.js";

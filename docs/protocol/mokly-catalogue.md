@@ -26,7 +26,7 @@ Component value types follow the
 [props](./mokly-component-props.md), [controls](./mokly-component-controls.md)
 and [instance](./mokly-instances.md) contracts; the prop schema follows the
 [entry props contract](./mokly-entry-props.md). The generated
-[`CatalogueReadModel`](../../packages/viewer/src/generated/catalogue/CatalogueReadModel.ts)
+[`CatalogueReadModel`](../../packages/model/src/generated/catalogue/CatalogueReadModel.ts)
 type and the generated types that it imports define the shape of the read
 model. The viewer exports these types and the component value types without a
 CLI dependency. A screen's or a component's `props` hold the entry's own

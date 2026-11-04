@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { runCleanup } from "../src/client/cleanup.js";
+import { runCleanup } from "../src/shell/cleanup.js";
 
 test("cleanup releases every owner and preserves the original callback exception", () => {
   const original = new Error("Host callback failure");

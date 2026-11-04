@@ -1,6 +1,5 @@
-import type { PropSchema } from "../generated/catalogue/PropSchema.js";
+import type { ComponentControl, PropSchema } from "@mokly/model";
 
-import type { ComponentControl } from "./control_types.js";
 import { assertPlainData, exactKeys, invalidData, plainKeys } from "./data.js";
 import { isPrimitive, schemaTypes } from "./profile_schema.js";
 import { profileAccepts } from "./profile_value.js";

@@ -3,10 +3,11 @@
 import { useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
+import type { FrameAdapter } from "@mokly/frame";
+import type { CatalogueReadModel, EntryDetailV4 } from "@mokly/model";
+
 import type { DetailRequest } from "../catalogue/detail_fences.js";
-import type { CatalogueReadModel, EntryDetailV4 } from "../catalogue/types.js";
 import type { MoklyVersionError } from "../catalogue/version_error.js";
-import type { FrameAdapter } from "../client/frame_adapter.js";
 import type { ViewerSelection } from "../host/types.js";
 
 import type { Catalogue } from "./catalogue.js";

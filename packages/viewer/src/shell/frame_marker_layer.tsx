@@ -2,10 +2,10 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { runCleanup } from "../client/cleanup.js";
 import { viewerFailures } from "../host/failures.js";
 import type { ViewerEvents, ViewerMarker } from "../host/types.js";
 
+import { runCleanup } from "./cleanup.js";
 import { useShellComparisonMode } from "./comparison_mode.js";
 import { ShellFrameMarkers } from "./frame_markers.js";
 import { useOptionalShellFrameRegistry } from "./frame_registry.js";

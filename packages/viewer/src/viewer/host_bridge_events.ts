@@ -3,8 +3,9 @@
 import { useCallback } from "react";
 import type { MutableRefObject } from "react";
 
-import type { Box, FrameEvent } from "../client/frame_adapter.js";
-import { FrameError } from "../client/frame_error.js";
+import type { Box, FrameEvent } from "@mokly/frame";
+import { FrameError } from "@mokly/frame/internal";
+
 import type { MoklyViewerProps, PickEnd } from "../host/types.js";
 import type { ShellInspectionController } from "../shell/frame_inspection_controller.js";
 import {

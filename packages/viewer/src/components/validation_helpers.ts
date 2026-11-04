@@ -1,4 +1,4 @@
-import { isSafeRepositoryPath } from "../navigation/logical.js";
+import { isSafeRepositoryPath } from "@mokly/model";
 
 import { invalidData } from "./data.js";
 

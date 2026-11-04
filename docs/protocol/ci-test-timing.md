@@ -4,9 +4,9 @@ Status: Follow-up work remains in the [viewer clock lint item](../../plans/follo
 
 Required tests check correctness without depending on machine speed. This
 contract applies to every Node test file that the viewer suite discovers under
-`tests/`, `packages/viewer/tests/`, and `packages/ui/tests/`, and to the
-browser specs under
-`tests/browser/`. Rust tests under `crates/` and `xtask/` follow the same
+`tests/`, `packages/viewer/tests/`, `packages/ui/tests/`,
+`packages/model/tests/`, and `packages/frame/tests/`, and to the browser specs
+under `tests/browser/`. Rust tests under `crates/` and `xtask/` follow the same
 assertion rule; the job timeout of the
 [CI workflow contract](./ci-workflow.md#job-execution) is their hang guard. It
 supplements [CI suite evidence](./ci-suite-evidence.md).
@@ -56,9 +56,9 @@ budgets and their thresholds.
 ## ESLint Guard
 
 ESLint rejects two elapsed-time patterns in every JavaScript and TypeScript
-file under `tests/`, `packages/viewer/tests/`, and `packages/ui/tests/`,
-including browser specs and
-`page.evaluate` callbacks:
+file under `tests/`, `packages/viewer/tests/`, `packages/ui/tests/`,
+`packages/model/tests/`, and `packages/frame/tests/`, including browser specs
+and `page.evaluate` callbacks:
 
 - A subtraction with a clock call on the left and a nonliteral operand on the
   right. The clock calls are `performance.now()`, `Date.now()`, and

@@ -1,10 +1,6 @@
 /** Adapter instrumentation for retained-evidence browser coverage. */
 
-import type {
-  FrameAdapter,
-  FrameEvent,
-  MountedFrame,
-} from "../src/client/frame_adapter.js";
+import type { FrameAdapter, FrameEvent, MountedFrame } from "@mokly/frame";
 
 interface EvidenceAdapterProbe {
   calls: string[];

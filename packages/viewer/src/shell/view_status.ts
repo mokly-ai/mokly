@@ -1,6 +1,7 @@
-import type { CatalogueView, ComparisonSelection } from "../catalogue/types.js";
+import type { CatalogueView, ComparisonSelection } from "@mokly/model";
 
 /** Product-facing state shown beside a workspace title. */
+
 export type EntryStatus = "Added" | "Changed" | "Removed" | "Unmodified";
 
 /** The ready comparison of one index view, with its original axes. */

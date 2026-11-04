@@ -13,14 +13,14 @@
 - **Category:** Test.
 - **Terms:**
   - **Frame adapter:** the viewer client that mounts a preview frame and
-    turns its posted messages into frame events, in
-    `packages/viewer/src/client/frame_adapter.ts`.
+    turns its posted messages into frame events, with the interface that
+    `packages/frame/src/frame_adapter.ts` defines.
 - **Background:**
   - The test "cross-origin native activations report bounded targets and
     modifiers without navigation" clicks links inside a cross-origin preview
     frame.
   - The frame runtime emits a `navigation` frame event in its click
-    handler, at `packages/viewer/src/inspector/runtime.ts:110-128`.
+    handler, at `packages/frame/src/probe/runtime.ts:109-127`.
   - The fixture at `tests/browser/frame_adapter_fixture.ts:46-48` pushes
     each frame event into `window.frameEvents`. The test clears that list
     before each click.

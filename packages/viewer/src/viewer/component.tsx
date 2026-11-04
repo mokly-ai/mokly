@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
+import { sameOriginAdapter } from "@mokly/frame";
 import { RootState } from "@mokly/ui/shell-layout";
 
 import {
   MoklyVersionError,
   VERSION_ERROR_MESSAGE,
 } from "../catalogue/version_error.js";
-import { sameOriginAdapter } from "../client/same_origin_adapter.js";
 import type { MoklyViewerProps } from "../host/types.js";
 import { memoryScrollTogether } from "../shell/comparison_scroll_preference.js";
 import { useFocusAfter } from "../shell/focus_after.js";

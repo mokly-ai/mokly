@@ -1,6 +1,6 @@
 /** The prop schema profile of JSON Schema 2020-12, checked without code generation. */
 
-import type { PropSchema } from "../generated/catalogue/PropSchema.js";
+import type { PropSchema } from "@mokly/model";
 
 import { DataBudget, invalidData, plainKeys, record } from "./data.js";
 

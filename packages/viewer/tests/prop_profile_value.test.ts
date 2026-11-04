@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { PropSchema } from "@mokly/model";
+
 import {
   isMultipleOf,
   profileAccepts,
   validateProfileValue,
 } from "../src/components/profile_value.js";
-import type { PropSchema } from "../src/components/prop_types.js";
 import { validateProps } from "../src/components/props.js";
 
 const schema = {

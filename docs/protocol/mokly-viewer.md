@@ -6,7 +6,7 @@
 `>=19.0.0` peers. `@mokly/mokly` depends on its exact released version. The
 viewer never imports the CLI, Node built-ins, Git, or consumer code, and it
 renders only in the browser. Its shared shapes are the
-[generated types](../../packages/viewer/src/generated/catalogue/)
+[generated types](../../packages/model/src/generated/catalogue/)
 of the model.
 The package has four entry points:
 
@@ -172,7 +172,7 @@ The viewer fetches only the index, the details, documents, removed previews,
 and comparison generation files of its artifact origin root, under the fetch
 rules of the [shell delivery contract](./mokly-shell-delivery.md#fetch-and-fences).
 It sends no telemetry and reads no cookies. Consumer code never
-enters the browser through the viewer. The in-frame inspector script of the
-frame adapter contract is the one React-free part of the package. Several
-viewers can mount in one document with independent state, and each cleans up
-on unmount.
+enters the browser through the viewer. The
+[frame probe](./mokly-frame-probe.md) script is the one React-free part of the
+package. Several viewers can mount in one document with independent state, and
+each cleans up on unmount.

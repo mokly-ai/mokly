@@ -1,17 +1,18 @@
 import assert from "node:assert/strict";
 
+import type {
+  CataloguePage,
+  CatalogueReadModel,
+  EntryChangeReason,
+  EntryDetailV4,
+  ViewEvidence,
+} from "@mokly/model";
+
 import {
   detailKey,
   type DetailRequest,
 } from "../src/catalogue/detail_fences.js";
 import type { ShellCatalogueReadModel } from "../src/catalogue/scoped_types.js";
-import type {
-  CataloguePage,
-  CatalogueReadModel,
-  EntryDetailV4,
-  ViewEvidence,
-} from "../src/catalogue/types.js";
-import type { EntryChangeReason } from "../src/review/types.js";
 import type { Catalogue } from "../src/shell/catalogue.js";
 import { ShellMain } from "../src/shell/views.js";
 

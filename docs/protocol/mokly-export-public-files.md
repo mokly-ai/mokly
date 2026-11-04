@@ -76,7 +76,7 @@ private comparison data.
 
 `mokly-viewer/index.json` and `mokly-viewer/entries/**` enter the same
 collision-checked ownership and upload inventories as every other file,
-alongside `mokly-viewer/client/inspector.js`. The index is the public form
+alongside `mokly-viewer/client/frame-probe.js`. The index is the public form
 of the catalogue model under the [catalogue contract](./mokly-catalogue.md).
 The details carry each entry's usage, review states, resource evidence, and
 workspace lists. The ownership marker and the upload metadata gate the viewer
@@ -84,15 +84,15 @@ namespace at the versions of the [format inventory](./mokly-format-versions.md).
 The review result stays in memory.
 The deployment identity includes the index and the details under the
 [delivery hashing rule](./mokly-export-browser.md#deployment-identity) and
-includes the inspector.
+includes the frame probe.
 
-Only current rendered HTML copies in the output gain the Mokly-owned inspector
-script and its bounded inert boundary metadata under the
-[published inspector contract](./mokly-published-inspector.md). The
-[inspector contract](./mokly-inspector-wire.md#cross-origin-mount-and-handshake) requires a host handshake
-before activation. Authored files and snapshot document bytes are unchanged;
-consumer content and portable links are not rewritten to implement
-inspection. Default local frames keep scripts disabled.
+Only current rendered HTML copies in the output gain the Mokly-owned frame
+probe script and its bounded inert boundary metadata under the
+[frame probe contract](./mokly-frame-probe.md). The
+[frame probe wire contract](./mokly-frame-probe-wire.md#cross-origin-mount-and-handshake)
+requires a host handshake before activation. Authored files and snapshot
+document bytes are unchanged; consumer content and portable links are not
+rewritten to implement inspection. Default local frames keep scripts disabled.
 
 Consumers must not deep-import package internals or copy repository scripts.
 The CLI is the supported interface; there is no public JavaScript build engine

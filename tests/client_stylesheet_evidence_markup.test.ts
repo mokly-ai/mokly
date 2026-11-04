@@ -8,7 +8,7 @@ import {
   COMPONENT_STYLE_COPY,
   SCREEN_STYLE_COPY,
 } from "../examples/basic/specs/design/parts/stylesheet_evidence.js";
-import type { RuleEvidence } from "../packages/viewer/dist/catalogue/types.js";
+import type { RuleEvidence } from "../packages/model/dist/index.js";
 import type {
   ComparedEntry,
   ReviewView,

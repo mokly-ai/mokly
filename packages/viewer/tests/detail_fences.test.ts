@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { EntryDetailV4 } from "@mokly/model";
+
 import { detailKey, fenceDetail } from "../src/catalogue/detail_fences.js";
 import { readEntryDetail } from "../src/catalogue/detail_reader.js";
-import type { EntryDetailV4 } from "../src/catalogue/types.js";
 
 import { indexFixture, rawDetailFixtures } from "./catalogue_v9_fixture.js";
 

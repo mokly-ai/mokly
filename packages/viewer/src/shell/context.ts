@@ -1,4 +1,5 @@
-import type { ChangesStatus } from "../catalogue/types.js";
+import type { ChangesStatus } from "@mokly/model";
+
 import type { ViewerTheme } from "../host/types.js";
 
 /** Route-independent context shared by every view of one shell root. */

@@ -88,7 +88,7 @@ test("file resources stay inside the built directory and missing resources retur
   );
 });
 
-test("only static and file delivery allow the published inspector script", (context) => {
+test("only static and file delivery allow the published frame probe script", (context) => {
   const names = [
     "MOKLY_PLAYWRIGHT_STATIC_DIR",
     "MOKLY_PLAYWRIGHT_FILE_DIR",
@@ -108,7 +108,7 @@ test("only static and file delivery allow the published inspector script", (cont
     process.env[name] = "/output";
     assert.equal(
       unexpectedDesignScripts(),
-      'script:not([src="/mokly-viewer/client/inspector.js"])',
+      'script:not([src="/mokly-viewer/client/frame-probe.js"])',
     );
     delete process.env[name];
   }

@@ -5,8 +5,9 @@
  * kind contradicts its own kind and is invalid.
  */
 
+import type { EntryChangeReason } from "@mokly/model";
+
 import { invalidData } from "../components/data.js";
-import type { EntryChangeReason } from "../generated/catalogue/EntryChangeReason.js";
 
 import { reasonsInOrder } from "./reason_order.js";
 import { array, choice, entryPath, object, repositoryPath } from "./values.js";

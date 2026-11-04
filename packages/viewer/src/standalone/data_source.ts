@@ -1,5 +1,7 @@
 /** The same-origin routes of the standalone shell that Serve and `build` deliver. */
 
+import type { CatalogueReadModel } from "@mokly/model";
+
 import {
   entryDetailPath,
   INDEX_PATH,
@@ -13,7 +15,6 @@ import {
   loadDetailResult,
   type JsonFetch,
 } from "../catalogue/sources.js";
-import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { ShellDataSource } from "../shell/data_source.js";
 
 import { standaloneLiveSource } from "./live_source.js";

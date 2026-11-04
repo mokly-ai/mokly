@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { FrameError } from "../src/client/frame_error.js";
+import { FrameError } from "@mokly/frame/internal";
+
+import { viewerFailures } from "../src/host/failures.js";
 import {
   InspectionWork,
   ObsoleteInspection,
-} from "../src/client/inspection_work.js";
-import { viewerFailures } from "../src/host/failures.js";
+} from "../src/shell/inspection_work.js";
 
 for (const fail of [true, false]) {
   test(`obsolete ${fail ? "failure" : "success"} settles before a custom adapter finishes`, async () => {

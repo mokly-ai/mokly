@@ -16,7 +16,7 @@ fixed.
 | `diffs/generations/<generation>/entries/<entry path>.json`   | the entry detail v4 of a removed entry                          | Serve, output |
 | `diffs/generations/<generation>/snapshots/**`, `previews/**` | snapshot documents and resources, removed page preview metadata | Serve, output |
 | `diffs/generations/<generation>/`                            | the generation root, which renews a retained generation         | Serve only    |
-| `client/**`, `shell.css`, `fonts/**`                         | the shell bundle, the inspector, styles, and fonts              | Serve, output |
+| `client/**`, `shell.css`, `fonts/**`                         | the shell bundle, the frame probe, styles, and fonts            | Serve, output |
 | `live.json`                                                  | the live descriptor v3                                          | Serve only    |
 | `events`                                                     | the event stream, one message per publication                   | Serve only    |
 | `diffs/selection`                                            | the on-demand selected comparison endpoint                      | Serve only    |
@@ -56,7 +56,7 @@ contains a review file. The upload Plan contains only `mokly-upload.json`,
 `.mokly-export-artifact`, and `mokly-viewer/index.json`, without a
 full-artifact upload; Blob digest, size, and snapshot
 accounting follow the [upload exchange](./mokly-upload-exchange.md).
-Catalogue references, frame URLs, the inspector, geometry and navigation
+Catalogue references, frame URLs, the frame probe, geometry and navigation
 checks, CORS allowlists, deployment hashing, receiver fixtures, archive
 assertions, and provider adapters all use these exact paths. `/view/` and
 `/static/` keep their meanings. No other file or alias

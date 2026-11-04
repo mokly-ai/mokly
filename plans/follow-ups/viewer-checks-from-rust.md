@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-01, from the branch `calummoore/mokly-viewer-responsibilities`: the user chose option F of the viewer investigation as a follow-up.
-- **Location:** `packages/viewer/src/catalogue/`, `packages/viewer/src/components/`, `packages/viewer/src/navigation/logical.ts`, `packages/viewer/src/data/`, `packages/viewer/src/data.ts`, `crates/mokly-model/src/readers.rs`, `crates/mokly-model/src/validation.rs`, and `crates/mokly-model/src/profile.rs`.
+- **Location:** `packages/viewer/src/catalogue/`, `packages/viewer/src/components/`, `packages/model/src/navigation/logical.ts`, `packages/model/src/data/paths.ts`, `packages/frame/src/navigation/logical.ts`, `packages/viewer/src/data/`, `packages/viewer/src/data.ts`, `crates/mokly-model/src/readers.rs`, `crates/mokly-model/src/validation.rs`, and `crates/mokly-model/src/profile.rs`.
 - **Reason:** On 2026-11-01 the user chose to remove the viewer's leftover layers first, and to share the Rust checks with the viewer after that change.
 
 - **Source:** Design.

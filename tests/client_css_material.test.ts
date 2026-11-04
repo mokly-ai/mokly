@@ -4,10 +4,8 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type {
-  ComparedEntry,
-  ReviewState,
-} from "../packages/viewer/dist/review/types.js";
+import type { ReviewState } from "../packages/model/dist/index.js";
+import type { ComparedEntry } from "../packages/viewer/dist/review/types.js";
 import {
   selectedComparisonDocuments,
   selectedComparisonViews,

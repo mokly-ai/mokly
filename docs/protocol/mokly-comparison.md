@@ -15,7 +15,7 @@ document. A fragment a sidecar returns carries its regions as the comment
 markers below, and the core reads them into node annotations when it grafts the
 fragment. Served and built documents keep the `mokly-instance` and `mokly-slot`
 markers of every region the core composed, whatever rendered the instance, so
-the [published inspector](./mokly-published-inspector.md) resolves each `r-n`
+the [frame probe](./mokly-frame-probe.md) resolves each `r-n`
 region in the live page. Ignore regions resolve at composition. Private
 `mokly-output` pairs mark adapter output inside renderer wrappers; the core
 consumes them when it attaches a component root. `mokly-link` pairs are consumed
@@ -205,8 +205,8 @@ Entries are path-keyed: kind, path, `previousPath` on moved pairs, metadata
 reasons, views, and component variants grouped under their parent. Every
 evidence record names its owner. Serve, the static build, and publication
 project the same snapshot. The generated
-[`CatalogueReadModel`](../../packages/viewer/src/generated/catalogue/CatalogueReadModel.ts)
-and [`EntryDetailV4`](../../packages/viewer/src/generated/catalogue/EntryDetailV4.ts)
+[`CatalogueReadModel`](../../packages/model/src/generated/catalogue/CatalogueReadModel.ts)
+and [`EntryDetailV4`](../../packages/model/src/generated/catalogue/EntryDetailV4.ts)
 types define the index and the detail.
 
 `ignoredIds` lists the sorted unique ids of paired ignore regions removed for

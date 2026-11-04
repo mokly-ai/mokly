@@ -16,7 +16,7 @@ test.afterAll(async () => {
   await fixture?.close();
 });
 
-test("inspector ignores wrong-origin/source/nonce, unknown fields and oversized requests", async ({
+test("frame probe ignores wrong-origin/source/nonce, unknown fields and oversized requests", async ({
   page,
 }) => {
   await mountCrossFrame(page, fixture);
@@ -33,8 +33,8 @@ test("inspector ignores wrong-origin/source/nonce, unknown fields and oversized 
     (instance) => instance.id === "action",
   )!.key;
   const request = {
-    channel: "mokly-inspector",
-    version: 2,
+    channel: "mokly-frame-probe",
+    version: 3,
     nonce,
     type: "highlight",
     requestId: 100,
@@ -52,7 +52,7 @@ test("inspector ignores wrong-origin/source/nonce, unknown fields and oversized 
           window.parent,
         ],
         [JSON.stringify({ ...request, extra: true }), host, window.parent],
-        [JSON.stringify({ ...request, version: 3 }), host, window.parent],
+        [JSON.stringify({ ...request, version: 2 }), host, window.parent],
         [
           JSON.stringify({
             ...request,
@@ -157,8 +157,8 @@ test("host rejects forged frame events and accepts only its active subscribed se
       document.querySelector<HTMLIFrameElement>("#frame")!.contentWindow!;
     const nonce = state.wire.find((message) => message.type === "ready")!.nonce;
     const event = {
-      channel: "mokly-inspector",
-      version: 2,
+      channel: "mokly-frame-probe",
+      version: 3,
       nonce,
       type: "geometry",
     };
@@ -212,7 +212,7 @@ test("loading the published script directly never starts inspection or navigatio
     `${fixture.frames.url}/static/mokly-generated/home/index.mobile.html`,
   );
   const facts = await page.evaluate(() => ({
-    maps: document.querySelectorAll("template[data-mokly-inspector]").length,
+    maps: document.querySelectorAll("template[data-mokly-frame-probe]").length,
     overlays: document.querySelectorAll("[data-mokly-overlay]").length,
   }));
   expect(facts).toEqual({ maps: 1, overlays: 0 });

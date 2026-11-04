@@ -10,6 +10,13 @@ export {
   VIEWER_DIRECTORY,
   currentDocumentPath,
   currentDocumentRoute,
+  isEntryPath,
+  isLinkPath,
+  isLogicalFragment,
+  isPathSegment,
+  isWindowsDeviceName,
+} from "@mokly/model";
+export {
   generatedResourcePath,
   generatedResourceRoute,
 } from "./catalogue/delivery_paths.js";
@@ -31,12 +38,6 @@ export type {
   SnapshotSide,
   ViewRouteKind,
 } from "./navigation/routes.js";
-export {
-  isEntryPath,
-  isLinkPath,
-  isLogicalFragment,
-  isPathSegment,
-  isWindowsDeviceName,
-} from "./navigation/logical.js";
+
 export { validatePropSchema } from "./components/profile_schema.js";
 export { validateProps } from "./components/props.js";

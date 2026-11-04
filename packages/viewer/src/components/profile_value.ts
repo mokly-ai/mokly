@@ -1,6 +1,6 @@
 /** Value validation under the prop schema profile, with no generated code. */
 
-import type { PropSchema } from "../generated/catalogue/PropSchema.js";
+import type { PropSchema } from "@mokly/model";
 
 import {
   ComponentValidationError,

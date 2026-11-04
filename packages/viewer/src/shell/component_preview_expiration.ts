@@ -2,7 +2,8 @@
 
 import { useEffect, type RefObject } from "react";
 
-import { localFramePath } from "../client/same_origin_adapter.js";
+import { localFramePath } from "@mokly/frame/internal";
+
 import type { ComponentRenderSuccess } from "../components/render_types.js";
 
 import type { TemporaryPreviews } from "./data_context.js";

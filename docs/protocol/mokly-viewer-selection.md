@@ -89,13 +89,20 @@ key. Titles and props come from the index and the detail, never from
 cross-origin DOM messages. Automatic inspection requires a frame's own ready,
 bounded usage from the detail; unavailable siblings stay navigable but emit no
 pointer inspection events. Every current, visible frame with ready usage can
-emit authenticated hover and click events, independent of an explicit
-highlight's mask and label scope; such a click leaves an idle highlight intact
-and ends inspection only while a pick is active. A detail update refreshes the
-usage of mounted frames without reloading a frame whose `documentKey` is
-unchanged. Inspection ownership, evidence invalidation, multi-frame
-highlighting, marker positioning and boundary refreshes belong to the
-[marker contract](./mokly-viewer-markers.md).
+emit authenticated hover and click events. A click leaves an idle highlight
+intact and ends inspection only while a pick is active. A detail update
+refreshes the usage of mounted frames without reloading a frame whose
+`documentKey` is unchanged. Inspection ownership, evidence invalidation,
+multi-frame highlighting, marker positioning and boundary refreshes belong to
+the [marker contract](./mokly-viewer-markers.md).
+
+Hover names the instance that a click at the same point would report. In a
+frame with a highlight or an active pick, hover and click report only the
+highlighted or pickable keys. In a frame without either, hover and click
+report any instance. When reportable instances nest under the pointer, the
+innermost one wins, for hover and for click. Decision: hover reports only the
+highlighted or pickable keys, like click, not every instance under the
+pointer, because hover then matches click in every mode.
 
 `highlightInstance`, `highlightInstances` and `scrollToInstance` operate on
 exact current views and reject missing or unavailable instances without

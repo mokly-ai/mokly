@@ -1,4 +1,4 @@
-import type { CatalogueNode } from "../../packages/viewer/src/generated/catalogue/CatalogueNode.js";
+import type { CatalogueNode } from "../../packages/model/dist/index.js";
 
 import { withAncestors } from "./design_accessibility.js";
 import {

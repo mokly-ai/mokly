@@ -17,8 +17,8 @@ use mokly_source_interface::tree::SourceTree;
 
 use crate::changes::{ChangeState, PublicationInput};
 use crate::error::{Error, InternalError, Result};
+use crate::frame_probe;
 use crate::identity;
-use crate::inspector;
 use crate::inventory::Inventory;
 use crate::transaction::Cancellation;
 use crate::{comparison_details, comparison_output, resource_bytes};
@@ -119,7 +119,7 @@ impl Assembler for CatalogueAssembler {
             }
             inventory.insert(
                 namespace::generated(&plan.route),
-                inspector::inject(document, &plan.route)?.into(),
+                frame_probe::inject(document, &plan.route)?.into(),
             )?;
         }
         for route in input.generation.resource_routes() {

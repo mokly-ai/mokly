@@ -3,12 +3,14 @@ import { once } from "node:events";
 
 import { parse, type DefaultTreeAdapterMap } from "parse5";
 
+import type {
+  CatalogueReadModel,
+  ColorScheme,
+  EntryDetailV4,
+  Viewport,
+} from "../../packages/model/dist/index.js";
 import { readEntryDetail } from "../../packages/viewer/src/catalogue/detail_reader.js";
 import { readCatalogueIndex } from "../../packages/viewer/src/catalogue/index_reader.js";
-import type { CatalogueReadModel } from "../../packages/viewer/src/generated/catalogue/CatalogueReadModel.js";
-import type { ColorScheme } from "../../packages/viewer/src/generated/catalogue/ColorScheme.js";
-import type { EntryDetailV4 } from "../../packages/viewer/src/generated/catalogue/EntryDetailV4.js";
-import type { Viewport } from "../../packages/viewer/src/generated/catalogue/Viewport.js";
 import { spawnServe } from "../../scripts/verification/serve-process.mjs";
 
 import { EXAMPLE_BASE, validateExampleDiagnostics } from "./example_base.js";

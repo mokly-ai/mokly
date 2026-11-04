@@ -1,5 +1,10 @@
+import { isEntryPath, isKebabCase } from "@mokly/model";
+import type {
+  ComponentInputOwner,
+  ComponentInstanceRecord,
+} from "@mokly/model";
+
 import { reviewMaterialKey } from "../data/material_key.js";
-import { isKebabCase, isEntryPath } from "../navigation/logical.js";
 import { isStylesheetPath } from "../review/css/stylesheet_path.js";
 
 import { decodeProps, encodeProps } from "./codec.js";
@@ -10,8 +15,6 @@ import { validateComponentSource } from "./source.js";
 import { sortedStrings, validateResourcePath } from "./validation_helpers.js";
 import { validateViewReferences } from "./view_references.js";
 import type {
-  ComponentInputOwner,
-  ComponentInstanceRecord,
   ComponentViewRecord,
   ComponentSchemaRecord,
 } from "./view_types.js";

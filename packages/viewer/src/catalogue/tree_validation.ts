@@ -1,6 +1,6 @@
-import { invalidData } from "../components/data.js";
+import type { CatalogueNode, CatalogueRecord } from "@mokly/model";
 
-import type { CatalogueNode, CatalogueRecord } from "./types.js";
+import { invalidData } from "../components/data.js";
 
 /** Validate public tree references without rebuilding private folder metadata. */
 export function validateCatalogueTree(

@@ -2,9 +2,10 @@
 
 import assert from "node:assert/strict";
 
+import type { CatalogueComponent, ChangeKind } from "@mokly/model";
+
 import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
 import type { ShellCatalogueReadModel } from "../src/catalogue/scoped_types.js";
-import type { CatalogueComponent, ChangeKind } from "../src/catalogue/types.js";
 
 import { rawIndexFixture, shellModelFixture } from "./catalogue_v9_fixture.js";
 

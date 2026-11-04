@@ -2,7 +2,7 @@ import {
   MoklyVersionError,
   VERSION_ERROR_MESSAGE,
 } from "../catalogue/version_error.js";
-import { ObsoleteInspection } from "../client/inspection_work.js";
+import { ObsoleteInspection } from "../shell/inspection_work.js";
 
 import type { ViewerError, ViewerEvents } from "./types.js";
 

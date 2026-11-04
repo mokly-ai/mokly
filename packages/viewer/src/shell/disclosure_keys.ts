@@ -1,6 +1,6 @@
 /** Stable, section-scoped identities for persisted navigation disclosures. */
 
-import { isEntryPath } from "../navigation/logical.js";
+import { isEntryPath } from "@mokly/model";
 
 import type { NavSectionNode } from "./nav_tree.js";
 

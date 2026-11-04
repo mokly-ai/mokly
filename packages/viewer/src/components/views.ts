@@ -1,9 +1,10 @@
+import type { ColorScheme, Viewport } from "@mokly/model";
+
 import type {
   ShellCatalogueRoutedEntry,
   ShellCatalogueScreen,
   ShellCatalogueComponent,
 } from "../catalogue/scoped_types.js";
-import type { ColorScheme, Viewport } from "../data/axes.js";
 import { viewRoute } from "../navigation/routes.js";
 
 import type { ComponentViewRecord } from "./view_types.js";

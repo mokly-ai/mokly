@@ -4,7 +4,6 @@ import type { MutableRefObject } from "react";
 import { useCallback } from "react";
 import { flushSync } from "react-dom";
 
-import { ObsoleteInspection } from "../client/inspection_work.js";
 import type { viewerFailures } from "../host/failures.js";
 import type { MoklyViewerHandle, PickEnd } from "../host/types.js";
 import type { ShellInspectionController } from "../shell/frame_inspection_controller.js";
@@ -12,6 +11,7 @@ import type {
   ShellFrameRegistry,
   ShellFrameSession,
 } from "../shell/frame_registry.js";
+import { ObsoleteInspection } from "../shell/inspection_work.js";
 
 import { viewerInstanceSessions } from "./host_bridge_evidence.js";
 import type { ViewerInspectionGeometryOwnership } from "./inspection_geometry_ownership.js";

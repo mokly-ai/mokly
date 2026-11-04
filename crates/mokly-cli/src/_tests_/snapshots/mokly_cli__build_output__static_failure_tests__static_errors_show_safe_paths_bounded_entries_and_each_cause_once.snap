@@ -16,7 +16,7 @@ expression: output
 
 [mokly/build-invalid] The catalogue is empty.
 
-[mokly/build-invalid] home/index.html: data-mokly-inspector-link is reserved for Mokly.
+[mokly/build-invalid] home/index.html: data-mokly-frame-probe-link is reserved for Mokly.
 
 [mokly/export-invalid] Invalid export ownership inventory: C:\site.
 
@@ -89,7 +89,7 @@ x The catalogue could not be built.  [mokly/build-invalid]
   Fix the reported catalogue source and retry.
 
 x The catalogue could not be built.  [mokly/build-invalid]
-  home/index.html: data-mokly-inspector-link is reserved for Mokly.
+  home/index.html: data-mokly-frame-probe-link is reserved for Mokly.
   Fix the reported catalogue source and retry.
 
 x The static output could not be written.  [mokly/export-invalid]

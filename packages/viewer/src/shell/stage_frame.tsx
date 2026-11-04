@@ -6,15 +6,15 @@
 
 import { useContext, useMemo } from "react";
 
+import { temporaryPreviewAdapter } from "@mokly/frame/internal";
+import { VIEWER_DIRECTORY } from "@mokly/model";
 import { PhoneFrame } from "@mokly/ui/device-frame";
 import { PreviewFrame, PreviewIframe } from "@mokly/ui/preview-frame";
 
-import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
 import type {
   ShellCatalogueRoutedEntry,
   ShellCatalogueView,
 } from "../catalogue/scoped_types.js";
-import { temporaryPreviewAdapter } from "../client/same_origin_adapter.js";
 import type { GeneratedComponentView } from "../components/views.js";
 import { entryRoute } from "../navigation/routes.js";
 

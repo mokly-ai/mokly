@@ -9,12 +9,11 @@ import {
 } from "react";
 import type { RefObject } from "react";
 
-import type { CatalogueUsage } from "../catalogue/types.js";
-import { runCleanup } from "../client/cleanup.js";
-import type { FrameAdapter, FrameEvent } from "../client/frame_adapter.js";
-import { FrameError } from "../client/frame_error.js";
-import { cancelFrameMount } from "../client/frame_mount.js";
+import type { FrameAdapter, FrameEvent } from "@mokly/frame";
+import { FrameError, cancelFrameMount } from "@mokly/frame/internal";
+import type { CatalogueUsage } from "@mokly/model";
 
+import { runCleanup } from "./cleanup.js";
 import type { FrameLayout } from "./frame_layout_context.js";
 import { mountedFrameReadiness } from "./frame_readiness.js";
 import {

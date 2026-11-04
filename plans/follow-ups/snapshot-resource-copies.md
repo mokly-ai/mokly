@@ -26,7 +26,7 @@
     after-side resources, 130,210 bytes, were byte-equal to files under
     `static/`. One example is
     `static/mokly-generated/styles/examples/basic/design-component-controls.css`.
-  - The after-side documents are not copies. They lack the inspector
+  - The after-side documents are not copies. They lack the frame probe
     script that the current documents carry.
   - `mokly publish` sends each digest once, so the copies cost disk, build
     memory, and file count, not upload bytes.

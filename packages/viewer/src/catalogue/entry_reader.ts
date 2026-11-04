@@ -1,5 +1,14 @@
 /** Field readers for the entry records of the catalogue index v9. */
 
+import type {
+  CatalogueChanges,
+  CatalogueComponent,
+  CatalogueRecord,
+  CatalogueScreen,
+  CatalogueView,
+  ComparisonSelection,
+} from "@mokly/model";
+
 import { invalidData } from "../components/data.js";
 import type { ComponentWireProps } from "../components/prop_types.js";
 
@@ -8,15 +17,7 @@ import {
   readEntryProps,
   readSchema,
 } from "./component_values.js";
-import type {
-  CatalogueChanges,
-  CatalogueComponent,
-  CatalogueEntry,
-  CatalogueRecord,
-  CatalogueScreen,
-  CatalogueView,
-  ComparisonSelection,
-} from "./types.js";
+import type { CatalogueEntry } from "./types.js";
 import {
   array,
   boolean,

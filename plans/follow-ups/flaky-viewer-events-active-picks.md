@@ -20,7 +20,7 @@
     reports its end as a `pick-end` event with a reason.
   - **Cross-origin adapter:** the viewer frame adapter that talks to
     preview frames of another origin through posted messages, in
-    `packages/viewer/src/client/post_message_adapter.ts`.
+    `packages/frame/src/adapters/post_message_adapter.ts`.
 - **Background:**
   - The test starts at `tests/browser/viewer_events.spec.ts:113`. It mounts
     the viewer with the cross-origin adapter, through
@@ -34,7 +34,7 @@
     `navigation`. So `cancelPick` must add no third event.
   - No step waits for the end of the first pick before line 124. The viewer
     can learn of the Escape press from a preview frame, through a posted
-    message, at `packages/viewer/src/inspector/runtime.ts:129-133`.
+    message, at `packages/frame/src/probe/runtime.ts:140-146`.
   - While a pick is active, `startPick` resolves at once and starts no new
     pick, at `packages/viewer/src/viewer/picking.ts:20`.
 - **Problem:**

@@ -152,7 +152,7 @@ test("first-run builds refuse any partially published version and fail closed on
     calls.push([file, ...args]);
     return { code: 1, signal: null, stdout: "", stderr: "npm error code E404" };
   });
-  assert.equal(calls.length, 8);
+  assert.equal(calls.length, 10);
   assert.deepEqual(
     calls.map((args) => args[2]!.slice(0, args[2]!.lastIndexOf("@"))),
     releasePackages().map(({ name }) => name),
