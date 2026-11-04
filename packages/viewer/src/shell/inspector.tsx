@@ -23,7 +23,7 @@ import {
   useShellIdentifierScope,
 } from "./identifier_context.js";
 import { useShellRoot } from "./root_context.js";
-import { useOptionalShellStore } from "./store_context.js";
+import { useShellStore } from "./store_context.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { workspaceEvidenceEntry } from "./workspace_entry.js";
 import { selectedVariant } from "./workspace_selection.js";
@@ -51,7 +51,7 @@ export function Inspector({
   inspectorRef?: RefObject<InspectorHandle | null>;
   sizing?: InspectorSizing;
 }) {
-  const store = useOptionalShellStore();
+  const store = useShellStore();
   const contentId = useShellIdentifier("mb-inspector-content");
   const identifier = useShellIdentifierScope();
   const variant = selectedVariant(data).variant;
@@ -98,8 +98,8 @@ export function Inspector({
     tab("props", CONTROLS_COPY.tab, panels.props),
     tab("usage", "Usage", panels.usage),
   ];
-  const open = store?.state.detailsOpen ?? false;
-  const interactive = store?.interactive ?? false;
+  const open = store.state.detailsOpen;
+  const interactive = store.interactive;
   const localInspector = useRef<InspectorHandle>(null);
   const inspector = inspectorRef ?? localInspector;
   const elements = useShellRoot()?.elements;
@@ -117,12 +117,12 @@ export function Inspector({
   }, [elements, inspector, interactive, open]);
   return (
     <InspectorView
-      active={store?.state.inspectorTab}
+      active={store.state.inspectorTab}
       contentId={contentId}
       contentRef={elements?.scrolls.ref("inspector")}
       {...sizing}
       interactive={interactive}
-      onOpenChange={(next, id) => store?.setDetails(next, id)}
+      onOpenChange={(next, id) => store.setDetails(next, id)}
       open={open}
       ref={inspector}
       tabs={tabs}

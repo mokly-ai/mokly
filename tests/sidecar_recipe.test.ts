@@ -37,7 +37,7 @@ test("bundle recipes carry one module graph and fail with a typed size diagnosti
   const modules = [{ path: "entry.ts", imports: [] }];
   const result = bundleResult(restore(params, recipe, modules));
   assert.deepEqual(result.modules, modules);
-  assert.ok(!Object.hasOwn(result.compiled!, "modules"));
+  assert.ok(!Object.hasOwn(result.compiled, "modules"));
   assert.throws(
     () => checkRecipeSize(params, result, 64),
     (error: unknown) => {
@@ -86,10 +86,10 @@ test("a failed peer lookup remains explicit in a real bundle recipe", async (con
   const native = createRequire(path.join(params.sourceRoot, "package.json"));
   assert.ok(native.resolve("react/package.json"));
   const result = await sidecar.call<BundleResult>("bundle", params);
-  assert.equal(result.compiled?.peers["react/package.json"], null);
+  assert.equal(result.compiled.peers["react/package.json"], null);
   assert.throws(
     () =>
-      restore(params, result.compiled!, result.modules).require.resolve(
+      restore(params, result.compiled, result.modules).require.resolve(
         "react/package.json",
       ),
     { code: "MODULE_NOT_FOUND" },

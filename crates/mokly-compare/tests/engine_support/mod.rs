@@ -5,8 +5,9 @@ use std::path::Path;
 use std::process::Command;
 use std::sync::Arc;
 
+use unimock::Unimock;
+
 use mokly_catalogue::config::{ConfigLoader, Loader};
-use mokly_catalogue::definition_provider::DeferredDefinitions;
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::preparation::{Builder, CatalogueBuilder};
 use mokly_catalogue::working_tree::WorkingTree;
@@ -160,7 +161,7 @@ fn prepare(
     let catalogue = Builder {
         tree: tree.clone(),
         discovery: Arc::new(Discoverer { tree: tree.clone() }),
-        definitions: Arc::new(DeferredDefinitions),
+        definitions: Arc::new(Unimock::new(())),
     }
     .prepare(&config, None)
     .map_err(|source| Error::Catalogue { source })?;

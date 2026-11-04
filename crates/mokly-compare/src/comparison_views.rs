@@ -8,8 +8,6 @@ use mokly_css::attribution::PageObservation;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::catalogue::EntryContent;
 use mokly_model::evidence::ViewEvidence;
-use mokly_model::read_contract::ContractViolation;
-use mokly_model::readers::ReadError;
 use mokly_model::review::{ReviewEntryAddress, ReviewState};
 use mokly_model::review_affected::ReviewSide;
 use mokly_model::usage::CatalogueUsage;
@@ -18,7 +16,7 @@ use crate::comparison_address::address;
 use crate::comparison_error::CompareResult;
 use crate::comparison_resources::{self, ResourceInput};
 use crate::comparison_types::{DocumentComparison, ViewKey};
-use crate::error::{Error, Result};
+use crate::error::Result;
 use crate::instance_proof::{InstanceProof, ProofInput};
 use crate::move_inventory::PlanIndex;
 use crate::move_types::EntryPair;
@@ -105,25 +103,18 @@ pub(crate) fn collect(
             .as_ref()
             .map(|route| after.comparison_document(route).compare())
             .transpose()?;
-        let before_document = before_artifact
-            .as_ref()
-            .and_then(|artifact| artifact.document.as_ref());
-        let after_document = after_artifact
-            .as_ref()
-            .and_then(|artifact| artifact.document.as_ref());
-        if key.viewport.is_some()
-            && before_document
-                .into_iter()
-                .chain(after_document)
-                .any(|document| !matches!(document.usage, CatalogueUsage::Ready { .. }))
-        {
-            return Err(Error::Review {
-                source: ReadError::Contract {
-                    boundary: "rendered usage",
-                    message: ContractViolation::Review,
-                },
-            });
-        }
+        let before_document = before_artifact.as_ref().map(|artifact| {
+            artifact
+                .document
+                .as_ref()
+                .expect("the graph composes a document for every base comparison view plan")
+        });
+        let after_document = after_artifact.as_ref().map(|artifact| {
+            artifact
+                .document
+                .as_ref()
+                .expect("the graph composes a document for every current comparison view plan")
+        });
         let resources = comparison_resources::closures(
             before.clone(),
             after.clone(),
@@ -200,8 +191,8 @@ pub(crate) fn collect(
             memo,
             candidates,
         )?;
-        if let (Some(comparison), Some(before), Some(after)) = (&comparison, previous, current) {
-            owned.prepare(comparison, before, after, key);
+        if let Some(comparison) = &comparison {
+            owned.prepare(comparison);
         }
         observation.rules.append(&mut owned.rules);
         let inline = inline_styles::compare(
@@ -220,11 +211,8 @@ pub(crate) fn collect(
         )?;
         observation.rules.extend(inline);
         let proofs = match (&comparison, previous, current) {
-            (Some(comparison), Some(before), Some(after)) => instance_proof::collect(ProofInput {
+            (Some(comparison), Some(_), Some(_)) => instance_proof::collect(ProofInput {
                 comparison,
-                before,
-                after,
-                view: key,
                 resources: &resources,
                 evidence: &evidence,
                 paths,

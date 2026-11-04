@@ -13,7 +13,7 @@ use mokly_model::wire_props;
 use crate::composition::Engine;
 use crate::context::Context;
 use crate::diagnostic_code::Code;
-use crate::error::{HtmlError, Result, invalid};
+use crate::error::{Result, invalid};
 use crate::expansion::{After, Expansion};
 use crate::fragment::RenderKind;
 use crate::props::{camel_case, coerce, schema_at, validate, value_at};
@@ -107,14 +107,8 @@ impl Engine<'_> {
             id,
         ));
         validate(&component.prop_schema, &props, &component.path)?;
-        let key = match instance_key(&context.owner, context.slot_key.as_deref(), id) {
-            Ok(key) => key,
-            Err(source) => return Err(HtmlError::Props { source }),
-        };
-        let props_digest = match props_key(&props) {
-            Ok(key) => key,
-            Err(source) => return Err(HtmlError::Props { source }),
-        };
+        let key = instance_key(&context.owner, context.slot_key.as_deref(), id);
+        let props_digest = props_key(&props);
         let existing = self.instances.get(&key);
         let repeated = context.replay
             && existing.is_some_and(|record| {

@@ -17,7 +17,7 @@ use tokio::sync::broadcast::error::TryRecvError;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::backend::DocumentsMock;
-use crate::detail_encoding::ValidatedDetails;
+use crate::detail_encoding::EncodedDetails;
 use crate::evidence;
 use crate::publication::{PublicationWriter, Publications, SharedPublication};
 use crate::publication_support::ready;
@@ -89,7 +89,7 @@ fn generation(title: &str) -> Arc<dyn RenderGeneration> {
         documents: BTreeMap::new(),
         slot_fragments: BTreeMap::new(),
         elements: BTreeMap::new(),
-        deferred_modules: Vec::new(),
+
         javascript: Default::default(),
         dependency_directories: Default::default(),
         warnings: Vec::new(),
@@ -177,7 +177,7 @@ fn a_use_case_title_only_edit_publishes_exactly_one_revision() {
         .iter()
         .map(|route| (route.clone(), ready()))
         .collect::<Vec<_>>();
-    if let Some(next) = evidence::complete(&replacement, &repeated, &ValidatedDetails).unwrap() {
+    if let Some(next) = evidence::complete(&replacement, &repeated, &EncodedDetails) {
         assert!(publications.replace(next));
     }
     assert_eq!(

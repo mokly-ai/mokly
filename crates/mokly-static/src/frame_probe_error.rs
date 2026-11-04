@@ -11,9 +11,6 @@ pub enum FrameProbeFailure {
         /// Reserved attribute supplied by the author.
         attribute: &'static str,
     },
-    /// The composition range record is inconsistent.
-    #[error("[mokly-static/frame_probe] Frame probe ranges are invalid.")]
-    Ranges,
     /// The document has no place for the inert metadata and script.
     #[error("[mokly-static/frame_probe] The rendered document has no head.")]
     Head,

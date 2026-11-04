@@ -102,7 +102,7 @@ fn prepare() -> Catalogue {
     });
     let prepared = catalogue.prepare(&config, None).unwrap();
     assert!(prepared.warnings.is_empty(), "{:?}", prepared.warnings);
-    assert!(prepared.deferred_modules.is_empty());
+
     let generation = runtime
         .create(&config)
         .unwrap()

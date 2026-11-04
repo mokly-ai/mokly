@@ -10,7 +10,7 @@ use mokly_sidecar::results::{Dependency, DependencyKind};
 use mokly_source_interface::tree::{FileKind, SourceTree};
 
 use crate::error::{DependencyFailure, RenderError, Result};
-use crate::postcss_scan::Scan;
+use crate::postcss_scan::{Scan, glob};
 
 pub(crate) struct Inventory {
     pub(crate) inputs: BTreeMap<String, String>,
@@ -126,13 +126,14 @@ pub(crate) fn collect(
                     tree,
                     &node.identity,
                     dependency.glob.as_deref().unwrap_or("**/*"),
-                    &|| {
-                        failure(
+                    &|| match glob(dependency.glob.as_deref().unwrap_or("**/*")) {
+                        Ok(matcher) => Ok(matcher),
+                        Err(_) => Err(failure(
                             &dependency,
                             stylesheet,
                             &relative(&path, root),
                             DependencyFailure::Glob,
-                        )
+                        )),
                     },
                 )?;
                 for suffix in files.iter() {

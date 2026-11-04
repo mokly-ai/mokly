@@ -11,7 +11,6 @@ import { entryRoute, viewHref } from "../navigation/routes.js";
 import type { ShellContext } from "./context.js";
 import {
   navLeafVisible,
-  navNodeContains,
   navNodeVisible,
   navigationFiltering,
   variantDisclosureKey,
@@ -21,15 +20,15 @@ import type { NavLeafNode, NavSectionNode } from "./nav_tree.js";
 import type { ShellStore } from "./store_context.js";
 
 /**
- * What the rows of one render read. Without a store, the rows show the
- * column's context unfiltered, with the default disclosures.
+ * What the rows of one render read. The store's disclosures hold every
+ * current key, because the store builds them from the same sections.
  */
 export interface NavRowsSource {
   /** The column's context; its `activeId` marks the current row. */
   context: ShellContext;
   /** Resolves a package-owned identifier in the shell root. */
   identifier: (value: string) => string;
-  store: Pick<ShellStore, "context" | "state"> | undefined;
+  store: Pick<ShellStore, "context" | "state">;
 }
 
 /** The open state of `key` from before search or Changes began to filter. */
@@ -37,7 +36,7 @@ export function filterOpen(
   store: NavRowsSource["store"],
   key: string,
 ): boolean | undefined {
-  const baseline = store?.state.filterBaseline;
+  const baseline = store.state.filterBaseline;
   return baseline ? Boolean(baseline[key]) : undefined;
 }
 
@@ -51,8 +50,8 @@ function navLink(
   const { store } = source;
   const { changed, changedVariants, label } = navRowPresentation(
     node,
-    store?.state.selection.view === "changes",
-    store?.context ?? source.context,
+    store.state.selection.view === "changes",
+    store.context,
   );
   return {
     changed,
@@ -79,9 +78,9 @@ function navLink(
 /**
  * A leaf row. An entry that owns variants, or a folder's own screen or
  * component with other members, discloses a list: the variants, then the
- * `members` rows. Without a stored choice, the list is open only while it
- * holds the active route or the active route is the entry itself. While
- * search or Changes filters the tree, the list is open when it holds a match.
+ * `members` rows. The store's disclosure decides whether the list is open,
+ * except while search or Changes filters the tree: then the list is open
+ * when it holds a match.
  */
 export function navLeaf(
   node: NavLeafNode,
@@ -91,46 +90,38 @@ export function navLeaf(
   members: readonly NavigationRow[],
 ): NavigationLeaf {
   const { store } = source;
+  const { selection } = store.state;
   const variants = node.variants ?? [];
   const memberNodes = node.members ?? [];
   const parentId = node.entryId;
-  const leafVisible = store
-    ? navLeafVisible(node, store.state.selection, store.context)
-    : !node.removedPage && !node.removedVariant && !node.hidden;
-  if ((variants.length === 0 && memberNodes.length === 0) || !parentId)
-    return { kind: "leaf", link: navLink(node, depth, !leafVisible, source) };
+  if ((variants.length === 0 && memberNodes.length === 0) || !parentId) {
+    const hidden = !navLeafVisible(node, selection, store.context);
+    return { kind: "leaf", link: navLink(node, depth, hidden, source) };
+  }
   const key = variantDisclosureKey(parentId);
-  const filtering = store ? navigationFiltering(store.state.selection) : false;
-  const parentVisible = store
-    ? navNodeVisible(node, store.state.selection, store.context)
-    : !node.hidden;
-  const listMatches = store
-    ? variants.some((variant) =>
-        navLeafVisible(variant, store.state.selection, store.context),
-      ) ||
-      memberNodes.some((member) =>
-        navNodeVisible(member, store.state.selection, store.context),
-      )
-    : true;
-  const active = navNodeContains(node, source.context.activeId);
   return {
     kind: "leaf",
     link: navLink(node, depth, false, source),
     list: {
       disclosure: key,
       filterOpen: filterOpen(store, key),
-      hidden: !parentVisible,
+      hidden: !navNodeVisible(node, selection, store.context),
       id: source.identifier(`mb-nav-variants-${sectionId}-${parentId}`),
-      open: filtering ? listMatches : (store?.state.disclosures[key] ?? active),
+      open: navigationFiltering(selection)
+        ? variants.some((variant) =>
+            navLeafVisible(variant, selection, store.context),
+          ) ||
+          memberNodes.some((member) =>
+            navNodeVisible(member, selection, store.context),
+          )
+        : Boolean(store.state.disclosures[key]),
       rows: members,
       title: node.title,
       variants: variants.map((variant) =>
         navLink(
           variant,
           depth + 1,
-          store
-            ? !navLeafVisible(variant, store.state.selection, store.context)
-            : Boolean(variant.removedVariant || variant.hidden),
+          !navLeafVisible(variant, selection, store.context),
           source,
         ),
       ),

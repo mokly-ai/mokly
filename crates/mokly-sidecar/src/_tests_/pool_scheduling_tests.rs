@@ -49,11 +49,11 @@ fn a_render_uses_an_idle_slot_while_an_earlier_affine_call_waits() {
     let queued = pool.clone();
     let waiting = thread::spawn(move || {
         let (index, slot) = queued.acquire(&css(), None).unwrap();
-        queued.release(index, slot).unwrap();
+        queued.release(index, slot);
         index
     });
     {
-        let mut state = pool.lock().unwrap();
+        let mut state = pool.lock();
         while state.ticket < 2 {
             state = pool.ready.wait(state).unwrap();
         }
@@ -65,16 +65,16 @@ fn a_render_uses_an_idle_slot_while_an_earlier_affine_call_waits() {
             .acquire(
                 &Call::RenderPage(RenderPage {
                     generation: "g".into(),
-                    handle: "page".into(),
+                    handle: "page#default".into(),
                 }),
                 None,
             )
             .unwrap();
         send.send(index).unwrap();
-        render.release(index, slot).unwrap();
+        render.release(index, slot);
     });
     let independent = receive.recv_timeout(Duration::from_secs(10));
-    pool.release(busy, None).unwrap();
+    pool.release(busy, None);
     assert_eq!(waiting.join().unwrap(), busy);
     rendering.join().unwrap();
     assert_eq!(independent.unwrap(), 1);
@@ -106,7 +106,7 @@ fn a_release_during_last_cleanup_is_delivered_when_the_slot_returns_idle() {
                 .n_times(2),
         );
         {
-            let mut state = pool.lock().unwrap();
+            let mut state = pool.lock();
             state.slots.push(None);
             state.contexts.insert("last".into());
         }
@@ -124,8 +124,7 @@ fn a_release_during_last_cleanup_is_delivered_when_the_slot_returns_idle() {
                 renders: 0,
                 requests: 0,
             }),
-        )
-        .unwrap();
+        );
         pool.synchronize_releases();
         assert_eq!(*recorded.lock().unwrap(), ["first", "last"]);
     }

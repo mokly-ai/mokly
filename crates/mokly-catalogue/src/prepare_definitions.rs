@@ -37,9 +37,6 @@ impl Builder {
             .collect();
         if !javascript.is_empty() || config.input.renderer.is_some() {
             let described = self.definitions.describe(config, &javascript)?;
-            if !described.deferred {
-                prepared.deferred_modules.clear();
-            }
             prepared.model.folders.extend(described.folders);
             prepared.javascript.generation = described.generation;
             prepared.javascript.bindings = described.bindings;

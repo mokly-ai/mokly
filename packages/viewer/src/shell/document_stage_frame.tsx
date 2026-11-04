@@ -23,7 +23,7 @@ import { useFrameGeneration, useFrameSource } from "./frame_source_hook.js";
 import { useShellRoot } from "./root_context.js";
 import { documentLightOnly, schemeValue } from "./scheme_fallback.js";
 import { framePath, unavailableUsage } from "./stage_sources.js";
-import { useOptionalShellStore } from "./store_context.js";
+import { useShellStore } from "./store_context.js";
 
 /** A whole-document page with the same adapter-owned logical navigation. */
 export function DocumentStageFrame({
@@ -38,7 +38,7 @@ export function DocumentStageFrame({
   const elements = useShellRoot()?.elements;
   const localStage = useRef<HTMLDivElement>(null);
   const stage = elements?.scrolls.ref("embed") ?? localStage;
-  const store = useOptionalShellStore();
+  const store = useShellStore();
   const registry = useOptionalShellFrameRegistry();
   const selection = useContext(DisplaySelection);
   const scheme = schemeValue<"dark" | "light">(
@@ -58,7 +58,7 @@ export function DocumentStageFrame({
   );
   const generation = useFrameGeneration(source, documentKeyOf(entry, scheme));
   const mounted = useMountedShellFrame({
-    enabled: store?.interactive ?? false,
+    enabled: store.interactive,
     generation,
     identity,
     layout: { stage, expanded: false },
@@ -78,7 +78,7 @@ export function DocumentStageFrame({
     mounted.frameRef,
     source,
     registry?.baseUrl,
-    Boolean(store?.interactive && registry),
+    Boolean(store.interactive && registry),
     generation,
   );
   return (

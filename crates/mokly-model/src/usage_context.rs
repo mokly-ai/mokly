@@ -63,9 +63,7 @@ pub fn validate_with(
             return Err(invalid(ContractViolation::UsageKey));
         }
         if material::instance_key(&instance.owner, instance.slot_key.as_deref(), &instance.id)
-            .ok()
-            .as_deref()
-            != Some(&instance.key)
+            != instance.key
         {
             return Err(invalid(ContractViolation::UsageKey));
         }
@@ -73,7 +71,7 @@ pub fn validate_with(
             Ok(props) => props,
             Err(_) => return Err(invalid(ContractViolation::UsageProps)),
         };
-        if material::props_key(&props).ok().as_deref() != Some(&instance.props_key) {
+        if material::props_key(&props) != instance.props_key {
             return Err(invalid(ContractViolation::UsageKey));
         }
         schemas.validate(&instance.component_id, &props)?;
@@ -107,10 +105,7 @@ pub fn validate_with(
     for slot in slots {
         if !hash(&slot.key)
             || previous.is_some_and(|previous: &str| previous >= slot.key.as_str())
-            || material::slot_key(&slot.instance_key, &slot.name)
-                .ok()
-                .as_deref()
-                != Some(&slot.key)
+            || material::slot_key(&slot.instance_key, &slot.name) != slot.key
         {
             return Err(invalid(ContractViolation::UsageKey));
         }

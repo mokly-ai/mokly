@@ -126,33 +126,28 @@ function UseCaseFlow({
     <FrameStageContext value={stage}>
       <FlowStage ref={stage}>
         {entry.steps.map((step, index) => {
+          // Each step of a current use case names a current screen.
           const screen = catalogue.screens.find(
             (candidate) => candidate.path === step.screenPath,
-          );
+          )!;
           return (
             <FlowStep
-              description={step.description ?? screen?.details.description}
+              description={step.description ?? screen.details.description}
               key={`${step.screenPath}-${index}`}
               number={index + 1}
-              screen={
-                screen
-                  ? { href: viewHref(screen.path), title: screen.title }
-                  : undefined
-              }
-              title={step.title ?? screen?.title ?? step.screenPath}
+              screen={{ href: viewHref(screen.path), title: screen.title }}
+              title={step.title ?? screen.title}
             >
-              {screen ? (
-                <StageFrame
-                  entry={screen}
-                  flow
-                  hasDarkFragments={hasDarkFragments}
-                  key={`${screen.path}:${index}:${viewport}`}
-                  stepIndex={index}
-                  views={screen.views}
-                  viewport={viewport}
-                  {...(index === 0 && fragment ? { fragment } : {})}
-                />
-              ) : null}
+              <StageFrame
+                entry={screen}
+                flow
+                hasDarkFragments={hasDarkFragments}
+                key={`${screen.path}:${index}:${viewport}`}
+                stepIndex={index}
+                views={screen.views}
+                viewport={viewport}
+                {...(index === 0 && fragment ? { fragment } : {})}
+              />
             </FlowStep>
           );
         })}

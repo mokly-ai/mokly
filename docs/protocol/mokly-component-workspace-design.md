@@ -182,12 +182,7 @@ changed files, the paired prop values, and the changed components used here. A
 `dependency` reason reads only through the changed-files list of the
 [CSS evidence contract](./mokly-css-evidence-presentation.md), a `screen`
 reason, which only a use case carries, has no sentence, and a pure move has no
-reason sentence. Only a record that Changes lists shows reasons. A reason that
-contradicts its record is dropped: `removed` on a current record, `added` on a
-record with a base side, `screen` outside a use case, and `implementation`
-outside a component parent. A viewer still loads such a detail, and a detail
-whose reasons disagree with its record's Changes membership; Details then show
-only the reasons that fit, so that a recoverable mismatch never hides the entry.
+reason sentence. Only a record that Changes lists shows reasons.
 
 | Reason           | Sentence                                                 |
 | ---------------- | -------------------------------------------------------- |

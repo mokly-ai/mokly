@@ -2,8 +2,6 @@
 
 use std::path::Path;
 
-use mokly_model::error::ModelError;
-use mokly_model::readers::ReadError;
 use mokly_server::error::{InternalError, ServerError};
 
 use crate::codes::Code;
@@ -77,21 +75,6 @@ fn internal(error: &InternalError) -> String {
         InternalError::Io { source } => source.to_string(),
         InternalError::Json { source } => source.to_string(),
         InternalError::Task { .. } => "A server worker did not finish. Restart Serve.".into(),
-        InternalError::Model { source } => match source {
-            ModelError::Schema(diagnostic) | ModelError::Props(diagnostic) => {
-                diagnostic.to_string()
-            }
-            ModelError::Internal(source) => source.to_string(),
-        },
-        InternalError::Read { source } => match source {
-            ReadError::Version {
-                boundary,
-                expected,
-                received,
-            } => format!("{boundary} requires schemaVersion {expected}; received {received:?}"),
-            ReadError::Invalid { boundary, source } => format!("Invalid {boundary}: {source}"),
-            ReadError::Contract { boundary, message } => format!("Invalid {boundary}: {message}"),
-        },
     }
 }
 

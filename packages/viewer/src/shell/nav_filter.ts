@@ -16,14 +16,14 @@ import type { ShellStore } from "./store_context.js";
 /** The All and Changes filter, or nothing for a catalogue without Changes. */
 export function navFilter(
   context: ShellContext,
-  store: Pick<ShellStore, "state"> | undefined,
+  store: Pick<ShellStore, "state">,
 ): NavigationFilter | undefined {
   const status = context.changedEntries ? "ready" : context.changesStatus;
   if (!status) return undefined;
   return {
     count: context.changedEntries?.length,
     status,
-    view: store?.state.selection.view ?? "all",
+    view: store.state.selection.view,
   };
 }
 
@@ -33,23 +33,20 @@ export function navFilter(
  */
 export function navStatus(
   context: ShellContext,
-  store: Pick<ShellStore, "context" | "sections" | "state"> | undefined,
+  store: Pick<ShellStore, "context" | "sections" | "state">,
 ): NavigationStatus | undefined {
   if (!context.changesStatus && !context.changedEntries) return undefined;
   const status = context.changedEntries ? undefined : context.changesStatus;
-  const selected = store?.state.selection.view === "changes";
-  const visible =
-    store?.sections.some((section) =>
-      section.children.some((node) =>
-        navNodeVisible(node, store.state.selection, store.context),
-      ),
-    ) ?? true;
-  const constrained = store
-    ? queryConstrains({
-        freeText: store.state.selection.search,
-        tags: store.state.selection.tags,
-      })
-    : false;
+  const selected = store.state.selection.view === "changes";
+  const visible = store.sections.some((section) =>
+    section.children.some((node) =>
+      navNodeVisible(node, store.state.selection, store.context),
+    ),
+  );
+  const constrained = queryConstrains({
+    freeText: store.state.selection.search,
+    tags: store.state.selection.tags,
+  });
   return {
     hidden: !selected || (status === undefined && visible),
     message:

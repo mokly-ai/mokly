@@ -8,7 +8,7 @@ use mokly_model::prop_schema::{JsonType, Primitive, PropSchema, Types};
 use mokly_model::validation::{PropValidator, accepts};
 
 use crate::diagnostic_code::Code;
-use crate::error::{HtmlError, Result, invalid, json};
+use crate::error::{HtmlError, Result, invalid};
 use crate::serialize;
 
 /// Look up a declared dotted property in a schema.
@@ -182,11 +182,14 @@ pub(crate) fn validate_for(
         variant: None,
         kind,
     };
-    let validator = match PropValidator::compile(&json(schema)?, &context) {
+    let schema = serde_json::to_value(schema)
+        .expect("prop schemas contain only JSON values and string property names");
+    let props = serde_json::to_value(props).expect("props contain only JSON data and string keys");
+    let validator = match PropValidator::compile(&schema, &context) {
         Ok(value) => value,
         Err(source) => return Err(HtmlError::Props { source }),
     };
-    match validator.validate(&json(props)?, &context) {
+    match validator.validate(&props, &context) {
         Ok(()) => Ok(()),
         Err(source) => Err(HtmlError::Props { source }),
     }

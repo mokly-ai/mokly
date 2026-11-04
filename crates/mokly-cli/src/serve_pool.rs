@@ -33,7 +33,7 @@ impl ServePool {
             gate: Arc::new(Gate {
                 state: Mutex::new(State::default()),
                 changed: Condvar::new(),
-                limit: limit.max(1),
+                limit,
             }),
         }
     }

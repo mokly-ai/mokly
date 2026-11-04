@@ -7,35 +7,12 @@ use std::sync::Arc;
 use mokly_git::error;
 use thiserror::Error;
 
-use crate::lookup::LookupError;
-
 /// Base preparation result.
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// Recoverable preparation failures.
 #[derive(Debug, Error)]
 pub enum Error {
-    /// The retained removal has no matching public base record or detail.
-    #[error("[mokly-compare/projection] removed record is missing for {path}")]
-    RemovedRecord {
-        /// Historical entry path.
-        path: String,
-    },
-    /// A base render plan names an absent catalogue entry.
-    #[error("[mokly-compare/projection] historical plan {route} names missing entry {entry}")]
-    HistoricalPlanEntry {
-        /// Historical document route.
-        route: String,
-        /// Missing catalogue entry index.
-        entry: usize,
-    },
-    /// A planned historical render did not retain its composed document.
-    #[error("[mokly-compare/projection] historical document is missing for {route}")]
-    HistoricalDocument {
-        /// Historical document route.
-        route: String,
-    },
-
     /// A bounded source operation cannot classify this path.
     #[error("[mokly-compare/limit] {path}: {source}")]
     Limit {
@@ -72,13 +49,6 @@ pub enum Error {
         /// Original graph diagnostics.
         source: mokly_graph::error::GraphError,
     },
-    /// A complete result failed its strict model contract.
-    #[error("[mokly-compare/review-invalid] {source}")]
-    Review {
-        /// Original strict reader diagnostic.
-        source: mokly_model::readers::ReadError,
-    },
-
     /// The selected package manager executable could not be started.
     #[error("[mokly-compare/install] package manager is unavailable")]
     CommandUnavailable,
@@ -144,32 +114,7 @@ pub enum Error {
 /// Internal adapter source errors.
 #[derive(Debug, Error)]
 pub enum InternalError {
-    /// Accepted comparison references violated the shared lookup contract.
-    #[error("branch-point lookup failed: {source}")]
-    Lookup {
-        /// Original lookup invariant or generation failure.
-        source: LookupError,
-    },
-    /// A resource read did not retain its comparison fact.
-    #[error("resource fact is missing for {route}")]
-    MissingResourceFact {
-        /// Requested public route.
-        route: String,
-    },
-    /// Pairing must retain at least one side of every identity.
-    #[error("entry pairing has neither side")]
-    EmptyPair,
-    /// Pure model serialization failed.
-    #[error("model encoding failed: {source}")]
-    Model {
-        /// Original serialization source.
-        source: mokly_model::error::ModelError,
-    },
-
-    /// Source-index initialization could not acquire its state.
-    #[error("source index state is poisoned")]
-    Poisoned,
-    /// Cache receipt encoding failed.
+    /// JSON decoding failed.
     #[error("JSON encoding failed: {source}")]
     Json {
         /// Original serialization failure.

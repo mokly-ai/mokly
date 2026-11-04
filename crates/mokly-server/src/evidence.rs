@@ -7,12 +7,10 @@ use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::namespace::viewer;
 use mokly_model::projection_usage;
 use mokly_model::usage::CatalogueUsage;
-use mokly_model::usage_schemas::UsageSchemas;
 
 use crate::detail_encoding::{DetailEncoder, detail_id};
-use crate::error::Result;
 use crate::revision::RevisionLease;
-use crate::snapshot::{Snapshot, checked_index};
+use crate::snapshot::{Snapshot, encode_index};
 
 /// A document's position and detail context in one immutable graph generation.
 #[derive(Clone)]
@@ -40,7 +38,7 @@ pub(crate) fn complete(
     current: &Snapshot,
     updates: &[(String, CatalogueUsage)],
     encoder: &dyn DetailEncoder,
-) -> Result<Option<Arc<Snapshot>>> {
+) -> Option<Arc<Snapshot>> {
     let changed: Vec<_> = updates
         .iter()
         .filter_map(|(route, usage)| {
@@ -49,7 +47,7 @@ pub(crate) fn complete(
         })
         .collect();
     if changed.is_empty() {
-        return Ok(None);
+        return None;
     }
     let mut next = current.clone();
     let mut dirty = BTreeSet::new();
@@ -104,35 +102,32 @@ pub(crate) fn complete(
         }
     });
     if dirty.is_empty() {
-        return Ok(Some(Arc::new(next)));
+        return Some(Arc::new(next));
     }
-    let Some(revision) = current.index.revision.checked_add(1) else {
-        return Ok(None);
-    };
+    let revision = current.index.revision.checked_add(1)?;
     next.lease = Arc::new(RevisionLease::default());
     next.index.revision = revision;
     for path in &dirty {
         if let Some(detail) = next.details.get_mut(path) {
             let detail = Arc::make_mut(detail);
-            detail.detail_id = detail_id(detail)?;
+            detail.detail_id = detail_id(detail);
             mokly_model::projection::set_detail_id(&mut next.index, path, &detail.detail_id);
             detail.revision = Some(revision);
         }
     }
-    let mut schemas = UsageSchemas::new(&next.index.components);
     for path in dirty {
         if let Some(detail) = next.details.get_mut(&path) {
             let detail = Arc::make_mut(detail);
             next.files.insert(
                 viewer(&format!("entries/{path}.json")),
-                encoder.encode(detail, &next.index, &mut schemas)?,
+                encoder.encode(detail),
             );
         }
     }
-    let index_file = checked_index(&next.index)?;
+    let index_file = encode_index(&next.index);
     next.files.insert(
         viewer("index.json"),
-        crate::revision_file::RevisionFile::new(index_file)?,
+        crate::revision_file::RevisionFile::new(index_file),
     );
-    Ok(Some(Arc::new(next)))
+    Some(Arc::new(next))
 }

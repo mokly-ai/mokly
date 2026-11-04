@@ -22,8 +22,8 @@ export function catalogueHierarchy(
   const variantParentByPath = new Map<string, ShellCatalogueRoutedEntry>();
   for (const entry of entries) {
     if (!("variantOf" in entry) || entry.variantOf === undefined) continue;
-    const parent = byPath.get(entry.variantOf);
-    if (!parent) continue;
+    // A current variant's parent is a current entry of the same catalogue.
+    const parent = byPath.get(entry.variantOf)!;
     const variants = variantsByPath.get(parent.path) ?? [];
     variants.push(entry);
     variantsByPath.set(parent.path, variants);
@@ -35,14 +35,14 @@ export function catalogueHierarchy(
     titles: readonly string[],
   ): HierarchyNode<ShellCatalogueRoutedEntry> => {
     if (node.kind === "folder") {
-      const index = node.index ? byPath.get(node.index) : undefined;
       return {
         kind: "folder",
         ...(node.hidden ? { hidden: true } : {}),
         path: node.path,
         key: node.path,
         label: node.title,
-        ...(index ? { index } : {}),
+        // A folder's own page is a current entry of the same catalogue.
+        ...(node.index ? { index: byPath.get(node.index)! } : {}),
         ...(node.order ? { order: node.order } : {}),
         children: node.children.map((child) =>
           convert(

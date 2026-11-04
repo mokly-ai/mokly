@@ -37,11 +37,11 @@ fn busy_cancellation_kills_then_reaps_every_process() {
         },
     );
     {
-        let mut state = pool.lock().unwrap();
+        let mut state = pool.lock();
         state.slots = vec![None, None];
         let control: Arc<dyn WorkerControl> = Arc::new(mock.clone());
         state.controls = BTreeMap::from([(0, control.clone()), (1, control)]);
     }
     pool.cancel_requests().unwrap();
-    assert!(pool.lock().unwrap().controls.is_empty());
+    assert!(pool.lock().controls.is_empty());
 }

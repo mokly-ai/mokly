@@ -12,8 +12,7 @@ use mokly_model::deployment::DeploymentFileV1;
 use mokly_model::namespace;
 use mokly_model::output::artifact::{Artifact, File};
 use mokly_model::projection::{self, Publication, ViewKey};
-use mokly_model::usage::CatalogueUsage;
-use mokly_model::{detail_context, projection_usage, readers, shell, versions};
+use mokly_model::{projection_usage, shell, versions};
 use mokly_source_interface::tree::SourceTree;
 
 use crate::changes::{ChangeState, PublicationInput};
@@ -21,7 +20,6 @@ use crate::error::{Error, InternalError, Result};
 use crate::frame_probe;
 use crate::identity;
 use crate::inventory::Inventory;
-use crate::modules;
 use crate::transaction::Cancellation;
 use crate::{comparison_details, comparison_output, resource_bytes};
 
@@ -58,20 +56,13 @@ pub struct CatalogueAssembler {
 
 impl Assembler for CatalogueAssembler {
     fn assemble(&self, input: Assembly<'_>, cancellation: &dyn Cancellation) -> Result<Artifact> {
-        modules::validate(&input.viewer)?;
         let model = &input.generation.catalogue().model;
         if model.entries.is_empty() {
             return Err(Error::Empty);
         }
         let mut keys = Vec::new();
         for plan in input.generation.plans().values() {
-            let entry = model
-                .entries
-                .get(plan.entry)
-                .ok_or_else(|| Error::PlanEntry {
-                    route: plan.route.clone(),
-                    entry: plan.entry,
-                })?;
+            let entry = &model.entries[plan.entry];
             keys.push(ViewKey {
                 path: entry.metadata.path.clone(),
                 viewport: plan.viewport,
@@ -87,12 +78,8 @@ impl Assembler for CatalogueAssembler {
             base: input.changes.base().map(str::to_owned),
             live_generation: None,
         };
-        let mut index = match tracing::info_span!("index.build")
-            .in_scope(|| projection::index(model, &keys, &state))
-        {
-            Ok(index) => index,
-            Err(source) => return Err(InternalError::Model { source }.into()),
-        };
+        let mut index =
+            tracing::info_span!("index.build").in_scope(|| projection::index(model, &keys, &state));
         let mut details = projection::pending_details(model, &index, &keys);
         let mut inventory = Inventory::default();
         let stub = shell::html(&index.identity.title);
@@ -118,26 +105,16 @@ impl Assembler for CatalogueAssembler {
                     });
                 }
             };
-            let document = rendered.document.as_ref().ok_or_else(|| Error::Invalid {
-                path: plan.route.clone(),
-            })?;
-            let entry = model
-                .entries
-                .get(plan.entry)
-                .ok_or_else(|| Error::PlanEntry {
-                    route: plan.route.clone(),
-                    entry: plan.entry,
-                })?;
+            let document = rendered
+                .document
+                .as_ref()
+                .expect("A rendered document plan retains its composed document");
+            let entry = &model.entries[plan.entry];
             if let Some(detail) = details.get_mut(&entry.metadata.path)
                 && let Some(view) = detail.views.iter_mut().find(|view| {
                     Some(view.viewport) == plan.viewport && view.color_scheme == plan.color_scheme
                 })
             {
-                if !matches!(document.usage, CatalogueUsage::Ready { .. }) {
-                    return Err(Error::Invalid {
-                        path: plan.route.clone(),
-                    });
-                }
                 view.usage = document.usage.clone();
             }
             inventory.insert(
@@ -208,35 +185,18 @@ impl Assembler for CatalogueAssembler {
             .as_ref()
             .map(|publication| publication.metadata(input.changes))
             .transpose()?;
-        let mut files = inventory.into_files();
-        files.extend(identity::finalize(&mut index, &mut details, &files)?);
-        files.push(File {
-            path: namespace::viewer("deployment.json"),
-            bytes: identity::json(&DeploymentFileV1 {
+        for file in identity::finalize(&mut index, &mut details, inventory.files()) {
+            inventory.insert(file.path, file.bytes)?;
+        }
+        inventory.insert(
+            namespace::viewer("deployment.json"),
+            identity::json(&DeploymentFileV1 {
                 schema_version: versions::DEPLOYMENT_FILE,
                 deployment_id: index.deployment_id.clone(),
-            })?
+            })
             .into(),
-        });
-        if let Err(source) = readers::index(&String::from_utf8_lossy(&identity::json(&index)?)) {
-            return Err(InternalError::Index {
-                path: namespace::viewer("index.json"),
-                source,
-            }
-            .into());
-        }
-        for (path, detail) in &details {
-            if detail_context::validate(detail, &index).is_err() {
-                return Err(Error::Invalid {
-                    path: namespace::viewer(&format!("entries/{path}.json")),
-                });
-            }
-        }
-        let mut final_inventory = Inventory::default();
-        for file in files {
-            final_inventory.insert(file.path, file.bytes)?;
-        }
-        match Artifact::finalize(input.directory, final_inventory.into_files(), metadata) {
+        )?;
+        match Artifact::finalize(input.directory, inventory.into_files(), metadata) {
             Ok(artifact) => Ok(artifact),
             Err(source) => Err(InternalError::Format { source }.into()),
         }

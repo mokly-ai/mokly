@@ -3,6 +3,8 @@
 use mokly_catalogue::error::CatalogueError;
 use tempfile::TempDir;
 
+#[path = "support/definitions.rs"]
+mod definitions;
 mod support;
 
 #[test]

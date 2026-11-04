@@ -5,13 +5,14 @@ use std::path::Path;
 
 use mokly_graph::types::RenderGenerationMock;
 use mokly_model::canonical;
+use mokly_model::namespace;
 use mokly_model::output::ownership::Ownership;
 use mokly_model::output::validation::digest;
 use mokly_model::readers;
 use unimock::{MockFn, Unimock, matching};
 
 use super::assembly_support::{
-    assembler, config, empty_assembler, graph_with_key, plan, prepared, request,
+    assembler, config, empty_assembler, graph_with_catalogue, prepared, request,
 };
 use crate::assembly::Assembler;
 use crate::error::Error;
@@ -19,7 +20,7 @@ use crate::transaction::CancellationMock;
 
 #[test]
 fn builds_complete_current_bytes_from_a_mocked_generation_without_disk_access() {
-    let graph = graph_with_key(&"a".repeat(64));
+    let graph = graph_with_catalogue(prepared());
     let assembler: &dyn Assembler = &assembler();
     let cancellation = Unimock::new(
         CancellationMock::requested
@@ -89,58 +90,33 @@ fn builds_complete_current_bytes_from_a_mocked_generation_without_disk_access() 
 }
 
 #[test]
-fn rejects_empty_and_inconsistent_generations_without_panics_or_side_effects() {
-    for empty in [true, false] {
-        let mut catalogue = prepared();
-        if empty {
-            catalogue.model.entries.clear();
-        }
-        let graph = if empty {
-            Unimock::new(
-                RenderGenerationMock::catalogue
-                    .each_call(matching!())
-                    .returns(catalogue),
-            )
-        } else {
-            Unimock::new((
-                RenderGenerationMock::catalogue
-                    .each_call(matching!())
-                    .returns(catalogue),
-                RenderGenerationMock::plans
-                    .each_call(matching!())
-                    .returns(plan(9)),
-            ))
-        };
-        let assembler = empty_assembler();
-        let error = assembler
-            .assemble(request(&config(), &graph), &Unimock::new(()))
-            .unwrap_err();
-        assert!(if empty {
-            matches!(error, Error::Empty)
-        } else {
-            matches!(error, Error::PlanEntry { entry: 9, .. })
-        });
-    }
+fn rejects_an_empty_catalogue_before_output() {
+    let mut catalogue = prepared();
+    catalogue.model.entries.clear();
+    let graph = Unimock::new(
+        RenderGenerationMock::catalogue
+            .each_call(matching!())
+            .returns(catalogue),
+    );
+    let error = empty_assembler()
+        .assemble(request(&config(), &graph), &Unimock::new(()))
+        .unwrap_err();
+    assert!(matches!(error, Error::Empty));
 }
 
 #[test]
-fn malformed_published_index_preserves_the_reader_diagnostic() {
-    let graph = graph_with_key("bad");
-    let assembler: &dyn Assembler = &assembler();
+fn rejects_a_current_index_above_the_output_file_limit() {
+    let mut catalogue = prepared();
+    catalogue.model.entries[0].metadata.description = "a".repeat(64 * 1024 * 1024);
+    let graph = graph_with_catalogue(catalogue);
     let cancellation = Unimock::new(
         CancellationMock::requested
             .each_call(matching!())
             .returns(false),
     );
-    let error = assembler
-        .assemble(request(&config(), &graph), &cancellation)
-        .unwrap_err();
-    assert!(
-        error.to_string().contains("invalid page document key"),
-        "{error}"
-    );
-    assert!(
-        error.to_string().contains("mokly-viewer/index.json"),
-        "{error}"
-    );
+    let result = assembler().assemble(request(&config(), &graph), &cancellation);
+    assert!(matches!(
+        result,
+        Err(Error::TooLarge { path }) if path == namespace::viewer("index.json")
+    ));
 }

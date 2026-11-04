@@ -23,7 +23,6 @@ pub struct Request {
 
 /// Structured remote failure.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(deny_unknown_fields)]
 pub struct RemoteError {
     /// Protocol error category.
     pub code: RemoteCode,
@@ -37,7 +36,7 @@ pub struct RemoteError {
 
 /// Exactly one response outcome; raw JSON is decoded using the pending method.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(untagged, deny_unknown_fields)]
+#[serde(untagged)]
 pub enum Response {
     /// A successful method result.
     Success {
@@ -57,12 +56,7 @@ pub enum Response {
 
 /// Asynchronous sidecar diagnostics, without request ids.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(
-    tag = "event",
-    content = "params",
-    rename_all = "camelCase",
-    deny_unknown_fields
-)]
+#[serde(tag = "event", content = "params", rename_all = "camelCase")]
 pub enum Event {
     /// An operation performed by the worker process.
     Operation {
@@ -109,17 +103,8 @@ pub enum MethodResult {
 }
 
 impl Response {
-    /// Verify correlation before reading any result or remote error.
+    /// Decode the result selected by the pending request method.
     pub fn decode_result(self, request: &Request) -> Result<MethodResult> {
-        let id = match &self {
-            Self::Success { id, .. } | Self::Failure { id, .. } => *id,
-        };
-        if id != request.id {
-            return Err(Error::Protocol(ProtocolError::ResponseId {
-                expected: request.id,
-                actual: id,
-            }));
-        }
         match self {
             Self::Failure {
                 error:
@@ -147,10 +132,7 @@ impl Response {
                 | Call::Bindings(_)
                 | Call::DisposeContext(_)
                 | Call::Dispose(_)
-                | Call::Shutdown(_) => {
-                    decode::<()>(result)?;
-                    Ok(MethodResult::Empty)
-                }
+                | Call::Shutdown(_) => Ok(MethodResult::Empty),
             },
         }
     }

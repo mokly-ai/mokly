@@ -10,7 +10,7 @@ use crate::results::Module;
 
 /// Private compiled code retained for live generations and bounded release reuse.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct CompiledGeneration {
     /// Dependency lookup provenance retained across restored worker generations.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -42,7 +42,7 @@ pub struct CompiledGeneration {
 
 /// Install captured code in a fresh worker without invoking esbuild.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct RestoreGeneration {
     /// Original evaluated-lifetime id.
     pub generation: String,

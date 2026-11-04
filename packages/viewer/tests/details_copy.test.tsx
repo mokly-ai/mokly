@@ -1,13 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { renderToStaticMarkup } from "react-dom/server";
-
 import type { CatalogueReadModel } from "@mokly/model";
 
 import { EntryDetailsBody } from "../src/shell/details.js";
 
 import { catalogueFixture, indexFixture } from "./catalogue_v9_fixture.js";
+import { storeMarkup } from "./shell_markup.js";
 
 /** The Details body of one current or removed entry of the edited fixture. */
 function details(path: string, edit: (index: CatalogueReadModel) => void) {
@@ -17,9 +16,7 @@ function details(path: string, edit: (index: CatalogueReadModel) => void) {
     catalogue.removedEntries.find((record) => record.entry.path === path)
       ?.entry;
   assert.ok(entry, path);
-  return renderToStaticMarkup(
-    <EntryDetailsBody catalogue={catalogue} entry={entry} />,
-  );
+  return storeMarkup(<EntryDetailsBody catalogue={catalogue} entry={entry} />);
 }
 
 const row = (label: string) =>

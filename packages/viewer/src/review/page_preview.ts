@@ -7,14 +7,13 @@ import { invalidData, record } from "../components/data.js";
 
 const FIELDS = ["schemaVersion", "baseRef", "baseCommit", "path"];
 
-/** Strictly validate a removed page's identity-only preview payload. */
+/**
+ * Read a removed page's identity-only preview payload. It reads the fields of
+ * this version and ignores any other field.
+ */
 export function parseRemovedPagePreview(value: unknown): RemovedPagePreview {
-  if (
-    !record(value) ||
-    Object.keys(value).length !== FIELDS.length ||
-    FIELDS.some((field) => !Object.hasOwn(value, field))
-  )
-    invalidData("$preview", "expected exactly the preview metadata fields");
+  if (!record(value) || FIELDS.some((field) => !Object.hasOwn(value, field)))
+    invalidData("$preview", "expected the preview metadata fields");
   if (value.schemaVersion !== 3)
     invalidData("$preview", "unsupported preview version");
   return {

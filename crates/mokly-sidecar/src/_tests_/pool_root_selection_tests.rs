@@ -69,7 +69,7 @@ fn pool(size: usize) -> (Pool, Arc<Mutex<Vec<Event>>>) {
 
 fn request(pool: &Pool, root: &str, sequence: usize) {
     let context = format!("{root}:{sequence}");
-    assert!(!pool.lock().unwrap().affinity.contains_key(&context));
+    assert!(!pool.lock().affinity.contains_key(&context));
     pool.request(Call::ProcessCss(ProcessCss {
         source_root: root.into(),
         context,
@@ -91,7 +91,7 @@ fn new_contexts_reuse_two_workers_across_alternating_source_roots() {
                 request(&pool, root, sequence);
             }
         }
-        let affinities = pool.lock().unwrap().affinity.len();
+        let affinities = pool.lock().affinity.len();
         let observed = events.lock().unwrap().clone();
         pool.abort().unwrap();
         assert_eq!(affinities, pairs * 2);
@@ -109,13 +109,7 @@ fn a_newer_matching_worker_wins_over_the_oldest_idle_other_root() {
     request(&pool, "/head", 0);
     request(&pool, "/base", 0);
     request(&pool, "/head", 1);
-    let idle = pool
-        .lock()
-        .unwrap()
-        .available
-        .iter()
-        .copied()
-        .collect::<Vec<_>>();
+    let idle = pool.lock().available.iter().copied().collect::<Vec<_>>();
     request(&pool, "/head", 2);
     let observed = events.lock().unwrap().clone();
     pool.abort().unwrap();

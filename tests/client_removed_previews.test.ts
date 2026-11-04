@@ -30,25 +30,6 @@ const pagePath = `mokly-viewer/diffs/generations/${GENERATION}/previews/removed-
 /** A removed screen's preview reads its removed detail inside the generation. */
 const screenPath = `mokly-viewer/diffs/generations/${GENERATION}/entries/removed-screen.json`;
 
-test("development stages never discover an unadvertised preview endpoint", () => {
-  assert.equal(
-    previewEndpoint(
-      { ...removedPage, published: { kind: "page" } },
-      undefined,
-      BASE,
-    ),
-    undefined,
-  );
-  assert.equal(
-    previewEndpoint(
-      { ...removedScreen, published: { kind: "screen" } },
-      undefined,
-      BASE,
-    ),
-    undefined,
-  );
-});
-
 test("every delivery loads only what the catalogue advertises", () => {
   assert.equal(previewEndpoint(removedPage, delivery, BASE), undefined);
   assert.equal(

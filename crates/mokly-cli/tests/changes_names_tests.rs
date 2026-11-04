@@ -120,6 +120,7 @@ fn inspect(root: &Path) {
     let common = Common {
         config: env::var("MOKLY_TEST_CONFIG").ok(),
         base: env::var("MOKLY_TEST_BASE").ok(),
+        sidecars: Some(1),
         ..Common::default()
     };
     let tree = Arc::new(WorkingTree);

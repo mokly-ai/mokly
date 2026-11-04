@@ -5,7 +5,6 @@ use ts_rs::TS;
 
 /// Identity obtained from the open descriptor that supplied the observed bytes.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(deny_unknown_fields)]
 #[ts(rename = "PostcssFileIdentity")]
 pub struct FileIdentity {
     /// Native device and file identifier, represented without number precision loss.
@@ -18,7 +17,7 @@ pub struct FileIdentity {
 
 /// A whole-file read witness; a path alone and a partial read cannot create one.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
+#[serde(tag = "kind", rename_all = "kebab-case")]
 #[ts(rename = "PostcssRead")]
 pub enum Read {
     /// Hash computed before delivering the complete raw buffer to its consumer.
@@ -53,33 +52,33 @@ pub enum Read {
     },
 }
 
-/// Observation does not prove that all readers use the observed bytes.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
-#[serde(rename_all = "lowercase")]
-#[ts(rename = "PostcssCoverage")]
-pub enum Coverage {
-    /// Opaque reads remain compatible and can have a late baseline.
-    #[default]
-    Incomplete,
-}
-
 /// A child context's cumulative observations, included atomically with each result.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[ts(rename = "PostcssEvidence")]
 pub struct Evidence {
     /// Never inferred from the number of observed paths.
-    pub coverage: Coverage,
+    pub coverage: String,
     /// All distinct whole-file versions delivered during this context.
     pub reads: Vec<Read>,
     /// Known module input names, including modules with no byte observation.
     pub modules: Vec<String>,
 }
 
+impl Default for Evidence {
+    fn default() -> Self {
+        Self {
+            coverage: "incomplete".into(),
+            reads: Vec::new(),
+            modules: Vec::new(),
+        }
+    }
+}
+
 impl Evidence {
     /// Payload metadata charged to the existing PostCSS result cache.
     pub fn retained_bytes(&self) -> usize {
-        self.reads.capacity() * size_of::<Read>()
+        self.coverage.capacity()
+            + self.reads.capacity() * size_of::<Read>()
             + self
                 .reads
                 .iter()

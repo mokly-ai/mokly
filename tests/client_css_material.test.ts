@@ -15,6 +15,7 @@ import type { ComparisonPresentation } from "../packages/viewer/dist/shell/use_c
 import { isStyleOnlyView } from "../packages/viewer/dist/shell/workspace_style_evidence.js";
 
 import { cssSchemaFixture } from "./helpers/review_css_schema.js";
+import { inShellStore } from "./helpers/viewer_catalogue.js";
 
 /** Render one presented comparison as the shell does once it is ready. */
 function renderComparison(
@@ -27,19 +28,21 @@ function renderComparison(
   const entryId = entry.path;
   const views = selectedComparisonViews(loaded, presentation, entry);
   return renderToStaticMarkup(
-    createElement(ComparisonViews, {
-      entryId,
-      entryKind: "screen",
-      presentation,
-      presentations: new Map(
-        selectedComparisonDocuments(views).map((address) => [
-          address,
-          { snapshotAddress: address, srcdoc: "<p>Snapshot</p>" },
-        ]),
-      ),
-      together: true,
-      views,
-    }),
+    inShellStore(
+      createElement(ComparisonViews, {
+        entryId,
+        entryKind: "screen",
+        presentation,
+        presentations: new Map(
+          selectedComparisonDocuments(views).map((address) => [
+            address,
+            { snapshotAddress: address, srcdoc: "<p>Snapshot</p>" },
+          ]),
+        ),
+        together: true,
+        views,
+      }),
+    ),
   );
 }
 

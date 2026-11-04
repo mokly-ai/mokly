@@ -31,18 +31,6 @@ pub enum Error {
         /// Complete source and view attribution.
         call: Box<Call>,
     },
-    /// A generation was disposed or never bundled in this pool.
-    #[error("[mokly-sidecar/bundle-failed] unknown generation {generation}")]
-    UnknownGeneration {
-        /// Requested immutable generation.
-        generation: String,
-    },
-    /// Source bytes changed before a recycled process could reload them.
-    #[error("[mokly-sidecar/bundle-failed] generation {generation} changed while reloading")]
-    GenerationChanged {
-        /// Expected immutable generation.
-        generation: String,
-    },
     /// The command cancelled its pending and queued sidecar work.
     #[error("[mokly-sidecar/cancelled] sidecar pool is shut down")]
     Cancelled,
@@ -158,20 +146,9 @@ pub enum ProtocolError {
     /// EOF occurred inside a frame.
     #[error("unterminated frame at end of stream")]
     Truncated,
-    /// A malformed exchange or shutdown closed this session.
-    #[error("session is closed; replace the sidecar")]
-    SessionClosed,
     /// The first response was not the hello response.
     #[error("hello must complete before other traffic")]
     Handshake,
-    /// A response did not match the outstanding request.
-    #[error("response id {actual} does not match request id {expected}")]
-    ResponseId {
-        /// Outstanding request id.
-        expected: u64,
-        /// Received response id.
-        actual: u64,
-    },
 }
 
 /// Remote failure categories; authoring diagnostics retain their own code.
@@ -223,7 +200,4 @@ pub enum InternalError {
         /// Original platform error.
         source: mokly_platform::error::Error,
     },
-    /// A pipe worker or pool state is no longer available.
-    #[error("sidecar synchronization failed")]
-    Synchronization,
 }

@@ -17,11 +17,11 @@ fn validate_target(
     fragment: &str,
 ) -> Result<()> {
     let artifact = session.raw(&plan.route)?;
-    if !artifact
+    let document = artifact
         .document
         .as_ref()
-        .is_some_and(|document| references::anchors(&document.tree).contains(fragment))
-    {
+        .expect("rendered destination artifacts carry their composed tree");
+    if !references::anchors(&document.tree).contains(fragment) {
         return Err(invalid(
             &reference.source_route,
             format!(

@@ -13,7 +13,9 @@ const RECORD_FACTOR: usize = 2;
 
 pub(crate) fn document(document: &Composed) -> usize {
     let usage = serde_json::to_vec(&document.usage)
-        .map_or(0, |bytes| bytes.len().saturating_mul(RECORD_FACTOR));
+        .expect("usage records contain only JSON fields and string prop keys")
+        .len()
+        .saturating_mul(RECORD_FACTOR);
     mem::size_of::<Composed>()
         + nodes(&document.tree)
         + usage
@@ -46,9 +48,13 @@ pub(crate) fn document(document: &Composed) -> usize {
 
 pub(crate) fn fragment(fragment: &Fragment) -> usize {
     let instances = serde_json::to_vec(&fragment.instances)
-        .map_or(0, |bytes| bytes.len().saturating_mul(RECORD_FACTOR));
+        .expect("instance records contain only JSON fields and string prop keys")
+        .len()
+        .saturating_mul(RECORD_FACTOR);
     let slots = serde_json::to_vec(&fragment.slots)
-        .map_or(0, |bytes| bytes.len().saturating_mul(RECORD_FACTOR));
+        .expect("slot records contain only JSON fields")
+        .len()
+        .saturating_mul(RECORD_FACTOR);
     mem::size_of::<Fragment>()
         + fragment.html.capacity()
         + fragment

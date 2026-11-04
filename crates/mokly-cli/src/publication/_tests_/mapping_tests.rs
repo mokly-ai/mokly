@@ -35,8 +35,11 @@ fn strict_cancellation_and_recovery_keep_the_native_failure() {
 #[test]
 fn interrupted_publications_keep_the_original_diagnostic_for_optional_stacks() {
     let error = build_result::<()>(Err(BuildError::Interrupted {
-        source: Box::new(BuildError::Deferred {
-            modules: vec!["specs/broken.mockup.ts export Main".into()],
+        source: Box::new(BuildError::Rendering {
+            source: Box::new(mokly_graph::error::GraphError::ResourceUnavailable {
+                route: "specs/broken.mockup.ts export Main".into(),
+                message: "specs/broken.mockup.ts export Main".into(),
+            }),
             warnings: Vec::new(),
         }),
     }))

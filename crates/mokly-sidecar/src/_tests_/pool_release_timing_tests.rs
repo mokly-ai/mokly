@@ -62,7 +62,7 @@ fn cleanup_retirement_keeps_only_the_cause_after_active_or_idle_failure() {
                     requests: 0,
                 };
                 {
-                    let mut state = pool.lock().unwrap();
+                    let mut state = pool.lock();
                     state.slots.push(None);
                     state.controls.insert(0, Arc::new(worker.clone()));
                 }
@@ -70,18 +70,18 @@ fn cleanup_retirement_keeps_only_the_cause_after_active_or_idle_failure() {
                     if active {
                         let caller = tracing::info_span!("caller");
                         let _scope = caller.enter();
-                        pool.release(0, Some(slot)).unwrap();
+                        pool.release(0, Some(slot));
                     } else {
                         {
-                            let mut state = pool.lock().unwrap();
+                            let mut state = pool.lock();
                             state.slots[0] = Some(slot);
                             state.available.push_back(0);
                         }
-                        assert!(!clean_idle(&pool.state, &pool.ready, None).unwrap());
+                        assert!(!clean_idle(&pool.state, &pool.ready, None));
                     }
                 });
                 pool.synchronize_releases();
-                let state = pool.lock().unwrap();
+                let state = pool.lock();
                 assert!(state.slots[0].is_none());
                 assert!(!state.controls.contains_key(&0));
                 assert!(matches!(state.replacement_reasons[&0], Reason::Replacement));

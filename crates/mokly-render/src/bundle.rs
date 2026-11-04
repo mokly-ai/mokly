@@ -12,9 +12,8 @@ use mokly_model::material::digest;
 use mokly_sidecar::definitions::Definitions;
 use mokly_sidecar::methods::{Bundle, Call, CssModules, Generation};
 use mokly_sidecar::results;
-use mokly_sidecar::wire::MethodResult;
 
-use crate::error::{InternalError, RenderError, Result};
+use crate::error::{RenderError, Result};
 use crate::input_stamp::InputStamp;
 use crate::leases::{BundleLease, PreparedLease};
 use crate::render_environment::{ClassMaps, RenderEnvironment};
@@ -40,7 +39,7 @@ pub(crate) fn describe(
     config: &ResolvedConfig,
     files: &[SourceFile],
 ) -> Result<(JavaScriptGeneration, Definitions)> {
-    let side = runtime.side(config)?;
+    let side = runtime.side(config);
     let mut params = bundle_inputs::params(config, files, &side);
     let cache_key =
         bundle_inputs::cache_key(config, &params, &side, runtime.dependency_tree.as_ref())?;
@@ -62,7 +61,7 @@ pub(crate) fn describe(
     let mut prepared_maps = None;
     if let Some(previous) = candidates.first() {
         let maps = class_maps(compiler.as_ref(), &previous.modules, &params)?;
-        let digest = maps_digest(&maps)?;
+        let digest = maps_digest(&maps);
         if let Some(existing) = candidates
             .iter()
             .find(|state| state.class_maps_digest == digest)
@@ -73,7 +72,7 @@ pub(crate) fn describe(
     }
     let mut evaluation = cache_key.clone();
     if let Some(maps) = &prepared_maps {
-        evaluation.push_str(&maps_digest(maps)?);
+        evaluation.push_str(&maps_digest(maps));
     }
     params.evaluation = Some(digest(evaluation.as_bytes()));
     let (mut result, mut lease) = bundle_attempt::request(runtime, &params)?;
@@ -83,7 +82,7 @@ pub(crate) fn describe(
         Some(maps) => maps,
         None => class_maps(compiler.as_ref(), &modules, &params)?,
     };
-    let class_maps_digest = maps_digest(&maps)?;
+    let class_maps_digest = maps_digest(&maps);
     if bundle_attempt::existing(runtime, &result.generation)
         .is_some_and(|previous| previous.class_maps_digest != class_maps_digest)
     {
@@ -104,7 +103,7 @@ pub(crate) fn describe(
             .base
             .as_ref()
             .and_then(|base| base.cache_namespace.as_deref()),
-    )?;
+    );
     let stamp = bundle_attempt::stamp(&result, &config.repo_root);
     let module_digests = result
         .modules
@@ -130,19 +129,13 @@ pub(crate) fn describe(
         generation: lease.id.clone(),
         class_maps: maps,
     })) {
-        Ok(MethodResult::Empty) => {}
-        Ok(_) => {
-            return Err(RenderError::ResultKind {
-                method: "cssModules",
-            });
-        }
+        Ok(_) => {}
         Err(source) => return Err(RenderError::Sidecar { source }),
     }
     let definitions = match runtime.pool.request(Call::Describe(Generation {
         generation: lease.id.clone(),
     })) {
-        Ok(MethodResult::Definitions(result)) => result,
-        Ok(_) => return Err(RenderError::ResultKind { method: "describe" }),
+        Ok(result) => result.into_definitions(),
         Err(source) => return Err(RenderError::Sidecar { source }),
     };
     let state = Arc::new(BundleState {
@@ -219,11 +212,10 @@ fn finish(
     ))
 }
 
-fn maps_digest(maps: &ClassMaps) -> Result<String> {
-    match serde_json::to_vec(maps) {
-        Ok(bytes) => Ok(digest(&bytes)),
-        Err(source) => Err(InternalError::Json { source }.into()),
-    }
+fn maps_digest(maps: &ClassMaps) -> String {
+    let bytes = serde_json::to_vec(maps)
+        .expect("CSS Modules maps contain only strings and string-keyed maps");
+    digest(&bytes)
 }
 
 fn class_maps(

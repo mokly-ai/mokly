@@ -40,8 +40,6 @@ pub struct PreparedCatalogue {
     pub slot_fragments: BTreeMap<String, BTreeMap<String, crate::template_types::SavedSlot>>,
     /// One shared HTML and JavaScript component namespace.
     pub elements: ElementRegistry,
-    /// JavaScript sources awaiting the Milestone 8 sidecar implementation.
-    pub deferred_modules: Vec<String>,
     /// Private JavaScript handles, bundle inputs, and saved React slots.
     pub javascript: JavaScriptCatalogue,
     /// Repository-relative dependency directories reached by this generation's completed bundles.
@@ -112,7 +110,6 @@ impl Builder {
             documents: BTreeMap::new(),
             slot_fragments: BTreeMap::new(),
             elements: BTreeMap::new(),
-            deferred_modules: Vec::new(),
             javascript: JavaScriptCatalogue::default(),
             dependency_directories: BTreeSet::new(),
             warnings: Vec::new(),
@@ -125,7 +122,6 @@ impl Builder {
                 continue;
             }
             if matches!(file.kind, SourceKind::Module | SourceKind::Stories) {
-                prepared.deferred_modules.push(file.path.clone());
                 continue;
             }
             let bytes = match self.tree.read(&file.absolute) {

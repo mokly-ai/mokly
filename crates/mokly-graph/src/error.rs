@@ -109,12 +109,6 @@ pub enum InternalError {
     /// A preparation task unwound before returning a result.
     #[error("preparation failed")]
     PreparationPanicked,
-    /// Canonical key input serialization failed.
-    #[error("key serialization failed: {source}")]
-    Json {
-        /// Original JSON failure.
-        source: serde_json::Error,
-    },
     /// Worker creation failed.
     #[error("render workers could not start: {source}")]
     Workers {

@@ -83,7 +83,7 @@ fn shutdown_cancels_queued_and_inflight_work_with_one_shared_deadline() {
             let active = scope.spawn(|| pool.request(call()));
             started_rx.recv().unwrap();
             let queued = scope.spawn(|| pool.request(call()));
-            while pool.lock().unwrap().ticket < 2 {
+            while pool.lock().ticket < 2 {
                 thread::yield_now();
             }
             pool.shutdown().unwrap();

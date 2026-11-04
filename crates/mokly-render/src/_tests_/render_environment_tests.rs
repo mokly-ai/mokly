@@ -18,7 +18,7 @@ fn equal_settings_under_two_source_roots_share_one_environment() {
         &result("/work/repo/node_modules", react),
         &maps("x"),
     );
-    assert_eq!(head.unwrap().environment, base.unwrap().environment);
+    assert_eq!(head.environment, base.environment);
 }
 
 #[test]
@@ -28,14 +28,12 @@ fn another_installation_or_runtime_package_changes_the_environment() {
         &params("/work/repo"),
         &result("/work/repo/node_modules", react),
         &maps("x"),
-    )
-    .unwrap();
+    );
     let installed = derive(
         &params("/cache/base"),
         &result("/cache/install/node_modules", react),
         &maps("x"),
-    )
-    .unwrap();
+    );
     let peer = derive(
         &params("/work/repo"),
         &result(
@@ -43,8 +41,7 @@ fn another_installation_or_runtime_package_changes_the_environment() {
             "/work/repo/node_modules/react/cjs.js",
         ),
         &maps("x"),
-    )
-    .unwrap();
+    );
     assert_ne!(head.environment, installed.environment);
     assert_ne!(head.environment, peer.environment);
 }
@@ -52,8 +49,8 @@ fn another_installation_or_runtime_package_changes_the_environment() {
 #[test]
 fn class_map_digests_change_only_for_the_changed_stylesheet() {
     let react = "/work/repo/node_modules/react/index.js";
-    let before = derive(&params("/r"), &result("/r/node_modules", react), &maps("x")).unwrap();
-    let after = derive(&params("/r"), &result("/r/node_modules", react), &maps("y")).unwrap();
+    let before = derive(&params("/r"), &result("/r/node_modules", react), &maps("x"));
+    let after = derive(&params("/r"), &result("/r/node_modules", react), &maps("y"));
     assert_ne!(
         before.class_map_digests["a.module.css"],
         after.class_map_digests["a.module.css"]

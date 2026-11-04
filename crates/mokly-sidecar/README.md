@@ -15,9 +15,10 @@ The Node implementation lives in `@mokly/mokly`.
 
 ## What This Crate Does
 
-`Client` consumes `dyn Transport` and `dyn Events`. It requires hello before
-commands, checks response ids, forwards diagnostic events, and decodes each
-result against the pending method. Protocol failures close the session.
+`Client` consumes `dyn Transport` and `dyn Events`. It performs the exact-version
+hello, forwards diagnostic events, and decodes each result for the pending
+method. The pool completes hello before commands and replaces a worker after
+a protocol failure.
 Authoring diagnostics retain their codes and leave a healthy session usable.
 Description preserves the order of data props and explicit controls, so the
 core can carry author order into the read model.
@@ -28,8 +29,9 @@ bounds active processes to `PoolOptions::size`. The CLI resolves
 `--sidecars`, `MOKLY_SIDECARS`, and the core count. `PoolOptions` takes the
 parsed `NonZeroUsize` and timeout override.
 
-The pool retains compiled recipes, CSS Modules maps, and resolved handle
-tables. A new process restores old code without compiling changed sources.
+Every bundle result includes its compiled recipe. The pool retains these
+recipes, CSS Modules maps, and resolved handle tables. A new process restores
+old code without compiling changed sources.
 Epoch-specific releases retain newer lifetimes with the same id. Releases
 record state without waiting for a worker. An idle cleanup worker sends
 disposal to each affected slot. Busy slots apply it before their next request.
@@ -183,12 +185,13 @@ cargo xtask generate-types
 under `packages/mokly/src/generated/sidecar/`.
 
 Unit tests use `unimock` at process, pipe, clock, and reporter boundaries.
-They verify frame limits, hello, correlation, deadlines, retry, recycling,
+They verify frame limits, hello, deadlines, retry, recycling,
 FIFO order, concurrency bounds, queue cancellation, and UTF-8 diagnostic lines.
 Replay tests keep complete inputs for fresh workers, omit already loaded
 inputs, and preserve binding updates across workers. Recipe store tests
 check the seed choice, eviction by use order, the replacement of an entry
 with equal settings, the exact envelope bound, and clearing on every stop.
+They retain a selected live seed when its final lease ends during restoration.
 Real-process recipe tests count esbuild operations. A revert after a
 release skips esbuild, a changed input compiles, and a stored and a live
 recipe with one content id both stay usable. The shutdown unit tests
@@ -223,8 +226,8 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [`src/process_clock.rs`](./src/process_clock.rs) and
   [`src/process_memory.rs`](./src/process_memory.rs) define the host
   `SystemClock` and `SystemMemory` that the composition root injects.
-- [`src/client.rs`](./src/client.rs) defines `Client`, which requires hello,
-  checks response ids, and decodes each result.
+- [`src/client.rs`](./src/client.rs) defines `Client`, which performs hello,
+  forwards diagnostic events, and decodes each result.
 - [`src/codec.rs`](./src/codec.rs) frames NDJSON messages within
   `MAX_FRAME_BYTES`.
 - [`src/methods.rs`](./src/methods.rs), [`src/results.rs`](./src/results.rs),

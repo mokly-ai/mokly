@@ -7,7 +7,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::codec;
 use crate::compiled::{CompiledGeneration, RestoreGeneration};
-use crate::methods::{Bundle, Call};
+use crate::methods::{Bundle, Call, Generation};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
 use crate::pool_state::Slot;
@@ -16,6 +16,8 @@ use crate::wire::{MethodResult, Request};
 use crate::workers::{ClockMock, WorkerMock};
 
 use super::{Recipes, seed_id};
+
+type RestoreAction = Box<dyn FnOnce() + Send>;
 
 pub(super) fn settings(entry: &str, evaluation: &str) -> Bundle {
     Bundle {
@@ -65,6 +67,7 @@ pub(super) fn envelope_size(entry: &str, id: &str) -> usize {
 pub(super) struct Fixture {
     pub(super) pool: Pool,
     pub(super) calls: Arc<Mutex<Vec<Call>>>,
+    pub(super) before_restore: Arc<Mutex<Option<RestoreAction>>>,
     _worker: Unimock,
 }
 
@@ -72,20 +75,27 @@ impl Fixture {
     pub(super) fn new(bound: usize) -> Self {
         let calls = Arc::new(Mutex::new(Vec::new()));
         let recorded = calls.clone();
+        let before_restore = Arc::new(Mutex::new(None::<RestoreAction>));
+        let restoring = before_restore.clone();
         let worker = Unimock::new((
             WorkerMock::request
                 .each_call(matching!(_, _))
                 .answers_arc(Arc::new(move |_, request, _| {
                     recorded.lock().unwrap().push(request.call.clone());
+                    if matches!(request.call, Call::RestoreGeneration(_)) {
+                        let action = restoring.lock().unwrap().take();
+                        if let Some(action) = action {
+                            action();
+                        }
+                    }
                     Ok(match &request.call {
                         Call::Bundle(params) => {
                             let id = params.evaluation.as_deref().unwrap();
                             MethodResult::Bundle(results::Bundle {
                                 generation: id.into(),
-                                compiled: (!id.starts_with("probe")).then(|| compiled(id)),
+                                compiled: compiled(id),
                                 epoch: 0,
                                 modules: Vec::new(),
-                                warnings: Vec::new(),
                                 unmapped_dependency_directories: None,
                             })
                         }
@@ -113,7 +123,7 @@ impl Fixture {
             },
         );
         {
-            let mut state = pool.lock().unwrap();
+            let mut state = pool.lock();
             state.recipes = Recipes::new(bound);
             for index in 0..4 {
                 state.slots.push(Some(Slot {
@@ -134,16 +144,17 @@ impl Fixture {
         Self {
             pool,
             calls,
+            before_restore,
             _worker: worker,
         }
     }
 
     pub(super) fn retained(&self) -> usize {
-        self.pool.lock().unwrap().recipes.len()
+        self.pool.lock().recipes.len()
     }
 
     pub(super) fn select(&self, slot: usize) {
-        let mut state = self.pool.lock().unwrap();
+        let mut state = self.pool.lock();
         state.available.retain(|index| *index != slot);
         state.available.push_front(slot);
     }
@@ -169,8 +180,9 @@ impl Fixture {
     pub(super) fn probe(&self, entry: &str, id: &str, slot: usize) -> Vec<String> {
         self.select(slot);
         self.calls.lock().unwrap().clear();
-        self.bundle(entry, id);
-        self.calls
+        let probe = self.bundle(entry, id);
+        let restored = self
+            .calls
             .lock()
             .unwrap()
             .iter()
@@ -178,7 +190,13 @@ impl Fixture {
                 Call::RestoreGeneration(recipe) => Some(recipe.compiled.identity.clone()),
                 _ => None,
             })
-            .collect()
+            .collect();
+        self.pool
+            .request(Call::Dispose(Generation {
+                generation: probe.generation,
+            }))
+            .unwrap();
+        restored
     }
 }
 

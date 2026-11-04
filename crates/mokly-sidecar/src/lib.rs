@@ -11,6 +11,7 @@ pub mod definition_metadata;
 pub mod definitions;
 pub mod diagnostics;
 pub mod error;
+mod method_results;
 pub mod methods;
 pub mod operations;
 pub mod pool;
@@ -58,3 +59,7 @@ mod pool_recycle;
 #[cfg(test)]
 #[path = "_tests_/trace_capture.rs"]
 mod trace_capture;
+
+#[cfg(test)]
+#[path = "_tests_/compiled_fixture.rs"]
+mod compiled_fixture;

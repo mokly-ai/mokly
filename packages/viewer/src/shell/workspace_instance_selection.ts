@@ -12,7 +12,7 @@ import type { InspectorHandle } from "@mokly/ui/inspector";
 
 import type { GeneratedComponentView } from "../components/views.js";
 
-import { useOptionalShellStore } from "./store_context.js";
+import { useShellStore } from "./store_context.js";
 
 /** Keep instance selection across preview changes and focus Props after a pick. */
 export function useWorkspaceInstanceSelection(
@@ -20,13 +20,13 @@ export function useWorkspaceInstanceSelection(
   views: readonly GeneratedComponentView[],
   inspectorRef: RefObject<InspectorHandle | null>,
 ) {
-  const store = useOptionalShellStore();
-  const viewport = store?.state.selection.viewport ?? "both";
+  const store = useShellStore();
+  const viewport = store.state.selection.viewport;
   const [activeViewport, setActiveViewport] = useState<"desktop" | "mobile">(
     viewport === "mobile" ? "mobile" : "desktop",
   );
   const [selectedKey, setSelectedKey] = useState<string | undefined>(
-    store?.state.route.instance,
+    store.state.route.instance,
   );
   const openedInstance = useRef<string | undefined>(undefined);
   const resolvedViewport = views.some(
@@ -42,10 +42,10 @@ export function useWorkspaceInstanceSelection(
 
   useEffect(() => {
     setActiveViewport(
-      store?.state.route.viewport === "mobile" ? "mobile" : "desktop",
+      store.state.route.viewport === "mobile" ? "mobile" : "desktop",
     );
-    setSelectedKey(store?.state.route.instance);
-  }, [entryPath, store?.state.route.instance, store?.state.route.viewport]);
+    setSelectedKey(store.state.route.instance);
+  }, [entryPath, store.state.route.instance, store.state.route.viewport]);
 
   useEffect(() => {
     if (selectedKey && activeView?.usage && !selectedInstance)
@@ -59,7 +59,7 @@ export function useWorkspaceInstanceSelection(
     }
     if (openedInstance.current === selectedInstance.key) return;
     openedInstance.current = selectedInstance.key;
-    store?.setDetails(true, "props");
+    store.setDetails(true, "props");
   }, [selectedInstance, store]);
 
   const selectInstance = useCallback(
@@ -68,8 +68,8 @@ export function useWorkspaceInstanceSelection(
       setActiveViewport(nextViewport);
       setSelectedKey(key);
       if (!openProps) return;
-      store?.setExpandedFrame(undefined);
-      store?.setDetails(true, "props");
+      store.setExpandedFrame(undefined);
+      store.setDetails(true, "props");
       queueMicrotask(() => inspectorRef.current?.focusTab("props"));
     },
     [store],

@@ -48,7 +48,7 @@ interface ShellStoreProviderProps {
   frameBaseUrl?: string | URL;
   /** The validated index the shell starts from. */
   index: CatalogueReadModel;
-  /** Details already held, adopted under their fences before the first render. */
+  /** Details already held before the first render. */
   initialDetails?: readonly (readonly [DetailRequest, EntryDetailV4])[];
   initialState?: ShellInitialState;
   interactive: boolean;

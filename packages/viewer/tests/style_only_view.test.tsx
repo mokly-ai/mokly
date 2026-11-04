@@ -8,8 +8,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { renderToStaticMarkup } from "react-dom/server";
-
 import type { EntryChangeReason } from "@mokly/model";
 
 import type { ComparedEntry, ReviewView } from "../src/review/types.js";
@@ -17,6 +15,8 @@ import { selectedComparisonViews } from "../src/shell/comparison_selection.js";
 import { ComparisonViews } from "../src/shell/comparison_views.js";
 import type { ComparisonPresentation } from "../src/shell/use_comparison.js";
 import { isStyleOnlyView } from "../src/shell/workspace_style_evidence.js";
+
+import { storeMarkup } from "./shell_markup.js";
 
 const SHEET = "static/theme.css";
 const OTHER = "static/other.css";
@@ -146,7 +146,7 @@ function heading(
     url: `https://example.test/mokly-viewer/diffs/generations/${"b".repeat(64)}/`,
   };
   const views = selectedComparisonViews(loaded, presentation, entry);
-  const markup = renderToStaticMarkup(
+  const markup = storeMarkup(
     <ComparisonViews
       entryId={entry.path}
       entryKind={kind}

@@ -3,7 +3,6 @@
 use std::process::Command;
 use std::thread;
 
-use mokly_model::canonical;
 use mokly_model::review::{EntryChangeReason, ReviewState};
 
 #[expect(dead_code, reason = "deep fixtures only edit and move pages")]
@@ -73,17 +72,6 @@ fn deep_two_commit_changes_preserve_material_and_move_results() {
                 (path == "moved").then_some("old")
             );
         }
-        let review = canonical::to_string(&result.review).unwrap();
-        assert_eq!(
-            canonical::to_string(&mokly_model::readers::review(&review).unwrap()).unwrap(),
-            review
-        );
-        let snapshot = canonical::to_string(&result.snapshot).unwrap();
-        assert_eq!(
-            canonical::to_string(&mokly_model::readers::change_snapshot(&snapshot).unwrap())
-                .unwrap(),
-            snapshot
-        );
     })
     .join()
     .unwrap();

@@ -9,8 +9,6 @@ use mokly_sidecar::methods::{Bundle, ModuleResolution};
 use mokly_sidecar::results;
 use serde::Serialize;
 
-use crate::error::{InternalError, Result};
-
 /// The reserved logical prefix of installation metadata outside a side's source root.
 const INSTALLED: &str = "node_modules/.mokly-roots/installed/";
 
@@ -38,7 +36,7 @@ struct Settings {
     configuration_directory: String,
     repository_roots: Vec<String>,
     dependency_roots: Vec<String>,
-    peers: Option<BTreeMap<String, Option<String>>>,
+    peers: BTreeMap<String, Option<String>>,
 }
 
 /// Convert physical settings to names that are stable across equivalent checkouts.
@@ -100,8 +98,8 @@ pub(crate) fn derive(
     maps: &ClassMaps,
     working_root: &Path,
     cache_namespace: Option<&Path>,
-) -> Result<RenderEnvironment> {
-    let compiled = result.compiled.as_ref();
+) -> RenderEnvironment {
+    let compiled = &result.compiled;
     let mut paths = PathMapper::new(working_root, cache_namespace);
     let settings = settings(params, result, &mut paths);
     paths.report_external();
@@ -109,21 +107,21 @@ pub(crate) fn derive(
         .modules
         .iter()
         .any(|module| PREVIEWS.contains(&module.path.as_str()));
-    let resolution_digests = compiled
-        .map(|compiled| resolution(&compiled.metadata_inputs, previewed))
-        .unwrap_or_default();
+    let resolution_digests = resolution(&compiled.metadata_inputs, previewed);
     let mut class_map_digests = BTreeMap::new();
     for (path, map) in maps {
-        class_map_digests.insert(path.clone(), json_digest(map)?);
+        let bytes = serde_json::to_vec(map)
+            .expect("a CSS Modules class map contains only strings and string keys");
+        class_map_digests.insert(path.clone(), digest(&bytes));
     }
-    Ok(RenderEnvironment {
-        environment: json_digest(&settings)?,
+    let settings = serde_json::to_vec(&settings)
+        .expect("render environment settings contain only strings and string-keyed maps");
+    RenderEnvironment {
+        environment: digest(&settings),
         resolution_digests,
         class_map_digests,
-        runtime_packages: compiled
-            .map(|compiled| compiled.peers.keys().map(|peer| package(peer)).collect())
-            .unwrap_or_default(),
-    })
+        runtime_packages: compiled.peers.keys().map(|peer| package(peer)).collect(),
+    }
 }
 
 fn settings(params: &Bundle, result: &results::Bundle, paths: &mut PathMapper<'_>) -> Settings {
@@ -153,22 +151,16 @@ fn settings(params: &Bundle, result: &results::Bundle, paths: &mut PathMapper<'_
             .collect(),
         dependency_roots: result
             .compiled
-            .as_ref()
-            .map(|compiled| {
-                compiled
-                    .dependency_roots
-                    .iter()
-                    .map(|path| paths.map(path))
-                    .collect()
-            })
-            .unwrap_or_default(),
-        peers: result.compiled.as_ref().map(|compiled| {
-            compiled
-                .peers
-                .iter()
-                .map(|(name, path)| (name.clone(), path.as_deref().map(|path| paths.map(path))))
-                .collect()
-        }),
+            .dependency_roots
+            .iter()
+            .map(|path| paths.map(path))
+            .collect(),
+        peers: result
+            .compiled
+            .peers
+            .iter()
+            .map(|(name, path)| (name.clone(), path.as_deref().map(|path| paths.map(path))))
+            .collect(),
     }
 }
 
@@ -200,13 +192,6 @@ pub(crate) fn resolution(
             value.as_ref().map(|value| (name.to_owned(), value.clone()))
         })
         .collect()
-}
-
-fn json_digest(value: &impl Serialize) -> Result<String> {
-    match serde_json::to_vec(value) {
-        Ok(bytes) => Ok(digest(&bytes)),
-        Err(source) => Err(InternalError::Json { source }.into()),
-    }
 }
 
 #[cfg(test)]

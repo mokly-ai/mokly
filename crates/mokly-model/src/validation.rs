@@ -20,14 +20,10 @@ pub struct PropValidator {
 /// Test a candidate against an already validated property schema without coercion.
 /// HTML union coercion uses this same JSON Schema engine in member order.
 pub fn accepts(schema: &PropSchema, value: &DataValue) -> bool {
-    let schema = match serde_json::to_value(schema) {
-        Ok(schema) => schema,
-        Err(_) => return false,
-    };
-    let value = match serde_json::to_value(value) {
-        Ok(value) => value,
-        Err(_) => return false,
-    };
+    let schema = serde_json::to_value(schema)
+        .expect("PropSchema contains only JSON data and string property keys");
+    let value = serde_json::to_value(value)
+        .expect("DataValue contains only JSON data and string object keys");
     if limits::check(&value, true).is_err() {
         return false;
     }

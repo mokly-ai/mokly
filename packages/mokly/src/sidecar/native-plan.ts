@@ -29,10 +29,9 @@ export interface NativePlan {
  * recorded. An import that may have taken a fallback path stays unplanned.
  */
 export async function planNative(
-  metafile: Metafile | undefined,
+  metafile: Metafile,
   paths: ModulePaths,
 ): Promise<NativePlan> {
-  if (!metafile) throw new Error("the native compile returned no metafile");
   const scope = new PackageScope();
   const targets = new Map<string, Promise<Target | undefined>>();
   const target = (file: string) => {

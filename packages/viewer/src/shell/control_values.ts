@@ -214,14 +214,14 @@ export function controlTarget(
           removed: row.removed,
         }
       : undefined;
-  if (entry.kind !== "screen" || !entry.propSchema) return undefined;
+  if (entry.kind !== "screen") return undefined;
   return {
     path: entry.path,
     title: entry.title,
     kind: "screen",
     propSchema: entry.propSchema,
-    props: entry.props ?? {},
-    controls: entry.controls ?? {},
+    props: entry.props,
+    controls: entry.controls,
     ...(controlOrder ? { controlOrder } : {}),
     suppliedSlots: [],
     removed,

@@ -2,8 +2,6 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import test from "node:test";
 
-import { renderToStaticMarkup } from "react-dom/server";
-
 import type { ColorScheme } from "@mokly/model";
 
 import { shellCatalogueModel } from "../src/catalogue/shell_model.js";
@@ -15,6 +13,7 @@ import {
 } from "../src/shell/previews.js";
 
 import { indexFixture } from "./catalogue_v9_fixture.js";
+import { storeMarkup } from "./shell_markup.js";
 
 const BAND =
   '<p class="mbk-previous mbk-scheme-fallback mbk-reset" data-color-scheme-fallback=""><span class="mbk-frame-scheme-note mbk-reset">Light only</span></p>';
@@ -27,7 +26,7 @@ function fixtureDocument(colorSchemes: ColorScheme[]) {
 
 test("a current document with no dark render names its fallback above its pane", () => {
   const stage = (colorSchemes: ColorScheme[], hasDarkFragments: boolean) =>
-    renderToStaticMarkup(
+    storeMarkup(
       <DocumentStageFrame
         entry={fixtureDocument(colorSchemes)}
         hasDarkFragments={hasDarkFragments}
@@ -99,7 +98,7 @@ function removedStage(
     removed,
   );
   assert.ok(data);
-  return renderToStaticMarkup(<RemovedPreviewStage data={data} />);
+  return storeMarkup(<RemovedPreviewStage data={data} />, { index });
 }
 
 test("a removed document with no dark render adds the note to its label", () => {

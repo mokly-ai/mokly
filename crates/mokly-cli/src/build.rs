@@ -34,8 +34,6 @@ pub struct BuildSummary {
     pub counts: BTreeMap<EntryKind, usize>,
     /// All sorted and deduplicated warnings from this attempt.
     pub warnings: Vec<Warning>,
-    /// Sources awaiting JavaScript description in the sidecar milestone.
-    pub deferred_modules: Vec<String>,
 }
 
 /// Typed build failure; warning records survive both error paths.
@@ -101,14 +99,6 @@ pub enum BuildError {
     /// The command was interrupted before successful completion.
     #[error("[mokly-cli/build] build cancelled")]
     Cancelled,
-    /// The injected definition provider cannot evaluate discovered JavaScript.
-    #[error("[mokly-cli/build] JavaScript rendering is unavailable for {}", .modules.join(", "))]
-    Deferred {
-        /// Repository-relative JavaScript inputs awaiting an implementation.
-        modules: Vec<String>,
-        /// Warnings produced by preparation.
-        warnings: Vec<Warning>,
-    },
     /// Graph preparation or complete view rendering failed.
     #[error("[mokly-cli/build] rendering failed: {source}")]
     Rendering {

@@ -29,7 +29,7 @@ fn only_definitions_without_a_source_path_outside_stories_files_are_unattributed
         "folders": [{ "handle": "specs/kit.mockup.tsx#folder" }],
         "components": [{ "handle": "specs/label.stories.tsx#default" }],
         "stories": [],
-        "warnings": [],
+
     }))
     .unwrap();
     let files = [

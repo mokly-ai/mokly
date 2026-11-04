@@ -70,10 +70,7 @@ JavaScript recipes retain handles separately from source attribution, saved
 React slots, module edges, class-map identity, and the resolved handle table.
 Resolution metadata and consumed-module directories remain private watch
 inputs, including missing manifest and tsconfig candidates. An opaque provider lease keeps the bundle alive while a prepared model
-or graph uses it. `DeferredDefinitions` marks its result as deferred and
-leaves those files in `deferred_modules` without evaluating them. A successful
-provider clears that deferred set, so a build cannot report success after
-skipping JavaScript inputs. JavaScript diagnostics retain module and export
+or graph uses it. JavaScript diagnostics retain module and export
 attribution without invented coordinates.
 
 Declared controls pass the Rust validator. Story control hints do not change

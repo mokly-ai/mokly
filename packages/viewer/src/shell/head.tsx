@@ -15,7 +15,7 @@ import {
   type VariantParentResolution,
 } from "./catalogue_branch_point.js";
 import { structuredCrumbTrail, type CatalogueCrumb } from "./crumbs.js";
-import { useOptionalShellStore } from "./store_context.js";
+import { useShellStore } from "./store_context.js";
 import type { RouteTarget } from "./target.js";
 import { variantHeading } from "./view_title.js";
 
@@ -32,15 +32,15 @@ const SCHEMES: readonly Segment<ViewerSelection["colorScheme"]>[] = [
 
 /** Viewport selection shown in the header of a screen route. */
 export function ViewportSwitch() {
-  const store = useOptionalShellStore();
+  const store = useShellStore();
   return (
     <SegmentedControl
       attribute="data-viewport-option"
       label="Viewport"
       mark="data-mokly-viewswitch"
-      onChange={(value) => store?.selectViewport(value)}
+      onChange={(value) => store.selectViewport(value)}
       segments={VIEWPORTS}
-      value={store?.state.selection.viewport ?? "both"}
+      value={store.state.selection.viewport}
     />
   );
 }
@@ -53,15 +53,15 @@ export function ViewportSwitch() {
  * stylesheet reveals whichever fits the current width.
  */
 export function SchemeSwitch() {
-  const store = useOptionalShellStore();
+  const store = useShellStore();
   return (
     <SegmentedControl
       attribute="data-color-scheme-option"
       label="Preview color scheme"
       mark="data-mokly-schemeswitch"
-      onChange={(value) => store?.selectColorScheme(value)}
+      onChange={(value) => store.selectColorScheme(value)}
       segments={SCHEMES}
-      value={store?.state.selection.colorScheme ?? "light"}
+      value={store.state.selection.colorScheme}
     />
   );
 }
@@ -78,15 +78,15 @@ export function ScreenHead(props: {
   heading: string;
   path?: string | undefined;
 }) {
-  const store = useOptionalShellStore();
+  const store = useShellStore();
   return (
     <ScreenHeader
       action={props.action}
       crumbs={props.crumbs}
       heading={props.heading}
-      onCopyPath={(path) => store?.copy(path, `Copied path ${path}`)}
+      onCopyPath={(path) => store.copy(path, `Copied path ${path}`)}
       onRevealFolder={({ folder }) => {
-        if (folder) store?.revealFolder(folder.section, folder.path);
+        if (folder) store.revealFolder(folder.section, folder.path);
       }}
       path={props.path}
       status={props.status}

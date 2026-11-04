@@ -125,7 +125,7 @@ impl ChangesPass {
             &result.review,
             &result.snapshot,
             result.after.generation_key(),
-        ))?;
+        ));
         let accepted = Arc::new(Accepted {
             source: Some(source.clone()),
             cancel: cancel.clone(),

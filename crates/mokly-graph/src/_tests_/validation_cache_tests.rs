@@ -142,7 +142,6 @@ pub(super) fn probe(retain: bool, missing_dark_mobile: bool) -> Probe {
         documents: BTreeMap::new(),
         slot_fragments: BTreeMap::new(),
         elements: BTreeMap::new(),
-        deferred_modules: vec![],
         warnings: vec![],
     };
     let mut plans = BTreeMap::new();

@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 use mokly_sidecar::methods::ModuleResolution;
-use mokly_sidecar::postcss_evidence::{Coverage, Evidence, Read};
+use mokly_sidecar::postcss_evidence::{Evidence, Read};
 use mokly_source_interface::read_evidence::{ReadBaseline, ReadCoverage};
 use mokly_source_interface::tree::{FileKind, Node, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
@@ -46,7 +46,7 @@ fn base_modules_use_selected_dependencies_and_undeclared_reads_stay_outside_the_
         directories: vec![],
     };
     let evidence = Evidence {
-        coverage: Coverage::Incomplete,
+        coverage: "incomplete".into(),
         modules: vec![
             "/base/postcss.mjs".into(),
             "/install/node_modules/plugin/index.mjs".into(),

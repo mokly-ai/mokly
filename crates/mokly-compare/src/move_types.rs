@@ -53,13 +53,11 @@ impl Pairing {
             .iter()
             .filter_map(|pair| {
                 Some((
-                    before
-                        .entries
-                        .get(pair.before?)?
+                    before.entries[pair.before?]
                         .metadata
                         .path
                         .to_ascii_lowercase(),
-                    after.entries.get(pair.after?)?.metadata.path.clone(),
+                    after.entries[pair.after?].metadata.path.clone(),
                 ))
             })
             .collect()

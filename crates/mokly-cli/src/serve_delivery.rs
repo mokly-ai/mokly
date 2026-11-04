@@ -135,7 +135,7 @@ pub(super) fn create(
 /// The background pass renders no more views at once than Serve has workers or
 /// sidecar admission slots, so its renders never queue for a sidecar among themselves.
 fn background_batch(workers: u32, sidecars: usize) -> usize {
-    (workers as usize).min(sidecars).max(1)
+    (workers as usize).min(sidecars)
 }
 
 #[cfg(test)]

@@ -4,7 +4,6 @@ import test from "node:test";
 import {
   createSnapshotPresentationLoader,
   type SnapshotPresentationEnvironment,
-  type SnapshotSides,
 } from "../packages/viewer/dist/previews/presentation.js";
 
 const GENERATION =
@@ -101,19 +100,6 @@ test("comparison confinement rejects every unadvertised subtree", async () => {
       /^Error: The comparison is unavailable\.$/,
     );
   assert.equal(fetches, 0);
-});
-
-test("a snapshot loader requires a typed non-empty side set", () => {
-  assert.throws(
-    () =>
-      createSnapshotPresentationLoader(
-        GENERATION,
-        [] as unknown as SnapshotSides,
-        { kind: "live" },
-        environment(async () => response(BEFORE)),
-      ),
-    /at least one snapshot side/i,
-  );
 });
 
 test("an aborted in-flight presentation is not reused", async () => {

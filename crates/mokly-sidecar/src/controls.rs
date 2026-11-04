@@ -77,7 +77,7 @@ pub enum Control {
 
 /// Storybook control annotations applied after schema inference.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct StoryHints {
     /// Primitive choices of the derived select.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -99,7 +99,6 @@ pub struct StoryHints {
 
 /// Numeric Storybook annotations; they do not change schema validation.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
-#[serde(deny_unknown_fields)]
 pub struct StoryNumberHints {
     /// Lower control bound.
     #[serde(skip_serializing_if = "Option::is_none")]

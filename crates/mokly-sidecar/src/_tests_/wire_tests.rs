@@ -2,6 +2,7 @@
 
 use serde_json::{Value, json};
 
+use crate::compiled_fixture::compiled;
 use crate::methods::Call;
 use crate::wire::{MethodResult, Request, Response};
 
@@ -20,7 +21,7 @@ fn every_method_and_result_round_trips() {
         "styles":[{"css":"button{color:red}","owners":[]}],
         "markers":[],
         "resources":[],
-        "warnings":[],
+
         "instances":[],
         "slots":[]
     });
@@ -29,12 +30,12 @@ fn every_method_and_result_round_trips() {
         (
             "bundle",
             json!({"entryFiles":[],"renderer":null,"storiesFiles":[],"moduleResolution":{},"sourceRoot":"/checkout","configurationDirectory":".","repositoryRoots":[]}),
-            json!({"generation":"g","modules":[{"path":"specs/a.tsx","imports":["ui/button.tsx"]}],"warnings":[]}),
+            json!({"generation":"g","compiled":compiled("g"),"modules":[{"path":"specs/a.tsx","imports":["ui/button.tsx"]}]}),
         ),
         (
             "describe",
             json!({"generation":"g"}),
-            json!({"screens":[],"pages":[],"useCases":[],"folders":[],"components":[],"warnings":[],"stories":[]}),
+            json!({"screens":[],"pages":[],"useCases":[],"folders":[],"components":[],"stories":[]}),
         ),
         ("renderScreen", render, fragment.clone()),
         ("renderComponent", component, fragment.clone()),
@@ -42,7 +43,7 @@ fn every_method_and_result_round_trips() {
         (
             "renderPage",
             json!({"generation":"g","handle":"specs/page.ts#Page"}),
-            json!({"html":"<!doctype html><html></html>","resources":[],"warnings":[]}),
+            json!({"html":"<!doctype html><html></html>","resources":[]}),
         ),
         (
             "processCss",
@@ -76,7 +77,7 @@ fn every_method_and_result_round_trips() {
 
 #[test]
 fn authoring_metadata_is_preserved_until_catalogue_validation() {
-    let result = json!({"screens":[],"pages":[],"useCases":[],"folders":[],"components":[{"handle":"ui/button.tsx#Button","controls":{"tone":{"kind":"select","options":[]}},"movedFrom":"old/button","variants":[],"props":{},"slots":[],"tags":[]}],"warnings":[],"stories":[]});
+    let result = json!({"screens":[],"pages":[],"useCases":[],"folders":[],"components":[{"handle":"ui/button.tsx#Button","controls":{"tone":{"kind":"select","options":[]}},"movedFrom":"old/button","variants":[],"props":{},"slots":[],"tags":[]}],"stories":[]});
     let request: Request =
         serde_json::from_value(json!({"id":1,"method":"describe","params":{"generation":"g"}}))
             .unwrap();

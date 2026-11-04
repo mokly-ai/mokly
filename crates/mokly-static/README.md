@@ -39,7 +39,7 @@ The caller uses its shared workspace initializer for removed visual details
 before applying the comparison workspace projection.
 The comparison inventory is finalized before deployment identity. Disabled or
 unavailable Changes writes no generation; both states remain explicit in the index.
-The strict index reader runs before installation and retains its diagnostic on failure.
+Assembly trusts the typed index and detail records from the same build.
 Publication takes its base ref and commit from that same result.
 
 `OutputTransactions` implements `dyn Transactions` over injected `Files` and
@@ -129,7 +129,7 @@ exercise retained recovery bytes through debug-only fault adapters.
 - [`src/frame_probe.rs`](./src/frame_probe.rs) provides `inject`, which writes
   the frame probe metadata and script into a document head.
 - [`src/modules.rs`](./src/modules.rs) provides `validate`, which checks
-  package module requests against the browser inventory.
+  package module requests against the browser inventory at package input.
 - [`src/error.rs`](./src/error.rs) defines `Error`, the typed static-output
   failure with its retained recovery paths.
 

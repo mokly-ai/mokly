@@ -237,6 +237,8 @@ view after the edit and counts real process starts and hello calls.
 - [`src/render_environment.rs`](./src/render_environment.rs) derives the inputs
   that every render input key of one side shares, and names their paths
   without the checkout folder.
+- [`src/transport_values.rs`](./src/transport_values.rs) maps typed sidecar
+  props, controls, owners, and source coordinates into catalogue records.
 - [`src/postcss.rs`](./src/postcss.rs) runs consumer PostCSS in an explicit
   side-specific context before scoping.
 - [`src/stylesheet_cache.rs`](./src/stylesheet_cache.rs) defines

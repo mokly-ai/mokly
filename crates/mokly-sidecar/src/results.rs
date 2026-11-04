@@ -10,7 +10,6 @@ use crate::usage::{InstanceDraft, SlotDraft};
 
 /// Package version reported during hello.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(deny_unknown_fields)]
 #[ts(rename = "HelloResult")]
 pub struct Hello {
     /// Exact sidecar npm package version.
@@ -19,7 +18,6 @@ pub struct Hello {
 
 /// A module's ordered import edges.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(deny_unknown_fields)]
 pub struct Module {
     /// Digest of the bytes that the bundler actually consumed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -31,19 +29,8 @@ pub struct Module {
     pub imports: Vec<String>,
 }
 
-/// A sidecar warning before catalogue attribution.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(deny_unknown_fields)]
-pub struct Warning {
-    /// Stable build warning code.
-    pub code: WarningCode,
-    /// Safe diagnostic detail.
-    pub message: String,
-}
-
 /// An unevaluated bundle's module graph.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(deny_unknown_fields)]
 #[ts(rename = "BundleResult")]
 pub struct Bundle {
     /// Used repository dependency directories whose importer lookup is not mapped.
@@ -59,20 +46,15 @@ pub struct Bundle {
     #[ts(skip)]
     pub epoch: u64,
     /// Immutable code for restoration and evaluation-only reuse.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub compiled: Option<CompiledGeneration>,
+    pub compiled: CompiledGeneration,
     /// Content-addressed bundle id.
     pub generation: String,
     /// Complete module graph.
     pub modules: Vec<Module>,
-    /// Nonfatal bundling diagnostics.
-    pub warnings: Vec<Warning>,
 }
 
 /// Rendered fragment and its declared resources.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(deny_unknown_fields)]
 #[ts(rename = "RenderResult")]
 pub struct Render {
     /// Rendered HTML fragment.
@@ -87,21 +69,16 @@ pub struct Render {
     pub instances: Vec<InstanceDraft>,
     /// Supplied slots and their physical placements.
     pub slots: Vec<SlotDraft>,
-    /// Nonfatal render diagnostics.
-    pub warnings: Vec<Warning>,
 }
 
 /// Complete page document; the core applies the document safety rules.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(deny_unknown_fields)]
 #[ts(rename = "PageResult")]
 pub struct Page {
     /// Complete synchronous page HTML.
     pub html: String,
     /// Declared public resource seeds.
     pub resources: Vec<String>,
-    /// Nonfatal render diagnostics.
-    pub warnings: Vec<Warning>,
 }
 
 /// PostCSS dependency kind used by the watcher.
@@ -116,7 +93,6 @@ pub enum DependencyKind {
 
 /// A file or directory reported by consumer PostCSS.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(deny_unknown_fields)]
 pub struct Dependency {
     /// Dependency kind.
     pub kind: DependencyKind,
@@ -134,7 +110,6 @@ pub struct Dependency {
 
 /// Consumer PostCSS result.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(deny_unknown_fields)]
 #[ts(rename = "CssResult")]
 pub struct Css {
     /// Context read witnesses, independent of plugin dependency declarations.
@@ -152,26 +127,4 @@ pub struct Css {
     pub text: String,
     /// Watch dependencies.
     pub dependencies: Vec<Dependency>,
-}
-
-/// Stable build warning categories.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "kebab-case")]
-pub enum WarningCode {
-    /// Base dependencies fell back to the working tree.
-    BaseDependencies,
-    /// A component declares a stylesheet more than once.
-    DuplicateComponentStylesheet,
-    /// HTML parsing moved an element out of a table.
-    HtmlFosterParented,
-    /// A body does not reference a declared prop.
-    HtmlUnusedProps,
-    /// A styled link has an overlapping ancestor.
-    LinkControlAncestor,
-    /// A styled link has an overlapping descendant.
-    LinkControlDescendant,
-    /// A marker occurred inside raw text.
-    MarkerInRawText,
-    /// Inference excluded a non-data prop.
-    PropsNotData,
 }

@@ -1,10 +1,7 @@
 //! Private captures keep bytes and trusted metadata, including deeply nested trees.
 
 use std::collections::BTreeMap;
-use std::io::Write;
 
-use flate2::Compression;
-use flate2::write::ZlibEncoder;
 use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_graph::cache::Artifact;
@@ -20,9 +17,6 @@ use mokly_model::usage::{CatalogueUsage, ComponentInputOwner};
 use mokly_model::{wire_decode, wire_props};
 
 use super::EncodedView;
-use crate::capture_annotations::RegionRecord;
-use crate::capture_error::{CaptureError, CaptureInternalError};
-use crate::capture_nodes::{self, FlatNode};
 
 fn artifact(tree: Vec<Node>) -> Artifact {
     Artifact {
@@ -113,7 +107,7 @@ fn encoded_views_preserve_bytes_and_all_trusted_annotations() {
     let input = artifact(nodes);
     let encoded = EncodedView::encode(&input).unwrap();
     for _ in 0..2 {
-        let output = encoded.restore().unwrap();
+        let output = encoded.restore();
         assert_eq!(output.bytes, input.bytes);
         assert_eq!(output.content_type, input.content_type);
         let before = input.document.as_ref().unwrap();
@@ -161,51 +155,8 @@ fn capture_and_restore_are_iterative_and_keep_authored_owner_attributes_untruste
     let encoded = EncodedView::encode(&input).unwrap();
     assert!(encoded.bytes() > 0);
     assert!(encoded.bytes() < input.byte_cost());
-    let output = encoded.restore().unwrap();
+    let output = encoded.restore();
     assert_eq!(output.document.unwrap().tree, input.document.unwrap().tree);
-}
-
-#[test]
-fn corrupt_internal_frames_return_typed_errors() {
-    let mut encoded = EncodedView::encode(&artifact(vec![])).unwrap();
-    encoded.payload = encoded.payload[..2].to_vec().into_boxed_slice();
-    assert!(matches!(
-        encoded.restore(),
-        Err(CaptureError::Internal(
-            CaptureInternalError::DecodeIo { .. }
-        ))
-    ));
-    let bad = vec![FlatNode::Region {
-        region: RegionRecord::from(&Region {
-            id: "r".into(),
-            kind: RegionKind::Root {
-                path: "card".into(),
-            },
-        }),
-        children: 1,
-    }];
-    assert!(capture_nodes::restore(bad).is_err());
-}
-
-#[test]
-fn zlib_failure_during_json_decode_reports_decompression() {
-    let mut encoded = EncodedView::encode(&artifact(vec![])).unwrap();
-    let mut compressor = ZlibEncoder::new(Vec::new(), Compression::fast());
-    compressor.write_all(br#"{"tree":[]}"#).unwrap();
-    let mut payload = compressor.finish().unwrap();
-    *payload.last_mut().unwrap() ^= 0xff;
-    encoded.payload = payload.into_boxed_slice();
-    encoded.bytes_len = 0;
-    let error = encoded.restore().unwrap_err();
-    assert!(matches!(
-        error,
-        CaptureError::Internal(CaptureInternalError::DecodeIo { .. })
-    ));
-    assert!(
-        error
-            .to_string()
-            .starts_with("[mokly-compare/capture] input decompression failed:")
-    );
 }
 
 #[test]
@@ -239,7 +190,7 @@ fn capture_preserves_valid_props_at_the_64_level_limit() {
             ranges: vec![],
         };
         let encoded = EncodedView::encode(&input).unwrap();
-        let output = encoded.restore().unwrap();
+        let output = encoded.restore();
         assert_eq!(output.bytes, input.bytes);
         assert_eq!(
             output.document.unwrap().usage,
@@ -247,23 +198,4 @@ fn capture_preserves_valid_props_at_the_64_level_limit() {
         );
         assert!(encoded.retained_bytes() > encoded.bytes());
     }
-}
-
-#[test]
-fn malformed_json_reports_decoding_separately_from_encoding() {
-    let mut encoded = EncodedView::encode(&artifact(vec![])).unwrap();
-    let mut compressor = ZlibEncoder::new(Vec::new(), Compression::fast());
-    compressor.write_all(b"{").unwrap();
-    encoded.payload = compressor.finish().unwrap().into_boxed_slice();
-    encoded.bytes_len = 0;
-    let error = encoded.restore().unwrap_err();
-    assert!(matches!(
-        error,
-        CaptureError::Internal(CaptureInternalError::DecodeJson { .. })
-    ));
-    assert!(
-        error
-            .to_string()
-            .starts_with("[mokly-compare/capture] input decoding failed:")
-    );
 }

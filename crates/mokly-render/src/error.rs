@@ -75,12 +75,6 @@ pub enum RenderError {
         /// Stable dependency rule.
         reason: DependencyFailure,
     },
-    /// A typed response did not match the pending operation.
-    #[error("[mokly-render/sidecar-protocol] unexpected result for {method}")]
-    ResultKind {
-        /// Expected method.
-        method: &'static str,
-    },
     /// Render drafts disagree on a repeated logical input.
     #[error("[mokly-render/build-invalid] conflicting fragment input {key}")]
     Input {
@@ -109,7 +103,7 @@ pub enum DependencyFailure {
 /// Infrastructure errors retain their original type.
 #[derive(Debug, Error)]
 pub enum InternalError {
-    /// JSON transport conversion failed.
+    /// A projected filesystem path cannot be encoded in a bundle cache key.
     #[error("JSON conversion failed: {source}")]
     Json {
         /// Original JSON failure.
@@ -121,17 +115,6 @@ pub enum InternalError {
         /// Original source failure.
         source: SourceError,
     },
-}
-
-pub(crate) fn convert<T: serde::Serialize, U: serde::de::DeserializeOwned>(value: &T) -> Result<U> {
-    let value = match serde_json::to_value(value) {
-        Ok(value) => value,
-        Err(source) => return Err(InternalError::Json { source }.into()),
-    };
-    match serde_json::from_value(value) {
-        Ok(value) => Ok(value),
-        Err(source) => Err(InternalError::Json { source }.into()),
-    }
 }
 
 impl DependencyFailure {

@@ -120,9 +120,8 @@ A wrapper diagnostic names the importer's logical source path as its location
 and the wrapped file's logical name when it describes that module's exports.
 Peers resolve from the configuration directory. Virtual modules do not enter the source inventory. CSS Modules
 in dependencies use the same logical dependency names as their graph records.
-The sidecar fails closed when a map is absent. Installing maps after
-evaluation is a protocol failure. A changed map uses a new evaluation digest
-and retains the old generation until its final graph or request releases it.
+A changed map uses a new evaluation digest and retains the old generation
+until its final graph or request releases it.
 An evaluation-only change reuses compiled code without another compilation.
 Replays never compile the current filesystem for an old generation.
 
@@ -138,7 +137,7 @@ cache, or the bundler's implementation path.
 
 ## Compiled Recipes And Release
 
-The private `bundle` result carries `compiled`: code, runtime import key,
+Every private `bundle` result carries `compiled`: code, runtime import key,
 captured entry text, resolved peers, physical input digests,
 logical metadata digests, and the compilation identity. `restoreGeneration`
 installs that recipe with its original parameters, module graph, and evaluated generation id. The bundle result carries the graph once.

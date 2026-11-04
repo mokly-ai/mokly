@@ -8,7 +8,7 @@ use mokly_html::tree::{self, Node};
 use mokly_model::usage::{CatalogueUsage, ComponentRangeTarget};
 use serde::Serialize;
 
-use crate::error::{Error, InternalError, Result};
+use crate::error::{Error, Result};
 use crate::frame_probe_error::FrameProbeFailure;
 
 #[derive(Serialize)]
@@ -55,21 +55,13 @@ pub fn inject(document: &Composed, route: &str) -> Result<Vec<u8>> {
             if instances.len() > 1024 || ranges.len() > 4096 {
                 metadata.error = Some("limit");
             } else {
-                for (index, range) in ranges.iter().enumerate() {
-                    let parent = range
-                        .parent_id
-                        .as_ref()
-                        .and_then(|id| id.strip_prefix("r-"))
-                        .and_then(|value| value.parse::<usize>().ok());
-                    if range.id != format!("r-{index}")
-                        || parent.is_some_and(|parent| parent >= index)
-                        || (range.parent_id.is_some() && parent.is_none())
-                    {
-                        return Err(Error::FrameProbe {
-                            route: route.into(),
-                            reason: FrameProbeFailure::Ranges,
-                        });
-                    }
+                for range in ranges {
+                    let parent = range.parent_id.as_ref().map(|id| {
+                        id.strip_prefix("r-")
+                            .expect("Composed range ids use the r- prefix")
+                            .parse::<usize>()
+                            .expect("Composed range ids contain their integer index")
+                    });
                     let key = match &range.target {
                         ComponentRangeTarget::Instance { instance_key } => {
                             Some(instance_key.clone())
@@ -86,7 +78,7 @@ pub fn inject(document: &Composed, route: &str) -> Result<Vec<u8>> {
     if metadata.links.len() > 1024 {
         metadata.error = Some("limit");
     }
-    let mut text = encode(&metadata)?;
+    let mut text = encode(&metadata);
     if text.len() > 262_144 {
         metadata.error = Some("limit");
     }
@@ -94,7 +86,7 @@ pub fn inject(document: &Composed, route: &str) -> Result<Vec<u8>> {
         metadata.ranges.clear();
         metadata.links.clear();
         clear_links(&mut nodes);
-        text = encode(&metadata)?;
+        text = encode(&metadata);
     }
     let additions = vec![
         tree::element(
@@ -117,11 +109,10 @@ pub fn inject(document: &Composed, route: &str) -> Result<Vec<u8>> {
     Ok(serialize::html(&nodes).into_bytes())
 }
 
-fn encode(metadata: &Metadata) -> Result<String> {
-    match serde_json::to_string(metadata) {
-        Ok(text) => Ok(text),
-        Err(source) => Err(InternalError::Json { source }.into()),
-    }
+fn encode(metadata: &Metadata) -> String {
+    serde_json::to_string(metadata).expect(
+        "Inspector metadata contains strings, integer indices, and typed navigation records",
+    )
 }
 
 fn links(

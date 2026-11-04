@@ -68,14 +68,8 @@ pub(crate) fn prepare(
         }
         let mut schema = match &input.prop_schema {
             Some(schema) => schema.clone(),
-            None => match serde_json::to_value(&inferred) {
-                Ok(schema) => schema,
-                Err(error) => {
-                    return Err(
-                        Issue::new(Code::HtmlFrontMatter, error.to_string()).at(source.clone())
-                    );
-                }
-            },
+            None => serde_json::to_value(&inferred)
+                .expect("inferred prop schemas contain only JSON values and string property names"),
         };
         normalize_numbers(&mut schema);
         let validator = props::compile(&schema, parsed, source)?;

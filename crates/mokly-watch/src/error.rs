@@ -20,7 +20,7 @@ pub enum Error {
 /// Failures that callers report without branching.
 #[derive(Debug, thiserror::Error)]
 pub enum InternalError {
-    /// An already validated glob could not compile.
+    /// A PostCSS directory dependency supplied an invalid glob.
     #[error("watch pattern could not compile: {source}")]
     Glob {
         /// Glob parser failure.

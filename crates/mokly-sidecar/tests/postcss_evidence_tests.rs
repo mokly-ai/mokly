@@ -11,7 +11,7 @@ use mokly_sidecar::error::Result;
 use mokly_sidecar::methods::{Call, ModuleResolution, ProcessCss};
 use mokly_sidecar::pool::{Pool, SidecarPool};
 use mokly_sidecar::pool_options::{Launch, PoolOptions};
-use mokly_sidecar::postcss_evidence::{Coverage, Read};
+use mokly_sidecar::postcss_evidence::Read;
 use mokly_sidecar::process_clock::SystemClock;
 use mokly_sidecar::process_factory::NodeFactory;
 use mokly_sidecar::process_memory::{MemoryFactory, ResidentMemory};
@@ -115,10 +115,7 @@ result.messages.push({type:'dependency',file:'tokens.txt'});
             "{}",
             result.text
         );
-        assert!(matches!(
-            result.read_evidence.coverage,
-            Coverage::Incomplete
-        ));
+        assert_eq!(result.read_evidence.coverage, "incomplete");
         let versions: Vec<_> = result
             .read_evidence
             .reads

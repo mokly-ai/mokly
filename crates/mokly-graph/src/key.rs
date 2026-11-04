@@ -4,8 +4,6 @@ use mokly_model::canonical;
 use mokly_model::material::digest;
 use serde_json::Value;
 
-use crate::error::{InternalError, Result};
-
 /// A lowercase SHA-256 node input digest; never an output-bytes digest.
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct NodeKey(pub String);
@@ -40,10 +38,8 @@ pub fn key(kind: NodeKind, inputs: &[&[u8]]) -> NodeKey {
 }
 
 /// Encode structured inputs with UTF-16 object key order before hashing.
-pub fn data_key(kind: NodeKind, input: Value) -> Result<NodeKey> {
-    let encoded = match serde_json::to_vec(&canonical::sorted(input)) {
-        Ok(bytes) => bytes,
-        Err(source) => return Err(InternalError::Json { source }.into()),
-    };
-    Ok(key(kind, &[&encoded]))
+pub fn data_key(kind: NodeKind, input: Value) -> NodeKey {
+    let encoded = serde_json::to_vec(&canonical::sorted(input))
+        .expect("JSON values with string object keys always serialize");
+    key(kind, &[&encoded])
 }

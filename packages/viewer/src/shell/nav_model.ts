@@ -33,7 +33,7 @@ export function catalogueNavSections(
         entryKind: entry.kind,
         label: `${entry.title} · Removed`,
         title: entry.title,
-        tags: entry.tags ?? [],
+        tags: entry.tags,
         ...(folderTitles.length > 0 ? { folderTitles } : {}),
         removedPage: entry.kind === "page" || entry.kind === "document",
         ...(snapshotId ? { snapshotId } : {}),
@@ -70,12 +70,6 @@ export function disclosurePath(
   }
   return [];
 }
-
-/** The selection a render without a shell store shows: All, unsearched. */
-export const UNFILTERED_SELECTION: Pick<
-  ViewerSelection,
-  "view" | "search" | "tags"
-> = { view: "all", search: "", tags: [] };
 
 /** Whether one leaf survives the current search and Changes constraints. */
 export function navLeafVisible(
@@ -179,10 +173,7 @@ function nodePath(
 }
 
 /** Whether a row, its variants, its members, or its children hold `id`. */
-export function navNodeContains(
-  node: NavNode,
-  id: string | undefined,
-): boolean {
+function navNodeContains(node: NavNode, id: string | undefined): boolean {
   return (
     id !== undefined &&
     (node.kind === "leaf"

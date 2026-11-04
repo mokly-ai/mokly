@@ -39,30 +39,35 @@ exactly one of `result` or `error`; a method without a return value uses
 `result: null`. An event has `event` and `params` and no `id`. Requests on one
 sidecar run in order; the pool spreads independent requests across sidecars. A request waiting for its affine slot does not block the first later request that can use another slot.
 
+Decision: each side trusts the frames that the other side of the same version
+writes, and checks only author data. JSON decoding, the hello and version
+check, and the frame size limit still apply. Checks of every frame field on
+both sides were rejected, because the copies drift and increase the code size.
+
 ```json
 {"id":12,"method":"renderComponent","params":{"generation":"3f9c…","handle":"specs/ui/button.mockup.tsx#Button","entry":{"path":"ui/button","title":"Button"},"props":{"label":"Save"},"slots":{},"viewport":"mobile","colorScheme":"light","ignoreScope":"enabled"}}
-{"id":12,"result":{"html":"<!--mokly-output:start id=\"r-1\"--><button class=\"css-1x2\">Save</button><!--mokly-output:end id=\"r-1\"-->","styles":[{"css":".css-1x2{color:red}","owners":["ui/button"]}],"markers":[{"id":"r-1","payload":{"kind":"output"}}],"resources":[],"instances":[],"slots":[],"warnings":[]}}
+{"id":12,"result":{"html":"<!--mokly-output:start id=\"r-1\"--><button class=\"css-1x2\">Save</button><!--mokly-output:end id=\"r-1\"-->","styles":[{"css":".css-1x2{color:red}","owners":["ui/button"]}],"markers":[{"id":"r-1","payload":{"kind":"output"}}],"resources":[],"instances":[],"slots":[]}}
 {"event":"diagnostic","params":{"message":"…"}}
 ```
 
 ## Methods
 
-| Method              | Params                                                                                                            | Result                                                                              |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `hello`             | optional `timings` boolean, default `false`                                                                       | `{ version }`                                                                       |
-| `bundle`            | entry files, renderer, stories files, resolution settings, source root, configuration directory, repository roots | `{ generation, modules, warnings, compiled }`                                       |
-| `restoreGeneration` | generation, original bundle params, module graph, immutable compiled recipe                                       | nothing                                                                             |
-| `describe`          | generation                                                                                                        | `{ screens, pages, useCases, folders, components, stories, diagnostics, warnings }` |
-| `renderScreen`      | generation, handle, effective entry, props, viewport, colour scheme                                               | render result                                                                       |
-| `renderComponent`   | generation, handle, effective entry, props, tagged slots, viewport, colour scheme, enclosing ignore scope         | render result                                                                       |
-| `renderStory`       | generation, story id, props, viewport, colour scheme                                                              | render result                                                                       |
-| `renderPage`        | generation, handle                                                                                                | `{ html, resources, warnings }`                                                     |
-| `processCss`        | context, source root, repository roots, resolution settings, PostCSS module, source path, text                    | `{ text, dependencies, readEvidence }`                                              |
-| `bindings`          | generation, handle-to-path-and-title table                                                                        | nothing                                                                             |
-| `disposeContext`    | PostCSS context                                                                                                   | nothing                                                                             |
-| `cssModules`        | generation, class maps by stylesheet path                                                                         | nothing                                                                             |
-| `dispose`           | generation                                                                                                        | nothing                                                                             |
-| `shutdown`          | none                                                                                                              | nothing                                                                             |
+| Method              | Params                                                                                                            | Result                                                                    |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `hello`             | optional `timings` boolean, default `false`                                                                       | `{ version }`                                                             |
+| `bundle`            | entry files, renderer, stories files, resolution settings, source root, configuration directory, repository roots | `{ generation, modules, compiled }`                                       |
+| `restoreGeneration` | generation, original bundle params, module graph, immutable compiled recipe                                       | nothing                                                                   |
+| `describe`          | generation                                                                                                        | `{ screens, pages, useCases, folders, components, stories, diagnostics }` |
+| `renderScreen`      | generation, handle, effective entry, props, viewport, colour scheme                                               | render result                                                             |
+| `renderComponent`   | generation, handle, effective entry, props, tagged slots, viewport, colour scheme, enclosing ignore scope         | render result                                                             |
+| `renderStory`       | generation, story id, props, viewport, colour scheme                                                              | render result                                                             |
+| `renderPage`        | generation, handle                                                                                                | `{ html, resources }`                                                     |
+| `processCss`        | context, source root, repository roots, resolution settings, PostCSS module, source path, text                    | `{ text, dependencies, readEvidence }`                                    |
+| `bindings`          | generation, handle-to-path-and-title table                                                                        | nothing                                                                   |
+| `disposeContext`    | PostCSS context                                                                                                   | nothing                                                                   |
+| `cssModules`        | generation, class maps by stylesheet path                                                                         | nothing                                                                   |
+| `dispose`           | generation                                                                                                        | nothing                                                                   |
+| `shutdown`          | none                                                                                                              | nothing                                                                   |
 
 The [render records contract](./mokly-sidecar-render-records.md) defines the
 render result, bindings, entry context, usage drafts, and slot inputs. Page results follow the [pages contract](./mokly-pages.md).
@@ -70,7 +75,7 @@ render result, bindings, entry context, usage drafts, and slot inputs. Page resu
 ## Definitions
 
 `describe` returns every exported definition with its handle and a
-`diagnostics` list and generation warnings. The [definition transport](./mokly-sidecar-definitions.md)
+`diagnostics` list. The [definition transport](./mokly-sidecar-definitions.md)
 defines typed metadata, raw authored schemas, and source-attributed authoring
 errors. These errors keep their own codes and do not invalidate the transport.
 The core validates schemas with its single schema validator before it
@@ -121,8 +126,7 @@ the consumer runtime and attaches invocation source only to Mokly wrappers.
 
 `bundle` evaluates nothing. `cssModules` must install all maps before
 `describe` evaluates the generation. A bundle or evaluation failure returns
-`bundle-failed` with its source and diagnostic. A render without installed
-bindings fails closed under the [render records](./mokly-sidecar-render-records.md).
+`bundle-failed` with its source and diagnostic.
 
 ## Style Collection
 
@@ -215,15 +219,15 @@ define deadlines, process replacement, and shutdown grace.
 
 ## Fail-Closed Rules
 
-| Code                  | Condition                                                            | Presentation                                                                   |
-| --------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `sidecar-unavailable` | Node or the sidecar entry cannot be started                          | `build-invalid` naming the missing part                                        |
-| `sidecar-version`     | the sidecar version differs from the CLI version                     | `build-invalid` with both versions                                             |
-| `sidecar-protocol`    | a malformed frame, an unknown method, or a frame over the size limit | `build-invalid`; the sidecar is replaced                                       |
-| `sidecar-crashed`     | the process exits during a request                                   | the request's own code after one retry                                         |
-| `bundle-failed`       | bundling or evaluation fails                                         | `build-invalid` with the module and diagnostic                                 |
-| `render-failed`       | a render throws or returns a non-string                              | `build-invalid` with the entry and, for a view render, the viewport and scheme |
-| `render-timeout`      | a deadline passed twice                                              | `build-invalid` with the entry and the deadline                                |
+| Code                  | Condition                                        | Presentation                                                                   |
+| --------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------ |
+| `sidecar-unavailable` | Node or the sidecar entry cannot be started      | `build-invalid` naming the missing part                                        |
+| `sidecar-version`     | the sidecar version differs from the CLI version | `build-invalid` with both versions                                             |
+| `sidecar-protocol`    | a malformed frame or a frame over the size limit | `build-invalid`; the sidecar is replaced                                       |
+| `sidecar-crashed`     | the process exits during a request               | the request's own code after one retry                                         |
+| `bundle-failed`       | bundling or evaluation fails                     | `build-invalid` with the module and diagnostic                                 |
+| `render-failed`       | a render throws or returns a non-string          | `build-invalid` with the entry and, for a view render, the viewport and scheme |
+| `render-timeout`      | a deadline passed twice                          | `build-invalid` with the entry and the deadline                                |
 
 There is no fallback render and no partial output. Commands that need neither
 JavaScript nor PostCSS never start a sidecar or fail for these reasons.

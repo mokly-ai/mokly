@@ -88,8 +88,9 @@ props, saved variants, the schema, or a later render. Adapters map
 schema-defined `enum`, `const`, or `string` preset values to consumer
 callbacks or icons inside their own code.
 
-Validation runs when Mokly accepts a definition, on every saved variant
-before any render starts, on every wrapper invocation before its adapter
+Mokly validates the schema when it accepts a definition. It validates the
+props on every saved variant before any render starts, on every wrapper
+invocation before its adapter
 runs, and on the fully merged props of a live control edit. Index and detail
 readers decode and validate recorded props against the serialized schema
 before trusting a props key or a usage record. The wrapper, the viewer, and

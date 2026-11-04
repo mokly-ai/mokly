@@ -9,25 +9,25 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { renderToStaticMarkup } from "react-dom/server";
-
 import type { ColorScheme } from "@mokly/model";
 
 import { ShellIdentifierProvider } from "../src/shell/identifier_context.js";
 import type { ChangedView } from "../src/shell/view_marks.js";
 import { WorkspaceControls } from "../src/shell/workspace_controls.js";
 
+import { storeMarkup } from "./shell_markup.js";
+
 const DARK_MOBILE: readonly ChangedView[] = [
   { viewport: "mobile", colorScheme: "dark" },
 ];
 
-/** The controls without a store, so the viewport shows both and the scheme is Light. */
+/** The controls in a home-route store, so the viewport shows both and the scheme is Light. */
 function controls(
   changedViews: readonly ChangedView[],
   dark: boolean,
   effectiveColorScheme: ColorScheme,
 ): string {
-  return renderToStaticMarkup(
+  return storeMarkup(
     <ShellIdentifierProvider prefix="root-">
       <WorkspaceControls
         changedViews={changedViews}
@@ -76,7 +76,7 @@ test("a catalogue without dark previews has no Dark preview toggle", () => {
 
 test("the highlight state reaches the Highlight components toggle", () => {
   const toggle = () => undefined;
-  const on = renderToStaticMarkup(
+  const on = storeMarkup(
     <WorkspaceControls
       changedViews={[]}
       dark={false}
@@ -89,7 +89,7 @@ test("the highlight state reaches the Highlight components toggle", () => {
     /aria-label="Highlight components" aria-description="Inspect component regions and their supplied props." aria-pressed="true" title="Highlight components" data-workspace-highlight="">/,
   );
   const reason = "Waiting for the component preview.";
-  const unavailable = renderToStaticMarkup(
+  const unavailable = storeMarkup(
     <WorkspaceControls
       changedViews={[]}
       dark={false}

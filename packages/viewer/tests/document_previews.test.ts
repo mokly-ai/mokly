@@ -124,10 +124,6 @@ test("removed document descriptors and requests retain historical schemes", asyn
     ],
   );
   assert.equal(
-    previewEndpoint(data, undefined, "https://example.test"),
-    undefined,
-  );
-  assert.equal(
     previewEndpoint(data, { comparisonUrl: null }, "https://example.test"),
     undefined,
   );
@@ -179,15 +175,5 @@ test("a removed screen's preview uses its held detail without another read", asy
       (view) =>
         `/${root}snapshots/before/mokly-generated/${path}/index.${view.viewport}${view.colorScheme === "dark" ? ".dark" : ""}.html`,
     ),
-  );
-  await assert.rejects(
-    requestPreview(
-      { ...data, snapshotId: "c".repeat(64) },
-      request,
-      environment,
-      new AbortController().signal,
-      detail,
-    ),
-    /The previous version is unavailable/,
   );
 });

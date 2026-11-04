@@ -28,14 +28,12 @@ pub(crate) fn inputs(
         .flatten()
     {
         for pattern in &rule.paths {
-            let glob = match GlobBuilder::new(pattern)
+            let glob = GlobBuilder::new(pattern)
                 .literal_separator(true)
                 .backslash_escape(false)
                 .build()
-            {
-                Ok(glob) => glob.compile_matcher(),
-                Err(_) => return Err(invalid(pattern, "watch glob is invalid")),
-            };
+                .expect("watch rule globs were validated when loading the configuration")
+                .compile_matcher();
             rules.push((rule.action, glob));
         }
     }

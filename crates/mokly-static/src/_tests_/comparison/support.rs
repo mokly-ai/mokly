@@ -38,7 +38,7 @@ pub(super) fn catalogue(path: &str) -> PreparedCatalogue {
         elements: BTreeMap::new(),
         javascript: Default::default(),
         dependency_directories: Default::default(),
-        deferred_modules: vec![],
+
         warnings: vec![],
     }
 }
@@ -115,7 +115,6 @@ pub(super) fn result_with(
     ComparisonResult {
         resource_work: Default::default(),
         affected_lookups: 0,
-        validation_lookups: 0,
         warnings: vec![],
         counts: Default::default(),
         pairing: Default::default(),
