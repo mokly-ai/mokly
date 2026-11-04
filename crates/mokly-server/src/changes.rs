@@ -8,6 +8,7 @@ use std::time::Duration;
 use mokly_compare::comparison_types::ComparisonResult;
 use mokly_compare::{projection_index, projection_removed};
 use mokly_model::namespace::viewer;
+use mokly_model::nullable::Nullable;
 use mokly_model::projection::{self, Publication};
 use mokly_model::public_metadata::ChangesStatus;
 use mokly_model::routes;
@@ -176,7 +177,7 @@ pub(crate) fn project(
                 record.entry.set_detail_id(id);
             }
         }
-        next.index.comparison_url = Some(routes::comparison_generation(&accepted.id));
+        next.index.comparison_url = Nullable(Some(routes::comparison_generation(&accepted.id)));
     }
     changes_detail::apply(&mut next)?;
     for (path, detail) in &mut next.details {

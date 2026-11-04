@@ -9,7 +9,8 @@ use serde::Deserializer;
 use serde::de::{DeserializeOwned, Visitor};
 use serde_json::Value;
 
-use super::nullable;
+use crate::nullable;
+
 use super::visitor::Wrapped;
 
 /// Decode a supplied value without treating its null as optional-field absence.

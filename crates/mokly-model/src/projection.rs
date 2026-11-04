@@ -10,6 +10,7 @@ use std::collections::BTreeMap;
 use crate::axes::{ColorScheme, Viewport};
 use crate::catalogue::{CatalogueModel, EntryContent};
 use crate::material::catalogue_key;
+use crate::nullable::Nullable;
 use crate::public_detail::{DetailEntry, DetailView, EntryDetailV4};
 use crate::public_index::{CatalogueReadModel, LiveGeneration};
 use crate::public_metadata::{CatalogueIdentity, ChangesStatus};
@@ -66,7 +67,7 @@ pub fn index(model: &CatalogueModel, keys: &[ViewKey], state: &Publication) -> C
                 generation: generation.clone(),
             }),
         changes_status: state.changes_status,
-        comparison_url: None,
+        comparison_url: Nullable(None),
         tree: projection_tree::build(model),
         tree_order: model
             .folders

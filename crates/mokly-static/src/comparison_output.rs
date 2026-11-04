@@ -6,6 +6,7 @@ use mokly_compare::comparison_types::ComparisonResult;
 use mokly_compare::{projection_index, projection_removed, projection_workspace};
 use mokly_model::canonical;
 use mokly_model::material::digest;
+use mokly_model::nullable::Nullable;
 use mokly_model::output::artifact::File;
 use mokly_model::public_detail::EntryDetailV4;
 use mokly_model::public_index::CatalogueReadModel;
@@ -64,7 +65,7 @@ pub(crate) fn append(
             record.entry.set_detail_id(&detail.detail_id);
         }
     }
-    index.comparison_url = Some(routes::comparison_generation(&generation));
+    index.comparison_url = Nullable(Some(routes::comparison_generation(&generation)));
     let prefix = routes::comparison_generation(&generation);
     for file in files {
         output.insert(format!("{prefix}{}", file.path), file.bytes)?;

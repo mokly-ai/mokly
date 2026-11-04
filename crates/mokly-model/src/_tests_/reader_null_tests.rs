@@ -73,21 +73,37 @@ fn derived_optional_fields_reject_present_null() {
 }
 
 #[test]
+fn index_readers_reject_a_missing_comparison_url() {
+    let mut value = empty_index();
+    value.as_object_mut().unwrap().remove("comparisonUrl");
+    for result in [
+        readers::index_lenient(&value.to_string()),
+        readers::index(&value.to_string()),
+    ] {
+        let error = result.expect_err("comparisonUrl must be present, as a root or null");
+        assert!(matches!(
+            error,
+            ReadError::Invalid {
+                boundary: "catalogue index",
+                ..
+            }
+        ));
+        assert_eq!(
+            error.to_string(),
+            "[mokly-model/read] invalid catalogue index: missing field `comparisonUrl`"
+        );
+    }
+}
+
+#[test]
 fn nullable_comparison_constants_and_tagged_props_keep_their_values() {
     let expected = empty_index();
-    let mut missing = expected.clone();
-    missing.as_object_mut().unwrap().remove("comparisonUrl");
-    for value in [expected.clone(), missing] {
-        for result in [
-            readers::index_lenient(&value.to_string()),
-            readers::index(&value.to_string()),
-        ] {
-            assert!(
-                result.is_ok(),
-                "nullable or missing comparisonUrl must remain accepted"
-            );
-            assert_eq!(serde_json::to_value(result.unwrap()).unwrap(), expected);
-        }
+    for result in [
+        readers::index_lenient(&expected.to_string()),
+        readers::index(&expected.to_string()),
+    ] {
+        assert!(result.is_ok(), "a null comparisonUrl must remain accepted");
+        assert_eq!(serde_json::to_value(result.unwrap()).unwrap(), expected);
     }
     let mut value = reader_fixtures::index();
     value["components"][0]["propSchema"] = json!({"type":"object","additionalProperties":false,

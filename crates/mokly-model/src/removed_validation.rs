@@ -12,7 +12,7 @@ use crate::read_contract::ContractViolation;
 use crate::readers::ReadError;
 
 pub(crate) fn validate(index: &CatalogueReadModel) -> Result<(), ReadError> {
-    if index.comparison_url.as_deref().is_some_and(|url| {
+    if index.comparison_url.0.as_deref().is_some_and(|url| {
         !url.strip_prefix(&namespace::viewer("diffs/generations/"))
             .and_then(|tail| tail.strip_suffix('/'))
             .is_some_and(hash)
@@ -80,7 +80,7 @@ pub(crate) fn validate(index: &CatalogueReadModel) -> Result<(), ReadError> {
             if !hash(snapshot) || !snapshots.insert(snapshot) {
                 return Err(invalid(ContractViolation::Snapshot));
             }
-        } else if index.comparison_url.is_some() {
+        } else if index.comparison_url.0.is_some() {
             return Err(invalid(ContractViolation::MissingSnapshot));
         }
     }

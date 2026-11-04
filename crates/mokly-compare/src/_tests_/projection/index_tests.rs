@@ -162,5 +162,5 @@ fn ready_projection_sets_its_pinned_ref_and_commit_without_replacing_the_live_fe
     assert_eq!(index.base.as_deref(), Some("base"));
     assert_eq!(index.base_commit, Some(result.review.base_commit.clone()));
     assert_eq!(index.live.unwrap().generation, "f".repeat(64));
-    assert!(index.comparison_url.is_none());
+    assert!(index.comparison_url.0.is_none());
 }

@@ -110,7 +110,10 @@ shapes with the core's index and detail readers, under the
 The check reads the fields that their version defines and ignores any other
 field at every depth, so a receiver accepts a newer writer's additive optional
 fields. A field that contradicts its own record's kind, such as ready evidence
-on a pending state, stays invalid. The privacy rules still reject private
+on a pending state, stays invalid. A required field stays required when its
+value can be null, so an index without `comparisonUrl` is invalid. The check
+does not read the absence as null, because the viewer reads the stored bytes,
+which still lack the field. The privacy rules still reject private
 evidence anywhere, and `usage` or `resourceEvidence` anywhere in the index.
 
 The viewer gates the index, the detail, and the

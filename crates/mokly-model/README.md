@@ -198,6 +198,9 @@ cargo xtask generate-types
   `deployment`, `detail`, and `live`, which gate the format number before
   they decode a payload. `index_lenient` and `detail_lenient` provide the
   receiver's additive-field readers with privacy checks.
+- [`src/nullable.rs`](./src/nullable.rs) defines `Nullable`, a required public
+  field whose value can be null, such as `comparisonUrl`. Every decoder
+  rejects its absence, and TypeScript declares it as `T | null`.
 - [`src/public_privacy.rs`](./src/public_privacy.rs) inspects the original
   JSON of a lenient read for private evidence and unsafe public paths, before
   decoding drops the unknown fields.

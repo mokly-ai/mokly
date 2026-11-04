@@ -89,7 +89,7 @@ fn builds_twice_with_identical_bytes_and_complete_public_fences() {
     assert_eq!(index.revision, 0);
     assert!(index.live.is_none());
     assert!(index.base.is_none());
-    assert!(index.comparison_url.is_none());
+    assert!(index.comparison_url.0.is_none());
     assert_eq!(files[Path::new("index.html")], files[Path::new("404.html")]);
     assert_eq!(
         files[Path::new("index.html")],

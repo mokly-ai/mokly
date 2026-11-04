@@ -3,12 +3,12 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use crate::nullable::Nullable;
 use crate::public_metadata::{CatalogueIdentity, ChangesStatus};
 use crate::public_records::{
     CatalogueComponent, CatalogueDocument, CataloguePage, CatalogueRecord, CatalogueScreen,
     CatalogueUseCase,
 };
-use crate::read_decode::nullable;
 
 /// Public tree nodes. Entry children hold variants and index-folder members.
 #[derive(Serialize, TS)]
@@ -145,8 +145,7 @@ pub struct CatalogueReadModel {
     /// Comparison preparation state.
     pub changes_status: ChangesStatus,
     /// Root of the generation-pinned comparison, or null.
-    #[serde(default, deserialize_with = "nullable::read")]
-    pub comparison_url: Option<String>,
+    pub comparison_url: Nullable<String>,
     /// One tree containing each current entry exactly once.
     pub tree: Vec<CatalogueNode>,
     /// Top-level authored child order.
