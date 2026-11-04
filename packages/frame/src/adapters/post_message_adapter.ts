@@ -6,6 +6,7 @@ import type {
 import { origin } from "../probe/values.js";
 
 import { FrameError } from "./frame_error.js";
+import { notifyFrameListeners } from "./frame_event_listeners.js";
 import { frameUrl, ownFrame } from "./frame_mount.js";
 import {
   frameEvents,
@@ -52,9 +53,8 @@ export function postMessageAdapter(options: {
         resolveReady = resolve;
         rejectReady = reject;
       });
-      const notify = (event: FrameEvent) => {
-        for (const listener of [...listeners]) listener(event);
-      };
+      const notify = (event: FrameEvent) =>
+        notifyFrameListeners(win, listeners, event);
       const dispose = (code: "disposed" | "timeout" = "disposed") => {
         if (disposed) return;
         if (ready) {

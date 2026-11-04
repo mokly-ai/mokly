@@ -81,6 +81,7 @@ export function framePackageReport(): PackageReport {
       "dist/index.d.ts",
       "dist/internal.js",
       "dist/internal.d.ts",
+      "dist/browser/frame-probe.js",
       "README.md",
       "CHANGELOG.md",
       "LICENSE",

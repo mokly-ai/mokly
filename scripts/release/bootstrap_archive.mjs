@@ -7,7 +7,7 @@ import path from "node:path";
 import { createPackageArchive, inspectRuntimeLicenses } from "./archive.mjs";
 import { runCommand } from "./command.mjs";
 import { packNative } from "./native.mjs";
-import { nativeTarget } from "./targets.mjs";
+import { nativeTarget, releasePackages } from "./targets.mjs";
 
 /**
  * The JavaScript packages a registration can pack, each pinned to the one
@@ -80,6 +80,19 @@ export async function createBootstrapArchive(
       },
     );
     await inspectRuntimeLicenses(checkout);
+    if (registration) {
+      for (const prerequisite of releasePackages()) {
+        if (prerequisite.name === packageName) break;
+        if (prerequisite.triple) continue;
+        await runCommand(
+          "npm",
+          ["run", "build", "--workspace", prerequisite.name],
+          {
+            cwd: checkout,
+          },
+        );
+      }
+    }
     const packed = registration
       ? await createPackageArchive(
           path.join(checkout, relative),

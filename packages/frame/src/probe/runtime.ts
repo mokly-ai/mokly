@@ -1,10 +1,15 @@
-import type { Box, InstanceBoundary } from "../frame_adapter.js";
+import type {
+  Box,
+  FrameNavigation,
+  InstanceBoundary,
+} from "../frame_adapter.js";
 
 import { inspection, inspectionError } from "./inspection.js";
 import type { ProbeMetadata } from "./metadata.js";
 import type {
   ProbeEnvironment,
   ProbeNavigation,
+  ProbeRuntimeCallback,
   ProbeRuntimeEvent,
   ProbeSubscription,
 } from "./runtime_types.js";
@@ -14,7 +19,7 @@ export const probeRuntime = (
   metadata: ProbeMetadata,
   environment: ProbeEnvironment,
   navigate: ProbeNavigation,
-  send: (event: ProbeRuntimeEvent) => void,
+  send: ProbeRuntimeCallback,
   disposed = () => {},
 ) => {
   const doc = win.document,
@@ -60,7 +65,7 @@ export const probeRuntime = (
     active = false;
     send({ type: "error", code: inspectionError(error) });
   };
-  const point = (event: MouseEvent | null, click = false) => {
+  const point = (event: MouseEvent | null) => {
     const boundary = regions.find(
       ([{ key }, boxes]) =>
         event &&
@@ -76,9 +81,7 @@ export const probeRuntime = (
     const key = boundary?.key ?? null,
       boxes = boundary?.ranges.flatMap(({ boxes }) => boxes) ?? [];
     if (boxes.length > 64) throw "limit";
-    if (click && key) emit({ type: "click", key, boxes });
-    if (!click) emit({ type: "hover", key, boxes });
-    return key;
+    return { key, boxes };
   };
   const tick = (time: number) => {
     if (time - last < 1000 / 60) {
@@ -87,17 +90,21 @@ export const probeRuntime = (
     }
     pending = 0;
     last = time;
+    let hover: ReturnType<typeof point> | undefined;
     try {
       if (active || (pointer !== false && events.includes("hover"))) measure();
-      if (dirty) {
-        dirty = false;
-        emit({ type: "geometry" });
-      }
-      if (pointer !== false && events.includes("hover")) point(pointer);
-      pointer = false;
+      if (pointer !== false && events.includes("hover")) hover = point(pointer);
     } catch (error) {
+      pointer = false;
       fail(error);
+      return;
     }
+    pointer = false;
+    if (dirty) {
+      dirty = false;
+      emit({ type: "geometry" });
+    }
+    if (hover) emit({ type: "hover", ...hover });
   };
   const schedule = () => {
     pending ||= environment.requestAnimationFrame(tick);
@@ -107,22 +114,28 @@ export const probeRuntime = (
     schedule();
   };
   const activate = (event: MouseEvent) => {
+    let hit: ReturnType<typeof point> | undefined;
+    let error: ReturnType<typeof inspectionError> | undefined;
     try {
       if (active || events.includes("click")) {
         measure();
-        if (point(event, true) && active) {
-          event.preventDefault();
-          event.stopImmediatePropagation();
-          return;
-        }
+        hit = point(event);
       }
-      const navigation = navigate(event);
-      if (navigation && events.includes("navigation")) {
-        event.preventDefault();
-        emit({ type: "navigation", navigation });
-      }
-    } catch (error) {
-      fail(error);
+    } catch (failure) {
+      active = false;
+      error = inspectionError(failure);
+    }
+    let navigation: FrameNavigation | undefined;
+    if (hit?.key && active) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    } else navigation = navigate(event);
+    if (navigation && events.includes("navigation")) event.preventDefault();
+    try {
+      if (error) fail(error);
+      if (hit?.key) emit({ type: "click", key: hit.key, boxes: hit.boxes });
+    } finally {
+      if (navigation) emit({ type: "navigation", navigation });
     }
   };
   const on = (name: string, listener: EventListener) =>

@@ -77,7 +77,7 @@ export async function bootstrapFixture(
     license: "MIT",
     type: "module",
     files: ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
-    scripts: { prepack: "node ../../build.mjs" },
+    scripts: { build: "node ../../build.mjs viewer", prepack: "npm run build" },
   };
   const uiPackage = {
     name: "@mokly/ui",
@@ -85,7 +85,7 @@ export async function bootstrapFixture(
     license: "MIT",
     type: "module",
     files: ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
-    scripts: { prepack: "node ../../build.mjs" },
+    scripts: { build: "node ../../build.mjs ui", prepack: "npm run build" },
   };
   const modelPackage = {
     name: "@mokly/model",
@@ -93,7 +93,7 @@ export async function bootstrapFixture(
     license: "MIT",
     type: "module",
     files: ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
-    scripts: { prepack: "node ../../build.mjs" },
+    scripts: { build: "node ../../build.mjs model", prepack: "npm run build" },
   };
   const framePackage = {
     name: "@mokly/frame",
@@ -102,7 +102,7 @@ export async function bootstrapFixture(
     type: "module",
     files: ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
     dependencies: { "@mokly/model": "0.18.0" },
-    scripts: { prepack: "node ../../build.mjs" },
+    scripts: { build: "node ../../build.mjs frame", prepack: "npm run build" },
   };
   const distFiles = [
     ...modelPackageReport()
@@ -164,8 +164,11 @@ export async function bootstrapFixture(
     "build.mjs": `import fs from "node:fs/promises";
 import path from "node:path";
 process.chdir(import.meta.dirname);
+const workspace = process.argv[2];
+if (workspace === "frame") await fs.access("packages/model/dist/index.d.ts");
 const source = await fs.readFile("source.txt", "utf8");
 for (const file of ${JSON.stringify(distFiles)}) {
+  if (workspace && !file.startsWith(\`packages/\${workspace}/\`)) continue;
   await fs.mkdir(path.dirname(file), { recursive: true });
   await fs.writeFile(file, source);
 }

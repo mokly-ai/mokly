@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { classifyLocalActivation } from "../src/adapters/same_origin_navigation.js";
+
 import {
   hidden,
   inner,
@@ -105,6 +107,79 @@ test("the core uses the supplied link classifier and pick takes precedence", (t)
   events.length = 0;
   assert.equal(fixture.point("click"), false);
   assert.deepEqual(events, []);
+
+  const endingPick = runtimeFixture(
+    t,
+    () => navigation,
+    undefined,
+    (event) => {
+      if (event.type === "click") endingPick.runtime.__highlight([], "off");
+    },
+  );
+  endingPick.runtime.__subscribe(["click", "navigation"]);
+  endingPick.runtime.__highlight([inner], "pick");
+  assert.equal(endingPick.point("click"), true);
+  assert.deepEqual(endingPick.events, [
+    { type: "click", key: inner, boxes: [innerBox, repeatedBox] },
+  ]);
+});
+
+test("inspection overflow preserves marked link navigation", (t) => {
+  const fixture = runtimeFixture(t, classifyLocalActivation, {
+    ranges: [[inner, null]],
+    links: [],
+  });
+  const { runtime, doc, win, events } = fixture;
+  doc.body.innerHTML = `<!--mokly-instance:start id="r-0" instance="${inner}"-->
+<a data-box="inner" data-mokly-link="details">Open details</a>
+<!--mokly-instance:end id="r-0"-->`;
+  const link = doc.querySelector<HTMLAnchorElement>("a")!;
+  const rects = Array.from(
+    { length: 65 },
+    (_, index) =>
+      new win.DOMRect(
+        20 + (index % 13) * 2,
+        20 + Math.floor(index / 13) * 2,
+        1,
+        1,
+      ),
+  );
+  link.getClientRects = () =>
+    Object.assign(rects, { item: (index: number) => rects[index] ?? null });
+  runtime.__subscribe(["click", "navigation"]);
+  const prevented = fixture.point("click", 25, link);
+  assert.deepEqual(events, [
+    { type: "error", code: "limit" },
+    {
+      type: "navigation",
+      navigation: {
+        screenPath: "details",
+        target: { kind: "self" },
+        activation: "primary",
+      },
+    },
+  ]);
+  assert.equal(prevented, true);
+});
+
+test("scheduled callback exceptions retain identity without inspection errors", (t) => {
+  for (const type of ["geometry", "hover"] as const) {
+    const error = new Error(`${type} callback failed`);
+    const fixture = runtimeFixture(t, undefined, undefined, (event) => {
+      if (event.type === type) throw error;
+    });
+    fixture.runtime.__subscribe([type]);
+    if (type === "geometry") fixture.changed();
+    else fixture.point("pointermove");
+    assert.throws(
+      () => fixture.flush(),
+      (caught) => caught === error,
+    );
+    assert.deepEqual(
+      fixture.events.map((event) => event.type),
+      [type],
+    );
+  }
 });
 
 test("host callbacks coalesce events and disposal removes all work once", (t) => {

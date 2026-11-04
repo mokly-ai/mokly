@@ -17,4 +17,6 @@ export type ProbeNavigation = (
 export type ProbeRuntimeEvent =
   | Exclude<FrameEvent, { type: "error" }>
   | { type: "error"; code: ReturnType<typeof inspectionError> };
+/** Receives events synchronously and must not throw. */
+export type ProbeRuntimeCallback = (event: ProbeRuntimeEvent) => void;
 export type ProbeSubscription = Exclude<ProbeRuntimeEvent["type"], "error">;

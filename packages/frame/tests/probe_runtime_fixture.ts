@@ -47,6 +47,7 @@ export function runtimeFixture(
   t: TestContext,
   navigate: ProbeNavigation = () => undefined,
   map = metadata,
+  onEvent: (event: ProbeRuntimeEvent) => void = () => {},
 ) {
   const dom = new BrowserWindow();
   t.after(() => dom.happyDOM.close());
@@ -145,7 +146,10 @@ export function runtimeFixture(
     map,
     environment,
     navigate,
-    (event) => events.push(event),
+    (event) => {
+      events.push(event);
+      onEvent(event);
+    },
     () => {
       disposed++;
     },
@@ -170,13 +174,14 @@ export function runtimeFixture(
       frames.clear();
       for (const callback of callbacks) callback(time);
     },
-    point(type: "pointermove" | "click", x = 25) {
+    point(type: "pointermove" | "click", x = 25, target: EventTarget = doc) {
       const event = new win.MouseEvent(type, {
         clientX: x,
         clientY: 25,
         cancelable: true,
+        bubbles: true,
       });
-      doc.dispatchEvent(event);
+      target.dispatchEvent(event);
       return event.defaultPrevented;
     },
   };

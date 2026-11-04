@@ -44,11 +44,16 @@ for (const registration of registrations) {
       version: registration.version,
     });
     const { createBootstrapArchive } = await bootstrapModule();
-    const { archivePath, report } = await createBootstrapArchive({
+    const completion = createBootstrapArchive({
       ...fixture,
       repositoryRoot: fixture.root,
       packageName: registration.name,
     });
+    await assert.doesNotReject(
+      completion,
+      "registration builds its required JavaScript workspaces",
+    );
+    const { archivePath, report } = await completion;
     assert.equal(report.name, registration.name);
     assert.equal(report.version, registration.version);
     assert.equal(report.filename, registration.filename);
@@ -60,9 +65,11 @@ for (const registration of registrations) {
     const files = report.files.map((file) => file.path);
     assert.ok(files.includes(registration.required));
     assert.ok(files.includes("CHANGELOG.md"));
-    assert.equal(
-      files.some((file) => file.startsWith("dist/browser/")),
-      false,
+    assert.deepEqual(
+      files.filter((file) => file.startsWith("dist/browser/")),
+      registration.name === "@mokly/frame"
+        ? ["dist/browser/frame-probe.js"]
+        : [],
     );
     assert.ok((await fs.stat(archivePath)).size > 0);
     assert.equal(

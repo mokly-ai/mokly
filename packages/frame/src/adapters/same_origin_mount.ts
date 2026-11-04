@@ -7,6 +7,7 @@ import type {
 } from "../frame_adapter.js";
 
 import { FrameError } from "./frame_error.js";
+import { notifyFrameListeners } from "./frame_event_listeners.js";
 import { ownFrame } from "./frame_mount.js";
 import { localFrameAccess } from "./same_origin_access.js";
 import {
@@ -54,9 +55,8 @@ export function mountLocalDocument(
     let operations: LocalOperations | undefined;
     let disposed = false;
     let release = () => {};
-    const emit = (event: FrameEvent) => {
-      for (const listener of [...listeners]) listener(event);
-    };
+    const emit = (event: FrameEvent) =>
+      notifyFrameListeners(win, listeners, event);
     const disposeActivation = () => {
       activationController?.abort();
       activationController = undefined;
