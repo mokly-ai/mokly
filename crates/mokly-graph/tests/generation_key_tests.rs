@@ -6,7 +6,6 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
-use mokly_catalogue::definition_provider::DeferredDefinitions;
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::preparation::{Builder, CatalogueBuilder};
 use mokly_catalogue::working_tree::WorkingTree;
@@ -23,6 +22,9 @@ use mokly_html::fragment::DeferredFragments;
 use mokly_source_interface::read_evidence::ReadBaseline;
 use mokly_source_interface::tree::SourceTree;
 use tempfile::TempDir;
+
+#[path = "support/definitions.rs"]
+mod definitions;
 
 /// Adds a module witness whose version changes with every bundle, like a request order would.
 struct Witness {
@@ -48,7 +50,7 @@ fn generation_key(root: &Path, versions: &Arc<AtomicUsize>) -> String {
     let prepared = Builder {
         tree: tree.clone(),
         discovery: Arc::new(Discoverer { tree: tree.clone() }),
-        definitions: Arc::new(DeferredDefinitions),
+        definitions: Arc::new(definitions::EmptyDefinitions),
     }
     .prepare(&config, None)
     .unwrap();

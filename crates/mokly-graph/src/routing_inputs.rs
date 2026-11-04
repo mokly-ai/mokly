@@ -11,7 +11,6 @@ use mokly_model::catalogue::{EntryContent, ModelEntry};
 use mokly_model::routes;
 use pulldown_cmark::{Event, Parser, Tag};
 
-use crate::error::Result;
 use crate::key::NodeKey;
 use crate::routing_records::RoutingRecords;
 
@@ -20,7 +19,7 @@ pub(crate) fn key(
     components: &BTreeSet<String>,
     catalogue: &PreparedCatalogue,
     records: &RoutingRecords<'_>,
-) -> Result<NodeKey> {
+) -> NodeKey {
     let mut targets = BTreeSet::new();
     let mut opaque = false;
     let parent = entry

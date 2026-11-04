@@ -7,28 +7,6 @@ import type { Loader, OnLoadResult } from "esbuild";
 import { moduleContext } from "./postcss-context.js";
 import { moduleBytesAsync } from "./postcss-evidence.js";
 
-function loader(value: string | undefined): Loader | undefined {
-  switch (value) {
-    case "js":
-    case "jsx":
-    case "ts":
-    case "tsx":
-    case "json":
-    case "text":
-    case "base64":
-    case "binary":
-    case "dataurl":
-    case "empty":
-    case "file":
-    case "copy":
-    case "css":
-    case "local-css":
-      return value;
-    default:
-      return undefined;
-  }
-}
-
 /** Every supported loader receives the raw buffer whose digest was recorded. */
 export async function postcssSource(
   file: string,
@@ -51,7 +29,7 @@ export async function postcssSource(
   };
   const selected =
     defaults[path.extname(file)] ??
-    (extension ? loader(configured[extension]) : undefined);
+    (extension ? (configured[extension] as Loader) : undefined);
   if (!selected) return undefined;
   const script = ["js", "jsx", "ts", "tsx"].includes(selected);
   const defaultAsset = !script && defaults[path.extname(file)] !== undefined;

@@ -54,7 +54,7 @@ pub struct EntryMetadata {
 
 /// One ordered use-case step.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct UseCaseStep {
     /// Screen path or imported definition.
     pub screen_path: EntryReference,

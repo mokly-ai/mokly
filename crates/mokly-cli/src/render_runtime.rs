@@ -47,10 +47,9 @@ impl Services {
         cache: Arc<dyn RenderCache>,
     ) -> Result<Self> {
         let clock = Arc::new(SystemClock::new());
-        let size = common
-            .sidecars
-            .and_then(NonZeroUsize::new)
-            .unwrap_or(NonZeroUsize::MIN);
+        let size = common.sidecars.and_then(NonZeroUsize::new).expect(
+            "CLI option normalization sets a positive sidecar count before runtime creation",
+        );
         let pool: Arc<dyn SidecarPool> = Arc::new(Pool::new(
             Arc::new(
                 NodeFactory::new(

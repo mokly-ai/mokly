@@ -132,7 +132,9 @@ impl PreviewStore for MemoryPreviews {
             props: wire_props::encode(props),
             usage: preview.usage,
         };
-        let metadata = serde_json::to_vec(&response).map_or(usize::MAX, |bytes| bytes.len());
+        let metadata = serde_json::to_vec(&response)
+            .expect("RenderSuccess contains typed JSON fields and tagged props")
+            .len();
         let bytes = preview.files.iter().fold(metadata, |sum, (path, file)| {
             sum.saturating_add(path.len())
                 .saturating_add(file.bytes.len())

@@ -10,7 +10,6 @@ use crate::public_validation::hash;
 use crate::read_contract::ContractViolation;
 use crate::readers::ReadError;
 use crate::review_order::reason_key;
-use crate::review_validation::ignore_id;
 use crate::usage::CatalogueUsage;
 use crate::wire_decode;
 
@@ -129,4 +128,14 @@ fn invalid(message: ContractViolation) -> ReadError {
         boundary: "entry detail",
         message,
     }
+}
+
+fn ignore_id(value: &str) -> bool {
+    !value.is_empty()
+        && value.split('-').all(|part| {
+            !part.is_empty()
+                && part
+                    .bytes()
+                    .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit())
+        })
 }

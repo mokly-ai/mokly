@@ -103,7 +103,7 @@ pub(super) fn prepared(warnings: Vec<Warning>) -> PreparedCatalogue {
         documents: BTreeMap::new(),
         slot_fragments: BTreeMap::new(),
         elements: BTreeMap::new(),
-        deferred_modules: Vec::new(),
+
         warnings,
     }
 }
@@ -157,7 +157,7 @@ fn build_passes_the_default_output_and_counts_validated_variants() {
     let summary = service.run(Path::new("/repo"), &options()).unwrap();
     assert_eq!(summary.counts, BTreeMap::from([(EntryKind::Screen, 2)]));
     assert_eq!(summary.documents, 4);
-    assert!(summary.deferred_modules.is_empty());
+
     assert!(summary.warnings.is_empty());
 }
 
@@ -225,37 +225,6 @@ fn a_loader_failure_preserves_the_typed_error_without_preparing_a_catalogue() {
     };
     assert_eq!(issue.code, Code::ConfigInvalid);
     assert_eq!(issue.message, "bad root");
-}
-
-#[test]
-fn deferred_definitions_fail_before_graph_creation() {
-    let loader = Arc::new(Unimock::new(
-        ConfigLoaderMock::load
-            .next_call(matching!(_, _))
-            .returns(Ok(config())),
-    ));
-    let mut prepared = prepared(Vec::new());
-    prepared.deferred_modules = vec!["specs/later.mockup.tsx".into()];
-    let builder = Arc::new(Unimock::new(
-        CatalogueBuilderMock::prepare
-            .next_call(matching!(_, _))
-            .returns(Ok(prepared)),
-    ));
-    let service: &dyn BuildService = &CatalogueBuild {
-        changes: Arc::new(Unimock::new(())),
-        inputs: None,
-        cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
-        config: loader,
-        catalogue: builder,
-        graphs: Arc::new(Unimock::new(())),
-    };
-    let BuildError::Deferred { modules, warnings } =
-        service.run(Path::new("/repo"), &options()).unwrap_err()
-    else {
-        panic!()
-    };
-    assert_eq!(modules, ["specs/later.mockup.tsx"]);
-    assert!(warnings.is_empty());
 }
 
 #[test]

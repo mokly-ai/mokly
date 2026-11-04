@@ -1,56 +1,13 @@
 //! Bounded ordered batching above the injected Git runner.
 
 use std::ffi::OsString;
-use std::path::Path;
-use std::sync::Arc;
 
-use crate::command::{DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Output, Request, Runner};
 use crate::error::{Error, Result};
 
 /// Default maximum path arguments per Git invocation.
 pub const MAX_ARGUMENTS: usize = 128;
 /// Conservative cross-platform encoded argument budget.
 pub const MAX_ARGUMENT_BYTES: usize = 16 * 1024;
-
-/// Bounded multi-command execution boundary.
-#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = BatchesMock))]
-pub trait Batches: Send + Sync {
-    /// Run ordered path batches; stop at the first failed invocation.
-    fn run(&self, directory: &Path, prefix: &[OsString], paths: &[OsString])
-    -> Result<Vec<Output>>;
-}
-
-/// Batch coordinator with configurable count and byte limits.
-pub struct BoundedRunner {
-    /// Injected subprocess implementation.
-    pub runner: Arc<dyn Runner>,
-    /// Maximum paths in each invocation.
-    pub max_arguments: usize,
-    /// Maximum encoded bytes including prefix arguments and separators.
-    pub max_bytes: usize,
-}
-
-impl Batches for BoundedRunner {
-    fn run(
-        &self,
-        directory: &Path,
-        prefix: &[OsString],
-        paths: &[OsString],
-    ) -> Result<Vec<Output>> {
-        let batches = split(prefix, paths, self.max_arguments, self.max_bytes)?;
-        let mut outputs = Vec::with_capacity(batches.len());
-        for args in batches {
-            outputs.push(self.runner.run(&Request {
-                directory: directory.to_owned(),
-                args,
-                stdin: vec![],
-                output_limit: DEFAULT_OUTPUT_LIMIT,
-                stderr_limit: DEFAULT_STDERR_LIMIT,
-            })?);
-        }
-        Ok(outputs)
-    }
-}
 
 /// Split arguments by count and conservative UTF-16/UTF-8 byte costs.
 /// An empty path list issues no command, so no empty batch broadens a query.
@@ -60,9 +17,6 @@ pub fn split(
     count: usize,
     bytes: usize,
 ) -> Result<Vec<Vec<OsString>>> {
-    if count == 0 || bytes == 0 {
-        return Err(Error::InvalidBudget);
-    }
     let cost = |argument: &OsString| {
         argument
             .as_encoded_bytes()

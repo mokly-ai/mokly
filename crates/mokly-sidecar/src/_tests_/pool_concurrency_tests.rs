@@ -25,7 +25,7 @@ fn call(index: usize) -> Call {
 }
 
 fn wait_queued(pool: &Pool, count: u64) {
-    let mut state = pool.lock().unwrap();
+    let mut state = pool.lock();
     while state.ticket < count {
         state = pool.ready.wait(state).unwrap();
     }
@@ -114,8 +114,8 @@ fn leases_are_fifo_and_concurrent_requests_never_exceed_the_size_bound() {
                 assert_eq!(events.recv().unwrap(), index);
             }
         }
-        assert_eq!(pool.lock().unwrap().slots.len(), size);
-        assert_eq!(pool.lock().unwrap().serving, size as u64);
+        assert_eq!(pool.lock().slots.len(), size);
+        assert_eq!(pool.lock().serving, size as u64);
         assert!(matches!(events.try_recv(), Err(mpsc::TryRecvError::Empty)));
         for (index, release) in releases.iter().enumerate() {
             release.send(()).unwrap();
@@ -126,6 +126,6 @@ fn leases_are_fifo_and_concurrent_requests_never_exceed_the_size_bound() {
         for thread in threads {
             assert!(matches!(thread.join().unwrap(), MethodResult::Css(_)));
         }
-        assert_eq!(pool.lock().unwrap().slots.len(), size);
+        assert_eq!(pool.lock().slots.len(), size);
     }
 }

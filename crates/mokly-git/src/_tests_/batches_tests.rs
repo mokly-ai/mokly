@@ -1,12 +1,8 @@
-//! Ordered batching and injected runner failures.
+//! Ordered path splitting within count and byte budgets.
 
 use std::ffi::OsString;
-use std::sync::Arc;
 
-use unimock::{MockFn, Unimock, matching};
-
-use crate::batches::{Batches, BoundedRunner, split};
-use crate::command::{Output, RunnerMock};
+use crate::batches::split;
 use crate::error::Error;
 
 #[test]
@@ -41,43 +37,8 @@ fn batches_bound_count_and_bytes_and_preserve_order() {
     );
     assert!(split(&prefix, &[], 1, 100).unwrap().is_empty());
     assert!(matches!(
-        split(&prefix, &paths, 0, 100),
-        Err(Error::InvalidBudget)
-    ));
-    assert!(matches!(
         split(&prefix, &paths, 1, 1),
         Err(Error::ArgumentLimit { .. })
-    ));
-}
-
-#[test]
-fn coordinator_stops_at_first_failure() {
-    let mock = Arc::new(Unimock::new((
-        RunnerMock::run
-            .next_call(matching!((request) if request.args == vec![OsString::from("a")]))
-            .returns(Ok(Output {
-                stdout: b"a".to_vec(),
-                stderr: vec![],
-            })),
-        RunnerMock::run
-            .next_call(matching!((request) if request.args == vec![OsString::from("b")]))
-            .returns(Err(Error::CommandFailed {
-                status: Some(1),
-                stderr: vec![],
-            })),
-    )));
-    let runner: &dyn Batches = &BoundedRunner {
-        runner: mock,
-        max_arguments: 1,
-        max_bytes: 100,
-    };
-    assert!(matches!(
-        runner.run(
-            "/checkout".as_ref(),
-            &[],
-            &["a".into(), "b".into(), "c".into()]
-        ),
-        Err(Error::CommandFailed { .. })
     ));
 }
 

@@ -9,7 +9,6 @@ use mokly_model::review::{EntryChangeReason, ReviewState};
 use crate::comparison_types::EntryClassification;
 use crate::comparison_views::PairViews;
 use crate::entry_metadata;
-use crate::error::{InternalError, Result};
 use crate::move_types::EntryPair;
 
 pub(crate) fn classify(
@@ -18,19 +17,19 @@ pub(crate) fn classify(
     before: &CatalogueModel,
     after: &CatalogueModel,
     paths: &BTreeMap<String, String>,
-) -> Result<EntryClassification> {
+) -> EntryClassification {
     let previous = pair.before.map(|index| &before.entries[index]);
     let current = pair.after.map(|index| &after.entries[index]);
-    let Some(entry) = current.or(previous) else {
-        return Err(InternalError::EmptyPair.into());
-    };
+    let entry = current
+        .or(previous)
+        .expect("the move detector pairs entries from the union of both catalogues");
     let mut reasons = Vec::new();
     match (previous, current) {
         (None, _) => reasons.push(EntryChangeReason::Added),
         (_, None) => reasons.push(EntryChangeReason::Removed),
         (Some(previous), Some(current)) => {
-            if entry_metadata::projection(previous, before, paths)?
-                != entry_metadata::projection(current, after, &BTreeMap::new())?
+            if entry_metadata::projection(previous, before, paths)
+                != entry_metadata::projection(current, after, &BTreeMap::new())
             {
                 reasons.push(EntryChangeReason::Metadata);
             }
@@ -74,7 +73,7 @@ pub(crate) fn classify(
     } else {
         ReviewState::aggregate(views.views.iter().map(|view| view.document.state))
     };
-    Ok(EntryClassification {
+    EntryClassification {
         kind: entry.content.kind(),
         path: entry.metadata.path.clone(),
         previous_path: pair
@@ -84,7 +83,7 @@ pub(crate) fn classify(
         state,
         reasons,
         documents: views.views.into_iter().map(|view| view.document).collect(),
-    })
+    }
 }
 
 fn owned(owner: &EvidenceOwner, own_component: Option<&String>) -> bool {

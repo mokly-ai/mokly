@@ -42,7 +42,6 @@ async function collect(generation: Generation): Promise<Definitions> {
     folders: [],
     stories: [],
     diagnostics: [],
-    warnings: generation.warnings,
   };
   const collected: {
     value: object;

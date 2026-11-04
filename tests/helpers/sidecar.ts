@@ -18,7 +18,16 @@ export function startSidecar(
   env: NodeJS.ProcessEnv = process.env,
   entry = path.resolve("packages/mokly/dist/sidecar.js"),
 ) {
-  const child = spawn(process.execPath, [entry], { stdio: "pipe", cwd, env });
+  const child = spawn(process.execPath, [entry], {
+    stdio: "pipe",
+    cwd,
+    env: {
+      ...env,
+      INIT_CWD: undefined,
+      npm_package_json: undefined,
+      npm_config_local_prefix: undefined,
+    },
+  });
   context.after(() => {
     child.kill("SIGKILL");
   });

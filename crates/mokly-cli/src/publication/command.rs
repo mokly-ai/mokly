@@ -6,7 +6,6 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use mokly_publish::accounting::Receipt;
 use mokly_publish::checkout::Checkout;
-use mokly_publish::error;
 use mokly_publish::exchange::Exchange;
 use mokly_publish::identity::ActionsContext;
 use mokly_publish::runtime::Cancellation;
@@ -120,12 +119,6 @@ impl Publish for Command {
         };
         let snapshot = self.output.build(&request, cancellation)?;
         let finalized = snapshot.capture().publication()?;
-        let artifact = finalized.artifact();
-        if artifact.directory != directory {
-            return Err(Error::Exchange {
-                source: error::Error::InvalidBundle,
-            });
-        }
         let prepared = finalized.prepared();
         let final_state = self
             .checkout
@@ -139,17 +132,6 @@ impl Publish for Command {
                 paths: final_state.changed_paths,
                 during_build: true,
                 build_directories: final_state.build_directories,
-            });
-        }
-        if prepared.metadata.head_sha != initial.head_sha
-            || prepared.metadata.repository != request.publication.repository
-            || prepared.metadata.branch != request.publication.branch
-            || prepared.metadata.mokly_version != options.version
-            || prepared.metadata.pull_request != request.publication.pull_request
-            || (options.no_changes && prepared.metadata.base_sha.is_some())
-        {
-            return Err(Error::Exchange {
-                source: error::Error::InvalidBundle,
             });
         }
         let receipt = self

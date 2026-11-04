@@ -1,8 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { renderToStaticMarkup } from "react-dom/server";
-
 import { EntryDetailsBody } from "../src/shell/details.js";
 
 import {
@@ -12,6 +10,7 @@ import {
   publishedScreen,
   publishedUseCase,
 } from "./published_entries_fixture.js";
+import { storeMarkup } from "./shell_markup.js";
 
 /** One routed entry of each kind, each with a related document. */
 const records = {
@@ -41,7 +40,7 @@ test("details omit authoring dependencies for every routed entry kind", () => {
         ? { ownedDependencies: ["legacy/owned.css"] }
         : {}),
     } as unknown as typeof entry;
-    const markup = renderToStaticMarkup(
+    const markup = storeMarkup(
       <EntryDetailsBody catalogue={catalogue} entry={legacyEntry} />,
     );
     assert.match(markup, /<span class="mbk-meta-k mbk-reset">Source<\/span>/);

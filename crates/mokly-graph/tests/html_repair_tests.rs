@@ -54,7 +54,7 @@ fn reowned_instances_with_colliding_keys_lose_their_regions() {
         assert_eq!(instances.len(), 1);
         assert_eq!(
             instances[0].key,
-            instance_key(&ComponentInputOwner::Entry, None, "leaf").unwrap()
+            instance_key(&ComponentInputOwner::Entry, None, "leaf")
         );
         assert_eq!(instances[0].order, 0);
         assert!(slots.is_empty());
@@ -114,7 +114,7 @@ fn surviving_nested_inputs_use_the_enclosing_owner_and_recomputed_identity() {
     assert!(matches!(instances[0].owner, ComponentInputOwner::Entry));
     assert_eq!(
         instances[0].key,
-        instance_key(&ComponentInputOwner::Entry, None, "leaf").unwrap()
+        instance_key(&ComponentInputOwner::Entry, None, "leaf")
     );
     assert_eq!(ranges.len(), 1);
     assert!(ranges[0].parent_id.is_none());

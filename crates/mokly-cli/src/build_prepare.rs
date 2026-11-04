@@ -20,12 +20,6 @@ impl CatalogueBuild {
             Err(source) => return Err(BuildError::Catalogue { source }),
         };
         self.checkpoint()?;
-        if !prepared.deferred_modules.is_empty() {
-            return Err(BuildError::Deferred {
-                modules: prepared.deferred_modules,
-                warnings: prepared.warnings,
-            });
-        }
         let graph = match self.graphs.create(&config) {
             Ok(graph) => graph,
             Err(source) => {
@@ -108,7 +102,6 @@ impl CatalogueBuild {
                 documents: rendered.documents,
                 counts,
                 warnings,
-                deferred_modules: prepared.deferred_modules,
             },
         })
     }

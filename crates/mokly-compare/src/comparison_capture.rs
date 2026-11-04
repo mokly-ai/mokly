@@ -19,7 +19,6 @@ use mokly_model::data::Props;
 
 use crate::capture_codec::EncodedView;
 use crate::capture_collection::Collector;
-use crate::capture_error;
 use crate::capture_styles::{self, EncodedResource};
 use crate::capture_weight::{self, Budget, DEFAULT_BASE_CAPTURE_BYTES, DEFAULT_HEAD_CAPTURE_BYTES};
 
@@ -161,7 +160,7 @@ impl GeneratedResources for CapturedGeneration {
             .get(route)
             .filter(|resource| resource.retains_bytes())
         {
-            return capture_error::graph(style.read());
+            return Ok(style.read());
         }
         self.source.resource(route)
     }
@@ -198,7 +197,7 @@ impl RenderGeneration for CapturedGeneration {
     }
     fn comparison_document(&self, route: &str) -> Result<Arc<Artifact>> {
         if let Some(view) = self.views.get(route) {
-            return Ok(Arc::new(capture_error::graph(view.document.restore())?));
+            return Ok(Arc::new(view.document.restore()));
         }
         self.source.comparison_document(route)
     }
@@ -232,7 +231,7 @@ impl RenderGeneration for CapturedGeneration {
             .and_then(|route| self.styles.get(route))
             .filter(|resource| resource.retains_bytes())
         {
-            return capture_error::graph(style.read());
+            return Ok(style.read());
         }
         self.source.resource_bytes(route)
     }

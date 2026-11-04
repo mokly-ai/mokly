@@ -3,7 +3,6 @@
 import {
   currentEntry,
   detailKey,
-  fenceDetail,
   type DetailRequest,
 } from "../catalogue/detail_fences.js";
 import type { HeldDetails } from "../catalogue/shell_model.js";
@@ -40,16 +39,15 @@ export function dataSnapshot(
   };
 }
 
-/** The first snapshot: an index and the given details its fences accept. */
+/** The first snapshot: an index and the details already held for it. */
 export function initialSnapshot(
   index: CatalogueReadModel,
   details: readonly (readonly [DetailRequest, EntryDetailV4])[] = [],
 ): ShellDataSnapshot {
-  const held = new Map<string, EntryDetailV4>();
-  for (const [request, detail] of details)
-    if (fenceDetail(index, request, detail).kind === "accepted")
-      held.set(detailKey(request), detail);
-  return dataSnapshot(index, held);
+  return dataSnapshot(
+    index,
+    new Map(details.map(([request, detail]) => [detailKey(request), detail])),
+  );
 }
 
 /** Add accepted details to an unchanged index. */

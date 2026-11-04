@@ -45,7 +45,7 @@ pub(crate) fn describe(
     ] {
         for definition in definitions {
             let story = story(files, &definition.handle);
-            let mut entry = definition_input::entry(&definition, kind, story)?;
+            let mut entry = definition_input::entry(&definition, kind, story);
             let (owned, remaining): (Vec<_>, Vec<_>) =
                 diagnostics.into_iter().partition(|diagnostic| {
                     diagnostic.module == entry.exporting_file

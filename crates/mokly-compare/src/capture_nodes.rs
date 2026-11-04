@@ -7,7 +7,6 @@ use mokly_model::catalogue::SourceLocation;
 use serde::{Deserialize, Serialize};
 
 use crate::capture_annotations::{AttributeRecord, ReferenceRecord, RegionRecord};
-use crate::capture_error::{CaptureInternalError, Result};
 
 #[derive(Deserialize, Serialize)]
 pub(crate) enum FlatNode {
@@ -75,16 +74,14 @@ pub(crate) fn flatten(nodes: &[Node]) -> Vec<FlatNode> {
     output
 }
 
-pub(crate) fn restore(nodes: Vec<FlatNode>) -> Result<Vec<Node>> {
+pub(crate) fn restore(nodes: Vec<FlatNode>) -> Vec<Node> {
     let mut output = Vec::new();
     for node in nodes.into_iter().rev() {
         let count = match &node {
             FlatNode::Element { children, .. } | FlatNode::Region { children, .. } => *children,
             _ => 0,
         };
-        let Some(start) = output.len().checked_sub(count) else {
-            return Err(CaptureInternalError::Tree.into());
-        };
+        let start = output.len() - count;
         let mut children = output.split_off(start);
         children.reverse();
         output.push(match node {
@@ -124,5 +121,5 @@ pub(crate) fn restore(nodes: Vec<FlatNode>) -> Result<Vec<Node>> {
         });
     }
     output.reverse();
-    Ok(output)
+    output
 }

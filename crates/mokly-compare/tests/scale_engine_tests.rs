@@ -193,17 +193,12 @@ fn widely_used_changed_components_and_shared_resources_use_indexed_work() {
         let result = fixture.compare().unwrap();
         assert_eq!(result.snapshot.changed_entries, ["card"]);
         assert_eq!(result.review.affected.len(), size);
-        (
-            result.affected_lookups,
-            result.validation_lookups,
-            result.resource_work,
-        )
+        (result.affected_lookups, result.resource_work)
     };
     let small = run(8);
     let large = run(32);
-    assert!(small.0 > 0 && small.1 > 0 && small.2.reads > 0);
+    assert!(small.0 > 0 && small.1.reads > 0);
     assert!(large.0 * 2 <= small.0 * 9);
-    assert!(large.1 * 2 <= small.1 * 9);
-    assert_eq!(large.2.reads, small.2.reads);
-    assert_eq!(large.2.read_bytes, small.2.read_bytes);
+    assert_eq!(large.1.reads, small.1.reads);
+    assert_eq!(large.1.read_bytes, small.1.read_bytes);
 }

@@ -18,10 +18,9 @@ use mokly_html::fragment::{DeferredFragments, FragmentRenderer};
 use mokly_model::material::digest;
 use mokly_sidecar::bindings::{Bindings, EntryBinding};
 use mokly_sidecar::methods::Call;
-use mokly_sidecar::wire::MethodResult;
 
 use crate::declarations;
-use crate::error::{self, RenderError, Result};
+use crate::error::{RenderError, Result};
 use crate::fragments::Fragments;
 use crate::runtime::Runtime;
 use crate::source_lease::LeasedTree;
@@ -75,7 +74,7 @@ impl JavaScriptGraph {
         config: &ResolvedConfig,
         catalogue: &mut PreparedCatalogue,
     ) -> Result<Arc<dyn RenderGraph>> {
-        let mut side = self.runtime.side(config)?;
+        let mut side = self.runtime.side(config);
         let mut inputs = DeliveryInputs {
             resources: self.runtime.resources.clone(),
             closures: self.runtime.closures.clone(),
@@ -115,14 +114,11 @@ impl JavaScriptGraph {
                     .collect(),
             };
             match self.runtime.pool.request(Call::Bindings(bindings.clone())) {
-                Ok(MethodResult::Empty) => {}
-                Ok(_) => return Err(RenderError::ResultKind { method: "bindings" }),
+                Ok(_) => {}
                 Err(source) => return Err(RenderError::Sidecar { source }),
             }
-            let table = match serde_json::to_vec(&bindings.entries) {
-                Ok(bytes) => bytes,
-                Err(source) => return Err(error::InternalError::Json { source }.into()),
-            };
+            let table = serde_json::to_vec(&bindings.entries)
+                .expect("entry bindings contain only strings and string-keyed maps");
             let fingerprint = digest(
                 format!(
                     "{}:{}:{}",
@@ -142,7 +138,7 @@ impl JavaScriptGraph {
                     Some((source.handle.clone(), entry.metadata.source.path.clone()))
                 })
                 .collect();
-            let keys = match RenderKeys::build(
+            let keys = Arc::new(RenderKeys::build(
                 &RenderInputs {
                     generation,
                     bindings: &catalogue.javascript.bindings,
@@ -151,14 +147,7 @@ impl JavaScriptGraph {
                     declarations: &declaring,
                 },
                 NodeKey(fingerprint),
-            ) {
-                Ok(keys) => Arc::new(keys),
-                Err(source) => {
-                    return Err(RenderError::Graph {
-                        source: Box::new(source),
-                    });
-                }
-            };
+            ));
             fragments = Arc::new(MemoFragments::new(
                 keys.clone(),
                 Arc::new(Fragments {
@@ -179,7 +168,7 @@ impl JavaScriptGraph {
                             .handle
                             .split('#')
                             .next()
-                            .unwrap_or(&source.handle)
+                            .expect("splitting a handle always yields its module segment")
                             .to_owned(),
                     )
                 })

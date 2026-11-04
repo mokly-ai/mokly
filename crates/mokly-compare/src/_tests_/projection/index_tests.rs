@@ -33,8 +33,7 @@ fn surviving_added_and_removed_view_aggregates_project_as_changed_for_all_kinds(
                     key: "c".repeat(64),
                 }],
                 &publication,
-            )
-            .unwrap();
+            );
             projection_index::apply(&mut index, &result);
             if kind == EntryKind::Component {
                 assert!(matches!(
@@ -126,8 +125,7 @@ fn component_metadata_reasons_preserve_the_own_view_aggregate_in_comparison_sele
         change.reasons.push(EntryChangeReason::Metadata);
         let result = result(vec![input.clone()], vec![input], vec![change]);
         let publication = projection_index::publication("mokly.config.json".into(), "base");
-        let mut index =
-            projection::index(&result.after.catalogue().model, &[], &publication).unwrap();
+        let mut index = projection::index(&result.after.catalogue().model, &[], &publication);
         projection_index::apply(&mut index, &result);
         assert!(matches!(
             index.components[0].entry.changes,
@@ -157,7 +155,7 @@ fn ready_projection_sets_its_pinned_ref_and_commit_without_replacing_the_live_fe
     let mut publication = projection_index::publication("mokly.config.json".into(), "stale");
     publication.changes_status = ChangesStatus::Unavailable;
     publication.live_generation = Some("f".repeat(64));
-    let mut index = projection::index(&result.after.catalogue().model, &[], &publication).unwrap();
+    let mut index = projection::index(&result.after.catalogue().model, &[], &publication);
     assert!(index.base_commit.is_none());
     projection_index::apply(&mut index, &result);
     assert_eq!(index.changes_status, ChangesStatus::Ready);

@@ -20,11 +20,8 @@ use crate::move_context::RenderedMoves;
 use crate::move_inventory;
 use crate::move_types::MoveDetector;
 use crate::resource_memo::{Memo, ResourceMemo};
-use crate::source_validation::SourceValidation;
 use crate::use_case_impact;
-use crate::{
-    affected, entry_classification, review_projection, root_impact, snapshots, source_validation,
-};
+use crate::{affected, entry_classification, review_projection, root_impact, snapshots};
 
 /// Injected move policy and byte-bounded parse cache. It retains no parsed view set.
 pub struct Engine {
@@ -133,7 +130,7 @@ impl Engine {
                 before.catalogue(),
                 after.catalogue(),
                 &paths,
-            )?;
+            );
             for view in &mut views.views {
                 comparison_attribution::apply(
                     view,
@@ -156,7 +153,7 @@ impl Engine {
                 before_model,
                 after_model,
                 &paths,
-            )?);
+            ));
         }
         impact.extend(instance_proofs.iter().map(|proof| proof.component.clone()));
         implementation::include(&mut entries, &instance_proofs, &own_impact);
@@ -182,19 +179,7 @@ impl Engine {
                 })
                 .collect(),
         };
-        review_order::normalize(&mut review).compare()?;
-        let validation_lookups = source_validation::validate(
-            &review,
-            SourceValidation {
-                before: before_model,
-                after: after_model,
-                pairing: &pairing,
-                classifications: &entries,
-                usage: &usages,
-                impact: &impact,
-                instance_proofs: &instance_proofs,
-            },
-        )?;
+        review_order::normalize(&mut review);
         let snapshot = snapshots::create(
             &request.catalogue_identity,
             &request.base_ref,
@@ -203,7 +188,7 @@ impl Engine {
             after_model,
             &pairing,
             &entries,
-        )?;
+        );
         let counts = ComparisonCounts {
             changes: snapshot.changed_entries.len(),
             moved: pairing.moves.len(),
@@ -237,7 +222,6 @@ impl Engine {
         Ok(ComparisonResult {
             resource_work: memo.work(),
             affected_lookups,
-            validation_lookups,
             warnings,
             review,
             snapshot,

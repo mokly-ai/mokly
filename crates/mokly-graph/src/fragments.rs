@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use mokly_html::error::{HtmlError, Result};
+use mokly_html::error::Result;
 use mokly_html::fragment::{Fragment, FragmentRenderer, FragmentRequest, RenderKind};
 use mokly_model::material::props_key;
 
@@ -44,10 +44,7 @@ impl MemoFragments {
 
 impl FragmentRenderer for MemoFragments {
     fn render(&self, request: &FragmentRequest) -> Result<Fragment> {
-        let props = match props_key(&request.props) {
-            Ok(key) => key,
-            Err(source) => return Err(HtmlError::Props { source }),
-        };
+        let props = props_key(&request.props);
         let axes = format!(
             "{:?}/{:?}/{:?}/{}",
             request.kind, request.viewport, request.color_scheme, request.ignore_enabled

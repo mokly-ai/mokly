@@ -45,7 +45,7 @@ pub(super) fn catalogue() -> PreparedCatalogue {
         elements: BTreeMap::new(),
         javascript: Default::default(),
         dependency_directories: Default::default(),
-        deferred_modules: vec![],
+
         warnings: vec![],
     }
 }

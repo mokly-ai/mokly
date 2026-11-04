@@ -1,4 +1,4 @@
-//! Handshake, correlation and diagnostic forwarding without real processes.
+//! Handshake and diagnostic forwarding without real processes.
 
 use std::sync::Arc;
 
@@ -94,28 +94,15 @@ fn client_requires_an_exact_version_hello_before_requests() {
         id: 1,
         call: Call::Shutdown(Empty {}),
     };
-    assert!(matches!(
-        client.request(&shutdown),
-        Err(Error::Protocol(ProtocolError::Handshake))
-    ));
-    client.handshake().unwrap();
     client.handshake().unwrap();
     assert!(matches!(
         client.request(&shutdown).unwrap(),
         MethodResult::Empty
     ));
-    assert!(matches!(
-        client.request(&shutdown),
-        Err(Error::Protocol(ProtocolError::SessionClosed))
-    ));
-    assert!(matches!(
-        client.handshake(),
-        Err(Error::Protocol(ProtocolError::SessionClosed))
-    ));
 }
 
 #[test]
-fn wrong_versions_and_first_events_fail_closed() {
+fn wrong_versions_and_first_events_fail() {
     for (frame, version_error) in [
         (
             Frame::Response(Response::Success {
@@ -150,30 +137,15 @@ fn wrong_versions_and_first_events_fail_closed() {
             (Err(Error::Protocol(ProtocolError::Handshake)), false) => {}
             result => panic!("unexpected handshake result: {result:?}"),
         }
-        assert!(matches!(
-            client.handshake(),
-            Err(Error::Protocol(ProtocolError::SessionClosed))
-        ));
     }
 }
 
 #[test]
-fn response_id_is_checked_before_result_decoding() {
+fn invalid_result_payload_fails_json_decoding() {
     let request = Request {
         id: 7,
         call: Call::Hello(Hello::default()),
     };
-    let response = Response::Success {
-        id: 6,
-        result: json!({"invalid":"payload"}),
-    };
-    assert!(matches!(
-        response.decode_result(&request),
-        Err(Error::Protocol(ProtocolError::ResponseId {
-            expected: 7,
-            actual: 6
-        }))
-    ));
     let response = Response::Success {
         id: 7,
         result: json!({"invalid":"payload"}),

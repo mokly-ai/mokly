@@ -92,7 +92,7 @@ async fn serving_is_polled_during_projection_and_a_revision_race_does_not_recrea
         documents: BTreeMap::new(),
         slot_fragments: BTreeMap::new(),
         elements: BTreeMap::new(),
-        deferred_modules: Vec::new(),
+
         warnings: Vec::new(),
     };
     let rendered = Unimock::new(());

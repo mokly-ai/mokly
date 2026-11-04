@@ -1,8 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { renderToStaticMarkup } from "react-dom/server";
-
 import { branchPoints } from "../src/shell/catalogue_branch_point.js";
 import type { ShellContext } from "../src/shell/context.js";
 import { EntryDetailsBody } from "../src/shell/details.js";
@@ -17,6 +15,7 @@ import {
   publishedScreen,
   removedScreenVariant,
 } from "./published_entries_fixture.js";
+import { storeMarkup } from "./shell_markup.js";
 
 /**
  * Billing moved under Account; its Paid variant was deleted on the way. A
@@ -194,7 +193,7 @@ test("Details name the path a moved entry came from, after its source", () => {
   const details = (path: string) => {
     const shown = catalogue.byPath.get(path);
     assert.ok(shown, path);
-    return renderToStaticMarkup(
+    return storeMarkup(
       <EntryDetailsBody catalogue={catalogue} entry={shown} />,
     );
   };

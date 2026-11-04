@@ -1,7 +1,7 @@
 //! Shared process-tree control, shutdown enqueueing, and guaranteed kill on drop.
 
 use std::sync::mpsc::{Receiver, SyncSender};
-use std::sync::{Arc, Mutex, Weak};
+use std::sync::{Arc, Mutex, PoisonError, Weak};
 
 use mokly_platform::error;
 use mokly_platform::processes::ProcessGroup;
@@ -56,18 +56,12 @@ impl WorkerControl for ProcessControl {
     }
 
     fn finish(&self, deadline: u64) -> Result<()> {
-        let receiver = match self.exited.lock() {
-            Ok(receiver) => receiver,
-            Err(_) => return Err(InternalError::Synchronization.into()),
-        };
+        let receiver = self.exited.lock().unwrap_or_else(PoisonError::into_inner);
         if !self.clock.exited(&receiver, deadline) {
             self.kill()?;
             self.clock.reaped(&receiver);
         } else {
-            let drained = match self.drained.lock() {
-                Ok(drained) => drained,
-                Err(_) => return Err(InternalError::Synchronization.into()),
-            };
+            let drained = self.drained.lock().unwrap_or_else(PoisonError::into_inner);
             if !self.clock.drained(&drained, deadline) {
                 self.kill()?;
             }

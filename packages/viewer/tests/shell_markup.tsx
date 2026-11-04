@@ -4,6 +4,7 @@
  * presentation tests read the same tree the browser entry mounts.
  */
 
+import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import type { DetailRequest } from "../src/catalogue/detail_fences.js";
@@ -11,6 +12,7 @@ import type {
   CatalogueReadModel,
   EntryDetailV4,
 } from "../src/catalogue/types.js";
+import type { ComparisonEnvironment } from "../src/shell/comparison_context.js";
 import type { ShellContext } from "../src/shell/context.js";
 import { routeFromUrl } from "../src/shell/routes.js";
 import { ShellStoreProvider } from "../src/shell/store.js";
@@ -55,6 +57,52 @@ export function standaloneMarkup(
     >
       <StandaloneShellContents />
     </ShellStoreProvider>,
+  );
+}
+
+/** The store of one non-interactive shell around isolated containers. */
+export interface ShellStoreFixtureOptions {
+  /** The installed index; the protocol fixture by default. */
+  index?: CatalogueReadModel;
+  /** The shell route, such as `/view/screens/home/`; home by default. */
+  path?: string;
+  /** The comparison transport, for a container that requests comparisons. */
+  comparisonEnvironment?: ComparisonEnvironment;
+}
+
+/**
+ * Supply the store of a non-interactive shell, as every mounted shell does.
+ * On the home route, Details stay closed, both viewports show, and previews
+ * use the Light scheme.
+ */
+export function ShellStoreFixture({
+  children,
+  comparisonEnvironment,
+  index,
+  path,
+}: ShellStoreFixtureOptions & { children: ReactNode }) {
+  return (
+    <ShellStoreProvider
+      {...(comparisonEnvironment ? { comparisonEnvironment } : {})}
+      context={{ embedded: false }}
+      index={index ?? indexFixture()}
+      interactive={false}
+      route={(catalogue) =>
+        routeFromUrl(catalogue, new URL(path ?? "/", SHELL_ORIGIN))
+      }
+    >
+      {children}
+    </ShellStoreProvider>
+  );
+}
+
+/** Render isolated containers inside {@link ShellStoreFixture} as markup. */
+export function storeMarkup(
+  children: ReactNode,
+  options: ShellStoreFixtureOptions = {},
+): string {
+  return renderToStaticMarkup(
+    <ShellStoreFixture {...options}>{children}</ShellStoreFixture>,
   );
 }
 

@@ -13,7 +13,7 @@ import { encodeUrlPath } from "../data/paths.js";
 import { previewMetadataPath } from "../navigation/routes.js";
 import type { RemovedPreviewData } from "../shell/previews.js";
 
-import { pageContent, screenContent, type ParsedPreview } from "./content.js";
+import { pageContent, screenContent } from "./content.js";
 
 /** One historical screen view rendered in its own device frame. */
 export interface PreviewScreenView {
@@ -71,10 +71,9 @@ export interface PreviewRequestEnvironment {
  */
 export function previewEndpoint(
   data: RemovedPreviewData,
-  delivery: PreviewDelivery | undefined,
+  delivery: PreviewDelivery,
   base: string,
 ): PreviewRequest | undefined {
-  if (!delivery) return undefined;
   const comparisonUrl = delivery.comparisonUrl;
   const advertised = data.published;
   if (comparisonUrl === null || !advertised) return undefined;
@@ -93,27 +92,25 @@ function unavailable(): never {
 }
 
 /**
- * Whether the loaded metadata names the requested removed record: a removed
- * screen's detail repeats its snapshot id, and a page descriptor's base commit
- * derives it.
+ * Whether a page descriptor's base commit derives the selected snapshot id, so
+ * a late response or Retry cannot replace an open historical record after the
+ * baseline changes.
  */
-function snapshotMatches(
-  data: RemovedPreviewData,
-  parsed: ParsedPreview,
-): boolean {
+function baseMatches(data: RemovedPreviewData, baseCommit: string): boolean {
   if (data.snapshotId === undefined && data.catalogueIdentity === undefined)
     return true;
   if (!data.snapshotId || !data.catalogueIdentity) return false;
-  return parsed.identity.kind === "snapshot"
-    ? parsed.identity.snapshotId === data.snapshotId
-    : historicalSnapshotId(
-        data.catalogueIdentity,
-        parsed.identity.baseCommit,
-        data,
-      ) === data.snapshotId;
+  return (
+    historicalSnapshotId(data.catalogueIdentity, baseCommit, data) ===
+    data.snapshotId
+  );
 }
 
-/** Request one preview and validate it against the entry that asked for it. */
+/**
+ * Request one preview. A removed screen reads the route's held detail, which
+ * the route's fences accepted; a page or document reads its metadata, which
+ * must derive the selected snapshot.
+ */
 export async function requestPreview(
   data: RemovedPreviewData,
   request: PreviewRequest,
@@ -127,24 +124,28 @@ export async function requestPreview(
   )
     throw new DeploymentChangedError();
   const base = request.generation.href;
-  const parsed =
-    data.kind === "screen"
-      ? screenContent(data, detail, base)
-      : pageContent(
-          data,
-          (
-            await fetchJson(request.endpoint, signal, (input, init) =>
-              environment.fetch(input, init),
-            )
-          ).value,
-          base,
-        );
-  if (!snapshotMatches(data, parsed)) unavailable();
   return {
-    content: parsed.content,
+    content:
+      data.kind === "screen"
+        ? screenContent(data, detail, base)
+        : await pageRequest(data, request, environment, signal),
     generation: new URL(".", base).href,
     url: request.endpoint.href,
   };
+}
+
+async function pageRequest(
+  data: RemovedPreviewData,
+  request: PreviewRequest,
+  environment: PreviewRequestEnvironment,
+  signal: AbortSignal,
+): Promise<PreviewContent> {
+  const { value } = await fetchJson(request.endpoint, signal, (input, init) =>
+    environment.fetch(input, init),
+  );
+  const parsed = pageContent(data, value, request.generation.href);
+  if (!baseMatches(data, parsed.baseCommit)) unavailable();
+  return parsed.content;
 }
 
 /**

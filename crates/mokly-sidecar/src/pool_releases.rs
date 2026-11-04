@@ -5,7 +5,6 @@ use std::sync::mpsc;
 use std::sync::mpsc::Receiver;
 use std::sync::{Arc, Condvar, Mutex};
 
-use crate::error::Result;
 use crate::pool::Pool;
 use crate::pool_cleanup;
 use crate::pool_state::State;
@@ -42,16 +41,7 @@ impl Pool {
                     let (Some(state), Some(ready)) = (state.upgrade(), ready.upgrade()) else {
                         break;
                     };
-                    loop {
-                        match clean_idle(&state, &ready, timeout) {
-                            Ok(true) => continue,
-                            Ok(false) => break,
-                            Err(error) => {
-                                tracing::warn!(%error, "sidecar release failed");
-                                break;
-                            }
-                        }
-                    }
+                    while clean_idle(&state, &ready, timeout) {}
                 }
             })
         {
@@ -71,17 +61,14 @@ impl Pool {
     }
 
     pub(super) fn enqueue_release(&self, release: Release) {
-        if let Err(error) = self.record_release(release) {
-            tracing::warn!(%error, "sidecar release could not be recorded");
-            return;
-        }
+        self.record_release(release);
         if let Some(sender) = &self.releases {
             let _ = sender.send(Notice::Work);
         }
     }
 
-    fn record_release(&self, release: Release) -> Result<()> {
-        let mut state = self.lock()?;
+    fn record_release(&self, release: Release) {
+        let mut state = self.lock();
         match release {
             Release::Generation { id, epoch } => {
                 let last = state
@@ -90,12 +77,19 @@ impl Pool {
                     .is_some_and(|leases| leases.remove(&epoch) && leases.is_empty());
                 if last {
                     state.leases.remove(&id);
-                    let bundle = state.bundles.remove(&id);
-                    let compiled = state.compiled.remove(&id);
-                    let modules = state.modules.remove(&id).unwrap_or_default();
-                    if !state.stopped
-                        && let (Some(bundle), Some(compiled)) = (bundle, compiled)
-                    {
+                    let bundle = state
+                        .bundles
+                        .remove(&id)
+                        .expect("a live generation retains its bundle settings");
+                    let compiled = state
+                        .compiled
+                        .remove(&id)
+                        .expect("a live generation retains its compiled recipe");
+                    let modules = state
+                        .modules
+                        .remove(&id)
+                        .expect("a bundled generation retains its module inventory");
+                    if !state.stopped {
                         state.recipes.insert(id.clone(), bundle, modules, compiled);
                     }
                     state.epochs.remove(&id);
@@ -109,15 +103,14 @@ impl Pool {
             }
         }
         self.ready.notify_all();
-        Ok(())
     }
 }
 
-fn clean_idle(state: &Mutex<State>, ready: &Condvar, timeout: Option<u64>) -> Result<bool> {
+fn clean_idle(state: &Mutex<State>, ready: &Condvar, timeout: Option<u64>) -> bool {
     let slots = {
-        let mut state = pool_cleanup::lock(state)?;
+        let mut state = pool_cleanup::lock(state);
         if state.stopped {
-            return Ok(false);
+            return false;
         }
         let available = std::mem::take(&mut state.available);
         let mut slots = Vec::new();
@@ -141,7 +134,7 @@ fn clean_idle(state: &Mutex<State>, ready: &Condvar, timeout: Option<u64>) -> Re
             Ok(changed) => (Some(slot), changed),
             Err(error) => {
                 tracing::warn!(%error, "sidecar cleanup failed");
-                let stopped = pool_cleanup::lock(state)?.stopped;
+                let stopped = pool_cleanup::lock(state).stopped;
                 let _ = if stopped {
                     slot.control.kill()
                 } else {
@@ -150,7 +143,7 @@ fn clean_idle(state: &Mutex<State>, ready: &Condvar, timeout: Option<u64>) -> Re
                 (None, true)
             }
         };
-        let mut state = pool_cleanup::lock(state)?;
+        let mut state = pool_cleanup::lock(state);
         if slot.is_none() {
             state.replacement_reasons.insert(index, Reason::Replacement);
         }
@@ -165,7 +158,7 @@ fn clean_idle(state: &Mutex<State>, ready: &Condvar, timeout: Option<u64>) -> Re
                 .is_some_and(|slot| pool_cleanup::pending(&state, slot));
         ready.notify_all();
     }
-    Ok(pending)
+    pending
 }
 
 #[cfg(test)]

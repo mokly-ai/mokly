@@ -83,9 +83,9 @@ fn failure_detail(style: &Style, failure: &BuildError, redactor: &Redactor) -> S
 /// Retained warnings from one failed preparation attempt.
 pub fn warning_records(failure: &BuildError) -> Vec<Warning> {
     let mut records = match failure {
-        BuildError::Deferred { warnings, .. }
-        | BuildError::Strict { warnings }
-        | BuildError::Comparison { warnings, .. } => warnings.clone(),
+        BuildError::Strict { warnings } | BuildError::Comparison { warnings, .. } => {
+            warnings.clone()
+        }
         BuildError::Catalogue {
             source: CatalogueError::Invalid { warnings, .. },
         } => warnings.clone(),
@@ -148,17 +148,6 @@ pub fn failure_diagnostics(style: &Style, failure: &BuildError, redactor: &Redac
         BuildError::Static { source } => style.error_lines(static_errors::code(source), &static_errors::detail(source), redactor),
         BuildError::Git { base, .. } => style.error(Code::GitFailed, &format!("Git information could not be read for {base}. Check the repository and configured base."), redactor),
         BuildError::Cancelled => style.error(Code::BuildInvalid, "build cancelled", redactor),
-        BuildError::Deferred {
-            modules,
-            warnings: _,
-        } => style.error(
-            Code::BuildInvalid,
-            &format!(
-                "JavaScript rendering is unavailable for {}",
-                modules.join(", ")
-            ),
-            redactor,
-        ),
         BuildError::Rendering { source, .. } => render_diagnostics(style, source, redactor),
         BuildError::Strict { warnings: records } => {
             let count = strict_count(records);

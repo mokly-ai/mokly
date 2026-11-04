@@ -95,7 +95,6 @@ fn ready_durations_and_unavailable_reason_have_bounded_styled_rows() {
             (EntryKind::Component, 18),
         ]),
         warnings: vec![],
-        deferred_modules: vec![],
     };
     let mut rows = Vec::new();
     for (color, ascii, columns) in [(false, false, 100), (true, false, 100), (false, true, 40)] {

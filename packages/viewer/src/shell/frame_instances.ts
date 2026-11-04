@@ -130,14 +130,9 @@ export function workspaceFrameSessions(
   });
 }
 
-/** Validate the bounded usage contract before any inspection operation. */
+/** Whether ready usage stays inside the inspector's bounds. */
 export function validFrameUsage(session: ShellFrameSession): boolean {
-  if (session.usage.status !== "ready") return false;
-  try {
-    return !frameUsage(session.usage).error;
-  } catch {
-    return false;
-  }
+  return session.usage.status === "ready" && !frameUsage(session.usage).error;
 }
 
 /** Capture the session revision that an asynchronous operation is allowed to use. */

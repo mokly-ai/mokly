@@ -129,12 +129,6 @@ pub enum InternalError {
         /// Original typed provider failure.
         source: Box<dyn std::error::Error + Send + Sync>,
     },
-    /// Model data could not be encoded.
-    #[error("JSON encoding failed: {source}")]
-    Json {
-        /// Original JSON failure.
-        source: serde_json::Error,
-    },
 }
 
 pub(crate) fn invalid(code: Code, message: impl Into<String>) -> HtmlError {
@@ -142,12 +136,5 @@ pub(crate) fn invalid(code: Code, message: impl Into<String>) -> HtmlError {
         code,
         message: message.into(),
         location: None,
-    }
-}
-
-pub(crate) fn json<T: serde::Serialize>(value: &T) -> Result<serde_json::Value> {
-    match serde_json::to_value(value) {
-        Ok(value) => Ok(value),
-        Err(source) => Err(InternalError::Json { source }.into()),
     }
 }

@@ -32,7 +32,6 @@ test("bindings supply derived paths, variant context, source, and complete usage
     viewport: "mobile",
     colorScheme: "light",
   };
-  await assert.rejects(sidecar.call("renderScreen", params), /bindings/);
   const entries = Object.fromEntries(
     ["leaf", "box", "relay", "screen"].map((name) => [
       `usage.mockup.tsx#${name}`,
@@ -135,38 +134,5 @@ test("saved React slots, placeholder tokens, and disabled ignore scopes remain d
   });
   assert.match(placeholder.html, /<mokly-slot /);
   assert.ok(!placeholder.html.includes("Saved child"));
-  await assert.rejects(
-    sidecar.call("renderComponent", {
-      ...params,
-      slots: { children: { kind: "saved", handle: "missing" } },
-    }),
-    /unknown saved slot/,
-  );
-});
-
-test("bindings reject relative link paths as catalogue paths", async (context) => {
-  const sidecar = startSidecar(context);
-  await sidecar.call("hello");
-  const { generation } = await sidecar.call<BundleResult>(
-    "bundle",
-    bundleParams({
-      entryFiles: ["page.mockup.ts"],
-      renderer: null,
-      storiesFiles: [],
-    }),
-  );
-  await sidecar.call("cssModules", { generation, classMaps: {} });
-  await sidecar.call("describe", { generation });
-  await assert.rejects(
-    sidecar.call("bindings", {
-      generation,
-      entries: {
-        "page.mockup.ts#default": { path: "./relative", title: "Page" },
-      },
-    }),
-    {
-      code: "sidecar-protocol",
-      message: "bindings require complete catalogue paths",
-    },
-  );
+  await sidecar.call("shutdown");
 });

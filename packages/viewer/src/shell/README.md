@@ -272,7 +272,9 @@ An inspector tag then returns focus to the toggle in its own shell. Picker
 chips keep the focus return of `@mokly/ui/tag-picker`.
 
 `store.tsx` and the focused `store_*` modules own the shared route,
-selection, disclosure, drawer, details and scroll state. `store_browser.ts`
+selection, disclosure, drawer, details and scroll state. Every container
+renders under `ShellStoreProvider` and reads that state through
+`useShellStore`, also in tests. `store_browser.ts`
 owns standalone history, and `store_host.ts` owns host selection commits.
 `store_routes.ts` installs each route's display for both roots.
 `store_interactions.ts` binds both roots to clicks and Escape. It dismisses
@@ -446,11 +448,11 @@ route of Serve. A publication commit rebuilds the navigation sections and
 reconciles the current disclosures and pre-filter baseline to exactly their
 new keys; initial restore uses the same `disclosure_storage.ts`
 reconciliation with an explicit fallback. A publication keeps surviving
-collapsed choices; route navigation owns active-route reveal. The
-`nav_rows.ts` and `nav_leaf_rows.ts` missing-key defaults remain defensive
-for rendering without a store; mounted shells supply every current key. A
-removed-entry route whose snapshot record leaves a refreshed index shows the
-missing state.
+collapsed choices; route navigation owns active-route reveal.
+`nav_rows.ts` and `nav_leaf_rows.ts` read each disclosure from the store,
+which holds every current key, because it builds its disclosures from the
+same sections. A removed-entry route whose snapshot record leaves a refreshed
+index shows the missing state.
 
 `workspace.tsx` coordinates the React workspace without owning transport or
 frame internals. `component_controls.tsx` owns cancellable temporary prop edits,

@@ -32,8 +32,8 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
                     epoch: 0,
                     generation: id.clone(),
                     modules: vec![],
-                    warnings: vec![],
-                    compiled: Some(CompiledGeneration {
+
+                    compiled: CompiledGeneration {
                         unmapped_dependency_directories: Some(vec![id]),
                         identity: "same".into(),
                         code: "code".into(),
@@ -46,7 +46,7 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
                         metadata_inputs: Default::default(),
                         input_directories: Default::default(),
                         metadata_directories: Default::default(),
-                    }),
+                    },
                 }))
             }))
             .n_times(2),
@@ -92,7 +92,7 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
         }))
         .unwrap();
     }
-    let state = pool.lock().unwrap();
+    let state = pool.lock();
     assert_eq!(
         state.compiled["1"].unmapped_dependency_directories,
         Some(vec!["1".into()])

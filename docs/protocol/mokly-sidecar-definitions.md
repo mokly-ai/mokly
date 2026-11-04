@@ -2,8 +2,7 @@
 
 The [render sidecar](./mokly-sidecar.md) evaluates the entry modules and
 stories of one bundle generation. Its `describe` result has `screens`,
-`pages`, `useCases`, `folders`, `components`, `stories`, `diagnostics`, and
-`warnings`.
+`pages`, `useCases`, `folders`, `components`, `stories`, and `diagnostics`.
 Each definition has a `handle`: the repository-relative file path, `#`, and
 export name. Its optional `sourcePath` is the module that created the definition,
 which can differ from the exporting module in the handle. Installed packages have no attributed
@@ -63,8 +62,9 @@ declaration order independently of sorted JSON object keys. Explicit controls
 take precedence over schema property order, then first-seen own and variant
 prop keys. The core omits uneditable properties from the detail's order.
 Definitions and variants also carry optional `excludedProps` lists of non-data
-inference keys. The core emits their warnings after it derives each final
-entry path. Storybook excludes non-prop args before it collects these keys.
+inference keys. The core emits their `props-not-data` warnings after it
+derives each final entry path. Storybook excludes non-prop args before it
+collects these keys.
 Saved React slot values remain inside the loaded generation and serialize
 as slot-name to opaque handle records. Functions and React elements never
 serialize as data props. The core builds the catalogue and component registry
@@ -79,8 +79,5 @@ The component parent's `argTypes` carries the meta's hints. Each story carries
 its merged hints separately, so a story override does not replace the parent's
 own labels and choices.
 
-`warnings` carries generation-level `props-not-data` diagnostics from
-inference. Describe returns each warning once in its inventory. Render and
-page results contain only warnings raised by that render.
 After registration the core installs the resolved
 [handle table](./mokly-sidecar-render-records.md#resolved-bindings) before rendering.

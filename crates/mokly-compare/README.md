@@ -14,7 +14,7 @@ both sides. `mokly-server` and `mokly-static` publish the retained result.
 - Compare canonical trees, paired ignores, caller inputs, and component regions.
 - Pair moves, keep removed metadata, and resolve branch-point references.
 - Compare reached resources and use catalogue-wide CSS own-page proof.
-- Produce the strict review result, the private change snapshot, and
+- Produce the typed review result, the private change snapshot, and
   affected-consumer chains.
 - Share public index state, eligibility, workspace lists, and input-change projection.
 - Read checkout-converted base files with preserved POSIX paths.
@@ -134,7 +134,8 @@ captured head and the bounded base capture. Both
 results keep view states, reasons, ownership records, and immutable historical
 metadata.
 
-`Lookup` indexes kind-aware, case-folded identities once per projection batch
+`Lookup` borrows one comparison's catalogues and indexes kind-aware,
+case-folded identities once per projection batch
 under the [branch-point lookup contract](../../docs/protocol/mokly-branch-point-lookup.md).
 It resolves explicit before and after references, accepted moves, removed
 records, counterparts, and variant parents. Metadata comparison keeps schema,

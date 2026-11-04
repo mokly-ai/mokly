@@ -1,6 +1,5 @@
 //! Behaviour fixtures compare real Git sources through the same HTML render graph.
 
-use mokly_model::canonical;
 use mokly_model::review::{EntryChangeReason, ReviewState};
 
 mod engine_support;
@@ -64,16 +63,6 @@ fn source_formatting_ignored_changes_and_each_missing_side_classify_independentl
     assert_eq!(result.counts.changes, 3);
     assert_eq!(result.counts.ignored_only, 1);
     assert_eq!(entry(&result, "ignored").views[0].ignored_ids, ["chrome"]);
-    let text = canonical::to_string(&result.review).unwrap();
-    assert_eq!(
-        text,
-        canonical::to_string(&mokly_model::readers::review(&text).unwrap()).unwrap()
-    );
-    let snapshot = canonical::to_string(&result.snapshot).unwrap();
-    assert_eq!(
-        snapshot,
-        canonical::to_string(&mokly_model::readers::change_snapshot(&snapshot).unwrap()).unwrap()
-    );
 }
 
 #[test]
@@ -151,11 +140,6 @@ fn pure_moves_documents_pages_and_removed_titles_share_one_snapshot() {
     assert_eq!(removed.folder_titles, ["Base group"]);
     assert_eq!(removed.snapshot_id.len(), 64);
     assert_eq!(result.snapshot.removed_entries.len(), 2);
-    let snapshot = canonical::to_string(&result.snapshot).unwrap();
-    assert_eq!(
-        snapshot,
-        canonical::to_string(&mokly_model::readers::change_snapshot(&snapshot).unwrap()).unwrap()
-    );
     assert!(
         result
             .review

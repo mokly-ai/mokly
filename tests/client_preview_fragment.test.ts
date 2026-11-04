@@ -10,7 +10,7 @@ import { routeFromUrl } from "../packages/viewer/dist/shell/routes.js";
 import { defaultSelection } from "../packages/viewer/dist/shell/selection.js";
 import { TargetStage } from "../packages/viewer/dist/shell/stages.js";
 
-import { catalogueModel } from "./helpers/viewer_catalogue.js";
+import { catalogueModel, inShellStore } from "./helpers/viewer_catalogue.js";
 
 const FRAGMENT = "section:one";
 const ENCODED_FRAGMENT = "section%3Aone";
@@ -151,14 +151,16 @@ function renderTarget(
   assert.equal(route.view.kind, "target");
   if (route.view.kind !== "target") throw new Error("Expected target route.");
   return renderToStaticMarkup(
-    createElement(DisplaySelection.Provider, {
-      value: { ...defaultSelection, colorScheme },
-      children: createElement(TargetStage, {
-        catalogue,
-        target: route.view.target,
-        ...(route.fragment ? { fragment: route.fragment } : {}),
+    inShellStore(
+      createElement(DisplaySelection.Provider, {
+        value: { ...defaultSelection, colorScheme },
+        children: createElement(TargetStage, {
+          catalogue,
+          target: route.view.target,
+          ...(route.fragment ? { fragment: route.fragment } : {}),
+        }),
       }),
-    }),
+    ),
   );
 }
 

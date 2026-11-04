@@ -39,7 +39,7 @@ pub(crate) fn sort(
                 .copied();
             let anchor = parent
                 .and_then(|parent| destinations.get(&parent))
-                .and_then(|index| after.entries.get(*index))
+                .map(|index| &after.entries[*index])
                 .filter(|parent| {
                     parent.metadata.variant_of.is_none()
                         && parent.content.kind() == entry.content.kind()

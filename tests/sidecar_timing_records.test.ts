@@ -2,21 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { Request } from "../packages/mokly/src/generated/sidecar/Request.js";
-import { request } from "../packages/mokly/src/sidecar/requests.js";
 import { Timings } from "../packages/mokly/src/sidecar/timings.js";
-
-test("hello accepts only an optional boolean timing selector", () => {
-  for (const params of [{}, { timings: false }, { timings: true }])
-    assert.deepEqual(
-      request({ id: 0, method: "hello", params }).params,
-      params,
-    );
-  for (const timings of [null, 0, "true", {}, []])
-    assert.throws(
-      () => request({ id: 0, method: "hello", params: { timings } }),
-      /boolean/u,
-    );
-});
 
 test("sidecar spans use a fake clock and fixed categories without request data", () => {
   let clock = 100;

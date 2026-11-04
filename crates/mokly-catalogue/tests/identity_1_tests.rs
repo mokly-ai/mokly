@@ -1,5 +1,7 @@
 //! Isolated catalogue behavior fixtures.
 
+#[path = "support/definitions.rs"]
+mod definitions;
 #[path = "support/fixtures.rs"]
 mod fixtures;
 

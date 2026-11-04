@@ -8,7 +8,7 @@ use mokly_model::material::digest;
 use mokly_model::review_affected::ReviewSide;
 
 use crate::comparison_resources::css_urls;
-use crate::error::{InternalError, Result};
+use crate::error::Result;
 use crate::owned_styles;
 use crate::resource_memo::{Memo, ResourceMemo};
 use crate::resource_memo_state::PairKey;
@@ -151,10 +151,8 @@ impl Memo {
         } else {
             rules::diff(&before, &after)
         });
-        let bytes = match serde_json::to_vec(diff.as_ref()) {
-            Ok(bytes) => bytes,
-            Err(source) => return Err(InternalError::Json { source }.into()),
-        };
+        let bytes = serde_json::to_vec(diff.as_ref())
+            .expect("RuleDiff contains only typed JSON fields and string values");
         let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
         state.work.diffs += 1;
         state.diffs.insert(

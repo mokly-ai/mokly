@@ -6,8 +6,6 @@ use mokly_model::material::{instance_key, slot_key};
 use mokly_model::usage::{ComponentInputOwner, ComponentInstanceRecord, ComponentSlotRecord};
 
 use crate::context::Context;
-use crate::diagnostic_code::Code;
-use crate::error::{HtmlError, Result, invalid};
 use crate::tree::{Node, RegionKind};
 
 pub(crate) fn rebase(
@@ -15,7 +13,7 @@ pub(crate) fn rebase(
     instances: &mut [ComponentInstanceRecord],
     slots: &mut [ComponentSlotRecord],
     context: &Context,
-) -> Result<()> {
+) {
     let mut instance_keys = BTreeMap::new();
     let mut slot_keys: BTreeMap<String, String> = BTreeMap::new();
     for _ in 0..=instances.len() + slots.len() {
@@ -34,18 +32,12 @@ pub(crate) fn rebase(
                 },
                 None => None,
             };
-            let key = match instance_key(&owner, slot, &instance.id) {
-                Ok(key) => key,
-                Err(source) => return Err(HtmlError::Props { source }),
-            };
+            let key = instance_key(&owner, slot, &instance.id);
             instance_keys.insert(instance.key.clone(), key);
         }
         for slot in slots.iter() {
             if let Some(instance) = instance_keys.get(&slot.instance_key) {
-                let key = match slot_key(instance, &slot.name) {
-                    Ok(key) => key,
-                    Err(source) => return Err(HtmlError::Props { source }),
-                };
+                let key = slot_key(instance, &slot.name);
                 slot_keys.insert(slot.key.clone(), key);
             }
         }
@@ -53,15 +45,9 @@ pub(crate) fn rebase(
             break;
         }
     }
-    if instance_keys.len() != instances.len() || slot_keys.len() != slots.len() {
-        return Err(invalid(
-            Code::BuildInvalid,
-            "fragment input scope contains a cycle",
-        ));
-    }
     for instance in instances {
         instance.owner = owner(&instance.owner, &instance_keys, context)
-            .ok_or_else(|| invalid(Code::BuildInvalid, "unknown fragment owner"))?;
+            .expect("fragment instance owners were validated before rebasing");
         instance.slot_key = instance
             .slot_key
             .as_ref()
@@ -70,7 +56,7 @@ pub(crate) fn rebase(
     }
     for slot in slots {
         slot.owner = owner(&slot.owner, &instance_keys, context)
-            .ok_or_else(|| invalid(Code::BuildInvalid, "unknown fragment slot owner"))?;
+            .expect("fragment slot owners were validated before rebasing");
         slot.instance_key = instance_keys[&slot.instance_key].clone();
         slot.key = slot_keys[&slot.key].clone();
         slot.source_slot_key = slot
@@ -79,7 +65,6 @@ pub(crate) fn rebase(
             .and_then(|key| slot_keys.get(key).cloned());
     }
     regions(nodes, &instance_keys, &slot_keys, context);
-    Ok(())
 }
 
 fn owner(

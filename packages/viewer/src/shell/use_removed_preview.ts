@@ -25,7 +25,7 @@ import {
 import { useReloadDetail, useRouteDelivery } from "./data_context.js";
 import type { RemovedPreviewData } from "./previews.js";
 import { schemeValue } from "./scheme_fallback.js";
-import { useOptionalShellStore } from "./store_context.js";
+import { useShellStore } from "./store_context.js";
 
 /** Display state for one route-owned previous-version request. */
 export type RemovedPreviewState =
@@ -101,14 +101,14 @@ export function useRemovedPreview({
   viewport: "both" | "desktop" | "mobile";
 }): { retry(): void; state: RemovedPreviewState } {
   const environment = useComparisonEnvironment();
-  const model = useOptionalShellStore()?.catalogue.publicModel;
-  const comparisonUrl = model?.comparisonUrl;
+  const model = useShellStore().catalogue.publicModel;
+  const comparisonUrl = model.comparisonUrl;
   const delivery = useRouteDelivery();
   const reloadDetail = useReloadDetail();
   const deliveryStatus = data.kind === "screen" ? delivery?.status : undefined;
   const detail =
     data.kind === "screen"
-      ? model?.details.get(
+      ? model.details.get(
           detailKey({
             path: data.path,
             ...(data.snapshotId ? { snapshotId: data.snapshotId } : {}),
@@ -138,15 +138,11 @@ export function useRemovedPreview({
       const delivery = environment.delivery();
       const request = previewEndpoint(
         data,
-        comparisonUrl !== undefined
-          ? { comparisonUrl }
-          : delivery.kind === "pinned"
-            ? delivery
-            : undefined,
+        { comparisonUrl },
         String(environment.baseUrl),
       );
       const requestKey = request
-        ? `${request.endpoint.href}:${request.generation?.href ?? ""}`
+        ? `${request.endpoint.href}:${request.generation.href}`
         : "";
       let owner =
         !refresh &&

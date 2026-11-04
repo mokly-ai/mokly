@@ -27,14 +27,11 @@ fn the_generation_has_no_review_file_and_removed_details_keep_two_space_indentat
             .each_call(matching!("sample/index.html"))
             .answers_arc(Arc::new(|_, _| Ok(history()))),
     )));
-    result.after = Arc::new(Unimock::new((
+    result.after = Arc::new(Unimock::new(
         RenderGenerationMock::catalogue
             .each_call(matching!())
             .returns(current),
-        RenderGenerationMock::generation_key
-            .each_call(matching!())
-            .returns("after"),
-    )));
+    ));
     let files = comparison_metadata::files(&accepted, &snapshot(Some(accepted.clone()))).unwrap();
     assert_eq!(
         files.keys().collect::<Vec<_>>(),

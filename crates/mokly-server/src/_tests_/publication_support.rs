@@ -11,10 +11,9 @@ use mokly_model::public_index::CatalogueNode;
 use mokly_model::public_metadata::{CatalogueChanges, ComparisonSelection};
 use mokly_model::readers;
 use mokly_model::usage::CatalogueUsage;
-use mokly_model::usage_schemas::UsageSchemas;
 
 use crate::backend::Documents;
-use crate::detail_encoding::{DetailEncoder, ValidatedDetails};
+use crate::detail_encoding::{DetailEncoder, EncodedDetails};
 use crate::evidence::{self, RenderRoute};
 use crate::generation::Generation;
 use crate::revision::RevisionLease;
@@ -99,13 +98,10 @@ pub(crate) fn snapshot(count: usize, documents: Arc<dyn Documents>) -> Arc<Snaps
     for (path, detail) in &details {
         projection::set_detail_id(&mut index, path, &detail.detail_id);
     }
-    let mut schemas = UsageSchemas::new(&index.components);
     for (path, detail) in &details {
         files.insert(
             format!("mokly-viewer/entries/{path}.json"),
-            ValidatedDetails
-                .encode(detail, &index, &mut schemas)
-                .unwrap(),
+            EncodedDetails.encode(detail),
         );
     }
     Arc::new(Snapshot {
@@ -160,9 +156,7 @@ pub(crate) fn unrecorded_ready(count: usize, documents: Arc<dyn Documents>) -> A
         .iter()
         .map(|view| (view.route.clone(), ready()))
         .collect::<Vec<_>>();
-    let published = evidence::complete(&initial, &updates, &ValidatedDetails)
-        .unwrap()
-        .unwrap();
+    let published = evidence::complete(&initial, &updates, &EncodedDetails).unwrap();
     let mut unrecorded = (*published).clone();
     unrecorded.completed.clear();
     Arc::new(unrecorded)

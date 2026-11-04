@@ -10,17 +10,15 @@ use mokly_html::fragment::{
     RenderKind,
 };
 use mokly_model::axes::ColorScheme;
-use mokly_model::routes;
 use mokly_model::usage::{ComponentInstanceRecord, ComponentSlotRecord};
 use mokly_sidecar::bindings::{EntryBinding, SlotInput};
 use mokly_sidecar::methods::{self, Call, IgnoreScope};
 use mokly_sidecar::pool::SidecarPool;
 use mokly_sidecar::render_records::MarkerPayload;
 use mokly_sidecar::results::Render;
-use mokly_sidecar::wire::MethodResult;
 
-use crate::diagnostics;
-use crate::error::{RenderError, Result, convert};
+use crate::error::{RenderError, Result};
+use crate::transport_values;
 
 pub(crate) struct Fragments {
     pub(crate) _lease: Option<std::sync::Arc<dyn mokly_catalogue::render_sources::GenerationLease>>,
@@ -55,7 +53,7 @@ impl Fragments {
                 path: request.entry_path.clone(),
                 title: request.entry_title.clone(),
             },
-            props: convert(&request.props)?,
+            props: transport_values::plain_props(&request.props),
             viewport: match request.viewport {
                 mokly_model::axes::Viewport::Mobile => "mobile",
                 mokly_model::axes::Viewport::Desktop => "desktop",
@@ -112,46 +110,35 @@ impl Fragments {
             Ok(result) => result,
             Err(source) => return Err(RenderError::Sidecar { source }),
         };
-        let route = if matches!(request.kind, RenderKind::Page) {
-            routes::document(&request.entry_path, ColorScheme::Light)
+        if matches!(request.kind, RenderKind::Page) {
+            let result = result.into_page();
+            Ok(Fragment {
+                html: result.html,
+                resources: result.resources,
+                ..Default::default()
+            })
         } else {
-            routes::view(&request.entry_path, request.viewport, request.color_scheme)
-        };
-        match result {
-            MethodResult::Render(result) => fragment(result, &route),
-            MethodResult::Page(result) if matches!(request.kind, RenderKind::Page) => {
-                Ok(Fragment {
-                    html: result.html,
-                    resources: result.resources,
-                    warnings: diagnostics::warnings(&result.warnings, &route),
-                    ..Default::default()
-                })
-            }
-            _ => Err(RenderError::ResultKind { method: "render" }),
+            fragment(result.into_render())
         }
     }
 }
 
-pub(crate) fn fragment(result: Render, route: &str) -> Result<Fragment> {
+pub(crate) fn fragment(result: Render) -> Result<Fragment> {
     let mut instances: BTreeMap<String, ComponentInstanceRecord> = BTreeMap::new();
     for instance in &result.instances {
         let record = ComponentInstanceRecord {
             key: instance.key.clone(),
             id: instance.id.clone(),
             component_id: instance.component_path.clone(),
-            owner: convert(&instance.owner)?,
+            owner: transport_values::owner(&instance.owner),
             slot_key: instance.slot_key.clone(),
             order: instance.order,
             props: instance.props.clone(),
             props_key: instance.props_key.clone(),
-            source: match &instance.source {
-                Some(source) => Some(convert(source)?),
-                None => None,
-            },
+            source: instance.source.as_ref().map(transport_values::source),
         };
         if let Some(previous) = instances.get(&instance.key)
-            && convert::<_, serde_json::Value>(previous)?
-                != convert::<_, serde_json::Value>(&record)?
+            && previous != &record
         {
             return Err(RenderError::Input {
                 key: instance.key.clone(),
@@ -165,12 +152,11 @@ pub(crate) fn fragment(result: Render, route: &str) -> Result<Fragment> {
             key: slot.key.clone(),
             instance_key: slot.instance_key.clone(),
             name: slot.name.clone(),
-            owner: convert(&slot.owner)?,
+            owner: transport_values::owner(&slot.owner),
             source_slot_key: slot.source_slot_key.clone(),
         };
         if let Some(previous) = slots.get(&slot.key)
-            && convert::<_, serde_json::Value>(previous)?
-                != convert::<_, serde_json::Value>(&record)?
+            && previous != &record
         {
             return Err(RenderError::Input {
                 key: slot.key.clone(),
@@ -182,26 +168,8 @@ pub(crate) fn fragment(result: Render, route: &str) -> Result<Fragment> {
     for marker in result.markers {
         let kind = match marker.payload {
             MarkerPayload::Output => FragmentMarkerKind::Output,
-            MarkerPayload::Instance { key } => {
-                if !result
-                    .instances
-                    .iter()
-                    .any(|instance| instance.region_id == marker.id && instance.key == key)
-                {
-                    return Err(RenderError::Input { key });
-                }
-                FragmentMarkerKind::Instance { key }
-            }
-            MarkerPayload::Slot { key } => {
-                if !result
-                    .slots
-                    .iter()
-                    .any(|slot| slot.key == key && slot.region_ids.contains(&marker.id))
-                {
-                    return Err(RenderError::Input { key });
-                }
-                FragmentMarkerKind::Slot { key }
-            }
+            MarkerPayload::Instance { key } => FragmentMarkerKind::Instance { key },
+            MarkerPayload::Slot { key } => FragmentMarkerKind::Slot { key },
             MarkerPayload::Ignore { material_key } => FragmentMarkerKind::Ignore { material_key },
             MarkerPayload::Link { to } => FragmentMarkerKind::Link { to },
         };
@@ -234,6 +202,6 @@ pub(crate) fn fragment(result: Render, route: &str) -> Result<Fragment> {
             })
             .collect(),
         resources: result.resources,
-        warnings: diagnostics::warnings(&result.warnings, route),
+        warnings: Vec::new(),
     })
 }

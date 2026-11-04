@@ -73,7 +73,6 @@ pub(crate) fn accepted(
         result: ComparisonResult {
             resource_work: Default::default(),
             affected_lookups: 0,
-            validation_lookups: 0,
             warnings: vec![],
             review: ReviewResultV8 {
                 schema_version: 8,
@@ -179,7 +178,7 @@ pub(crate) fn historical_inputs() -> (PreparedCatalogue, BTreeMap<String, Docume
         documents: BTreeMap::new(),
         slot_fragments: BTreeMap::new(),
         elements: BTreeMap::new(),
-        deferred_modules: Vec::new(),
+
         javascript: Default::default(),
         dependency_directories: Default::default(),
         warnings: Vec::new(),
