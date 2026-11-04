@@ -1,6 +1,6 @@
 # One-Time Mokly Registry Bootstrap
 
-Status: In progress under the [frame package plan](../../plans/frame-package.md).
+Status: Follow-up work remains in the [model and frame registration item](../../plans/follow-ups/register-model-and-frame-packages.md).
 
 npm can configure a trusted publisher only for a package that already exists.
 The first publication of each package is therefore a one-time, reviewed,
