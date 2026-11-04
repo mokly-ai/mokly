@@ -5,17 +5,21 @@ and usage-adoption boundaries consumed by the client-rendered React shell.
 Shell navigation, selection, comparisons and component inspection live under
 `src/shell`, and the shell's index, detail and live transports under
 `src/shell/data_*` and `src/standalone`; this directory contains no second
-interaction runtime. The package build bundles the standalone shell and the
-frame inspector into `dist/browser/shell.js` and `dist/browser/inspector.js`
-and generates the adjacent `dist/browser.manifest.json` from the completed
-esbuild outputs. Serve and `build` deliver them as
-`/mokly-viewer/client/shell.js` and the inspector script of the
-[frame adapter contract](../../../../docs/protocol/mokly-frame-adapter.md).
+interaction runtime. The adapters import the public frame types from
+`@mokly/frame`, and the shared event core, the wire schema, and the frame link
+rules from `@mokly/frame/internal`. The package build bundles the standalone
+shell into `dist/browser/shell.js`, copies the frame probe that `@mokly/frame`
+builds into `dist/browser/frame-probe.js`, and generates the adjacent
+`dist/browser.manifest.json` from those outputs. Serve and `build` deliver
+them as `/mokly-viewer/client/shell.js` and
+`/mokly-viewer/client/frame-probe.js`, the script of the
+[frame probe contract](../../../../docs/protocol/mokly-frame-probe.md).
 
 ## Same-origin frames
 
 `sameOriginAdapter` keeps script-disabled frames and reports their geometry.
-It runs the shared inspector core with the viewer's callback environment.
+It runs the shared event core of the frame probe with the viewer's callback
+environment.
 Both adapters draw nothing. The shell draws the masks and labels with
 `@mokly/ui` components from the reported instance boundaries.
 Its mounts authenticate the current document and support scroll restoration
@@ -68,9 +72,10 @@ cargo xtask check --suite viewer
 
 ### Key Code
 
-- [`frame_adapter.ts`](./frame_adapter.ts) defines the public `FrameAdapter`,
-  `FrameMount`, `MountedFrame`, and `FrameEvent` types that `@mokly/viewer`
-  exports.
+- [`../../../frame/src/frame_adapter.ts`](../../../frame/src/frame_adapter.ts)
+  in `@mokly/frame` defines the public `FrameAdapter`, `FrameMount`,
+  `MountedFrame`, and `FrameEvent` types that these adapters implement and
+  `@mokly/viewer` re-exports.
 - [`same_origin_adapter.ts`](./same_origin_adapter.ts) holds
   `sameOriginAdapter`, the default adapter for script-disabled frames,
   `temporaryPreviewAdapter` for control previews, and `localFramePath` for
@@ -87,8 +92,9 @@ cargo xtask check --suite viewer
   the only same-origin adapter code that reads a frame's document or window.
 - [`same_origin_navigation.ts`](./same_origin_navigation.ts) classifies served
   logical links and owns their activation until the shared core starts.
-- [`../inspector/runtime.ts`](../inspector/runtime.ts) holds the shared core
-  for geometry, hover, click, picks, Escape, and navigation.
+- [`../../../frame/src/probe/runtime.ts`](../../../frame/src/probe/runtime.ts)
+  in `@mokly/frame` holds `probeRuntime`, the shared core for geometry, hover,
+  click, picks, Escape, and navigation.
 - [`component_geometry.ts`](./component_geometry.ts) holds `visibleFrameBox`,
   which clips the frame to the host viewport and its ancestors.
 - [`post_message_adapter.ts`](./post_message_adapter.ts) holds
@@ -96,9 +102,9 @@ cargo xtask check --suite viewer
 - [`message_transport.ts`](./message_transport.ts) holds `messageTransport`,
   the bounded request and reply state of one cross-origin session.
 - [`frame_usage.ts`](./frame_usage.ts) holds `frameUsage` and `frameEvents`,
-  which turn validated usage into inspector metadata and the allowed events.
+  which turn validated usage into frame probe metadata and the allowed events.
 
-Related boundaries: [inspector](../inspector/README.md),
+Related boundaries: [frame probe](../../../frame/src/probe/README.md),
 [Browse document adaptation](../../../../docs/protocol/mokly-export-delivery.md),
 [logical navigation](../../../../docs/protocol/mokly-navigation.md),
 [selection and events](../../../../docs/protocol/mokly-viewer-selection.md#selection-events-and-imperative-use),

@@ -341,24 +341,24 @@ Rust static build and server use the new names in the same milestone, so
 that the product works. The host adapters stay in the viewer for one
 milestone and import from `@mokly/frame/internal`.
 
-- [ ] Move `packages/viewer/src/inspector`,
+- [x] Move `packages/viewer/src/inspector`,
       `packages/viewer/src/client/frame_adapter.ts`, the frame-only
       functions of the **Design** section, and the scripts
       `inspector-bundle.mjs`, `inspector-pool.mjs`, and
       `inspector-pool.d.mts` with `git mv`. Rename them to the frame probe
       names.
-- [ ] Build `frame-probe.js` in the package. Copy it in the viewer build
+- [x] Build `frame-probe.js` in the package. Copy it in the viewer build
       into `packages/viewer/dist/browser` and the browser manifest.
-- [ ] Rename the channel, the wire version, and the page markers. Rename the
+- [x] Rename the channel, the wire version, and the page markers. Rename the
       Rust modules, the injected script path, the reserved-marker build
       error, and the asset check in `crates/mokly-server/src/assets.rs`.
       Update their tests and snapshots.
-- [ ] Add the republish step of the rename to
+- [x] Add the republish step of the rename to
       `docs/guides/start/upgrade.md`. Update the READMEs and follow-up items
       that name the old script: `packages/viewer/docs/deployment/README.md`,
       `packages/viewer/README.md`, and the items under `plans/follow-ups/`
       that name `inspector.js`.
-- [ ] Move `packages/viewer/tests/inspector_budget.test.ts` and
+- [x] Move `packages/viewer/tests/inspector_budget.test.ts` and
       `marker_ranges.test.ts`. Point `tests/inspector_inert.test.ts`,
       `tests/inspector_schema.test.ts`, and `tests/inspector_pool.test.ts`
       at the package, and rename them to the frame probe.

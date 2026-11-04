@@ -6,14 +6,14 @@ import test from "node:test";
 import { command, publicationFixture } from "./helpers/static_publication.js";
 
 test(
-  "consumer inspector metadata fails with its document route and build category",
+  "consumer frame probe metadata fails with its document route and build category",
   { timeout: 120_000 },
   async (context) => {
     const root = await publicationFixture();
     try {
       await fs.writeFile(
         path.join(root, "specs/home.screen.html"),
-        '---\ntitle: Home\n---\n<a href="#home" data-mokly-inspector-link="0">Home</a><h1 id="home">Home</h1>',
+        '---\ntitle: Home\n---\n<a href="#home" data-mokly-frame-probe-link="0">Home</a><h1 id="home">Home</h1>',
       );
       const result = await command(
         root,
@@ -26,7 +26,7 @@ test(
       assert.equal(result.code, 1);
       assert.match(
         result.stderr,
-        /\[mokly\/build-invalid\] home\/index\.(desktop|mobile)\.html: data-mokly-inspector-link is reserved/,
+        /\[mokly\/build-invalid\] home\/index\.(desktop|mobile)\.html: data-mokly-frame-probe-link is reserved/,
       );
       assert.ok(!result.stderr.includes("[mokly-static"));
     } finally {

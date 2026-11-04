@@ -1,12 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { InstanceBoundary, MountedFrame } from "@mokly/frame";
 import type { CatalogueUsage } from "@mokly/model";
 
-import type {
-  InstanceBoundary,
-  MountedFrame,
-} from "../src/client/frame_adapter.js";
 import { SupersededFrameGeometry } from "../src/shell/frame_geometry.js";
 import { ShellFrameGeometryController } from "../src/shell/frame_geometry_controller.js";
 import type {

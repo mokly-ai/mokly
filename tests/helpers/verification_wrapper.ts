@@ -24,7 +24,7 @@ export async function createHarness(): Promise<string> {
   );
   const files = new Map([
     ["packages/viewer/dist/index.js", ""],
-    ["packages/viewer/dist/browser/inspector.js", ""],
+    ["packages/viewer/dist/browser/frame-probe.js", ""],
     [
       "tests/failing.test.ts",
       'import test from "node:test";\ntest("retained unit diagnostic", () => {\n  throw new Error("retained unit diagnostic sentinel");\n});\n',

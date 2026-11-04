@@ -71,10 +71,10 @@ async fn watched_html_css_membership_config_and_failure_recovery_share_one_port(
         ),
         (
             "viewer/browser.manifest.json",
-            r#"{"schemaVersion":1,"modules":["shell.js","inspector.js"]}"#,
+            r#"{"schemaVersion":1,"modules":["shell.js","frame-probe.js"]}"#,
         ),
         ("viewer/browser/shell.js", ""),
-        ("viewer/browser/inspector.js", ""),
+        ("viewer/browser/frame-probe.js", ""),
         ("viewer/shell.css", ""),
         ("viewer/assets/brand.svg", "<svg/>"),
         ("viewer/assets/fonts/InterVariable.woff2", ""),

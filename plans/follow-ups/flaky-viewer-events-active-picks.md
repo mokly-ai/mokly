@@ -34,7 +34,7 @@
     `navigation`. So `cancelPick` must add no third event.
   - No step waits for the end of the first pick before line 124. The viewer
     can learn of the Escape press from a preview frame, through a posted
-    message, at `packages/viewer/src/inspector/runtime.ts:129-133`.
+    message, at `packages/frame/src/probe/runtime.ts:140-146`.
   - While a pick is active, `startPick` resolves at once and starts no new
     pick, at `packages/viewer/src/viewer/picking.ts:20`.
 - **Problem:**

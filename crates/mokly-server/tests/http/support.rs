@@ -125,7 +125,7 @@ impl Harness {
         let mut assets = BTreeMap::new();
         for (path, content_type) in [
             ("client/shell.js", "text/javascript; charset=utf-8"),
-            ("client/inspector.js", "text/javascript; charset=utf-8"),
+            ("client/frame-probe.js", "text/javascript; charset=utf-8"),
             ("shell.css", "text/css; charset=utf-8"),
             ("fonts/InterVariable.woff2", "font/woff2"),
             ("client/brand.svg", "image/svg+xml"),

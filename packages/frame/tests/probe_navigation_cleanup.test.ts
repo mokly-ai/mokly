@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { inspectorRuntime } from "../src/inspector/runtime.js";
-import type { InspectorEnvironment } from "../src/inspector/runtime_types.js";
+import { probeRuntime } from "../src/probe/runtime.js";
+import type { ProbeEnvironment } from "../src/probe/runtime_types.js";
 
 /**
  * A frame's document whose window turns cross-origin when the frame
@@ -12,7 +12,7 @@ import type { InspectorEnvironment } from "../src/inspector/runtime_types.js";
 function navigableFrame() {
   let navigated = false;
   const listeners = new Map<string, (event: Event) => void>();
-  const environment: InspectorEnvironment = {
+  const environment: ProbeEnvironment = {
     AbortController,
     ResizeObserver: class {
       observe() {}
@@ -56,7 +56,7 @@ function navigableFrame() {
     },
     fonts: new EventTarget(),
   } as unknown as Document;
-  const runtime = inspectorRuntime(
+  const runtime = probeRuntime(
     win as unknown as Window,
     { ranges: [], links: [] },
     environment,

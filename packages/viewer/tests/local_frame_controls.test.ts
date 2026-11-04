@@ -4,8 +4,6 @@ import test from "node:test";
 import { localFrameAccess } from "../src/client/same_origin_access.js";
 import { createMountAuthentication } from "../src/client/same_origin_identity.js";
 
-import { runtimeFixture } from "./inspector_runtime_fixture.js";
-
 test("local inspection stays unavailable when the immediate document cannot authenticate", () => {
   const frame = { contentDocument: null } as unknown as HTMLIFrameElement;
   const url = new URL("https://app.test/static/screen.html");
@@ -26,16 +24,4 @@ test("replacing a local frame preserves the exact query and fragment", () => {
   const url = new URL("https://app.test/static/screen.html?revision=2#summary");
   localFrameAccess(frame).replace(url);
   assert.deepEqual(replacements, [url.href]);
-});
-
-test("the core cancels pending measurements and listeners on disposal", (t) => {
-  const fixture = runtimeFixture(t);
-  const { runtime, signals, cancelled, frames } = fixture;
-  fixture.changed();
-  assert.equal(frames.size, 1);
-  assert.equal(signals.length, 2);
-  assert.ok(signals.every((signal) => !signal.aborted));
-  runtime.__dispose();
-  assert.ok(signals.every((signal) => signal.aborted));
-  assert.deepEqual(cancelled, [1]);
 });

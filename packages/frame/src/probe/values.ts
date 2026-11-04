@@ -4,7 +4,7 @@ import type {
   Box,
   FrameNavigation,
   NavigationTarget,
-} from "../client/frame_adapter.js";
+} from "../frame_adapter.js";
 
 /** Small, shared validators; no DOM or server dependency enters the wire schema. */
 
@@ -23,7 +23,7 @@ export const EVENTS = [
   "pick-end",
   "geometry",
 ] as const;
-export type InspectorEventType = (typeof EVENTS)[number];
+export type ProbeEventType = (typeof EVENTS)[number];
 export type JsonObject = Record<string, unknown>;
 export const object = (value: unknown): value is JsonObject =>
   value !== null &&

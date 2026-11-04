@@ -1,6 +1,6 @@
 import type { ComponentRangeRecord } from "@mokly/model";
 
-import type { FrameNavigation } from "../client/frame_adapter.js";
+import type { FrameNavigation } from "../frame_adapter.js";
 
 import { array, boundedJson, identity, key, object, shape } from "./values.js";
 
@@ -8,25 +8,22 @@ import { array, boundedJson, identity, key, object, shape } from "./values.js";
  * Range index n is r-n; null keys identify slots and null parents identify
  * top-level ranges. `[null, null]` at index 0 is a component page's root region.
  */
-export type InspectorRange = readonly [
-  key: string | null,
-  parent: number | null,
-];
+export type ProbeRange = readonly [key: string | null, parent: number | null];
 export type LinkIdentity = Omit<FrameNavigation, "activation">;
-export interface InspectorMetadata {
-  ranges: readonly InspectorRange[];
+export interface ProbeMetadata {
+  ranges: readonly ProbeRange[];
   links: readonly LinkIdentity[];
   error?: "limit" | "unavailable";
 }
-export const metadataKeys = (metadata: InspectorMetadata): string[] =>
+export const metadataKeys = (metadata: ProbeMetadata): string[] =>
   [...new Set(metadata.ranges.flatMap(([key]) => key ?? []))].sort();
 export const unavailableMetadata = (
   error: "limit" | "unavailable",
-): InspectorMetadata => ({ ranges: [], links: [], error });
+): ProbeMetadata => ({ ranges: [], links: [], error });
 /** Validate references before conversion, which must never coerce a bad parent to null. */
 export const compactRanges = (
   records: readonly ComponentRangeRecord[],
-): InspectorRange[] | undefined => {
+): ProbeRange[] | undefined => {
   if (
     records.some(
       (record, index) =>
@@ -44,7 +41,7 @@ export const compactRanges = (
   ]);
 };
 /** Compact inert tuples retain every identity and physical parent without duplication. */
-export const readMetadata = (json: unknown): InspectorMetadata | undefined => {
+export const readMetadata = (json: unknown): ProbeMetadata | undefined => {
   const value = boundedJson(json);
   if (
     !object(value) ||
@@ -72,6 +69,6 @@ export const readMetadata = (json: unknown): InspectorMetadata | undefined => {
     )
   )
     return;
-  const metadata = value as unknown as InspectorMetadata;
+  const metadata = value as unknown as ProbeMetadata;
   return metadataKeys(metadata).length <= 1024 ? metadata : undefined;
 };

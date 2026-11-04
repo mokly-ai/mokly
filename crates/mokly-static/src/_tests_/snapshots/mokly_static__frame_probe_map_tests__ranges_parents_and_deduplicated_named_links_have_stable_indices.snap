@@ -1,5 +1,5 @@
 ---
-source: crates/mokly-static/src/_tests_/inspector_map_tests.rs
+source: crates/mokly-static/src/_tests_/frame_probe_map_tests.rs
 expression: "serde_json::to_string_pretty(&metadata).unwrap()"
 ---
 {

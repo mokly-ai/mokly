@@ -9,7 +9,7 @@ export async function missingPreparedOutputs(
   const missing = [];
   const files = [
     "packages/viewer/dist/index.js",
-    "packages/viewer/dist/browser/inspector.js",
+    "packages/viewer/dist/browser/frame-probe.js",
   ];
   if (browser) {
     const { platformPackage } =

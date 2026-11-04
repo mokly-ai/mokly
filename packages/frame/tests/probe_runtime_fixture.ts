@@ -2,13 +2,13 @@ import type { TestContext } from "node:test";
 
 import { Window as BrowserWindow } from "happy-dom";
 
-import type { InspectorMetadata } from "../src/inspector/metadata.js";
-import { inspectorRuntime } from "../src/inspector/runtime.js";
+import type { ProbeMetadata } from "../src/probe/metadata.js";
+import { probeRuntime } from "../src/probe/runtime.js";
 import type {
-  InspectorEnvironment,
-  InspectorNavigation,
-  InspectorRuntimeEvent,
-} from "../src/inspector/runtime_types.js";
+  ProbeEnvironment,
+  ProbeNavigation,
+  ProbeRuntimeEvent,
+} from "../src/probe/runtime_types.js";
 
 export const outer = "a".repeat(64),
   inner = "b".repeat(64),
@@ -16,7 +16,7 @@ export const outer = "a".repeat(64),
 export const outerBox = { x: 10, y: 10, width: 100, height: 40 },
   innerBox = { x: 20, y: 20, width: 20, height: 20 },
   repeatedBox = { x: 80, y: 20, width: 20, height: 20 };
-const metadata: InspectorMetadata = {
+const metadata: ProbeMetadata = {
   ranges: [
     [null, null],
     [outer, 0],
@@ -45,7 +45,7 @@ const body = `<!--mokly-instance:start id="r-1" instance="${outer}"-->
 /** Real marker/range handling, with deterministic layout and host callbacks. */
 export function runtimeFixture(
   t: TestContext,
-  navigate: InspectorNavigation = () => undefined,
+  navigate: ProbeNavigation = () => undefined,
   map = metadata,
 ) {
   const dom = new BrowserWindow();
@@ -76,7 +76,7 @@ export function runtimeFixture(
     });
   };
   const frames = new Map<number, FrameRequestCallback>();
-  const events: InspectorRuntimeEvent[] = [];
+  const events: ProbeRuntimeEvent[] = [];
   const signals: AbortSignal[] = [];
   const cancelled: number[] = [];
   const observed: Node[] = [];
@@ -95,7 +95,7 @@ export function runtimeFixture(
       signals.push(options.signal);
     listen(name, listener, options);
   };
-  const environment: InspectorEnvironment = {
+  const environment: ProbeEnvironment = {
     AbortController,
     ResizeObserver: class {
       constructor(notify: ResizeObserverCallback) {
@@ -140,7 +140,7 @@ export function runtimeFixture(
         throw new Error("Frame callback realm used");
       },
     });
-  const runtime = inspectorRuntime(
+  const runtime = probeRuntime(
     win,
     map,
     environment,

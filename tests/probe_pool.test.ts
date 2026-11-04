@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import vm from "node:vm";
 
-import { inspectorPool } from "../packages/viewer/scripts/inspector-pool.mjs";
+import { probePool } from "../packages/frame/scripts/probe-pool.mjs";
 
 function execute(source: string): string {
   const context = { result: "", window: {}, document: {} };
@@ -70,14 +70,14 @@ for (const [name, source] of [
     ]);`,
   ],
 ] as const)
-  test(`inspector pooling preserves ${name}`, () => {
-    assert.equal(execute(inspectorPool(source)), execute(source));
+  test(`probe pooling preserves ${name}`, () => {
+    assert.equal(execute(probePool(source)), execute(source));
   });
 
-test("inspector pooling rejects a collision with its generated identifiers", () => {
+test("probe pooling rejects a collision with its generated identifiers", () => {
   assert.throws(
-    () => inspectorPool("const __inspectorPoolNative0 = 1;"),
-    /Reserved inspector/,
+    () => probePool("const __probePoolNative0 = 1;"),
+    /Reserved probe/,
   );
 });
 
@@ -88,6 +88,6 @@ for (const source of [
   "const [Object] = input;",
   "try {} catch (window) {}",
 ])
-  test(`inspector pooling rejects native shadowing: ${source}`, () => {
-    assert.throws(() => inspectorPool(source), /shadow/);
+  test(`probe pooling rejects native shadowing: ${source}`, () => {
+    assert.throws(() => probePool(source), /shadow/);
   });

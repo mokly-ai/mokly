@@ -1,13 +1,13 @@
-import type { FrameNavigation } from "../client/frame_adapter.js";
+import type { FrameNavigation } from "../frame_adapter.js";
 import { frameLinkActivation } from "../navigation/activation.js";
 
-import type { InspectorMetadata } from "./metadata.js";
+import type { ProbeMetadata } from "./metadata.js";
 /** Cache accepted identities once, independently of the portable href or link text. */
-export const inspectorNavigation =
-  (metadata: InspectorMetadata) =>
+export const probeNavigation =
+  (metadata: ProbeMetadata) =>
   (event: MouseEvent): FrameNavigation | undefined => {
     const link = (event.target as Element | null)?.closest?.(
-      "[data-mokly-inspector-link]",
+      "[data-mokly-frame-probe-link]",
     );
     if (
       !link ||
@@ -24,7 +24,7 @@ export const inspectorNavigation =
       link.hasAttribute("download"),
     );
     if (!activation) return;
-    const index = link.getAttribute("data-mokly-inspector-link")!;
+    const index = link.getAttribute("data-mokly-frame-probe-link")!;
     const item = /^(0|[1-9]\d{0,3})$/.test(index)
       ? metadata.links[Number(index)]
       : undefined;

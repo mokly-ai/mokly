@@ -1,6 +1,6 @@
 /** Clip immediate frames to the host viewport and their actual ancestors. */
 
-import { clipNode } from "../inspector/clipping.js";
+import { clipNode } from "@mokly/frame/internal";
 
 import { intersectRectangles, type CoordinateRect } from "./geometry.js";
 

@@ -1,5 +1,15 @@
 export type * from "./catalogue/types.js";
-export type * from "./client/frame_adapter.js";
+export type {
+  Box,
+  FrameAdapter,
+  FrameErrorCode,
+  FrameEvent,
+  FrameMount,
+  FrameNavigation,
+  InstanceBoundary,
+  MountedFrame,
+  NavigationTarget,
+} from "@mokly/frame";
 export type * from "./components/view_types.js";
 export type {
   ComponentMetadata as ManifestComponent,

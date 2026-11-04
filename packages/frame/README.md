@@ -43,7 +43,12 @@ and select a frame adapter.
 ## Development
 
 `npm run build` builds this package after `@mokly/model` and before
-`@mokly/viewer`. `npm run typecheck` includes its source and tests. The root
+`@mokly/viewer`. The package build compiles `src` into `dist`, then bundles
+the frame probe into `dist/browser/frame-probe.js`. The viewer build copies
+that script into `packages/viewer/dist/browser` and lists it in the viewer's
+browser module inventory.
+
+`npm run typecheck` includes its source and tests. The root
 test runner discovers package tests under `tests/`. Run one with
 `npm test -- packages/frame/tests/{file}`. `npm test --workspace @mokly/frame`
 runs the package tests and accepts an empty test directory.
@@ -55,11 +60,27 @@ of spelling them in source.
 
 ### Key Code
 
-- [`src/index.ts`](./src/index.ts) — the public package entry
+- [`src/index.ts`](./src/index.ts) — the public package entry, which exports
+  the frame adapter types
 - [`src/internal.ts`](./src/internal.ts) — the entry for viewer-only frame
-  operations
-- [`scripts/build.mjs`](./scripts/build.mjs) — removes `dist` and compiles the
-  package with `tsconfig.build.json`
+  operations, such as the shared event core, the wire schema, the inert map
+  reader, the clipping rules, and the frame link rules
+- [`src/frame_adapter.ts`](./src/frame_adapter.ts) — the public
+  `FrameAdapter`, `FrameMount`, `MountedFrame`, and `FrameEvent` types, which
+  `@mokly/viewer` re-exports
+- [`src/probe`](./src/probe/README.md) — the frame probe IIFE and the shared
+  event core that both adapters run
+- [`src/navigation`](./src/navigation) — the link rules that only the frame
+  code uses: `frameLinkActivation` in `activation.ts`, `parseLogicalMarker`
+  and `logicalMarker` in `logical.ts`, and `parseBrowsingTarget` in
+  `target.ts`
+- [`../viewer/src/client`](../viewer/src/client/README.md) — the built-in
+  adapters and their message transport, in the viewer package, which import
+  the frame code through `@mokly/frame/internal`
+- [`scripts/build.mjs`](./scripts/build.mjs) — removes `dist`, compiles the
+  package with `tsconfig.build.json`, and bundles the frame probe
+- [`scripts/probe-bundle.mjs`](./scripts/probe-bundle.mjs) — `bundleProbe`,
+  which runs esbuild, the string pool of `probe-pool.mjs`, and Terser
 
 ### Related Docs
 

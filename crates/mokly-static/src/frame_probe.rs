@@ -1,4 +1,4 @@
-//! Head-only inspector publication from authenticated composition metadata.
+//! Head-only frame probe publication from authenticated composition metadata.
 
 use std::collections::BTreeMap;
 
@@ -9,7 +9,7 @@ use mokly_model::usage::{CatalogueUsage, ComponentRangeTarget};
 use serde::Serialize;
 
 use crate::error::{Error, InternalError, Result};
-use crate::inspector_error::InspectorFailure;
+use crate::frame_probe_error::FrameProbeFailure;
 
 #[derive(Serialize)]
 struct Metadata {
@@ -65,9 +65,9 @@ pub fn inject(document: &Composed, route: &str) -> Result<Vec<u8>> {
                         || parent.is_some_and(|parent| parent >= index)
                         || (range.parent_id.is_some() && parent.is_none())
                     {
-                        return Err(Error::Inspector {
+                        return Err(Error::FrameProbe {
                             route: route.into(),
-                            reason: InspectorFailure::Ranges,
+                            reason: FrameProbeFailure::Ranges,
                         });
                     }
                     let key = match &range.target {
@@ -99,19 +99,19 @@ pub fn inject(document: &Composed, route: &str) -> Result<Vec<u8>> {
     let additions = vec![
         tree::element(
             "template",
-            &[("data-mokly-inspector", "")],
+            &[("data-mokly-frame-probe", "")],
             vec![Node::Text(text)],
         ),
         tree::element(
             "script",
-            &[("src", "/mokly-viewer/client/inspector.js")],
+            &[("src", "/mokly-viewer/client/frame-probe.js")],
             Vec::new(),
         ),
     ];
     if !head(&mut nodes, &additions) {
-        return Err(Error::Inspector {
+        return Err(Error::FrameProbe {
             route: route.into(),
-            reason: InspectorFailure::Head,
+            reason: FrameProbeFailure::Head,
         });
     }
     Ok(serialize::html(&nodes).into_bytes())
@@ -134,11 +134,11 @@ fn links(
     while let Some(node) = pending.pop() {
         match node {
             Node::Element(element) => {
-                for attribute in ["data-mokly-inspector", "data-mokly-inspector-link"] {
+                for attribute in ["data-mokly-frame-probe", "data-mokly-frame-probe-link"] {
                     if element.get(attribute).is_some() {
-                        return Err(Error::Inspector {
+                        return Err(Error::FrameProbe {
                             route: route.into(),
-                            reason: InspectorFailure::Reserved { attribute },
+                            reason: FrameProbeFailure::Reserved { attribute },
                         });
                     }
                 }
@@ -165,7 +165,7 @@ fn links(
                         output.push(navigation);
                         index
                     });
-                    element.set("data-mokly-inspector-link", index.to_string());
+                    element.set("data-mokly-frame-probe-link", index.to_string());
                 }
                 pending.extend(element.children.iter_mut().rev());
             }
@@ -181,7 +181,7 @@ fn clear_links(nodes: &mut [Node]) {
     while let Some(node) = pending.pop() {
         match node {
             Node::Element(element) => {
-                element.take("data-mokly-inspector-link");
+                element.take("data-mokly-frame-probe-link");
                 pending.extend(element.children.iter_mut().rev());
             }
             Node::Region { children, .. } => pending.extend(children.iter_mut().rev()),

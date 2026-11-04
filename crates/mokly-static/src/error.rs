@@ -7,7 +7,7 @@ use mokly_graph::error::GraphError;
 use mokly_model::output::error::FormatError;
 use thiserror::Error;
 
-use crate::inspector_error::InspectorFailure;
+use crate::frame_probe_error::FrameProbeFailure;
 
 /// Static output result.
 pub type Result<T> = std::result::Result<T, Error>;
@@ -134,13 +134,13 @@ pub enum Error {
         /// Offending file or route.
         path: String,
     },
-    /// Inspector publication failed for a specific current document.
+    /// Frame probe publication failed for a specific current document.
     #[error("[mokly-static] {route}: {reason}")]
-    Inspector {
+    FrameProbe {
         /// Generated document route.
         route: String,
         /// Typed metadata failure.
-        reason: InspectorFailure,
+        reason: FrameProbeFailure,
     },
     /// A document plan refers to an absent catalogue entry.
     #[error("[mokly-static] Invalid document plan for {route}: entry {entry} is absent.")]

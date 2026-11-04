@@ -8,7 +8,7 @@ import { requirePrepared } from "../scripts/verification/prepared.mjs";
 
 const outputs = [
   "packages/viewer/dist/index.js",
-  "packages/viewer/dist/browser/inspector.js",
+  "packages/viewer/dist/browser/frame-probe.js",
 ];
 
 test("prepared verification names every missing viewer output", async (t) => {

@@ -1,8 +1,7 @@
+import type { FrameMount } from "@mokly/frame";
+import { origin } from "@mokly/frame/internal";
 import { RENDERS_PATH, RENDER_ID, currentDocumentRoute } from "@mokly/model";
 
-import { origin } from "../inspector/values.js";
-
-import type { FrameMount } from "./frame_adapter.js";
 import { FrameError } from "./frame_error.js";
 
 const mounts = new WeakMap<HTMLIFrameElement, () => void>();

@@ -1,9 +1,9 @@
-import type { FrameEvent, FrameNavigation } from "../client/frame_adapter.js";
+import type { FrameEvent, FrameNavigation } from "../frame_adapter.js";
 
 import type { inspectionError } from "./inspection.js";
 
 /** Use the host realm for callbacks when the frame disables scripts. */
-export type InspectorEnvironment = Pick<
+export type ProbeEnvironment = Pick<
   Window & typeof globalThis,
   | "ResizeObserver"
   | "MutationObserver"
@@ -11,13 +11,10 @@ export type InspectorEnvironment = Pick<
   | "requestAnimationFrame"
   | "cancelAnimationFrame"
 >;
-export type InspectorNavigation = (
+export type ProbeNavigation = (
   event: MouseEvent,
 ) => FrameNavigation | undefined;
-export type InspectorRuntimeEvent =
+export type ProbeRuntimeEvent =
   | Exclude<FrameEvent, { type: "error" }>
   | { type: "error"; code: ReturnType<typeof inspectionError> };
-export type InspectorSubscription = Exclude<
-  InspectorRuntimeEvent["type"],
-  "error"
->;
+export type ProbeSubscription = Exclude<ProbeRuntimeEvent["type"], "error">;

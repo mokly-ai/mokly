@@ -47,11 +47,11 @@ async fn start(extra: &[&str]) -> Running {
     write(
         root.path(),
         "viewer/browser.manifest.json",
-        r#"{"schemaVersion":1,"modules":["shell.js","inspector.js"]}"#,
+        r#"{"schemaVersion":1,"modules":["shell.js","frame-probe.js"]}"#,
     );
     for path in [
         "viewer/browser/shell.js",
-        "viewer/browser/inspector.js",
+        "viewer/browser/frame-probe.js",
         "viewer/shell.css",
         "viewer/assets/fonts/InterVariable.woff2",
         "viewer/assets/brand.svg",

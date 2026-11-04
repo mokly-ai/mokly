@@ -3,8 +3,9 @@
 import { useEffect, useLayoutEffect } from "react";
 import type { MutableRefObject, RefObject } from "react";
 
+import type { FrameEvent } from "@mokly/frame";
+
 import { runCleanup } from "../client/cleanup.js";
-import type { FrameEvent } from "../client/frame_adapter.js";
 import type { PickEnd } from "../host/types.js";
 import { useShellComparisonMode } from "../shell/comparison_mode.js";
 import type { ShellInspectionController } from "../shell/frame_inspection_controller.js";

@@ -64,7 +64,7 @@ export async function assertDesignResource(
 export function unexpectedDesignScripts(): string {
   return process.env["MOKLY_PLAYWRIGHT_STATIC_DIR"] ||
     process.env["MOKLY_PLAYWRIGHT_FILE_DIR"]
-    ? 'script:not([src="/mokly-viewer/client/inspector.js"])'
+    ? 'script:not([src="/mokly-viewer/client/frame-probe.js"])'
     : "script";
 }
 

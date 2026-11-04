@@ -5,8 +5,8 @@ use mokly_html::tree::{self, Node, Region, RegionKind};
 use mokly_model::usage::{CatalogueUsage, ComponentRangeRecord, ComponentRangeTarget};
 use serde_json::Value;
 
-use crate::inspector::inject;
-use crate::inspector_tests::document;
+use crate::frame_probe::inject;
+use crate::frame_probe_tests::document;
 
 fn link(path: &str, fragment: Option<&str>, target: &str) -> Node {
     let mut node = tree::element(
@@ -40,7 +40,7 @@ fn body(nodes: &mut [Node], children: Vec<Node>) {
 }
 fn map(html: &str) -> Value {
     let text = html
-        .split("<template data-mokly-inspector=\"\">")
+        .split("<template data-mokly-frame-probe=\"\">")
         .nth(1)
         .unwrap()
         .split("</template>")
@@ -108,8 +108,8 @@ fn ranges_parents_and_deduplicated_named_links_have_stable_indices() {
     assert_eq!(metadata["ranges"][1], serde_json::json!([key, 0]));
     assert_eq!(metadata["ranges"][2], serde_json::json!([null, 1]));
     assert_eq!(metadata["links"].as_array().unwrap().len(), 2);
-    assert_eq!(html.matches("data-mokly-inspector-link=\"0\"").count(), 2);
-    assert_eq!(html.matches("data-mokly-inspector-link=\"1\"").count(), 1);
+    assert_eq!(html.matches("data-mokly-frame-probe-link=\"0\"").count(), 2);
+    assert_eq!(html.matches("data-mokly-frame-probe-link=\"1\"").count(), 1);
     assert!(metadata.get("error").is_none());
     insta::assert_snapshot!(serde_json::to_string_pretty(&metadata).unwrap());
 }
@@ -151,5 +151,5 @@ fn utf8_byte_and_link_count_limits_never_publish_a_truncated_map() {
         map(&html),
         serde_json::json!({"ranges":[], "links":[], "error":"limit"})
     );
-    assert!(!html.contains("data-mokly-inspector-link"));
+    assert!(!html.contains("data-mokly-frame-probe-link"));
 }

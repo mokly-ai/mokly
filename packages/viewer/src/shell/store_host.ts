@@ -3,7 +3,8 @@
 import { useCallback, useLayoutEffect, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
-import type { FrameNavigation } from "../client/frame_adapter.js";
+import type { FrameNavigation } from "@mokly/frame";
+
 import type { ViewerEvents, ViewerSelection } from "../host/types.js";
 import { folderTitleLookup } from "../registry/folder_titles.js";
 

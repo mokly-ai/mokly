@@ -1,8 +1,8 @@
-import type { InstanceBoundary } from "../client/frame_adapter.js";
+import type { InstanceBoundary } from "../frame_adapter.js";
 
 import { edges, viewport } from "./clipping.js";
 import { geometry } from "./geometry.js";
-import { metadataKeys, type InspectorMetadata } from "./metadata.js";
+import { metadataKeys, type ProbeMetadata } from "./metadata.js";
 import { documentRanges } from "./ranges.js";
 
 export const inspectionError = (error: unknown) =>
@@ -10,7 +10,7 @@ export const inspectionError = (error: unknown) =>
     ? error
     : "invalid-boundary";
 
-export const inspection = (doc: Document, metadata: InspectorMetadata) => {
+export const inspection = (doc: Document, metadata: ProbeMetadata) => {
   const keys = metadataKeys(metadata);
   const requireKeys = (requested: readonly string[]) => {
     if (metadata.error) throw metadata.error;

@@ -23,7 +23,7 @@ export function viewerPackageReport(): PackageReport {
       "dist/data.d.ts",
       "dist/styles.css",
       "dist/shell.css",
-      "dist/browser/inspector.js",
+      "dist/browser/frame-probe.js",
       "dist/browser/shell.js",
       "dist/assets/fonts/Inter-OFL.txt",
       "README.md",

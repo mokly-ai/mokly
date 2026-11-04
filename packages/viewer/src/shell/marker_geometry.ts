@@ -1,4 +1,5 @@
-import type { Box } from "../client/frame_adapter.js";
+import type { Box } from "@mokly/frame";
+
 import {
   intersectRectangles,
   type CoordinateRect,

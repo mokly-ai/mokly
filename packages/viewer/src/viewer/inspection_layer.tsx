@@ -8,10 +8,10 @@ import {
   useSyncExternalStore,
 } from "react";
 
+import type { Box } from "@mokly/frame";
 import { HighlightLabel, LabelLayer } from "@mokly/ui/highlight-label";
 import { HighlightMask } from "@mokly/ui/highlight-mask";
 
-import type { Box } from "../client/frame_adapter.js";
 import type { InstanceRef } from "../host/types.js";
 import { SupersededFrameGeometry } from "../shell/frame_geometry.js";
 import { frameInspectionMask } from "../shell/frame_inspection_mask.js";

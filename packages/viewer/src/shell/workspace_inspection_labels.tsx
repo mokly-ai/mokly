@@ -1,10 +1,10 @@
 /** React masks and labels for registry-backed workspace highlights. */
 
+import type { InstanceBoundary } from "@mokly/frame";
 import { HighlightLabel, LabelLayer } from "@mokly/ui/highlight-label";
 import { HighlightMask } from "@mokly/ui/highlight-mask";
 
 import { visibleFrameBox } from "../client/component_geometry.js";
-import type { InstanceBoundary } from "../client/frame_adapter.js";
 
 import { frameInspectionMask } from "./frame_inspection_mask.js";
 import type { ShellFrameSession } from "./frame_registry.js";

@@ -1,10 +1,6 @@
-import { origin } from "../inspector/values.js";
+import type { FrameAdapter, FrameEvent, MountedFrame } from "@mokly/frame";
+import { origin } from "@mokly/frame/internal";
 
-import type {
-  FrameAdapter,
-  FrameEvent,
-  MountedFrame,
-} from "./frame_adapter.js";
 import { FrameError } from "./frame_error.js";
 import { frameUrl, ownFrame } from "./frame_mount.js";
 import {

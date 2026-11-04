@@ -1,13 +1,9 @@
 import type { CSSProperties, ReactNode, Ref } from "react";
 
+import type { Box, FrameAdapter, FrameNavigation } from "@mokly/frame";
 import type { CatalogueReadModel } from "@mokly/model";
 
 import type { DetailSource, IndexSource } from "../catalogue/sources.js";
-import type {
-  Box,
-  FrameAdapter,
-  FrameNavigation,
-} from "../client/frame_adapter.js";
 
 export type {
   DetailResult,

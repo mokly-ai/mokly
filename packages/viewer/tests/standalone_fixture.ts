@@ -78,7 +78,7 @@ async function createCrossOriginFixture(options: BrowserSourceOptions) {
     await writeBrowserFile(
       workspace,
       "silent.html",
-      "<!doctype html><p>No inspector</p>",
+      "<!doctype html><p>No probe</p>",
     );
     await fs.symlink(
       path.join(repositoryRoot, "node_modules"),
@@ -89,7 +89,7 @@ async function createCrossOriginFixture(options: BrowserSourceOptions) {
     await build({
       stdin: {
         contents:
-          'export * from "./packages/viewer/dist/client/post_message_adapter.js"; export * from "./packages/viewer/dist/client/same_origin_adapter.js"; export { frameUsage } from "./packages/viewer/dist/client/frame_usage.js"; export { inspection } from "./packages/viewer/dist/inspector/inspection.js";',
+          'export * from "./packages/viewer/dist/client/post_message_adapter.js"; export * from "./packages/viewer/dist/client/same_origin_adapter.js"; export { frameUsage } from "./packages/viewer/dist/client/frame_usage.js"; export { inspection } from "./packages/frame/dist/probe/inspection.js";',
         resolveDir: repositoryRoot,
         sourcefile: "browser-adapters.ts",
       },
@@ -129,7 +129,7 @@ async function createCrossOriginFixture(options: BrowserSourceOptions) {
       "static/silent.html",
       "static/mokly-generated/silent/index.html",
     ])
-      await writeBrowserFile(root, name, "<!doctype html><p>No inspector</p>");
+      await writeBrowserFile(root, name, "<!doctype html><p>No probe</p>");
     const host = await serveStaticFiles(root);
     cleanups.push(host.close);
     const frames = await serveStaticFiles(root, { allowedOrigin: host.url });

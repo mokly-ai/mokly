@@ -11,12 +11,12 @@ const globals = [
   "Math",
 ];
 const builtins = ["Math.min", "Math.max", "Array.isArray"];
-export const inspectorPrivateProperties = /^__(?:list|scroll|keys|node|index)$/;
+export const probePrivateProperties = /^__(?:list|scroll|keys|node|index)$/;
 
 /** Pool repeated names as ordinary constants, preserving property names and receivers. */
-export function inspectorPool(code) {
+export function probePool(code) {
   const source = ts.createSourceFile(
-    "inspector.js",
+    "frame-probe.js",
     code,
     ts.ScriptTarget.Latest,
     true,
@@ -46,10 +46,10 @@ export function inspectorPool(code) {
       ts.isClassDeclaration(node.parent) ||
       ts.isClassExpression(node.parent));
   const collect = (node) => {
-    if (ts.isIdentifier(node) && node.text.startsWith("__inspectorPool"))
-      throw new Error("Reserved inspector minifier name");
+    if (ts.isIdentifier(node) && node.text.startsWith("__probePool"))
+      throw new Error("Reserved probe minifier name");
     if (ts.isIdentifier(node) && globals.includes(node.text) && binding(node))
-      throw new Error("Inspector minifier does not support native shadowing");
+      throw new Error("Probe minifier does not support native shadowing");
     if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node))
       count(node.text, node.text.length + 1);
     if (ts.isPropertyAccessExpression(node))
@@ -76,15 +76,15 @@ export function inspectorPool(code) {
   const words = [...counts]
     .filter(
       ([word, saving]) =>
-        !inspectorPrivateProperties.test(word) && saving > word.length + 9,
+        !probePrivateProperties.test(word) && saving > word.length + 9,
     )
     .map(([word]) => word);
   const aliases = new Map(
-    words.map((word, index) => [word, `__inspectorPoolWord${index}`]),
+    words.map((word, index) => [word, `__probePoolWord${index}`]),
   );
   const natives = new Map(
     [...globals.filter((name) => references.has(name)), ...builtins].map(
-      (word, index) => [word, `__inspectorPoolNative${index}`],
+      (word, index) => [word, `__probePoolNative${index}`],
     ),
   );
   const identifier = (name) => ts.factory.createIdentifier(name);
@@ -195,6 +195,6 @@ export function inspectorPool(code) {
     ...Array.from({ length: 32 }, (_, index) => String.fromCharCode(index)),
   ].find((candidate) => words.every((word) => !word.includes(candidate)));
   if (delimiter === undefined)
-    throw new Error("No safe inspector string delimiter");
+    throw new Error("No safe probe string delimiter");
   return `((${[...aliases.values()].join(",")})=>{${directives}const ${declarations};${body}})(...${JSON.stringify(words.join(delimiter))}.split(${JSON.stringify(delimiter)}));`;
 }

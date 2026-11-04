@@ -6,8 +6,8 @@ use mokly_html::parse;
 use mokly_model::usage::{CatalogueUsage, ComponentRangeRecord, ComponentRangeTarget};
 
 use crate::error::Error;
-use crate::inspector::inject;
-use crate::inspector_error::InspectorFailure;
+use crate::frame_probe::inject;
+use crate::frame_probe_error::FrameProbeFailure;
 
 pub(super) fn document(html: &str) -> Composed {
     Composed {
@@ -33,7 +33,7 @@ fn publication_uses_the_head_and_does_not_change_body_child_positions() {
         .unwrap(),
     )
     .unwrap();
-    assert!(html.find("data-mokly-inspector").unwrap() < html.find("</head>").unwrap());
+    assert!(html.find("data-mokly-frame-probe").unwrap() < html.find("</head>").unwrap());
     assert!(html.ends_with("<body><main><h1>Title</h1><p>Body</p></main></body></html>"));
     insta::assert_snapshot!(html);
 }
@@ -59,16 +59,16 @@ fn oversized_usage_is_explicit_and_never_truncated() {
 fn reserved_authored_markers_and_invalid_parent_indices_fail() {
     for (html, expected) in [
         (
-            "<template data-mokly-inspector>{}</template>",
-            "data-mokly-inspector",
+            "<template data-mokly-frame-probe>{}</template>",
+            "data-mokly-frame-probe",
         ),
         (
-            "<a data-mokly-inspector-link=0 href='#a'>link</a>",
-            "data-mokly-inspector-link",
+            "<a data-mokly-frame-probe-link=0 href='#a'>link</a>",
+            "data-mokly-frame-probe-link",
         ),
     ] {
         assert!(
-            matches!(inject(&document(html), "home/index.html"), Err(Error::Inspector { route, reason: InspectorFailure::Reserved { attribute } }) if route == "home/index.html" && attribute == expected)
+            matches!(inject(&document(html), "home/index.html"), Err(Error::FrameProbe { route, reason: FrameProbeFailure::Reserved { attribute } }) if route == "home/index.html" && attribute == expected)
         );
     }
     let mut document = document("<p>Body</p>");
@@ -82,7 +82,7 @@ fn reserved_authored_markers_and_invalid_parent_indices_fail() {
         }],
     };
     assert!(
-        matches!(inject(&document, "home/index.html"), Err(Error::Inspector { route, reason: InspectorFailure::Ranges }) if route == "home/index.html")
+        matches!(inject(&document, "home/index.html"), Err(Error::FrameProbe { route, reason: FrameProbeFailure::Ranges }) if route == "home/index.html")
     );
     document.tree.clear();
     document.usage = CatalogueUsage::Ready {
@@ -91,7 +91,7 @@ fn reserved_authored_markers_and_invalid_parent_indices_fail() {
         ranges: vec![],
     };
     assert!(
-        matches!(inject(&document, "headless/index.html"), Err(Error::Inspector { route, reason: InspectorFailure::Head }) if route == "headless/index.html")
+        matches!(inject(&document, "headless/index.html"), Err(Error::FrameProbe { route, reason: FrameProbeFailure::Head }) if route == "headless/index.html")
     );
 }
 
@@ -117,5 +117,5 @@ fn a_link_outside_the_wire_bounds_is_omitted_without_disabling_inspection() {
     let html = String::from_utf8(inject(&document, "home/index.html").unwrap()).unwrap();
     assert!(!html.contains("&quot;error&quot;"));
     assert!(html.contains("&quot;links&quot;:[]"));
-    assert!(!html.contains("data-mokly-inspector-link"));
+    assert!(!html.contains("data-mokly-frame-probe-link"));
 }

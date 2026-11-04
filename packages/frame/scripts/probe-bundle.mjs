@@ -3,13 +3,10 @@ import fs from "node:fs/promises";
 import { build } from "esbuild";
 import { minify } from "terser";
 
-import {
-  inspectorPool,
-  inspectorPrivateProperties,
-} from "./inspector-pool.mjs";
+import { probePool, probePrivateProperties } from "./probe-pool.mjs";
 
 /** The result is one ordinary IIFE: no evaluator, compressed code or runtime imports. */
-export async function bundleInspector(entryPoint, outfile) {
+export async function bundleProbe(entryPoint, outfile) {
   const result = await build({
     bundle: true,
     entryPoints: [entryPoint],
@@ -20,12 +17,12 @@ export async function bundleInspector(entryPoint, outfile) {
     write: false,
     logLevel: "silent",
   });
-  const { code } = await minify(inspectorPool(result.outputFiles[0].text), {
+  const { code } = await minify(probePool(result.outputFiles[0].text), {
     ecma: 2023,
     compress: { passes: 5, toplevel: true },
-    mangle: { properties: { regex: inspectorPrivateProperties } },
+    mangle: { properties: { regex: probePrivateProperties } },
     format: { comments: false },
   });
-  if (!code) throw new Error("Inspector minification produced no code");
+  if (!code) throw new Error("Probe minification produced no code");
   await fs.writeFile(outfile, code);
 }

@@ -1,10 +1,6 @@
+import type { FrameEvent, InstanceBoundary, MountedFrame } from "@mokly/frame";
 import type { CatalogueUsage } from "@mokly/model";
 
-import type {
-  FrameEvent,
-  InstanceBoundary,
-  MountedFrame,
-} from "./frame_adapter.js";
 import { FrameError } from "./frame_error.js";
 import { ownFrame } from "./frame_mount.js";
 import { localFrameAccess } from "./same_origin_access.js";
@@ -26,7 +22,7 @@ interface LocalOperations {
   dispose(): void;
 }
 
-/** Load/session ownership, with no inspector handshake or consumer script permission. */
+/** Load/session ownership, with no probe handshake or consumer script permission. */
 export function mountLocalDocument(
   frame: HTMLIFrameElement,
   url: URL,

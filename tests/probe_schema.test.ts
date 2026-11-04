@@ -5,8 +5,8 @@ import {
   validMessage,
   encodeMessage,
   type MessageBody,
-} from "../packages/viewer/dist/inspector/schema.js";
-import { boundedJson } from "../packages/viewer/dist/inspector/values.js";
+} from "../packages/frame/dist/probe/schema.js";
+import { boundedJson } from "../packages/frame/dist/probe/values.js";
 
 const nonce = "1".repeat(32),
   key = "a".repeat(64);
@@ -45,20 +45,20 @@ const messages: MessageBody[] = [
   { type: "dispose" },
 ];
 const wire = (body: object) => ({
-  channel: "mokly-inspector",
-  version: 2,
+  channel: "mokly-frame-probe",
+  version: 3,
   nonce,
   ...body,
 });
 
 for (const body of messages)
-  test(`inspector schema: ${body.type} accepts only its exact envelope`, () => {
+  test(`probe schema: ${body.type} accepts only its exact envelope`, () => {
     assert.ok(validMessage(boundedJson(encodeMessage(nonce, body)), nonce));
     for (const mutation of [
       { extra: true },
       { nonce: "f".repeat(32) },
       { channel: "other" },
-      { version: 3 },
+      { version: 2 },
       { nonce: "INVALID" },
       { type: "unknown" },
     ])
@@ -70,7 +70,7 @@ for (const body of messages)
     }
   });
 
-test("inspector rejects malformed envelopes before parsing and counts UTF-8 bytes", () => {
+test("probe rejects malformed envelopes before parsing and counts UTF-8 bytes", () => {
   for (const value of [
     null,
     {},
@@ -84,7 +84,7 @@ test("inspector rejects malformed envelopes before parsing and counts UTF-8 byte
   assert.equal(boundedJson(`"${"é".repeat(131071)}"`), "é".repeat(131071));
 });
 
-test("inspector recursively rejects unknown fields, invalid geometry and duplicate identities", () => {
+test("probe recursively rejects unknown fields, invalid geometry and duplicate identities", () => {
   const boundaries = (value: unknown) =>
     validMessage(wire({ type: "boundaries", requestId: 1, boundaries: value }));
   const item = { key, ranges: [{ id: "r-0", boxes: [box] }] };
@@ -129,7 +129,7 @@ test("inspector recursively rejects unknown fields, invalid geometry and duplica
   );
 });
 
-test("inspector enforces key/range/box totals without truncation", () => {
+test("probe enforces key/range/box totals without truncation", () => {
   const keys = Array.from({ length: 1025 }, (_, index) =>
     index.toString(16).padStart(64, "0"),
   );

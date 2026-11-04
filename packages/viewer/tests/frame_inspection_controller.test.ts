@@ -2,12 +2,9 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { setImmediate } from "node:timers/promises";
 
+import type { FrameAdapter, MountedFrame } from "@mokly/frame";
 import type { CatalogueUsage } from "@mokly/model";
 
-import type {
-  FrameAdapter,
-  MountedFrame,
-} from "../src/client/frame_adapter.js";
 import type { InstanceRef } from "../src/host/types.js";
 import { ShellInspectionController } from "../src/shell/frame_inspection_controller.js";
 import {

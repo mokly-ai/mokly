@@ -3,9 +3,9 @@ import { test } from "node:test";
 
 import type { CatalogueUsage } from "@mokly/model";
 
-import { inspection } from "../src/inspector/inspection.js";
-import { compactRanges } from "../src/inspector/metadata.js";
-import { documentRanges } from "../src/inspector/ranges.js";
+import { inspection } from "../src/probe/inspection.js";
+import { compactRanges } from "../src/probe/metadata.js";
+import { documentRanges } from "../src/probe/ranges.js";
 
 import { markerDocument, rangeText } from "./marker_dom.js";
 import {
@@ -18,7 +18,7 @@ import {
 type Ranges = Extract<CatalogueUsage, { status: "ready" }>["ranges"];
 
 /** The shared reader, over the metadata that both frame adapters build. */
-function inspector(body: string, ranges: Ranges): Range[] {
+function probe(body: string, ranges: Ranges): Range[] {
   return documentRanges(markerDocument(body), {
     ranges: compactRanges(ranges)!,
     links: [],
@@ -27,7 +27,7 @@ function inspector(body: string, ranges: Ranges): Range[] {
 
 function refused(body: string, ranges: Ranges = HOME_RANGES) {
   assert.throws(
-    () => inspector(body, ranges),
+    () => probe(body, ranges),
     (error) => error === "invalid-boundary",
   );
   // The core propagates a rejected forest before it reads any geometry.
@@ -58,7 +58,7 @@ const NESTED_RANGES: Ranges = [
 ];
 
 test("a Serve screen's instances, nested instances and supplied slots authenticate", () => {
-  const ranges = inspector(HOME_BODY, HOME_RANGES);
+  const ranges = probe(HOME_BODY, HOME_RANGES);
   assert.equal(ranges.length, 8);
   assert.equal(rangeText(ranges[0]!), '<Save & "go"> 3 Default');
   assert.equal(rangeText(ranges[3]!), 'Supplier <Save & "go">');
@@ -68,7 +68,7 @@ test("a Serve screen's instances, nested instances and supplied slots authentica
     rangeText(ranges[2]!),
     /^Details Supplier .*Slot action Default$/,
   );
-  const authenticated = inspector(HOME_BODY, HOME_RANGES);
+  const authenticated = probe(HOME_BODY, HOME_RANGES);
   assert.equal(authenticated.length, 8);
   // The slot instance is placed twice, once in each `children` slot.
   assert.deepEqual(
@@ -84,21 +84,20 @@ test("a Serve screen's instances, nested instances and supplied slots authentica
 
 test("a component page's root region is the body content, without a marker", () => {
   assert.equal(
-    rangeText(inspector(BUTTON_BODY, BUTTON_RANGES)[0]!),
+    rangeText(probe(BUTTON_BODY, BUTTON_RANGES)[0]!),
     "Save 2 Default",
   );
   assert.equal(
-    rangeText(inspector(BUTTON_BODY, BUTTON_RANGES)[0]!),
+    rangeText(probe(BUTTON_BODY, BUTTON_RANGES)[0]!),
     "Save 2 Default",
   );
   // A marked region inside the root names r-0 as its parent.
-  const ranges = inspector(NESTED_BODY, NESTED_RANGES);
+  const ranges = probe(NESTED_BODY, NESTED_RANGES);
   assert.equal(rangeText(ranges[0]!), "Go");
   assert.equal(rangeText(ranges[1]!), "Go");
-  assert.deepEqual(
-    inspector(NESTED_BODY, NESTED_RANGES).slice(1).map(rangeText),
-    ["Go"],
-  );
+  assert.deepEqual(probe(NESTED_BODY, NESTED_RANGES).slice(1).map(rangeText), [
+    "Go",
+  ]);
 });
 
 test("the contract's slot marker with its instance attribute authenticates", () => {
@@ -106,8 +105,8 @@ test("the contract's slot marker with its instance attribute authenticates", () 
     /<!--mokly-slot:start id="(r-\d+)" name/g,
     '<!--mokly-slot:start id="$1" instance="r-2" name',
   );
-  assert.equal(inspector(body, HOME_RANGES).length, 8);
-  assert.equal(inspector(body, HOME_RANGES).length, 8);
+  assert.equal(probe(body, HOME_RANGES).length, 8);
+  assert.equal(probe(body, HOME_RANGES).length, 8);
 });
 
 test("markers that disagree with the usage are refused", () => {

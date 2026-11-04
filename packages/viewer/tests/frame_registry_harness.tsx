@@ -2,10 +2,10 @@
 
 import { useContext } from "react";
 
+import type { FrameEvent } from "@mokly/frame";
 import type { CatalogueUsage } from "@mokly/model";
 
 import type { ShellCatalogueView } from "../src/catalogue/scoped_types.js";
-import type { FrameEvent } from "../src/client/frame_adapter.js";
 import { FrameStageContext } from "../src/shell/frame_layout_context.js";
 import { useMountedShellFrame } from "../src/shell/frame_mount_hook.js";
 import { useOptionalShellFrameRegistry } from "../src/shell/frame_registry.js";

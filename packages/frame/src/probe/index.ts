@@ -1,7 +1,7 @@
 import { inspectionError } from "./inspection.js";
-import { inspectorNavigation } from "./links.js";
-import { readMetadata, type InspectorMetadata } from "./metadata.js";
-import { inspectorRuntime } from "./runtime.js";
+import { probeNavigation } from "./links.js";
+import { readMetadata, type ProbeMetadata } from "./metadata.js";
+import { probeRuntime } from "./runtime.js";
 import { encodeMessage, validHostMessage, type MessageBody } from "./schema.js";
 import { boundedJson, BYTE_LIMIT, origin } from "./values.js";
 /** The sole pre-handshake effect is this bounded message listener. */
@@ -14,7 +14,7 @@ const host =
     ? hosts[0]
     : undefined;
 let nonce: string | undefined;
-let runtime: ReturnType<typeof inspectorRuntime> | undefined;
+let runtime: ReturnType<typeof probeRuntime> | undefined;
 let lastRequest = 0;
 const send = (body: MessageBody): void => {
   const json = encodeMessage(nonce!, body);
@@ -44,22 +44,22 @@ const receive = (event: MessageEvent<unknown>): void => {
     if (!nonce) {
       nonce = message.nonce;
       const maps = doc.querySelectorAll<HTMLTemplateElement>(
-        "template[data-mokly-inspector]",
+        "template[data-mokly-frame-probe]",
       );
       const metadata =
         maps.length === 1
           ? readMetadata(maps[0]!.content.textContent)
           : undefined;
-      const accepted: InspectorMetadata = metadata ?? {
+      const accepted: ProbeMetadata = metadata ?? {
         ranges: [],
         links: [],
         error: "unavailable",
       };
-      runtime = inspectorRuntime(
+      runtime = probeRuntime(
         win,
         accepted,
         win,
-        inspectorNavigation(accepted),
+        probeNavigation(accepted),
         (event) =>
           send(event.type === "error" ? { ...event, requestId: null } : event),
         () => win.removeEventListener("message", receive),

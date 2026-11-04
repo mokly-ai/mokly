@@ -4,6 +4,8 @@ import fs from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
 
+import { bundleProbe } from "./probe-bundle.mjs";
+
 const root = path.resolve(import.meta.dirname, "..");
 await fs.rm(path.join(root, "dist"), { force: true, recursive: true });
 execFileSync(
@@ -14,4 +16,10 @@ execFileSync(
     path.join(root, "tsconfig.build.json"),
   ],
   { stdio: "inherit" },
+);
+const browser = path.join(root, "dist/browser");
+await fs.mkdir(browser, { recursive: true });
+await bundleProbe(
+  path.join(root, "src/probe/index.ts"),
+  path.join(browser, "frame-probe.js"),
 );

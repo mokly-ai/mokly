@@ -1,20 +1,20 @@
-import type { Box, InstanceBoundary } from "../client/frame_adapter.js";
+import type { Box, InstanceBoundary } from "../frame_adapter.js";
 
 import { inspection, inspectionError } from "./inspection.js";
-import type { InspectorMetadata } from "./metadata.js";
+import type { ProbeMetadata } from "./metadata.js";
 import type {
-  InspectorEnvironment,
-  InspectorNavigation,
-  InspectorRuntimeEvent,
-  InspectorSubscription,
+  ProbeEnvironment,
+  ProbeNavigation,
+  ProbeRuntimeEvent,
+  ProbeSubscription,
 } from "./runtime_types.js";
 /** One document's event core, independent of its transport and callback realm. */
-export const inspectorRuntime = (
+export const probeRuntime = (
   win: Window,
-  metadata: InspectorMetadata,
-  environment: InspectorEnvironment,
-  navigate: InspectorNavigation,
-  send: (event: InspectorRuntimeEvent) => void,
+  metadata: ProbeMetadata,
+  environment: ProbeEnvironment,
+  navigate: ProbeNavigation,
+  send: (event: ProbeRuntimeEvent) => void,
   disposed = () => {},
 ) => {
   const doc = win.document,
@@ -24,7 +24,7 @@ export const inspectorRuntime = (
   const depths: number[] = [];
   for (const [, parent] of metadata.ranges)
     depths.push(parent === null ? 0 : depths[parent]! + 1);
-  let events: readonly InspectorSubscription[] = [],
+  let events: readonly ProbeSubscription[] = [],
     keys: readonly string[] = [];
   let active = false,
     pending = 0,
@@ -45,7 +45,7 @@ export const inspectorRuntime = (
       .sort((a, b) => b[2] - a[2]);
     return boundaries;
   };
-  const emit = (event: Exclude<InspectorRuntimeEvent, { type: "error" }>) => {
+  const emit = (event: Exclude<ProbeRuntimeEvent, { type: "error" }>) => {
     if (events.includes(event.type)) send(event);
   };
   const run = <T>(operation: () => T): T => {
@@ -181,7 +181,7 @@ export const inspectorRuntime = (
         active = mode !== "off";
       }),
     __scroll: (key: string) => run(() => reader.__scroll(key)),
-    __subscribe: (subscribed: readonly InspectorSubscription[]) => {
+    __subscribe: (subscribed: readonly ProbeSubscription[]) => {
       events = subscribed;
     },
     __dispose: dispose,

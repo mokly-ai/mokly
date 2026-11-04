@@ -1,6 +1,7 @@
 /** Promise ownership for frame mount and evidence-update readiness. */
 
-import type { MountedFrame } from "../client/frame_adapter.js";
+import type { MountedFrame } from "@mokly/frame";
+
 import { FrameError } from "../client/frame_error.js";
 
 interface InitialFrameReadiness {

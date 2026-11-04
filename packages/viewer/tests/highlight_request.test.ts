@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { MountedFrame } from "@mokly/frame";
 import type { CatalogueUsage } from "@mokly/model";
 
-import type { MountedFrame } from "../src/client/frame_adapter.js";
 import type { InstanceRef } from "../src/host/types.js";
 import {
   frameHasInstance,

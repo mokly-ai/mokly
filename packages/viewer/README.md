@@ -159,7 +159,8 @@ export function IsolatedCataloguePage({ origin }: { origin: string }) {
 ```
 
 The catalogue host must allow the embedding application's exact origin and
-serve the shell bundle and the inspector that Mokly writes beside the catalogue.
+serve the shell bundle and the frame probe script that Mokly writes beside the
+catalogue.
 Read [Deployment and security](./docs/deployment/README.md) before you ship this
 configuration.
 
@@ -178,9 +179,11 @@ configuration.
 
 `@mokly/viewer` owns the shell state, the readers of the catalogue index and the
 entry detail, the selection model, navigation, the comparison and inspection
-logic, instance resolution, the preview frames with the frame adapters and the
-in-frame inspector, and the browser entry. `@mokly/ui` owns every element and
-every style rule of the Browse shell. `@mokly/model` owns the path and link
+logic, instance resolution, the preview frames with the built-in frame
+adapters, and the browser entry. `@mokly/ui` owns every element and every
+style rule of the Browse shell. `@mokly/frame` owns the frame adapter types,
+the shared event core of both adapters, and the frame probe script that runs
+inside published pages. `@mokly/model` owns the path and link
 grammar, the current document paths, the route and the id grammar of temporary
 renders, the directory names, and the generated types of the Rust model crate.
 The viewer imports them from that package, and `@mokly/viewer/data` re-exports
@@ -207,8 +210,9 @@ The repository is an npm workspace. The Rust core is a Cargo workspace under
 and the authoring API. `packages/ui` holds `@mokly/ui`, every element and
 every stylesheet of the shell. `packages/model` holds `@mokly/model`, the
 catalogue rules and the generated TypeScript types of the Rust model crate,
-which are the shared shapes of this package. `packages/viewer` holds this
-package. From the repository root:
+which are the shared shapes of this package. `packages/frame` holds
+`@mokly/frame`, the frame adapter types and the frame probe. `packages/viewer`
+holds this package. From the repository root:
 
 ```bash
 npm ci
@@ -219,9 +223,11 @@ cargo xtask check
 ```
 
 `npm run build` builds the host native target, the UI package, the model
-package, the viewer, and then the shim and the sidecar, in that order. The
-viewer build writes `shell.css` and `styles.css` from the `@font-face` rule of
-the shell font and the UI package's `styles.css`,
+package, the frame package, the viewer, and then the shim and the sidecar, in
+that order. The viewer build bundles the standalone shell into
+`dist/browser/shell.js` and copies the frame probe that `@mokly/frame` builds
+into `dist/browser/frame-probe.js`. It writes `shell.css` and `styles.css`
+from the `@font-face` rule of the shell font and the UI package's `styles.css`,
 whose rules keep the cascade order that `packages/ui/src/styles.css` lists.
 The embedded `styles.css` needs no `@scope` rule, because no package rule
 reaches the host page or host slot content. The build records every browser
@@ -238,6 +244,9 @@ and Review regressions against `mokly serve` of the example catalogue.
   shell composes, one directory per component with its CSS beside it
 - [`../model/src`](../model/src) — the `@mokly/model` catalogue rules and
   generated types that the shell and the frame code import
+- [`../frame/src`](../frame/src) — the `@mokly/frame` frame adapter types, the
+  shared event core, and the React-free frame probe that runs inside
+  published pages
 - [`src/viewer`](./src/viewer) — the embedded `MoklyViewer`: React lifecycle,
   source loading, host integration, and instance operations; it imports the
   shared shell, which has no dependency on this directory
@@ -327,7 +336,6 @@ and Review regressions against `mokly serve` of the example catalogue.
   comparator for each section's sibling order
 - [`src/client`](./src/client) — the frame adapters, message transport, and
   geometry
-- [`src/inspector`](./src/inspector) — the React-free in-frame inspector
 - [`src/previews`](./src/previews) — the removed-entry previews
 - [`src/previews/descriptor.ts`](./src/previews/descriptor.ts) — the identity
   key of a route-owned previous-version request

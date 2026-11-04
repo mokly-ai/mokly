@@ -1,6 +1,6 @@
-import { inspectorRuntime } from "../inspector/runtime.js";
+import type { FrameAdapter } from "@mokly/frame";
+import { probeRuntime } from "@mokly/frame/internal";
 
-import type { FrameAdapter } from "./frame_adapter.js";
 import { FrameError } from "./frame_error.js";
 import { frameUrl, temporaryFrameUrl } from "./frame_mount.js";
 import { frameEvents, frameUsage } from "./frame_usage.js";
@@ -35,7 +35,7 @@ function localAdapter(resolveUrl: typeof frameUrl): FrameAdapter {
         url,
         (doc, emit) => {
           const start = () =>
-            inspectorRuntime(
+            probeRuntime(
               doc.defaultView,
               usage,
               win,

@@ -1,0 +1,5 @@
+---
+source: crates/mokly-static/src/_tests_/frame_probe_tests.rs
+expression: html
+---
+<html><head><template data-mokly-frame-probe="">{&quot;ranges&quot;:[],&quot;links&quot;:[]}</template><script src="/mokly-viewer/client/frame-probe.js"></script></head><body><main><h1>Title</h1><p>Body</p></main></body></html>

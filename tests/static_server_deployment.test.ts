@@ -32,26 +32,23 @@ test(
     const replacement = path.join(root, "replacement");
     await fs.mkdir(original);
     await fs.mkdir(replacement);
+    await fs.writeFile(path.join(original, "frame-probe.js"), "original probe");
     await fs.writeFile(
-      path.join(original, "inspector.js"),
-      "original inspector",
-    );
-    await fs.writeFile(
-      path.join(replacement, "inspector.js"),
-      "replacement inspector",
+      path.join(replacement, "frame-probe.js"),
+      "replacement probe",
     );
     let published = original;
     const host = await serveStaticFiles(() => published);
     resources.host = host;
     const stat = fs.stat;
     context.mock.method(fs, "stat", async (file: string) => {
-      if (file === path.join(original, "inspector.js")) {
+      if (file === path.join(original, "frame-probe.js")) {
         selected.resolve();
         await release.promise;
       }
       return stat(file);
     });
-    const originalRequest = fetch(`${host.url}/inspector.js`);
+    const originalRequest = fetch(`${host.url}/frame-probe.js`);
     resources.request = originalRequest;
     let originalSettled = false;
     void originalRequest.then(
@@ -64,9 +61,9 @@ test(
     );
     await selected.promise;
     published = replacement;
-    const current = await fetch(`${host.url}/inspector.js`);
+    const current = await fetch(`${host.url}/frame-probe.js`);
     assert.equal(current.status, 200);
-    assert.equal(await current.text(), "replacement inspector");
+    assert.equal(await current.text(), "replacement probe");
     assert.equal(
       originalSettled,
       false,
@@ -75,7 +72,7 @@ test(
     release.resolve();
     const previous = await originalRequest;
     assert.equal(previous.status, 200);
-    assert.equal(await previous.text(), "original inspector");
+    assert.equal(await previous.text(), "original probe");
   },
 );
 

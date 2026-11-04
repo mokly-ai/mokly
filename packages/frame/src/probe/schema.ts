@@ -2,7 +2,7 @@ import type {
   FrameNavigation,
   InstanceBoundary,
   Box,
-} from "../client/frame_adapter.js";
+} from "../frame_adapter.js";
 
 import {
   array,
@@ -15,9 +15,9 @@ import {
   requestId,
   unique,
   EVENTS,
-  type InspectorEventType,
+  type ProbeEventType,
 } from "./values.js";
-export type InspectorError =
+export type ProbeError =
   "unavailable" | "invalid-boundary" | "limit" | "missing-instance";
 export type MessageBody =
   | {
@@ -55,7 +55,7 @@ export type MessageBody =
   | {
       type: "subscribe";
       requestId: number;
-      events: readonly InspectorEventType[];
+      events: readonly ProbeEventType[];
     }
   | {
       type: "hover";
@@ -78,14 +78,14 @@ export type MessageBody =
   | {
       type: "error";
       requestId: number | null;
-      code: InspectorError;
+      code: ProbeError;
     };
 export type HostMessage = Message & {
   type: "hello" | "dispose" | "list" | "highlight" | "scroll-to" | "subscribe";
 };
 export type Message = MessageBody & {
-  channel: "mokly-inspector";
-  version: 2;
+  channel: "mokly-frame-probe";
+  version: 3;
   nonce: string;
 };
 export const envelope = (
@@ -93,8 +93,8 @@ export const envelope = (
   nonce?: string,
 ): value is Record<string, unknown> =>
   object(value) &&
-  value.channel === "mokly-inspector" &&
-  value.version === 2 &&
+  value.channel === "mokly-frame-probe" &&
+  value.version === 3 &&
   typeof value.nonce === "string" &&
   /^[a-f0-9]{32}$/.test(value.nonce) &&
   (nonce === undefined || value.nonce === nonce);
@@ -164,9 +164,7 @@ export const validHostMessage = (
         shape(value, 6) &&
         array(value.events, 5) &&
         unique(value.events) &&
-        value.events.every((event) =>
-          EVENTS.includes(event as InspectorEventType),
-        )
+        value.events.every((event) => EVENTS.includes(event as ProbeEventType))
       );
     default:
       return false;
@@ -221,8 +219,8 @@ export const validMessage = (
   validHostMessage(value, nonce) || validFrameMessage(value, nonce);
 export const encodeMessage = (nonce: string, body: MessageBody): string =>
   JSON.stringify({
-    channel: "mokly-inspector",
-    version: 2,
+    channel: "mokly-frame-probe",
+    version: 3,
     nonce,
     ...body,
   });

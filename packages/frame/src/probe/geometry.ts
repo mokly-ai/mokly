@@ -1,4 +1,4 @@
-import type { Box } from "../client/frame_adapter.js";
+import type { Box } from "../frame_adapter.js";
 
 import { clipNode, edges, viewport, type Edges } from "./clipping.js";
 const intersect = (a: Edges, b: Edges): Edges =>

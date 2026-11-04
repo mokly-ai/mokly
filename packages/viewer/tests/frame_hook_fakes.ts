@@ -2,12 +2,9 @@
 
 import type { Root } from "react-dom/client";
 
+import type { FrameAdapter, MountedFrame } from "@mokly/frame";
 import type { CatalogueUsage } from "@mokly/model";
 
-import type {
-  FrameAdapter,
-  MountedFrame,
-} from "../src/client/frame_adapter.js";
 import type { ComponentViewRecord } from "../src/components/view_types.js";
 import type { ShellFrameRegistry } from "../src/shell/frame_registry.js";
 

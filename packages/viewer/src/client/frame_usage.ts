@@ -1,20 +1,20 @@
-import type { CatalogueUsage } from "@mokly/model";
-
+import type { InstanceBoundary } from "@mokly/frame";
 import {
   readMetadata,
   metadataKeys,
   unavailableMetadata,
   compactRanges,
-  type InspectorMetadata,
-} from "../inspector/metadata.js";
-import { BYTE_LIMIT, EVENTS } from "../inspector/values.js";
-import type { InspectorEventType } from "../inspector/values.js";
+  BYTE_LIMIT,
+  EVENTS,
+  type ProbeEventType,
+  type ProbeMetadata,
+} from "@mokly/frame/internal";
+import type { CatalogueUsage } from "@mokly/model";
 
-import type { InstanceBoundary } from "./frame_adapter.js";
 import { FrameError } from "./frame_error.js";
 
 /** Snapshot only the instance/range identities needed by the mounted session. */
-export function frameUsage(usage: CatalogueUsage): InspectorMetadata {
+export function frameUsage(usage: CatalogueUsage): ProbeMetadata {
   if (usage.status !== "ready") return unavailableMetadata("unavailable");
   if (usage.instances.length > 1024 || usage.ranges.length > 4096)
     return unavailableMetadata("limit");
@@ -33,18 +33,16 @@ export function frameUsage(usage: CatalogueUsage): InspectorMetadata {
     throw new FrameError("invalid-boundary");
   return metadata;
 }
-export function knownKey(usage: InspectorMetadata, key: string): boolean {
+export function knownKey(usage: ProbeMetadata, key: string): boolean {
   return !usage.error && metadataKeys(usage).includes(key);
 }
 /** Navigation is independent of inspection evidence and its bounded identities. */
-export function frameEvents(
-  usage: InspectorMetadata,
-): readonly InspectorEventType[] {
+export function frameEvents(usage: ProbeMetadata): readonly ProbeEventType[] {
   return usage.error ? ["navigation"] : EVENTS;
 }
 export function validateBoundaryUsage(
   boundaries: readonly InstanceBoundary[],
-  usage: InspectorMetadata,
+  usage: ProbeMetadata,
 ): boolean {
   const keys = metadataKeys(usage);
   if (usage.error || boundaries.length !== keys.length) return false;

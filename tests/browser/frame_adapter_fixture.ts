@@ -3,7 +3,7 @@ import type { Page } from "@playwright/test";
 import type {
   FrameEvent,
   MountedFrame,
-} from "../../packages/viewer/src/client/frame_adapter.js";
+} from "../../packages/frame/src/frame_adapter.js";
 import type * as PostAdapter from "../../packages/viewer/src/client/post_message_adapter.js";
 import type { BrowserUsage } from "../../packages/viewer/tests/browser_documents.js";
 import { crossOriginFixture } from "../../packages/viewer/tests/standalone_fixture.js";

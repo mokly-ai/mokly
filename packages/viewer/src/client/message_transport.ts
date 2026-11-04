@@ -1,13 +1,14 @@
+import type { FrameErrorCode } from "@mokly/frame";
 import {
+  boundedJson,
+  BYTE_LIMIT,
   encodeMessage,
   envelope,
   validMessage,
   type Message,
   type MessageBody,
-} from "../inspector/schema.js";
-import { boundedJson, BYTE_LIMIT } from "../inspector/values.js";
+} from "@mokly/frame/internal";
 
-import type { FrameErrorCode } from "./frame_adapter.js";
 import { FrameError } from "./frame_error.js";
 
 interface Pending {
@@ -31,7 +32,7 @@ type Request =
       )[];
     };
 
-/** Bounded request/reply state, independent of the DOM and inspector implementation. */
+/** Bounded request/reply state, independent of the DOM and probe implementation. */
 export function messageTransport(
   win: Window,
   nonce: string,

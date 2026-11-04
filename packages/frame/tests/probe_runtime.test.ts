@@ -9,7 +9,7 @@ import {
   outerBox,
   repeatedBox,
   runtimeFixture,
-} from "./inspector_runtime_fixture.js";
+} from "./probe_runtime_fixture.js";
 
 test("the core lists authenticated boundaries and rejects missing instances directly", (t) => {
   const { runtime, doc } = runtimeFixture(t);
@@ -138,4 +138,16 @@ test("host callbacks coalesce events and disposal removes all work once", (t) =>
   fixture.flush();
   assert.deepEqual(events, []);
   assert.equal(frames.size, 0);
+});
+
+test("the core cancels pending measurements and listeners on disposal", (t) => {
+  const fixture = runtimeFixture(t);
+  const { runtime, signals, cancelled, frames } = fixture;
+  fixture.changed();
+  assert.equal(frames.size, 1);
+  assert.equal(signals.length, 2);
+  assert.ok(signals.every((signal) => !signal.aborted));
+  runtime.__dispose();
+  assert.ok(signals.every((signal) => signal.aborted));
+  assert.deepEqual(cancelled, [1]);
 });

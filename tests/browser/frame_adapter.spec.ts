@@ -161,7 +161,7 @@ test("logical navigation is host-owned and restores native activation after unsu
   ).toBeVisible();
 });
 
-test("view swaps, disposal, and absent inspector timeouts discard old work", async ({
+test("view swaps, disposal, and absent probe timeouts discard old work", async ({
   page,
 }) => {
   await mountCrossFrame(page, fixture);

@@ -127,7 +127,7 @@ HTTP bodies and public models contain no warning records.
 
 Authored GET responses stream from the confined handle without a file-size
 limit. HEAD opens the same handle and sends no bytes. Serve delivers document
-and preview HTML without inspector injection.
+and preview HTML without frame probe injection.
 
 Temporary renders follow the
 [live controls contract](../../docs/protocol/mokly-component-controls.md),

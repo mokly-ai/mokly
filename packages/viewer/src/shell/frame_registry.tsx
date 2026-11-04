@@ -3,13 +3,9 @@
 import { createContext, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
+import type { FrameAdapter, FrameEvent, MountedFrame } from "@mokly/frame";
 import type { CatalogueUsage } from "@mokly/model";
 
-import type {
-  FrameAdapter,
-  FrameEvent,
-  MountedFrame,
-} from "../client/frame_adapter.js";
 import {
   registerFrameSession,
   releaseFrameSession,

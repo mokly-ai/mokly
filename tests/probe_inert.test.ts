@@ -3,10 +3,10 @@ import fs from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
 
-import { encodeMessage } from "../packages/viewer/dist/inspector/schema.js";
+import { encodeMessage } from "../packages/frame/dist/probe/schema.js";
 
 const bundle = fs.readFileSync(
-  "packages/viewer/dist/browser/inspector.js",
+  "packages/frame/dist/browser/frame-probe.js",
   "utf8",
 );
 const nonce = "a".repeat(32);
@@ -144,7 +144,7 @@ function harness(query: string) {
   };
 }
 
-test("inspector bundle is a bounded standalone IIFE without top-window access", () => {
+test("probe bundle is a bounded standalone IIFE without top-window access", () => {
   assert.ok(
     Buffer.byteLength(bundle) <= 9216,
     `${Buffer.byteLength(bundle)} bytes`,
@@ -170,8 +170,8 @@ test("before a valid handshake only the bounded message listener exists", () => 
     "x".repeat(262145),
     encodeMessage(nonce, { type: "list", requestId: 1 }),
     JSON.stringify({
-      channel: "mokly-inspector",
-      version: 2,
+      channel: "mokly-frame-probe",
+      version: 3,
       nonce,
       type: "hello",
       extra: true,
@@ -272,8 +272,8 @@ test("wire errors retain request ids and consume them before a later request", (
     ["ready", "error", "ack", "navigation"],
   );
   assert.deepEqual(replies[1], {
-    channel: "mokly-inspector",
-    version: 2,
+    channel: "mokly-frame-probe",
+    version: 3,
     nonce,
     type: "error",
     requestId: 1,

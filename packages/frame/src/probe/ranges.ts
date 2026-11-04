@@ -1,5 +1,5 @@
 import { MARKER } from "./markers.js";
-import type { InspectorMetadata } from "./metadata.js";
+import type { ProbeMetadata } from "./metadata.js";
 /**
  * Authenticate the complete ordered marker forest, including otherwise
  * invisible slots. A component page's root region, the tuple `[null, null]`
@@ -8,7 +8,7 @@ import type { InspectorMetadata } from "./metadata.js";
  */
 export const documentRanges = (
   doc: Document,
-  metadata: InspectorMetadata,
+  metadata: ProbeMetadata,
 ): Range[] => {
   if (metadata.error) throw metadata.error;
   const walker = doc.createTreeWalker(doc, 128),
