@@ -23,6 +23,10 @@ mod serve_controls;
 mod serve_debounce;
 mod serve_delivery;
 mod serve_git;
+#[cfg(unix)]
+mod serve_keyboard_keys;
+#[cfg(unix)]
+mod serve_keyboard_unix;
 mod serve_lifecycle;
 mod serve_pool;
 mod serve_preparation;
