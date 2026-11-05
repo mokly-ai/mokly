@@ -1,13 +1,14 @@
 # Wait for the frame adapter navigation message
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Outside the scope.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a browser follow-up of Milestone 8, recorded in Milestone 15.
 - **Location:** `tests/browser/frame_adapter_navigation.spec.ts:24-117`,
-  with the polled assertions at lines 44-57 and 73-90.
-- **Reason:** The test failed once in a verification run of unrelated
-  browser work, and nobody reproduced the failure or confirmed its source.
+  with the polled assertions at lines 44-57 and 73-90, and
+  `tests/browser/frame_adapter_fixture.ts:46-48`.
+- **Reason:** On 2026-11-03 the user chose option C, one shared wait helper
+  for the frame event specs, and asked for it in a later branch.
 
 - **Source:** Review.
 - **Category:** Test.
@@ -29,6 +30,7 @@
     `playwright.config.ts:18`.
   - `tests/browser/same_origin_identity.spec.ts` also records
     `window.frameEvents`, so option C would change that spec too.
+  - On 2026-11-03 the user chose option C.
 - **Problem:**
   - Failure: the posted-message assertion once got no navigation event.
   - Failure text: not recorded. The plan named a browser delegate report,
@@ -50,7 +52,7 @@
   - **B.** Change nothing until the test fails again, and record the
     failure text in this item then. Effort: Small.
   - **C.** Apply A through one fixture helper that resolves on the next
-    frame event of a given type. Use it in each of the nine specs that read
+    frame event of a given type. Use it in each of the eight specs that read
     `frameEvents`. Effort: Small.
   - **D.** If the reproduction shows a product race in the frame code, add
     a failing test first. Then fix the order in the viewer frame code.
@@ -86,10 +88,31 @@
     cross-origin preview frames through `crossOriginFixture` in
     `packages/viewer/tests/standalone_fixture.ts`. Each item has its own
     suspected source, so it needs its own fix.
-- **Recommendation:** A. The plan recommended it: wait for the message
-  event. C best protects the other frame adapter specs.
-- **Action:** ask the user, because the failure has not been reproduced with a
-  confirmed cause. No fix is clearly best until reproduction identifies the
-  source, as the flaky-test rule requires.
+- **Recommendation:** C. The user chose it on 2026-11-03. One helper gives
+  every frame adapter spec an explicit readiness signal. The first
+  recommendation was A, the same wait in this test only.
+- **Action:** fix after merge, apply C, because the user chose C on
+  2026-11-03 and asked for it in a later branch.
+- **Work:**
+  - Repeat the test until it fails, and record the pass counts under
+    `.context/`, as the flaky-test rule of the `testing` skill says. Name
+    the source.
+  - Add one helper that resolves on the next frame event of a given type,
+    for example in `tests/browser/frame_adapter_fixture.ts`, which fills
+    `window.frameEvents`.
+  - Use the helper in the eight specs under `tests/browser/` that read
+    `frameEvents`: `frame_adapter.spec.ts`,
+    `frame_adapter_geometry.spec.ts`, `frame_adapter_navigation.spec.ts`,
+    `frame_adapter_security.spec.ts`, `frame_readiness.spec.ts`,
+    `same_origin_adapter.spec.ts`, `same_origin_identity.spec.ts`, and
+    `same_origin_reconnect.spec.ts`. Keep every assertion.
+  - When the source is in the viewer frame code, the flaky-test rule makes
+    it a product bug: add a failing test first, then fix the order, as
+    option D says.
+  - When the repeats do not reproduce the failure, record the run count in
+    this item. Still add the helper, because the user chose it.
+  - Delete this item in the branch that adds the helper. Remove the links to
+    it from `flaky-viewer-selection-navigation.md` and
+    `flaky-viewer-events-active-picks.md`.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L4696).

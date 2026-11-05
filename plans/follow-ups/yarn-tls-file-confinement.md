@@ -1,6 +1,6 @@
 # Base installs read TLS files outside the repository
 
-- **Severity:** High. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Severity:** High. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 153, the probe of user decision 145 B.
 - **Location:** `crates/mokly-compare/src/manager_yarnrc.rs:15`,
@@ -44,6 +44,16 @@
     line 123 is a decision in force. A base install trusts the base commit
     as the project's own install of that commit does. Mokly adds no
     hardening beyond that install.
+  - The trust rule rests on the choice of the base. The base is the merge
+    base of `HEAD` and `review.base`, so it is a commit that the project
+    already merged and installed.
+  - The base side also runs base code on the host. The render sidecar
+    evaluates the base commit's component bundles in Node. Base renderers
+    and PostCSS plugins run too, as
+    `docs/protocol/mokly-base-preparation.md:33` says. So in a catalogue
+    with JavaScript components, a renderer, or PostCSS plugins, base code
+    can already read any host file. A base side that runs no base code, such
+    as plain HTML screens with package stylesheets, has no such path.
   - The local-path rule of `docs/protocol/mokly-base-dependencies.md:91` to
     line 95 sends a package specification or a Yarn patch path outside the
     repository to a typed fallback. It does not cover TLS files. No
@@ -123,17 +133,18 @@
   repository certificates and blocks host reads.
 - **Previous examples:** `RepositoryPath::confine` already confines the
   Berry `cacheFolder` and the Yarn Classic offline mirror.
-- **Recommendation:** D. Mokly starts base installs by itself, in Serve,
-  build, and publish, also in CI where secrets are present. A project's own
-  install is a step that a developer chooses, so the trust rule fits these
-  automatic reads less well. D blocks the outside reads that the probes
-  found in every manager, and it keeps the certificates that a repository
-  holds. E accepts the existing host-file access and preserves private host
-  TLS setups.
-- **Action:** ask the user, because D adds a stricter check of base
-  configurations and changes two decisions in force in
+- **Recommendation:** E. The base is a commit that the project already
+  merged. In a catalogue with JavaScript components, a renderer, or PostCSS
+  plugins, base code also runs on the host during the base render. So D
+  closes only a small part of that access, and
+  it breaks private host TLS setups, such as a company certificate
+  authority under `/etc`. On 2026-11-03 the recommendation changed from D
+  to E, when the fact about base code reached this item. D best blocks host
+  TLS reads by a base configuration.
+- **Action:** ask the user, because the coordinator reserved this choice for
+  the user on 2026-10-28. D and E trade a stricter base check against
+  private host TLS setups. D also changes two decisions in force in
   `docs/protocol/mokly-base-dependencies.md`: the trust rule and the npm
-  input rule. The coordinator reserved this choice for the user on
-  2026-10-28.
+  input rule.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6133).

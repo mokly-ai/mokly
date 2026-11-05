@@ -5,7 +5,7 @@
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a problem outside the scope of the HTML pipeline decision work of
   2026-10-26.
-- **Location:** `crates/mokly-catalogue/src/templates.rs:163-172` and
+- **Location:** `crates/mokly-catalogue/src/templates.rs:172-181` and
   `docs/protocol/mokly-html-screens.md:76-81`.
 - **Reason:** The review found the problem outside its change, and each fix
   adds an exception to a protocol rule, which needs the user.
@@ -20,7 +20,7 @@
     element name resolves against the component registry. An unknown
     hyphenated name fails with `html-element`, because plain rendering would
     lose the component.
-  - `templates.rs:163-172` applies that rule. It fails a hyphenated name
+  - `templates.rs:172-181` applies that rule. It fails a hyphenated name
     that is not a `mokly-` name and not a registered component, with the
     message "unknown element {name}".
   - The HTML standard reserves eight hyphenated names for SVG and MathML
