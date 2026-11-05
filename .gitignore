@@ -13,6 +13,7 @@ target/
 test-results/
 playwright-report/
 .superpowers/
+.amp/portals/*
 
 # Host and release binaries are build output.
 packages/native-*/bin/

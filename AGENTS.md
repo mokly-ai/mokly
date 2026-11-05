@@ -19,7 +19,7 @@ the Rust verification task runner is under `xtask/`. The protocol docs under
 
 This file holds the rules that are specific to this repository. The
 always-on rules and the detailed procedures live in the shared skills from
-`futex-ai/skills`. Read the skill at the named moment instead of guessing
+`Firna-AI/skills`. Read the skill at the named moment instead of guessing
 the rule. Rules for one application, package, or feature live in the
 `README.md`, doc, or protocol doc next to the code they describe.
 
