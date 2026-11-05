@@ -34,14 +34,31 @@ value must fail its corresponding behaviour check:
 | `stack-swap`     | Swap Before and Current content in stacked previews. |
 | `heading-record` | Change a recorded reason without changing a heading. |
 
+The Serve terminal regression in
+[`serve_terminal_tests.rs`](./serve_terminal_tests.rs) is a Rust process test.
+It runs rich watched Serve with a pseudo-terminal as stdin. It waits until
+Serve answers the `h` shortcut and reads all queued input. It then closes the
+terminal and checks that Serve still answers HTTP. Next, it sends `SIGHUP` and
+checks that Serve exits 0 and frees its port.
+
+The test runs only on Unix. It starts the crate's `mokly` binary directly, not
+through the npm shim. Its timeouts only guard against a hang. Set
+`MOKLY_TEST_TERMINAL_BINARY` to a binary path to run the same test against
+another build. Unit tests in
+[`serve_controls_tests.rs`](../src/_tests_/serve_controls_tests.rs) check on
+every platform that closed or failed input ends the key reader and does not
+stop Serve.
+
 ```bash
 cargo test -p mokly-cli
 cargo test -p mokly-cli --features design-matrix --test design_attribution_tests
 cargo test -p mokly-cli --test design_behaviour_tests
+cargo test -p mokly-cli --test serve_terminal_tests
 cargo clippy -p mokly-cli --all-targets -- -D warnings
 ```
 
-Process recovery tests are Node tests under the repository `tests/` folder.
+[Static build recovery](../../../docs/protocol/mokly-export-recovery.md) tests
+are Node tests under the repository `tests/` folder.
 They start the debug binary through
 [`tests/helpers/static_publication.ts`](../../../tests/helpers/static_publication.ts)
 and set faults through
