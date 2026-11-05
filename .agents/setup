@@ -1,0 +1,174 @@
+#!/usr/bin/env bash
+# Prepare an Amp orb for this repository. Amp runs this script once for a fresh
+# orb and again when it restores a stale snapshot, so every step is idempotent.
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$repo_root"
+
+step() {
+  local name="$1" start
+  shift
+  start=$SECONDS
+  echo "==> $name"
+  "$@"
+  echo "<== $name ($((SECONDS - start))s)"
+}
+
+node_version="$(tr -d '[:space:]' < .nvmrc)"
+node_home="$HOME/.local/share/mokly-node/node-v$node_version-linux-x64"
+npm_version="$(jq -r '.packageManager | sub("^npm@"; "")' package.json)"
+bun_version="$(tr -d '[:space:]' < .bun-version)"
+skills_home="$HOME/.futex/skills"
+
+# The repository ratchets read release tags, and CI checks out full history.
+fetch_history() {
+  if [[ "$(git rev-parse --is-shallow-repository)" == "true" ]]; then
+    git fetch --quiet --unshallow --tags origin
+  else
+    git fetch --quiet --tags origin
+  fi
+}
+
+# The mokly-git LFS tests need git-lfs, which CI images include.
+install_system_packages() {
+  if git lfs version >/dev/null 2>&1; then
+    echo "git-lfs is installed."
+  else
+    sudo apt-get update -qq
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq git-lfs
+  fi
+}
+
+install_node() {
+  if [[ -x "$node_home/bin/node" ]]; then
+    echo "Node $node_version is installed."
+  else
+    local base="https://nodejs.org/dist/v$node_version"
+    local archive="node-v$node_version-linux-x64.tar.xz"
+    local work
+    work="$(mktemp -d)"
+    curl -fsSL "$base/$archive" -o "$work/$archive"
+    curl -fsSL "$base/SHASUMS256.txt" -o "$work/SHASUMS256.txt"
+    (cd "$work" && grep " $archive\$" SHASUMS256.txt | sha256sum --check --status)
+    mkdir -p "$(dirname "$node_home")"
+    tar -xJf "$work/$archive" -C "$(dirname "$node_home")"
+    rm -rf "$work"
+  fi
+  if [[ "$("$node_home/bin/npm" --version)" != "$npm_version" ]]; then
+    "$node_home/bin/npm" install --global --no-audit --no-fund "npm@$npm_version"
+  fi
+}
+
+install_rust() {
+  if [[ ! -x "$HOME/.cargo/bin/rustup" ]]; then
+    curl --proto '=https' --tlsv1.2 -fsSL https://sh.rustup.rs |
+      sh -s -- -y --no-modify-path --profile minimal --default-toolchain none
+  fi
+  # rustup reads the channel and the components from rust-toolchain.toml.
+  rustup toolchain install
+}
+
+# sccache is off: the snapshot keeps target/ warm, so a cache saved little,
+# and the R2 cache made builds slower on a 2-CPU orb. To turn it back on,
+# uncomment the "Install sccache" step and the RUSTC_WRAPPER export.
+install_sccache() {
+  local version="0.19.0" binary=/usr/local/bin/sccache
+  if [[ "$("$binary" --version 2>/dev/null)" == "sccache $version" ]]; then
+    echo "sccache $version is installed."
+    return
+  fi
+  local name="sccache-v$version-x86_64-unknown-linux-musl"
+  local base="https://github.com/mozilla/sccache/releases/download/v$version"
+  local work
+  work="$(mktemp -d)"
+  curl -fsSL "$base/$name.tar.gz" -o "$work/$name.tar.gz"
+  curl -fsSL "$base/$name.tar.gz.sha256" -o "$work/sha256"
+  echo "$(cat "$work/sha256")  $work/$name.tar.gz" | sha256sum --check --status
+  tar -xzf "$work/$name.tar.gz" -C "$work"
+  sudo install -m 0755 "$work/$name/sccache" "$binary"
+  rm -rf "$work"
+}
+
+# Amp and supervised services start in non-interactive login shells, which
+# read only ~/.bash_profile in this orb image. Setup rewrites the environment
+# file on every run and adds one line that sources it.
+environment_file="$HOME/.config/mokly-orb/environment.sh"
+persist_environment() {
+  mkdir -p "$(dirname "$environment_file")"
+  cat > "$environment_file" <<EOF
+case ":\$PATH:" in
+  *":$node_home/bin:"*) ;;
+  *) export PATH="$node_home/bin:$HOME/.cargo/bin:\$PATH" ;;
+esac
+# export RUSTC_WRAPPER=sccache
+# CI builds Rust without debug info. A debug test build fills about 38 GB.
+export CARGO_PROFILE_DEV_DEBUG=0
+export CARGO_PROFILE_TEST_DEBUG=0
+# CI sets CARGO_INCREMENTAL=0 for its build cache. The orb keeps incremental
+# builds: a rebuild after a small edit takes about 4 s, not 11 s.
+# Browser specs use Playwright's Chromium, as in CI, not Google Chrome.
+export PLAYWRIGHT_CHANNEL=chromium
+EOF
+  local line=". \"$environment_file\""
+  if ! grep -Fqx "$line" "$HOME/.bash_profile" 2>/dev/null; then
+    printf '\n# mokly orb toolchain\n%s\n' "$line" >> "$HOME/.bash_profile"
+  fi
+}
+
+# Amp signs every orb commit except under /tmp. Test fixtures commit as their
+# own identity in repositories under .context/, which the signer rejects.
+disable_fixture_signing() {
+  local key="includeIf.gitdir:$repo_root/.context/.path"
+  git config --global "$key" /etc/gitconfig.d/amp-signing-off
+}
+
+install_bun() {
+  if [[ "$(bun --version 2>/dev/null)" == "$bun_version" ]]; then
+    echo "Bun $bun_version is installed."
+  else
+    npm install --global --no-audit --no-fund "bun@$bun_version"
+  fi
+}
+
+install_chromium() {
+  npx playwright install chromium
+  # Check for missing shared libraries first, so a warm run skips apt-get.
+  local shell
+  shell="$(find "$HOME/.cache/ms-playwright" -name chrome-headless-shell -type f | head -n 1)"
+  if [[ -n "$shell" ]] && ! ldd "$shell" | grep -q 'not found'; then
+    echo "Chromium system libraries are installed."
+  else
+    npx playwright install-deps chromium
+  fi
+}
+
+# The Firna-AI/skills checkout holds the shared skills that AGENTS.md names.
+# install.sh links them into ~/.claude/skills, which Amp reads. Amp reads the
+# always-on rules from ~/.config/AGENTS.md, so link them there too.
+install_shared_skills() {
+  if [[ -d "$skills_home/.git" ]]; then
+    git -C "$skills_home" pull --ff-only --quiet
+  else
+    mkdir -p "$(dirname "$skills_home")"
+    git clone --quiet https://github.com/Firna-AI/skills.git "$skills_home"
+  fi
+  "$skills_home/scripts/install.sh" --quiet
+  ln -sfn "$skills_home/global/AGENTS.md" "$HOME/.config/AGENTS.md"
+}
+
+step "Persist the toolchain in the login profile" persist_environment
+# shellcheck disable=SC1090
+. "$environment_file"
+step "Fetch the full Git history and tags" fetch_history
+step "Install system packages" install_system_packages
+step "Install Node $node_version and npm $npm_version" install_node
+step "Install the Rust toolchain" install_rust
+# step "Install sccache" install_sccache
+step "Install Bun $bun_version" install_bun
+step "Install npm dependencies" npm ci --no-audit --no-fund
+step "Install Playwright Chromium" install_chromium
+step "Install the shared skills" install_shared_skills
+step "Turn off commit signing for test fixtures" disable_fixture_signing
+step "Build the native binary and the packages" npm run build
+step "Build the Rust test binaries" cargo test --workspace --no-run --quiet
