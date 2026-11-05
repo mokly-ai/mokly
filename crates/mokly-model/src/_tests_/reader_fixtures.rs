@@ -3,8 +3,10 @@
 use serde_json::{Value, json};
 
 pub(super) fn index() -> Value {
-    let mut value: Value =
-        serde_json::from_str(include_str!("fixtures/catalogue-v9.json")).unwrap();
+    let mut value: Value = serde_json::from_str(include_str!(
+        "../../../../docs/protocol/fixtures/catalogue-v9.json"
+    ))
+    .unwrap();
     value["live"] = json!({"generation":"f6".repeat(32)});
     let action = &mut value["components"][0];
     action["propSchema"] = json!({"type":"object","additionalProperties":false,
@@ -31,8 +33,10 @@ pub(super) fn usage() -> Value {
 }
 
 pub(super) fn details() -> Vec<Value> {
-    let mut value: Value =
-        serde_json::from_str(include_str!("fixtures/entry-details-v4.json")).unwrap();
+    let mut value: Value = serde_json::from_str(include_str!(
+        "../../../../docs/protocol/fixtures/entry-details-v4.json"
+    ))
+    .unwrap();
     let home = &mut value["current"]["product/browse/home"];
     for view in home["views"].as_array_mut().unwrap() {
         view["usage"] = usage();
