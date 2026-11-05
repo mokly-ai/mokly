@@ -13,7 +13,8 @@ re-exports the rules that its `./data` entry lists.
 
 - The path grammar of the path contract, such as `isEntryPath`, the link and
   fragment grammar of the authoring links contract, such as
-  `parseLogicalTarget`, and the checks of kebab-case ids and repository paths.
+  `parseLogicalTarget`, and the `isSafeRepositoryPath` check of a repository
+  path.
 - `currentDocumentPath`, the static path of a current generated document, and
   its inverse route `currentDocumentRoute`, which
   [frame mapping](../../docs/protocol/mokly-artifact-paths.md#frames-and-reverse-mapping)
