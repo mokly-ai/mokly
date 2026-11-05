@@ -152,6 +152,13 @@ reserves an 8 MiB main-thread stack through its linker settings in
   [`src/serve.rs`](./src/serve.rs) compose, prepare, and close Serve.
 - [`src/serve_services.rs`](./src/serve_services.rs) shares one pool and
   cache across Serve preparation and live views.
+- [`src/serve_controls.rs`](./src/serve_controls.rs) maps the keys of rich
+  watched Serve to its shortcuts and owns raw mode. Closed or failed terminal
+  input ends the key reader but does not stop Serve. Serve shutdown waits for
+  the key reader only for a bounded time. On Unix,
+  [`src/serve_keyboard_unix.rs`](./src/serve_keyboard_unix.rs) reads the
+  terminal and [`src/serve_keyboard_keys.rs`](./src/serve_keyboard_keys.rs)
+  decodes its keys. On Windows, `serve_controls.rs` reads Crossterm key events.
 - [`src/build.rs`](./src/build.rs) defines `BuildService` and
   `CatalogueBuild`, which validate and render the catalogue before static
   output.

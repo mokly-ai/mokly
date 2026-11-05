@@ -66,6 +66,7 @@ mock = ["dep:unimock", "mokly-publish/mock"]
 
 [target."cfg(unix)".dependencies]
 signal-hook = "0.3.18"
+libc = "0.2.190"
 
 [target."cfg(not(unix))".dependencies]
 ctrlc = { version = "3.5.2", features = ["termination"] }
