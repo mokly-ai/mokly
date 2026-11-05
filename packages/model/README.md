@@ -91,9 +91,8 @@ rejects the spelled name.
 - [`src/index.ts`](./src/index.ts) — the root entry, which exports each rule
   and each generated type by name
 - [`src/navigation/logical.ts`](./src/navigation/logical.ts) — the path
-  grammar, such as `isEntryPath` and `firstPathCaseCollision`, the link and
-  fragment grammar, such as `parseLogicalTarget`, and the `isKebabCase` and
-  `isSafeRepositoryPath` checks
+  grammar, such as `isEntryPath`, the link and fragment grammar, such as
+  `parseLogicalTarget`, and the `isSafeRepositoryPath` check
 - [`src/catalogue/delivery_paths.ts`](./src/catalogue/delivery_paths.ts) —
   `currentDocumentPath` with its inverse `currentDocumentRoute`, and
   `RENDERS_PATH` and `RENDER_ID` of temporary renders
