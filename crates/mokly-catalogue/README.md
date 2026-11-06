@@ -59,9 +59,16 @@ ownership. Later stages reuse it instead of walking again.
 
 `Builder` implements `CatalogueBuilder`. It produces `PreparedCatalogue`: a
 validated in-memory model, private HTML and Markdown bodies, variant slot
-fragments, the element registry, warnings, and the source inventory. The graph
-fills its private dependency-directory set from completed bundles. Each
-prepared generation owns that set. Cache validation adds no entries.
+fragments, the element registry, the compiled prop validators, warnings, and
+the source inventory. The graph fills its private dependency-directory set from
+completed bundles. Each prepared generation owns that set. Cache validation
+adds no entries.
+
+Preparation checks each parent schema once, when it accepts the definition.
+`prop_validators` maps the path of each admitted parent and of each of its
+variants to one shared compiled `PropValidator` behind an `Arc`. HTML
+composition, transient prop renders, and Serve's live prop requests reuse that
+validator. No later step compiles or checks the schema again.
 
 The builder calls `dyn DefinitionProvider` with the resolved configuration for
 discovered JavaScript files or a configured renderer. Renderer imports join
@@ -204,7 +211,8 @@ The property test of the source maps over the vendored HTML corpus lives in
 - [`src/discovery.rs`](./src/discovery.rs) defines `Discovery` and
   `Discoverer`, which walk the roots once and return the source `Inventory`.
 - [`src/preparation.rs`](./src/preparation.rs) defines `CatalogueBuilder` and
-  `Builder`, which prepare one validated `PreparedCatalogue` per pass.
+  `Builder`, which prepare one validated `PreparedCatalogue` per pass, with
+  its shared `prop_validators`.
 - [`src/definition_provider.rs`](./src/definition_provider.rs) defines
   `DefinitionProvider`, the boundary that describes JavaScript definitions.
 - [`src/working_tree.rs`](./src/working_tree.rs) defines `WorkingTree`, the

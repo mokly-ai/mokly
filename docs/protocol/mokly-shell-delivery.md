@@ -1,6 +1,6 @@
 # Shell Delivery And Read Model Routes
 
-Status: Follow-up work remains in the [fallback keys item](../../plans/follow-ups/fallback-keys-checkout-folder.md).
+Status: Follow-up work remains in the [fallback keys item](../../plans/follow-ups/fallback-keys-checkout-folder.md), and no receiver checks the placement of the workspace lists yet, until the [receiver read-model validation item](../../plans/follow-ups/receiver-read-model-validation.md) adds that check to Mokly Cloud.
 
 ## Purpose And Boundary
 
@@ -64,7 +64,7 @@ The [frame probe](./mokly-frame-probe.md) script is the
 
 The index is the read model v9 of the
 [catalogue contract](./mokly-catalogue.md), which owns its fields and the tree
-rules: `schemaVersion: 8`, `identity`, `deploymentId`, one integer `revision`,
+rules: `schemaVersion: 9`, `identity`, `deploymentId`, one integer `revision`,
 the `base` ref when Changes is configured, `baseCommit` while Changes is
 ready, `changesStatus`, `comparisonUrl`, `tree`, every current entry record,
 and `removedEntries`. Each current and removed record carries the `detailId`
@@ -96,12 +96,12 @@ devDependency edit in it therefore changes these keys. Keys without the root
 manifest were rejected, because a change of its `sideEffects` field could then
 leave a stale render.
 
-No record carries `usage` or `resourceEvidence`; the reader rejects
-either anywhere. In Serve the index carries `live: { generation }`, the render
-generation: the hash of the config, every `documentKey`, every stylesheet bundle
-and its assets, and any consumer bundle generation. It is wider than a live prop
-render needs, on purpose: a narrower hash could miss an input and keep a stale
-descriptor. A static build has no `live` field. The index is canonical JSON.
+No record carries `usage` or `resourceEvidence`. In Serve the index carries
+`live: { generation }`, the render generation: the hash of the config, every
+`documentKey`, every stylesheet bundle and its assets, and any consumer bundle
+generation. It is wider than a live prop render needs, on purpose: a narrower
+hash could miss an input and keep a stale descriptor. A static build has no
+`live` field. The index is canonical JSON.
 
 ## Entry Detail
 
@@ -156,11 +156,10 @@ Its page reads both lists from its component parent's detail. Screens,
 component parents, and removed entries keep both lists in their own workspaces.
 Keeping copies on current variants was rejected because it repeats most of the
 usage data. Moving `affected` in a later format change was rejected because
-the same parent request carries both lists. The core rejects either list on a
-current component variant under the
+the same parent request carries both lists. A receiver's
+[upload check](./mokly-upload-validation.md#catalogue-content) rejects either
+list on a current component variant under the
 [misplaced-field rule](./mokly-catalogue-serialization.md#versions).
-Checking this placement only in tests was rejected because a writer bug must
-fail before a build or publication exposes it.
 
 A screen or component detail omits `workspace` until every input of its lists
 is proven. Pending or unavailable consumer usage cannot prove a complete list.

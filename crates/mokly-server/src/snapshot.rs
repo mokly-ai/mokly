@@ -196,6 +196,7 @@ impl Projector {
             .map(|route| (route.route.clone(), route.clone()))
             .collect();
         let shared = Arc::new(Generation {
+            prop_validators: generation.catalogue().prop_validators.clone(),
             model: Arc::new(generation.catalogue().model.clone()),
             view_keys: keys,
             config_path: state.config_path,

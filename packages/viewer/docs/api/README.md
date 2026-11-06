@@ -45,20 +45,22 @@ order, cancellation, and evidence refresh.
 
 ## Package entry points
 
-| Import                     | Purpose                                                                                                                      |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `@mokly/viewer`            | `MoklyViewer`, its types, the frame adapters, `resolveInstance`, and the readers of the catalogue index and the entry detail |
-| `@mokly/viewer/styles.css` | The scoped stylesheet of an embedded root; import it once                                                                    |
-| `@mokly/viewer/browser`    | Mounts the standalone Browse shell into the stub that `mokly serve` and `mokly build` deliver                                |
-| `@mokly/viewer/data`       | Pure path functions, directory names, the path grammar, and the prop schema validators, with no React dependency             |
+| Import                     | Purpose                                                                                                                          |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `@mokly/viewer`            | `MoklyViewer`, its types, the frame adapters, `resolveInstance`, and the readers of the catalogue index and the entry detail     |
+| `@mokly/viewer/styles.css` | The scoped stylesheet of an embedded root; import it once                                                                        |
+| `@mokly/viewer/browser`    | Mounts the standalone Browse shell into the stub that `mokly serve` and `mokly build` deliver                                    |
+| `@mokly/viewer/data`       | Pure path functions, directory names, the path grammar, and the prop schema and props value validators, with no React dependency |
 
 React applications need only the root entry and the stylesheet. Do not import
 `@mokly/viewer/browser` in an application-owned React root: it mounts the
 standalone shell into the stub's `data-mokly-shell` element, and Serve and
 `build` deliver it as `/mokly-viewer/client/shell.js` with React bundled in.
 
-The readers validate an index or a detail that a host reads itself. Each reader
-accepts exactly one format number and rejects every other with a typed
+The readers check the format version of an index or a detail that a host reads
+itself. A reader returns a typed copy of the document and checks no other
+content. Each reader accepts exactly one format number and rejects every other
+with a typed
 `MoklyVersionError` whose diagnostic reads
 `Unsupported Mokly <boundary> version <version>; this viewer supports version <supported>.`
 The embedded viewer reports the same failure through `onError` with code
@@ -73,6 +75,13 @@ grammar functions `isPathSegment`, `isEntryPath`, and `isWindowsDeviceName` of
 the [path contract](../../../../docs/protocol/mokly-paths.md), the link grammar
 functions `isLinkPath` and `isLogicalFragment` of the
 [authoring links](../../../../docs/protocol/mokly-authoring.md#links), and the
-profile validators `validatePropSchema` and `validateProps` of the
+profile validators `validatePropSchema`, `validateProps`, and
+`validatePropValues` of the
 [entry props contract](../../../../docs/protocol/mokly-entry-props.md#prop-schema-profile),
 which generate no code; it has no React dependency.
+
+`validatePropValues(schema, value, context?)` checks one complete props value
+against a schema that the core already accepted. It does not check the schema
+again. `validateProps` checks the schema with `validatePropSchema` first, then
+checks the value in the same way. Each returns the checked props, or throws an
+error whose message names the context and the exact property path.

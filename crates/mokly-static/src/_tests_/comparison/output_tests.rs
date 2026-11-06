@@ -73,7 +73,7 @@ fn removed_detail_keeps_id_and_bytes_when_generation_context_changes() {
 fn a_small_generation_has_stable_files_and_no_public_private_snapshot() {
     let (index, files) = small_generation();
     assert_eq!(index.removed_entries.len(), 1);
-    let root = index.comparison_url.as_ref().unwrap();
+    let root = index.comparison_url.0.as_ref().unwrap();
     assert!(root.starts_with("mokly-viewer/diffs/generations/") && root.ends_with('/'));
     assert!(
         files
@@ -147,5 +147,5 @@ fn cancellation_after_both_sides_stops_before_removed_records_are_published() {
     ));
     assert!(inventory.into_files().is_empty());
     assert!(index.removed_entries.is_empty());
-    assert!(index.comparison_url.is_none());
+    assert!(index.comparison_url.0.is_none());
 }

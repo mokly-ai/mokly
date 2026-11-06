@@ -1,22 +1,22 @@
 # Component Review Validation
 
-This contract validates the
-[component comparison schema](./mokly-component-review.md). The comparison
-validates its review result in memory, in one canonical order with one
+This contract gives the rules that a result of the
+[component comparison schema](./mokly-component-review.md) meets. The
+comparison builds its review result in memory, in one canonical order with one
 affected-consumer order key, before any host projects it into the index and
-the entry details.
+the entry details. Decision: the comparison trusts the result that it built
+and runs no second check of it, because Mokly checks data once, where it
+enters from outside.
 
 ## Validation And Canonical Output
 
 One result schema and one reason policy serve Serve's background
-classification, the selected comparison, `build`, and `publish`. The producer
-validates the result against both sides' catalogue
-models, so evidence cannot name an unknown entry, view, instance, or rendered
-resource. Every screen, component, variant, and use case record must match its
-side addresses; use case addresses and screen reasons must match the sides'
-use case steps. Unknown fields, inconsistent sides, duplicate records or
-reasons, missing view evidence, and invalid values fail rather than being
-dropped.
+classification, the selected comparison, `build`, and `publish`. Evidence
+names only entries, views, instances, and rendered resources of both sides'
+catalogue models. Every screen, component, variant, and use case record must
+match its side addresses; use case addresses and screen reasons must match the
+sides' use case steps. A result has no unknown field, inconsistent side,
+duplicate record or reason, missing view evidence, or invalid value.
 
 A `dependency` reason is valid only when a view of that entry carries a rule
 or resource record owned by the entry for that path. A reachable path alone
@@ -36,12 +36,12 @@ path, flattened variants included. A moved entry uses its current path.
 
 Each moved screen, component, variant, or use case of an accepted move pair
 has exactly one record, with both original side addresses. `previousPath`
-appears exactly on those records. Validation requires `previousPath` when
-paired paths differ beyond case. It rejects a case-only `previousPath`,
-duplicate historical identities, and a paired
-historical identity that is also listed as removed. Catalogue readers
-additionally require ready, included, unmodified-or-changed current records
-for prior paths. Empty reasons are valid only for a paired move. Page and
+appears exactly on those records. A record carries `previousPath` when its
+paired paths differ beyond case. No record carries a case-only
+`previousPath`, no historical identity occurs twice, and no paired historical
+identity is also listed as removed. A current record with a
+prior path is also ready, included, and unmodified or changed. Empty reasons
+are valid only for a paired move. Page and
 document moves are catalogue evidence under the
 [move contract](./mokly-moves.md#result).
 
@@ -56,12 +56,12 @@ Linked and ownerless CSS require own-page proof; declared owners can use
 exact-instance proof, including supplied content. An included variant with
 proven render, resource, or CSS impact permits its parent identity in
 affected evidence without a parent Changes row. Every classification path
-performs this validation before it returns a result.
+follows these rules.
 
 The [selected comparison](./mokly-selected-comparisons.md) of Serve captures
-the documents of one screen or component variant entry of a validated complete
-result. It returns no record: the entry's detail carries its comparison facts,
-and catalogue-wide source coverage and affected evidence stay with the
+the documents of one screen or component variant entry of a complete result.
+It returns no record: the entry's detail carries its comparison facts, and
+catalogue-wide source coverage and affected evidence stay with the
 background classification and the shell inspector.
 
 Entry paths follow the [path grammar](./mokly-paths.md#segment-grammar);
@@ -93,9 +93,9 @@ states; `affected` sorts by `changedComponentId`, consumer kind, then consumer
 path, and its evidence by side (before, then after), context kind, context
 entry path, view order, and the canonical JSON of `via`, which keeps its chain
 order; `diagnostics` keep the order in which the comparison produced them.
-Path sets are sorted and unique. Validation enforces every stated order and
-rejects duplicates rather than reordering them. The entry details keep the
-evidence, reason, and ignore-id orders of the result.
+Path sets are sorted and unique. The comparison writes every stated order with
+no duplicate, and no later step reorders or deduplicates them. The entry
+details keep the evidence, reason, and ignore-id orders of the result.
 
 ## Path Identity
 

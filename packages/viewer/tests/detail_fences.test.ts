@@ -32,18 +32,6 @@ function removed(
   return readEntryDetail(detail);
 }
 
-test("control order names exactly the index's editable props", () => {
-  const index = indexFixture();
-  const path = "components/action";
-  for (const order of [[], ["missing"]]) {
-    const detail = current(path, (detail) => {
-      detail.controlOrder = order;
-    });
-    assert.equal(fenceDetail(index, { path }, detail).kind, "rejected");
-  }
-  assert.equal(fenceDetail(index, { path }, current(path)).kind, "accepted");
-});
-
 test("the fixture index accepts every fixture detail", () => {
   const index = indexFixture();
   const fixtures = rawDetailFixtures();
@@ -113,98 +101,18 @@ test("a current detail must describe the requested index entry", () => {
     fenceDetail(index, { path: "missing" }, current("guide")).kind,
     "rejected",
   );
-  const lostView = current("product/browse/home", (detail) => {
-    (detail.views as unknown[]).pop();
-  });
-  assert.equal(
-    fenceDetail(index, { path: "product/browse/home" }, lostView).kind,
-    "rejected",
-  );
+  for (const entry of [{ path: "guide" }, { kind: "component" }]) {
+    const mismatched = current("product/browse/home", (detail) => {
+      Object.assign(detail.entry, entry);
+    });
+    assert.equal(
+      fenceDetail(index, { path: "product/browse/home" }, mismatched).kind,
+      "rejected",
+    );
+  }
   assert.equal(
     fenceDetail(index, { path: "product/browse/home" }, removed(RETIRED)).kind,
     "revision",
-  );
-});
-
-test("usage must fit the index's components and the entry kind", () => {
-  const index = indexFixture();
-  const noRoot = current("components/action", (detail) => {
-    for (const view of detail.views)
-      if (view.usage.status === "ready") view.usage.ranges = [];
-  });
-  assert.equal(
-    fenceDetail(index, { path: "components/action" }, noRoot).kind,
-    "rejected",
-  );
-  const screenRoot = current("product/browse/home", (detail) => {
-    for (const view of detail.views)
-      if (view.usage.status === "ready")
-        view.usage.ranges = [{ id: "r-0", target: { kind: "root" } }];
-  });
-  assert.equal(
-    fenceDetail(index, { path: "product/browse/home" }, screenRoot).kind,
-    "rejected",
-  );
-  const pending = current("components/action", (detail) => {
-    for (const view of detail.views)
-      (view as { usage: unknown }).usage = { status: "pending" };
-  });
-  assert.equal(
-    fenceDetail(index, { path: "components/action" }, pending).kind,
-    "accepted",
-  );
-});
-
-test("workspace lists stay on current parents and variant lists are ignored", () => {
-  const index = indexFixture();
-  const parent = current("components/action", (detail) => {
-    delete (detail.workspace as unknown as Record<string, unknown>).usedBy;
-  });
-  assert.equal(
-    fenceDetail(index, { path: "components/action" }, parent).kind,
-    "rejected",
-  );
-  const variant = current("components/action/default", (detail) => {
-    const workspace = detail.workspace as unknown as Record<string, unknown>;
-    workspace.usedBy = [];
-    workspace.affected = [];
-  });
-  assert.equal(
-    fenceDetail(index, { path: "components/action/default" }, variant).kind,
-    "accepted",
-  );
-  const screenVariant = current("product/browse/home/empty", (detail) => {
-    delete (detail.workspace as unknown as Record<string, unknown>).usedBy;
-  });
-  assert.equal(
-    fenceDetail(index, { path: "product/browse/home/empty" }, screenVariant)
-      .kind,
-    "rejected",
-  );
-});
-
-test("removed details may omit their workspace, but partial lists are rejected", () => {
-  const index = indexFixture();
-  const withoutWorkspace = removed(RETIRED, (detail) => {
-    delete (detail as unknown as Record<string, unknown>).workspace;
-  });
-  assert.equal(
-    fenceDetail(
-      index,
-      { path: "product/browse/home/retired", snapshotId: RETIRED },
-      withoutWorkspace,
-    ).kind,
-    "accepted",
-  );
-  const partial = removed(RETIRED);
-  delete (partial.workspace as unknown as Record<string, unknown>).usedBy;
-  assert.equal(
-    fenceDetail(
-      index,
-      { path: "product/browse/home/retired", snapshotId: RETIRED },
-      partial,
-    ).kind,
-    "rejected",
   );
 });
 
@@ -242,6 +150,15 @@ test("a removed detail needs the index identity, detail id and snapshot", () => 
     fenceDetail(index, { path, snapshotId: RETIRED }, current("guide")).kind,
     "rejected",
   );
+  for (const entry of [{ path: "guide" }, { kind: "component" }]) {
+    const mismatched = removed(RETIRED, (detail) => {
+      Object.assign(detail.entry, entry);
+    });
+    assert.equal(
+      fenceDetail(index, { path, snapshotId: RETIRED }, mismatched).kind,
+      "rejected",
+    );
+  }
 });
 
 test("a removed detail uses its published detail id", () => {
@@ -251,6 +168,66 @@ test("a removed detail uses its published detail id", () => {
   assert.equal(
     fenceDetail(
       replaced,
+      { path: "product/browse/home/retired", snapshotId: RETIRED },
+      removed(RETIRED),
+    ).kind,
+    "accepted",
+  );
+});
+
+test("delivery fences accept content without matching it to the index", () => {
+  const index = indexFixture();
+  const lostView = current("product/browse/home", (detail) => {
+    (detail.views as unknown[]).pop();
+  });
+  assert.equal(
+    fenceDetail(index, { path: "product/browse/home" }, lostView).kind,
+    "accepted",
+  );
+  const pending = current("components/action", (detail) => {
+    for (const view of detail.views)
+      (view as { usage: unknown }).usage = { status: "pending" };
+  });
+  assert.equal(
+    fenceDetail(index, { path: "components/action" }, pending).kind,
+    "accepted",
+  );
+  const variant = current("components/action/default", (detail) => {
+    const workspace = detail.workspace as unknown as Record<string, unknown>;
+    workspace.usedBy = [];
+    workspace.affected = [];
+  });
+  assert.equal(
+    fenceDetail(index, { path: "components/action/default" }, variant).kind,
+    "accepted",
+  );
+  const withoutWorkspace = removed(RETIRED, (detail) => {
+    delete (detail as unknown as Record<string, unknown>).workspace;
+  });
+  assert.equal(
+    fenceDetail(
+      index,
+      { path: "product/browse/home/retired", snapshotId: RETIRED },
+      withoutWorkspace,
+    ).kind,
+    "accepted",
+  );
+});
+
+test("identity fences ignore additive identity fields", () => {
+  const index = indexFixture();
+  Object.assign(index.identity, { later: true });
+  assert.equal(
+    fenceDetail(
+      index,
+      { path: "product/browse/home" },
+      current("product/browse/home"),
+    ).kind,
+    "accepted",
+  );
+  assert.equal(
+    fenceDetail(
+      index,
       { path: "product/browse/home/retired", snapshotId: RETIRED },
       removed(RETIRED),
     ).kind,

@@ -1,5 +1,7 @@
 # Package And Consumer Boundary
 
+Status: No receiver checks the catalogue content of an upload yet. The [receiver read-model validation item](../../plans/follow-ups/receiver-read-model-validation.md) adds that check to Mokly Cloud.
+
 ## Rule
 
 Mokly owns the mechanics shared by any mockup catalogue. A consumer owns
@@ -59,11 +61,15 @@ variants and inspection without the live capability. See the
 that state to the shell's components, the readers of the catalogue index and
 entry detail, navigation, the preview frames, and the browser entry. It renders
 no element of its own, and it mounts its frames through the adapters of the
-frame package. Shared shapes come from the generated types of the Rust model
-crate, which the model package holds. The CLI keeps configuration, rendering,
-comparison, Serve, the static build, publish, and the private control and live
-transports. The viewer never imports the CLI, Node built-ins, Git, or consumer
-application code, and it renders only in the browser under the
+frame package. Its readers apply the version gates, and the shell applies the
+delivery fences. Neither checks the other content of a document. A receiver of
+an upload, such as Mokly Cloud, checks that content with the readers of the
+Rust model crate before it accepts the upload. Shared shapes come from the
+generated types of the Rust model crate, which the model package holds. The CLI
+keeps configuration, rendering, comparison, Serve, the static build, publish,
+and the private control and live transports. The viewer never imports the CLI,
+Node built-ins, Git, or consumer application code, and it renders only in the
+browser under the
 [shell delivery contract](../protocol/mokly-shell-delivery.md).
 
 `@mokly/viewer` depends on the exact coordinated release version of

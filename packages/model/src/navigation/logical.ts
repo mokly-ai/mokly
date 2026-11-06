@@ -1,7 +1,7 @@
 import { GENERATED_DIRECTORY } from "../generated/catalogue/Namespace.js";
 const PATH_SEGMENT = /^[A-Za-z0-9_-]+$/;
 const WINDOWS_DEVICE_NAME = /^(?:aux|con|nul|prn|com[1-9]|lpt[1-9])$/i;
-const LOGICAL_FRAGMENT = /^[\p{L}\p{N}\p{M}_:.-]+$/u;
+const LOGICAL_FRAGMENT = /^[\p{Alphabetic}\p{N}\p{M}_:.-]+$/u;
 
 /** A parsed complete logical catalogue destination. */
 export interface LogicalTarget {
@@ -30,25 +30,6 @@ export function isEntryPath(value: unknown): value is string {
     value.split("/")[0]?.toLowerCase() !== GENERATED_DIRECTORY &&
     value.split("/").every(isPathSegment)
   );
-}
-
-/** Find conflicting spellings of a path or any of its folder prefixes. */
-export function firstPathCaseCollision(
-  paths: readonly string[],
-): readonly [string, string] | undefined {
-  const prefixes = new Map<string, string>();
-  for (const path of paths) {
-    const segments = path.split("/");
-    for (let length = 1; length <= segments.length; length++) {
-      const prefix = segments.slice(0, length).join("/");
-      const folded = prefix.toLowerCase();
-      const previous = prefixes.get(folded);
-      if (previous !== undefined && previous !== prefix)
-        return previous < prefix ? [previous, prefix] : [prefix, previous];
-      prefixes.set(folded, prefix);
-    }
-  }
-  return undefined;
 }
 
 /** Check complete or explicitly relative logical paths without coercion. */
@@ -80,11 +61,6 @@ export function parseLogicalTarget(value: unknown): LogicalTarget | undefined {
   )
     return undefined;
   return fragment === undefined ? { path } : { fragment, path };
-}
-
-/** Validate tags and explicitly authored local instance and ignore ids. */
-export function isKebabCase(value: unknown): value is string {
-  return typeof value === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value);
 }
 
 /** Return whether a value is a canonical, portable repository-relative path. */

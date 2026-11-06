@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { object } from "../../packages/viewer/src/catalogue/values.js";
 import { benchmark } from "../../scripts/large/benchmark.js";
 import { prepareFixture } from "../../scripts/large/setup.js";
 import { fixtureEdits } from "../../scripts/large/watch_edits.js";
 import { repositoryRoot } from "../helpers/fixture.js";
+import { object } from "../helpers/json_record.js";
 
 import { test } from "./browser_test.js";
 

@@ -12,6 +12,7 @@ use crate::profile;
 use crate::prop_schema::PropSchema;
 
 /// Compiled, bounded prop schema with its normative structured shape.
+#[derive(Debug)]
 pub struct PropValidator {
     schema: PropSchema,
     validator: Validator,

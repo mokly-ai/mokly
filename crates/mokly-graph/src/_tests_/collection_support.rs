@@ -122,6 +122,7 @@ pub(super) fn probe_with_closures(count: usize, closures: Arc<dyn ClosureInputs>
         documents: BTreeMap::new(),
         slot_fragments: BTreeMap::new(),
         elements: BTreeMap::new(),
+        prop_validators: Default::default(),
         warnings: vec![warning("preparation")],
     };
     let plans = (0..count)

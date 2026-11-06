@@ -1,5 +1,7 @@
 # Catalogue Serialization, Identity And Versions
 
+Status: No receiver checks an upload under the lenient rule yet. The [receiver read-model validation item](../../plans/follow-ups/receiver-read-model-validation.md) adds that check to Mokly Cloud.
+
 ## Canonical Bytes
 
 The catalogue index, every entry detail, and every detail inside a
@@ -100,18 +102,30 @@ current and removed detail shapes use the detail version in the
 [format inventory](./mokly-format-versions.md). The generated
 [`CatalogueReadModel`](../../packages/model/src/generated/catalogue/CatalogueReadModel.ts)
 and [`EntryDetailV4`](../../packages/model/src/generated/catalogue/EntryDetailV4.ts)
-types are the normative shapes. A reader validates a document against them
-before use.
+types are the normative shapes.
 
-The viewer's readers of the index, the detail, the
-[live descriptor](./mokly-shell-delivery.md#live-descriptor), and the
-render route's answer of the
-[controls contract](./mokly-component-controls.md) read the fields their
-version defines and ignore any other field at every depth, so an older viewer
-reads a newer writer's additive optional fields. A field that contradicts its
-own record's kind, such as ready evidence on a pending state, stays invalid,
-and the privacy rules still reject private evidence anywhere and `usage` or
-`resourceEvidence` anywhere in the index.
+A receiver checks the index and every entry detail of an upload against these
+shapes with the core's index and detail readers, under the
+[upload validation contract](./mokly-upload-validation.md#catalogue-content).
+The check reads the fields that their version defines and ignores any other
+field at every depth, so a receiver accepts a newer writer's additive optional
+fields. A field that contradicts its own record's kind, such as ready evidence
+on a pending state, stays invalid. A required field stays required when its
+value can be null, so an index without `comparisonUrl` is invalid. The check
+does not read the absence as null, because the viewer reads the stored bytes,
+which still lack the field. The privacy rules still reject private
+evidence anywhere, and `usage` or `resourceEvidence` anywhere in the index.
+
+The viewer gates the index, the detail, and the
+[live descriptor](./mokly-shell-delivery.md#live-descriptor) on their version.
+In these documents, and in the render route's answer of the
+[controls contract](./mokly-component-controls.md), which follows the live
+descriptor's version, it reads the fields that the version defines and
+ignores any other field at every depth, so an older viewer reads a newer
+writer's additive optional fields. It checks no other rule of the content.
+The render answer's revision, render id, and preview URL must still match the
+request and the render route. That match is a delivery fence of the controls
+contract, not a check of catalogue content.
 
 ## Tree Validation
 

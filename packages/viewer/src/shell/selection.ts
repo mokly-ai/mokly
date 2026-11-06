@@ -21,6 +21,13 @@ export const defaultSelection: ViewerSelection = {
   search: "",
   tags: [],
 };
+/** A host selection that names no valid view of the catalogue. */
+export class UnavailableSelectionError extends Error {
+  constructor() {
+    super("The requested catalogue selection is unavailable.");
+    this.name = "UnavailableSelectionError";
+  }
+}
 const selectionKeys = new Set([
   "screenPath",
   "snapshotId",
@@ -59,7 +66,7 @@ export function normalizeSelection(
         typeof tag === "string" && tag.trim() && !/\s/.test(tag.trim()),
     )
   )
-    throw new Error("The requested catalogue selection is unavailable.");
+    throw new UnavailableSelectionError();
   const query = parseSearchQuery(value.search);
   return {
     screenPath: value.screenPath,

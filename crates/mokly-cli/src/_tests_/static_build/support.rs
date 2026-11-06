@@ -43,6 +43,7 @@ pub(super) fn catalogue() -> PreparedCatalogue {
         documents: BTreeMap::new(),
         slot_fragments: BTreeMap::new(),
         elements: BTreeMap::new(),
+        prop_validators: Default::default(),
         javascript: Default::default(),
         dependency_directories: Default::default(),
 

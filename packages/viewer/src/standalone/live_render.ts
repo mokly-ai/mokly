@@ -1,17 +1,11 @@
 /**
- * The render route's request body and the validation of its answers;
+ * The render route's request body and the delivery fences of its answers;
  * nothing here enters catalogue data.
  */
 
 import { RENDERS_PATH, RENDER_ID } from "@mokly/model";
 
-import {
-  readInstance,
-  readProps,
-  readRange,
-  readSlot,
-} from "../catalogue/component_values.js";
-import { array, counter, object, string } from "../catalogue/values.js";
+import { record } from "../components/data.js";
 import {
   ComponentRenderError,
   renderStatus,
@@ -68,46 +62,32 @@ export function renderFailure(
 /** Serve's message of a failed answer, or nothing when it sent none. */
 export async function failureMessage(response: Response): Promise<string> {
   try {
-    const body = object(await response.json());
-    return typeof body.message === "string" ? body.message : "";
+    const body: unknown = await response.json();
+    return record(body) && typeof body.message === "string" ? body.message : "";
   } catch {
     return "";
   }
 }
 
-/**
- * Accept a render answer only for the revision and view it was asked for,
- * reading the fields the route defines and ignoring any other.
- */
+/** Copy a render answer only for its requested revision and confined preview URL. */
 export function readRenderResponse(
   value: unknown,
   request: ComponentRenderRequest,
 ): ComponentRenderSuccess {
   try {
-    const input = object(value);
-    const renderId = string(input.renderId);
-    const previewUrl = string(input.previewUrl);
-    const usage = object(input.usage);
     if (
-      !RENDER_ID.test(renderId) ||
-      counter(input.revision) !== request.revision ||
-      !previewUrl.startsWith(`/${RENDERS_PATH}/${renderId}/`) ||
-      new URL(previewUrl, "https://mokly.invalid").pathname !== previewUrl ||
-      usage.status !== "ready"
+      !record(value) ||
+      typeof value.renderId !== "string" ||
+      !RENDER_ID.test(value.renderId) ||
+      value.revision !== request.revision ||
+      typeof value.previewUrl !== "string" ||
+      !value.previewUrl.startsWith(`/${RENDERS_PATH}/${value.renderId}/`) ||
+      new URL(value.previewUrl, "https://mokly.invalid").pathname !==
+        value.previewUrl
     )
       throw new Error("mismatched render answer");
-    return {
-      renderId,
-      revision: request.revision,
-      previewUrl,
-      props: readProps(input.props),
-      usage: {
-        status: "ready",
-        instances: array(usage.instances).map(readInstance),
-        slots: array(usage.slots).map(readSlot),
-        ranges: array(usage.ranges).map(readRange),
-      } as ComponentRenderSuccess["usage"],
-    };
+    const content: unknown = structuredClone(value);
+    return content as ComponentRenderSuccess;
   } catch {
     throw new ComponentRenderError(
       "invalid-response",

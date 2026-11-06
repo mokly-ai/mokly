@@ -39,7 +39,9 @@ node's input hash, which is the public `documentKey` of the
 dependency edits recompute their bundles. Equal emitted CSS and asset digests
 preserve document keys. `dyn RenderGeneration` supports on-demand rendering, a
 full build pass, resource reads, and closure queries. `render_props` validates
-a complete transient props map and uses the same composition and closure path.
+a complete transient props map with the parent's prepared validator from
+`PreparedCatalogue::prop_validators`, and uses the same composition and
+closure path.
 Its document does not replace the saved plan or catalogue props. The
 generation also exposes validated PostCSS directory watches, including empty
 glob matches.

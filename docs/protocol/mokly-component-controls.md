@@ -1,5 +1,7 @@
 # Component Controls
 
+Status: The [select option builder](../../plans/follow-ups/select-option-builder.md) repairs duplicate or unusable select choices from Storybook and schema choices.
+
 ## Scope And User Behaviour
 
 Saved variants work in every catalogue. Serve renders temporary edits of

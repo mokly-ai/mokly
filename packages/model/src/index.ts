@@ -12,9 +12,7 @@ export {
   VIEWER_DIRECTORY,
 } from "./generated/catalogue/Namespace.js";
 export {
-  firstPathCaseCollision,
   isEntryPath,
-  isKebabCase,
   isLinkPath,
   isLogicalFragment,
   isPathSegment,

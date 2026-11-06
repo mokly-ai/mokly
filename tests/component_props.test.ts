@@ -7,7 +7,6 @@ import {
   decodeProps,
   encodeValue,
 } from "../packages/viewer/dist/components/codec.js";
-import { canonicalJson } from "../packages/viewer/dist/components/data.js";
 import { validatePropSchema } from "../packages/viewer/dist/components/profile_schema.js";
 import type { PropValue } from "../packages/viewer/dist/components/prop_types.js";
 import { validateProps } from "../packages/viewer/dist/components/props.js";
@@ -97,11 +96,6 @@ test("component schema rejects malformed, unsafe and ambiguous declarations", ()
     rooted({ oneOf: [{ type: "string" }] }),
     rooted({ anyOf: [] }),
     rooted({ type: "string", default: "x" }),
-    {
-      type: "object",
-      additionalProperties: false,
-      properties: { constructor: { type: "null" } },
-    },
   ])
     assert.throws(() => validatePropSchema(invalid));
   validatePropSchema(rooted({ enum: ["1", 1, false, null] }));
@@ -179,7 +173,6 @@ test("codec rejects noncanonical values and orders integer-looking keys lexicall
       ["2", ["boolean", true]],
     ],
   ]);
-  assert.equal(canonicalJson(value), '{"10":false,"2":true}');
   assert.deepEqual(decodeProps({ value: encodeValue(value) }).value, value);
 });
 

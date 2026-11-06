@@ -78,5 +78,5 @@ A receiver that does not support these versions answers HTTP 426, and the CLI
 sends no Blob or Complete request and does not downgrade. The ownership and upload readers check their own
 fields and namespace; catalogue readers independently enforce their payload
 versions. Mokly Cloud reads upload metadata v3 and catalogue v9, and reads
-Changes from the index. Its receiver parses no entry detail and no static
-deployment file, and its embedded viewer reads entry detail v4.
+Changes from the index. Its receiver parses no static deployment file, and
+its embedded viewer reads entry detail v4.

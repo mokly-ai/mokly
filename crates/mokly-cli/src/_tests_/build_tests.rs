@@ -103,7 +103,7 @@ pub(super) fn prepared(warnings: Vec<Warning>) -> PreparedCatalogue {
         documents: BTreeMap::new(),
         slot_fragments: BTreeMap::new(),
         elements: BTreeMap::new(),
-
+        prop_validators: Default::default(),
         warnings,
     }
 }

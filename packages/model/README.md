@@ -13,7 +13,8 @@ re-exports the rules that its `./data` entry lists.
 
 - The path grammar of the path contract, such as `isEntryPath`, the link and
   fragment grammar of the authoring links contract, such as
-  `parseLogicalTarget`, and the checks of kebab-case ids and repository paths.
+  `parseLogicalTarget`, and the `isSafeRepositoryPath` check of a repository
+  path.
 - `currentDocumentPath`, the static path of a current generated document, and
   its inverse route `currentDocumentRoute`, which
   [frame mapping](../../docs/protocol/mokly-artifact-paths.md#frames-and-reverse-mapping)
@@ -91,9 +92,8 @@ rejects the spelled name.
 - [`src/index.ts`](./src/index.ts) — the root entry, which exports each rule
   and each generated type by name
 - [`src/navigation/logical.ts`](./src/navigation/logical.ts) — the path
-  grammar, such as `isEntryPath` and `firstPathCaseCollision`, the link and
-  fragment grammar, such as `parseLogicalTarget`, and the `isKebabCase` and
-  `isSafeRepositoryPath` checks
+  grammar, such as `isEntryPath`, the link and fragment grammar, such as
+  `parseLogicalTarget`, and the `isSafeRepositoryPath` check
 - [`src/catalogue/delivery_paths.ts`](./src/catalogue/delivery_paths.ts) —
   `currentDocumentPath` with its inverse `currentDocumentRoute`, and
   `RENDERS_PATH` and `RENDER_ID` of temporary renders

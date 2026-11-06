@@ -1,5 +1,7 @@
 # Viewer Selection, Events And Shell State
 
+Status: A cleanup error of host slot or marker content that a teardown removes can still become a catalogue error, until the [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) moves host content above the catalogue catcher.
+
 This continues the [embeddable viewer contract](./mokly-viewer.md), which
 defines the props and the types that this page uses.
 
@@ -18,9 +20,9 @@ and comparison mode keep their route and runtime state.
 of any kind. With it, the pair must resolve exactly one removed record; an
 unknown, stale, or cross-catalogue identity is unavailable. A path-only
 selection of a removed record normalizes to its published identity when
-present. Readers reject an index where a current and a removed record share a
-path. When a newer index arrives, the selected removed record is matched by
-its identity; a replaced or missing record becomes unavailable without
+present. A current and a removed record never share a path. When a newer
+index arrives, the selected removed record is matched by its identity; a
+replaced or missing record becomes unavailable without
 retargeting. The `snapshot` query of the removed entry's `/view/<path>/` URL,
 its survival across axis and filter changes, and its removal by navigation to
 current content follow the

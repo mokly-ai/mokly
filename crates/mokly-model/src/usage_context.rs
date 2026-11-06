@@ -5,7 +5,6 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::axes::EntryKind;
 use crate::detail_context::invalid;
 use crate::material;
-use crate::paths::is_path_segment;
 use crate::public_records::CatalogueComponent;
 use crate::public_validation::hash;
 use crate::read_contract::ContractViolation;
@@ -51,14 +50,13 @@ pub fn validate_with(
             .component(&instance.component_id)
             .ok_or_else(|| invalid(ContractViolation::UsageReference))?;
         let default_id = component.entry.path.rsplit('/').next().unwrap_or("");
-        if !is_path_segment(&instance.id)
-            || instance.id != default_id
-                && !instance.id.split('-').all(|part| {
-                    !part.is_empty()
-                        && part
-                            .bytes()
-                            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit())
-                })
+        if instance.id != default_id
+            && !instance.id.split('-').all(|part| {
+                !part.is_empty()
+                    && part
+                        .bytes()
+                        .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit())
+            })
         {
             return Err(invalid(ContractViolation::UsageKey));
         }

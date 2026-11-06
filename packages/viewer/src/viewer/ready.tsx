@@ -19,7 +19,11 @@ import type { MoklyViewerProps, ViewerSelection } from "../host/types.js";
 import type { ScrollTogetherPreference } from "../shell/comparison_scroll_preference.js";
 import { EmbeddedViewerShell } from "../shell/embedded_viewer.js";
 import { ShellIdentifierProvider } from "../shell/identifier_context.js";
-import { defaultSelection, normalizeSelection } from "../shell/selection.js";
+import {
+  defaultSelection,
+  normalizeSelection,
+  UnavailableSelectionError,
+} from "../shell/selection.js";
 import { ShellStoreProvider } from "../shell/store.js";
 import { hostRoute } from "../shell/store_host_routes.js";
 import { viewRoute } from "../shell/store_initial.js";
@@ -60,8 +64,10 @@ export function ReadyViewer(props: ReadyProps) {
         model,
         props.selection ?? { ...defaultSelection, ...defaults },
       );
-    } catch {
-      return undefined;
+    } catch (error) {
+      // Other errors come from the catalogue, so the catcher shows its failure.
+      if (error instanceof UnavailableSelectionError) return undefined;
+      throw error;
     }
   }, [model, props.selection, defaults]);
   const reported = useRef(false);

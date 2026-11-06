@@ -184,11 +184,25 @@ pub(crate) fn validate_for(
     };
     let schema = serde_json::to_value(schema)
         .expect("prop schemas contain only JSON values and string property names");
-    let props = serde_json::to_value(props).expect("props contain only JSON data and string keys");
     let validator = match PropValidator::compile(&schema, &context) {
         Ok(value) => value,
         Err(source) => return Err(HtmlError::Props { source }),
     };
+    validate_prepared_for(&validator, props, entry, kind)
+}
+
+pub(crate) fn validate_prepared_for(
+    validator: &PropValidator,
+    props: &Props,
+    entry: &str,
+    kind: AuthoringKind,
+) -> Result<()> {
+    let context = Context {
+        entry: entry.into(),
+        variant: None,
+        kind,
+    };
+    let props = serde_json::to_value(props).expect("props contain only JSON data and string keys");
     match validator.validate(&props, &context) {
         Ok(()) => Ok(()),
         Err(source) => Err(HtmlError::Props { source }),

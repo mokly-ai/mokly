@@ -1,0 +1,229 @@
+{
+  "paths": [
+    {
+      "value": "account/Invoice",
+      "valid": true
+    },
+    {
+      "value": "constructor",
+      "valid": true
+    },
+    {
+      "value": "com0",
+      "valid": true
+    },
+    {
+      "value": "a_b/c-d",
+      "valid": true
+    },
+    {
+      "value": "",
+      "valid": false
+    },
+    {
+      "value": "/a",
+      "valid": false
+    },
+    {
+      "value": "a/",
+      "valid": false
+    },
+    {
+      "value": "a//b",
+      "valid": false
+    },
+    {
+      "value": "a/../b",
+      "valid": false
+    },
+    {
+      "value": "a%2fb",
+      "valid": false
+    },
+    {
+      "value": "a\\b",
+      "valid": false
+    },
+    {
+      "value": "a b",
+      "valid": false
+    },
+    {
+      "value": "con",
+      "valid": false
+    },
+    {
+      "value": "AUX",
+      "valid": false
+    },
+    {
+      "value": "folder/lpt1",
+      "valid": false
+    },
+    {
+      "value": "mokly-generated/private",
+      "valid": false
+    }
+  ],
+  "links": [
+    {
+      "value": "details",
+      "syntaxAccepted": true,
+      "resolved": "details"
+    },
+    {
+      "value": "./details",
+      "syntaxAccepted": true,
+      "resolved": "account/details"
+    },
+    {
+      "value": "../details",
+      "syntaxAccepted": true,
+      "resolved": "details"
+    },
+    {
+      "value": "./a/../details",
+      "syntaxAccepted": true,
+      "resolved": "account/details"
+    },
+    {
+      "value": "../../details",
+      "syntaxAccepted": true,
+      "resolved": null
+    },
+    {
+      "value": "../mokly-generated/private",
+      "syntaxAccepted": true,
+      "resolved": null
+    },
+    {
+      "value": "con",
+      "syntaxAccepted": false,
+      "resolved": null
+    },
+    {
+      "value": "a//b",
+      "syntaxAccepted": false,
+      "resolved": null
+    },
+    {
+      "value": "a%2fb",
+      "syntaxAccepted": false,
+      "resolved": null
+    },
+    {
+      "value": "/details",
+      "syntaxAccepted": false,
+      "resolved": null
+    },
+    {
+      "value": "",
+      "syntaxAccepted": false,
+      "resolved": null
+    }
+  ],
+  "fragments": [
+    {
+      "value": "Ⓐ",
+      "valid": true
+    },
+    {
+      "value": "café_日本語-1:._",
+      "valid": true
+    },
+    {
+      "value": "́",
+      "valid": true
+    },
+    {
+      "value": "aः",
+      "valid": true
+    },
+    {
+      "value": "a⃝",
+      "valid": true
+    },
+    {
+      "value": "𐐀",
+      "valid": true
+    },
+    {
+      "value": "Ⅻ",
+      "valid": true
+    },
+    {
+      "value": "",
+      "valid": false
+    },
+    {
+      "value": "a b",
+      "valid": false
+    },
+    {
+      "value": "a/b",
+      "valid": false
+    },
+    {
+      "value": "#a",
+      "valid": false
+    },
+    {
+      "value": "a%20",
+      "valid": false
+    },
+    {
+      "value": "\"a\"",
+      "valid": false
+    },
+    {
+      "value": "a\n",
+      "valid": false
+    }
+  ],
+  "instances": [
+    {
+      "value": "con",
+      "valid": true
+    },
+    {
+      "value": "aux",
+      "valid": true
+    },
+    {
+      "value": "nul",
+      "valid": true
+    },
+    {
+      "value": "prn",
+      "valid": true
+    },
+    {
+      "value": "com1",
+      "valid": true
+    },
+    {
+      "value": "lpt9",
+      "valid": true
+    },
+    {
+      "value": "first-2",
+      "valid": true
+    },
+    {
+      "value": "Con",
+      "valid": false
+    },
+    {
+      "value": "_id",
+      "valid": false
+    },
+    {
+      "value": "two--ids",
+      "valid": false
+    },
+    {
+      "value": "",
+      "valid": false
+    }
+  ]
+}

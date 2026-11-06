@@ -10,7 +10,9 @@ use crate::detail_validation;
 use crate::namespace;
 use crate::public_detail::{EntryDetailV4, LiveDescriptorV3};
 use crate::public_index::CatalogueReadModel;
+use crate::public_privacy;
 use crate::read_contract::ContractViolation;
+use crate::read_decode::value;
 use crate::{public_validation, versions};
 
 /// Typed public read failure.
@@ -53,6 +55,19 @@ pub fn index(text: &str) -> Result<CatalogueReadModel, ReadError> {
     Ok(index)
 }
 
+/// Decode a receiver's index, checking its version, content, and public-data privacy.
+/// Unknown record fields are ignored, while misplaced union fields remain invalid.
+pub fn index_lenient(text: &str) -> Result<CatalogueReadModel, ReadError> {
+    let index = decode_with_mode(
+        text,
+        "catalogue index",
+        versions::CATALOGUE_INDEX,
+        Mode::Lenient,
+    )?;
+    public_validation::validate(&index)?;
+    Ok(index)
+}
+
 /// Decode the static deployment file after its version gate.
 pub fn deployment(text: &str) -> Result<DeploymentFileV1, ReadError> {
     let deployment: DeploymentFileV1 = decode(text, "deployment file", versions::DEPLOYMENT_FILE)?;
@@ -68,6 +83,14 @@ pub fn deployment(text: &str) -> Result<DeploymentFileV1, ReadError> {
 /// Decode an entry detail after its version gate.
 pub fn detail(text: &str) -> Result<EntryDetailV4, ReadError> {
     let detail: EntryDetailV4 = decode(text, "entry detail", versions::ENTRY_DETAIL)?;
+    detail_validation::validate(&detail)?;
+    Ok(detail)
+}
+
+/// Decode a receiver's detail, checking its version, content, and public-data privacy.
+/// Unknown record fields are ignored. Contextual usage checks still need an index.
+pub fn detail_lenient(text: &str) -> Result<EntryDetailV4, ReadError> {
+    let detail = decode_with_mode(text, "entry detail", versions::ENTRY_DETAIL, Mode::Lenient)?;
     detail_validation::validate(&detail)?;
     Ok(detail)
 }
@@ -91,6 +114,21 @@ fn decode<T: DeserializeOwned + Serialize>(
     boundary: &'static str,
     expected: u32,
 ) -> Result<T, ReadError> {
+    decode_with_mode(text, boundary, expected, Mode::Strict)
+}
+
+#[derive(PartialEq)]
+enum Mode {
+    Strict,
+    Lenient,
+}
+
+fn decode_with_mode<T: DeserializeOwned + Serialize>(
+    text: &str,
+    boundary: &'static str,
+    expected: u32,
+    mode: Mode,
+) -> Result<T, ReadError> {
     let value: Value = match serde_json::from_str(text) {
         Ok(value) => value,
         Err(source) => return Err(ReadError::Invalid { boundary, source }),
@@ -103,10 +141,16 @@ fn decode<T: DeserializeOwned + Serialize>(
             received,
         });
     }
-    let decoded: T = match serde_json::from_value(value.clone()) {
+    if mode == Mode::Lenient {
+        public_privacy::validate(&value, boundary)?;
+    }
+    let decoded: T = match value::from_value(value.clone()) {
         Ok(value) => value,
         Err(source) => return Err(ReadError::Invalid { boundary, source }),
     };
+    if mode == Mode::Lenient {
+        return Ok(decoded);
+    }
     let encoded = serde_json::to_value(&decoded)
         .expect("the four public reader types contain only JSON data and string map keys");
     if !known_fields(&value, &encoded) {
@@ -162,3 +206,23 @@ fn version_text(received: &Option<u64>) -> String {
 #[cfg(test)]
 #[path = "_tests_/comparison_eligibility_tests.rs"]
 mod comparison_eligibility_tests;
+
+#[cfg(test)]
+#[path = "_tests_/reader_fixtures.rs"]
+mod reader_fixtures;
+
+#[cfg(test)]
+#[path = "_tests_/reader_lenient_tests.rs"]
+mod reader_lenient_tests;
+
+#[cfg(test)]
+#[path = "_tests_/reader_union_tests.rs"]
+mod reader_union_tests;
+
+#[cfg(test)]
+#[path = "_tests_/reader_privacy_tests.rs"]
+mod reader_privacy_tests;
+
+#[cfg(test)]
+#[path = "_tests_/reader_null_tests.rs"]
+mod reader_null_tests;

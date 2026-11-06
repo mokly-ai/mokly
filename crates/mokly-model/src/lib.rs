@@ -17,6 +17,7 @@ pub mod inference;
 pub mod limits;
 pub mod material;
 pub mod namespace;
+pub mod nullable;
 mod numeric;
 pub mod output;
 pub mod paths;
@@ -27,12 +28,15 @@ mod projection_tree;
 pub mod projection_usage;
 pub mod prop_schema;
 mod public_comparison;
+mod public_decode;
 pub mod public_detail;
 pub mod public_index;
 pub mod public_metadata;
+mod public_privacy;
 pub mod public_records;
 mod public_validation;
 pub mod read_contract;
+mod read_decode;
 pub mod readers;
 mod removed_validation;
 pub mod routes;
@@ -53,6 +57,10 @@ pub mod review;
 pub mod review_affected;
 pub mod snapshot;
 pub mod snapshot_records;
+
+#[cfg(test)]
+#[path = "_tests_/author_checks_tests.rs"]
+mod author_checks_tests;
 
 mod catalogue_tree;
 pub mod review_order;

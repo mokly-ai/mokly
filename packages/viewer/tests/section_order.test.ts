@@ -101,7 +101,7 @@ test("each section applies a folder's order record to the children it shows", ()
   );
 });
 
-test("the public reader keeps valid folder orders and rejects repeated names", () => {
+test("the public reader keeps folder orders", () => {
   const model = rawIndexFixture();
   const folder = model.tree.find((node) => node.kind === "folder");
   assert.ok(folder);
@@ -113,6 +113,4 @@ test("the public reader keeps valid folder orders and rejects repeated names", (
     "...",
     "browse",
   ]);
-  folder.order = ["browse", "browse"];
-  assert.throws(() => readCatalogueIndex(model), /order/);
 });

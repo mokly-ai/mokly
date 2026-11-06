@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 /// Owner of rule or resource evidence; CSS is never a resource owner.
-#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize, TS)]
-#[serde(tag = "kind", rename_all = "lowercase", deny_unknown_fields)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, TS)]
+#[serde(tag = "kind", rename_all = "lowercase")]
 pub enum EvidenceOwner {
     /// The containing entry.
     Entry,
@@ -29,7 +29,7 @@ pub enum RuleStatus {
 
 /// One public selector attribution record.
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct RuleEvidence {
     /// Public stylesheet route, or containing document route for ownerless head rules.
     pub stylesheet: String,
@@ -43,7 +43,7 @@ pub struct RuleEvidence {
 
 /// One reached rendered resource.
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct ResourceEvidence {
     /// Rendered resource route, never a private source path.
     pub path: String,
@@ -53,7 +53,7 @@ pub struct ResourceEvidence {
 
 /// Ready evidence with required explicit arrays.
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct ViewEvidence {
     /// Rule evidence, empty when omitted by review.
     pub rules: Vec<RuleEvidence>,

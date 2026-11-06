@@ -1,5 +1,7 @@
 /** The private Serve routes: the live descriptor, the event stream and renders. */
 
+import { VIEWER_DIRECTORY } from "@mokly/model";
+
 import { EVENTS_PATH, LIVE_PATH } from "../catalogue/delivery_paths.js";
 import { readLiveDescriptor } from "../catalogue/live_reader.js";
 import { fetchJson } from "../catalogue/sources.js";
@@ -47,16 +49,19 @@ export function standaloneLiveSource(win: StandaloneWindow): ShellLiveSource {
       return () => source.close();
     },
     async render(descriptor, request, signal) {
-      const response = await win.fetch(new URL(descriptor.render.url, root), {
-        method: "POST",
-        credentials: "same-origin",
-        signal,
-        headers: {
-          "content-type": "application/json",
-          "x-mokly-render-token": descriptor.render.token,
+      const response = await win.fetch(
+        new URL(`${VIEWER_DIRECTORY}/components/render`, root),
+        {
+          method: "POST",
+          credentials: "same-origin",
+          signal,
+          headers: {
+            "content-type": "application/json",
+            "x-mokly-render-token": descriptor.render.token,
+          },
+          body: renderRequestBody(request),
         },
-        body: renderRequestBody(request),
-      });
+      );
       if (!response.ok)
         throw renderFailure(response.status, await failureMessage(response));
       return readRenderResponse(await response.json(), request);

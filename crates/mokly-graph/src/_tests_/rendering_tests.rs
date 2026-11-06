@@ -42,6 +42,7 @@ fn injected_unsafe_markdown_output_keeps_its_file_and_exact_reason() {
         documents: BTreeMap::new(),
         slot_fragments: BTreeMap::new(),
         elements: BTreeMap::new(),
+        prop_validators: Default::default(),
         warnings: Vec::new(),
     };
     let mut nodes =
