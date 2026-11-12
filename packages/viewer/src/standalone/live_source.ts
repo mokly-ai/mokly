@@ -7,7 +7,7 @@ import { readLiveDescriptor } from "../catalogue/live_reader.js";
 import { fetchJson } from "../catalogue/sources.js";
 import type { ShellLiveSource } from "../shell/data_source.js";
 
-import type { StandaloneWindow } from "./data_source.js";
+import { ownOriginFetch, type StandaloneWindow } from "./data_source.js";
 import {
   failureMessage,
   readRenderResponse,
@@ -23,7 +23,7 @@ export function standaloneLiveSource(win: StandaloneWindow): ShellLiveSource {
       const { value } = await fetchJson(
         new URL(LIVE_PATH, root),
         signal,
-        win.fetch,
+        ownOriginFetch(win),
       );
       return readLiveDescriptor(value);
     },

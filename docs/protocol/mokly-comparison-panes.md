@@ -26,7 +26,9 @@ Each address must be on the configured source origin beneath
 root that the live selection redirected to, or the pinned `comparisonUrl`.
 The GET carries the comparison's abort signal and uses the comparison
 credential rule: `credentials: "omit"` for pinned delivery and
-`credentials: "same-origin"` for live delivery.
+`credentials: "same-origin"` for live delivery. The standalone shell sends
+`credentials: "same-origin"` for both, under the
+[shell fetch rules](./mokly-shell-fences.md#fetch-and-fences).
 
 The entry detail addresses panes by entry identity, view axes, and view
 state. The viewer derives each side's
