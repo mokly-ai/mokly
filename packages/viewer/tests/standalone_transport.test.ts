@@ -4,6 +4,7 @@ import { test } from "node:test";
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
 import {
   fetchStandaloneIndex,
+  ownOriginFetch,
   standaloneDataSource,
   type StandaloneWindow,
 } from "../src/standalone/data_source.js";
@@ -53,7 +54,7 @@ test("the standalone shell reads the index at the stub's origin", async () => {
   assert.deepEqual(requests, [
     {
       url: `${ORIGIN}/mokly-viewer/index.json`,
-      init: { credentials: "omit", signal },
+      init: { credentials: "same-origin", signal },
     },
   ]);
   const older = fakeWindow({
@@ -90,7 +91,7 @@ test("current details live under entries and removed ones under their generation
   assert.equal(removed.entry.snapshotId, RETIRED);
   assert.deepEqual(
     requests.map((request) => request.init.credentials),
-    ["omit", "omit"],
+    ["same-origin", "same-origin"],
   );
   await assert.rejects(
     source.loadDetail(
@@ -115,6 +116,16 @@ test("static source reads the deployment file from the catalogue root", async ()
     deploymentId: index.deploymentId,
   });
   assert.equal(requests[0]!.url, `${ORIGIN}/mokly-viewer/deployment.json`);
+  assert.equal(requests[0]!.init.credentials, "same-origin");
+});
+
+test("every standalone read sends the cookie of the stub's origin", async () => {
+  const { win, requests } = fakeWindow({});
+  await ownOriginFetch(win)(new URL(`${ORIGIN}/mokly-viewer/index.json`), {
+    credentials: "omit",
+    signal,
+  });
+  assert.deepEqual(requests[0]!.init, { credentials: "same-origin", signal });
 });
 
 test("another deployment reloads the requested page", () => {
@@ -137,7 +148,7 @@ test("the descriptor is read from the live route of the same origin", async () =
   const live = standaloneDataSource(win).live!;
   assert.deepEqual(await live.loadDescriptor(signal), descriptor);
   assert.equal(requests[0]!.url, `${ORIGIN}/mokly-viewer/live.json`);
-  assert.equal(requests[0]!.init.credentials, "omit");
+  assert.equal(requests[0]!.init.credentials, "same-origin");
   const older = fakeWindow({
     "/mokly-viewer/live.json": { ...descriptor, schemaVersion: 2 },
   });

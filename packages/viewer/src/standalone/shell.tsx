@@ -135,28 +135,30 @@ function ReadyShell({
   const [source] = useState(() =>
     standaloneDataSource(win, index.live === undefined),
   );
-  const comparison = useMemo<ComparisonEnvironment>(
-    () => ({
+  const comparison = useMemo<ComparisonEnvironment>(() => {
+    // The same-origin credentials of `ownOriginFetch`, for any request input.
+    const fetch: ComparisonEnvironment["fetch"] = (input, init) =>
+      win.fetch(input, { ...init, credentials: "same-origin" });
+    return {
       baseUrl: win.location.origin,
       delivery: () =>
         index.live
           ? { kind: "live" }
           : { kind: "pinned", comparisonUrl: index.comparisonUrl },
-      fetch: (input, init) => win.fetch(input, init),
+      fetch,
       ...(index.live === undefined
         ? {
             deploymentCheck: deploymentCheck(
               new URL("/", win.location.href),
               index.deploymentId,
-              win.fetch,
+              fetch,
               () => win.location.reload(),
             ),
           }
         : {}),
       scrollTogether: storedScrollTogether(() => win.localStorage),
-    }),
-    [index, win],
-  );
+    };
+  }, [index, win]);
   return (
     <ShellStoreProvider
       comparisonEnvironment={comparison}
