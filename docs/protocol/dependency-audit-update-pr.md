@@ -3,8 +3,8 @@
 ## Workflow Boundary
 
 `.github/workflows/dependency-audit.yml` runs daily off the hour and on
-`workflow_dispatch`. It has two independent jobs on `blacksmith-2vcpu-ubuntu-2404`,
-each with a 30-minute timeout. Use concurrency group `dependency-audit` and do
+`workflow_dispatch`. It has two independent jobs on GitHub-hosted
+`ubuntu-24.04`, each with a 30-minute timeout. Use concurrency group `dependency-audit` and do
 not cancel an active run. The npm update job has `contents: write`,
 `pull-requests: write`, and `issues: write`. Actions use immutable revisions
 with reviewed version comments.
