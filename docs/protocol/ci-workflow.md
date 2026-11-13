@@ -119,26 +119,31 @@ glibc or musl build of a native package
 pin equals `packageManager`. CI and release jobs set up that npm before
 `npm ci`.
 
-Linux and Windows jobs across the CI, preview, release, native bootstrap, and
-Dependency Audit workflows use Blacksmith's 2-vCPU tiers, except the design
-matrix below and the CI jobs that compile Rust. The Linux CI jobs that compile
-Rust use 4 vCPUs. The 4-vCPU tier gives most of the speed of the 8-vCPU tier
+Linux x64 jobs across the CI, preview, release, native bootstrap, and
+Dependency Audit workflows run on GitHub-hosted `ubuntu-24.04`, except the
+design matrix below and the CI jobs that compile Rust. GitHub-hosted runners
+are free for this public repository, and Blacksmith's 2-vCPU tier is not.
+Linux ARM64 and Windows jobs use Blacksmith's 2-vCPU tiers, except the CI
+Windows native job. The Linux CI jobs that compile Rust use Blacksmith's
+4-vCPU tier. The 4-vCPU tier gives most of the speed of the 8-vCPU tier
 at half the price per minute. These jobs do not use 2 vCPUs, because on
 2 vCPUs the CI result comes much later. The CI Windows native job uses
 8 vCPUs, because on 2 vCPUs its complete Rust build and test run is usually
 the slowest CI job. It does not use 16 vCPUs, because with the Rust build
 cache it is no faster than on 8 vCPUs.
-macOS jobs use the provider's smallest available tier, which is 6 vCPUs. The publishing exception is any job that publishes
-to npm with trusted publishing, the release `publish` job: it runs on
-GitHub-hosted `ubuntu-24.04` with `actions/checkout`, because npm creates
+macOS jobs use the provider's smallest available tier, which is 6 vCPUs.
+A job on a GitHub-hosted runner checks out with `actions/checkout`. A job on
+a Blacksmith runner checks out with Blacksmith's checkout action, which keeps
+a Git mirror between runs.
+The release `publish` job, and every other job that publishes to npm with
+trusted publishing, runs on GitHub-hosted `ubuntu-24.04`, because npm creates
 provenance only on GitHub-hosted runners and rejects a publish from a
 self-hosted runner such as Blacksmith.
-A second, narrow exception permits only the `darwin-x64` row of the release,
+A narrow exception permits only the `darwin-x64` row of the release,
 release-check, and native bootstrap build matrices on GitHub-hosted
-`macos-26-intel`, with `actions/checkout`. Blacksmith's
-macOS hosts are ARM64. This row keeps native Intel build and execution coverage;
-it has no npm publishing permission. Every other native build row follows
-the Blacksmith size rule.
+`macos-26-intel`. Blacksmith's macOS hosts are ARM64. This row keeps native
+Intel build and execution coverage; it has no npm publishing permission.
+Every other native build row follows the runner rule above.
 
 In the CI workflow, the repository job has a 75-minute timeout and each viewer
 job has a 40-minute timeout. Browser shards, static-delivery jobs, and native

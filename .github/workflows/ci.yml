@@ -17,7 +17,7 @@ env:
 jobs:
   profile:
     name: Runtime profile
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
       node-24-version: ${{ steps.node-version.outputs.value }}
@@ -337,11 +337,11 @@ jobs:
       - browser
       - native
       - static-delivery
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - name: Check out report validator
-        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
       - name: Set up Node.js
