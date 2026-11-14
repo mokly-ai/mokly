@@ -1,12 +1,13 @@
 # Commit info warning breaks a nested JSON report
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Outside the scope.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from the CI run of PR #242 at `410de45e`.
 - **Location:** `tests/browser/browser_error_rejection.spec.ts:10`, with the
-  parse at line 33, and
-  `tests/fixtures/browser-errors/playwright.config.ts:7`.
-- **Reason:** The test is unrelated to PR #242 and passed on the next run.
+  parse at line 33, the folder `tests/fixtures/browser-errors/`, and the
+  spec's entry at `scripts/verification/browser-shard-weights.json:19`.
+- **Reason:** On 2026-11-03 the user chose option D, the removal of the
+  test, and asked for it in a later branch.
 
 - **Source:** Review.
 - **Category:** Test.
@@ -27,6 +28,12 @@
     rule: every browser spec fails on an unexpected console error or page
     error. This test is the only test that shows the rule failing a spec.
     It checks the test harness and no product code.
+  - `tests/browser/browser_error_fixture.spec.ts` checks that the shared
+    error fixture observes each error. It does not show that an unexpected
+    error fails a spec.
+  - On 2026-11-03 the user chose option D. That choice approves the removal
+    of the last test of the browser error rule, which the `testing` skill
+    reserves for the user.
 - **Problem:**
   - Failure: the test failed in browser shard 4 of 4 of the CI run of
     PR #242 at `410de45e`. The date of the run was not recorded. PR #242
@@ -63,8 +70,26 @@
 - **Related:** [flaky-viewer-selection-navigation.md](./flaky-viewer-selection-navigation.md)
   records the other unrelated browser failure that PR #242 met. It has a
   different test and a different source.
-- **Recommendation:** A. It removes the mixed stream, whatever
-  writes to it.
-- **Action:** ask the user, because the failure has not been reproduced with a
-  confirmed cause. No fix is clearly best until reproduction identifies the
-  source, as the flaky-test rule requires.
+- **Recommendation:** D. The user chose it on 2026-11-03. The first
+  recommendation was A, which keeps the test and parses a report file.
+- **Action:** fix after merge, apply D, because the user chose D on
+  2026-11-03 and asked for it in a later branch.
+- **Work:**
+  - Delete `tests/browser/browser_error_rejection.spec.ts` and the folder
+    `tests/fixtures/browser-errors/`, which holds `errors.fixture.ts` and
+    `playwright.config.ts`. Only this spec uses the folder.
+  - Remove the spec's entry from
+    `scripts/verification/browser-shard-weights.json`. Its weight is
+    1,246 ms for its one test.
+  - Keep the browser error rule in `docs/protocol/ci-suite-evidence.md`,
+    section Browser Errors. Keep the code that applies the rule to every
+    spec: `tests/browser/browser_test.ts`, `tests/browser/error_monitor.ts`,
+    and `tests/browser/console_notices.ts`. Only the test of the rule goes.
+  - Search `docs/`, `plans/`, and every `README.md` for
+    `browser_error_rejection` and `browser-errors`. Update each live
+    reference. On 2026-11-03 only this item named them.
+  - Record the removal in the pull request description: the test, the
+    reason, the user's approval of 2026-11-03, and the run time that it
+    saves.
+  - Delete this item in the same branch. Remove the link to it from
+    `flaky-viewer-selection-navigation.md`.

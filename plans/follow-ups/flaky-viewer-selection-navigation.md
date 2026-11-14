@@ -1,12 +1,13 @@
 # Viewer selection test races a navigation
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Outside the scope.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from a local complete gate run of PR #242 at
   `f15728a5`.
 - **Location:** `tests/browser/viewer.spec.ts:22`, the test "uncontrolled
   selection, slots and handle lifecycle".
-- **Reason:** The test is unrelated to PR #242 and passed on the rerun.
+- **Reason:** On 2026-11-03 the user chose option A, a reproduction before
+  the fix, and asked for it in a later branch.
 
 - **Source:** Review.
 - **Category:** Test.
@@ -17,6 +18,7 @@
   - The viewer suite test "uncontrolled selection, slots and handle
     lifecycle" starts at `tests/browser/viewer.spec.ts:22`.
   - It evaluates code in the page at several steps.
+  - On 2026-11-03 the user chose option A.
 - **Problem:**
   - Failure: the test failed once in a local complete gate run of PR #242
     at `f15728a5`. The date of the run was not recorded. PR #242 merged on
@@ -68,8 +70,19 @@
     of its failure shows no second load of the top page, and that item says
     why the failure text alone does not prove a navigation. It has its own
     test and suspected source, so it needs its own fix.
-- **Recommendation:** A. It removes the race and keeps every
-  assertion.
-- **Action:** ask the user, because the failure has not been reproduced with a
-  confirmed cause. No fix is clearly best until reproduction identifies the
-  source, as the flaky-test rule requires.
+- **Recommendation:** A. The user chose it on 2026-11-03. It removes the
+  race and keeps every assertion.
+- **Action:** fix after merge, apply A, because the user chose A on
+  2026-11-03 and asked for it in a later branch.
+- **Work:**
+  - Repeat the test until it fails, and record the pass counts under
+    `.context/`, as the flaky-test rule of the `testing` skill says.
+  - Log the protocol error of the failed call, for example with
+    `DEBUG=pw:protocol`. Check whether the top page loads again. The failure
+    text alone does not prove a navigation, as
+    `flaky-viewer-events-active-picks.md` says.
+  - When the source is in the viewer, the flaky-test rule makes it a product
+    bug: add a failing test first, then fix the viewer, as option C says.
+  - When the repeats do not reproduce the failure, record the run count in
+    this item, and ask the user again. Change no code.
+  - Delete this item in the branch that fixes the test.

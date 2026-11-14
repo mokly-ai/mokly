@@ -10,8 +10,8 @@
   `skills/plans/references/follow-up-items.md:10-17` and `:110-116`,
   `skills/plans/scripts/follow-ups.sh:42-49` and `:59-63`,
   `skills/plans/SKILL.md:164-171`, and `tests/follow_ups_test.sh:24-28`.
-- **Reason:** The fix changes the shared skill workflow outside Mokly, and
-  it needs the user's process choice.
+- **Reason:** The fix changes the shared skill workflow outside Mokly. On
+  2026-11-03 the user took this work for a separate workspace.
 
 - **Source:** Review.
 - **Category:** Process.
@@ -112,6 +112,6 @@
   reads the field that is already the authority, and needs no migration.
   D best separates origin and approval state as data, but it is Large, and
   its new field repeats the Action outcome.
-- **Action:** ask the user, because B changes the shared listing output to
-  expose approval state. No recorded requirement or user choice covers that new
-  output.
+- **Action:** ask the user, because the user does this work in a separate
+  workspace, as the user said on 2026-11-03. No agent starts it. Delete this
+  item after the change to `futex-ai/skills` lands.

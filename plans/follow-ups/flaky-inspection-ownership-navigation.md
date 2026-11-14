@@ -42,25 +42,41 @@
     navigation during the awaited pick setup.
   - `plans/follow-ups/flaky-viewer-selection-navigation.md` records the same
     error in another spec, `tests/browser/viewer.spec.ts`.
-- **Problem:** A navigation of the host page can happen while the test's
-  `page.evaluate` still runs, so the test fails at random.
+  - `startInspection`, in `tests/browser/viewer_inspection_fixture.ts`, is
+    the shared start of this spec and of
+    `tests/browser/viewer_inspection_scope.spec.ts`. It waits for the test
+    harness, mounts the viewer with a probe adapter, and waits for the
+    viewer's handle. Line 79 is the first `page.evaluate` after it.
+  - Playwright 1.61.1 reports this failure text for almost every protocol
+    error of a call, so the text alone does not prove a navigation.
+    `plans/follow-ups/flaky-viewer-events-active-picks.md` found this in a
+    trace: its failure had no second load of the top page.
+- **Problem:** The `page.evaluate` at line 79 fails at random under the load
+  of a full shard. Its failure text suggests a navigation of the host page,
+  but nobody confirmed one.
 - **Impact if no action:** The browser suite can fail on a correct change and
   costs a rerun.
-- **Root question:** What navigates the host page while the test starts its
-  pick, and how does the test wait for it?
+- **Root question:** What ends the `page.evaluate` at line 79 while the test
+  starts its pick, and how does the test wait until the page is ready?
 - **Options:**
-  - **A.** Reproduce the failure with `--repeat-each`, name the navigation,
-    and wait for the page's load state or a readiness signal before the
-    `page.evaluate`. Keep every assertion. Effort: Small.
+  - **A.** Reproduce the failure with `--repeat-each`. Log the protocol error
+    of the failed call, for example with `DEBUG=pw:protocol`, and name the
+    source. Then wait for the page's load state or a readiness signal before
+    the `page.evaluate`. Keep every assertion. Effort: Small.
   - **B.** A, and give the shared start of these tests, `startInspection`,
-    the same wait, so that every generated test gains it. Effort: Small.
+    the same wait, so that every test of both inspection specs gains it.
+    Effort: Small.
 - **Left out:** A retry or a longer time limit, because the
   `testing` skill rules them out.
-- **Wider fix:** B.
-- **Related:** `flaky-viewer-selection-navigation.md`: the same error class.
-  One readiness rule for host pages could serve both.
+- **Wider fix:** B. The shared start gives every inspection test the wait.
+- **Related:**
+  - `flaky-viewer-selection-navigation.md`: the same error class. One
+    readiness rule for host pages could serve both.
+  - `flaky-viewer-events-active-picks.md`: the same failure text in a third
+    viewer spec. Its trace showed no navigation.
 - **Previous examples:** `flaky-viewer-selection-navigation.md`.
-- **Recommendation:** B.
+- **Recommendation:** B. One shared wait covers every test of both
+  inspection specs.
 - **Action:** ask the user, because the failure has not been reproduced with a
   confirmed cause. No fix is clearly best until reproduction identifies the
   source, as the flaky-test rule requires.
