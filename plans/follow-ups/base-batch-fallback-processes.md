@@ -27,7 +27,7 @@
     `base-conversion` warning, and the other files stay.
   - The base prefetch in `crates/mokly-compare/src/git_prefetch.rs:67` does
     the same through one read for each path.
-  - `docs/protocol/mokly-git.md:106` requires that each file of a failed,
+  - `docs/protocol/mokly-git.md:108` requires that each file of a failed,
     timed-out, or oversized batch converts again alone, so that a file is
     unavailable only when its own conversion fails.
 - **Problem:** Each call of the fallback can start about three Git
@@ -46,7 +46,7 @@
     file then needs a few batch processes for each halving. Keep the
     per-file retry after a deadline, because each halving would wait for a
     new 120-second deadline. Update the mechanism sentence at
-    `docs/protocol/mokly-git.md:106`. Effort: Medium.
+    `docs/protocol/mokly-git.md:108`. Effort: Medium.
   - **C.** Keep the per-file fallback, but share the attribute lookup and the
     object fetch of the failed batch among its single-file calls. Each file
     then starts one process instead of about three. Effort: Medium.
@@ -64,9 +64,14 @@
     option C moves the per-file retry into one place and keeps its cost.
   - [base-batch-byte-limit.md](./base-batch-byte-limit.md) concerns the same
     two modules. Its batch helper can hold the split of B.
-  - [git-opaque-asset-batching.md](./git-opaque-asset-batching.md) concerns
-    the Git processes of each opaque asset in the base. It is the same cost
-    class in another reader, so one design can cover both.
+  - [git-opaque-asset-batching.md](./git-opaque-asset-batching.md) concerned
+    the Git processes of each opaque asset in the base, the same cost class
+    in another reader. Its Git process part closed with the branch
+    `conductor/rust-rebuild-64-opaque-asset-digests` on 2026-11-01, which
+    batched the base digests of the opaque assets of each stylesheet file.
+    Its delivery part for extracted assets stays open. A failed digest batch
+    of that branch also digests each asset again alone, in
+    `crates/mokly-git/src/checkout_digest.rs`.
 - **Recommendation:** B. It keeps every failure with its file and
   bounds the process count.
 - **Action:** ask the user, because B changes the failed-batch retry rule in

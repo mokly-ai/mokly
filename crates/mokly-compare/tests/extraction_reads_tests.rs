@@ -68,6 +68,16 @@ fn an_attached_extraction_serves_reads_digests_and_projections_without_git() {
     let tree = GitTree::new(root.into(), sources, 1024 * 1024);
     fs::rename(root.join(".git"), root.join("hidden-git")).unwrap();
 
+    let paths: Vec<_> = FILES.iter().map(|path| root.join(path)).collect();
+    for (result, bytes) in tree.digest_unretained_batch(&paths).into_iter().zip(&bytes) {
+        assert_eq!(result.unwrap(), mokly_model::material::digest(bytes));
+    }
+    let image = root.join("images/c.svg");
+    let mut stream = tree.open_stream(&image).unwrap();
+    let mut output = Vec::new();
+    stream.copy_verified(&image, &digest, &mut output).unwrap();
+    assert_eq!(output, bytes[2]);
+
     for (path, expected) in FILES.iter().zip(&bytes) {
         assert_eq!(&tree.read(&root.join(path)).unwrap(), expected, "{path}");
     }

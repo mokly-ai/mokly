@@ -126,6 +126,105 @@ impl SourceTree for SourceSnapshot {
     fn digest_unretained(&self, path: &Path) -> Result<String> {
         self.digest_value(path, true)
     }
+    fn digest_unretained_batch(&self, paths: &[PathBuf]) -> Vec<Result<String>> {
+        let cells: BTreeMap<_, _> = {
+            let mut digests = self
+                .digests
+                .lock()
+                .unwrap_or_else(|error| error.into_inner());
+            paths
+                .iter()
+                .map(|path| {
+                    (
+                        path.clone(),
+                        digests.entry(path.clone()).or_default().clone(),
+                    )
+                })
+                .collect()
+        };
+        let mut observed = {
+            let mut pending = Vec::new();
+            let mut results = BTreeMap::new();
+            for (path, cell) in &cells {
+                let mut value = cell.value.lock().unwrap_or_else(|error| error.into_inner());
+                if let Some(hash) = &*value {
+                    results.insert(path.clone(), Ok(hash.clone()));
+                    continue;
+                }
+                let bytes = self
+                    .reads
+                    .lock()
+                    .unwrap_or_else(|error| error.into_inner())
+                    .get(path)
+                    .cloned();
+                let bytes = bytes.and_then(|cell| {
+                    cell.bytes
+                        .lock()
+                        .unwrap_or_else(|error| error.into_inner())
+                        .clone()
+                });
+                if let Some(bytes) = bytes {
+                    let hash = digest(&bytes);
+                    *value = Some(hash.clone());
+                    results.insert(path.clone(), Ok(hash));
+                } else {
+                    pending.push((path, value));
+                }
+            }
+            let pending_paths: Vec<_> = pending.iter().map(|(path, _)| (*path).clone()).collect();
+            if !pending_paths.is_empty() {
+                for ((path, mut value), result) in pending
+                    .into_iter()
+                    .zip(self.source.digest_unretained_batch(&pending_paths))
+                {
+                    if let Ok(hash) = &result {
+                        *value = Some(hash.clone());
+                    }
+                    results.insert(path.clone(), result);
+                }
+            }
+            results
+        };
+        paths
+            .iter()
+            .map(|path| match observed.get(path) {
+                Some(Ok(hash)) => Ok(hash.clone()),
+                _ => observed
+                    .remove(path)
+                    .unwrap_or_else(|| self.digest_unretained(path)),
+            })
+            .collect()
+    }
+    fn project_batch(&self, paths: &[PathBuf]) -> Vec<Result<Option<Node>>> {
+        let mut results: Vec<_> = {
+            let nodes = self.nodes.lock().unwrap_or_else(|error| error.into_inner());
+            paths
+                .iter()
+                .map(|path| nodes.get(path).cloned().map(Ok))
+                .collect()
+        };
+        let pending: Vec<_> = paths
+            .iter()
+            .enumerate()
+            .filter(|(index, _)| results[*index].is_none())
+            .collect();
+        let pending_paths: Vec<_> = pending.iter().map(|(_, path)| (*path).clone()).collect();
+        if !pending_paths.is_empty() {
+            let projected = self.source.project_batch(&pending_paths);
+            let mut nodes = self.nodes.lock().unwrap_or_else(|error| error.into_inner());
+            for ((index, path), result) in pending.into_iter().zip(projected) {
+                results[index] = Some(match result {
+                    Ok(node) => Ok(nodes.entry(path.clone()).or_insert(node).clone()),
+                    Err(error) => Err(error),
+                });
+            }
+        }
+        paths
+            .iter()
+            .zip(results)
+            .map(|(path, result)| result.unwrap_or_else(|| self.project(path)))
+            .collect()
+    }
     fn project(&self, path: &Path) -> Result<Option<Node>> {
         let mut nodes = self.nodes.lock().unwrap_or_else(|error| error.into_inner());
         if let Some(node) = nodes.get(path) {
@@ -170,3 +269,7 @@ impl SourceTree for SourceSnapshot {
 #[cfg(test)]
 #[path = "_tests_/public_snapshot_tests.rs"]
 mod public_snapshot_tests;
+
+#[cfg(test)]
+#[path = "_tests_/projection_forwarding_tests.rs"]
+mod projection_forwarding_tests;

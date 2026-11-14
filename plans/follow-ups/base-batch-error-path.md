@@ -39,7 +39,7 @@
   - `read_many` passes the whole call to `checkout_read`. The prefetch at
     `crates/mokly-compare/src/git_prefetch.rs:65` also reads through
     `read_many`, and then reads each file of a failed call alone.
-  - `docs/protocol/mokly-git.md:106` requires that each file of a failed
+  - `docs/protocol/mokly-git.md:108` requires that each file of a failed
     batch converts again alone, so that a file is unavailable only when its
     own conversion fails.
 - **Problem:** When a batch fails as a whole, its `Conversion` error names
@@ -70,12 +70,12 @@
     error then names that file, and one failing file costs a few batch
     processes for each halving. Keep the per-file retry after a deadline,
     because each halving would wait for a new 120-second deadline. Update
-    the mechanism sentence at `docs/protocol/mokly-git.md:106`. This changes
+    the mechanism sentence at `docs/protocol/mokly-git.md:108`. This changes
     a stated rule, so it needs the user. Effort: Medium.
   - **E.** When `convert_entries` returns a batch failure for a call of two
     or more files, convert each file of the call alone inside
     `checkout_read`. Then `read_many` follows the rule of
-    `docs/protocol/mokly-git.md:106`, and each failure names its own file.
+    `docs/protocol/mokly-git.md:108`, and each failure names its own file.
     Retry only on a filter failure, a command failure, or a byte or output
     limit, never on a cancellation. Keep the remaining byte limit across the
     files, each file's own deadline, and the record of a file whose own

@@ -30,6 +30,19 @@
     script that the current documents carry.
   - `mokly publish` sends each digest once, so the copies cost disk, build
     memory, and file count, not upload bytes.
+  - A one-time probe on 2026-11-01 used the release binary `2a196323`, built
+    from commit `8efaa239` of the branch
+    `conductor/rust-rebuild-64-opaque-asset-digests`. Its HTML fixture holds
+    one 60 MiB opaque asset that one stylesheet references, and its head
+    edits the one screen. Three builds with Changes against `HEAD` reached a
+    peak RSS of 215,320 to 224,032 KiB. Three builds with `--no-changes`
+    reached 90,884 to 99,628 KiB.
+  - `crates/mokly-static/src/resource_bytes.rs:22` reads each snapshot asset
+    whole into the in-memory output inventory, for each side, through the
+    resource loop at line 45 of `comparison_files.rs`. The base of that
+    fixture needs no sidecar, so its base delivery streams from Git. The
+    difference of about 120 MiB matches one whole copy of the 60 MiB asset
+    for each snapshot side.
   - Two fixes are known. In a static build, the viewer could give the after
     pane a base under `static/` and the build could skip the after-side
     resources. Or each snapshot resource could be stored once by content
@@ -47,6 +60,10 @@
   deployed change and no credentials.
 - **Done when:** The measurement is recorded, and the item is either
   replaced by a decision for the user or deleted.
-- **Related:** [unread-comparison-snapshots.md](./unread-comparison-snapshots.md)
-  and [skip-equal-before-snapshots.md](./skip-equal-before-snapshots.md)
-  remove the other snapshot copies. Decide the snapshot layout together.
+- **Related:**
+  - [unread-comparison-snapshots.md](./unread-comparison-snapshots.md) and
+    [skip-equal-before-snapshots.md](./skip-equal-before-snapshots.md)
+    remove the other snapshot copies. Decide the snapshot layout together.
+  - [git-opaque-asset-batching.md](./git-opaque-asset-batching.md) concerns
+    the base delivery of extracted opaque assets. The build memory of its
+    measurement of 2026-10-28 comes from the snapshot copies of this item.

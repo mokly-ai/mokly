@@ -117,3 +117,46 @@ fn opaque_digests_share_the_generation_cell_without_retaining_payloads() {
     assert_eq!(snapshot.retained_bytes(), 0);
     assert!(snapshot.reads.lock().unwrap().is_empty());
 }
+
+#[test]
+fn a_blocked_batch_releases_an_already_cached_digest_cell() {
+    let (entered, started) = mpsc::channel();
+    let (release, released) = mpsc::channel();
+    let released = Mutex::new(released);
+    let source = Unimock::new((
+        SourceTreeMock::digest
+            .next_call(matching!((path) if *path == Path::new("cached")))
+            .returns(Ok("cached-hash".into())),
+        SourceTreeMock::digest_unretained_batch
+            .next_call(matching!((paths) if paths == &[Path::new("slow").to_owned()]))
+            .answers_arc(Arc::new(move |_, _| {
+                entered.send(()).unwrap();
+                released.lock().unwrap().recv().unwrap();
+                vec![Ok("slow-hash".into())]
+            })),
+    ));
+    let snapshot = Arc::new(SourceSnapshot::new(Arc::new(source)));
+    snapshot.digest(Path::new("cached")).unwrap();
+    let batch = snapshot.clone();
+    let batch = thread::spawn(move || {
+        batch.digest_unretained_batch(&[
+            Path::new("cached").to_owned(),
+            Path::new("slow").to_owned(),
+        ])
+    });
+    started.recv().unwrap();
+    let (ready, result) = mpsc::channel();
+    let fast = snapshot.clone();
+    let fast = thread::spawn(move || ready.send(fast.digest(Path::new("cached"))).unwrap());
+    let result = result.recv_timeout(Duration::from_secs(10));
+    release.send(()).unwrap();
+    assert!(
+        batch
+            .join()
+            .unwrap()
+            .into_iter()
+            .all(|result| result.is_ok())
+    );
+    fast.join().unwrap();
+    assert_eq!(result.unwrap().unwrap(), "cached-hash");
+}

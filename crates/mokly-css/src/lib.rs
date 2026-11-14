@@ -85,6 +85,7 @@ mod physical_ownership_tests;
 mod scoped_universal_tests;
 
 mod compiler_assets;
+mod compiler_projection;
 mod css_boundaries;
 mod selector_nesting;
 
@@ -105,3 +106,11 @@ pub mod token_differential;
 #[cfg(test)]
 #[path = "_tests_/deep_scanner_tests.rs"]
 mod deep_scanner_tests;
+
+#[cfg(test)]
+#[path = "_tests_/asset_failures_tests.rs"]
+mod asset_failures_tests;
+
+#[cfg(test)]
+#[path = "_tests_/asset_digest_errors_tests.rs"]
+mod asset_digest_errors_tests;

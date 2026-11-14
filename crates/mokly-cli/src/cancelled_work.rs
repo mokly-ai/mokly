@@ -98,9 +98,36 @@ impl SourceTree for CancellableTree {
         self.check(path)?;
         self.inner.digest_unretained(path)
     }
+    fn digest_unretained_batch(
+        &self,
+        paths: &[PathBuf],
+    ) -> Vec<mokly_source_interface::error::Result<String>> {
+        if paths.iter().any(|path| self.check(path).is_err()) {
+            return paths
+                .iter()
+                .map(|path| {
+                    self.check(path)
+                        .and_then(|()| self.inner.digest_unretained(path))
+                })
+                .collect();
+        }
+        self.inner.digest_unretained_batch(paths)
+    }
     fn digest(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
         self.check(path)?;
         self.inner.digest(path)
+    }
+    fn project_batch(
+        &self,
+        paths: &[PathBuf],
+    ) -> Vec<mokly_source_interface::error::Result<Option<Node>>> {
+        if paths.iter().any(|path| self.check(path).is_err()) {
+            return paths
+                .iter()
+                .map(|path| self.check(path).and_then(|()| self.inner.project(path)))
+                .collect();
+        }
+        self.inner.project_batch(paths)
     }
     fn project(&self, path: &Path) -> mokly_source_interface::error::Result<Option<Node>> {
         self.check(path)?;
@@ -235,3 +262,7 @@ mod comparison_cancellation_tests;
 #[cfg(test)]
 #[path = "_tests_/stylesheet_cancellation_tests.rs"]
 mod stylesheet_cancellation_tests;
+
+#[cfg(test)]
+#[path = "_tests_/projection_forwarding_tests.rs"]
+mod projection_forwarding_tests;

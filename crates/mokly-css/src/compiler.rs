@@ -5,7 +5,8 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use lightningcss::stylesheet::{ParserOptions, StyleSheet};
-use mokly_source_interface::tree::SourceTree;
+use mokly_source_interface::error;
+use mokly_source_interface::tree::{Node, SourceTree};
 
 use crate::error::{AssetFailure, CssError, Result, TransformFailure};
 use crate::resolver::ImportResolver;
@@ -28,8 +29,17 @@ pub(crate) struct Preparation<'a> {
     pub(crate) compiler: &'a Compiler,
     root: &'a StylesheetRoot,
     pub(crate) sources: BTreeMap<String, String>,
+    pub(crate) asset_nodes: BTreeMap<PathBuf, error::Result<Option<Node>>>,
     pub(crate) resolutions: BTreeMap<(String, String), String>,
     pub(crate) result: Bundle,
+}
+
+pub(crate) struct AssetCandidate {
+    pub(crate) node: Node,
+    pub(crate) route: String,
+    pub(crate) target: String,
+    pub(crate) url: String,
+    pub(crate) importer: String,
 }
 
 impl StylesheetBundler for Compiler {
@@ -48,6 +58,7 @@ impl StylesheetBundler for Compiler {
             compiler: self,
             root,
             sources: BTreeMap::new(),
+            asset_nodes: BTreeMap::new(),
             resolutions: BTreeMap::new(),
             result: Bundle {
                 read_evidence: Default::default(),
@@ -147,6 +158,8 @@ impl Preparation<'_> {
         self.result.directories.extend(processed.directories);
         self.result.dependency_digests.extend(processed.inputs);
         let mut edits = Vec::new();
+        let mut assets = Vec::new();
+        self.project_asset_targets(path, &processed.text);
         for reference in syntax::references(&processed.text) {
             if reference.image_set_string && !paths::external(&reference.value) {
                 return Err(CssError::Asset {
@@ -172,7 +185,10 @@ impl Preparation<'_> {
                     self.source(&target, path)?;
                 }
             } else {
-                let rewritten = self.asset(path, &reference.value)?;
+                let (rewritten, candidate) = self.asset_reference(path, &reference.value)?;
+                if let Some(candidate) = candidate {
+                    assets.push(candidate);
+                }
                 edits.push((
                     reference.start,
                     reference.end,
@@ -180,6 +196,7 @@ impl Preparation<'_> {
                 ));
             }
         }
+        self.digest_assets(assets)?;
         let transformed = syntax::replace(path, &processed.text, edits)?;
         let transformed = if path.ends_with(".module.css") {
             let (text, exports) = modules::scope(path, &transformed)?;

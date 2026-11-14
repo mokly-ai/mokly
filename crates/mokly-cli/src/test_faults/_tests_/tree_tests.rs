@@ -21,6 +21,9 @@ fn public_reads_digests_and_prefetch_reach_the_injected_tree() {
         SourceTreeMock::digest
             .next_call(matching!(_))
             .returns(Ok("streamed digest".into())),
+        SourceTreeMock::digest_unretained_batch
+            .next_call(matching!((paths) if paths == &[PathBuf::from("/repo/large.bin")]))
+            .returns(vec![Ok("opaque digest".into())]),
     ));
     let tree: &dyn SourceTree = &InjectedTree {
         inner: Arc::new(inner),
@@ -34,5 +37,9 @@ fn public_reads_digests_and_prefetch_reach_the_injected_tree() {
     assert_eq!(
         tree.digest(Path::new("/repo/large.bin")).unwrap(),
         "streamed digest"
+    );
+    assert_eq!(
+        tree.digest_unretained_batch(&paths).pop().unwrap().unwrap(),
+        "opaque digest"
     );
 }

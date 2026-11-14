@@ -112,7 +112,7 @@ pub(crate) fn bounded(
     Ok(result)
 }
 
-fn validate_entries(entries: &[Entry], limits: Limits) -> Result<()> {
+pub(crate) fn validate_entries(entries: &[Entry], limits: Limits) -> Result<()> {
     if entries.len() > limits.files {
         return Err(Error::FileCount {
             limit: limits.files,

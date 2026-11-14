@@ -1,5 +1,7 @@
 # mokly-source-interface
 
+Status: Follow-up work remains in the [nested path lookup item](../../plans/follow-ups/batch-lookup-nested-paths.md).
+
 `mokly-source-interface` defines read-only access to an authored source tree.
 Discovery and rendering depend on its `SourceTree` trait. Working-tree and
 Git-tree adapters use the same path, node, and error contract. Depend on it to
@@ -18,7 +20,13 @@ dependency and opens no filesystem paths itself.
 `SourceTree::project` returns a canonical `Node`, or `None` when a path is
 missing or replaced. A node keeps both its lexical kind and its target kind,
 so an entry replaced by a symlink is dropped while an explicit root alias
-remains valid. `children` returns lexical child kinds. `read` returns
+remains valid. `project_batch` returns one metadata result for each requested
+path, in request order, and reads no source payload. Its default calls
+`project` for each path and continues after an error, so working adapters can
+keep it. The Git adapter batches the exact metadata lookups and keeps the
+ordinary outcome of each path. The CLI's `CancellableTree` and `InjectedTree`,
+`SourceSnapshot`, `CapturedTree`, and `LeasedTree` forward the batch.
+`children` returns lexical child kinds. `read` returns
 owned bytes. `read_shared` returns immutable `Arc<[u8]>` storage, with a default
 adapter over `read`. A caching implementation shares that storage on hits.
 `digest` returns a SHA-256 hash through the same boundary. Snapshot adapters
@@ -60,6 +68,10 @@ Working and Git adapters implement `digest` with bounded streaming reads.
 Snapshot and static admission wrappers retain the resulting hash without the
 resource bytes. `digest_unretained` hashes an opaque input without promoting bytes into a
 private payload cache. Snapshot adapters share one digest cell with `digest`.
+`digest_unretained_batch` hashes several opaque inputs and returns one result
+for each path, in request order. Its default calls `digest_unretained` for
+each path and continues after a failed digest. The Git adapter overrides it
+with one batch, and wrapper adapters forward it.
 `open_stream` returns a `dyn SourceStream` with a length and checked-copy
 operation. It reads bounded chunks into private destination storage and
 returns `SourceError::Changed` on a digest or length mismatch. Callers expose

@@ -8,6 +8,7 @@ use mokly_git::identity::RepoPath;
 use mokly_source_interface::error::SourceError;
 
 use crate::error::Error;
+use crate::git_asset_stream::OPAQUE_LIMIT;
 use crate::git_tree::{GitTree, adapter};
 use crate::source_failures::SourceFailures;
 
@@ -27,7 +28,7 @@ impl GitTree {
         } = &source
         {
             let message = format!("base resource {relative} is unavailable: {source}");
-            if !matches!(source.as_ref(), error::Error::ByteLimit { .. })
+            if !matches!(source.as_ref(), error::Error::ByteLimit { limit } if *limit != OPAQUE_LIMIT)
                 && let Ok(relative) = RepoPath::parse(relative)
             {
                 self.unavailable
@@ -76,3 +77,7 @@ impl SourceFailures for GitTree {
             .clone()
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/git_asset_failure_tests.rs"]
+mod git_asset_failure_tests;

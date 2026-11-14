@@ -1,7 +1,7 @@
 //! Commit-pinned tree metadata and batched blob reads for a source-tree adapter.
 
 use std::collections::BTreeMap;
-use std::fmt;
+use std::io::Write;
 use std::sync::{Arc, Mutex};
 
 use mokly_git::error;
@@ -13,6 +13,7 @@ use mokly_git::tree::{Entry, Limits};
 use crate::cache_types::Lease;
 use crate::error::{Error, GitResult, Result};
 use crate::extraction_snapshots::{ProcessSnapshots, Snapshots};
+use crate::source_digest::SourceDigest;
 use crate::source_index::SourceIndex;
 
 /// Immutable metadata for every Git mode, including directories and links.
@@ -50,6 +51,23 @@ pub trait Sources: Send + Sync {
     }
     /// Stream one blob's SHA-256 digest without retaining its bytes.
     fn digest(&self, path: &RepoPath) -> Result<String>;
+    /// Hash opaque blobs in one bounded conversion batch.
+    fn digest_with_length(&self, paths: &[RepoPath]) -> Result<Vec<Result<SourceDigest>>> {
+        Ok(paths
+            .iter()
+            .map(|path| {
+                self.digest(path)
+                    .map(|hash| SourceDigest { hash, length: None })
+            })
+            .collect())
+    }
+    /// Stream one converted opaque blob without retaining its bytes.
+    fn stream(
+        &self,
+        path: &RepoPath,
+        output: &mut (dyn Write + Send),
+        limit: usize,
+    ) -> Result<usize>;
     /// Return commit-pinned metadata for a later SourceTree adapter.
     fn index(&self) -> Result<Arc<TreeIndex>>;
 }
@@ -58,7 +76,7 @@ pub trait Sources: Send + Sync {
 pub struct GitSources {
     pub(crate) repository: Arc<dyn Repository>,
     pub(crate) commit: ObjectId,
-    limits: Limits,
+    pub(crate) limits: Limits,
     state: Mutex<SourceIndex>,
     pub(crate) snapshots: Arc<dyn Snapshots>,
     pub(crate) extraction: Mutex<Option<(Arc<Lease>, Arc<ExtractedFiles>)>>,
@@ -257,16 +275,23 @@ impl Sources for GitSources {
         .at_path(path.as_str())
     }
 
+    fn digest_with_length(&self, paths: &[RepoPath]) -> Result<Vec<Result<SourceDigest>>> {
+        self.digest_source_batch(paths)
+    }
+
+    fn stream(
+        &self,
+        path: &RepoPath,
+        output: &mut (dyn Write + Send),
+        limit: usize,
+    ) -> Result<usize> {
+        self.stream_source(path, output, limit)
+    }
+
     /// Lists the whole tree once and reads each extraction file that still
     /// matches its first fingerprint in the process.
     fn attach(&self, extraction: Arc<Lease>) -> Result<()> {
         self.attach_extraction(extraction)
-    }
-}
-
-impl fmt::Debug for dyn Sources + '_ {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str("Sources")
     }
 }
 

@@ -153,10 +153,22 @@ impl SourceTree for InjectedTree {
     fn digest_unretained(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
         self.inner.digest_unretained(path)
     }
+    fn digest_unretained_batch(
+        &self,
+        paths: &[PathBuf],
+    ) -> Vec<mokly_source_interface::error::Result<String>> {
+        self.inner.digest_unretained_batch(paths)
+    }
     fn digest(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
         self.inner.digest(path)
     }
 
+    fn project_batch(
+        &self,
+        paths: &[PathBuf],
+    ) -> Vec<mokly_source_interface::error::Result<Option<Node>>> {
+        self.inner.project_batch(paths)
+    }
     fn project(&self, path: &Path) -> mokly_source_interface::error::Result<Option<Node>> {
         self.inner.project(path)
     }
@@ -236,3 +248,7 @@ pub(super) fn columns(fallback: usize) -> usize {
 #[cfg(test)]
 #[path = "_tests_/tree_tests.rs"]
 mod tree_tests;
+
+#[cfg(test)]
+#[path = "_tests_/projection_tests.rs"]
+mod projection_tests;

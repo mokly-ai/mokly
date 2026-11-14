@@ -2,7 +2,7 @@
 
 use mokly_catalogue::error::CatalogueError;
 use mokly_compare::error::Error;
-use mokly_css::error::CssError;
+use mokly_css::error::{AssetFailure, CssError};
 use mokly_graph::error::GraphError;
 use mokly_html::error::HtmlError;
 use mokly_model::runtime_diagnostic::RuntimeCode;
@@ -63,6 +63,10 @@ fn graph(error: &GraphError) -> Option<&'static str> {
         GraphError::Html { source } => html(source),
         GraphError::Css { source } => match source {
             CssError::Runtime { source } => runtime(source.code),
+            CssError::Asset {
+                kind: AssetFailure::Unavailable,
+                ..
+            } => Some("base resource unavailable"),
             CssError::Internal(_) => None,
             CssError::RootRoute { .. }
             | CssError::Import { .. }

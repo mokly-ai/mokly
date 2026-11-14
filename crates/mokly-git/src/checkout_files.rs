@@ -4,7 +4,11 @@ use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
+use sha2::{Digest, Sha256};
+
 use crate::error::{Error, IoResult, Result};
+use crate::repository::BlobDigest;
+use crate::tree::Entry;
 
 /// The converted files of one conversion call, addressed by entry index.
 pub(crate) trait BatchFiles: Send {
@@ -123,6 +127,60 @@ pub(crate) struct EntryWriter<'a> {
     index: usize,
     written: usize,
     failure: Option<Error>,
+}
+
+/// Hashes each converted file as the checkout batch writes it.
+pub(crate) struct DigestFiles {
+    hashes: Vec<Option<(Sha256, usize)>>,
+    limit: usize,
+}
+
+impl DigestFiles {
+    pub(crate) fn new(entries: &[Entry], limit: usize) -> Self {
+        Self {
+            hashes: vec![None; entries.len()],
+            limit,
+        }
+    }
+
+    pub(crate) fn into_digests(self) -> Result<Vec<BlobDigest>> {
+        self.hashes
+            .into_iter()
+            .map(|hash| {
+                let Some((hash, length)) = hash else {
+                    return Err(Error::MalformedOutput);
+                };
+                let digest = hash
+                    .finalize()
+                    .iter()
+                    .map(|byte| format!("{byte:02x}"))
+                    .collect();
+                Ok(BlobDigest { digest, length })
+            })
+            .collect()
+    }
+}
+
+impl BatchFiles for DigestFiles {
+    fn open(&mut self, index: usize) -> Result<()> {
+        let Some(slot) = self.hashes.get_mut(index) else {
+            return Err(Error::MalformedOutput);
+        };
+        *slot = Some((Sha256::new(), 0));
+        Ok(())
+    }
+
+    fn write(&mut self, index: usize, bytes: &[u8]) -> Result<()> {
+        let Some(Some((hash, length))) = self.hashes.get_mut(index) else {
+            return Err(Error::MalformedOutput);
+        };
+        *length = length.saturating_add(bytes.len());
+        if *length > self.limit {
+            return Err(Error::ByteLimit { limit: self.limit });
+        }
+        hash.update(bytes);
+        Ok(())
+    }
 }
 
 impl<'a> EntryWriter<'a> {

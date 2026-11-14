@@ -34,7 +34,7 @@ pub(crate) enum SourceOrigin {
 }
 
 impl SideTree {
-    fn mapped(&self, path: &Path) -> Option<(PathBuf, PathBuf, PathBuf)> {
+    pub(crate) fn mapped(&self, path: &Path) -> Option<(PathBuf, PathBuf, PathBuf)> {
         let relative = path.strip_prefix(&self.root).ok()?;
         let text = relative.to_string_lossy().replace('\\', "/");
         let text = text.strip_prefix(INSTALLED_INPUT_PREFIX).unwrap_or(&text);
@@ -66,8 +66,34 @@ impl SideTree {
     }
 
     fn source(&self, path: &Path) -> Result<Option<(PathBuf, Node)>> {
+        self.source_with(path, &|path| self.sources.project(path))
+    }
+
+    pub(crate) fn source_candidates(&self, path: &Path) -> Vec<PathBuf> {
         if let Some(source) = source_paths::repository_input(&self.root, path) {
-            return Ok(self.sources.project(&source)?.map(|node| (source, node)));
+            return vec![source];
+        }
+        if self._base.is_none() {
+            return Vec::new();
+        }
+        path.strip_prefix(&self.root)
+            .ok()
+            .map_or_else(Vec::new, |relative| {
+                source_paths::source_candidates(
+                    &self.root,
+                    &self.aliases,
+                    &relative.to_string_lossy().replace('\\', "/"),
+                )
+            })
+    }
+
+    pub(crate) fn source_with(
+        &self,
+        path: &Path,
+        project: &source_paths::Projection<'_>,
+    ) -> Result<Option<(PathBuf, Node)>> {
+        if let Some(source) = source_paths::repository_input(&self.root, path) {
+            return Ok(project(&source)?.map(|node| (source, node)));
         }
         if self._base.is_none() {
             return Ok(None);
@@ -75,15 +101,15 @@ impl SideTree {
         let Ok(relative) = path.strip_prefix(&self.root) else {
             return Ok(None);
         };
-        source_paths::source_node(
-            self.sources.as_ref(),
+        source_paths::source_node_with(
+            project,
             &self.root,
             &self.aliases,
             &relative.to_string_lossy().replace('\\', "/"),
         )
     }
 
-    fn source_alias(&self, identity: &Path) -> Option<PathBuf> {
+    pub(crate) fn source_alias(&self, identity: &Path) -> Option<PathBuf> {
         if self
             .dependency_roots
             .iter()
@@ -174,18 +200,15 @@ impl SourceTree for SideTree {
         Ok(())
     }
     fn open_stream(&self, path: &Path) -> Result<Box<dyn SourceStream>> {
-        let (tree, physical, _) = self.selected(path)?;
-        let source = tree
-            .project(&physical)?
-            .map_or(physical, |node| node.identity);
+        let (tree, source, _) = self.asset_source(path)?;
         tree.open_stream(&source)
     }
     fn digest_unretained(&self, path: &Path) -> Result<String> {
-        let (tree, physical, _) = self.selected(path)?;
-        let source = tree
-            .project(&physical)?
-            .map_or(physical, |node| node.identity);
+        let (tree, source, _) = self.asset_source(path)?;
         tree.digest_unretained(&source)
+    }
+    fn digest_unretained_batch(&self, paths: &[PathBuf]) -> Vec<Result<String>> {
+        self.digest_assets(paths)
     }
     fn digest(&self, path: &Path) -> Result<String> {
         let (tree, physical, _) = self.selected(path)?;
@@ -206,41 +229,12 @@ impl SourceTree for SideTree {
         Ok(bytes)
     }
     fn project(&self, path: &Path) -> Result<Option<Node>> {
-        if let Some((_, mut node)) = self.source(path)? {
-            node.identity = path.into();
-            return Ok(Some(node));
-        }
-        if path == self.root.join("node_modules/.mokly-roots")
-            || path == self.root.join("node_modules") && self.dependency_roots.len() > 1
-        {
-            return Ok(Some(Node {
-                identity: path.into(),
-                lexical_kind: mokly_source_interface::tree::FileKind::Directory,
-                kind: mokly_source_interface::tree::FileKind::Directory,
-            }));
-        }
-        let Some((root, physical, relative)) = self.mapped(path) else {
-            return self.sources.project(path);
-        };
-        let Some(mut node) = self.dependencies.project(&physical)? else {
-            return Ok(None);
-        };
-        if let Some(source) = self.source_alias(&node.identity) {
-            return self.sources.project(&source);
-        }
-        let Some(root) = self.dependencies.project(&root)? else {
-            return Ok(None);
-        };
-        if !node.identity.starts_with(&root.identity)
-            && !self
-                .dependency_roots
-                .iter()
-                .any(|root| node.identity.starts_with(root))
-        {
-            return Ok(None);
-        }
-        node.identity = self.root.join(relative);
-        Ok(Some(node))
+        self.project_source(path, &|path| self.sources.project(path), &|path| {
+            self.dependencies.project(path)
+        })
+    }
+    fn project_batch(&self, paths: &[PathBuf]) -> Vec<Result<Option<Node>>> {
+        self.project_sources(paths)
     }
 
     fn children(&self, path: &Path) -> Result<Vec<Child>> {
