@@ -149,7 +149,7 @@ impl Consumer {
             Arc::new(WorkingTree),
             Arc::new(SystemPhysicalInputs),
             pool.clone(),
-            Arc::new(MemoryCache::new(16 * 1024 * 1024)),
+            Arc::new(MemoryCache::new(16 * 1024 * 1024, 0)),
             Arc::new(ThreadWorkers::new(2).unwrap()),
             package_version::read(),
             None,

@@ -13,6 +13,8 @@ use mokly_model::axes::ColorScheme;
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use unimock::{MockFn, Unimock, matching};
 
+use crate::capture_restore::LosslessRestorer;
+
 use crate::capture_producer;
 
 use super::{CaptureSide, CapturedGeneration, capture};
@@ -20,6 +22,7 @@ use super::{CaptureSide, CapturedGeneration, capture};
 #[test]
 fn a_retained_capture_forwards_cancellation_to_its_source() {
     let generation = CapturedGeneration {
+        restorer: Box::new(LosslessRestorer),
         source: Arc::new(Unimock::new(
             RenderGenerationMock::check_cancelled
                 .next_call(matching!())

@@ -144,6 +144,8 @@ fn successful_capture_emits_retention_counts_and_keeps_view_counts_off_end_recor
     assert_eq!(records[1]["retainedBytes"], 128);
     assert_eq!(records[1]["encodedBytes"], 64);
     assert_eq!(records[2]["stage"], "render.cache");
+    assert_eq!(records[2]["restores"], 0);
+    assert_eq!(records[2]["restoreFailures"], 0);
     assert!(records[2].get("views").is_none());
     assert_eq!(records[3]["status"], "ok");
     assert!(records[0].get("views").is_none());

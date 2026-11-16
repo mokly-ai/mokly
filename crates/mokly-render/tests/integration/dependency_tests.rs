@@ -92,7 +92,7 @@ fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources
         Arc::new(WorkingTree),
         consumer.runtime.physical_inputs.clone(),
         consumer.pool.clone(),
-        Arc::new(MemoryCache::new(16 * 1024 * 1024)),
+        Arc::new(MemoryCache::new(16 * 1024 * 1024, 0)),
         Arc::new(ThreadWorkers::new(2).unwrap()),
         super::support::package_version::read(),
         Some(base),

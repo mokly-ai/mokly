@@ -89,7 +89,7 @@ fn prepare() -> Catalogue {
         tree.clone(),
         Arc::new(SystemPhysicalInputs),
         pool,
-        Arc::new(MemoryCache::new(256 * 1024 * 1024)),
+        Arc::new(MemoryCache::new(256 * 1024 * 1024, 0)),
         Arc::new(CancellableWorkers {
             inner: Arc::new(ThreadWorkers::new(4).unwrap()),
             cancellation: Arc::new(BuildCancellation::new(clock)),

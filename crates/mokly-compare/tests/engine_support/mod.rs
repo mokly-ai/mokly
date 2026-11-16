@@ -77,7 +77,7 @@ impl Fixture {
         Self {
             directory,
             commit,
-            cache: Arc::new(MemoryCache::new(4 * 1024 * 1024)),
+            cache: Arc::new(MemoryCache::new(4 * 1024 * 1024, 0)),
         }
     }
 
@@ -91,6 +91,23 @@ impl Fixture {
         let destination = self.directory.path().join(after);
         fs::create_dir_all(destination.parent().unwrap()).unwrap();
         fs::rename(self.directory.path().join(before), destination).unwrap();
+    }
+
+    pub fn base_tree(&self, runner: Arc<dyn Runner>, source_bytes: usize) -> Arc<dyn SourceTree> {
+        let repositories: &dyn Repositories = &GitRepositories {
+            runner,
+            disk: Arc::new(SystemDisk),
+        };
+        let repository = repositories.open(self.directory.path()).unwrap();
+        Arc::new(GitTree::new(
+            self.directory.path().into(),
+            Arc::new(GitSources::new(
+                repository,
+                self.commit.clone(),
+                Limits::default(),
+            )),
+            source_bytes,
+        ))
     }
 
     pub fn compare(&self) -> Result<ComparisonResult> {
@@ -115,20 +132,7 @@ impl Fixture {
         runner: Arc<dyn Runner>,
         source_bytes: usize,
     ) -> Result<ComparisonResult> {
-        let repositories: &dyn Repositories = &GitRepositories {
-            runner,
-            disk: Arc::new(SystemDisk),
-        };
-        let repository = repositories.open(self.directory.path()).unwrap();
-        let base_tree: Arc<dyn SourceTree> = Arc::new(GitTree::new(
-            self.directory.path().into(),
-            Arc::new(GitSources::new(
-                repository,
-                self.commit.clone(),
-                Limits::default(),
-            )),
-            source_bytes,
-        ));
+        let base_tree = self.base_tree(runner, source_bytes);
         let before = prepare(self.directory.path(), base_tree, self.cache.clone())?;
         let after = prepare(
             self.directory.path(),
@@ -149,7 +153,7 @@ impl Fixture {
     }
 }
 
-fn prepare(
+pub fn prepare(
     root: &Path,
     tree: Arc<dyn SourceTree>,
     cache: Arc<dyn RenderCache>,

@@ -167,14 +167,16 @@ without splitting the delivered CSS text or changing its style-block grouping.
 
 ## Quick Start
 
-The composition root builds one `Runtime` and consumes it through both
-factory traits:
+The composition root builds one `Runtime` with the shared render cache and
+consumes it through both factory traits. See the
+[`mokly-graph` construction example](../mokly-graph/README.md#quick-start)
+to create the cache:
 
 ```rust
 use std::sync::Arc;
 
 use mokly_catalogue::definition_provider::DefinitionProvider;
-use mokly_graph::cache::MemoryCache;
+use mokly_graph::cache::RenderCache;
 use mokly_graph::types::GraphFactory;
 use mokly_graph::workers::RenderWorkers;
 use mokly_render::physical_inputs::SystemPhysicalInputs;
@@ -185,6 +187,7 @@ use mokly_source_interface::tree::SourceTree;
 fn services(
     tree: Arc<dyn SourceTree>,
     pool: Arc<dyn SidecarPool>,
+    cache: Arc<dyn RenderCache>,
     workers: Arc<dyn RenderWorkers>,
     version: String,
 ) -> (Arc<dyn DefinitionProvider>, Arc<dyn GraphFactory>) {
@@ -193,7 +196,7 @@ fn services(
         tree,
         Arc::new(SystemPhysicalInputs),
         pool,
-        Arc::new(MemoryCache::new(256 * 1024 * 1024)),
+        cache,
         workers,
         version,
         None,

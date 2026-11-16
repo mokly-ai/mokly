@@ -112,7 +112,7 @@ fn denied_files_are_not_carried_into_a_replacement() {
     assert!(carried.contains_public_file(PUBLIC_FILE));
     let replacement = support::prepare_with_cache_and_output(
         root.path(),
-        Arc::new(MemoryCache::new(0)),
+        Arc::new(MemoryCache::new(0, 0)),
         1,
         inputs,
         Some(&root.path().join("assets")),

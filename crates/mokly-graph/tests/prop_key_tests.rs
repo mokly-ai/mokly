@@ -85,7 +85,7 @@ fn prop_link_substitutions_and_pass_through_invalidate_cached_routes() {
             "specs/pass.component.html",
             &component("ui-pass", "<ui-go link=\"$link\"></ui-go>"),
         );
-        let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(8 * 1024 * 1024));
+        let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(8 * 1024 * 1024, 0));
         let first = prepare(root.path(), &cache);
         let route = "a/index.mobile.html";
         let before = first.render(route).unwrap();
@@ -115,7 +115,7 @@ fn an_identical_component_moved_to_another_path_changes_markers_and_usage() {
         "specs/card.component.html",
         "---\ntitle: Card\nelement: ui-card\npropSchema: {type: object, additionalProperties: false, properties: {}}\n---\n<div>Card</div>",
     );
-    let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(8 * 1024 * 1024));
+    let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(8 * 1024 * 1024, 0));
     let first = prepare(root.path(), &cache);
     let route = "a/index.mobile.html";
     let before = first.render(route).unwrap();

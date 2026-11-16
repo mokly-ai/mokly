@@ -24,12 +24,18 @@ use mokly_sidecar::process_memory::SystemMemory;
 use mokly_sidecar::workers::Diagnostics;
 use mokly_source_interface::tree::SourceTree;
 
-/// The render cache bound of the runtime contract.
+/// Shared capacity for full artifacts and compact documents.
 const RENDER_CACHE_BYTES: usize = 256 * 1024 * 1024;
+
+/// Compact documents take at most half of the shared capacity.
+const COMPACT_RENDER_CACHE_CEILING: usize = 128 * 1024 * 1024;
 
 /// Create the one render cache of a command. Both sides and the timing layer share it.
 pub(super) fn cache() -> Arc<dyn RenderCache> {
-    Arc::new(MemoryCache::new(RENDER_CACHE_BYTES))
+    Arc::new(MemoryCache::new(
+        RENDER_CACHE_BYTES,
+        COMPACT_RENDER_CACHE_CEILING,
+    ))
 }
 
 pub(super) struct Services {

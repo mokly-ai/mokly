@@ -6,8 +6,10 @@ use mokly_html::tree::{Attribute, Element, Node, Region};
 use mokly_model::catalogue::SourceLocation;
 use serde::{Deserialize, Serialize};
 
-use crate::capture_annotations::{AttributeRecord, ReferenceRecord, RegionRecord};
+use crate::document_annotations::{AttributeRecord, ReferenceRecord, RegionRecord};
+use crate::document_error::{CodecInternalError, Result};
 
+/// Flat trusted tree records avoid recursive tree serialization.
 #[derive(Deserialize, Serialize)]
 pub(crate) enum FlatNode {
     Element {
@@ -30,6 +32,7 @@ pub(crate) enum FlatNode {
     Doctype(String),
 }
 
+/// Flatten a tree in authored order with explicit child counts.
 pub(crate) fn flatten(nodes: &[Node]) -> Vec<FlatNode> {
     let mut output = Vec::new();
     let mut pending: Vec<_> = nodes.iter().rev().collect();
@@ -74,14 +77,17 @@ pub(crate) fn flatten(nodes: &[Node]) -> Vec<FlatNode> {
     output
 }
 
-pub(crate) fn restore(nodes: Vec<FlatNode>) -> Vec<Node> {
+/// Rebuild the exact tree and reject invalid child counts.
+pub(crate) fn restore(nodes: Vec<FlatNode>) -> Result<Vec<Node>> {
     let mut output = Vec::new();
     for node in nodes.into_iter().rev() {
         let count = match &node {
             FlatNode::Element { children, .. } | FlatNode::Region { children, .. } => *children,
             _ => 0,
         };
-        let start = output.len() - count;
+        let Some(start) = output.len().checked_sub(count) else {
+            return Err(CodecInternalError::InvalidTree.into());
+        };
         let mut children = output.split_off(start);
         children.reverse();
         output.push(match node {
@@ -121,5 +127,6 @@ pub(crate) fn restore(nodes: Vec<FlatNode>) -> Vec<Node> {
         });
     }
     output.reverse();
-    output
+    output.shrink_to_fit();
+    Ok(output)
 }

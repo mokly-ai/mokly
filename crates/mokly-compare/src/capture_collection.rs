@@ -3,12 +3,13 @@
 use std::collections::BTreeMap;
 use std::mem;
 
+use mokly_graph::cache::Artifact;
 use mokly_graph::collection::ComparisonCollector;
+use mokly_graph::document_codec::EncodedView;
 use mokly_graph::error::Result;
 use mokly_graph::types::{ComparisonDocument, RenderSummary};
 
-use crate::capture_codec::EncodedView;
-use crate::capture_error;
+use crate::capture_error::{self, CaptureResult};
 use crate::capture_weight;
 use crate::comparison_capture::{CapturedGeneration, CapturedView};
 
@@ -46,7 +47,7 @@ impl ComparisonCollector for Collector {
     }
 
     fn collect(&mut self, route: &str, input: ComparisonDocument) -> Result<()> {
-        let document = capture_error::graph(EncodedView::encode(&input.artifact))?;
+        let document = encode(&input.artifact)?;
         let view = CapturedView {
             document,
             closure: input.closure,
@@ -63,6 +64,13 @@ impl ComparisonCollector for Collector {
         }
         Ok(())
     }
+}
+
+#[tracing::instrument(name = "review.capture-encode", skip_all, fields(status = "error"))]
+fn encode(artifact: &Artifact) -> Result<EncodedView> {
+    let document = capture_error::graph(EncodedView::encode(artifact).capture())?;
+    tracing::Span::current().record("status", "ok");
+    Ok(document)
 }
 
 #[cfg(test)]

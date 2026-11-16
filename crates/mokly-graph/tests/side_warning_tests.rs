@@ -136,7 +136,7 @@ fn conversion_warnings(generation: &dyn RenderGeneration) -> usize {
 fn a_base_only_conversion_warning_never_reaches_the_head() {
     let head_root = catalogue();
     let base_root = catalogue();
-    let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(16 * 1024 * 1024));
+    let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(16 * 1024 * 1024, 0));
     let head = generation(head_root.path(), Arc::new(WorkingTree), cache.clone());
     let loaded = Loader {
         tree: Arc::new(WorkingTree),

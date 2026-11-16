@@ -107,11 +107,14 @@ head. Each view supplies its validated document and closure without a second
 render. `Comparison::compare_prepared` classifies the prepared base and head.
 An uncaptured fallback uses the source generation, so a summary that exceeds
 the capture bound does not start another pass. The capture keeps exact document
-bytes, generated CSS, and trusted annotations in compressed form. Inputs that
-do not fit the capture budget read from their side's source. Serve head reads
-use the bounded render cache and render again on the head root only after
-cache eviction. Build head reads use the head capture. Each result holds at
-most one base capture, and a build result also holds one head capture. The
+bytes, generated CSS, and trusted annotations in compressed form. It encodes
+documents with `mokly_graph::document_codec::EncodedView`, the codec that the
+compact tier of the render cache also uses. Inputs that do not fit the capture
+budget, and kept views that fail to restore, read from their side's source.
+Serve head reads use the bounded render cache and render again on the head
+root only when neither cache tier holds the document. Build head reads use the
+head capture. Each result holds at most one base capture, and a build result
+also holds one head capture. The
 [comparison serving contract](../../docs/protocol/mokly-comparison-serving.md)
 owns the capture budget and its overlap with the render cache. Capture checks
 cancellation before each view and each encoding. Its timing spans contain no
@@ -124,7 +127,7 @@ trusted proof. Owned rules enter the same catalogue-wide evidence reducer of
 `mokly-css` as linked and ownerless head CSS, under the
 [CSS attribution contract](../../docs/protocol/mokly-css-attribution.md).
 Registry rule ownership stays separate from delivery style groups. Both the
-private capture codec and the head comparison retain these rule records.
+shared document codec and the head comparison retain these rule records.
 Saved prop edits retain their view records without marking unchanged
 consumers affected. Own CSS states and dependency reasons use kept own-page
 source proof. Actual-instance implementation reasons preserve own view states.
