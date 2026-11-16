@@ -64,6 +64,7 @@ mod capture_restore;
 mod capture_styles;
 mod comparison_capture;
 mod comparison_error;
+mod comparison_preparation;
 
 mod comparison_resources;
 pub mod comparison_steps;

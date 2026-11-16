@@ -78,6 +78,9 @@ The task explicitly requires forwarding the existing capture scheduler.
 Before each delegation batch and the final pull request, fetch and merge `origin/main` under the `git-merge` skill.
 Preserve the base-reader, Git-process, sidecar, and `calummoore/mokly-base-usage-without-restore-g972` changes.
 Record later main commits and rebuild the baseline from the final merge base when they affect the measured path.
+The performance orchestrator identified the profile edit on 2026-11-16.
+It changed one React screen title in `mokly-cloud` with `--base HEAD`.
+Four views changed. The other 1,504 views stayed unchanged.
 The baseline release build at `331bf5d43` is saved as `.context/parallel-compare-views/mokly-before`.
 The source diff, SHA-256, and build log stay beside it.
 
@@ -235,28 +238,32 @@ Replaced ways: monolithic per-view preparation becomes independent preparation p
 `comparison_views::collect` and the shared closure caller in `rendered_moves.rs` migrate in Milestone 2.
 Milestone 2 removes the replaced monolithic path. No capture API is replaced.
 
-## Milestone 1: Documentation and protocol audit
+## Milestone 1: Documentation and protocol audit — completed
 
 Depends on: none
 
 Delegate to the `docs implementor`. Keep user-visible comparison behaviour unchanged.
 
-- [ ] Verify the saved baseline release binary and unchanged product source evidence before Milestone 2.
-- [ ] Audit comparison, serving, timing, and crate docs against the approved design.
-- [ ] Update only stale requirements or entry-point descriptions. Keep implementation mechanics in code comments.
-- [ ] Record the audit and any needed implementation-time doc edits under `.context/parallel-compare-views/`.
+- [x] Verify the saved baseline release binary and unchanged product source evidence before Milestone 2.
+- [x] Audit comparison, serving, timing, and crate docs against the approved design.
+- [x] Update only stale requirements or entry-point descriptions. Keep implementation mechanics in code comments.
+- [x] Record the audit and any needed implementation-time doc edits under `.context/parallel-compare-views/`.
 
-## Milestone 2: Separate independent view work
+Evidence: `.context/parallel-compare-views/reports/docs-audit-preparation.md`. No stale protocol requirement. README additions wait for final API names.
+
+## Milestone 2: Separate independent view work — completed
 
 Depends on: 1
 
 Delegate to the `non-ui implementor`. Keep the split sequential until the scheduling milestone.
 
-- [ ] Extract Phase A documents, closures, matching trees, and non-move material comparison without memo or parsed CSS access.
-- [ ] Keep Phase B memo and parse calls in their current order, including move aliases and material comparison.
-- [ ] Release each Phase A result after its Phase B. Remove the replaced monolithic path and unused helpers.
-- [ ] Update the moved code location in `plans/follow-ups/skip-equal-before-snapshots.md` without changing its historical words.
-- [ ] Run comparison and scale count tests. Save the result under `.context/parallel-compare-views/`.
+- [x] Extract Phase A documents, closures, matching trees, and non-move material comparison without memo or parsed CSS access.
+- [x] Keep Phase B memo and parse calls in their current order, including move aliases and material comparison.
+- [x] Release each Phase A result after its Phase B. Remove the replaced monolithic path and unused helpers.
+- [x] Update the moved code location in `plans/follow-ups/skip-equal-before-snapshots.md` without changing its historical words.
+- [x] Run comparison and scale count tests. Save the result under `.context/parallel-compare-views/`.
+
+Evidence: `.context/parallel-compare-views/reports/phase-split.md`. The root checked the source order, result lifetime, test logs, and clippy result.
 
 ## Milestone 3: Schedule bounded concurrent batches
 
@@ -292,7 +299,7 @@ Save every input, command, commit, timing, and RSS sample under `.context/parall
 - [ ] Measure before and after on `examples/basic` and the HTML and React large fixtures from `scripts/large/`.
 - [ ] Measure Changes build and Serve with one controlled screen-content edit on four CPUs.
       Include `review.compare-views`, `changes.classify`, and peak native-process RSS.
-- [ ] Measure a shared stylesheet edit too. Assess the target for both edit kinds. The supplied profile did not identify its edit kind.
+- [ ] Measure a shared stylesheet edit too. Assess both edit kinds. The supplied profile used a one-screen content edit.
 - [ ] Record base `uncapturedViews` from `review.capture-side` in every run and report its share with the target assessment.
 - [ ] Use the same inputs and settings for both versions. Confirm the large-catalogue comparison stage takes at most half the sequential time.
 - [ ] Check the bounded transient-input proof and RSS evidence. Report any unmet target to the performance orchestrator.

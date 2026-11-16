@@ -8,7 +8,7 @@ use mokly_model::material::digest;
 use mokly_model::review_affected::ReviewSide;
 
 use crate::comparison_error::CompareResult;
-use crate::comparison_resources::closures;
+use crate::comparison_resources::{aliases, closures};
 use crate::error::Result;
 use crate::material::{self, Projection};
 use crate::move_context::RenderedMoves;
@@ -159,14 +159,13 @@ impl MoveEvidence for RenderedMoves<'_> {
                 .document
                 .as_ref()
                 .expect("the graph composes a document for every current move candidate plan");
-            let resources = closures(
-                self.before.clone(),
-                self.after.clone(),
+            let mut resources = closures(
+                self.before.as_ref(),
+                self.after.as_ref(),
                 Some(&left_plan.route),
                 Some(&right_plan.route),
-                true,
-                self.memo.as_ref(),
             )?;
+            resources.aliases = aliases(&resources.before, &resources.after, self.memo.as_ref())?;
             let comparison = view_material::compare(
                 left_document,
                 right_document,

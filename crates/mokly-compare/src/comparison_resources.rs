@@ -1,7 +1,6 @@
 //! Validate both resource closures, prove relocation aliases, and collect rule evidence.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::sync::Arc;
 
 use mokly_css::attribution::{PageObservation, observe};
 use mokly_css::match_tree::MatchTree;
@@ -26,14 +25,13 @@ pub(crate) struct Resources {
     pub(crate) aliases: BTreeMap<String, String>,
 }
 
+/// Read the base and head closures in order without computing memo-dependent aliases.
 #[tracing::instrument(name = "review.resource-graph", skip_all, err)]
 pub(crate) fn closures(
-    before: Arc<dyn RenderGeneration>,
-    after: Arc<dyn RenderGeneration>,
+    before: &dyn RenderGeneration,
+    after: &dyn RenderGeneration,
     before_route: Option<&str>,
     after_route: Option<&str>,
-    relocate: bool,
-    memo: &dyn ResourceMemo,
 ) -> Result<Resources> {
     let left = before_route.map_or_else(
         || Ok(Closure::default()),
@@ -43,15 +41,10 @@ pub(crate) fn closures(
         || Ok(Closure::default()),
         |route| after.closure(route).compare(),
     )?;
-    let aliases = if relocate {
-        aliases(&left, &right, memo)?
-    } else {
-        BTreeMap::new()
-    };
     Ok(Resources {
         before: left,
         after: right,
-        aliases,
+        aliases: BTreeMap::new(),
     })
 }
 
@@ -59,7 +52,7 @@ pub(crate) fn closures(
 /// unique equal digest on both sides, or as the sole removed and added resource
 /// of one file kind. The map holds only this view's closure references, so the
 /// alias rewrite of HTML and CSS stays scoped to the paired view.
-fn aliases(
+pub(crate) fn aliases(
     before: &Closure,
     after: &Closure,
     memo: &dyn ResourceMemo,

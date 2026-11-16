@@ -13,7 +13,7 @@ use mokly_model::review_affected::ReviewSide;
 use mokly_model::usage::CatalogueUsage;
 
 use crate::comparison_address::address;
-use crate::comparison_error::CompareResult;
+use crate::comparison_preparation::{self, Preparation, PreparedView, ViewPreparation};
 use crate::comparison_resources::{self, ResourceInput};
 use crate::comparison_types::{DocumentComparison, ViewKey};
 use crate::error::Result;
@@ -21,7 +21,7 @@ use crate::instance_proof::{InstanceProof, ProofInput};
 use crate::move_inventory::PlanIndex;
 use crate::move_types::EntryPair;
 use crate::resource_memo::ResourceMemo;
-use crate::{inline_styles, instance_proof, matching_tree, owned_styles, view_material};
+use crate::{inline_styles, instance_proof, owned_styles, view_material};
 
 pub(crate) struct UsageView {
     pub(crate) side: ReviewSide,
@@ -92,49 +92,32 @@ pub(crate) fn collect(
         views: Vec::new(),
         usage: Vec::new(),
     };
+    let preparation: &dyn ViewPreparation = &Preparation {
+        before: before.as_ref(),
+        after: after.as_ref(),
+        paths,
+    };
     for key in keys {
         let before_route = left.get(&key).map(|plan| plan.route.clone());
         let after_route = right.get(&key).map(|plan| plan.route.clone());
-        let before_artifact = before_route
-            .as_ref()
-            .map(|route| before.comparison_document(route).compare())
-            .transpose()?;
-        let after_artifact = after_route
-            .as_ref()
-            .map(|route| after.comparison_document(route).compare())
-            .transpose()?;
-        let before_document = before_artifact.as_ref().map(|artifact| {
-            artifact
-                .document
-                .as_ref()
-                .expect("the graph composes a document for every base comparison view plan")
-        });
-        let after_document = after_artifact.as_ref().map(|artifact| {
-            artifact
-                .document
-                .as_ref()
-                .expect("the graph composes a document for every current comparison view plan")
-        });
-        let resources = comparison_resources::closures(
-            before.clone(),
-            after.clone(),
-            before_route.as_deref(),
-            after_route.as_deref(),
-            pair.moved,
-            memo,
-        )?;
+        let PreparedView {
+            artifacts,
+            mut resources,
+            trees: [before_tree, after_tree],
+            material,
+        } = preparation.prepare(before_route.as_deref(), after_route.as_deref(), pair.moved)?;
+        let [before_document, after_document] = comparison_preparation::documents(&artifacts);
+        if pair.moved {
+            resources.aliases =
+                comparison_resources::aliases(&resources.before, &resources.after, memo)?;
+        }
         result
             .warnings
             .extend(resources.before.warnings.iter().cloned());
-        let before_tree =
-            before_document.map(|document| matching_tree::document(&document.tree, paths));
-        let after_tree = after_document
-            .map(|document| matching_tree::document(&document.tree, &BTreeMap::new()));
         let mut observation = PageObservation {
             component: component.clone(),
             ..Default::default()
         };
-        let aliases = resources.aliases.clone();
         let evidence = comparison_resources::evidence(
             ResourceInput {
                 resources: &resources,
@@ -153,8 +136,8 @@ pub(crate) fn collect(
             },
             &mut observation,
         )?;
-        let comparison = match (before_document, after_document) {
-            (Some(left), Some(right)) => Some(view_material::compare(
+        let comparison = match (pair.moved, before_document, after_document) {
+            (true, Some(left), Some(right)) => Some(view_material::compare(
                 left,
                 right,
                 &format!(
@@ -166,9 +149,9 @@ pub(crate) fn collect(
                     after_route.as_deref().unwrap_or("")
                 ),
                 paths,
-                &aliases,
+                &resources.aliases,
             )),
-            _ => None,
+            _ => material,
         };
         let candidates = match (&comparison, previous, current) {
             (Some(comparison), Some(_), Some(_)) => comparison.instances.as_slice(),
