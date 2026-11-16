@@ -29,7 +29,7 @@ fn lru_evicts_the_oldest_access_and_counts_every_retained_byte() {
     let second = artifact("other");
     let third = artifact("third");
     let cost = entry_cost(&node("a"), &first);
-    let cache: &dyn RenderCache = &MemoryCache::new(cost * 2);
+    let cache: &dyn RenderCache = &MemoryCache::new(cost * 2, 0);
     cache.insert(node("a"), first);
     cache.insert(node("b"), second);
     assert!(cache.get(&node("a")).is_some());
@@ -46,12 +46,12 @@ fn lru_evicts_the_oldest_access_and_counts_every_retained_byte() {
 
 #[test]
 fn oversized_results_and_zero_bounds_retain_no_partial_artifact() {
-    let cache: &dyn RenderCache = &MemoryCache::new(0);
+    let cache: &dyn RenderCache = &MemoryCache::new(0, 0);
     cache.insert(node("a"), artifact("a"));
     assert!(cache.get(&node("a")).is_none());
     assert_eq!(cache.stats().bytes, 0);
     let value = artifact("small");
-    let cache: &dyn RenderCache = &MemoryCache::new(entry_cost(&node("a"), &value));
+    let cache: &dyn RenderCache = &MemoryCache::new(entry_cost(&node("a"), &value), 0);
     cache.insert(node("a"), value);
     cache.insert(node("a"), artifact("oversized"));
     assert!(cache.get(&node("a")).is_none());
@@ -85,7 +85,7 @@ fn equal_keys_with_different_allocations_keep_exact_charges_on_access_and_replac
     expanded.push_str(&ordinary.0);
     let expanded = NodeKey(expanded);
     let value = artifact("value");
-    let cache: &dyn RenderCache = &MemoryCache::new(8192);
+    let cache: &dyn RenderCache = &MemoryCache::new(8192, 0);
     cache.insert(expanded.clone(), value.clone());
     assert!(cache.get(&ordinary).is_some());
     cache.insert(expanded, value.clone());
@@ -97,7 +97,7 @@ fn equal_keys_with_different_allocations_keep_exact_charges_on_access_and_replac
 
 #[test]
 fn retained_logical_links_cannot_exceed_the_artifact_budget() {
-    let cache: &dyn RenderCache = &MemoryCache::new(32 * 1024);
+    let cache: &dyn RenderCache = &MemoryCache::new(32 * 1024, 0);
     let value = Arc::new(Artifact {
         bytes: Vec::new(),
         fragment: None,
@@ -127,7 +127,7 @@ fn retained_logical_links_cannot_exceed_the_artifact_budget() {
 
 #[test]
 fn retained_sidecar_style_owners_count_toward_the_document_budget() {
-    let cache: &dyn RenderCache = &MemoryCache::new(32 * 1024);
+    let cache: &dyn RenderCache = &MemoryCache::new(32 * 1024, 0);
     let mut style = element("style", &[], Vec::new());
     let Node::Element(element) = &mut style else {
         panic!()
@@ -157,7 +157,7 @@ fn retained_sidecar_style_owners_count_toward_the_document_budget() {
 
 #[test]
 fn registry_rule_metadata_counts_toward_fragment_cache_bound() {
-    let cache: &dyn RenderCache = &MemoryCache::new(32 * 1024);
+    let cache: &dyn RenderCache = &MemoryCache::new(32 * 1024, 0);
     let value = Arc::new(Artifact {
         bytes: vec![],
         document: None,

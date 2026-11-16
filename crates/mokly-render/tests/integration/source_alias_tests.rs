@@ -76,7 +76,7 @@ fn linked_workspace_stylesheets_keep_both_repository_aliases_in_sources() {
         Arc::new(WorkingTree),
         Arc::new(WorkingTree),
         consumer.pool.clone(),
-        Arc::new(MemoryCache::new(1024 * 1024)),
+        Arc::new(MemoryCache::new(1024 * 1024, 0)),
         Arc::new(ThreadWorkers::new(1).unwrap()),
         package_version::read(),
         Some(base),

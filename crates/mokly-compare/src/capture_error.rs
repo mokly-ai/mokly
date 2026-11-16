@@ -2,6 +2,7 @@
 
 use std::io;
 
+use mokly_graph::document_error::{self, CodecError};
 use mokly_graph::error::{GraphError, InternalError};
 use thiserror::Error;
 
@@ -15,6 +16,8 @@ pub(crate) enum CaptureError {
 
 #[derive(Debug, Error)]
 pub(crate) enum CaptureInternalError {
+    #[error("document codec failed: {source}")]
+    Document { source: CodecError },
     #[error("input encoding failed: {source}")]
     Json { source: serde_json::Error },
     #[error("input compression failed: {source}")]
@@ -39,6 +42,15 @@ impl<T> CaptureResult<T> for io::Result<T> {
         match self {
             Ok(value) => Ok(value),
             Err(source) => Err(CaptureInternalError::Io { source }.into()),
+        }
+    }
+}
+
+impl<T> CaptureResult<T> for document_error::Result<T> {
+    fn capture(self) -> Result<T> {
+        match self {
+            Ok(value) => Ok(value),
+            Err(source) => Err(CaptureInternalError::Document { source }.into()),
         }
     }
 }

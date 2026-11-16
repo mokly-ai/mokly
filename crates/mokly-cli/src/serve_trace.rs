@@ -267,6 +267,10 @@ where
 mod cache_trace_tests;
 
 #[cfg(test)]
+#[path = "_tests_/cache_codec_trace_tests.rs"]
+mod cache_codec_trace_tests;
+
+#[cfg(test)]
 #[path = "_tests_/capture_trace_tests.rs"]
 mod capture_trace_tests;
 

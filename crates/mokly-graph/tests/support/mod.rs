@@ -36,7 +36,7 @@ pub fn prepare_with_inputs(
     threads: usize,
     inputs: mokly_graph::delivery_inputs::DeliveryInputs,
 ) -> (Result<Arc<dyn RenderGeneration>>, Arc<dyn RenderCache>) {
-    let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(bytes));
+    let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(bytes, 0));
     prepare_with_cache(root, cache, threads, inputs)
 }
 

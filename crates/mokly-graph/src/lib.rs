@@ -2,10 +2,18 @@
 #![warn(unreachable_pub)]
 
 pub mod cache;
+mod cache_state;
+mod cache_tier;
 pub mod closure;
 pub mod collection;
 pub mod delivery_inputs;
 mod dependency_inputs;
+mod document_annotations;
+pub mod document_codec;
+pub mod document_error;
+mod document_nodes;
+mod document_usage;
+mod document_weight;
 pub mod error;
 pub mod fragments;
 pub mod graph;

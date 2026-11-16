@@ -1,12 +1,14 @@
 //! A byte-bounded LRU render cache with no clock or filesystem dependency.
 
-use std::collections::BTreeMap;
+use std::collections::VecDeque;
 use std::mem;
 use std::sync::{Arc, Mutex};
 
 use mokly_html::composition::Composed;
 use mokly_html::fragment::Fragment;
 
+use crate::cache_state::State;
+use crate::document_codec::EncodedView;
 use crate::key::NodeKey;
 use crate::weight;
 
@@ -37,22 +39,26 @@ impl Artifact {
 /// Cache statistics use operation counts, never wall-clock time.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct CacheStats {
-    /// Cache-owned memory charge.
+    /// Cache-owned memory charge across both tiers.
     pub bytes: usize,
-    /// Retained artifacts.
+    /// Retained entries across both tiers.
     pub entries: usize,
-    /// Successful lookups.
+    /// Lookups served by either tier.
     pub hits: usize,
-    /// Absent lookups.
+    /// Successful lookups restored from the compact tier.
+    pub restores: usize,
+    /// Compact lookups that failed to restore and must render again.
+    pub restore_failures: usize,
+    /// Lookups served by neither tier.
     pub misses: usize,
-    /// Evicted artifacts.
+    /// Entries that left the cache.
     pub evictions: usize,
 }
 
 /// Stateful cache boundary shared by Serve, build, and comparison.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderCacheMock))]
 pub trait RenderCache: Send + Sync {
-    /// Get a node and promote it to most recently used.
+    /// Get a node. A compact document promotes only on reuse within full-tier turnover.
     fn get(&self, key: &NodeKey) -> Option<Arc<Artifact>>;
     /// Retain a result when it fits. Oversized results still return to the caller.
     fn insert(&self, key: NodeKey, value: Arc<Artifact>);
@@ -60,80 +66,139 @@ pub trait RenderCache: Send + Sync {
     fn stats(&self) -> CacheStats;
 }
 
-/// Process-memory LRU; eviction changes rendering work only.
+/// Bounded full artifacts and compact documents, each with its own LRU order.
 pub struct MemoryCache {
-    bound: usize,
+    compact_bound: usize,
     state: Mutex<State>,
 }
 
-#[derive(Default)]
-struct State {
-    values: BTreeMap<NodeKey, (u128, Arc<Artifact>)>,
-    order: BTreeMap<u128, NodeKey>,
-    next: u128,
-    stats: CacheStats,
-}
-
 impl MemoryCache {
-    /// Construct an empty cache with the supplied charged-byte bound.
-    pub fn new(bytes: usize) -> Self {
+    /// Construct empty tiers with one total bound and a compact-document ceiling.
+    pub fn new(total_bytes: usize, compact_ceiling: usize) -> Self {
         Self {
-            bound: bytes,
-            state: Mutex::new(State::default()),
+            compact_bound: compact_ceiling.min(total_bytes),
+            state: Mutex::new(State::new(total_bytes, compact_ceiling)),
         }
+    }
+
+    /// Each new compact charge can displace more full entries. Encode outside locks.
+    fn compact(&self, evicted: Vec<(NodeKey, Arc<Artifact>)>) {
+        let mut pending = VecDeque::from(evicted);
+        while let Some((key, value)) = pending.pop_front() {
+            let encoded = if self.compact_bound > 0 && value.document.is_some() {
+                EncodedView::encode(&value).ok().map(|encoded| {
+                    let cost = compact_cost(&key, &encoded);
+                    (Arc::new(encoded), cost)
+                })
+            } else {
+                None
+            };
+            let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+            if state.full.contains(&key) || state.compact.contains(&key) {
+                continue;
+            }
+            if let Some((encoded, cost)) = encoded {
+                pending.extend(state.insert_compact(key, encoded, cost));
+            } else {
+                state.stats.evictions = state.stats.evictions.saturating_add(1);
+            }
+        }
+    }
+
+    fn promote(&self, key: &NodeKey, encoded: &Arc<EncodedView>, value: Arc<Artifact>) {
+        let cost = entry_cost(key, &value);
+        let evicted = {
+            let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+            if !state.remove_compact(key, encoded) {
+                return;
+            }
+            state.insert_full(key.clone(), value, cost)
+        };
+        self.compact(evicted);
+    }
+
+    fn failed_restore(&self, key: &NodeKey, encoded: &Arc<EncodedView>) {
+        tracing::error!("render cache document restore failed");
+        let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        if state.remove_compact(key, encoded) {
+            state.stats.evictions = state.stats.evictions.saturating_add(1);
+        }
+        state.stats.restore_failures = state.stats.restore_failures.saturating_add(1);
+        state.stats.misses = state.stats.misses.saturating_add(1);
     }
 }
 
 impl RenderCache for MemoryCache {
     fn get(&self, key: &NodeKey) -> Option<Arc<Artifact>> {
-        let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
-        let Some((stored, (old, artifact))) = state.values.remove_entry(key) else {
-            state.stats.misses += 1;
-            return None;
+        let encoded = {
+            let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+            state.operation();
+            if let Some(value) = state.full.get(key) {
+                state.stats.hits = state.stats.hits.saturating_add(1);
+                return Some(value);
+            }
+            let Some(encoded) = state.compact.get(key) else {
+                state.stats.misses = state.stats.misses.saturating_add(1);
+                return None;
+            };
+            encoded
         };
-        state.order.remove(&old);
-        state.next += 1;
-        let next = state.next;
-        state.order.insert(next, stored.clone());
-        state.values.insert(stored, (next, artifact.clone()));
-        state.stats.hits += 1;
+        let artifact = match encoded.restore() {
+            Ok(artifact) => Arc::new(artifact),
+            Err(_) => {
+                self.failed_restore(key, &encoded);
+                return None;
+            }
+        };
+        let promote = {
+            let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+            state.stats.hits = state.stats.hits.saturating_add(1);
+            state.stats.restores = state.stats.restores.saturating_add(1);
+            let operation = state.operations;
+            let turnover = state.full.len();
+            state.compact.restored(key, &encoded, operation, turnover)
+        };
+        if promote {
+            self.promote(key, &encoded, artifact.clone());
+        }
         Some(artifact)
     }
 
     fn insert(&self, key: NodeKey, value: Arc<Artifact>) {
-        let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
-        if let Some((stored, (old, value))) = state.values.remove_entry(&key) {
-            state.order.remove(&old);
-            state.stats.bytes -= entry_cost(&stored, &value);
-        }
-        let cost = entry_cost(&key, &value);
-        if cost > self.bound {
-            state.stats.entries = state.values.len();
-            return;
-        }
-        while state.stats.bytes > self.bound - cost {
-            let Some((_, key)) = state.order.pop_first() else {
-                break;
-            };
-            if let Some((stored, (_, value))) = state.values.remove_entry(&key) {
-                state.stats.bytes -= entry_cost(&stored, &value);
-                state.stats.evictions += 1;
+        {
+            let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+            state.operation();
+            if state.compact.contains(&key) {
+                return;
             }
         }
-        state.next += 1;
-        let next = state.next;
-        state.order.insert(next, key.clone());
-        state.values.insert(key, (next, value));
-        state.stats.bytes += cost;
-        state.stats.entries = state.values.len();
+        let cost = entry_cost(&key, &value);
+        let evicted = {
+            let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+            if state.compact.contains(&key) {
+                return;
+            }
+            state.insert_full(key, value, cost)
+        };
+        self.compact(evicted);
     }
 
     fn stats(&self) -> CacheStats {
-        self.state
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .stats
+        let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        CacheStats {
+            bytes: state.full.bytes.saturating_add(state.compact.bytes),
+            entries: state.full.len().saturating_add(state.compact.len()),
+            ..state.stats
+        }
     }
+}
+
+/// Charge the compact payload, both key records, and cache bookkeeping.
+pub(crate) fn compact_cost(key: &NodeKey, value: &EncodedView) -> usize {
+    value
+        .retained_bytes()
+        .saturating_add(key.0.capacity().saturating_mul(2))
+        .saturating_add(256)
 }
 
 pub(crate) fn entry_cost(key: &NodeKey, value: &Artifact) -> usize {
@@ -142,3 +207,11 @@ pub(crate) fn entry_cost(key: &NodeKey, value: &Artifact) -> usize {
         .saturating_add(key.0.capacity().saturating_mul(2))
         .saturating_add(256)
 }
+
+#[cfg(test)]
+#[path = "_tests_/compact_cache_tests.rs"]
+mod compact_cache_tests;
+
+#[cfg(test)]
+#[path = "_tests_/cache_promotion_tests.rs"]
+mod cache_promotion_tests;

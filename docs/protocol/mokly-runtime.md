@@ -47,24 +47,29 @@ once per enabled colour scheme. A watched change renders again only the
 outputs whose inputs changed, and a component rendered with the same props on
 many screens renders once.
 
-The render cache is bounded at 256 MiB. Both sides read it, and equal keys
-share one entry, which holds no warning of the side that read it. Serve reads
-the head from it. Changes captures the base within 256 MiB. Base capture
-misses use the pinned source.
-`build` and `publish` capture the head once during the build check, within their
-own 256 MiB bound. Changes, the output, and the comparison output read that
-capture. An evicted head document renders again on the head root.
-Decision: the head reuses the base capture, so a build renders each head
-document once. A larger render cache, bounded render batches, and a reordered
-build were rejected. No fixed cache bound fits every catalogue, batches still
-render each document several times, and a reorder changes the build's stage
-order.
-Decision: each side has its own bound. A shared bound was rejected, because the
-head is captured first and could leave no room for the base.
-The base-side extraction cache and the dependency install cache live in the
-operating system's cache directory under a key derived from the repository
-path, each with its own byte bound; the terminal names that directory, and
-deleting it is safe. No cache is in the repository.
+The render cache has one 256 MiB bound, and its full tier of complete documents,
+fragments, and stylesheets can use all of it. Each tier evicts its least
+recently used entry. A document that the full tier evicts moves losslessly to
+the compact tier, and any other evicted entry leaves the cache. The compact tier
+takes room only from evicted full entries, up to 128 MiB, so the full tier keeps
+at least 128 MiB and a catalogue that fits never restores. A lookup restores a
+compact document with exact bytes, tree, and trusted annotations. Only a second
+restore of a document within fewer cache operations than the full tier has
+entries promotes it to the full tier, so one pass over all views never promotes.
+A document that the compact tier cannot keep or restore leaves the cache.
+Decision: keep evicted documents in compact form. Rejected: a larger bound,
+because memory grows and a larger catalogue still thrashes. Rejected: a fixed
+split of the bound, because it takes room from a catalogue that fits. Rejected:
+a scan-resistant eviction order, because part of the head still misses when the
+head alone exceeds the bound. Rejected: a Serve head capture that the base
+reads, because it serves only Changes and adds a copy.
+Both sides read the cache, and equal keys share one entry, which holds no
+warning of the side that read it. Serve reads the head from it. A head document
+that neither tier holds renders again on the head root. Each
+[capture](./mokly-comparison-serving.md#base-and-head-capture) has its own
+bound. The base-side extraction cache and the dependency install cache live in
+the operating system's cache directory under a key derived from the repository
+path, each with its own byte bound, and the terminal names that directory.
 
 ## Serve
 
@@ -102,10 +107,9 @@ The output transaction stages the whole site, replaces the output directory
 in one step, and rolls back on failure, so the last successful output stays
 in place. A validation-only run is a build to a temporary directory.
 
-`mokly publish` builds into its own directory outside the repository and
-uploads the result through the [upload exchange](./mokly-upload-exchange.md).
-There is no other verb: validation is `build --strict`, and the static site
-is `build`.
+`mokly publish` builds into its own directory outside the repository and uploads
+the result through the [upload exchange](./mokly-upload-exchange.md). There is
+no other verb: validation is `build --strict`, and the static site is `build`.
 
 ## Sidecar Pool
 
@@ -159,8 +163,7 @@ the top bar, search and tags, the navigation column with its All/Changes
 filter, the breadcrumbs, the viewport and appearance controls, the device
 chrome, the expand toggle, and the details inspector. The
 [navigation contract](./mokly-navigation.md) owns routes, links, history,
-and the active-tree rule; the
-[variant navigation](./mokly-variant-navigation.md),
+and the active-tree rule; the [variant navigation](./mokly-variant-navigation.md),
 [disclosure persistence](./mokly-disclosure-persistence.md),
 [appearance](./mokly-viewer-appearance.md), and
 [shell design](./mokly-shell-design.md) contracts own their parts.
@@ -198,15 +201,13 @@ invalidation through the render graph, recovery, and publication.
 
 ## Changes
 
-Both sides of a comparison render from sources with the current Mokly
-version, the head from the working tree and the base from the base commit's
-Git tree, under the [comparison contract](./mokly-comparison.md). Serve
-classifies Changes in background work after readiness and publishes the
-result as a revision. Comparison snapshots render on demand when the reader
-selects a diff, under the
-[comparison serving contract](./mokly-comparison-serving.md). `build` writes
-one complete comparison generation. There is no standalone comparison
-command.
+Both sides of a comparison render from sources with the current Mokly version,
+the head from the working tree and the base from the base commit's Git tree,
+under the [comparison contract](./mokly-comparison.md). Serve classifies Changes
+in background work after readiness and publishes the result as a revision.
+Comparison snapshots render on demand when the reader selects a diff, under the
+[comparison serving contract](./mokly-comparison-serving.md). `build` writes one
+complete comparison generation. There is no standalone comparison command.
 
 ## Shutdown
 
@@ -243,8 +244,7 @@ only other files Mokly writes, and deleting them changes time only.
 
 ## Related Docs
 
-- [Rust core architecture](../architecture/rust-core.md)
-- [Data flow](../architecture/rust-core.md#data-flow)
+- [Rust core architecture](../architecture/rust-core.md) and its [data flow](../architecture/rust-core.md#data-flow)
 - [Package and authoring contract](./mokly-package.md)
 - [Shell delivery and read model routes](./mokly-shell-delivery.md)
 - [Changes and comparisons](./mokly-changes.md)

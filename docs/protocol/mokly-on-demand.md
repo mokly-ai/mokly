@@ -28,8 +28,9 @@ A request for `/static/mokly-generated/<route>` renders the document on first
 request. A JavaScript fragment renders through the
 [sidecar](./mokly-sidecar.md) under its deadlines; an HTML screen or component
 renders without the sidecar. The finished document stays in the render cache
-until an input changes or the byte bound evicts it; the next request for an
-evicted document renders it again.
+until an input changes or it leaves the cache under the
+[cache bounds](./mokly-runtime.md#render-graph-and-cache). The next request for
+a document that left the cache renders it again.
 
 Concurrent requests for one document share one render. Foreground requests
 take priority over background work: a background render that has not started

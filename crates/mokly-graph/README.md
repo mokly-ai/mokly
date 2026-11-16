@@ -9,9 +9,12 @@ writes no files.
 ## Responsibilities
 
 - Compute content-addressed node keys before document rendering.
-- Keep rendered artifacts in a byte-bounded LRU process cache.
+- Keep rendered artifacts in a byte-bounded LRU process cache, with a compact
+  tier for evicted documents.
+- Encode documents losslessly for the compact tier and the comparison capture.
 - Render all views through an injected worker pool.
-- Reconstruct evicted documents and stylesheet resources from their recipes.
+- Reconstruct documents and stylesheet resources that left the cache from
+  their recipes.
 - Validate logical anchors across destination views.
 - Compute the referenced authored asset closure with one public policy.
 
@@ -77,18 +80,38 @@ routing inventory serves each generation. Opaque entries share its complete
 key. Explicit case spellings, moved aliases, and missing targets keep their
 requested identities in the document key.
 
-`MemoryCache` implements `dyn RenderCache`. It charges document bytes, parsed
-trees, and evidence, including registry ownership in documents and fragments.
-The charge is an estimate of retained memory. Usage, instance, and slot
-records count at twice their JSON length. `stats` reports the charged bytes,
-the retained entries, and the hit, miss, and eviction counts.
-It evicts by access order. Oversized artifacts return to the caller without
-retention. Plans keep recipes rather than a complete set of parsed documents.
+`MemoryCache` implements `dyn RenderCache` with a full tier and a compact tier
+under one total byte bound. `MemoryCache::new` takes that total and the ceiling
+of the compact tier. Each tier evicts by access order, and the full tier can
+use the whole bound. The full tier charges document bytes, parsed trees, and
+evidence, including registry ownership in documents and fragments. The charge
+is an estimate of retained memory. Usage, instance, and slot records count at
+twice their JSON length. When the full tier evicts a document, the cache
+encodes it outside its lock, and the compact tier keeps it in the room that
+the eviction freed, up to the ceiling. Every other evicted artifact leaves the
+cache. A lookup reads the full tier, then the compact tier. A compact hit
+returns the restored artifact. It promotes the entry to the full tier only
+when the same key was restored before within fewer cache operations than the
+full tier has entries. An `insert` of a key that the compact tier holds keeps
+the entry compact, so a caller that stores a restored artifact again does not
+promote it. A failed restore removes the entry, counts as a miss and as a
+restore failure, and logs an error without document data. `stats` reports the
+charged bytes and the retained entries of both tiers, and the hit, restore,
+restore failure, miss, and eviction counts of the
+[`render.cache` record](../../docs/protocol/mokly-timings.md#core-spans).
+Oversized artifacts return to the caller without retention. Plans keep
+recipes rather than a complete set of parsed documents.
 Eviction changes work only. Cross-view anchor checks retain successful
 destination renders in this same bounded cache. Repeated links reuse those
 documents. Each requested fragment is still checked in every destination view,
 including cache hits. Concurrent checks of one destination share its active
 render.
+
+`document_codec::EncodedView` is the lossless compact form of one document. The
+compact tier and the base and head captures of `mokly-compare` share it.
+`EncodedView::restore` rebuilds the exact bytes, parsed tree, and trusted
+annotations without parsing authored HTML, or returns a
+`document_error::CodecError`.
 
 `collect_comparison` streams complete side validation to an ordered
 `ComparisonCollector`. Each view composes once, including when the artifact
@@ -156,7 +179,7 @@ use std::sync::Arc;
 use mokly_graph::cache::{Artifact, MemoryCache, RenderCache};
 use mokly_graph::key::{NodeKind, key};
 
-let cache: &dyn RenderCache = &MemoryCache::new(1024 * 1024);
+let cache: &dyn RenderCache = &MemoryCache::new(1024 * 1024, 256 * 1024);
 let key = key(NodeKind::Document, &[b"entry-source", b"light"]);
 cache.insert(key.clone(), Arc::new(Artifact {
     bytes: b"<!doctype html>".to_vec(),
@@ -192,8 +215,12 @@ retention disabled.
   `DeliveryInputs`, the sidecar-reported stylesheet metadata of a generation.
 - [`src/key.rs`](./src/key.rs) provides `key` and `NodeKind`, the
   content-addressed node keys.
-- [`src/cache.rs`](./src/cache.rs) defines `RenderCache`, `MemoryCache`, and
-  `Artifact`, the byte-bounded LRU render cache.
+- [`src/cache.rs`](./src/cache.rs) defines `RenderCache`, `MemoryCache`,
+  `Artifact`, and `CacheStats`, the render cache with its full and compact
+  tiers.
+- [`src/document_codec.rs`](./src/document_codec.rs) defines `EncodedView`,
+  the lossless compact document that the compact tier and the comparison
+  capture share.
 - [`src/workers.rs`](./src/workers.rs) defines `RenderWorkers` and
   `ThreadWorkers`, the injected worker pool. Its `stylesheets` method runs one
   `StylesheetWorker` job for each stylesheet root, keeps the root order, and

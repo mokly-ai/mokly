@@ -108,10 +108,18 @@ both current and base work.
 ## Base And Head Capture
 
 A capture is a bounded store of one side's rendered views. A later read of a
-kept view does not render the view again. Each classification captures its
+kept view restores it without a render. Each classification captures its
 base side in Serve, `build`, and `publish`. `build` and `publish` also capture
-the head side. The [render cache rules](./mokly-runtime.md#render-graph-and-cache)
-give the bound of each side.
+the head side once, during the build check. Changes, the output, and the
+comparison output read that head capture. Each side's capture has its own
+256 MiB bound beside the render cache.
+Decision: the head reuses the base capture, so a build renders each head
+document once. A larger render cache, bounded render batches, and a reordered
+build were rejected. No fixed cache bound fits every catalogue, batches still
+render each document several times, and a reorder changes the build's stage
+order.
+Decision: each side has its own bound. A shared bound was rejected, because the
+head is captured first and could leave no room for the base.
 
 Route order is the byte order of the view routes. A capture keeps views in
 route order while they fit its bound. It skips a view that does not fit when
@@ -119,11 +127,12 @@ that view arrives. It still keeps a later view that fits. The side's validation
 summary, stylesheets, and asset digests come before views in the same bound.
 When they need more room, the capture drops its last kept views first.
 
-A view that a capture does not keep comes from its side's source when a
-comparison or the output needs it. The source renders the view again unless
-the render cache still holds it. The comparison and the output have the same
-bytes whichever views a capture keeps. Only the number of views that render
-again changes.
+A view that a capture does not keep, or that fails to restore, comes from its
+side's source when a comparison or the output needs it. Base capture misses use
+the pinned source. The source renders the view again only when neither tier of
+the [render cache](./mokly-runtime.md#render-graph-and-cache) holds it. The
+comparison and the output have the same bytes whichever views a capture keeps.
+Only the number of views that render again changes.
 
 Decision: a capture does not try a skipped view again. Strict route order,
 which keeps no view after the first skip, was rejected, because it keeps fewer
