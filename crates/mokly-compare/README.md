@@ -16,6 +16,8 @@ both sides. `mokly-server` and `mokly-static` publish the retained result.
 - Compare reached resources and use catalogue-wide CSS own-page proof.
 - Produce the typed review result, the private change snapshot, and
   affected-consumer chains.
+- Let a base provider keep one captured base between classifications, and
+  compare a reuse through a reader with its own cancellation.
 - Share public index state, eligibility, workspace lists, and input-change projection.
 - Read checkout-converted base files with preserved POSIX paths.
 - Extract JavaScript sources only when a caller requests them.
@@ -114,7 +116,8 @@ budget, and kept views that fail to restore, read from their side's source.
 Serve head reads use the bounded render cache and render again on the head
 root only when neither cache tier holds the document. Build head reads use the
 head capture. Each result holds at most one base capture, and a build result
-also holds one head capture. The
+also holds one head capture. A result that reuses a kept base reads that
+capture and adds no second base capture. The
 [comparison serving contract](../../docs/protocol/mokly-comparison-serving.md)
 owns the capture budget and its overlap with the render cache. Capture checks
 cancellation before each view and each encoding. Its timing spans contain no
@@ -131,9 +134,10 @@ shared document codec and the head comparison retain these rule records.
 Saved prop edits retain their view records without marking unchanged
 consumers affected. Own CSS states and dependency reasons use kept own-page
 source proof. Actual-instance implementation reasons preserve own view states.
-Removed previews read the same pinned base generation. Serve retains the
-original cached head generation and one bounded base capture. Build retains the
-captured head and the bounded base capture. Both
+Removed previews read the same pinned base generation, through the reader when
+the result reuses a kept base. Serve retains the original cached head
+generation and one bounded base capture, its own or a kept one. Build retains
+the captured head and the bounded base capture. Both
 results keep view states, reasons, ownership records, and immutable historical
 metadata.
 
@@ -153,6 +157,27 @@ through the common graph. A JavaScript provider uses the same request's source
 and repository handles for extraction and dependency leases. The CLI supplies
 `mokly_render::runtime::Runtime` for both sides, sharing its render cache,
 sidecar pool, and cancellation.
+
+`BaseProvider` can also keep one captured base between classifications. After
+the pin and before any base read, `Changes` calls `BaseProvider::find_kept`
+with a `BaseRetentionRequest`: the `PinnedBase`, the working configuration,
+the head, and the effective install-scripts setting. A hit returns a
+`BaseReuse`, and `Changes` compares through a per-classification reader. It
+prepares and captures no base. A miss prepares and captures a fresh base, and
+offers it to `BaseProvider::keep` as a `KeptBase` with its source-failure
+record and its scripts-off flag. When `keep` returns a `BaseReuse`, that
+classification also compares through a reader. The reader checks the reuse's
+own cancellation before each call. Its first failed read, while that
+cancellation is not set, releases that exact `KeptBase` through
+`BaseProvider::release`. A reused base that fails this way gets one fresh
+preparation in the same classification. A reused base with a recorded source
+failure is released, and the classification fails with `Error::Base`. A head
+failure or a cancelled reader keeps the base. `review.base-tree` records
+`action`, `reuse` or `prepare`. The default methods keep nothing, so `build`,
+`publish`, and a provider without retention prepare and capture the base in
+each classification. The
+[Serve base lifetime rule](../../docs/protocol/mokly-base-preparation.md#serve-base-lifetime)
+owns what a provider may keep, the freshness checks, and the release events.
 
 `Changes` announces each comparison `Step` through its `dyn Steps` as the step
 starts, so a command can name the running step on its progress line. It
@@ -193,7 +218,9 @@ Compose the host adapters at the CLI boundary. Consume `dyn Sources`,
 the comparison coordinator. Call `InputReader::read` on `GitSources` and
 `WorkingInputs::read` on the same `dyn Repository`, with the base inputs,
 before dependency selection. Pass one cancellation token to the caches, the
-Git runner, and the install supervisor. Then run the crate tests:
+Git runner, and the install supervisor of one preparation. A provider that
+keeps a base detaches it from that token in `keep`, and gives each `BaseReuse`
+its own token. Then run the crate tests:
 
 ```bash
 cargo test -p mokly-compare
@@ -239,7 +266,21 @@ development dependencies, and no test uses the internet.
 - [`src/base_render.rs`](./src/base_render.rs) defines `ChangesService`,
   `Changes`, `BaseProvider`, `PreparedBase`, and `BasePreparationError`, which
   pin the base, prepare its sources, report whether its tier-two install ran
-  with lifecycle scripts off, and compare it with the head.
+  with lifecycle scripts off, and compare it with the head. The default
+  `BaseProvider::find_kept`, `keep`, and `release` methods keep nothing.
+- [`src/base_retention.rs`](./src/base_retention.rs) defines
+  `BaseRetentionRequest`, `KeptBase`, and `BaseReuse`: the inputs of the kept
+  base's key and freshness checks, the kept capture with its source-failure
+  record and scripts-off flag, and one classification's access to it with its
+  own cancellation.
+- [`src/base_classification.rs`](./src/base_classification.rs) holds the
+  classification path of `Changes`: one kept base or one fresh capture, the
+  `review.base-tree` action, and the single fresh preparation after a failed
+  reuse.
+- [`src/base_reader.rs`](./src/base_reader.rs) defines `BaseReader`, the
+  per-classification reader of a kept base. It checks its reader's
+  cancellation before each call and releases the base after its own first
+  failed read.
 - [`src/comparison_steps.rs`](./src/comparison_steps.rs) defines `Step`,
   `Steps`, and `StepCache`, the comparison steps that a command shows while
   Changes runs.

@@ -51,7 +51,7 @@ fn pin_resolves_once_and_classification_uses_its_reference_and_commit() {
         SourceFailuresMock::failure
             .each_call(matching!())
             .returns(None)
-            .n_times(2),
+            .n_times(3),
     ));
     let service: &dyn ChangesService = &Changes {
         lookup: Arc::new(Unimock::new(())), pinned: Some(pinned),

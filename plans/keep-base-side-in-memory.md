@@ -14,7 +14,7 @@ the same, so this work repeats for the same commit. On 2026-10-29, `main` at
 on the baseline machine. The base side took 5.0 s of it. On 2026-10-30 a
 machine 1.6 to 1.9 times slower measured 22.1 s and 9.7 s. That evidence
 stayed in the closed perf 6 workspace. Milestone 5 measures again from
-`main` at `a1d834fbe`.
+`main` at `c42755bcd`.
 
 Serve keeps the last prepared base side in memory: the captured base
 generation with its render graph, its sources, its leases, its bundle
@@ -68,7 +68,7 @@ Contract owners:
 
 The perf 6 planner made calls 1 to 13 on 2026-10-30. On 2026-11-16 the docs
 implementor checked each call against `main` at `a1d834fbe`. A dated note
-marks each change. Calls 14 to 22 are new calls of 2026-11-16.
+marks each change. Calls 14 to 24 are new calls of 2026-11-16.
 
 1. A reuse publishes no `preparing` status and no second `pending` status.
    The [Changes contract](../docs/protocol/mokly-changes.md#changes-in-serve)
@@ -188,6 +188,16 @@ marks each change. Calls 14 to 22 are new calls of 2026-11-16.
     includes `build` in the timing rule, and points follow-up links to the
     protocol anchors. This preserves the runtime cap, the prepare trace,
     and links after this plan is deleted.
+
+23. The workspace orchestrator's call, 2026-11-16: release uses the exact
+    `Arc<KeptBase>` identity. The reader releases it on its first owned
+    failure, also after classification returns. The reuse attempt ends
+    before fresh preparation starts. Reason: a late failure must preserve
+    a newer slot, and the fallback must release its local old handles.
+24. The workspace orchestrator's call, 2026-11-16: a successfully kept fresh
+    base uses the same reader as a found base. A streamed asset copy also
+    checks that reader. Reason: the first published result and a copy after
+    an asset opens need the same cancellation and failure checks.
 
 ### Code facts on `main` at `a1d834fbe`
 
@@ -515,29 +525,38 @@ The `non-ui implementor` adds the reuse path to `Changes::classify`. The new
 provider methods keep nothing by default, so `build` and `publish` do not
 change.
 
-- [ ] `BaseProvider` gets three default methods. They find a kept base for
+- [x] `BaseProvider` gets three default methods. They find a kept base for
       the pinned commit and the key, keep a captured base, and release it.
       A kept base holds its source-failure record and its `scripts_off`
       flag, under design call 15.
-- [ ] `Changes::classify` asks for a kept base after the pin and before it
+- [x] `Changes::classify` asks for a kept base after the pin and before it
       creates sources. A reuse skips sources, preparation, and capture. It
       compares through the reader of design call 7.
-- [ ] A fresh preparation keeps the base after its capture succeeds, under
+- [x] A fresh preparation keeps the base after its capture succeeds, under
       design calls 4 and 5. The base events release it.
-- [ ] A failed reuse releases the base first, then prepares once, under
+- [x] A failed reuse releases the base first, then prepares once, under
       design calls 8 and 21. Only a failure marked by the base reader takes
       this path. A head failure or cancellation keeps a valid base.
-- [ ] `review.base-tree` records `action`.
-- [ ] Update the strict provider mocks of the existing tests, also the step
+- [x] `review.base-tree` records `action`.
+- [x] Update the strict provider mocks of the existing tests, also the step
       tests of PR #248.
-- [ ] Test: two classifications through one provider prepare and capture the
+- [x] Test: two classifications through one provider prepare and capture the
       base once.
-- [ ] Test: a source failure on a reused base releases it.
-- [ ] Test: a failed reuse read releases the base, and the classification
+- [x] Test: a source failure on a reused base releases it.
+- [x] Test: a failed reuse read releases the base, and the classification
       prepares once and no more.
-- [ ] Test: a head failure and reader cancellation do not take the fresh
+- [x] Test: a head failure and reader cancellation do not take the fresh
       base path or release a valid base.
-- [ ] Update the Key Code of `crates/mokly-compare/README.md`.
+- [x] Update the Key Code of `crates/mokly-compare/README.md`.
+
+Evidence: `.context/keep-base-side-in-memory/milestone-2-report.md` and
+`.context/keep-base-side-in-memory/milestone-2-docs-report.md`.
+
+Implementation approval, 2026-11-16: the performance orchestrator chose 1A
+for the strict fixtures under user delegation. Separate strict Unimock
+instances cover present and absent boundaries. Every assertion stays.
+The implementor stops after three further unexpected failures of the same
+tests and sends the logs. This adds no product decision.
 
 ## Milestone 3: Freshness checks
 
@@ -607,7 +626,7 @@ Depends on: 4
 
 - [ ] Build the after binary with `cargo build --release -p mokly-cli`. The
       before binary is `.context/keep-base-side-in-memory/before-mokly`,
-      built from `a1d834fbe`. When the branch merged a later `main` that
+      built from `c42755bcd`. When the branch merged a later `main` that
       changes Changes, build a new before binary from that merge base.
 - [ ] Interleave three before runs and three after runs, in the order before,
       after, before, after, before, after. Measure the Serve edit on
@@ -634,6 +653,10 @@ Depends on: 4
 ## Milestone 6: Verification, commit, review, and pull request
 
 Depends on: every other milestone
+
+Evidence: `.context/keep-base-side-in-memory/merge-resolution.md` holds the
+conflict decisions of the merge of `main` at `c42755bcd`. The pull request
+description copies them.
 
 - [ ] Remove the status lines that Milestone 1 added. Keep the macOS item of
       the runtime status line.

@@ -22,6 +22,9 @@ fn reading_starts_before_base_preparation_and_comparing_after_the_base_capture()
         StepsMock::step
             .next_call(matching!(Step::Reading))
             .returns(()),
+        BaseProviderMock::find_kept
+            .next_call(matching!(_))
+            .returns(Ok(None)),
         BaseSourceFactoryMock::create
             .next_call(matching!(_, _, _))
             .answers(&|boundaries, _, _, _| {
@@ -45,6 +48,12 @@ fn reading_starts_before_base_preparation_and_comparing_after_the_base_capture()
         ComparisonMock::capture_base
             .next_call(matching!(_))
             .answers(&|_, before| Ok(before)),
+        SourceFailuresMock::failure
+            .next_call(matching!())
+            .returns(None),
+        BaseProviderMock::keep
+            .next_call(matching!(_))
+            .returns(Ok(None)),
         StepsMock::step
             .next_call(matching!(Step::Comparing))
             .returns(()),
