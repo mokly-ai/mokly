@@ -42,27 +42,49 @@ pub struct EncodedView {
 impl EncodedView {
     /// Encode one validated document and retain its complete metadata.
     pub fn encode(artifact: &Artifact) -> Result<Self> {
+        let mut encoder = ZlibEncoder::new(Vec::new(), Compression::fast());
+        {
+            let mut writer = BufWriter::new(&mut encoder);
+            Self::write_payload(artifact, &mut writer)?;
+        }
+        Ok(Self::from_payload(artifact, encoder.finish().codec()?))
+    }
+
+    /// Reuse a charged cache encoder, including its serialization buffer.
+    pub(crate) fn encode_pooled(
+        artifact: &Artifact,
+        writer: &mut BufWriter<ZlibEncoder<Vec<u8>>>,
+    ) -> Result<Self> {
+        let result = Self::write_payload(artifact, writer);
+        if result.is_err() {
+            writer.flush().codec()?;
+        }
+        let payload = writer.get_mut().reset(Vec::new()).codec()?;
+        result?;
+        Ok(Self::from_payload(artifact, payload))
+    }
+
+    fn write_payload(artifact: &Artifact, writer: &mut dyn Write) -> Result<()> {
         let payload = Payload {
             tree: artifact
                 .document
                 .as_ref()
                 .map_or_else(Vec::new, |document| document_nodes::flatten(&document.tree)),
         };
+        writer.write_all(&artifact.bytes).codec()?;
+        serde_json::to_writer(&mut *writer, &payload).codec()?;
+        writer.flush().codec()
+    }
+
+    fn from_payload(artifact: &Artifact, payload: Vec<u8>) -> Self {
         let metadata = artifact.document.as_ref().map(|document| Metadata {
             usage: document.usage.clone(),
             resources: document.resources.clone(),
             components: document.components.clone(),
             links: document.links.clone(),
         });
-        let mut encoder = ZlibEncoder::new(Vec::new(), Compression::fast());
-        {
-            let mut writer = BufWriter::new(&mut encoder);
-            writer.write_all(&artifact.bytes).codec()?;
-            serde_json::to_writer(&mut writer, &payload).codec()?;
-            writer.flush().codec()?;
-        }
-        let encoded = Self {
-            payload: encoder.finish().codec()?.into_boxed_slice(),
+        Self {
+            payload: payload.into_boxed_slice(),
             bytes_len: artifact.bytes.len(),
             warnings: artifact
                 .document
@@ -74,8 +96,7 @@ impl EncodedView {
                 .document
                 .as_ref()
                 .map_or(0, document_weight::metadata),
-        };
-        Ok(encoded)
+        }
     }
 
     /// Encoded document and tree payload length.

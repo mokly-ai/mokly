@@ -20,7 +20,7 @@ fn equal_key_base_capture_does_not_render_after_the_head_overflows_the_full_tier
         "---\ntitle: Page\n---\n<!doctype html><html><head><title>Page</title></head><body><p>{}</p></body></html>",
         "text".repeat(4096)
     );
-    let paths: Vec<_> = (0..64)
+    let paths: Vec<_> = (0..256)
         .map(|index| format!("specs/page{index:02}.page.html"))
         .collect();
     let files: Vec<_> = paths
@@ -28,7 +28,7 @@ fn equal_key_base_capture_does_not_render_after_the_head_overflows_the_full_tier
         .map(|path| (path.as_str(), body.as_str()))
         .collect();
     let fixture = Fixture::new(&files);
-    let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(3 * 1024 * 1024, 1024 * 1024));
+    let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(12 * 1024 * 1024, 1024 * 1024));
     let head = engine_support::prepare(
         fixture.directory.path(),
         Arc::new(WorkingTree),
@@ -44,14 +44,14 @@ fn equal_key_base_capture_does_not_render_after_the_head_overflows_the_full_tier
     for (route, plan) in head.plans() {
         assert_eq!(plan.key, base.plans()[route].key);
     }
-    assert_eq!(head.render_all().unwrap().documents, 64);
+    assert_eq!(head.render_all().unwrap().documents, 256);
     let start = cache.stats();
     let engine: &dyn Comparison = &Engine {
         moves: Arc::new(Detector),
         css: Arc::new(MemoryParsedCss::new(4096)),
     };
     let captured = engine.capture_base(base).unwrap();
-    assert_eq!(captured.comparison_capture().unwrap().views, 64);
+    assert_eq!(captured.comparison_capture().unwrap().views, 256);
     let end = cache.stats();
     assert_eq!(
         end.misses, start.misses,
@@ -61,9 +61,9 @@ fn equal_key_base_capture_does_not_render_after_the_head_overflows_the_full_tier
         end.restores > start.restores,
         "the head must have overflowed the full tier"
     );
-    assert_eq!(start.entries, 64);
+    assert_eq!(start.entries, 256);
     assert_eq!(end.evictions, 0);
-    assert!(end.bytes <= 3 * 1024 * 1024);
+    assert!(end.bytes <= 12 * 1024 * 1024);
     assert_eq!(
         captured.render("page00/index.html").unwrap().bytes,
         head.render("page00/index.html").unwrap().bytes

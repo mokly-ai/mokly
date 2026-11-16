@@ -2,6 +2,7 @@
 #![warn(unreachable_pub)]
 
 pub mod cache;
+mod cache_encoder_pool;
 mod cache_encoding;
 mod cache_state;
 mod cache_tier;

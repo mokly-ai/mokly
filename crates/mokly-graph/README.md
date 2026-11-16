@@ -88,10 +88,14 @@ rest. Each tier evicts by access order. The full tier charges document bytes,
 parsed trees, and evidence, including registry ownership in documents and fragments. The charge
 is an estimate of retained memory. Usage, instance, and slot records count at
 twice their JSON length. When the full tier evicts a document, the cache
-reserves its charge plus twice that charge for encoding from the headroom. If
-the reservation does not fit, the document leaves the cache and counts as an
-eviction. Inserts never wait. A reservation handle releases the charge on every
-exit path, including encoding failure. Encoding runs outside the lock. Its
+reserves its charge plus twice that charge for encoding from the headroom.
+The same locked step takes one of eight reusable encoder leases. Each encoder
+allocates on first use and keeps a 384 KiB headroom charge while idle or active,
+up to 3 MiB for all eight. The encoder reuses its compressor and serialization
+buffers between documents. If the document and workspace charges do not fit,
+or no lease is free, the document leaves the cache and counts as an eviction.
+Inserts never wait. A reservation handle releases the document charge and
+returns the lease on every exit path, including encoding failure. Encoding runs outside the lock. Its
 completion transfers the document from transit to the compact tier in one
 locked step. The compact tier uses room from evicted full entries up to its
 ceiling. Every other evicted artifact leaves the cache. A lookup reads the full
@@ -103,7 +107,8 @@ full tier has entries. An `insert` of a key that transit or the compact tier
 holds keeps the entry there, so a caller that stores a restored artifact again
 does not promote it. A failed restore removes the entry, counts as a miss and as a
 restore failure, and logs an error without document data. `stats` reports the
-charged bytes and retained entries of both tiers and transit, and the hit,
+charged bytes of both tiers, transit, and encoder leases, retained artifact
+entries, and the hit,
 restore, restore failure, miss, and eviction counts of the
 [`render.cache` record](../../docs/protocol/mokly-timings.md#core-spans).
 Oversized artifacts return to the caller without retention. Plans keep
@@ -186,7 +191,7 @@ use std::sync::Arc;
 use mokly_graph::cache::{Artifact, MemoryCache, RenderCache};
 use mokly_graph::key::{NodeKind, key};
 
-let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(1024 * 1024, 256 * 1024));
+let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(16 * 1024 * 1024, 4 * 1024 * 1024));
 let key = key(NodeKind::Document, &[b"entry-source", b"light"]);
 cache.insert(key.clone(), Arc::new(Artifact {
     bytes: b"<!doctype html>".to_vec(),

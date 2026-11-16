@@ -17,24 +17,29 @@ fn node(index: usize) -> NodeKey {
     NodeKey(format!("{index:02}").as_str().into())
 }
 
-fn cache_with_encoder(
+pub(super) fn cache_with_encoder(
     total: usize,
     ceiling: usize,
+    workspace: usize,
     encode: impl Fn(&MemoryCache, &Artifact) -> Result<EncodedView> + Send + Sync + 'static,
 ) -> Arc<MemoryCache> {
     Arc::new_cyclic(|cache: &Weak<MemoryCache>| {
         let cache = cache.clone();
-        MemoryCache {
-            encoder: Arc::new(Unimock::new(
+        MemoryCache::with_encoder(
+            total,
+            ceiling,
+            Arc::new(Unimock::new((
+                EncoderMock::workspace_bytes
+                    .some_call(matching!())
+                    .returns(workspace),
                 EncoderMock::encode
-                    .each_call(matching!(_))
-                    .answers_arc(Arc::new(move |_, artifact| {
+                    .each_call(matching!(_, _))
+                    .answers_arc(Arc::new(move |_, artifact, _| {
                         encode(&cache.upgrade().unwrap(), artifact)
                     }))
                     .at_least_times(0),
-            )),
-            ..MemoryCache::new(total, ceiling)
-        }
+            ))),
+        )
     })
 }
 
@@ -59,7 +64,7 @@ fn one_insert_reserves_only_the_documents_that_fit_in_transit_headroom() {
     let total = full * 96;
     let observations = Arc::new(Mutex::new(Vec::new()));
     let captured = observations.clone();
-    let cache = cache_with_encoder(total, compact * 2, move |cache, artifact| {
+    let cache = cache_with_encoder(total, compact * 2, 0, move |cache, artifact| {
         let stats = cache.stats();
         assert!(stats.bytes <= total, "full + compact + transit must fit");
         captured.lock().unwrap().push(stats);
@@ -103,7 +108,7 @@ fn a_lookup_during_encoding_returns_the_document_in_transit() {
     let compact = compact_cost(&NodeKey("00".into()), &EncodedView::encode(&value).unwrap());
     let observations = Arc::new(Mutex::new(0));
     let captured = observations.clone();
-    let cache = cache_with_encoder(full * 96, compact * 2, move |cache, artifact| {
+    let cache = cache_with_encoder(full * 96, compact * 2, 0, move |cache, artifact| {
         let mut count = captured.lock().unwrap();
         let key = node(*count);
         let found = cache.get(&key);
@@ -138,12 +143,17 @@ fn failed_encoding_releases_headroom_for_the_next_compaction() {
     let full = entry_cost(&node(0), &value);
     let compact = compact_cost(&node(0), &EncodedView::encode(&value).unwrap());
     let calls = AtomicUsize::new(0);
-    let cache = cache_with_encoder(total(full * 45 + compact), compact, move |_, artifact| {
-        if calls.fetch_add(1, Ordering::Relaxed) == 0 {
-            return Err(CodecInternalError::InvalidTree.into());
-        }
-        EncodedView::encode(artifact)
-    });
+    let cache = cache_with_encoder(
+        total(full * 45 + compact),
+        compact,
+        0,
+        move |_, artifact| {
+            if calls.fetch_add(1, Ordering::Relaxed) == 0 {
+                return Err(CodecInternalError::InvalidTree.into());
+            }
+            EncodedView::encode(artifact)
+        },
+    );
     for index in 0..46 {
         cache.insert(node(index), value.clone());
     }

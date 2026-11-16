@@ -12,15 +12,22 @@ pub(crate) struct Transit<'a> {
     owner: &'a Mutex<State>,
     key: NodeKey,
     value: Option<Arc<Artifact>>,
+    lease: usize,
 }
 
 impl<'a> Transit<'a> {
     /// State has already charged the readable transit entry before this handle leaves.
-    pub(crate) fn new(owner: &'a Mutex<State>, key: NodeKey, value: Arc<Artifact>) -> Self {
+    pub(crate) fn new(
+        owner: &'a Mutex<State>,
+        key: NodeKey,
+        value: Arc<Artifact>,
+        lease: usize,
+    ) -> Self {
         Self {
             owner,
             key,
             value: Some(value),
+            lease,
         }
     }
 
@@ -34,10 +41,16 @@ impl<'a> Transit<'a> {
         &self.key
     }
 
+    /// The reserved slot has exclusive use of its reusable encoder.
+    pub(crate) fn lease(&self) -> usize {
+        self.lease
+    }
+
     /// Release the full artifact and transfer to the compact tier in one locked step.
     pub(crate) fn complete(mut self, encoded: Arc<EncodedView>, cost: usize) -> Vec<Self> {
         let mut state = self.owner.lock().unwrap_or_else(|error| error.into_inner());
         self.value = None;
+        state.encoders.release(self.lease);
         if state.transit.remove(&self.key).is_none() {
             return Vec::new();
         }
@@ -52,6 +65,7 @@ impl Drop for Transit<'_> {
         }
         let mut state = self.owner.lock().unwrap_or_else(|error| error.into_inner());
         self.value = None;
+        state.encoders.release(self.lease);
         if state.transit.remove(&self.key).is_some() {
             state.stats.evictions = state.stats.evictions.saturating_add(1);
         }

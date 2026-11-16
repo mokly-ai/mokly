@@ -2,15 +2,15 @@
 
 use std::sync::Arc;
 
-use crate::cache::{MemoryCache, RenderCache};
+use crate::cache::RenderCache;
 
-use super::compact_cache_tests::{costs, document, numbered, total};
+use super::compact_cache_tests::{costs, document, memory_cache, numbered, total};
 
 #[test]
 fn a_fitting_catalogue_keeps_every_artifact_full_until_retained_capacity_overflows() {
     let value = document();
     let (full, _) = costs(&value);
-    let cache = MemoryCache::new(full * 48, full * 24);
+    let cache = memory_cache(full * 48, full * 24);
     for index in 0..45 {
         cache.insert(numbered(index), value.clone());
     }
@@ -36,7 +36,7 @@ fn a_fitting_catalogue_keeps_every_artifact_full_until_retained_capacity_overflo
 fn complete_passes_and_their_following_inserts_do_not_promote_compact_documents() {
     let value = document();
     let (full, compact) = costs(&value);
-    let cache = MemoryCache::new(total(full * 45 + compact * 2), compact * 2);
+    let cache = memory_cache(total(full * 45 + compact * 2), compact * 2);
     for index in 0..47 {
         cache.insert(numbered(index), value.clone());
     }
@@ -62,7 +62,7 @@ fn complete_passes_and_their_following_inserts_do_not_promote_compact_documents(
 fn only_reuse_within_turnover_promotes_and_later_reads_hit_the_full_tier() {
     let value = document();
     let (full, compact) = costs(&value);
-    let cache = MemoryCache::new(total(full * 45 + compact), compact);
+    let cache = memory_cache(total(full * 45 + compact), compact);
     for index in 0..46 {
         cache.insert(numbered(index), value.clone());
     }

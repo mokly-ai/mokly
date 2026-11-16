@@ -31,18 +31,21 @@ fn cache_compaction_has_no_review_span_but_capture_encoding_keeps_its_span() {
             links: vec![],
         }),
     });
-    let full = value.byte_cost() + 260;
-    let retained = full * 45 + 1024;
+    let full = value.byte_cost() + 262;
+    let retained = full * 900 + 1024;
     let cache = MemoryCache::new(retained + retained / 15, 1024);
     let records = capture(|| {
-        for index in 0..46 {
+        for index in 0..901 {
             cache.insert(
-                NodeKey(format!("{index:02}").as_str().into()),
+                NodeKey(format!("{index:03}").as_str().into()),
                 value.clone(),
             );
         }
-        assert_eq!(cache.stats().entries, 46);
-        assert_eq!(cache.get(&NodeKey("00".into())).unwrap().bytes, value.bytes);
+        assert_eq!(cache.stats().entries, 901);
+        assert_eq!(
+            cache.get(&NodeKey("000".into())).unwrap().bytes,
+            value.bytes
+        );
         assert_eq!(cache.stats().restores, 1);
         let source = Arc::new(Unimock::new((
             RenderGenerationMock::comparison_capture

@@ -3,6 +3,7 @@
 use std::sync::{Arc, Mutex};
 
 use crate::cache::{Artifact, CacheStats};
+use crate::cache_encoder_pool::EncoderPool;
 use crate::cache_tier::{Evicted, Tier};
 use crate::cache_transit::Transit;
 use crate::document_codec::EncodedView;
@@ -16,6 +17,8 @@ pub(crate) struct State {
     pub(crate) compact: Tier<EncodedView>,
     /// Readable documents reserve their charge and twice that charge for encoding.
     pub(crate) transit: Tier<Artifact>,
+    /// Reserved encoder slots retain their workspace charge while idle.
+    pub(crate) encoders: EncoderPool,
     /// Cumulative operation counts; totals include transit reservations.
     pub(crate) stats: CacheStats,
     /// Wrapping sequence of public reads and writes.
@@ -25,13 +28,14 @@ pub(crate) struct State {
 
 impl State {
     /// Reserve one sixteenth of the total for compaction, including its workspace.
-    pub(crate) fn new(total: usize, compact_ceiling: usize) -> Self {
+    pub(crate) fn new(total: usize, compact_ceiling: usize, workspace: usize) -> Self {
         let headroom = total / 16;
         let retained = total - headroom;
         Self {
             full: Tier::new(retained),
             compact: Tier::new(compact_ceiling.min(retained)),
             transit: Tier::new(headroom),
+            encoders: EncoderPool::new(workspace),
             stats: CacheStats::default(),
             operations: 0,
             retained,
@@ -124,14 +128,15 @@ impl State {
         entry: Evicted<Artifact>,
     ) -> Option<Transit<'a>> {
         let charge = entry.cost.checked_mul(3);
+        let headroom = self.transit.bound - self.transit.bytes - self.encoders.bytes;
         if self.compact.bound > 0
             && entry.value.document.is_some()
-            && let Some(charge) =
-                charge.filter(|charge| *charge <= self.transit.bound - self.transit.bytes)
+            && let Some(charge) = charge.filter(|charge| *charge <= headroom)
+            && let Some(lease) = self.encoders.take(headroom - charge)
         {
             self.transit
                 .insert(entry.key.clone(), entry.value.clone(), charge);
-            return Some(Transit::new(owner, entry.key, entry.value));
+            return Some(Transit::new(owner, entry.key, entry.value, lease));
         }
         self.stats.evictions = self.stats.evictions.saturating_add(1);
         None

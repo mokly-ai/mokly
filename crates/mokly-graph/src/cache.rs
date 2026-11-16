@@ -41,7 +41,7 @@ impl Artifact {
 /// Cache statistics use operation counts, never wall-clock time.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct CacheStats {
-    /// Cache-owned memory charge across both tiers and transit reservations.
+    /// Cache-owned charge across tiers, transit reservations, and encoder leases.
     pub bytes: usize,
     /// Retained entries across both tiers and documents in transit.
     pub entries: usize,
@@ -77,9 +77,18 @@ pub struct MemoryCache {
 impl MemoryCache {
     /// Reserve one sixteenth of the total for transit; bound both tiers by the rest.
     pub fn new(total_bytes: usize, compact_ceiling: usize) -> Self {
+        Self::with_encoder(
+            total_bytes,
+            compact_ceiling,
+            Arc::new(DocumentEncoder::default()),
+        )
+    }
+
+    fn with_encoder(total_bytes: usize, compact_ceiling: usize, encoder: Arc<dyn Encoder>) -> Self {
+        let workspace = encoder.workspace_bytes();
         Self {
-            encoder: Arc::new(DocumentEncoder),
-            state: Mutex::new(State::new(total_bytes, compact_ceiling)),
+            encoder,
+            state: Mutex::new(State::new(total_bytes, compact_ceiling, workspace)),
         }
     }
 
@@ -90,7 +99,7 @@ impl MemoryCache {
             let Some(value) = reservation.artifact() else {
                 continue;
             };
-            let Ok(encoded) = self.encoder.encode(value) else {
+            let Ok(encoded) = self.encoder.encode(value, reservation.lease()) else {
                 continue;
             };
             let cost = compact_cost(reservation.key(), &encoded);
@@ -187,7 +196,8 @@ impl RenderCache for MemoryCache {
                 .full
                 .bytes
                 .saturating_add(state.compact.bytes)
-                .saturating_add(state.transit.bytes),
+                .saturating_add(state.transit.bytes)
+                .saturating_add(state.encoders.bytes),
             entries: state
                 .full
                 .len()
@@ -224,3 +234,7 @@ mod cache_promotion_tests;
 #[cfg(test)]
 #[path = "_tests_/cache_transit_tests.rs"]
 mod cache_transit_tests;
+
+#[cfg(test)]
+#[path = "_tests_/cache_encoding_tests.rs"]
+mod cache_encoding_tests;

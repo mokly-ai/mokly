@@ -48,18 +48,18 @@ outputs whose inputs changed, and a component rendered with the same props on
 many screens renders once.
 
 The 256 MiB render cache reserves one sixteenth (16 MiB) for transit and encoding.
-The full and compact tiers share 240 MiB. Each tier evicts its least recently used
-entry. Compaction reserves the document's charge and twice that for encoding
-from headroom. Documents that cannot fit leave and count as evictions. Inserts
-never wait. A handle releases each reservation on every exit path.
-Encoding runs outside the lock. Completion moves transit to compact in one
-locked step. Other evicted artifacts leave the cache. The compact tier takes
-room only from evicted full entries, up to 128 MiB; the full tier keeps at least
-112 MiB. A catalogue that fits in 240 MiB never restores. Reads check full,
-transit, then compact. Transit returns the full artifact; compact restores exact
-bytes, tree, and trusted annotations. Only a second restore within fewer cache
-operations than the full tier has entries promotes the document. A full pass
-never promotes. A document that compact cannot keep or restore leaves the cache.
+The tiers share 240 MiB and evict the least recently used entry. Compaction reserves
+three times the document charge and one of eight encoder leases under one lock.
+Encoders allocate on first use and retain 384 KiB each, at most 3 MiB, while idle
+or active. If charges do not fit or no lease is free, the document leaves and counts
+as an eviction. Inserts never wait. Every exit returns the lease and releases the
+document charge. Encoding runs outside the lock. Completion moves transit to compact
+under one lock. Other evicted artifacts leave. Compact takes room from evicted full
+entries, up to 128 MiB. Full keeps at least 112 MiB. A catalogue fitting 240 MiB
+never restores. Reads check full, transit, then compact. Transit returns full artifacts.
+Compact restores exact bytes, trees, and trusted annotations. Only a second restore
+within fewer operations than full has entries promotes. A full pass never promotes.
+A document that compact cannot keep or restore leaves the cache.
 Decision: keep evicted documents compact. Rejected: a larger bound that still
 thrashes; a fixed tier split that reduces room for fitting catalogues; a
 scan-resistant order that still misses when the head exceeds the bound; a Serve

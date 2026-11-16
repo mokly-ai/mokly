@@ -11,6 +11,14 @@ use crate::cache::{Artifact, CacheStats, MemoryCache, RenderCache, compact_cost,
 use crate::document_codec::EncodedView;
 use crate::key::NodeKey;
 
+use super::cache_transit_tests::cache_with_encoder;
+
+pub(super) fn memory_cache(total: usize, ceiling: usize) -> Arc<MemoryCache> {
+    cache_with_encoder(total, ceiling, 0, |_, artifact| {
+        EncodedView::encode(artifact)
+    })
+}
+
 fn node(name: &str) -> NodeKey {
     NodeKey(name.into())
 }
@@ -56,7 +64,7 @@ pub(super) fn costs(value: &Artifact) -> (usize, usize) {
 fn evicted_documents_restore_exact_bytes_and_tree_and_stay_compact() {
     let value = document();
     let (full, compact) = costs(&value);
-    let cache = MemoryCache::new(total(full * 45 + compact), compact);
+    let cache = memory_cache(total(full * 45 + compact), compact);
     cache.insert(node("aa"), value.clone());
     fill(&cache, &value, 44);
     cache.insert(node("bb"), value.clone());
@@ -116,7 +124,7 @@ fn full_eviction_drops_fragments_and_stylesheets() {
 fn compact_lru_drops_the_oldest_access_and_counts_only_final_evictions() {
     let value = document();
     let (full, compact) = costs(&value);
-    let cache = MemoryCache::new(total(full * 45 + compact * 2), compact * 2);
+    let cache = memory_cache(total(full * 45 + compact * 2), compact * 2);
     for name in ["aa", "bb"] {
         cache.insert(node(name), value.clone());
     }
@@ -158,7 +166,7 @@ fn the_total_and_compact_ceiling_hold_and_oversized_compact_entries_leave() {
     let value = document();
     let (full, compact) = costs(&value);
     let bound = total(full * 45 + compact * 2);
-    let cache = MemoryCache::new(bound, compact * 2);
+    let cache = memory_cache(bound, compact * 2);
     for index in 0..51 {
         cache.insert(numbered(index), value.clone());
         let state = cache.state.lock().unwrap();
@@ -170,7 +178,7 @@ fn the_total_and_compact_ceiling_hold_and_oversized_compact_entries_leave() {
     assert_eq!(cache.stats().entries, 47);
     assert_eq!(cache.stats().bytes, full * 45 + compact * 2);
     assert_eq!(cache.stats().evictions, 4);
-    let cache = MemoryCache::new(total(full * 45 + compact - 1), compact - 1);
+    let cache = memory_cache(total(full * 45 + compact - 1), compact - 1);
     cache.insert(node("aa"), value.clone());
     fill(&cache, &value, 44);
     cache.insert(node("bb"), value);
@@ -184,7 +192,7 @@ fn the_total_and_compact_ceiling_hold_and_oversized_compact_entries_leave() {
 fn failed_compact_restore_removes_the_entry_and_counts_a_miss() {
     let value = document();
     let (full, compact) = costs(&value);
-    let cache = MemoryCache::new(total(full * 45 + compact), compact);
+    let cache = memory_cache(total(full * 45 + compact), compact);
     cache.insert(node("aa"), value.clone());
     fill(&cache, &value, 44);
     cache.insert(node("bb"), value.clone());
@@ -230,7 +238,7 @@ fn failed_compact_restore_removes_the_entry_and_counts_a_miss() {
 fn reinserting_a_compact_key_keeps_it_compact() {
     let value = document();
     let (full, compact) = costs(&value);
-    let cache = MemoryCache::new(total(full * 45 + compact * 2), compact * 2);
+    let cache = memory_cache(total(full * 45 + compact * 2), compact * 2);
     cache.insert(node("aa"), value.clone());
     fill(&cache, &value, 44);
     cache.insert(node("bb"), value.clone());
