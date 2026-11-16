@@ -77,15 +77,15 @@ Depends on: 1
 
 Depends on: 1, 2
 
-- [ ] Run the targeted tests, the early check, and the repository suite named
-      in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests, the early check, and the repository suite named
+      in `AGENTS.md`. The repository suite passed: 2,427 tests.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
-- [ ] Delete this plan when the `plans` skill says, under "Deleting the
+      once, and report. One round, no findings.
+- [x] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
