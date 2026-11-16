@@ -58,18 +58,18 @@ Contract owners:
 
 Depends on: none
 
-- [ ] `mokly-platform`: a plain mode of `ProcessGroups` that sets
+- [x] `mokly-platform`: a plain mode of `ProcessGroups` that sets
       `Command::process_group(0)` on Unix and no `pre_exec` hook, with the same
       `attach` guard. Windows uses its job, as today.
-- [ ] `mokly-git`: a typed process mode on `Request`, defaulting to the full
+- [x] `mokly-git`: a typed process mode on `Request`, defaulting to the full
       tree. The commands of the decision use the plain mode at each call site,
       including the Serve ref poll in `crates/mokly-cli/src/serve_changes_native.rs`.
-- [ ] Tests: a plain-mode command runs with its output, exit status, and
+- [x] Tests: a plain-mode command runs with its output, exit status, and
       cancellation as before, and a cancellation signals its process group; the
       runner calls the plain setup only for requests that name it (strict
       mocks); a full-mode request still gets the session setup.
-- [ ] Docs: the Git runtime rule and the two READMEs.
-- [ ] A follow-up item for the trampoline of the last design call.
+- [x] Docs: the Git runtime rule and the two READMEs.
+- [x] A follow-up item for the trampoline of the last design call.
 
 ## Milestone 2: Measurement
 

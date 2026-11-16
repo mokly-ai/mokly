@@ -3,7 +3,7 @@
 use std::ffi::OsString;
 
 use crate::batches::{self, MAX_ARGUMENT_BYTES, MAX_ARGUMENTS};
-use crate::command::{DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Request};
+use crate::command::{DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, ProcessMode, Request};
 use crate::error::Result;
 use crate::identity::{ObjectId, RepoPath};
 use crate::repository::GitRepository;
@@ -49,6 +49,7 @@ impl GitRepository {
         let mut entries = Vec::new();
         for args in batches::split(&prefix, &paths, MAX_ARGUMENTS, MAX_ARGUMENT_BYTES)? {
             let output = self.runner.run(&Request {
+                process_mode: ProcessMode::PlainGroup,
                 directory: self.directory.clone(),
                 args,
                 stdin: Vec::new(),

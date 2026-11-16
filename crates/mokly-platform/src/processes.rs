@@ -22,6 +22,8 @@ pub trait ProcessGroup: Send + Sync {
 pub trait ProcessGroups: Send + Sync {
     /// Configure a new process tree before starting the command.
     fn configure(&self, command: &mut Command) -> Result<()>;
+    /// Configure a helper-free child in its own group without a Unix exec hook.
+    fn configure_plain(&self, command: &mut Command) -> Result<()>;
     /// Acquire the process-tree guard immediately after spawn.
     fn attach(&self, child: &Child) -> Result<Box<dyn ProcessGroup>>;
 }
@@ -33,6 +35,14 @@ impl ProcessGroups for SystemProcessGroups {
     fn configure(&self, command: &mut Command) -> Result<()> {
         #[cfg(unix)]
         unix::configure(command);
+        #[cfg(windows)]
+        windows::configure(command);
+        Ok(())
+    }
+
+    fn configure_plain(&self, command: &mut Command) -> Result<()> {
+        #[cfg(unix)]
+        unix::configure_plain(command);
         #[cfg(windows)]
         windows::configure(command);
         Ok(())
