@@ -45,7 +45,7 @@ Depends on: none
       allocation and no change to the result.
 - [ ] Unit tests: for each case, `references` gives the same result as the
       tokenizer path: `url(a.png)`, `URL(a.png)`, `u\72l(a.png)`, `@import
-      "a.css";`, `@IMPORT url(a.css);`, `image-set("a.png" 1x)`,
+    "a.css";`, `@IMPORT url(a.css);`, `image-set("a.png" 1x)`,
       `-webkit-image-set('a.png' 2x)`, a comment that holds `url(`, text
       with no reference, and an empty text. Show that a prefilter which
       ignores backslashes fails the escape case.
