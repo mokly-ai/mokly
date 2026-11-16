@@ -116,7 +116,7 @@ impl Harness {
                 }),
                 processor: Arc::new(IdentityProcessor),
             }),
-            cache: Arc::new(MemoryCache::new(16 * 1024 * 1024)),
+            cache: Arc::new(MemoryCache::new(16 * 1024 * 1024, 0)),
             workers: Arc::new(ThreadWorkers::new(2).unwrap()),
             version: "fixture".into(),
         });

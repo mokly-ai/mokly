@@ -1,10 +1,12 @@
 //! Private captures keep bytes and trusted metadata, including deeply nested trees.
 
 use std::collections::BTreeMap;
+use std::io::Write;
 
+use flate2::Compression;
+use flate2::write::ZlibEncoder;
 use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_catalogue::html_input::DeliveredHtml;
-use mokly_graph::cache::Artifact;
 use mokly_html::composition::Composed;
 use mokly_html::fragment::StyleAttribution;
 use mokly_html::links::Reference;
@@ -16,7 +18,18 @@ use mokly_model::usage::ComponentInstanceRecord;
 use mokly_model::usage::{CatalogueUsage, ComponentInputOwner};
 use mokly_model::{wire_decode, wire_props};
 
-use super::EncodedView;
+use crate::cache::Artifact;
+use crate::document_error::{CodecError, CodecInternalError};
+use crate::document_nodes::{self, FlatNode};
+
+use super::{EncodedView, Payload};
+
+impl EncodedView {
+    /// Damage an encoded document for cache restore-failure tests.
+    pub(crate) fn invalidate_payload(&mut self) {
+        self.payload = Box::new([]);
+    }
+}
 
 fn artifact(tree: Vec<Node>) -> Artifact {
     Artifact {
@@ -107,7 +120,7 @@ fn encoded_views_preserve_bytes_and_all_trusted_annotations() {
     let input = artifact(nodes);
     let encoded = EncodedView::encode(&input).unwrap();
     for _ in 0..2 {
-        let output = encoded.restore();
+        let output = encoded.restore().unwrap();
         assert_eq!(output.bytes, input.bytes);
         assert_eq!(output.content_type, input.content_type);
         let before = input.document.as_ref().unwrap();
@@ -155,7 +168,7 @@ fn capture_and_restore_are_iterative_and_keep_authored_owner_attributes_untruste
     let encoded = EncodedView::encode(&input).unwrap();
     assert!(encoded.bytes() > 0);
     assert!(encoded.bytes() < input.byte_cost());
-    let output = encoded.restore();
+    let output = encoded.restore().unwrap();
     assert_eq!(output.document.unwrap().tree, input.document.unwrap().tree);
 }
 
@@ -190,7 +203,7 @@ fn capture_preserves_valid_props_at_the_64_level_limit() {
             ranges: vec![],
         };
         let encoded = EncodedView::encode(&input).unwrap();
-        let output = encoded.restore();
+        let output = encoded.restore().unwrap();
         assert_eq!(output.bytes, input.bytes);
         assert_eq!(
             output.document.unwrap().usage,
@@ -198,4 +211,28 @@ fn capture_preserves_valid_props_at_the_64_level_limit() {
         );
         assert!(encoded.retained_bytes() > encoded.bytes());
     }
+}
+
+#[test]
+fn damaged_payloads_and_invalid_child_counts_return_errors() {
+    let input = artifact(parse::html(DeliveredHtml::fragment("<p>text</p>")));
+    let mut encoded = EncodedView::encode(&input).unwrap();
+    encoded.invalidate_payload();
+    assert!(matches!(
+        encoded.restore(),
+        Err(CodecError::Internal(CodecInternalError::Io { .. }))
+    ));
+    let mut tree = document_nodes::flatten(&input.document.as_ref().unwrap().tree);
+    let FlatNode::Element { children, .. } = &mut tree[0] else {
+        panic!("element")
+    };
+    *children = 2;
+    let mut encoder = ZlibEncoder::new(Vec::new(), Compression::fast());
+    encoder.write_all(&input.bytes).unwrap();
+    serde_json::to_writer(&mut encoder, &Payload { tree }).unwrap();
+    encoded.payload = encoder.finish().unwrap().into_boxed_slice();
+    assert!(matches!(
+        encoded.restore(),
+        Err(CodecError::Internal(CodecInternalError::InvalidTree))
+    ));
 }

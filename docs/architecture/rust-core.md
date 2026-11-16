@@ -115,9 +115,10 @@ composed documents, one per view, kept in the render cache
 4. Serve reads composed documents from the render cache. `build` and `publish`
    render and retain a bounded head capture during the build check. Changes,
    static output, and comparison output read that capture. An uncaptured head
-   document uses the head source, which renders it again only after render-cache
-   eviction. The [comparison contract](../protocol/mokly-comparison.md) reads
-   the ownership tree that composition keeps with each document.
+   document uses the head source, which renders it again only after the
+   document leaves the render cache. The
+   [comparison contract](../protocol/mokly-comparison.md) reads the ownership
+   tree that composition keeps with each document.
 
 ## Render Graph
 
@@ -138,14 +139,19 @@ lists the inputs and the render inputs that are unsupported. Both sides of
 Changes share the render cache, so an unchanged base view reuses the head's
 render. Each side keeps its own sidecar generation for its cache misses.
 
-No node is written to the repository. The render cache is process memory,
-bounded by bytes and evicted least recently used. Serve reads head documents
-from it. `build` and `publish` capture the head during the build check under a
-separate 256 MiB bound, then Changes and output read that capture. The base
-side of Changes has its own 256 MiB capture bound. Serve keeps one captured
-base, with its graph, sources, and leases, between classifications while the
-merge base and the base inputs stay the same. An uncaptured head document
-uses the head source, which renders it again only after render-cache eviction.
+No node is written to the repository. The render cache is process memory under
+one byte bound, with a full tier and a compact tier. The full tier keeps
+complete artifacts and evicts the least recently used first. A document that it
+evicts stays in the compact tier in lossless form until that tier evicts it
+too. The [runtime contract](../protocol/mokly-runtime.md#render-graph-and-cache)
+owns the bound, the compact ceiling, and when a compact document returns to the
+full tier. Serve reads head documents from the render cache. `build` and
+`publish` capture the head during the build check under a separate 256 MiB
+bound, then Changes and output read that capture. The base side of Changes has
+its own 256 MiB capture bound. Serve keeps one captured base, with its graph,
+sources, and leases, between classifications while the merge base and the base
+inputs stay the same. An uncaptured head document uses the head source, which
+renders it again only after the document leaves the render cache.
 The base-side extraction cache and the dependency install cache live outside the
 repository, in the operating system's cache directory under a key derived from
 the repository path. Each has its own byte bound. The terminal names that
@@ -193,8 +199,9 @@ Comparison works on trees, never on text offsets. The
   Inputs above a side's budget read that side's sources: the pinned base
   sources for the base, and the head sources for the head.
 - Parsed CSS, the render cache, the base-side extraction cache, and the
-  dependency cache are bounded by bytes. A dependency install has a time
-  limit.
+  dependency cache are bounded by bytes. The render cache keeps the documents
+  that its full tier evicts in a compact tier inside the same bound. A
+  dependency install has a time limit.
 - Sidecars are recycled after a fixed number of renders or when their
   resident size passes a fixed cap. The fragment cache makes a recycle cheap.
   The [sidecar memory contract](../protocol/mokly-sidecar-memory.md) owns

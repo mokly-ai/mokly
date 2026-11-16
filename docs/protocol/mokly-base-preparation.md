@@ -197,8 +197,8 @@ Serve releases the kept base on each of these events:
 
 A classification with another key releases the kept base before it prepares
 a new one. In-flight work, such as a selected capture, can still hold an
-older base until it ends. The kept capture stays within the base capture
-bound of the [runtime contract](./mokly-runtime.md#render-graph-and-cache).
+older base until it ends. The kept capture stays within the
+[base capture bound](./mokly-comparison-serving.md#base-and-head-capture).
 
 When the kept base fails during a reuse, for example because a resource
 changed since its first read or its bundle cannot load again, Serve releases

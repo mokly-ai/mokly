@@ -59,9 +59,8 @@ mod move_candidates;
 pub mod move_types;
 pub mod moves;
 
-mod capture_codec;
 mod capture_error;
-mod capture_nodes;
+mod capture_restore;
 mod capture_styles;
 mod comparison_capture;
 mod comparison_error;
@@ -193,8 +192,6 @@ mod manager_arguments_tests;
 #[path = "_tests_/manager_confinement_tests.rs"]
 mod manager_confinement_tests;
 
-mod capture_annotations;
-mod capture_usage;
 mod capture_weight;
 
 #[cfg(test)]
