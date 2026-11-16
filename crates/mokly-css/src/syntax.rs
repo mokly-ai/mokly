@@ -28,6 +28,9 @@ pub struct Reference {
 
 /// Extract nested URL functions and prelude imports without matching source strings.
 pub fn references(source: &str) -> Vec<Reference> {
+    if !may_have_references(source) {
+        return Vec::new();
+    }
     let tokens = Tokens::new(source);
     let mut pending = vec![Scan::new(tokens.root(), false)];
     let mut output: Vec<Reference> = Vec::new();
@@ -101,6 +104,28 @@ pub fn references(source: &str) -> Vec<Reference> {
         }
     }
     output
+}
+
+/// Keep escaped names on the tokenizer path and reject only impossible references.
+/// Unescaped imports need an adjacent `@`, so `!important` needs no tokenization.
+fn may_have_references(source: &str) -> bool {
+    let bytes = source.as_bytes();
+    bytes.iter().enumerate().any(|(start, byte)| {
+        let remaining = &bytes[start..];
+        match byte.to_ascii_lowercase() {
+            b'\\' => true,
+            b'u' => remaining
+                .get(..3)
+                .is_some_and(|word| word.eq_ignore_ascii_case(b"url")),
+            b'@' => remaining
+                .get(..7)
+                .is_some_and(|word| word.eq_ignore_ascii_case(b"@import")),
+            b'i' => remaining
+                .get(..9)
+                .is_some_and(|word| word.eq_ignore_ascii_case(b"image-set")),
+            _ => false,
+        }
+    })
 }
 
 /// The argument of `url()` when the block holds exactly one quoted string.

@@ -50,6 +50,22 @@ fn asset_route_grammar_keeps_scopes_and_rejects_device_names_and_escapes() {
 #[test]
 fn legacy_css_reference_boundaries_keep_escapes_comments_and_image_sets() {
     for (source, expected) in [
+        ("", vec![]),
+        ("u i im image-se ur", vec![]),
+        ("x{content:'café';color:red}", vec![]),
+        ("a{color:red!important}", vec![]),
+        ("[data-x]{pointer-events:none!important}", vec![]),
+        ("/* url( */", vec![]),
+        ("url(a.png)", vec!["a.png"]),
+        ("URL(a.png)", vec!["a.png"]),
+        (r"u\72l(a.png)", vec!["a.png"]),
+        (r#"@import "a.css";"#, vec!["a.css"]),
+        ("@import url(a.css);", vec!["a.css"]),
+        ("@IMPORT url(a.css);", vec!["a.css"]),
+        (r#"@IMPORT "a.css";"#, vec!["a.css"]),
+        (r#"image-set("a.png" 1x)"#, vec!["a.png"]),
+        ("-webkit-image-set('a.png' 2x)", vec!["a.png"]),
+        (r#"IMAGE-SET("a.png" 1x)"#, vec!["a.png"]),
         ("color: red; padding: 2px", vec![]),
         ("color: var(--tone); transform: translateX(0px)", vec![]),
         (r"background: u\72l(icon.svg)", vec!["icon.svg"]),
