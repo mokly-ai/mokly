@@ -26,6 +26,7 @@ fn equal_key_base_capture_does_not_render_after_the_head_overflows_the_full_tier
     let files: Vec<_> = paths
         .iter()
         .map(|path| (path.as_str(), body.as_str()))
+        .chain([(".gitattributes", "* -text\n")])
         .collect();
     let fixture = Fixture::new(&files);
     let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(12 * 1024 * 1024, 1024 * 1024));
