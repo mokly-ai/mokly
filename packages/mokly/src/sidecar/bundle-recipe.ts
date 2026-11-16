@@ -10,11 +10,14 @@ import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration
 import { previewCandidates } from "./bundle-entry.js";
 import { moduleGraph } from "./bundle-graph.js";
 import type { Bundled } from "./bundle.js";
-import { bundleResult, fileDigest, restore } from "./compiled.js";
+import { bundleResult, generationId, restore } from "./compiled.js";
+import { fileDigest } from "./file-digests.js";
 import type { Measurements } from "./measurements.js";
 import type { ModulePaths } from "./module-paths.js";
 import type { ConsumerRequire } from "./paths.js";
+import type { ResolutionEvidence } from "./resolution-evidence.js";
 import { resolutionInputs } from "./resolution-inputs.js";
+import { toolchainIdentity } from "./toolchain.js";
 
 /** One finished compile and the state that its plugins recorded. */
 export interface CompiledBundle {
@@ -26,6 +29,7 @@ export interface CompiledBundle {
   inputPaths: Map<string, string>;
   preview: string | null | undefined;
   runtimeKey: string;
+  evidence: ResolutionEvidence;
 }
 
 /** The module graph, consumed digests, resolution inputs, and the recipe. */
@@ -39,6 +43,7 @@ export async function bundleRecipe(
     inputPaths,
     preview,
     runtimeKey,
+    evidence,
   }: CompiledBundle,
   measurements: Measurements,
 ): Promise<Bundled> {
@@ -103,6 +108,22 @@ export async function bundleRecipe(
   const directories = await measurements.run("sidecar.bundle.resolution", () =>
     resolutionInputs(paths, physical.values(), physicalInputs, metadataInputs),
   );
+  const peers = require.snapshot();
+  await evidence.peers(peers);
+  const reuseEvidence = await evidence.finish(compiled.metafile!);
+  const toolchain = await toolchainIdentity();
+  if (!toolchain) reuseEvidence.complete = false;
+  const reusable = reuseEvidence.complete;
+  if (!reusable) hash.update(JSON.stringify(runtimeKey));
+  hash.update(
+    JSON.stringify([
+      toolchain,
+      [...evidence.physical.identityInputs].sort(([a], [b]) =>
+        a < b ? -1 : a > b ? 1 : 0,
+      ),
+      Object.entries(peers).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
+    ]),
+  );
   hash.update(JSON.stringify(metadataInputs));
   hash.update(
     JSON.stringify([
@@ -119,6 +140,8 @@ export async function bundleRecipe(
     ]),
   );
   const compilation: CompiledGeneration = {
+    toolchain: toolchain ?? "",
+    reuseEvidence,
     identity: hash.digest("hex"),
     code: compiled.outputFiles![0]!.text,
     runtimeKey,
@@ -130,12 +153,21 @@ export async function bundleRecipe(
         Buffer.from(inputs.files.get(physical) ?? []).toString("utf8"),
       ]),
     ),
-    peers: require.snapshot(),
+    peers,
     unmappedDependencyDirectories: [...paths.dependencyUsage.unmapped].sort(),
     ...directories,
     inputs: physicalInputs,
     metadataInputs,
   };
   const generation = restore(params, compilation, graph);
-  return { generation, result: bundleResult(generation) };
+  const result = bundleResult(generation);
+  if (reusable && !compilation.reuseEvidence.complete) {
+    compilation.identity = createHash("sha256")
+      .update(compilation.identity)
+      .update(runtimeKey)
+      .digest("hex");
+    generation.id = generationId(compilation.identity, params.evaluation);
+    result.generation = generation.id;
+  }
+  return { generation, result };
 }

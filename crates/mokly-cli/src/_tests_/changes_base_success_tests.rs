@@ -15,6 +15,7 @@ use mokly_git::identity::ObjectId;
 use mokly_graph::workers::RenderWorkersMock;
 use mokly_render::runtime::Runtime;
 use mokly_render::side::BaseSide;
+use mokly_sidecar::compiled::{CompiledGeneration, ReuseEvidence};
 use mokly_sidecar::definitions::Definitions;
 use mokly_sidecar::methods::{Call, ModuleResolution};
 use mokly_sidecar::pool::PoolMock;
@@ -87,10 +88,12 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
             .next_call(matching!((call) if matches!(call, Call::Bundle(bundle)
                 if Path::new(&bundle.source_root) == Path::new("/base")
                     && bundle.entry_files == ["specs/card.mockup.ts"])))
-            .returns(Ok(MethodResult::Bundle(Bundle {
+            .returns(Ok(MethodResult::Bundle(Box::new(Bundle {
                 unmapped_dependency_directories: None,
                 epoch: 0,
-                compiled: mokly_sidecar::compiled::CompiledGeneration {
+                compiled: CompiledGeneration {
+                    toolchain: "fixture".into(),
+                    reuse_evidence: ReuseEvidence { complete: true, inputs: Default::default() },
                     identity: "base-bundle".into(),
                     code: "module.exports={}".into(),
                     runtime_key: "fixture-runtime".into(),
@@ -110,7 +113,7 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
                     imports: Vec::new(),
                     digest: Some("source".into()),
                 }],
-            }))),
+            })))),
         PoolMock::request
             .next_call(matching!((call) if matches!(call, Call::CssModules(params) if params.generation == "base-bundle")))
             .returns(Ok(MethodResult::Empty)),
@@ -134,6 +137,7 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
     ));
     let provider: &dyn BaseProvider = &NativeBase {
         runtime: Arc::new(Runtime::new(
+            Arc::new(Unimock::new(())),
             Arc::new(Unimock::new(())),
             Arc::new(Unimock::new(())),
             Arc::new(pool),

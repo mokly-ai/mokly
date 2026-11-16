@@ -1,5 +1,7 @@
 # Combined Path And Output Format Versions
 
+Status: In progress under the [bundle disk cache plan](../../plans/bundle-disk-cache.md).
+
 ## Version Inventory
 
 | Boundary                                | Version                   | Reason and reader                                                                                                                                                                                                                                   |
@@ -20,6 +22,7 @@
 | Verification process-owner records      | 1                         | PID/token/process-lifetime shape.                                                                                                                                                                                                                   |
 | Browser module inventory                | 1                         | Exact module-path inventory shape.                                                                                                                                                                                                                  |
 | Timing records and verification reports | 1                         | Timing/runner evidence shape.                                                                                                                                                                                                                       |
+| Bundle cache entry                      | 1                         | One [bundle cache](./mokly-base-cache.md#bundle-entries) entry. Its first line names this number, the writing Mokly version, and the payload SHA-256. The reader requires 1 and the running Mokly version before it reads the payload.              |
 
 A format number changes only when the shape or the interpretation of its
 format changes. Package 1.0.0 is the first release with a stable format

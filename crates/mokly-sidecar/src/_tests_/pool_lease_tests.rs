@@ -35,13 +35,13 @@ fn a_late_old_epoch_release_preserves_the_same_ids_new_lifetime() {
         WorkerMock::request
             .next_call(matching!((request, _) if matches!(request.call, Call::Bundle(_))))
             .answers(&|_, _, _| {
-                Ok(MethodResult::Bundle(results::Bundle {
+                Ok(MethodResult::Bundle(Box::new(results::Bundle {
                     unmapped_dependency_directories: None,
                     epoch: 0,
                     compiled: compiled("g"),
                     generation: "g".into(),
                     modules: vec![],
-                }))
+                })))
             })
             .n_times(2),
         WorkerMock::request

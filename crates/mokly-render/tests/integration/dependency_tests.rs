@@ -90,6 +90,7 @@ fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources
     let runtime = Arc::new(Runtime::new(
         Arc::new(WorkingTree),
         Arc::new(WorkingTree),
+        consumer.runtime.physical_inputs.clone(),
         consumer.pool.clone(),
         Arc::new(MemoryCache::new(16 * 1024 * 1024)),
         Arc::new(ThreadWorkers::new(2).unwrap()),

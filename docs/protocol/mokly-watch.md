@@ -1,5 +1,7 @@
 # Watched Catalogue Development
 
+Status: In progress under the [bundle disk cache plan](../../plans/bundle-disk-cache.md).
+
 ## Watch Inputs
 
 `mokly serve` watches by default; `--no-watch` serves one snapshot. Watch
@@ -145,8 +147,12 @@ are the roots, the PostCSS directory roots, the rule roots, and the exact
 required files not covered by one of them; a required file with a denied
 directory between a root and itself stays an explicit target. Resolution
 metadata includes missing manifest and tsconfig candidates. File additions and
-removals in a consumed-module directory invalidate compilation reuse. Linux
-renews a registration after its directory is replaced. Vanished directories
+removals in a consumed-module directory invalidate compilation reuse. The other
+[reuse evidence](./mokly-sidecar-modules.md#compiled-recipes-and-release) of a
+compilation, such as `jsconfig.json` candidates, `extends` targets, and peer
+manifests, also invalidates compilation reuse. It is not a watch input and
+moves no render input key, so a change to it takes effect at the next bundle.
+Linux renews a registration after its directory is replaced. Vanished directories
 are skipped. A new matching file in a watched directory causes one rebuild.
 Notifications coalesce by path. A classifier exception is reported once, that
 event is dropped, and later notifications keep flowing. A rescan flag or a

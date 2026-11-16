@@ -1,0 +1,117 @@
+//! Read cache-only filesystem observations outside the logical source tree.
+
+use std::fs::{self, File};
+use std::io::{self, ErrorKind};
+use std::path::Path;
+
+use mokly_sidecar::compiled::{PhysicalEntry, PhysicalEntryKind, PhysicalInput, ReuseEvidence};
+use mokly_source_interface::error::{Result, SourceError};
+use mokly_source_interface::stream::{OpenedSource, SourceStream};
+
+/// Physical reads used only to decide whether an earlier compilation remains current.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = PhysicalInputsMock))]
+pub trait PhysicalInputs: Send + Sync {
+    /// Compare one observation. Read errors must reject reuse, including recorded absence.
+    fn matches(&self, path: &Path, expected: &PhysicalInput) -> Result<bool>;
+}
+
+/// Native filesystem reader. File content checks retain one 64 KiB streaming buffer.
+pub struct SystemPhysicalInputs;
+
+impl PhysicalInputs for SystemPhysicalInputs {
+    fn matches(&self, path: &Path, expected: &PhysicalInput) -> Result<bool> {
+        match self.read(path, expected) {
+            Ok(matches) => Ok(matches),
+            Err(source) => Err(SourceError::Io {
+                operation: "check physical compilation input",
+                path: path.into(),
+                source,
+            }),
+        }
+    }
+}
+
+impl SystemPhysicalInputs {
+    fn read(&self, path: &Path, expected: &PhysicalInput) -> io::Result<bool> {
+        match expected {
+            PhysicalInput::Absent => match fs::symlink_metadata(path) {
+                Err(error)
+                    if matches!(error.kind(), ErrorKind::NotFound | ErrorKind::NotADirectory) =>
+                {
+                    Ok(true)
+                }
+                Err(error) => Err(error),
+                Ok(_) => Ok(false),
+            },
+            PhysicalInput::File { digest } => {
+                let file = File::open(path)?;
+                let metadata = file.metadata()?;
+                if !metadata.is_file() {
+                    return Ok(false);
+                }
+                let mut stream = OpenedSource {
+                    reader: Box::new(file),
+                    length: metadata.len(),
+                };
+                Ok(stream.copy_verified(path, digest, &mut io::sink()).is_ok())
+            }
+            PhysicalInput::Directory { entries } => {
+                let mut actual = Vec::new();
+                for entry in fs::read_dir(path)? {
+                    if actual.len() >= entries.len() {
+                        return Ok(false);
+                    }
+                    let entry = entry?;
+                    let kind = entry.file_type()?;
+                    actual.push(PhysicalEntry {
+                        name: entry
+                            .file_name()
+                            .to_str()
+                            .ok_or(io::Error::from(ErrorKind::InvalidData))?
+                            .to_owned(),
+                        kind: if kind.is_symlink() {
+                            PhysicalEntryKind::Link
+                        } else if kind.is_file() {
+                            PhysicalEntryKind::File
+                        } else if kind.is_dir() {
+                            PhysicalEntryKind::Directory
+                        } else {
+                            PhysicalEntryKind::Other
+                        },
+                        target: if kind.is_symlink() {
+                            Some(real_path(&entry.path())?)
+                        } else {
+                            None
+                        },
+                    });
+                }
+                actual.sort_by(|a, b| a.name.cmp(&b.name));
+                Ok(&actual == entries)
+            }
+            PhysicalInput::Link { target } => {
+                Ok(fs::symlink_metadata(path)?.file_type().is_symlink()
+                    && real_path(path)? == *target)
+            }
+        }
+    }
+}
+
+fn real_path(path: &Path) -> io::Result<String> {
+    let real = dunce::canonicalize(path)?;
+    match real.into_os_string().into_string() {
+        Ok(real) => Ok(real),
+        Err(_) => Err(io::Error::from(ErrorKind::InvalidData)),
+    }
+}
+
+pub(crate) fn current(evidence: &ReuseEvidence, reader: &dyn PhysicalInputs) -> bool {
+    evidence.complete
+        && evidence
+            .inputs
+            .iter()
+            .all(|(path, expected)| reader.matches(Path::new(path), expected).unwrap_or(false))
+}
+
+#[cfg(test)]
+#[path = "_tests_/physical_inputs_tests.rs"]
+mod physical_inputs_tests;

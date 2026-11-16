@@ -80,6 +80,7 @@ fn head(
     Arc::new(Runtime::new(
         Arc::new(Unimock::new(())),
         dependencies,
+        Arc::new(Unimock::new(())),
         pool,
         Arc::new(Unimock::new(())),
         workers,

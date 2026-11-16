@@ -17,7 +17,7 @@ impl MethodResult {
     /// Take the bundle result decoded for a bundle request.
     pub fn into_bundle(self) -> results::Bundle {
         let value = match self {
-            Self::Bundle(value) => Some(value),
+            Self::Bundle(value) => Some(*value),
             _ => None,
         };
         value.expect("bundle requests select the bundle result decoder")

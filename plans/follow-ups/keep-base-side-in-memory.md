@@ -39,8 +39,10 @@
     reuses it while the merge base and its inputs stay equal. Option B also
     kept the capture on disk. The plan records why it lost: a disk copy
     needs a new versioned format.
-  - On 2026-10-30 the user chose to start this work in parallel with
-    [bundle-disk-cache.md](./bundle-disk-cache.md).
+  - On 2026-10-30 the user chose to start this work in parallel with the
+    bundle disk cache work, which keeps compiled JavaScript bundles across
+    restarts in the
+    [bundle cache](../../docs/protocol/mokly-base-cache.md#bundle-entries).
   - The task of the closed workspace set this acceptance:
     - After an edit to one screen module, the second classification runs no
       base `config.load`, `catalogue.discover`, `catalogue.validate`, or
@@ -140,9 +142,10 @@
      commit, the full Git configuration, and the effective attributes of
      each file, in `crates/mokly-git/src/source_key.rs`. At line 40 it adds
      a salt for each preparation when a file has a `filter` attribute.
-     `docs/protocol/mokly-base-cache.md:57` makes a settings change
-     invalidate a source entry. Line 63 makes a later preparation run
-     external filters again. Today a settings change takes effect at the
+     The "Converted Source Identity" section of
+     `docs/protocol/mokly-base-cache.md` makes a settings change invalidate
+     a source entry, and it makes a later preparation run external filters
+     again. Today a settings change takes effect at the
      next classification.
      - **A.** Keep the conversion of the preparation until the next
        preparation. This is the plan's call. A base without an extraction
@@ -174,10 +177,12 @@
     the watcher can miss installed modules, which limits options 1C and 1D.
   - [background-base-render-pool.md](./background-base-render-pool.md):
     decision 5 changes its text.
-  - [bundle-disk-cache.md](./bundle-disk-cache.md): it caches the base
-    bundle on disk, so a fresh preparation gets cheaper. Measure this item
-    again after either merges. Its option 4D records the inputs that the
-    stamps of 1F miss.
+  - The [bundle cache](../../docs/protocol/mokly-base-cache.md#bundle-entries)
+    of compiled JavaScript: it keeps the base bundle on disk, so a fresh
+    preparation gets cheaper. Measure this item again after it merges. Its
+    reuse evidence, chosen on 2026-11-16, records the inputs that the stamps
+    of 1F miss. The core's own bundle reuse also checks that evidence, under
+    the [compiled recipe rules](../../docs/protocol/mokly-sidecar-modules.md#compiled-recipes-and-release).
   - [jsconfig-resolution-input.md](./jsconfig-resolution-input.md): one of
     the inputs that the stamps of 1F miss.
 - **Recommendation:** 1F, 2B, 3A, 4A, 5B, 6B.

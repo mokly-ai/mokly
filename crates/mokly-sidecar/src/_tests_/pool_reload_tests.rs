@@ -46,13 +46,13 @@ fn worker(expected: &[&str], calls: usize) -> Unimock {
                     label(&request.call)
                 );
                 Ok(match &request.call {
-                    Call::Bundle(_) => MethodResult::Bundle(results::Bundle {
+                    Call::Bundle(_) => MethodResult::Bundle(Box::new(results::Bundle {
                         unmapped_dependency_directories: None,
                         epoch: 0,
                         compiled: compiled("g"),
                         generation: "g".into(),
                         modules: Vec::new(),
-                    }),
+                    })),
                     Call::Describe(_) => MethodResult::Definitions(Definitions {
                         screens: Vec::new(),
                         pages: Vec::new(),

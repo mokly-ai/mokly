@@ -25,6 +25,7 @@ import { nativeLogOverride } from "./native-resolution.js";
 import type { PlannedImport, Resolution } from "./native-resolution.js";
 import { consumerRequire } from "./paths.js";
 import { consumerPlugins } from "./plugins.js";
+import { ResolutionEvidence } from "./resolution-evidence.js";
 import { resolutionOptions } from "./resolution.js";
 
 export interface Generation {
@@ -114,6 +115,8 @@ export async function bundleWith(
     params = { ...params, sourceRoot: await fs.realpath(params.sourceRoot) };
     const paths = await ModulePaths.create(params);
     sources = paths;
+    const evidence = new ResolutionEvidence(params, paths);
+    await evidence.prepare();
     const require = await consumerRequire(params, paths);
     const inputs = {
       files: new Map<string, Uint8Array>(),
@@ -154,14 +157,17 @@ export async function bundleWith(
       ...(resolution.mode === "native"
         ? { logOverride: nativeLogOverride }
         : {}),
-      plugins: consumerPlugins(
-        params,
-        inputs,
-        require,
-        paths,
-        runtimeKey,
-        resolution,
-      ),
+      plugins: [
+        evidence.plugin,
+        ...consumerPlugins(
+          params,
+          inputs,
+          require,
+          paths,
+          runtimeKey,
+          resolution,
+        ),
+      ],
       ...resolutionOptions(params.sourceRoot, settings),
       loader: loaders as Record<string, Loader>,
     } satisfies Parameters<typeof build>[0];
@@ -192,6 +198,7 @@ export async function bundleWith(
         inputPaths,
         preview,
         runtimeKey,
+        evidence,
       },
       measurements,
     );

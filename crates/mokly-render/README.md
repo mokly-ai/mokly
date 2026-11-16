@@ -17,8 +17,8 @@ JavaScript or mixed catalogue. HTML composition stays in `mokly-html`.
 ## What This Crate Does
 
 `Runtime` implements `DefinitionProvider` and `GraphFactory`. The CLI injects
-its source readers, sidecar pool, worker scheduler, and byte-bounded render
-cache. Construction starts no sidecar. Description is serialized across clones of one
+its source readers, physical input reader, sidecar pool, worker scheduler, and
+byte-bounded render cache. Construction starts no sidecar. Description is serialized across clones of one
 runtime. Each attempt has fresh source and dependency snapshots. An HTML-only catalogue with no renderer has
 no bundle, class-map exchange, description, or render request. A configured
 renderer is bundled and inventoried even without JavaScript entries. Consumer PostCSS can run
@@ -85,6 +85,10 @@ cache cleanup without waiting for worker requests or the PostCSS cache lock.
 Failed candidates release their own contexts. Bundle metadata stamps include
 resolved React manifests, ancestor package and tsconfig candidates, absent
 Storybook previews, and file membership in consumed-module directories.
+Bundle reuse also reads the reuse evidence of the compiled recipe again through
+the injected `PhysicalInputs` reader, outside the side tree. A read error
+rejects reuse, also for a recorded absence, and incomplete evidence never
+permits reuse.
 The pool restores compatible code before evaluation-only bundles across slots
 and recycling. It gives each loaded lifetime an epoch. A stale process replays
 maps, describe, and bindings before rendering. Metadata invalidation still recomputes class maps before reusing
@@ -173,6 +177,7 @@ use mokly_catalogue::definition_provider::DefinitionProvider;
 use mokly_graph::cache::MemoryCache;
 use mokly_graph::types::GraphFactory;
 use mokly_graph::workers::RenderWorkers;
+use mokly_render::physical_inputs::SystemPhysicalInputs;
 use mokly_render::runtime::Runtime;
 use mokly_sidecar::pool::SidecarPool;
 use mokly_source_interface::tree::SourceTree;
@@ -186,6 +191,7 @@ fn services(
     let runtime = Arc::new(Runtime::new(
         tree.clone(),
         tree,
+        Arc::new(SystemPhysicalInputs),
         pool,
         Arc::new(MemoryCache::new(256 * 1024 * 1024)),
         workers,
@@ -222,7 +228,11 @@ view after the edit and counts real process starts and hello calls.
 
 - [`src/runtime.rs`](./src/runtime.rs) defines `Runtime`, which implements
   `DefinitionProvider` and `GraphFactory` over the injected source readers,
-  sidecar pool, workers, and render cache.
+  physical input reader, sidecar pool, workers, and render cache.
+- [`src/physical_inputs.rs`](./src/physical_inputs.rs) defines
+  `PhysicalInputs`, the reader that checks the reuse evidence of a compiled
+  recipe outside the side tree, and `SystemPhysicalInputs`, its filesystem
+  implementation.
 - [`src/side.rs`](./src/side.rs) defines `BaseSide`, the leased base
   extraction and dependency selection of a historical render.
 - [`src/dependency_usage.rs`](./src/dependency_usage.rs) defines
@@ -252,6 +262,7 @@ view after the edit and counts real process starts and hello calls.
 ### Related Docs
 
 - [Sidecar protocol](../../docs/protocol/mokly-sidecar.md).
+- [Compiled recipes and reuse](../../docs/protocol/mokly-sidecar-modules.md#compiled-recipes-and-release).
 - [Render records](../../docs/protocol/mokly-sidecar-render-records.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).
 - [PostCSS contexts and evidence](../../docs/protocol/mokly-sidecar-postcss.md).

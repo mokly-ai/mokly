@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::codec;
-use crate::compiled::{CompiledGeneration, RestoreGeneration};
+use crate::compiled::{CompiledGeneration, RestoreGeneration, ReuseEvidence};
 use crate::methods::{Bundle, Call, Generation};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
@@ -34,6 +34,11 @@ pub(super) fn settings(entry: &str, evaluation: &str) -> Bundle {
 
 fn compiled(id: &str) -> CompiledGeneration {
     CompiledGeneration {
+        toolchain: "fixture".into(),
+        reuse_evidence: ReuseEvidence {
+            complete: true,
+            inputs: Default::default(),
+        },
         identity: id.into(),
         code: "quoted \"code\" with a newline\n and Unicode \u{e9}".repeat(4),
         runtime_key: "runtime".into(),
@@ -91,13 +96,13 @@ impl Fixture {
                     Ok(match &request.call {
                         Call::Bundle(params) => {
                             let id = params.evaluation.as_deref().unwrap();
-                            MethodResult::Bundle(results::Bundle {
+                            MethodResult::Bundle(Box::new(results::Bundle {
                                 generation: id.into(),
                                 compiled: compiled(id),
                                 epoch: 0,
                                 modules: Vec::new(),
                                 unmapped_dependency_directories: None,
-                            })
+                            }))
                         }
                         _ => MethodResult::Empty,
                     })
@@ -167,7 +172,7 @@ impl Fixture {
         else {
             panic!("expected bundle")
         };
-        result
+        *result
     }
 
     pub(super) fn release(&self, entry: &str, id: &str) {

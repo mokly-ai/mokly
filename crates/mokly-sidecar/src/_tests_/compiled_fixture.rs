@@ -2,10 +2,15 @@
 
 use std::collections::BTreeMap;
 
-use crate::compiled::CompiledGeneration;
+use crate::compiled::{CompiledGeneration, ReuseEvidence};
 
 pub(crate) fn compiled(identity: &str) -> CompiledGeneration {
     CompiledGeneration {
+        toolchain: "fixture".into(),
+        reuse_evidence: ReuseEvidence {
+            complete: true,
+            inputs: Default::default(),
+        },
         identity: identity.into(),
         code: "module.exports={}".into(),
         runtime_key: "fixture-runtime".into(),

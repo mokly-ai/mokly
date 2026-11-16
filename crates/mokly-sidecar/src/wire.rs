@@ -89,7 +89,7 @@ pub enum MethodResult {
     /// Hello package version.
     Hello(results::Hello),
     /// Bundle generation and module graph.
-    Bundle(results::Bundle),
+    Bundle(Box<results::Bundle>),
     /// Exported definitions.
     Definitions(Definitions),
     /// Fragment render.

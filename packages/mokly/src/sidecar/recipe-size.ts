@@ -18,6 +18,13 @@ export function checkRecipeSize(
     Buffer.byteLength(response),
     Buffer.byteLength(restore),
   );
+  if (
+    bytes > limit &&
+    Object.keys(result.compiled.reuseEvidence.inputs).length
+  ) {
+    result.compiled.reuseEvidence = { complete: false, inputs: {} };
+    return checkRecipeSize(params, result, limit);
+  }
   if (bytes > limit)
     throw new SidecarError(
       "bundle-failed",

@@ -25,6 +25,7 @@ use crate::bundle::BundleState;
 use crate::dependency_usage::{DependencyUsage, UsedDependencies};
 use crate::graph::JavaScriptGraph;
 use crate::leases::PreparedLease;
+use crate::physical_inputs::PhysicalInputs;
 use crate::postcss_cache::CssCache;
 use crate::side::{BaseSide, SideInputs};
 use crate::stylesheet_store::StylesheetCache;
@@ -40,6 +41,8 @@ pub struct Runtime {
     pub(crate) inventory_tree: Arc<dyn SourceTree>,
     /// Physical reader for the selected installed third-party dependencies.
     pub dependency_tree: Arc<dyn SourceTree>,
+    /// Filesystem reader for physical compilation evidence outside the side tree.
+    pub physical_inputs: Arc<dyn PhysicalInputs>,
     /// Lazily started Node processes.
     pub pool: Arc<dyn SidecarPool>,
     /// Shared byte-bounded render cache.
@@ -83,9 +86,14 @@ impl Runtime {
             })
     }
     /// Assemble runtime services without starting a sidecar or reading sources.
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "source trees and physical reuse evidence have separate injectable read boundaries"
+    )]
     pub fn new(
         tree: Arc<dyn SourceTree>,
         dependency_tree: Arc<dyn SourceTree>,
+        physical_inputs: Arc<dyn PhysicalInputs>,
         pool: Arc<dyn SidecarPool>,
         cache: Arc<dyn RenderCache>,
         workers: Arc<dyn RenderWorkers>,
@@ -96,6 +104,7 @@ impl Runtime {
             inventory_tree: tree.clone(),
             tree,
             dependency_tree,
+            physical_inputs,
             pool,
             cache,
             workers,

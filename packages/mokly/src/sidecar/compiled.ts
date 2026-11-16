@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-import fs from "node:fs/promises";
 import { createRequire, isBuiltin } from "node:module";
 import path from "node:path";
 
@@ -10,10 +9,13 @@ import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration
 import type { Module } from "../generated/sidecar/Module.js";
 
 import type { Generation } from "./bundle.js";
+import { everyInput, fileDigest } from "./file-digests.js";
 import { sideRequire } from "./importer-resolution.js";
 import { ModulePaths } from "./module-paths.js";
+import { currentEvidence } from "./physical-inputs.js";
 import { checkRecipeSize } from "./recipe-size.js";
 import { directoryFiles } from "./resolution-inputs.js";
+import { toolchainIdentity } from "./toolchain.js";
 
 /**
  * The generation id: the compilation identity `bundle` hashes, plus the core's
@@ -29,23 +31,6 @@ export function generationId(
     .update(identity)
     .update(JSON.stringify(evaluation ?? null))
     .digest("hex");
-}
-
-export async function fileDigest(file: string): Promise<string | null> {
-  try {
-    return createHash("sha256")
-      .update(await fs.readFile(file))
-      .digest("hex");
-  } catch (error) {
-    if (
-      error &&
-      typeof error === "object" &&
-      "code" in error &&
-      ["ENOENT", "ENOTDIR"].includes(String(error.code))
-    )
-      return null;
-    throw error;
-  }
 }
 
 /** Retain compiled code while giving every evaluation its own maps and registrations. */
@@ -125,32 +110,29 @@ export async function reuse(
   params = { ...params, sourceRoot: paths.sourceRoot };
   const settings = (value: BundleParams) =>
     JSON.stringify({ ...value, evaluation: undefined });
+  const toolchain = await toolchainIdentity();
   for (const generation of generations) {
     if (
+      !toolchain ||
+      generation.compiled.toolchain !== toolchain ||
+      !generation.compiled.reuseEvidence.complete ||
       settings(generation.params) !== settings(params) ||
       JSON.stringify(generation.dependencyRoots) !==
         JSON.stringify(paths.dependencyRoots)
     )
       continue;
-    const inputs = Object.entries(generation.compiled.inputs);
-    let current = true;
-    for (const [file, digest] of inputs) {
-      if ((await fileDigest(file)) !== digest) {
-        current = false;
-        break;
-      }
-    }
-    for (const [directory, names] of Object.entries(
-      generation.compiled.inputDirectories,
-    )) {
-      if (
-        JSON.stringify(await directoryFiles(directory)) !==
-        JSON.stringify(names)
-      ) {
-        current = false;
-        break;
-      }
-    }
+    const current =
+      (await currentEvidence(generation.compiled.reuseEvidence)) &&
+      (await everyInput(
+        Object.entries(generation.compiled.inputs),
+        async ([file, digest]) => (await fileDigest(file)) === digest,
+      )) &&
+      (await everyInput(
+        Object.entries(generation.compiled.inputDirectories),
+        async ([directory, names]) =>
+          JSON.stringify(await directoryFiles(directory)) ===
+          JSON.stringify(names),
+      ));
     if (current)
       return restore(params, generation.compiled, generation.modules);
   }

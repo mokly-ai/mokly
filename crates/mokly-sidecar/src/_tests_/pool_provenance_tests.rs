@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
 
-use crate::compiled::CompiledGeneration;
+use crate::compiled::{CompiledGeneration, ReuseEvidence};
 use crate::methods::{Bundle, Call};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
@@ -27,13 +27,18 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
                     *next += 1;
                     next.to_string()
                 };
-                Ok(MethodResult::Bundle(results::Bundle {
+                Ok(MethodResult::Bundle(Box::new(results::Bundle {
                     unmapped_dependency_directories: Some(vec![id.clone()]),
                     epoch: 0,
                     generation: id.clone(),
                     modules: vec![],
 
                     compiled: CompiledGeneration {
+                        toolchain: "fixture".into(),
+                        reuse_evidence: ReuseEvidence {
+                            complete: true,
+                            inputs: Default::default(),
+                        },
                         unmapped_dependency_directories: Some(vec![id]),
                         identity: "same".into(),
                         code: "code".into(),
@@ -47,7 +52,7 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
                         input_directories: Default::default(),
                         metadata_directories: Default::default(),
                     },
-                }))
+                })))
             }))
             .n_times(2),
         WorkerMock::resident_bytes

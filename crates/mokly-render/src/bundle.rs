@@ -9,6 +9,7 @@ use mokly_catalogue::discovery::SourceFile;
 use mokly_catalogue::render_sources::JavaScriptGeneration;
 use mokly_css::types::{StylesheetBundler, StylesheetRoot};
 use mokly_model::material::digest;
+use mokly_sidecar::compiled::ReuseEvidence;
 use mokly_sidecar::definitions::Definitions;
 use mokly_sidecar::methods::{Bundle, Call, CssModules, Generation};
 use mokly_sidecar::results;
@@ -20,7 +21,7 @@ use crate::render_environment::{ClassMaps, RenderEnvironment};
 use crate::runtime::Runtime;
 use crate::side::SideInputs;
 use crate::{bundle_attempt, bundle_inputs, render_environment};
-use crate::{sources, stylesheets};
+use crate::{physical_inputs, sources, stylesheets};
 
 pub(crate) struct BundleState {
     pub(crate) repository: PathBuf,
@@ -32,6 +33,7 @@ pub(crate) struct BundleState {
     pub(crate) module_digests: BTreeMap<String, Option<String>>,
     pub(crate) render: RenderEnvironment,
     pub(crate) stamp: InputStamp,
+    pub(crate) reuse_evidence: ReuseEvidence,
 }
 
 pub(crate) fn describe(
@@ -55,7 +57,10 @@ pub(crate) fn describe(
     let tree = sources::reader(runtime, config, &side);
     let candidates: Vec<_> = candidates
         .into_values()
-        .filter(|state| state.stamp.current(tree.as_ref()) == state.stamp)
+        .filter(|state| {
+            state.stamp.current(tree.as_ref()) == state.stamp
+                && physical_inputs::current(&state.reuse_evidence, runtime.physical_inputs.as_ref())
+        })
         .collect();
     let compiler = stylesheets::compiler(runtime, config, &side);
     let mut prepared_maps = None;
@@ -121,6 +126,7 @@ pub(crate) fn describe(
             module_digests,
             render,
             stamp,
+            reuse_evidence: result.compiled.reuse_evidence,
         });
         bundle_attempt::remember(runtime, &existing);
         return finish(runtime, side, compiler, existing);
@@ -148,6 +154,7 @@ pub(crate) fn describe(
         module_digests,
         render,
         stamp,
+        reuse_evidence: result.compiled.reuse_evidence,
     });
     bundle_attempt::remember(runtime, &state);
     finish(runtime, side, compiler, state)

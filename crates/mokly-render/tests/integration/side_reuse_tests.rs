@@ -69,6 +69,7 @@ fn base_runtime(
     Arc::new(Runtime::new(
         Arc::new(WorkingTree),
         Arc::new(WorkingTree),
+        head.runtime.physical_inputs.clone(),
         head.runtime.pool.clone(),
         head.runtime.cache.clone(),
         head.runtime.workers.clone(),

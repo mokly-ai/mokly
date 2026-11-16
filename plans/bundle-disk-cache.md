@@ -761,7 +761,7 @@ The approved options are 1 A, 2 A, 3 A, 4 D, 5 A, 6 D, 7 C, 8 A, and 9 C.
 ### Flow of one `bundle` request
 
 1. The pool runs its existing in-process seeds. When no live or released
-   recipe of the same settings is available, it asks the store for the entry of the
+   complete recipe of the same settings is available, it asks the store for the entry of the
    request's settings. The store reads the first line and rejects another
    format or Mokly version without a parse. It checks the payload digest.
 2. On an entry, the pool sends `restoreGeneration` to the worker. It records
@@ -770,7 +770,8 @@ The approved options are 1 A, 2 A, 3 A, 4 D, 5 A, 6 D, 7 C, 8 A, and 9 C.
    damaged entry.
 3. The pool forwards the `bundle` request. The sidecar's `reuse` check
    accepts the restored compilation, or the sidecar compiles.
-4. The pool compares the runtime key of the result with the restored one.
+4. The pool compares the runtime key of the result with the disk seed and
+   every memory compilation available to the worker before the request.
    A match with a memory seed is `memory`. A match with a disk seed is
    `hit`. No match means that the sidecar compiled. The pool stores the
    served envelope when it differs from the last disk record. A core
@@ -910,14 +911,102 @@ These are my calls, made on 2026-10-30 under the decision test.
     it cannot produce the old absolute gain on this machine. This applies
     the machine correction of option 2 E as my call under the current task.
 
+20. Use one recoverable entry warning for damaged, unreadable, and foreign
+    entries. Use one directory warning when the store becomes unavailable.
+    Map another format or Mokly version to `version-mismatch`. Map damaged,
+    unreadable, or wrong-settings entries to `damaged`. Map held entry locks
+    and unusable directories to `unavailable`. Reason: these are the approved
+    seven outcomes, and all entry faults require the same rebuild action.
+    The warning text is in the terminal cache contract. The directory line
+    still follows the approved first-bundle-lookup rule of decision 7 C.
+    The options check chose D: one exhaustive store outcome type maps each
+    read or write to its timing value, warning, and store state. Retire a
+    still-rejected entry after one exclusive lock attempt, after checking
+    that no other writer replaced it. This prevents repeated warnings when
+    compilation fails or cannot store complete evidence. Contention, lack
+    of room, incomplete evidence, and cancellation stay silent. Filesystem
+    or platform faults outside an entry disable the store for the process.
+    A failed disk restore stops using that seed. A transport failure uses
+    only the pool's existing exchange recovery, without the rejected seed.
+    No new retry is added. Alternatives: B removes rejected entries without
+    a shared outcome mapping. C tracks rejected keys in memory. E adds a
+    `busy` timing value. D prevents disagreement between output and timing
+    without another timing value or an unbounded rejected-key set.
+
+21. Bound cache-only evidence at 8 MiB and optional config reads at 1 MiB.
+    Use four streaming file-hash workers. Bound recursive config and export
+    inspection and queued resolution observations too. Omit evidence and
+    mark it incomplete when these limits or the remaining restore-frame
+    space cannot hold it. Compilation still proceeds. Reason: these
+    internal limits enforce call 9 without rejecting valid source code or
+    allocating a restore frame for cache evidence alone. Unbounded reads
+    break the resource constraint. Frame-sized evidence would retain much
+    more memory for inputs that can safely miss instead.
+    Apply options G and D from the check. One physical-evidence owner bounds
+    retained observations, parsed metadata, visited paths, and unique
+    request keys, each at 8 MiB. It owns metadata reads and directory checks.
+    Queue each unique request once. Remove the schedule-dependent in-flight
+    count. Stop a directory check as soon as its entry count exceeds the
+    record. Before storing, check both the whole stored file and the actual
+    encoded disk-seed request against their read and wire limits. Oversized
+    writes skip silently. Alternatives A, B, and C fix those bounds
+    separately. F replaces directory records with digests. G keeps the
+    current shared evidence shape and one owner, while D avoids a fragile
+    fixed size margin. Measure capture and fast-path costs under E in
+    Milestone 5. Use the observed cost to assess scheduling, without adding
+    an elapsed-time gate.
+
+22. Give each incomplete compilation a fresh identity by including its
+    private runtime key. Apply the same rule when the frame budget drops
+    evidence. Complete recipes keep deterministic identities. Apply option
+    A from the check: hash each resolved peer's real path and manifest, and
+    present `tsconfig.json` and `package.json` candidates above the source
+    root, into that identity. Keep these outside render-key and watch
+    metadata. Reason: equal ids let the core keep old definitions, the pool
+    share an old recipe, the sidecar replace per-id state, and whole-bundle
+    views keep old renders. An input that changes code or evaluation must
+    give a new id. This follows the existing generation-id contract.
+    Hashing normalized compiler output cannot detect changed peer evaluation
+    and would permit reuse of an incomplete compilation. Giving every
+    compile a fresh identity is option B. It adds a describe and whole-bundle
+    renders after harmless directory changes. Finishing every unsupported
+    resolver form cannot cover failed or oversized reads. Add a real peer
+    change regression that reaches a new identity and describe.
+
+23. Ignore incomplete recipes when selecting a memory seed for a bundle
+    request. Keep old-generation restoration for existing graph and render
+    lifetimes. Do not retain an incomplete recipe solely for release-time
+    bundle reuse. Reason: the reuse check cannot accept it, and selecting it
+    would also hide a usable disk record. The complete-evidence rule already
+    rejects reuse and writes. This applies that rule before optional seeding
+    and retention. Apply checked option B, confirmed by the user on
+    2026-11-16: one reusable-recipe type admits
+    only complete evidence. The released store, seed selection, and disk
+    writes use that type. Live generations keep the plain recipe for explicit
+    restoration. An incomplete release first removes the older record of
+    equal settings, then retains nothing, as an oversized release does.
+    This preserves the last-release rule. Keep the completeness guard outside
+    the shared explicit-restoration functions. Test both skipped optional
+    seeding and successful explicit restoration of an incomplete generation.
+    Alternatives: A applies separate guards. C keeps an older complete
+    release and changes the last-release rule. Keep the seed and fall through to disk only
+    after its rejection, which adds restoration work. Remove all incomplete
+    generations, which breaks live graph lifetimes. Keep memory-first lookup
+    for complete recipes and the existing released-recipe byte bound.
+
 The options check for the restored decisions and these calls is recorded
 under `.context/bundle-disk-cache/options-check-current.md` and
-`.context/bundle-disk-cache/options-check-calls-14-19.md`. The second check
+`.context/bundle-disk-cache/options-check-calls-14-19.md`. Call 20 uses
+`.context/bundle-disk-cache/options-check-call-20.md`. Call 21 uses
+`.context/bundle-disk-cache/options-check-call-21.md`. The second check
 confirms calls 14 to 19. Its suggested silent version miss does not apply:
 the current task explicitly requires a warning for foreign entries. Any new
 decision
 that the decision test assigns to the user goes to the performance
 orchestrator before dependent work continues.
+
+Call 22 uses `.context/bundle-disk-cache/options-check-call-22.md`. Call 23
+uses `.context/bundle-disk-cache/options-check-call-23.md`.
 
 ## Milestone 1: Documentation and protocol
 
@@ -927,68 +1016,81 @@ The protocol pages state the requirements and the decisions in force for
 the work below. Each changed page carries the status line of the repository
 rules until Milestone 5.
 
-- [ ] `docs/protocol/mokly-sidecar-modules.md`, "Compiled Recipes And
+- [x] `docs/protocol/mokly-sidecar-modules.md`, "Compiled Recipes And
       Release": the toolchain identity in the recipe, in the identity, and in
       the reuse rule. The new recorded inputs: peer manifests,
       `jsconfig.json` candidates, and tsconfig `extends` targets. The binary
       keeps the latest compilation of each bundle setting in the OS cache,
       and a later process restores it only through the same input check.
-- [ ] `docs/protocol/mokly-watch.md`: the resolution inputs that invalidate
+- [x] `docs/protocol/mokly-watch.md`: the resolution inputs that invalidate
       compilation reuse. The render-key rule for peers stays.
-- [ ] `docs/protocol/mokly-base-cache.md`: the bundle kind, its bound, the
+- [x] `docs/protocol/mokly-base-cache.md`: the bundle kind, its bound, the
       entry header with the format and Mokly versions and the payload digest,
       the hit that checks the digest, the replace rule, the rejection of
       other versions, the damaged-entry rule, and the reset by deletion.
-- [ ] `docs/protocol/mokly-terminal-cache.md` and
-      `docs/protocol/mokly-terminal-output.md`: the directory line for the
+- [x] `docs/protocol/mokly-terminal-cache.md` and
+      `docs/protocol/mokly-terminal-output.md` and
+      `docs/protocol/mokly-terminal-errors.md`: the directory line for the
       bundle kind, and the warning line of decision 7 and current call 13.
-- [ ] `docs/protocol/mokly-format-versions.md`: a row for the bundle cache
+- [x] `docs/protocol/mokly-format-versions.md`: a row for the bundle cache
       entry, version 1, with a reader that requires 1.
-- [ ] `docs/protocol/mokly-timings.md`: the `catalogue.bundle` span and its
+- [x] `docs/protocol/mokly-timings.md`: the `catalogue.bundle` span and its
       `cache` values, the field's meaning for each stage, the removal of the
       `catalogue.describe` row, and a budget row for the bundle cache bound.
-- [ ] Update both OS-cache statements in `docs/protocol/mokly-runtime.md`.
-      Keep all current lifetime and cache requirements.
-- [ ] Delete the fixed item `plans/follow-ups/bundle-disk-cache.md` and
+- [x] Update both OS-cache statements in `docs/protocol/mokly-runtime.md`.
+      Keep all current lifetime and cache requirements. Update the two
+      OS-cache lists in `docs/architecture/rust-core.md` as well.
+- [x] Delete the fixed item `plans/follow-ups/bundle-disk-cache.md` and
       update its live references. Keep the stylesheet cache target in its
       existing follow-up item, with the approved scope and date.
-- [ ] Run `npm run format:check` and
+- [x] Run `npm run format:check` and
       `npm test -- tests/markdown_links.test.ts`.
+
+Evidence: `.context/bundle-disk-cache/reports/milestone-1.md`.
 
 ## Milestone 2: Toolchain identity and recorded inputs
 
 Depends on: 1
 
-- [ ] Add `toolchain` and typed physical reuse-evidence fields to
+- [x] Add `toolchain` and typed physical reuse-evidence fields to
       `CompiledGeneration` in
       `crates/mokly-sidecar/src/compiled.rs`, and regenerate the TypeScript
       type.
-- [ ] Compute the toolchain identity once in each sidecar process. Record it
+- [x] Compute the toolchain identity once in each sidecar process. Record it
       in `bundle-recipe.ts`, and hash it into the compilation identity. Make
       `reuse` in `compiled.ts` require an equal toolchain, and digest the
       inputs in parallel.
-- [ ] Record the peer manifests, the `jsconfig.json` candidates, and the
+- [x] Record the peer manifests, the `jsconfig.json` candidates, and the
       tsconfig `extends` chains. Record complete conservative resolution
       evidence under current calls 14 and 15. Both the sidecar and Rust
       fast path must check it. Preserve render-key and watch inputs.
-- [ ] Tests with a real sidecar: a fresh sidecar that restores a recipe with
+- [x] Tests with a real sidecar: a fresh sidecar that restores a recipe with
       an equal toolchain and unchanged inputs bundles with no esbuild
       operation. With another toolchain it compiles again. Add one case for
       each new input kind to the existing reuse tests. Cover new candidates,
       link retargets with old targets present, and the Rust fast path.
-      See each fail first.
-- [ ] Update the Key Code of `packages/mokly/README.md`.
+      Cover the generation identity and describe boundary for incomplete
+      evidence and for peer manifest or link changes. See each fail first.
+- [x] Update the Key Code of `packages/mokly/README.md`.
+- [x] Update the render README for the physical reader and its constructor
+      boundary. State the incomplete-identity rule in the sidecar protocol.
+
+Evidence: `.context/bundle-disk-cache/reports/milestone-2.md` and
+`.context/bundle-disk-cache/reports/call-23-docs.md`.
 
 ## Milestone 3: The bundle kind of the OS cache
 
 Depends on: 1, 2
 
 - [ ] Define the `BundleStore` boundary and its outcome type in
-      `crates/mokly-sidecar`.
+      `crates/mokly-sidecar`. Apply call 20 D to reads, writes, rejected-entry
+      retirement, warnings, cancellation, and normal contention. Define the
+      reusable-recipe type of call 23 B for the write boundary.
 - [ ] Add the `bundles` kind with its 512 MiB bound, the replace operation
       under the entry lock, the entry codec version 1 with the format
       version, the Mokly version, and the payload digest, and the store over
-      the cache in `crates/mokly-compare`.
+      the cache in `crates/mokly-compare`. Apply call 21 D to the whole stored
+      file and the actual encoded disk-seed request, before every write.
 - [ ] Tests: an entry of another format or Mokly version that the reader
       rejects before the payload, a damaged entry, two writers of one key
       that never expose a partial entry, and a replace past the bound that
@@ -1003,6 +1105,12 @@ Depends on: 2, 3
 - [ ] The pool seeds the worker from the store, forwards the request,
       compares the runtime keys, stores the served envelope when it differs from the last disk record, and
       returns the outcome. The core fast path sends a served-generation notice.
+- [ ] Ignore incomplete memory recipes as bundle seeds and released reuse
+      records. Preserve restoration for old live graph and render leases.
+      Test that an incomplete memory recipe cannot hide a usable disk entry.
+      Test explicit restoration and last-release replacement for an incomplete
+      recipe. Update the sidecar protocol, the sidecar README, and the flow
+      above for complete-only optional seeds and released retention.
 - [ ] Compose the store in `crates/mokly-cli/src/render_runtime.rs`.
 - [ ] Share one once-only cache reporter for each command between the bundle
       cache and the base caches, and print the warning line of decision 7 and current call 13.
@@ -1031,15 +1139,23 @@ Depends on: 4
       three warm runs, the edit run, and the React fixture. Save the output
       under `.context/bundle-disk-cache/`. Count zero warm compile spans and
       zero esbuild operations on both head and base.
+- [ ] Measure the added evidence-capture cost after an edit and a core
+      fast-path rebuild. Assess whether the capture scheduling needs a
+      change. Keep this as measurement evidence, not a time gate.
 - [ ] Prove once that `mokly build --strict` output with a cache hit is
       byte-identical to a cold build. Save the proof under `.context/`.
 - [ ] Smoke test: restart Serve on `examples/basic`, open the catalogue, and
       check a JavaScript screen and its Changes view.
-- [ ] Remove the status lines from the protocol pages.
+- [ ] Remove the bundle-cache status from every changed protocol page and
+      `docs/architecture/rust-core.md`. Keep the existing unrelated follow-up
+      status in the runtime and terminal-errors pages.
 - [ ] Fetch and merge `origin/main` if it advanced. Preserve the render
       cache and base-lifetime work of the parallel branches. Apply current
       design call 10 to `mokly-runtime.md`. Measure again if their changes
       affect the baseline.
+      The user selected `c42755bcd` as the new release baseline on 2026-11-16,
+      after the compact render-cache branch merged. Preserve its compact
+      ceiling, capture bounds, and restore timing fields.
 
 ## Milestone 6: Verification, commit, review, and pull request
 

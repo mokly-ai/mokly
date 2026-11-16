@@ -17,6 +17,7 @@ use mokly_graph::cache::{Artifact, MemoryCache};
 use mokly_graph::types::{GraphFactory, RenderGeneration};
 use mokly_graph::workers::ThreadWorkers;
 use mokly_platform::processes::SystemProcessGroups;
+use mokly_render::physical_inputs::SystemPhysicalInputs;
 use mokly_render::runtime::Runtime;
 use mokly_sidecar::pool::{Pool, SidecarPool};
 use mokly_sidecar::pool_options::{Launch, PoolOptions};
@@ -86,6 +87,7 @@ fn prepare() -> Catalogue {
     let runtime = Arc::new(Runtime::new(
         tree.clone(),
         tree.clone(),
+        Arc::new(SystemPhysicalInputs),
         pool,
         Arc::new(MemoryCache::new(256 * 1024 * 1024)),
         Arc::new(CancellableWorkers {

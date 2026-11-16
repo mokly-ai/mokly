@@ -94,6 +94,7 @@ fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
     let runtime = Arc::new(Runtime::new(
         Arc::new(WorkingTree),
         Arc::new(WorkingTree),
+        head.runtime.physical_inputs.clone(),
         head.runtime.pool.clone(),
         head.runtime.cache.clone(),
         head.runtime.workers.clone(),

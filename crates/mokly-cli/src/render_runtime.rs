@@ -14,6 +14,7 @@ use mokly_graph::cache::{MemoryCache, RenderCache};
 use mokly_graph::error::Result;
 use mokly_graph::workers::{RenderWorkers, ThreadWorkers};
 use mokly_platform::processes::SystemProcessGroups;
+use mokly_render::physical_inputs::SystemPhysicalInputs;
 use mokly_render::runtime::Runtime;
 use mokly_sidecar::pool::{Pool, SidecarPool};
 use mokly_sidecar::pool_options::{Launch, PoolOptions};
@@ -101,6 +102,7 @@ fn runtime(
     Arc::new(Runtime::new(
         tree.clone(),
         tree,
+        Arc::new(SystemPhysicalInputs),
         pool,
         cache,
         Arc::new(CancellableWorkers {

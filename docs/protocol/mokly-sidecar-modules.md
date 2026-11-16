@@ -1,5 +1,7 @@
 # Sidecar Module Sources
 
+Status: In progress under the [bundle disk cache plan](../../plans/bundle-disk-cache.md).
+
 This page expands the [sidecar bundling contract](./mokly-sidecar.md#bundling).
 The source root and dependency roots identify one comparison side. All roots
 are resolved to real filesystem paths before identity and confinement checks.
@@ -138,16 +140,16 @@ cache, or the bundler's implementation path.
 ## Compiled Recipes And Release
 
 Every private `bundle` result carries `compiled`: code, runtime import key,
-captured entry text, resolved peers, physical input digests,
-logical metadata digests, and the compilation identity. `restoreGeneration`
-installs that recipe with its original parameters, module graph, and evaluated generation id. The bundle result carries the graph once.
-It reads no current source file and invokes no compiler. Peer packages retain
-the selected physical installation. Failed peer resolutions remain explicit and
+captured entry text, resolved peers, physical input digests, logical metadata
+digests, reuse evidence, the toolchain identity, and the compilation identity.
+`restoreGeneration` installs that recipe with its original parameters, module
+graph, and evaluated generation id. The bundle result carries the graph once. It
+reads no current source file and invokes no compiler. Peer packages retain the
+selected physical installation. Failed peer resolutions remain explicit and
 raise `MODULE_NOT_FOUND`; native fallback cannot bypass that failure. Equal
-compilations keep independent maps, bindings, and authoring registrations.
-A `restoreGeneration` envelope above the
-[frame limit](./mokly-sidecar.md) fails with `bundle-failed` before the sidecar
-installs anything.
+compilations keep independent maps, bindings, and authoring registrations. A
+`restoreGeneration` envelope above the [frame limit](./mokly-sidecar.md) fails
+with `bundle-failed` before the sidecar installs anything.
 
 A compilation is reused only while its inputs stay unchanged. These inputs
 include the ancestor `package.json` and `tsconfig.json` candidates of each
@@ -159,27 +161,64 @@ same input checks. Resolution metadata and directory membership remain
 observable. CSS bytes belong to stylesheet processing rather than the
 JavaScript compilation.
 
+Reuse also requires an equal toolchain identity and unchanged reuse evidence.
+The toolchain identity digests the Mokly, esbuild, and Node versions, every
+file in the `dist/` directory of the Mokly package that runs the sidecar, and
+the real root of that package. The reuse evidence records each file and
+directory that can change how a bundled import or a peer resolves:
+
+- the `jsconfig.json` candidate beside each `tsconfig.json` candidate, and
+  each file that a tsconfig `extends` chain names;
+- the package manifest of each resolved peer;
+- each directory where the resolver can look for a candidate before it finds
+  its result: relative paths with their extensions and index files, `paths`
+  targets, `baseUrl`, each `node_modules` level, and each configured lookup
+  root;
+- the `package.json`, `tsconfig.json`, and `jsconfig.json` candidates above
+  the source root, each up to the first present candidate or the filesystem
+  root.
+
+A recorded directory keeps every entry, the kind of each entry, and the real
+target of each link. An absent file or directory is recorded as absent. A
+candidate that cannot be read never matches a recorded absence. When the sidecar
+cannot record the evidence of an import completely, the compilation is never
+reused and never stored. When the binary reuses a bundle result without a
+`bundle` request, it checks the same evidence. Reuse evidence moves no render
+input key and is not a watch input. The compilation identity includes the
+toolchain identity, the content of the recorded `jsconfig.json` and `extends`
+files, the real path and the manifest content of each resolved peer, and the
+content of each present `tsconfig.json` and `package.json` candidate above the
+source root. So a change to one of them gives a new generation id. The other
+reuse evidence stays out of the identity. An incomplete compilation gets a fresh
+identity at each compile, also when the sidecar drops its evidence to fit the
+frame limit. The binary then never reuses the definitions of an earlier
+generation for it. A complete compilation keeps a deterministic identity.
+Decision: a reuse check compares recorded digests, directory entries, and link
+targets with the filesystem, so it copies no resolver rule. A second resolve
+with esbuild was rejected, because it runs an esbuild operation on each reuse.
+Package-manager install state files were rejected, because a manual link
+change keeps them.
+
 Each `bundle` call starts an unevaluated lifetime, also when the content id
 matches an earlier evaluated lifetime. The core installs its maps,
 description, and bindings before rendering. Releasing a generation or a
 PostCSS context reaches every process that used it and starts no sidecar.
 
-After the final graph or request releases a generation, the pool keeps its
-compiled recipe in memory for later `bundle` calls. The pool keeps at most
-one released recipe for each set of bundle settings: the last one released.
-The pool compares settings without the evaluation digest. A later `bundle`
-call can reuse that recipe. Equal settings, equal resolved roots, and the
-input rule above are the only reuse checks, for released and live
-compilations alike.
+After the final graph or request releases a complete compilation, the pool keeps
+its recipe in memory for later `bundle` calls. The pool keeps at most one
+released recipe for each set of bundle settings: the last one released. The pool
+compares settings without the evaluation digest. A later `bundle` call can reuse
+that recipe. Equal settings, equal resolved roots, and the input rules above are
+the only reuse checks, for released, stored, and live compilations alike.
 
 The pool counts each released recipe at the size of its serialized
 `restoreGeneration` envelope. The released recipes of one pool use at most
-64 MiB in total, the value of the frame limit. The pool does not keep a
-recipe above that bound. When a new recipe takes the total above the bound,
-the pool removes the least recently used recipes until the total fits. The
-pool discards every released recipe when it stops: on shutdown,
-cancellation, and forced termination. A release after the stop keeps
-nothing.
+64 MiB in total, the value of the frame limit. A release of an incomplete recipe
+or of a recipe above that bound removes the older released recipe of equal
+settings and keeps nothing. When a new recipe takes the total above the bound,
+the pool removes the least recently used recipes until the total fits. The pool
+discards every released recipe when it stops: on shutdown, cancellation, and
+forced termination. A release after the stop keeps nothing.
 
 Decision: the pool keeps the last released recipe of each set of bundle
 settings, in practice one head and one base recipe. The bound equals the
@@ -190,6 +229,20 @@ Stores of many recipes within 16, 32, or 64 MiB were rejected. A `bundle`
 call restores only one released recipe of its settings, so older recipes
 would hold memory and never serve a bundle. A 128 MiB bound was rejected,
 because it differs from 64 MiB only for a recipe above 32 MiB.
+
+The binary also keeps the latest served compilation of each set of bundle
+settings in the [bundle cache](./mokly-base-cache.md#bundle-entries), so a later
+process can reuse it. Only a complete live or released compilation seeds a
+`bundle` request. When the pool keeps none of the request's settings, it
+installs the stored compilation with `restoreGeneration` before the request. The
+reuse check then accepts it, or the sidecar compiles. A replay still restores a
+live incomplete generation. The binary stores each served compilation that the
+bundle cache lacks, also one served from memory. A failed bundle stores nothing.
+Decision: a stored compilation reaches a sidecar only through
+`restoreGeneration` and the reuse check. A check of the stored compilation in
+the binary was rejected, because it needs new pool methods and the toolchain
+identity in the binary. A sidecar that reads and writes the cache was
+rejected, because the sidecar performs no file writes.
 
 A worker emits an `operation` event for each catalogue `esbuild` call and each
 PostCSS worker start or stop. The payload contains the operation and sidecar

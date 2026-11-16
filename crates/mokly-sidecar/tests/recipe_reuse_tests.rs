@@ -38,7 +38,7 @@ fn bundle(pool: &Pool, params: &Bundle) -> results::Bundle {
     let MethodResult::Bundle(result) = pool.request(Call::Bundle(params.clone())).unwrap() else {
         panic!("expected bundle")
     };
-    result
+    *result
 }
 
 fn pool(root: &Path, counts: Arc<Counts>) -> Pool {

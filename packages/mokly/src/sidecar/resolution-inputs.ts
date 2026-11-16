@@ -1,17 +1,31 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { fileDigest } from "./compiled.js";
+import { SidecarError } from "./errors.js";
+import { fileDigest } from "./file-digests.js";
 import type { ModulePaths } from "./module-paths.js";
 import { inside } from "./path-scope.js";
+import { FRAME_LIMIT } from "./transport.js";
 
 /** Capture file membership without retaining source contents. */
-export async function directoryFiles(directory: string): Promise<string[]> {
+export async function directoryFiles(
+  directory: string,
+  limit = FRAME_LIMIT / 2,
+): Promise<string[]> {
   try {
-    return (await fs.readdir(directory, { withFileTypes: true }))
-      .filter((entry) => entry.isFile() || entry.isSymbolicLink())
-      .map((entry) => entry.name)
-      .sort();
+    const names: string[] = [];
+    let bytes = 2;
+    for await (const entry of await fs.opendir(directory)) {
+      if (!entry.isFile() && !entry.isSymbolicLink()) continue;
+      bytes += Buffer.byteLength(JSON.stringify(entry.name)) + 1;
+      if (bytes > limit)
+        throw new SidecarError(
+          "bundle-failed",
+          `Compiled bundle data needs more than ${FRAME_LIMIT} bytes. The sidecar limit is ${FRAME_LIMIT} bytes. Reduce the bundle and retry.`,
+        );
+      names.push(entry.name);
+    }
+    return names.sort();
   } catch (error) {
     if (
       error &&
@@ -61,8 +75,10 @@ export async function resolutionInputs(
   }
   const inputDirectories = new Map<string, string[]>();
   const metadataDirectories = new Map<string, string[]>();
+  let remaining = FRAME_LIMIT / 2;
   for (const directory of [...directories].sort()) {
-    const names = await directoryFiles(directory);
+    const names = await directoryFiles(directory, remaining);
+    remaining -= Buffer.byteLength(JSON.stringify(names));
     inputDirectories.set(directory, names);
     metadataDirectories.set(paths.metadataName(directory), names);
   }

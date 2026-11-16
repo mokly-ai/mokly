@@ -1,6 +1,6 @@
 # Mokly Build And Browse Runtime
 
-Status: Follow-up work remains in the [macOS mid-walk orphan item](../../plans/follow-ups/macos-stop-mid-walk-orphans.md).
+Status: In progress under the [bundle disk cache plan](../../plans/bundle-disk-cache.md). Follow-up work remains in the [macOS mid-walk orphan item](../../plans/follow-ups/macos-stop-mid-walk-orphans.md).
 
 This page is the runtime contract of `mokly serve` and `mokly build`: how a
 catalogue is discovered, rendered, cached, served, written, and shut down. The
@@ -61,10 +61,10 @@ render each document several times, and a reorder changes the build's stage
 order.
 Decision: each side has its own bound. A shared bound was rejected, because the
 head is captured first and could leave no room for the base.
-The base-side extraction cache and the dependency install cache live in the
-operating system's cache directory under a key derived from the repository
-path, each with its own byte bound; the terminal names that directory, and
-deleting it is safe. No cache is in the repository.
+The base-side extraction cache, the dependency install cache, and the bundle
+cache live in the [operating system's cache directory](./mokly-base-cache.md)
+under a key derived from the repository path, each with its own byte bound. The
+terminal names that directory, and deleting it is safe. No cache is in the repository.
 
 ## Serve
 
@@ -238,13 +238,13 @@ commit point and never leave a partial output directory in place.
 
 No command writes into the repository except `build` into its output
 directory. Serve, Changes, live prop editing, and comparison generations keep
-every result in process memory. The caches outside the repository are the
-only other files Mokly writes, and deleting them changes time only.
+every result in process memory. The caches outside the repository, which also
+keep compiled bundles across processes, are the only other files Mokly writes,
+and deleting them changes time only.
 
 ## Related Docs
 
-- [Rust core architecture](../architecture/rust-core.md)
-- [Data flow](../architecture/rust-core.md#data-flow)
+- [Rust core architecture](../architecture/rust-core.md) and its [data flow](../architecture/rust-core.md#data-flow)
 - [Package and authoring contract](./mokly-package.md)
 - [Shell delivery and read model routes](./mokly-shell-delivery.md)
 - [Changes and comparisons](./mokly-changes.md)

@@ -13,6 +13,7 @@ use mokly_graph::cache::MemoryCache;
 use mokly_graph::types::{GraphFactory, RenderGeneration};
 use mokly_graph::workers::ThreadWorkers;
 use mokly_platform::processes::SystemProcessGroups;
+use mokly_render::physical_inputs::SystemPhysicalInputs;
 use mokly_render::runtime::Runtime;
 use mokly_sidecar::methods::Call;
 use mokly_sidecar::operations::Operation;
@@ -146,6 +147,7 @@ impl Consumer {
         let runtime = Arc::new(Runtime::new(
             Arc::new(WorkingTree),
             Arc::new(WorkingTree),
+            Arc::new(SystemPhysicalInputs),
             pool.clone(),
             Arc::new(MemoryCache::new(16 * 1024 * 1024)),
             Arc::new(ThreadWorkers::new(2).unwrap()),

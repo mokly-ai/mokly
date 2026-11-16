@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use mokly_sidecar::compiled::CompiledGeneration;
+use mokly_sidecar::compiled::{CompiledGeneration, ReuseEvidence};
 use mokly_sidecar::methods::{Bundle, ModuleResolution};
 use mokly_sidecar::results;
 
@@ -89,6 +89,11 @@ pub(super) fn result(dependency_root: &str, react: &str) -> results::Bundle {
         unmapped_dependency_directories: None,
         epoch: 0,
         compiled: CompiledGeneration {
+            toolchain: "fixture".into(),
+            reuse_evidence: ReuseEvidence {
+                complete: true,
+                inputs: Default::default(),
+            },
             unmapped_dependency_directories: None,
             identity: "identity".into(),
             code: String::new(),

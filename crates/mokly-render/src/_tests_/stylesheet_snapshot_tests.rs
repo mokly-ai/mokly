@@ -9,7 +9,7 @@ use mokly_catalogue::config_types::{Config, ResolvedConfig};
 use mokly_catalogue::definition_provider::DefinitionProvider;
 use mokly_css::types::StylesheetRoot;
 use mokly_graph::cache::MemoryCache;
-use mokly_sidecar::compiled::CompiledGeneration;
+use mokly_sidecar::compiled::{CompiledGeneration, ReuseEvidence};
 use mokly_sidecar::definitions::Definitions;
 use mokly_sidecar::methods::Call;
 use mokly_sidecar::pool::PoolMock;
@@ -67,10 +67,15 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
             .each_call(matching!(_))
             .answers(&|_, call| {
                 Ok(match call {
-                    Call::Bundle(_) => MethodResult::Bundle(Bundle {
+                    Call::Bundle(_) => MethodResult::Bundle(Box::new(Bundle {
                         unmapped_dependency_directories: None,
                         epoch: 0,
                         compiled: CompiledGeneration {
+                            toolchain: "fixture".into(),
+                            reuse_evidence: ReuseEvidence {
+                                complete: true,
+                                inputs: Default::default(),
+                            },
                             identity: "bundle".into(),
                             code: "module.exports={}".into(),
                             runtime_key: "fixture-runtime".into(),
@@ -98,7 +103,7 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
                                 digest: Some("css".into()),
                             },
                         ],
-                    }),
+                    })),
                     Call::CssModules(_) | Call::Dispose(_) => MethodResult::Empty,
                     Call::Describe(_) => MethodResult::Definitions(Definitions {
                         screens: vec![],
@@ -116,6 +121,7 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
     let mut runtime = Runtime::new(
         tree.clone(),
         tree,
+        Arc::new(Unimock::new(())),
         pool,
         Arc::new(MemoryCache::new(0)),
         Arc::new(Unimock::new(())),

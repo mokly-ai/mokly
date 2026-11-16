@@ -75,6 +75,7 @@ fn linked_workspace_stylesheets_keep_both_repository_aliases_in_sources() {
     let runtime = Arc::new(Runtime::new(
         Arc::new(WorkingTree),
         Arc::new(WorkingTree),
+        consumer.runtime.physical_inputs.clone(),
         consumer.pool.clone(),
         Arc::new(MemoryCache::new(1024 * 1024)),
         Arc::new(ThreadWorkers::new(1).unwrap()),

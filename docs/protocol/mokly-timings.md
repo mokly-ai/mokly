@@ -1,5 +1,7 @@
 # Startup Diagnostics And Scale Fixtures
 
+Status: In progress under the [bundle disk cache plan](../../plans/bundle-disk-cache.md).
+
 ## Opt-In Timings
 
 `--debug-timings` is a common boolean CLI option for `serve` (including the
@@ -39,7 +41,7 @@ its files are installed. Its Serve duration includes queue time.
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
 | `config.load`                                    | configuration discovery, loading, and validation                                                                                     |
 | `catalogue.discover`                             | the root walk, front matter and folder parsing, and path derivation                                                                  |
-| `catalogue.describe`                             | the wait for the sidecar's `bundle` and `describe` results and their validation                                                      |
+| `catalogue.bundle`                               | one core `bundle` request: the bundle cache lookup and restore, the sidecar's answer, and the bundle cache write; carries `cache`    |
 | `catalogue.validate`                             | registry, relationship, link, marker, and stylesheet validation                                                                      |
 | `graph.prepare`                                  | stylesheet inputs, render plans, and generation keys before document rendering                                                       |
 | `render.document`                                | one composed document: substitution, slots, composition, link rewriting, and assembly; carries `viewport` and `scheme`               |
@@ -97,6 +99,27 @@ the cache removed the record under its byte bound or the record exceeded that
 bound, `stamp-mismatch` when an input of the record changed, and
 `inconsistent-evidence` when the read evidence of the earlier bundle
 disagreed, so its record stayed in its attempt.
+
+`catalogue.bundle` records every core `bundle` request, also when a cache
+serves it. So its `cache` field names the outcome of the request, and the
+`cache` field of `css.bundle` names only why a cache missed. The values are:
+
+- `memory`: the sidecar reused a compilation that the pool kept in memory.
+- `hit`: the sidecar reused the compilation of the
+  [bundle cache](./mokly-base-cache.md#bundle-entries).
+- `no-record`: neither the pool nor the bundle cache kept a compilation of
+  the request's settings.
+- `stamp-mismatch`: the reuse check rejected the compilation that the pool or
+  the bundle cache kept.
+- `version-mismatch`: the bundle cache entry has another format or Mokly
+  version.
+- `damaged`: the bundle cache entry is damaged or unreadable, or holds other
+  settings.
+- `unavailable`: the bundle cache directory is unusable, or another caller
+  holds the entry lock.
+
+The sidecar compiled for every value except `memory` and `hit`. A reuse inside
+the core sends no `bundle` request, so it makes no `catalogue.bundle` span.
 
 `sidecar.operation` carries `event: "counts"`, `count: 1`, `operation`, and
 `worker`, the sidecar PID. Operations are `esbuild`, `postcss-start`, and
@@ -190,6 +213,7 @@ CI's small correctness fixtures have
 | sidecar deadlines and recycling    | the values of the [sidecar contract](./mokly-sidecar.md#cancellation-and-timeouts)                                             |
 | base dependency preparation        | 120 seconds (120,000 ms) shared by version discovery and all selected installs; expiry uses the documented dependency fallback |
 | comparison cache namespace         | 2 GiB (2,147,483,648 bytes) per repository and namespace, separately for extraction and dependency installs                    |
+| bundle cache namespace             | 512 MiB (536,870,912 bytes) per repository, complete and staged bundle data together                                           |
 | render cache bounds                | the byte bounds of the [runtime contract](./mokly-runtime.md#render-graph-and-cache)                                           |
 | `build` time and peak memory       | recorded per variant from scenario 1                                                                                           |
 | `changesReadyMs` and the CSS share | recorded per variant from scenarios 2 and 3                                                                                    |

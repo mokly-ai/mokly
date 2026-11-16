@@ -182,6 +182,38 @@ the packed contents of the package.
   [`src/sidecar/native-plan.ts`](./src/sidecar/native-plan.ts) classifies the
   result. It plans a second compile when esbuild's own resolution would change
   the bundle.
+- [`src/sidecar/bundle-recipe.ts`](./src/sidecar/bundle-recipe.ts) holds
+  `bundleRecipe`, which turns one compile into its compiled recipe: the module
+  graph, the input digests, the reuse evidence, the toolchain identity, and
+  the compilation identity. An incomplete recipe gets a fresh identity, also
+  when `checkRecipeSize` in
+  [`src/sidecar/recipe-size.ts`](./src/sidecar/recipe-size.ts) drops its
+  evidence to fit a frame.
+- [`src/sidecar/compiled.ts`](./src/sidecar/compiled.ts) holds `reuse`, which
+  accepts an earlier compilation only while its settings, toolchain, input
+  digests, and complete reuse evidence still match. Its `restore` installs a
+  recipe without a compile.
+- [`src/sidecar/toolchain.ts`](./src/sidecar/toolchain.ts) holds
+  `toolchainIdentity`, which each sidecar process computes once from the
+  package root, the Mokly, esbuild, and Node versions, and every `dist/` file.
+- [`src/sidecar/resolution-evidence.ts`](./src/sidecar/resolution-evidence.ts)
+  holds `ResolutionEvidence`, the esbuild plugin that records the candidate
+  directories, manifests, and configurations of each import before esbuild
+  resolves it. A form that it cannot map makes the evidence incomplete.
+  [`src/sidecar/config-inputs.ts`](./src/sidecar/config-inputs.ts) records
+  each `tsconfig.json` or `jsconfig.json` and its `extends` chain, and
+  [`src/sidecar/config-json.ts`](./src/sidecar/config-json.ts) parses JSON
+  with comments and trailing commas.
+- [`src/sidecar/physical-inputs.ts`](./src/sidecar/physical-inputs.ts) holds
+  `PhysicalInputs`, the one owner of the evidence reads. It reads each
+  metadata file within 1 MiB, parses the configurations, and queues each
+  unique resolution request once. Its retained observations, metadata read
+  bytes, visited paths, and request keys each stay within 8 MiB.
+  `currentEvidence` reads the evidence again for a reuse check. The protected
+  filesystem operations of the same owner are in
+  [`src/sidecar/physical-input-reader.ts`](./src/sidecar/physical-input-reader.ts).
+  [`src/sidecar/file-digests.ts`](./src/sidecar/file-digests.ts) streams each
+  file digest through one 64 KiB buffer and checks inputs with four workers.
 - [`src/sidecar/postcss.ts`](./src/sidecar/postcss.ts) holds `PostcssWorkers`,
   which owns the PostCSS child processes.
 - [`src/generated/sidecar`](./src/generated/sidecar) holds the request and
