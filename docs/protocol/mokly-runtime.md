@@ -47,25 +47,25 @@ once per enabled colour scheme. A watched change renders again only the
 outputs whose inputs changed, and a component rendered with the same props on
 many screens renders once.
 
-The render cache has one 256 MiB bound, and its full tier of complete documents,
-fragments, and stylesheets can use all of it. Each tier evicts its least
-recently used entry. A document that the full tier evicts moves losslessly to
-the compact tier, and any other evicted entry leaves the cache. The compact tier
-takes room only from evicted full entries, up to 128 MiB, so the full tier keeps
-at least 128 MiB and a catalogue that fits never restores. A lookup restores a
-compact document with exact bytes, tree, and trusted annotations. Only a second
-restore of a document within fewer cache operations than the full tier has
-entries promotes it to the full tier, so one pass over all views never promotes.
-A document that the compact tier cannot keep or restore leaves the cache.
-Decision: keep evicted documents in compact form. Rejected: a larger bound,
-because memory grows and a larger catalogue still thrashes. Rejected: a fixed
-split of the bound, because it takes room from a catalogue that fits. Rejected:
-a scan-resistant eviction order, because part of the head still misses when the
-head alone exceeds the bound. Rejected: a Serve head capture that the base
-reads, because it serves only Changes and adds a copy.
-Both sides read the cache, and equal keys share one entry, which holds no
-warning of the side that read it. Serve reads the head from it. A head document
-that neither tier holds renders again on the head root. Each
+The 256 MiB render cache reserves one sixteenth (16 MiB) for transit and encoding.
+The full and compact tiers share 240 MiB. Each tier evicts its least recently used
+entry. Compaction reserves the document's charge and twice that for encoding
+from headroom. Documents that cannot fit leave and count as evictions. Inserts
+never wait. A handle releases each reservation on every exit path.
+Encoding runs outside the lock. Completion moves transit to compact in one
+locked step. Other evicted artifacts leave the cache. The compact tier takes
+room only from evicted full entries, up to 128 MiB; the full tier keeps at least
+112 MiB. A catalogue that fits in 240 MiB never restores. Reads check full,
+transit, then compact. Transit returns the full artifact; compact restores exact
+bytes, tree, and trusted annotations. Only a second restore within fewer cache
+operations than the full tier has entries promotes the document. A full pass
+never promotes. A document that compact cannot keep or restore leaves the cache.
+Decision: keep evicted documents compact. Rejected: a larger bound that still
+thrashes; a fixed tier split that reduces room for fitting catalogues; a
+scan-resistant order that still misses when the head exceeds the bound; a Serve
+head capture read by the base, because it only serves Changes and adds a copy.
+Both sides share equal keys with no side warning. Serve reads the head from the
+cache. A missing head document renders again on the head root. Each
 [capture](./mokly-comparison-serving.md#base-and-head-capture) has its own
 bound. The base-side extraction cache and the dependency install cache live in
 the operating system's cache directory under a key derived from the repository

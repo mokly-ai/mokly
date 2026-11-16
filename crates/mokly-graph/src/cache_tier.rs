@@ -13,6 +13,16 @@ struct Entry<T> {
     cost: usize,
 }
 
+/// A released entry keeps the charge recorded when it entered the tier.
+pub(crate) struct Evicted<T> {
+    /// Released key.
+    pub(crate) key: NodeKey,
+    /// Released value.
+    pub(crate) value: Arc<T>,
+    /// Original retained charge.
+    pub(crate) cost: usize,
+}
+
 /// One bounded set of values with independent charge and access order.
 pub(crate) struct Tier<T> {
     values: BTreeMap<NodeKey, Entry<T>>,
@@ -100,32 +110,22 @@ impl<T> Tier<T> {
     }
 
     /// Remove the least recently accessed entry.
-    pub(crate) fn oldest(&mut self) -> Option<(NodeKey, Arc<T>)> {
+    pub(crate) fn oldest(&mut self) -> Option<Evicted<T>> {
         let (_, key) = self.order.pop_first()?;
-        let value = self.remove(&key)?;
-        Some((key, value))
-    }
-
-    /// Return entries above the current bound in eviction order.
-    pub(crate) fn trim(&mut self) -> Vec<(NodeKey, Arc<T>)> {
-        let mut evicted = Vec::new();
-        while self.bytes > self.bound {
-            let Some(entry) = self.oldest() else { break };
-            evicted.push(entry);
-        }
-        evicted
+        let entry = self.values.remove(&key)?;
+        self.bytes -= entry.cost;
+        Some(Evicted {
+            key,
+            value: entry.value,
+            cost: entry.cost,
+        })
     }
 
     /// Return capacity evictions, but do not count replacement as an eviction.
-    pub(crate) fn insert(
-        &mut self,
-        key: NodeKey,
-        value: Arc<T>,
-        cost: usize,
-    ) -> Vec<(NodeKey, Arc<T>)> {
+    pub(crate) fn insert(&mut self, key: NodeKey, value: Arc<T>, cost: usize) -> Vec<Evicted<T>> {
         self.remove(&key);
         if cost > self.bound {
-            return vec![(key, value)];
+            return vec![Evicted { key, value, cost }];
         }
         let mut evicted = Vec::new();
         while self.bytes > self.bound - cost {

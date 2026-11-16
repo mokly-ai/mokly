@@ -61,6 +61,15 @@ Decisions:
   `restoreFailures` in the `render.cache` record and logs an error without
   document data, so a codec defect stays visible. A capture view whose restore
   fails reads its side's source, as an uncaptured view does.
+- 2026-11-16, my call after review round 1, finding 1: documents on their way
+  to the compact tier stay inside the bound. A fixed headroom of 1/16 of the
+  total holds them, and the full tier never uses it. Each released document
+  reserves its charge plus twice that charge for the encoding work. A document
+  whose reservation does not fit leaves the cache, as before this change, and
+  inserts never wait. A lookup also reads the documents in transit. Rejected:
+  shared charge ownership without a rule for a full headroom, and a wait of the
+  inserting worker. The headroom sits inside the 256 MiB, so memory does not
+  grow.
 - 2026-11-16, my call: the codec moves from `mokly-compare` to `mokly-graph`,
   beside the cache, so that the cache and the capture share one codec.
 - 2026-11-16, docs call: the capture bounds, "Base capture misses use the

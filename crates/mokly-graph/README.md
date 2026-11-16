@@ -82,22 +82,29 @@ requested identities in the document key.
 
 `MemoryCache` implements `dyn RenderCache` with a full tier and a compact tier
 under one total byte bound. `MemoryCache::new` takes that total and the ceiling
-of the compact tier. Each tier evicts by access order, and the full tier can
-use the whole bound. The full tier charges document bytes, parsed trees, and
-evidence, including registry ownership in documents and fragments. The charge
+of the compact tier. One sixteenth of the total is fixed headroom for documents
+in transit and their encoding workspace. The full and compact tiers share the
+rest. Each tier evicts by access order. The full tier charges document bytes,
+parsed trees, and evidence, including registry ownership in documents and fragments. The charge
 is an estimate of retained memory. Usage, instance, and slot records count at
 twice their JSON length. When the full tier evicts a document, the cache
-encodes it outside its lock, and the compact tier keeps it in the room that
-the eviction freed, up to the ceiling. Every other evicted artifact leaves the
-cache. A lookup reads the full tier, then the compact tier. A compact hit
-returns the restored artifact. It promotes the entry to the full tier only
+reserves its charge plus twice that charge for encoding from the headroom. If
+the reservation does not fit, the document leaves the cache and counts as an
+eviction. Inserts never wait. A reservation handle releases the charge on every
+exit path, including encoding failure. Encoding runs outside the lock. Its
+completion transfers the document from transit to the compact tier in one
+locked step. The compact tier uses room from evicted full entries up to its
+ceiling. Every other evicted artifact leaves the cache. A lookup reads the full
+tier, then transit documents, then the compact tier. A transit hit returns the
+full artifact without a restore. A compact hit returns the restored artifact.
+It promotes the entry to the full tier only
 when the same key was restored before within fewer cache operations than the
-full tier has entries. An `insert` of a key that the compact tier holds keeps
-the entry compact, so a caller that stores a restored artifact again does not
-promote it. A failed restore removes the entry, counts as a miss and as a
+full tier has entries. An `insert` of a key that transit or the compact tier
+holds keeps the entry there, so a caller that stores a restored artifact again
+does not promote it. A failed restore removes the entry, counts as a miss and as a
 restore failure, and logs an error without document data. `stats` reports the
-charged bytes and the retained entries of both tiers, and the hit, restore,
-restore failure, miss, and eviction counts of the
+charged bytes and retained entries of both tiers and transit, and the hit,
+restore, restore failure, miss, and eviction counts of the
 [`render.cache` record](../../docs/protocol/mokly-timings.md#core-spans).
 Oversized artifacts return to the caller without retention. Plans keep
 recipes rather than a complete set of parsed documents.
@@ -179,7 +186,7 @@ use std::sync::Arc;
 use mokly_graph::cache::{Artifact, MemoryCache, RenderCache};
 use mokly_graph::key::{NodeKind, key};
 
-let cache: &dyn RenderCache = &MemoryCache::new(1024 * 1024, 256 * 1024);
+let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(1024 * 1024, 256 * 1024));
 let key = key(NodeKind::Document, &[b"entry-source", b"light"]);
 cache.insert(key.clone(), Arc::new(Artifact {
     bytes: b"<!doctype html>".to_vec(),

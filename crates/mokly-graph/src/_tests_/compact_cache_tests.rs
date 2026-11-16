@@ -15,6 +15,20 @@ fn node(name: &str) -> NodeKey {
     NodeKey(name.into())
 }
 
+pub(super) fn numbered(index: usize) -> NodeKey {
+    NodeKey(format!("{index:02}").as_str().into())
+}
+
+pub(super) fn total(retained: usize) -> usize {
+    retained + retained / 15
+}
+
+fn fill(cache: &MemoryCache, value: &Arc<Artifact>, count: usize) {
+    for index in 0..count {
+        cache.insert(numbered(index), value.clone());
+    }
+}
+
 pub(super) fn document() -> Arc<Artifact> {
     Arc::new(Artifact {
         bytes: b"<p>exact\0raw\xffbytes</p>".repeat(128),
@@ -33,8 +47,8 @@ pub(super) fn document() -> Arc<Artifact> {
 
 pub(super) fn costs(value: &Artifact) -> (usize, usize) {
     (
-        entry_cost(&node("a"), value),
-        compact_cost(&node("a"), &EncodedView::encode(value).unwrap()),
+        entry_cost(&node("aa"), value),
+        compact_cost(&node("aa"), &EncodedView::encode(value).unwrap()),
     )
 }
 
@@ -42,12 +56,13 @@ pub(super) fn costs(value: &Artifact) -> (usize, usize) {
 fn evicted_documents_restore_exact_bytes_and_tree_and_stay_compact() {
     let value = document();
     let (full, compact) = costs(&value);
-    let cache = MemoryCache::new(full + compact, compact);
-    cache.insert(node("a"), value.clone());
-    cache.insert(node("b"), value.clone());
-    assert!(cache.get(&node("z")).is_none());
+    let cache = MemoryCache::new(total(full * 45 + compact), compact);
+    cache.insert(node("aa"), value.clone());
+    fill(&cache, &value, 44);
+    cache.insert(node("bb"), value.clone());
+    assert!(cache.get(&node("zz")).is_none());
     for _ in 0..2 {
-        let restored = cache.get(&node("a"));
+        let restored = cache.get(&node("aa"));
         assert!(restored.is_some(), "the evicted document must restore");
         let restored = restored.unwrap();
         assert_eq!(restored.bytes, value.bytes);
@@ -59,14 +74,16 @@ fn evicted_documents_restore_exact_bytes_and_tree_and_stay_compact() {
         assert_eq!(after.resources, before.resources);
         assert_eq!(after.components, before.components);
         assert!(!Arc::ptr_eq(&restored, &value));
+        for _ in 0..45 {
+            assert!(Arc::ptr_eq(&cache.get(&node("bb")).unwrap(), &value));
+        }
     }
-    assert!(Arc::ptr_eq(&cache.get(&node("b")).unwrap(), &value));
     assert_eq!(
         cache.stats(),
         CacheStats {
-            bytes: full + compact,
-            entries: 2,
-            hits: 3,
+            bytes: full * 45 + compact,
+            entries: 46,
+            hits: 92,
             restores: 2,
             restore_failures: 0,
             misses: 1,
@@ -84,7 +101,7 @@ fn full_eviction_drops_fragments_and_stylesheets() {
             fragment,
             content_type: "text/css".into(),
         });
-        let cache = MemoryCache::new(entry_cost(&node("a"), &value), 16 * 1024);
+        let cache = MemoryCache::new(total(entry_cost(&node("a"), &value)), 16 * 1024);
         cache.insert(node("a"), value.clone());
         cache.insert(node("b"), value.clone());
         assert!(cache.get(&node("a")).is_none());
@@ -99,27 +116,35 @@ fn full_eviction_drops_fragments_and_stylesheets() {
 fn compact_lru_drops_the_oldest_access_and_counts_only_final_evictions() {
     let value = document();
     let (full, compact) = costs(&value);
-    let cache = MemoryCache::new(full + compact * 2, compact * 2);
-    for name in ["a", "b", "c"] {
+    let cache = MemoryCache::new(total(full * 45 + compact * 2), compact * 2);
+    for name in ["aa", "bb"] {
         cache.insert(node(name), value.clone());
     }
-    let restored = cache.get(&node("a"));
+    fill(&cache, &value, 43);
+    for name in ["cc", "dd"] {
+        cache.insert(node(name), value.clone());
+    }
+    let restored = cache.get(&node("aa"));
     assert!(
         restored.is_some(),
         "the oldest compact document must still exist"
     );
     assert_eq!(restored.unwrap().bytes, value.bytes);
-    cache.insert(node("d"), value.clone());
-    assert!(cache.get(&node("b")).is_none());
-    for name in ["a", "c", "d"] {
+    cache.insert(node("ee"), value.clone());
+    assert!(cache.get(&node("bb")).is_none());
+    for _ in 0..45 {
+        assert!(Arc::ptr_eq(&cache.get(&node("ee")).unwrap(), &value));
+    }
+    for name in ["aa", "cc", "dd", "ee"] {
         assert_eq!(cache.get(&node(name)).unwrap().bytes, value.bytes);
     }
+    assert_eq!(cache.get(&numbered(0)).unwrap().bytes, value.bytes);
     assert_eq!(
         cache.stats(),
         CacheStats {
-            bytes: full + compact * 2,
-            entries: 3,
-            hits: 4,
+            bytes: full * 45 + compact * 2,
+            entries: 47,
+            hits: 51,
             restores: 3,
             restore_failures: 0,
             misses: 1,
@@ -132,23 +157,26 @@ fn compact_lru_drops_the_oldest_access_and_counts_only_final_evictions() {
 fn the_total_and_compact_ceiling_hold_and_oversized_compact_entries_leave() {
     let value = document();
     let (full, compact) = costs(&value);
-    let cache = MemoryCache::new(full + compact * 2, compact * 2);
-    for name in ["a", "b", "c", "d", "e", "f"] {
-        cache.insert(node(name), value.clone());
+    let bound = total(full * 45 + compact * 2);
+    let cache = MemoryCache::new(bound, compact * 2);
+    for index in 0..51 {
+        cache.insert(numbered(index), value.clone());
         let state = cache.state.lock().unwrap();
-        assert!(state.full.bytes + state.compact.bytes <= full + compact * 2);
+        assert!(state.full.bytes + state.compact.bytes + state.transit.bytes <= bound);
+        assert_eq!(state.transit.bytes, 0);
         assert!(state.full.bytes <= state.full.bound);
         assert!(state.compact.bytes <= compact * 2);
     }
-    assert_eq!(cache.stats().entries, 3);
-    assert_eq!(cache.stats().bytes, full + compact * 2);
-    assert_eq!(cache.stats().evictions, 3);
-    let cache = MemoryCache::new(full + compact - 1, compact - 1);
-    cache.insert(node("a"), value.clone());
-    cache.insert(node("b"), value);
-    assert!(cache.get(&node("a")).is_none());
-    assert_eq!(cache.stats().entries, 1);
-    assert_eq!(cache.stats().bytes, full);
+    assert_eq!(cache.stats().entries, 47);
+    assert_eq!(cache.stats().bytes, full * 45 + compact * 2);
+    assert_eq!(cache.stats().evictions, 4);
+    let cache = MemoryCache::new(total(full * 45 + compact - 1), compact - 1);
+    cache.insert(node("aa"), value.clone());
+    fill(&cache, &value, 44);
+    cache.insert(node("bb"), value);
+    assert!(cache.get(&node("aa")).is_none());
+    assert_eq!(cache.stats().entries, 45);
+    assert_eq!(cache.stats().bytes, full * 45);
     assert_eq!(cache.stats().evictions, 1);
 }
 
@@ -156,19 +184,20 @@ fn the_total_and_compact_ceiling_hold_and_oversized_compact_entries_leave() {
 fn failed_compact_restore_removes_the_entry_and_counts_a_miss() {
     let value = document();
     let (full, compact) = costs(&value);
-    let cache = MemoryCache::new(full + compact, compact);
-    cache.insert(node("a"), value.clone());
-    cache.insert(node("b"), value.clone());
+    let cache = MemoryCache::new(total(full * 45 + compact), compact);
+    cache.insert(node("aa"), value.clone());
+    fill(&cache, &value, 44);
+    cache.insert(node("bb"), value.clone());
     let mut encoded = EncodedView::encode(&value).unwrap();
     encoded.invalidate_payload();
-    let cost = compact_cost(&node("a"), &encoded);
+    let cost = compact_cost(&node("aa"), &encoded);
     cache
         .state
         .lock()
         .unwrap()
         .compact
-        .insert(node("a"), Arc::new(encoded), cost);
-    let (restored, events) = cache_failure_events::capture(|| cache.get(&node("a")));
+        .insert(node("aa"), Arc::new(encoded), cost);
+    let (restored, events) = cache_failure_events::capture(|| cache.get(&node("aa")));
     assert!(restored.is_none());
     assert_eq!(
         events,
@@ -183,8 +212,8 @@ fn failed_compact_restore_removes_the_entry_and_counts_a_miss() {
     assert_eq!(
         cache.stats(),
         CacheStats {
-            bytes: full,
-            entries: 1,
+            bytes: full * 45,
+            entries: 45,
             hits: 0,
             restores: 0,
             restore_failures: 1,
@@ -192,7 +221,7 @@ fn failed_compact_restore_removes_the_entry_and_counts_a_miss() {
             evictions: 1,
         }
     );
-    assert!(cache.get(&node("a")).is_none());
+    assert!(cache.get(&node("aa")).is_none());
     assert_eq!(cache.stats().misses, 2);
     assert_eq!(cache.stats().evictions, 1);
 }
@@ -201,17 +230,26 @@ fn failed_compact_restore_removes_the_entry_and_counts_a_miss() {
 fn reinserting_a_compact_key_keeps_it_compact() {
     let value = document();
     let (full, compact) = costs(&value);
-    let cache = MemoryCache::new(full + compact * 2, compact * 2);
-    cache.insert(node("a"), value.clone());
-    cache.insert(node("b"), value.clone());
-    let restored = cache.get(&node("a")).unwrap();
-    cache.insert(node("a"), restored);
-    let restored = cache.get(&node("a")).unwrap();
+    let cache = MemoryCache::new(total(full * 45 + compact * 2), compact * 2);
+    cache.insert(node("aa"), value.clone());
+    fill(&cache, &value, 44);
+    cache.insert(node("bb"), value.clone());
+    let restored = cache.get(&node("aa")).unwrap();
+    cache.insert(node("aa"), restored);
+    {
+        let state = cache.state.lock().unwrap();
+        assert!(state.compact.contains(&node("aa")));
+        assert!(!state.full.contains(&node("aa")));
+    }
+    for _ in 0..45 {
+        assert!(Arc::ptr_eq(&cache.get(&node("bb")).unwrap(), &value));
+    }
+    let restored = cache.get(&node("aa")).unwrap();
     assert!(!Arc::ptr_eq(&restored, &value));
     assert_eq!(cache.stats().restores, 2);
-    assert!(Arc::ptr_eq(&cache.get(&node("b")).unwrap(), &value));
-    assert_eq!(cache.stats().entries, 2);
-    assert_eq!(cache.stats().bytes, full + compact);
+    assert!(Arc::ptr_eq(&cache.get(&node("bb")).unwrap(), &value));
+    assert_eq!(cache.stats().entries, 46);
+    assert_eq!(cache.stats().bytes, full * 45 + compact);
     assert_eq!(cache.stats().evictions, 0);
 }
 

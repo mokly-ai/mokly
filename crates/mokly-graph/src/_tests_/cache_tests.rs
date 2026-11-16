@@ -29,7 +29,8 @@ fn lru_evicts_the_oldest_access_and_counts_every_retained_byte() {
     let second = artifact("other");
     let third = artifact("third");
     let cost = entry_cost(&node("a"), &first);
-    let cache: &dyn RenderCache = &MemoryCache::new(cost * 2, 0);
+    let retained = cost * 2;
+    let cache: &dyn RenderCache = &MemoryCache::new(retained + retained / 15, 0);
     cache.insert(node("a"), first);
     cache.insert(node("b"), second);
     assert!(cache.get(&node("a")).is_some());
@@ -51,7 +52,8 @@ fn oversized_results_and_zero_bounds_retain_no_partial_artifact() {
     assert!(cache.get(&node("a")).is_none());
     assert_eq!(cache.stats().bytes, 0);
     let value = artifact("small");
-    let cache: &dyn RenderCache = &MemoryCache::new(entry_cost(&node("a"), &value), 0);
+    let retained = entry_cost(&node("a"), &value);
+    let cache: &dyn RenderCache = &MemoryCache::new(retained + retained / 15, 0);
     cache.insert(node("a"), value);
     cache.insert(node("a"), artifact("oversized"));
     assert!(cache.get(&node("a")).is_none());

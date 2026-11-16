@@ -7,7 +7,9 @@ use std::sync::{Arc, Mutex};
 use mokly_html::composition::Composed;
 use mokly_html::fragment::Fragment;
 
+use crate::cache_encoding::{DocumentEncoder, Encoder};
 use crate::cache_state::State;
+use crate::cache_transit::Transit;
 use crate::document_codec::EncodedView;
 use crate::key::NodeKey;
 use crate::weight;
@@ -39,17 +41,17 @@ impl Artifact {
 /// Cache statistics use operation counts, never wall-clock time.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct CacheStats {
-    /// Cache-owned memory charge across both tiers.
+    /// Cache-owned memory charge across both tiers and transit reservations.
     pub bytes: usize,
-    /// Retained entries across both tiers.
+    /// Retained entries across both tiers and documents in transit.
     pub entries: usize,
-    /// Lookups served by either tier.
+    /// Lookups served by either tier or transit documents.
     pub hits: usize,
     /// Successful lookups restored from the compact tier.
     pub restores: usize,
     /// Compact lookups that failed to restore and must render again.
     pub restore_failures: usize,
-    /// Lookups served by neither tier.
+    /// Lookups that the cache could not serve.
     pub misses: usize,
     /// Entries that left the cache.
     pub evictions: usize,
@@ -68,40 +70,31 @@ pub trait RenderCache: Send + Sync {
 
 /// Bounded full artifacts and compact documents, each with its own LRU order.
 pub struct MemoryCache {
-    compact_bound: usize,
+    encoder: Arc<dyn Encoder>,
     state: Mutex<State>,
 }
 
 impl MemoryCache {
-    /// Construct empty tiers with one total bound and a compact-document ceiling.
+    /// Reserve one sixteenth of the total for transit; bound both tiers by the rest.
     pub fn new(total_bytes: usize, compact_ceiling: usize) -> Self {
         Self {
-            compact_bound: compact_ceiling.min(total_bytes),
+            encoder: Arc::new(DocumentEncoder),
             state: Mutex::new(State::new(total_bytes, compact_ceiling)),
         }
     }
 
     /// Each new compact charge can displace more full entries. Encode outside locks.
-    fn compact(&self, evicted: Vec<(NodeKey, Arc<Artifact>)>) {
+    fn compact<'a>(&self, evicted: Vec<Transit<'a>>) {
         let mut pending = VecDeque::from(evicted);
-        while let Some((key, value)) = pending.pop_front() {
-            let encoded = if self.compact_bound > 0 && value.document.is_some() {
-                EncodedView::encode(&value).ok().map(|encoded| {
-                    let cost = compact_cost(&key, &encoded);
-                    (Arc::new(encoded), cost)
-                })
-            } else {
-                None
-            };
-            let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
-            if state.full.contains(&key) || state.compact.contains(&key) {
+        while let Some(reservation) = pending.pop_front() {
+            let Some(value) = reservation.artifact() else {
                 continue;
-            }
-            if let Some((encoded, cost)) = encoded {
-                pending.extend(state.insert_compact(key, encoded, cost));
-            } else {
-                state.stats.evictions = state.stats.evictions.saturating_add(1);
-            }
+            };
+            let Ok(encoded) = self.encoder.encode(value) else {
+                continue;
+            };
+            let cost = compact_cost(reservation.key(), &encoded);
+            pending.extend(reservation.complete(Arc::new(encoded), cost));
         }
     }
 
@@ -112,7 +105,7 @@ impl MemoryCache {
             if !state.remove_compact(key, encoded) {
                 return;
             }
-            state.insert_full(key.clone(), value, cost)
+            state.insert_full(&self.state, key.clone(), value, cost)
         };
         self.compact(evicted);
     }
@@ -134,6 +127,10 @@ impl RenderCache for MemoryCache {
             let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
             state.operation();
             if let Some(value) = state.full.get(key) {
+                state.stats.hits = state.stats.hits.saturating_add(1);
+                return Some(value);
+            }
+            if let Some(value) = state.transit.get(key) {
                 state.stats.hits = state.stats.hits.saturating_add(1);
                 return Some(value);
             }
@@ -168,17 +165,17 @@ impl RenderCache for MemoryCache {
         {
             let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
             state.operation();
-            if state.compact.contains(&key) {
+            if state.compact.contains(&key) || state.transit.contains(&key) {
                 return;
             }
         }
         let cost = entry_cost(&key, &value);
         let evicted = {
             let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
-            if state.compact.contains(&key) {
+            if state.compact.contains(&key) || state.transit.contains(&key) {
                 return;
             }
-            state.insert_full(key, value, cost)
+            state.insert_full(&self.state, key, value, cost)
         };
         self.compact(evicted);
     }
@@ -186,8 +183,16 @@ impl RenderCache for MemoryCache {
     fn stats(&self) -> CacheStats {
         let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
         CacheStats {
-            bytes: state.full.bytes.saturating_add(state.compact.bytes),
-            entries: state.full.len().saturating_add(state.compact.len()),
+            bytes: state
+                .full
+                .bytes
+                .saturating_add(state.compact.bytes)
+                .saturating_add(state.transit.bytes),
+            entries: state
+                .full
+                .len()
+                .saturating_add(state.compact.len())
+                .saturating_add(state.transit.len()),
             ..state.stats
         }
     }
@@ -215,3 +220,7 @@ mod compact_cache_tests;
 #[cfg(test)]
 #[path = "_tests_/cache_promotion_tests.rs"]
 mod cache_promotion_tests;
+
+#[cfg(test)]
+#[path = "_tests_/cache_transit_tests.rs"]
+mod cache_transit_tests;
