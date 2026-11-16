@@ -180,15 +180,20 @@ Measure the change against `main` on `mokly-cloud` and `examples/basic`.
 
 Depends on: 1, 2, 3, 5
 
-- [ ] Run the targeted tests, the early check, and the complete gate named
-      in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests, the early check, and the complete gate named
+      in `AGENTS.md`. The repository suite passed locally (2,426 tests); the
+      viewer, native, and browser suites run in CI on the pull request.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
-- [ ] Delete this plan when the `plans` skill says, under "Deleting the
+      once, and report. Two rounds, four findings, all fixed: uncharged
+      documents in transit (High, `75c178927`), a stale README constructor
+      (Low, `75c178927`), uncharged encoder workspace (Medium, `295ea9126`),
+      and a dead JSON adapter (Low, `295ea9126`). Findings file:
+      `.context/reviews/calummoore/compact-evicted-documents/findings.md`.
+- [x] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
