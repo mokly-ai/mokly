@@ -1,4 +1,4 @@
-//! Serde mirrors stay private to authenticated in-process comparison captures.
+//! Trusted annotation records stay private to the in-process document codec.
 
 use mokly_html::links::Reference;
 use mokly_html::tree::{Attribute, Region, RegionKind};

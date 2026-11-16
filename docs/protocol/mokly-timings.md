@@ -109,15 +109,19 @@ including failed compilations. Replay and evaluation-only reuse add no
 `output.write` span. It comes before that span's end record, also when the
 span ends with `error`. Its `parentId` is that span, and `phase` names the
 span's stage. Between the start and the end of the span, `hits` counts the
-render cache lookups that found an entry, `misses` the lookups that found
-none, and `evictions` the entries removed to make room. These counts cover
-every cache operation of the process in that interval, including nested
-spans and concurrent foreground work. `chargedBytes` and `entries` give the
-cache's charged bytes and retained entries at the end of the span. Charged
-bytes are the cache's estimate under the
+render cache lookups that either tier served. `restores` counts the lookups
+that the compact tier served, so `hits` includes `restores`. `misses` counts
+the lookups that no tier served. `restoreFailures` counts the compact
+documents that failed to restore. Each failure also counts as a miss, and the
+cache logs an error for it that holds no document data. `evictions` counts the
+entries that left the cache. A move between the tiers is not an eviction. These
+counts cover every cache operation of the process in that interval, including
+nested spans and concurrent foreground work. `chargedBytes` and `entries` give
+the charged bytes and the retained entries of both tiers at the end of the span.
+Charged bytes are the cache's estimate under the
 [runtime bound](./mokly-runtime.md#render-graph-and-cache), not measured
 memory. The `cacheHits` count of `serve.background` counts only the
-documents of that pass that came from the cache.
+documents of that pass that came from either tier of the cache.
 Decision: one counts record for each phase. Fields on each phase's own
 counts record were rejected, because they would rename `cacheHits` and lose
 the counts of a failed review phase.

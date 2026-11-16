@@ -252,7 +252,7 @@ fn the_first_failed_root_in_root_order_gives_the_error_when_a_later_root_fails_f
             fragments: Arc::new(DeferredFragments),
         }),
         stylesheets: stylesheets.clone(),
-        cache: Arc::new(MemoryCache::new(1024 * 1024)),
+        cache: Arc::new(MemoryCache::new(1024 * 1024, 0)),
         workers: Arc::new(ThreadWorkers::new(3).unwrap()),
         version: "fixture".into(),
     };

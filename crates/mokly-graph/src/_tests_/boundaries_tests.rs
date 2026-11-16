@@ -141,7 +141,7 @@ fn fragment_cache_reuses_equal_props_and_separates_ignore_scope() {
                 ..Default::default()
             })),
     )));
-    let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(1024 * 1024));
+    let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(1024 * 1024, 0));
     let memo: &dyn FragmentRenderer = &MemoFragments::new(
         Arc::new(RenderKeys::whole(NodeKey("generation".into()))),
         renderer,

@@ -10,6 +10,7 @@ use mokly_graph::asset_delivery::AssetRead;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::{Closure, GeneratedResources};
 use mokly_graph::collection::ComparisonCollector;
+use mokly_graph::document_codec::EncodedView;
 use mokly_graph::error::Result;
 use mokly_graph::resource_inputs::ResourceObserver;
 use mokly_graph::types::{
@@ -17,8 +18,8 @@ use mokly_graph::types::{
 };
 use mokly_model::data::Props;
 
-use crate::capture_codec::EncodedView;
 use crate::capture_collection::Collector;
+use crate::capture_restore::{DocumentRestorer, LosslessRestorer};
 use crate::capture_styles::{self, EncodedResource};
 use crate::capture_weight::{self, Budget, DEFAULT_BASE_CAPTURE_BYTES, DEFAULT_HEAD_CAPTURE_BYTES};
 
@@ -65,6 +66,7 @@ pub(crate) struct CapturedGeneration {
     styles: BTreeMap<String, EncodedResource>,
     retained_bytes: usize,
     encoded_bytes: usize,
+    restorer: Box<dyn DocumentRestorer>,
 }
 
 /// The result owns bounded side inputs; the original source handles every cache miss.
@@ -135,6 +137,7 @@ pub(crate) fn capture_with_bound(
         styles,
         retained_bytes: budget.retained,
         encoded_bytes,
+        restorer: Box::new(LosslessRestorer),
     }))
 }
 
@@ -197,7 +200,12 @@ impl RenderGeneration for CapturedGeneration {
     }
     fn comparison_document(&self, route: &str) -> Result<Arc<Artifact>> {
         if let Some(view) = self.views.get(route) {
-            return Ok(Arc::new(view.document.restore()));
+            match self.restorer.restore(&view.document) {
+                Ok(artifact) => return Ok(Arc::new(artifact)),
+                Err(_) => {
+                    tracing::error!("comparison capture document restore failed; reading source")
+                }
+            }
         }
         self.source.comparison_document(route)
     }
@@ -275,3 +283,7 @@ mod capture_batch_tests;
 #[cfg(test)]
 #[path = "_tests_/capture_cancellation_tests.rs"]
 mod capture_cancellation_tests;
+
+#[cfg(test)]
+#[path = "_tests_/capture_restore_tests.rs"]
+mod capture_restore_tests;

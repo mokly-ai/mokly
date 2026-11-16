@@ -117,7 +117,7 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
         tree.clone(),
         tree,
         pool,
-        Arc::new(MemoryCache::new(0)),
+        Arc::new(MemoryCache::new(0, 0)),
         Arc::new(Unimock::new(())),
         "test".into(),
         None,
