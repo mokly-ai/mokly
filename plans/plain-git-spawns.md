@@ -75,7 +75,7 @@ Depends on: none
 
 Depends on: 1
 
-- [ ] Release builds of `main` and of the branch. On `mokly-cloud`: the CPU
+- [x] Release builds of `main` and of the branch. On `mokly-cloud`: the CPU
       time of an idle watched Serve over 60 s, and a Serve run with one edit,
       before and after, with the share of the fork in a CPU profile, under
       `.context/plain-git-spawns/`.
@@ -84,10 +84,10 @@ Depends on: 1
 
 Depends on: 1, 2
 
-- [ ] Run the targeted tests, the early check, and the repository suite named
+- [x] Run the targeted tests, the early check, and the repository suite named
       in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review

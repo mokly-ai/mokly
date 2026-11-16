@@ -88,6 +88,18 @@
   children. `crates/mokly-git/src/system.rs` selects the Git mode and keeps one
   shared ownership and cancellation path.
 
+- **Related:**
+
+  - [plain-git-fsmonitor-override.md](./plain-git-fsmonitor-override.md): a
+    plain-group `check-attr` or `rev-parse` can start the user's filesystem
+    monitor hook, because the index read starts it.
+  - [plain-git-promisor-tree-reads.md](./plain-git-promisor-tree-reads.md): a
+    plain-group `ls-tree -l` can lazy-fetch in a partial clone on a Git build
+    without the lazy-fetch control.
+  - Both cases have the same cause: a list of helper-free commands depends on
+    the user's configuration and the Git build. The launcher of option A
+    removes the need for that list, so it is also the wider fix of both items.
+
 - **Recommendation:**
 
   A. It removes the fork of the large core while preserving full child setup.
