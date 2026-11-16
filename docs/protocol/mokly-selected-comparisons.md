@@ -1,5 +1,7 @@
 # Selected live comparisons
 
+Status: Serve does not keep a base between classifications yet. The [keep base side plan](../../plans/keep-base-side-in-memory.md) adds the kept base rules of this page.
+
 A selected comparison compares one shown view in Serve on demand: the screen
 or component entry the reader opened, at the selected viewport and colour
 scheme, head against base. It reads only that entry's views and their
@@ -101,7 +103,11 @@ Identical pending selections coalesce. Different selections serialize, with
 at most 32 pending requests and a ten-second deadline from admission to
 completion. A Git command that a cancellation stops is drained with its
 pipes. A source or Changes replacement aborts outstanding work, and stale
-work cannot publish. Shutdown stops admission, aborts
+work cannot publish. Aborted work on the kept base of the
+[base lifetime rule](./mokly-base-preparation.md#cancellation) stops before
+its next call to that base. A Git read, a sidecar call, or a render that
+already runs on the kept base finishes, and the kept base stays usable for
+later captures. Shutdown stops admission, aborts
 outstanding work, and drains it before releasing the cache. Refresh
 regenerates the selection and coalesces with a pending capture for the same
 accepted inputs.
@@ -117,7 +123,8 @@ own the classification. After its last owner exits, a missing snapshot returns 4
 while the generation's cached JSON remains available. After replacement,
 cached JSON and snapshots follow the idle rule too.
 Each classification can retain a separate base capture of up to 256 MiB,
-beside the graph's 256 MiB render cache. An old capture held by in-flight work
+beside the graph's 256 MiB render cache. Serve keeps at most one base capture
+between classifications. An old capture held by in-flight work
 can overlap a new capture. These are separate bounds, not a process memory limit.
 Count all retained delivery JSON and snapshots against the same store bounds. Bound
 retained generations to 64 and 128 MiB, and each generation to 64 MiB.

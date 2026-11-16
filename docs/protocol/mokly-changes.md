@@ -1,5 +1,7 @@
 # Changes and screen comparisons
 
+Status: Serve does not reuse a kept base yet. The [keep base side plan](../../plans/keep-base-side-in-memory.md) adds the reuse and its statuses.
+
 The [catalogue change metadata contract](./mokly-catalogue-changes.md) states
 what Changes shows when the base commit has no configuration file, when a base
 read fails, and when a comparison budget is exceeded. Runtime failure outcomes
@@ -111,7 +113,9 @@ publication replaces the index and the details together and raises
 `revision` by one. The index's `changesStatus` is `preparing` while the base
 side's sources are extracted and its dependencies install, when the base side
 needs them; `pending` while the base side renders and the comparison runs;
-then `ready` or `unavailable`. `disabled` means the catalogue was built with `--no-changes`; Serve never
+then `ready` or `unavailable`. A classification that reuses the kept base of
+the [base lifetime rule](./mokly-base-preparation.md#serve-base-lifetime)
+prepares no base side and publishes no `preparing`. `disabled` means the catalogue was built with `--no-changes`; Serve never
 publishes it, because the configuration always has a base. A
 content change clears the result, publishes `pending`, and publishes a
 terminal status only for the latest generation; a result from a superseded

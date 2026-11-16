@@ -1,5 +1,7 @@
 # Rust Core Architecture
 
+Status: Serve does not keep a base between classifications yet. The [keep base side plan](../../plans/keep-base-side-in-memory.md) adds the kept base.
+
 Mokly is a Rust core, a Node render sidecar, and a browser viewer. This page is
 the map: the processes, the components and their responsibilities, the
 boundaries between them, and the flow of data from the sources to a delivered
@@ -140,7 +142,9 @@ No node is written to the repository. The render cache is process memory,
 bounded by bytes and evicted least recently used. Serve reads head documents
 from it. `build` and `publish` capture the head during the build check under a
 separate 256 MiB bound, then Changes and output read that capture. The base
-side of Changes has its own 256 MiB capture bound. An uncaptured head document
+side of Changes has its own 256 MiB capture bound. Serve keeps one captured
+base, with its graph, sources, and leases, between classifications while the
+merge base and the base inputs stay the same. An uncaptured head document
 uses the head source, which renders it again only after render-cache eviction.
 The base-side extraction cache and the dependency install cache live outside the
 repository, in the operating system's cache directory under a key derived from
@@ -184,7 +188,8 @@ Comparison works on trees, never on text offsets. The
 - Comparison data lives in the core, outside the sidecar's JavaScript heap. A
   view's trees are discarded when its comparison ends. Each result holds at
   most one base capture, with its own byte budget, separate from the render
-  cache. A build result also holds one head capture with its own 256 MiB bound.
+  cache. Serve keeps at most one base capture between classifications. A
+  build result also holds one head capture with its own 256 MiB bound.
   Inputs above a side's budget read that side's sources: the pinned base
   sources for the base, and the head sources for the head.
 - Parsed CSS, the render cache, the base-side extraction cache, and the

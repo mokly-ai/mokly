@@ -68,7 +68,7 @@ Contract owners:
 
 The perf 6 planner made calls 1 to 13 on 2026-10-30. On 2026-11-16 the docs
 implementor checked each call against `main` at `a1d834fbe`. A dated note
-marks each change. Calls 14 to 21 are new calls of 2026-11-16.
+marks each change. Calls 14 to 22 are new calls of 2026-11-16.
 
 1. A reuse publishes no `preparing` status and no second `pending` status.
    The [Changes contract](../docs/protocol/mokly-changes.md#changes-in-serve)
@@ -180,6 +180,14 @@ marks each change. Calls 14 to 21 are new calls of 2026-11-16.
     readers of both sides return the same server error inside a graph
     provider error. The comparison layer cannot identify the side from
     that error type. This call applies the options check's first problem.
+22. The workspace orchestrator's call, 2026-11-16: also align the replacement
+    rule in `mokly-on-demand.md` with decision 2B. Reason: its rule that
+    replacement cancels every active Git command needs the same kept-base
+    exception as the other cancellation rules. This adds no user decision.
+    The docs implementor keeps the runtime change in its Changes section,
+    includes `build` in the timing rule, and points follow-up links to the
+    protocol anchors. This preserves the runtime cap, the prepare trace,
+    and links after this plan is deleted.
 
 ### Code facts on `main` at `a1d834fbe`
 
@@ -466,34 +474,38 @@ Depends on: none
 The docs implementor writes the contract. Each changed page gets the status
 line of the repository rules until Milestone 6.
 
-- [ ] `docs/protocol/mokly-base-preparation.md`: add a Serve base lifetime
+- [x] `docs/protocol/mokly-base-preparation.md`: add a Serve base lifetime
       section. It states what Serve keeps, the key, and the freshness checks
       of decisions 1 and 6 with the accepted limits of decision 1. It also
       states the cancellation rule of decision 2, the release events, the
       fallback of design call 8, and the bound of one kept base. It gives
       the decisions in force with their rejected options. Change the shared
       cancellation rule at line 62 under decision 2.
-- [ ] `docs/protocol/mokly-runtime.md`: Serve keeps the base capture between
+- [x] `docs/protocol/mokly-runtime.md`: Serve keeps the base capture between
       classifications. Extend the existing status line. Keep the page at 250
       lines or fewer.
-- [ ] `docs/protocol/mokly-comparison-serving.md`: one kept capture instead
+- [x] `docs/protocol/mokly-comparison-serving.md`: one kept capture instead
       of one for each classification, its memory bound, and the replacement
       rule at line 104 under decision 2.
-- [ ] `docs/protocol/mokly-selected-comparisons.md`: the capture-abort rule
+- [x] `docs/protocol/mokly-selected-comparisons.md`: the capture-abort rule
       at line 102 under decision 2, and the memory bound at line 119.
-- [ ] `docs/protocol/mokly-timings.md`: the spans of design call 11.
-- [ ] Align `docs/protocol/mokly-changes.md`,
+- [x] `docs/protocol/mokly-timings.md`: the spans of design call 11.
+- [x] Align `docs/protocol/mokly-changes.md`,
       `docs/protocol/mokly-watch-runtime.md`, and
       `docs/architecture/rust-core.md`.
-- [ ] Update `plans/follow-ups/background-base-render-pool.md` under decision
+- [x] Align the Git replacement rule in `docs/protocol/mokly-on-demand.md`
+      with decision 2B, under design call 22.
+- [x] Update `plans/follow-ups/background-base-render-pool.md` under decision
       5, and refresh its code locations.
-- [ ] When the plan commit did not do it, delete
+- [x] When the plan commit did not do it, delete
       `plans/follow-ups/keep-base-side-in-memory.md`. Fix the three links to
       it in `plans/follow-ups/installed-module-watch-paths.md` and
       `plans/follow-ups/bundle-disk-cache.md`.
-- [ ] Fetch `origin/main`. Run `npm run format:check`,
+- [x] Fetch `origin/main`. Run `npm run format:check`,
       `npm test -- tests/markdown_links.test.ts`, and
       `cargo xtask source-file-length-lint`.
+
+Evidence: `.context/keep-base-side-in-memory/milestone-1-report.md`.
 
 ## Milestone 2: Reuse contract in mokly-compare
 

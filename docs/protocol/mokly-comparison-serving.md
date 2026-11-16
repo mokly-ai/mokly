@@ -1,5 +1,7 @@
 # Comparison Generation And Serving
 
+Status: Serve still captures the base in each classification. The [keep base side plan](../../plans/keep-base-side-in-memory.md) adds the kept base capture and its replacement rule.
+
 ## Generation And Serving
 
 A comparison generation is an immutable set of files under
@@ -38,7 +40,9 @@ Otherwise the snapshot route returns 404 and starts no work, even while the
 generation's cached JSON remains available.
 Delivery files count against the 128 MiB comparison store. Each classification
 can also retain a separate base capture of up to 256 MiB, beside the 256 MiB
-render cache. An old capture held by in-flight work can overlap a new
+render cache. Serve keeps at most one base capture between classifications,
+under the [base lifetime rule](./mokly-base-preparation.md#serve-base-lifetime).
+An old capture held by in-flight work can overlap a new
 classification's capture. These bounds are separate, not a process memory limit.
 A route whose generation is gone returns 404
 and never redirects or starts work. The shell derives every snapshot and
@@ -101,16 +105,21 @@ Complete base validation and capture must use the same rendered input for each
 view. Capture must preserve validation failures and warning order, including
 when another view fails later. A failed validation publishes no partial capture.
 
-Replacing an unfinished classification cancels its base capture, its base
-workers, its source reads, and its sidecar calls. Command shutdown cancels
-both current and base work.
+Replacing an unfinished classification cancels the base that it prepares: its
+base capture, its base workers, its source reads, and its sidecar calls. A
+replaced classification that reads the kept base stops before its next call
+to that base. A call that already runs finishes, and the kept base stays
+usable, under the
+[kept base cancellation rule](./mokly-base-preparation.md#cancellation).
+Command shutdown cancels both current and base work, the kept base included.
 
 ## Base And Head Capture
 
 A capture is a bounded store of one side's rendered views. A later read of a
-kept view does not render the view again. Each classification captures its
-base side in Serve, `build`, and `publish`. `build` and `publish` also capture
-the head side. The [render cache rules](./mokly-runtime.md#render-graph-and-cache)
+kept view does not render the view again. Each preparation of a base side
+captures it, in Serve, `build`, and `publish`. A Serve classification that
+reuses the kept base captures nothing again. `build` and `publish` also
+capture the head side. The [render cache rules](./mokly-runtime.md#render-graph-and-cache)
 give the bound of each side.
 
 Route order is the byte order of the view routes. A capture keeps views in

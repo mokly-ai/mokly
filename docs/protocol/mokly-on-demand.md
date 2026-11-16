@@ -1,5 +1,7 @@
 # On-demand Serve
 
+Status: Serve does not keep a base between classifications yet. The [keep base side plan](../../plans/keep-base-side-in-memory.md) adds the kept base exception of the replacement rule.
+
 ## Startup And Completeness
 
 Serve validates the configuration, the catalogue model, the routes, the
@@ -108,7 +110,10 @@ candidate keeps the last-good state. Replacement invalidates the cached
 documents whose keys moved, every detail, and the comparison evidence; a
 resource edit invalidates the documents that reference it. Replacement and
 shutdown cancel active Git commands and wait for their process and pipe
-closure before cleanup completes.
+closure before cleanup completes. A Git read of the kept base finishes after
+a replacement, under the
+[kept base cancellation rule](./mokly-base-preparation.md#cancellation).
+Shutdown still cancels it.
 
 ## Comparison Snapshots
 

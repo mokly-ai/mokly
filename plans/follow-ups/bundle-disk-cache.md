@@ -75,8 +75,9 @@
     and `crates/mokly-cli/src/serve_trace_stages.rs:13` allows it. No code
     emits it. Decision 8 settles the row.
   - On 2026-10-27 the user set this finding aside. On 2026-10-30 the user
-    chose to start it in parallel with
-    [keep-base-side-in-memory.md](./keep-base-side-in-memory.md).
+    chose to start it in parallel with the work that keeps the Serve base
+    side in memory between edits. That work adds the
+    [Serve base lifetime rule](../../docs/protocol/mokly-base-preparation.md#serve-base-lifetime).
 - **Problem:** Every restart compiles the same unchanged sources again, and
   so does the base side of each first classification.
 - **Impact if no action:** Startup stays about 3 s over the target on the
@@ -178,8 +179,11 @@
     [large React startup item at its last commit](https://github.com/mokly-ai/mokly/blob/75bacb9d016205c804633b79ff0e8496c6c07929/plans/follow-ups/large-react-startup.md)
     closed on 2026-11-01, when large React startup measured about 3.7 s,
     cold and warm.
-  - [keep-base-side-in-memory.md](./keep-base-side-in-memory.md): both
-    shorten the base side. Measure again after either merges.
+  - The
+    [Serve base lifetime rule](../../docs/protocol/mokly-base-preparation.md#serve-base-lifetime):
+    both shorten the base side. A reuse of the kept base compiles no base
+    bundle, so this cache then shortens only a fresh preparation. Measure
+    this item again with the kept base in place.
 - **Recommendation:** 1A, 2A, 3A, 4D, 5A, 6D, 7C, 8A, 9C.
   - 1A: one check then decides for live and stored recipes, with no new
     pool method. 1D is about 0.1 s faster for each hit.

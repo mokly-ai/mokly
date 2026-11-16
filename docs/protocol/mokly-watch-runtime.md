@@ -1,5 +1,7 @@
 # Watch Runtime And Recovery
 
+Status: Serve does not keep a base between classifications yet. The [keep base side plan](../../plans/keep-base-side-in-memory.md) adds the release on a moved merge base.
+
 Continuation of [Watched Catalogue Development](./mokly-watch.md).
 
 ## Actions And Coalescing
@@ -64,7 +66,9 @@ never blocks a rebuild or comparison invalidation.
 
 Watched Serve polls the resolved `HEAD` and base commits once per second;
 Git resolves symbolic refs, worktrees, and packed refs. When either tip moves, Serve resolves their merge base again.
-An equal merge base keeps the published Changes state. A moved merge base clears the Changes evidence, reclassifies
+An equal merge base keeps the published Changes state. A moved merge base
+releases the kept base of the
+[base lifetime rule](./mokly-base-preparation.md#serve-base-lifetime), clears the Changes evidence, reclassifies
 from the render cache without re-rendering the head side, renders the base
 views whose commit changed, and publishes the result as a revision; the
 terminal reports `comparing again`. Replacement and shutdown cancel active

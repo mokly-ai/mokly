@@ -1,6 +1,6 @@
 # Mokly Build And Browse Runtime
 
-Status: Follow-up work remains in the [macOS mid-walk orphan item](../../plans/follow-ups/macos-stop-mid-walk-orphans.md).
+Status: Follow-up work remains in the [macOS mid-walk orphan item](../../plans/follow-ups/macos-stop-mid-walk-orphans.md). Serve does not keep a base capture between classifications yet, until the [keep base side plan](../../plans/keep-base-side-in-memory.md) adds it.
 
 This page is the runtime contract of `mokly serve` and `mokly build`: how a
 catalogue is discovered, rendered, cached, served, written, and shut down. The
@@ -202,11 +202,11 @@ Both sides of a comparison render from sources with the current Mokly
 version, the head from the working tree and the base from the base commit's
 Git tree, under the [comparison contract](./mokly-comparison.md). Serve
 classifies Changes in background work after readiness and publishes the
-result as a revision. Comparison snapshots render on demand when the reader
-selects a diff, under the
+result as a revision. Serve keeps one captured base between classifications
+under the [base lifetime rule](./mokly-base-preparation.md#serve-base-lifetime).
+Comparison snapshots render on demand when the reader selects a diff, under the
 [comparison serving contract](./mokly-comparison-serving.md). `build` writes
-one complete comparison generation. There is no standalone comparison
-command.
+one complete comparison generation. There is no standalone comparison command.
 
 ## Shutdown
 

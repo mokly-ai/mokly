@@ -1,5 +1,7 @@
 # Base Source And Dependency Preparation
 
+Status: Serve does not keep a base between classifications yet. The [keep base side plan](../../plans/keep-base-side-in-memory.md) adds the Serve base lifetime and its cancellation rule.
+
 This page defines how Mokly prepares the sources and the dependencies of the
 base side. The [comparison contract](./mokly-comparison.md#sides) owns
 rendered sides. The [Git runtime](./mokly-git.md) owns history, blobs and
@@ -60,8 +62,10 @@ missing objects names the recovery command.
 ## Shared Render Runtime
 
 The head and the base render with the current Mokly version. One cancellation
-stops both sides, including Git reads, extraction, installation, comparison,
-and public resource planning. HTML without a renderer or PostCSS follows the
+stops both sides of a classification, including Git reads, extraction,
+installation, comparison, and public resource planning. A base that Serve
+keeps follows the [kept base cancellation rule](#cancellation) instead. HTML
+without a renderer or PostCSS follows the
 [HTML dependency policy](./mokly-comparison.md#html-package-styles).
 
 Sidecar working directories follow the [fixed source-root rule](./mokly-sidecar.md#lifecycle).
@@ -92,6 +96,122 @@ missing base configuration still denotes an empty catalogue. Base diagnostics
 are detail lines that name the full base commit and original terminal code.
 A successful build has no error block. Genuine Git and internal comparison
 failures use error blocks and fail the command.
+
+## Serve Base Lifetime
+
+Serve keeps the last prepared base in memory between classifications. The
+kept base is the captured base with its render graph, its sources, its
+leases, and its sidecar bundle. Serve keeps at most one base. `build` and
+`publish` keep no base.
+
+A classification reuses the kept base while its key and its
+[freshness checks](#freshness-checks) hold. The key is the merge-base commit,
+the adopted working configuration, and the effective install-scripts setting.
+A reuse loads no base configuration, discovers and validates no base sources,
+and prepares no base graph. It captures no base view again, and it publishes
+no `preparing` status. A view that the kept capture does not hold renders
+again through the kept base, as a capture miss does. A failed lookup of the
+base ref keeps the kept base.
+
+Serve keeps a prepared base only when its preparation and its capture succeed
+without a source failure and without a `base-conversion` warning. It keeps no
+base whose files have a `filter` attribute, because an external filter can
+give other bytes later, as the
+[cache contract](./mokly-base-cache.md#converted-source-identity) says. It
+keeps no base whose dependencies fell back for a reason that a later attempt
+can fix: a failed install, the time limit, a cache failure, or the cache size
+limit. It keeps a base that fell back for a lasting reason, such as an
+unsupported package manager.
+
+Decision: keep the captured base with its graph, sources, leases, and bundle.
+Rejected: the capture and the catalogue only, because the views that the
+capture does not hold could then not render.
+
+### Freshness Checks
+
+Before each reuse, Serve checks that a fresh preparation would give the same
+base:
+
+- The working manifests and lockfiles that select the base dependencies are
+  unchanged, and the head uses the same dependency directories.
+- For a base that reads the working install, the install record and the
+  entry list of each working `node_modules` directory that it reads are
+  unchanged. Tier 1, tier 3, and an HTML-only base read the working install
+  under the
+  [package tiers](./mokly-comparison-packages.md#javascript-package-selection).
+  A tier-2 base reads its own install.
+- For such a base, each installed module that the base bundle and the head
+  bundle both read has the same digest on both sides.
+- The effective checkout settings of the base commit are unchanged: the Git
+  configuration and the attributes of each file. A preparation samples them
+  before its first base read.
+
+A failed check releases the kept base, and the classification prepares a new
+base. The checks do not see these changes:
+
+- A change to a package stylesheet, an asset, or a file that only the base
+  reads, while the install record and the entry list stay equal.
+- A Bun install, or a hand edit inside `node_modules`, while the entry lists
+  stay equal and the current head bundle shows no change in a module that
+  both bundles read.
+- An installed-module change after the last head bundle.
+- A package manager that the user installs after a lasting fallback.
+
+A Serve restart or a key change prepares the base again. A Git configuration
+write that changes no checkout setting, such as a new upstream, also releases
+the kept base.
+
+Decision: compare the installed-module digests of the two bundles, with the
+install records and the entry lists. Rejected: the input stamps of the base
+runtime, and a new digest of each installed file that the base read, because
+nobody measured their cost and the stamps still miss inputs. Decision:
+compare the checkout settings before each reuse. Rejected: keep the settings
+of the preparation, because a fresh preparation reads with the current
+settings.
+
+### Cancellation
+
+While Serve prepares a base, the classification's cancellation stops all of
+its base work. When Serve keeps the base, the base detaches from that
+classification, and only the stop of Serve stops it. Each reader of the kept
+base, a classification or a selected capture, checks its own cancellation
+before each call to the base. A call that already runs finishes after its
+reader is cancelled: a Git read, a sidecar call, a render, or a wait for
+sidecar admission. The kept base stays usable for the next reader.
+
+Decision: detach the base when Serve keeps it. Rejected: release the base
+after any cancelled read, because each edit during a classification would
+lose the base. Rejected: a cancelled read that records no source failure,
+because one reader could then stop a read of another reader.
+
+### Release
+
+Serve releases the kept base on each of these events:
+
+- a merge-base move or another change of the key,
+- a failed freshness check,
+- a base error or a source failure,
+- a dependency fallback that Serve does not keep,
+- a failure of the kept base during a reuse,
+- the stop of Serve.
+
+A classification with another key releases the kept base before it prepares
+a new one. In-flight work, such as a selected capture, can still hold an
+older base until it ends. The kept capture stays within the base capture
+bound of the [runtime contract](./mokly-runtime.md#render-graph-and-cache).
+
+When the kept base fails during a reuse, for example because a resource
+changed since its first read or its bundle cannot load again, Serve releases
+it. The same classification then prepares a new base once, and not more. A
+failure of the head side or a cancelled reader keeps the kept base.
+
+Decision: release the kept base with the state of Serve when Serve stops.
+Rejected: a separate release step in the shutdown order, because it frees
+nothing more. Rejected: an idle time limit, because the published
+classification holds the same base while it is current. Decision: one new
+preparation in the same
+classification after a failure of the kept base. Rejected: an unavailable
+result, because Changes would stay unavailable until the next edit.
 
 ## Cache Location And Ownership
 
