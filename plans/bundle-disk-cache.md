@@ -994,6 +994,46 @@ These are my calls, made on 2026-10-30 under the decision test.
     generations, which breaks live graph lifetimes. Keep memory-first lookup
     for complete recipes and the existing released-recipe byte bound.
 
+24. Use 256 fixed entry-lock stripes for the bundle kind, indexed by the
+    first byte of its SHA-256 settings key. Use one separate namespace lock.
+    Every read, replacement, eviction, stage cleanup, and invalidation uses
+    the same mapping. A collision misses or skips without waiting. Leave
+    source and dependency locks unchanged. Reason: lock files for every
+    settings key grow without a bound as source roots change. Fixed stripes
+    bound lock metadata and active stages and add no outcome value.
+    Deleting per-key lock files can split one logical lock across two file
+    identities. A single global entry lock adds unnecessary contention.
+    Alternatives: one global lock, or a bounded registry that assigns locks
+    to keys and requires another lifetime protocol. The existing best-effort
+    contention rule and resource bound settle this internal choice.
+    Apply checked A: one function maps every kind and key to its lock path.
+    A bundle lock ends inside its store call. Close the read file and release
+    its lock before restore or invalidation. An exclusive writer may evict
+    other keys of its own stripe without taking its own lock again. The old
+    kinds retain per-key locks because they wait and keep long leases.
+    Stripes could make a build wait for an unrelated lease, including its
+    own. The stripe layout is fixed for the `bundles` directory. A future
+    layout change needs another directory. State this in code and the compare
+    README, and scope the protocol's key-independence rule to the old kinds.
+
+25. Give each publication a fresh 256-bit nonce in its bundle-only receipt.
+    The rejected-entry token carries that nonce and ignores the access
+    sequence. Invalidation takes one exclusive lock attempt and removes only
+    the matching publication. Apply checked A: after the exclusive attempt,
+    also remove an entry whose receipt is still damaged or unreadable. A
+    replacement with a complete entry stays. Each receipt touch keeps its
+    nonce. Release the shared read lock before the exclusive attempt.
+    Keep the bundle data header and the old kinds' receipts unchanged.
+    Reason: access sequences change on reads and can repeat after cache
+    deletion. A nonce also distinguishes equal payloads after replacement or
+    namespace recreation. A platform randomness failure disables the optional
+    store through its existing fault outcome. Alternatives: a durable
+    monotonic counter plus a random namespace incarnation adds recovery and
+    overflow state. Comparing a header alone can remove another writer's
+    replacement. This applies call 20's matching-publication retirement rule.
+    The base-cache protocol names the bundle publication id and the complete
+    replacement rule. The old kinds' receipt shape stays unchanged.
+
 The options check for the restored decisions and these calls is recorded
 under `.context/bundle-disk-cache/options-check-current.md` and
 `.context/bundle-disk-cache/options-check-calls-14-19.md`. Call 20 uses
@@ -1007,6 +1047,8 @@ orchestrator before dependent work continues.
 
 Call 22 uses `.context/bundle-disk-cache/options-check-call-22.md`. Call 23
 uses `.context/bundle-disk-cache/options-check-call-23.md`.
+Call 24 uses `.context/bundle-disk-cache/options-check-call-24.md`.
+Call 25 uses the same options-check report.
 
 ## Milestone 1: Documentation and protocol
 
