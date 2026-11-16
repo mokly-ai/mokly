@@ -48,29 +48,30 @@ changes only if its description of the work goes stale.
 
 Depends on: none
 
-- [ ] Precompute the shared parts once for each `RenderKeys::build`, and give
+- [x] Precompute the shared parts once for each `RenderKeys::build`, and give
       each entry only its own extra members. Keep the closure, resolution,
       binding, and fallback rules exactly as they are.
-- [ ] Stream the key JSON into the digest without an intermediate
+- [x] Stream the key JSON into the digest without an intermediate
       `serde_json::Value`, with byte-identical output.
-- [ ] A test that compares every key of the new build with a reference
+- [x] A test that compares every key of the new build with a reference
       implementation of today's algorithm, kept in the test module, on a
       generation with a shared renderer closure, a stories file with a
       preview, re-exported bindings, a cycle in the module graph, and an
       unnamed renderer. Show that the test fails when one shared resolution
       file is left out of an entry.
-- [ ] The existing tests under `crates/mokly-graph/src/_tests_/render_*`
+- [x] The existing tests under `crates/mokly-graph/src/_tests_/render_*`
       pass unchanged.
 
 ## Milestone 2: Measurement
 
 Depends on: 1
 
-- [ ] Release builds of `main` and of the branch. On `mokly-cloud`, Serve
+- [x] Release builds of `main` and of the branch. On `mokly-cloud`, Serve
       start and one edit, before and after: `catalogue.validate`,
       `graph.prepare`, and `watch.action`, and the share of
       `RenderKeys::build` in a CPU profile, under
       `.context/faster-render-keys/`.
+- Evidence: `.context/faster-render-keys/measurements.md`.
 
 ## Milestone 3: Verification, commit, review, and pull request
 
