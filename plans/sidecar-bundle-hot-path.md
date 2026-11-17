@@ -176,15 +176,17 @@ Depends on: 1
 
 Delegate these changes and their focused tests to the non-ui implementor. Keep the implementation and shared build output under one owner.
 
-- [ ] Add assertion-red tests of the registered style filter. Cover direct libraries, subpaths, library and parent-scope aliases, nonmatches, literal regex characters, and overlapping aliases.
-- [ ] Compute and register the style filter once in setup. Keep every callback check.
-- [ ] Add a generated path table against the existing `path.relative` form. Cover equality, children, prefix siblings, `/`, trailing separators, dot segments, relative paths, and Windows semantics where available.
-- [ ] Prove the path optimization's new operation behaviour fails before the change. Add the normalized absolute POSIX fast path to `inside` and `logical`.
-- [ ] Keep the consumer resolve callback unchanged.
-- [ ] Replace the file load callback read with callback `fs.readFile` wrapped in one promise. Apply decision 5 to its failure branch. Look up `readFile` on the `node:fs` default export at call time. Keep the CSS load read unchanged.
-- [ ] Prove equal source bytes, loader selection, and cache-hit reads. Prove against the baseline sidecar on Node 22 and 24 that a read error keeps its code, message, and bundle failure detail. Change only the snapshot test read patch and preserve every assertion. Use assertion-red checks for new read-operation behaviour.
-- [ ] Run a one-time before/after byte comparison for direct and aliased imports of all three libraries. Compare code, metafiles, inputs, module digests, and dependency usage. Compare `compiled.peers` with sorted keys. Save the proof under `.context/`.
-- [ ] Run unchanged sidecar tests. Repeat each new asynchronous test 10 times. Record the cost and failure proof of each new test.
+- [x] Add assertion-red tests of the registered style filter. Cover direct libraries, subpaths, library and parent-scope aliases, nonmatches, literal regex characters, and overlapping aliases.
+- [x] Compute and register the style filter once in setup. Keep every callback check.
+- [x] Add a generated path table against the existing `path.relative` form. Cover equality, children, prefix siblings, `/`, trailing separators, dot segments, relative paths, and Windows semantics where available.
+- [x] Prove the path optimization's new operation behaviour fails before the change. Add the normalized absolute POSIX fast path to `inside` and `logical`.
+- [x] Keep the consumer resolve callback unchanged.
+- [x] Replace the file load callback read with callback `fs.readFile` wrapped in one promise. Apply decision 5 to its failure branch. Look up `readFile` on the `node:fs` default export at call time. Keep the CSS load read unchanged.
+- [x] Prove equal source bytes, loader selection, and cache-hit reads. Prove against the baseline sidecar on Node 22 and 24 that a read error keeps its code, message, and bundle failure detail. Change only the snapshot test read patch and preserve every assertion. Use assertion-red checks for new read-operation behaviour.
+- [x] Run a one-time before/after byte comparison for direct and aliased imports of all three libraries. Compare code, metafiles, inputs, module digests, and dependency usage. Compare `compiled.peers` with sorted keys. Save the proof under `.context/`.
+- [x] Run unchanged sidecar tests. Repeat each new asynchronous test 10 times. Record the cost and failure proof of each new test.
+
+- [ ] Commit with Conventional Commits and push the implementation. Send its SHA to the performance orchestrator at once for the `mokly-cloud` measurement.
 
 Evidence: `.context/sidecar-bundle-hot-path/implementation-report.md` and the evidence files that it names.
 
@@ -207,7 +209,6 @@ Depends on: 1, 2, 3
 
 The workspace orchestrator owns this milestone. Merge new main changes with the git-merge skill when needed. Preserve the nearby bundle disk cache change if it merges first. Do not merge this pull request.
 
-- [ ] Commit with Conventional Commits and push the implementation. Send its SHA to the performance orchestrator at once for the `mokly-cloud` measurement.
 - [ ] Review the complete local diff against `origin/main` after the push with the implementation-review skill. Run the finding checks. Apply its two-fix-round limit, record follow-up items for remaining findings, and re-review.
 - [ ] Confirm the performance orchestrator's `mokly-cloud` result and the 200 ms target before the final report. Report uncertainty if measurements do not establish it.
 - [ ] Finish CI with the finish-work skill's `scripts/ci-wait.sh`. Fix each branch-caused failure. Send the final report to the performance orchestrator.
