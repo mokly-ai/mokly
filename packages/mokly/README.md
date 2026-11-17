@@ -223,7 +223,10 @@ the packed contents of the package.
   at the first touch, and it reads them again after the last attempt. It never
   changes `complete`.
   [`src/sidecar/capture-runtime.ts`](./src/sidecar/capture-runtime.ts) holds
-  the stat and clock boundary and the age guard, and
+  the stat and clock boundary and the age guard. On Windows, its
+  `captureSnapshot` reads a witness through `handleStat`, a read-only handle
+  stat, because some libuv versions report a wrong device for a path stat.
+  `sameCaptureStat` compares a witness with its recheck.
   [`src/sidecar/capture-volumes.ts`](./src/sidecar/capture-volumes.ts)
   classifies each volume by its Linux file system type or by the hint.
 - [`src/sidecar/postcss.ts`](./src/sidecar/postcss.ts) holds `PostcssWorkers`,

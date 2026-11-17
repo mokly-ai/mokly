@@ -1450,6 +1450,161 @@ These are my calls, made on 2026-10-30 under the decision test.
     holds that work. Its recommended option binds the resolved winners and
     keeps all reuse. It is Large.
 
+31. My call, 2026-11-17: apply checked option B of the Windows capture
+    check. On Windows, every capture witness takes its device, identity, and
+    stamps from one read-only handle stat. The path stat keeps only the link
+    semantics, and it must agree with the handle. The check keeps the letters
+    A to C. No user decision is open.
+
+    Problem: the one-time proof of call 30 failed on the Windows 2025 runner
+    with Node 22.15.0. Every path stat there reported device 0, so no Windows
+    witness matched its hinted volume, and no compilation was durable. A
+    handle stat reported the hinted serial, 1383836831, with the same inode
+    and stamps. Node 24.22.1 reported the serial in both routes.
+
+    Cause: libuv 1.49.x and 1.50.x declare their private copy of
+    `FILE_STAT_BASIC_INFORMATION` with `FileId128` before
+    `VolumeSerialNumber`. Windows 11 24H2 and Windows Server 2025 export
+    `GetFileInformationByName`. There, a path stat of an object that is not a
+    reparse point reads its device from the upper half of the 128-bit file
+    ID. That half is 0 on NTFS. libuv 1.51.0 fixed the order through
+    libuv/libuv#4696 and libuv/libuv#4698. Node 22.14.0 to 22.16.0 bundle
+    libuv 1.49.2, and Node 23.11.0 to 24.1.0 bundle libuv 1.50.0. A handle
+    stat queries `FileFsVolumeInformation` on the open handle, on every Node
+    version. On the runner, that value equalled the hinted serial with both
+    Node versions.
+
+    Root question: how does a Windows capture witness get a faithful volume
+    identity and faithful stamps on every supported Node version, without a
+    guess and without a weaker assertion?
+
+    Shared assumptions, with their sources:
+
+    - Call 30 F stays: the private hint, the volume table, the witnesses,
+      `durable` only, and no wait in tests. Source: call 30.
+    - `mokly-base-cache.md` supports NTFS and ReFS on a fixed Windows volume,
+      and `mokly-sidecar.md` defines the private `capture` hint. Both stay.
+      Source: the protocol pages.
+    - The supported Node range includes the affected versions. Source: the
+      engines fields of `package.json` and `packages/mokly/package.json`, and
+      the Node 22.15.0 native jobs of `docs/protocol/ci-workflow.md`. These
+      are requirements. A and C change them, so both need the user.
+    - The hint carries the 32-bit serial of `GetVolumeInformationW`. Source:
+      the code and call 30. It stays, because the handle route reports the
+      same number.
+    - Call 30 assumed that a path stat supplies the witness device. Its text
+      says "Node's `stat.dev` must equal the hinted value". That names a
+      mechanism, not a requirement. B drops the path-device mechanism on
+      Windows. macOS keeps its path stat.
+
+    Options:
+
+    - A. Runtime policy. Keep path stats and accept no Windows disk cache on
+      affected runtimes. Move the Windows native job to Node 22.17.0 or 24,
+      or give the disk-hit test a runtime-specific expectation, and document
+      the runtime limit. It changes the CI or cache requirement, so it needs
+      the user. Small.
+    - B. Handle-snapshot witnesses on every Windows runtime. One capture
+      runtime method opens the path read-only, takes a bigint handle stat,
+      and closes the handle. Every Windows witness uses it at the first touch
+      and after `finish()`. Medium.
+    - C. Runtime floor. Raise both engines fields to Node 22.17.0 and 24.2.0,
+      move every 22.15.0 pin, and update five docs. It is outward-facing for
+      package users, so it needs the user. It also fixes the PostCSS name
+      check that the follow-up below records. Medium.
+
+    Left out:
+
+    - A volume from device 0, a drive letter, or a mount root when the device
+      is 0. Device 0 carries no volume, and on ReFS that value is part of a
+      file ID.
+    - A 64-bit serial in the hint, or a signed alias of the serial. No Node
+      version reports either value.
+    - Another path stat variant. All eight numeric, bigint, sync, async,
+      `stat`, and `lstat` variants gave device 0.
+    - A volume from `realpath` and the mount roots alone. It still needs a
+      handle, and it loses the device check that rejects a junction to
+      another volume. B is better on every point.
+    - A Rust classifier for each path, or a final native proof in the pool.
+      It needs the witness list on the wire and a second witness owner, and
+      the sidecar still lacks the device at the first touch.
+    - A native addon that reads `FILE_ID_INFO`. It adds a native package for
+      each platform. B is better on every point.
+    - A startup check that turns durability off when the two routes disagree.
+      It still loses the cache. B removes the wrong case.
+    - A libuv version gate inside B. It only lowers the cost on fixed
+      runtimes. A later measurement can add it without a change of behaviour.
+
+    Wider fix: B. One snapshot route serves every Windows witness at both
+    ends, so no witness can read a path device on Windows. C is the wider fix
+    for every path device in the package, but it changes a requirement, so it
+    needs the user. Recommendation: B.
+
+    B stays within F. It changes no requirement, hint, volume table, private
+    `hello` field, CI matrix, or assertion. It adds no error, gate, retry,
+    wait, skip, sidecar write, or weaker test, and it removes nothing from
+    `origin/main`. The handle stat is private. Call 30 sends a failed Windows
+    proof to the user only when F cannot make Windows durable. B makes
+    Windows durable within F.
+
+    Design of B:
+
+    - `CaptureRuntime.handleStat` opens the path read-only, takes a bigint
+      handle stat, and closes the handle. `captureSnapshot` applies it on
+      `win32` only. Linux and macOS keep their current stats.
+    - Every Windows witness uses `captureSnapshot` after `finish()`. At the
+      first touch, the directories of the ancestor walk and the link targets
+      use it too. A metadata witness keeps the handle stat of its own
+      metadata read at the first touch and needs no second open.
+    - The witness records only the handle stat, so it never mixes fields
+      from two calls. The path stats before and after the open must agree
+      with the handle on the kind, `ino`, `ctimeNs`, and `mtimeNs`, and on
+      `size` for metadata. No check reads a Windows path `dev`.
+      `sameCaptureStat` compares the witness with its recheck.
+    - After `finish()`, a no-follow witness takes its path lstat first. A
+      symlink, a junction, a file, or a missing path rejects before any open.
+      A new volume mount point shows another `dev` and `ino`, so it rejects.
+    - The maturity check uses the time of the first touch, which `observe`
+      reads before the open. So handle latency cannot mature a recent stamp.
+    - An open, stat, or close error, a kind mismatch, or a field mismatch
+      clears only `durable`. It never changes `complete`, the identity, or
+      in-process reuse. A directory that a user can pass but not list fails
+      the open, so it fails closed.
+    - The preflight keeps path lstats, because it reads only `ctimeNs`.
+
+    Cost: one more open, stat, and close for each Windows directory witness,
+    at both ends. It runs only for a real compile with a bundle store, never
+    on reuse, and within the visited-path bound. The check estimates tens of
+    milliseconds for about a thousand directory witnesses. It is not
+    measured.
+
+    Tests: a new focused file injects a `win32` runtime. It covers a path
+    device of 0 with a handle serial, a metadata witness that keeps its first
+    handle stat, a changed handle identity, stamp, or kind at either end, a
+    link that replaces a directory, open, stat, and close failures that keep
+    the evidence complete and close each handle, and handle latency that
+    cannot mature a recent stamp. Each new test runs 10 times. Every existing
+    assertion stays. No test gets a wait, sleep, skip, retry, or platform
+    semantic expectation.
+
+    Proof: after the source commit, the root runs the unchanged temporary
+    proof on the macOS 26 and Windows 2025 runner types, with Node 22.15.0
+    and Node 24. The native CI job then runs the Windows disk-hit
+    assertions. A user decision opens only if that proof fails with B.
+
+    Bounded unknowns: handle freshness after a create, a rename, and a
+    delete on Node 22.15.0 is not proven yet. ReFS is unproven for all of F,
+    and B fails closed there if the two routes disagree. The list-denied
+    failure comes from the libuv access flags, not from a run.
+
+    A volume mounted in a folder never matches its own mount directory, so
+    such a volume fails closed. The follow-up item
+    [capture-mount-root-match.md](./follow-ups/capture-mount-root-match.md)
+    holds that fix. The PostCSS read witness has the same path-device cause.
+    The follow-up item
+    [postcss-windows-resolved-name.md](./follow-ups/postcss-windows-resolved-name.md)
+    holds that work.
+
 The options check for the restored decisions and these calls is recorded
 under `.context/bundle-disk-cache/options-check-current.md` and
 `.context/bundle-disk-cache/options-check-calls-14-19.md`. Call 20 uses
@@ -1470,6 +1625,7 @@ Call 27 uses `.context/bundle-disk-cache/options-check-call-27.md`.
 Call 28 uses `.context/bundle-disk-cache/options-check-call-28.md`.
 Call 29 uses `.context/bundle-disk-cache/options-check-call-29.md`.
 Call 30 uses `.context/bundle-disk-cache/options-check-call-30.md`.
+Call 31 uses `.context/bundle-disk-cache/options-check-windows-device.md`.
 
 ## Milestone 1: Documentation and protocol
 
@@ -1646,10 +1802,19 @@ Depends on: 4
         cached-listing windows. Keep every disk-hit assertion, with a
         private fixture parent. Add no wait, sleep, skip, retry, or platform
         semantic test.
-  - [ ] Prove once that directory stamps change and that `stat.dev` equals
-        the hint, on this machine and the macOS 26 and Windows 2025 runner
-        types, with Node 22.15.0 and 24. Keep the artifacts under
-        `.context/`. A failed proof on macOS or Windows goes to the user.
+  - [x] Apply checked call 31 B. Take every Windows witness from one
+        read-only handle stat at the first touch and after `finish()`. Keep
+        the first handle stat of a metadata witness. Require kind and field
+        agreement with the path stats, and keep the first-touch maturity
+        time. Let open, stat, and close errors clear only `durable`. Run each
+        new focused test 10 times.
+  - [ ] Prove once that directory stamps change and that the capture's
+        device value equals the hint: the path stat device on macOS, and the
+        handle stat device of call 31 on Windows. Run the temporary proof
+        with its assertions unchanged, on this machine and the macOS 26 and
+        Windows 2025 runner types, with Node 22.15.0 and 24. Keep the
+        artifacts under `.context/`. A failed proof on macOS or Windows goes
+        to the user.
   - [x] Update the protocol pages and the READMEs in the commit of the
         code, after the source names settle and the root authorizes each
         README.
@@ -1680,7 +1845,7 @@ Depends on: 4
 - [x] Remove the bundle-cache status from every changed protocol page and
       `docs/architecture/rust-core.md`. Keep the existing unrelated follow-up
       status in the runtime and terminal-errors pages.
-- [ ] Fetch and merge `origin/main` if it advanced. Preserve the render
+- [x] Fetch and merge `origin/main` if it advanced. Preserve the render
       cache and base-lifetime work of the parallel branches. Apply current
       design call 10 to `mokly-runtime.md`. Measure again if their changes
       affect the baseline.
@@ -1693,7 +1858,8 @@ Depends on: 4
 
 Merge evidence: `.context/bundle-disk-cache/merge-notes.md` and
 `.context/bundle-disk-cache/merge-86-preservation.json`, and
-`.context/bundle-disk-cache/merge-f380-preservation.json`.
+`.context/bundle-disk-cache/merge-f380-preservation.json`, and
+`.context/bundle-disk-cache/merge-794b-preservation.json`.
 
 Evidence: `.context/bundle-disk-cache/reports/preview-reuse-fix.md`,
 `.context/bundle-disk-cache/reports/test-cache-isolation.md`, and
@@ -1705,6 +1871,11 @@ Call 30 evidence: `.context/bundle-disk-cache/reports/capture-window.md`
 and `.context/bundle-disk-cache/reports/durability-docs.md`,
 `.context/bundle-disk-cache/reports/durability.md`, and
 `.context/bundle-disk-cache/reports/durability-boundary-docs.md`.
+
+Call 31 evidence:
+`.context/bundle-disk-cache/options-check-windows-device.md`,
+`.context/bundle-disk-cache/reports/windows-capture.md`, and
+`.context/bundle-disk-cache/reports/windows-capture-docs.md`.
 
 ## Milestone 6: Verification, commit, review, and pull request
 

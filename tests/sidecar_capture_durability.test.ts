@@ -27,6 +27,8 @@ function fixture(
     mtimeNs: old,
     size: 4n,
     isDirectory: () => true,
+    isFile: () => false,
+    isSymbolicLink: () => false,
     ...values,
   };
   let now = start;
@@ -45,6 +47,7 @@ function fixture(
       return current;
     },
     stat: async () => current,
+    handleStat: async () => current,
     filesystem: async () => type,
   };
   return {
