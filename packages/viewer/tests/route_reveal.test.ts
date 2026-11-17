@@ -6,7 +6,11 @@ import { createCatalogue } from "../src/shell/catalogue.js";
 import { catalogueNavSections } from "../src/shell/nav_model.js";
 import { shellContext } from "../src/shell/projection.js";
 import type { ShellRoute } from "../src/shell/routes.js";
-import { defaultSelection, revealSelection } from "../src/shell/selection.js";
+import {
+  defaultSelection,
+  mergeSelection,
+  revealSelection,
+} from "../src/shell/selection.js";
 import { withRoute } from "../src/shell/store_filters.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
 
@@ -88,6 +92,19 @@ test("a route reveal under Changes keeps a search that a changed listed row matc
     }),
     { ...selection, search: "" },
   );
+});
+
+test("a host route proposal keeps a search that a listed row of the destination matches", () => {
+  const { catalogue, model, sections } = fixture();
+  const titles = folderTitleLookup(catalogue.hierarchy);
+  const searched = { ...defaultSelection, search: "empty" };
+  const proposed = (screenPath: string) =>
+    mergeSelection(model, titles, sections, searched, { screenPath });
+  assert.deepEqual(proposed("welcome"), {
+    ...searched,
+    screenPath: "welcome",
+  });
+  assert.equal(proposed("billing").search, "");
 });
 
 test("activating a parent row that only its variant shows keeps the search box", () => {
