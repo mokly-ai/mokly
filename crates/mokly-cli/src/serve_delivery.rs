@@ -56,6 +56,7 @@ pub(super) fn states(input: StateInputs<'_>) -> Result<Arc<dyn ServeStateFactory
     Ok(Arc::new(NativeServeState {
         changes: Arc::new(ServeChanges {
             reuse: Arc::new(comparison_reuse::MemoryComparisons::new(32 * 1024 * 1024)),
+            kept_base: Arc::default(),
             sidecars: input.services.sidecars.clone(),
             progress: input.progress,
             refreshes: input.reporter,

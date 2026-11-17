@@ -1,5 +1,6 @@
 //! Public engine proofs for bounded preparation, ordered failures, and cancellation.
 
+mod base_reader_tests;
 mod bound_tests;
 mod control;
 mod order_tests;

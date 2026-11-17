@@ -27,6 +27,8 @@ use unimock::{MockFn, Unimock, matching};
 mod base_dependencies;
 #[path = "../src/changes_base.rs"]
 mod changes_base;
+#[path = "../src/changes_freshness.rs"]
+mod changes_freshness;
 #[path = "../src/changes_runtime.rs"]
 mod changes_runtime;
 #[path = "../src/changes_static.rs"]

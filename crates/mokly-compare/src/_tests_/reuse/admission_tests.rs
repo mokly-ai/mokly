@@ -2,6 +2,7 @@
 
 use crate::comparison_reuse::{ComparisonReuse, MemoryComparisons, ReuseFence};
 
+use super::base_support::reader;
 use super::support::{Fixture, engine, request, review};
 
 #[test]
@@ -12,7 +13,7 @@ fn accepted_views_skip_preparation_but_changed_and_unknown_views_compare() {
         ..Fixture::default()
     };
     let mut after = before.clone();
-    let previous = before.generation(false, true);
+    let mut previous = reader(before.generation(false, true));
     let mut current = after.generation(true, true);
     let initial = store.begin(engine(), ReuseFence::new(&"settings"));
     let expected = initial
@@ -20,6 +21,7 @@ fn accepted_views_skip_preparation_but_changed_and_unknown_views_compare() {
         .unwrap();
     assert_eq!(initial.work().compared, 2);
     initial.accept();
+    previous = reader(before.generation(false, true));
     before.clear();
     let same = store.begin(engine(), ReuseFence::new(&"settings"));
     let result = same
@@ -47,6 +49,17 @@ fn accepted_views_skip_preparation_but_changed_and_unknown_views_compare() {
         .unwrap();
     assert_eq!((edit.work().reused, edit.work().compared), (1, 1));
     edit.accept();
+    let mut replacement = before.clone();
+    replacement
+        .html
+        .insert("one".into(), "<p>replacement base</p>".into());
+    previous = reader(replacement.generation(false, true));
+    let replaced = store.begin(engine(), ReuseFence::new(&"settings"));
+    replaced
+        .compare_prepared(&request(), previous.clone(), current.clone())
+        .unwrap();
+    assert_eq!((replaced.work().reused, replaced.work().compared), (1, 1));
+    replaced.accept();
     after.known = false;
     current = after.generation(true, true);
     let uncertain = store.begin(engine(), ReuseFence::new(&"settings"));

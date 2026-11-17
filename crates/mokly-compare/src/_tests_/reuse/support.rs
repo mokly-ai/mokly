@@ -11,6 +11,7 @@ use mokly_css::parsed_cache::MemoryParsedCss;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
 use mokly_graph::comparison_proof::{ComparisonRead, ContentIdentity, DocumentProof, ProofMode};
+use mokly_graph::error::GraphError;
 use mokly_graph::key::{NodeKind, key};
 use mokly_graph::types::{DocumentPlan, RenderGeneration, RenderGenerationMock, RenderSummary};
 use mokly_html::{composition::Composed, parse};
@@ -31,6 +32,8 @@ pub(super) struct Fixture {
     pub(super) html: BTreeMap<String, String>,
     pub(super) resources: BTreeMap<String, Vec<u8>>,
     pub(super) known: bool,
+    pub(super) failed_document: Option<String>,
+    pub(super) failed_resources: bool,
     pub(super) documents: Arc<AtomicUsize>,
     pub(super) workers: bool,
     pub(super) proof_threads: Arc<Mutex<Vec<ThreadId>>>,
@@ -46,6 +49,8 @@ impl Default for Fixture {
             html: BTreeMap::from([("one".into(), "<p>one</p>".into()), ("two".into(), "<p>two</p>".into())]),
             resources: BTreeMap::new(),
             known: true,
+            failed_document: None,
+            failed_resources: false,
             documents: Arc::new(AtomicUsize::new(0)),
             workers: false,
             proof_threads: Arc::new(Mutex::new(Vec::new())),
@@ -97,6 +102,8 @@ impl Fixture {
         let documents = self.documents.clone();
         let proof = self.clone();
         let proof_threads = self.proof_threads.clone();
+        let failed_document = self.failed_document.clone();
+        let failed_resources = self.failed_resources;
         let common = (
             RenderGenerationMock::comparison_document_proof
                 .each_call(matching!(_))
@@ -134,6 +141,9 @@ impl Fixture {
             RenderGenerationMock::comparison_document
                 .each_call(matching!(_))
                 .answers_arc(Arc::new(move |_, route| {
+                    if failed_document.as_deref() == Some(route) {
+                        return Err(GraphError::InputsChanged { path: route.into() });
+                    }
                     Ok(artifact(&html[route.strip_suffix("/index.html").unwrap()]))
                 }))
                 .at_least_times(0),
@@ -183,12 +193,20 @@ impl Fixture {
                     index += 1;
                 }
             }));
-        let generation: Arc<dyn RenderGeneration> = Arc::new(match (head, prove) {
-            (false, true) => Unimock::new((common, proof, scheduling)),
-            (true, true) => Unimock::new((common, proof, validation)),
-            (false, false) => Unimock::new((common, scheduling)),
-            (true, false) => Unimock::new((common, validation)),
-        });
+        let resource = RenderGenerationMock::resource_digest
+            .some_call(matching!(_))
+            .answers(&|_, route| Err(GraphError::InputsChanged { path: route.into() }));
+        let generation: Arc<dyn RenderGeneration> =
+            Arc::new(match (head, prove, failed_resources) {
+                (false, true, false) => Unimock::new((common, proof, scheduling)),
+                (true, true, false) => Unimock::new((common, proof, validation)),
+                (false, false, false) => Unimock::new((common, scheduling)),
+                (true, false, false) => Unimock::new((common, validation)),
+                (false, true, true) => Unimock::new((common, proof, scheduling, resource)),
+                (true, true, true) => Unimock::new((common, proof, validation, resource)),
+                (false, false, true) => Unimock::new((common, scheduling, resource)),
+                (true, false, true) => Unimock::new((common, validation, resource)),
+            });
         if let Some(route) = generation.plans().keys().next() {
             let _ = generation.comparison_document_proof(route);
         }

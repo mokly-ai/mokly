@@ -18,7 +18,7 @@
   `crates/mokly-graph/src/validation.rs:37-69` and `:71`,
   `crates/mokly-graph/src/cache.rs:173-189`,
   `crates/mokly-graph/src/document_codec.rs:26-31` and `:133`, and
-  `crates/mokly-graph/src/types.rs:142-148`.
+  `crates/mokly-graph/src/types.rs:143-149`.
 - **Reason:** On 2026-11-17 the user asked to record the proof cost in the
   reuse pull request with no code change, and to choose an option in a later
   branch.
@@ -79,16 +79,17 @@
   - Compact cache entries keep the usage and the links outside the
     compressed payload, in `document_codec.rs:26-31` and `:133`.
   - `FrozenResources` keeps the default `comparison_usage`, which calls
-    `comparison_document`, in `types.rs:142-148`. So a usage read through it
+    `comparison_document`, in `types.rs:143-149`. So a usage read through it
     runs the checked head read again.
   - On the large HTML fixture, 4,800 of the 5,850 head views are screen
     views. Each links to `#summary` on the next screen, in
     `tests/fixtures/large/html.ts:124`. So each of their checked head reads
     reads five documents: its own and the four views of the next screen.
   - Measurement setup:
-    - `main` at `03bedb6ec` against the implementation at `38b923b5c`. The
-      branch has since merged `main` at `0accb6818` as `69ad2b326`. The
-      reuse runtime is unchanged from the measured commit.
+    - `main` at `03bedb6ec` against the implementation at `38b923b5c`. These
+      numbers are historical. The branch later merged `main` at `0accb6818`
+      and at `51f356574`, which adds the kept base of Serve. The later
+      runtime can give other numbers.
     - Release builds ran in separate checkouts and target directories.
     - Each side ran 3 samples, each with one edit and an exact restoration.
       An event-stream observer measured HTTP Ready.

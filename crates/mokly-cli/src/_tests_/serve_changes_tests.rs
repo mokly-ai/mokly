@@ -71,6 +71,7 @@ fn refresh_uses_current_and_cancelled_attempts_print_no_warnings_or_result() {
             reuse: Arc::new(mokly_compare::comparison_reuse::MemoryComparisons::new(
                 32 * 1024 * 1024,
             )),
+            kept_base: Arc::default(),
             sidecars: Arc::new(Unimock::new(())),
             progress: Arc::new(Unimock::new(())),
             cache_announced: Arc::new(false.into()),

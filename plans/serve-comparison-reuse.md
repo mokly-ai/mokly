@@ -384,8 +384,9 @@ The orchestrator owns these steps.
 
 - [x] Use Git 2.45 or later first on `PATH`, with `git-lfs` installed.
 - [ ] Finish the running gate, then merge main's kept-base change at `b881bfffb` under `git-merge` and preserve both changes.
-- [ ] Check retained-only proofs through `BaseReader`, including its cancellation, release, replacement, and fresh-base retry boundaries.
+- [x] Check retained-only proofs through `BaseReader`, including its cancellation, release, replacement, and fresh-base retry boundaries.
 - [ ] Run merged-tree targeted tests and the byte oracle. Push the combination and send its SHA before the complete gate for cloud measurement.
+- [ ] Run a watched smoke on the combination. Confirm view reuse and kept-base reuse after an edit and exact restoration.
 - [ ] Run targeted tests, Rust format and clippy, `cargo xtask check --suite repository`, and `cargo xtask check`.
 - [x] Run a watched Serve smoke test. Check disk and RAM before each large Cargo build.
 - [x] Check every delegated TODO against the diff and repository rules.
@@ -399,6 +400,8 @@ Commit `38b923b5c` is pushed. Its complete gate remains required.
 The performance orchestrator also requested that newer `main` merge before the pull request, after these paired measurements.
 The performance orchestrator's call of 2026-11-17 adds the kept-base integration after the running gate.
 The combined SHA goes to the orchestrator immediately after targeted checks and the push, before the combined complete gate.
+Integration preflight: `.context/serve-comparison-reuse/kept-base-preflight.md`.
+The integration and preservation records will be `kept-base-integration-report.md`, `kept-base-docs-integration-report.md`, and `kept-base-merge-preservation.md` in that folder.
 
 ## Post-merge follow-up (non-blocking)
 
@@ -415,7 +418,8 @@ First complete gate attempt: `.context/serve-comparison-reuse/complete-gate-fina
 The repository suite passes; viewer typechecking requires the machine's Bun upgrade from 1.3.14 to the repository pin, 1.4.4.
 The pre-kept-base gate result is in `.context/serve-comparison-reuse/complete-gate-pre-kept-base-result.json`.
 Repository and viewer suites pass. The browser suite has one unrelated failure and 2,286 passes.
-The exact failed case passes its focused rerun. The existing lost-highlight follow-up records this recurrence.
+The exact failed case passes its focused rerun. Main `51f356574` fixes this race and deletes its resolved follow-up.
+Keep that deletion. The recurrence evidence remains in the gate report.
 Static delivery did not run after the browser failure. The complete gate remains required on the kept-base integration.
 
 Orchestrator source check: `.context/serve-comparison-reuse/orchestrator-source-check.md`.

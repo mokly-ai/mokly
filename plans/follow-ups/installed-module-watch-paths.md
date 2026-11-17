@@ -62,8 +62,10 @@
   conversion the same.
 - **Previous examples:** None found.
 - **Related:**
-  - [keep-base-side-in-memory.md](./keep-base-side-in-memory.md): its
-    options 1C and 1D rely on the head watcher seeing install changes.
+  - The
+    [kept base freshness checks](../../docs/protocol/mokly-base-preparation.md#freshness-checks)
+    of Serve compare the base bundle's installed-module digests with the
+    head bundle's. So they rely on the head watcher seeing install changes.
   - [jsconfig-resolution-input.md](./jsconfig-resolution-input.md): another
     gap in the watched resolution inputs.
 - **Recommendation:** B. It fixes both cases with one rule, and it changes

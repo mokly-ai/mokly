@@ -24,7 +24,7 @@
 - **Background:**
   - The base needs JavaScript rendering when its catalogue has a JavaScript
     entry module or a stories file, or its configuration names a renderer
-    or PostCSS. `crates/mokly-cli/src/changes_base.rs:87` to line 102
+    or PostCSS. `crates/mokly-cli/src/changes_base.rs:98` to line 114
     prepares base dependencies only then. An HTML-only catalogue needs no
     install.
   - The dependency inputs are the tracked package manifests and lockfiles.
@@ -56,7 +56,7 @@
     `SIGKILL`, and a child of a script survived `SIGTERM` and then
     `SIGKILL`.
   - The time limit of a base install is 120 seconds, at
-    `crates/mokly-cli/src/base_dependencies.rs:170`.
+    `crates/mokly-cli/src/base_dependencies.rs:173`.
   - The recipe below meets each condition of a real base install:
     - Each case has its own scratch Git repository and a fresh cache.
     - The base commit and the working tree each hold `mokly.config.json`

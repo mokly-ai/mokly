@@ -51,7 +51,7 @@ its files are installed. Its Serve duration includes queue time.
 | `watch.action`                                   | one watch action from debounce end to publication; carries `action`                                                                  |
 | `changes.classify`                               | one Changes classification, in Serve and in `build`                                                                                  |
 | `review.base-commit`                             | merge-base resolution and commit validation; a pinned commit reuses the result without another Git span                              |
-| `review.base-tree`                               | base source preparation and complete rendering, including bounded tree/blob reads, extraction, and dependency preparation            |
+| `review.base-tree`                               | bounded base reads, extraction, dependencies, and rendering, or a reuse of the kept base; carries `action`, `prepare` or `reuse`     |
 | `review.base-extraction`                         | the base source key, the cache lookup, and the extraction when no complete entry exists; carries `action`, `reuse` or `extract`      |
 | `review.base-dependencies`                       | the dependency tier decision and, in the second tier, the bounded install; the end carries `tier`                                    |
 | `review.compare-views`                           | the comparison loop; its `counts` record carries `views`, `unchanged`, `changed`, and `ignoredOnly`                                  |
@@ -70,7 +70,11 @@ under `changes.classify` in Serve and under `output.write` in `build`. The
 `review.capture-side` span carries `side`, with `base` for the base generation
 and `head` for the head generation. Build and publish emit the head capture
 under `output.write` before `changes.classify`. The base capture appears under
-`review.base-tree`. A repeated discovery for the same side, route, content
+`review.base-tree`. `review.base-tree` carries `action`: `prepare` for a new
+base, and `reuse` when Serve reuses the kept base of the
+[base lifetime rule](./mokly-base-preparation.md#serve-base-lifetime). A
+reuse emits no `review.base-extraction`, `review.base-dependencies`, or
+`review.capture-side` span. A repeated discovery for the same side, route, content
 digest, and exclusion identity is a defect. A contained parse or selector failure in
 `review.css-analysis` returns unresolved evidence with status `ok`; an
 escaping error ends the span with `error`. The spans log no paths,
@@ -85,15 +89,13 @@ Only a completed comparison emits these counts. `review.base-extraction`,
 record `ok` only after successful work. A `review.base-extraction` lookup
 without a build that finds no complete entry ends without an `action`.
 
-In Serve, `review.compare-views` also records the work of
+Only in Serve, `review.compare-views` also records the work of
 [view comparison reuse](./mokly-comparison-serving.md#view-comparison-reuse).
-Its `end` record carries the fields below, also with status `error`, and its
-`counts` record carries them too. `build` and `publish` record none of them.
-The comparison counts still cover every view, reused views included.
+Its `end` record carries the fields below, also with status `error`, and so
+does its `counts` record. Comparison counts include reused views.
 
-- `reused` counts the views whose kept comparison passed its proof. `compared`
-  counts the views that the classification compared. `recordedReads` counts
-  the proof reads that the reused views kept and the compared views recorded.
+- `reused` counts reused views, and `compared` counts compared views.
+  `recordedReads` counts their proof reads, kept or newly recorded.
 - `identitiesChecked` counts the identity checks of the proofs.
   `identityReads` counts the checks that asked a generation for an identity.
   `recordingIdentityReads` counts the identity reads of recording.
@@ -111,9 +113,8 @@ The comparison counts still cover every view, reused views included.
 - `overflowed` is a boolean. It is `true` when the classification could not
   collect a complete set within the bound.
 
-Decision: each Serve classification reports the time and identity reads of
-its proofs and its recording, and the time of its current usage reads. Reuse
-counts alone were rejected, because they would hide the cost of the proofs.
+Decision: Serve reports the cost of proofs, recording, and usage reads.
+Reuse counts alone were rejected, because they would hide the cost of proofs.
 
 Static input counters on `output.*` stages are observations. Their
 `retainedBytes` counts private source payload once per captured path.
