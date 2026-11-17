@@ -11,6 +11,7 @@ import {
   nestedScriptNotice,
   navigationDenials,
 } from "./navigation_error_allowances.js";
+import { routeNavigationNestedFrame } from "./navigation_fixture.js";
 
 test.beforeAll(startSuite);
 
@@ -18,11 +19,9 @@ test.afterAll(stopSuite);
 
 test.beforeEach(async ({ page, allowBrowserError }) => {
   allowBrowserError(nestedScriptNotice);
-  await page.route("https://cross-origin.example.test/nested.html", (route) =>
-    route.fulfill({
-      body: '<a data-mokly-link="details#section" href="/details" id="cross-marked" target="_top">Marked</a><a href="#ordinary" id="cross-unmarked" target="_top">Ordinary</a><a href="#popup" id="cross-popup" target="_blank">Popup</a><script>parent.__crossScriptRan=true</script>',
-      contentType: "text/html",
-    }),
+  await routeNavigationNestedFrame(
+    page,
+    '<a data-mokly-link="details#section" href="/details" id="cross-marked" target="_top">Marked</a><a href="#ordinary" id="cross-unmarked" target="_top">Ordinary</a><a href="#popup" id="cross-popup" target="_blank">Popup</a><script>parent.__crossScriptRan=true</script>',
   );
 });
 
