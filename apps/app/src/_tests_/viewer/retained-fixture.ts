@@ -23,7 +23,7 @@ export default defineScreen({
 const config = {
   repoRoot: ".",
   roots: [{ dir: "catalogue/src", files: ["**/*.mockup.tsx"] }],
-  moduleResolution: { packageRoots: ["ts"] },
+  moduleResolution: { packageRoots: ["."] },
   review: { base: "main" },
 };
 

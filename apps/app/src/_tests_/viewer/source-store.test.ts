@@ -23,7 +23,7 @@ async function packagedIndex(): Promise<CatalogueReadModel> {
     JSON.parse(
       readFileSync(
         repositoryRoot +
-          "/ts/node_modules/@mokly/mokly/docs/protocol/fixtures/catalogue-v9.json",
+          "/docs/protocol/fixtures/catalogue-v9.json",
         "utf8",
       ),
     ),

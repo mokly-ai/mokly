@@ -39,7 +39,9 @@ struct Reply {
 
 #[derive(Debug, thiserror::Error)]
 enum Rejected {
-    #[error("[mkc-email-postmark/transport] provider rejected delivery: HTTP {status}, code {code}")]
+    #[error(
+        "[mkc-email-postmark/transport] provider rejected delivery: HTTP {status}, code {code}"
+    )]
     Provider { status: u16, code: u32 },
 }
 

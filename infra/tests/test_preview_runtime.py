@@ -33,11 +33,11 @@ class PreviewRuntimeTests(unittest.TestCase):
     def assert_dev_api_reuses_credential(self, exported_signing_key):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            scripts = root / "scripts"
-            scripts.mkdir()
+            scripts = root / "scripts/cloud"
+            scripts.mkdir(parents=True)
             for name in ("dev-api.sh", "dev-publication-env.sh"):
                 target = scripts / name
-                target.write_text((ROOT / "scripts" / name).read_text())
+                target.write_text((ROOT / "scripts/cloud" / name).read_text())
                 target.chmod(0o755)
             commands = root / "commands"
             commands.mkdir()

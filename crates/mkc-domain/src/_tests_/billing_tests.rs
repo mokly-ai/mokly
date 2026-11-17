@@ -10,7 +10,8 @@ use crate::billing::{
 use crate::values::{Plan, Role, SeatKind, Visibility};
 
 const BILLING: &str = include_str!("../../../../docs/protocol/cloud/billing.md");
-const BILLING_CATALOGUE: &str = include_str!("../../../../docs/protocol/cloud/billing-catalogue.md");
+const BILLING_CATALOGUE: &str =
+    include_str!("../../../../docs/protocol/cloud/billing-catalogue.md");
 
 #[test]
 fn typed_catalogue_matches_the_billing_protocol_tables() {

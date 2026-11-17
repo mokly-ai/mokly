@@ -2,11 +2,11 @@
 
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
 
-use crate::command::CommandRunnerRunMock;
+use crate::command::{CommandRunnerRunMock, CommandSpec};
 use crate::error::Error;
 use crate::rust_file_length::RustFileLengthAuditorRunMock;
 
@@ -16,44 +16,61 @@ use super::runner::{CheckRunner, DefaultCheckRunner};
 
 #[test]
 fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
-    let command_runner = Arc::new(Unimock::new((
-        (
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run dependencies:check -- --baseline" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run dependencies:check:rust" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        ),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo xtask check-generated-types" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run format:check" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run lint" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "node scripts/verification/source-file-length.mjs" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "node scripts/verification/repository-ratchets.mjs" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo fmt --all -- --check" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        (
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo clippy --workspace --all-targets -- -D warnings" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo clippy -p mokly-cli --features design-matrix --all-targets -- -D warnings" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        ),
-        (
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/ui\"" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/model\"" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/frame\"" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/viewer\"" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        ),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/mokly\"" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo test --workspace" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run typecheck:ci" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run test:viewer:prepared" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run test:browser:prepared" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run test:delivery:prepared" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-    )));
+    let observed = Arc::new(Mutex::new(Vec::new()));
+    let captured = observed.clone();
+    let command_runner = Arc::new(Unimock::new(
+        CommandRunnerRunMock
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, command: &CommandSpec| {
+                assert_eq!(command.working_directory(), Some(Path::new("/workspace")));
+                captured.lock().unwrap().push(command.display());
+                Ok(())
+            })),
+    ));
     let auditor = Arc::new(Unimock::new(
         RustFileLengthAuditorRunMock
-            .next_call(matching!((root) if *root == workspace().as_path()))
+            .some_call(matching!(_))
             .returns(Ok(())),
     ));
     let runner = DefaultCheckRunner::new(command_runner, auditor, workspace());
     runner
         .run(CheckRequest::new(None, None, None).unwrap())
         .unwrap();
+    let commands = observed.lock().unwrap();
+    for required in [
+        "cargo test --locked -p \"mokly-*\" -p xtask",
+        "npm run test:viewer:prepared",
+        "npm run test:browser:prepared",
+        "npm run test:delivery:prepared",
+        "node xtask/scripts/strict-command.mjs cargo xtask openapi --check",
+        "node xtask/scripts/strict-command.mjs cargo xtask openapi-lint",
+        "node xtask/scripts/strict-command.mjs bash infra/scripts/check-image.sh",
+    ] {
+        assert_eq!(
+            commands
+                .iter()
+                .filter(|command| **command == required)
+                .count(),
+            1,
+            "{required}"
+        );
+    }
+    for suite in ["cloud-rust", "cloud-app", "cloud-desktop"] {
+        let prefix = format!("node xtask/scripts/isolated-postgres.mjs {suite} ");
+        assert_eq!(
+            commands
+                .iter()
+                .filter(|command| command.starts_with(&prefix))
+                .count(),
+            1,
+            "{suite} must get its own database in the complete gate"
+        );
+    }
+    assert!(
+        !commands
+            .iter()
+            .any(|command| command.contains("--suite native"))
+    );
 }
 
 #[test]
@@ -77,56 +94,52 @@ fn selected_viewer_builds_then_checks_and_tests() {
 
 #[test]
 fn repository_suite_runs_audit_first_and_includes_file_length() {
-    let command_runner = Arc::new(Unimock::new((
+    let observed = Arc::new(Mutex::new(Vec::new()));
+    let captured = observed.clone();
+    let command_runner = Arc::new(Unimock::new(
         CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "npm run dependencies:check -- --baseline"))
-            .returns(Ok(())),
-        CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "npm run dependencies:check:rust"))
-            .returns(Ok(())),
-        CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "cargo xtask check-generated-types"))
-            .returns(Ok(())),
-        CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "npm run format:check"))
-            .returns(Ok(())),
-        CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "npm run lint"))
-            .returns(Ok(())),
-        CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "node scripts/verification/source-file-length.mjs" && command.working_directory() == Some(Path::new("/workspace"))))
-            .returns(Ok(())),
-        CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "node scripts/verification/repository-ratchets.mjs"))
-            .returns(Ok(())),
-        CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "cargo fmt --all -- --check"))
-            .returns(Ok(())),
-        CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "cargo clippy --workspace --all-targets -- -D warnings"))
-            .returns(Ok(())),
-        CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "cargo clippy -p mokly-cli --features design-matrix --all-targets -- -D warnings"))
-            .returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/ui\"")).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/model\"")).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/frame\"")).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/viewer\"")).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/mokly\"")).returns(Ok(())),
-        CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "cargo test --workspace"))
-            .returns(Ok(())),
-    )));
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, command: &CommandSpec| {
+                captured.lock().unwrap().push(command.display());
+                Ok(())
+            })),
+    ));
     let auditor = Arc::new(Unimock::new(
         RustFileLengthAuditorRunMock
-            .next_call(matching!((root) if *root == workspace().as_path()))
+            .some_call(matching!(_))
             .returns(Ok(())),
     ));
     let runner = DefaultCheckRunner::new(command_runner, auditor, workspace());
-    let request = CheckRequest::new(Some(VerificationSuite::Repository), None, None)
-        .expect("repository request is valid");
-
-    runner.run(request).expect("repository suite succeeds");
+    runner
+        .run(CheckRequest::new(Some(VerificationSuite::Repository), None, None).unwrap())
+        .unwrap();
+    assert_eq!(
+        *observed.lock().unwrap(),
+        [
+            "npm run dependencies:check -- --baseline",
+            "npm ci",
+            "npm run dependencies:check:rust",
+            "cargo xtask boundary",
+            "cargo xtask whitespace",
+            "cargo xtask check-generated-types",
+            "npm run format:check",
+            "npm run lint",
+            "node_modules/.bin/ast-grep test --skip-snapshot-tests",
+            "node_modules/.bin/ast-grep scan crates xtask packages apps",
+            "node --test xtask/scripts/boundary-imports.test.mjs xtask/scripts/strict-command.test.mjs xtask/scripts/isolated-postgres.test.mjs",
+            "node scripts/verification/source-file-length.mjs",
+            "node scripts/verification/repository-ratchets.mjs",
+            "cargo fmt --all -- --check",
+            "cargo clippy --locked -p \"mokly-*\" -p xtask --all-targets -- -D warnings",
+            "cargo clippy -p mokly-cli --features design-matrix --all-targets -- -D warnings",
+            "npm run build --workspace \"@mokly/ui\"",
+            "npm run build --workspace \"@mokly/model\"",
+            "npm run build --workspace \"@mokly/frame\"",
+            "npm run build --workspace \"@mokly/viewer\"",
+            "npm run build --workspace \"@mokly/mokly\"",
+            "cargo test --locked -p \"mokly-*\" -p xtask",
+        ]
+    );
 }
 
 #[test]

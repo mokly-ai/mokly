@@ -2,12 +2,12 @@
 
 use std::sync::Arc;
 
-use mkc_email_interface::mail::Mailer;
 use mkc_auth::runtime::Runtime;
 use mkc_auth::service::Identity;
 use mkc_billing::entitlements::Entitlements;
 use mkc_billing::lifecycle::BillingLifecycle;
 use mkc_domain::ids::UserId;
+use mkc_email_interface::mail::Mailer;
 use mkc_store_interface::integration::IntegrationSubject;
 use mkc_store_interface::store::Store;
 

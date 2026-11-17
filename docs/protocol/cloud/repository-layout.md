@@ -111,15 +111,15 @@ source. Missing tags and malformed or absent digests fail, under the
 
 ## Verification: `cargo xtask check`
 
-The complete 25-stage sequence, hosted partitions and image runtime requirements
-are in [Repository verification](./repository-verification.md). Preview
-contracts are in [PR preview environments](./pr-preview-environments.md).
+The cloud checks run as the `cloud-*` suites of the repository gate, which
+[CI verification](../ci-verification.md#cloud-suites) defines. The image runtime
+requirements are in [Repository verification](./repository-verification.md).
+Preview contracts are in [PR preview environments](./pr-preview-environments.md).
 Only stable environments have Terraform environment states; PR resources are
 created and deleted by the preview workflow.
 
-`xtask` also exposes the `stripe-catalogue` command, whose `sync` subcommand
-stable promotion jobs and operators run and whose `archive` subcommand only an
-operator runs; neither is one of the 25 check stages, and deployment jobs do
-not invoke `archive`. For it, `xtask` depends on `mkc-domain`,
-`mkc-billing-interface` and `mkc-billing-stripe`; application crates do not
-depend on `xtask`.
+The `stripe-catalogue` binary of `mkc-billing-stripe` validates and reconciles
+the Stripe catalogue. Stable promotion jobs and operators run its `sync`
+subcommand, and only an operator runs `archive`; deployment jobs never invoke
+`archive`. `cargo xtask stripe-catalogue` starts that binary as a subprocess,
+so `xtask` depends on no `mkc-` crate. Neither command is a gate suite.

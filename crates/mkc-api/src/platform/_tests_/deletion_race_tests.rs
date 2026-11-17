@@ -3,11 +3,11 @@
 use std::sync::Arc;
 
 use chrono::Duration;
-use mkc_email_interface::mail::Mailer;
 use mkc_auth::runtime::{Runtime, RuntimeMock};
 use mkc_billing::entitlements::Entitlements;
 use mkc_billing::lifecycle::{BillingLifecycle, BillingLifecycleMock, Cancellation};
 use mkc_domain::values::Role;
+use mkc_email_interface::mail::Mailer;
 use mkc_store_interface::billing_state::SubscriptionStatus;
 use mkc_store_interface::billing_subscription::{BillingSubscription, BillingSubscriptionsMock};
 use mkc_store_interface::member::MembersMock;

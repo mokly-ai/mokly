@@ -1,6 +1,6 @@
 # CI Verification
 
-Status: The cloud suites, the boundary check, and the narrower native suite are not in place yet. The [combine plan](../../plans/combine-mokly-cloud.md) adds them.
+Status: The cloud CI jobs are not wired yet. The [combine plan](../../plans/combine-mokly-cloud.md) completes them.
 
 ## Verification Boundary
 
@@ -10,14 +10,11 @@ when selected. The local gate starts with the live workspace dependency audit.
 [Baseline auditing](./dependency-audit-baseline.md#xtask-and-ci-selection)
 owns the `--dependency-audit` modes and their selection in CLI and CI. The
 complete gate can instead run on Testboxes under the
-[remote verification contract](./remote-verification.md). Only active reviewed
-path exceptions cover findings.
+[remote verification contract](./remote-verification.md). Only active reviewed exceptions cover findings.
 [Dependency security](./dependency-security.md) defines their UTC expiry and
-31-day limit. A selected suite is partial evidence and never claims a complete
-pass. CI's validated aggregate is complete evidence for its exact tree.
+31-day limit. A selected suite is partial evidence. CI's validated aggregate is complete
+evidence for its exact tree.
 [Release evidence](./npm-release-evidence.md) defines reuse.
-
-The CLI is:
 
 ```bash
 cargo xtask check
@@ -29,9 +26,9 @@ cargo xtask check --suite browser
 cargo xtask check --suite browser --shard 1/4
 ```
 
-`--shard INDEX/TOTAL` is valid only with `browser`. Both values are one-based
+`--shard INDEX/TOTAL` is valid with `browser` and `cloud-app`. Both values are one-based
 positive integers no larger than JavaScript's maximum safe integer, and
-`INDEX` must not exceed `TOTAL`. A shard runs one weighted whole-file
+`INDEX` must not exceed `TOTAL`. A Mokly browser shard runs one weighted whole-file
 partition under the [shard balance rule](./ci-suite-evidence.md#browser-shard-balance),
 not Playwright's count-based `--shard` selection. Omitting `--shard` runs the
 complete selected suite. Unknown suites, malformed shards, missing values, and
@@ -55,7 +52,8 @@ In-process auditors fail like subprocesses.
 The local Repository and Viewer suites cover the native build and Rust checks
 once. The selected Native suite repeats those checks on the hosted macOS and
 Windows runners, for the `mokly-*` crates and `xtask` only. On Linux, the
-Native suite covers every crate. Required CI requires both native jobs.
+Native suite also selects only the Mokly crates and `xtask`. The cloud Rust
+suite covers cloud crates. Required CI requires both native jobs.
 Decision: the macOS and Windows runs leave out the `mkc-` crates, because
 those crates use Diesel with Postgres, which needs `libpq`.
 
@@ -97,31 +95,49 @@ runners.
 
 ## Cloud Suites
 
-The suites also run the checks of Mokly Cloud. Rust formatting and the Rust
-file-length audit of the Repository suite cover the `mkc-` crates. Clippy of the
-Repository suite covers the `mokly-*` crates and `xtask` only. The cloud Rust
-suite runs Clippy and the Rust tests of the `mkc-` crates. The existing suites also run the cloud whitespace, Markdown
-link, Prettier, and ESLint checks. The cloud suites run the other cloud
-checks: the cloud Rust checks, the migration lock, the app, the mockups, the site, the OpenAPI
-document, the contract fixtures, the email templates, Terraform, the origin
-router, Helm, the infrastructure tests, and the desktop shell. The complete
-gate runs every cloud suite, and `--suite` selects one. Hosted CI runs the
-cloud suites on Linux.
+The complete gate runs every cloud suite. `--suite` selects one. CI uses Linux.
+Seven remote workers cover Rust and desktop, four app shards, web, and infrastructure.
+Each worker attempts every assigned suite and reports each failure.
 
-The cloud checks need tools that the Mokly checks do not need, such as
-Postgres. A suite fails when a tool that it needs is missing, because every
-suite rejects skips. Only the cloud suites need Postgres and `libpq`, so the
-Repository suite runs on every host.
+| Suite                  | Required checks                                                           |
+| ---------------------- | ------------------------------------------------------------------------- |
+| `cloud-rust`           | Clippy, the workspace Mokly build, and tests of every `mkc-` crate        |
+| `cloud-migrations`     | SQL pairs, migration checksums, and the append-only base lock             |
+| `cloud-typecheck`      | Type checks of every cloud npm project                                    |
+| `cloud-app`            | App logic, web export, and browser tests                                  |
+| `cloud-mockups`        | Mockup build, compilation, determinism, policy, browser smoke, and types  |
+| `cloud-site`           | Mockup build, site build, types, unit tests, links, and browser checks    |
+| `cloud-openapi`        | Drift of the Rust-owned document and generated TypeScript client          |
+| `cloud-fixtures`       | Workspace-built Mokly fixture drift and the Rust dogfood test             |
+| `cloud-emails`         | Email template drift and mutation tests                                   |
+| `cloud-openapi-lint`   | API error reasons, protocol reason mentions, and GitHub delivery fixtures |
+| `cloud-terraform`      | Terraform formatting, validation, and mock-provider tests                 |
+| `cloud-origin-router`  | Cloudflare Worker types and tests                                         |
+| `cloud-helm`           | Helm lint, golden renders, rejected values, and setting parity            |
+| `cloud-infrastructure` | Infrastructure contracts, BuildKit storage evidence, and workload images  |
+| `cloud-desktop`        | Electron logic, bundled export, and real-API smoke                        |
+| `cloud-toolchain-pins` | Protocol pins, manifests, images, and installed tool versions             |
 
-The contract fixtures check builds the fixtures from the workspace packages,
-not from installed npm releases, and fails when the committed fixtures differ.
-`cargo xtask mokly-fixtures` regenerates them under the
-[repository layout](./repository-layout.md#boundary).
+Repository formats and length-checks every Rust crate. Its Clippy and tests
+cover `mokly-*` and `xtask`. Whitespace, Prettier, ESLint, and ast-grep run once
+in Repository. The whole-repository Markdown link check runs once in Viewer.
+
+Cloud Rust, app, and desktop create a database per invocation (role: `CREATEDB`).
+`MKC_TEST_DATABASE_URL` selects the server. Cloud Rust needs `libpq`; missing tools and skips fail.
+
+`cloud-app --shard INDEX/TOTAL` builds an independent web export and runs
+that browser shard. Shard 1 also runs app logic tests. Without `--shard`, it
+runs all logic and browser tests. An inherited app shard cannot restrict an
+unsharded run.
+
+The fixtures suite compares bytes from the workspace Mokly build;
+`cargo xtask mokly-fixtures` regenerates them. The toolchain check compares
+`CLOUD_MOKLY_VERSION` with `packages/mokly/package.json`.
 
 ## Deterministic Test Repository Inputs
 
-The [test repository contract](./ci-test-repository-inputs.md) defines
-fixture-owned Git state, checked-out lockfiles, and remote-state protection.
+The [test repository contract](./ci-test-repository-inputs.md) defines fixture
+Git state, checked-out lockfiles, and remote-state protection.
 
 ## Pull Request Title Contract
 

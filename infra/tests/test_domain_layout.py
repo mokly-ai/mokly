@@ -150,8 +150,8 @@ def worker_routes():
 def typescript_site_segments():
     runner = ROOT / "node_modules/.bin/tsx"
     script = """
-import { SITE_FIRST_SEGMENTS as worker } from "./ts/worker/src/site-segments.ts";
-import { SITE_OUTPUT_FIRST_SEGMENTS, SITE_PATHS } from "./ts/site/src/navigation.ts";
+import { SITE_FIRST_SEGMENTS as worker } from "./apps/worker/src/site-segments.ts";
+import { SITE_OUTPUT_FIRST_SEGMENTS, SITE_PATHS } from "./apps/site/src/navigation.ts";
 const site = new Set(SITE_OUTPUT_FIRST_SEGMENTS);
 for (const route of Object.values(SITE_PATHS)) {
   const segment = route.split("/")[1];

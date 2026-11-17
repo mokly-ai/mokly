@@ -3,9 +3,9 @@
 use std::sync::Arc;
 
 use chrono::{DateTime, Duration, Utc};
-use mkc_email_interface::mail::Mailer;
 use mkc_domain::client_origins::AdmittedOrigins;
 use mkc_domain::ids::UserId;
+use mkc_email_interface::mail::Mailer;
 use mkc_store_interface::session::Session;
 use mkc_store_interface::store::{StoreMock, Transaction};
 use mkc_store_interface::user::User;

@@ -60,7 +60,6 @@ mkc-publications = { path = "crates/mkc-publications" }
 mkc-store-interface = { path = "crates/mkc-store-interface" }
 mkc-store-pg = { path = "crates/mkc-store-pg" }
 mkc-test-pg = { path = "crates/mkc-test-pg" }
-mkc-test-support = { path = "crates/mkc-test-support" }
 mkc-upload-memory = { path = "crates/mkc-upload-memory" }
 mkc-upload-memory-interface = { path = "crates/mkc-upload-memory-interface" }
 

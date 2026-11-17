@@ -3,8 +3,8 @@
 use std::sync::Arc;
 
 use chrono::{DateTime, Utc};
-use mkc_email_interface::mail::Mailer;
 use mkc_domain::client_origins::{AdmittedOrigins, ClientOrigin};
+use mkc_email_interface::mail::Mailer;
 use mkc_store_interface::session::Session;
 use mkc_store_interface::store::Store;
 use mkc_store_interface::user::User;

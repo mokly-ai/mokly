@@ -1,7 +1,5 @@
 # Developer Test Commands
 
-Status: The cloud crates and projects are not in the workspaces yet. The [combine plan](../../plans/combine-mokly-cloud.md) adds them.
-
 ## Public Commands And Preparation
 
 - `npm test -- [<file> ...] [<pattern> ...]` builds first with `npm run build`,
@@ -12,8 +10,8 @@ Status: The cloud crates and projects are not in the workspaces yet. The [combin
   `packages/ui/tests/`, the model package tests under `packages/model/tests/`,
   and the frame package tests under `packages/frame/tests/`.
 - `cargo test -p <crate>` runs one crate's Rust tests, and
-  `cargo test --workspace` runs the default targets. The repository suite runs the default
-  set; a selected crate is partial verification. Sidecar integration tests
+  `cargo test --workspace` runs the default targets. The Repository suite runs `mokly-*` and `xtask`. The cloud Rust suite runs
+  `mkc-*`; a selected crate is partial verification. Sidecar integration tests
   require `npm run build --workspace @mokly/ui`, then
   `npm run build --workspace @mokly/model`, then
   `npm run build --workspace @mokly/frame`, then
@@ -101,8 +99,7 @@ build check, or test execution. Forward every pattern unchanged and in argument
 order to Node; Node applies repeated patterns as alternatives.
 
 Reject `--shard` with or without a value, including the equals form: Node tests
-have no shards. Its error names `cargo xtask check --suite browser --shard` as
-the only sharded suite. Every other flag fails with the usage text, preceded by
+have no shards. Its error names `cargo xtask check --suite browser --shard` for Mokly browser shards. Cloud app shards use `cargo xtask check --suite cloud-app --shard`. Every other flag fails with the usage text, preceded by
 `unknown option <flag>`.
 
 ### Developer Failure Reports
@@ -164,13 +161,24 @@ commands, their shared project inventory, and the Bun provisioning rules.
 use Diesel with Postgres, so they need `libpq` to build. Their database tests
 need a reachable Postgres, and `MKC_TEST_DATABASE_URL` selects the database.
 On macOS and Windows, the Native suite builds and tests only the `mokly-*`
-crates and `xtask`. On Linux, it covers every crate.
+crates and `xtask`. The same selection applies on Linux; `cloud-rust` covers
+the cloud crates.
 
 Each cloud project under `apps/` and `packages/tokens/` runs its own tests with
 `npm run <script> --workspace <package>`, as its README says. Such a run, like
 a selected crate test, is partial verification. The
 [cloud suites](./ci-verification.md#cloud-suites) run every cloud check in the
-complete gate.
+complete gate. Run one cloud suite with `cargo xtask check --suite cloud-app`,
+for example. `--shard INDEX/TOTAL` selects one app browser shard and runs logic
+tests on shard 1. Every cloud suite rejects missing tools and reported skips.
+Cloud Rust, app, and desktop suite invocations each get a disposable database.
+The configured Postgres role needs `CREATEDB` permission.
+
+`cargo xtask mokly-fixtures` builds Mokly from the workspace, then regenerates
+the cloud contract fixtures. `--check` compares without changing them.
+`cargo xtask openapi` regenerates the API document and app client;
+`--check` compares their bytes. `cargo xtask email-templates --check` checks
+template drift and runs the email mutation tests.
 
 ## Partial Verification
 

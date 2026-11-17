@@ -2,8 +2,8 @@
 
 use std::sync::Arc;
 
-use mkc_email_interface::mail::{Content, Lifetime, MailerMock};
 use mkc_domain::client_origins::{AdmittedOrigins, DESKTOP_ORIGIN};
+use mkc_email_interface::mail::{Content, Lifetime, MailerMock};
 use mkc_store_interface::magic_link::MagicLinksMock;
 use mkc_store_interface::rate_limit::RateLimitsMock;
 use unimock::{MockFn, Unimock, matching};

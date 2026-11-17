@@ -40,6 +40,13 @@ the sanitized Stripe error type and code, never the response body.
 signatures, ignores other schemes, applies the five-minute tolerance in either
 direction, and accepts any constant-time HMAC-SHA256 match.
 
+The `stripe-catalogue` binary validates the intended catalogue offline. Its
+`sync` and `archive` commands read Stripe by default. `--apply` enables writes.
+They require `--environment main-preview` or `--environment production` and
+`MKC_STRIPE_CATALOGUE_KEY` with the matching restricted key mode.
+`MKC_STRIPE_API_ORIGIN` can select a test origin. `cargo xtask stripe-catalogue`
+forwards arguments to this binary without linking a cloud crate into xtask.
+
 ## Quick Start
 
 ```rust
@@ -83,6 +90,11 @@ The API composes this provider with `OPERATION_TIMEOUT` and the retrying
 transport for ordinary operations, and a second `StripeClient` over a plain
 transport with `VERIFICATION_TIMEOUT` for startup price verification.
 
+```sh
+cargo run -p mkc-billing-stripe --bin stripe-catalogue -- check
+cargo xtask stripe-catalogue sync --environment main-preview
+```
+
 ## Development
 
 ```sh
@@ -95,6 +107,8 @@ inspect the reqwest request before transmission. Fixture provenance is
 documented in [fixtures/README.md](fixtures/README.md).
 
 ### Key Code
+
+- [Catalogue binary](src/bin/stripe-catalogue/main.rs) — the operator CLI and cloud-owned composition root.
 
 - [client/mod.rs](src/client/mod.rs) — `StripeClient`, the one adapter behind both provider traits.
 - [client/billing.rs](src/client/billing.rs) — the `BillingProvider` implementation: customers, Checkout and Portal sessions, subscriptions, seat items and lookup-key price reads.

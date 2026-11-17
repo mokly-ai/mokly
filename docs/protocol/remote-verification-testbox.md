@@ -18,7 +18,7 @@ Set `timeout-minutes: 30`.
 
 The job matches the CI suite jobs in runner, Cargo settings, and Rust build
 cache, so each command takes about the time and runner cost of its CI job.
-One job serves all seven commands. The repository command therefore restores
+One job serves all fourteen commands. The repository command therefore restores
 the cache of the other suites, not the cache of the CI repository job.
 
 Run the steps in this order:
@@ -97,6 +97,12 @@ example through static HTTP and file URLs. Both modes must pass.
 These selected delivery checks do not replace any of the five suite reports.
 No browser shard runs delivery after its ordinary specs. Browser work and portable
 delivery use separate 30-minute Testbox job guards.
+
+Seven cloud commands, listed in the [remote README](../../xtask/remote/README.md),
+each run `node xtask/scripts/testbox-cloud.mjs --expect <fingerprint> --suites <list>`
+on their own box. Each installs the root lockfile and Chromium, attempts every
+listed suite, names each failed suite, and exits nonzero when any fails. They
+produce no suite report.
 
 ## Readiness And Sync Probe
 

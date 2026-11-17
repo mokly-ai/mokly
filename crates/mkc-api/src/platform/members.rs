@@ -1,11 +1,11 @@
 //! Membership administration and verified-email invitation acceptance.
 
 use chrono::Duration;
-use mkc_email_interface::mail::{Content, Lifetime, Message};
 use mkc_domain::app_paths;
 use mkc_domain::ids::OrganizationId;
 use mkc_domain::validation;
 use mkc_domain::values::Role;
+use mkc_email_interface::mail::{Content, Lifetime, Message};
 use mkc_store_interface::member::Member;
 use mkc_store_interface::store::Queries;
 

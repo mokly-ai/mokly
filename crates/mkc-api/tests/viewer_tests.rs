@@ -26,7 +26,8 @@ fn running_api_reads_the_published_contract_fixture() {
         eprintln!("SKIP viewer smoke: MKC_TEST_DATABASE_URL is unreachable: {error}");
         return;
     }
-    let script = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../scripts/cloud/smoke_viewer_reads.py");
+    let script =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../scripts/cloud/smoke_viewer_reads.py");
     let output = Command::new("python3")
         .arg(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/support/capture.py"))
         .arg(script)

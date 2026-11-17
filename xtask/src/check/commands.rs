@@ -2,6 +2,7 @@
 
 use crate::command::CommandSpec;
 
+use super::cloud_commands::cloud_commands;
 use super::request::{DependencyAudit, Shard, VerificationSuite};
 
 /// Commands in dependency order for one validated suite.
@@ -27,8 +28,9 @@ pub(super) fn commands_for(
             npm(&["run", "build", "--workspace", "@mokly/frame"]),
             npm(&["run", "build", "--workspace", "@mokly/viewer"]),
             npm(&["run", "build", "--workspace", "@mokly/mokly"]),
-            cargo(&["test", "--workspace", "--no-fail-fast"]),
+            mokly_cargo("test").args(["--no-fail-fast"]),
         ],
+        cloud => cloud_commands(cloud, shard),
     }
 }
 
@@ -48,10 +50,22 @@ fn repository_commands(dependency_audit: DependencyAudit) -> Vec<CommandSpec> {
     };
     vec![
         audit,
+        npm(&["ci"]),
         npm(&["run", "dependencies:check:rust"]),
+        cargo(&["xtask", "boundary"]),
+        cargo(&["xtask", "whitespace"]),
         cargo(&["xtask", "check-generated-types"]),
         npm(&["run", "format:check"]),
         npm(&["run", "lint"]),
+        CommandSpec::new("node_modules/.bin/ast-grep").args(["test", "--skip-snapshot-tests"]),
+        CommandSpec::new("node_modules/.bin/ast-grep")
+            .args(["scan", "crates", "xtask", "packages", "apps"]),
+        node(&[
+            "--test",
+            "xtask/scripts/boundary-imports.test.mjs",
+            "xtask/scripts/strict-command.test.mjs",
+            "xtask/scripts/isolated-postgres.test.mjs",
+        ]),
         CommandSpec::new("node").args(["scripts/verification/source-file-length.mjs"]),
         node(&["scripts/verification/repository-ratchets.mjs"]),
         cargo(&["fmt", "--all", "--", "--check"]),
@@ -62,19 +76,17 @@ fn repository_commands(dependency_audit: DependencyAudit) -> Vec<CommandSpec> {
         npm(&["run", "build", "--workspace", "@mokly/frame"]),
         npm(&["run", "build", "--workspace", "@mokly/viewer"]),
         npm(&["run", "build", "--workspace", "@mokly/mokly"]),
-        cargo(&["test", "--workspace"]),
+        mokly_cargo("test"),
     ]
 }
 
 fn rust_clippy() -> CommandSpec {
-    cargo(&[
-        "clippy",
-        "--workspace",
-        "--all-targets",
-        "--",
-        "-D",
-        "warnings",
-    ])
+    mokly_cargo("clippy").args(["--all-targets", "--", "-D", "warnings"])
+}
+
+/// Restrict native and MIT Rust work to the app-independent crates.
+fn mokly_cargo(operation: &str) -> CommandSpec {
+    cargo(&[operation, "--locked", "-p", "mokly-*", "-p", "xtask"])
 }
 
 /// Lint the feature-gated design matrix target that the workspace lint skips.

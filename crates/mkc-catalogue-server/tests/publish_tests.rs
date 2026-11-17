@@ -114,7 +114,8 @@ fn published_package_and_fixture_reach_isolated_catalogue_hosts() {
         return;
     }
     let (database, _schema) = isolated_database(&database);
-    let script = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../scripts/cloud/smoke_publications.py");
+    let script =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../scripts/cloud/smoke_publications.py");
     let output = Command::new("timeout")
         .arg("600s")
         .arg("python3")

@@ -10,10 +10,13 @@ mod cli;
 mod command;
 mod error;
 mod executor;
+mod policy;
 mod remote;
 mod rust_file_length;
 
-fn main() -> std::process::ExitCode {
+use std::process::ExitCode;
+
+fn main() -> ExitCode {
     cli::main()
 }
 

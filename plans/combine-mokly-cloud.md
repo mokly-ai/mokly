@@ -272,19 +272,19 @@ Depends on: 2
 
 Depends on: 3, 4, and 5
 
-- [ ] Port each cloud stage to the Mokly `xtask`. Put format, Clippy, Rust
+- [x] Port each cloud stage to the Mokly `xtask`. Put format, Clippy, Rust
       tests, whitespace, links, Prettier, and ESLint into the existing
       suites. Add cloud suites for the rest: migrations, the app, mockups,
       the site, OpenAPI, fixtures, email templates, Terraform, the origin
       router, Helm, infrastructure, and desktop.
-- [ ] Limit the native suite on macOS and Windows to the `mokly-*` crates
+- [x] Limit the native suite on macOS and Windows to the `mokly-*` crates
       and `xtask`.
-- [ ] Add the boundary check of the design calls to the Repository suite.
-- [ ] Move the `stripe-catalogue` command into a binary of a cloud crate.
-- [ ] Make the remote executor run the cloud suites. Allow `--shard` for
+- [x] Add the boundary check of the design calls to the Repository suite.
+- [x] Move the `stripe-catalogue` command into a binary of a cloud crate.
+- [x] Make the remote executor run the cloud suites. Allow `--shard` for
       the cloud app suite.
-- [ ] Delete the cloud `xtask`. Keep every Rust file at 300 lines or fewer.
-- [ ] Run `cargo xtask check`. Save the result under
+- [x] Delete the cloud `xtask`. Keep every Rust file at 300 lines or fewer.
+- [x] Run `cargo xtask check`. Save the result under
       `.context/combine-cloud/`.
 
 ## Milestone 7: One CI

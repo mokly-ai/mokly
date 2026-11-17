@@ -1,5 +1,6 @@
 //! CLI parsing and dependency composition.
 
+use std::env::consts;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -14,6 +15,9 @@ use crate::check::runner::DefaultCheckRunner;
 use crate::command::{CommandRunner, SystemCommandRunner};
 use crate::error::{Error, Result};
 use crate::executor::Executor;
+use crate::policy::command::PolicyCommand;
+use crate::policy::environment;
+use crate::policy::runner::DefaultPolicyChecks;
 use crate::remote::availability::{DefaultSelector, Selector};
 use crate::remote::clients::blacksmith::SystemBlacksmith;
 use crate::remote::clients::github::SystemGithub;
@@ -46,6 +50,27 @@ pub(crate) struct Cli {
 #[derive(Debug, Subcommand)]
 /// Repository task variants.
 pub(crate) enum Command {
+    /// File and generated-artifact policies.
+    #[command(flatten)]
+    Policy(PolicyCommand),
+    /// Regenerate cloud contract fixtures from the built workspace packages.
+    MoklyFixtures {
+        /// Compare without changing committed fixtures.
+        #[arg(long)]
+        check: bool,
+    },
+    /// Generate committed cloud email templates.
+    EmailTemplates {
+        /// Compare without writing and run mutation tests.
+        #[arg(long)]
+        check: bool,
+    },
+    /// Run the AGPL cloud Stripe catalogue binary as a subprocess.
+    StripeCatalogue {
+        /// Arguments forwarded unchanged to the cloud binary.
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
     /// Build and install the host native binary.
     BuildNative,
     /// Write TypeScript declarations from mokly-model.
@@ -104,10 +129,16 @@ pub(crate) fn main() -> ExitCode {
         dependencies: dependencies.clone(),
     });
     let app: Arc<dyn Xtask> = Arc::new(Application {
+        policy: Arc::new(DefaultPolicyChecks {
+            environment: Arc::new(environment::SystemEnvironment {
+                root: workspace.clone(),
+                commands: command_runner.clone(),
+            }),
+        }),
         artifacts: Arc::new(DefaultArtifacts {
             workspace: workspace.clone(),
-            os: std::env::consts::OS.to_owned(),
-            architecture: std::env::consts::ARCH.to_owned(),
+            os: consts::OS.to_owned(),
+            architecture: consts::ARCH.to_owned(),
             commands: Arc::clone(&command_runner),
             files: Arc::new(SystemArtifactFiles),
         }),

@@ -12,7 +12,7 @@ CHART = ROOT / "infra/helm/mokly-cloud"
 def parse_yaml(text):
     script = """
 const fs = require('node:fs');
-const yaml = require('./ts/node_modules/yaml');
+const yaml = require('yaml');
 const docs = yaml.parseAllDocuments(fs.readFileSync(0, 'utf8'));
 for (const doc of docs) if (doc.errors.length) throw doc.errors[0];
 process.stdout.write(JSON.stringify(docs.map(doc => doc.toJS()).filter(Boolean)));

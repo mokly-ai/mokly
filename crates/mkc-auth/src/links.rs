@@ -1,9 +1,9 @@
 //! Link admission and single-use verification transactions.
 
 use chrono::Duration;
-use mkc_email_interface::mail::{Content, Lifetime, Message};
 use mkc_domain::client_origins::ClientOrigin;
 use mkc_domain::{app_paths, validation};
+use mkc_email_interface::mail::{Content, Lifetime, Message};
 use mkc_store_interface::magic_link::MagicLink;
 use mkc_store_interface::rate_limit::RateLimit;
 use mkc_store_interface::store::Queries;

@@ -31,11 +31,8 @@ fn pinned_cli_evidence_covers_every_worker_mapped_code_and_result() {
     ))
     .unwrap();
     let package: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../../package.json")).unwrap();
-    assert_eq!(
-        fixture.mokly_version,
-        package["devDependencies"]["@mokly/mokly"]
-    );
+        serde_json::from_str(include_str!("../../../../../packages/mokly/package.json")).unwrap();
+    assert_eq!(fixture.mokly_version, package["version"]);
     assert_eq!(fixture.scenarios.len(), 2);
     let at = "2026-10-12T00:00:00Z".parse().unwrap();
     for typed in [

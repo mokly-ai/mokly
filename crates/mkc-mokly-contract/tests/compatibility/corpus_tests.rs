@@ -25,8 +25,8 @@ struct Checksums {
 }
 
 fn installed_version(name: &str) -> String {
-    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join(format!("../../ts/node_modules/@mokly/{name}/package.json"));
+    let path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join(format!("../../packages/{name}/package.json"));
     let package: Package = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
     package.version
 }

@@ -3,9 +3,9 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use mkc_email_interface::mail::{Content, Lifetime, MailerMock};
 use mkc_auth::runtime::RuntimeMock;
 use mkc_domain::values::Role;
+use mkc_email_interface::mail::{Content, Lifetime, MailerMock};
 use mkc_store_interface::store::{Decision, StoreMock, Transaction};
 use unimock::{MockFn, Unimock, matching};
 use uuid::Uuid;

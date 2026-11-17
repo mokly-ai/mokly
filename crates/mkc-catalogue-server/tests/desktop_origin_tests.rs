@@ -20,8 +20,8 @@ fn catalogue_headers_and_grant_check_follow_the_desktop_flag() {
         eprintln!("SKIP catalogue origins: unconfigured Postgres is unreachable: {error}");
         return;
     }
-    let script =
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../scripts/cloud/smoke_catalogue_origins.py");
+    let script = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../scripts/cloud/smoke_catalogue_origins.py");
     let output = Command::new("python3")
         .arg(script)
         .arg(env!("CARGO_BIN_EXE_mkc-catalogue-server"))

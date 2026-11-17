@@ -4,9 +4,6 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 
-use mkc_email_interface::mail::Mailer;
-use mkc_email_postmark::delivery::{LogMailer, PostmarkMailer};
-use mkc_email_postmark::transport::{PostmarkHttpFactory, TransportFactory};
 use mkc_auth::runtime::{Runtime, SystemRuntime};
 use mkc_auth::service::{AuthService, Authenticator, PreviewSignIn};
 use mkc_billing::entitlements::DatabaseEntitlements;
@@ -19,6 +16,9 @@ use mkc_db::migration::{
     DieselMigrations, MigrationRunner, MigrationStatusFactory, PooledMigrationStatusFactory,
 };
 use mkc_domain::client_origins::AdmittedOrigins;
+use mkc_email_interface::mail::Mailer;
+use mkc_email_postmark::delivery::{LogMailer, PostmarkMailer};
+use mkc_email_postmark::transport::{PostmarkHttpFactory, TransportFactory};
 use mkc_publications::build_head::DatabaseBuildHeadRecorder;
 use mkc_publications::build_reconciliation::BuildReconciler;
 use mkc_publications::build_scheduler::DatabaseBuildScheduler;

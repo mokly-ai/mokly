@@ -14,7 +14,7 @@ import { repositoryRoot } from "../root";
 import { removed } from "./fixtures";
 
 const fixtures =
-  repositoryRoot + "/ts/node_modules/@mokly/mokly/docs/protocol/fixtures/";
+  repositoryRoot + "/docs/protocol/fixtures/";
 const indexFile: unknown = JSON.parse(
   readFileSync(fixtures + "catalogue-v9.json", "utf8"),
 );

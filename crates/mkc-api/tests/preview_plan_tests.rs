@@ -16,7 +16,8 @@ mod support;
 fn running_api_assigns_preview_workspace_plans() {
     let database = env::var("MKC_TEST_DATABASE_URL")
         .unwrap_or_else(|_| "postgres://postgres:postgres@localhost/mkc_test".to_owned());
-    let script = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../scripts/cloud/smoke_preview_plan.py");
+    let script =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../scripts/cloud/smoke_preview_plan.py");
     let output = Command::new("python3")
         .arg(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/support/capture.py"))
         .arg(script)

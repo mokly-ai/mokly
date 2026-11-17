@@ -16,7 +16,7 @@ if str(HELM_TESTS) not in sys.path:
 from runtime_settings import RuntimeSettingsParityError, check_parity, check_runtime_settings
 from chart_support import CHART, environment, parse_yaml, resource
 
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "scripts/cloud"))
 from smoke_support import Api
 
 render = load("render-values")

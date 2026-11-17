@@ -95,6 +95,7 @@ fn application_dispatches_source_length_and_complete_check() {
             .returns(Ok(())),
     )));
     let app = Application {
+        policy: Arc::new(Unimock::new(())),
         artifacts: Arc::new(Unimock::new(())),
         selector: Arc::new(Unimock::new(
             SelectorSelectMock
@@ -188,6 +189,7 @@ fn application_dispatches_both_dependency_audit_modes() {
 fn application_rejects_explicit_audit_modes_before_running_checks() {
     let unused = || Arc::new(Unimock::new(()));
     let app = Application {
+        policy: Arc::new(Unimock::new(())),
         artifacts: Arc::new(Unimock::new(())),
         selector: unused(),
         check_runner: unused(),
@@ -220,6 +222,7 @@ fn application_rejects_explicit_audit_modes_before_running_checks() {
 /// Build an application whose automatic executor always selects the local gate.
 fn local_application(check_runner: Arc<Unimock>, complete: bool) -> Application {
     Application {
+        policy: Arc::new(Unimock::new(())),
         artifacts: Arc::new(Unimock::new(())),
         selector: Arc::new(if complete {
             Unimock::new(
