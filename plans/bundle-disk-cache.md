@@ -1907,10 +1907,10 @@ Depends on: 1, 2, 3, 4, 5
         separate checkouts and target directories. Keep every earlier run.
   - [x] Merge main `0accb6818` with its detail-publication reuse and
         MockLink fixture changes. Preserve every incoming path.
-  - [ ] Repeat the release pairs against exact main `0accb6818`. Archive
+  - [x] Repeat the release pairs against exact main `0accb6818`. Archive
         each checkout's measured programs before its source changes. Keep
         each checkout's own Cargo target and all earlier evidence.
-  - [ ] Run repository verification on the combined source before the final
+  - [x] Run repository verification on the combined source before the final
         implementation review. Let final CI verify the combined branch.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
@@ -1939,6 +1939,10 @@ Latest main integration evidence:
 `.context/bundle-disk-cache/merge-0accb6818/preservation.json`,
 `.context/bundle-disk-cache/merge-0accb6818/decisions.md`, and
 `.context/bundle-disk-cache/logs/merge-0accb6818-audit.log`.
+Latest fixed release and repository evidence:
+`.context/bundle-disk-cache/m5-final-0accb681/metadata/final-assessment.json`,
+`.context/bundle-disk-cache/m5-final-0accb681/metadata/cleanup.json`, and
+`.context/bundle-disk-cache/logs/repository-0acc-f032.log`.
 
 ## Post-merge follow-up (non-blocking)
 

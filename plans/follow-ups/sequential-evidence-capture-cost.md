@@ -83,6 +83,43 @@
   - These numbers prove no cause. The pair is one sample, with no median.
     The after run reused disk compilations at startup, so its first compile
     came at the edit. The copied sidecar timed its own wrappers.
+  - Final measurements of 2026-11-17, on the same machine, against `main` at
+    `0accb6818`, with the change at `f032dd04c`:
+    - All 28 release cases passed. All nine warm cases of the change had zero
+      compiles and zero esbuild operations. All eight strict outputs matched
+      byte for byte.
+    - Warm medians of three runs went from before to after as follows. Basic
+      `serve.ready` went from 3.031 s to 2.611 s, and React `serve.ready` from
+      1.831 s to 1.116 s. The basic build wall time went from 13.584 s to
+      12.212 s. `changes.classify` went from 4.839 s to 4.583 s in basic
+      Serve, and from 4.766 s to 4.186 s in the basic build. In React it went
+      from 2.036 s to 1.240 s. `serve.background` went from 4.327 s to
+      4.760 s in basic Serve, and from 0.482 s to 0.494 s in React.
+    - Single cold runs went from before to after as follows. Basic
+      `serve.ready` went from 6.687 s to 6.063 s, and React `serve.ready` from
+      1.569 s to 3.296 s. Basic Serve `changes.classify` went from 8.375 s to
+      11.767 s, and React from 1.977 s to 3.621 s. The basic build wall time
+      went from 15.795 s to 19.888 s.
+    - One uninstrumented pair of the JavaScript edit ran before and after the
+      change. `watch.action` went from 2.823 s to 5.418 s, which is 2.595 s
+      more. The time from the edit to the end of the next classification went
+      from 7.342 s to 11.035 s, which is 3.693 s more. The `sidecar.bundle`
+      span of the edit went from 1,626.5 ms to 4,085.2 ms, and its native
+      compile span from 642.9 ms to 2,167.2 ms. Both runs compiled twice after
+      the edit.
+    - The copied sidecar measured 1,553.332 ms of capture for the edited head.
+      Of that, 1,377.483 ms was observation, 171.095 ms the physical finish
+      check, and 4.755 ms the witness finish check. The witness preflight
+      took 2.382 ms outside that total. The capture ran 3,143 unique requests
+      with 1,375.761 ms of request work, and 1,354.092 ms of that work ran
+      during a compile.
+    - The first head and base captures took 1,447.745 ms and 1,956.214 ms,
+      with 3,143 and 3,156 unique requests. No capture of the set called the
+      barrier wait, so each actual wait was 0 ms.
+    - Each edit and each cold value is one sample for each release, not a
+      median. The after run again reused disk compilations at startup, so its
+      first compile came at the edit. These numbers prove no cause and no
+      overall speed change.
   - Since 2026-11-17, each Windows directory witness also adds one open, one
     stat, and one close at the first touch and again after the compile. That
     cost is not measured.
@@ -101,19 +138,20 @@
       is added. Every existing test stays.
 - **Problem:** Evidence capture runs the unique requests of a real compile
   one at a time, and esbuild waits for each capture in `onResolve`. On
-  `examples/basic`, about 1.7 s of capture work runs while each real compile
-  is in flight.
+  `examples/basic`, 1.2 s to 1.7 s of capture work ran while a compile was in
+  flight, in each measured capture.
 - **Impact if no action:** Each JavaScript edit in Serve, each cold start,
   and each start after a change keep the measured capture work on the path
-  of their real compile, about 1.7 s on `examples/basic`. In the one
-  observed pair, `watch.action` took 4.543 s before and 7.211 s after. No
-  stable causal slowdown is proven. Warm restarts keep their gain, because
-  they do not compile.
+  of their real compile: 1.4 s to 2.0 s for each capture on
+  `examples/basic`. In the two pairs recorded here, `watch.action` went from
+  4.543 s to 7.211 s and from 2.823 s to 5.418 s.
+  No stable causal slowdown is proven. Warm restarts keep their gain,
+  because they do not compile.
 - **Root question:** How does a real compile record complete, coherent, and
   bounded reuse evidence in less time?
 - **Options:**
-  - **A.** Change nothing. Each real compile of `examples/basic` keeps about
-    1.7 s of capture work on its path. Effort: Small.
+  - **A.** Change nothing. Each real compile of `examples/basic` keeps 1.4 s
+    to 2.0 s of measured capture work on its path. Effort: Small.
   - **B.** Cut the work of each request and keep the one queue. A profile
     names the repeated work, for example repeated configuration and manifest
     checks of one directory, or repeated ancestor walks of bare imports. The
