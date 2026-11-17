@@ -136,9 +136,6 @@
     },
     "miniflare": {
       "undici": "7.30.1"
-    },
-    "@cloudflare/vitest-pool-workers": {
-      "wrangler": "4.113.0"
     }
   },
   "workspaces": [

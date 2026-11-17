@@ -322,7 +322,7 @@ class ReleaseTests(unittest.TestCase):
         docker = (ROOT / "infra/docker/app.Dockerfile").read_text()
         for contract in ["npm ci", "build:web --workspace @mokly-cloud/app", "EXPO_PUBLIC_MKC_API_ORIGIN",
                          "EXPO_PUBLIC_MKC_APP_ORIGIN", "MKC_CATALOGUE_BASE_DOMAIN",
-                         "COPY --from=build /build/ts/app/dist", "COPY --from=build /build/build-config.json",
+                         "COPY --from=build /build/apps/app/dist", "COPY --from=build /build/build-config.json",
                          "COPY infra/docker/app-server.mjs", "USER 65532:65532", "STOPSIGNAL SIGINT"]:
             self.assertIn(contract, docker)
         self.assertNotIn("crates/mkc-domain/src/app_paths.rs", docker)
