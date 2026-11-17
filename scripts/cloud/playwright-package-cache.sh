@@ -16,7 +16,7 @@ case "$1" in
       sudo tee /etc/apt/apt.conf.d/99-mkc-download-cache >/dev/null
     sudo apt-get update
 
-    playwright_version=$(node -p "require('./ts/package-lock.json').packages['node_modules/playwright-core'].version")
+    playwright_version=$(node -p "require('./package-lock.json').packages['node_modules/playwright-core'].version")
     # A refreshed index or runner image must not reuse an immutable old key.
     apt_state=$(
       {

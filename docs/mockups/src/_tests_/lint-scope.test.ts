@@ -69,7 +69,7 @@ test("the repository lint reads catalogue sources and skips generated output", a
   const lint = spawnSync(
     "sh",
     ["-c", script + " --format json --output-file lint.json"],
-    { cwd: path.join(fixture.root, "ts"), encoding: "utf8" },
+    { cwd: fixture.root, encoding: "utf8" },
   );
   assert.equal(lint.status, 1, lint.stderr);
   const report: unknown = JSON.parse(

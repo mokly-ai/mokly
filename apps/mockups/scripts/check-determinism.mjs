@@ -21,7 +21,7 @@ try {
         "npm",
         ["run", "mockups:build", "--workspace", "@mokly-cloud/mockups"],
         {
-          cwd: path.join(repository, "ts"),
+          cwd: repository,
           maxBuffer: 32 * 1024 * 1024,
         },
       );

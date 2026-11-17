@@ -71,7 +71,7 @@ export async function outputFixture() {
   await write(
     ".gitignore",
     (await readFile(path.join(repository, ".gitignore"), "utf8")) +
-      "\n/ts/node_modules\n",
+      "\n/node_modules\n",
   );
   await write("package.json", '{"private":true}');
   await symlink(
@@ -84,7 +84,7 @@ export async function outputFixture() {
     JSON.stringify({
       repoRoot: ".",
       roots: [{ dir: "entries", files: ["**/*.mockup.tsx"] }],
-      moduleResolution: { packageRoots: ["ts"] },
+      moduleResolution: { packageRoots: ["."] },
       review: { base: "main" },
     }),
   );

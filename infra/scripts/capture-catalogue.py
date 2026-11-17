@@ -129,7 +129,7 @@ def capture_exchange(configuration, local, directory, debug_timings=False):
     install_seconds = None
     if not local:
         install_seconds = run_command(
-            ["npm", "--prefix", "ts", "ci"],
+            ["npm", "ci"],
             configuration.checkout,
             "npm ci",
         )

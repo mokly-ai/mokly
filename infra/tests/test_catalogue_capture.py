@@ -45,7 +45,7 @@ class CatalogueCaptureTests(unittest.TestCase):
         for digest in expected:
             data = (self.capture.output / "blobs" / digest).read_bytes()
             self.assertEqual(hashlib.sha256(data).hexdigest(), digest)
-        self.assertEqual(self.capture.npm_calls.read_text(), "--prefix ts ci\n")
+        self.assertEqual(self.capture.npm_calls.read_text(), "ci\n")
         self.assertTrue(
             result.stdout.startswith(
                 (FIXTURES / "mokly-publish-success.stdout.txt").read_text()

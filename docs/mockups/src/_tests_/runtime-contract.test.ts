@@ -189,7 +189,7 @@ test("Mokly and test loaders preserve the public web resolution boundary", () =>
     conditions: ["react-native", "import", "module", "default"],
     loaders: { ".js": "jsx" },
     mainFields: ["react-native", "module", "main"],
-    packageRoots: ["ts"],
+    packageRoots: ["."],
     resolveExtensions: [
       ".web.tsx",
       ".web.ts",
