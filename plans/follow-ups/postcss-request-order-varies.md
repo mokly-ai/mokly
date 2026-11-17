@@ -4,7 +4,7 @@
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from the step A review round 2 of PR #228 and the
   step B review round 2 of PR #242.
-- **Location:** `crates/mokly-graph/src/workers.rs:171`, where the render
+- **Location:** `crates/mokly-graph/src/workers.rs:209`, where the render
   workers bundle the stylesheet roots of one preparation in parallel.
 - **Reason:** Each choice changes the PostCSS contract or gives back part of
   the parallel gain of PR #228, so the user decides.

@@ -5,7 +5,9 @@ use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use mokly_git::command::{DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Request, Runner};
+use mokly_git::command::{
+    DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, ProcessMode, Request, Runner,
+};
 use mokly_git::error;
 use mokly_model::output::repository::Repository;
 use mokly_model::output::upload::Publication;
@@ -189,7 +191,7 @@ impl GitCheckout {
         args: &[&str],
         cancellation: &dyn Cancellation,
     ) -> Result<Vec<u8>> {
-        match self.run(directory, args, cancellation) {
+        match self.run_with_mode(directory, args, cancellation, ProcessMode::PlainGroup) {
             Err(Error::Git { .. }) => Err(Error::Checkout),
             result => result,
         }
@@ -201,7 +203,18 @@ impl GitCheckout {
         args: &[&str],
         cancellation: &dyn Cancellation,
     ) -> Result<Vec<u8>> {
+        self.run_with_mode(directory, args, cancellation, ProcessMode::default())
+    }
+
+    fn run_with_mode(
+        &self,
+        directory: &Path,
+        args: &[&str],
+        cancellation: &dyn Cancellation,
+        process_mode: ProcessMode,
+    ) -> Result<Vec<u8>> {
         let request = Request {
+            process_mode,
             directory: directory.to_owned(),
             args: args.iter().map(OsString::from).collect(),
             output_limit: DEFAULT_OUTPUT_LIMIT,

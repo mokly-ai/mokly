@@ -57,8 +57,9 @@ npx mokly ...                  @mokly/mokly shim: Node version gate, binary look
 
 `mokly-static` and `mokly-publish` share output shapes through `mokly-model`
 and never depend on each other. The CLI composes the crates for each command
-and turns a finished static output into one upload. Each crate's README names
-its entry points.
+and turns a finished static output into one upload. To decrease allocator CPU
+cost and peak memory, the CLI selects mimalloc as the global allocator for the
+binary's Rust allocations. Each crate's README names its entry points.
 
 ## npm Packages
 
