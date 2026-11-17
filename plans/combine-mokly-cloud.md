@@ -287,6 +287,15 @@ Depends on: 2
       except generated files, which the length audit excludes by path. Split
       each protocol page over 250 lines, or add its exact cap to
       `xtask/protocol-document-caps.json`.
+- [ ] After the `@firna/ui` move, rewrite the cloud pages, READMEs, and
+      runbooks that still require published Mokly releases and pin bumps,
+      such as `docs/protocol/cloud/mockups.md`,
+      `mokly-artifact-compatibility.md`, `repository-typescript.md`,
+      `desktop-app.md`, and `docs/ops/mokly-release-cutover.md`, for
+      workspace use.
+- [ ] Extend `tests/markdown_links.test.ts` to every Markdown file that the
+      old cloud check read, such as the legal pages of `apps/site`, with
+      the root-route rule for site links.
 - [ ] Run `npm test -- tests/markdown_links.test.ts`, `npm run format:check`,
       `npm run lint`, and `cargo xtask source-file-length-lint`.
 
@@ -323,6 +332,8 @@ Depends on: 6
 - [ ] Apply the public CI rule of the design calls to every job that reads
       a secret or requests an OIDC token. Test the guard with a fork
       pull request event fixture.
+- [ ] Set `ELECTRON_SKIP_BINARY_DOWNLOAD=1` in every CI job that does not
+      run Electron, and move that rule to the CI workflow pages.
 - [ ] Leave `docs/protocol/cloud/` out of the `@mokly/mokly` package.
 - [ ] Scope Release Please to the published packages. Keep the cloud
       projects out of the changelog and the version bump.
