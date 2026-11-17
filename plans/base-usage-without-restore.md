@@ -175,20 +175,21 @@ Evidence belongs in `.context/base-usage-without-restore/implementation-report.m
 
 Depends on: 2
 
-The non-ui implementor measures release binaries of the latest merged main and
-the branch. Save both binaries before moving build inputs. Run builds serially.
+The workspace orchestrator performed the release measurements, as the user
+directed on 2026-11-17. Both binaries were saved before build inputs moved.
+All builds and benchmark cases ran serially.
 
-- [ ] Record the exact main and branch revisions, environment, fixture sizes,
+- [x] Record the exact main and branch revisions, environment, fixture sizes,
       edit, sidecar count, and command arguments.
-- [ ] Check `df -h` and `free -m` before each large Cargo build. Set
+- [x] Check `df -h` and `free -m` before each large Cargo build. Set
       `CARGO_INCREMENTAL=0`. Run only one Cargo build at a time.
-- [ ] Measure Serve with one edit on `examples/basic` and the HTML and React
+- [x] Measure Serve with one edit on `examples/basic` and the HTML and React
       large fixtures from `scripts/large/`. Record Ready publication duration,
       or `changes.classify` duration through ready state.
-- [ ] Measure `mokly build` with Changes on those same fixtures and revisions.
-- [ ] Compare projected detail bytes before and after with identical catalogue
+- [x] Measure `mokly build` with Changes on those same fixtures and revisions.
+- [x] Compare projected detail bytes before and after with identical catalogue
       inputs. Save this one-time proof outside permanent tests.
-- [ ] Save raw evidence and a before/after table under
+- [x] Save raw evidence and a before/after table under
       `.context/base-usage-without-restore/`. Use bounded harness memory and
       report noise and each unavailable measurement.
 
@@ -198,6 +199,11 @@ The usage override now lives in `capture_generation.rs` beside the scheduling
 methods. Checking wrappers still use the document-based default.
 The release baseline is `6d0fcbb46`. Verification uses Git 2.45.4 first on `PATH`.
 This applies the existing design without another design choice.
+
+Measurement evidence belongs in `.context/base-usage-without-restore/measurement-report.md`,
+`react-build-stage-report.md`, `react-build-stages.csv`, and
+`mokly-cloud-evidence.md`. The extra interleaved React build pairs found no
+consistently slower stage. All three static detail byte comparisons passed.
 
 ## Milestone 4: Gate, review, and pull request
 
@@ -227,3 +233,17 @@ The workspace orchestrator checks every delegated result and owns this work.
 
 Merge evidence belongs in `.context/base-usage-without-restore/merge-integration-report.md`,
 `scheduling-merge-audit.log`, and `allocator-merge-audit.log`.
+
+Integration record of 2026-11-17: main `f380e9462` adds the Node installer fix.
+The automatic merge keeps all eleven incoming paths, including both follow-up
+items. It changes no Rust source or Cargo lock from the measured implementation.
+The merge has two parents and an empty remerge diff. Evidence belongs in
+`.context/base-usage-without-restore/node-merge-audit.log`.
+
+Integration record of 2026-11-17: the user required main `794b30a91`, which
+restores compact trees from binary records. The automatic codec merge keeps
+the metadata usage accessor and all incoming restore code. Captured usage
+still reads no payload. The user stopped the earlier gate and required a new
+gate on this merged tree. Existing measurements remain valid evidence by the
+user's instruction. No measurement is repeated.
+Merge evidence belongs in `.context/base-usage-without-restore/binary-codec-merge-audit.log`.
