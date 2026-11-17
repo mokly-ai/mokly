@@ -194,6 +194,7 @@ pub(crate) fn request(
     stdin: Vec<u8>,
 ) -> Request {
     Request {
+        process_mode: Default::default(),
         directory: repository.directory.clone(),
         args: [
             "--no-optional-locks".to_owned(),
