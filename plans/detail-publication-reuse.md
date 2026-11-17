@@ -187,7 +187,7 @@ Check disk and available memory before every large Cargo build.
 - [x] Build release binaries for `main` and the branch with the same settings.
 - [x] Measure repeated Serve edits on `examples/basic` and generated fixtures from `scripts/large/`. Record fixture sizes, phase `detail.build` counts, edit-to-Changes-ready times, and memory observations.
 - [x] Compare delivered publications against the pre-change oracle and explain any measurement limits.
-- [ ] Push the implementation and immediately send its SHA to the performance orchestrator for the Mokly Cloud acceptance measurement.
+- [x] Push the implementation and immediately send its SHA to the performance orchestrator for the Mokly Cloud acceptance measurement.
 
 The performance orchestrator added two verification calls on 2026-11-17.
 Confirm that every miss still emits `detail.build`. Locate the React timing
@@ -201,9 +201,9 @@ unproven. Evidence: `.context/detail-publication-reuse/react-publication-analysi
 Depends on: 1, 2, 3
 
 - [x] Run targeted tests, `cargo xtask check --suite repository`, and `cargo xtask check`. Use Git 2.45 or later first on PATH and install git-lfs. Report any blocked suite.
-- [ ] Commit with Conventional Commits and push. Run the shared finish-work `scripts/ci-wait.sh` after each CI-triggering change.
-- [ ] Review the full diff against `origin/main` with the implementation-review skill. Check each new finding, apply up to two fix rounds, re-review fixes, and record remaining items.
-- [ ] Refresh `origin/main`, preserve merged nearby work, and finish CI on the last commit. Report fixed, deferred, and open findings and the repository follow-up count.
+- [x] Commit with Conventional Commits and push. Run the shared finish-work `scripts/ci-wait.sh` after each CI-triggering change.
+- [x] Review the full diff against `origin/main` with the implementation-review skill. Check each new finding, apply up to two fix rounds, re-review fixes, and record remaining items.
+- [x] Refresh `origin/main`, preserve merged nearby work, and finish CI on the last commit. Report fixed, deferred, and open findings and the repository follow-up count.
 - [ ] Delete this plan under the plans skill after all preceding TODOs are complete.
 - [ ] Open the pull request into `main`. Preserve dated calls and the plan permalink in its description. Wait for final CI and send the complete report to the performance orchestrator. Do not merge.
 
@@ -213,3 +213,14 @@ of `origin/main` at `49f28d837`. The merge preserves the base-usage optimization
 and browser test fix. Integration checks follow the merge. Final pull request
 CI will verify the combined tree. Release comparisons remain the controlled
 before/after measurements against `794b30a91`.
+
+Milestone 3 complete. The implementation is pushed at
+`5238d4e7d71441a1de2e9e57be6d3cdaf57dc044`. The performance orchestrator
+received the SHA immediately after the push.
+
+The fresh implementation review found no in-scope or outside-scope finding.
+No finding check or fix round is required. Review records live under
+`.context/reviews/calummoore/mokly-detail-publication-reuse-7lec/`.
+The implementation push starts no CI before a pull request exists.
+The shared waiter returned the expected no-run result.
+Only plan deletion and pull request opening with final CI remain.
