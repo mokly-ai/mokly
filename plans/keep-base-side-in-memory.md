@@ -267,6 +267,22 @@ marks each change. Calls 14 to 24 are new calls of 2026-11-16.
     must not keep a newer slot entry after the last Serve state drops. Its
     own base can remain until the reader ends, as decision 4A permits.
 
+39. The performance orchestrator's correction, 2026-11-17: the base reader
+    checks its reader token and forwards `retained_comparison_input` to the
+    kept capture. A failed restore still returns no retained input. The
+    ordered path then reads through the reader and records its owned failure.
+    This replaces the retained-input part of design call 32. Reason: the
+    `mokly-cloud` measurement found that the default path serialized each
+    restore and added about 1.1 s to comparison. The user explicitly requested
+    the forwarding fix and its regression test.
+40. The continuation orchestrator's measurement call, 2026-11-17: measure
+    both release binaries with one sidecar and the existing 1,750,000 KiB
+    harness RSS safety stop. Stop each paired run after the edited
+    classification, and restore its source offline. Run the branch restore
+    smoke separately. Reason: the two-sidecar baseline hit the safety stop,
+    including once during its first classification. The plan fixes no sidecar
+    count, and the required first and edited classifications stay measured.
+
 ### Code facts on `main` at `a1d834fbe`
 
 The docs implementor checked these facts on 2026-11-16.
@@ -715,15 +731,37 @@ The `non-ui implementor` keeps the base in Serve and reuses it.
 Evidence: `.context/keep-base-side-in-memory/milestone-4-report.md` and
 `.context/keep-base-side-in-memory/milestone-4-docs-report.md`.
 
-## Milestone 5: Measurement and smoke test
+## Milestone 4a: Retained comparison inputs
 
 Depends on: 4
+
+The `non-ui implementor` applies the performance orchestrator's requested
+correction of 2026-11-17 before release measurements continue.
+
+- [x] `BaseReader::retained_comparison_input` checks reader cancellation,
+      then forwards to the kept capture. A failed retained restore still
+      defers to the ordered reader path and its owned failure handling.
+- [x] Test that reused captured views provide retained inputs to the parallel
+      comparison phase. See its behavior assertion fail without forwarding.
+- [x] Check cancellation at this path. Run the focused compare tests,
+      formatting, and Clippy. Record the new test's cost.
+- [ ] Commit and push the fix. Send its SHA to the performance orchestrator
+      at once for another `mokly-cloud` measurement.
+
+Evidence: `.context/keep-base-side-in-memory/milestone-4a-report.md`.
+
+## Milestone 5: Measurement and smoke test
+
+Depends on: 4a
 
 - [ ] Build release binaries of the branch and the last merged `main`,
       `f380e9462`, with `cargo build --release -p mokly-cli`. Each checkout
       has its own target directory. The before checkout is
       `.context/before-checkout`, with `.context/target-before`. Refresh
       `.context/keep-base-side-in-memory/before-mokly` from that build.
+- [ ] Use one sidecar for both binaries and keep the existing harness RSS
+      safety stop, under measurement call 40. Preserve both earlier baseline
+      safety-stop attempts under `.context/keep-base-side-in-memory/`.
 - [ ] Interleave three before runs and three after runs, in the order before,
       after, before, after, before, after. Measure the Serve edit on
       `examples/basic` and on the React fixture of the
@@ -754,10 +792,12 @@ Evidence: `.context/keep-base-side-in-memory/merge-resolution.md` holds the
 preservation audits of the merges of `main` at `6d0fcbb46` and `f380e9462`.
 The pull request description copies their outcomes.
 
-- [ ] Remove the status lines that Milestone 1 added. Keep the macOS item of
+- [x] Remove the status lines that Milestone 1 added. Keep the macOS item of
       the runtime status line.
-- [ ] Refresh the live code references in affected follow-up items after the
+- [x] Refresh the live code references in affected follow-up items after the
       Milestone 4 code layout settles. Keep their requirements and grades.
+- [x] Align the deferred scripts-off flag option with preparation freshness
+      evidence and the kept base. Keep its recommendation and grade.
 - [x] Merge `origin/main` with the `git-merge` skill.
 - [ ] Run `cargo xtask check --suite repository`, then the complete gate
       `cargo xtask check`.

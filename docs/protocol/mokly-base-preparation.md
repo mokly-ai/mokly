@@ -1,7 +1,5 @@
 # Base Source And Dependency Preparation
 
-Status: Serve does not keep a base between classifications yet. The [keep base side plan](../../plans/keep-base-side-in-memory.md) adds the Serve base lifetime and its cancellation rule.
-
 This page defines how Mokly prepares the sources and the dependencies of the
 base side. The [comparison contract](./mokly-comparison.md#sides) owns
 rendered sides. The [Git runtime](./mokly-git.md) owns history, blobs and

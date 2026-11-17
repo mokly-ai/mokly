@@ -7,7 +7,7 @@
   `crates/mokly-git/src/conversion_paths.rs:38`,
   `crates/mokly-git/src/source_key.rs:39`,
   `crates/mokly-git/src/history.rs:19`, and
-  `crates/mokly-cli/src/serve_changes_native.rs:46`.
+  `crates/mokly-cli/src/serve_changes_native.rs:48`.
 - **Reason:** Only a Linux checkout with a hook-mode `core.fsmonitor` meets it, and only when a stop comes while such a command runs, so the outcome rules defer a Small fix of a Rare problem that is not High.
 
 - **Source:** Review.
@@ -44,15 +44,17 @@
     `crates/mokly-git/src/conversion_paths.rs:38` (checkout conversion paths)
     and `crates/mokly-git/src/source_key.rs:39` (the checkout settings hash),
     and `rev-parse` in `crates/mokly-git/src/history.rs:19` and
-    `crates/mokly-cli/src/serve_changes_native.rs:46`.
+    `crates/mokly-cli/src/serve_changes_native.rs:48`.
   - Two methods use the checkout settings hash: `Repository::source_key` and
     `Repository::checkout_identity`. `CachedExtraction` in
     `crates/mokly-compare/src/extraction.rs` computes the source key when a
     base looks up or builds its source extraction. A Serve base preparation
     samples the checkout identity before its first base read, in
     `NativeBase::prepare` of `crates/mokly-cli/src/changes_base.rs`.
-    `FreshnessChecks::current` in `crates/mokly-compare/src/base_freshness.rs`
-    samples it again before each reuse of a kept base. So the checkout sample
+    Before each reuse of a kept base, `ServeBase::find_kept` in
+    `crates/mokly-cli/src/serve_base.rs` samples it again through
+    `FreshnessChecks::current` of `crates/mokly-compare/src/base_freshness.rs`.
+    So the checkout sample
     and the reuse check add `check-attr` runs to Serve classifications, and a
     stop can come while one runs.
   - Every plain request goes through `git_command` in

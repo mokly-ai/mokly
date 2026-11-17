@@ -1,7 +1,5 @@
 # Comparison Generation And Serving
 
-Status: Serve still captures the base in each classification. The [keep base side plan](../../plans/keep-base-side-in-memory.md) adds the kept base capture and its replacement rule.
-
 ## Generation And Serving
 
 A comparison generation is an immutable set of files under

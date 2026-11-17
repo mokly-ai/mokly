@@ -11,6 +11,7 @@ use mokly_graph::asset_delivery::AssetRead;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::{Closure, GeneratedResources};
 use mokly_graph::collection::ComparisonCollector;
+use mokly_graph::comparison_input::RetainedComparisonInput;
 use mokly_graph::comparison_stream::ComparisonConsumer;
 use mokly_graph::error::{GraphError, Result};
 use mokly_graph::resource_inputs::ResourceObserver;
@@ -139,6 +140,19 @@ impl RenderGeneration for BaseReader {
     }
     fn comparison_document(&self, route: &str) -> Result<Arc<Artifact>> {
         self.state.read(|base| base.comparison_document(route))
+    }
+    fn retained_comparison_input(&self, route: &str) -> Option<RetainedComparisonInput> {
+        self.state.check_cancelled().ok()?;
+        match self
+            .state
+            .reuse
+            .base
+            .generation
+            .retained_comparison_input(route)?
+        {
+            RetainedComparisonInput::Ready(input) => Some(RetainedComparisonInput::Ready(input)),
+            RetainedComparisonInput::Deferred(_) => None,
+        }
     }
     fn comparison_parallelism(&self) -> usize {
         self.state.reuse.base.generation.comparison_parallelism()

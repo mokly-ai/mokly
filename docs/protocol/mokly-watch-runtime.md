@@ -1,7 +1,5 @@
 # Watch Runtime And Recovery
 
-Status: Serve does not keep a base between classifications yet. The [keep base side plan](../../plans/keep-base-side-in-memory.md) adds the release on a moved merge base.
-
 Continuation of [Watched Catalogue Development](./mokly-watch.md).
 
 ## Actions And Coalescing

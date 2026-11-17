@@ -62,8 +62,9 @@
     - Its hop at `:41-43` runs `prepare`, which calls `source.classify` at
       `:120`.
     - In the CLI, `Source::classify` at
-      `crates/mokly-cli/src/serve_changes.rs:124-129` calls `classify_native`,
-      which prepares the base, captures it, and compares the views.
+      `crates/mokly-cli/src/serve_changes.rs:127-132` calls `classify_native`.
+      It prepares and captures the base, or reuses the base that Serve kept
+      from an earlier classification, and it compares the views.
     - `execute` itself runs inside the `tokio::spawn` hop at
       `changes_background.rs:71-77`.
     - The error path at `changes_execution.rs:86` records `status` on

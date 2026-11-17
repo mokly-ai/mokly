@@ -136,7 +136,10 @@ A task reads the head side and the base input that
 `retained_comparison_input` returns. It makes no base source read and no base
 sidecar call. The base capture answers that lookup from its kept views. A kept
 view that fails to restore returns a deferred source read, so classification
-restores it once.
+restores it once. The reader of a kept base checks its own cancellation, then
+forwards the lookup to the kept capture. Through that reader, a failed restore
+returns no retained input, and the ordered pass reads the view through the
+reader, with its cancellation and failure checks.
 
 A view with a base route whose input is deferred or not retained gets all
 of its reads in the ordered pass, after every earlier view. An ordered failure

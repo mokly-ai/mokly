@@ -4,7 +4,7 @@
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #228, decision 9 of the stylesheet bundle
   performance plan, and review finding 1 of step A.
-- **Location:** `crates/mokly-cli/src/serve_changes_native.rs:170`,
+- **Location:** `crates/mokly-cli/src/serve_changes_native.rs:194`,
   `crates/mokly-cli/src/serve_pool.rs:93`, and
   `crates/mokly-graph/src/session_collection.rs:28`.
 - **Reason:** The orchestrator chose to change the shared render pool in a
@@ -28,7 +28,7 @@
 - **Background:**
   - The base runtime of Serve wraps the shared render pool, in
     `Source::classification_runtime` at
-    `crates/mokly-cli/src/serve_changes_native.rs:170`. So base jobs and
+    `crates/mokly-cli/src/serve_changes_native.rs:194`. So base jobs and
     foreground document renders use the same workers.
   - `acquire` in `crates/mokly-cli/src/serve_pool.rs:93` makes a base call
     wait while a foreground request is active. A base job that waits there

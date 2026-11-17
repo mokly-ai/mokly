@@ -1,7 +1,5 @@
 # Selected live comparisons
 
-Status: Serve does not keep a base between classifications yet. The [keep base side plan](../../plans/keep-base-side-in-memory.md) adds the kept base rules of this page.
-
 A selected comparison compares one shown view in Serve on demand: the screen
 or component entry the reader opened, at the selected viewport and colour
 scheme, head against base. It reads only that entry's views and their

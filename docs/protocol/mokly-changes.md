@@ -1,7 +1,5 @@
 # Changes and screen comparisons
 
-Status: Serve does not reuse a kept base yet. The [keep base side plan](../../plans/keep-base-side-in-memory.md) adds the reuse and its statuses.
-
 The [catalogue change metadata contract](./mokly-catalogue-changes.md) states
 what Changes shows when the base commit has no configuration file, when a base
 read fails, and when a comparison budget is exceeded. Runtime failure outcomes

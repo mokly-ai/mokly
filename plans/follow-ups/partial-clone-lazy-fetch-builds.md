@@ -37,7 +37,8 @@
     method, at `crates/mokly-git/src/source_key.rs:33`. A base computes the
     source key when it looks up or builds its source extraction. A Serve base
     preparation samples the checkout identity before its first base read. The
-    check before Serve reuses a kept base samples it again. So these reads
+    check before Serve reuses a kept base, `ServeBase::find_kept` in
+    `crates/mokly-cli/src/serve_base.rs`, samples it again. So these reads
     also run `ls-tree -l` before the missing-object check, for every regular
     file of the commit. When the sample fails for a reason other than
     cancellation, the preparation records no freshness evidence and continues,

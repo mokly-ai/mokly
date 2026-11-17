@@ -1,7 +1,5 @@
 # Startup Diagnostics And Scale Fixtures
 
-Status: Serve does not reuse a kept base yet, so `review.base-tree` has no `action`. The [keep base side plan](../../plans/keep-base-side-in-memory.md) adds both.
-
 ## Opt-In Timings
 
 `--debug-timings` is a common boolean CLI option for `serve` (including the

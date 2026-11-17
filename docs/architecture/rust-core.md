@@ -1,7 +1,5 @@
 # Rust Core Architecture
 
-Status: Serve does not keep a base between classifications yet. The [keep base side plan](../../plans/keep-base-side-in-memory.md) adds the kept base.
-
 Mokly is a Rust core, a Node render sidecar, and a browser viewer. This page is
 the map: the processes, the components and their responsibilities, the
 boundaries between them, and the flow of data from the sources to a delivered

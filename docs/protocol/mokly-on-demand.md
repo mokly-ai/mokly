@@ -1,7 +1,5 @@
 # On-demand Serve
 
-Status: Serve does not keep a base between classifications yet. The [keep base side plan](../../plans/keep-base-side-in-memory.md) adds the kept base exception of the replacement rule.
-
 ## Startup And Completeness
 
 Serve validates the configuration, the catalogue model, the routes, the
