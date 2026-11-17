@@ -7,6 +7,7 @@ use mokly_css::match_tree::MatchTree;
 use mokly_css::rule_matching::match_document;
 use mokly_css::{observation, rules};
 use mokly_graph::closure::Closure;
+use mokly_graph::comparison_input::RetainedComparisonInput;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::evidence::{EvidenceOwner, ResourceEvidence};
 use mokly_model::review_affected::ReviewSide;
@@ -32,11 +33,16 @@ pub(crate) fn closures(
     after: &dyn RenderGeneration,
     before_route: Option<&str>,
     after_route: Option<&str>,
+    retained: Option<RetainedComparisonInput>,
 ) -> Result<Resources> {
-    let left = before_route.map_or_else(
-        || Ok(Closure::default()),
-        |route| before.closure(route).compare(),
-    )?;
+    let left = match retained {
+        Some(RetainedComparisonInput::Ready(input)) => input.closure,
+        Some(RetainedComparisonInput::Deferred(recipe)) => recipe.closure(),
+        None => before_route.map_or_else(
+            || Ok(Closure::default()),
+            |route| before.closure(route).compare(),
+        )?,
+    };
     let right = after_route.map_or_else(
         || Ok(Closure::default()),
         |route| after.closure(route).compare(),

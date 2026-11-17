@@ -5,23 +5,24 @@ use std::sync::Arc;
 
 use mokly_catalogue::diagnostic::Warning;
 use mokly_css::attribution::PageObservation;
+use mokly_graph::comparison_input::RetainedComparisonInput;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::catalogue::EntryContent;
-use mokly_model::evidence::ViewEvidence;
-use mokly_model::review::{ReviewEntryAddress, ReviewState};
+use mokly_model::review::ReviewEntryAddress;
 use mokly_model::review_affected::ReviewSide;
 use mokly_model::usage::CatalogueUsage;
 
-use crate::comparison_address::address;
-use crate::comparison_preparation::{self, Preparation, PreparedView, ViewPreparation};
-use crate::comparison_resources::{self, ResourceInput};
+use crate::comparison_batch::{Batch, ViewRoutes};
+use crate::comparison_consumer::{Consumer, ViewConsumer};
+use crate::comparison_error::CompareResult;
+use crate::comparison_preparation::{Preparation, ViewInput, ViewPreparation};
 use crate::comparison_types::{DocumentComparison, ViewKey};
 use crate::error::Result;
-use crate::instance_proof::{InstanceProof, ProofInput};
+use crate::instance_proof::InstanceProof;
 use crate::move_inventory::PlanIndex;
 use crate::move_types::EntryPair;
+use crate::owned_styles;
 use crate::resource_memo::ResourceMemo;
-use crate::{inline_styles, instance_proof, owned_styles, view_material};
 
 pub(crate) struct UsageView {
     pub(crate) side: ReviewSide,
@@ -97,171 +98,59 @@ pub(crate) fn collect(
         after: after.as_ref(),
         paths,
     };
-    for key in keys {
-        let before_route = left.get(&key).map(|plan| plan.route.clone());
-        let after_route = right.get(&key).map(|plan| plan.route.clone());
-        let PreparedView {
-            artifacts,
-            mut resources,
-            trees: [before_tree, after_tree],
-            material,
-        } = preparation.prepare(before_route.as_deref(), after_route.as_deref(), pair.moved)?;
-        let [before_document, after_document] = comparison_preparation::documents(&artifacts);
-        if pair.moved {
-            resources.aliases =
-                comparison_resources::aliases(&resources.before, &resources.after, memo)?;
-        }
-        result
-            .warnings
-            .extend(resources.before.warnings.iter().cloned());
-        let mut observation = PageObservation {
-            component: component.clone(),
-            ..Default::default()
-        };
-        let evidence = comparison_resources::evidence(
-            ResourceInput {
-                resources: &resources,
-                memo,
-                before_tree: before_tree.as_ref(),
-                after_tree: after_tree.as_ref(),
-                paths,
-                before_route: &format!(
-                    "static/mokly-generated/{}",
-                    before_route.as_deref().unwrap_or("")
-                ),
-                after_route: &format!(
-                    "static/mokly-generated/{}",
-                    after_route.as_deref().unwrap_or("")
-                ),
-            },
-            &mut observation,
-        )?;
-        let comparison = match (pair.moved, before_document, after_document) {
-            (true, Some(left), Some(right)) => Some(view_material::compare(
-                left,
-                right,
-                &format!(
-                    "static/mokly-generated/{}",
-                    before_route.as_deref().unwrap_or("")
-                ),
-                &format!(
-                    "static/mokly-generated/{}",
-                    after_route.as_deref().unwrap_or("")
-                ),
-                paths,
-                &resources.aliases,
-            )),
-            _ => material,
-        };
-        let candidates = match (&comparison, previous, current) {
-            (Some(comparison), Some(_), Some(_)) => comparison.instances.as_slice(),
-            _ => &[],
-        };
-        let mut owned = owned_styles::compare(
-            [
-                before_document.map_or(&[], |document| document.tree.as_slice()),
-                after_document.map_or(&[], |document| document.tree.as_slice()),
-            ],
-            [before_tree.as_ref(), after_tree.as_ref()],
-            paths,
-            &format!(
-                "static/mokly-generated/{}",
-                after_route
-                    .as_ref()
-                    .or(before_route.as_ref())
-                    .map_or("", String::as_str)
-            ),
-            memo,
-            candidates,
-        )?;
-        if let Some(comparison) = &comparison {
-            owned.prepare(comparison);
-        }
-        observation.rules.append(&mut owned.rules);
-        let inline = inline_styles::compare(
-            before_document.map(|document| document.tree.as_slice()),
-            after_document.map(|document| document.tree.as_slice()),
-            before_tree.as_ref(),
-            after_tree.as_ref(),
-            &format!(
-                "static/mokly-generated/{}",
-                after_route
-                    .as_ref()
-                    .or(before_route.as_ref())
-                    .map_or("", String::as_str)
-            ),
-            memo,
-        )?;
-        observation.rules.extend(inline);
-        let proofs = match (&comparison, previous, current) {
-            (Some(comparison), Some(_), Some(_)) => instance_proof::collect(ProofInput {
-                comparison,
-                resources: &resources,
-                evidence: &evidence,
-                paths,
-            }),
-            _ => Vec::new(),
-        };
-        let state = match &comparison {
-            None if before_document.is_none() => ReviewState::Added,
-            None => ReviewState::Removed,
-            Some(comparison) if comparison.changed => ReviewState::Changed,
-            Some(comparison) if comparison.ignored_only => ReviewState::IgnoredOnly,
-            _ => ReviewState::Unchanged,
-        };
-        let ignored_ids = comparison
-            .as_ref()
-            .map_or_else(Vec::new, |comparison| comparison.ignored_ids.clone());
-        result.views.push(PendingView {
-            document: DocumentComparison {
+    let consumer: &dyn ViewConsumer = &Consumer {
+        moved: pair.moved,
+        previous,
+        current,
+        component,
+        paths,
+        memo,
+    };
+    let mut keys = keys.into_iter();
+    loop {
+        let routes: Vec<_> = keys
+            .by_ref()
+            .take(before.comparison_parallelism().max(1))
+            .map(|key| ViewRoutes {
                 key,
-                before_route,
-                after_route,
-                state,
-                ignored_ids,
-                evidence: ViewEvidence {
-                    rules: Vec::new(),
-                    resources: evidence,
-                },
-            },
-            observation,
-            material: comparison
-                .as_ref()
-                .is_some_and(|comparison| comparison.changed),
-            inputs: comparison
-                .as_ref()
-                .is_some_and(|comparison| comparison.inputs),
-            structure: comparison
-                .as_ref()
-                .is_some_and(|comparison| comparison.structure),
-            proofs,
-            owned,
-            rule_sources: BTreeSet::new(),
-            // A view on one side proves a root change only for a one-sided
-            // entry; an entry with both sides that gains or loses a view has
-            // no paired canonical form for that view.
-            root_changed: comparison
-                .as_ref()
-                .map_or(previous.is_none() || current.is_none(), |comparison| {
-                    comparison.root_changed
-                }),
-        });
-        {
-            for (side, entry, document) in [
-                (ReviewSide::Before, previous, before_document),
-                (ReviewSide::After, current, after_document),
-            ] {
-                if let (Some(entry), Some(document)) = (entry, document) {
-                    result.usage.push(UsageView {
-                        side,
-                        entry: address(entry),
-                        component: matches!(entry.content, EntryContent::Component { .. }),
-                        key,
-                        usage: document.usage.clone(),
-                    });
-                }
-            }
+                before: left.get(&key).map(|plan| plan.route.clone()),
+                after: right.get(&key).map(|plan| plan.route.clone()),
+            })
+            .collect();
+        if routes.is_empty() {
+            break;
+        }
+        before.check_cancelled().compare()?;
+        after.check_cancelled().compare()?;
+        let batch = Batch::new(
+            preparation,
+            &routes,
+            pair.moved,
+            before.as_ref(),
+            after.as_ref(),
+        );
+        before.schedule_comparison_tasks(routes.len(), &batch);
+        for (route, input) in routes.iter().zip(batch.results()) {
+            before.check_cancelled().compare()?;
+            after.check_cancelled().compare()?;
+            let prepared = match input? {
+                ViewInput::Ready(prepared) => prepared,
+                ViewInput::Deferred(recipe) => Box::new(preparation.prepare(
+                    route.before.as_deref(),
+                    route.after.as_deref(),
+                    pair.moved,
+                    recipe.map(RetainedComparisonInput::Deferred),
+                )?),
+            };
+            consumer.consume(
+                &mut result,
+                route.key,
+                route.before.clone(),
+                route.after.clone(),
+                *prepared,
+            )?;
         }
     }
+
     Ok(result)
 }

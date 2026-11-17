@@ -155,6 +155,31 @@ returns to the original source recipes. Wrappers that add checks must return
 `None` from `comparison_capture`, so rebuilding cannot bypass their checks.
 Production callers supply fresh base generations.
 
+`schedule_comparison_tasks` runs a caller's `ComparisonTask` once for every
+index on the generation's render workers. It returns when every index has run.
+The caller sizes each call by `comparison_parallelism` and keeps the results,
+the errors, and the cancellation checks. `ThreadWorkers` carries the caller's
+tracing span and subscriber through one shared context for all worker methods.
+The trait defaults have a capacity of one and run
+the indexes in order on the caller.
+
+Wrappers forward `comparison_parallelism`,
+`schedule_comparison`, and `schedule_comparison_tasks` to their inner
+generation. `RenderWorkers` wrappers forward `comparison_parallelism`,
+`comparison`, and `comparison_tasks` in the same way. Without these forwards,
+the comparison runs one view at a time. A scheduled task still calls the
+wrapper's own methods, so the wrapper's checks stay active.
+
+`retained_comparison_input` returns a comparison input that the generation
+already holds. It reads no source and logs nothing. `Ready` holds the decoded
+document and its closure. `Deferred` holds the `ComparisonFallback` of one
+failed restore. Its `document` logs the failure and reads the original source.
+Its `closure` returns the kept closure.
+
+The default returns `None`. A wrapper
+that adds checks returns `None` when a forward would bypass those checks or
+need source IO.
+
 `FilePolicy` is the one policy of the public closure contract for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.
 Package directories come from the normalized `ResolvedConfig::package_roots`.
@@ -234,9 +259,11 @@ retention disabled.
   the lossless compact document that the compact tier and the comparison
   capture share.
 - [`src/workers.rs`](./src/workers.rs) defines `RenderWorkers` and
-  `ThreadWorkers`, the injected worker pool. Its `stylesheets` method runs one
-  `StylesheetWorker` job for each stylesheet root, keeps the root order, and
-  returns the first failure in root order.
+  `ThreadWorkers`, the injected worker pool, and `ComparisonTask`, one indexed
+  comparison job. Its `stylesheets` method runs one `StylesheetWorker` job for
+  each stylesheet root, keeps the root order, and returns the first failure in
+  root order. Its `comparison_tasks` method runs every index of a
+  `ComparisonTask` once and returns when all of them have run.
 - [`src/fragments.rs`](./src/fragments.rs) defines `MemoFragments`, which
   memoizes JavaScript fragments in the same bounded cache.
 - [`src/render_inputs.rs`](./src/render_inputs.rs) defines `RenderInputs` and
@@ -250,6 +277,9 @@ retention disabled.
   closure walk.
 - [`src/collection.rs`](./src/collection.rs) defines `ComparisonCollector`,
   which consumes validated comparison inputs in route order.
+- [`src/comparison_input.rs`](./src/comparison_input.rs) defines
+  `RetainedComparisonInput` and `ComparisonFallback`, a retained comparison
+  input and the deferred source read of a failed restore.
 - [`src/source_snapshot.rs`](./src/source_snapshot.rs) defines
   `SourceSnapshot`, the generation-scoped source reader.
 - [`src/asset_delivery.rs`](./src/asset_delivery.rs) defines `AssetRead`, the

@@ -164,6 +164,7 @@ impl MoveEvidence for RenderedMoves<'_> {
                 self.after.as_ref(),
                 Some(&left_plan.route),
                 Some(&right_plan.route),
+                None,
             )?;
             resources.aliases = aliases(&resources.before, &resources.after, self.memo.as_ref())?;
             let comparison = view_material::compare(

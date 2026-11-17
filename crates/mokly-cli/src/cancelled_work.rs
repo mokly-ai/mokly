@@ -10,8 +10,8 @@ use mokly_graph::closure::Closure;
 use mokly_graph::error::{GraphError, Result};
 use mokly_graph::types::ComparisonDocument;
 use mokly_graph::workers::{
-    ArtifactWorker, ComparisonWorker, DocumentWorker, RenderWorkers, StylesheetWorker,
-    ValidatedView,
+    ArtifactWorker, ComparisonTask, ComparisonWorker, DocumentWorker, RenderWorkers,
+    StylesheetWorker, ValidatedView,
 };
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use mokly_source_interface::error::SourceError;
@@ -142,6 +142,10 @@ fn check(cancellation: &dyn Cancellation) -> Result<()> {
 }
 
 impl RenderWorkers for CancellableWorkers {
+    /// The supplied task checks both generations and stores their own errors.
+    fn comparison_tasks(&self, count: usize, task: &dyn ComparisonTask) {
+        self.inner.comparison_tasks(count, task);
+    }
     fn comparison_parallelism(&self) -> usize {
         self.inner.comparison_parallelism()
     }

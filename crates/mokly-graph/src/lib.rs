@@ -9,6 +9,7 @@ mod cache_tier;
 mod cache_transit;
 pub mod closure;
 pub mod collection;
+pub mod comparison_input;
 pub mod delivery_inputs;
 mod dependency_inputs;
 mod document_annotations;

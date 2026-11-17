@@ -26,7 +26,7 @@ use crate::types::{
     ResourcePlan, TemporaryDocument,
 };
 use crate::validation_summary::Summary;
-use crate::workers::{ComparisonWorker, RenderWorkers, check_cancelled};
+use crate::workers::{ComparisonTask, ComparisonWorker, RenderWorkers, check_cancelled};
 use crate::{styles, temporary, validation};
 
 #[derive(Clone)]
@@ -149,6 +149,9 @@ impl RenderGeneration for Session {
     }
     fn comparison_parallelism(&self) -> usize {
         self.state.workers.comparison_parallelism()
+    }
+    fn schedule_comparison_tasks(&self, count: usize, task: &dyn ComparisonTask) {
+        self.state.workers.comparison_tasks(count, task);
     }
     fn schedule_comparison(
         &self,

@@ -15,6 +15,7 @@ use mokly_graph::types::{
     ComparisonCapture, ComparisonDocument, DocumentPlan, RenderGeneration, RenderSummary,
     TemporaryDocument,
 };
+use mokly_graph::workers::{ComparisonTask, ComparisonWorker};
 use mokly_model::data::Props;
 use mokly_model::material::digest;
 use mokly_model::namespace::generated;
@@ -61,6 +62,19 @@ impl GeneratedResources for FrozenResources {
     }
 }
 impl RenderGeneration for FrozenResources {
+    fn comparison_parallelism(&self) -> usize {
+        self.inner.comparison_parallelism()
+    }
+    fn schedule_comparison_tasks(&self, count: usize, task: &dyn ComparisonTask) {
+        self.inner.schedule_comparison_tasks(count, task);
+    }
+    fn schedule_comparison(
+        &self,
+        routes: &[String],
+        worker: &dyn ComparisonWorker,
+    ) -> Vec<Result<ComparisonDocument>> {
+        self.inner.schedule_comparison(routes, worker)
+    }
     fn check_cancelled(&self) -> Result<()> {
         self.inner.check_cancelled()
     }

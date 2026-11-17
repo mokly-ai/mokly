@@ -234,6 +234,28 @@ Options-check evidence: `.context/parallel-compare-views/reports/plan-options-fu
 - **Action:** Apply A. Workspace orchestrator's call, 2026-11-16. The current capture-specific result type requires this adaptation.
   The performance orchestrator explicitly accepted this scheduler call on 2026-11-16.
 
+### 7. Carry scoped tracing onto indexed workers
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** performance.
+- **Location:** `crates/mokly-graph/src/workers.rs`.
+- **Background:** Production uses a global timing subscriber. The test harness uses a scoped subscriber that worker threads do not inherit.
+- **Problem:** `parent.in_scope` enters the span but does not install that dispatcher. The new CLI test observed zero worker records instead of four.
+- **Impact if no action:** The scoped test subscriber cannot see worker view spans or verify their comparison parent.
+- **Root question:** How do worker spans and events reach the caller's subscriber under the caller's span?
+- **Options:**
+  - **A.** Capture the current dispatcher at scheduling. Install it around `parent.in_scope` for each indexed task. Effort: Small.
+  - **B.** Require a global subscriber from each caller. Production already uses one. The scoped test harness would need to change. Effort: Small.
+  - **C.** Add one shared worker context helper and use it in all six pool methods. It carries both context parts at each call. Effort: Small.
+  - **D.** Keep span-only scheduling and prove parentage with a global subscriber in a dedicated test process. It adds a process-level harness. Effort: Medium.
+- **Left out:** A dispatcher bound to the pool lifetime cannot serve later scoped callers. Task-side tracing repeats scheduler responsibility and breaks the accepted boundary.
+- **Wider fix:** C. One helper carries both context parts for every render-worker hop.
+- **Previous examples:** Existing worker methods use only `parent.in_scope`. The new scoped CLI tracing test exposes the difference.
+- **Assumptions:** The task requires worker span parentage. Scoped subscribers come from the test harness, not a product requirement. D drops scoped support. C drops the earlier scope choice to leave typed methods span-only.
+- **Recommendation:** C, changed from A after the options check. It removes the copied incomplete pattern with one small helper in the same file.
+- **Action:** Apply C. Workspace orchestrator's call, 2026-11-17. Entering a span alone does not carry a scoped subscriber. One helper prevents the same gap in every pool method.
+
 Replaced ways: monolithic per-view preparation becomes independent preparation plus one ordered consumer.
 `comparison_views::collect` and the shared closure caller in `rendered_moves.rs` migrate in Milestone 2.
 Milestone 2 removes the replaced monolithic path. No capture API is replaced.
@@ -265,28 +287,33 @@ Delegate to the `non-ui implementor`. Keep the split sequential until the schedu
 
 Evidence: `.context/parallel-compare-views/reports/phase-split.md`. The root checked the source order, result lifetime, test logs, and clippy result.
 
-## Milestone 3: Schedule bounded concurrent batches
+## Milestone 3: Schedule bounded concurrent batches — completed
 
 Depends on: 2
 
 Delegate to the `non-ui implementor`. Keep the existing render pool and sequential defaults.
 
-- [ ] Add the object-safe task scheduling boundary and use the existing pool with inherited tracing spans.
-- [ ] Forward capacity and both scheduling operations through `FrozenResources`, `CapturedGeneration`, `CancellableWorkers`, and `SerialStylesheets`.
-- [ ] Add the retained-only input read. Keep wrapper checks and the incoming base-usage read.
-- [ ] Defer views that need base source fallback to ordered preparation before Phase B.
-- [ ] For a failed restore, use a deferred source-and-closure recipe. Attempt the restore once and log its failure only when consumed.
-- [ ] Prove that Phase A reads no base source and deferred preparation starts only after every earlier view is consumed.
-- [ ] Prove that later base source failures cannot replace an earlier view error. Cover one failed restore with no source closure read.
-- [ ] Run Phase A in one pool-sized batch at a time and consume results in view order.
-- [ ] Check both generation cancellations before each batch and ordered consumption. Preserve the base classification's cancellation error.
-- [ ] Test the task's required sequential and parallel result, warning, and work-count equality with the mixed-view and stylesheet fixture.
+- [x] Add the object-safe task scheduling boundary and use the existing pool with inherited tracing spans.
+- [x] Preserve the `review.resource-graph` error outcome when a closure read fails. Cover the discovered span regression.
+- [x] Forward capacity and both scheduling operations through `FrozenResources`, `CapturedGeneration`, `CancellableWorkers`, and `SerialStylesheets`.
+- [x] Add the retained-only input read. Keep wrapper checks and the incoming base-usage read.
+- [x] Defer views that need base source fallback to ordered preparation before Phase B.
+- [x] For a failed restore, use a deferred source-and-closure recipe. Attempt the restore once and log its failure only when consumed.
+- [x] Prove that Phase A reads no base source and deferred preparation starts only after every earlier view is consumed.
+- [x] Prove that later base source failures cannot replace an earlier view error. Cover one failed restore with no source closure read.
+- [x] Run Phase A in one pool-sized batch at a time and consume results in view order.
+- [x] Check both generation cancellations before each batch and ordered consumption. Preserve the base classification's cancellation error.
+- [x] Test the task's required sequential and parallel result, warning, and work-count equality with the mixed-view and stylesheet fixture.
       Include retained and deferred base views. The user explicitly required this regression test, including red-first evidence.
-- [ ] Run existing exact-count scale fixtures with multiple workers as well as the sequential default.
-- [ ] Add red-first concurrency and peak-bound coverage with a recording worker double.
-- [ ] Add red-first ordered-error coverage where the later failure completes first. Cover an earlier Phase B error too.
-- [ ] Run every new asynchronous test ten times without sleeps, retries, or elapsed-time assertions. Record test costs and red evidence.
-- [ ] Finish the crate entry-point docs after the final API names are known.
+- [x] Run existing exact-count scale fixtures with multiple workers as well as the sequential default.
+- [x] Add red-first concurrency and peak-bound coverage with a recording worker double.
+- [x] Add red-first ordered-error coverage where the later failure completes first. Cover an earlier Phase B error too.
+- [x] Run every new asynchronous test ten times without sleeps, retries, or elapsed-time assertions. Record test costs and red evidence.
+- [x] Finish the crate entry-point docs after the final API names are known.
+
+Docs evidence: `.context/parallel-compare-views/reports/final-docs.md`. The root checked API names and wrapper rules. The code delegate owns the discovered closure-error span fix.
+
+Evidence: `.context/parallel-compare-views/reports/scheduling.md`. The root checked source order, batch ownership, all completed mutation failures, repeated-test results, and final clippy. Options evidence: `.context/parallel-compare-views/reports/tracing-options.md`.
 
 ## Milestone 4: Performance evidence
 
@@ -309,6 +336,7 @@ Save every input, command, commit, timing, and RSS sample under `.context/parall
 Depends on: 4
 
 The workspace orchestrator owns the combined gate, review, and pull request.
+Merge evidence: `.context/parallel-compare-views/reports/main-merge-audit.log` and `main-merge-preservation.txt`.
 Fetch and merge `origin/main` before each delegation batch and before the final pull request.
 Preserve merged changes from the base-reader, Git-process, and sidecar branches.
 Before every large Cargo build, check `df -h` and `free -m`.

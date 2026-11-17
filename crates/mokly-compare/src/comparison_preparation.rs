@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use mokly_css::match_tree::MatchTree;
 use mokly_graph::cache::Artifact;
+use mokly_graph::comparison_input::{ComparisonFallback, RetainedComparisonInput};
 use mokly_graph::types::RenderGeneration;
 use mokly_html::composition::Composed;
 
@@ -26,14 +27,26 @@ pub(crate) struct PreparedView {
     pub(crate) material: Option<MaterialComparison>,
 }
 
-/// Read a paired view through its checked generations without shared comparison caches.
+/// A worker result either owns completed inputs or defers all source work.
+pub(crate) enum ViewInput {
+    Ready(Box<PreparedView>),
+    Deferred(Option<Box<dyn ComparisonFallback>>),
+}
+
+/// Read a paired view without shared comparison caches.
 pub(crate) trait ViewPreparation: Send + Sync {
-    /// Preserve base document, head document, base closure, and head closure order.
+    /// Prepare retained base inputs only. Base Git source reads write a fatal
+    /// SourceFailures channel that can replace the returned comparison error.
+    /// Deferring all base source IO preserves the set and order of those writes.
+    fn retained(&self, before: Option<&str>, after: Option<&str>, moved: bool)
+    -> Result<ViewInput>;
+    /// Read documents before closures; open a failed restore recipe once, in order.
     fn prepare(
         &self,
-        before_route: Option<&str>,
-        after_route: Option<&str>,
+        before: Option<&str>,
+        after: Option<&str>,
         moved: bool,
+        retained: Option<RetainedComparisonInput>,
     ) -> Result<PreparedView>;
 }
 
@@ -48,22 +61,51 @@ pub(crate) struct Preparation<'a> {
 }
 
 impl ViewPreparation for Preparation<'_> {
+    fn retained(
+        &self,
+        before: Option<&str>,
+        after: Option<&str>,
+        moved: bool,
+    ) -> Result<ViewInput> {
+        let retained = before.and_then(|route| self.before.retained_comparison_input(route));
+        match retained {
+            Some(RetainedComparisonInput::Deferred(recipe)) => {
+                Ok(ViewInput::Deferred(Some(recipe)))
+            }
+            None if before.is_some() => Ok(ViewInput::Deferred(None)),
+            retained => Ok(ViewInput::Ready(Box::new(
+                self.prepare(before, after, moved, retained)?,
+            ))),
+        }
+    }
+
     fn prepare(
         &self,
         before_route: Option<&str>,
         after_route: Option<&str>,
         moved: bool,
+        retained: Option<RetainedComparisonInput>,
     ) -> Result<PreparedView> {
-        let before = before_route
-            .map(|route| self.before.comparison_document(route).compare())
-            .transpose()?;
+        let before = match (&retained, before_route) {
+            (Some(RetainedComparisonInput::Ready(input)), _) => Some(input.artifact.clone()),
+            (Some(RetainedComparisonInput::Deferred(recipe)), Some(route)) => {
+                Some(recipe.document(route).compare()?)
+            }
+            (_, Some(route)) => Some(self.before.comparison_document(route).compare()?),
+            _ => None,
+        };
         let after = after_route
             .map(|route| self.after.comparison_document(route).compare())
             .transpose()?;
         let artifacts = [before, after];
         let [before, after] = documents(&artifacts);
-        let resources =
-            comparison_resources::closures(self.before, self.after, before_route, after_route)?;
+        let resources = comparison_resources::closures(
+            self.before,
+            self.after,
+            before_route,
+            after_route,
+            retained,
+        )?;
         let trees = [
             before.map(|document| matching_tree::document(&document.tree, self.paths)),
             after.map(|document| matching_tree::document(&document.tree, &BTreeMap::new())),

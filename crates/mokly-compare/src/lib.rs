@@ -60,9 +60,13 @@ pub mod move_types;
 pub mod moves;
 
 mod capture_error;
+mod capture_fallback;
+mod capture_generation;
 mod capture_restore;
 mod capture_styles;
+mod comparison_batch;
 mod comparison_capture;
+mod comparison_consumer;
 mod comparison_error;
 mod comparison_preparation;
 
@@ -204,3 +208,7 @@ mod capture_engine_tests;
 mod capture_producer;
 
 mod capture_collection;
+
+#[cfg(test)]
+#[path = "_tests_/scheduling/mod.rs"]
+mod scheduling_tests;

@@ -7,7 +7,7 @@ use mokly_graph::closure::Closure;
 use mokly_graph::error::Result;
 use mokly_graph::types::ComparisonDocument;
 use mokly_graph::workers::{
-    ArtifactWorker, ComparisonWorker, DocumentWorker, RenderWorkers, ValidatedView,
+    ArtifactWorker, ComparisonTask, ComparisonWorker, DocumentWorker, RenderWorkers, ValidatedView,
 };
 
 /// Every job but stylesheet bundling runs on the shared render workers.
@@ -21,6 +21,10 @@ pub struct SerialStylesheets {
 }
 
 impl RenderWorkers for SerialStylesheets {
+    /// Phase A uses retained base inputs only and never calls the base sidecar.
+    fn comparison_tasks(&self, count: usize, task: &dyn ComparisonTask) {
+        self.inner.comparison_tasks(count, task);
+    }
     fn comparison_parallelism(&self) -> usize {
         self.inner.comparison_parallelism()
     }
