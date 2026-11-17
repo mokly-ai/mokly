@@ -466,9 +466,13 @@ Set `CARGO_INCREMENTAL=0`. Run Cargo builds one at a time.
 - [x] Smoke-test a Changes build and a Serve edit. Run the required strict example build and smoke check when rendering changes require it.
       Smoke evidence: `.context/parallel-compare-views/reports/window-smoke-final.json` and `window-strict-example-build-result.json`. The two first temporary smoke scripts failed only on their npm-wrapper shutdown expectation; the corrected development-entry smoke passed.
 
-- [ ] Run `cargo xtask check`. If blocked, record the blocker and each suite that ran.
-- [ ] Commit with Conventional Commits and push. Start `scripts/ci-wait.sh` after each CI-triggering action.
-- [ ] Review the complete diff against `origin/main` with `implementation-review` after the push. Run finding checks and both permitted fix rounds.
-- [ ] Record all deferred or open findings as follow-up items. Prepare the final evidence and review report for the performance orchestrator.
+- [x] Run `cargo xtask check`. If blocked, record the blocker and each suite that ran.
+- [x] Commit with Conventional Commits and push. Start `scripts/ci-wait.sh` after each CI-triggering action.
+- [x] Review the complete diff against `origin/main` with `implementation-review` after the push. Run finding checks and both permitted fix rounds.
+- [x] Record all deferred or open findings as follow-up items. Prepare the final evidence and review report for the performance orchestrator.
 - [ ] Delete this plan under the `plans` skill after every earlier TODO is complete.
 - [ ] Open the pull request into `main`. Preserve the dated calls, plan permalink, checks, measurements, and follow-up items in its description.
+
+Verification evidence: `.context/parallel-compare-views/reports/window-verification.md` and `window-verification.json` in that folder. The corrected complete gate passed. Earlier gate failures and the unrelated environment-probe flake remain recorded.
+
+Review evidence: `.context/reviews/calummoore/mokly-parallel-view-comparison-n4kr/findings.md`, `round-1-checks.md`, and `round-2-review.md` in that folder. The Low source-pointer finding is fixed. The fresh full-diff review found no in-scope finding. The three outside-scope records are `serve-scoped-tracing-context.md`, `follow-up-line-pointer-drift.md`, and `flaky-program-environment-probe.md` under `plans/follow-ups/`.
