@@ -28,6 +28,18 @@
     without a change.
   - Suspected source: the test evaluates in the page while a navigation
     replaces its context.
+  - New evidence, 2026-11-17: a local complete gate based on `794b30a91`
+    failed in this test while checking an unrelated browser-error test fix.
+    The browser inventory had 2,286 passes and this one failure.
+  - The failure came from `page.evaluate` at line 33, after the "Host start"
+    click and the visible "Annotation" check. The callback awaits `startPick`
+    before it cancels the pick and clears the selection.
+  - Failure text: `page.evaluate: Execution context was destroyed, most likely because of a navigation.`
+    The saved trace shows one top-page document request. It does not
+    confirm a second top-page navigation.
+  - Rerun outcome: one focused rerun passed without a code change.
+    Suspected source: context or frame readiness around `startPick`.
+    The error text alone does not establish the cause.
 - **Impact if no action:** The browser suite can fail at random on a correct
   change. A real navigation defect can hide behind a flake label.
 - **Root question:** How does the test wait for the navigation to finish
@@ -55,7 +67,7 @@
     complete document and its action link.
   - [frame-adapter-message-flake.md](./frame-adapter-message-flake.md).
 - **Related:**
-  - [flaky-browser-error-rejection-commit-info.md](./flaky-browser-error-rejection-commit-info.md)
+  - [flaky-browser-error-rejection-commit-info.md](https://github.com/mokly-ai/mokly/blob/133782a997e9d062b18b1d6a9f9bfbd6b276b5a1/plans/follow-ups/flaky-browser-error-rejection-commit-info.md)
     records the other unrelated browser failure that PR #242 met. It has a
     different test and a different source.
   - [frame-adapter-message-flake.md](./frame-adapter-message-flake.md) is a

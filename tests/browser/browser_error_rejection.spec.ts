@@ -15,6 +15,7 @@ test("automatic browser errors fail real tests for both console and page errors"
       "mokly-error-proof-",
     ),
   );
+  const reportPath = path.join(output, "report.json");
   try {
     const result = await runCaptured(
       process.execPath,
@@ -25,12 +26,16 @@ test("automatic browser errors fail real tests for both console and page errors"
       ],
       {
         cwd: path.resolve(import.meta.dirname, "../.."),
-        env: { ...process.env, MOKLY_ERROR_PROBE_OUTPUT: output },
+        env: {
+          ...process.env,
+          MOKLY_ERROR_PROBE_OUTPUT: output,
+          PLAYWRIGHT_JSON_OUTPUT_FILE: reportPath,
+        },
       },
     );
     assert.equal(result.exitCode, 0, result.stderr);
     assert.equal(result.signal, null);
-    const report = JSON.parse(result.stdout);
+    const report = JSON.parse(await fs.readFile(reportPath, "utf8"));
     assert.deepEqual(report.errors, []);
     assert.equal(report.stats.expected, 2);
     assert.equal(report.stats.unexpected, 0);
