@@ -144,7 +144,7 @@ stage build runs the mockups build itself only when a selected document is
 absent, including on a fresh clone; existing stale documents need an explicit
 build. An unreadable or invalid catalogue index fails with
 `The dogfood catalogue needs a version 9 catalogue index. Run npm run mockups:build from the repository root.`
-The repository gate's site stage always builds the mockups first.
+The `cloud-site` suite always builds the mockups first.
 
 To add a public first segment or a root asset output, declare it in
 `src/navigation.ts`, run `npm run site:routes` to regenerate the
@@ -163,7 +163,7 @@ files. Root ESLint lints the TypeScript but does not parse `.astro` files;
 builds and verifies mockups, then runs the complete site gate. Lighthouse is a
 separate visible CI job and does not block the required aggregate. Workflow
 tests record reviewed immutable action pins, including the Electron download
-cache used by the desktop partition.
+cache used by the desktop job.
 They also check the desktop release workflow's action pins and require its
 secret references to stay in step environments.
 

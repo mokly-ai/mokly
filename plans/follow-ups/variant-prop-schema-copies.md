@@ -37,7 +37,9 @@
   - The viewer already checks each detail against the parent schemas of the
     index, in `packages/viewer/src/catalogue/detail_fences.ts:167`.
   - Release 0.18.0 shipped index version 9. A format change needs index
-    version 10, and Mokly Cloud must adopt the new reader.
+    version 10. The Mokly Cloud receiver in this repository reads index
+    version 9 only, in `crates/mkc-mokly-contract/src/index.rs:29-36`, so
+    the change also moves that reader and its fixtures.
 - **Problem:** The index stores each prop schema once for the parent and
   once more for each variant. Here the copies are 53% of the index.
 - **Impact if no action:** Each variant adds another schema copy to a file
@@ -49,7 +51,7 @@
   - **B.** Leave out `propSchema` and `controls` on a variant when they
     equal the parent's. Readers take them from the parent. It needs index
     version 10, the Rust writer, the viewer reader, and the Mokly Cloud
-    reader. Effort: Large.
+    reader in `crates/mkc-mokly-contract`, in one change. Effort: Large.
   - **C.** Move `propSchema`, `props`, and `controls` from the index to the
     entry details. The detail check of the viewer then needs another
     source for the parent schemas. Effort: Large.
@@ -65,8 +67,6 @@
     the example index is 528,842 bytes.
   - [skip-equal-before-snapshots.md](./skip-equal-before-snapshots.md): it
     also needs a new index number. One release can carry both.
-  - [mokly-cloud-index-v9.md](./mokly-cloud-index-v9.md): Mokly Cloud must
-    adopt each new index version.
 - **Recommendation:** B. It removes the copies with the smallest format
   change, and the detail check already uses only parent schemas.
 - **Action:** ask the user, because option B changes the catalogue index

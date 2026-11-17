@@ -234,7 +234,7 @@ if verification fails. Keep keys needed by old pods until recovery completes.
 Lease loss follows the
 [live-lease renewal rule](../protocol/cloud/cloud-builds.md#claims-leases-and-retries).
 Concurrent completion and attempt endings
-follow the [persistence lock order](../protocol/cloud/persistence-boundaries.md#build-and-publication-lock-order).
+follow the [persistence lock order](../protocol/cloud/persistence-publication-storage.md#build-and-publication-lock-order).
 
 To disable builds, stop new build requests and cancel or drain active attempts
 first. Set app-config `builds` to exactly `{ "enabled": false }` and roll the

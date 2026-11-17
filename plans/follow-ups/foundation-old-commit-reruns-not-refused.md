@@ -24,7 +24,7 @@
 - **Options:**
   - **A.** Change nothing. The runbook warnings and the wait message stay the only guard. Effort: Small (estimate).
   - **B.** Make the Foundation plan job and the Deploy wait fail when the commit of the run is no longer the head of `main`. The failure names the newest commit and says that its runs carry the change. Effort: Small.
-- **Left out:** A run that applies the newest `main`, whatever its own commit. It breaks the decision in `docs/protocol/foundation-promotion.md:81-83` that Deploy finds the Foundation run by its own commit. A GitHub environment with required reviewers. The user rejected that manual step on 2026-10-21. No other approach was found, because a run can only warn, refuse, or apply another commit.
+- **Left out:** A run that applies the newest `main`, whatever its own commit. It breaks the decision in `docs/protocol/cloud/foundation-promotion.md:81-83` that Deploy finds the Foundation run by its own commit. A GitHub environment with required reviewers. The user rejected that manual step on 2026-10-21. No other approach was found, because a run can only warn, refuse, or apply another commit.
 - **Wider fix:** B. It is a guard, which is a detection fix. No structural fix was found, because GitHub keeps the commit of a re-run.
 - **Previous examples:** None found.
 - **Related:** [`docs/ops/deploy.md#stable-environment-apply`](../../docs/ops/deploy.md#stable-environment-apply) holds the new-commit recovery guidance for the same cause: a re-run keeps its old commit. After a failed approval check, the runs of a new commit on `main` apply the fix, and the operator does not re-run the failed run. B makes such a re-run fail safely.

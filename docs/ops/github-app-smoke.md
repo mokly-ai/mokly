@@ -31,8 +31,9 @@ The CI workflow provisions Postgres and explicitly supplies this variable.
 The [fixture provenance](../../crates/mkc-github/fixtures/README.md) describes
 the distinction between these examples and authenticated live recordings.
 The [repository delivery source](../../crates/mkc-api/tests/fixtures/github/README.md)
-includes its original `changes` and top-level `installation` fields. Stage 18
-checks that every documented subscription has a delivery fixture.
+includes its original `changes` and top-level `installation` fields. The
+`cloud-openapi-lint` suite checks that every documented subscription has a
+delivery fixture.
 
 ## Register an App
 

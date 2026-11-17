@@ -6,7 +6,7 @@ CLI. Teams keep authoring React mockups in their own repository. The cloud
 publishes each branch's exported catalogue, posts a GitHub check with the
 Changes count, and gives every project a hosted viewer for its branches and
 pull requests. This repository also builds the static public website and
-documentation, rendering CLI guides from the installed Mokly package. Where
+documentation, rendering CLI guides from the workspace Mokly package. Where
 this leads (review, editing, native apps) is in
 [Product direction](../product-direction.md).
 
@@ -41,14 +41,14 @@ this leads (review, editing, native apps) is in
 
 ## Relationship To The Open-Source Package
 
-The cloud pins `@mokly/mokly@0.19.0`, `@mokly/viewer@0.19.0` and
-`@mokly/ui@0.19.0` from their published npm releases. It uses
+The cloud uses the workspace `@mokly/mokly`, `@mokly/viewer` and `@mokly/ui`
+packages of this repository directly, not published npm releases, as
+[Repository layout](../protocol/repository-layout.md#boundary) defines. It uses
 only their documented exports and the documented file artifacts they produce:
 the build output, its ownership marker, the catalogue index and entry details,
 and the upload envelope and exchange used by `mokly publish`.
-The cloud never imports Mokly internals. Fields the
-cloud needs land in the open repository's protocol docs and a released version
-first.
+The cloud never imports Mokly internals. A field that the cloud needs lands
+first in the Mokly protocol docs.
 
 ## Using Mokly Cloud
 
@@ -113,7 +113,7 @@ only from their own sandbox origin, one host per publication. See the
 ### Toolchains
 
 Install Rust **1.98.1** with rustfmt and clippy, Node **24.21.0**, npm
-**11.11.0**, Terraform **1.16.2** and Helm **4.3.0**, plus Git and a native C
+**11.21.0**, Terraform **1.16.2** and Helm **4.3.0**, plus Git and a native C
 linker. The [pin table](../protocol/cloud/repository-layout.md#pinned-toolchains)
 is the source of truth. On Linux amd64, `bash infra/scripts/install-tools.sh`
 installs Terraform and Helm after the clone; on other platforms, install the
@@ -126,27 +126,30 @@ npm optional dependency, so keep optional dependencies enabled.
 With network access to GitHub and the package registries:
 
 ```bash
-git clone https://github.com/mokly-ai/mokly-cloud.git
-cd mokly-cloud
+git clone https://github.com/mokly-ai/mokly.git
+cd mokly
 bash infra/scripts/install-tools.sh  # Linux amd64 only
-npm run ci:install
+npm ci
 npm exec --workspace @mokly-cloud/mockups -- playwright install chromium
-cargo xtask check                    # the complete gate; installs ts/ dependencies itself
+cargo xtask check                    # the complete gate
 ```
 
-The check installs the npm dependencies from the lockfile and runs all 25
-stages. `origin/main` must be available; after a shallow or
+The check installs the npm dependencies from the lockfile and runs every
+suite, the Mokly suites included; the [Mokly developer guide](./README.md)
+lists the tools that those suites need. Run `npm run build` before a cloud
+build, a cloud test or a local server, because the cloud uses the built
+workspace packages. `origin/main` must be available; after a shallow or
 single-branch clone, run `git fetch origin main:refs/remotes/origin/main`.
 Chromium is required for the catalogue, site and app browser tests; on
 supported Linux hosts, add `--with-deps` to its install command to install the
-system libraries too. Stage 25 also needs Electron's GTK 3, NSS and ALSA
-libraries and `xvfb-run` on Linux; see the
+system libraries too. The `cloud-desktop` suite also needs Electron's GTK 3,
+NSS and ALSA libraries and `xvfb-run` on Linux; see the
 [desktop development guide](../../apps/desktop/README.md#development). The platform
 integration tests use Postgres 16, Python 3 and `psql`, and read
 `MKC_TEST_DATABASE_URL` to select the database. An unreachable database fails
-the stage when `MKC_TEST_DATABASE_URL` or `CI` is set; an unconfigured
+the run when `MKC_TEST_DATABASE_URL` or `CI` is set; an unconfigured
 developer machine skips it with a printed reason. The
-[xtask guide](../../xtask/README.md) lists every stage and its prerequisites.
+[xtask guide](../../xtask/README.md) lists every suite and its prerequisites.
 
 ### Local Servers
 
@@ -194,7 +197,7 @@ npm run start --workspace @mokly-cloud/app
 Add `--debug-timings` to the capture command to print Mokly's timing events
 and the capture summary. Sign in by opening
 `http://localhost:8081/auth/preview/callback#secret=<secret>` with the secret
-from `.context/preview-sign-in`. The project is private, and the pinned viewer
+from `.context/preview-sign-in`. The project is private, and the viewer
 cannot load its private comparison, so Changes show an overlay without an
 action.
 
@@ -203,7 +206,7 @@ action.
 Rust owns every API boundary type. After a change to one, run
 `cargo xtask openapi` to regenerate `docs/api/openapi.json` and the app's
 generated client; `cargo xtask openapi --check` reports drift, as the
-`openapi-drift` stage of the gate does. The
+`cloud-openapi` suite of the gate does. The
 [API reference](../api/README.md) gives the conventions.
 
 ### Mockups And Emails
@@ -270,14 +273,14 @@ directories and the [architecture doc](../architecture/cloud.md) the components.
 
 ### TypeScript, Mockups And Infrastructure
 
-The [TypeScript npm workspace README](../../apps/README.md) holds the lockfile and the
-shared scripts of the six packages.
+The [cloud npm projects README](../../apps/README.md) describes the cloud
+projects of the root npm workspace and their shared scripts.
 
 | Area                                               | Owns                                                                                    |
 | -------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | [apps/app](../../apps/app/README.md)               | The Expo application: account entry, onboarding, settings and the hosted viewer         |
 | [apps/desktop](../../apps/desktop/README.md)       | The Electron desktop shell: the bundled web export, the sign-in handoff and the updater |
-| [apps/mockups](../../apps/mockups/README.md)       | The pinned Mokly packages and the scripts that build and verify the catalogue           |
+| [apps/mockups](../../apps/mockups/README.md)       | The workspace Mokly packages and the scripts that build and verify the catalogue        |
 | [apps/site](../../apps/site/README.md)             | The static Astro marketing, documentation, changelog and legal site                     |
 | [packages/tokens](../../packages/tokens/README.md) | The design tokens, surface families, CSS custom properties and control theme            |
 | [apps/worker](../../apps/worker/README.md)         | The Cloudflare Worker that routes the shared public origin                              |

@@ -3,7 +3,7 @@
 - **Severity:** Medium (estimate). **Likelihood:** Common. **Effort:** Large (estimate). **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from Milestones 12L and 12M of the deleted `plans/mokly-cloud-follow-ups.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `crates/mkc-api/src/error.rs:29-36`, `crates/mkc-api/src/error_mapping.rs:50-54`, `crates/mkc-api/src/error_data.rs:38-52`, `ts/app/src/api/form-error.ts:114-125`, `ts/app/src/screens/account/cli-form-screen.tsx:117-124`, `ts/app/src/screens/account/choose-repository-screen.tsx:153-160` and `docs/protocol/rest-api.md:62`.
+- **Location:** `crates/mkc-api/src/error.rs:29-36`, `crates/mkc-api/src/error_mapping.rs:50-54`, `crates/mkc-api/src/error_data.rs:38-52`, `apps/app/src/api/form-error.ts:114-125`, `apps/app/src/screens/account/cli-form-screen.tsx:117-124`, `apps/app/src/screens/account/choose-repository-screen.tsx:153-160` and `docs/protocol/cloud/rest-api.md:62`.
 - **Reason:** The fix changes the API and the app together, which is Large, and no recorded user decision approves it.
 - **Checked:** 2026-10-31, at commit `f568853e`. The decision is still open. `ValidationFailed` still carries no data, and both account forms still report it above the controls.
 - **Category:** Product bug.
@@ -18,7 +18,7 @@
   - **A.** Keep the form maps, and report every `validation-failed` above the control. Effort: Small.
   - **B.** Name the field in the error data, then read it in the forms. Its field names and its domain error design are a proposal that no decision approves yet. Effort: Large.
     - Add `data.field` to `validation-failed`, spelled as the body spells it: `configPath`, `repository`, `name` or `email`. Omit it when no single field owns the refusal.
-    - Record it beside the `duplicate-project` and `version-conflict` data in `docs/protocol/rest-api.md` and in the Rust error-data schema.
+    - Record it beside the `duplicate-project` and `version-conflict` data in `docs/protocol/cloud/rest-api.md` and in the Rust error-data schema.
     - Produce the reason and the field together in `mkc-domain`, with no string lookup in `mkc-api`.
     - Populate it for every project, workspace and account `validation-failed`. Add unit tests per field and an API smoke for a refused `configPath`.
     - In the forms, prefer the named field over the form's map. Keep the map for reasons with no field. Report a field that the form does not render above the control.

@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-03, from branch `conductor/follow-ups-mockup-overlay-focus`. It keeps option E of `viewer-overlay-backdrop-takes-focus.md`, which that branch fixed with option D and deleted.
-- **Location:** `docs/mockups/src/_tests_/disk-overlay-policy.ts`, `docs/mockups/src/_tests_/disk.spec.ts`, `docs/mockups/src/_tests_/overlay.spec.ts` and `docs/protocol/mockup-verification.md:197-200`. At commit `6be0d89d`, the source of the port: `disk-overlay-policy.ts:12-40`, `disk.spec.ts:162` and `overlay.spec.ts:112-130`.
+- **Location:** `docs/mockups/src/_tests_/disk-overlay-policy.ts`, `docs/mockups/src/_tests_/disk.spec.ts`, `docs/mockups/src/_tests_/overlay.spec.ts` and `docs/protocol/cloud/mockup-verification.md:197-200`. At commit `6be0d89d`, the source of the port: `disk-overlay-policy.ts:12-40`, `disk.spec.ts:162` and `overlay.spec.ts:112-130`.
 - **Reason:** The option makes a check stricter, which the user reserves, and the approved overlay fix does not depend on it.
 - **Checked:** 2026-11-03, against the source port at `6be0d89d` and the completed port on this branch. The guard still uses counted presses before the capture. All 20 new browser tests passed 10 of 10 runs. No stricter option was applied. On 2026-11-04 a one-off browser check measured the scroll that the guard leaves on `product/viewer/switcher`.
 - **Category:** Test.
@@ -15,10 +15,10 @@
   - **Smoke capture:** The full-page PNG that each disk test writes for the visual smoke review of changed pages.
   - **Product screen root:** The element with `data-mkc-screen` that holds the drawing of one screen.
 - **Background:**
-  - `docs/protocol/mockup-verification.md:197-200` says that Tab from an overlay panel never reaches a control outside the panel. The user approved that rule on 2026-10-12.
+  - `docs/protocol/cloud/mockup-verification.md:197-200` says that Tab from an overlay panel never reaches a control outside the panel. The user approved that rule on 2026-10-12.
   - On 2026-10-12 the user also kept the overlay Tab checks in the disk test. The protocol states the rule, not the method of the check.
   - On 2026-11-03 the user chose to port the overlay guard of commit `6be0d89d` with its known gaps. The guard counts the N focusable controls of the open panel. It presses Tab N times from the top of the page, and each stop must be inside the panel.
-  - `docs/protocol/mockups.md:147-150` keeps notes outside the product screen root and puts catalogue-only links below an artboard. No rule says whether such a link may follow an overlay panel.
+  - `docs/protocol/cloud/mockups.md:147-150` keeps notes outside the product screen root and puts catalogue-only links below an artboard. No rule says whether such a link may follow an overlay panel.
   - C and E also move the guard after the smoke capture. `plans/follow-ups/disk-focus-checks-lack-one-post-capture-step.md` holds that capture-order choice, and either walk can run without the move.
 - **Problem:** The guard never presses Tab from the last panel control. A trailing control is reached only by that press, so the guard passes a page that breaks the rule. No fixture puts a control after the panel.
 - **Impact if no action:** A page with a trailing control passes the disk test, although Tab from its panel reaches a control outside the panel.
@@ -27,7 +27,7 @@
   - **C.** Walk the whole Tab cycle with a press limit, and run the guard after the smoke capture. The walk stops when focus leaves the document or returns to the first stop. It makes a check stricter. Effort: Medium.
   - **E.** Do C, but close the trailing-control gap with one more Tab press after the counted presses, not with the whole cycle. Accept only the document body or a panel control at that stop. It makes a check stricter. Effort: Medium.
   - **H.** Keep the counted walk and its call. Add a DOM rule to the guard: on an overlay screen, no element outside the open panel takes focus unless an `inert` ancestor holds it. It catches a trailing control with no press past the panel, and it leaves the call order to the capture-order item. Risk: it uses the same static test of focus as the hidden-subtree rule, so a tab stop that only the browser adds can pass. It makes a check stricter. Effort: Small.
-  - **I.** Apply the overlay Tab rule only inside the product screen root. Inside that root, `ViewerPanelScreen` draws only the inert backdrop and the panel, so no control can come after the panel. Notes and catalogue-only links stay outside the root and stay reachable. Change `docs/protocol/mockup-verification.md:199-200`, and make the guard ignore controls outside the root. Risk: it changes a rule that the user approved on 2026-10-12, and a keyboard reader can then Tab from a panel to a catalogue link. Effort: Small.
+  - **I.** Apply the overlay Tab rule only inside the product screen root. Inside that root, `ViewerPanelScreen` draws only the inert backdrop and the panel, so no control can come after the panel. Notes and catalogue-only links stay outside the root and stay reachable. Change `docs/protocol/cloud/mockup-verification.md:199-200`, and make the guard ignore controls outside the root. Risk: it changes a rule that the user approved on 2026-10-12, and a keyboard reader can then Tab from a panel to a catalogue link. Effort: Small.
 - **Left out:**
   - Change nothing. The guard keeps the gap, and it passes a page with a trailing control.
   - Narrow the Tab rule to the controls that the guard counts. It weakens the rule to fit a gap in its check.

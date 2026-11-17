@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from Milestone 5 of [PR #77](https://github.com/mokly-ai/mokly-cloud/pull/77). Updated on 2026-10-30 with Milestone 13L of the deleted `plans/mokly-cloud-follow-ups.md`, which recorded the same gap.
-- **Location:** `ts/app/src/settings/panes/workspace-pane.tsx:227-240`, `docs/mockups/src/screens/product/settings/workspace-pane.tsx:72-99`, `docs/protocol/product-mockups-settings.md:24` and `docs/protocol/settings-dialog.md:106`.
+- **Location:** `apps/app/src/settings/panes/workspace-pane.tsx:227-240`, `docs/mockups/src/screens/product/settings/workspace-pane.tsx:72-99`, `docs/protocol/cloud/product-mockups-settings.md:24` and `docs/protocol/cloud/settings-dialog.md:106`.
 - **Reason:** The mismatch is already on `origin/main`, so a separate branch fixes it.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The app still shows Your role, and the drawn facts still list only Plan, Slug and GitHub accounts. Both doc rows still omit the role.
 - **Category:** Mockup.
@@ -12,11 +12,11 @@
   - **Fact row:** A label and value pair that a settings pane shows, such as **Your role**.
   - **Parity suite:** The mockup tests in `docs/mockups/src/_tests_/app-parity.test.ts`, which compare the drawn labels and state titles with the app's.
 - **Background:** The list below gives the facts.
-  - The app's Workspace settings pane draws a **Your role** fact at `ts/app/src/settings/panes/workspace-pane.tsx:239`, as the Organization pane on `main` did before PR #77 renamed it.
+  - The app's Workspace settings pane draws a **Your role** fact at `apps/app/src/settings/panes/workspace-pane.tsx:239`, as the Organization pane on `main` did before PR #77 renamed it.
   - The Workspace pane mockup has no such fact. Its loaded drawings list Plan, Slug and GitHub accounts. No file under `docs/mockups/src` writes "Your role".
   - The legacy backlog, in Milestone 13L, first found the gap on the Organization pane. It asked to draw the role on the pane's canonical, state and installation pages. Every drawing of the pane then carries the facts that it reads.
   - Today those drawings are `product/settings/workspace` and its state screens, from `docs/mockups/src/screens/product/settings/workspace-pane.tsx`.
-  - The backlog also asked to record the fact in the docs. Both rows omit it today: `docs/protocol/product-mockups-settings.md:24` and `docs/protocol/settings-dialog.md:106`.
+  - The backlog also asked to record the fact in the docs. Both rows omit it today: `docs/protocol/cloud/product-mockups-settings.md:24` and `docs/protocol/cloud/settings-dialog.md:106`.
 - **Problem:** Every loaded drawing of the Workspace pane is one fact short of the running pane, and the docs do not name the fact. The loading and failed drawings show no loaded facts, so the role does not belong there.
 - **Impact if no action:** Reviewers judge the pane without one of its facts. The parity suite compares control labels and state titles, not the facts that a pane reads, so a change to the role fact stays unseen.
 - **Root question:** Does the Workspace pane show the reader's role, and do its drawings show it too?

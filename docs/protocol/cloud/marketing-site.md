@@ -1,11 +1,10 @@
 # Marketing Site
 
 The public website and documentation live in this repository as the static
-Astro npm workspace `apps/site`. Marketing lives here, not in `apps/app` and not in
-the open `mokly` repository, because the site documents the cloud from this
-repository's protocol docs, stages this repository's dogfood catalogue and
-consumes this repository's design tokens, while the product app serves only
-the signed-in application and its account routes. The site and app share one
+Astro npm workspace `apps/site`. Marketing lives here, not in `apps/app`,
+because the site documents the cloud from the cloud protocol docs, stages the
+cloud dogfood catalogue and consumes the cloud design tokens, while the
+product app serves only the signed-in application and its account routes. The site and app share one
 public origin; the site's explicit first segments take precedence over
 workspace slugs. This document fixes route ownership and links.
 [Site](./site.md), [Site design](./site-design.md),

@@ -192,8 +192,8 @@ index validation and rejection cases.
 
 The contract fixtures are committed golden files beside their consumer, not
 disposable generated output. `cargo xtask mokly-fixtures` regenerates them,
-`--check` fails on any byte or filename drift, and stage 18 runs check mode
-unconditionally. Neither mode publishes a catalogue or edits the product
+`--check` fails on any byte or filename drift, and the `cloud-fixtures` suite
+runs check mode unconditionally. Neither mode publishes a catalogue or edits the product
 catalogue. Check mode also runs one authored index Changes-count corpus
 through the Rust reader and the public `readCatalogueIndex` of the viewer.
 The rule for that corpus is in

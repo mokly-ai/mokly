@@ -2,10 +2,10 @@
 
 This is the plan, blob and completion exchange of
 [Publication upload](./publication-upload.md). The 0.19.0 release's
-[upload exchange v1](https://github.com/mokly-ai/mokly/blob/v0.19.0/docs/protocol/mokly-upload-exchange.md),
-[upload validation v3](https://github.com/mokly-ai/mokly/blob/v0.19.0/docs/protocol/mokly-upload-validation.md)
+[upload exchange v1](../mokly-upload-exchange.md),
+[upload validation v3](../mokly-upload-validation.md)
 and
-[export ownership v3](https://github.com/mokly-ai/mokly/blob/v0.19.0/docs/protocol/mokly-export-ownership.md)
+[export ownership v3](../mokly-export-ownership.md)
 own the wire format and take precedence over this document, which records the
 cloud receiver's choices where they leave room. The cloud adopts
 this release's envelope, marker and index versions. The service

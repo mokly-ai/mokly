@@ -3,19 +3,19 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from the closed [PR #63](https://github.com/mokly-ai/mokly-cloud/pull/63), review finding 3. The closed PR #39 left the same question open as finding F7.
-- **Location:** `docs/protocol/viewer-chrome.md:79-83`, `ts/app/src/viewer/selection.ts:41-56` and `:134-138`, and `ts/app/src/viewer/panels/share.tsx:148` and `:246-247`.
+- **Location:** `docs/protocol/cloud/viewer-chrome.md:79-83`, `apps/app/src/viewer/selection.ts:41-56` and `:134-138`, and `apps/app/src/viewer/panels/share.tsx:148` and `:246-247`.
 - **Reason:** Each option changes a protocol requirement or removes product code, so the user decides.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The route correction still closes Share once no publication resolves, and the contract still promises the empty body.
 - **Category:** Docs or spec.
 
 - **Terms:**
-  - **Share:** The viewer panel in `ts/app/src/viewer/panels/share.tsx` that shows and copies a link to the publication, or to one screen of it.
+  - **Share:** The viewer panel in `apps/app/src/viewer/panels/share.tsx` that shows and copies a link to the publication, or to one screen of it.
   - **Empty state:** The Share body "No publications yet", drawn by `NoPublication` in `share.tsx`, which also offers Set up publishing to an administrator.
-  - **Route correction:** The rule in `ts/app/src/viewer/selection.ts` that drops `panel=share` from an address with no publication, which closes Share.
-  - **Entry:** How the viewer route resolves the address into a publication, a build or a card, in `ts/app/src/viewer/entry.ts`.
-- **Background:** `docs/protocol/viewer-chrome.md:79-83` says that a panel that needs a publication says so in its own body, and that Share offers Set up publishing. The same sentence says that the route corrects `panel=share` away on a reference with nothing published. `defaults.publication` is unknown until the entry resolves. When it becomes false, the route correction closes Share in the same render.
+  - **Route correction:** The rule in `apps/app/src/viewer/selection.ts` that drops `panel=share` from an address with no publication, which closes Share.
+  - **Entry:** How the viewer route resolves the address into a publication, a build or a card, in `apps/app/src/viewer/entry.ts`.
+- **Background:** `docs/protocol/cloud/viewer-chrome.md:79-83` says that a panel that needs a publication says so in its own body, and that Share offers Set up publishing. The same sentence says that the route corrects `panel=share` away on a reference with nothing published. `defaults.publication` is unknown until the entry resolves. When it becomes false, the route correction closes Share in the same render.
 - **Problem:** No reader sees the empty state after the entry resolves, because the route correction closes Share first. Since 2026-11-04, Share shows a preparing state while the entry resolves, so the empty state never shows.
-- **Impact if no action:** The protocol doc promises a Share body that no reader can see. A later test can depend on it, as the member test in `ts/app/src/_tests_/viewer/entry-states.spec.ts` did. On 2026-11-04, PR #124 replaced that check with a preparing assertion.
+- **Impact if no action:** The protocol doc promises a Share body that no reader can see. A later test can depend on it, as the member test in `apps/app/src/_tests_/viewer/entry-states.spec.ts` did. On 2026-11-04, PR #124 replaced that check with a preparing assertion.
 - **Root question:** What does a reader see who opens Share on a project with nothing published?
 - **Options:**
   - **A.** Change only the doc. Say that the route correction closes Share once the entry resolves without a publication. Keep the empty branch in `share.tsx` as a guard. Effort: Small.

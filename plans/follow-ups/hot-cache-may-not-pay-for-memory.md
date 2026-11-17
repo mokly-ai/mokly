@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from the post-merge notes of the deleted `plans/publication-storage-scaling.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `crates/mkc-catalogue-server/src/cache.rs`, `docs/protocol/catalogue-delivery.md`, section "Bounded Hot Cache", and `docs/ops/environment.md:287-306`.
+- **Location:** `crates/mkc-catalogue-server/src/cache.rs`, `docs/protocol/cloud/catalogue-delivery.md`, section "Bounded Hot Cache", and `docs/ops/environment.md:287-306`.
 - **Reason:** The plan made the cache's removal depend on a measurement under real traffic, and a removal of functionality needs the user's approval.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. No representative measurement exists. A capacity of 0 already turns the cache off without a code change.
 - **Category:** Performance.

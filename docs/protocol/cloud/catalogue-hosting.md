@@ -66,7 +66,7 @@ keep previously minted links resolving. Slugs never change the UUID-derived
 catalogue host or move publication bytes onto the app or API origin.
 
 Follow the published
-[delivery contract](https://github.com/mokly-ai/mokly/blob/v0.19.0/docs/protocol/mokly-export-delivery.md).
+[delivery contract](../mokly-export-delivery.md).
 Every stored file keeps its export-relative path from the
 [artifact path table](./mokly-artifact-compatibility.md#stored-and-served-paths):
 
@@ -188,7 +188,7 @@ gives the reads and the decision.
 Blob identity is per project, and an object key carries the content hash and
 an incarnation that fences its lifetime, so a later reincarnation uses a new
 key and a delayed deletion cannot remove fresh content.
-[Persistence boundaries](./persistence-boundaries.md#publication-storage)
+[Publication storage](./persistence-publication-storage.md)
 defines the identity and the exact maintenance lookup. Object keys are
 storage names, never product URLs.
 
@@ -218,7 +218,7 @@ operations keep finite whole-operation timeouts.
 The GCS bucket is private. An optional `MKC_GCS_PREFIX` scopes the physical
 name to `<prefix>/sha256/<hash>/<incarnation>` without changing logical keys
 or public URLs; see
-[object prefixes](./persistence-boundaries.md#object-prefixes). The local
+[object prefixes](./persistence-publication-storage.md#object-prefixes). The local
 adapter uses an exclusively owned directory and publishes immutable files
 atomically. Both verify supplied bytes before a write.
 [Retention](./retention.md) owns reference accounting, failed-attempt

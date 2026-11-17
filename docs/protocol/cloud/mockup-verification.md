@@ -40,7 +40,7 @@ boundary, per [Email authoring](./email-authoring.md#catalogue-and-checks).
 
 ## Build Determinism
 
-Stage 15 proves that two independent builds of the dogfood catalogue have
+The `cloud-mockups` suite proves that two independent builds of the dogfood catalogue have
 identical paths and bytes. Output that changes between two builds of the same
 sources would publish those sources as a new deployment and would show as
 false Changes.
@@ -59,7 +59,7 @@ A mismatch fails with sorted missing, extra and changed paths.
 The message tells the author to rebuild after source changes and rerun tests.
 A failed second build also fails the test command.
 The command removes only its owned snapshot after success or failure.
-The first build in stage 15 is `mockups:build`; standalone
+The first build in the `cloud-mockups` suite is `mockups:build`; standalone
 `mockups:test` also requires a preceding build.
 
 Every Node and browser test process removes each inherited `GIT_*`
@@ -100,8 +100,9 @@ build-card body, and maps each to a drawing path. A drawing is a screen or a
 variant that the authored product inventory declares:
 `expectedProductScreens()` in `docs/mockups/src/_tests_/product-inventory.ts`.
 The test imports only that pure inventory and reads no generated output, so
-stage 14 runs it before any mockup build, including on the fresh `app-check`
-runner. Stage 15 ties the inventory to the built catalogue: the product policy
+the `cloud-app` suite runs it with the app logic tests, before any mockup
+build, including on the fresh runner of app shard 1. The `cloud-mockups` suite
+ties the inventory to the built catalogue: the product policy
 requires the authored product screens to equal the inventory, the responsive
 sweep opens every inventory page from disk, and the disk smoke requires all
 four views of every built entry.

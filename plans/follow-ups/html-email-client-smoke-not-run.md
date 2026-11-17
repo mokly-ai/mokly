@@ -9,7 +9,7 @@
 
 - **Terms:**
   - **Postmark:** The mail provider that sends the sign-in and invitation emails from hosted templates.
-- **Background:** PR #47 made the sign-in and invitation emails HTML, generated from the mockup catalogue. `docs/protocol/email.md` defines the messages and their dark mode behaviour. Gmail web, Apple Mail, iOS Mail and Outlook render HTML mail in different ways. The repository tests check the generated templates, not a real inbox. The absence of a recorded result does not prove that nobody ran the smoke.
+- **Background:** PR #47 made the sign-in and invitation emails HTML, generated from the mockup catalogue. `docs/protocol/cloud/email.md` defines the messages and their dark mode behaviour. Gmail web, Apple Mail, iOS Mail and Outlook render HTML mail in different ways. The repository tests check the generated templates, not a real inbox. The absence of a recorded result does not prove that nobody ran the smoke.
 - **Task:** After a `main-preview` rollout that carries the HTML templates, run the smoke below.
   - Request a sign-in link and send an invitation to inboxes that an operator controls.
   - Inspect both messages in Gmail web, in light mode and in Gmail's own inversion.

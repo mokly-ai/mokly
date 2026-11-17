@@ -114,5 +114,5 @@ cargo clippy -p mkc-file-store-interface --all-targets -- -D warnings
 - [Catalogue hosting](../../docs/protocol/cloud/catalogue-hosting.md)
 - [Blob durability](../../docs/protocol/cloud/publication-blob-durability.md)
 - [Retention](../../docs/protocol/cloud/retention.md)
-- [Object prefixes](../../docs/protocol/cloud/persistence-boundaries.md#object-prefixes)
+- [Object prefixes](../../docs/protocol/cloud/persistence-publication-storage.md#object-prefixes)
 - [Architecture](../../docs/architecture/cloud.md) — the components, their boundaries, and the data flows this crate takes part in.

@@ -10,7 +10,8 @@ and its integration tests, so a package bump and its parser evidence share
 one review diff. `cargo xtask mokly-fixtures` regenerates them;
 `cargo xtask mokly-fixtures --check` regenerates in isolated temporary storage,
 compares every byte and filename, and fails on missing, extra or changed files.
-Stage 18 runs check mode unconditionally. Neither mode publishes a catalogue or
+The `cloud-fixtures` suite runs check mode unconditionally. Neither mode
+publishes a catalogue or
 modifies the canonical dogfood catalogue.
 
 The archives, JSON artifacts, checksum records, authored corpus and the

@@ -20,8 +20,8 @@ Change a doc only when a requirement or a decision changes.
   [Rust workspace](./repository-rust-workspace.md) owns crate naming and
   ownership, the pinned dependencies and the migration lock, the
   [TypeScript layout](./repository-typescript.md) the npm packages, pins and
-  tooling rules, [verification](./repository-verification.md) the stages, CI
-  partitions and image build runtime, and
+  tooling rules, [verification](./repository-verification.md) the cloud suite
+  rules, the app shards and the image build runtime, and
   [generated files](./repository-generated-files.md) the ignore rules,
   untracked output trees and committed golden files.
 - [Publication upload](./publication-upload.md) — the exchange, envelope
@@ -57,8 +57,9 @@ Change a doc only when a requirement or a decision changes.
   [foundation](../../ops/foundation.md),
   [previews](../../ops/preview.md), [secrets](../../ops/secrets.md) and
   [infrastructure](../../../infra/README.md).
-- [Platform model](./platform-model.md) — entities, slugs, roles, project
-  visibility, invitations and deletion.
+- [Platform model](./platform-model.md) — entities, slugs, roles and project
+  visibility, and [invitations and deletion](./platform-invitations-and-deletion.md)
+  the invitation lifecycle and the deletion rules.
 - [Billing](./billing.md) — plan catalogue, seat kinds, roles and product
   copy; [plan gates](./billing-plan-gates.md) owns the plan-gated writes and
   the downgrade, and [subscriptions](./billing-subscriptions.md) the
@@ -87,12 +88,15 @@ Change a doc only when a requirement or a decision changes.
   [trusted proxies](./rest-proxies.md) the verified client-IP selection and
   hop configuration.
 - [Persistence boundaries](./persistence-boundaries.md) — table ownership,
-  atomic work, migration lifecycle, authentication and GitHub record retention,
-  publication storage and object prefixes.
+  atomic work, migration lifecycle, and authentication and GitHub record
+  retention, and [publication storage](./persistence-publication-storage.md)
+  the publication transaction boundary, the lock orders and object prefixes.
 - [Product copy](./product-copy.md) — user-facing text rules for the product,
   marketing site, and mockups.
 - [Mockup catalogue](./mockups.md) — public package boundary, registration,
-  hierarchy, rendering and flows;
+  hierarchy and rendering;
+  [links and flows](./mockup-links-and-flows.md) owns mock links, slug
+  fixtures and use-case flows;
   [tooling](./mockup-tooling.md) owns configuration, commands and build output;
   [comparison base](./mockup-baselines.md) owns base selection and rendering,
   base dependencies, cache limits and trust;
@@ -176,7 +180,8 @@ Change a doc only when a requirement or a decision changes.
   and parallel storage writes.
 - [Catalogue hosting](./catalogue-hosting.md) — isolated origins, private access and static delivery.
 - [Catalogue delivery](./catalogue-delivery.md) — headers, ranges, compression and cache.
-- [Changes check](./changes-check.md) — immutable check results and rerequests.
+- [Changes check](./changes-check.md) — immutable check results and rerequests,
+  and [build checks](./changes-check-builds.md) the check of each cloud build.
 - [Cloud builds](./cloud-builds.md) — triggers, the build lifecycle, leases,
   supersession and retention, with [records and leases](./cloud-build-lifecycle.md),
   the [runner](./cloud-build-runner.md) and its
@@ -187,11 +192,11 @@ Change a doc only when a requirement or a decision changes.
 
 ## Boundary With The Open-Source Protocol
 
-The open-source `mokly` repository owns the contracts for the CLI and its
-configuration, the build output, the artifact inventory, the
-`mokly-upload.json` envelope, the catalogue index and the entry details, and
-the `@mokly/viewer` and `@mokly/ui` package APIs. Docs here
-reference those contracts by the pinned package version and never restate them
-as if they were owned here.
-When the cloud needs a change to any of them, the change is proposed in the
-open repository first and adopted here through a version bump.
+The Mokly protocol docs under [`docs/protocol/`](../README.md) own the
+contracts for the CLI and its configuration, the build output, the artifact
+inventory, the `mokly-upload.json` envelope, the catalogue index and the entry
+details, and the `@mokly/viewer` and `@mokly/ui` package APIs. Docs here link
+to those contracts and never restate them as if they were owned here. When the
+cloud needs a change to any of them, the change updates the Mokly contract
+first, in the same change or an earlier one, as the
+[repository boundary](../repository-layout.md#boundary) defines.

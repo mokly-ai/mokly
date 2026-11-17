@@ -139,7 +139,7 @@ Invalid prefixes fail startup with `Error::Invalid("MKC_GCS_PREFIX")`; values
 are never trimmed or normalized. API and catalogue must share the value
 (`pr-N` in a PR); stable buckets leave it unset. Logical keys and public URLs
 stay unchanged. PR workloads have no bucket-wide list permission. See
-[object prefixes](../../docs/protocol/cloud/persistence-boundaries.md#object-prefixes).
+[object prefixes](../../docs/protocol/cloud/persistence-publication-storage.md#object-prefixes).
 
 ## Development
 

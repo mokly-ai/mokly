@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-03, from branch `conductor/follow-ups-mockup-overlay-focus`. It keeps option B of `settings-modal-leaves-dialog-focusable.md`, which that branch fixed with option C and deleted.
-- **Location:** `docs/mockups/src/_tests_/settings-document-policy.ts:30-42`, `docs/protocol/settings-mockups.md:46-50` and `docs/protocol/settings-dialog.md:24-32`. The disk test runs the policy at `docs/mockups/src/_tests_/disk.spec.ts:189-190`.
+- **Location:** `docs/mockups/src/_tests_/settings-document-policy.ts:30-42`, `docs/protocol/cloud/settings-mockups.md:46-50` and `docs/protocol/cloud/settings-dialog.md:24-32`. The disk test runs the policy at `docs/mockups/src/_tests_/disk.spec.ts:189-190`.
 - **Reason:** Each option changes a check or a protocol statement, which the user reserves, and the approved settings fix does not depend on it.
 - **Checked:** 2026-11-03, on the completed helper and policy port. The settings policy still checks only `aria-hidden` on the page backdrop. The direct frame-focus regression passed 10 of 10 runs in both viewports.
 - **Category:** Test.
@@ -14,9 +14,9 @@
   - **Settings document policy:** `settingsDocumentViolations` in `docs/mockups/src/_tests_/settings-document-policy.ts`. The disk test runs it on every built page under `product/settings/`.
   - **`LayerBeneath`:** The helper in `docs/mockups/src/components/layer-beneath.tsx`. It sets `inert` and `aria-hidden` together on a layer beneath an open layer.
 - **Background:**
-  - `docs/protocol/settings-dialog.md:24-32` says that the page beneath the dialog is inert. It also says that the dialog beneath a confirmation modal stays open and inert.
-  - `docs/protocol/settings-dialog.md:44-47` says that a row menu on a wide surface is a popover, and that the pane stays interactive around it.
-  - `docs/protocol/settings-mockups.md:46-50` says that the page beneath stays inert, and that policy tests enforce these rules.
+  - `docs/protocol/cloud/settings-dialog.md:24-32` says that the page beneath the dialog is inert. It also says that the dialog beneath a confirmation modal stays open and inert.
+  - `docs/protocol/cloud/settings-dialog.md:44-47` says that a row menu on a wide surface is a popover, and that the pane stays interactive around it.
+  - `docs/protocol/cloud/settings-mockups.md:46-50` says that the page beneath stays inert, and that policy tests enforce these rules.
   - Until 2026-11-03, the settings frame beside a confirmation modal had no `inert` and no `aria-hidden`. So its rail links and buttons took keyboard focus.
   - On 2026-11-03 the user chose to fix that through `LayerBeneath`. `SettingsSurface` in `docs/mockups/src/screens/product/settings/surface.tsx` uses it for the frame beneath an open modal and for the desktop page backdrop. A browser regression in `docs/mockups/src/_tests_/overlay.spec.ts` checks a built settings confirmation page.
   - 14 settings entries draw a confirmation modal, in 56 documents. The count is from 2026-11-03.
@@ -29,11 +29,11 @@
 - **Options:**
   - **B.** Make the settings document policy check `inert` on each layer beneath an open modal layer, as its message says: the desktop page backdrop and the frame beneath a confirmation modal. A desktop row-menu popover is not modal, so the frame beneath it stays interactive. It makes a check stricter. Effort: Small.
     - Its earlier limit for the frame beneath the mobile row-menu sheet no longer applies, because the sheet no longer draws inside the frame.
-  - **D.** Keep the checks as they are. Change the policy message and the sentence in `docs/protocol/settings-mockups.md:46-50` to say `aria-hidden` for the page beneath. It changes a protocol statement. It lowers the mockup check below the `inert` that `docs/protocol/settings-dialog.md:26` and `:30-31` require, and it leaves the frame beneath a modal unchecked. Effort: Small.
+  - **D.** Keep the checks as they are. Change the policy message and the sentence in `docs/protocol/cloud/settings-mockups.md:46-50` to say `aria-hidden` for the page beneath. It changes a protocol statement. It lowers the mockup check below the `inert` that `docs/protocol/cloud/settings-dialog.md:26` and `:30-31` require, and it leaves the frame beneath a modal unchecked. Effort: Small.
   - **E.** Replace the class names of B with one rule in the shared document policy. On a page with a product screen root, at most one `aria-modal` dialog has no `inert` ancestor. When that open modal dialog exists, no element outside it takes focus unless an `inert` ancestor holds it. A page with no open modal dialog gets no focus condition from this rule. The rule covers the settings layers, the viewer backdrop and each later layer, whatever their class names. It also catches a control after an open viewer panel. Risk: on 2026-11-03 it fails all 86 desktop settings entries, because the skip link sits outside the dialog. It also fails the two mobile row-menu pages, because their sheet sits inside the frame. Each needs a decision or a fix first. The row-menu fix of 2026-11-04 removed the cause for the two menu pages, because it moved their sheet out of the frame. It makes a check stricter. Effort: Large.
 - **Left out:**
   - Change nothing. The policy message and the protocol keep claiming a check of `inert` that the policy does not make.
-  - Draw the confirmation as a pane instead of a modal. `docs/protocol/settings-dialog.md` requires a modal over the pane.
+  - Draw the confirmation as a pane instead of a modal. `docs/protocol/cloud/settings-dialog.md` requires a modal over the pane.
   - A Tab walk of each settings page with an open modal. E reads the same layers with no press count and no capture order, and both fail first on the skip link.
 - **Wider fix:** None. `LayerBeneath` is the structural fix, and it is in force since 2026-11-03. B is a direct detection fix, because it must know the class names of the settings layers. E is the detection fix that needs no class names.
 - **Previous examples:**

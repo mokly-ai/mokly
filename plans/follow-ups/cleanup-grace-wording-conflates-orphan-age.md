@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-31, from the privacy-retention alignment plan check and post-push review finding 1.
-- **Location:** `docs/ops/environment.md:153-155`; `ts/site/src/content/legal/privacy.md:184-185`; `crates/mkc-publications/src/garbage_collection.rs:98-110`.
+- **Location:** `docs/ops/environment.md:153-155`; `apps/site/src/content/legal/privacy.md:184-185`; `crates/mkc-publications/src/garbage_collection.rs:98-110`.
 - **Reason:** The user deferred this work to a follow-up on 2026-11-02. It does not block the current PR.
 - **Decision:** The user approved deferral, without selecting an implementation option. Keep D as the recommendation for future work.
 
@@ -34,9 +34,9 @@ cleanup can delete a file, including after a reset or restore?
   grace and orphan creation-age rule. Effort: Small. This duplicates the
   canonical retention rule and adds storage-record detail to public copy.
 - **B — Link the guide and explain the public exception.** Link
-  `docs/protocol/retention.md#reference-accounting` from the guide. Qualify the
+  `docs/protocol/cloud/retention.md#reference-accounting` from the guide. Qualify the
   Privacy Policy's reference-release delay and explain orphan age. Update the
-  legal-copy contract in `docs/protocol/site-legal.md` with that disclosure.
+  legal-copy contract in `docs/protocol/cloud/site-legal.md` with that disclosure.
   Effort: Small.
 - **C — Add a reset-based recovery delay to collection.** Persist a reset
   boundary outside the erased database and delay collection accordingly.

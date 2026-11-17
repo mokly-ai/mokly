@@ -125,7 +125,8 @@ with its recording under `infra/tests/fixtures/catalogue-capture/`.
 The pinned CLI has no stale-output refusal, because no
 generated output is committed.
 Contract archives and JSON under `crates/mkc-mokly-contract/fixtures/` remain
-committed golden files checked byte for byte by stage 18; they are not generated
+committed golden files checked byte for byte by the `cloud-fixtures` suite;
+they are not generated
 catalogue directories. See [Fixture regeneration](../protocol/cloud/mokly-fixture-regeneration.md).
 
 The API can refuse an upload before the smoke has sent the whole request body.

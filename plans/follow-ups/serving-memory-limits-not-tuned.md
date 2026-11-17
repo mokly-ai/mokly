@@ -9,7 +9,7 @@
 
 - **Terms:**
   - **Admission bound:** A limit that refuses new work before memory runs out, such as the shared upload byte budget.
-  - **Hot cache:** The catalogue server's in-memory cache of recently served publication files, `docs/protocol/catalogue-delivery.md`, "Bounded Hot Cache".
+  - **Hot cache:** The catalogue server's in-memory cache of recently served publication files, `docs/protocol/cloud/catalogue-delivery.md`, "Bounded Hot Cache".
 - **Background:** The storage scaling change bounded API memory with admission limits, and it added the catalogue hot cache. The cloud builds change runs the build worker inside the API process. The plans asked to check these settings under real traffic.
   - `MKC_INGEST_WORKERS`, the number of parallel ingest workers.
   - `MKC_UPLOAD_MEMORY_BYTES`, the shared upload byte budget.

@@ -3,7 +3,7 @@
 - **Severity:** Medium (estimate). **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-30, from the post-merge tasks of the deleted `plans/billing.md` and `plans/stripe-catalogue-sync.md`, on the branch `calummoore/plans-skill-update`. On 2026-10-31 the validity audit merged the duplicate item `stripe-archive-dry-run-not-run.md` into it. On 2026-11-01 the merge of `main` into `calummoore/maseru` merged the duplicate items `billing-walkthrough-not-run.md` and `catalogue-archive-dry-run-not-run.md` into it.
-- **Location:** `docs/ops/billing-smoke.md`, `docs/ops/deploy.md`, `xtask/src/stripe_catalogue/archive.rs` and `docs/protocol/billing-catalogue-operations.md`.
+- **Location:** `docs/ops/billing-smoke.md`, `docs/ops/deploy.md`, `crates/mkc-billing-stripe/src/bin/stripe-catalogue/stripe_catalogue/archive.rs` and `docs/protocol/cloud/billing-catalogue-operations.md`.
 - **Reason:** The smoke needs the deployed `main-preview` with billing on and the Stripe test mode, not a branch checkout.
 - **Checked:** 2026-10-31, at commit `f568853e`. The audit could not verify whether the smoke ran. The repository holds no dated result of a complete live walk, and the audit read no Stripe state.
 

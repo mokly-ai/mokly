@@ -10,7 +10,7 @@ mappings in
 together.
 Canonical definitions live under `docs/mockups/src/entries`; shared TSX
 components live under `docs/mockups/src/components`.
-`ts/` supplies one shared React runtime. The configuration is the data-only
+The root npm workspace supplies one shared React runtime. The configuration is the data-only
 `mokly.config.json` at the repository root, with the values in this table.
 
 | Field                           | Value                                                                        |
@@ -40,7 +40,7 @@ to the configuration file.
 
 Build and check pass `--strict`. Runtime and type mappings use documented
 public entrypoints from the single installation.
-Stage 15 runs build, check, test and typecheck in that order.
+The `cloud-mockups` suite runs build, check, test and typecheck in that order.
 
 ## Imported Viewer Styles
 
@@ -101,7 +101,8 @@ npm run mockups:typecheck
 ```
 
 The build output supplies the policy and browser tests.
-Stage 15's [determinism guard](./mockup-verification.md#build-determinism)
+The [determinism guard](./mockup-verification.md#build-determinism) of the
+`cloud-mockups` suite
 compares two independent builds byte for byte, including the catalogue index,
 the entry details, the CSS and the binary assets.
 The guard must fail and list every differing path; browser policy alone cannot

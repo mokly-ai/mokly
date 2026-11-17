@@ -3,17 +3,17 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-02, from the ten-run check of the app browser suite in the Milestone 2 app work item of the branch `calummoore/mokly-cli-upgrade`, an unrelated flaky test.
-- **Location:** `ts/app/src/_tests_/database-fixture.ts:70-110`, which holds `forgetInstallation` and `releaseRecordedGitHub`.
+- **Location:** `apps/app/src/_tests_/database-fixture.ts:70-110`, which holds `forgetInstallation` and `releaseRecordedGitHub`.
 - **Reason:** The release statements are the same on `origin/main` and this branch did not change them, so one fix in a separate branch reaches every open branch.
 - **Category:** Test.
 - **Related:** `plans/follow-ups/installation-release-fails-on-late-check-row.md` records the same cleanup failure from CI, with reproduction guidance. Keep both histories when the future fix consolidates them.
 
 - **Terms:**
   - **Recorded GitHub:** The GitHub double of the app browser suite. It replays recorded answers for one App installation, provider ID 1, which holds the repository `octocat/Hello-World`.
-  - **`releaseRecordedGitHub`:** The harness function in `ts/app/src/_tests_/database-fixture.ts` that deletes the rows of the recorded installation, so that the next test can install the App again.
+  - **`releaseRecordedGitHub`:** The harness function in `apps/app/src/_tests_/database-fixture.ts` that deletes the rows of the recorded installation, so that the next test can install the App again.
   - **Check worker:** The background loop of the API in `crates/mkc-api/src/check_runtime.rs`. Every five seconds it delivers the due events of the `publication_events` outbox as GitHub check runs, and it writes each check run to `github_check_runs`.
 - **Background:** The list below gives the facts.
-  - Every viewer test that calls `publishedProject` in `ts/app/src/_tests_/viewer/support.ts` signs in, creates a project and publishes to it. `createProject` in `ts/app/src/_tests_/harness.ts` calls `installApp`, which calls `releaseRecordedGitHub` first.
+  - Every viewer test that calls `publishedProject` in `apps/app/src/_tests_/viewer/support.ts` signs in, creates a project and publishes to it. `createProject` in `apps/app/src/_tests_/harness.ts` calls `installApp`, which calls `releaseRecordedGitHub` first.
   - So the project of each test is bound to the same recorded repository, and the publication of each test queues a check event for that repository.
   - `releaseRecordedGitHub` sends all its statements in one `psql -c` command, so they run in one transaction. `forgetInstallation` deletes the `github_check_runs` rows of the repository first. It deletes the `github_installations` row last, and that delete cascades to `github_repositories`.
   - `github_check_runs.repository_id` references `github_repositories` with no delete action, in `crates/mkc-db/migrations/202609161530_github_app/up.sql`. `builds.repository_id` references it in the same way, in `crates/mkc-db/migrations/202610100900_cloud_builds/up.sql`.
@@ -25,7 +25,7 @@
 - **Options:**
   - **A.** Run the release in one explicit transaction that first takes `LOCK TABLE github_check_runs, builds IN SHARE ROW EXCLUSIVE MODE`. A concurrent check-run write then waits until the release commits. After that, the write fails its own foreign-key check in the API, which logs a warning and retries the event, as it did in the failed run. Effort: Small.
   - **B.** Before the release, poll until the outbox holds no undelivered and live event of a publication in a project that is bound to the recorded repository. Give the poll a deadline of at least 10 seconds. The worker runs every five seconds, so a release can wait that long, and a delivery that fails and backs off holds the poll until its deadline. Effort: Small.
-  - **C.** Let the shared `publish` helper in `ts/app/src/_tests_/publish.ts` return only after the check worker delivered or dead-lettered the check event of its publication. No delivery then outlives its test, but each publishing test can wait up to five seconds more. Effort: Medium.
+  - **C.** Let the shared `publish` helper in `apps/app/src/_tests_/publish.ts` return only after the check worker delivered or dead-lettered the check event of its publication. No delivery then outlives its test, but each publishing test can wait up to five seconds more. Effort: Medium.
   - **D.** Give each test its own installation and repository identifiers, so that no delivery of an earlier test touches the rows that a later test releases. The recordings answer for one installation today, so they need answers for any identifier. Effort: Large.
 - **Left out:** The list below gives the approaches that the options leave out.
   - A retry of the release on the foreign-key error. The flaky-test rule forbids a retry, because it hides the race.
@@ -38,7 +38,7 @@
 
 Failure, as history. These facts come from the recorded run.
 
-- On 2026-11-02, a ten-run check ran 27 tests of `ts/app` on one worker, on the work tree that became commit `5f45e7b2`. The command was `playwright test --config playwright.config.ts --tsconfig tsconfig.runtime.json --retries=0 --repeat-each=10` with the named tests. 269 of 270 runs passed.
+- On 2026-11-02, a ten-run check ran 27 tests of `apps/app` on one worker, on the work tree that became commit `5f45e7b2`. The command was `playwright test --config playwright.config.ts --tsconfig tsconfig.runtime.json --retries=0 --repeat-each=10` with the named tests. 269 of 270 runs passed.
 - The failed run was repeat 5 of `src/_tests_/viewer-mobile.spec.ts:217`, "a late package slot does not restore after leaving its path", on the `mobile` project. The other 9 runs of that test passed. No other run of the full app browser suites of that work item failed this way.
 - The error text was:
   `ERROR: update or delete on table "github_repositories" violates foreign key constraint "github_check_runs_repository_id_fkey" on table "github_check_runs"`

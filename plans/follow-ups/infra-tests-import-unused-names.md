@@ -19,7 +19,7 @@
   - **B.** Add a lint that rejects unused Python imports in `scripts/` and `infra/`. `plans/follow-ups/python-code-has-no-unused-import-lint.md` compares the tools for it. It adds a lint. Effort: Medium.
 - **Left out:** Keep the imports with a `noqa` marker. Neither import has a reason to stay.
 - **Wider fix:** B, a detection fix, because no structural fix exists for unused imports. It is blocked, because it adds a lint. `plans/follow-ups/python-code-has-no-unused-import-lint.md` holds that choice.
-- **Previous examples:** The six unused imports in `scripts/_tests_/publication_smoke_cli_tests.py` and `publication_smoke_fixture_tests.py` on the closed branch of PR #72. With these two, the class has three cases.
+- **Previous examples:** The six unused imports in `scripts/cloud/_tests_/publication_smoke_cli_tests.py` and `publication_smoke_fixture_tests.py` on the closed branch of PR #72. With these two, the class has three cases.
 - **Related:** `plans/follow-ups/python-code-has-no-unused-import-lint.md`, a shared class. It holds the choice of the lint and its tool.
 - **Recommendation:** A. It removes the dead code now. B best protects the codebase.
 - **Action:** fix after merge, apply A, because the imports are dead code outside the branch that found them.

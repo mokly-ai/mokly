@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-11-02, from the post-merge tasks of the Mokly 0.18.0 upgrade plan on the branch `calummoore/mokly-cli-upgrade`, deleted with that change.
-- **Location:** `docs/protocol/cloud-build-runner.md` and `docs/protocol/cloud-build-sandbox.md`, the runner template and its time limits.
+- **Location:** `docs/protocol/cloud/cloud-build-runner.md` and `docs/protocol/cloud/cloud-build-sandbox.md`, the runner template and its time limits.
 - **Reason:** A real measure needs the deployed runner template and a real comparison build.
 
 - **Terms:**

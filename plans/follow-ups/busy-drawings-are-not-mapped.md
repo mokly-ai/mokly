@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-06, from the fix of review findings 41 and 81 on `calummoore/skeleton-sizing-mismatch` (`plans/loading-states-match-content.md`).
-- **Location:** `ts/app/src/_tests_/viewer/stage-drawings.test.ts` and the parity rule in `docs/protocol/mockup-verification.md`.
+- **Location:** `apps/app/src/_tests_/viewer/stage-drawings.test.ts` and the parity rule in `docs/protocol/cloud/mockup-verification.md`.
 - **Reason:** The fix adds a check and changes the parity rule, which the user decides.
 - **Category:** Test.
 

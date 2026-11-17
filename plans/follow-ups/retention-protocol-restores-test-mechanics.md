@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-01, from the post-push retention review and the independent check of finding 5.
-- **Location:** `docs/protocol/retention.md:126`; `docs/protocol/retention.md:155`.
+- **Location:** `docs/protocol/cloud/retention.md:126`; `docs/protocol/cloud/retention.md:155`.
 - **Reason:** The user deferred this work to a follow-up on 2026-11-02. It does not block the current PR.
 - **Decision:** The user approved deferral, without selecting an implementation option. Keep C as the recommendation for future work. Its new requirement still needs approval before implementation.
 

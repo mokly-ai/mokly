@@ -26,12 +26,14 @@ every boundary live in the [protocol docs](../protocol/cloud/README.md).
 | Blob storage     | A GCS bucket per stable environment, a prefix of the shared preview bucket per PR preview, or a local directory | The content-addressed publication files, deduplicated within a project                                                      |
 | Providers        | GitHub, Stripe, Postmark, E2B, Cloudflare, GCP                                                                  | Identity and check runs, payment, email delivery, build sandboxes, DNS and edge delivery, and the cluster and cloud storage |
 
-The producer and the viewer are the open-source packages at their exact
-pinned releases. The cloud uses only their documented exports and artifacts:
+The producer and the viewer are the open-source Mokly packages of this
+repository, which the cloud uses from the workspace, not from published
+releases. The cloud uses only their documented exports and artifacts:
 the build output and its ownership marker, the artifact inventory, the upload
 envelope and exchange, and the catalogue index and entry details that the
-viewer reads. A field or a behavior that the cloud needs lands
-in the open repository's protocol docs and a released version first.
+viewer reads. A field or a behavior that the cloud needs lands first in the
+Mokly protocol docs, as the
+[repository boundary](../protocol/repository-layout.md#boundary) defines.
 
 ### The API
 
@@ -154,7 +156,7 @@ The dogfood mockup catalogue under `docs/mockups` is the design
 specification. The app, the catalogue, and the site import the same design
 tokens and stylesheets from the tokens package, and both the mockups and the
 app render the pinned `@firna/ui` controls through one theme mapping. The
-viewer drawings compose the pinned open-source `@mokly/ui` parts, from which
+viewer drawings compose the workspace open-source `@mokly/ui` parts, from which
 the viewer renders its own shell. Mockups complete before the
 matching product screens change.
 

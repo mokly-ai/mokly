@@ -10,7 +10,7 @@ lifecycle; the
 [runner](./cloud-build-runner.md) and its [sandbox](./cloud-build-sandbox.md)
 own the sandbox steps and the
 [build API](./cloud-build-api.md) owns the REST surface. The `Mokly` check
-rows are in [Changes check](./changes-check.md#build-checks).
+rows are in [Build checks](./changes-check-builds.md).
 
 The [architecture](../../architecture/cloud.md) describes component ownership. The
 [API guide](../../../crates/mkc-api/README.md) gives code entry points.
@@ -127,7 +127,7 @@ first wins.
 Both transitions apply the [attempt-ending upload rule](./publication-ingest.md#ending-build-attempts)
 in that same transaction.
 They follow the
-[build and publication lock order](./persistence-boundaries.md#build-and-publication-lock-order).
+[build and publication lock order](./persistence-publication-storage.md#build-and-publication-lock-order).
 
 ## Publications And Checks
 
@@ -141,7 +141,7 @@ worker or lease recovery then makes the `published` transition. The build may
 name a publication that another producer committed first. Upload cleanup for
 every attempt end follows [Publication ingest](./publication-ingest.md#ending-build-attempts).
 The ready transaction follows the
-[build and publication lock order](./persistence-boundaries.md#build-and-publication-lock-order).
+[build and publication lock order](./persistence-publication-storage.md#build-and-publication-lock-order).
 
 Grant consumption reads the shared clock after it holds the project, build,
 grant and completion publication locks. The grant expiry, attempt deadline
@@ -158,7 +158,7 @@ with the retry and dead-letter rules of
 `permanent_failures`; `attempts` keeps counting as the retry version. A bump
 leaves a live claim unchanged. Per-row delivery claims, attempt fences,
 success/failure writes and requeue follow
-[Build checks](./changes-check.md#build-checks). The
+[Build checks](./changes-check-builds.md). The
 delivery loop renders the build's current state under the external ID
 `mokly-build:<build id>`; only this outbox writes that check, and no event of
 a publication that names a build delivers a check.
@@ -174,7 +174,7 @@ build's current result with a fresh retry budget. A re-run therefore never
 publishes a head older than its reference's current one.
 
 Both build and publication Re-run workers claim marks through the same
-[parent-first query](./persistence-boundaries.md#build-and-publication-lock-order).
+[parent-first query](./persistence-publication-storage.md#build-and-publication-lock-order).
 They clear each mark in the transaction that schedules its replacement build,
 bumps its result outbox or inserts its publication event. Busy parents or
 checks stay marked for a later batch. No provider request runs in that transaction.
@@ -190,7 +190,7 @@ Active builds are never deleted. Project deletion cascades every build; its
 worker stops at the next renewal.
 
 Retention and parent deletion follow the
-[persistence lock order](./persistence-boundaries.md#build-and-publication-lock-order).
+[persistence lock order](./persistence-publication-storage.md#build-and-publication-lock-order).
 The [parent deletion contract](./persistence-boundaries.md#table-ownership) also
 defines deletion with published builds.
 

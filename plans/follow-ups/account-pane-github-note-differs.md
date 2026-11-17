@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-04, from task M2e of `plans/loading-states-match-content.md`, on the branch `calummoore/skeleton-sizing-mismatch`.
-- **Location:** `ts/app/src/settings/panes/account-pane.tsx` and `docs/mockups/src/screens/product/settings/account-pane.tsx` (`GithubSection`).
+- **Location:** `apps/app/src/settings/panes/account-pane.tsx` and `docs/mockups/src/screens/product/settings/account-pane.tsx` (`GithubSection`).
 - **Reason:** The difference is already on `origin/main`, and choosing a side of a mockup and app difference is the user's.
 - **Checked:** 2026-11-06, from the check of review finding 82: the drawing titles the connected note with a GitHub login, which the session does not carry; the app draws a "GitHub account" note with a status badge.
 - **Category:** Mockup.

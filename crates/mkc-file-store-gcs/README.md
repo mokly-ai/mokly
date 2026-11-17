@@ -39,7 +39,7 @@ create/read/delete permissions, plus list permission for callers that enumerate
 objects. This crate has no publication authorization or database reference
 policy.
 
-The [PR preview contract](../../docs/protocol/cloud/persistence-boundaries.md#object-prefixes)
+The [PR preview contract](../../docs/protocol/cloud/persistence-publication-storage.md#object-prefixes)
 defines optional `MKC_GCS_PREFIX`, parsed by `mkc-config` into the file-store
 interface's `ObjectPrefix`: unset/empty keeps existing names; otherwise use
 1–63 lowercase ASCII letters, digits or hyphens, without normalization.

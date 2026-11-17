@@ -91,7 +91,7 @@ them eligible.
 ## Build Uploads
 
 Build upload transactions follow the
-[build and publication lock order](./persistence-boundaries.md#build-and-publication-lock-order),
+[build and publication lock order](./persistence-publication-storage.md#build-and-publication-lock-order),
 including the completion transaction before its first publication write.
 
 A
@@ -160,7 +160,7 @@ each still `uploading` or `validating` attempt to `failed` with `expired`,
 release its file references and append its failed event. Leave ready
 publications and already closed attempts unchanged. No unfinished upload or
 its references outlive the build attempt. Each ending transaction follows the
-[build and publication lock order](./persistence-boundaries.md#build-and-publication-lock-order).
+[build and publication lock order](./persistence-publication-storage.md#build-and-publication-lock-order).
 
 Each upload closed by an ending transition has exactly one failure event.
 Its event time equals the build transition time. Cleanup covers every

@@ -43,7 +43,7 @@ use-case record.
 The generator commits source only with the fixed identity and date in the
 [fixture procedure](../../../docs/protocol/cloud/mokly-fixture-regeneration.md).
 Native fixture checkouts need no package manifest or dependency symlink. The
-generator uses the CLI and viewer installed in the outer `ts/` workspace.
+generator uses the workspace CLI and viewer of the root npm workspace.
 Each comparison uses `HEAD~1`. `build --strict
 --out .context/export` writes the complete export. `publish --strict` sends a
 Plan to a loopback receiver. The receiver checks the test bearer and refuses
@@ -115,8 +115,8 @@ remain unchanged. The corpus
 covers the read-field checks in
 [Publication index](../../../docs/protocol/cloud/publication-review.md).
 
-`check-index-corpus.mjs` runs as an ESM entry from `ts/` so that the public
-package resolves through the installed workspace. The generator invokes it in
+`check-index-corpus.mjs` runs as an ESM entry from the repository root so that
+the public package resolves through the root npm workspace. The generator invokes it in
 check mode. It reports the case name for a hash, count, or viewer mismatch.
 
 ## CLI Failure Codes

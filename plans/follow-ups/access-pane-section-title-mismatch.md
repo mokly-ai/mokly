@@ -3,13 +3,13 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from [PR #77](https://github.com/mokly-ai/mokly-cloud/pull/77).
-- **Location:** `docs/mockups/src/screens/product/settings/access-pane.tsx:73` and `ts/app/src/settings/panes/access-pane.tsx:29`.
+- **Location:** `docs/mockups/src/screens/product/settings/access-pane.tsx:73` and `apps/app/src/settings/panes/access-pane.tsx:29`.
 - **Reason:** No requirement chooses between the app title and the mockup title, so the user must choose.
 - **Checked:** 2026-10-31, at commit `f568853e`. The titles still differ, and neither owning protocol chooses one. The wording choice remains pending.
 - **Category:** UX wording (estimate).
 
-- **Background:** The Access pane of the project settings dialog lists the inherited workspace access and the project's own grants. The mockup `docs/mockups/src/screens/product/settings/access-pane.tsx` draws the pane. The app pane `ts/app/src/settings/panes/access-pane.tsx` implements it. Both give the inherited section the description "Everyone in the workspace already has this access."
-- **Problem:** The title of the inherited section differs. The mockup says "From Mokly". The app says "From the workspace", and `ts/app/src/_tests_/settings/panes.spec.ts:201` expects that text. The same difference was on `origin/main` before the rename of PR #77.
+- **Background:** The Access pane of the project settings dialog lists the inherited workspace access and the project's own grants. The mockup `docs/mockups/src/screens/product/settings/access-pane.tsx` draws the pane. The app pane `apps/app/src/settings/panes/access-pane.tsx` implements it. Both give the inherited section the description "Everyone in the workspace already has this access."
+- **Problem:** The title of the inherited section differs. The mockup says "From Mokly". The app says "From the workspace", and `apps/app/src/_tests_/settings/panes.spec.ts:201` expects that text. The same difference was on `origin/main` before the rename of PR #77.
 - **Impact if no action:** The design specification shows a title that the product does not show. A reviewer who compares the two finds a difference that nobody chose.
 - **Root question:** Which title names the inherited workspace access in both the mockup and the app?
 - **Options:**

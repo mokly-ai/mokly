@@ -1,9 +1,10 @@
 # Privacy Retention Alignment
 
-Status: Active. [PR #85](https://github.com/mokly-ai/mokly-cloud/pull/85) is open
-as a draft. Implementation and the required review are complete. On
-2026-11-02, the user deferred all five review findings to follow-up work.
-Those findings do not block this PR. The PR merge completes this plan.
+Status: Completed. [PR #85](https://github.com/mokly-ai/mokly-cloud/pull/85)
+of the old `mokly-ai/mokly-cloud` repository merged on 2026-11-06 and completed
+this plan. On 2026-11-02, the user deferred all five review findings to
+follow-up work. A user decision of 2026-10-31 keeps this plan and the
+`plans/README.md` index.
 
 Align Mokly's deployed cleanup behavior with the retention promises in the
 public Privacy Policy, and make the Terms describe the workspace-deletion path

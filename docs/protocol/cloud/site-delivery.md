@@ -7,7 +7,7 @@ Routes are in [Site](./site.md); the repository gate is in
 
 ## Package
 
-- The site is one private package in the single `ts/` npm workspace, covered
+- The site is one private package in the root npm workspace, covered
   by the one `package-lock.json`; no nested lockfile exists. Its Lighthouse
   tooling is part of the same install and runs on the pinned Node
   toolchain.
@@ -185,7 +185,7 @@ runners. The deterministic accessibility rules above are the required gate.
 
 The site gate runs the build, the typecheck, the unit tests, the link check
 and the browser check, in that order; the Lighthouse budget runs apart from
-it. The repository gate's site stage builds the mockups before the site gate,
+it. The `cloud-site` suite builds the mockups before the site gate,
 including on the independent site CI runner, because the home stage consumes
 generated dogfood output. Missing or stale site output fails rather than
 skips.
@@ -214,7 +214,7 @@ skips.
 ## Continuous Integration
 
 The site gate runs in the required aggregate through its own parallel CI
-partition. A separate Lighthouse job uses the same pinned Node, npm, lockfile
+job. A separate Lighthouse job uses the same pinned Node, npm, lockfile
 and Chromium installation, builds the mockups before the site, and runs the
 report-only budget, keeping its results on failure. The required aggregate
 does not depend on that job.

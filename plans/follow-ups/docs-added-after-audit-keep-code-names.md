@@ -3,9 +3,9 @@
 - **Severity:** Low (estimate). **Effort:** Large (estimate). **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from pending decision 9 and its unchecked TODO in the deleted `plans/documentation-skill-alignment.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `docs/protocol/persistence-boundaries.md`, `docs/protocol/cloud-build-runner.md` with its split-off `docs/protocol/cloud-build-sandbox.md`, `docs/protocol/product-mockups-viewer.md`, and `docs/protocol/desktop-app.md` with its split-off `docs/protocol/desktop-bundle.md`. The background names the other docs.
+- **Location:** `docs/protocol/cloud/persistence-boundaries.md`, with the pages that a split moves out of it, `docs/protocol/cloud/cloud-build-runner.md` with its split-off `docs/protocol/cloud/cloud-build-sandbox.md`, `docs/protocol/cloud/product-mockups-viewer.md`, and `docs/protocol/cloud/desktop-app.md` with its split-off `docs/protocol/cloud/desktop-bundle.md`. The background names the other docs.
 - **Reason:** The decision was proposed on 2026-10-21 and is still pending. PR #51 merged the same day without its answer.
-- **Checked:** 2026-11-01, on the branch `calummoore/mokly-cli-upgrade` at commit `62e623ca`, with its uncommitted Mokly 0.18.0 docs. The decision is still open. `persistence-boundaries.md` and `product-mockups-viewer.md` still pass 250 lines. All six pages in the location still hold code names and mechanics.
+- **Checked:** 2026-11-17, in the combined repository. The decision is still open. All six pages in the location still hold code names and mechanics, for example `create_sandbox` and `mkc-build-sandbox::policy::denied_destinations` in `cloud-build-sandbox.md`.
 - **Category:** Docs or spec.
 
 - **Terms:**
@@ -22,17 +22,19 @@
   - On 2026-11-01, the Mokly 0.18.0 docs on the branch `calummoore/mokly-cli-upgrade` split two of them, under the `documentation` skill's rule for a touched doc that passes the target. `cloud-build-runner.md` moved its sandbox, output and reconciliation text into `cloud-build-sandbox.md`. `desktop-app.md` moved its bundle and origin text into `desktop-bundle.md`.
   - The splits moved the text without aligning it. The new pages still name code, such as `create_sandbox`, `mkc-build-sandbox::policy::denied_destinations`, `isDesktopShell()` and `startDesktop`.
   - After the splits, the four docs have 310, 249, 299 and 220 lines. `cloud-build-sandbox.md` has 93 lines and `desktop-bundle.md` has 71.
-- **Problem:** Protocol docs that merged after the audit still mix requirements with code names, mechanics, test narration and evidence. Two docs pass the length target.
+  - On 2026-11-17 the cloud protocol docs moved into this repository, under `docs/protocol/cloud/`. The repository gate fails a changed protocol page over 250 lines, and a new page cannot get a cap, as `docs/protocol/verification-ratchets.md` says. So the change that combined the repositories splits each cloud page that passed 250 lines. Those splits move text by subject, and they do not align it either.
+- **Problem:** Protocol docs that merged after the audit still mix requirements with code names, mechanics, test narration and evidence.
 - **Impact if no action:** Reviewers check code against docs that also describe how the code works, so the docs go stale on refactors. New docs copy the older pattern.
 - **Root question:** Do the passages that merged after the 2026-10-19 audit get the same alignment as the audited ones?
 - **Options:**
   - **C.** Leave the content as it is. Effort: Small.
-  - **D.** Split only the docs that pass 250 lines, two since the move to Mokly 0.18.0. Leave the other passages as they are. Effort: Medium.
-  - **B.** Audit and align the content in a separate plan and pull request, and split the long docs. Effort: Large.
-- **Left out:** Option A, align the content inside PR #51. That pull request merged on 2026-10-21.
+  - **B.** Audit and align the content in a separate plan and pull request. Effort: Large.
+- **Left out:**
+  - Option A, align the content inside PR #51. That pull request merged on 2026-10-21.
+  - Option D, split only the docs that pass 250 lines. Since 2026-11-17 the gate caps every protocol page at 250 lines, so no page can stay longer.
 - **Wider fix:** B. One audit under the current skill aligns every passage of the class.
 - **Previous examples:** PR #51 aligned about 910 passages of the same classes.
-- **Related:** `plans/follow-ups/doc-splits-have-no-removal-audit.md` holds the audit rule for document splits that B and D would use.
+- **Related:** `plans/follow-ups/doc-splits-have-no-removal-audit.md` holds the audit rule for document splits that B would use.
 - **Recommendation:** B. It was the recommendation on 2026-10-21. It applies one rule to every protocol doc.
 - **Action:** ask the user, because condition 4 holds: the options trade documentation quality against a Large docs change, and the 2026-10-21 decision is still unanswered.
 

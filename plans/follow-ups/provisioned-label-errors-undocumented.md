@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from the Milestone 5 review outcome of the deleted `plans/unified-domain-layout.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `ts/worker/src/index.ts:121,229-230`, `docs/protocol/origin-router.md:74-75,123-130` and `ts/worker/README.md:31-33`.
+- **Location:** `apps/worker/src/index.ts:121,229-230`, `docs/protocol/cloud/origin-router.md:74-75,123-130` and `apps/worker/README.md:31-33`.
 - **Reason:** The recorded recommendation changes the current branch-origin requirement, and no user decision approves that policy.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The Worker still rethrows a failed `br-main` fetch, while the contract and the README still promise a router 404.
 - **Category:** Docs or spec.
@@ -15,9 +15,9 @@
   - The origin router proxies product paths to the environment's app workload.
   - The review of 2026-09-22 found different answers for failed origin fetches. Provisioned labels propagate a Worker error, while disposable labels get the router's 404. The code still makes `br-main` provisioned.
   - Commit `2fe70139` later added the branch-origin requirement below. The review recorded its recommendation, but no user chose it.
-  - The tests at `ts/worker/tests/routing.test.ts:138-150` cover unresolved origins for `pr-84` and `br-feature`, not `br-main`.
+  - The tests at `apps/worker/tests/routing.test.ts:138-150` cover unresolved origins for `pr-84` and `br-feature`, not `br-main`.
   - Nobody has seen a deployed origin outage from this.
-- **Problem:** `origin-router.md:74-75` requires a no-store router 404 when a valid branch label has no internal origin record. That includes `br-main`, whose failed fetch the code rethrows instead. `ts/worker/README.md:31-33` also promises a router 404 for an unresolved branch origin. Documenting the observed split would change this requirement. The provisioned set also depends on the literal `main`.
+- **Problem:** `origin-router.md:74-75` requires a no-store router 404 when a valid branch label has no internal origin record. That includes `br-main`, whose failed fetch the code rethrows instead. `apps/worker/README.md:31-33` also promises a router 404 for an unresolved branch origin. Documenting the observed split would change this requirement. The provisioned set also depends on the literal `main`.
 - **Impact if no action:** The router and its branch-origin requirement remain inconsistent. A later worker could mistake the old recommendation for an approved policy change.
 - **Root question:** What does the router answer when the origin of each kind of label cannot be reached?
 - **Options:**

@@ -8,7 +8,7 @@ builds add a second transaction that prunes finished
 [builds](../protocol/cloud/cloud-builds.md#retention-and-recovery), at most 1,000
 per run, after `MKC_BUILD_RETENTION_SECONDS` (default 2592000).
 Build pruning follows the
-[build and publication lock order](../protocol/cloud/persistence-boundaries.md#build-and-publication-lock-order).
+[build and publication lock order](../protocol/cloud/persistence-publication-storage.md#build-and-publication-lock-order).
 
 ```sh
 MKC_DATABASE_URL=postgres://USER@HOST/DATABASE mkc-api prune

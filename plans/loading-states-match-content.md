@@ -1,9 +1,11 @@
 # Loading states match their content
 
 Status: Active. [PR #131](https://github.com/mokly-ai/mokly-cloud/pull/131)
-is open. The pull request that completes the work deletes this plan, as the
-`plans` skill says. The plan stays until decisions 4 and 5 are answered and
-applied.
+of the old `mokly-ai/mokly-cloud` repository merged the completed milestones on
+2026-11-06, and this repository holds that code. No branch and no pull request
+of this repository holds the remaining work yet. The pull request that
+completes the work deletes this plan, as the `plans` skill says. The plan
+stays until decisions 4 and 5 are answered and applied.
 
 The app shows a loading state while it waits for the API. Every wait draws one
 shared block: `Pending` in `apps/app/src/components/page-parts.tsx`. The block is

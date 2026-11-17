@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-04, from the complete gate of branch `conductor/follow-ups-mockup-overlay-focus` on 2026-11-03, an unrelated flaky test.
-- **Location:** `ts/app/src/_tests_/connect.spec.ts:139-164`, `ts/app/src/screens/account/github-callback-screen.tsx:34` and `:66`, `ts/app/src/screens/app/workspace-route.tsx:38-40`, and `ts/app/src/screens/account/install-screen.tsx:201-205`.
+- **Location:** `apps/app/src/_tests_/connect.spec.ts:139-164`, `apps/app/src/screens/account/github-callback-screen.tsx:34` and `:66`, `apps/app/src/screens/app/workspace-route.tsx:38-40`, and `apps/app/src/screens/account/install-screen.tsx:201-205`.
 - **Reason:** The branch that met the flake changes no app code and no app test, and the flaky-test rule fixes an unrelated flaky test in its own branch.
 - **Checked:** The gate ran on 2026-11-03, on a mockup-only branch based on `main` at commit `50283907`. The test failed once and passed on its configured retry. On 2026-11-04, after `main` at commit `08b3a98b` merged, the test and its wait at line 163 were unchanged. Nobody ran a controlled reproduction.
 - **Category:** Test.
@@ -40,7 +40,7 @@
   - The order of the workspace list. When Holder Org is first, a bare `/install` always hands on to Holder Org's repository step.
   - The timing of that hand-on. The wait passes only when it sees `/install` before `router.replace` runs.
 - **Problem:** After **Back to install**, the test waits for the path `/install`. In one run the page showed Holder Org's repository step instead, and the wait timed out after 30 seconds. The retry passed, so the result depends on timing or on order.
-- **Impact if no action:** The test can fail the app stage at random, and a failure of the retry too fails the complete gate. If the list order is the source, the way back can also take a reader to the repository step of the workspace that holds the account.
+- **Impact if no action:** The test can fail the `cloud-app` suite at random, and a failure of the retry too fails the complete gate. If the list order is the source, the way back can also take a reader to the repository step of the workspace that holds the account.
 - **Root question:** How does the test check the way back from the refusal page, whatever the order of the workspace list and the timing of the install screen?
 - **Options:**
   - **A.** Investigate first. Read the order in which the API lists a reader's workspaces. Reproduce the test with a controlled order and a controlled event order. Then fix the source that the reproduction names, and keep every assertion and time limit. Effort: Medium.

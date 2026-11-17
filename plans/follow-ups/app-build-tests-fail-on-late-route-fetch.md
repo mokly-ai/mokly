@@ -3,15 +3,16 @@
 - **Severity:** Medium (estimate). **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from CI run 40396307516 of the closed [PR #62](https://github.com/mokly-ai/mokly-cloud/pull/62), an unrelated flaky test. Updated on 2026-11-01 with the failures that the closed PR #87 and the branch `calummoore/ci-pipeline-duration` found. Updated on 2026-11-02 with one more failure from the same branch. Updated again on 2026-11-02 with failures in two more CI runs from the same branch, at commits `0d1e5bb9` and `6216f480`. On 2026-11-03, the user chose to record these updates in that branch. Updated again on 2026-11-03 by the branch `conductor/follow-ups-app-test-fixes`, which tried the chosen option C and withdrew it.
-- **Location:** `ts/app/src/_tests_/harness.ts:58`, `ts/app/src/_tests_/build-answers.ts:93` and `ts/app/src/_tests_/build-routes.ts:28-41`. The decision also concerns `ts/app/src/_tests_/build-routes.ts:51-56`, where the proposed option C would set its mark, `ts/app/src/_tests_/github-install-landing.spec.ts:50`, and `ts/node_modules/playwright-core/lib/coreBundle.js:61767-61774` of `playwright-core` 1.63.0.
+- **Location:** The `test` export of `apps/app/src/_tests_/harness.ts`, `apps/app/src/_tests_/build-answers.ts:94`, and `answering` at `apps/app/src/_tests_/build-routes.ts:31-46`, which ignores "Test ended." at line 38 since commit `d7118e8a0`. The decision also concerns `routeBuilds` at `apps/app/src/_tests_/build-routes.ts:53-58`, where the proposed option C would set its mark, and `apps/app/src/_tests_/github-install-landing.spec.ts:50`.
 - **Reason:** The chosen teardown hung in an unrelated spec, and its exact cause remains unknown. The user requested a later decision without blocking this branch.
 - **Answered:** On 2026-11-03, the user chose the first option C, and the main orchestrator approved a plan that applies only it. The branch `conductor/follow-ups-app-test-fixes` withdrew that fix on the same day, before any commit.
 - **Checked:** 2026-11-01, at commit `10834d30`. Verified in CI. From 30 October to 1 November 2026, the error failed 6 CI runs, which the list at the end gives. The shared fixture still has no route teardown, and `answering` at `build-routes.ts:35` still does not ignore "Test ended". On 2026-11-02, the line numbers were checked again on the branch `calummoore/ci-pipeline-duration`.
+- **Checked:** 2026-11-17, in this repository after the cloud moved in. The root npm workspace resolves Playwright 1.61.1, not 1.63.0. Commit `d7118e8a0` added "Test ended." to the messages that `answering` ignores. That change is the first option A, which the user rejected on 2026-11-03. The shared fixture still has no route teardown. The line numbers in the record below come from the old cloud repository and can differ by a few lines here.
 - **Category:** Test.
 
 - **Terms:**
-  - **Build double:** The fake build state that app browser tests lay over the real local API, through route handlers in `ts/app/src/_tests_/build-routes.ts`.
-  - **`answering`:** The wrapper in `build-routes.ts:28-41` that ignores three request-lifecycle messages and rethrows every other handler error.
+  - **Build double:** The fake build state that app browser tests lay over the real local API, through route handlers in `apps/app/src/_tests_/build-routes.ts`.
+  - **`answering`:** The wrapper in `build-routes.ts:31-46` that ignores four request-lifecycle messages and rethrows every other handler error.
   - **Owned page:** A page on which `routeBuilds` installed the build double.
   - **Waiting unroute:** The call `page.unrouteAll({ behavior: "wait" })`. It removes every page route, then waits for the handlers that still run.
   - **Spec-local overlay:** A handler in one spec that calls `route.fetch()` and then `route.fulfill()` without `answering`. An example is `readAsReviewer`.
@@ -19,7 +20,9 @@
   - `answerRows` in `build-answers.ts:88-100` answers a branch or pull request list request. It calls `route.fetch()` for the real list, then lays the double's rows over it.
   - The double also calls `route.fetch()` at `build-routes.ts:61` and at `build-answers.ts:61` and `:79`.
   - All 24 specs that use the double install the same handlers through `buildScenario` or a direct `routeBuilds` call.
-  - `answering` ignores only errors that match "Response has been disposed", "Route is already handled" or "has been closed". Any other handler error fails the run.
+  - Until 2026-11-17, `answering` ignored only errors that matched "Response has been disposed", "Route is already handled" or "has been closed". Any other handler error failed the run.
+  - On 2026-11-17 the cloud moved into this repository, and its app tests run with Playwright 1.61.1, the version of the root lockfile. With 1.61.1, a route callback that outlived a passing test failed that test with `Error: "route.fetch: Test ended." while running route callback.`, for example in `build-references.spec.ts:47`. Commit `d7118e8a0` then added `Test ended\.` to the messages that `answering` ignores. A timeout and every other handler error still fail. After that commit, the four `cloud-app` shards passed all 413 browser tests with no retry. Handlers outside `answering`, such as the spec-local overlays, the direct handlers of the GitHub specs and the four billing calls, do not get the ignore.
+  - The source flow below names files and lines of `playwright-core` 1.63.0, which the old cloud repository used. Version 1.61.1 can differ.
   - On 2026-11-03 the user chose the first option C: a waiting unroute in the teardown of the shared `page` fixture. The user rejected the first options A, B, and D. The first record of these options stays below, as history.
   - On 2026-11-03 the branch `conductor/follow-ups-app-test-fixes` tried that fix as this uncommitted edit of the `test` export in `harness.ts`:
 
@@ -38,7 +41,7 @@
     5. A failed route call never settles the route, at `59750-59758`. So a waiting unroute that made its list before the failure waits until the test timeout, at `60168-60189`.
   - The exact refused message is inferred, not recorded. The diagnostics did not record the text, so the check found "Route is already handled!" by elimination.
   - The branch then added a cleanup to `answering`, as a call of its orchestrator. After one of its three ignored messages, `answering` called `route.fallback()` and returned. That settled a refused build-double route, so it no longer held the wait.
-  - The fix used six selected cases, under `ts/app/src/_tests_/`:
+  - The fix used six selected cases, under `apps/app/src/_tests_/`:
     - `desktop`: `build-references.spec.ts:45`, "the standalone entry shows the default branch's first build".
     - `desktop`: `build-references.spec.ts:107`, "a failed build newer than the newest publication holds the stage".
     - `desktop`: `build-states.spec.ts:14`, "a lockfile builds cannot install links the CI guide".
@@ -48,7 +51,7 @@
   - This command runs each case 10 times with no retry, 60 attempts in total. Run it from the repository root. Each recorded run used its own artifact directory. The command below writes new output under the repository’s ignored scratch directory.
 
     ```sh
-    npm --prefix ts run test:browser --workspace @mokly-cloud/app -- \
+    npm run test:browser --workspace @mokly-cloud/app -- \
       src/_tests_/build-closed-mobile.spec.ts \
       src/_tests_/build-fork-mobile.spec.ts \
       src/_tests_/build-order-mobile.spec.ts \
@@ -65,7 +68,7 @@
     - Two diagnostic runs then repeated `build-closed-mobile.spec.ts:11` with a one-time probe, and stopped at the first failure. The first gave 6 passed, 1 failed, and 3 did not run. The second gave 8 passed, 1 failed, and 1 did not run.
     - With the fixture edit and the cleanup, the command passed 60 of 60, 10 of 10 for each case. These counts cover only the six selected cases.
   - A source-based risk stayed. Handlers outside `answering` did not get the cleanup, so a spec-local overlay that finishes second can fail visibly with "Route is already handled!". It does not hang. No run reproduced it.
-    - The overlays under `ts/app/src/_tests_/` are `build-reader.ts:22-32`, `build-plan.spec.ts:73-81`, `build-order.spec.ts:126-134`, `build-settings.spec.ts:98-116`, and `build-state-readers.ts:164-171`. The billing specs also call `route.fetch()` in four places, which the first check did not read.
+    - The overlays under `apps/app/src/_tests_/` are `build-reader.ts:22-32`, `build-plan.spec.ts:73-81`, `build-order.spec.ts:126-134`, `build-settings.spec.ts:98-116`, and `build-state-readers.ts:164-171`. The billing specs also call `route.fetch()` in four places, which the first check did not read.
     - Three specs call the waiting unroute inside a test: `build-settings.spec.ts:85` and `:124`, and `build-references.spec.ts:161`. No failure from them is recorded. `viewer/entry-states.spec.ts:113` also calls it, and the check did not read that call.
   - Then the complete gate recorded a new timeout. It ran on 2026-11-03 after merge `1c9f425b` of `origin/main` commit `18cc4834`, with the fixture edit and the cleanup.
     - Stages 1 to 13 passed. Stage 14 passed its logic suites and its web build, then ran the full App browser suite.
@@ -100,10 +103,10 @@
     - 24 spec files call `buildScenario` or `routeBuilds`. `buildScenario` calls `routeBuilds` at `build-scenario.ts:33`, and `build-settings.spec.ts` calls `routeBuilds` directly. So a mark that `routeBuilds` sets reaches every build-double caller.
     - `billing.spec.ts` and `billing-confirmation.spec.ts` have four `route.fetch()` calls, and they do not use the build double.
     - A repeat of the GitHub case cannot show whether B or C works, because it already passes 10 of 10 without them.
-- **Problem:** The original flake stays on `main`. The waiting teardown with cleanup passed six selected cases, but it timed out in an unrelated GitHub installation spec. Nobody knows the exact cause of that timeout yet.
-- **Impact if no action:** The App browser suite keeps failing at random with "route.fetch: Test ended.", and each failure costs a CI rerun.
+- **Problem:** The original race stays. In this repository, commit `d7118e8a0` hides its error for the build-double handlers with the first option A, which the user rejected on 2026-11-03. Handlers outside `answering` still fail on it. The waiting teardown with cleanup passed six selected cases, but it timed out in an unrelated GitHub installation spec. Nobody knows the exact cause of that timeout yet.
+- **Impact if no action:** A handler outside `answering` can still fail the App browser suite at random with "route.fetch: Test ended.", and each failure costs a CI rerun. A build-double handler that outlives its test now passes without a signal, against the choice of 2026-11-03.
 - **Root question:** How do build-double handlers finish before the browser context closes, without a new teardown hang in any App test?
-- **Options:** The letters A, B, and C below belong to this decision. The first options A to D stay in the history below.
+- **Options:** The letters A, B, C, and D below belong to this decision. The first options A to D stay in the history below. A, B, and C each also remove the ignore of "Test ended." that commit `d7118e8a0` added, because the user rejected it on 2026-11-03.
   - **A.** Use the withdrawn global waiting teardown and its cleanup in a private diagnostic probe. Capture the exact pending operation before another branch change. Effort: Large.
     - The targeted repeat did not reproduce the timeout. A later fix may need another decision, and the flake stays until its cause is known.
     - Pages without the build double keep the call and the flake. No proof exists today.
@@ -126,11 +129,15 @@
     - Limit: code reading supports the change for unowned pages. Repeated runs give evidence for owned pages, but cannot prove that every rare ordering is safe.
     - Limit: only `routeBuilds` sets the mark. A future build-double route helper must call it or set the mark.
     - Available evidence: the code reading, the global-wait version at 60 of 60, and 49 passing desktop build-double results in the gate. No run tested the proposed ownership mark.
-    - Put the `WeakSet<Page>` in a small new module under `ts/app/src/_tests_/`, because `harness.ts` has 593 lines, as `plans/follow-ups/app-test-files-pass-300-lines.md` records. Set the mark in `routeBuilds` before its first `page.route` call.
+    - Put the `WeakSet<Page>` in a small new module under `apps/app/src/_tests_/`, so that `harness.ts` stays under the 300-line cap of the changed-file length audit. Set the mark in `routeBuilds` before its first `page.route` call.
     - Verification: typecheck, ESLint, the six cases 10 times each, the full App suite with its mobile project, and the complete gate.
     - Record what stays open as a follow-up item: the unexplained hang on owned pages, B for spec-local overlays, and the four billing calls.
+  - **D.** Keep the ignore that commit `d7118e8a0` added, which is the first option A, and record the user's approval of it. Effort: Small.
+    - It needs a new answer, because the user rejected the first option A on 2026-11-03: it hides a handler failure.
+    - Timeouts and the other handler errors still fail. With it, the four `cloud-app` shards passed all 413 browser tests on 2026-11-17.
+    - Limit: handlers outside `answering` keep the original failure, and the race itself stays.
 - **Left out:** The list below gives the approaches that the options leave out.
-  - The first options A and B: ignore "Test ended", or use `behavior: "ignoreErrors"`. The user rejected them on 2026-11-03, because they hide handler failures.
+  - The first option B: use `behavior: "ignoreErrors"`. The user rejected it on 2026-11-03, because it hides handler failures. The first option A, ignore "Test ended", is now option D, because commit `d7118e8a0` applied it.
   - Recorded answers in place of `route.fetch()`, the first option D. The user rejected it on 2026-11-03. It is the only design with no teardown wait, and the user can bring it back.
   - Ignore errors, add retries, raise timeouts, or skip tests. The user prohibited these.
   - A Playwright upgrade. It changes files outside the scope of the tests, and no verified release fix is known.
@@ -143,8 +150,8 @@
 - **Shared assumptions:** The options check named these. Each one holds and stays.
   - Build-double handlers keep a live `route.fetch()`, so some teardown must wait. Source: the user's decision of 2026-11-03. Its reason is weaker now, because the reused call has an unexplained hang. Only recorded answers drop it.
   - The blocked work is inside the new `page.unrouteAll` call. Source: the gate stack.
-  - Playwright stays at 1.63.0, and only its public calls are used. Source: the file limits of the task and the cleanup call.
-  - The fix adds no retry, sleep, longer timeout, suppression, skip, removal, gate, or committed teardown test. Every assertion stays. Source: the user's directions of 2026-11-03.
+  - Playwright stays at the version of the root lockfile, 1.61.1 on 2026-11-17, and only its public calls are used. Source: the file limits of the task and the cleanup call.
+  - The fix adds no retry, sleep, longer timeout, suppression, skip, removal, gate, or committed teardown test. Every assertion stays. Source: the user's directions of 2026-11-03. Commit `d7118e8a0` breaks this assumption for "Test ended.", and option D asks the user to accept that.
   - The fix acts in the fixture teardown, not in spec bodies. Source: the user's decision of 2026-11-03. A spec fix drops it, so it stays left out.
 - **Wider fix:** C, not B. The class is a build-double teardown that runs in tests without the build double. C is a mark that the shared fixture honours, so unowned pages skip the call whichever step blocked. B works only if the callback wait blocked. B stays the wider fix for the earlier class: running handlers that meet removed routes.
 - **Previous examples:** The list below gives them.
@@ -152,7 +159,7 @@
   - `main` already runs the waiting unroute at `build-settings.spec.ts:85` and `:124`, and at `build-references.spec.ts:161`. No failure from these calls is recorded.
   - A history search found those three calls in commit `26c3e7d0`, from PR #45. That search was incomplete.
 - **Recommendation:** C. It removes the named call from every unowned page without knowing which step blocked, and it keeps the user's call on all owned pages.
-- **Action:** ask the user, because the new timeout remains unexplained after ten diagnostic passes. B changes the waiting mechanism, and C narrows its coverage.
+- **Action:** ask the user, because the new timeout remains unexplained after ten diagnostic passes. B changes the waiting mechanism, C narrows its coverage, and commit `d7118e8a0` applied an option that the user rejected on 2026-11-03.
 
 The first decision record, as history. On 2026-11-03 the user chose its option C. Until then, the item held these fields:
 
@@ -166,7 +173,7 @@ The first decision record, as history. On 2026-11-03 the user chose its option C
   - B. End each build-double test with `await page.unrouteAll({ behavior: "ignoreErrors" })`. Playwright then does not wait for running handlers. It silently catches all their later errors, so it needs the user's approval. Effort: Small.
   - C. Give the shared `page` fixture in `harness.ts` a teardown that calls `await page.unrouteAll({ behavior: "wait" })`. Effort: Small.
     - Playwright then waits for each running handler before the test ends. It catches no error.
-    - Risk: a handler that a failed test leaves held stops the teardown until the 120-second test timeout. An example is `holdBuildReads` at `ts/app/src/_tests_/build-announcements.spec.ts:122`. The failure still shows.
+    - Risk: a handler that a failed test leaves held stops the teardown until the 120-second test timeout. An example is `holdBuildReads` at `apps/app/src/_tests_/build-announcements.spec.ts:122`. The failure still shows.
     - Before the change, confirm the race with a targeted run or a fresh CI stack that shows "route.fetch: Test ended.". Check the held-read risk too.
   - D. Let the double answer each request from its own rows and a recorded real answer, without `route.fetch()`. No handler then waits on the network. It needs a recorded answer for each overlaid request. Effort: Medium.
 - Left out: The list below gives the approaches that the options leave out.
@@ -176,7 +183,7 @@ The first decision record, as history. On 2026-11-03 the user chose its option C
 - Previous examples: The list below gives them.
   - The deleted [desktop app shell plan](https://github.com/mokly-ai/mokly-cloud/blob/06320e4f484905567fa9e06bea1a87350b59abb3/plans/desktop-app-shell.md?plain=1#L782-L788) recorded the same failure as "Main merge CI flake 1", at commit `05cf1d9d` and on `main` at `44f2a5f3`. Both reruns passed.
   - The suite already calls `page.unrouteAll({ behavior: "wait" })` at `build-settings.spec.ts:85` and `:124`, `build-references.spec.ts:161` and `viewer/entry-states.spec.ts:112`.
-  - The calls in `ts/app/src/_tests_/account.spec.ts:181`, `:211` and `:253` use the default behavior, which does not wait.
+  - The calls in `apps/app/src/_tests_/account.spec.ts:181`, `:211` and `:253` use the default behavior, which does not wait.
 - Recommendation: C. It removes the race without hiding an error, and the suite already uses this call.
 - Action: fix after merge, apply C, because the flaky helper is outside the branch that met it.
 
@@ -186,7 +193,7 @@ Failures, as history. These facts come from the recorded runs. They do not prove
   `Error: "route.fetch: Test ended." while running route callback.`
 - The stack ran from `build-routes.ts:32` and `:87` to `answerRows` at `build-answers.ts:93`, for `GET /v1/projects/<id>/pull-requests`.
 - Playwright reported "1 error was not a part of any test", 334 passed and 1 did not run. Attempt 2 passed.
-- The test that did not run was `ts/app/src/_tests_/build-order-mobile.spec.ts:18` on the `mobile` project. Its title is "a phone shows a closed pull request's running build, then its closed card and the Team card".
+- The test that did not run was `apps/app/src/_tests_/build-order-mobile.spec.ts:18` on the `mobile` project. Its title is "a phone shows a closed pull request's running build, then its closed card and the Team card".
 - It is the same test in all three recorded failures. The suspected source is a handler of that test that awaits `route.fetch()` after the test ends.
 
 Failures from 30 October to 1 November 2026, found on 2026-11-01 from the branch `calummoore/ci-pipeline-duration` and from the closed PR #87:

@@ -13,7 +13,7 @@
   - **`CSC_LINK`:** The GitHub Actions secret that holds the base64 `.p12` export of that certificate for the release workflow.
   - **Revocation:** Apple's withdrawal of a certificate before its expiry date.
 - **Background:** The list below gives the facts.
-  - The release workflow signs and notarizes the macOS packages of every desktop tag pre-release with the certificate in `CSC_LINK`. See `docs/protocol/desktop-distribution.md:8-14` and `.github/workflows/desktop-release.yml:139-148`.
+  - The release workflow signs and notarizes the macOS packages of every desktop tag pre-release with the certificate in `CSC_LINK`. See `docs/protocol/cloud/desktop-distribution.md:8-14` and `.github/workflows/desktop-release.yml:139-148`.
   - The source recorded that the certificate was created on 2026-10-26 under the individual Apple Developer Program membership `UV85J3PKBX`. It expires on 2027-11-25.
   - The source recorded that releases `0.1.0-alpha.1` and `0.1.0-alpha.2` were signed with it on 2026-10-26, in release runs 40316994987 and 40397608619.
   - Both pre-releases exist. Their public release list does not show which certificate signed each asset.

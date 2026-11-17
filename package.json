@@ -133,9 +133,6 @@
     },
     "eslint": {
       "minimatch": "11.0.3"
-    },
-    "miniflare": {
-      "undici": "7.30.1"
     }
   },
   "workspaces": [

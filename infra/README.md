@@ -127,7 +127,7 @@ default; a machine deliberately provisioned with enough space for full parent
 copies can set `MKC_BUILDKIT_REQUIRE_LAYERED=false`. On a startup failure it
 prints the worker probe, the retained daemon log at `/tmp/mkc-buildkit.log`
 and the filesystem capacity, and the image gate repeats the capacity
-diagnostics around each image because earlier check stages also consume the
+diagnostics around each image because earlier checks also consume the
 runner filesystem. `check-image.sh` uses explicit nonproduction build origins;
 `build-release.sh ENVIRONMENT...` requires `MKC_DOMAIN` and
 `MKC_CATALOGUE_BASE_DOMAIN`, derives the public app and API origins from the
@@ -135,12 +135,12 @@ environment naming contract and builds the three product images for stable
 and PR environments alike. When BuildKit is installed, the storage smoke also
 requires `mkfs.ext4` from e2fsprogs, mount/umount and passwordless sudo; CI
 installs the package explicitly.
-Hosted CI assigns every canonical task to one of six fresh-runner partitions:
-`workspace-check` for shared checks, app tests, desktop tests, mockup tests, site tests
-and `workload-images`, which runs the storage smoke and builds the API,
-catalogue and app images. The required aggregate rejects a failed, cancelled
-or skipped partition. Local `cargo xtask check` is the complete 25-stage
-aggregate, including the origin router.
+The `cloud-infrastructure` suite runs these contracts, the storage smoke and
+the three image builds. The other
+[cloud suites](../docs/protocol/ci-verification.md#cloud-suites) run the
+Terraform, Helm and origin-router checks. Required CI rejects a failed,
+cancelled or skipped cloud job. Local `cargo xtask check` is the complete
+gate, including the origin router.
 With a disposable native Postgres database and Linux/passwordless sudo, run:
 
 ```sh
@@ -271,7 +271,7 @@ evidence, costs and cleanup.
 - `scripts/preview-seed-job.py` — the trusted PR seed runner and its `--validate-evidence` check, which reuses the evidence validation in `preview_seed_types.py`. `preview_seed_job_run.py` creates the Job from the `preview-seed` CronJob, waits for it, and runs the log, collection and cleanup steps after any outcome. `preview_seed_job_storage.py` stages the request and the unopened catalogue, downloads the status and the proof, and removes earlier runs. `preview_seed_job_cluster.py` validates the common inputs and selects the cluster with the preview shell helpers.
 - `scripts/preview_seed_types.py` — the shared preview settings, JSON reader and atomic writer, private credential reader, and seed evidence validation.
 - `scripts/preview-comment.py` and `scripts/preview-event.py` — the validated PR comment renderer and the pure event policy.
-- [`../scripts/site/cleanup.sh`](../scripts/cloud/site/cleanup.sh) — the site workflow's Pages cleanup: lists every deployment page, deletes only the closed pull request's `pr-<number>` deployments, and reports every failure as retained.
+- [`../scripts/cloud/site/cleanup.sh`](../scripts/cloud/site/cleanup.sh) — the site workflow's Pages cleanup: lists every deployment page, deletes only the closed pull request's `pr-<number>` deployments, and reports every failure as retained.
 - [scripts/sync-postmark-templates.mjs](./scripts/sync-postmark-templates.mjs) and `scripts/sync-postmark-environment.sh` — the trusted deploy job that reads each managed Postmark alias, validates and creates or updates a changed template, and verifies the read-back, and the shell wrapper that runs it for one stable environment.
 - `scripts/install-tools.sh`, `scripts/install-build-tools.sh`, `scripts/check-terraform.sh` and `scripts/run-infrastructure-tests.py` — the pinned tool installers, the Terraform format, validate and test runner, and the Python test partition runner.
 - `helm/tests/check.py` — the Helm lint, golden renders and rejected-input cases.

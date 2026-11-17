@@ -87,11 +87,15 @@
      bytes, and the viewer cannot rewrite URLs inside stylesheets. Effort:
      Large.
   2. **Mokly Cloud receiver rule** (High). On 2026-10-27 Mokly Cloud
-     rejected an upload when a compared view lacked a snapshot document.
-     **A.** State in `docs/protocol/mokly-upload-validation.md` that a
-     receiver does not require a snapshot document for each view, and send
-     the rule to Mokly Cloud. **B.** Change no Mokly doc, and rely on Mokly
-     Cloud to drop its check. Both Small.
+     rejected an upload when a compared view lacked a snapshot document. On
+     2026-11-17 the cloud receiver, now in this repository, checks only that
+     comparison files sit under the generation root, in
+     `crates/mkc-mokly-contract/src/bundle_validation.rs:104-141`. It
+     requires no snapshot document for each view. **A.** State in
+     `docs/protocol/mokly-upload-validation.md` that a receiver does not
+     require a snapshot document for each view, and add a cloud receiver
+     test that accepts a view without one. **B.** Change no Mokly doc, and
+     rely on the current cloud receiver. Both Small.
   3. **Version guard** (Medium). A viewer that ignores `sameDocument`
      requests missing files. **A.** Guard with an unreleased index number,
      version 10 today, because 0.18.0 shipped version 9. Keep the marker an
@@ -119,8 +123,6 @@
     two rules work together.
   - [variant-prop-schema-copies.md](./variant-prop-schema-copies.md): it
     also needs a new index number. One release can carry both.
-  - [cloud-without-review-json.md](./cloud-without-review-json.md): the
-    Mokly Cloud work that decision 2 depends on.
   - [embedded-document-closures.md](./embedded-document-closures.md): its
     option C gives the list of embedded documents that option 5A needs.
 - **Recommendation:** 1A, 2A, 3A, 4A, 5A. Shared view documents are 98.4% of

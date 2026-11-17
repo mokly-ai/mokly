@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Medium (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-03, from branch `conductor/follow-ups-mockup-overlay-focus`. It keeps option C of `viewer-overlay-backdrop-takes-focus.md`, which that branch fixed with option D and deleted.
-- **Location:** `docs/mockups/src/_tests_/disk-overlay-policy.ts`, `docs/mockups/src/_tests_/disk.spec.ts`, `docs/mockups/src/_tests_/overlay.spec.ts` and `docs/protocol/mockup-verification.md:197-200`. At commit `6be0d89d`, the source of the port: `disk-overlay-policy.ts:12-40`, `disk.spec.ts:162`, `disk.spec.ts:248-259` and `overlay.spec.ts:112-130`.
+- **Location:** `docs/mockups/src/_tests_/disk-overlay-policy.ts`, `docs/mockups/src/_tests_/disk.spec.ts`, `docs/mockups/src/_tests_/overlay.spec.ts` and `docs/protocol/cloud/mockup-verification.md:197-200`. At commit `6be0d89d`, the source of the port: `disk-overlay-policy.ts:12-40`, `disk.spec.ts:162`, `disk.spec.ts:248-259` and `overlay.spec.ts:112-130`.
 - **Reason:** The option makes a check stricter, which the user reserves, and the approved overlay fix does not depend on it.
 - **Checked:** 2026-11-03, against the source port at `6be0d89d` and the completed port on this branch. The guard still uses counted presses before the capture. All 20 new browser tests passed 10 of 10 runs. No stricter option was applied. On 2026-11-04 a one-off browser check measured the scroll that the guard leaves on `product/viewer/switcher`.
 - **Category:** Test.
@@ -15,11 +15,11 @@
   - **Smoke capture:** The full-page PNG that each disk test writes for the visual smoke review of changed pages.
   - **Focus-outline policy:** `focusPolicyViolations` in `docs/mockups/src/_tests_/focus-policy.ts`, which walks the Tab order and checks each focus outline.
 - **Background:**
-  - `docs/protocol/mockup-verification.md:197-200` says: "An overlay screen's viewer backdrop is `inert`, and Tab from its panel never reaches a control outside the panel." The user approved that rule on 2026-10-12.
+  - `docs/protocol/cloud/mockup-verification.md:197-200` says: "An overlay screen's viewer backdrop is `inert`, and Tab from its panel never reaches a control outside the panel." The user approved that rule on 2026-10-12.
   - On 2026-10-12 the user also kept the overlay inertness and Tab checks in the disk test. The protocol states the rule, not the method of the check.
   - On 2026-11-03 the user chose to make the backdrop `inert` through a shared helper and to port the overlay guard of commit `6be0d89d` with its two known gaps.
   - 18 viewer overlay entries, in 72 documents, render through `ViewerPanelScreen` in `docs/mockups/src/screens/product/viewer/screen.tsx`.
-  - `docs/protocol/mockups.md:147-150` keeps notes outside the product screen root and puts catalogue-only links below an artboard. No rule says whether such a link may follow an overlay panel.
+  - `docs/protocol/cloud/mockups.md:147-150` keeps notes outside the product screen root and puts catalogue-only links below an artboard. No rule says whether such a link may follow an overlay panel.
 - **Problem:** The overlay guard never presses Tab from the last panel control, so it passes a page with a control after the panel. It also runs before the smoke capture, so its walk can leave a panel body scrolled in the capture. "Gap facts" below gives the evidence.
 - **Impact if no action:** The guard can pass a page that breaks the protocol rule. A capture of a clipped panel can show a scrolled body that the page does not draw on open. On 2026-11-04 the guard left the switcher panel body scrolled by 95px on desktop and 239px on mobile.
 - **Root question:** How does the disk test prove the overlay Tab rule for every control, while each capture shows the page as it opens?

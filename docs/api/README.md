@@ -55,8 +55,8 @@ cargo xtask openapi-lint
 `docs/api/openapi.json` and regenerates `apps/app/src/api/generated/schema.ts`.
 Commit both files. Never hand-edit either output or hand-write frontend types
 for backend data. The `--check` mode regenerates both without rewriting them
-and reports the first differing line in either file. Stage 17 `openapi-drift`
-runs that check.
+and reports the first differing line in either file. The `cloud-openapi`
+suite runs that check.
 
 The router registers the operations in the generated document. Root security
 applies unless an operation explicitly sets
@@ -66,8 +66,9 @@ derives the marker from `Operation::implemented()` after merging the area
 contracts. Implemented operations have no marker. The platform smoke reads
 the document from the binary under test to find its deferred operations.
 
-Stage 20 `openapi-lint` reads the JSON document and checks the error reason
-rules below, using `x-deferred` for availability. It also requires delivery fixtures for the GitHub protocol's
+The `cloud-openapi-lint` suite runs `cargo xtask openapi-lint`. It reads the
+JSON document and checks the error reason rules below, using `x-deferred` for
+availability. It also requires delivery fixtures for the GitHub protocol's
 subscriptions. Rust tests check operation coverage, security markers,
 required fields, reason catalogues and serialized responses against their
 schemas. Validate structural OpenAPI changes with
@@ -95,8 +96,8 @@ declared by an implemented route.
 
 Protocol prose marks backticked error names with `reason`, `reasons`, `return`,
 `returns` or `returned` immediately before the name. The lint checks these
-mentions in `docs/protocol/*.md` against the REST catalogue, and rejects known
-reason names misspelled with underscores anywhere in prose. Other code spans
+mentions in `docs/protocol/cloud/*.md` against the REST catalogue, and
+rejects known reason names misspelled with underscores anywhere in prose. Other code spans
 (such as crate names, fields and mockup IDs) are identifiers, not error reasons.
 The REST table's code column contains rpc-error standard codes, not reasons.
 

@@ -3,9 +3,9 @@
 - **Severity:** Medium (estimate). **Effort:** Large (estimate). **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-30, from the closed [PR #65](https://github.com/mokly-ai/mokly-cloud/pull/65), which re-landed finding F5 of the closed PR #39. On 2026-10-31 the validity audit merged two duplicate items into it: `runner-tests-wait-under-ten-seconds.md` and `timeout-guard-reads-only-three-files.md`. They came from findings 2 and 3 of the review of PR #65 on 2026-10-30.
-- **Location:** `crates/mkc-api/tests/build_maintenance_tests.rs:26`, `crates/mkc-api/tests/check_recovery_tests.rs:99`, `crates/mkc-catalogue-server/tests/publish_tests.rs:121` and `crates/mkc-catalogue-server/tests/publish_tests.rs:262`.
+- **Location:** `crates/mkc-api/tests/build_maintenance_tests.rs:26`, `crates/mkc-api/tests/check_recovery_tests.rs:99`, `crates/mkc-api/tests/maintenance_cli_tests.rs:32`, `crates/mkc-catalogue-server/tests/publish_tests.rs:119` and `crates/mkc-catalogue-server/tests/publish_tests.rs:250`.
 - **Reason:** On 2026-10-30 the user closed the pull request with the fix and asked to track its work as a follow-up item.
-- **Checked:** 2026-10-31, at commit `f568853e`. The problem is still open. A search of `crates` and `xtask` finds exactly the four `Command::new("timeout")` calls, and `mkc-test-support` holds no process runner. The runner tests and the guard exist only on the closed branch.
+- **Checked:** 2026-11-17, in this repository after the cloud moved in. The problem is still open. A search of `crates` and `xtask` finds five `Command::new("timeout")` calls: the four of 2026-10-31 and one in `maintenance_cli_tests.rs`, which PR #85 of the old cloud repository added. `mkc-test-support` holds no process runner. The runner tests and the guard exist only on the closed branch.
 - **Category:** Test.
 
 - **Terms:**
@@ -14,9 +14,9 @@
   - **SIGTERM:** The Unix signal that asks a process to stop, which the process can handle.
   - **SIGKILL:** The Unix signal that stops a process at once.
   - **Expected-state wait:** A wall-clock wait for a state that a test needs, such as a child process that finishes or prints.
-- **Background:** Four integration tests start a child process and must stop it when it hangs. They wrap the child in GNU `timeout` with `Command::new("timeout")`. The tests are the `mkc-api` build maintenance test, the `mkc-api` check recovery test, the published-package smoke and the run of the smoke script unit tests. The last two are in `publish_tests.rs`. macOS does not ship GNU `timeout`. CI runs the Rust tests on 2-vCPU Ubuntu runners only. On 2026-10-12 the user approved one portable bounded child-process helper for all four calls.
-- **Problem:** On macOS the four tests fail before the child starts, because the `timeout` command does not exist. The repository has no shared helper that bounds a child process and keeps its output.
-- **Impact if no action:** A developer on macOS cannot run these four tests. Each new test that needs a time limit can copy the GNU `timeout` call again.
+- **Background:** Five integration tests start a child process and must stop it when it hangs. They wrap the child in GNU `timeout` with `Command::new("timeout")`. The tests are the `mkc-api` build maintenance test, the `mkc-api` check recovery test, the `mkc-api` maintenance CLI test, the published-package smoke and the run of the smoke script unit tests. The last two are in `publish_tests.rs`. macOS does not ship GNU `timeout`. In this repository, the `cloud-rust` suite runs the tests of the `mkc-` crates on Linux only, and the macOS and Windows native jobs leave out the `mkc-` crates. On 2026-10-12 the user approved one portable bounded child-process helper for all four calls of that day.
+- **Problem:** On macOS the five tests fail before the child starts, because the `timeout` command does not exist. The repository has no shared helper that bounds a child process and keeps its output.
+- **Impact if no action:** A developer on macOS cannot run these five tests. Each new test that needs a time limit can copy the GNU `timeout` call again.
 - **Root question:** How does an integration test bound a child process on Linux and on macOS?
 - **Options:**
   - **A.** Replace each `timeout` call with a loop over `Child::try_wait` that calls `Child::kill` at the deadline. It needs no new dependency. It stops only the direct child. A grandchild, such as the CLI under the publication smoke, can then keep the output pipes open and hang the test. Effort: Medium.
@@ -25,8 +25,9 @@
     - At the deadline it sends SIGTERM to the group. It sends SIGKILL to the group when the leader exits or after one second, whichever comes first. It returns `process::Error::TimedOut` with the captured output.
     - Pipes that stay open for one second after the child exits return `process::Error::PipesOpen`.
     - On macOS a group signal answers `EPERM` when only zombie processes remain. After the leader exits, `EPERM` therefore counts as "no live member", like `ESRCH`.
-    - The four tests use the runner with their current deadlines.
-    - `docs/protocol/repository-rust-workspace.md` and the root `README.md` name the runner as part of `mkc-test-support`.
+    - The tests use the runner with their current deadlines. A re-land also moves the fifth call, in `maintenance_cli_tests.rs`.
+    - `docs/protocol/cloud/repository-rust-workspace.md` and the root `README.md` of the old cloud repository name the runner as part of `mkc-test-support`. In this repository, that README is `docs/development/cloud.md`, and its crate table names `mkc-test-support`.
+  - **C.** Build the runner of B in `mkc-test-support` on the `ProcessGroups` type of the Mokly crate `mokly-platform`, in place of a direct `rustix` dependency. `ProcessGroups` already owns a child process tree on Linux, macOS and Windows: a new Unix session or process group, or a Windows job object that ends the tree when it closes, as `crates/mokly-platform/README.md` says. The cloud may depend on a Mokly crate, under the boundary rule of `docs/protocol/repository-layout.md`. The caller keeps the child and its pipes, so the runner still adds the deadline, the group signals and the output capture. Nobody checked that its API covers the macOS `EPERM` case of B. Effort: Medium (estimate).
 - **Open choices inside B:** The review of the closed branch left two findings open on 2026-10-30. Each concerns test code that exists only on the closed branch, so `main` has neither problem. Each keeps the option letters of its merged item. No option of either choice is approved.
   - **Runner test waits,** from the merged item "Runner tests wait under ten seconds". The review graded it Low severity, Small effort and Medium confidence.
     - Three tests in `crates/mkc-test-support/tests/portable_process_tests.rs` of the closed branch run the test binary itself as the child, through the runner.
@@ -48,16 +49,16 @@
     - Problem: a new test in another file can call GNU `timeout`, and the guard still passes. The guard also fails on a correct `"timeout"` literal in those files, such as a JSON key.
     - Impact: the guard gives little protection for the upkeep that it needs. A rename of a scanned file breaks the test build of `mkc-test-support`.
     - **A.** Leave the guard out, and keep the shared runner as the structural fix. No check then stops a new GNU `timeout` call. Effort: Small.
-    - **B.** Replace the guard with an ast-grep rule under `rules/rust/` that rejects `Command::new("timeout")` in every Rust file. The `ast-grep` stage of `cargo xtask check` runs these rules. Add its rule test, a YAML file under `rules/_tests_/`. This adds a lint. Effort: Medium. The review recommended B.
+    - **B.** Replace the guard with an ast-grep rule under `rules/rust/` that rejects `Command::new("timeout")` in every Rust file. The Repository suite of `cargo xtask check` runs these rules. Add its rule test, a YAML file under `rules/_tests_/`. This adds a lint. Effort: Medium. The review recommended B.
 - **Left out:**
   - Name GNU coreutils as a macOS prerequisite in the get started guide. It keeps the external command that the 2026-10-12 decision removes.
   - For the runner test waits, change nothing. The drain and nonzero-exit tests then keep a 5-second expected-state wait.
   - For the runner test waits, read a scale factor from an environment variable to stretch every limit. A slow machine that does not set it still fails.
   - For the runner test waits, use a fake clock. A fake clock cannot drive a real child process. The unit tests in `crates/mkc-test-support/src/_tests_/process_tests.rs` of the closed branch already mock the clock.
   - For the timeout guard, keep the guard and match only `Command::new("timeout")`. This ends the false failures, but a new test in another file still passes.
-  - For the timeout guard, let the guard read every Rust test file at run time. Option B does the same in the existing `ast-grep` stage, without a test that reads source files.
+  - For the timeout guard, let the guard read every Rust test file at run time. Option B does the same in the existing ast-grep check of the Repository suite, without a test that reads source files.
   - For the timeout guard, ban `Command::new` through the Clippy `disallowed-methods` setting. Clippy cannot match the `"timeout"` argument, so it would ban every `Command::new` call.
-- **Wider fix:** B. One shared runner is the structural fix, because later tests reuse it instead of an external command. Option B of the timeout guard is the detection fix, and it adds a lint. Option C of the runner test waits gives later tests a named minimum.
+- **Wider fix:** B, or C with the same runner. One shared runner is the structural fix, because later tests reuse it instead of an external command. Option B of the timeout guard is the detection fix, and it adds a lint. Option C of the runner test waits gives later tests a named minimum.
 - **Previous examples:**
   - The final review of the closed PR #39 found four such calls on 2026-10-12, and its branch `calummoore/untitled-v2` replaced them. `crates/mkc-api/tests/build_maintenance_tests.rs` landed on `main` after that and added another call.
   - On that branch, `plans/mokly-review-follow-ups.md:902-903` says that "process-runner and socket tests wait less than 10 seconds for expected states".
@@ -65,7 +66,7 @@
 - **Related:**
   - `plans/follow-ups/no-check-flags-breaking-migration-sql.md`, same code. Its CLI fixture runs through the runner of option B, so that work lands after this item or with it.
   - `plans/follow-ups/polling-tests-wait-on-real-time.md`, same class as the runner test waits. Its build polling browser tests also wait on real time.
-- **Recommendation:** B. It stops the whole process group and keeps the output, which the publication smoke needs.
+- **Recommendation:** B. It stops the whole process group and keeps the output, which the publication smoke needs. C can reuse tested process-tree code, but it needs a new design and a check of the macOS cases.
 - **Action:** fix after merge, apply B, because the user approved the helper on 2026-10-12. The two open choices inside B still wait for the user. Condition 3 holds for the runner test waits, because each option raises a test time limit. Condition 6 holds for the timeout guard, because the guard is a custom check that the removal rule of the `testing` skill does not cover.
 
-The closed branch `calummoore/reland-portable-process-runner` holds the work at commit `2e35d661`. Its complete gate passed on 2026-10-26. The branch did not land. A merge check on 2026-10-30 found no conflicts with `main`. Later merges, such as PR #81 on 2026-10-31, can change that result. Check the merge again and rerun the complete gate before a re-land.
+The closed branch `calummoore/reland-portable-process-runner` of the old cloud repository holds the work at commit `2e35d661`. Its complete gate passed on 2026-10-26. The branch did not land. A merge check on 2026-10-30 found no conflicts with that `main`. The crate paths did not change when the cloud moved into this repository, so a re-land can port the commits of that branch as a patch. Rerun the complete gate before a re-land.

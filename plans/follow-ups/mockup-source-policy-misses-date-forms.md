@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-01, from branch `conductor/mokly-rust-core-upgrade-m2-b-mockups`. That branch applied the decided source policy of the deleted item `mockup-drawings-read-clock-and-locale.md` and moved that item's options C and E here.
-- **Location:** `docs/mockups/src/_tests_/deterministic-date-values.ts:91-95`, `docs/mockups/src/_tests_/deterministic-locale-policy.ts:29-60`, `docs/mockups/src/_tests_/deterministic-source-policy.ts:16-33` and `docs/protocol/mockup-source-policy.md:29-43`.
+- **Location:** `docs/mockups/src/_tests_/deterministic-date-values.ts:91-95`, `docs/mockups/src/_tests_/deterministic-locale-policy.ts:29-60`, `docs/mockups/src/_tests_/deterministic-source-policy.ts:16-33` and `docs/protocol/cloud/mockup-source-policy.md:29-43`.
 - **Reason:** Each option adds a rejection to the source policy, and the user decides each new rejection.
 
 - **Terms:**
@@ -11,7 +11,7 @@
   - **Source policy:** The test in `docs/mockups/src/_tests_/deterministic-source-policy.test.ts`, with its rules in the other `deterministic-*.ts` modules, which scans every drawing for inputs from the build machine.
 - **Background:** The list below gives the facts.
   - A drawing that reads the local time zone or the host locale renders different bytes on different machines.
-  - On 2026-10-12 the user decided on a source policy that requires an explicit time and locale for dates. `docs/protocol/mockup-source-policy.md` states its rules.
+  - On 2026-10-12 the user decided on a source policy that requires an explicit time and locale for dates. `docs/protocol/cloud/mockup-source-policy.md` states its rules.
   - A date string must be a compile-time constant, and a string with a time must end with `Z` or an explicit offset.
   - Local-time `Date` members and the default `Date` string conversion fail. Each locale-sensitive call names a string-literal locale, and date formatting also names a `timeZone`.
   - No current drawing uses `Date`, `Intl`, a locale method or `navigator`. Checked on 2026-11-01, at commit `abf42851`.

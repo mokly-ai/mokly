@@ -7,9 +7,11 @@ formatting, lint and import rules.
 
 ## Packages
 
-- `package.json` declares npm workspaces `app`, `desktop`, `mockups`, `tokens`,
-  `site` and `worker`, with a single lockfile at `package-lock.json`. The root
-  `package.json` only forwards scripts into `ts/`.
+- The root `package.json` declares the cloud npm workspaces `apps/app`,
+  `apps/desktop`, `apps/mockups`, `packages/tokens`, `apps/site` and
+  `apps/worker` beside the Mokly packages, with the single root lockfile
+  `package-lock.json`. Its `cloud:typecheck` and `cloud:test` scripts run
+  every cloud workspace.
 - `apps/worker` is `@mokly-cloud/worker`, the Cloudflare origin router.
   Wrangler owns the script and its two whole-origin routes; Terraform does
   not. Its zone-specific Wrangler configuration is rendered at deploy time
@@ -131,13 +133,13 @@ formatting, lint and import rules.
   it adds a dependency. Every npm workspace typechecks with
   strict, no-emit TypeScript through the one compiler pinned at the
   npm workspace root. Mockup typechecks include `docs/mockups/src` and use only
-  public package entrypoints from the single `ts/` installation. The
+  public package entrypoints from the single root installation. The
   configuration is data-only JSON, which Mokly validates against its shipped
   schema, so no typecheck includes it. The
   [mockups tooling guide](../../../apps/mockups/README.md) documents resolution.
 - Rust import style is enforced by ast-grep rules under `rules/rust/`
   (`no-inline-use`, `prefer-imports-over-crate-paths`, and `no-late-use`)
-  with `sgconfig.yml` at the root; the pinned `@ast-grep/cli` is a `ts/` dev
+  with `sgconfig.yml` at the root; the pinned `@ast-grep/cli` is a root dev
   dependency. `rules/typescript/` holds the same kind of rule for the app:
   `derive-disabled-from-write` keeps a settings control from answering "can I
   be pressed" for itself when the write behind it already answers that, and

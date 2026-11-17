@@ -6,11 +6,12 @@
 - **Location:** `.github/workflows/` and `docs/ops/publish-smoke.md`.
 - **Reason:** Publishing needs the deployed production cloud and a project token, so it waits until after the merge.
 - **Checked:** 2026-10-31, at commit `f568853e`. The audit could not verify a live production publication. No workflow publishes to production, but cloud builds could publish without one, and no dated evidence exists either way.
+- **Checked:** 2026-11-17, in this repository after the cloud moved in. No workflow under `.github/workflows` runs `mokly publish`. The task now applies to this repository, `mokly-ai/mokly`.
 
 - **Terms:**
-  - **Dogfood catalogue:** This repository's own mockup catalogue under `docs/mockups`.
+  - **Dogfood catalogue:** The cloud mockup catalogue under `docs/mockups`, which the root `mokly.config.json` configures.
   - **Changes check:** The `Mokly` GitHub check run that reports how many entries changed on a pull request.
-- **Background:** The initial scope asked to publish the dogfood catalogue from this repository's CI to production Mokly Cloud and to enable the `Mokly` check here. It also asked to confirm the live check on an installed test pull request, with its summary, rerequest and failure observations. No workflow under `.github/workflows` runs `mokly publish` to production. The preview workflow publishes only into preview namespaces. Cloud builds are a supported path that needs no CI token, as `docs/product-direction.md:36-40` says. So the workflow files alone do not prove that no production project or live check exists.
+- **Background:** The initial scope asked to publish the dogfood catalogue from the CI of the cloud repository to production Mokly Cloud and to enable the `Mokly` check there. On 2026-11-17 the cloud and its catalogue moved from `mokly-ai/mokly-cloud` into this repository, `mokly-ai/mokly`, so the task now applies here. This repository also holds the Mokly example catalogue under `examples/basic`, which the initial scope did not name. It also asked to confirm the live check on an installed test pull request, with its summary, rerequest and failure observations. No workflow under `.github/workflows` runs `mokly publish` to production. The cloud preview workflow publishes only into preview namespaces. Cloud builds are a supported path that needs no CI token, as `docs/product-direction.md:36-40` says. So the workflow files alone do not prove that no production project or live check exists.
 - **Task:** Make this repository a customer of its own product, then record the check.
   - Create a production project for this repository and a publishing token in its Tokens pane.
   - Store the token as a CI secret, and publish the catalogue from CI after the catalogue build. Cloud builds can do it instead, once they run live.
@@ -20,7 +21,7 @@
   - If a production project and a live check already exist, record their dated evidence instead.
   - The effort covers the proof only. Grade a new workflow change separately.
 - **Impact if no action:** The team does not use its own product on its own changes, and the live check stays unproven.
-- **Needs:** Production access, a project token, and the GitHub App on this repository.
+- **Needs:** Production access, a project token, and the GitHub App on this repository, `mokly-ai/mokly`.
 - **Done when:** Each pull request of this repository gets a live `Mokly` check, and the runbook records the observations.
 - **Related:** The list below gives the links.
   - `plans/follow-ups/cloud-builds-never-ran-live.md` can publish the catalogue without a CI token.

@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-02, from CI run 41370073016 of the branch `calummoore/ci-pipeline-duration`, an unrelated flaky test.
-- **Location:** `ts/app/src/_tests_/database-fixture.ts:11-17`, `:70-88` and `:100-110`, `ts/app/src/_tests_/harness.ts:233-239`, `crates/mkc-publications/src/check_provider.rs:120-133`, `crates/mkc-publications/src/check_worker.rs:42-60`, `crates/mkc-api/src/check_runtime.rs:62-77`, and `crates/mkc-db/migrations/202609161530_github_app/up.sql:18` and `:99`.
+- **Location:** `apps/app/src/_tests_/database-fixture.ts:11-17`, `:70-88` and `:100-110`, `apps/app/src/_tests_/harness.ts:233-239`, `crates/mkc-publications/src/check_provider.rs:120-133`, `crates/mkc-publications/src/check_worker.rs:42-60`, `crates/mkc-api/src/check_runtime.rs:62-77`, and `crates/mkc-db/migrations/202609161530_github_app/up.sql:18` and `:99`.
 - **Reason:** The branch that met the flake changes neither the test, the release helper nor the check writer, and the flaky-test rule fixes an unrelated flaky test in its own branch.
 - **Checked:** 2026-11-02, at commit `07febda2`. These files are the same as on `main` at `10834d30`. The release still runs its deletes in one `psql -c` call, the check delivery still records each check row in its own transaction, and the foreign key still has no delete action. Nobody ran a controlled reproduction.
 - **Category:** Test.
@@ -11,7 +11,7 @@
 
 - **Terms:**
   - **Recorded installation:** The GitHub App installation with GitHub id 1 that the recorded GitHub double replays for every account. The app browser suite shares it between tests.
-  - **Release:** `releaseRecordedGitHub` in `ts/app/src/_tests_/database-fixture.ts`. It deletes the recorded installation and what it holds, so that the next walk can install it again.
+  - **Release:** `releaseRecordedGitHub` in `apps/app/src/_tests_/database-fixture.ts`. It deletes the recorded installation and what it holds, so that the next walk can install it again.
   - **Check delivery:** The background loop of the API that runs the check batches every five seconds. A publication batch claims pending rows of `publication_events`, creates the check on GitHub, and then records it as a row of `github_check_runs`.
 - **Background:** The list below gives facts from the code.
   - `installApp` at `harness.ts:233-239` calls the release first. `installThroughApi` at `harness.ts:252` does the same, and `onboarding.spec.ts`, `connect.spec.ts` and `settings/github-accounts.spec.ts` call it directly five times.

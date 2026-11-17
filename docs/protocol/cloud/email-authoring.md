@@ -37,8 +37,8 @@ in names and links outside HTML.
 `<kind>` is `sign-in` or `invitation`. The committed copies live in
 `crates/mkc-email-templates/templates/` and are excluded from Prettier as
 generated output. `cargo xtask email-templates` regenerates them in place;
-`cargo xtask email-templates --check`, verification stage 19 in
-[Repository verification](./repository-verification.md#verification-cargo-xtask-check),
+`cargo xtask email-templates --check`, which the `cloud-emails` suite of
+[CI verification](../ci-verification.md#cloud-suites) runs,
 runs the generator in check mode and rejects a missing, extra or byte-different
 file, naming the regeneration command. Trusted deployment jobs
 [compare these files with Postmark](./email-postmark-sync.md) on every stable

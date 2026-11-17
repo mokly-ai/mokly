@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from an outside-the-scope note of the Milestone 5 review TODO in the deleted `plans/require-the-installation.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `ts/app/src/_tests_/onboarding.spec.ts:317-330`.
+- **Location:** `apps/app/src/_tests_/onboarding.spec.ts:317-330`.
 - **Reason:** The test predates PR #69's review scope, so that review left it for a separate branch. The review-fix rule leaves its category to the user.
 - **Checked:** 2026-10-31, at commit `f568853e`. The problem is still open. The repositories route still checks its empty page with `satisfies ApiBody<"listInstallations">`.
 - **Category:** Test.

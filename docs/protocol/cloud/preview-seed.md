@@ -70,7 +70,7 @@ The objects of one run live in the folder `seed/<run>/` under the API's
 object prefix: `pr-N/seed/<run>/` in the preview bucket, and the same folder
 under `MKC_FILE_STORE_ROOT` locally. The folder sits beside the content
 store's `sha256/` names, and
-[blob listing](./persistence-boundaries.md#object-prefixes) ignores it. The
+[blob listing](./persistence-publication-storage.md#object-prefixes) ignores it. The
 seed never lists the folder.
 
 | Object                                              | Writer      | Content                                                          |

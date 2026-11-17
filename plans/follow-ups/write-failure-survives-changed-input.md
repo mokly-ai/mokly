@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Likelihood:** Common. **Effort:** Large (estimate). **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from Milestone 12N of the deleted `plans/mokly-cloud-follow-ups.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `ts/app/src/settings/write.ts:117-122`, `:145` and `:175-177`, `ts/app/src/settings/panes/account-pane.tsx:75-89`, `ts/app/src/_tests_/settings/undoable-writes.ts` and `ts/app/src/_tests_/settings/writes.spec.ts:7-43`.
+- **Location:** `apps/app/src/settings/write.ts:117-122`, `:145` and `:175-177`, `apps/app/src/settings/panes/account-pane.tsx:75-89`, `apps/app/src/_tests_/settings/undoable-writes.ts` and `apps/app/src/_tests_/settings/writes.spec.ts:7-43`.
 - **Reason:** The legacy backlog recorded it on 2026-09-18 for a later UI change, and its wider fix is Large.
 - **Checked:** 2026-10-31, at commit `f568853e`. The bug is still open. `failureAfterInput` still keeps a failure while `sendable` stays true, so a changed valid input keeps the old failure.
 - **Category:** Product bug.
@@ -21,10 +21,10 @@
     - A key on the whole input clears the failure at the first change of that input. That is close to the left-out option. So B must also say when the failure leaves: at the first change of the sent value, or at the next attempt.
 - **Left out:** Clear every failure on any keystroke. The reader then loses the cause while they correct it.
 - **Wider fix:** B. One rule in `write.ts` replaces every local workaround.
-- **Previous examples:** `ts/app/src/screens/account/cli-form-screen.tsx:95-100` and `ts/app/src/screens/account/choose-repository-screen.tsx:97-113`.
+- **Previous examples:** `apps/app/src/screens/account/cli-form-screen.tsx:95-100` and `apps/app/src/screens/account/choose-repository-screen.tsx:97-113`.
 - **Related:** The list below gives the links.
   - `plans/follow-ups/cli-form-create-project-lacks-undo-row.md` adds a row to the same `undoable-writes.ts` table.
-  - The confirmation rows in `ts/app/src/_tests_/settings/undoable-writes.ts:255-291` assert the undo rule that this fix changes. `writes.spec.ts:13-41` runs them.
+  - The confirmation rows in `apps/app/src/_tests_/settings/undoable-writes.ts:255-291` assert the undo rule that this fix changes. `writes.spec.ts:13-41` runs them.
 - **Recommendation:** B. It fixes the property where it lives.
 - **Action:** ask the user, because condition 3 holds: B changes the `useWrite` calls in 25 files, which is Large. No requirement says when a failure leaves after its input changes to another valid value.
 

@@ -72,7 +72,7 @@ An index read that fails shows the failed-index card of
 ## Changes Count
 
 The receiver counts Changes under the
-[Changes count](https://github.com/mokly-ai/mokly/blob/v0.19.0/docs/protocol/mokly-catalogue-changes.md#changes-count)
+[Changes count](../mokly-catalogue-changes.md#changes-count)
 of the released `mokly-catalogue-changes.md`, so the check and the viewer's
 Changes list agree. A record counts when its `changes.status` is `ready` and its
 `changes.included` is true. Current screens, pages, documents,

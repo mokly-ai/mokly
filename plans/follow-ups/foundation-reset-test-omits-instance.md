@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from review 1 finding 1 of the reset fix in [PR #55](https://github.com/mokly-ai/mokly-cloud/pull/55), which the deleted `plans/foundation-terraform-from-ci.md` kept open, on the branch `calummoore/plans-skill-update`.
-- **Location:** `infra/tests/test_rollout.py:120`, `infra/tests/test_rollout.py:169-182`, `infra/scripts/rollout.sh:63-79` and `docs/protocol/infrastructure-promotion.md:66-80`.
+- **Location:** `infra/tests/test_rollout.py:120`, `infra/tests/test_rollout.py:169-182`, `infra/scripts/rollout.sh:63-79` and `docs/protocol/cloud/infrastructure-promotion.md:66-80`.
 - **Reason:** The review left this missing-test finding for the user, and PR #55 merged on 2026-10-26 without an answer.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The tests still reset `main-preview` only and do not assert `--instance`. The script targets the right instance today.
 - **Category:** Test (estimate).
@@ -16,7 +16,7 @@
   - It then lists, deletes and creates the `mokly` database with `gcloud sql databases` commands that pass `--instance="$instance"`.
   - On 2026-10-25 the user chose to remove the instance condition from the reset role bindings. IAM conditions do not apply to Cloud SQL database operations, so that condition denied every reset. PR #55 merged the change on 2026-10-26.
   - Each reset account can now list, create and delete databases on both stable instances. Only `rollout.sh` selects the instance.
-  - `docs/protocol/infrastructure-promotion.md:68-69` requires that a reset recreates only the database of the environment that it resets.
+  - `docs/protocol/cloud/infrastructure-promotion.md:68-69` requires that a reset recreates only the database of the environment that it resets.
 - **Problem:** `infra/tests/test_rollout.py` runs the reset for `main-preview` only, at line 120. It checks the order of the database calls and the impersonated account, but not the `--instance` value. A change that names a fixed or wrong instance passes every test.
 - **Impact if no action:** A wrong instance in `rollout.sh` can delete the production database during a `main-preview` reset, and no test fails first.
 - **Root question:** How do the tests prove that a reset recreates only the database of the environment that it resets?

@@ -177,7 +177,7 @@ silently. Refreshing a branch/PR alias may select a newer ready publication,
 but refreshing a publication URL never does. Failed uploads do not replace
 the latest ready publication. An unpublished branch uses the reference stage
 that [Viewer builds](./viewer-builds.md#references-without-a-ready-publication) defines.
-A [build check](./changes-check.md#build-checks) links its build route
+A [build check](./changes-check-builds.md) links its build route
 instead.
 
 ## Navigation Shell

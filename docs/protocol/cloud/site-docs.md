@@ -31,7 +31,7 @@ search all follow that list, and a disagreement between any of them fails the
 build.
 
 Package guide authoring and packaging follow the installed
-[`mokly-guides.md`](https://github.com/mokly-ai/mokly/blob/main/docs/protocol/mokly-guides.md)
+[`mokly-guides.md`](../mokly-guides.md)
 contract. This repository validates that boundary and does not restate or
 rewrite package-owned prose. The package decides its guide inventory, titles
 and order; the site renders every guide the installed release supplies. The

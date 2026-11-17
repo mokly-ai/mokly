@@ -3,14 +3,14 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-06, from Milestone 7 of `plans/loading-states-match-content.md`, on the branch `calummoore/skeleton-sizing-mismatch`.
-- **Location:** `ts/app/README.md`.
-- **Reason:** The file already had 445 lines on `origin/main`, so its split is not part of the loading-states change that grew it.
+- **Location:** `apps/app/README.md`.
+- **Reason:** The file already had 445 lines on `main` of the old cloud repository, so its split is not part of the loading-states change that grew it.
 - **Category:** Repository rule.
 
 - **Terms:**
   - **App README:** The guide of the `@mokly-cloud/app` package: what it does, its commands, its development rules and its key code.
-- **Background:** The always-on rules ask each file to stay near 200 lines and to be split when it passes 300. `AGENTS.md` lets a file other than Rust pass the target for generated code, large data or cohesion, but asks for a split when it is practical. The app README had 445 lines on `origin/main` at `967ab6c8`. The loading-states change added entries for the new placeholder parts, waits and writes, and the merged tree has 462 lines.
-- **Problem:** The README is about 45% over the split threshold. Its Key Code list and its sections on cloud builds and tests make most of its length.
+- **Background:** The always-on rules ask each file to stay near 200 lines and to be split when it passes 300. The repository `AGENTS.md` caps changed TypeScript and JavaScript files at 300 lines and protocol pages at 250 lines through the gate, and it sets no cap for a README. The app README had 445 lines on `main` of the old cloud repository at `967ab6c8`. The loading-states change added entries for the new placeholder parts, waits and writes, and the merged tree had 462 lines. On 2026-11-17, after the cloud moved into this repository, the README has 472 lines.
+- **Problem:** The README is about 57% over the split threshold. Its Key Code list and its sections on cloud builds and tests make most of its length.
 - **Impact if no action:** A reader who looks for one entry point reads a long file, and each change adds to it.
 - **Root question:** How does the app's guide stay short enough to read?
 - **Options:**

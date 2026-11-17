@@ -107,7 +107,7 @@ move the complete stack when the default ports are busy. Rebuild after
 changing ports because Expo bakes the API origin into the export.
 
 Installs that never run Electron set `ELECTRON_SKIP_BINARY_DOWNLOAD=1`.
-The desktop CI partition caches the Electron download. The app image's build
+The desktop CI job caches the Electron download. The app image's build
 context excludes the desktop bundle, release output and test runtime.
 
 ### Releases
@@ -121,7 +121,7 @@ at the freedesktop sizes from 16 to 512 px and the 1024 px master. macOS
 packages the master, and electron-builder derives the `icns` sizes from it.
 Linux packages the whole set.
 After a change to the SVG, run `npm run icon:build --workspace @mokly-cloud/desktop`
-from `ts/`. A logic test rejects a PNG that differs from its source.
+from the repository root. A logic test rejects a PNG that differs from its source.
 
 Pull requests that change package inputs build for main-preview without release
 credentials or publishing. The macOS package uses an ad-hoc signature with

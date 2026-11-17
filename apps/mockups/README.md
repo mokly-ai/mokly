@@ -64,8 +64,8 @@ The email scripts render the sign-in and invitation definitions into six
 committed Postmark files under `crates/mkc-email-templates/templates/`.
 The shared email style table converts `rem` lengths to equivalent pixels at a
 16px root before rendering catalogue screens, inline styles, and overrides.
-The check compares them byte for byte and is also stage 19 of
-`cargo xtask check`.
+The check compares them byte for byte and also runs in the `cloud-emails`
+suite of `cargo xtask check`.
 The [Postmark sync contract](../../docs/protocol/cloud/email-postmark-sync.md)
 describes deployment to the stable servers.
 
@@ -86,7 +86,8 @@ npm run emails:check
 npm run emails:test
 ```
 
-CI installs Chromium with `--with-deps` on Ubuntu before the mockup stage.
+CI installs Chromium with `--with-deps` on Ubuntu before the `cloud-mockups`
+suite.
 
 ## Development
 

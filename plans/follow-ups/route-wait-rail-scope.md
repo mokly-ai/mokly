@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-06, from the check of finding 83 of the round 2 review of `calummoore/skeleton-sizing-mismatch` (`plans/loading-states-match-content.md`).
-- **Location:** `ts/app/src/settings/route-wait.tsx` (the rail of the wide durable route's wait) and `docs/protocol/settings-dialog-states.md:12`.
+- **Location:** `apps/app/src/settings/route-wait.tsx` (the rail of the wide durable route's wait) and `docs/protocol/cloud/settings-dialog-states.md:12`.
 - **Reason:** The protocol is silent on which address the wide route's wait reads, so the user decides which side is right.
 - **Category:** Docs or spec.
 

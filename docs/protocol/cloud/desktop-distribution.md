@@ -85,10 +85,10 @@ reads `DESKTOP_RELEASES_TOKEN` as `GH_TOKEN`.
 
 ## Verification
 
-`cargo xtask check` runs stage 25, `desktop`: the npm workspace's logic tests,
-the export it bundles and its Electron smoke test, in the hosted
-`desktop-check` partition. Stage 13 already typechecks the npm workspace, stage
-11 lints it and stage 10 formats it.
+The `cloud-desktop` suite of `cargo xtask check` runs the logic tests of the
+desktop project, the export it bundles and its Electron smoke test. The
+`cloud-typecheck` suite typechecks the project, and the Repository suite lints
+and formats it.
 
 - Logic tests (`src/_tests_/*.test.ts`, `node:test` through `tsx`) cover the
   scheme-address validator, the navigation policy with its rewrite and site

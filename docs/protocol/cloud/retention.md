@@ -75,7 +75,7 @@ that share a hash use one object within a project but keep path-specific MIME
 in their individual index rows; the same hash in another project has a
 separate row, incarnation and object. Every reservation, explicit release and
 parent cascade follows the
-[canonical blob lock order](./persistence-boundaries.md#canonical-blob-lock-order).
+[canonical blob lock order](./persistence-publication-storage.md#canonical-blob-lock-order).
 
 A ready transition requires every referenced blob to carry the durability
 marker that [Blob durability](./publication-blob-durability.md) defines.

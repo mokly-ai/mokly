@@ -49,7 +49,7 @@ Build completion locks its project, build through its grant, grant and
 completion publications before authorization and any publication write.
 This includes the ready winner that a replay can attach. Consumption reuses
 those locks through commit, under the
-[persistence lock order](../../docs/protocol/cloud/persistence-boundaries.md#build-and-publication-lock-order).
+[persistence lock order](../../docs/protocol/cloud/persistence-publication-storage.md#build-and-publication-lock-order).
 [Publication ingest](../../docs/protocol/cloud/publication-ingest.md) and
 [blob durability](../../docs/protocol/cloud/publication-blob-durability.md) hold the
 requirements.

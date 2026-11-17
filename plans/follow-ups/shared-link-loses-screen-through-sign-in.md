@@ -3,7 +3,7 @@
 - **Severity:** Medium (estimate). **Likelihood:** Common. **Effort:** Medium (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from the signed-out return defect that Milestone 8 of the deleted `plans/mokly-dependencies-upgrade.md` recorded for a separate plan, on the branch `calummoore/plans-skill-update`.
-- **Location:** `ts/app/app/sign-in.tsx:11-19`, `ts/app/app/sign-up.tsx:11-19`, `ts/app/app/auth/email.tsx:11-21`, `ts/app/src/screens/account/entry-screen.tsx:54-74` and `:101-105`, `ts/app/src/navigation/address.ts:84-107` and `ts/app/src/navigation/return-to.ts:92-104`.
+- **Location:** `apps/app/app/sign-in.tsx:11-19`, `apps/app/app/sign-up.tsx:11-19`, `apps/app/app/auth/email.tsx:11-21`, `apps/app/src/screens/account/entry-screen.tsx:54-74` and `:101-105`, `apps/app/src/navigation/address.ts:84-107` and `apps/app/src/navigation/return-to.ts:92-104`.
 - **Reason:** The pull request with the fix, PR #37, closed unmerged on 2026-10-30, and no recorded decision says whether its fix lands.
 - **Checked:** 2026-10-31, at commit `f568853e`. Partly confirmed. The sign-in and sign-up switch link still drops `returnTo`. The automatic return defect is not verified. The entry routes read the live address, not a one-time copy.
 - **Category:** Product bug.
@@ -23,7 +23,7 @@
   - **A.** Reproduce the full chain at the current commit first: shared screen, Sign in, request body, sent page, callback and final screen. Cover email, resend and GitHub. If the automatic return works, narrow this item to the switch link. Do not delete the item, because the switch link gap stays. Effort: Small.
   - **B.** Give the switch link the shared destination, and add one regression test of the full chain. Fix each step that the test shows to lose the destination. The source's B asked the entry routes to read the live address, and they already do. Effort: Medium (estimate).
   - **C.** Re-land the closed PR #37 on today's `main`. It adds a live address store, account-entry links that keep the destination, a native fallback and their tests. Its earlier test results do not prove that today's code needs it. Effort: Large.
-- **Left out:** Send every signed-in reader to `/dashboard`. It breaks the `returnTo` rule in `docs/protocol/product-navigation.md`.
+- **Left out:** Send every signed-in reader to `/dashboard`. It breaks the `returnTo` rule in `docs/protocol/cloud/product-navigation.md`.
 - **Wider fix:** C. One address store gives every account-entry link the live destination.
 - **Previous examples:** The readable addresses work fixed a related loss on 2026-09-23. Encoded query values then changed across authentication returns.
 - **Related:** `plans/follow-ups/pr-39-doc-fixes-still-apply.md`, fix 11, wanted a sentence that names the owner of this defect. This item is now its owner.
@@ -33,7 +33,7 @@
 Facts for the work:
 
 - The closed branch `calummoore/shared-link-sign-in-return` holds the fix at commit `7902db16`.
-- It adds `ts/app/src/_tests_/shared-link-sign-in.spec.ts`, a real-API test of the request body, the sent-screen address, the callback result and the final screen.
+- It adds `apps/app/src/_tests_/shared-link-sign-in.spec.ts`, a real-API test of the request body, the sent-screen address, the callback result and the final screen.
 - Its six browser regressions failed before the fix and passed after it. That result is history. Nobody repeated it at commit `f568853e`.
 
 Source: [the status paragraph](https://github.com/mokly-ai/mokly-cloud/blob/06320e4f484905567fa9e06bea1a87350b59abb3/plans/mokly-dependencies-upgrade.md?plain=1#L1-L12) and [Milestone 8](https://github.com/mokly-ai/mokly-cloud/blob/06320e4f484905567fa9e06bea1a87350b59abb3/plans/mokly-dependencies-upgrade.md?plain=1#L1216-L1240) of the deleted plan.

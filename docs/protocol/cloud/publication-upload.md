@@ -1,6 +1,6 @@
 # Publication Upload
 
-Mokly Cloud adopts the public [upload v3 contract](https://github.com/mokly-ai/mokly/blob/v0.19.0/docs/protocol/mokly-upload.md)
+Mokly Cloud adopts the public [upload v3 contract](../mokly-upload.md)
 from the published `@mokly/mokly` package. The open repository
 owns the wire format; this document defines the cloud receiver's choices where
 it leaves room.

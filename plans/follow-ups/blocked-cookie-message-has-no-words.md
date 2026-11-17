@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-02, from Decision 12 of the Mokly 0.18.0 upgrade on the branch `calummoore/mokly-cli-upgrade`. The Milestone 1 docs agent raised it on 2026-11-01, and an options check added options C and D.
-- **Location:** `docs/protocol/viewer.md`, section "Catalogue Isolation", the app card `ts/app/src/viewer/stage.tsx:252-256`, and the mockups `docs/mockups/src/screens/product/viewer/stage.tsx:170-176`.
+- **Location:** `docs/protocol/cloud/viewer.md`, section "Catalogue Isolation", the app card `apps/app/src/viewer/stage.tsx:234-251`, and the mockups `docs/mockups/src/screens/product/viewer/stage-access.tsx:55-61`.
 - **Reason:** On 2026-11-02 the user deferred the choice, and with it the blocked-cookie part of Decision 5.
 - **Category:** UX wording.
 
@@ -23,7 +23,7 @@
   - **B.** **Open this publication in another browser**, with "This browser blocks the cookie that private publications need." It is false on iPhone and iPad, and it uses a technical term. Effort: Small.
   - **C.** **This publication can’t open in this browser**, with "Open it in Chrome, Edge or Firefox on a computer." It is true everywhere, but it names other products. Effort: Small.
   - **D.** **This publication can’t open in this browser**, with "Allow cross-site cookies in this browser’s settings." It works on iPhone and iPad, but it weakens privacy for every site. Effort: Small.
-- **Left out:** A title with no way forward, because `docs/protocol/product-copy.md` asks an error for a recovery when one exists.
+- **Left out:** A title with no way forward, because `docs/protocol/cloud/product-copy.md` asks an error for a recovery when one exists.
 - **Wider fix:** None. The restore is in `plans/follow-ups/private-catalogues-lose-changes-and-blocked-cookie-access.md`.
 - **Previous examples:** None found.
 - **Related:** `plans/follow-ups/private-comparison-overlay-blocks-current.md`, same code. Both answers change one card in `stage.tsx`.

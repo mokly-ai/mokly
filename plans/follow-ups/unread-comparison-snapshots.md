@@ -50,6 +50,9 @@
     such waste. Its selected generations already miss embedded documents,
     as [embedded-document-closures.md](./embedded-document-closures.md)
     says.
+  - The cloud receiver accepts a generation without a snapshot for each
+    view. It checks only that comparison files sit under the generation
+    root, in `crates/mkc-mokly-contract/src/bundle_validation.rs:104-141`.
 - **Problem:** A build with Changes writes both snapshot sides of every
   view, also of views that offer no comparison.
 - **Impact if no action:** In the example, unread snapshots are 44% of the
@@ -79,8 +82,6 @@
   - [skip-equal-before-snapshots.md](./skip-equal-before-snapshots.md):
     inside comparable entries it still removes equal before documents. The
     two rules work together.
-  - [cloud-without-review-json.md](./cloud-without-review-json.md): Mokly
-    Cloud must accept a generation without a snapshot for each view.
   - [snapshot-resource-copies.md](./snapshot-resource-copies.md): the after
     side also repeats the current resource files.
   - [embedded-document-closures.md](./embedded-document-closures.md): its

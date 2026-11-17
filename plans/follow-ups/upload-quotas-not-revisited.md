@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from the post-merge notes of the deleted `plans/publication-delta-upload.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `docs/protocol/publication-upload-validation.md:17-45`, `crates/mkc-mokly-contract/src/limits.rs:33-78` and `docs/ops/environment.md:313-343`.
+- **Location:** `docs/protocol/cloud/publication-upload-validation.md:17-45`, `crates/mkc-mokly-contract/src/limits.rs:33-78` and `docs/ops/environment.md:313-343`.
 - **Reason:** A change to the quotas changes a requirement, and the plan left the question for after the merge.
 - **Checked:** 2026-10-31, at commit `f568853e`. The decision is still open. The quotas and their memory model are unchanged, and no measurement of real exports or receiver load exists.
 - **Category:** Performance.

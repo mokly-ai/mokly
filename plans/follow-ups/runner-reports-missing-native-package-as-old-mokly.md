@@ -4,7 +4,7 @@
 - **Kind:** Needs decision.
 - **Added:** 2026-11-01, from the planning of the `@mokly/mokly` 0.18.0 upgrade on the branch `calummoore/mokly-cli-upgrade`.
 - **Location:** `crates/mkc-build-sandbox/src/publish.rs:37-40`, `crates/mkc-build-sandbox/src/versions.rs:10-21` and `crates/mkc-publications/src/build_worker/outcome.rs:85-87`.
-- **Reason:** The case exists only after the upgrade to a native Mokly CLI merges, and its fix needs a new stored build cause and new copy, which the user decides.
+- **Reason:** The fix needs a new stored build cause and new copy, which the user decides.
 - **Category:** Product bug.
 
 - **Terms:**
@@ -22,7 +22,7 @@
 - **Options:**
   - **A.** Keep one cause, and change its copy to name both an old version and a broken install. Effort: Small.
   - **B.** Add a stored cause for a CLI that cannot start, chosen when the probe prints `[mokly/cli-invalid]`, with its own copy. It needs a migration of the build cause constraint, an API value and an app message. Effort: Medium.
-  - **C.** Fall back to the cloud's pinned CLI when the repository's CLI cannot start. It hides the broken install and publishes with a version that the repository did not choose. Effort: Medium.
+  - **C.** Fall back to the cloud's fallback CLI when the repository's CLI cannot start. That is the published `@mokly/mokly` at `CLOUD_MOKLY_VERSION`, in `crates/mkc-build-sandbox/src/versions.rs:6`, which the runner uses when a repository has no installed CLI. It hides the broken install and publishes with a version that the repository did not choose. Effort: Medium.
 - **Left out:** Parse the free text after `[mokly/cli-invalid]` to give one message per cause. The text is not a documented interface, so a release can change it.
 - **Wider fix:** B, because a typed cause keeps each failure apart for every reader of the build record.
 - **Previous examples:** None found.

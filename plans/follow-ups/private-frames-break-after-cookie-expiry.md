@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-02, from Decision 10 of the Mokly 0.18.0 upgrade on the branch `calummoore/mokly-cli-upgrade`. The Milestone 1 docs agent raised it on 2026-11-01, and an options check added options D and E.
-- **Location:** `docs/protocol/viewer-host.md`, section "Sources", `ts/app/src/viewer/access.ts:94`, and `crates/mkc-catalogue-server/src/response.rs:180`.
+- **Location:** `docs/protocol/cloud/viewer-host.md`, section "Sources", `apps/app/src/viewer/access.ts:94`, and `crates/mkc-catalogue-server/src/response.rs:180`.
 - **Reason:** On 2026-11-02 the user deferred the choice. `origin/main` had the same limit before the upgrade.
 - **Category:** Product bug.
 
@@ -13,7 +13,7 @@
   - The app renews private access once when a detail read gets 401. `renewCatalogueAccess` in `access.ts` does this without a remount of the viewer.
   - The viewer keeps each entry detail for the life of the page. Each screen frame needs the catalogue cookie.
   - The catalogue server checks project membership on every private request, so removed access ends at once. The 300-second limit matters only after sign-out or for a stolen cookie.
-  - Viewer 0.18.0 sends no event when a frame fails to load. A frame that gets 401 shows "This preview could not be loaded."
+  - The viewer sends no event to its host when a frame fails to load: `packages/viewer/src/shell/frame_mount_hook.ts:151-158` only sets the frame's error state. A frame that gets 401 shows "This preview could not be loaded."
 - **Problem:** A screen that opens again, or a viewport or colour change, loads new frames without a detail read. After 300 seconds those frames get 401, and nothing renews the cookie.
 - **Impact if no action:** A reader who stays more than five minutes on a private publication sees broken screens until they reload the page.
 - **Root question:** How does a reader keep reading a private publication for as long as the page stays open?
@@ -26,7 +26,7 @@
 - **Left out:**
   - Renew and remount after a frame error, because the viewer reports no frame error.
   - A service worker, because a worker on the app's address never sees the catalogue's frame loads.
-  - An upstream frame-failure event, because D is better on every point.
+  - A frame-failure event of `@mokly/viewer`, because D is better on every point.
   - A token in frame addresses, because tokens never go in URLs.
 - **Wider fix:** E, because no read meets an expired cookie while the session lives.
 - **Previous examples:** None found.

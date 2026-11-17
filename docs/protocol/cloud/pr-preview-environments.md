@@ -164,7 +164,7 @@ on the bucket, and GCS cannot restrict listing by `resource.name` to a prefix.
 PR workloads get no bucket-wide list grant; no GC/listing job is scheduled.
 Deploy performs cleanup with its bucket-scoped admin grant. Library listing
 still supports prefixes for other authorized callers, as specified in
-[Persistence boundaries](./persistence-boundaries.md#object-prefixes).
+[Publication storage](./persistence-publication-storage.md#object-prefixes).
 See [GCS conditional access](https://docs.cloud.google.com/storage/docs/access-control/iam).
 
 The shared bucket uses uniform access, public-access prevention, no versioning

@@ -9,7 +9,7 @@
 
 - **Terms:**
   - **Project trigger:** The viewer bar's control that names the workspace and the project and opens the projects panel.
-- **Background:** `docs/protocol/viewer-chrome.md` says that the project trigger uses the workspace display name when its authorized read succeeds, and the readable slug while that optional read is pending or unavailable. The drawing `product/viewer/standalone/workspace-unreadable` draws the stage after that workspace read failed.
+- **Background:** `docs/protocol/cloud/viewer-chrome.md` says that the project trigger uses the workspace display name when its authorized read succeeds, and the readable slug while that optional read is pending or unavailable. The drawing `product/viewer/standalone/workspace-unreadable` draws the stage after that workspace read failed.
 - **Problem:** The drawing's project trigger shows the workspace display name, which the failed read could not supply. It should show the workspace slug.
 - **Impact if no action:** The catalogue draws a label that the app cannot have, so the drawing and the app disagree.
 - **Root question:** What does the project trigger say after the workspace read failed?

@@ -11,8 +11,8 @@ server.
 `npm run emails:build` renders the standalone HTML document, subject and
 plain-text alternative from the same email components as the catalogue.
 `npm run emails:check` compares every committed file byte-for-byte and rejects
-missing, extra or changed files. `cargo xtask email-templates --check` is
-stage 19 of `cargo xtask check`. The HTML and text keep their final newline;
+missing, extra or changed files. The `cloud-emails` suite of
+`cargo xtask check` runs `cargo xtask email-templates --check`. The HTML and text keep their final newline;
 the Postmark `Subject` field omits only the generated subject file's final
 newline. The generated files are excluded from Prettier so formatting cannot
 change delivery bytes.

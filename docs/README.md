@@ -1,7 +1,23 @@
 # Docs
 
-This directory holds the architecture doc, the protocol docs, the design
-mockups, and the operational runbooks for Mokly Cloud.
+This directory holds the docs of Mokly and of Mokly Cloud.
+[Repository layout](./protocol/repository-layout.md) defines the paths of both
+parts.
+
+For Mokly:
+
+- [Protocol docs](./protocol/README.md) — the specification of the Rust core,
+  the render sidecar, the Browse shell, and the release and verification
+  tooling.
+- [Rust core](./architecture/rust-core.md) and
+  [package boundary](./architecture/package-boundary.md) — the architecture of
+  Mokly and the boundary between Mokly and each consumer.
+- [Developer guide](./development/README.md) — the tools and the commands for
+  work on Mokly.
+- `guides/` — the user guides that ship with `@mokly/mokly`.
+
+For Mokly Cloud, the architecture doc, the protocol docs, the design mockups,
+and the operational runbooks:
 
 - [Architecture](./architecture/cloud.md) — the components, their responsibilities,
   the boundaries between them, and the data flows across those boundaries.

@@ -200,7 +200,8 @@ by the navigation rule above.
 ## Distribution And Verification
 
 [Desktop distribution and verification](./desktop-distribution.md) defines
-packaging, the public update feed, release secrets and stage 25's tests.
+packaging, the public update feed, release secrets and the tests of the
+`cloud-desktop` suite.
 
 ## Local Mode
 

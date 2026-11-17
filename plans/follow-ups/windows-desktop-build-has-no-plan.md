@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from the post-merge tasks of the deleted `plans/desktop-app-shell.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `.github/workflows/desktop-release.yml:35-39` and `:111-116`, `ts/desktop`, `docs/protocol/desktop-app.md:3-17` and `docs/protocol/desktop-distribution.md:18-22`.
+- **Location:** `.github/workflows/desktop-release.yml:35-39` and `:111-116`, `apps/desktop`, `docs/protocol/cloud/desktop-app.md:3-17` and `docs/protocol/cloud/desktop-distribution.md:18-22`.
 - **Reason:** The desktop shell chose macOS and Linux first, and the plan for Windows closed unmerged without a recorded decision.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. Both release matrices still build macOS and Linux only, as the desktop contract allows.
 - **Category:** Process.
@@ -15,7 +15,7 @@
   - The `windows-2025` runner in the release workflow.
   - Authenticode signing through Azure Artifact Signing with a federated credential.
   - The Windows path of the updater, the Windows behaviours of the shell, and portable build and packaging scripts.
-  - Two open decisions: the signing provider and the application icon. `docs/protocol/desktop-distribution.md:18-22` now chooses the icon artwork, so only its Windows format remains, which is an implementation detail.
+  - Two open decisions: the signing provider and the application icon. `docs/protocol/cloud/desktop-distribution.md:18-22` now chooses the icon artwork, so only its Windows format remains, which is an implementation detail.
   - The closure of PR #53 does not show that the user rejected Windows.
 - **Problem:** Windows users cannot install the shell, and no plan says whether or when they can.
 - **Impact if no action:** The desktop app reaches only macOS and Linux users.

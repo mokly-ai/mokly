@@ -127,7 +127,7 @@ for query-only fork eligibility. Ingest resolves grants by digest and consumes
 them with their ready publication in one transaction. Completion calls
 `BuildUploadGrants::lock_build_grant` before authorization or publication writes.
 The query locks the project, build, grant and completion publications in the
-[persistence order](../../docs/protocol/cloud/persistence-boundaries.md#build-and-publication-lock-order).
+[persistence order](../../docs/protocol/cloud/persistence-publication-storage.md#build-and-publication-lock-order).
 Consumption keeps those locks through the ready commit. Outcome writes preserve
 the documented ranking across concurrent requests.
 

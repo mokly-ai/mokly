@@ -4,7 +4,7 @@
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #217 and its completed plan, which put the
   gap outside the scope of its review.
-- **Location:** `docs/protocol/mokly-upload-validation.md:20`.
+- **Location:** `docs/protocol/mokly-upload-validation.md:22`.
 - **Reason:** The rejection table predates PR #217, and the review found the
   gap outside the diff of that change.
 
@@ -30,10 +30,14 @@
   - The CLI maps a receiver's status by value alone. A 426 answer stops the
     exchange without a retry and prints "The catalogue service does not
     support this Mokly version. Update the service and try again."
-  - `docs/protocol/mokly-upload-validation.md:20` gives 426 for an
+  - `docs/protocol/mokly-upload-validation.md:22` gives 426 for an
     unsupported envelope or a present ownership `schemaVersion` other than 3. A malformed archive gets 400 or 422.
-  - Each receiver accepts exactly the index versions that it knows. Mokly
-    Cloud must move its index parser for each new index version.
+  - Each receiver accepts exactly the index versions that it knows. The
+    Mokly Cloud receiver in this repository reads index version 9 only. It
+    answers 426 `upload-unsupported-version` for any other version, in
+    `crates/mkc-mokly-contract/src/index.rs:29-36` and
+    `crates/mkc-mokly-contract/src/error.rs:143`. Its parser moves with
+    each new index version.
   - `docs/protocol/mokly-format-versions.md:77` says that a receiver that
     does not support these versions answers HTTP 426. The inventory at
     line 7 of that page lists the public catalogue index, version 9. So
@@ -77,9 +81,11 @@
   Upload envelope version 3 added the catalogue index to the Plan archive
   on 2026-10-26. The index rule was added to the validation page, but the
   426 row did not change.
-- **Related:** [mokly-cloud-index-v9.md](./mokly-cloud-index-v9.md) moves
-  Mokly Cloud to index version 9. Until it does, a publication of the next
-  release meets exactly this case.
+- **Related:**
+  [unsupported-version-message-blames-service.md](./unsupported-version-message-blames-service.md)
+  asks what the 426 message tells the user. Both items change the 426 rules
+  of `docs/protocol/mokly-upload-validation.md`, so one change can carry
+  both answers.
 - **Recommendation:** D. It states the existing 426 requirement once for
   every versioned Plan file and keeps the CLI's update message.
 - **Action:** fix after merge, apply D, because the row restates the 426

@@ -48,9 +48,10 @@ the API document and the client) prove that the pinned generators still
 produce the exact bytes the code consumes. They are not Mokly output trees.
 
 `cargo xtask openapi` regenerates both API files. Never hand-edit either file.
-Stage 17 regenerates both and rejects any difference from the committed bytes.
-Checking only the client is rejected because a stale document would remain
-undetected. Stage 18 continues to check the contract fixtures' exact bytes.
+The `cloud-openapi` suite regenerates both and rejects any difference from the
+committed bytes. Checking only the client is rejected because a stale document
+would remain undetected. The `cloud-fixtures` suite continues to check the
+contract fixtures' exact bytes.
 
 The fixture generator and the publish smoke commit only sources in their own
 temporary Git repositories. Their builds write into directories

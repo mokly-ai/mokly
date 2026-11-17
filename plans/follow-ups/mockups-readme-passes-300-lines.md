@@ -3,10 +3,11 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, found while the closed [PR #70](https://github.com/mokly-ai/mokly-cloud/pull/70) edited the file, outside its scope.
-- **Location:** `docs/mockups/README.md:195-262`, the Key Code section, and the doc comments of the code files that it names. Option D also covers `docs/mockups/README.md:125-142` and `:155-172`.
+- **Location:** `docs/mockups/README.md:195-268`, the Key Code section, and the doc comments of the code files that it names. Option D also covers `docs/mockups/README.md:125-142` and `:155-172`.
 - **Reason:** The user's approval of 2026-11-03 applied option A and kept B and C for the user, and the later options D and E each include B.
 - **Checked:** 2026-11-04, after option A and the merge of the overlay changes from `main` at `b2b30715`. The README has 290 lines. Its Key Code section at lines 195-262 still holds long entries of mechanics.
 - **Checked:** 2026-11-06, after the merge of `origin/main` at `967ab6c8` into `calummoore/skeleton-sizing-mismatch`. The README has 295 lines (291 on `main`). Its Key Code section is at lines 195-268 and still holds long entries of mechanics.
+- **Checked:** 2026-11-17, in this repository after the cloud moved in. The README still has 295 lines, and its Key Code section is still at lines 195-268.
 - **Category:** Repository rule.
 
 - **Terms:**
@@ -27,7 +28,7 @@
   - It also added two short entries for `stage.tsx` and `unpublished-stage.tsx`, which `main` did not list.
   - The README now has 290 physical lines, after the merge kept three new Key Code entries from the overlay change on `main`. That is under the split limit of 300 and over the target of 200.
   - Key Code, lines 195-262, has 66 entries with 16,875 characters. 17 entries pass 300 characters. The longest, for `src/screens/product/viewer/published-viewer.tsx` at line 219, has 1136 characters.
-  - Each entry stays on one source line, because `.prettierrc.json` sets `proseWrap: "preserve"`. So Key Code holds about 55% of the README's characters in 66 lines.
+  - Each entry stays on one source line, because Prettier keeps its default `proseWrap: "preserve"`. The root `.prettierrc.json` does not set it. So Key Code holds about 55% of the README's characters in 66 lines.
   - Key Code names 138 distinct code files and 10 directories. The count takes each backticked name that ends in `.ts`, `.tsx`, `.mjs`, `.js`, `.css` or `.json`.
   - The item recorded 101 code files at `f568853e`. It did not record its counting method, so the two counts may differ in method.
   - An options check on 2026-11-03 sampled the doc comments. 113 of the 118 TypeScript and JavaScript files that Key Code names have a doc comment, and 108 have it in their first 25 lines.
@@ -39,7 +40,7 @@
   - A rough word-overlap check found 36 of the 63 entries with at least 60% of their words in the doc comments of their files.
   - Two passages outside Key Code also have a home elsewhere:
     - The steps under "Add Or Change A Registered Component", lines 125-142, are the twin of the screen steps that moved to the authoring page.
-    - The test harness paragraphs under Commands, lines 155-172, repeat `ts/mockups/README.md` on the strict build comparison, the suite order, the missing base ref and the capture folder.
+    - The test harness paragraphs under Commands, lines 155-172, repeat `apps/mockups/README.md` on the strict build comparison, the suite order, the missing base ref and the capture folder.
     - That README lacks two of their facts: the 390px mobile journey captures and the sorted order of the mismatch list.
   - By the options check's estimate, B leaves about 20 Key Code entries and about 245 README lines. D leaves about 215 lines.
   - No option other than A is applied.
@@ -52,7 +53,7 @@
   - **C.** Do A and B. A is already complete, so the remaining work of C is the work of B. C is now the same choice as B. Effort: Medium.
   - **D.** Do B, and move two more passages that have a home elsewhere. Effort: Medium.
     - Move the steps under "Add Or Change A Registered Component" to the authoring page or to a sibling page.
-    - Replace the test harness paragraphs under Commands, README lines 155-172, with the link to `ts/mockups/README.md`. That README already holds most of their facts. Move the other facts there.
+    - Replace the test harness paragraphs under Commands, README lines 155-172, with the link to `apps/mockups/README.md`. That README already holds most of their facts. Move the other facts there.
     - The README then has about 215 lines.
     - Cost: a wider title or a sibling page, and one more README edit.
   - **E.** Do B, but split Key Code by area. Effort: Medium.
@@ -67,7 +68,7 @@
   - Add a README note that repeats the one-sentence Key Code rule. It copies a rule that the `documentation` skill already holds.
   - Wrap the entries at 80 columns. It moves no fact.
 - **Wider fix:** None. The Key Code rule of the `documentation` skill and the always-on length rules are the wider fix in force. `plans/follow-ups/changed-files-have-no-length-check.md` holds a length check for changed Markdown files. That check is a new gate, so it waits for the user.
-- **Previous examples:** `plans/follow-ups/app-test-files-pass-300-lines.md` records the same class for app test files. Commit [`88668a4b`](https://github.com/mokly-ai/mokly-cloud/commit/88668a4b71a9a1a83d2ce6c4554d1c8c2a553752), from PR #122 merged on 2026-11-04, fixed a case of the same class in `docs/mockups/composition.md` and `ts/mockups/README.md`. It removed repeated mechanics from those guides and kept each fact in its home, mostly a code doc comment.
+- **Previous examples:** `plans/follow-ups/app-test-files-pass-300-lines.md` records the same class for app test files. Commit [`88668a4b`](https://github.com/mokly-ai/mokly-cloud/commit/88668a4b71a9a1a83d2ce6c4554d1c8c2a553752), from PR #122 merged on 2026-11-04, fixed a case of the same class in `docs/mockups/composition.md` and `apps/mockups/README.md`. It removed repeated mechanics from those guides and kept each fact in its home, mostly a code doc comment.
 - **Related:** The list below gives the links.
   - `plans/follow-ups/changed-files-have-no-length-check.md`, shared wider fix. It names this item as a current case of its class.
 - **Recommendation:** D. It moves the README toward the approximate 200-line target. It uses moves like A and leaves about 215 lines against about 245 for B. The recommendation was B before the options check of 2026-11-03.
@@ -90,5 +91,5 @@ History. The list below keeps the earlier record of this item.
 
 Checks for the work:
 
-- Run `cargo xtask markdown-links`, `cargo xtask prettier` and `cargo xtask whitespace`.
-- B, C, D and E also edit code doc comments, so run `cargo xtask mockups` and `cargo xtask eslint`.
+- Run `npm test -- tests/markdown_links.test.ts`, `npm run format:check` and `cargo xtask whitespace`.
+- B, C, D and E also edit code doc comments, so run `cargo xtask check --suite cloud-mockups` and `npm run lint`.

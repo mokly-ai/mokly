@@ -3,7 +3,7 @@
 - **Severity:** Medium (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-30, from finding 2 of the `ea1ea2a8` review in the deleted `plans/cloud-builds.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `plans/`, for the new plan. The rules it changes are in `docs/protocol/viewer-address-state.md` and `docs/protocol/cloud-builds.md`.
+- **Location:** `plans/`, for the new plan. The rules it changes are in `docs/protocol/cloud/viewer-address-state.md` and `docs/protocol/cloud/cloud-builds.md`.
 - **Reason:** On 2026-10-20 the user approved that this finding gets its own plan, and that plan was never written on `main`.
 - **Checked:** 2026-10-31, at commit `f568853e`. The problem is still open. The branch alias still follows the creation order of ready publications, and no commit-order plan exists.
 

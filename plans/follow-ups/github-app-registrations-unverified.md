@@ -20,7 +20,7 @@
 - **Task:** For the App of `main-preview` and for the production App `mokly-ai`, do the steps below.
   - Compare the callback, setup and webhook URLs with the table, and correct each one that differs.
   - Confirm that Redirect on update is enabled with the setup URL, or enable it.
-  - Compare the permissions and events with `docs/protocol/github-app.md`.
+  - Compare the permissions and events with `docs/protocol/cloud/github-app.md`.
   - Record the date and the result in `docs/ops/github-app-smoke.md`.
 - **Impact if no action:** If Redirect on update is off, Configure on GitHub does not return to Mokly. A wrong callback or webhook URL would break sign-in, installs or check delivery.
 - **Needs:** Owner access to both GitHub App registrations.

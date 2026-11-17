@@ -151,5 +151,5 @@ check compares the documented and the rendered settings in both directions.
 - [Billing](../../docs/protocol/cloud/billing.md)
 - [Catalogue hosting](../../docs/protocol/cloud/catalogue-hosting.md)
 - [REST trusted proxies](../../docs/protocol/cloud/rest-proxies.md)
-- [Persistence boundaries](../../docs/protocol/cloud/persistence-boundaries.md#object-prefixes) — object prefixes.
+- [Publication storage](../../docs/protocol/cloud/persistence-publication-storage.md#object-prefixes) — object prefixes.
 - [Architecture](../../docs/architecture/cloud.md) — the components, their boundaries, and the data flows this crate takes part in.

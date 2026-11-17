@@ -14,7 +14,7 @@
   - **Import:** A `terraform import` command, which records an object that already exists in the cloud in the Terraform state.
 - **Background:**
   - On 2026-10-21 the user chose the timing of foundation imports. An operator imports an object only after the change that declares it is approved. Then the operator merges that change at once and holds other merges.
-  - `docs/protocol/foundation-promotion.md:149-158` records that decision. Terraform `import` blocks in the change were rejected, because imports are rare and each import is coordinated with its merge.
+  - `docs/protocol/cloud/foundation-promotion.md:149-158` records that decision. Terraform `import` blocks in the change were rejected, because imports are rare and each import is coordinated with its merge.
   - `docs/ops/foundation.md:116-142` gives five steps. Step 2 checks out the change. Step 3 imports each object.
   - Step 4 runs `bash infra/scripts/terraform-foundation.sh plan` on that checkout. The plan must show no create of the imported object and no delete or replacement.
   - Step 5 merges the change. The Foundation run of the merge commit then makes and applies its own plan.

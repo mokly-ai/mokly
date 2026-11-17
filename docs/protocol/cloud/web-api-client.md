@@ -55,7 +55,7 @@ types for backend data and never hand-writes equivalent types.
 The [generator pins](./repository-layout.md#pinned-toolchains) are exact.
 
 Both generated files stay committed. `cargo xtask openapi` regenerates them;
-`cargo xtask openapi --check` and stage 17 `openapi-drift` reject drift in
+`cargo xtask openapi --check` and the `cloud-openapi` suite reject drift in
 either file. Never hand-edit the outputs. The
 [generated-file contract](./repository-generated-files.md) records why both
 outputs are committed and checked.

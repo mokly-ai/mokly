@@ -78,7 +78,7 @@ Every build start rechecks the limit under the same workspace lock. A concurrent
 claim can find no unlocked candidate and return idle; the next poll retries.
 
 Recovery and attempt starts follow the
-[build and publication lock order](./persistence-boundaries.md#build-and-publication-lock-order).
+[build and publication lock order](./persistence-publication-storage.md#build-and-publication-lock-order).
 
 Claims, renewals and upload-grant consumption use current time to decide
 ownership. A lock wait or transaction retry cannot make an expired lease or
@@ -146,4 +146,4 @@ four, clearing the lease; after the fifth attempt the build ends `failed`
 with `infrastructure`. Every transition bumps the check outbox.
 
 Finalization, including infrastructure requeue, follows the
-[build and publication lock order](./persistence-boundaries.md#build-and-publication-lock-order).
+[build and publication lock order](./persistence-publication-storage.md#build-and-publication-lock-order).

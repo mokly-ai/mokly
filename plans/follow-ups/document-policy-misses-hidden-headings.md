@@ -3,14 +3,14 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-04, from Milestone 3 of `plans/loading-states-match-content.md`, on the branch `calummoore/skeleton-sizing-mismatch`, as the wider fix of two hidden headings.
-- **Location:** `docs/mockups/src/_tests_/document-policy.ts` (`documentViolations`, the "one primary heading required" check) and `ts/app/src/_tests_/document-policy.ts`.
+- **Location:** `docs/mockups/src/_tests_/document-policy.ts` (`documentViolations`, the "one primary heading required" check) and `apps/app/src/_tests_/document-policy.ts`.
 - **Reason:** The fix is a stricter check, and the always-on rules leave a new or stricter check to the user.
 - **Category:** Test.
 
 - **Terms:**
   - **Document policy:** The checks that the catalogue's browser tests and the app's browser tests run on every drawn or rendered page, such as one `main` landmark and one `h1`.
-  - **Wait:** What a region draws while a read that it needs runs, as `docs/protocol/folio-chrome.md` defines it.
-- **Background:** `docs/protocol/web-app.md` says that every screen owns one `main` landmark, one `h1` and a skip link. The document policy counts the `h1` elements of a page with `querySelectorAll("h1")`. It does not check that the `h1` is exposed to assistive technology or that it has a name.
+  - **Wait:** What a region draws while a read that it needs runs, as `docs/protocol/cloud/folio-chrome.md` defines it.
+- **Background:** `docs/protocol/cloud/web-app.md` says that every screen owns one `main` landmark, one `h1` and a skip link. The document policy counts the `h1` elements of a page with `querySelectorAll("h1")`. It does not check that the `h1` is exposed to assistive technology or that it has a name.
 - **Problem:** A wait drew its `h1` as a bar hidden from assistive technology twice in the change that found this: the finished project's wait while the project loads, and the viewer's wait while the project loads (`product/viewer/standalone/project-loading`). The policy passed both, because the hidden `h1` still counts as an element.
 - **Impact if no action:** A later wait or screen can hide its only `h1` from screen readers again, and no check fails.
 - **Root question:** How does the policy know that each page has one heading that a screen reader can reach?

@@ -3,37 +3,41 @@
 - **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from the closed [PR #39](https://github.com/mokly-ai/mokly-cloud/pull/39), whose Markdown checks the re-land did not bring back. Updated on 2026-10-30 with the slugger follow-up of the deleted `plans/documentation-skill-alignment.md`.
-- **Location:** `xtask/src/checks/markdown_links.rs:25-96` and `xtask/src/checks/markdown_anchors.rs:1-68`.
+- **Location:** `tests/markdown_links.test.ts:47-72`, the anchor reader, and `:85-133`, the link resolution.
 - **Reason:** Every option that adds a rule adds stricter validation, and the user answers that.
-- **Checked:** 2026-10-31, at commit `f568853e`. The decision is still open. The link check still resolves fragments against headings only and does not reject ignored targets. No current scan of all links ran.
+- **Checked:** 2026-11-17, in this repository after the cloud moved in. The cloud link stage is gone. The Markdown link test of this repository now checks the cloud docs too. It resolves `<a id>` and `<a name>` anchors, still follows GitHub's slug rules only in part, and does not reject ignored targets. No current scan of all links ran.
 - **Category:** Process.
 
 - **Terms:**
-  - **Markdown link check:** `cargo xtask markdown-links`, stage 9 of the gate, which checks that each local link in every Markdown file that Git lists resolves.
+  - **Markdown link check:** `tests/markdown_links.test.ts`, which the Viewer suite of `cargo xtask check` runs once. It checks that each local link in `AGENTS.md`, `docs/`, `plans/`, and every `README.md` resolves. Before the move, the old cloud repository ran `cargo xtask markdown-links`, stage 9 of its gate, over every Markdown file that Git listed.
   - **Fragment:** The `#name` part of a link, which must name a heading anchor of the target document.
   - **Explicit anchor:** An HTML `id` or `name` attribute in a Markdown file that a fragment can target.
 - **Background:** The list below gives the facts.
-  - On 2026-10-12 the user approved four additions to the Markdown link check in PR #39.
+  - On 2026-10-12 the user approved four additions to the Markdown link check of the old cloud repository in PR #39.
   - Fragments resolve with GitHub's heading slugs and explicit anchors. A link to a target that Git ignores fails.
   - Each protocol doc over 250 lines prints a warning. A line that a branch adds under `plans/` fails when it cites a path below `.context/`.
-  - PR #51 then added its own fragment check to `main`. On 2026-10-20 the user chose that check without the 250-line warning, in decision 7 of the deleted [documentation skill alignment plan](https://github.com/mokly-ai/mokly-cloud/blob/06320e4f484905567fa9e06bea1a87350b59abb3/plans/documentation-skill-alignment.md?plain=1#L85-L91).
-  - A scan of 2,593 local links on `main` on 2026-10-30 found no link to an ignored target. It found no fragment that only an explicit anchor resolves, and no slug difference. This scan is history, and no current scan ran.
-- **Problem:** The list below gives what `main` lacks from the four rules.
-  - Fragments resolve against headings only, not explicit anchors.
-  - The slug rules differ from GitHub's in edge cases. Main does not skip a duplicate suffix that another heading produced, drops combining marks, drops image alt text, and joins heading lines with nothing.
+  - PR #51 then added its own fragment check to the old cloud `main`. On 2026-10-20 the user chose that check without the 250-line warning, in decision 7 of the deleted [documentation skill alignment plan](https://github.com/mokly-ai/mokly-cloud/blob/06320e4f484905567fa9e06bea1a87350b59abb3/plans/documentation-skill-alignment.md?plain=1#L85-L91).
+  - A scan of 2,593 local links on the old cloud `main` on 2026-10-30 found no link to an ignored target. It found no fragment that only an explicit anchor resolves, and no slug difference. This scan is history, and no current scan ran.
+  - On 2026-11-17 the cloud moved into this repository, and its link stage went with the old runner. The Markdown link test of this repository took over the cloud docs.
+  - The changed-file length audit of the Repository suite now fails a changed protocol doc over 250 lines, so the 250-line warning has a stricter replacement.
+  - The root lockfile already resolves `github-slugger` 2.0.0, through the Astro packages of `apps/site`.
+- **Problem:** The list below gives what the Markdown link test lacks from the four rules.
+  - Explicit anchors resolve only on `<a>` elements. An `id` on another element is not an anchor for the test.
+  - The slug rules differ from GitHub's in edge cases. The test does not skip a duplicate suffix that another heading produced, drops combining marks, and reads only `#` headings, so an underlined heading gets no anchor.
   - A link target that exists locally passes, also when Git ignores it, so it fails only on a fresh clone.
-  - Neither the 250-line warning nor the plan citation rule exists.
+  - The plan citation rule does not exist.
+  - The test reads fewer files than the old cloud stage. On 2026-11-17 no Markdown file outside its scope held a relative link to a repository file, except fixtures, `CHANGELOG.md`, and the example catalogue notes.
 - **Impact if no action:** The scan of 2026-10-30 found nothing that the missing rules would catch. A future link to an ignored target fails only on a fresh clone.
 - **Root question:** Which link rules must the gate enforce so that every Markdown link resolves on a fresh clone and on GitHub?
 - **Options:**
   - **A.** Change nothing, and delete this item. Effort: Small.
-  - **B.** Port the ignored-target rule into `markdown_links.rs`. Send all local targets to one `git check-ignore -z --stdin` call, and fail an ignored target even when it exists locally. It adds stricter validation. Effort: Medium.
-  - **C.** Do B. Also resolve explicit anchors, and match GitHub's duplicate-suffix and combining-mark rules. It adds stricter validation. Effort: Medium.
-  - **D.** Use a maintained GitHub-compatible slugger for the fragment check. The review of PR #51 proposed it as the follow-up of its finding 5, with Large effort and no earlier example. It adds a dependency. Effort: Large.
+  - **B.** Add the ignored-target rule to `tests/markdown_links.test.ts`. Send all local targets to one `git check-ignore -z --stdin` call, and fail an ignored target even when it exists locally. It adds stricter validation. Effort: Small.
+  - **C.** Do B. Also resolve an `id` on any element, and match GitHub's duplicate-suffix, combining-mark, and underlined-heading rules. It adds stricter validation. Effort: Medium.
+  - **D.** Use a maintained GitHub-compatible slugger, such as `github-slugger`, for the fragment check. The review of PR #51 proposed it as the follow-up of its finding 5. It adds a direct dependency. Effort: Medium.
 - **Left out:** The list below gives the two rules that the options leave out.
-  - The 250-line warning. The user chose the fragment check without it on 2026-10-20. At commit `f568853e`, four protocol docs would warn, from `persistence-boundaries.md` at 310 lines to `desktop-app.md` at 272.
+  - The 250-line warning. The user chose the fragment check without it on 2026-10-20. The changed-file length audit now fails a changed protocol doc over 250 lines.
   - The plan citation rule. The `plans` skill now tells a plan to name its evidence file under `.context/`. The rule rejects that line. On 2026-10-30, 118 plan lines added since 2026-10-15 would have failed it.
 - **Wider fix:** D. One maintained slugger matches GitHub's rules, so no local copy of the rules can drift.
-- **Previous examples:** On the branch `calummoore/untitled-v2` of the closed PR #39, `xtask/src/checks/markdown_check.rs:15-117` holds the four rules, and `docs/protocol/markdown-checks.md` defines them. That branch adds the `regex` and `html-escape` dependencies, and its errors give no line number. Main's `markdown_anchors.rs` has the same name with other signatures, so a port must fit main's layout.
+- **Previous examples:** On the branch `calummoore/untitled-v2` of the closed PR #39 in the old cloud repository, `xtask/src/checks/markdown_check.rs:15-117` holds the four rules, and `docs/protocol/markdown-checks.md` defines them. That branch adds the `regex` and `html-escape` dependencies, and its errors give no line number. That Rust check cannot move here as it is, because this repository checks links in a Node test.
 - **Recommendation:** A. The scan of 2026-10-30 found nothing that the missing rules would catch. Two of the rules conflict with a decision or a rule in force.
 - **Action:** ask the user, because condition 3 holds for B, C and D: each adds stricter validation or a dependency.

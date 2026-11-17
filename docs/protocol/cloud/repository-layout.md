@@ -27,7 +27,7 @@ boundaries, and the data flows between them are in the
 | `docs/api/`                    | Committed `openapi.json` generated from the Rust API contract, and the API guide            |
 | `plans/`                       | Implementation plans, each with its status below its title                                  |
 | `infra/`                       | Terraform, container images, Helm, deployment scripts and infrastructure tests              |
-| `scripts/`                     | Developer scripts that are not part of `xtask`                                              |
+| `scripts/cloud/`               | Cloud developer and smoke scripts that are not part of `xtask`                              |
 | `fixtures/`                    | Shared Rust/API smoke inputs, with ownership and provenance in their README                 |
 | `rules/`                       | ast-grep rules for Rust and the app, with their cases under `rules/_tests_/`                |
 | `.github/workflows/`           | CI, deploy, and preview workflows                                                           |
@@ -68,12 +68,12 @@ The [API contract guide](../../api/README.md) documents regeneration.
 | ingress-nginx chart | 4.15.1                                                                                                            | `infra/toolchains.json` → `ingress_nginx_chart`                                                          |
 | cert-manager chart  | v1.21.2                                                                                                           | `infra/toolchains.json` → `cert_manager_chart`                                                           |
 | Postgres image      | docker.io/library/postgres:16.15-bookworm@sha256:efedf3595f1d6f415c08568ba171029bf54052e754cc9f030e3f2412b21f3d67 | `infra/toolchains.json` → `postgres_image`                                                               |
-| Chromium            | —                                                                                                                 | Installed once at the Playwright version pinned by the TypeScript lockfile                               |
+| Chromium            | —                                                                                                                 | Installed once at the Playwright version pinned by the root npm lockfile                                 |
 | Electron            | 44.11.3                                                                                                           | `apps/desktop/package.json`; bundles Node 24.22.2 and Chromium 152                                       |
 
 CI installs the active toolchains at exactly these versions; local development
 should match them. The table is the source of truth; update matching pin files
-in the same change. The toolchain-pins stage rejects disagreement between the
+in the same change. The `cloud-toolchain-pins` suite rejects disagreement between the
 Rust, Node, npm, tar, Terraform and Helm rows, their pin files and the
 installed tools. The chart and image rows must equal the matching
 `infra/toolchains.json` values, which the preview platform scripts and the
@@ -86,7 +86,7 @@ the same JSON file. The BuildKit runtime and capacity requirements are in
 [Repository verification](./repository-verification.md#image-build-runtime).
 Provider versions and checksums are committed in Terraform dependency locks.
 Chromium is installed at the Playwright version the lockfile pins before the
-mockup, site and app stages run; the
+mockup, site and app suites run; the
 [get started guide](../../development/cloud.md#developer-get-started) gives the
 commands, and CI installs the browser's operating-system libraries too.
 

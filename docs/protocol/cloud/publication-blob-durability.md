@@ -15,7 +15,7 @@ publication
 [becomes ready](./publication-ingest.md#state-and-atomic-visibility) only when
 every blob it references carries one. A confirmation is idempotent and targets
 the exact incarnation;
-[Persistence boundaries](./persistence-boundaries.md#publication-storage)
+[Publication storage](./persistence-publication-storage.md)
 states its outcomes for a confirmed, absent, reincarnated or deleting row.
 
 A marked row lets reservation skip storage without consulting the object.
@@ -39,7 +39,7 @@ created the row first. Decision: the second upload writes too rather than
 waiting for the first, because immutable, conditional puts make both racers
 safe and a crashed reserver cannot leave a permanent hole. Reservation follows
 the
-[canonical blob lock order](./persistence-boundaries.md#canonical-blob-lock-order).
+[canonical blob lock order](./persistence-publication-storage.md#canonical-blob-lock-order).
 
 The writer stores the pending set with a bounded number of parallel workers.
 `MKC_INGEST_WORKERS` defaults to 8; integer values are clamped to 1–32 and a

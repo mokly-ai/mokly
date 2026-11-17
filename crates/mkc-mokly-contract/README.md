@@ -134,7 +134,8 @@ A pin bump regenerates the fixtures and updates the corpus deliberately.
 The CLI failure fixture captures uncommitted-file and refused-upload codes from
 real failed 0.19.0 publish commands in a separate temporary checkout. Its checksum
 is in `checksums.json`. The publications worker tests its typed mappings
-against these observed codes; stage 18 regenerates and rejects byte drift.
+against these observed codes; the `cloud-fixtures` suite regenerates and
+rejects byte drift.
 
 Bump `@mokly/mokly` or `@mokly/viewer` in its own change: read the released
 protocol changes, change the exact pin in every npm workspace `package.json` that

@@ -15,7 +15,7 @@
   - The API process runs the build worker. A deploy or a restart stops the process. Today a running attempt then loses its worker.
   - A new lease lasts two minutes. When the lease expires, recovery treats the lost attempt as an infrastructure failure and counts it against the build's retry budget.
   - The requeue then waits a backoff of 60 to 480 seconds, and the fifth lost attempt fails the build.
-  - `docs/protocol/cloud-build-lifecycle.md:87-97` and `:140-144` state this counting rule.
+  - `docs/protocol/cloud/cloud-build-lifecycle.md:87-97` and `:140-144` state this counting rule.
   - The code registers Ctrl-C only, and the API pod has a 30-second termination grace period.
   - The review of `ea1ea2a8` reported this, and the user moved it to post-merge follow-up.
 - **Problem:** A routine restart uses up an attempt that the build did not fail, and the build waits for the lease to expire.
@@ -28,7 +28,7 @@
 - **Wider fix:** None found.
 - **Previous examples:** None found.
 - **Recommendation:** B. The review recommended it, and the user chose to fix it after the merge.
-- **Action:** fix after merge, apply B, because the user moved the finding to post-merge follow-up. B changes the counting rule of `docs/protocol/cloud-build-lifecycle.md`, and the deferral chose no design. Before the implementation, ask the user to approve a retry-neutral shutdown rule, because condition 1 holds.
+- **Action:** fix after merge, apply B, because the user moved the finding to post-merge follow-up. B changes the counting rule of `docs/protocol/cloud/cloud-build-lifecycle.md`, and the deferral chose no design. Before the implementation, ask the user to approve a retry-neutral shutdown rule, because condition 1 holds.
 
 The plan records the user's choice in Milestone 12 without a day. The review ran after the verification of 2026-10-04, and PR #45 merged on 2026-10-20. Confirm the shutdown signal that the API receives in the Helm chart before you implement B.
 
