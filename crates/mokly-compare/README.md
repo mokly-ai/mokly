@@ -120,21 +120,25 @@ owns the capture budget and its overlap with the render cache. Capture checks
 cancellation before each view and each encoding. Its timing spans contain no
 source data or error payloads.
 
-`compare_prepared` prepares groups of at most `comparison_parallelism` views on
-the base generation's render workers through `schedule_comparison_tasks`. Each
-group keeps its results in comparison-owned slots until the ordered pass takes
-them. A task reads the head side and the base input that
+`compare_prepared` streams the views of all entry pairs, in pairing and view
+order, through the base generation's `schedule_comparison_stream`. Each started
+view keeps its inputs in a comparison-owned slot. At most twice
+`comparison_parallelism().max(1)` views are started and not yet consumed by the
+ordered pass. The calling thread completes each view in entry and view order
+and then releases its inputs. Each completion lets one more view start.
+
+A task reads the head side and the base input that
 `retained_comparison_input` returns. It makes no base source read and no base
 sidecar call. The base capture answers that lookup from its kept views. A kept
 view that fails to restore returns a deferred source read, so classification
 restores it once.
 
 A view with a base route whose input is deferred or not retained gets all
-of its reads in the ordered pass, after every earlier view. The ordered pass
-completes each view in entry and view order. The comparison checks both
-generations for cancellation before each group, each task, and each ordered
-view. Results, warnings, the first error, `resource_work`, and the parsed CSS
-cache counts do not depend on the worker count.
+of its reads in the ordered pass, after every earlier view. An ordered failure
+stops new views, and the comparison waits for the views that already started.
+The comparison checks both generations for cancellation before each task and
+each ordered view. Results, warnings, the first error, `resource_work`, and the
+parsed CSS cache counts do not depend on the worker count.
 
 The [comparison contract](../../docs/protocol/mokly-comparison.md) owns
 materiality, style ownership, resources, and Changes membership. Both sides

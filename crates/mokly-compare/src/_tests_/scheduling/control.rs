@@ -9,6 +9,13 @@ use mokly_graph::workers::ComparisonTask;
 
 #[derive(Default)]
 pub(super) struct Control {
+    pub(super) entry_counts: Option<Vec<usize>>,
+    pub(super) rolling: bool,
+    pub(super) stream_calls: AtomicUsize,
+    pub(super) started: Mutex<Vec<usize>>,
+    pub(super) admitted: Mutex<Vec<usize>>,
+    pub(super) consumed: Mutex<Vec<usize>>,
+    pub(super) window: Mutex<Vec<usize>>,
     pub(super) batches: Mutex<Vec<usize>>,
     pub(super) events: Mutex<Vec<String>>,
     pub(super) artifacts: Mutex<Vec<Weak<Artifact>>>,

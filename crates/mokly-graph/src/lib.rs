@@ -10,6 +10,7 @@ mod cache_transit;
 pub mod closure;
 pub mod collection;
 pub mod comparison_input;
+pub mod comparison_stream;
 pub mod delivery_inputs;
 mod dependency_inputs;
 mod document_annotations;
@@ -34,6 +35,7 @@ pub mod route_inventory;
 pub mod source_snapshot;
 pub mod types;
 pub mod urls;
+mod worker_context;
 pub mod workers;
 
 mod component_keys;

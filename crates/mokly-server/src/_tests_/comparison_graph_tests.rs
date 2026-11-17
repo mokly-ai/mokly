@@ -1,7 +1,7 @@
 //! Public capture rejects changed bytes while using the graph's one digest boundary.
 
 use std::collections::BTreeMap;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
@@ -11,7 +11,6 @@ use mokly_graph::error::GraphError;
 use mokly_graph::types::{
     ComparisonDocument, RenderGeneration, RenderGenerationMock, RenderSummary,
 };
-use mokly_graph::workers::{ComparisonTaskMock, ComparisonWorkerMock};
 use mokly_model::material::digest;
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use unimock::{MockFn, Unimock, matching};
@@ -225,69 +224,4 @@ fn validated_collection_preserves_frozen_document_and_resource_checks() {
     );
     assert!(graph.resource_bytes("static/image.png").is_err());
     assert!(graph.render("sample/index.html").is_err());
-}
-
-#[test]
-fn frozen_schedulers_run_the_supplied_checked_jobs_and_preserve_index_and_capture_order() {
-    let inner: Arc<dyn RenderGeneration> = Arc::new(Unimock::new((
-        RenderGenerationMock::schedule_comparison_tasks
-            .each_call(matching!(_, _))
-            .answers(&|_, count, task| {
-                for index in (0..count).rev() {
-                    task.run(index);
-                }
-            }),
-        RenderGenerationMock::schedule_comparison
-            .each_call(matching!(_, _))
-            .answers(&|_, routes, worker| routes.iter().map(|route| worker.input(route)).collect()),
-        RenderGenerationMock::comparison_document
-            .each_call(matching!(_))
-            .answers(&|_, _| {
-                Ok(Arc::new(Artifact {
-                    bytes: b"accepted".to_vec(),
-                    content_type: "text/html".into(),
-                    document: None,
-                    fragment: None,
-                }))
-            }),
-    )));
-    let graph: Arc<dyn RenderGeneration> = Arc::new(FrozenResources::new(inner));
-    let seen = Arc::new(Mutex::new(Vec::new()));
-    let recorded = seen.clone();
-    let checked = graph.clone();
-    let task = Unimock::new(
-        ComparisonTaskMock::run
-            .each_call(matching!(_))
-            .answers_arc(Arc::new(move |_, index| {
-                let artifact = checked.comparison_document("sample/index.html").unwrap();
-                recorded
-                    .lock()
-                    .unwrap()
-                    .push((index, artifact.bytes.clone()));
-            })),
-    );
-    graph.schedule_comparison_tasks(2, &task);
-    assert_eq!(
-        *seen.lock().unwrap(),
-        [(1, b"accepted".to_vec()), (0, b"accepted".to_vec())]
-    );
-    let checked = graph.clone();
-    let worker = Unimock::new(
-        ComparisonWorkerMock::input
-            .each_call(matching!(_))
-            .answers_arc(Arc::new(move |_, route| {
-                Ok(ComparisonDocument {
-                    artifact: checked.comparison_document(route)?,
-                    closure: Closure::default(),
-                })
-            })),
-    );
-    let results = graph.schedule_comparison(&["sample/index.html".into()], &worker);
-    assert_eq!(
-        results
-            .into_iter()
-            .map(|result| result.unwrap().artifact.bytes.clone())
-            .collect::<Vec<_>>(),
-        [b"accepted".to_vec()]
-    );
 }

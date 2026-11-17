@@ -8,6 +8,7 @@ use mokly_css::dependencies::DirectoryDependency;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::{Closure, GeneratedResources};
 use mokly_graph::collection::ComparisonCollector;
+use mokly_graph::comparison_stream::ComparisonConsumer;
 use mokly_graph::error::{GraphError, InternalError, Result};
 
 use mokly_graph::resource_inputs::ResourceObserver;
@@ -64,6 +65,13 @@ impl GeneratedResources for FrozenResources {
 impl RenderGeneration for FrozenResources {
     fn comparison_parallelism(&self) -> usize {
         self.inner.comparison_parallelism()
+    }
+    fn schedule_comparison_stream(
+        &self,
+        task: &dyn ComparisonTask,
+        consumer: &mut dyn ComparisonConsumer,
+    ) {
+        self.inner.schedule_comparison_stream(task, consumer);
     }
     fn schedule_comparison_tasks(&self, count: usize, task: &dyn ComparisonTask) {
         self.inner.schedule_comparison_tasks(count, task);
@@ -183,3 +191,7 @@ impl ComparisonCollector for CheckedCollector<'_> {
 #[cfg(test)]
 #[path = "_tests_/comparison_graph_tests.rs"]
 mod comparison_graph_tests;
+
+#[cfg(test)]
+#[path = "_tests_/comparison_scheduling_tests.rs"]
+mod comparison_scheduling_tests;

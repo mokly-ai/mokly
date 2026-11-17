@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
+use mokly_graph::comparison_stream::ComparisonConsumer;
 use mokly_graph::error::Result;
 use mokly_graph::types::ComparisonDocument;
 use mokly_graph::workers::{
@@ -22,6 +23,9 @@ pub struct SerialStylesheets {
 
 impl RenderWorkers for SerialStylesheets {
     /// Phase A uses retained base inputs only and never calls the base sidecar.
+    fn comparison_stream(&self, task: &dyn ComparisonTask, consumer: &mut dyn ComparisonConsumer) {
+        self.inner.comparison_stream(task, consumer);
+    }
     fn comparison_tasks(&self, count: usize, task: &dyn ComparisonTask) {
         self.inner.comparison_tasks(count, task);
     }

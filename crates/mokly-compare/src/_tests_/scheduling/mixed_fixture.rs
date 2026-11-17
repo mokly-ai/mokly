@@ -172,10 +172,10 @@ pub(super) fn generation(head: bool, parallel: bool) -> Arc<dyn RenderGeneration
             RenderGenerationMock::comparison_parallelism
                 .each_call(matching!())
                 .answers_arc(Arc::new(move |_| pool.comparison_parallelism())),
-            RenderGenerationMock::schedule_comparison_tasks
+            RenderGenerationMock::schedule_comparison_stream
                 .each_call(matching!(_, _))
-                .answers_arc(Arc::new(move |_, count, task| {
-                    scheduling.comparison_tasks(count, task)
+                .answers_arc(Arc::new(move |_, task, consumer| {
+                    scheduling.comparison_stream(task, consumer)
                 })),
         )))
     } else {

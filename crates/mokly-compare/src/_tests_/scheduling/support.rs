@@ -29,22 +29,44 @@ pub(super) fn source(
     count: usize,
     control: Arc<Control>,
 ) -> Arc<dyn RenderGeneration> {
+    let mut model = catalogue();
+    if let Some(counts) = &control.entry_counts {
+        model.model.entries = counts
+            .iter()
+            .enumerate()
+            .map(|(index, _)| {
+                let mut entry = model.model.entries[0].clone();
+                entry.metadata.path = format!("screen{index}");
+                entry
+            })
+            .collect();
+    }
     let plans = (0..count)
         .map(|index| {
             let route = route(index);
+            let (entry, view) = control.entry_counts.as_ref().map_or((0, index), |counts| {
+                let mut offset = 0;
+                for (entry, count) in counts.iter().enumerate() {
+                    if index < offset + count {
+                        return (entry, index - offset);
+                    }
+                    offset += count;
+                }
+                unreachable!()
+            });
             (
                 route.clone(),
                 DocumentPlan {
                     resource_key: route.clone(),
                     key: key(NodeKind::Document, &[route.as_bytes()]),
                     route,
-                    entry: 0,
-                    viewport: Some(if index < 2 {
+                    entry,
+                    viewport: Some(if view < 2 {
                         Viewport::Mobile
                     } else {
                         Viewport::Desktop
                     }),
-                    color_scheme: if index % 2 == 0 {
+                    color_scheme: if view % 2 == 0 {
                         ColorScheme::Light
                     } else {
                         ColorScheme::Dark
@@ -67,13 +89,13 @@ pub(super) fn source(
     let documents = control.clone();
     let closures = control.clone();
     let resources = control.clone();
-    let scheduling = control.clone();
+    let streaming = control.clone();
     Arc::new(Generation {
         capacity: control.capacity.unwrap_or(2),
         metadata: Unimock::new((
             RenderGenerationMock::catalogue
                 .each_call(matching!())
-                .returns(catalogue()),
+                .returns(model),
             RenderGenerationMock::plans
                 .each_call(matching!())
                 .returns(plans),
@@ -87,10 +109,10 @@ pub(super) fn source(
         }),
         scheduling: (side == 1 && active).then(|| {
             Unimock::new(
-                RenderGenerationMock::schedule_comparison_tasks
+                RenderGenerationMock::schedule_comparison_stream
                     .each_call(matching!(_, _))
-                    .answers_arc(Arc::new(move |_, count, task| {
-                        scheduling.schedule(count, task)
+                    .answers_arc(Arc::new(move |_, task, consumer| {
+                        streaming.stream(task, consumer)
                     })),
             )
         }),

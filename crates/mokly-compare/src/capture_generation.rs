@@ -10,6 +10,7 @@ use mokly_graph::cache::Artifact;
 use mokly_graph::closure::{Closure, GeneratedResources};
 use mokly_graph::collection::ComparisonCollector;
 use mokly_graph::comparison_input::RetainedComparisonInput;
+use mokly_graph::comparison_stream::ComparisonConsumer;
 use mokly_graph::error::Result;
 use mokly_graph::resource_inputs::ResourceObserver;
 use mokly_graph::types::{
@@ -59,6 +60,13 @@ impl GeneratedResources for CapturedGeneration {
 impl RenderGeneration for CapturedGeneration {
     fn comparison_parallelism(&self) -> usize {
         self.source.comparison_parallelism()
+    }
+    fn schedule_comparison_stream(
+        &self,
+        task: &dyn ComparisonTask,
+        consumer: &mut dyn ComparisonConsumer,
+    ) {
+        self.source.schedule_comparison_stream(task, consumer);
     }
     fn schedule_comparison_tasks(&self, count: usize, task: &dyn ComparisonTask) {
         self.source.schedule_comparison_tasks(count, task);

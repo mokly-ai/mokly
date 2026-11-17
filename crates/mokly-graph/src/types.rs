@@ -16,6 +16,7 @@ use crate::cache::Artifact;
 use crate::closure::{Closure, GeneratedResources};
 use crate::collection::ComparisonCollector;
 use crate::comparison_input::RetainedComparisonInput;
+use crate::comparison_stream::{self, ComparisonConsumer};
 use crate::error::Result;
 use crate::key::NodeKey;
 use crate::resource_inputs::ResourceObserver;
@@ -119,6 +120,15 @@ pub trait RenderGeneration: GeneratedResources {
         for index in 0..count {
             task.run(index);
         }
+    }
+    /// Prepare and consume in order. Stop on false and join all admitted work.
+    /// The default prepares one view at a time on the calling thread.
+    fn schedule_comparison_stream(
+        &self,
+        task: &dyn ComparisonTask,
+        consumer: &mut dyn ComparisonConsumer,
+    ) {
+        comparison_stream::sequential(task, consumer);
     }
     /// Schedule a wrapper's own input checks on this generation's workers.
     fn schedule_comparison(

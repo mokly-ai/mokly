@@ -7,6 +7,7 @@ use std::sync::Arc;
 use mokly_css::types::{Bundle, StylesheetRoot};
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
+use mokly_graph::comparison_stream::ComparisonConsumer;
 use mokly_graph::error::{GraphError, Result};
 use mokly_graph::types::ComparisonDocument;
 use mokly_graph::workers::{
@@ -143,6 +144,9 @@ fn check(cancellation: &dyn Cancellation) -> Result<()> {
 
 impl RenderWorkers for CancellableWorkers {
     /// The supplied task checks both generations and stores their own errors.
+    fn comparison_stream(&self, task: &dyn ComparisonTask, consumer: &mut dyn ComparisonConsumer) {
+        self.inner.comparison_stream(task, consumer);
+    }
     fn comparison_tasks(&self, count: usize, task: &dyn ComparisonTask) {
         self.inner.comparison_tasks(count, task);
     }

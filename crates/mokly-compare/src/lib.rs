@@ -64,11 +64,13 @@ mod capture_fallback;
 mod capture_generation;
 mod capture_restore;
 mod capture_styles;
-mod comparison_batch;
 mod comparison_capture;
 mod comparison_consumer;
 mod comparison_error;
+mod comparison_pipeline;
 mod comparison_preparation;
+mod comparison_routes;
+mod comparison_slots;
 
 mod comparison_resources;
 pub mod comparison_steps;

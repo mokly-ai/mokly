@@ -13,8 +13,10 @@ use rayon::prelude::*;
 
 use crate::cache::Artifact;
 use crate::closure::Closure;
+use crate::comparison_stream::{self, ComparisonConsumer};
 use crate::error::{GraphError, InternalError, Result};
 use crate::types::ComparisonDocument;
+use crate::worker_context::WorkerContext;
 
 /// Indexed comparison work with caller-owned results and cancellation checks.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ComparisonTaskMock))]
@@ -105,6 +107,11 @@ pub trait RenderWorkers: Send + Sync {
             task.run(index);
         }
     }
+    /// Prepare and consume in order. Stop on false and join all admitted work.
+    /// The default prepares one view at a time on the calling thread.
+    fn comparison_stream(&self, task: &dyn ComparisonTask, consumer: &mut dyn ComparisonConsumer) {
+        comparison_stream::sequential(task, consumer);
+    }
     /// Existing capacity for bounded comparison batches.
     fn comparison_parallelism(&self) -> usize {
         1
@@ -147,25 +154,6 @@ pub struct ThreadWorkers {
     pool: rayon::ThreadPool,
 }
 
-/// A span and its subscriber must cross the pool boundary together.
-struct WorkerContext {
-    parent: tracing::Span,
-    dispatch: tracing::Dispatch,
-}
-
-impl WorkerContext {
-    fn current() -> Self {
-        Self {
-            parent: tracing::Span::current(),
-            dispatch: tracing::dispatcher::get_default(Clone::clone),
-        }
-    }
-
-    fn in_scope<T>(&self, operation: impl FnOnce() -> T) -> T {
-        tracing::dispatcher::with_default(&self.dispatch, || self.parent.in_scope(operation))
-    }
-}
-
 impl ThreadWorkers {
     /// Start a bounded worker pool; zero is normalized to one.
     pub fn new(count: usize) -> Result<Self> {
@@ -181,6 +169,9 @@ impl ThreadWorkers {
 }
 
 impl RenderWorkers for ThreadWorkers {
+    fn comparison_stream(&self, task: &dyn ComparisonTask, consumer: &mut dyn ComparisonConsumer) {
+        comparison_stream::parallel(&self.pool, task, consumer);
+    }
     fn comparison_tasks(&self, count: usize, task: &dyn ComparisonTask) {
         let context = WorkerContext::current();
         self.pool.install(|| {

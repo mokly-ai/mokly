@@ -15,3 +15,6 @@ mod generation;
 mod restore_tests;
 
 mod inputs;
+
+mod window_control;
+mod window_tests;

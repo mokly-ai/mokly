@@ -63,34 +63,65 @@ fn concurrent_preparation_keeps_one_pool_sized_batch_and_releases_each_ordered_r
 #[test]
 fn cancellation_before_batches_and_ordered_views_keeps_each_generations_own_error_on_retained_hits()
 {
-    for side in [1, 2] {
-        for during in 0..3 {
-            let control = Arc::new(Control {
-                cancellation: AtomicUsize::new(if during == 0 { side } else { 0 }),
-                cancel_after_batch: if during == 1 { side } else { 0 },
-                cancel_in_view: if during == 2 { side } else { 0 },
-                ..Default::default()
-            });
-            let error = compare(
-                captured(source(1, 2, control.clone()), &[0, 1]),
-                source(2, 2, control.clone()),
-            )
-            .unwrap_err();
-            let Error::Graph {
-                source: GraphError::Runtime { source },
-            } = error
-            else {
-                panic!("expected generation cancellation")
-            };
-            assert_eq!(source.code, RuntimeCode::Cancelled);
-            let expected = side;
-            assert_eq!(source.message, format!("cancelled side {expected}"));
-            assert_eq!(
-                *control.batches.lock().unwrap(),
-                if during == 0 { vec![] } else { vec![2] }
-            );
-            assert_eq!(control.cancellation.load(Ordering::SeqCst), expected);
-            assert_eq!(control.live(), 0);
+    for rolling in [false, true] {
+        for side in [1, 2] {
+            for during in 0..3 {
+                let control = Arc::new(Control {
+                    rolling,
+                    entry_counts: rolling.then(|| vec![1, 0, 1, 4]),
+                    cancellation: AtomicUsize::new(if during == 0 { side } else { 0 }),
+                    cancel_after_batch: if during == 1 { side } else { 0 },
+                    cancel_in_view: if during == 2 { side } else { 0 },
+                    ..Default::default()
+                });
+                let count = if rolling { 6 } else { 2 };
+                let error = compare(
+                    captured(
+                        source(1, count, control.clone()),
+                        &(0..count).collect::<Vec<_>>(),
+                    ),
+                    source(2, count, control.clone()),
+                )
+                .unwrap_err();
+                let Error::Graph {
+                    source: GraphError::Runtime { source },
+                } = error
+                else {
+                    panic!("expected generation cancellation")
+                };
+                assert_eq!(source.code, RuntimeCode::Cancelled);
+                let expected = side;
+                assert_eq!(source.message, format!("cancelled side {expected}"));
+                if rolling {
+                    assert_eq!(
+                        *control.admitted.lock().unwrap(),
+                        if during == 0 {
+                            vec![]
+                        } else if during == 1 {
+                            vec![0, 1, 2, 3]
+                        } else {
+                            vec![0, 1, 2, 3, 4]
+                        }
+                    );
+                    assert_eq!(
+                        *control.consumed.lock().unwrap(),
+                        if during == 0 {
+                            vec![]
+                        } else if during == 1 {
+                            vec![0]
+                        } else {
+                            vec![0, 1]
+                        }
+                    );
+                } else {
+                    assert_eq!(
+                        *control.batches.lock().unwrap(),
+                        if during == 0 { vec![] } else { vec![2] }
+                    );
+                }
+                assert_eq!(control.cancellation.load(Ordering::SeqCst), expected);
+                assert_eq!(control.live(), 0);
+            }
         }
     }
 }

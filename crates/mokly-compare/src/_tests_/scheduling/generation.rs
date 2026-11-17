@@ -8,6 +8,7 @@ use mokly_css::dependencies::DirectoryDependency;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::{Closure, GeneratedResources};
 use mokly_graph::collection::ComparisonCollector;
+use mokly_graph::comparison_stream::ComparisonConsumer;
 use mokly_graph::error::Result;
 use mokly_graph::resource_inputs::ResourceObserver;
 use mokly_graph::types::{
@@ -56,11 +57,15 @@ impl RenderGeneration for Generation {
     fn comparison_parallelism(&self) -> usize {
         self.capacity
     }
-    fn schedule_comparison_tasks(&self, count: usize, task: &dyn ComparisonTask) {
+    fn schedule_comparison_stream(
+        &self,
+        task: &dyn ComparisonTask,
+        consumer: &mut dyn ComparisonConsumer,
+    ) {
         self.scheduling
             .as_ref()
             .unwrap()
-            .schedule_comparison_tasks(count, task);
+            .schedule_comparison_stream(task, consumer);
     }
     fn render_all(&self) -> Result<RenderSummary> {
         self.validation.as_ref().unwrap().render_all()

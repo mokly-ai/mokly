@@ -330,6 +330,8 @@ Options evidence: `.context/parallel-compare-views/reports/overlap-options.md`. 
 Evidence and un-applied proposal: `.context/parallel-compare-views/reports/private-read-timing-assessment.md` and `private-read-timing-proposal.patch` in that folder.
 Options evidence: `.context/parallel-compare-views/reports/private-read-options.md`. The concrete patch covers A. C adds the pair-profile check.
 
+Driver implementation evidence: `.context/parallel-compare-views/reports/decision-9c-driver-ready.md`.
+
 Replaced ways: monolithic per-view preparation becomes independent preparation plus one ordered consumer.
 `comparison_views::collect` and the shared closure caller in `rendered_moves.rs` migrate in Milestone 2.
 Milestone 2 removes the replaced monolithic path. No capture API is replaced.
@@ -395,17 +397,21 @@ Depends on: 3
 
 Delegate to the `non-ui implementor`. This revision follows the performance orchestrator's 2026-11-17 measurement.
 
-- [ ] Form one view stream across entry pairs in pairing and view order.
-- [ ] Add and forward the scoped existing-pool scheduling operation. Keep sequential defaults and all existing completion contracts.
-- [ ] Overlap preparation and ordered consumption. Keep at most 2P started and unconsumed views. Refill after each ordered consumption.
-- [ ] Stop new admission on an ordered failure. Join admitted tasks and release per-index completion signals on unwind.
-- [ ] Use sequential execution when the caller is already a worker of this pool.
-- [ ] Release each input after its ordered Phase B. Preserve empty-entry results and each entry's warning and usage ownership.
-- [ ] Add red-first cross-entry and window-bound coverage with a recording worker double. Cover ordered failure stopping admission, task panic, and the pool-worker caller path.
-- [ ] Preserve exact results, warnings, resource/CSS counts, affected lookups, ordered errors across entries, cancellation, retained fallbacks, and span parentage.
-- [ ] Run focused tests and clippy. Run each new asynchronous test ten times and record its cost.
-- [ ] Update the crate READMEs after the scoped API is stable.
+- [x] Form one view stream across entry pairs in pairing and view order.
+- [x] Add and forward the scoped existing-pool scheduling operation. Keep sequential defaults and all existing completion contracts.
+- [x] Overlap preparation and ordered consumption. Keep at most 2P started and unconsumed views. Refill after each ordered consumption.
+- [x] Stop new admission on an ordered failure. Join admitted tasks and release per-index completion signals on unwind.
+- [x] Use sequential execution when the caller is already a worker of this pool.
+- [x] Release each input after its ordered Phase B. Preserve empty-entry results and each entry's warning and usage ownership.
+- [x] Add red-first cross-entry and window-bound coverage with a recording worker double. Cover ordered failure stopping admission, task panic, and the pool-worker caller path.
+- [x] Preserve exact results, warnings, resource/CSS counts, affected lookups, ordered errors across entries, cancellation, retained fallbacks, and span parentage.
+- [x] Run focused tests and clippy. Run each new asynchronous test ten times and record its cost.
+- [x] Update the crate READMEs after the scoped API is stable.
 - [ ] Commit and push the revision. Send its SHA immediately for a new external `mokly-cloud` measurement.
+
+README evidence: `.context/parallel-compare-views/reports/window-docs.md`. The root aligned the normalized capacity and consumption wording with the source.
+
+Source acceptance evidence: `.context/parallel-compare-views/reports/root-window-acceptance.json`, `overlap-source-audit.json`, and `overlap-release.json` in that folder.
 
 ## Milestone 4: Performance evidence
 

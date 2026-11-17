@@ -70,24 +70,33 @@ fn failed_restore_reads_one_source_document_then_head_and_uses_only_the_captured
 
 #[test]
 fn an_unconsumed_failed_restore_neither_logs_nor_reads_its_source() {
-    let control = Arc::new(Control {
-        fail_from: Some(0),
-        has_deferred: true,
-        ..Default::default()
-    });
-    let before = failed(source(1, 2, control.clone()), 1);
-    let after = source(2, 2, control.clone());
-    let error = with_errors(control.clone(), || compare(before, after)).unwrap_err();
-    assert!(
-        matches!(error, Error::Graph { source: GraphError::InputsChanged { path } } if path.to_str() == Some("stage-0"))
-    );
-    let events = control.events.lock().unwrap();
-    assert_eq!(
-        events
-            .iter()
-            .filter(|event| !event.starts_with("complete:"))
-            .cloned()
-            .collect::<Vec<_>>(),
-        ["document:1:0"]
-    );
+    for rolling in [false, true] {
+        let control = Arc::new(Control {
+            rolling,
+            entry_counts: rolling.then(|| vec![1, 0, 1, 4]),
+            fail_from: Some(0),
+            has_deferred: true,
+            ..Default::default()
+        });
+        let before = failed(source(1, if rolling { 6 } else { 2 }, control.clone()), 1);
+        let after = source(2, if rolling { 6 } else { 2 }, control.clone());
+        let error = with_errors(control.clone(), || compare(before, after)).unwrap_err();
+        assert!(
+            matches!(error, Error::Graph { source: GraphError::InputsChanged { path } } if path.to_str() == Some("stage-0"))
+        );
+        let events = control.events.lock().unwrap();
+        assert_eq!(
+            events
+                .iter()
+                .filter(|event| !event.starts_with("complete:"))
+                .cloned()
+                .collect::<Vec<_>>(),
+            ["document:1:0"]
+        );
+        if rolling {
+            assert_eq!(*control.admitted.lock().unwrap(), [0, 1, 2, 3]);
+            assert_eq!(*control.consumed.lock().unwrap(), [0]);
+        }
+        assert_eq!(control.live(), 0);
+    }
 }
