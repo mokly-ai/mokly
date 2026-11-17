@@ -207,6 +207,9 @@
     Its tests are "a preview edit during compilation cannot replace its
     consumed digest" and "an imported manifest restored during compilation
     keeps its consumed digest", in the same file.
+- **Related:** `plans/follow-ups/sequential-evidence-capture-cost.md` measures
+  this capture boundary and can change its schedule. The ranking work of this
+  item must remain possible, and the scheduling measurement must include it.
 - **Recommendation:** D. It closes both windows in process and on disk
   without stamps, keeps the reuse of each coherent compilation, and writes
   no file. E copies no rule, but it adds a dependency and an esbuild run to

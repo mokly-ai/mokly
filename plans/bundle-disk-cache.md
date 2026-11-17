@@ -1776,7 +1776,7 @@ Depends on: 4
 - [x] Share one evidence owner across native, planned, and full attempts.
       Prepare once and finish after the last attempt, under call 30. Prove
       that a lasting inter-attempt change rejects reuse.
-- [ ] Close the transient open-lookup capture window under checked call 30.
+- [x] Close the transient open-lookup capture window under checked call 30.
       Close the cached-listing window for the disk store too. Preserve
       existing reuse assertions on every supported platform.
   - [x] Add `durable` to `ReuseEvidence` and regenerate the TypeScript
@@ -1808,7 +1808,7 @@ Depends on: 4
         agreement with the path stats, and keep the first-touch maturity
         time. Let open, stat, and close errors clear only `durable`. Run each
         new focused test 10 times.
-  - [ ] Prove once that directory stamps change and that the capture's
+  - [x] Prove once that directory stamps change and that the capture's
         device value equals the hint: the path stat device on macOS, and the
         handle stat device of call 31 on Windows. Run the temporary proof
         with its assertions unchanged, on this machine and the macOS 26 and
@@ -1818,21 +1818,21 @@ Depends on: 4
   - [x] Update the protocol pages and the READMEs in the commit of the
         code, after the source names settle and the root authorizes each
         README.
-- [ ] Measure with the method of the brief, interleaved with `origin/main`:
+- [x] Measure with the method of the brief, interleaved with `origin/main`:
       three warm runs, the edit run, and the React fixture. Save the output
       under `.context/bundle-disk-cache/`. Count zero warm compile spans and
       zero esbuild operations on both head and base.
-- [ ] Measure the added evidence-capture cost after an edit and a core
+- [x] Measure the added evidence-capture cost after an edit and a core
       fast-path rebuild. Assess whether the capture scheduling needs a
       change. Keep this as measurement evidence, not a time gate.
-- [ ] Measure the barrier of call 30 with the capture cost: how often it
+- [x] Measure the barrier of call 30 with the capture cost: how often it
       waits, and its total wait on real compiles. Check that the first
       Changes run stores a base entry and that the next run hits it. Add the
       owned-root hint only if base misses remain. Keep this as measurement
       evidence, not a time gate.
-- [ ] Prove once that `mokly build --strict` output with a cache hit is
+- [x] Prove once that `mokly build --strict` output with a cache hit is
       byte-identical to a cold build. Save the proof under `.context/`.
-- [ ] Smoke test: restart Serve on `examples/basic`, open the catalogue, and
+- [x] Smoke test: restart Serve on `examples/basic`, open the catalogue, and
       check a JavaScript screen and its Changes view.
 - [x] Keep retained preview reuse after adding and removing the preview file.
       Apply checked call 28. Preserve the existing two-compile assertion and
@@ -1877,13 +1877,23 @@ Call 31 evidence:
 `.context/bundle-disk-cache/reports/windows-capture.md`, and
 `.context/bundle-disk-cache/reports/windows-capture-docs.md`.
 
+Final measurement and smoke evidence:
+`.context/bundle-disk-cache/after.md`,
+`.context/bundle-disk-cache/reports/milestone-5.md`,
+`.context/bundle-disk-cache/native-proof/handle-final-summary.json`,
+`.context/bundle-disk-cache/logs/native-linux-final-node22.log`,
+`.context/bundle-disk-cache/logs/native-linux-final-node24.log`, and
+`.context/bundle-disk-cache/reports/browser-smoke.md`.
+The capture scheduling assessment is recorded in
+[sequential-evidence-capture-cost.md](./follow-ups/sequential-evidence-capture-cost.md).
+
 ## Milestone 6: Verification, commit, review, and pull request
 
 Depends on: 1, 2, 3, 4, 5
 
-- [ ] Run `cargo xtask check --suite repository` early, then the complete
+- [x] Run `cargo xtask check --suite repository` early, then the complete
       gate `cargo xtask check`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `fix now` findings, record
@@ -1902,6 +1912,12 @@ After the pull request opens, watch its last commit with `scripts/ci-wait.sh`.
 Fix each CI failure caused by this branch. Send the performance orchestrator
 the pull request, last commit, CI results, measurements, cache size, design
 calls, review findings, follow-ups, and checks. Do not merge.
+
+Verification evidence:
+`.context/bundle-disk-cache/logs/full-gate-f6a006-r2.log`,
+`.context/bundle-disk-cache/logs/full-gate-f6a006.log`,
+`.context/bundle-disk-cache/logs/viewer-evidence-cancellation-rerun.log`, and
+`.context/bundle-disk-cache/reports/viewer-evidence-gate-flake.md`.
 
 ## Post-merge follow-up (non-blocking)
 
