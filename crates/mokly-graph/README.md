@@ -123,7 +123,9 @@ render.
 compact tier and the base and head captures of `mokly-compare` share it.
 `EncodedView::restore` rebuilds the exact bytes, parsed tree, and trusted
 annotations without parsing authored HTML, or returns a
-`document_error::CodecError`.
+`document_error::CodecError`. An encoded view also lends its retained usage
+records without a restore. An artifact without a composed document retains no
+usage.
 
 `collect_comparison` streams complete side validation to an ordered
 `ComparisonCollector`. Each view composes once, including when the artifact
@@ -154,6 +156,15 @@ retaining another encoded copy of the same base. A smaller capture budget
 returns to the original source recipes. Wrappers that add checks must return
 `None` from `comparison_capture`, so rebuilding cannot bypass their checks.
 Production callers supply fresh base generations.
+
+`RenderGeneration::comparison_usage` returns the usage records of one view's
+comparison document, or `None` when its artifact has no composed document. Its
+default reads `comparison_document`, so it has the checks and errors of that
+read. A comparison capture returns the retained usage of a kept view without a
+restore, and reads every other view from its source. A wrapper that adds no
+checks forwards this read, so that a capture below it still skips the restore.
+A wrapper that adds checks keeps the default, so that each source read runs
+those checks.
 
 `schedule_comparison_tasks` runs a caller's `ComparisonTask` once for every
 index on the generation's render workers. It returns when every index has run.
