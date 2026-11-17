@@ -16,7 +16,7 @@ test.afterAll(async () => {
   await fixture?.close();
 });
 
-test("a frame that reports an error after its mount recovers with Try again", async ({
+test("an inspection error keeps a frame, and a reported failure recovers with Try again", async ({
   page,
 }) => {
   await page.goto(fixture.host.url);
@@ -24,20 +24,35 @@ test("a frame that reports an error after its mount recovers with Try again", as
   await page.evaluate(() => {
     const state = window as unknown as { mounts: number };
     state.mounts = 0;
+    const mounted = new Set<HTMLIFrameElement>();
+    let limited!: () => void;
+    const limitDelivered = new Promise<void>((resolve) => {
+      limited = resolve;
+    });
     const host = window.viewerHarness.start("one");
     const adapter: FrameAdapter = {
-      async mount() {
-        const failing = ++state.mounts === 1;
+      async mount(frame) {
+        // On its first mount, the hidden desktop frame reports an inspection
+        // limit. Then the shown mobile frame reports a failure, so its line
+        // renders after the limit was handled.
+        state.mounts++;
+        const first = !mounted.has(frame);
+        mounted.add(frame);
+        const mobile = frame.dataset["workspaceFrame"] === "mobile";
         return {
           listInstanceBoundaries: async () => [],
           highlight: async () => {},
           scrollTo: async () => {},
           subscribe(listener) {
-            // The first document reports a failure once it is mounted.
-            if (failing)
-              queueMicrotask(() =>
+            if (first && mobile)
+              void limitDelivered.then(() =>
                 listener({ type: "error", code: "unavailable" }),
               );
+            else if (first)
+              queueMicrotask(() => {
+                listener({ type: "error", code: "limit" });
+                limited();
+              });
             return () => {};
           },
           dispose() {},
@@ -52,9 +67,16 @@ test("a frame that reports an error after its mount recovers with Try again", as
     .getByRole("status")
     .filter({ hasText: "This preview could not be loaded." });
   await expect(line).toHaveCount(1);
+  const frames = page.locator("#one iframe");
+  await expect(
+    page.locator('#one iframe[data-workspace-frame="mobile"]'),
+  ).toHaveAttribute("data-mokly-frame-state", "error");
+  await expect(
+    page.locator('#one iframe[data-workspace-frame="desktop"]'),
+  ).toHaveAttribute("data-mokly-frame-state", "ready");
   await line.getByRole("button", { name: "Try again" }).click();
   await expect(line).toHaveCount(0);
-  for (const frame of await page.locator("#one iframe").all())
+  for (const frame of await frames.all())
     await expect(frame).toHaveAttribute("data-mokly-frame-state", "ready");
   // Two frames mounted once each, and Try again mounted the failed one again.
   expect(

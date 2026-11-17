@@ -23,6 +23,7 @@ import {
 } from "./frame_registry.js";
 import {
   adoptUsage,
+  failsFrame,
   finishMountedUsage,
   type ActiveSession,
   type ShellFrameStatus,
@@ -107,7 +108,7 @@ export function useMountedShellFrame(input: MountedFrameInput): {
     setStatus("loading");
     const receive = (event: FrameEvent) => {
       if (controller.signal.aborted) return;
-      if (event.type === "error") {
+      if (event.type === "error" && failsFrame(event.code)) {
         session.status = "error";
         setStatus("error");
         registry.changed();

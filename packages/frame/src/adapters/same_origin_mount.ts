@@ -103,10 +103,18 @@ export function mountLocalDocument(
         /* The load handler owns final origin failure reporting. */
       }
     };
+    // A page may render for as long as the server needs, so the fast check
+    // runs for about five seconds at the browser's 4 ms clamp, then slows.
     const watchReplacementDocument = () => {
       if (documentWatch !== undefined) return;
+      let fastChecks = 1250;
       inspectReplacementDocument();
-      documentWatch = win.setInterval(inspectReplacementDocument, 0);
+      documentWatch = win.setInterval(() => {
+        inspectReplacementDocument();
+        if (--fastChecks !== 0 || documentWatch === undefined) return;
+        win.clearInterval(documentWatch);
+        documentWatch = win.setInterval(inspectReplacementDocument, 100);
+      }, 0);
     };
     const disposeDocument = () => {
       stopDocumentWatch();

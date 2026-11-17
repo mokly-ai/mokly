@@ -1,0 +1,33 @@
+# Move focus after a preview's Try again
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-17, from branch `calummoore/preview-cannot-be-loaded-fov6`, review finding 8.
+- **Location:** `packages/viewer/src/shell/stage_frame.tsx` and `packages/viewer/src/shell/document_stage_frame.tsx` (the `retry` prop of the frame), `packages/ui/src/preview-frame/preview-frame.tsx` (the failed line), `packages/viewer/src/shell/stage_delivery.tsx` and `packages/viewer/src/shell/diffs.tsx` (the other Try again buttons).
+- **Reason:** No requirement says where focus goes after a Try again, so the focus target is a new requirement for the user to choose.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Failed frame line:** "This preview could not be loaded." with a Try again button, which `PreviewFrame` and `DocumentFrame` in `@mokly/ui` show below a preview whose load failed.
+  - **FocusAfter:** the helper in `packages/viewer/src/shell/focus_after.ts` that moves focus to a named element after a recovery action removes its own button.
+- **Background:**
+  - Try again on a failed preview calls the frame hook's `retry`. The frame status becomes `loading`, so the failed line and its button unmount at once.
+  - The `<iframe>` element itself stays mounted across the retry. It carries the frame title and `aria-busy` while it loads.
+  - The component controls retry and the catalogue retry move focus with FocusAfter. `docs/protocol/mokly-component-controls-design.md` sets their targets: the status that replaces the button, then the content when that status leaves.
+  - The stage failure ("This screen could not be shown", `stage_delivery.tsx`) and the comparison failure (`diffs.tsx`) move no focus either. `plans/follow-ups/detail-retry-focus.md` records the same gap for the Props and Usage retries.
+- **Problem:** After a keyboard user presses Try again on a failed preview, the focused button disappears, and focus falls back to the page body.
+- **Impact if no action:** Keyboard and screen-reader users lose their place each time they recover a preview.
+- **Root question:** Where does keyboard focus go after a reader activates Try again on a failed preview, while the frame reloads and after it settles?
+- **Options:**
+  - **A.** Record in `docs/protocol/mokly-viewer.md` that the frame's Try again keeps the browser's focus behaviour. Effort: Small.
+  - **B.** Focus the frame's wrapper after Try again, through FocusAfter in the two frame containers, and state the rule in `mokly-viewer.md`. Effort: Medium.
+  - **C.** Write one recovery focus rule for every Try again of the shell, the status-then-content rule of the controls retry: the stage failure, the comparison failure, the detail panels, and the frames. For a preview frame, the target is the `<iframe>` element, which already acts as the busy status and the restored content. Apply it through one shared viewer helper. Effort: Medium.
+  - **D.** Focus the `<iframe>` element just before the remount, in the two frame containers only. Effort: Small.
+  - **E.** Keep the failed line during the reload, with a "Loading preview…" status that takes focus, then move focus to the frame. Needs new copy, a new `@mokly/ui` state, and a library mockup variant. Effort: Medium.
+- **Left out:** Move focus only after the reload succeeds. The reload is then not announced, and focus stays lost while the page loads.
+- **Wider fix:** C. One rule gives every recovery a predictable target.
+- **Previous examples:** `plans/follow-ups/detail-retry-focus.md`.
+- **Related:** `plans/follow-ups/detail-retry-focus.md`, a shared wider fix: option C also settles that item, so merge the two when the user chooses C.
+- **Recommendation:** C. One rule closes this gap and the open detail retry gap together.
+- **Action:** ask the user, because the focus target is user-visible behaviour that no requirement covers.

@@ -17,16 +17,18 @@ async function failLoads(page: Page, pattern: string): Promise<() => void> {
   };
 }
 
-for (const [kind, route, documents] of [
+for (const [kind, route, documents, count] of [
   [
     "screen",
     "/view/example/screens/welcome/",
     "**/static/mokly-generated/example/screens/welcome/index.*",
+    2,
   ],
   [
     "document",
     "/view/example/workspace-guide/",
     "**/static/mokly-generated/example/workspace-guide/index*.html",
+    1,
   ],
 ] as const)
   test(`a ${kind} preview that failed to load recovers with Try again`, async ({
@@ -35,19 +37,20 @@ for (const [kind, route, documents] of [
     await page.setViewportSize({ width: 1280, height: 900 });
     const succeed = await failLoads(page, documents);
     await page.goto(route);
+    const frames = page.locator("iframe[data-mokly-frame-state]");
+    await expect(frames).toHaveCount(count);
+    // Every frame fails before any load may pass.
+    for (const frame of await frames.all())
+      await expect(frame).toHaveAttribute("data-mokly-frame-state", "error");
     const line = page.getByRole("status").filter({
       hasText: "This preview could not be loaded.",
     });
-    await expect(line.first()).toBeVisible();
-    const frames = page.locator("iframe[data-mokly-frame-state]");
-    await expect(frames.first()).toHaveAttribute(
-      "data-mokly-frame-state",
-      "error",
-    );
+    await expect(line).toHaveCount(count);
     succeed();
-    while ((await line.count()) > 0)
+    for (let left = count; left > 0; left--) {
       await line.first().getByRole("button", { name: "Try again" }).click();
-    await expect(line).toHaveCount(0);
+      await expect(line).toHaveCount(left - 1);
+    }
     for (const frame of await frames.all())
       await expect(frame).toHaveAttribute("data-mokly-frame-state", "ready");
   });

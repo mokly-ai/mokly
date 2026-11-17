@@ -10,6 +10,7 @@ const url = new URL("/static/mokly-generated/home/index.mobile.html", origin);
 /** A fake same-origin frame with deterministic timers and no real loads. */
 function localFrame(assigned?: string) {
   const timers = new Map<number, { callback: () => void; delay: number }>();
+  const intervals = new Map<number, { callback: () => void; delay: number }>();
   const attributes = new Map<string, string>(
     assigned === undefined ? [] : [["src", assigned]],
   );
@@ -23,8 +24,13 @@ function localFrame(assigned?: string) {
     clearTimeout(id: number) {
       timers.delete(id);
     },
-    setInterval: () => ++next,
-    clearInterval: () => undefined,
+    setInterval(callback: () => void, delay: number) {
+      intervals.set(++next, { callback, delay });
+      return next;
+    },
+    clearInterval(id: number) {
+      intervals.delete(id);
+    },
   });
   const frame = Object.assign(new EventTarget(), {
     ownerDocument: { defaultView: win, baseURI: `${origin}/` },
@@ -45,6 +51,12 @@ function localFrame(assigned?: string) {
   return {
     frame: frame as unknown as HTMLIFrameElement,
     limits: () => [...timers.values()].map((timer) => timer.delay),
+    polls: () => [...intervals.values()].map((interval) => interval.delay),
+    /** Run each poll that is active at that moment, `count` times. */
+    poll(count: number) {
+      for (let run = 0; run < count; run++)
+        for (const interval of [...intervals.values()]) interval.callback();
+    },
     load(address: string) {
       show(address);
       frame.dispatchEvent(new Event("load"));
@@ -83,7 +95,7 @@ test("a load without an accepted document rejects with timeout after five second
   await assert.rejects(mount, { code: "timeout" });
 });
 
-test("an accepted document ends the limit, and a later load starts none", async () => {
+test("each load restarts the limit, an accepted document ends it, and a later load starts none", async () => {
   const fake = localFrame(url.href);
   const operations = {
     updateUsage: () => undefined,
@@ -97,6 +109,8 @@ test("an accepted document ends the limit, and a later load starts none", async 
   const other = `${origin}/static/mokly-generated/other/index.mobile.html`;
   fake.load(other);
   assert.deepEqual(fake.limits(), [5000]);
+  fake.load(other);
+  assert.deepEqual(fake.limits(), [5000]);
   fake.load(url.href);
   assert.deepEqual(fake.limits(), []);
   const mounted = await mount;
@@ -104,4 +118,20 @@ test("an accepted document ends the limit, and a later load starts none", async 
   assert.deepEqual(fake.limits(), []);
   fake.expire();
   assert.deepEqual(await mounted.listInstanceBoundaries(), []);
+});
+
+test("the document check slows down during a long load and stops at disposal", async () => {
+  const fake = localFrame(url.href);
+  const controller = new AbortController();
+  const mount = sameOriginAdapter().mount(fake.frame, {
+    url,
+    usage: { status: "unavailable" },
+    signal: controller.signal,
+  });
+  assert.deepEqual(fake.polls(), [0]);
+  fake.poll(60_000);
+  assert.deepEqual(fake.polls(), [100]);
+  controller.abort();
+  await assert.rejects(mount, { code: "disposed" });
+  assert.deepEqual(fake.polls(), []);
 });
