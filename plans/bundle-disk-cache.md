@@ -1901,6 +1901,12 @@ Depends on: 1, 2, 3, 4, 5
       once, and report.
 - [ ] Fetch and merge `origin/main` if it advanced before the final pull
       request. Audit preservation with the `git-merge` skill.
+  - [x] Merge main `03bedb6ec` with its comparison-usage, render-worker, and
+        browser-error isolation changes. Preserve every incoming path.
+  - [ ] Repeat the release pairs against exact main `03bedb6ec`, with
+        separate checkouts and target directories. Keep every earlier run.
+  - [ ] Run repository verification on the combined source before the final
+        implementation review. Let final CI verify the combined branch.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request with `gh pr create --base main`. Its description
@@ -1918,6 +1924,10 @@ Verification evidence:
 `.context/bundle-disk-cache/logs/full-gate-f6a006.log`,
 `.context/bundle-disk-cache/logs/viewer-evidence-cancellation-rerun.log`, and
 `.context/bundle-disk-cache/reports/viewer-evidence-gate-flake.md`.
+Main integration evidence:
+`.context/bundle-disk-cache/merge-03bedb6ec/preservation.json`,
+`.context/bundle-disk-cache/merge-03bedb6ec/decisions.md`, and
+`.context/bundle-disk-cache/logs/merge-03bedb6ec-audit.log`.
 
 ## Post-merge follow-up (non-blocking)
 
