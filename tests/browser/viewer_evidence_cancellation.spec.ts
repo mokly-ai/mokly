@@ -2,6 +2,7 @@ import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
 import { evidenceFixture, presentation } from "./viewer_evidence_fixture.js";
+import { startViewerPick } from "./viewer_pick.js";
 const start = evidenceFixture();
 for (const cross of [false, true]) {
   const name = cross ? "postMessage" : "same-origin";
@@ -77,11 +78,9 @@ for (const cross of [false, true]) {
       .toBe(1);
     await presentation(page, cross, 0);
     expect(await page.evaluate(() => window.evidence.events)).toEqual([]);
-    await page.evaluate(async () => {
-      window.evidence.update("mobile");
-      await window.evidence.frames.startPick();
-      window.evidence.update("desktop", "empty");
-    });
+    await page.evaluate(() => window.evidence.update("mobile"));
+    await startViewerPick(page, "evidence");
+    await page.evaluate(() => window.evidence.update("desktop", "empty"));
     await expect
       .poll(() => page.evaluate(() => window.evidence.updates))
       .toBe(3);
