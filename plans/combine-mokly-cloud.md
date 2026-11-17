@@ -59,6 +59,24 @@ the three open decisions. The check report is under
   work first, to copy later commits by hand, and to re-run a path-map
   script before the merge. The options check recommended the script.
 
+- Dependency audit, answered on 2026-11-17 (option B). A reviewed
+  exception may also cover a production path that only the private
+  `apps/*` projects reach, for 31 days at most. No published package may
+  reach it. A follow-up item tracks the upgrade to Expo SDK 58. Rejected:
+  upgrading Expo now, and holding the merge until the upstream fixes ship.
+- Audit record kind, decided on 2026-11-17. Only a record with
+  `kind: "private-app"` uses the private-app rule. A record without it keeps
+  the dev-only rules, so a changed path cannot select the weaker rule in
+  silence. npm leaves the `private` flag out of the lockfile, so each audit
+  reads the workspace manifests, and the baseline comparison includes them.
+- UI library, answered on 2026-11-17 (option A). The Mokly example moves to
+  `@firna/ui` 4.0.0, so the repository has one `@firna/ui` version. Rejected:
+  a second npm name for 4.0.0, and moving the cloud mockups into
+  `apps/mockups`.
+- Milestone order, answered on 2026-11-17 (option A). Plans in this
+  repository follow the order of the shared `plans` skill. The cloud
+  override that put documentation first is gone.
+
 ## Design calls
 
 Each call below is my call, made on 2026-11-17.
@@ -208,7 +226,7 @@ the first push of an imported file publishes it, as Cal decided.
       cloud `Cargo.toml` and `package.json`. Keep the third-party notices,
       such as `crates/mkc-domain/data/github-reserved-names-LICENSE` and
       the license of the Inter font under `docs/mockups/styles/fonts/`.
-- [ ] Run the secret scan again over the imported paths. Save the report
+- [x] Run the secret scan again over the imported paths. Save the report
       under `.context/combine-cloud/`.
 
 ## Milestone 3: One Cargo workspace
@@ -222,7 +240,7 @@ Depends on: 2
       and `mkc-email-postmark`, with every use.
 - [x] Merge `.cargo/config.toml`. Keep the `target/xtask` target directory
       of the Mokly alias.
-- [ ] Regenerate `Cargo.lock`. Run `cargo build --workspace`,
+- [x] Regenerate `Cargo.lock`. Run `cargo build --workspace`,
       `cargo clippy --workspace --all-targets`, and `cargo test` for each
       crate.
 - [x] Move the ast-grep rules and `sgconfig.yml` so that they scan the
@@ -247,6 +265,10 @@ Depends on: 2
       app. Check that the app bundle holds one React copy.
 - [x] Merge `.prettierrc.json` and `eslint.config.js`. Keep the Astro plugin
       and the Mokly intrinsic-element rule for `packages/viewer/src`.
+- [ ] Move the Mokly example to `@firna/ui` 4.0.0, so the cloud mockups
+      resolve the one installed version.
+- [x] Let reviewed audit exceptions cover production paths that only the
+      private `apps/*` projects reach. Add the follow-up item for Expo SDK 58.
 - [ ] Make the cloud build of the app, the site, the mockups, and the
       desktop bundle use the built workspace packages. Make
       `cargo xtask mokly-fixtures` read the workspace build.
@@ -291,6 +313,10 @@ Depends on: 3, 4, and 5
 
 Depends on: 6
 
+- [ ] Port the cloud workflow contract tests of the old cloud `xtask`
+      (`tests/cli/` at `6d5163d6`: `ci_capacity`, `deployment_*`,
+      `desktop_*`, `origin_router_workflow`, `preview_*`, and `workflow`
+      tests) with the workflows they read. Keep every assertion.
 - [ ] Merge the cloud `ci.yml` jobs and `preview.yml` into the Mokly
       workflows. Add `deploy.yml`, `foundation.yml`, `site.yml`, and
       `desktop-release.yml`. Make `Required CI` require the cloud jobs.
