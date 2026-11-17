@@ -59,7 +59,9 @@ npm install --save-dev @mokly/mokly@0.19.0
 ## What you need
 
 - Node.js 22.15 or newer, excluding Node 23 and Node 24.14 through 24.18. If you use Node 24,
-  select 24.19 or later to avoid the affected runtime releases.
+  select 24.19 or later to avoid the affected runtime releases. On an
+  excluded version, the install succeeds and `mokly` stops at its first
+  command with a message that names the Node version to install.
 - A repository that holds your screens and components, or somewhere to write
   new ones.
 - Git, once you want to compare a branch with its base.

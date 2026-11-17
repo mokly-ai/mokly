@@ -49,6 +49,11 @@ JavaScript can handle an error. The upstream
 shipped in Node 24.19.0. The shim and sidecar run on the consumer's Node, so
 the shim rejects affected versions before it resolves the binary.
 
+The published `engines` range is `>=22.14.0`, the lowest floor of any earlier
+release. The shim's rejection names the Node version to install. The exact
+range is rejected for `engines`: npm installs the newest release whose `engines`
+accept the running Node, so it would install an older Mokly without an error.
+
 ## Package Identity
 
 - The public package name is `@mokly/mokly`.
