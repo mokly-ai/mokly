@@ -4,8 +4,8 @@
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-16, from the branch `calummoore/plain-git-spawns`, review round 1, the check of finding 2.
 - **Location:** `crates/mokly-git/src/repository.rs:166` to line 185,
-  `crates/mokly-git/src/lookup.rs:51`, and `docs/protocol/mokly-git.md:41`
-  to line 44.
+  `crates/mokly-git/src/lookup.rs:51`, `crates/mokly-git/src/fetch.rs:45` to
+  line 56, and `docs/protocol/mokly-git.md:41` to line 44.
 - **Reason:** `origin/main` behaves the same, so the branch that found it does not change it.
 
 - **Source:** Review.
@@ -41,6 +41,51 @@
     no time bound.
   - The local test runs put a task-local Git 2.50.1 first on `PATH`, so they
     do not cover older builds.
+  - Evidence of 2026-11-17, from a normal repository with one missing blob.
+    This is not a partial clone:
+    - The fixture had no promisor remote. Its commit held `home.screen.html`.
+      The fixture deleted the loose blob of that file,
+      `e47a8c6cc358043bbcdf5b0e3e7e4482bd204c37`. Below, `{blob}` stands for
+      that id, and `{commit}` for the fixture commit.
+    - Three saved release binaries ran Changes against that commit. They were
+      built from `331bf5d43`, from `main` at `0b82cf6c0`, and from the branch
+      `calummoore/mokly-parallel-view-comparison-n4kr` at `d2ecf20b5`.
+    - Under `/usr/bin/git` 2.43.0, the Ubuntu package `1:2.43.0-1ubuntu7.3`,
+      all three exited 1 with the same stderr. It names no base object and no
+      `git fetch origin` command:
+
+      ```text
+      [mokly/git-failed] comparison against base ref "fixture-base" failed: base {commit}: Git exited with status 128: fatal: bad object {blob}
+      ```
+
+    - Under Git 2.50.1, built from the kernel.org source, all three exited 1
+      with the same typed error:
+
+      ```text
+      [mokly/git-failed] comparison against base ref "fixture-base" failed: base {commit}: base object {blob} is missing; run `git fetch origin {blob}`
+      ```
+
+    - The base read lists the tree first (`crates/mokly-git/src/repository.rs:153`
+      to line 174). The missing-object check then passes each blob id as a
+      start point to `git rev-list --objects --no-object-names --missing=print --stdin`
+      (`crates/mokly-git/src/fetch.rs:45` to line 56).
+    - With the missing blob id on stdin, that command exited 128 with
+      `fatal: bad object {blob}` under Git 2.43.0. Under Git 2.50.1, it exited
+      0 and printed `?{blob}`. The user stated on 2026-11-17 that before Git
+      2.45, `--missing=print` does not cover a missing start point. Nobody ran
+      a 2.45 build.
+    - In a scratch repository under the same Git 2.43.0, `ls-tree -r -t -l`
+      printed the size `BAD` for a missing blob and exited 0.
+      `crates/mokly-git/src/tree.rs:112` accepts that size.
+    - In that repository, `git rev-list --objects --no-object-names --missing=print HEAD`
+      started from the commit, printed `?{blob}`, and exited 0. Option B also
+      starts its check from the tree, so it passes no blob as a start point.
+      Nobody has run option B.
+    - So on a Git build before 2.45, a normal clone with a missing blob gets
+      Git's `bad object` failure in place of the typed fetch error that
+      `docs/protocol/mokly-git.md` line 44 requires. This failure is
+      confirmed. The failure of a blobless clone on a backported build, above,
+      is still not reproduced.
 - **Problem:** On a backported build, a base read of a blobless clone can fail
   before the missing-object check runs. On a build without the control, the
   base read fetches objects one by one with no bound. In both cases the

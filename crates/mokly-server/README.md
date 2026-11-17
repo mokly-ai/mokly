@@ -86,7 +86,12 @@ retains document and resource hashes. It rejects changed public bytes or an
 inconsistent document after cache eviction before a capture can install a
 mixed generation. Its `comparison_capture` method returns `None`, so capture
 creation and smaller budgets cannot bypass these checks through the wrapped
-generation. The contract owns the admission, retention, and capacity limits.
+generation. It forwards `comparison_parallelism`, `schedule_comparison`,
+`schedule_comparison_tasks`, and `schedule_comparison_stream` to the wrapped
+generation. Scheduled tasks still call its checked reads. It keeps the default `None` of
+`retained_comparison_input`, because a forward could bypass these checks or
+need source IO. The contract owns the admission, retention, and capacity
+limits.
 
 `GraphDocuments` implements `dyn Documents`. It coalesces requests for the
 same document. Public authored reads require both reached closure membership
