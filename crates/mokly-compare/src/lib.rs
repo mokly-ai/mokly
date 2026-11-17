@@ -73,10 +73,17 @@ pub mod move_types;
 pub mod moves;
 
 mod capture_error;
+mod capture_fallback;
+mod capture_generation;
 mod capture_restore;
 mod capture_styles;
 mod comparison_capture;
+mod comparison_consumer;
 mod comparison_error;
+mod comparison_pipeline;
+mod comparison_preparation;
+mod comparison_routes;
+mod comparison_slots;
 
 mod comparison_resources;
 pub mod comparison_steps;
@@ -220,3 +227,7 @@ mod capture_collection;
 #[cfg(test)]
 #[path = "_tests_/bundle_fixture.rs"]
 mod bundle_fixture;
+
+#[cfg(test)]
+#[path = "_tests_/scheduling/mod.rs"]
+mod scheduling_tests;

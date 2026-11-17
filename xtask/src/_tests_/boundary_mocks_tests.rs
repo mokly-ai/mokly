@@ -58,6 +58,7 @@ fn git_and_sidecar_mocks_are_usable_from_a_downstream_crate() {
         })));
     runner
         .run(&command::Request {
+            process_mode: Default::default(),
             directory: "/fixture".into(),
             args: vec![],
             stdin: vec![],

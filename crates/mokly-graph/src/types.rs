@@ -15,10 +15,12 @@ use mokly_model::data::Props;
 use crate::cache::Artifact;
 use crate::closure::{Closure, GeneratedResources};
 use crate::collection::ComparisonCollector;
+use crate::comparison_input::RetainedComparisonInput;
+use crate::comparison_stream::{self, ComparisonConsumer};
 use crate::error::Result;
 use crate::key::NodeKey;
 use crate::resource_inputs::ResourceObserver;
-use crate::workers::ComparisonWorker;
+use crate::workers::{ComparisonTask, ComparisonWorker};
 
 /// A document's input key and render recipe, available before rendering.
 #[derive(Clone, Debug)]
@@ -103,9 +105,30 @@ pub trait RenderGeneration: GeneratedResources {
     fn render(&self, route: &str) -> Result<Arc<Artifact>>;
     /// Compose comparison material before closure checks, without changing document bytes.
     fn comparison_document(&self, route: &str) -> Result<Arc<Artifact>>;
+    /// Decode only retained inputs. No source IO, fallback, or failure log is allowed.
+    /// Checking wrappers keep this default when forwarding would bypass their checks.
+    fn retained_comparison_input(&self, _route: &str) -> Option<RetainedComparisonInput> {
+        None
+    }
     /// Maximum number of transient comparison inputs in one scheduled batch.
     fn comparison_parallelism(&self) -> usize {
         1
+    }
+    /// Run every indexed task once and finish before returning. Tasks own their
+    /// bounded result slots, errors, and generation cancellation checks.
+    fn schedule_comparison_tasks(&self, count: usize, task: &dyn ComparisonTask) {
+        for index in 0..count {
+            task.run(index);
+        }
+    }
+    /// Prepare and consume in order. Stop on false and join all admitted work.
+    /// The default prepares one view at a time on the calling thread.
+    fn schedule_comparison_stream(
+        &self,
+        task: &dyn ComparisonTask,
+        consumer: &mut dyn ComparisonConsumer,
+    ) {
+        comparison_stream::sequential(task, consumer);
     }
     /// Schedule a wrapper's own input checks on this generation's workers.
     fn schedule_comparison(

@@ -14,6 +14,7 @@ use mokly_source_interface::tree::SourceTree;
 use crate::cache::{Artifact, RenderCache};
 use crate::closure::{Closure, Walker};
 use crate::collection::ComparisonCollector;
+use crate::comparison_stream::ComparisonConsumer;
 use crate::delivery_inputs::DeliveryInputs;
 use crate::error::Result;
 use crate::graph::Graph;
@@ -26,7 +27,7 @@ use crate::types::{
     ResourcePlan, TemporaryDocument,
 };
 use crate::validation_summary::Summary;
-use crate::workers::{ComparisonWorker, RenderWorkers, check_cancelled};
+use crate::workers::{ComparisonTask, ComparisonWorker, RenderWorkers, check_cancelled};
 use crate::{styles, temporary, validation};
 
 #[derive(Clone)]
@@ -149,6 +150,16 @@ impl RenderGeneration for Session {
     }
     fn comparison_parallelism(&self) -> usize {
         self.state.workers.comparison_parallelism()
+    }
+    fn schedule_comparison_stream(
+        &self,
+        task: &dyn ComparisonTask,
+        consumer: &mut dyn ComparisonConsumer,
+    ) {
+        self.state.workers.comparison_stream(task, consumer);
+    }
+    fn schedule_comparison_tasks(&self, count: usize, task: &dyn ComparisonTask) {
+        self.state.workers.comparison_tasks(count, task);
     }
     fn schedule_comparison(
         &self,

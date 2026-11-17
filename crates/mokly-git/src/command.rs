@@ -14,9 +14,21 @@ pub const DEFAULT_STDERR_LIMIT: usize = 1024 * 1024;
 /// Default and maximum retained bytes on each subprocess output stream.
 pub const DEFAULT_OUTPUT_LIMIT: usize = 64 * 1024 * 1024;
 
+/// Process ownership selected by the caller, never inferred from Git arguments.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum ProcessMode {
+    /// Own the full tree, including helpers that start another Unix session.
+    #[default]
+    FullTree,
+    /// Own a helper-free command's process group without a Unix exec hook.
+    PlainGroup,
+}
+
 /// One Git invocation, always executed without a shell.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Request {
+    /// Child setup; use the full tree unless the command cannot start helpers.
+    pub process_mode: ProcessMode,
     /// Checkout root.
     pub directory: PathBuf,
     /// Exact argument vector.

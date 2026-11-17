@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 
 use crate::access::WorkingFile;
 use crate::changes::Change;
-use crate::command::{DEFAULT_OUTPUT_LIMIT, Runner};
+use crate::command::{DEFAULT_OUTPUT_LIMIT, ProcessMode, Runner};
 use crate::disk::Disk;
 use crate::error::{Error, Result};
 use crate::extracted::ExtractedFiles;
@@ -120,7 +120,8 @@ impl Repositories for GitRepositories {
             runner: Arc::clone(&self.runner),
             disk: Arc::clone(&self.disk),
         };
-        let output = repository.command(
+        let output = repository.command_with_mode(
+            ProcessMode::PlainGroup,
             &["rev-parse", "--show-toplevel"],
             vec![],
             DEFAULT_OUTPUT_LIMIT,
@@ -162,9 +163,25 @@ impl Repository for GitRepository {
         if let Some(root) = root {
             args.push(root.as_str());
         }
-        let entries = tree::parse(&self.command(&args, vec![], DEFAULT_OUTPUT_LIMIT)?, limits)?;
+        let entries = tree::parse(
+            &self.command_with_mode(
+                ProcessMode::PlainGroup,
+                &args,
+                vec![],
+                DEFAULT_OUTPUT_LIMIT,
+            )?,
+            limits,
+        )?;
         if self.ensure_checkout_objects(commit, &entries)? {
-            return tree::parse(&self.command(&args, vec![], DEFAULT_OUTPUT_LIMIT)?, limits);
+            return tree::parse(
+                &self.command_with_mode(
+                    ProcessMode::PlainGroup,
+                    &args,
+                    vec![],
+                    DEFAULT_OUTPUT_LIMIT,
+                )?,
+                limits,
+            );
         }
         Ok(entries)
     }

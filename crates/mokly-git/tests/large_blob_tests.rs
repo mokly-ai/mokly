@@ -45,6 +45,7 @@ fn a_failed_streaming_git_command_keeps_its_command_failure() {
     let fixture = Fixture::new();
     let result = runner(Arc::new(Token::default())).copy(
         &Request {
+            process_mode: Default::default(),
             directory: fixture.root().into(),
             args: vec!["cat-file".into(), "blob".into(), "0".repeat(40).into()],
             stdin: Vec::new(),

@@ -76,6 +76,11 @@ pub(crate) fn configure(command: &mut Command) {
     }
 }
 
+/// Start a helper-free child in its own group without a hook that forces fork.
+pub(crate) fn configure_plain(command: &mut Command) {
+    command.process_group(0);
+}
+
 /// Capture the root identity before the caller can reap its child.
 pub(crate) fn attach(child: &Child) -> Result<Box<dyn ProcessGroup>> {
     unix_process_tree::attach(child, Arc::new(SystemGroupSignal))
@@ -86,7 +91,7 @@ struct SystemGroupSignal;
 impl GroupSignal for SystemGroupSignal {
     fn signal(&self, pid: i32, signal: i32) -> io::Result<bool> {
         // SAFETY: The positive child PID identifies the process group created
-        // by setsid in the child pre-exec hook. No memory is accessed by kill.
+        // by setsid or Command::process_group. No memory is accessed by kill.
         let result = unsafe { libc::kill(-pid, signal) };
         if result == 0 {
             return Ok(false);

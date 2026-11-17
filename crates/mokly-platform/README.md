@@ -10,9 +10,9 @@ other workspace crate.
 
 - Rename files and directories atomically without replacing a destination.
 - Acquire nonblocking shared and exclusive file locks with handle-scoped release.
-- Own child process trees. On Unix, own a process group and each descendant
-  that its parent links reach, also in a new session. On Windows, own a
-  kill-on-close job object.
+- Own child process trees or plain groups for helper-free commands. On Unix,
+  reach descendants through parent links, also in a new session. On Windows,
+  own a kill-on-close job object in both modes.
 - Flush cache data with a filesystem barrier or plain file synchronization.
 - Expose typed errors that callers can handle without string matching.
 
@@ -27,9 +27,13 @@ guard releases the lock and leaves the lock file intact.
 
 `ProcessGroups` configures a child before spawn, then attaches an ownership
 guard immediately after spawn. The caller retains the child and its pipes.
-On Unix, the child starts a new session, so it leads its own process group.
+`configure` starts a new Unix session, so the child leads its own group.
 On Linux, it also becomes a subreaper, so an orphan inside the owned tree
-keeps a parent link to it while it runs.
+keeps a parent link to it while it runs. `configure_plain` uses
+`Command::process_group(0)` without a `pre_exec` hook for helper-free commands.
+The child keeps the parent's session. This permits the standard library's
+`posix_spawn` path on macOS and Linux with glibc 2.29 or newer, including a
+checkout directory. Both modes use the same `attach` guard.
 
 The guard records the child's identity, its PID and start time, before the
 caller can reap the child. A reused PID therefore never receives a signal. The
@@ -54,7 +58,7 @@ result counts as stopped only after enumeration confirms no live member. An
 unreadable member status keeps the original signal error.
 
 The Windows
-implementation starts the child suspended, attaches a kill-on-close job, and
+implementation starts the child suspended in both modes, attaches a kill-on-close job, and
 resumes its primary thread. This keeps descendants inside the job from their
 first instruction. It requests a console break for
 graceful termination, and terminates the job for forceful cancellation.
@@ -114,8 +118,9 @@ Consumers enable the `mock` feature to use every public trait with unimock.
   flush a filesystem, a file, or a directory before a cache entry is published.
 - [`src/error.rs`](./src/error.rs) defines `Error`, the typed failure that
   every trait returns.
-- [`src/unix.rs`](./src/unix.rs) starts a Unix child in a new session, makes
-  it a Linux subreaper in `configure`, and records its identity in `attach`.
+- [`src/unix.rs`](./src/unix.rs) starts a Unix session and Linux subreaper in
+  `configure`, selects a plain group in `configure_plain`, and records the
+  child identity in `attach`.
   [`src/windows.rs`](./src/windows.rs) holds the Windows FFI calls.
 - [`src/unix_process_tree/group.rs`](./src/unix_process_tree/group.rs)
   defines `UnixGroup`, the Unix `ProcessGroup`. It stops the group, finds the

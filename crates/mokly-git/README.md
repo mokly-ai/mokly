@@ -31,6 +31,16 @@ escalates to a forceful kill, reaps the child, and drains both pipes. Only an
 operation that acted on cancellation returns `Cancelled`. Other typed failures
 keep their own category.
 
+Each `Request` selects a typed `ProcessMode`. Its default is `FullTree`.
+Audited helper-free calls select `PlainGroup`: `rev-parse`, `merge-base`,
+`ls-tree`, `rev-list` with lazy fetch disabled, read-only `config`, and
+`check-attr`. The runner sets `GIT_NO_LAZY_FETCH=1` for ordinary commands.
+On Unix, the plain group avoids the exec hook that forces a fork of the core.
+Every other call keeps the session and Linux subreaper setup, including
+filters, fetches, diffs, and working-path queries. Windows uses the same job
+setup for both modes. The runner selects setup from the field without parsing
+arguments. Both modes keep the same ownership guard and supervision.
+
 Path batching uses default budgets of 128 path arguments and 16 KiB of
 conservative encoded argument cost. A path too large
 for one batch fails before any command runs. Empty path input issues no
@@ -153,8 +163,8 @@ extraction cleanup after cancellation during a streamed copy.
 
 ### Key Code
 
-- [`src/command.rs`](./src/command.rs) defines `Request`, `Output`, and
-  `Runner`, the boundary for one bounded Git invocation.
+- [`src/command.rs`](./src/command.rs) defines `Request`, its `ProcessMode`,
+  `Output`, and `Runner`, the boundary for one bounded Git invocation.
 - [`src/system.rs`](./src/system.rs) defines `SystemRunner`, the host runner
   that owns the process tree, the cancellation, and the clock.
 - [`src/control.rs`](./src/control.rs) defines the `Cancellation` and `Clock`

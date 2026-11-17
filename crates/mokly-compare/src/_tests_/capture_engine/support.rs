@@ -246,7 +246,13 @@ pub(super) fn generation(
         .each_call(matching!())
         .answers(&|_| Ok(()));
     if side == "head" {
-        Arc::new(Unimock::new((common, validation, render, read)))
+        Arc::new(Unimock::new((
+            common,
+            validation,
+            render,
+            read,
+            cancellation,
+        )))
     } else if capture {
         Arc::new(Unimock::new((
             common,

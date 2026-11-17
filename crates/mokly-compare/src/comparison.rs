@@ -75,7 +75,15 @@ impl Engine {
             ),
         )?;
         let paths = pairing.paths(before_model, after_model);
-        let mut pairs = Vec::new();
+        let mut pairs = comparison_views::collect(
+            &pairing.entries,
+            before.clone(),
+            after.clone(),
+            &paths,
+            memo.as_ref(),
+            &before_plans,
+            &after_plans,
+        )?;
         let mut warnings: Vec<_> = before
             .catalogue()
             .warnings
@@ -84,16 +92,7 @@ impl Engine {
             .cloned()
             .collect();
         let mut observations: Vec<PageObservation> = Vec::new();
-        for pair in &pairing.entries {
-            let mut views = comparison_views::collect(
-                pair,
-                before.clone(),
-                after.clone(),
-                &paths,
-                memo.as_ref(),
-                &before_plans,
-                &after_plans,
-            )?;
+        for views in &mut pairs {
             warnings.extend(views.warnings.iter().cloned());
             observations.extend(
                 views
@@ -101,7 +100,6 @@ impl Engine {
                     .iter_mut()
                     .map(|view| mem::take(&mut view.observation)),
             );
-            pairs.push(views);
         }
         let mut attributed = attribution::attribute(observations);
         let mut impact = mem::take(&mut attributed.changed_components);

@@ -228,5 +228,9 @@ mod sidecar_trace_tests;
 mod stylesheet_trace_tests;
 
 #[cfg(test)]
+#[path = "_tests_/comparison_trace_tests.rs"]
+mod comparison_trace_tests;
+
+#[cfg(test)]
 #[path = "_tests_/sidecar_stop/mod.rs"]
 mod sidecar_stop_tests;

@@ -12,6 +12,7 @@ use crate::serve_git::{GitRunnersMock, GitWork, ServeGit};
 
 fn request() -> Request {
     Request {
+        process_mode: Default::default(),
         directory: "fixture".into(),
         args: vec!["status".into()],
         stdin: Vec::new(),
