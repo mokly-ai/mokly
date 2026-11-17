@@ -8,8 +8,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::document_annotations::{AttributeRecord, ReferenceRecord, RegionRecord};
 use crate::document_error::{CodecInternalError, Result};
+use crate::document_records::SourceRecord;
 
 /// Flat trusted tree records avoid recursive tree serialization.
+/// Every nested public annotation must use a private record without public JSON rules.
 #[derive(Deserialize, Serialize)]
 pub(crate) enum FlatNode {
     Element {
@@ -17,7 +19,7 @@ pub(crate) enum FlatNode {
         style_attribution: Option<Vec<(String, Vec<String>)>>,
         origin: Option<String>,
         navigation: Option<ReferenceRecord>,
-        source: Option<SourceLocation>,
+        source: Option<SourceRecord>,
         name: String,
         namespace: String,
         attributes: Vec<AttributeRecord>,
@@ -50,7 +52,7 @@ pub(crate) fn flatten(nodes: &[Node]) -> Vec<FlatNode> {
                     }),
                     origin: element.origin.clone(),
                     navigation: element.navigation.as_ref().map(ReferenceRecord::from),
-                    source: element.source.clone(),
+                    source: element.source.as_ref().map(SourceRecord::from),
                     name: element.name.clone(),
                     namespace: element.namespace.clone(),
                     attributes: element
@@ -111,7 +113,7 @@ pub(crate) fn restore(nodes: Vec<FlatNode>) -> Result<Vec<Node>> {
                 }),
                 origin,
                 navigation: navigation.map(Reference::from),
-                source,
+                source: source.map(SourceLocation::from),
                 name,
                 namespace,
                 attributes: attributes.into_iter().map(Attribute::from).collect(),

@@ -1,10 +1,7 @@
 //! Private captures keep bytes and trusted metadata, including deeply nested trees.
 
 use std::collections::BTreeMap;
-use std::io::Write;
 
-use flate2::Compression;
-use flate2::write::ZlibEncoder;
 use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_html::composition::Composed;
@@ -19,10 +16,8 @@ use mokly_model::usage::{CatalogueUsage, ComponentInputOwner};
 use mokly_model::{wire_decode, wire_props};
 
 use crate::cache::Artifact;
-use crate::document_error::{CodecError, CodecInternalError};
-use crate::document_nodes::{self, FlatNode};
 
-use super::{EncodedView, Payload};
+use super::EncodedView;
 
 impl EncodedView {
     /// Damage an encoded document for cache restore-failure tests.
@@ -31,7 +26,7 @@ impl EncodedView {
     }
 }
 
-fn artifact(tree: Vec<Node>) -> Artifact {
+pub(super) fn artifact(tree: Vec<Node>) -> Artifact {
     Artifact {
         bytes: b"exact\0raw\xffbytes".to_vec(),
         content_type: "text/html; charset=utf-8".into(),
@@ -211,28 +206,4 @@ fn capture_preserves_valid_props_at_the_64_level_limit() {
         );
         assert!(encoded.retained_bytes() > encoded.bytes());
     }
-}
-
-#[test]
-fn damaged_payloads_and_invalid_child_counts_return_errors() {
-    let input = artifact(parse::html(DeliveredHtml::fragment("<p>text</p>")));
-    let mut encoded = EncodedView::encode(&input).unwrap();
-    encoded.invalidate_payload();
-    assert!(matches!(
-        encoded.restore(),
-        Err(CodecError::Internal(CodecInternalError::Io { .. }))
-    ));
-    let mut tree = document_nodes::flatten(&input.document.as_ref().unwrap().tree);
-    let FlatNode::Element { children, .. } = &mut tree[0] else {
-        panic!("element")
-    };
-    *children = 2;
-    let mut encoder = ZlibEncoder::new(Vec::new(), Compression::fast());
-    encoder.write_all(&input.bytes).unwrap();
-    serde_json::to_writer(&mut encoder, &Payload { tree }).unwrap();
-    encoded.payload = encoder.finish().unwrap().into_boxed_slice();
-    assert!(matches!(
-        encoded.restore(),
-        Err(CodecError::Internal(CodecInternalError::InvalidTree))
-    ));
 }

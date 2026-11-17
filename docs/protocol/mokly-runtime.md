@@ -43,9 +43,8 @@ command with an error fails with `build-invalid`. Non-fatal findings are
 The [architecture page](../architecture/rust-core.md#render-graph) describes
 the render graph. A screen or component renders once per view, that is per
 viewport and colour scheme. A page renders once. A Markdown document renders
-once per enabled colour scheme. A watched change renders again only the
-outputs whose inputs changed, and a component rendered with the same props on
-many screens renders once.
+once per enabled colour scheme. A watched change renders only the outputs whose
+inputs changed. A component with the same props on many screens renders once.
 
 The 256 MiB render cache reserves one sixteenth (16 MiB) for transit and encoding.
 The tiers share 240 MiB and evict the least recently used entry. Compaction reserves
@@ -57,9 +56,10 @@ document charge. Encoding runs outside the lock. Completion moves transit to com
 under one lock. Other evicted artifacts leave. Compact takes room from evicted full
 entries, up to 128 MiB. Full keeps at least 112 MiB. A catalogue fitting 240 MiB
 never restores. Reads check full, transit, then compact. Transit returns full artifacts.
-Compact restores exact bytes, trees, and trusted annotations. Only a second restore
-within fewer operations than full has entries promotes. A full pass never promotes.
-A document that compact cannot keep or restore leaves the cache.
+Compact restores exact bytes, trees, and trusted annotations. `postcard` encodes
+compact trees. `flate2` compresses trees and bytes with zlib. Only a second
+restore within fewer operations than full has entries promotes. A full pass
+never promotes. A document that compact cannot keep or restore leaves the cache.
 Decision: keep evicted documents compact. Rejected: a larger bound that still
 thrashes; a fixed tier split that reduces room for fitting catalogues; a
 scan-resistant order that still misses when the head exceeds the bound; a Serve
