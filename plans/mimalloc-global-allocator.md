@@ -157,13 +157,16 @@ Give each checkout its own target directory.
 - [x] Measure `examples/basic` builds with Changes and peak core RSS for both release binaries on the same catalogue and Git base.
 - [x] After merging `origin/main` at `0b82cf6c0`, rebuild both release binaries and repeat the allocator and sanity checks.
       Preserve the earlier measurements under `.context/global-allocator/before-main-merge/`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [ ] After merging `origin/main` at `86b7d5765`, rerun the CLI tests, rebuild both release binaries, and repeat the allocator and sanity checks.
+- [ ] Dispatch `release-check.yml` on the merged branch and wait for all five native builds, binary inspections, and packaging smoke checks.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete diff against `origin/main` with `implementation-review` after the push.
       Check every new finding, apply the fix rule, and run the second review round.
       Use at most two fix rounds and record each remaining finding as a follow-up item.
 - [ ] Delete this plan after every other required TODO is complete and the review rounds are done.
 - [ ] Open the pull request into `main`, preserve this plan's dated calls and permalink, and wait for its final CI.
-      Dispatch `release-check.yml` on the final branch commit and report all five targets and packaging smoke checks.
+      Report all five native targets and packaging smoke checks from the merged source commit.
+      The final plan-removal commit runs the pull request CI.
       Leave the pull request open for the performance orchestrator to merge.
 
 Evidence goes under `.context/global-allocator/`.
@@ -176,3 +179,9 @@ Review reports go under `.context/reviews/calummoore/mokly-mimalloc-global-alloc
 
 The complete local gate and the one unchanged-browser rerun are recorded in `.context/global-allocator/verification-summary.json`.
 The separate static HTTP and file delivery checks are in `.context/global-allocator/delivery.log`.
+
+The second main integration audit is `.context/global-allocator/main-86b7-integration-audit.log`.
+The preservation check is `.context/global-allocator/main-86b7-preservation.log`.
+
+The CLI tests after the second main merge are in `.context/global-allocator/cli-tests-main-86b7.log`.
+The first review found no in-scope finding. Its report is `round-1-review.md` in the review folder.
