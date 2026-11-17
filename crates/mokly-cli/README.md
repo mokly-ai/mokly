@@ -67,6 +67,10 @@ gate lets foreground requests finish their sidecar calls before more base
 requests start. The base preparation bundles its stylesheet roots on the
 classification thread, not on the shared render workers. A base root that
 waits at the gate then never holds a worker that a foreground render needs.
+Changes classification also prepares views on the shared render workers. Those
+tasks read only retained base inputs and the head, so they schedule no base
+source read and no base sidecar call. A view that needs the base source is
+prepared later, in the ordered classification pass.
 Serve captures one warning sink per preparation attempt and
 reports each warning once under the
 [build warnings contract](../../docs/protocol/mokly-build-warnings.md).

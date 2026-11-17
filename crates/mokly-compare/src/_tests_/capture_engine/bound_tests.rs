@@ -7,8 +7,9 @@ use mokly_graph::types::RenderSummary;
 
 use mokly_model::canonical;
 
+use crate::capture_generation::CapturedGeneration;
 use crate::capture_weight::{self, Budget, DEFAULT_BASE_CAPTURE_BYTES, DEFAULT_HEAD_CAPTURE_BYTES};
-use crate::comparison_capture::{CaptureSide, CapturedGeneration, capture_with_bound};
+use crate::comparison_capture::{CaptureSide, capture_with_bound};
 use crate::comparison_types::Comparison;
 
 use super::support::{self, Probe};

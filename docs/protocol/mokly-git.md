@@ -27,8 +27,14 @@ the pinned commit's attributes.
 
 ## Cancellation And Fetch
 
+Helper-free Git commands own a separate process group. Each request selects
+this mode explicitly. Every other command owns the full process tree,
+including helpers that start another session. Windows uses an owned job for
+both modes. Decision: only helper-free commands use a plain group. Rejected:
+one plain group for every command, because a helper can leave its group.
+
 Cancellation requests SIGTERM for the owned process tree, then SIGKILL after
-one second if it remains. Windows uses the owned job. A command settles after
+one second if it remains. A command settles after
 the process and its pipes close. A Git helper process never outlives its
 command. The
 [runtime shutdown contract](./mokly-runtime.md#shutdown) owns shutdown order.

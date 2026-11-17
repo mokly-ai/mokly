@@ -13,9 +13,9 @@ use mokly_html::composition::Composed;
 use mokly_model::usage::{CatalogueUsage, ComponentInputOwner, ComponentInstanceRecord};
 use mokly_model::wire_props::{ComponentWireValue, StringTag};
 
+use crate::capture_generation::CapturedGeneration;
 use crate::capture_restore::DocumentRestorer;
-
-use super::super::{CapturedGeneration, CapturedView};
+use crate::comparison_capture::CapturedView;
 
 pub(super) const ROUTE: &str = "home/empty/index.desktop.html";
 

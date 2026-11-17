@@ -166,6 +166,44 @@ checks forwards this read, so that a capture below it still skips the restore.
 A wrapper that adds checks keeps the default, so that each source read runs
 those checks.
 
+`schedule_comparison_tasks` runs a caller's `ComparisonTask` once for every
+index on the generation's render workers. It returns when every index has run.
+The caller sizes each of these calls by `comparison_parallelism`.
+
+`schedule_comparison_stream` runs a `ComparisonTask` as one ordered stream. Its
+`ComparisonConsumer` admits each index into a slot that the caller owns. The
+calling thread consumes the finished indexes in index order. At most twice
+`comparison_parallelism().max(1)` indexes are started and not yet consumed. Each
+consumption lets one more index start. A `false` from `admit` ends the stream.
+A `false` from `consume`, or a task panic, stops new admission and
+consumption. The call still waits for every admitted task, and a task panic
+then reaches the caller. A stream that starts on a worker of the same pool
+prepares and consumes one index at a time.
+
+In both operations, the caller keeps the results, the errors, and the
+cancellation checks. `ThreadWorkers` carries the caller's tracing span and
+subscriber through one shared context for all worker methods. The trait
+defaults have a capacity of one. They run the indexes in order on the caller,
+and the stream default prepares and consumes one index at a time.
+
+Wrappers forward `comparison_parallelism`, `schedule_comparison`,
+`schedule_comparison_tasks`, and `schedule_comparison_stream` to their inner
+generation. `RenderWorkers` wrappers forward `comparison_parallelism`,
+`comparison`, `comparison_tasks`, and `comparison_stream` in the same way.
+Without these forwards, the comparison runs one view at a time. A scheduled
+task still calls the wrapper's own methods, so the wrapper's checks stay
+active.
+
+`retained_comparison_input` returns a comparison input that the generation
+already holds. It reads no source and logs nothing. `Ready` holds the decoded
+document and its closure. `Deferred` holds the `ComparisonFallback` of one
+failed restore. Its `document` logs the failure and reads the original source.
+Its `closure` returns the kept closure.
+
+The default returns `None`. A wrapper
+that adds checks returns `None` when a forward would bypass those checks or
+need source IO.
+
 `FilePolicy` is the one policy of the public closure contract for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.
 Package directories come from the normalized `ResolvedConfig::package_roots`.
@@ -245,9 +283,13 @@ retention disabled.
   the lossless compact document that the compact tier and the comparison
   capture share.
 - [`src/workers.rs`](./src/workers.rs) defines `RenderWorkers` and
-  `ThreadWorkers`, the injected worker pool. Its `stylesheets` method runs one
-  `StylesheetWorker` job for each stylesheet root, keeps the root order, and
-  returns the first failure in root order.
+  `ThreadWorkers`, the injected worker pool, and `ComparisonTask`, one indexed
+  comparison job. Its `stylesheets` method runs one `StylesheetWorker` job for
+  each stylesheet root, keeps the root order, and returns the first failure in
+  root order. Its `comparison_tasks` method runs every index of a
+  `ComparisonTask` once and returns when all of them have run. Its
+  `comparison_stream` method runs a `ComparisonTask` as an ordered stream, with
+  at most twice the pool size started and not yet consumed.
 - [`src/fragments.rs`](./src/fragments.rs) defines `MemoFragments`, which
   memoizes JavaScript fragments in the same bounded cache.
 - [`src/render_inputs.rs`](./src/render_inputs.rs) defines `RenderInputs` and
@@ -261,6 +303,12 @@ retention disabled.
   closure walk.
 - [`src/collection.rs`](./src/collection.rs) defines `ComparisonCollector`,
   which consumes validated comparison inputs in route order.
+- [`src/comparison_input.rs`](./src/comparison_input.rs) defines
+  `RetainedComparisonInput` and `ComparisonFallback`, a retained comparison
+  input and the deferred source read of a failed restore.
+- [`src/comparison_stream.rs`](./src/comparison_stream.rs) defines
+  `ComparisonConsumer`, which admits each index of an ordered comparison
+  stream and consumes the finished indexes in order.
 - [`src/source_snapshot.rs`](./src/source_snapshot.rs) defines
   `SourceSnapshot`, the generation-scoped source reader.
 - [`src/asset_delivery.rs`](./src/asset_delivery.rs) defines `AssetRead`, the
