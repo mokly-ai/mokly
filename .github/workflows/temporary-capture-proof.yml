@@ -1,0 +1,83 @@
+name: Temporary capture volume proof
+on:
+  push:
+    branches:
+      - calummoore/bundle-capture-proof-20261117
+permissions:
+  contents: read
+env:
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_DEV_DEBUG: 0
+  CARGO_PROFILE_TEST_DEBUG: 0
+  CARGO_TARGET_DIR: target/capture-volume-proof
+jobs:
+  proof:
+    name: Capture volume proof (${{ matrix.runner }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - blacksmith-6vcpu-macos-26
+          - blacksmith-8vcpu-windows-2025
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out exact proof source
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a
+        env:
+          BLACKSMITH_BYPASS_CHECKOUT: "true"
+        with:
+          fetch-depth: 0
+      - name: Set up Node 22.15.0
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 22.15.0
+          package-manager-cache: false
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Set up npm
+        run: npm install --global npm@11.21.0
+      - name: Set up Rust
+        run: rustup toolchain install
+      - name: Restore Rust build cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0
+        with:
+          shared-key: capture-volume-proof
+          cache-bin: false
+          save-if: false
+      - name: Install dependencies
+        run: npm ci
+      - name: Build UI package
+        run: npm run build --workspace @mokly/ui
+      - name: Build model package
+        run: npm run build --workspace @mokly/model
+      - name: Build frame package
+        run: npm run build --workspace @mokly/frame
+      - name: Build viewer package
+        run: npm run build --workspace @mokly/viewer
+      - name: Build sidecar package
+        run: npm run build --workspace @mokly/mokly
+      - name: Read actual native volume hint
+        run: cargo run --locked -p mokly-sidecar --example capture_volumes --quiet > capture-hint.json
+      - name: Prove Node 22.15.0 stamps and native mapping
+        run: node scripts/temporary-capture-volume-proof.mjs capture-hint.json | tee capture-proof-node-22.jsonl
+      - name: Set up Node 24
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Prove Node 24 stamps and native mapping
+        run: node scripts/temporary-capture-volume-proof.mjs capture-hint.json | tee capture-proof-node-24.jsonl
+      - name: Retain one-time evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: capture-proof-${{ matrix.runner }}
+          path: |
+            capture-hint.json
+            capture-proof-node-*.jsonl
+          if-no-files-found: error
+          retention-days: 14
