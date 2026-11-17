@@ -4,7 +4,7 @@
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-31, from the remote gate of `calummoore/mokly-ui-inspector` at `d7a9780e`, "browser-4-of-4", during the shell views plan, which does not change this test or the code it covers.
 - **Location:** `tests/browser/viewer_inspection_ownership.spec.ts:79`, the `page.evaluate` of the generated test "same-origin obsolete labels success preserves request replacement pick".
-- **Reason:** The failure needs the load of a full shard, and its cause is not confirmed.
+- **Reason:** The failure occurs under suite load, and its cause is not confirmed. The local occurrence below shows that a remote shard is not required.
 
 - **Source:** Implementation.
 - **Category:** Test.
@@ -30,8 +30,9 @@
     the variant "same-origin obsolete highlight success preserves request
     replacement pick", with the same error at line 79.
   - Locally the whole spec passed 170 of 170 runs on Node 24 and 170 of 170
-    on Node 22.15.0, with `--repeat-each=5`. So the failure needs the load of
-    a full remote shard.
+    on Node 22.15.0, with `--repeat-each=5`. These runs suggested that the
+    failure needed the load of a full remote shard. The local occurrence
+    below disproves that inference.
   - On 2026-11-03, the receiver-reader branch met the same error at line 79
     in "postMessage obsolete highlight failure preserves request replacement
     pick". Its complete remote gate passed six of seven jobs. Browser shard
@@ -40,6 +41,20 @@
     failure or skip. The test took about one second. No assertion, retry, or
     time limit changed. The suspected source remains an asynchronous host
     navigation during the awaited pick setup.
+  - On 2026-11-17, the parallel render input keys branch met the same error
+    at line 79, column 22, in "postMessage obsolete labels failure preserves
+    frame replacement pick". It is the first frame replacement variant in this
+    record. The failure came from the local complete gate of
+    `calummoore/mokly-parallel-render-keys-6m85` at `31ee6f219`, not from a
+    remote shard. That commit changes only files under `crates/` and `plans/`.
+  - In that gate, the browser suite ran 2,287 tests: 2,285 passed, 2 failed,
+    and none skipped. The other failure is recorded in
+    `plans/follow-ups/flaky-mocklink-shell-navigation.md`. Final CI of the
+    branch was still pending.
+  - One focused rerun on the branch selected this test, and it passed in
+    725 ms. No assertion, retry, or time limit changed. The suspected source
+    remains an asynchronous host navigation during the awaited pick setup.
+    Nobody confirmed it.
   - `plans/follow-ups/flaky-viewer-selection-navigation.md` records the same
     error in another spec, `tests/browser/viewer.spec.ts`.
   - On 2026-11-17, the local complete gate at `2ecc62e95` met the same
