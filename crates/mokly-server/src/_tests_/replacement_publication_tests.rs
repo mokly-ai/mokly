@@ -177,7 +177,7 @@ fn a_use_case_title_only_edit_publishes_exactly_one_revision() {
         .iter()
         .map(|route| (route.clone(), ready()))
         .collect::<Vec<_>>();
-    if let Some(next) = evidence::complete(&replacement, &repeated, &EncodedDetails) {
+    if let Some(next) = evidence::complete(&replacement, &repeated, &EncodedDetails).unwrap() {
         assert!(publications.replace(next));
     }
     assert_eq!(

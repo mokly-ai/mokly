@@ -128,6 +128,12 @@ Shared assumptions: preserve today's delivered revision and typed stamp rules,
 as the task requires. Compare all semantic fields. Normalize only the fields
 that canonical hashing already normalizes. Preserve whether revision is present. Do not trust a supplied id alone.
 
+Our call, 2026-11-17: expose an opaque public `RecentDetails` value because
+external fixtures already construct public `Snapshot` literals. Keep mutation
+private. Propagate private encoder errors through existing result boundaries
+to avoid adding panic paths. These implementation details preserve the
+chosen behavior and add no protocol requirement.
+
 Our call, 2026-11-17: allow equal `RevisionFile` reuse across revisions
 because delivery already replaces that number. This corrects the task's
 raw-file premise without changing output or the performance orchestrator's calls.
@@ -146,9 +152,11 @@ Depends on: none
 Delegate to the docs implementor. Existing protocol requirements stay in force.
 No mockups are needed because no screen or user flow changes.
 
-- [ ] Check the contract owners and retain their current requirements.
-- [ ] Update the server README with the bounded equality reuse boundary and relevant code entry points.
-- [ ] Confirm no model README or protocol change is needed for single-conversion canonical output.
+- [x] Check the contract owners and retain their current requirements.
+- [x] Update the server README with the bounded equality reuse boundary and relevant code entry points.
+- [x] Confirm no model README or protocol change is needed for single-conversion canonical output.
+
+Milestone 1 complete. Evidence: `.context/detail-publication-reuse/milestone-1-docs-report.md`.
 
 ## Milestone 2: Recent publication reuse and canonical encoding
 
@@ -157,14 +165,16 @@ Depends on: 1
 Delegate to the non-ui implementor. Centralize equality reuse across rebuild,
 usage completion, and Changes without changing their revision rules.
 
-- [ ] Add the publication-sequence byte oracle over several edits and all three phases. Compare every index and detail response, id, and typed revision.
-- [ ] Add a red-first count regression proving a repeated phase does not hash or encode an equal detail again.
-- [ ] Add canonical byte equality coverage for nested maps, arrays, escapes, non-ASCII text, and number forms. Prove the tests detect a defect.
-- [ ] Implement the four-kind-slot bound, equality lookup, absent-path pruning, and shared encoded payloads in all three phases.
-- [ ] Remove the redundant canonical value conversion without changing sorting, formatting, errors, ids, or output.
-- [ ] Build each cache miss from one canonical preimage serialization. Fill only the top-level id slot and keep revision-spliced delivery.
-- [ ] Cover eviction, changed content with an old supplied id, revision changes, and candidate isolation at the lowest useful level.
-- [ ] Save red/green evidence and the added tests' run times under `.context/detail-publication-reuse/`.
+- [x] Add the publication-sequence byte oracle over several edits and all three phases. Compare every index and detail response, id, and typed revision.
+- [x] Add a red-first count regression proving a repeated phase does not hash or encode an equal detail again.
+- [x] Add canonical byte equality coverage for nested maps, arrays, escapes, non-ASCII text, and number forms. Prove the tests detect a defect.
+- [x] Implement the four-kind-slot bound, equality lookup, absent-path pruning, and shared encoded payloads in all three phases.
+- [x] Remove the redundant canonical value conversion without changing sorting, formatting, errors, ids, or output.
+- [x] Build each cache miss from one canonical preimage serialization. Fill only the top-level id slot and keep revision-spliced delivery.
+- [x] Cover eviction, changed content with an old supplied id, revision changes, and candidate isolation at the lowest useful level.
+- [x] Save red/green evidence and the added tests' run times under `.context/detail-publication-reuse/`.
+
+Milestone 2 complete. Evidence: `.context/detail-publication-reuse/milestone-2-report.md`.
 
 ## Milestone 3: Before and after evidence
 
@@ -174,18 +184,32 @@ Use separate checkouts and target directories for the last merged `main`
 and the branch. Cargo builds run one at a time with `CARGO_INCREMENTAL=0`.
 Check disk and available memory before every large Cargo build.
 
-- [ ] Build release binaries for `main` and the branch with the same settings.
-- [ ] Measure repeated Serve edits on `examples/basic` and generated fixtures from `scripts/large/`. Record fixture sizes, phase `detail.build` counts, edit-to-Changes-ready times, and memory observations.
-- [ ] Compare delivered publications against the pre-change oracle and explain any measurement limits.
+- [x] Build release binaries for `main` and the branch with the same settings.
+- [x] Measure repeated Serve edits on `examples/basic` and generated fixtures from `scripts/large/`. Record fixture sizes, phase `detail.build` counts, edit-to-Changes-ready times, and memory observations.
+- [x] Compare delivered publications against the pre-change oracle and explain any measurement limits.
 - [ ] Push the implementation and immediately send its SHA to the performance orchestrator for the Mokly Cloud acceptance measurement.
+
+The performance orchestrator added two verification calls on 2026-11-17.
+Confirm that every miss still emits `detail.build`. Locate the React timing
+gap before changing the miss path. Both checks are complete. Raw traces
+show zero misses in repeated edits. Publication windows shrink. The small
+React gap occurs in rendering and base capture. The runtime cause remains
+unproven. Evidence: `.context/detail-publication-reuse/react-publication-analysis.md`.
 
 ## Milestone 4: Verification, review, and pull request
 
 Depends on: 1, 2, 3
 
-- [ ] Run targeted tests, `cargo xtask check --suite repository`, and `cargo xtask check`. Use Git 2.45 or later first on PATH and install git-lfs. Report any blocked suite.
+- [x] Run targeted tests, `cargo xtask check --suite repository`, and `cargo xtask check`. Use Git 2.45 or later first on PATH and install git-lfs. Report any blocked suite.
 - [ ] Commit with Conventional Commits and push. Run the shared finish-work `scripts/ci-wait.sh` after each CI-triggering change.
 - [ ] Review the full diff against `origin/main` with the implementation-review skill. Check each new finding, apply up to two fix rounds, re-review fixes, and record remaining items.
 - [ ] Refresh `origin/main`, preserve merged nearby work, and finish CI on the last commit. Report fixed, deferred, and open findings and the repository follow-up count.
 - [ ] Delete this plan under the plans skill after all preceding TODOs are complete.
 - [ ] Open the pull request into `main`. Preserve dated calls and the plan permalink in its description. Wait for final CI and send the complete report to the performance orchestrator. Do not merge.
+
+Verification evidence: `.context/detail-publication-reuse/complete-gate.log`.
+The complete local gate passed on the implementation before the clean merge
+of `origin/main` at `49f28d837`. The merge preserves the base-usage optimization
+and browser test fix. Integration checks follow the merge. Final pull request
+CI will verify the combined tree. Release comparisons remain the controlled
+before/after measurements against `794b30a91`.

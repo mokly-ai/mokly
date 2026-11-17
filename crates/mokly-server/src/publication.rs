@@ -181,7 +181,7 @@ impl Publications for SharedPublication {
                 }
                 state.snapshot.clone()
             };
-            let Some(next) = evidence::complete(&current, &updates, self.encoder.as_ref()) else {
+            let Some(next) = evidence::complete(&current, &updates, self.encoder.as_ref())? else {
                 return Ok(());
             };
             let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
@@ -225,7 +225,7 @@ impl Publications for SharedPublication {
             if current.index.changes_status == status && accepted.is_none() {
                 return Ok(true);
             }
-            let next = changes::project(&current, status, accepted.clone())?;
+            let next = changes::project(&current, status, accepted.clone(), self.encoder.as_ref())?;
             if cancel.cancelled() {
                 return Ok(false);
             }

@@ -43,14 +43,21 @@ pub fn to_string(value: &impl Serialize) -> Result<String> {
         Ok(value) => value,
         Err(source) => return Err(ModelError::Internal(InternalError::Json { source })),
     };
-    let mut text = serde_json::to_string_pretty(&sorted(value))
-        .expect("JSON values contain only JSON data and string object keys");
+    encode_value(value)
+}
+
+fn encode_value(value: Value) -> Result<String> {
+    let mut text = match serde_json::to_string_pretty(&sorted(value)) {
+        Ok(text) => text,
+        Err(source) => return Err(ModelError::Internal(InternalError::Json { source })),
+    };
     text.push('\n');
     Ok(text)
 }
 
-/// Hash a detail's canonical JSON with its id and current revision zeroed.
-pub fn detail_id(value: &impl Serialize) -> Result<String> {
+/// Encode a detail's canonical identity preimage with its id and current revision zeroed.
+/// An absent revision remains absent. The returned text has one final LF.
+pub fn detail_preimage(value: &impl Serialize) -> Result<String> {
     let value = match serde_json::to_value(value) {
         Ok(Value::Object(mut object)) => {
             object.insert("detailId".into(), Value::String("0".repeat(64)));
@@ -69,10 +76,12 @@ pub fn detail_id(value: &impl Serialize) -> Result<String> {
         }
         Err(source) => return Err(ModelError::Internal(InternalError::Json { source })),
     };
-    let bytes = to_string(&value)
-        .expect("the detail hash preimage is a JSON object with string keys")
-        .into_bytes();
-    Ok(Sha256::digest(bytes)
+    encode_value(value)
+}
+
+/// Hash a detail's canonical JSON with its id and current revision zeroed.
+pub fn detail_id(value: &impl Serialize) -> Result<String> {
+    Ok(Sha256::digest(detail_preimage(value)?)
         .iter()
         .map(|byte| format!("{byte:02x}"))
         .collect())
