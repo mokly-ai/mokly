@@ -66,6 +66,19 @@
     more than five seconds to load, for example under CPU load, fails in the
     browser suite although it loads correctly alone.
 - **Problem:**
+  - The same test failed in the local complete gate on 2026-11-17 at
+    `2ecc62e95`. This run passed 2,459 Rust tests and 3,021 viewer tests.
+    The browser suite passed 2,285 tests and failed two, with no skips.
+    This failure occurred at the frame-load helper at line 41, called from
+    line 55. The assertion expected `data-test-load-state="complete"` and
+    received `"pending"` after 15,000 ms. The iframe entered `error`.
+    The trace records `net::ERR_NAME_NOT_RESOLVED` for
+    `https://cross-origin.example.test/nested.html` and two aborted requests.
+    Same-origin Home requests completed with HTTP 200 in about 10–22 ms.
+    One selected rerun against the same build passed one test, with no
+    failures or skips. Its test time was 2.0 seconds. No test, assertion,
+    timeout, or retry changed. The suspected source remains nested DNS
+    delaying frame readiness beyond the mount deadline.
   - Failure: the test failed once in the local complete gate,
     `cargo xtask check`, on 2026-11-17. The run used Node 24.22.1, Chrome 151,
     and one Playwright worker. The gate passed the repository suite and all
