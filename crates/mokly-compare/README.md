@@ -248,8 +248,12 @@ every public fact of the review result, which no file holds.
 `projection_workspace::apply`
 joins ready usage with indexed affected links and caller-owned input changes.
 It reads base usage through `RenderGeneration::comparison_usage`, so a kept
-base view needs no document restore. An absent workspace stays absent. An
-absent list stays absent until the caller proves usage.
+base view needs no document restore. The reader of a kept base checks its own
+cancellation, then forwards this read to the kept capture. When the forwarded
+read fails or returns no usage, the reader falls back to its own checked
+`comparison_document`, with its failure checks and its release of an owned
+failure. An absent workspace stays absent. An absent list stays absent until
+the caller proves usage.
 `projection_removed` assembles historical records, details with base usage,
 and typed preview metadata. Its `workspaces` initializer prepares removed
 visual details after the caller proves base usage. The static caller owns file
@@ -343,8 +347,9 @@ development dependencies, and no test uses the internet.
   reuse.
 - [`src/base_reader.rs`](./src/base_reader.rs) defines `BaseReader`, the
   per-classification reader of a kept base. It keeps only its `BaseReuse`,
-  checks its cancellation before each call, and releases the base through its
-  `BaseRelease` after its own first failed read.
+  checks its cancellation before each call, and forwards retained inputs and
+  captured usage to the kept capture after that check. It releases the base
+  through its `BaseRelease` after its own first failed read.
 - [`src/comparison_steps.rs`](./src/comparison_steps.rs) defines `Step`,
   `Steps`, and `StepCache`, the comparison steps that a command shows while
   Changes runs.

@@ -12,6 +12,7 @@ use mokly_graph::document_error::{CodecError, CodecInternalError};
 use mokly_graph::error::GraphError;
 use mokly_graph::types::{RenderGeneration, RenderGenerationMock, RenderSummary};
 use mokly_model::runtime_diagnostic::RuntimeCode;
+use mokly_model::usage::CatalogueUsage;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::base_reader::BaseReader;
@@ -174,11 +175,23 @@ fn cancelled_reader_does_not_restore_or_forward_a_retained_input() {
         before.retained_comparison_input(&route(0)),
         Some(RetainedComparisonInput::Ready(_))
     ));
+    assert_eq!(
+        before.comparison_usage(&route(0)).unwrap(),
+        Some(CatalogueUsage::Ready {
+            instances: vec![],
+            slots: vec![],
+            ranges: vec![],
+        })
+    );
     cancelled.store(true, Ordering::Release);
     assert!(before.retained_comparison_input(&route(0)).is_none());
     assert_eq!(restores.load(Ordering::Acquire), 1);
     assert!(matches!(
         before.comparison_document(&route(0)),
+        Err(GraphError::Runtime { source }) if source.code == RuntimeCode::Cancelled
+    ));
+    assert!(matches!(
+        before.comparison_usage(&route(0)),
         Err(GraphError::Runtime { source }) if source.code == RuntimeCode::Cancelled
     ));
     assert!(!before.failed());

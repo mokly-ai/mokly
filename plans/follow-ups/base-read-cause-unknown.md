@@ -82,7 +82,7 @@
     `crates/mokly-cli/src/build_changes.rs:58` reaches
     `changes_policy::unavailable`.
   - That path shows no `base-conversion` warning, because
-    `base_classification.rs:220` adds those warnings only to a successful
+    `base_classification.rs:218` adds those warnings only to a successful
     result.
   - `crates/mokly-cli/src/build_output.rs:206` to line 212 prints a
     `config-invalid` issue of the head build. Head reads use the working tree,

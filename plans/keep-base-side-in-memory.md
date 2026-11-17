@@ -892,11 +892,28 @@ The refresh at `49f28d837` preserves captured-usage reads and the nested
 browser report fix. The compare README keeps both branches' text. Its
 preservation audit is in the same merge evidence file.
 
+The refresh at `03bedb6ec` preserves exporter-key worker scheduling and
+both branches' follow-up facts. Its audit is in the same evidence file.
+
+The refresh at `0accb6818` preserves detail-publication reuse and the
+deterministic navigation fixtures. It keeps the deletion of the resolved
+MockLink item. The pull request keeps this branch's occurrence evidence.
+Its preservation audit is in the same evidence file.
+
+On 2026-11-17 the performance orchestrator confirmed the fixture-timing
+cause on unchanged main and assigned its fix to a separate branch. That
+fix merges before this branch. A React-only CI failure gets no rerun.
+After the fix reaches main, merge main, delete the resolved branch-only
+item, and keep its evidence in the pull request body.
+
 Verification evidence: `.context/keep-base-side-in-memory/milestone-6-verification.md`.
 Repetition and cause evidence: `.context/keep-base-side-in-memory/milestone-6-repetitions-report.md`
 and `.context/keep-base-side-in-memory/milestone-6-react-watch-cause-report.md`.
 Ownership correction evidence: `.context/keep-base-side-in-memory/finding-5-fix-report.md`
 and `.context/keep-base-side-in-memory/finding-5-docs-report.md`.
+Captured-usage evidence: `.context/keep-base-side-in-memory/captured-usage-report.md`
+and `.context/keep-base-side-in-memory/captured-usage-docs-report.md`.
+Final reference audit: `.context/keep-base-side-in-memory/final-reference-refresh-report.md`.
 
 - [x] Remove the status lines that Milestone 1 added. Keep the macOS item of
       the runtime status line.
@@ -912,10 +929,12 @@ and `.context/keep-base-side-in-memory/finding-5-docs-report.md`.
 - [x] Apply the confirmed review finding 5 with its checked option B and
       dated call 45. Prove the ownership regression before the fix and
       preserve the retained-input and late-reader tests.
-- [ ] After PR #301 merges into main, merge `origin/main` and keep both
+- [x] After PR #301 merges into main, merge `origin/main` and keep both
       README texts. Apply dated call 46's captured-usage forwarding and
       zero-restore regression before the final gate.
-- [ ] Run `cargo xtask check --suite repository`, then the complete gate
+- [x] Record the third React gate occurrence, its single unchanged rerun,
+      and the separate fixture-timing owner in the follow-up item.
+- [x] Run `cargo xtask check --suite repository`, then the complete gate
       `cargo xtask check`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the

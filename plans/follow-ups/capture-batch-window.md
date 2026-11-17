@@ -6,7 +6,7 @@
   "perf: single pass render (follow on)" workspace, 2026-10-27, which named
   it as a possible follow-up.
 - **Location:** `crates/mokly-graph/src/session_collection.rs:28` and
-  `crates/mokly-graph/src/workers.rs:186`.
+  `crates/mokly-graph/src/workers.rs:187`.
 - **Reason:** PR #220 did not measure the gain, and the change touches the
   shared capture path of `build` and Serve.
 

@@ -15,11 +15,12 @@
   `crates/mokly-server/src/background.rs:57`,
   `crates/mokly-server/src/changes_background.rs:82` and line 97, and
   `crates/mokly-server/src/publication.rs:279` to line 293.
-- **Reason:** The test failed once in a complete gate of a branch that does
+- **Reason:** The test first failed in a complete gate of a branch that does
   not change it, its harness, its fixture setup, or the startup replay code,
-  and the unchanged test passed on the rerun. Under the decision of
+  and the unchanged test passed on that rerun. Under the decision of
   2026-11-17, the failure is fixture timing, and F with E go to a separate
-  branch.
+  branch. Later that day, the separate branch reproduced the failure on
+  unchanged `main`.
 
 - **Source:** Implementation.
 - **Category:** Test.
@@ -139,16 +140,18 @@
     100 ms margin then needs a cold path to `begin()` that is faster than in
     that run. The two-second margin needs a modification time with no
     sub-second part, and the fixture times have sub-millisecond parts.
-  - Suspected source, not confirmed: a React input falls in the startup
-    replay window. The replay rebuilds once before the first Changes result
-    is ready. The new publication replaces the owner, so Serve cancels the
-    first classification and runs a second one. Both `changes.classify` spans
-    end, and `comparisonProfile` counts both. The window timing above shows
-    that this trigger is possible, but the evidence does not show it.
+  - Suspected source at first, not confirmed then: a React input falls in
+    the startup replay window. The replay rebuilds once before the first
+    Changes result is ready. The new publication replaces the owner, so Serve
+    cancels the first classification and runs a second one. Both
+    `changes.classify` spans end, and `comparisonProfile` counts both. The
+    window timing above shows that this trigger is possible, but the evidence
+    does not show it.
   - The test, the harness, the fixture setup, and the startup replay code
     match `origin/main` byte for byte. The branch changes how Serve keeps the
     base and cancels its readers, so an interaction with that change is not
-    excluded until the suspected order fails on `main` too.
+    excluded until the suspected order fails on `main` too. The reproduction
+    on `main` below later met that condition.
   - A native watch event, or a failed read of the reference poll, could also
     restart the classification. Correction: the first version named a
     changed Git reference. HEAD and the base do not change after setup, so
@@ -193,7 +196,44 @@
   - The compact run shows no sign that the branch starts classification
     earlier, or keeps the rebuild window open longer, than `main` on the same
     fixture. The exact trigger of the rebuild in the failed attempt stays
-    unrecorded. A startup replay is plausible, but not proven.
+    unrecorded. At that time, a startup replay was plausible, but not proven.
+  - Third failure on this branch, 2026-11-17, after the first gate failure and
+    the failed repetition above: the branch merged `main` with PR #303 as
+    `a69ab979b`. The complete gate ran there, with uncommitted changes to the
+    captured-usage reads of the base reader and to their tests and docs. None
+    of these changes touches the test, its harness, its fixture setup, or the
+    startup replay code. The gate exited 1. The repository checks, 2,496 Rust
+    tests, and 3,021 Node tests passed, and none failed.
+  - The browser suite observed all 2,287 assigned tests. Of these, 2,286
+    passed and 1 failed, with no skip, no cancellation, and no reporter
+    error. The only failure was "large changes delivers browser evidence for
+    react", with the same text
+    `AssertionError: Expected values to be strictly equal: 2 !== 1` at
+    `tests/browser/large_changes.spec.ts:73:16`. The test took 11.232
+    seconds. The HTML case of the same spec, both cases of
+    `tests/browser/large_watch.spec.ts`, and the four cases of
+    `tests/browser/browse_navigation.spec.ts` passed.
+  - The failure text again named neither the cold nor the warm result. The
+    `finally` again removed the harness evidence, so the failed test kept
+    only its Playwright trace and its error context.
+  - Rerun outcome of the third failure: the single unchanged rerun also
+    failed, with the same assertion. It had 0 passed, 1 failed, 0 skipped,
+    and 0 retries. The test took 9.6 seconds, and setup and execution took
+    50.33 seconds. The command was
+    `node node_modules/@playwright/test/cli.js test tests/browser/large_changes.spec.ts --project=chromium --workers=1 -g 'large changes delivers browser evidence for react'`.
+    No second rerun followed. The static delivery check, which the failed
+    gate did not run, then passed in both modes, with 653 cases each and exit 0.
+  - Reproduction on `main`, later on 2026-11-17: the separate branch
+    `calummoore/mokly-large-changes-fixture-timing-gilm` reproduced the same
+    failure deterministically on unchanged `main` at commit `f0c572b49`. With
+    the fixture modification times inside the startup replay window, the
+    first classification is always cancelled, and the second one ends `ok`.
+    Its report gave no count of runs.
+  - On that evidence, the performance orchestrator confirmed the fixture
+    setup as the cause. It also judged that this branch makes that overlap
+    with the replay window more frequent on the machine that ran the gates
+    and the repetitions. The files that triggered the rebuild in the natural
+    failures stay unrecorded.
 - **Impact if no action:** The browser suite can fail at random on a correct
   change, and each failure costs a gate rerun. A real change in the number
   of classifications can hide behind the flake. Each failure also deletes the
@@ -218,12 +258,15 @@
     cause. Source: the leading hypothesis of the first diagnosis. The trace
     supports part of it, because it points to the cold process. The window
     timing does not show it. E and F drop it, because they record evidence
-    instead of assuming a cause.
+    instead of assuming a cause. The reproduction on `main` of 2026-11-17
+    later showed this order, and the performance orchestrator confirmed the
+    fixture setup as the cause.
   - A to D send the work to a separate branch. Source: the rule for unrelated
     flaky tests in the `testing` skill, because the diff does not touch the
     test. This holds for the route, but it does not prove that the cause is
     outside the base retention change of the branch. E and F give that
-    evidence at the next failure.
+    evidence at the next failure. The reproduction on `main` of 2026-11-17
+    later showed the failure without this branch.
 - **Options:**
   - **B.** Give each generated fixture file a fixed modification time well
     before the commit, in the fixture setup, so that no setup write falls in
@@ -364,6 +407,21 @@
   - Outcome: the compact diagnostic showed neither. So the failure is
     fixture timing, and this branch makes no test change and no product
     change for it.
+  - After the third failure and the reproduction on `main`, the performance
+    orchestrator kept that decision on 2026-11-17. This branch still makes
+    no test change and no product change for it.
+  - Owner, 2026-11-17: the separate branch
+    `calummoore/mokly-large-changes-fixture-timing-gilm`. It fixes the
+    fixture modification times before Serve starts, which is B, and it
+    applies E and F. Its fix merges into `main` before the branch
+    `calummoore/mokly-keep-base-side-in-memory-2-hjj4`.
+  - Merge order, 2026-11-17: when the pull request CI of that branch fails
+    only on this React test, do not rerun it. Wait until the fixture fix
+    reaches `main`, and merge `main` into that branch. Then delete this item
+    as resolved, keep all its new evidence in the pull request description,
+    and run CI on the new commit. Only that branch holds this item, so a
+    merge of `main` does not delete it. Delete it by hand, also when Git
+    shows no modify/delete conflict.
 - **Action:** fix after merge, apply F with E, in a separate branch, because
   the later decision of 2026-11-17 classified the failure as fixture timing
   and deferred F with E.

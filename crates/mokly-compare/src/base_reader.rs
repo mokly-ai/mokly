@@ -22,6 +22,7 @@ use mokly_graph::types::{
 use mokly_graph::workers::{ComparisonTask, ComparisonWorker};
 use mokly_model::data::Props;
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
+use mokly_model::usage::CatalogueUsage;
 
 use crate::base_retention::BaseReuse;
 
@@ -137,6 +138,17 @@ impl RenderGeneration for BaseReader {
     }
     fn comparison_document(&self, route: &str) -> Result<Arc<Artifact>> {
         self.state.read(|base| base.comparison_document(route))
+    }
+    fn comparison_usage(&self, route: &str) -> Result<Option<CatalogueUsage>> {
+        self.state.check_cancelled()?;
+        if let Ok(Some(usage)) = self.state.reuse.base.generation.comparison_usage(route) {
+            return Ok(Some(usage));
+        }
+        Ok(self
+            .comparison_document(route)?
+            .document
+            .as_ref()
+            .map(|document| document.usage.clone()))
     }
     fn retained_comparison_input(&self, route: &str) -> Option<RetainedComparisonInput> {
         self.state.check_cancelled().ok()?;

@@ -113,7 +113,8 @@ pub trait RenderGeneration: GeneratedResources {
     }
     /// Read comparison usage, or None when the artifact has no composed document.
     /// The default preserves the document read's checks and errors.
-    /// Transparent wrappers forward this read. Checking wrappers keep the default.
+    /// Transparent wrappers forward this read. Checking wrappers may forward when
+    /// they preserve their own checks. Failed or missing usage must use their checked document read.
     fn comparison_usage(&self, route: &str) -> Result<Option<CatalogueUsage>> {
         Ok(self
             .comparison_document(route)?
