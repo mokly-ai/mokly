@@ -7,6 +7,6 @@ mod detail_tests;
 mod index_tests;
 mod lookup_tests;
 mod removed_tests;
-mod support;
+pub(crate) mod support;
 mod workspace_tests;
 mod workspace_variant_tests;

@@ -111,10 +111,11 @@ bytes, generated CSS, and trusted annotations in compressed form. It encodes
 documents with `mokly_graph::document_codec::EncodedView`, the codec that the
 compact tier of the render cache also uses. Inputs that do not fit the capture
 budget, and kept views that fail to restore, read from their side's source.
-Serve head reads use the bounded render cache and render again on the head
-root only when neither cache tier holds the document. Build head reads use the
-head capture. Each result holds at most one base capture, and a build result
-also holds one head capture. The
+A usage read of a kept view returns its retained usage without a restore, so
+it needs no source fallback. Serve head reads use the bounded render cache and
+render again on the head root only when neither cache tier holds the document.
+Build head reads use the head capture. Each result holds at most one base
+capture, and a build result also holds one head capture. The
 [comparison serving contract](../../docs/protocol/mokly-comparison-serving.md)
 owns the capture budget and its overlap with the render cache. Capture checks
 cancellation before each view and each encoding. Its timing spans contain no
@@ -190,8 +191,9 @@ component's base side, for current and removed details. These records carry
 every public fact of the review result, which no file holds.
 `projection_workspace::apply`
 joins ready usage with indexed affected links and caller-owned input changes.
-An absent workspace stays absent. An absent list stays absent until the caller
-proves usage.
+It reads base usage through `RenderGeneration::comparison_usage`, so a kept
+base view needs no document restore. An absent workspace stays absent. An
+absent list stays absent until the caller proves usage.
 `projection_removed` assembles historical records, details with base usage,
 and typed preview metadata. Its `workspaces` initializer prepares removed
 visual details after the caller proves base usage. The static caller owns file
