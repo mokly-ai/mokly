@@ -79,7 +79,7 @@ export const deviceFrame = defineComponent({
     {
       slug: "failed",
       title: "Failed to load",
-      props: { ...sample, retryDestination: DESTINATIONS.previewLoading },
+      props: { ...sample, retryDestination: DESTINATIONS.welcome },
       slots: { children: null },
     },
   ],

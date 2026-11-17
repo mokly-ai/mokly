@@ -84,7 +84,7 @@ its feature contract.
 | `design/browse/appearance/workspaces/difference`              | Browse shell › Appearance › Panels and comparisons                   | Difference comparison                                         |
 | `design/browse/appearance/status/home`                        | Browse shell › Appearance › Status and recovery                      | Home guidance with nothing selected                           |
 | `design/browse/appearance/status/loading`                     | Browse shell › Appearance › Status and recovery                      | Catalogue checking for changes                                |
-| `design/browse/appearance/status/error`                       | Browse shell › Appearance › Status and recovery                      | Preview failed to load; Try again opens `preview-loading`     |
+| `design/browse/appearance/status/error`                       | Browse shell › Appearance › Status and recovery                      | Screen could not be shown; Try again opens `preview-loading`  |
 | `design/browse/appearance/status/unavailable`                 | Browse shell › Appearance › Status and recovery                      | Changes unavailable                                           |
 | `design/browse/appearance/status/flow`                        | Browse shell › Appearance › Status and recovery                      | Use-case steps around light screens                           |
 | `design/browse/loading/catalogue-loading`                     | Browse shell › Loading and recovery                                  | One status line until the catalogue index arrives             |

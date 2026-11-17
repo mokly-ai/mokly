@@ -51,22 +51,6 @@ function HomeAndEmpty({ viewport }: { viewport: ArtboardViewport }) {
   );
 }
 
-/** A frame whose document failed to load; Try again loads the preview again. */
-function FailedShot({ viewport }: { viewport: ArtboardViewport }) {
-  return viewport === "desktop" ? (
-    <BrowserFrame
-      address="example.test/welcome"
-      retryDestination={DESTINATIONS.previewLoading}
-    >
-      {null}
-    </BrowserFrame>
-  ) : (
-    <PhoneFrame small retryDestination={DESTINATIONS.previewLoading}>
-      {null}
-    </PhoneFrame>
-  );
-}
-
 function ErrorAndRetry({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <AppearanceShell
@@ -86,7 +70,14 @@ function ErrorAndRetry({ viewport }: { viewport: ArtboardViewport }) {
         }
         inspector={<DetailsPanel subject="welcome" />}
         viewport={viewport}
-        render={(previewViewport) => <FailedShot viewport={previewViewport} />}
+        render={() => (
+          <EmptyState
+            to={DESTINATIONS.previewLoading}
+            title="This screen could not be shown"
+            body="The catalogue is still available while you try again."
+            linkLabel="Try again"
+          />
+        )}
       />
     </AppearanceShell>
   );
@@ -220,7 +211,7 @@ export const loadingScreen = defineScreen({
 export const errorScreen = defineScreen({
   ...appearanceDesignMetadata,
   description:
-    "A preview that could not be loaded, offering another attempt without leaving the catalogue.",
+    "A screen that could not be shown, offering another attempt without leaving the catalogue.",
   ...artboards({
     desktop: <ErrorAndRetry viewport="desktop" />,
     mobile: <ErrorAndRetry viewport="mobile" />,

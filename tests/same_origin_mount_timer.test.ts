@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { sameOriginAdapter } from "../packages/frame/dist/adapters/same_origin_adapter.js";
+import { mountLocalDocument } from "../packages/frame/dist/adapters/same_origin_mount.js";
 
 const origin = "https://app.test";
 const url = new URL("/static/mokly-generated/home/index.mobile.html", origin);
@@ -80,4 +81,27 @@ test("a load without an accepted document rejects with timeout after five second
   assert.deepEqual(fake.limits(), [5000]);
   fake.expire();
   await assert.rejects(mount, { code: "timeout" });
+});
+
+test("an accepted document ends the limit, and a later load starts none", async () => {
+  const fake = localFrame(url.href);
+  const operations = {
+    updateUsage: () => undefined,
+    list: () => [],
+    highlight: () => undefined,
+    scroll: () => undefined,
+    subscribe: () => undefined,
+    dispose: () => undefined,
+  };
+  const mount = mountLocalDocument(fake.frame, url, () => operations);
+  const other = `${origin}/static/mokly-generated/other/index.mobile.html`;
+  fake.load(other);
+  assert.deepEqual(fake.limits(), [5000]);
+  fake.load(url.href);
+  assert.deepEqual(fake.limits(), []);
+  const mounted = await mount;
+  fake.load(other);
+  assert.deepEqual(fake.limits(), []);
+  fake.expire();
+  assert.deepEqual(await mounted.listInstanceBoundaries(), []);
 });

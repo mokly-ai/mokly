@@ -48,7 +48,13 @@
       "select",
       "optional-unset"
     ],
-    "preview/device-frame": ["phone", "browser", "dark", "light-only"],
+    "preview/device-frame": [
+      "phone",
+      "browser",
+      "dark",
+      "light-only",
+      "failed"
+    ],
     "preview/comparison-pane": [
       "before",
       "current",
