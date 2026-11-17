@@ -21,9 +21,11 @@ function projectPath(url: URL, projectId: string): string[] | undefined {
 }
 
 /**
- * A request the page abandoned by navigating has nothing left to answer: its
- * response is disposed and its route is gone. Only that is ignored; any other
- * failure in a handler still fails the test.
+ * A request the page abandoned by navigating, or that was still in flight when
+ * the test ended, has nothing left to answer: its response is disposed and its
+ * route is gone. Playwright closes the context with the reason "Test ended."
+ * after a test passes. Only those are ignored; a timeout and any other failure
+ * in a handler still fail the test.
  */
 function answering(
   handler: (route: Route) => Promise<unknown>,
@@ -32,7 +34,7 @@ function answering(
     handler(route).catch((caught: unknown) => {
       const message = caught instanceof Error ? caught.message : String(caught);
       if (
-        /Response has been disposed|Route is already handled|has been closed/.test(
+        /Response has been disposed|Route is already handled|has been closed|Test ended\./.test(
           message,
         )
       ) {
