@@ -145,9 +145,11 @@
   - [install-pipe-wait-after-stop.md](./install-pipe-wait-after-stop.md): the
     same class of wait without a limit during base preparation. The causes
     and the fixes differ.
-  - [keep-base-side-in-memory.md](./keep-base-side-in-memory.md): a kept base
-    would hold its shared leases longer. A repair of a damaged entry would
-    then wait longer too.
+  - The
+    [Serve base lifetime rule](../../docs/protocol/mokly-base-preparation.md#serve-base-lifetime):
+    Serve keeps one captured base, with its leases, between classifications
+    until it releases that base. So a kept base holds its shared leases
+    longer, and a repair of a damaged entry waits longer too.
   - [base-cache-lock-file-growth.md](./base-cache-lock-file-growth.md): the
     same lock code and its lock files. A fix of either item must keep the
     rules of the other. Each item can merge alone.

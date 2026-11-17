@@ -6,12 +6,15 @@ use std::sync::Arc;
 
 use mokly_catalogue::config_types::{Config, ResolvedConfig};
 use mokly_cli::cancellation::BuildCancellation;
+use mokly_compare::base_freshness::{DependencySelection, FreshnessMock};
 use mokly_compare::base_render::{BaseProvider, BaseRequest, HistoricalSources};
 use mokly_compare::cache_types::Lease;
 use mokly_compare::comparison_steps::{Step, StepsMock};
 use mokly_compare::dependency_types::{Resolved, Tier};
 use mokly_compare::sources::SourcesMock;
 use mokly_git::identity::ObjectId;
+use mokly_git::repository::RepositoryMock;
+use mokly_git::source_key::CheckoutIdentity;
 use mokly_graph::workers::RenderWorkersMock;
 use mokly_render::runtime::Runtime;
 use mokly_render::side::BaseSide;
@@ -26,6 +29,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::base_dependencies::BaseDependenciesMock;
 use crate::changes_base::NativeBase;
+use crate::changes_freshness::PreparedDependencies;
 
 fn tree() -> Unimock {
     Unimock::new((
@@ -152,11 +156,14 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
             None,
         )),
         cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
+        freshness: Some(Arc::new(Unimock::new(FreshnessMock::record
+            .some_call(matching!((checkout, _, roots, _) if checkout.digest == "checkout" && roots.is_none()))
+            .returns(Ok(None))))),
         dependencies: Arc::new(Unimock::new(
             BaseDependenciesMock::prepare
-                .next_call(matching!((request, _, _, _, early)
+                .next_call(matching!((request, _, _, early)
                     if !request.install_scripts && early.is_none()))
-                .returns(Ok(side)),
+                .returns(Ok(PreparedDependencies { side, selection: Some(DependencySelection::default()) })),
         )),
     };
     let config = ResolvedConfig {
@@ -170,7 +177,14 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
         .prepare(&BaseRequest {
             head: &Unimock::new(()),
             working_config: &config,
-            repository: Arc::new(Unimock::new(())),
+            repository: Arc::new(Unimock::new(
+                RepositoryMock::checkout_identity
+                    .some_call(matching!(_))
+                    .returns(Ok(CheckoutIdentity {
+                        digest: "checkout".into(),
+                        filtered: false,
+                    })),
+            )),
             commit: ObjectId::parse(&"a".repeat(40)).unwrap(),
             install_scripts: false,
             sources: HistoricalSources {

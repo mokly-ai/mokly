@@ -65,6 +65,7 @@ fn refresh_uses_current_and_cancelled_attempts_print_no_warnings_or_result() {
         head: Arc::new(Unimock::new(())),
         warnings: old,
         services: ServeChanges {
+            kept_base: Arc::default(),
             sidecars: Arc::new(Unimock::new(())),
             progress: Arc::new(Unimock::new(())),
             cache_announced: Arc::new(false.into()),

@@ -47,6 +47,7 @@ fn moved_and_restored_tips_keep_the_resolved_merge_base_identity() {
         head: Arc::new(Unimock::new(())),
         warnings: scopes(&terminal).begin(),
         services: ServeChanges {
+            kept_base: Arc::default(),
             sidecars: Arc::new(Unimock::new(())),
             progress: Arc::new(Unimock::new(())),
             cache_announced: Arc::new(false.into()),

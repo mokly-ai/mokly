@@ -3,12 +3,17 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use mokly_git::control::CancellationMock;
+use mokly_graph::types::RenderGenerationMock;
 use mokly_model::axes::{ColorScheme, EntryKind, Viewport};
 use mokly_model::public_detail::{DetailView, InputChange};
 use mokly_model::review::ReviewState;
 use mokly_model::usage::ComponentInputOwner;
 use serde_json::json;
+use unimock::{MockFn, Unimock, matching};
 
+use crate::base_reader::BaseReader;
+use crate::base_retention::{BaseReuse, KeptBase};
 use crate::projection_tests::support::{classified, details, entry, result};
 use crate::projection_workspace;
 
@@ -45,7 +50,14 @@ fn captured_workspace_inputs_keep_literal_changes_and_order_without_restoring_do
     ]);
     let restores = Arc::new(AtomicUsize::new(0));
     result.before = captured(
-        result.before.clone(),
+        Arc::new(Unimock::new((
+            RenderGenerationMock::catalogue
+                .each_call(matching!())
+                .returns(result.before.catalogue().clone()),
+            RenderGenerationMock::check_cancelled
+                .each_call(matching!())
+                .answers(&|_| Ok(())),
+        ))),
         vec![(ROUTE, Some(before))],
         restores.clone(),
     );
@@ -72,29 +84,47 @@ fn captured_workspace_inputs_keep_literal_changes_and_order_without_restoring_do
         resource_evidence: None,
     }];
 
-    projection_workspace::apply(&mut current, &result).unwrap();
-    let workspace = current["home/empty"].workspace.as_ref().unwrap();
-    assert_eq!(
-        workspace.input_changes,
-        serde_json::from_value::<Vec<InputChange>>(json!([
-            {
-                "instanceId":"a-second", "title":"Button", "viewport":"desktop",
-                "colorScheme":"light", "variantPath":"home/empty",
-                "before":{"label":["string","second before"]},
-                "after":{"label":["string","second after"]}
-            },
-            {
-                "instanceId":"b-first", "title":"Button", "viewport":"desktop",
-                "colorScheme":"light", "variantPath":"home/empty",
-                "before":{"label":["string","first before"]},
-                "after":{"label":["string","first after"]}
-            }
-        ]))
-        .unwrap()
-    );
-    assert_eq!(
-        restores.load(Ordering::SeqCst),
-        0,
-        "workspace input projection must not restore captured documents"
-    );
+    for reused in [false, true] {
+        if reused {
+            result.before = Arc::new(BaseReader::new(BaseReuse {
+                base: Arc::new(KeptBase {
+                    generation: result.before.clone(),
+                    failures: Arc::new(Unimock::new(())),
+                    scripts_off: true,
+                    freshness: None,
+                }),
+                cancellation: Arc::new(Unimock::new(
+                    CancellationMock::cancelled
+                        .each_call(matching!())
+                        .returns(false),
+                )),
+                releaser: Arc::new(Unimock::new(())),
+            }));
+        }
+        projection_workspace::apply(&mut current, &result).unwrap();
+        let workspace = current["home/empty"].workspace.as_ref().unwrap();
+        assert_eq!(
+            workspace.input_changes,
+            serde_json::from_value::<Vec<InputChange>>(json!([
+                {
+                    "instanceId":"a-second", "title":"Button", "viewport":"desktop",
+                    "colorScheme":"light", "variantPath":"home/empty",
+                    "before":{"label":["string","second before"]},
+                    "after":{"label":["string","second after"]}
+                },
+                {
+                    "instanceId":"b-first", "title":"Button", "viewport":"desktop",
+                    "colorScheme":"light", "variantPath":"home/empty",
+                    "before":{"label":["string","first before"]},
+                    "after":{"label":["string","first after"]}
+                }
+            ]))
+            .unwrap()
+        );
+        assert_eq!(
+            restores.load(Ordering::SeqCst),
+            0,
+            "workspace input projection must not restore captured documents"
+        );
+    }
 }

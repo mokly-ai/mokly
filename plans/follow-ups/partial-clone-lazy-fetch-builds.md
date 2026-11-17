@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-16, from the branch `calummoore/plain-git-spawns`, review round 1, the check of finding 2. On 2026-11-17 it took in the facts of a second item, `git-missing-blob-root-check.md`, from the branch `calummoore/lisbon-h906`, where the repository gate stopped on Git 2.43.0.
-- **Location:** `crates/mokly-git/src/repository.rs:166` to line 185,
+- **Location:** `crates/mokly-git/src/repository_access.rs:42` to line 61,
   `crates/mokly-git/src/lookup.rs:51`, `crates/mokly-git/src/fetch.rs:45` to
   line 70, `crates/mokly-git/src/checkout_index.rs:44` to line 58,
   `crates/mokly-cli/tests/changes_failures_tests.rs:154` to line 184, and
@@ -38,9 +38,21 @@
   - `docs/protocol/mokly-base-preparation.md`, lines 51 to 52, keeps genuine
     Git command and object failures as fatal `git-failed` errors. Lines 57 to
     58 say: "A failed fetch of missing objects names the recovery command."
-  - Base reads run `ls-tree -l` first (`crates/mokly-git/src/repository.rs:166`
-    and `crates/mokly-git/src/lookup.rs:51`). It reads each blob's size. The
+  - Base reads run `ls-tree -l` first
+    (`crates/mokly-git/src/repository_access.rs:42` and
+    `crates/mokly-git/src/lookup.rs:51`). It reads each blob's size. The
     missing-object check and the one bounded fetch run after it.
+  - The source key and the checkout identity hash the checkout settings of the
+    whole base commit. They list it through the same `Repository::list`
+    method, at `crates/mokly-git/src/source_key.rs:33`. A base computes the
+    source key when it looks up or builds its source extraction. A Serve base
+    preparation samples the checkout identity before its first base read. The
+    check before Serve reuses a kept base, `ServeBase::find_kept` in
+    `crates/mokly-cli/src/serve_base.rs`, samples it again. So these reads
+    also run `ls-tree -l` before the missing-object check, for every regular
+    file of the commit. When the sample fails for a reason other than
+    cancellation, the preparation records no freshness evidence and continues,
+    so Serve keeps no base.
   - After the listing, `ensure_checkout_objects`
     (`crates/mokly-git/src/checkout_index.rs:44` to line 58) passes the
     checkout entries and their `.gitattributes` files to `ensure_objects`
@@ -130,9 +142,10 @@
       [mokly/git-failed] comparison against base ref "fixture-base" failed: base {commit}: base object {blob} is missing; run `git fetch origin {blob}`
       ```
 
-    - The base read lists the tree first (`crates/mokly-git/src/repository.rs:153`
-      to line 174). The missing-object check then passes each blob id as a
-      start point to `git rev-list --objects --no-object-names --missing=print --stdin`
+    - The base read lists the tree first
+      (`crates/mokly-git/src/repository_access.rs:29` to line 50). The
+      missing-object check then passes each blob id as a start point to
+      `git rev-list --objects --no-object-names --missing=print --stdin`
       (`crates/mokly-git/src/fetch.rs:45` to line 56).
     - With the missing blob id on stdin, that command exited 128 with
       `fatal: bad object {blob}` under Git 2.43.0. Under Git 2.50.1, it exited

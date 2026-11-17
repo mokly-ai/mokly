@@ -16,6 +16,10 @@ boundary, which this crate implements. `mokly-render` renders both sides. `mokly
 - Compare reached resources and use catalogue-wide CSS own-page proof.
 - Produce the typed review result, the private change snapshot, and
   affected-consumer chains.
+- Let a base provider keep one captured base between classifications, and
+  compare a reuse through a reader with its own cancellation.
+- Record the checkout and dependency evidence of a prepared base, and check
+  whether that evidence is still current.
 - Share public index state, eligibility, workspace lists, and input-change projection.
 - Read checkout-converted base files with preserved POSIX paths.
 - Extract JavaScript sources only when a caller requests them.
@@ -156,7 +160,8 @@ A usage read of a kept view returns its retained usage without a restore, so
 it needs no source fallback. Serve head reads use the bounded render cache and
 render again on the head root only when neither cache tier holds the document.
 Build head reads use the head capture. Each result holds at most one base
-capture, and a build result also holds one head capture. The
+capture, and a build result also holds one head capture. A result that reuses
+a kept base reads that capture and adds no second base capture. The
 [comparison serving contract](../../docs/protocol/mokly-comparison-serving.md)
 owns the capture budget and its overlap with the render cache. Capture checks
 cancellation before each view and each encoding. Its timing spans contain no
@@ -173,7 +178,10 @@ A task reads the head side and the base input that
 `retained_comparison_input` returns. It makes no base source read and no base
 sidecar call. The base capture answers that lookup from its kept views. A kept
 view that fails to restore returns a deferred source read, so classification
-restores it once.
+restores it once. The reader of a kept base checks its own cancellation, then
+forwards the lookup to the kept capture. Through that reader, a failed restore
+returns no retained input, and the ordered pass reads the view through the
+reader, with its cancellation and failure checks.
 
 A view with a base route whose input is deferred or not retained gets all
 of its reads in the ordered pass, after every earlier view. An ordered failure
@@ -193,9 +201,10 @@ shared document codec and the head comparison retain these rule records.
 Saved prop edits retain their view records without marking unchanged
 consumers affected. Own CSS states and dependency reasons use kept own-page
 source proof. Actual-instance implementation reasons preserve own view states.
-Removed previews read the same pinned base generation. Serve retains the
-original cached head generation and one bounded base capture. Build retains the
-captured head and the bounded base capture. Both
+Removed previews read the same pinned base generation, through the reader when
+the result reuses a kept base. Serve retains the original cached head
+generation and one bounded base capture, its own or a kept one. Build retains
+the captured head and the bounded base capture. Both
 results keep view states, reasons, ownership records, and immutable historical
 metadata.
 
@@ -216,6 +225,53 @@ and repository handles for extraction and dependency leases. The CLI supplies
 `mokly_render::runtime::Runtime` for both sides, sharing its render cache,
 sidecar pool, and cancellation.
 
+`BaseProvider` can also keep one captured base between classifications. After
+the pin and before any base read, `Changes` calls `BaseProvider::find_kept`
+with a `BaseRetentionRequest`: the `PinnedBase`, the working configuration,
+the head, and the effective install-scripts setting. A hit returns a
+`BaseReuse`, and `Changes` compares through a per-classification reader. It
+prepares and captures no base. A miss prepares and captures a fresh base, and
+offers it to `BaseProvider::keep` as a `KeptBase` with its source-failure
+record, its scripts-off flag, and its freshness evidence. When `keep` returns a
+`BaseReuse`, that classification also compares through a reader. The reader
+checks the reuse's own cancellation before each call. Its first failed read,
+while that cancellation is not set, releases that exact `KeptBase` through
+the `BaseRelease` of the reuse. The reader keeps only its `BaseReuse`, not the
+provider. A reused base that fails this way gets one fresh preparation in the
+same classification. A reused base with a recorded source failure is
+released, and the classification fails with `Error::Base`. A head
+failure or a cancelled reader keeps the base. `review.base-tree` records
+`action`, `reuse` or `prepare`. The default methods keep nothing, so `build`,
+`publish`, and a provider without retention prepare and capture the base in
+each classification. The
+[Serve base lifetime rule](../../docs/protocol/mokly-base-preparation.md#serve-base-lifetime)
+owns what a provider may keep, the freshness checks, and the release events.
+
+Only a provider that can keep a base records freshness evidence while it
+prepares one. In the CLI, only the Serve provider has a `Freshness`, so `build`
+and `publish` take no checkout sample and record no evidence. The Serve
+provider records none after a dependency fallback that a later attempt can
+fix. It also records none when the checkout sample or `Freshness::record`
+fails for a reason other than cancellation, and that preparation continues. A
+cancellation stops the preparation.
+
+`Freshness::record` returns `PreparationInputs` with the checkout sample that
+the provider took before its first base read, and the `DependencySelection` of
+working manifests, lockfiles, and dependency directories. A base that reads
+the working install also records the install state of each working
+`node_modules` root and the installed-module digests of its bundle. A tier-two
+base reads its own install, so it passes no working roots. `record` returns
+`None` when a file has a `filter` attribute or the install state of a root is
+not available.
+
+A provider must not keep a base without evidence. `PreparedBase` and
+`KeptBase` carry the evidence of the preparation unchanged.
+`Freshness::current` says whether that evidence still holds for the current
+checkout identity, dependency directories, working inputs, install records,
+and head bundle. The
+[freshness checks rule](../../docs/protocol/mokly-base-preparation.md#freshness-checks)
+owns what the checks cover and what they miss.
+
 `Changes` announces each comparison `Step` through its `dyn Steps` as the step
 starts, so a command can name the running step on its progress line. It
 announces reading and comparing, and the base provider announces rendering.
@@ -233,8 +289,12 @@ every public fact of the review result, which no file holds.
 `projection_workspace::apply`
 joins ready usage with indexed affected links and caller-owned input changes.
 It reads base usage through `RenderGeneration::comparison_usage`, so a kept
-base view needs no document restore. An absent workspace stays absent. An
-absent list stays absent until the caller proves usage.
+base view needs no document restore. The reader of a kept base checks its own
+cancellation, then forwards this read to the kept capture. When the forwarded
+read fails or returns no usage, the reader falls back to its own checked
+`comparison_document`, with its failure checks and its release of an owned
+failure. An absent workspace stays absent. An absent list stays absent until
+the caller proves usage.
 `projection_removed` assembles historical records, details with base usage,
 and typed preview metadata. Its `workspaces` initializer prepares removed
 visual details after the caller proves base usage. The static caller owns file
@@ -256,7 +316,10 @@ Compose the host adapters at the CLI boundary. Consume `dyn Sources`,
 the comparison coordinator. Call `InputReader::read` on `GitSources` and
 `WorkingInputs::read` on the same `dyn Repository`, with the base inputs,
 before dependency selection. Pass one cancellation token to the caches, the
-Git runner, and the install supervisor. Then run the crate tests:
+Git runner, and the install supervisor of one preparation. A provider that
+keeps a base detaches it from that token in `keep`. It gives each `BaseReuse`
+its own token and a `BaseRelease` that holds no preparation service and no
+status callback. Then run the crate tests:
 
 ```bash
 cargo test -p mokly-compare
@@ -302,7 +365,32 @@ development dependencies, and no test uses the internet.
 - [`src/base_render.rs`](./src/base_render.rs) defines `ChangesService`,
   `Changes`, `BaseProvider`, `PreparedBase`, and `BasePreparationError`, which
   pin the base, prepare its sources, report whether its tier-two install ran
-  with lifecycle scripts off, and compare it with the head.
+  with lifecycle scripts off, carry its freshness evidence, and compare it with
+  the head. The default `BaseProvider::find_kept`, `keep`, and `release`
+  methods keep nothing.
+- [`src/base_retention.rs`](./src/base_retention.rs) defines
+  `BaseRetentionRequest`, `KeptBase`, `BaseReuse`, and `BaseRelease`: the
+  inputs of the kept base's key and freshness checks, the kept capture with
+  its source-failure record, scripts-off flag, and freshness evidence, one
+  classification's access to it with its own cancellation, and the
+  release-only capability that frees that exact base.
+- [`src/base_freshness.rs`](./src/base_freshness.rs) defines `Freshness`,
+  `FreshnessChecks`, `PreparationInputs`, `DependencySelection`,
+  `FreshnessRequest`, and `InstallInputs`: the evidence of one preparation and
+  the check that says whether a kept base is still current.
+- [`src/install_inputs.rs`](./src/install_inputs.rs) defines
+  `SystemInstallInputs`, the host reader that digests the install records and
+  the package entries of one working `node_modules` root, without package
+  file contents.
+- [`src/base_classification.rs`](./src/base_classification.rs) holds the
+  classification path of `Changes`: one kept base or one fresh capture, the
+  `review.base-tree` action, and the single fresh preparation after a failed
+  reuse.
+- [`src/base_reader.rs`](./src/base_reader.rs) defines `BaseReader`, the
+  per-classification reader of a kept base. It keeps only its `BaseReuse`,
+  checks its cancellation before each call, and forwards retained inputs and
+  captured usage to the kept capture after that check. It releases the base
+  through its `BaseRelease` after its own first failed read.
 - [`src/comparison_steps.rs`](./src/comparison_steps.rs) defines `Step`,
   `Steps`, and `StepCache`, the comparison steps that a command shows while
   Changes runs.

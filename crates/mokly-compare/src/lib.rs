@@ -103,9 +103,14 @@ mod review_projection;
 mod snapshots;
 
 pub mod ancestor_roots;
+mod base_classification;
+pub mod base_freshness;
+mod base_reader;
 pub mod base_render;
+pub mod base_retention;
 pub mod base_selection;
 pub mod comparison;
+pub mod install_inputs;
 
 pub mod lookup;
 

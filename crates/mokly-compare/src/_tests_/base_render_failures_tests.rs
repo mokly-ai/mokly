@@ -25,6 +25,7 @@ fn prepared() -> BasePreparationResult {
     Ok(PreparedBase {
         generation: generation(),
         scripts_off: true,
+        freshness: None,
     })
 }
 
@@ -49,11 +50,14 @@ fn classify(
                     sources: Arc::new(Unimock::new(())),
                 })),
         )),
-        provider: Arc::new(Unimock::new(
+        provider: Arc::new(Unimock::new((
+            BaseProviderMock::find_kept
+                .some_call(matching!(_))
+                .returns(Ok(None)),
             BaseProviderMock::prepare
                 .next_call(matching!(_))
                 .returns(prepared),
-        )),
+        ))),
         comparison: Arc::new(comparison),
         steps: Arc::new(Unimock::new(
             StepsMock::step.each_call(matching!(_)).returns(()),
@@ -152,6 +156,9 @@ fn source_failure_after_capture_failure_keeps_scripts_off() {
 fn source_failure_after_comparison_keeps_scripts_off() {
     let source = Arc::new(Error::UnsupportedManager);
     let failures = Unimock::new((
+        SourceFailuresMock::failure
+            .next_call(matching!())
+            .returns(None),
         SourceFailuresMock::failure
             .next_call(matching!())
             .returns(None),

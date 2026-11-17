@@ -1899,6 +1899,10 @@ Depends on: 1, 2, 3, 4, 5
       then apply the review-fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+  - [x] Review the pushed source at `2d15cae28` against `0accb6818`.
+        Check finding 1 in a fresh second pass. Record the Rare timing
+        defect after merge with option D. No source fix is required now.
+  - [ ] Review the combined source after the latest main integration.
 - [ ] Fetch and merge `origin/main` if it advanced before the final pull
       request. Audit preservation with the `git-merge` skill.
   - [x] Merge main `03bedb6ec` with its comparison-usage, render-worker, and
@@ -1912,6 +1916,14 @@ Depends on: 1, 2, 3, 4, 5
         each checkout's own Cargo target and all earlier evidence.
   - [x] Run repository verification on the combined source before the final
         implementation review. Let final CI verify the combined branch.
+  - [x] Merge main `51f356574`, with kept-base reuse and the viewer pick
+        completion fix. Audit all incoming paths and preserve the completed
+        follow-up deletions. Adapt only the new test constructor arguments.
+  - [ ] Repeat the release comparison against exact main `51f356574`.
+        Preserve the complete `0accb6818` and `f032dd04c` programs, sources,
+        reports, and raw evidence before updating the private checkouts.
+  - [x] Run repository verification on the latest combined source before
+        its review. Let final CI verify all suites of the combined branch.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request with `gh pr create --base main`. Its description
@@ -1943,6 +1955,16 @@ Latest fixed release and repository evidence:
 `.context/bundle-disk-cache/m5-final-0accb681/metadata/final-assessment.json`,
 `.context/bundle-disk-cache/m5-final-0accb681/metadata/cleanup.json`, and
 `.context/bundle-disk-cache/logs/repository-0acc-f032.log`.
+
+Latest integration and review evidence:
+`.context/bundle-disk-cache/merge-51f35657/before.json`,
+`.context/bundle-disk-cache/m5-final-b881bfff/reports/preservation-phase.md`,
+and `.context/reviews/calummoore/lisbon-h906/findings.md`.
+The resolved integration is recorded in
+`.context/bundle-disk-cache/merge-51f35657/preservation.json`,
+`.context/bundle-disk-cache/merge-51f35657/decisions.md`,
+`.context/bundle-disk-cache/reports/merge-51f-review-docs.md`, and
+`.context/bundle-disk-cache/logs/repository-51f-combined.log`.
 
 ## Post-merge follow-up (non-blocking)
 
