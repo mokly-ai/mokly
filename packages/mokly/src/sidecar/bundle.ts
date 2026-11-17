@@ -116,14 +116,17 @@ export async function bundleWith(
     const paths = await ModulePaths.create(params);
     sources = paths;
     const evidence = new ResolutionEvidence(params, paths);
-    await evidence.prepare();
+    const capturedPreview = await evidence.prepare();
     const require = await consumerRequire(params, paths);
     const inputs = {
       files: new Map<string, Uint8Array>(),
       cssModules: new Set<string>(),
       virtualOrigins,
     };
-    const { contents, inputPaths, preview } = await entryModule(params);
+    const { contents, inputPaths, preview } = await entryModule(
+      params,
+      capturedPreview,
+    );
     const settings = params.moduleResolution;
     const loaders = Object.fromEntries(
       Object.entries(settings.loaders).filter(

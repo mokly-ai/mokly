@@ -16,6 +16,9 @@ export interface CapturedMetadata {
   bytes?: Buffer;
 }
 
+export type FilePathProbe =
+  { kind: "file"; path: string } | { kind: "absent" } | { kind: "other" };
+
 /** Protected filesystem primitives of the one PhysicalInputs owner. */
 export abstract class PhysicalInputReader {
   complete = true;
@@ -64,6 +67,17 @@ export abstract class PhysicalInputReader {
 
   protected realPath(file: string): Promise<string> {
     return fs.realpath(file);
+  }
+
+  protected async readFilePath(file: string): Promise<FilePathProbe> {
+    try {
+      return (await fs.stat(file)).isFile()
+        ? { kind: "file", path: await this.realPath(file) }
+        : { kind: "other" };
+    } catch (error) {
+      if (missingFile(error)) return { kind: "absent" };
+      throw error;
+    }
   }
 
   protected async linkTarget(file: string): Promise<string | undefined> {
@@ -132,6 +146,10 @@ export abstract class PhysicalInputReader {
       Object.entries(evidence.inputs),
       async ([file, expected]) => {
         switch (expected.kind) {
+          case "filePath": {
+            const actual = await this.readFilePath(file);
+            return actual.kind === "file" && actual.path === file;
+          }
           case "absent":
             try {
               await fs.lstat(file);
@@ -140,6 +158,7 @@ export abstract class PhysicalInputReader {
               return missingFile(error);
             }
           case "file": {
+            if ((await this.realPath(file)) !== file) return false;
             const actual = (await this.readMetadata(file)).input;
             return actual.kind === "file" && actual.digest === expected.digest;
           }
@@ -164,7 +183,8 @@ export abstract class PhysicalInputReader {
                   entry.kind === saved.kind &&
                   entry.target === saved.target
                 );
-              })
+              }) &&
+              (await this.realPath(file)) === file
             );
           }
         }

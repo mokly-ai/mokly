@@ -789,11 +789,15 @@ The approved options are 1 A, 2 A, 3 A, 4 D, 5 A, 6 D, 7 C, 8 A, and 9 C.
 
 - `packages/mokly/src/sidecar`: the toolchain identity, computed once in
   each process. `bundle-recipe.ts` records it and hashes it into the
-  compilation identity. `resolution-inputs.ts` records the peer manifests,
-  the `jsconfig.json` candidates, and the tsconfig `extends` chains.
-  `compiled.ts` compares the toolchain in `reuse`.
+  compilation identity. `resolution-evidence.ts` and `config-inputs.ts`
+  capture reuse-only resolution, peer, and configuration evidence through
+  the bounded owner in `physical-inputs.ts`. `resolution-inputs.ts` keeps
+  the existing render-key and watch metadata. `compiled.ts` compares the
+  toolchain and evidence in `reuse`.
 - `crates/mokly-sidecar/src/compiled.rs`: the `toolchain` field of
-  `CompiledGeneration`, with the generated TypeScript type.
+  `CompiledGeneration` and typed physical evidence, with generated
+  TypeScript types. The render core checks that evidence through
+  `crates/mokly-render/src/physical_inputs.rs` on its own fast path.
 - `crates/mokly-sidecar`: a `BundleStore` boundary with `load` and `save`,
   the outcome type, the pool seed and the pool write.
 - `crates/mokly-compare`: the `bundles` kind, the replace operation, the
@@ -1098,6 +1102,79 @@ These are my calls, made on 2026-10-30 under the decision test.
     The performance session supplied the checked D on 2026-11-17. No user
     choice remains open.
 
+28. My call, 2026-11-17: apply checked F. An exact existing regular file
+    records a bounded `FilePath` observation under its canonical path, with
+    its existing logical-path links. It carries no content digest. Both
+    readers require canonical keys for present `FilePath`, `File`, and
+    `Directory` observations. Present preview probes use `FilePath`. Absent
+    probes use `Absent`. Keep directory evidence for open lookups, missing
+    files, directories, extensionless candidates, and the `.js` family that
+    permits TypeScript substitutions. Keep all configuration and manifest
+    checks. A later metadata read upgrades `FilePath` to `File` and charges
+    only the byte difference. Source bodies stay with compiled inputs. CSS
+    bodies stay with the stylesheet owner. A preview that compilation
+    consumed keeps its compiler digest in both compiled and metadata inputs.
+    Only unconsumed preview probes read a later body digest. A later read
+    must not replace the digest of bytes that the compiler consumed.
+    Reason: an unrelated empty directory must not reject an exact file
+    selection. A new link must still reject reuse, even with equal bytes and
+    old targets retained. Preview probes must not consume the metadata body
+    budget. The existing two-compile and CSS reuse assertions stay.
+    Root question: how does exact-file evidence preserve reuse after an
+    unrelated sibling change while rejecting changed selection and links?
+    Shared assumptions: the six preview candidates keep their order, as the
+    code and sidecar protocol require. Every existing assertion stays, as
+    the task requires. Complete evidence and byte bounds stay under calls
+    9 and 21. The earlier assumption that only preview probes caused the
+    mismatch was false. Exact renderer and CSS imports also captured the
+    source-root listing. Call 14's conservative design needs no parent
+    listing where the exact path wins before any alternative candidate.
+    A uses file digests for fixed preview paths. Small. B adds a typed
+    preview-selection record. Medium. C adds absent-or-empty semantics for
+    that directory. Medium. All three leave the other exact lookups too
+    broad. D uses canonical `File` digests for all exact files. Medium. It
+    breaks CSS body reuse. E adds `FilePath` and canonical file checks.
+    Medium. F extends E to canonical directories and body-free probes.
+    Medium overall, Small beyond E. G adds a final mapping check against
+    every esbuild edge. Medium. Its extra detection duplicates the pinned
+    resolver's exact-file rule. Broad directory ignores fail the protocol.
+    Changing the compile-count assertion is blocked. A second resolver run
+    breaks the reuse contract. Recommendation F replaces my first A.
+    F is the structural wider fix in the same capture owner and readers.
+    No protocol requirement changes. The options check confirmed that no
+    user decision is open.
+
+29. My call, 2026-11-17: apply checked E. Let the virtual entry use the
+    preview selection from the same bounded prepass that records its
+    evidence. Reprobe only when evidence is already incomplete. Preserve
+    consumed bytes through one metadata-digest helper at every post-compile
+    digest site. Read a later digest only for an unconsumed file.
+    Reason: a transient preview deletion can select the wrong virtual
+    entry. A later metadata read can also replace the bytes that esbuild
+    consumed, for a preview or an imported manifest.
+    Root question: how does reusable code record the selected optional
+    preview and the bytes that compilation consumed?
+    Shared assumptions: preserve the six-candidate order and errors from
+    the code and sidecar protocol. Keep best-effort compilation for
+    incomplete evidence under calls 9 and 21. Preserve every assertion and
+    the no-stale-code rule from the task. Do not add a retry. The former
+    assumption that only deletion breaks coherence is false. A content edit
+    after compilation also breaks it. The consumed digest must win, as the
+    existing code comment and Rust stamp already require.
+    A passes the captured selection to the virtual entry. Small. B moves
+    selection and capture into the virtual-entry owner. Medium. C compares
+    two selections and rejects evidence on disagreement. Small. D adds
+    consumed-digest preservation for preview probes to A. Small. E applies
+    D through one helper at all five post-compile metadata sites. Small.
+    F makes the core select the preview and changes bundle parameters and
+    keys. Large. F still needs D or E for consumed bytes. A and C alone
+    leave the bytes race. B adds wiring for equal safety. E is the wider
+    fix in the existing digest owners. Recommendation E replaces my first
+    A. A typed selection reader would copy resolver rules. A post-compile
+    presence check misses changes that were undone. Locks cannot stop
+    external edits. A retry breaks the task. The checked E stays within
+    the existing contract. No user decision is open.
+
 The options check for the restored decisions and these calls is recorded
 under `.context/bundle-disk-cache/options-check-current.md` and
 `.context/bundle-disk-cache/options-check-calls-14-19.md`. Call 20 uses
@@ -1115,6 +1192,8 @@ Call 24 uses `.context/bundle-disk-cache/options-check-call-24.md`.
 Call 25 uses the same options-check report.
 Call 26 uses `.context/bundle-disk-cache/options-check-call-26.md`.
 Call 27 uses `.context/bundle-disk-cache/options-check-call-27.md`.
+Call 28 uses `.context/bundle-disk-cache/options-check-call-28.md`.
+Call 29 uses `.context/bundle-disk-cache/options-check-call-29.md`.
 
 ## Milestone 1: Documentation and protocol
 
@@ -1273,6 +1352,14 @@ Depends on: 4
       byte-identical to a cold build. Save the proof under `.context/`.
 - [ ] Smoke test: restart Serve on `examples/basic`, open the catalogue, and
       check a JavaScript screen and its Changes view.
+- [x] Keep retained preview reuse after adding and removing the preview file.
+      Apply checked call 28. Preserve the existing two-compile assertion and
+      the physical link, shadowing, and configuration checks.
+- [x] Keep consumed digests at every post-compile metadata site under
+      checked call 29. Prove the imported-manifest restore race.
+- [x] Use one captured preview selection for compilation and reuse evidence,
+      under checked call 29. Prove that a transient preview deletion cannot
+      publish reusable code with the wrong selection.
 - [x] Remove the bundle-cache status from every changed protocol page and
       `docs/architecture/rust-core.md`. Keep the existing unrelated follow-up
       status in the runtime and terminal-errors pages.
@@ -1290,7 +1377,8 @@ Depends on: 4
 Merge evidence: `.context/bundle-disk-cache/merge-notes.md` and
 `.context/bundle-disk-cache/merge-86-preservation.json`.
 
-Evidence: `.context/bundle-disk-cache/reports/test-cache-isolation.md` and
+Evidence: `.context/bundle-disk-cache/reports/preview-reuse-fix.md`,
+`.context/bundle-disk-cache/reports/test-cache-isolation.md`, and
 `.context/bundle-disk-cache/logs/strict-output-d-cli-package.json`,
 `.context/bundle-disk-cache/reports/strict-output-fix.md`, and
 `.context/bundle-disk-cache/reports/final-docs.md`.

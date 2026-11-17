@@ -11,7 +11,7 @@ import { previewCandidates } from "./bundle-entry.js";
 import { moduleGraph } from "./bundle-graph.js";
 import type { Bundled } from "./bundle.js";
 import { bundleResult, generationId, restore } from "./compiled.js";
-import { fileDigest } from "./file-digests.js";
+import { metadataDigest } from "./file-digests.js";
 import type { Measurements } from "./measurements.js";
 import type { ModulePaths } from "./module-paths.js";
 import type { ConsumerRequire } from "./paths.js";
@@ -78,24 +78,23 @@ export async function bundleRecipe(
   });
   for (const file of params.storiesFiles.length ? previewCandidates : []) {
     const absolute = path.resolve(params.sourceRoot, file);
-    metadataInputs[file] = physicalInputs[absolute] =
-      await fileDigest(absolute);
+    metadataInputs[file] = physicalInputs[absolute] = await metadataDigest(
+      absolute,
+      physicalInputs,
+    );
   }
   for (const root of paths.dependencyRoots) {
     const file = path.join(root, "react/package.json");
     metadataInputs[paths.name(file)] = physicalInputs[file] =
-      await fileDigest(file);
+      await metadataDigest(file, physicalInputs);
   }
   let reactVersion: string | null = null;
   try {
     const file = require.resolve("react/package.json");
     const bytes = await fs.readFile(file);
     reactVersion = JSON.parse(bytes.toString()).version;
-    metadataInputs[paths.name(file)] = physicalInputs[file] = createHash(
-      "sha256",
-    )
-      .update(bytes)
-      .digest("hex");
+    metadataInputs[paths.name(file)] = physicalInputs[file] =
+      await metadataDigest(file, physicalInputs, bytes);
   } catch (error) {
     if (!(
       error &&

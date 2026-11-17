@@ -3,7 +3,7 @@
 import type { PhysicalEntry } from "./PhysicalEntry.js";
 
 // prettier-ignore
-export type PhysicalInput = { "kind": "absent" } | { "kind": "file",
+export type PhysicalInput = { "kind": "absent" } | { "kind": "filePath" } | { "kind": "file",
 /**
  * The regular file's SHA-256 content digest.
  */

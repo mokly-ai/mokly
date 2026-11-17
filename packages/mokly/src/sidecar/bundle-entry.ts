@@ -14,9 +14,13 @@ export const previewCandidates = ["tsx", "ts", "jsx", "js", "mjs", "cjs"].map(
 /**
  * The virtual entry module: it imports every entry, story, and renderer file
  * and exports them by logical path. `inputPaths` maps each logical path to its
- * confined real file.
+ * confined real file. A captured preview supplies the selection. Missing
+ * evidence uses the file probes.
  */
-export async function entryModule(params: BundleParams) {
+export async function entryModule(
+  params: BundleParams,
+  capturedPreview: string | null | undefined,
+) {
   const files = [
     ...params.entryFiles,
     ...params.storiesFiles,
@@ -28,19 +32,21 @@ export async function entryModule(params: BundleParams) {
       logical(params.sourceRoot, path.resolve(params.sourceRoot, file)),
       await confinedFile(params.sourceRoot, file),
     );
-  const preview = params.storiesFiles.length
-    ? (
-        await Promise.all(
-          previewCandidates.map(
-            async (file) =>
-              await fs.access(path.resolve(params.sourceRoot, file)).then(
-                () => file,
-                () => null,
-              ),
-          ),
-        )
-      ).find(Boolean)
-    : null;
+  let preview = capturedPreview;
+  if (preview === undefined)
+    preview = params.storiesFiles.length
+      ? (
+          await Promise.all(
+            previewCandidates.map(
+              async (file) =>
+                await fs.access(path.resolve(params.sourceRoot, file)).then(
+                  () => file,
+                  () => null,
+                ),
+            ),
+          )
+        ).find(Boolean)
+      : null;
   const imports = files.map(
     (file, index) =>
       `import * as m${index} from ${JSON.stringify(path.resolve(params.sourceRoot, file))};`,

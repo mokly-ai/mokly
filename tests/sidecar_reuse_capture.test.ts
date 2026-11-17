@@ -159,13 +159,16 @@ test("a grown directory rejects reuse before resolving an excess link", async (c
   await fs.mkdir(target);
   await fs.symlink(target, path.join(directory, "alias"), "junction");
   const selected = await fs.realpath(target);
+  const directoryKey = await fs.realpath(directory);
   const original = fs.realpath;
   let reads = 0;
+  let canonicalReads = 0;
   context.mock.method(
     fs,
     "realpath",
     (...args: Parameters<typeof fs.realpath>) => {
-      reads++;
+      if (args[0] === directoryKey) canonicalReads++;
+      else reads++;
       return original(...args);
     },
   );
@@ -173,7 +176,7 @@ test("a grown directory rejects reuse before resolving an excess link", async (c
     await currentEvidence({
       complete: true,
       inputs: {
-        [directory]: {
+        [directoryKey]: {
           kind: "directory",
           entries: [{ name: "alias", kind: "link", target: selected }],
         },
@@ -182,15 +185,18 @@ test("a grown directory rejects reuse before resolving an excess link", async (c
     true,
   );
   assert.equal(reads, 1);
+  assert.equal(canonicalReads, 1);
   reads = 0;
+  canonicalReads = 0;
   assert.equal(
     await currentEvidence({
       complete: true,
-      inputs: { [directory]: { kind: "directory", entries: [] } },
+      inputs: { [directoryKey]: { kind: "directory", entries: [] } },
     }),
     false,
   );
   assert.equal(reads, 0, "the excess entry must not resolve its link target");
+  assert.equal(canonicalReads, 0);
 });
 
 test("metadata capture stops at its total byte bound before retaining another parsed file", async (context) => {
@@ -210,4 +216,69 @@ test("metadata capture stops at its total byte bound before retaining another pa
   assert.equal(await inputs.json(path.join(root, "13.json")), undefined);
   assert.equal(inputs.complete, false);
   assert.ok(inputs.usage.metadataBytes <= 8 * 1024 * 1024);
+});
+
+test("canonical file records reject an introduced source directory link", async (context) => {
+  const { root, write } = await source(context);
+  const text = "export {value} from '../value.ts';";
+  await write("chosen/source.ts", text);
+  await write("value.ts", "export const value='old';");
+  await write("changed/nested/source.ts", text);
+  await write("changed/value.ts", "export const value='new';");
+  const file = path.join(root, "chosen/source.ts");
+  const paths = new PhysicalInputs();
+  const contents = new PhysicalInputs();
+  const directories = new PhysicalInputs();
+  assert.equal(await paths.exactFile(file), true);
+  await contents.file(file);
+  await directories.directory(path.dirname(file));
+  const records = await Promise.all([
+    paths.finish(),
+    contents.finish(),
+    directories.finish(),
+  ]);
+  assert.deepEqual(await Promise.all(records.map(currentEvidence)), [
+    true,
+    true,
+    true,
+  ]);
+  await fs.rename(path.join(root, "chosen"), path.join(root, "retained"));
+  await fs.symlink(
+    path.join(root, "changed/nested"),
+    path.join(root, "chosen"),
+    "junction",
+  );
+  assert.deepEqual(await Promise.all(records.map(currentEvidence)), [
+    false,
+    false,
+    false,
+  ]);
+});
+
+test("exact file observations upgrade to bounded metadata content", async (context) => {
+  const { root, write } = await source(context);
+  await write("entry.ts", "export const value=1;");
+  const file = path.join(root, "entry.ts");
+  const inputs = new PhysicalInputs();
+  assert.equal(await inputs.exactFile(file), true);
+  await inputs.file(file);
+  const captured = await inputs.finish();
+  assert.equal(captured.complete, true);
+  await write("entry.ts", "export const value=2;");
+  assert.equal(await currentEvidence(captured), false);
+  const bounded = new PhysicalInputs();
+  assert.equal(await bounded.exactFile(file), true);
+  const original = Buffer.byteLength;
+  context.mock.method(
+    Buffer,
+    "byteLength",
+    (...args: Parameters<typeof Buffer.byteLength>) => {
+      const [value] = args;
+      return typeof value === "string" && value.includes('"kind":"file"')
+        ? 8 * 1024 * 1024
+        : original(...args);
+    },
+  );
+  await bounded.file(file);
+  assert.equal((await bounded.finish()).complete, false);
 });

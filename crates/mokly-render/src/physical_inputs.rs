@@ -34,6 +34,9 @@ impl PhysicalInputs for SystemPhysicalInputs {
 impl SystemPhysicalInputs {
     fn read(&self, path: &Path, expected: &PhysicalInput) -> io::Result<bool> {
         match expected {
+            PhysicalInput::FilePath => {
+                Ok(fs::metadata(path)?.is_file() && Path::new(&real_path(path)?) == path)
+            }
             PhysicalInput::Absent => match fs::symlink_metadata(path) {
                 Err(error)
                     if matches!(error.kind(), ErrorKind::NotFound | ErrorKind::NotADirectory) =>
@@ -44,6 +47,9 @@ impl SystemPhysicalInputs {
                 Ok(_) => Ok(false),
             },
             PhysicalInput::File { digest } => {
+                if Path::new(&real_path(path)?) != path {
+                    return Ok(false);
+                }
                 let file = File::open(path)?;
                 let metadata = file.metadata()?;
                 if !metadata.is_file() {
@@ -86,7 +92,7 @@ impl SystemPhysicalInputs {
                     });
                 }
                 actual.sort_by(|a, b| a.name.cmp(&b.name));
-                Ok(&actual == entries)
+                Ok(&actual == entries && Path::new(&real_path(path)?) == path)
             }
             PhysicalInput::Link { target } => {
                 Ok(fs::symlink_metadata(path)?.file_type().is_symlink()

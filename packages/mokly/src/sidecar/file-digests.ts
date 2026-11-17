@@ -34,6 +34,20 @@ export async function fileDigest(file: string): Promise<string | null> {
   }
 }
 
+/** Keep consumed module digests when metadata adds the same file again. */
+export async function metadataDigest(
+  file: string,
+  inputs: Readonly<Record<string, string | null>>,
+  bytes?: Uint8Array,
+): Promise<string | null> {
+  return (
+    inputs[file] ??
+    (bytes === undefined
+      ? await fileDigest(file)
+      : createHash("sha256").update(bytes).digest("hex"))
+  );
+}
+
 /** Four workers bound both open handles and the memory used by streaming checks. */
 export async function everyInput<T>(
   values: readonly T[],

@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { SidecarError } from "./errors.js";
-import { fileDigest } from "./file-digests.js";
+import { metadataDigest } from "./file-digests.js";
 import type { ModulePaths } from "./module-paths.js";
 import { inside } from "./path-scope.js";
 import { FRAME_LIMIT } from "./transport.js";
@@ -64,13 +64,13 @@ export async function resolutionInputs(
   for (const lookup of [...paths.lookupFiles].sort()) {
     const file = await paths.metadata(lookup);
     metadataInputs[paths.metadataName(file)] = inputs[file] =
-      await fileDigest(file);
+      await metadataDigest(file, inputs);
   }
   for (const directory of [...ancestors].sort()) {
     for (const name of ["package.json", "tsconfig.json"]) {
       const file = path.join(directory, name);
       metadataInputs[paths.metadataName(file)] = inputs[file] =
-        await fileDigest(file);
+        await metadataDigest(file, inputs);
     }
   }
   const inputDirectories = new Map<string, string[]>();

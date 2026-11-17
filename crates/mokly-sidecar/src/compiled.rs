@@ -14,6 +14,8 @@ use crate::results::Module;
 pub enum PhysicalInput {
     /// The candidate does not exist.
     Absent,
+    /// A canonical regular-file path, without a dependency on its content.
+    FilePath,
     /// A regular file's SHA-256 content digest.
     File {
         /// The regular file's SHA-256 content digest.

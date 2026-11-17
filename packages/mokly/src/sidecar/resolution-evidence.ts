@@ -26,7 +26,7 @@ function substitution(pattern: string, name: string): string | undefined {
     : undefined;
 }
 
-/** Snapshot all mapped candidate directories before esbuild can resolve an edge. */
+/** Snapshot exact file paths and mapped candidate directories before esbuild resolves an edge. */
 export class ResolutionEvidence {
   readonly physical = new PhysicalInputs();
   private readonly configs: ConfigInputs;
@@ -53,21 +53,30 @@ export class ResolutionEvidence {
     },
   };
 
-  async prepare(): Promise<void> {
+  async prepare(): Promise<string | null | undefined> {
     for (const file of [
       ...this.params.entryFiles,
       ...this.params.storiesFiles,
       ...(this.params.renderer ? [this.params.renderer] : []),
-      ...(this.params.storiesFiles.length ? previewCandidates : []),
     ])
       await this.record(
         path.resolve(this.params.sourceRoot, file),
         this.params.sourceRoot,
       );
+    // Preview selection checks exact files, not module-resolution candidates.
+    let preview: string | null = null;
+    if (this.params.storiesFiles.length)
+      for (const file of previewCandidates) {
+        const present = await this.physical.optionalFile(
+          path.resolve(this.params.sourceRoot, file),
+        );
+        if (present && preview === null) preview = file;
+      }
     await this.configs.scope(
       path.resolve(this.params.sourceRoot, this.params.configurationDirectory),
     );
     await this.configs.manifest(this.params.sourceRoot);
+    return this.physical.complete ? preview : undefined;
   }
 
   async peers(peers: Readonly<Record<string, string | null>>): Promise<void> {
@@ -115,7 +124,13 @@ export class ResolutionEvidence {
 
   private async candidate(base: string): Promise<void> {
     if (!this.physical.complete) return;
-    await this.physical.candidate(base);
+    const extension = path.extname(base).toLowerCase();
+    if (
+      !extension ||
+      [".js", ".jsx", ".mjs", ".cjs"].includes(extension) ||
+      !(await this.physical.exactFile(base))
+    )
+      await this.physical.candidate(base);
     await this.configs.manifest(path.dirname(base));
     await this.configs.manifest(base);
     await this.configs.scope(path.dirname(base));

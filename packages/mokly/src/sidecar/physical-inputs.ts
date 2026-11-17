@@ -8,9 +8,12 @@ import {
   EVIDENCE_LIMIT,
   PhysicalInputReader,
 } from "./physical-input-reader.js";
-import type { CapturedMetadata } from "./physical-input-reader.js";
+import type {
+  CapturedMetadata,
+  FilePathProbe,
+} from "./physical-input-reader.js";
 
-/** First observations, metadata parsing, request retention, and every byte bound have one owner. */
+/** Filesystem observations, metadata parsing, request retention, and every byte bound have one owner. */
 export class PhysicalInputs extends PhysicalInputReader {
   readonly inputs = new Map<string, PhysicalInput>();
   readonly identityInputs = new Map<string, string>();
@@ -75,14 +78,53 @@ export class PhysicalInputs extends PhysicalInputReader {
   }
 
   private save(file: string, value: PhysicalInput): void {
-    if (!this.complete || this.inputs.has(file)) return;
-    const bytes = Buffer.byteLength(JSON.stringify([file, value])) + 1;
+    const previous = this.inputs.get(file);
+    if (
+      !this.complete ||
+      (previous && !(previous.kind === "filePath" && value.kind === "file"))
+    )
+      return;
+    const bytes =
+      Buffer.byteLength(JSON.stringify([file, value])) +
+      1 -
+      (previous ? Buffer.byteLength(JSON.stringify([file, previous])) + 1 : 0);
     if (this.bytes + bytes > EVIDENCE_LIMIT) {
       this.complete = false;
       return;
     }
     this.bytes += bytes;
     this.inputs.set(file, value);
+  }
+
+  /** Exact resolution needs the canonical file path; source owners check its content. */
+  async exactFile(file: string): Promise<boolean> {
+    return (await this.capturePath(file))?.kind === "file" && this.complete;
+  }
+
+  /** Optional selection observes absence and regular-file paths without reading bodies. */
+  async optionalFile(file: string): Promise<boolean | undefined> {
+    const value = await this.capturePath(file);
+    if (!value || !this.complete) return undefined;
+    if (value.kind === "other") {
+      this.complete = false;
+      return undefined;
+    }
+    return value.kind === "file";
+  }
+
+  private async capturePath(file: string): Promise<FilePathProbe | undefined> {
+    if (!this.complete) return undefined;
+    try {
+      await this.pathLinks(file);
+      if (!this.complete) return undefined;
+      const value = await this.readFilePath(file);
+      if (value.kind === "file") this.save(value.path, { kind: "filePath" });
+      if (value.kind === "absent") this.save(file, value);
+      return value;
+    } catch {
+      this.complete = false;
+      return undefined;
+    }
   }
 
   async file(

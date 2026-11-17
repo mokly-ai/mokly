@@ -1,10 +1,56 @@
 //! Physical-only metadata must invalidate the core's bundle shortcut.
 
 use std::collections::BTreeMap;
+use std::fs;
 
+use mokly_model::material::digest;
+use mokly_render::physical_inputs::{PhysicalInputs, SystemPhysicalInputs};
+use mokly_sidecar::compiled::{PhysicalEntry, PhysicalEntryKind, PhysicalInput};
 use mokly_sidecar::methods::Call;
 
 use super::support::{Consumer, link_directory, workspace};
+
+#[test]
+fn canonical_file_records_reject_an_introduced_source_directory_link() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = dunce::canonicalize(directory.path()).unwrap();
+    let text = "export {value} from '../value.ts';";
+    fs::create_dir(root.join("chosen")).unwrap();
+    fs::create_dir_all(root.join("changed/nested")).unwrap();
+    fs::write(root.join("chosen/source.ts"), text).unwrap();
+    fs::write(root.join("changed/nested/source.ts"), text).unwrap();
+    fs::write(root.join("value.ts"), "export const value='old';").unwrap();
+    fs::write(root.join("changed/value.ts"), "export const value='new';").unwrap();
+    let file = root.join("chosen/source.ts");
+    let records = [
+        (file.clone(), PhysicalInput::FilePath),
+        (
+            file.clone(),
+            PhysicalInput::File {
+                digest: digest(text.as_bytes()),
+            },
+        ),
+        (
+            root.join("chosen"),
+            PhysicalInput::Directory {
+                entries: vec![PhysicalEntry {
+                    name: "source.ts".into(),
+                    kind: PhysicalEntryKind::File,
+                    target: None,
+                }],
+            },
+        ),
+    ];
+    let matches = || {
+        records
+            .each_ref()
+            .map(|(path, record)| SystemPhysicalInputs.matches(path, record).unwrap())
+    };
+    assert_eq!(matches(), [true, true, true]);
+    fs::rename(root.join("chosen"), root.join("retained")).unwrap();
+    link_directory(&root.join("changed/nested"), &root.join("chosen"));
+    assert_eq!(matches(), [false, false, false]);
+}
 
 #[test]
 fn a_jsconfig_edit_reaches_the_sidecar_instead_of_the_bundle_fast_path() {
