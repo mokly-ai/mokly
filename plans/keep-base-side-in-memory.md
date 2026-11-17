@@ -283,6 +283,40 @@ marks each change. Calls 14 to 24 are new calls of 2026-11-16.
     including once during its first classification. The plan fixes no sidecar
     count, and the required first and edited classifications stay measured.
 
+41. The performance orchestrator's dated call, 2026-11-17, under the user's
+    delegation of 2026-11-16: accept up to 5% extra time for the first
+    classification of a Serve session. The measured React increase is 56 ms,
+    or 3.7% of 1.5 s. Reason: sampling the checkout identity and keeping the
+    base pays the cost that decision 6B already accepts. Every later reuse
+    saves more: the React edited classification falls from 587 to 147 ms,
+    and the example falls from 3,273 to 856 ms. Keep every other acceptance
+    check. The user instruction requires no further options check for this
+    call.
+
+42. The performance orchestrator's call, 2026-11-17: allow a full-harness
+    RSS safety stop of 2,500,000 KiB for the one browser restore smoke. Start
+    it only with no build, test, or other measurement, and at least 4,000 MiB
+    available according to `free -m`. Keep 1,750,000 KiB for every paired run,
+    and do not repeat those runs. Reason: the harness counts Chrome, and the
+    CLI-tree peak was 1,239,244 KiB. The approved stop leaves about 3.6 GiB
+    of the available 6 GiB for the OS and agents. Baseline attempts also hit
+    the smaller stop. This changes no product memory bound. Record both
+    smoke peaks and this reason in the pull request. If the smoke CLI-tree
+    peak is more than 10% above a main attempt on the same catalogue, stop
+    and report the increase as a finding.
+
+43. The performance orchestrator's call, 2026-11-17: replace the full-harness
+    stop of call 42 for one final browser restore smoke. Stop at a CLI-tree
+    RSS above 1,494,966 KiB, or host `MemAvailable` below 1,500 MiB. Sample
+    both every 50 ms. Start only with at least 4,000 MiB available and no
+    other build, test, or runtime. Chrome counts in no RSS stop. Record the
+    CLI-tree peak, Chrome peak, and lowest host `MemAvailable` in the pull
+    request. Reason: earlier stops counted Chrome, while CLI RSS stayed
+    2.6% below the main maximum. The host stop bounds the real memory risk
+    directly. If a stop fires, record the smoke as incomplete and continue
+    the gate, reviews, plan deletion, pull request, and CI without another
+    smoke attempt. This call changes no paired measurement.
+
 ### Code facts on `main` at `a1d834fbe`
 
 The docs implementor checked these facts on 2026-11-16.
@@ -745,7 +779,7 @@ correction of 2026-11-17 before release measurements continue.
       comparison phase. See its behavior assertion fail without forwarding.
 - [x] Check cancellation at this path. Run the focused compare tests,
       formatting, and Clippy. Record the new test's cost.
-- [ ] Commit and push the fix. Send its SHA to the performance orchestrator
+- [x] Commit and push the fix. Send its SHA to the performance orchestrator
       at once for another `mokly-cloud` measurement.
 
 Evidence: `.context/keep-base-side-in-memory/milestone-4a-report.md`.
@@ -754,35 +788,45 @@ Evidence: `.context/keep-base-side-in-memory/milestone-4a-report.md`.
 
 Depends on: 4a
 
-- [ ] Build release binaries of the branch and the last merged `main`,
+- [x] Build release binaries of the branch and the last merged `main`,
       `f380e9462`, with `cargo build --release -p mokly-cli`. Each checkout
       has its own target directory. The before checkout is
       `.context/before-checkout`, with `.context/target-before`. Refresh
       `.context/keep-base-side-in-memory/before-mokly` from that build.
-- [ ] Use one sidecar for both binaries and keep the existing harness RSS
+- [x] Use one sidecar for both binaries and keep the existing harness RSS
       safety stop, under measurement call 40. Preserve both earlier baseline
       safety-stop attempts under `.context/keep-base-side-in-memory/`.
-- [ ] Interleave three before runs and three after runs, in the order before,
+- [x] Interleave three before runs and three after runs, in the order before,
       after, before, after, before, after. Measure the Serve edit on
       `examples/basic` and on the React fixture of the
       [large fixture README](../tests/fixtures/large/README.md). Save each run
       and the medians under `.context/keep-base-side-in-memory/`.
-- [ ] Report the retained bytes of each kept base: `retainedBytes` and
+- [x] Report the retained bytes of each kept base: `retainedBytes` and
       `encodedBytes` of the first `review.capture-side` span of each run.
       Also record the peak resident size of each run, because the goal
       forbids a change that can exhaust memory.
-- [ ] When `/home/user/code/mokly-cloud` is available, run Serve on its
+- [x] When `/home/user/code/mokly-cloud` is available, run Serve on its
       catalogue with each binary. Make two edits, and record each
       classification. Revert the edits, and commit nothing there. Otherwise
       record why the run was skipped.
-- [ ] Confirm the acceptance. After the edit, the second classification runs
+- [x] Confirm the acceptance. After the edit, the second classification runs
       no base `config.load`, `catalogue.discover`, `catalogue.validate`, or
       `graph.prepare` span. `review.base-tree` takes under 0.5 s. Edit to the
       end of the second classification falls by about the base side. The
-      first classification is not slower.
-- [ ] Smoke test: run Serve on the example, and change the visible text of
+      first classification is at most 5% slower, under dated call 41.
+- [x] Smoke test: run Serve on the example, and change the visible text of
       one screen. The next classification lists that screen and prepares no
-      base. Restore the text. The next classification lists nothing.
+      base. Restore the text. The next classification lists nothing. Use
+      the bounded browser-smoke execution and peak check of dated call 43.
+      If its final safety stop fires, record the incomplete smoke and
+      continue, as that call permits.
+
+Cloud evidence supplied by the performance orchestrator:
+`.context/keep-base-side-in-memory/mokly-cloud-evidence.md`.
+
+Evidence: `.context/keep-base-side-in-memory/milestone-5-report.md` and
+`.context/keep-base-side-in-memory/milestone-5-one-sidecar-summary.json`.
+Browser evidence: `.context/keep-base-side-in-memory/milestone-5-smoke-call-43/`.
 
 ## Milestone 6: Verification, commit, review, and pull request
 
@@ -791,6 +835,8 @@ Depends on: every other milestone
 Evidence: `.context/keep-base-side-in-memory/merge-resolution.md` holds the
 preservation audits of the merges of `main` at `6d0fcbb46` and `f380e9462`.
 The pull request description copies their outcomes.
+
+Verification evidence: `.context/keep-base-side-in-memory/milestone-6-verification.md`.
 
 - [x] Remove the status lines that Milestone 1 added. Keep the macOS item of
       the runtime status line.
