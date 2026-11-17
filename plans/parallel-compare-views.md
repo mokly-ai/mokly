@@ -75,6 +75,21 @@ The old capture scheduler stays because capture validation still returns graph-o
 The new task boundary schedules comparison-owned preparation. Both retain their sequential defaults.
 The task explicitly requires forwarding the existing capture scheduler.
 
+Workspace orchestrator's call, 2026-11-17: stream views across entry boundaries within a rolling window of at most 2P started and unconsumed views.
+The performance orchestrator requested this revision after its first `mokly-cloud` measurement missed the half-time target.
+It approved option D on 2026-11-17 under the user's performance authority of 2026-11-16.
+P is `comparison_parallelism().max(1)`. The stream follows pairing order and view order.
+After each ordered consumption, start the next view while capacity remains.
+Phase A runs while the calling thread consumes Phase B in order.
+Stop new admission after an ordered failure. Join every admitted task before return.
+Per-index completion signals release on unwind. A caller already on this pool uses sequential execution.
+All existing source-fallback, cache, warning, first-error, cancellation, and tracing contracts remain.
+Use an object-safe scoped scheduling boundary on the existing pool. Keep the completion contract of the existing indexed scheduler.
+A default provider prepares and consumes one view at a time.
+The graph owns window admission and completion. Comparison owns the result slots and ordered error.
+The pool implementation uses its in-place scope. No waiting task occupies a pool worker for admission.
+Do not add a coordinator thread or a second pool when the existing pool supports an in-place scope.
+
 Before each delegation batch and the final pull request, fetch and merge `origin/main` under the `git-merge` skill.
 Preserve the base-reader, Git-process, sidecar, and `calummoore/mokly-base-usage-without-restore-g972` changes.
 Record later main commits and rebuild the baseline from the final merge base when they affect the measured path.
@@ -256,6 +271,65 @@ Options-check evidence: `.context/parallel-compare-views/reports/plan-options-fu
 - **Recommendation:** C, changed from A after the options check. It removes the copied incomplete pattern with one small helper in the same file.
 - **Action:** Apply C. Workspace orchestrator's call, 2026-11-17. Entering a span alone does not carry a scoped subscriber. One helper prevents the same gap in every pool method.
 
+### 8. Keep the existing workers occupied
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** performance.
+- **Location:** `crates/mokly-compare/src/comparison_views.rs` and `crates/mokly-graph/src/workers.rs`.
+- **Background:** The first implementation schedules each entry separately and waits before ordered consumption. The external profile shows idle workers between those batches.
+- **Problem:** Small final entry batches and separate preparation and consumption missed the required comparison speed.
+- **Impact if no action:** The measured comparison stage falls by 25 percent instead of at least half.
+- **Root question:** How can the comparison keep workers and the caller occupied across all views, halve the measured time, and keep the two-batch memory bound?
+- **Options:**
+  - **A.** Stream all entry views in order. Add a scoped worker operation that schedules the next batch while the caller consumes the current batch. Use the pool's in-place scope. Effort: Medium.
+  - **B.** Stream the same batches. Run the existing completion-only scheduler on one scoped coordinator thread while the caller consumes the current batch. This adds a thread and its lifecycle. Effort: Medium.
+  - **C.** Use an ordered sliding window with at most two batches. Each consumed view releases capacity for more preparation. This needs per-slot completion and admission signals. Effort: Medium.
+  - **D.** Let the graph schedule one ordered stream within a 2P view window. After each caller consumption, start one next view. Use in-place scope and per-index completion signals. Stop new admission on an ordered failure. Use sequential execution when the caller is a pool worker. Effort: Medium.
+- **Left out:** The first implementation missed the measured target. Whole-catalogue decoded inputs break the memory bound. Running Phase B as a pool task breaks the requested caller-thread consumption.
+  Cross-entry filling without overlap leaves preparation and consumption sequential. Detached tasks can outlive an error. Waiting for admission inside tasks occupies the shared workers.
+- **Wider fix:** D. The graph owns admission, joined completion, and the prepared-view bound without restoring a fixed batch barrier.
+- **Previous examples:** Decisions 2 and 6 provide bounded ownership and indexed scheduling. The first external profile shows the synchronous per-entry limit.
+- **Assumptions:** Cross-entry order, two batches, caller-thread Phase B, the existing pool, and unchanged result/error/work contracts are explicit task requirements.
+  The current synchronous scheduler must still complete before returning. A and D add a separate scoped operation instead of changing that contract.
+  The profile reports CPU shares. It does not distinguish waiting inside tasks from waiting between tasks.
+- **Related:** Decision 2, replaces its first-measurement batching choice. Decision 6, extends the object-safe scheduling boundary.
+- **Recommendation:** D, changed from A after the options check. Its estimate gives A little margin at the half-time target. D removes each fixed batch wait within the same prepared-view bound.
+- **Action:** Apply D. The performance orchestrator approved it on 2026-11-17 under the user's delegation of 2026-11-16.
+  Reason: the rolling window removes fixed-batch waits within the same memory bound.
+
+Evidence: `.context/parallel-compare-views/reports/mokly-cloud-first-implementation.md`.
+Options evidence: `.context/parallel-compare-views/reports/overlap-options.md`. Its projected timings are estimates, not measurements.
+
+### 9. Accept handled private-read timing errors
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** process.
+- **Location:** `.context/parallel-compare-views/runner/sample.ts:100`.
+- **Background:** The baseline basic Changes build exited successfully. Its successful CSS bundles contained 80 failed private input reads that the resolver handled.
+- **Problem:** The frozen measurement driver requires zero error timing ends. The timing contract reports local read failures even when a successful caller handles them.
+- **Impact if no action:** The driver rejects a successful baseline build before it starts the after run.
+- **Root question:** How can the measurement driver distinguish a failed sample from a successful sample whose callers handle failed reads?
+- **Options:**
+  - **A.** Accept only paired private-read errors inside completed successful CSS bundles and successful catalogue validation. Preserve all raw errors and require zero unexpected errors. Keep every other acceptance and safety check. Effort: Small.
+  - **B.** Keep the driver frozen. Report affected local build cells as unavailable and use external measurements. This leaves their local ratios unknown. Effort: Small.
+  - **C.** Apply A and compare the handled-read profiles between versions. Count each stage, action, and parent-stage path. Reject a differing profile. Effort: Small.
+  - **D.** Accept any error whose nearest timed parent succeeds. Require identical error profiles between versions. This can accept an unknown shared handled failure. Effort: Small.
+  - **E.** Fix optional metadata probes in a separate product branch. After its merge, rebuild both releases and keep the frozen driver. This changes input evidence and requires separate review. Effort: Large.
+- **Left out:** Dropping error checks can hide real failures. Hard-coded error counts depend on the fixture. Changing the fixture breaks the fixed-input requirement.
+  Marking a failed read successful misstates its local result. Adding only an error-kind field does not distinguish handled failures because the resolver catches every metadata read error.
+- **Wider fix:** D. It handles another contained failure shape without changing the driver. C keeps the narrower proven shape and checks pair equality.
+- **Previous examples:** The baseline resolver catches package metadata read errors at `crates/mokly-css/src/resolver.rs:67-99`.
+- **Assumptions:** Strict mode, full inputs, fixed memory stop, and all other comparison checks stay unchanged. The task forbids weakening an assertion.
+  E can replace the saved baseline after a separate main merge. C adds a pair check. D defers error-profile acceptance until both versions have run.
+- **Recommendation:** C, changed from A after the options check. It admits only the proven handled shape and rejects a failure profile that appears in only one version.
+- **Action:** Apply C to the measurement driver only. The performance orchestrator approved it on 2026-11-17 under the user's delegation of 2026-11-16.
+  Reason: C preserves strict acceptance outside the proven handled shape and requires the same handled-error profile between versions.
+
+Evidence and un-applied proposal: `.context/parallel-compare-views/reports/private-read-timing-assessment.md` and `private-read-timing-proposal.patch` in that folder.
+Options evidence: `.context/parallel-compare-views/reports/private-read-options.md`. The concrete patch covers A. C adds the pair-profile check.
+
 Replaced ways: monolithic per-view preparation becomes independent preparation plus one ordered consumer.
 `comparison_views::collect` and the shared closure caller in `rendered_moves.rs` migrate in Milestone 2.
 Milestone 2 removes the replaced monolithic path. No capture API is replaced.
@@ -315,13 +389,45 @@ Docs evidence: `.context/parallel-compare-views/reports/final-docs.md`. The root
 
 Evidence: `.context/parallel-compare-views/reports/scheduling.md`. The root checked source order, batch ownership, all completed mutation failures, repeated-test results, and final clippy. Options evidence: `.context/parallel-compare-views/reports/tracing-options.md`.
 
-## Milestone 4: Performance evidence
+## Milestone 3b: Stream views through a bounded window
 
 Depends on: 3
+
+Delegate to the `non-ui implementor`. This revision follows the performance orchestrator's 2026-11-17 measurement.
+
+- [ ] Form one view stream across entry pairs in pairing and view order.
+- [ ] Add and forward the scoped existing-pool scheduling operation. Keep sequential defaults and all existing completion contracts.
+- [ ] Overlap preparation and ordered consumption. Keep at most 2P started and unconsumed views. Refill after each ordered consumption.
+- [ ] Stop new admission on an ordered failure. Join admitted tasks and release per-index completion signals on unwind.
+- [ ] Use sequential execution when the caller is already a worker of this pool.
+- [ ] Release each input after its ordered Phase B. Preserve empty-entry results and each entry's warning and usage ownership.
+- [ ] Add red-first cross-entry and window-bound coverage with a recording worker double. Cover ordered failure stopping admission, task panic, and the pool-worker caller path.
+- [ ] Preserve exact results, warnings, resource/CSS counts, affected lookups, ordered errors across entries, cancellation, retained fallbacks, and span parentage.
+- [ ] Run focused tests and clippy. Run each new asynchronous test ten times and record its cost.
+- [ ] Update the crate READMEs after the scoped API is stable.
+- [ ] Commit and push the revision. Send its SHA immediately for a new external `mokly-cloud` measurement.
+
+## Milestone 4: Performance evidence
+
+Depends on: 3b
 
 Delegate measurement preparation and runs to the `non-ui implementor` when implementation is idle.
 The orchestrator checks the measurements and decides whether the speed goal is met.
 Save every input, command, commit, timing, and RSS sample under `.context/parallel-compare-views/`.
+
+On 2026-11-17, the performance orchestrator accepted that full-size React Serve is not measurable on this machine.
+Its baseline startup exceeded the unchanged 1,750,000 KiB aggregate safety stop before comparison.
+Keep the dimensions and stop unchanged. Continue the supported cells.
+The performance orchestrator measures `mokly-cloud` from the pushed implementation commit while this workspace finishes its work.
+Evidence: `.context/parallel-compare-views/reports/first-large-react-serve-content-failure.md` and `driver-retention-check.md` in that folder.
+
+The basic Serve baseline also exceeded that stop during initial capture validation, before comparison or an edit.
+No after run started. The identical startup blocks its stylesheet cell too.
+Evidence: `.context/parallel-compare-views/reports/first-basic-serve-content-failure.md`.
+
+Both large HTML Serve edit classifications completed before the same stop interrupted the final public-data check.
+Neither after run started. No local Serve pair or speed ratio exists.
+Evidence: `.context/parallel-compare-views/reports/large-html-serve-content-cold-1.md` and `large-html-serve-stylesheet-cold-1.md` in that folder.
 
 - [ ] Measure before and after on `examples/basic` and the HTML and React large fixtures from `scripts/large/`.
 - [ ] Measure Changes build and Serve with one controlled screen-content edit on four CPUs.
@@ -342,7 +448,7 @@ Preserve merged changes from the base-reader, Git-process, and sidecar branches.
 Before every large Cargo build, check `df -h` and `free -m`.
 Set `CARGO_INCREMENTAL=0`. Run Cargo builds one at a time.
 
-- [ ] Run targeted tests, Rust formatting, clippy, and `cargo xtask check --suite repository`.
+- [x] Run targeted tests, Rust formatting, clippy, and `cargo xtask check --suite repository`.
 - [ ] Smoke-test a Changes build and a Serve edit. Run the required strict example build and smoke check when rendering changes require it.
 - [ ] Run `cargo xtask check`. If blocked, record the blocker and each suite that ran.
 - [ ] Commit with Conventional Commits and push. Start `scripts/ci-wait.sh` after each CI-triggering action.
