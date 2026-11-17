@@ -8,7 +8,7 @@ use std::sync::Arc;
 use mokly_git::control::Cancellation;
 use thiserror::Error;
 
-use crate::bundle_cache_types::{CAPACITY, OpenBundle, RECEIPT_BYTES};
+use crate::bundle_cache_types::{CAPACITY, CompilationRead, OpenBundle, RECEIPT_BYTES};
 use crate::bundle_inventory::measure;
 use crate::bundle_receipts::{self, ReadReceipt};
 use crate::error::{Error, Result};
@@ -17,6 +17,24 @@ use crate::storage_tree::{self, check, validate_directory, vanished};
 
 pub(crate) fn data_path(entry: &Path) -> PathBuf {
     entry.join("data").join("bundle.json")
+}
+
+pub(crate) fn compilation(storage: &SystemStorage, entry: &Path) -> Result<CompilationRead> {
+    check(storage.cancellation.as_ref())?;
+    validate_directory(&storage.root, entry.parent().unwrap_or(entry))?;
+    let metadata = match fs::symlink_metadata(entry) {
+        Ok(metadata) => metadata,
+        Err(error) if vanished(&error) => return Ok(CompilationRead::Absent),
+        Err(_) => return Ok(CompilationRead::Unreadable),
+    };
+    if !metadata.is_dir() {
+        return Ok(CompilationRead::Damaged);
+    }
+    Ok(match bundle_receipts::read(entry) {
+        ReadReceipt::Valid(receipt) => CompilationRead::Present(receipt.runtime_digest),
+        ReadReceipt::Invalid => CompilationRead::Damaged,
+        ReadReceipt::Unreadable => CompilationRead::Unreadable,
+    })
 }
 
 pub(crate) fn open(storage: &SystemStorage, entry: &Path) -> Result<OpenBundle> {

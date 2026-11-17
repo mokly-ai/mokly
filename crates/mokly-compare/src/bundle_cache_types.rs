@@ -27,6 +27,8 @@ pub struct BundleReceipt {
     pub used: u64,
     /// Fresh identity of this publication.
     pub publication: RecordToken,
+    /// SHA-256 of the compilation's private runtime key, preserved by receipt touches.
+    pub runtime_digest: [u8; 32],
 }
 
 /// A complete or incomplete owned directory from a bounded namespace scan.
@@ -67,6 +69,8 @@ pub struct RawEntry {
     pub bytes: u64,
     /// Publication identity independent of the access sequence.
     pub token: RecordToken,
+    /// Compilation digest from the receipt, checked against the decoded recipe.
+    pub runtime_digest: [u8; 32],
     /// Optional access-order failure, without losing the open entry.
     pub maintenance: Option<Error>,
     /// Shared stripe lease. It never crosses a BundleStore call.
@@ -87,6 +91,21 @@ pub enum RawRead {
     Unreadable(Option<RecordToken>),
 }
 
+/// Receipt-only inspection with no payload read or access-order update.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum CompilationRead {
+    /// The current receipt names this compilation digest.
+    Present([u8; 32]),
+    /// The entry does not exist.
+    Absent,
+    /// Another caller holds the entry stripe.
+    Contended,
+    /// The receipt or entry kind is invalid.
+    Damaged,
+    /// The receipt could not be read.
+    Unreadable,
+}
+
 /// Normal or successful completion of a raw mutation.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Mutation {
@@ -101,10 +120,12 @@ pub enum Mutation {
 /// Nonblocking bundle operations over the shared disk cache implementation.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = BundleCacheMock))]
 pub trait BundleCache: Send + Sync {
+    /// Read a bounded completion receipt with one nonblocking shared stripe attempt.
+    fn compilation(&self, key: &str) -> Result<CompilationRead>;
     /// Read with one shared stripe attempt and optional access-order update.
     fn read(&self, key: &str) -> Result<RawRead>;
     /// Reserve room, stage, flush, and atomically publish one full file.
-    fn replace(&self, key: &str, bytes: &[u8]) -> Result<Mutation>;
+    fn replace(&self, key: &str, bytes: &[u8], runtime_digest: [u8; 32]) -> Result<Mutation>;
     /// Remove matching data, or data whose receipt remains invalid.
     fn invalidate(&self, key: &str, token: Option<RecordToken>) -> Result<Mutation>;
     /// Read command or pool cancellation after an interrupted input read.

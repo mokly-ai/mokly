@@ -5,6 +5,7 @@ use std::sync::Arc;
 use crate::error::{Error, Result};
 use crate::methods::Call;
 use crate::pool::Pool;
+use crate::pool_bundle_cache::BundleAttempt;
 use crate::pool_cleanup;
 use crate::pool_state::Slot;
 use crate::wire::{MethodResult, Request};
@@ -15,10 +16,11 @@ impl Pool {
         slot: &mut Slot,
         call: &Call,
         deadline: u64,
+        attempt: &mut BundleAttempt,
     ) -> Result<MethodResult> {
         self.cleanup(slot)?;
         if let Call::Bundle(params) = call {
-            self.seed_compilation(slot, params)?;
+            self.seed_bundle(slot, params, attempt)?;
         }
         if let Some(generation) = generation(call) {
             self.prepare(
@@ -138,6 +140,9 @@ impl Pool {
                 }
                 _ => {}
             }
+        }
+        if let (Call::Bundle(params), MethodResult::Bundle(bundle)) = (call, &mut result) {
+            self.complete_bundle(params, bundle, attempt);
         }
         Ok(result)
     }

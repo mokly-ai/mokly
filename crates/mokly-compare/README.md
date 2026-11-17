@@ -64,8 +64,9 @@ cache lies outside the repository, it compares both paths in one form,
 without a Windows verbatim drive or network prefix. The
 [base cache contract](../../docs/protocol/mokly-base-cache.md) owns the
 location, the byte bounds, the receipts, the leases, and eviction. The CLI
-shares one `OnceReporter` across the namespaces that it opens and uses
-`plain_line` for the exact cache announcement.
+shares one cache announcement across the namespaces that it opens. `build`
+and `publish` share it through one `OnceReporter`. The CLI uses `plain_line`
+for the exact cache announcement.
 
 `CachedBundles` implements the `BundleStore` of `mokly-sidecar` over a
 `dyn BundleCache`. `CachedBundles::new` takes that cache and the running Mokly
@@ -77,8 +78,20 @@ versioned header line and a typed payload, hashes the payload while it
 streams, and checks the size of the whole file and of the exact
 `restoreGeneration` request against their limits. The inventory, storage, and
 receipt code confines every path, bounds each scan, writes durable receipts,
-and draws the publication nonce. No production caller uses this store yet.
-The
+and draws the publication nonce. Each bundle receipt also holds
+`runtimeDigest`, the 32-byte SHA-256 digest of the runtime key of its
+compilation. `BundleCache::replace` takes that digest for the new receipt, and
+access-order updates keep the digest and the nonce. Source and dependency
+receipts hold neither field. Before `save` encodes a recipe,
+`BundleCache::compilation` reads only the receipt of the entry, with one
+nonblocking shared stripe attempt, through `Storage::bundle_compilation`. An
+equal digest returns `Unchanged`, and a held stripe skips the write. In every
+other case, `save` replaces the entry. A damaged or unreadable receipt makes
+the result `WriteOutcome::EntryFault`, which adds that entry fault to the
+effects of the write. A `load` hit also checks that the receipt digest matches
+the decoded recipe, or it rejects the entry as damaged. The CLI adds this
+store to the sidecar pool of each command when `SystemLocations` gives a cache
+location. The
 [bundle cache contract](../../docs/protocol/mokly-base-cache.md#bundle-entries)
 owns the entry format, the fault classes, the locks, and the bound.
 
@@ -283,11 +296,13 @@ development dependencies, and no test uses the internet.
   [`src/cache_lock.rs`](./src/cache_lock.rs) holds the one lock-path mapping
   of every kind.
 - [`src/bundle_store.rs`](./src/bundle_store.rs) defines `CachedBundles`, the
-  `BundleStore` implementation, and `settings_key`, the entry key of one set
-  of bundle settings.
+  `BundleStore` implementation, which checks the receipt digest before it
+  encodes a recipe, and `settings_key`, the entry key of one set of bundle
+  settings.
 - [`src/bundle_cache_types.rs`](./src/bundle_cache_types.rs) defines
-  `BundleCache`, the streaming `BundleInput` and `RawEntry`, and the bounded
-  receipt and inventory values. `DiskCache` implements `BundleCache` in the
+  `BundleCache`, with `compilation`, the receipt-only read that returns a
+  `CompilationRead`, the streaming `BundleInput` and `RawEntry`, and the
+  bounded receipt and inventory values. `DiskCache` implements `BundleCache` in the
   private [`src/bundle_cache.rs`](./src/bundle_cache.rs) module and its read,
   write, and maintenance modules.
 - [`src/bundle_codec.rs`](./src/bundle_codec.rs) and its read and write
@@ -296,7 +311,8 @@ development dependencies, and no test uses the internet.
 - [`src/bundle_inventory.rs`](./src/bundle_inventory.rs),
   [`src/bundle_storage.rs`](./src/bundle_storage.rs), and
   [`src/bundle_receipts.rs`](./src/bundle_receipts.rs) hold the confined IO,
-  the bounded scans, the durable receipts, and the publication nonce.
+  the bounded scans, and the durable receipts with their publication nonce and
+  compilation digest.
 - [`src/dependencies.rs`](./src/dependencies.rs) and
   [`src/dependency_types.rs`](./src/dependency_types.rs) define
   `Dependencies`, `DependencyTiers`, `Request`, and `Resolved`, the dependency

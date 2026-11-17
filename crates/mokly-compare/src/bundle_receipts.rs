@@ -19,6 +19,7 @@ struct StoredReceipt {
     bytes: u64,
     used: u64,
     publication: String,
+    runtime_digest: [u8; 32],
 }
 
 pub(crate) enum ReadReceipt {
@@ -66,6 +67,7 @@ pub(crate) fn read(entry: &Path) -> ReadReceipt {
         bytes: receipt.bytes,
         used: receipt.used,
         publication,
+        runtime_digest: receipt.runtime_digest,
     })
 }
 
@@ -75,6 +77,7 @@ pub(crate) fn publish(entry: &Path, receipt: &BundleReceipt, durable: bool) -> R
         bytes: receipt.bytes,
         used: receipt.used,
         publication: receipt.publication.hex(),
+        runtime_digest: receipt.runtime_digest,
     };
     let bytes = match serde_json::to_vec(&stored) {
         Ok(bytes) => bytes,

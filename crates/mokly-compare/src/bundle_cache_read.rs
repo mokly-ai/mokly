@@ -5,13 +5,25 @@ use std::path::Path;
 use mokly_sidecar::bundle_outcomes::SkipReason;
 use mokly_sidecar::bundle_store::RecordToken;
 
-use crate::bundle_cache_types::{CAPACITY, Mutation, OpenBundle, RawEntry, RawRead};
+use crate::bundle_cache_types::{
+    CAPACITY, CompilationRead, Mutation, OpenBundle, RawEntry, RawRead,
+};
 use crate::cache::DiskCache;
 use crate::cache_lock::entry_lock_path;
 use crate::cache_types::Kind;
 use crate::error::Result;
 
 impl DiskCache {
+    pub(crate) fn bundle_compilation(&self, key: &str) -> Result<CompilationRead> {
+        let namespace = self.bundle_namespace(key)?;
+        let Some(_entry) =
+            self.bundle_lock(&entry_lock_path(&namespace, Kind::Bundles, key), true)?
+        else {
+            return Ok(CompilationRead::Contended);
+        };
+        self.storage
+            .bundle_compilation(&namespace.join("entries").join(key))
+    }
     pub(crate) fn bundle_read(&self, key: &str) -> Result<RawRead> {
         let namespace = self.bundle_namespace(key)?;
         let Some(guard) =
@@ -40,6 +52,7 @@ impl DiskCache {
                     input,
                     bytes,
                     token: receipt.publication,
+                    runtime_digest: receipt.runtime_digest,
                     maintenance,
                     guard,
                 }))

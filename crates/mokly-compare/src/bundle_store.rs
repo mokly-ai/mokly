@@ -8,8 +8,8 @@ use mokly_sidecar::bundle_store::{BundleStore, ReadMiss, ReadOutcome, RecordToke
 use mokly_sidecar::methods::Bundle;
 use mokly_sidecar::reusable_recipe::ReusableRecipe;
 
-use crate::bundle_cache_types::{BundleCache, Mutation, RawRead};
-use crate::bundle_codec::{self, Codec};
+use crate::bundle_cache_types::{BundleCache, CompilationRead, Mutation, RawRead};
+use crate::bundle_codec::{self, Codec, compilation_digest};
 use crate::error::{Error, Result};
 
 /// Process-scoped optional recipe store. A store fault disables it once.
@@ -90,9 +90,18 @@ impl BundleStore for CachedBundles {
             RawRead::Entry(entry) => {
                 let (decoded, token, maintenance) = {
                     let mut entry = entry;
-                    let decoded =
-                        self.codec
-                            .decode(entry.input.as_mut(), entry.bytes, params, &self.version);
+                    let decoded = self
+                        .codec
+                        .decode(entry.input.as_mut(), entry.bytes, params, &self.version)
+                        .and_then(|recipe| {
+                            if compilation_digest(&recipe.compiled().runtime_key)
+                                == entry.runtime_digest
+                            {
+                                Ok(recipe)
+                            } else {
+                                Err(EntryFault::Damaged)
+                            }
+                        });
                     (decoded, entry.token, entry.maintenance.take())
                 };
                 if self.cache.cancelled() {
@@ -130,16 +139,31 @@ impl BundleStore for CachedBundles {
         if !self.enabled.load(Ordering::Acquire) {
             return WriteOutcome::Disabled;
         }
-        let encoded = match self.codec.encode(recipe, &self.version) {
-            Ok(Some(encoded)) => encoded,
-            Ok(None) => return WriteOutcome::Skipped(SkipReason::Oversized),
-            Err(_) => return self.fault(),
-        };
         let key = match settings_key(recipe.params()) {
             Ok(key) => key,
             Err(_) => return self.fault(),
         };
-        self.mutation(self.cache.replace(&key, &encoded))
+        let runtime = compilation_digest(&recipe.compiled().runtime_key);
+        let fault = match self.cache.compilation(&key) {
+            Ok(CompilationRead::Present(current)) if current == runtime => {
+                return WriteOutcome::Unchanged;
+            }
+            Ok(CompilationRead::Contended) => return WriteOutcome::Skipped(SkipReason::Contended),
+            Ok(CompilationRead::Damaged) => Some(EntryFault::Damaged),
+            Ok(CompilationRead::Unreadable) => Some(EntryFault::Unreadable),
+            Ok(CompilationRead::Present(_) | CompilationRead::Absent) => None,
+            Err(Error::Cancelled) => return WriteOutcome::Cancelled,
+            Err(_) => return self.fault(),
+        };
+        let outcome = match self.codec.encode(recipe, &self.version) {
+            Ok(Some(encoded)) => self.mutation(self.cache.replace(&key, &encoded, runtime)),
+            Ok(None) => WriteOutcome::Skipped(SkipReason::Oversized),
+            Err(_) => self.fault(),
+        };
+        match fault {
+            Some(fault) => outcome.with_entry_fault(fault),
+            None => outcome,
+        }
     }
 
     fn invalidate(&self, params: &Bundle, token: &RecordToken) -> WriteOutcome {
@@ -158,6 +182,10 @@ impl BundleStore for CachedBundles {
 pub fn settings_key(params: &Bundle) -> Result<String> {
     bundle_codec::settings_key(params)
 }
+
+#[cfg(test)]
+#[path = "_tests_/bundle_save_tests.rs"]
+mod bundle_save_tests;
 
 #[cfg(test)]
 #[path = "_tests_/bundle_store_tests.rs"]

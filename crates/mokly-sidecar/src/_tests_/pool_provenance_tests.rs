@@ -30,6 +30,7 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
                 Ok(MethodResult::Bundle(Box::new(results::Bundle {
                     unmapped_dependency_directories: Some(vec![id.clone()]),
                     epoch: 0,
+                    cache: None,
                     generation: id.clone(),
                     modules: vec![],
 

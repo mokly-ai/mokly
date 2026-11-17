@@ -30,7 +30,22 @@ fn rejected_payloads_and_receipts_are_retired_but_newer_equal_publications_stay(
         old,
         "touch preserves publication identity"
     );
-    assert_eq!(store.save(&recipe), WriteOutcome::Written);
+    assert_eq!(store.save(&recipe), WriteOutcome::Unchanged);
+    let current = cache
+        .storage
+        .bundle_records(&cache.root.join("bundles/entries"), 512 * 1024 * 1024)
+        .unwrap();
+    let digest = current[0].receipt.as_ref().unwrap().runtime_digest;
+    assert_eq!(
+        cache
+            .replace(
+                &settings_key(&params).unwrap(),
+                &fs::read(support::data(&support::entry(&cache, &params))).unwrap(),
+                digest
+            )
+            .unwrap(),
+        Mutation::Written
+    );
     let (_, new) = support::loaded(store.load(&params));
     assert_ne!(old, new);
     assert_eq!(
@@ -182,7 +197,9 @@ fn replacement_evicts_the_oldest_other_key_in_its_own_stripe_within_the_byte_bou
         })
         .collect::<Vec<_>>();
     assert_eq!(
-        cache.replace(&target, &vec![0; 2 * 1024 * 1024]).unwrap(),
+        cache
+            .replace(&target, &vec![0; 2 * 1024 * 1024], [3; 32])
+            .unwrap(),
         Mutation::Written
     );
     assert!(!support::raw_entry(&cache, &victim).exists());

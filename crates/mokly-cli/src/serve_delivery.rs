@@ -57,7 +57,7 @@ pub(super) fn states(input: StateInputs<'_>) -> Result<Arc<dyn ServeStateFactory
             sidecars: input.services.sidecars.clone(),
             progress: input.progress,
             refreshes: input.reporter,
-            cache_announced: Arc::new(false.into()),
+            cache_announced: input.services.cache_announced.clone(),
             extraction_snapshots: Arc::new(ProcessSnapshots::default()),
             warnings: input.warnings,
             runtime: input.services.runtime.clone(),

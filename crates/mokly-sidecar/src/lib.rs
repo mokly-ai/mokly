@@ -18,6 +18,7 @@ pub mod methods;
 pub mod operations;
 pub mod pool;
 mod pool_affinity;
+mod pool_bundle_cache;
 mod pool_cleanup;
 mod pool_exchange;
 pub mod pool_options;

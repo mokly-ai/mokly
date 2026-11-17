@@ -7,7 +7,7 @@ use mokly_platform::locks::FileLock;
 use mokly_sidecar::bundle_store::RecordToken;
 use serde::{Deserialize, Serialize};
 
-use crate::bundle_cache_types::{BundleReceipt, BundleRecord, OpenBundle};
+use crate::bundle_cache_types::{BundleReceipt, BundleRecord, CompilationRead, OpenBundle};
 use crate::error::Result;
 
 /// Cache namespaces with independent byte bounds.
@@ -82,6 +82,8 @@ pub trait Cache: Send + Sync {
 /// Filesystem boundary of cache orchestration and install size supervision.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = StorageMock))]
 pub trait Storage: Send + Sync {
+    /// Read only the bounded bundle receipt without opening payload data.
+    fn bundle_compilation(&self, entry: &Path) -> Result<CompilationRead>;
     /// Inspect one bundle receipt and open its confined data file.
     fn bundle_open(&self, entry: &Path) -> Result<OpenBundle>;
     /// List owned bundle directories with bounded metadata and reservations.

@@ -10,35 +10,59 @@ use crate::pool::Pool;
 use crate::pool_recipes::same_settings;
 use crate::pool_state::{Slot, State};
 use crate::results::Module;
+use crate::reusable_recipe::ReusableRecipe;
 use crate::wire::Request;
 
 impl Pool {
-    pub(super) fn seed_compilation(&self, slot: &mut Slot, params: &Bundle) -> Result<()> {
-        let (stored, candidate) = {
+    pub(super) fn seed_compilation(
+        &self,
+        slot: &mut Slot,
+        params: &Bundle,
+    ) -> Result<(bool, Vec<String>)> {
+        let (stored, candidate, mut keys) = {
             let mut state = self.lock();
+            let keys: Vec<_> = slot
+                .generations
+                .keys()
+                .filter_map(|id| state.compiled.get(id))
+                .map(|compiled| compiled.runtime_key.clone())
+                .collect();
             let stored = state.recipes.seed(params);
             let candidate = state
                 .bundles
                 .iter()
                 .filter(|(_, retained)| same_settings(retained, params))
+                .filter_map(|(id, retained)| {
+                    ReusableRecipe::new(
+                        id.clone(),
+                        retained.clone(),
+                        state.modules[id].clone(),
+                        state.compiled[id].clone(),
+                    )
+                    .map(|recipe| (id, recipe))
+                })
                 .max_by_key(|(id, _)| (state.epochs[*id], *id))
-                .map(|(id, _)| {
+                .map(|(id, recipe)| {
                     (
                         id.clone(),
+                        recipe.compiled().runtime_key.clone(),
                         Preparation::snapshot(&state, slot, id, false, false, false),
                     )
                 });
-            (stored, candidate)
+            (stored, candidate, keys)
         };
+        let complete = stored.is_some() || candidate.is_some();
         if let Some(recipe) = stored {
+            keys.push(recipe.compiled.runtime_key.clone());
             let generation = recipe.generation.clone();
             self.prerequisite(slot, Call::RestoreGeneration(recipe))?;
             slot.generations.insert(generation, 0);
         }
-        if let Some((generation, preparation)) = candidate {
+        if let Some((generation, runtime, preparation)) = candidate {
             self.restore(slot, &generation, false, preparation)?;
+            keys.push(runtime);
         }
-        Ok(())
+        Ok((complete, keys))
     }
 
     pub(super) fn prepare(

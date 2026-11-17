@@ -19,7 +19,9 @@ setting in the OS cache directory. Before a `bundle` request, the core's pool
 installs the stored bundle in the worker with the existing
 `restoreGeneration` request. The sidecar's `reuse` input check then accepts
 it or compiles. The check also gains the inputs that it misses today and the
-identity of the toolchain that compiled the code. The pool stores the served bundle when it differs from its last disk record. Both comparison sides use it, because they share one
+identity of the toolchain that compiled the code. The pool offers each
+complete served bundle to the store. The store skips a write when its current
+receipt names that compilation. Both comparison sides use it, because they share one
 pool. The plan does not cache the describe result, the CSS Modules class
 maps, or the stylesheet bundles of graph preparation. It does not change the
 Serve base lifetime, which perf 6 owns.
@@ -773,8 +775,9 @@ The approved options are 1 A, 2 A, 3 A, 4 D, 5 A, 6 D, 7 C, 8 A, and 9 C.
 4. The pool compares the runtime key of the result with the disk seed and
    every memory compilation available to the worker before the request.
    A match with a memory seed is `memory`. A match with a disk seed is
-   `hit`. No match means that the sidecar compiled. The pool stores the
-   served envelope when it differs from the last disk record. A core
+   `hit`. No match means that the sidecar compiled. The pool offers each
+   complete served envelope to the store. The store skips a write only when
+   the current receipt names that compilation, under current call 26. A core
    fast-path hit sends the same served-generation notice to the pool.
 5. The pool returns the outcome with the result, in a field that never
    crosses the wire, as `epoch` does. The core's bundle call records it on
@@ -1034,6 +1037,32 @@ These are my calls, made on 2026-10-30 under the decision test.
     The base-cache protocol names the bundle publication id and the complete
     replacement rule. The old kinds' receipt shape stays unchanged.
 
+### Pool publication correction: my call, 2026-11-17
+
+26. Apply checked option G. The bundle receipt holds the SHA-256 digest of
+    its compilation's runtime key. The store owns write elision. It checks
+    that bounded receipt under one nonblocking shared stripe attempt before
+    it encodes a served recipe. An equal digest returns `Unchanged`. A held
+    stripe skips. Otherwise the existing replacement rules apply. Receipt
+    touches preserve the digest. The pool offers every complete served
+    recipe and retains no publication table. Keep legacy receipts unchanged.
+    Reason: completion order, eviction, another process, and cache deletion
+    can each invalidate a pool record. A receipt check removes that stale
+    record and keeps the existing storage requirement. No IO runs under the
+    pool mutex. This supersedes the own-record interpretation of call 16.
+    The options check changed my first choice A to G on 2026-11-17.
+    Alternatives: A forgets pool records after overlapping operations.
+    B uses a nonblocking operation gate and skips overlaps. C always writes.
+    D limits A's overlap tracking to each key. E checks a pool publication
+    token against the receipt. F moves that token table into the store.
+    H updates pool records through a callback under the stripe lock. A and D
+    leave eviction, another process, and deletion uncovered. B loses writes.
+    C adds a full write to each hit. E, F, and H keep a table and its lifetime.
+    G adds one bounded receipt read and removes that lifetime. A to D are
+    Small. E to H are Medium. The format is unpublished, so the bundle-only
+    receipt field remains in schema 1. This correction belongs to open
+    Milestone 4. Completed Milestone 3 remains history.
+
 The options check for the restored decisions and these calls is recorded
 under `.context/bundle-disk-cache/options-check-current.md` and
 `.context/bundle-disk-cache/options-check-calls-14-19.md`. Call 20 uses
@@ -1049,6 +1078,7 @@ Call 22 uses `.context/bundle-disk-cache/options-check-call-22.md`. Call 23
 uses `.context/bundle-disk-cache/options-check-call-23.md`.
 Call 24 uses `.context/bundle-disk-cache/options-check-call-24.md`.
 Call 25 uses the same options-check report.
+Call 26 uses `.context/bundle-disk-cache/options-check-call-26.md`.
 
 ## Milestone 1: Documentation and protocol
 
@@ -1148,24 +1178,28 @@ Evidence: `.context/bundle-disk-cache/reports/milestone-3.md`,
 
 Depends on: 2, 3
 
-- [ ] The pool seeds the worker from the store, forwards the request,
-      compares the runtime keys, stores the served envelope when it differs from the last disk record, and
+- [x] The pool seeds the worker from the store, forwards the request,
+      compares the runtime keys, offers every complete served envelope to the store, and
       returns the outcome. The core fast path sends a served-generation notice.
-- [ ] Ignore incomplete memory recipes as bundle seeds and released reuse
+- [x] Apply checked call 26 G in the bundle receipt and store. Test that a
+      receipt match skips encoding and writing, and that replacement,
+      eviction, and deletion cannot leave stale write-elision knowledge.
+      Preserve bounded warning facts, publication nonces, and legacy receipts.
+- [x] Ignore incomplete memory recipes as bundle seeds and released reuse
       records. Preserve restoration for old live graph and render leases.
       Test that an incomplete memory recipe cannot hide a usable disk entry.
       Test explicit restoration and last-release replacement for an incomplete
       recipe. Update the sidecar protocol, the sidecar README, and the flow
       above for complete-only optional seeds and released retention.
-- [ ] Compose the store in `crates/mokly-cli/src/render_runtime.rs`.
-- [ ] Share one once-only cache reporter for each command between the bundle
+- [x] Compose the store in `crates/mokly-cli/src/render_runtime.rs`.
+- [x] Share one once-only cache reporter for each command between the bundle
       cache and the base caches, and print the warning line of decision 7 and current call 13.
       Follow the `product-ui` skill for the warning text.
-- [ ] Emit `catalogue.bundle` with `cache` in
+- [x] Emit `catalogue.bundle` with `cache` in
       `crates/mokly-render/src/bundle_attempt.rs`. Add the stage and the
       values to `serve_trace_stages.rs` and `serve_trace.rs`. Remove the
       `catalogue.describe` allow-list entry.
-- [ ] Tests: pool unit tests with a fake worker and a fake store for the
+- [x] Tests: pool unit tests with a fake worker and a fake store for the
       request order, a write when the served recipe differs from the disk record, a memory
       revert that updates disk, and a failed restore. One
       integration test with a real sidecar and a temporary cache: a second
@@ -1175,7 +1209,11 @@ Depends on: 2, 3
       of the directory line and the warning line, including a foreign
       entry. Add focused cases for the lookup and byte-bound corrections. Run each new test 10
       times.
-- [ ] Update `crates/mokly-render/README.md` and `crates/mokly-cli/README.md`.
+- [x] Update `crates/mokly-render/README.md` and `crates/mokly-cli/README.md`.
+
+Evidence: `.context/bundle-disk-cache/reports/milestone-4.md`,
+`.context/bundle-disk-cache/reports/call26-docs.md`, and
+`.context/bundle-disk-cache/logs/m4-repetitions.json`.
 
 ## Milestone 5: Measurement, proof, and smoke test
 
@@ -1199,9 +1237,12 @@ Depends on: 4
       cache and base-lifetime work of the parallel branches. Apply current
       design call 10 to `mokly-runtime.md`. Measure again if their changes
       affect the baseline.
-      The user selected `c42755bcd` as the new release baseline on 2026-11-16,
-      after the compact render-cache branch merged. Preserve its compact
-      ceiling, capture bounds, and restore timing fields.
+      On 2026-11-17, the user selected the last merged `origin/main` as the
+      release baseline. This supersedes the `c42755bcd` selection of
+      2026-11-16. Give each checkout its own Cargo target directory. Check
+      both successful build logs and different binary SHA-256 hashes before
+      each paired run. Preserve the compact ceiling, capture bounds, and
+      restore timing fields.
 
 ## Milestone 6: Verification, commit, review, and pull request
 

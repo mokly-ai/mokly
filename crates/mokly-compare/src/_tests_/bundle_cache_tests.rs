@@ -11,7 +11,7 @@ use mokly_sidecar::bundle_store::RecordToken;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::bundle_cache_types::{
-    BundleCache, BundleReceipt, BundleRecord, Mutation, OpenBundle, RawRead,
+    BundleCache, BundleReceipt, BundleRecord, CompilationRead, Mutation, OpenBundle, RawRead,
 };
 use crate::cache::DiskCache;
 use crate::cache_types::{ReporterMock, StorageMock};
@@ -25,6 +25,7 @@ fn receipt() -> BundleReceipt {
         bytes: 1031,
         used: 4,
         publication: RecordToken::new([7; 32]),
+        runtime_digest: [3; 32],
     }
 }
 fn cache(storage: Unimock, locks: Unimock) -> DiskCache {
@@ -67,16 +68,20 @@ fn held_entry_stripes_miss_or_skip_without_waiting_or_reading_data() {
     );
     let locks = Unimock::new((
         LocksMock::try_lock_shared
-            .some_call(matching!(_))
-            .returns(Err(locked())),
+            .each_call(matching!(_))
+            .answers(&|_, _| Err(locked())),
         LocksMock::try_lock
             .some_call(matching!(_))
             .returns(Err(locked())),
     ));
     let cache = cache(storage, locks);
+    assert_eq!(
+        cache.compilation(&key()).unwrap(),
+        CompilationRead::Contended
+    );
     assert!(matches!(cache.read(&key()).unwrap(), RawRead::Contended));
     assert_eq!(
-        cache.replace(&key(), b"new").unwrap(),
+        cache.replace(&key(), b"new", [3; 32]).unwrap(),
         Mutation::Skipped(SkipReason::Contended)
     );
 }
@@ -146,6 +151,7 @@ fn active_stage_reservations_skip_a_write_before_any_payload_is_staged() {
                 bytes: 64 * 1024 * 1024,
                 used: index + 1,
                 publication: RecordToken::new([index as u8; 32]),
+                runtime_digest: [3; 32],
             }),
         })
         .collect::<Vec<_>>();
@@ -173,7 +179,7 @@ fn active_stage_reservations_skip_a_write_before_any_payload_is_staged() {
     );
     let cache = cache(storage, locks);
     assert_eq!(
-        cache.replace(&key(), b"new recipe").unwrap(),
+        cache.replace(&key(), b"new recipe", [3; 32]).unwrap(),
         Mutation::Skipped(SkipReason::Capacity)
     );
 }

@@ -93,6 +93,19 @@ pub struct Effects {
     pub state: StoreState,
 }
 
+impl Effects {
+    /// Preserve one entry fault together with a later bounded directory warning.
+    pub fn with_entry_fault(self, fault: EntryFault) -> Self {
+        let mut rejected = StoreEvent::Rejected(fault).effects();
+        rejected.state = self.state;
+        rejected.warnings.directory = self.warnings.directory;
+        if self.state == StoreState::Off {
+            rejected.cache = self.cache;
+        }
+        rejected
+    }
+}
+
 /// Exhaustive event vocabulary shared by reads and mutations.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum StoreEvent {

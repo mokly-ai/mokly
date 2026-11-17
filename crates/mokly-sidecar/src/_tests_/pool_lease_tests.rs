@@ -38,6 +38,7 @@ fn a_late_old_epoch_release_preserves_the_same_ids_new_lifetime() {
                 Ok(MethodResult::Bundle(Box::new(results::Bundle {
                     unmapped_dependency_directories: None,
                     epoch: 0,
+                    cache: None,
                     compiled: compiled("g"),
                     generation: "g".into(),
                     modules: vec![],

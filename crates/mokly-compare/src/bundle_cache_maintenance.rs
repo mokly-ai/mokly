@@ -69,6 +69,7 @@ impl DiskCache {
         namespace: &Path,
         key: &str,
         needed: u64,
+        runtime_digest: [u8; 32],
     ) -> Result<Reservation> {
         let mut guards = StripeGuards::new(entry_lock_path(namespace, Kind::Bundles, key));
         for record in self
@@ -151,6 +152,7 @@ impl DiskCache {
             bytes: needed,
             used,
             publication: self.storage.bundle_nonce()?,
+            runtime_digest,
         };
         let stage = namespace.join("staging").join(key);
         self.storage.prepare(&stage)?;

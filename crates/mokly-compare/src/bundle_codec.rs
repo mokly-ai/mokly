@@ -81,6 +81,10 @@ pub(crate) fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
+pub(crate) fn compilation_digest(runtime_key: &str) -> [u8; 32] {
+    Sha256::digest(runtime_key.as_bytes()).into()
+}
+
 struct DigestWriter(Sha256);
 
 impl Write for DigestWriter {

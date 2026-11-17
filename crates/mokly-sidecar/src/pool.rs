@@ -5,6 +5,7 @@ use std::path::Path;
 use std::sync::mpsc::{self, Sender};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard, PoisonError};
 
+use crate::bundle_store::BundleStore;
 use crate::error::{Error, Result};
 use crate::methods::Call;
 use crate::pool_options::{Launch, PoolOptions};
@@ -22,6 +23,8 @@ pub trait SidecarPool: Send + Sync {
     fn request(&self, call: Call) -> Result<MethodResult>;
     /// Record an epoch-specific final lease release without waiting for a worker.
     fn release_generation(&self, generation: &str, epoch: u64);
+    /// Apply the served-recipe write rule after the core directly reuses a live state.
+    fn served_generation(&self, generation: &str, epoch: u64);
     /// Record a final PostCSS context release without waiting for a worker.
     fn release_context(&self, context: &str);
     /// Cancel queued calls, kill and reap busy workers, and retain idle workers for shutdown.
@@ -41,6 +44,7 @@ pub struct Pool {
     pub(super) state: Arc<Mutex<State>>,
     pub(super) releases: Option<Sender<Notice>>,
     pub(super) ready: Arc<Condvar>,
+    pub(super) bundle_store: Option<Arc<dyn BundleStore>>,
 }
 
 impl Pool {
@@ -60,9 +64,16 @@ impl Pool {
             state: Arc::new(Mutex::new(State::default())),
             ready: Arc::new(Condvar::new()),
             releases: Some(sender),
+            bundle_store: None,
         };
         pool.start_releases(receiver);
         pool
+    }
+
+    /// Add optional persistent recipes without starting a process or accessing disk.
+    pub fn with_bundle_store(mut self, store: Arc<dyn BundleStore>) -> Self {
+        self.bundle_store = Some(store);
+        self
     }
 
     pub(super) fn lock(&self) -> MutexGuard<'_, State> {

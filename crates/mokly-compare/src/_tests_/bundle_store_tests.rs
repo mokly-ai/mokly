@@ -55,6 +55,10 @@ fn a_loaded_recipe_survives_access_maintenance_failure_and_keeps_its_warning() {
                 bytes: bytes.len() as u64,
                 input: Box::new(Cursor::new(bytes)),
                 token: RecordToken::new([7; 32]),
+                runtime_digest: [
+                    217, 44, 106, 129, 178, 255, 80, 9, 107, 205, 168, 8, 133, 66, 125, 31, 89,
+                    162, 91, 95, 72, 63, 112, 85, 82, 53, 4, 146, 93, 22, 171, 35,
+                ],
                 maintenance: Some(failure()),
                 guard: Box::new(Unimock::new(())),
             }))),

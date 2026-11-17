@@ -88,6 +88,7 @@ pub(super) fn result(dependency_root: &str, react: &str) -> results::Bundle {
     results::Bundle {
         unmapped_dependency_directories: None,
         epoch: 0,
+        cache: None,
         compiled: CompiledGeneration {
             toolchain: "fixture".into(),
             reuse_evidence: ReuseEvidence {

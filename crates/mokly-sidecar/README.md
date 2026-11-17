@@ -50,26 +50,30 @@ cleanup use one staleness rule: a missing bundle or a missing or different
 epoch makes a loaded generation stale. Cleanup stops when a pass changes no
 state.
 
-After the final release of a generation, the pool keeps its bundle settings,
-module graph, compiled code, input digests, and directory lists in a bounded
-store. The
+After the final release of a generation with complete reuse evidence, the
+pool keeps its bundle settings, module graph, compiled code, input digests,
+and directory lists in a bounded memory store. The final release of an
+incomplete generation removes the older entry with equal settings and keeps
+nothing. The
 [compiled recipes contract](../../docs/protocol/mokly-sidecar-modules.md#compiled-recipes-and-release)
 owns the retention rule and the bound. Each entry costs the bytes of its
 serialized `restoreGeneration` envelope, with its private seed id and
 without the LF delimiter. `MAX_FRAME_BYTES` bounds the total. A use counter,
 not a clock, orders eviction. Keeping or seeding an entry counts as a use.
 Before a `bundle` call, the pool restores the stored entry with equal
-settings under a private seed id. It then prepares the live generation with
-equal settings and the highest epoch. The generation id breaks an epoch tie.
+settings under a private seed id. It then prepares the complete live
+generation with equal settings and the highest epoch. The generation id breaks
+an epoch tie. An incomplete generation never seeds a `bundle` call.
 Directory membership can change without a change of the content id. The
 private seed id keeps a stored and a live recipe with the same content id
 apart, so both reach the sidecar's `reuse` check. Bundle results carry the
 public content id, never a seed id. Cleanup disposes of the seed when the
 slot returns from the bundle request. A reused recipe leaves the store when
 it becomes live. Its next final release can keep it again. Only a `bundle`
-call loads stored entries. Replays of live generations never do.
+call loads stored entries. A replay never loads one. A replay still restores
+the live generation that a request names, also an incomplete one.
 `shutdown`, `abort`, and `cancel_requests` clear the store. A late release
-cannot refill a stopped pool. The store writes no file. It adds no
+cannot refill a stopped pool. The memory store writes no file. It adds no
 configuration, terminal output, operation event, or timing name.
 
 `BundleStore` is the boundary of the bundle cache, which keeps compiled
@@ -77,17 +81,46 @@ recipes across processes. `load` returns a `ReadOutcome`. A hit holds the
 `ReusableRecipe`, the `RecordToken` of its publication, and the outcome of its
 access-order maintenance. A miss names its reason. A rejection holds the entry
 fault and the outcome of one attempt to remove the rejected entry. `save`
-publishes a `ReusableRecipe`, and `invalidate` removes only the publication
-that a `RecordToken` names. Both return a `WriteOutcome`. The `effects` method
+publishes a `ReusableRecipe`, or returns `Unchanged` when the entry already
+holds its compilation. A save that finds a damaged or unreadable entry still
+writes, and it returns `WriteOutcome::EntryFault` with the bounded effects of
+the fault and of the write. `with_entry_fault` builds that outcome in one
+place, and a cancelled write stays `Cancelled`. `invalidate`
+removes only the publication that a `RecordToken` names. Both return a
+`WriteOutcome`. The `effects` method
 of each outcome maps it once to its `Effects`: the `cache` value of the timing
 record, at most one entry warning and one directory warning, and the
 `StoreState`. `ReusableRecipe::new` accepts only a compilation with complete
 reuse evidence, and `disk_seed_request` builds the `restoreGeneration` request
 of a stored recipe. Live generations keep their `CompiledGeneration` for
 explicit restoration. `mokly-compare` implements the store over the OS cache.
-The pool does not call it yet. The
+The
 [bundle cache contract](../../docs/protocol/mokly-base-cache.md#bundle-entries)
 owns the entry, fault, and lock rules.
+
+`Pool::with_bundle_store` adds an optional `BundleStore` to the pool. It
+starts no process and reads no file. When a `bundle` call has no complete live
+or released seed, the pool loads the entry of its settings from the bundle
+store. On a hit, it restores the entry with `disk_seed_request` under a
+private `disk:` seed id before the request. The pool reads the store at most
+once for each call, also when the call runs again after a crash or a timeout.
+A failed restore invalidates that publication, and the result reports
+`damaged`, or `unavailable` when that removal finds the store unusable. After
+a successful `bundle` call, the pool compares the runtime key of the result
+with the keys of the seeds and of the generations that the worker already
+holds. It sets the `cache` field of the result, which never
+crosses the wire, to `memory` or `hit` for a reused compilation, or else to
+the reason why the sidecar compiled. Then it offers the served recipe to
+`save` when its reuse evidence is complete. The store decides whether to
+write it. The pool keeps no record of earlier store calls, and it calls the
+store outside its mutex. Without a store, the pool reads and writes no entry,
+and a compile without a memory seed reports `unavailable`.
+
+The core calls `SidecarPool::served_generation` with the id and the epoch of a
+live generation when it serves that generation without a `bundle` call. The
+pool then offers the recipe of that generation to `save` in the same way. It
+offers nothing after a stop or after the release of that epoch. The method
+returns no error.
 
 Bundle results include the digests of the bytes consumed by each module. An
 optional evaluation digest isolates CSS Modules and resolved configuration
@@ -226,22 +259,28 @@ spawn the built sidecar and render a component, screen, story, and page. The
 ### Key Code
 
 - [`src/pool.rs`](./src/pool.rs) defines `SidecarPool`, the boundary that
-  catalogue and render services call, and `Pool`, its lazy bounded
-  implementation.
+  catalogue and render services call, with `served_generation` for a core
+  reuse, and `Pool`, its lazy bounded implementation, with
+  `with_bundle_store`.
 - [`src/pool_options.rs`](./src/pool_options.rs) defines `Launch` and
   `PoolOptions`, the launch settings and the pool size and deadline override.
 - [`src/pool_recipes.rs`](./src/pool_recipes.rs) defines `Recipes`, the
-  bounded store of released compiled recipes.
+  bounded store of released compiled recipes with complete reuse evidence.
 - [`src/pool_releases.rs`](./src/pool_releases.rs) keeps the recipe of each
   final release in that store, and
-  [`src/pool_preparation.rs`](./src/pool_preparation.rs) selects the seeds
-  of each `bundle` call.
+  [`src/pool_preparation.rs`](./src/pool_preparation.rs) selects the complete
+  memory seeds of each `bundle` call.
+- [`src/pool_bundle_cache.rs`](./src/pool_bundle_cache.rs) seeds a `bundle`
+  call from the bundle store, keeps the request-local provenance of its
+  seeds, sets the `cache` outcome of its result, and offers served recipes to
+  the store.
 - [`src/bundle_store.rs`](./src/bundle_store.rs) defines `BundleStore` with
   `load`, `save`, and `invalidate`, its `ReadOutcome` and `WriteOutcome`, and
   `RecordToken`, the id of one publication.
 - [`src/bundle_outcomes.rs`](./src/bundle_outcomes.rs) defines `Effects` and
   `StoreState`, the one exhaustive mapping of each store outcome to its timing
-  value, its warnings, and the store state.
+  value, its warnings, and the store state. `Effects::with_entry_fault` adds
+  an entry fault to the effects of a write.
 - [`src/reusable_recipe.rs`](./src/reusable_recipe.rs) defines
   `ReusableRecipe`, which admits only complete reuse evidence, and
   `disk_seed_request`, the restore request of a stored recipe.

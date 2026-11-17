@@ -52,6 +52,9 @@ pub(super) struct CapturedPool {
 }
 
 impl SidecarPool for CapturedPool {
+    fn served_generation(&self, generation: &str, epoch: u64) {
+        self.inner.served_generation(generation, epoch);
+    }
     fn release_generation(&self, generation: &str, epoch: u64) {
         self.calls
             .lock()

@@ -6,7 +6,7 @@ use mokly_platform::error;
 use mokly_platform::locks::FileLock;
 use mokly_sidecar::bundle_store::RecordToken;
 
-use crate::bundle_cache_types::{BundleCache, Mutation, RawRead};
+use crate::bundle_cache_types::{BundleCache, CompilationRead, Mutation, RawRead};
 use crate::cache::DiskCache;
 use crate::cache_types::Kind;
 use crate::error::{Error, InternalError, Result};
@@ -54,12 +54,15 @@ impl DiskCache {
 }
 
 impl BundleCache for DiskCache {
+    fn compilation(&self, key: &str) -> Result<CompilationRead> {
+        self.bundle_compilation(key)
+    }
     fn read(&self, key: &str) -> Result<RawRead> {
         self.bundle_read(key)
     }
 
-    fn replace(&self, key: &str, bytes: &[u8]) -> Result<Mutation> {
-        self.bundle_replace(key, bytes)
+    fn replace(&self, key: &str, bytes: &[u8], runtime_digest: [u8; 32]) -> Result<Mutation> {
+        self.bundle_replace(key, bytes, runtime_digest)
     }
 
     fn invalidate(&self, key: &str, token: Option<RecordToken>) -> Result<Mutation> {

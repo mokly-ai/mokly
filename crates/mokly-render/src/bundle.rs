@@ -71,6 +71,7 @@ pub(crate) fn describe(
             .iter()
             .find(|state| state.class_maps_digest == digest)
         {
+            bundle_attempt::served(runtime, &existing.lease);
             return finish(runtime, side, compiler, existing.clone());
         }
         prepared_maps = Some(maps);

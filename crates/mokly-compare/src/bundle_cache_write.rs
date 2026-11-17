@@ -11,7 +11,12 @@ use crate::cache_types::Kind;
 use crate::error::Result;
 
 impl DiskCache {
-    pub(crate) fn bundle_replace(&self, key: &str, bytes: &[u8]) -> Result<Mutation> {
+    pub(crate) fn bundle_replace(
+        &self,
+        key: &str,
+        bytes: &[u8],
+        runtime_digest: [u8; 32],
+    ) -> Result<Mutation> {
         self.check()?;
         let needed = (bytes.len() as u64).saturating_add(RECEIPT_BYTES);
         if needed > CAPACITY {
@@ -27,7 +32,7 @@ impl DiskCache {
             let Some(_state) = self.bundle_lock(&namespace.join("state.lock"), false)? else {
                 return Ok(Mutation::Skipped(SkipReason::Contended));
             };
-            match self.bundle_reserve(&namespace, key, needed)? {
+            match self.bundle_reserve(&namespace, key, needed, runtime_digest)? {
                 Reservation::Ready(receipt) => receipt,
                 Reservation::Skipped(reason) => return Ok(Mutation::Skipped(reason)),
             }

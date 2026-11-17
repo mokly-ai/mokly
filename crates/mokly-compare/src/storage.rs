@@ -9,7 +9,7 @@ use mokly_git::control::Cancellation;
 use mokly_platform::flush::Flush;
 use mokly_sidecar::bundle_store::RecordToken;
 
-use crate::bundle_cache_types::{BundleReceipt, BundleRecord, OpenBundle};
+use crate::bundle_cache_types::{BundleReceipt, BundleRecord, CompilationRead, OpenBundle};
 use crate::bundle_inventory;
 use crate::bundle_receipts;
 use crate::bundle_storage;
@@ -29,6 +29,9 @@ pub struct SystemStorage {
 }
 
 impl Storage for SystemStorage {
+    fn bundle_compilation(&self, entry: &Path) -> Result<CompilationRead> {
+        bundle_storage::compilation(self, entry)
+    }
     fn bundle_open(&self, entry: &Path) -> Result<OpenBundle> {
         bundle_storage::open(self, entry)
     }

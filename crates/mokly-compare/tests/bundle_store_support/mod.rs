@@ -144,6 +144,7 @@ pub fn sparse(cache: &DiskCache, key: &str, bytes: u64, used: u64) {
                 bytes: bytes + 1024,
                 used,
                 publication: RecordToken::new([used as u8; 32]),
+                runtime_digest: [3; 32],
             },
             true,
         )

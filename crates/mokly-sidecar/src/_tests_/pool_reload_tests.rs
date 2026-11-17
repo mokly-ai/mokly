@@ -49,6 +49,7 @@ fn worker(expected: &[&str], calls: usize) -> Unimock {
                     Call::Bundle(_) => MethodResult::Bundle(Box::new(results::Bundle {
                         unmapped_dependency_directories: None,
                         epoch: 0,
+                        cache: None,
                         compiled: compiled("g"),
                         generation: "g".into(),
                         modules: Vec::new(),

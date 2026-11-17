@@ -15,7 +15,8 @@ other crate depends on it.
 - Load JSON configuration, validate the catalogue, and render every HTML or
   JavaScript view.
 - Compute Changes from a pinned Git base and keep its validated result in memory.
-- Compose one rendering runtime, sidecar pool, and render cache per command.
+- Compose one rendering runtime, sidecar pool, bundle store, and render cache
+  per command.
 
 ## What This Crate Does
 
@@ -48,6 +49,19 @@ passes the working repository root and the repository's cache namespace, the
 the checkout folder. The
 [terminal errors contract](../../docs/protocol/mokly-terminal-errors.md) owns
 the scripts hint of base failures.
+
+Each command also adds the bundle cache to its sidecar pool. `bundle_runtime`
+composes `CachedBundles` over a `DiskCache` that the command's cancellation
+stops. When `SystemLocations` gives no cache location, the pool gets a store
+whose first call reports a store fault, and the store then stays off. The
+store prints the entry warning and the directory warning of the
+[cache warnings contract](../../docs/protocol/mokly-terminal-cache.md#cache-warnings)
+through the command's diagnostics. The bundle cache and the base caches share
+one announcement of the cache directory in each command. In `build` and
+`publish`, they share one `OnceReporter`, which `render_runtime` returns for
+the Changes of the command. In Serve, the `ServeDirectory` of the bundle cache
+and the base cache notice of each comparison attempt share one flag.
+`ServeDirectory` does not depend on a comparison attempt.
 
 Serve validates an HTML, JavaScript, or mixed catalogue before it reserves a
 loopback port, then serves it through `mokly-server` under the
@@ -147,11 +161,34 @@ reserves an 8 MiB main-thread stack through its linker settings in
   token.
 - [`src/render_runtime.rs`](./src/render_runtime.rs) creates the render cache
   and composes the shared JavaScript and HTML rendering services of one
-  command.
+  command. It adds the bundle store to the pool and returns the command's
+  cache reporter for the Changes of `build` and `publish`.
+- [`src/bundle_runtime.rs`](./src/bundle_runtime.rs) composes the bundle store
+  of one command over a `DiskCache` that the command's cancellation stops,
+  and maps each store outcome to its warning lines.
+- [`src/changes_runtime.rs`](./src/changes_runtime.rs) composes the Changes
+  service of `build` and `publish`. Its `reporter` gives the one-shot
+  `OnceReporter` that the bundle store shares.
+- [`src/cache_directory.rs`](./src/cache_directory.rs) defines
+  `ServeDirectory`, the cache directory announcement of the bundle cache in
+  Serve.
 - [`src/entry_serve.rs`](./src/entry_serve.rs) and
   [`src/serve.rs`](./src/serve.rs) compose, prepare, and close Serve.
+  `entry_serve.rs` passes the terminal output of Serve to
+  `ServeServices::new`.
 - [`src/serve_services.rs`](./src/serve_services.rs) shares one pool and
-  cache across Serve preparation and live views.
+  cache across Serve preparation and live views. `ServeServices::new` takes
+  that `ServeOutput` and creates the one announcement flag of the Serve
+  process. [`src/serve_delivery.rs`](./src/serve_delivery.rs) passes that
+  flag to the base caches of Serve Changes.
+- [`src/serve_lifecycle.rs`](./src/serve_lifecycle.rs) holds the startup
+  helpers of Serve, such as the Tokio runtime and the progress animation, and
+  `ServeLifecycle`, which orders observer shutdown, busy-worker cancellation,
+  and idle-worker shutdown.
+- [`src/serve_trace.rs`](./src/serve_trace.rs) installs the
+  `--debug-timings` output of each command, and
+  [`src/serve_trace_fields.rs`](./src/serve_trace_fields.rs) holds the
+  bounded allow-lists of its record fields, such as the `cache` values.
 - [`src/serve_controls.rs`](./src/serve_controls.rs) maps the keys of rich
   watched Serve to its shortcuts and owns raw mode. Closed or failed terminal
   input ends the key reader but does not stop Serve. Serve shutdown waits for
@@ -185,8 +222,10 @@ reserves an 8 MiB main-thread stack through its linker settings in
   and [publish](../../docs/guides/cli/publish.md) guides.
 - [Package contract](../../docs/protocol/mokly-package.md).
 - [Terminal help](../../docs/protocol/mokly-terminal-help.md).
-- [Terminal output](../../docs/protocol/mokly-terminal-output.md) and
+- [Terminal output](../../docs/protocol/mokly-terminal-output.md),
+  [cache output](../../docs/protocol/mokly-terminal-cache.md), and
   [comparison steps](../../docs/protocol/mokly-terminal-steps.md).
+- [Bundle cache entries](../../docs/protocol/mokly-base-cache.md#bundle-entries).
 - [Terminal errors](../../docs/protocol/mokly-terminal-errors.md).
 - [On-demand Serve](../../docs/protocol/mokly-on-demand.md) and
   [watch runtime](../../docs/protocol/mokly-watch-runtime.md).

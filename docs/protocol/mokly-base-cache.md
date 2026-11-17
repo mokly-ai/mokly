@@ -24,8 +24,9 @@ complete entry reserves 1,024 bytes for its receipt. Retained size counts
 regular-file bytes and link targets without following links. A hit checks the
 bounded completion receipt and recounts the data bytes. Only receipt schema 1 is
 valid; another schema or unknown field is incomplete. A bundle receipt also
-holds a random 256-bit publication id from its write, and an access-order update
-keeps that id. Source and dependency hits do not hash file contents: a durable
+holds a random 256-bit publication id from its write and the SHA-256 digest of
+the runtime import key of its compilation. An access-order update keeps both.
+Source and dependency hits do not hash file contents: a durable
 completion receipt replaces repeated content verification. A completed entry
 survives a crash, because its data and directory metadata are durable before its
 receipt is published. A valid entry may retain consumer cache files as long as
@@ -89,7 +90,8 @@ class:
 | Normal event | A held lock, no room for a write, incomplete reuse evidence, a failed bundle, or a cancelled operation | None                           | Stays on                        |
 
 A damaged entry has a damaged receipt or first line, a wrong size or digest, a
-payload that does not parse, or settings that do not match its key. A stored
+payload that does not parse, settings that do not match its key, or a receipt
+digest that does not match the runtime import key of its payload. A stored
 compilation is damaged too when its `restoreGeneration` request returns an
 error, crashes the sidecar, or times out. A reuse check that declines a restored
 compilation, because its inputs changed, is a normal miss with no warning. The
@@ -114,6 +116,25 @@ timeout during the restore keeps only the existing
 [recovery](./mokly-sidecar.md#fail-closed-rules), and Mokly adds no retry. No
 bundle cache fault fails a command.
 
+Mokly offers each served compilation with complete reuse evidence to the
+bundle cache, also one served from memory. Before the bundle cache encodes the
+compilation, it reads only the receipt of the entry, under one shared attempt
+of the entry lock. It reads no payload and does not change the eviction order. When the
+receipt holds the digest of the served compilation's runtime import key, the
+write ends without a change, and it counts as a stored write. A held entry
+lock skips the write. In every other case, the write replaces the entry under
+the rules below. A damaged or unreadable receipt is also an entry fault. Each
+compile gets a new runtime import key, so an equal digest names the same
+compilation. The check trusts the receipt, and the next read still checks the
+payload.
+Decision: the receipt of an entry names its compilation, so the bundle cache
+decides whether a write is needed. A record of the last entry that each process
+read or wrote was rejected, because completion order, eviction, another
+process, and the deletion of the cache directory can each make it stale. Such a
+record checked against the publication id was rejected, because it keeps a
+table and its lifetime. A write of each served compilation was rejected,
+because it adds a full write after each hit.
+
 Bundle entries share a fixed set of entry locks. A write replaces the entry of
 its settings under its entry lock, so no reader sees a partial entry. No bundle
 cache operation waits for a lock. A held lock skips a write, and a held entry
@@ -131,8 +152,9 @@ entries, the staged writes of every process, and replaced or evicted data that
 is not yet deleted. Before a write, Mokly makes room for the whole new entry.
 It removes the replaced entry first, then evicts other entries under the
 eviction rule above. When it cannot make room, it skips the write. Deleting
-the cache directory removes every bundle entry, so the next process compiles
-each bundle again.
+the cache directory removes every bundle entry. A running process stores each
+compilation that it serves after the deletion again. A later process compiles
+each other bundle again.
 Decision: compiled bundles use a third kind of the same cache. The Mokly
 version in the first line keeps each release from parsing the entries of
 another release. A separate single-file store and an embedded database were

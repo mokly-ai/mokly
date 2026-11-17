@@ -233,7 +233,7 @@ because it differs from 64 MiB only for a recipe above 32 MiB.
 The binary also keeps the latest served compilation of each set of bundle
 settings in the [bundle cache](./mokly-base-cache.md#bundle-entries), so a later
 process can reuse it. Only a complete live or released compilation seeds a
-`bundle` request. When the pool keeps none of the request's settings, it
+`bundle` request. Without such a seed, the pool
 installs the stored compilation with `restoreGeneration` before the request. The
 reuse check then accepts it, or the sidecar compiles. A replay still restores a
 live incomplete generation. The binary stores each served compilation that the

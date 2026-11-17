@@ -68,6 +68,7 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
             .answers(&|_, call| {
                 Ok(match call {
                     Call::Bundle(_) => MethodResult::Bundle(Box::new(Bundle {
+                        cache: None,
                         unmapped_dependency_directories: None,
                         epoch: 0,
                         compiled: CompiledGeneration {

@@ -100,6 +100,7 @@ impl Fixture {
                                 generation: id.into(),
                                 compiled: compiled(id),
                                 epoch: 0,
+                                cache: None,
                                 modules: Vec::new(),
                                 unmapped_dependency_directories: None,
                             }))

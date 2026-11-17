@@ -65,22 +65,30 @@ pub enum WriteOutcome {
     StoreFault,
     /// An earlier fault already disabled the store.
     Disabled,
+    /// Bounded entry and mutation facts from a damaged receipt and one save attempt.
+    EntryFault(Effects),
 }
 
 impl WriteOutcome {
     /// Interpret this mutation through the common exhaustive mapping.
     pub fn effects(self) -> Effects {
-        self.event().effects()
-    }
-
-    fn event(self) -> StoreEvent {
-        match self {
+        let event = match self {
             Self::Written | Self::Invalidated | Self::Unchanged => StoreEvent::Stored,
             Self::Skipped(reason) => StoreEvent::Skipped(reason),
             Self::Cancelled => StoreEvent::Cancelled,
             Self::StoreFault => StoreEvent::StoreFault,
             Self::Disabled => StoreEvent::Disabled,
+            Self::EntryFault(effects) => return effects,
+        };
+        event.effects()
+    }
+
+    /// Add one recoverable receipt fault without growing a warning chain.
+    pub fn with_entry_fault(self, fault: EntryFault) -> Self {
+        if self == Self::Cancelled {
+            return self;
         }
+        Self::EntryFault(self.effects().with_entry_fault(fault))
     }
 }
 

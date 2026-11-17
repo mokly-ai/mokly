@@ -2,6 +2,7 @@
 
 use std::path::Path;
 use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
 use mokly_catalogue::discovery::Discoverer;
@@ -11,6 +12,8 @@ use mokly_cli::build::BuildError;
 use mokly_cli::cancellation::Cancellation;
 use mokly_cli::cancelled_work::CancellableTree;
 use mokly_cli::grammar::Common;
+use mokly_cli::output::Style;
+use mokly_cli::redaction::Redactor;
 use mokly_cli::serve::{CatalogueServe, PreparedServe, ServePreparation};
 use mokly_cli::serve_settings::ServeSettings;
 use mokly_graph::cache::RenderCache;
@@ -20,8 +23,11 @@ use mokly_sidecar::pool::SidecarPool;
 use mokly_sidecar::workers::Diagnostics;
 use mokly_source_interface::tree::SourceTree;
 
+use crate::bundle_runtime::Reporting;
+use crate::cache_directory::ServeDirectory;
 use crate::render_runtime::Services;
 use crate::serve_pool::{PoolScheduling, ServePool};
+use crate::terminal::Terminal;
 use mokly_cli::options;
 
 pub(super) struct ServeServices {
@@ -31,6 +37,14 @@ pub(super) struct ServeServices {
     pub(super) tree: Arc<dyn SourceTree>,
     pub(super) preparation: Arc<dyn ServePreparation>,
     pub(super) pool: Arc<dyn SidecarPool>,
+    pub(super) cache_announced: Arc<AtomicBool>,
+}
+
+/// Command output needed to share a directory notice with later base attempts.
+pub(super) struct ServeOutput {
+    pub(super) terminal: Arc<dyn Terminal>,
+    pub(super) style: Style,
+    pub(super) redactor: Arc<Redactor>,
 }
 
 impl ServeServices {
@@ -40,7 +54,18 @@ impl ServeServices {
         diagnostics: Arc<dyn Diagnostics>,
         cancellation: Arc<dyn Cancellation>,
         cache: Arc<dyn RenderCache>,
+        output: ServeOutput,
     ) -> Result<Self, BuildError> {
+        let cache_announced = Arc::new(AtomicBool::new(false));
+        let reporting = Reporting {
+            directory: Arc::new(ServeDirectory {
+                announced: cache_announced.clone(),
+                terminal: output.terminal,
+                style: output.style.clone(),
+                redactor: output.redactor,
+            }),
+            mode: output.style.mode,
+        };
         let tree: Arc<dyn SourceTree> = Arc::new(CancellableTree {
             inner: Arc::new(WorkingTree),
             cancellation: cancellation.clone(),
@@ -59,6 +84,7 @@ impl ServeServices {
             diagnostics,
             cancellation,
             cache,
+            reporting,
         ) {
             Ok(services) => services,
             Err(source) => {
@@ -90,6 +116,7 @@ impl ServeServices {
             tree,
             preparation,
             pool,
+            cache_announced,
         })
     }
 }

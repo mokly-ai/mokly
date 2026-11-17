@@ -3,6 +3,7 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use crate::bundle_outcomes::CacheOutcome;
 use crate::compiled::CompiledGeneration;
 use crate::postcss_evidence::Evidence;
 use crate::render_records::{CollectedStyle, MarkerDraft};
@@ -45,6 +46,10 @@ pub struct Bundle {
     #[serde(skip)]
     #[ts(skip)]
     pub epoch: u64,
+    /// Pool-owned cache classification; never crosses the wire.
+    #[serde(skip)]
+    #[ts(skip)]
+    pub cache: Option<CacheOutcome>,
     /// Immutable code for restoration and evaluation-only reuse.
     pub compiled: CompiledGeneration,
     /// Content-addressed bundle id.

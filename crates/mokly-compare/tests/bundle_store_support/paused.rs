@@ -5,7 +5,7 @@ use std::io::Write;
 use std::path::Path;
 use std::sync::{Arc, Barrier, Mutex, mpsc};
 
-use mokly_compare::bundle_cache_types::{BundleReceipt, BundleRecord, OpenBundle};
+use mokly_compare::bundle_cache_types::{BundleReceipt, BundleRecord, CompilationRead, OpenBundle};
 use mokly_compare::cache_types::{Receipt, Record, Storage};
 use mokly_compare::error::Result;
 use mokly_sidecar::bundle_store::RecordToken;
@@ -45,6 +45,7 @@ impl Storage for PausedStorage {
             self.inner.write(path, bytes)
         }
     }
+    delegate!(bundle_compilation(entry:&Path) -> Result<CompilationRead>);
     delegate!(bundle_open(entry:&Path) -> Result<OpenBundle>);
     delegate!(bundle_records(directory:&Path,limit:u64) -> Result<Vec<BundleRecord>>);
     delegate!(bundle_receipt(entry:&Path,receipt:&BundleReceipt,durable:bool) -> Result<()>);

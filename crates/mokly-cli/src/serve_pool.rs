@@ -158,6 +158,9 @@ struct ScheduledPool {
 }
 
 impl SidecarPool for ScheduledPool {
+    fn served_generation(&self, generation: &str, epoch: u64) {
+        self.inner.served_generation(generation, epoch);
+    }
     fn request(&self, call: Call) -> Result<MethodResult> {
         let _foreground = self.base.is_none().then(|| self.gate.foreground());
         let _admission = self.gate.acquire(self.base.as_deref())?;

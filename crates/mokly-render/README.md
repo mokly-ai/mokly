@@ -89,6 +89,13 @@ Bundle reuse also reads the reuse evidence of the compiled recipe again through
 the injected `PhysicalInputs` reader, outside the side tree. A read error
 rejects reuse, also for a recorded absence, and incomplete evidence never
 permits reuse.
+Each core `bundle` request runs in a `catalogue.bundle` span, which records the
+`cache` outcome that the pool sets on the result. A `BundleLease` owns the
+lifetime epoch of each result from its return. When the core serves a retained
+evaluated state without a `bundle` request, it sends the pool the
+served-generation notice with the id and the epoch of that state. The pool can
+then store that compilation in the bundle cache. Only that direct return of a
+retained state sends the notice.
 The pool restores compatible code before evaluation-only bundles across slots
 and recycling. It gives each loaded lifetime an epoch. A stale process replays
 maps, describe, and bindings before rendering. Metadata invalidation still recomputes class maps before reusing
@@ -246,7 +253,12 @@ view after the edit and counts real process starts and hello calls.
 - [`src/graph.rs`](./src/graph.rs) resolves bindings before both sides use the
   same composition path.
 - [`src/bundle.rs`](./src/bundle.rs) bundles only changed JavaScript and
-  isolates class maps across retained graphs.
+  isolates class maps across retained graphs. It sends the served-generation
+  notice only at its direct return of a retained state.
+- [`src/bundle_attempt.rs`](./src/bundle_attempt.rs) sends each core `bundle`
+  request in its `catalogue.bundle` span, gives each result's lifetime epoch
+  to a `BundleLease`, and sends the served-generation notice after a core
+  reuse.
 - [`src/render_environment.rs`](./src/render_environment.rs) derives the inputs
   that every render input key of one side shares, and names their paths
   without the checkout folder.
