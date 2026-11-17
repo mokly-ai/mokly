@@ -112,6 +112,11 @@ The options check kept calls 1 and 2. Its report is
 `.context/parallel-render-keys/options-check.md`. The contract check is
 `.context/parallel-render-keys/documentation-check.md`. No protocol change is needed.
 
+The performance orchestrator accepted the measured result on 2026-11-17.
+The idle mean is 105 ms, near the original 100 ms goal. Peak RSS does not
+rise. Busy-pool runs improve. Report the observed range and the 7% Serve
+CPU increase. The performance orchestrator requested no further measurement.
+
 ## Milestone 1: Documentation alignment
 
 Depends on: none
@@ -148,12 +153,14 @@ large Cargo build. Set `CARGO_INCREMENTAL=0` and distinct target directories.
 - [x] Build release `origin/main` and the branch in separate checkouts and target directories.
 - [x] Measure `examples/basic`, HTML and React fixtures from `scripts/large/`, and builds with Changes. Compare elapsed time and core peak RSS.
 - [x] Run the canonical strict example build and a Serve HTTP smoke test. Record the blocked desktop visual smoke.
-- [ ] Send the implementation SHA to the performance orchestrator at once after push. Obtain the target catalogue's 4-vCPU Serve measurement, including active renders, before completion.
-- [ ] Run targeted tests, `cargo xtask check --suite repository`, and `cargo xtask check`. Put Git 2.45 or later first on PATH and install git-lfs.
+- [x] Send the implementation SHA to the performance orchestrator at once after push. Obtain the target catalogue's 4-vCPU Serve measurement, including active renders, before completion.
+- [x] Run targeted tests, `cargo xtask check --suite repository`, and `cargo xtask check`. Put Git 2.45 or later first on PATH and install git-lfs.
 
 Evidence lives under `.context/parallel-render-keys/`.
 Measurement summary: `.context/parallel-render-keys/measurements-summary.md`.
 Smoke evidence: `.context/parallel-render-keys/smoke-report.md`.
+Target evidence: `.context/parallel-render-keys/mokly-cloud-measurements.md`.
+Verification and failure evidence: `.context/parallel-render-keys/verification-summary.md`.
 
 ## Milestone 4: Commit, review, and pull request
 
@@ -163,7 +170,9 @@ The initial implementation push starts the target catalogue measurement in
 Milestone 3. Its result holds plan deletion and pull request completion.
 Independent review can run while that measurement runs.
 
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the `implementation-review` skill after push. Check each new finding. Apply up to two fix rounds and re-review. Record follow-up items for other findings.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the `implementation-review` skill after push. Check each new finding. Apply up to two fix rounds and re-review. Record follow-up items for other findings.
 - [ ] Delete this plan under the `plans` skill after every other required TODO passes. Keep its dated decisions in the pull request description.
 - [ ] Open the pull request into `main`. Wait for final CI with `scripts/ci-wait.sh`. Report the link, SHA, measurements, calls, review, checks, and follow-ups to the performance orchestrator. Do not merge.
+
+Review evidence: `.context/reviews/calummoore/mokly-parallel-render-keys-6m85/findings.md`.

@@ -1,10 +1,10 @@
-# Flaky MockLink shell navigation
+# Flaky MockLink and raw link shell navigation
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-17, from the local complete gate of the branch `calummoore/mokly-mimalloc-global-allocator-i7qn` at `86dabdd3`, with its allocator change not yet committed.
-- **Location:** `tests/browser/browse_navigation.spec.ts:49`, the test "MockLink navigation reveals the destination and preserves shell state", with its `load` wait at lines 55-57 and the failed assertion at line 77. The nested frame of the suspected source is at `tests/browser/navigation_fixture.ts:32`.
-- **Reason:** The allocator branch changes only the memory allocator of the `mokly` binary and no browser, viewer, frame, or test code, and the test passed on its rerun.
+- **Location:** `tests/browser/browse_navigation.spec.ts:49`, the test "MockLink navigation reveals the destination and preserves shell state", with its `load` wait at lines 55-57 and the failed assertion at line 77. `tests/browser/browse_navigation.spec.ts:139`, the test "raw native links navigate from desktop, area, SVG, flow, and legacy frames", with its failed readiness assertion at line 224. The nested frame of the suspected source is at `tests/browser/navigation_fixture.ts:32`.
+- **Reason:** The allocator branch changes only the memory allocator of the `mokly` binary and no browser, viewer, frame, or test code, and its MockLink test passed on its rerun. The parallel-key branch changes no navigation code or test. Its raw-link failure repeated, and its cause remains unconfirmed.
 
 - **Source:** Implementation.
 - **Category:** Test.
@@ -127,13 +127,67 @@
     event. CPU load from other work on the machine can also delay the `load`
     event. The trace does not rule out a receiver that the shell lost while
     the mount was still live.
+  - Second occurrence, on 2026-11-17: another test of the same spec and
+    fixture failed. It is "raw native links navigate from desktop, area, SVG,
+    flow, and legacy frames", at `tests/browser/browse_navigation.spec.ts:139`.
+    It failed in the local complete gate of the branch
+    `calummoore/mokly-parallel-render-keys-6m85` at `31ee6f219`. That commit
+    changes only files under `crates/` and `plans/`. So it changes no browser,
+    viewer, frame, fixture, or browser test code.
+    - The gate passed 2,456 Rust tests, with 2 child probes ignored, and 3,021
+      Node tests, with no failure or skip. The browser suite ran 2,287 tests:
+      2,285 passed, 2 failed, and none skipped. The other failure is recorded
+      in `plans/follow-ups/flaky-inspection-ownership-navigation.md`.
+    - Failure text:
+
+      ```text
+      ✖ chromium › browse_navigation.spec.ts › raw native links navigate from desktop, area, SVG, flow, and legacy frames
+      Error: expect(locator).toHaveAttribute(expected) failed
+
+      Locator:  locator('.mbk-frame-mobile iframe')
+      Expected: "ready"
+      Received: "error"
+      Timeout:  10000ms
+
+          at navigateFrom (/home/user/code/mokly/tests/browser/browse_navigation.spec.ts:224:45)
+          at /home/user/code/mokly/tests/browser/browse_navigation.spec.ts:144:3
+      ```
+
+    - The call log shows the mobile frame state `loading` 14 times, then
+      `error` 10 times. Line 144 is the third `navigateFrom` call of the test,
+      for `#svg-link` in the mobile frame. Each call loads
+      `/view/fixture/nested/home/` again, and the calls at lines 142 and 143
+      passed before it.
+    - The trace of the failed attempt holds six requests for
+      `https://cross-origin.example.test/nested.html`. Each failed with
+      `net::ERR_NAME_NOT_RESOLVED` and has no timings.
+    - Rerun outcome: one focused rerun on the branch selected both failed tests
+      of the gate. This test failed again in 11.0 s, with the same assertion at
+      line 224. This time line 143 called it, the second `navigateFrom` call,
+      for `#area-link`. The run reported `1 failed` and `1 passed (58.0s)`.
+    - Spot check on `main`: one run of this test on a separate checkout of
+      `main` at `794b30a91` passed in 1.9 s. It used the release binary and the
+      JavaScript builds of `main`. The branch runs used the canonical debug
+      binary. So the spot check is not a same-build comparison, and it does
+      not reproduce the failure on `main`.
+    - Suspected source: the same fixture dependency as the MockLink failure. A
+      slow DNS failure for the reserved host can hold the `load` event of the
+      Home document past the 5,000 ms mount deadline. The mount then rejects
+      with `timeout`, and the frame state turns `error`. `navigateFrom` waits
+      for `ready`, so this test fails at its readiness assertion, before any
+      click.
+    - Not proven: nobody reproduced this failure with the same build on both
+      sides. The trace records no end time for the DNS failures. Unlike the
+      MockLink failure, this one repeated on its rerun. Nobody checked the DNS
+      resolver of the machine at that time. The nested frame and its DNS
+      dependency predate the branch. Final CI of the branch was still pending
+      when this occurrence was recorded.
 - **Impact if no action:** The browser suite can fail at random on a correct
   change, in the complete gate and in CI. Each failure costs a rerun of the
   browser suite, which took about 49 minutes in this run. A real frame
   ownership defect can hide behind a flake label.
-- **Root question:** How does the test make sure that the shell owns the
-  reloaded mobile frame when it clicks the MockLink, so that a correct shell
-  always passes?
+- **Root question:** How do these tests make sure that the shell owns the
+  mobile frame that they use, so that a correct shell always passes?
 - **Options:**
   - **A.** Reproduce the failure and confirm the source first. For example,
     hold the nested cross-origin request with `page.route` until the frame
@@ -182,6 +236,6 @@
 - **Recommendation:** Start with the investigation in A, in a separate branch.
   Confirm the source before selecting a test or product fix.
   Keep every assertion and the current requirements during that investigation.
-- **Action:** fix after merge, investigate A first, because the allocator diff
-  changes no navigation code or test. The investigation authorizes no product
+- **Action:** fix after merge, investigate A first, because the allocator and
+  parallel-key diffs change no navigation code or test. The investigation authorizes no product
   requirement change. Bring any later requirement choice to the user.
