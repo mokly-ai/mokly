@@ -173,7 +173,8 @@ A screen or component variant is its own row in Changes and counts on its own.
 When only a variant changed, the parent still shows a changed mark on its row
 so the group stays visible, and opening the parent from Changes takes you to
 the first changed variant. A deleted variant keeps a Removed row under the
-parent it belonged to, also when the parent went too. A change confined to one
+parent it belonged to, also when the parent went too. When that parent is now
+another screen's variant, the row stays in the parent's folder instead. A change confined to one
 viewport or scheme, such as a dark-only edit, puts a dot on the control that
 would take you to it: the theme control when the change is in the other theme,
 the viewport control when it is in the other viewport. Details names those

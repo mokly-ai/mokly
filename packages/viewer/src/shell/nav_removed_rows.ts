@@ -5,8 +5,9 @@
  * section still shows, after that container's current rows. A former folder
  * the section no longer shows comes back as a folder row with its
  * branch-point title, before the removed entry rows of its container, as a
- * code diff lists folders before files. A path that a current entry holds,
- * such as a former parent that is now a variant, is never recreated. A
+ * code diff lists folders before files. A path that the section shows as a
+ * variant row, such as a former parent that is now a variant, is never
+ * recreated as a folder. A
  * removed variant whose parent was removed too joins that parent's variants.
  */
 
@@ -18,8 +19,8 @@ interface Placement {
   appended: Map<string, NavNode[]>;
   /** Paths of the folders and entry rows the section shows. */
   containers: ReadonlySet<string>;
-  /** Whether a current entry of any section holds a path. */
-  current: (path: string) => boolean;
+  /** Paths the section shows as variant rows, which hold no members. */
+  variants: ReadonlySet<string>;
   /** A removed folder page, listed first in the folder at its own path. */
   own: Map<string, NavLeafNode>;
   /** Recreated folder rows by path. */
@@ -34,17 +35,17 @@ const ROOT = "";
 export function placeRemovedRows(
   nodes: readonly NavNode[],
   removed: readonly NavLeafNode[],
-  current: (path: string) => boolean,
 ): NavNode[] {
   if (removed.length === 0) return [...nodes];
   const rows = withRemovedVariants(removed);
+  const shown = shownPaths(nodes);
   const placement: Placement = {
     appended: new Map(),
-    containers: containerPaths(nodes),
-    current,
+    containers: shown.containers,
     own: new Map(),
     recreated: new Map(),
     titles: formerTitles(rows),
+    variants: shown.variants,
   };
   for (const row of rows)
     ensureFolder(target(row.entryId, placement), placement);
@@ -90,34 +91,41 @@ function withRemovedVariants(
 }
 
 /**
- * Every folder and entry row path the section shows. An entry row holds the
- * rows below its path as folder members, as a folder's own screen does.
+ * Every folder and entry row path the section shows, and its variant rows.
+ * An entry row holds the rows below its path as folder members, as a
+ * folder's own screen does.
  */
-function containerPaths(nodes: readonly NavNode[]): Set<string> {
-  const paths = new Set<string>();
+function shownPaths(nodes: readonly NavNode[]): {
+  containers: Set<string>;
+  variants: Set<string>;
+} {
+  const containers = new Set<string>();
+  const variants = new Set<string>();
   const visit = (node: NavNode): void => {
     if (node.kind === "group") {
-      paths.add(groupPath(node));
+      containers.add(node.path);
       node.children.forEach(visit);
     } else {
-      paths.add(node.entryId);
+      containers.add(node.entryId);
+      node.variants?.forEach((variant) => variants.add(variant.entryId));
       node.members?.forEach(visit);
     }
   };
   nodes.forEach(visit);
-  return paths;
+  return { containers, variants };
 }
 
 /**
  * The container a path's row joins: its deepest ancestor that the section
- * shows or that no current entry holds, or the section root.
+ * shows as a container or does not show as a variant row, or the section
+ * root.
  */
 function target(path: string, placement: Placement): string {
   const above = ancestors(path).slice(0, -1).reverse();
   return (
     above.find(
       (folder) =>
-        placement.containers.has(folder) || !placement.current(folder),
+        placement.containers.has(folder) || !placement.variants.has(folder),
     ) ?? ROOT
   );
 }
@@ -137,6 +145,7 @@ function ensureFolder(path: string, placement: Placement): void {
     key: `folder:${path}`,
     kind: "group",
     label: placement.titles.get(path) ?? path.split("/").at(-1)!,
+    path,
   };
   placement.recreated.set(path, group);
   append(placement, parent, group);
@@ -155,7 +164,7 @@ function contents(path: string, placement: Placement): NavNode[] {
 /** Copy one current node with the removed rows that belong inside it. */
 function fill(node: NavNode, placement: Placement): NavNode {
   if (node.kind === "group") {
-    const path = groupPath(node);
+    const path = node.path;
     const own = placement.own.get(path);
     return {
       ...node,
@@ -190,11 +199,6 @@ function formerTitles(rows: readonly NavLeafNode[]): Map<string, string> {
   };
   rows.forEach(visit);
   return titles;
-}
-
-/** The path of a folder row, which its key carries after `folder:`. */
-function groupPath(node: NavGroupNode): string {
-  return node.key.slice("folder:".length);
 }
 
 /** Every path at or above one path, outermost first. */

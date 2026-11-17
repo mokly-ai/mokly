@@ -116,7 +116,7 @@ Additional owning groups keep each page at no more than five screens:
   Each parent removed page renders its canonical preview and links to those
   children.
   The depicted branch removes four documents and five screens, so each child is
-  a sibling removed entry in the same flat Changes list and is selected the way
+  a removed entry in the Changes list, in its base folder, and is selected the way
   a reader selects it. A parent's document pane or device frames hold its
   previous version under the "Showing previous version" label; a child's loading
   or unavailable stage replaces that label and those frames while the catalogue

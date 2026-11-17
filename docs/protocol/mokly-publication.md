@@ -127,7 +127,7 @@ with no removed row. Removed screens show their Removed badge and no
 comparison controls and open their previous version under
 [removed previews](./mokly-removed-previews.md); removed component entries
 open their comparison with an explicit missing current side. Removed pages
-and documents keep their flat Changes rows and previous versions from the
+and documents keep their Changes rows at their base place and previous versions from the
 [catalogue change snapshot](./mokly-catalogue-changes.md), including after
 their parents were deleted. Pages and documents have no visual comparisons.
 

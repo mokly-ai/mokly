@@ -110,12 +110,15 @@ only removed rows. Decision: All does not keep removed screens or components,
 because a row in All for an entry that no longer exists confuses readers.
 
 Each removed row stands where its entry stood at the branch point, as a
-deleted file does in a code diff. The row joins the deepest folder, or
-screen or component folder page, of its base path that the section still
-shows, after that folder's current rows, in the canonical removal order. A
+deleted file does in a code diff. The row joins the deepest folder or entry
+row of its base path that the section still shows, after that container's
+current rows, in the canonical removal order. Below an entry row it is one of
+the entry's folder members. A
 removed folder page is the first row of the folder at its own path. A base
 folder that the section no longer shows comes back as a folder row labelled
-with its base title, and it holds the removed rows below it. A removed row
+with its base title, and it holds the removed rows below it. A path that the
+section shows as a variant row never comes back as a folder; the row joins the
+next container above it. A removed row
 with no base folder stands at the section root after the current rows. There
 is no extra App root and no expandable Removed group.
 

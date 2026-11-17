@@ -67,7 +67,7 @@ function navLink(
     key: node.key,
     kind: node.entryKind,
     label,
-    removed: node.key.startsWith("removed:"),
+    removed: node.removed === true,
     removedPage: node.removedPage === true,
     removedVariant: node.removedVariant === true,
     route: entryRoute(node.entryId),

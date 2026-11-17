@@ -33,8 +33,8 @@ export function adoptedVariants(
 
 /**
  * Append each adopted variant to its parent's list, after the current ones.
- * Adoption is what makes the row a Changes row, so the flag is written here
- * rather than guessed again by whoever supplied the leaf.
+ * Adoption is what places the row under its parent, so the variant flag is
+ * written here rather than guessed again by whoever supplied the leaf.
  */
 export function attachRemovedVariants(
   nodes: readonly NavNode[],

@@ -16,7 +16,7 @@ export function withMovedRows(
   lookup: Pick<BranchPointLookup, "previousPath">,
 ): NavSectionNode[] {
   const leaf = (node: NavLeafNode): NavLeafNode => {
-    const movedFrom = node.key.startsWith("removed:")
+    const movedFrom = node.removed
       ? undefined
       : lookup.previousPath({ kind: node.entryKind, path: node.entryId });
     return {

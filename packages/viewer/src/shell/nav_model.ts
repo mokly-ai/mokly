@@ -30,6 +30,7 @@ export function catalogueNavSections(
     return {
       kind: "leaf",
       key: `removed:${entry.path}`,
+      removed: true,
       entryId: entry.path,
       entryKind: entry.kind,
       label: `${entry.title} · Removed`,
@@ -106,7 +107,7 @@ export function navLeafVisible(
 
 /** Whether a row shows a removed entry, which only Changes lists. */
 function isRemovedRow(leaf: NavLeafNode): boolean {
-  return leaf.key.startsWith("removed:");
+  return leaf.removed === true;
 }
 
 /** Whether a group should remain in the filtered tree. */

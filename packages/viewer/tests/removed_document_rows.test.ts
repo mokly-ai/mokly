@@ -21,6 +21,7 @@ import {
   publishedScreen,
   removedEntry,
 } from "./published_entries_fixture.js";
+import { outline } from "./removed_row_outline.js";
 
 /** A removed document, page, and screen from the Guide folder. */
 const removed = [
@@ -60,22 +61,6 @@ function rows(): Map<string, NavLeafNode> {
   };
   for (const section of sections()) visit(section.children);
   return found;
-}
-
-/** Each row as its key, with the rows it holds, for order assertions. */
-function outline(nodes: readonly NavNode[]): unknown[] {
-  return nodes.map((node) =>
-    node.kind === "group"
-      ? { [`${node.key} ${node.label}`]: outline(node.children) }
-      : node.variants || node.members
-        ? {
-            [node.key]: outline([
-              ...(node.variants ?? []),
-              ...(node.members ?? []),
-            ]),
-          }
-        : node.key,
-  );
 }
 
 const context: ShellContext = {

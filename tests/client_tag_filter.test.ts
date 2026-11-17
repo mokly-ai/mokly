@@ -106,5 +106,6 @@ function group(label: string, children: NavLeafNode[]): NavGroupNode {
     key: `folder:${label.toLowerCase()}`,
     kind: "group",
     label,
+    path: label.toLowerCase(),
   };
 }

@@ -19,6 +19,8 @@ import {
 /** A leaf navigation row linking to one viewable route. */
 export interface NavLeafNode {
   hidden?: true;
+  /** A retained baseline entry: a removed row, which only Changes lists. */
+  removed?: true;
   entryId: string;
   /**
    * The folder's own page, listed as the folder's first child row. Its label
@@ -78,6 +80,8 @@ export interface NavGroupNode {
   key: string;
   kind: "group";
   label: string;
+  /** The folder's catalogue path. */
+  path: string;
 }
 
 /** One rendered navigation node. */
@@ -138,7 +142,6 @@ export function buildNavSections(
           ? leaf.entryKind === "component"
           : leaf.entryKind !== "component",
       ),
-      (path) => hierarchy.byPath.has(path),
     );
     if (children.length === 0) return [];
     return [
@@ -233,5 +236,6 @@ function structuredNode(
     key: `folder:${node.key}`,
     kind: "group",
     label: node.label,
+    path: node.key,
   };
 }
