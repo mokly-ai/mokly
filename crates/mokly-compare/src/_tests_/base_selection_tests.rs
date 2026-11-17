@@ -56,7 +56,8 @@ fn pin_resolves_once_and_classification_uses_its_reference_and_commit() {
     let service: &dyn ChangesService = &Changes {
         lookup: Arc::new(Unimock::new(())), pinned: Some(pinned),
         sources: Arc::new(Unimock::new(BaseSourceFactoryMock::create.next_call(matching!((_, commit, _) if commit.as_str() == "a".repeat(40))).returns(Ok(HistoricalSources { failures, tree: Arc::new(Unimock::new(())), sources: Arc::new(Unimock::new(())) })))),
-        provider: Arc::new(Unimock::new(BaseProviderMock::prepare.next_call(matching!((request) if request.commit.as_str() == "a".repeat(40))).returns(Ok(PreparedBase { generation: before, scripts_off: false })))),
+        provider: Arc::new(Unimock::new(BaseProviderMock::prepare.next_call(matching!((request) if request.commit.as_str() == "a".repeat(40))).returns(Ok(PreparedBase { generation: before, scripts_off: false, freshness: None,
+})))),
         comparison: Arc::new(Unimock::new(ComparisonMock::compare_prepared.next_call(matching!((request, before, _) if request.base_ref == "selected" && request.base_commit == "a".repeat(40) && before.comparison_capture().is_some())).returns(Err(Error::UnsupportedManager)))),
         steps: Arc::new(Unimock::new(StepsMock::step.each_call(matching!(_)).returns(()))),
     };
@@ -110,6 +111,7 @@ fn capture_failure_keeps_the_scripts_off_state_on_the_base_error() {
                 .returns(Ok(PreparedBase {
                     generation: Arc::new(Unimock::new(())),
                     scripts_off: true,
+                    freshness: None,
                 })),
         )),
         comparison: Arc::new(Unimock::new(

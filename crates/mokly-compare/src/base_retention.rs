@@ -6,6 +6,7 @@ use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_git::control::Cancellation;
 use mokly_graph::types::RenderGeneration;
 
+use crate::base_freshness::PreparationInputs;
 use crate::base_selection::PinnedBase;
 use crate::source_failures::SourceFailures;
 
@@ -29,6 +30,8 @@ pub struct KeptBase {
     pub failures: Arc<dyn SourceFailures>,
     /// Whether a tier-two install supplied dependencies with scripts off.
     pub scripts_off: bool,
+    /// Original preparation evidence. None prevents production retention.
+    pub freshness: Option<PreparationInputs>,
 }
 
 /// One classification's access to a kept base, with independent cancellation.

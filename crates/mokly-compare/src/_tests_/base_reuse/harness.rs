@@ -137,6 +137,7 @@ impl Harness {
                             Ok(PreparedBase {
                                 generation: fresh.clone(),
                                 scripts_off: true,
+                                freshness: None,
                             })
                         })
                     }),

@@ -5,9 +5,9 @@
 - **Added:** 2026-11-16, from the branch `calummoore/plain-git-spawns`, review round 1, finding 1.
 - **Location:** `crates/mokly-git/src/system_command.rs` (`git_command`),
   `crates/mokly-git/src/conversion_paths.rs:38`,
-  `crates/mokly-git/src/source_key.rs:25`,
+  `crates/mokly-git/src/source_key.rs:39`,
   `crates/mokly-git/src/history.rs:19`, and
-  `crates/mokly-cli/src/serve_changes_native.rs:43`.
+  `crates/mokly-cli/src/serve_changes_native.rs:46`.
 - **Reason:** Only a Linux checkout with a hook-mode `core.fsmonitor` meets it, and only when a stop comes while such a command runs, so the outcome rules defer a Small fix of a Rare problem that is not High.
 
 - **Source:** Review.
@@ -42,14 +42,24 @@
     poll and `merge_base_of` pass the configured base name to `rev-parse`.
   - The plain-group calls are: `check-attr` in
     `crates/mokly-git/src/conversion_paths.rs:38` (checkout conversion paths)
-    and `crates/mokly-git/src/source_key.rs:25` (the checkout source key), and
-    `rev-parse` in `crates/mokly-git/src/history.rs:19` and
-    `crates/mokly-cli/src/serve_changes_native.rs:43`.
+    and `crates/mokly-git/src/source_key.rs:39` (the checkout settings hash),
+    and `rev-parse` in `crates/mokly-git/src/history.rs:19` and
+    `crates/mokly-cli/src/serve_changes_native.rs:46`.
+  - Two methods use the checkout settings hash: `Repository::source_key` and
+    `Repository::checkout_identity`. `CachedExtraction` in
+    `crates/mokly-compare/src/extraction.rs` computes the source key when a
+    base looks up or builds its source extraction. A Serve base preparation
+    samples the checkout identity before its first base read, in
+    `NativeBase::prepare` of `crates/mokly-cli/src/changes_base.rs`.
+    `FreshnessChecks::current` in `crates/mokly-compare/src/base_freshness.rs`
+    samples it again before each reuse of a kept base. So the checkout sample
+    and the reuse check add `check-attr` runs to Serve classifications, and a
+    stop can come while one runs.
   - Every plain request goes through `git_command` in
     `crates/mokly-git/src/system_command.rs`, also the requests that call
     sites build without `command_with_mode`.
-  - `config --null --list --includes`, which the checkout source key hashes,
-    lists command-line `-c` settings too.
+  - `config --null --list --includes`, which the checkout settings hash
+    includes, lists command-line `-c` settings too.
 - **Problem:** A hook that the monitor starts, such as the Watchman server, can
   start its own session. In the plain group on Linux, no subreaper adopts it,
   so a stop of the Git command does not reach it, and it keeps running.
@@ -78,7 +88,9 @@
     run as the one-time proof. Add one line to `crates/mokly-git/README.md`.
     Cost: the checkout source key changes one time, because
     `config --list --includes` then lists the override, so each cached base
-    source is extracted one more time. Effort: Small.
+    source is extracted one more time. The checkout identity changes in the
+    same way. Serve keeps a base only in memory, so a new binary starts with
+    no kept base, and this costs nothing more. Effort: Small.
 - **Left out:** Change nothing, because it fails the goal. A one-time probe of
   `core.fsmonitor` that selects the full tree, because B and D run no extra
   command and keep the plain speed. A plain spawn in a new session, because it

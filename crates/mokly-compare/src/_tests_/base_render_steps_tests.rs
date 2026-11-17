@@ -40,6 +40,7 @@ fn reading_starts_before_base_preparation_and_comparing_after_the_base_capture()
                 Ok(PreparedBase {
                     generation: Arc::new(boundaries.clone()),
                     scripts_off: false,
+                    freshness: None,
                 })
             }),
         SourceFailuresMock::failure

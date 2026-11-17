@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-16, from the branch `calummoore/plain-git-spawns`, review round 1, the check of finding 2.
-- **Location:** `crates/mokly-git/src/repository.rs:166` to line 185,
+- **Location:** `crates/mokly-git/src/repository_access.rs:42` to line 61,
   `crates/mokly-git/src/lookup.rs:51`, `crates/mokly-git/src/fetch.rs:45` to
   line 56, and `docs/protocol/mokly-git.md:41` to line 44.
 - **Reason:** `origin/main` behaves the same, so the branch that found it does not change it.
@@ -28,9 +28,20 @@
     fetches every missing base object in one bounded request before the
     converted read starts." It also says: "Missing objects without a promisor
     remote retain a typed fetch error."
-  - Base reads run `ls-tree -l` first (`crates/mokly-git/src/repository.rs:166`
-    and `crates/mokly-git/src/lookup.rs:51`). It reads each blob's size. The
+  - Base reads run `ls-tree -l` first
+    (`crates/mokly-git/src/repository_access.rs:42` and
+    `crates/mokly-git/src/lookup.rs:51`). It reads each blob's size. The
     missing-object check and the one bounded fetch run after it.
+  - The source key and the checkout identity hash the checkout settings of the
+    whole base commit. They list it through the same `Repository::list`
+    method, at `crates/mokly-git/src/source_key.rs:33`. A base computes the
+    source key when it looks up or builds its source extraction. A Serve base
+    preparation samples the checkout identity before its first base read. The
+    check before Serve reuses a kept base samples it again. So these reads
+    also run `ls-tree -l` before the missing-object check, for every regular
+    file of the commit. When the sample fails for a reason other than
+    cancellation, the preparation records no freshness evidence and continues,
+    so Serve keeps no base.
   - A check on 2026-11-16 read Git 2.43.4 `promisor-remote.c` and
     `packfile.c`. On a backported build, `GIT_NO_LAZY_FETCH=1` still reaches
     `promisor_remote_get_direct`, and `ls-tree -l` then dies with
@@ -65,9 +76,10 @@
       [mokly/git-failed] comparison against base ref "fixture-base" failed: base {commit}: base object {blob} is missing; run `git fetch origin {blob}`
       ```
 
-    - The base read lists the tree first (`crates/mokly-git/src/repository.rs:153`
-      to line 174). The missing-object check then passes each blob id as a
-      start point to `git rev-list --objects --no-object-names --missing=print --stdin`
+    - The base read lists the tree first
+      (`crates/mokly-git/src/repository_access.rs:29` to line 50). The
+      missing-object check then passes each blob id as a start point to
+      `git rev-list --objects --no-object-names --missing=print --stdin`
       (`crates/mokly-git/src/fetch.rs:45` to line 56).
     - With the missing blob id on stdin, that command exited 128 with
       `fatal: bad object {blob}` under Git 2.43.0. Under Git 2.50.1, it exited

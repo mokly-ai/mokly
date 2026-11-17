@@ -4,11 +4,14 @@ use std::sync::Arc;
 
 use mokly_cli::cancelled_work::CancellableWorkers;
 use mokly_cli::serial_stylesheets::SerialStylesheets;
+use mokly_compare::base_freshness::FreshnessChecks;
 use mokly_compare::base_render::{Changes, ChangesService, GitSourceFactory, selected_base};
 use mokly_compare::base_selection::GitBaseLookup;
 use mokly_compare::comparison::Engine;
 use mokly_compare::comparison_types::ComparisonResult;
+use mokly_compare::install_inputs::SystemInstallInputs;
 use mokly_compare::moves::Detector;
+use mokly_compare::working_inputs::SystemWorkingInputs;
 use mokly_css::parsed_cache::MemoryParsedCss;
 use mokly_git::command::{ProcessMode, Request};
 use mokly_git::disk::SystemDisk;
@@ -129,6 +132,12 @@ impl Source {
                 inner: Arc::new(NativeBase {
                     runtime,
                     cancellation: cancellation.clone(),
+                    freshness: Some(Arc::new(FreshnessChecks {
+                        working: Arc::new(SystemWorkingInputs),
+                        installs: Arc::new(SystemInstallInputs {
+                            cancellation: cancellation.clone(),
+                        }),
+                    })),
                     dependencies: Arc::new(PreparingDependencies {
                         progress: progress.clone(),
                         inner: Arc::new(NativeDependencies {

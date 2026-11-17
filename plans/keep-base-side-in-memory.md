@@ -1,6 +1,6 @@
 # Keep The Base Side In Memory Between Edits
 
-Status: Active. On branch `calummoore/perth-1d8a`, no pull request yet. The
+Status: Active. On branch `calummoore/mokly-keep-base-side-in-memory-2-hjj4`, no pull request yet. The
 pull request that completes the work deletes this plan, as the `plans` skill
 says.
 
@@ -198,6 +198,41 @@ marks each change. Calls 14 to 24 are new calls of 2026-11-16.
     base uses the same reader as a found base. A streamed asset copy also
     checks that reader. Reason: the first published result and a copy after
     an asset opens need the same cancellation and failure checks.
+25. The continuation orchestrator's call, 2026-11-17: split the checkout
+    sample test at the milestone boundary. Milestone 3 proves that a setting
+    change after the first base read preserves the earlier sample and makes
+    the freshness check stale. Milestone 4 proves that the stale check
+    releases the Serve slot and prepares again. Reason: Milestone 3 has no
+    Serve slot, and the requirement needs no test-only retention provider.
+26. The continuation orchestrator's call, 2026-11-17: only a provider that
+    can keep a base enables preparation evidence. A sample or record failure,
+    except cancellation, gives no evidence and keeps the normal fresh path.
+    Reason: optional reuse must add no limit or failure to a fresh build, and
+    `build` and `publish` need no evidence. This fixes the unused whole-tree
+    sample and its new failure found by the docs implementor.
+27. The non-UI implementor's call, 2026-11-17: keep the exact working inputs
+    returned to dependency selection and HTML's exact governing candidate
+    paths. Reason: this applies decision 1C without another selection rule.
+28. The non-UI implementor's call, 2026-11-17: fingerprint direct package names
+    and kinds, plus scoped package directory children. Read npm's
+    `.package-lock.json`, pnpm's `.modules.yaml` and `.pnpm/lock.yaml`, Yarn
+    Classic's `.yarn-integrity`, and Yarn Berry's `.yarn-state.yml` and sibling
+    `.yarn/install-state.gz`. Reason: these are the selected installs' records.
+29. The non-UI implementor's call, 2026-11-17: stream manager records and bound
+    package-name storage with the existing Git limits. Give no evidence when
+    a bound or unreadable record prevents proof. Reason: memory stays bounded,
+    and no new build rejection is needed.
+30. The non-UI implementor's call, 2026-11-17: use the base's dependency usage
+    directories and prepared catalogue dependency directories as working
+    roots. Tier 2 has no working roots or shared-module check. Reason: this
+    follows design call 18 and covers each root the base reads.
+31. The non-UI implementor's call, 2026-11-17: move the unchanged `Repository`
+    implementation to `repository_access.rs`. Reason: both files stay below
+    the 300-line cap.
+32. The non-UI implementor's call, 2026-11-17: forward the two added scheduling
+    methods through `BaseReader`, and keep its retained-input path and
+    `comparison_capture` result of `None`. Reason: the scheduling of `main`
+    stays active, with the reader's cancellation and owned failure checks.
 
 ### Code facts on `main` at `a1d834fbe`
 
@@ -562,34 +597,55 @@ tests and sends the logs. This adds no product decision.
 
 Depends on: 2
 
+Continuation, 2026-11-17: this workspace starts from `5f8f2716e` and redoes
+the uncommitted work of the earlier workspace. `983654df0` merges `main`
+at `6d0fcbb46` without conflicts. Evidence:
+`.context/keep-base-side-in-memory/merge-resolution.md`.
+
 The `non-ui implementor` records the inputs of decisions 1 and 6 at
 preparation and checks them before a reuse. Nothing reuses a base yet.
 
-- [ ] Record the inputs of decision 1 at preparation: the dependency
+- [x] Enable preparation evidence only for providers that can keep a base.
+      A sample or record failure except cancellation gives no evidence and
+      preserves normal fresh preparation, under design call 26. Test both
+      disabled evidence and failed optional evidence.
+- [x] Record the inputs of decision 1 at preparation: the dependency
       selection, the install record and the entry list of each working
       `node_modules` root that the base reads, and the installed-module
       digests of the base bundle.
-- [ ] A check reads the current values and compares the installed-module
+- [x] A check reads the current values and compares the installed-module
       digests with the current head bundle's. It says whether the base is
       current. Design call 18 sets which bases it covers.
-- [ ] Add the `Repository` method of design call 17. Sample the identity and
+- [x] Add the `Repository` method of design call 17. Sample the identity and
       its filter flag after the pin and before the first base read, under
       design call 20. Record that sample with the kept base. Keep no base
       whose files have a `filter` attribute.
-- [ ] Test: `source_key` gives its earlier value for a commit without a
+- [x] Test: `source_key` gives its earlier value for a commit without a
       `filter` attribute, and it stays salted for a commit with one.
-- [ ] Tests: equal inputs keep the base current. Each of these makes it
+- [x] Tests: equal inputs keep the base current. Each of these makes it
       stale: a changed working lockfile, install record, entry list,
       installed-module digest, or checkout setting. A tier-2 base ignores
       the working install records. A base with a `filter` attribute is not
       kept.
-- [ ] Test: a checkout setting that changes after the first base read and
-      before the keep makes the next classification prepare again.
-- [ ] Measure the time of both checks on `examples/basic` and the React
+- [x] Test: a checkout setting that changes after the first base read and
+      before the keep preserves the earlier sample and makes its freshness
+      check stale. Milestone 4 proves the next preparation.
+- [x] Measure the time of both checks on `examples/basic` and the React
       fixture. Save the results under `.context/keep-base-side-in-memory/`.
       When the checks miss the 0.5 s target of `review.base-tree`, stop and
       report to the orchestrator.
-- [ ] Update `crates/mokly-git/README.md` for the new method.
+- [x] Update `crates/mokly-git/README.md` for the new method.
+- [x] Update the moved checkout call location and new callers in
+      `plans/follow-ups/plain-git-fsmonitor-override.md`.
+- [x] Update moved `Repository` call locations in
+      `plans/follow-ups/partial-clone-lazy-fetch-builds.md` and
+      `plans/follow-ups/plain-git-promisor-tree-reads.md`.
+
+Evidence: `.context/keep-base-side-in-memory/milestone-3-report.md` and
+`.context/keep-base-side-in-memory/milestone-3-docs-report.md`.
+
+The main refresh at `f380e9462` merged without conflicts as `59c51fa33`.
+Evidence: `.context/keep-base-side-in-memory/merge-resolution.md`.
 
 ## Milestone 4: Serve kept base
 
@@ -610,6 +666,9 @@ The `non-ui implementor` keeps the base in Serve and reuses it.
 - [ ] Apply design calls 1 to 5, 7 to 10, 14, and 15.
 - [ ] Test: a second classification with the same merge base prepares once.
 - [ ] Test: a merge-base move prepares again and drops the old base.
+- [ ] Test: a checkout setting that changes after the first base read and
+      before the keep releases the slot at the next classification and
+      prepares again, under design call 25.
 - [ ] Test: cancel the preparing classification after the keep, and cancel a
       capture in a base read. Then a reuse reads a document and a resource.
 - [ ] Test: a changed frozen resource on a reuse releases the base, and the
@@ -660,7 +719,9 @@ description copies them.
 
 - [ ] Remove the status lines that Milestone 1 added. Keep the macOS item of
       the runtime status line.
-- [ ] Merge `origin/main` with the `git-merge` skill.
+- [ ] Refresh the live code references in affected follow-up items after the
+      Milestone 4 code layout settles. Keep their requirements and grades.
+- [x] Merge `origin/main` with the `git-merge` skill.
 - [ ] Run `cargo xtask check --suite repository`, then the complete gate
       `cargo xtask check`.
 - [ ] Commit with Conventional Commits and push the branch.

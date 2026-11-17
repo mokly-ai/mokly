@@ -23,7 +23,10 @@ fn source_keys_follow_external_attribute_file_contents() {
     let repository = fixture.repository();
     let before = repository.source_key(&commit).unwrap();
     fs::write(&attributes, "*.txt text eol=crlf\n").unwrap();
-    assert_ne!(before, repository.source_key(&commit).unwrap());
+    let checkout = repository.checkout_identity(&commit).unwrap();
+    assert_eq!(checkout.digest, repository.source_key(&commit).unwrap());
+    assert!(!checkout.filtered);
+    assert_ne!(before, checkout.digest);
     assert_eq!(
         repository
             .read(&commit, &RepoPath::parse("notes.txt").unwrap(), 32)
@@ -41,6 +44,9 @@ fn external_filters_do_not_reuse_a_stale_source_key() {
     let commit = fixture.commit();
     fixture.git(&["config", "filter.custom.smudge", "cat"]);
     let repository = fixture.repository();
+    let checkout = repository.checkout_identity(&commit).unwrap();
+    assert!(checkout.filtered);
+    assert_eq!(checkout, repository.checkout_identity(&commit).unwrap());
     assert_ne!(
         repository.source_key(&commit).unwrap(),
         repository.source_key(&commit).unwrap()

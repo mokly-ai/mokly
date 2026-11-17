@@ -44,6 +44,7 @@ fn late_base_reader_failure_releases_its_identity_and_preserves_a_newer_base() {
                 generation: Arc::new(Unimock::new(())),
                 failures: Arc::new(Unimock::new(())),
                 scripts_off: true,
+                freshness: None,
             })
         });
         if let Some(newer) = &newer {

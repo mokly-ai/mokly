@@ -68,6 +68,7 @@ pub(super) fn kept(
         generation,
         failures: failures(failure),
         scripts_off: true,
+        freshness: None,
     })
 }
 

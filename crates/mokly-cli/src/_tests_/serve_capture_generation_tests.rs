@@ -7,10 +7,13 @@ use mokly_cli::cancellation::{Cancellation, ServeCancellation};
 use mokly_cli::cancelled_work::CancellableWorkers;
 use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
+use mokly_compare::base_freshness::FreshnessMock;
 use mokly_compare::base_render::{BaseProvider, BaseRequest, HistoricalSources};
 use mokly_compare::comparison_steps::{Step, StepsMock};
 use mokly_css::types::{Bundle, StylesheetRoot};
 use mokly_git::identity::ObjectId;
+use mokly_git::repository::RepositoryMock;
+use mokly_git::source_key::CheckoutIdentity;
 use mokly_graph::error::GraphError;
 use mokly_graph::types::RenderGenerationMock;
 use mokly_graph::workers::{RenderWorkers, StylesheetWorker, ThreadWorkers};
@@ -125,6 +128,11 @@ fn replaced_run_cancels_a_prepared_base_generation_without_cancelling_the_comman
         runtime: source.classification_runtime(cancellation.clone()),
         cancellation,
         dependencies: Arc::new(Unimock::new(())),
+        freshness: Some(Arc::new(Unimock::new(
+            FreshnessMock::record
+                .some_call(matching!(_))
+                .returns(Ok(None)),
+        ))),
     };
     let generation = provider
         .prepare(&BaseRequest {
@@ -134,7 +142,14 @@ fn replaced_run_cancels_a_prepared_base_generation_without_cancelling_the_comman
                     .returns(catalogue(vec![])),
             ),
             working_config: &source.config,
-            repository: Arc::new(Unimock::new(())),
+            repository: Arc::new(Unimock::new(
+                RepositoryMock::checkout_identity
+                    .some_call(matching!(_))
+                    .returns(Ok(CheckoutIdentity {
+                        digest: "checkout".into(),
+                        filtered: false,
+                    })),
+            )),
             commit: ObjectId::parse(&"a".repeat(40)).unwrap(),
             install_scripts: false,
             sources: HistoricalSources {

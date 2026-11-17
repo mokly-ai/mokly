@@ -25,6 +25,7 @@ fn prepared() -> BasePreparationResult {
     Ok(PreparedBase {
         generation: generation(),
         scripts_off: true,
+        freshness: None,
     })
 }
 

@@ -4,6 +4,7 @@ use mimalloc::MiMalloc;
 
 mod base_dependencies;
 mod changes_base;
+mod changes_freshness;
 mod changes_runtime;
 mod changes_static;
 mod command_diagnostics;

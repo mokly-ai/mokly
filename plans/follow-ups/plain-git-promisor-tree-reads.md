@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-16, from the branch `calummoore/plain-git-spawns`, review round 1, finding 2.
-- **Location:** `crates/mokly-git/src/repository.rs:166` to line 185,
+- **Location:** `crates/mokly-git/src/repository_access.rs:42` to line 61,
   `crates/mokly-git/src/lookup.rs:51`, and `crates/mokly-git/src/fetch.rs:122`.
 - **Reason:** It needs both a partial clone and a Git build without the lazy-fetch control, so the outcome rules defer a fix of a Rare problem that is not High.
 
@@ -33,9 +33,18 @@
     missing blob starts a lazy fetch (`object-file.c`, Git 2.43.0, line 1623,
     which calls the promisor fetch path). Git starts a lazy fetch only when the
     repository has a promisor remote.
-  - The two plain `ls-tree -l` calls are `crates/mokly-git/src/repository.rs:166`
-    and `crates/mokly-git/src/lookup.rs:51`. The missing-object check that
+  - The two plain `ls-tree -l` calls are
+    `crates/mokly-git/src/repository_access.rs:42` and
+    `crates/mokly-git/src/lookup.rs:51`. The missing-object check that
     fetches every missing base object in one bounded request runs after them.
+  - The source key and the checkout identity hash the checkout settings of the
+    whole base commit. They list it through the first of these calls, at
+    `crates/mokly-git/src/source_key.rs:33`. A base computes the source key
+    when it looks up or builds its source extraction. A Serve base preparation
+    samples the checkout identity before its first base read. The check before
+    Serve reuses a kept base samples it again. So in a partial clone on a build
+    without the control, each of these listings can start a lazy fetch for
+    each missing blob of the commit.
   - `fetch.rs:122` already reads the promisor remotes with a helper-free
     `config` command.
   - `rev-list --missing=print` sets `fetch_if_missing = 0` on every build that

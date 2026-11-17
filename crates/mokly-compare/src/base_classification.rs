@@ -149,6 +149,7 @@ impl Changes {
             generation,
             failures,
             scripts_off,
+            freshness: prepared.freshness,
         });
         let reuse = match self.provider.keep(request, base.clone()) {
             Ok(reuse) => reuse,

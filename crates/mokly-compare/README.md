@@ -18,6 +18,8 @@ both sides. `mokly-server` and `mokly-static` publish the retained result.
   affected-consumer chains.
 - Let a base provider keep one captured base between classifications, and
   compare a reuse through a reader with its own cancellation.
+- Record the checkout and dependency evidence of a prepared base, and check
+  whether that evidence is still current.
 - Share public index state, eligibility, workspace lists, and input-change projection.
 - Read checkout-converted base files with preserved POSIX paths.
 - Extract JavaScript sources only when a caller requests them.
@@ -185,10 +187,10 @@ the head, and the effective install-scripts setting. A hit returns a
 `BaseReuse`, and `Changes` compares through a per-classification reader. It
 prepares and captures no base. A miss prepares and captures a fresh base, and
 offers it to `BaseProvider::keep` as a `KeptBase` with its source-failure
-record and its scripts-off flag. When `keep` returns a `BaseReuse`, that
-classification also compares through a reader. The reader checks the reuse's
-own cancellation before each call. Its first failed read, while that
-cancellation is not set, releases that exact `KeptBase` through
+record, its scripts-off flag, and its freshness evidence. When `keep` returns a
+`BaseReuse`, that classification also compares through a reader. The reader
+checks the reuse's own cancellation before each call. Its first failed read,
+while that cancellation is not set, releases that exact `KeptBase` through
 `BaseProvider::release`. A reused base that fails this way gets one fresh
 preparation in the same classification. A reused base with a recorded source
 failure is released, and the classification fails with `Error::Base`. A head
@@ -198,6 +200,31 @@ failure or a cancelled reader keeps the base. `review.base-tree` records
 each classification. The
 [Serve base lifetime rule](../../docs/protocol/mokly-base-preparation.md#serve-base-lifetime)
 owns what a provider may keep, the freshness checks, and the release events.
+
+Only a provider that can keep a base records freshness evidence while it
+prepares one. In the CLI, only the Serve provider has a `Freshness`, so `build`
+and `publish` take no checkout sample and record no evidence. The Serve
+provider records none after a dependency fallback that a later attempt can
+fix. It also records none when the checkout sample or `Freshness::record`
+fails for a reason other than cancellation, and that preparation continues. A
+cancellation stops the preparation.
+
+`Freshness::record` returns `PreparationInputs` with the checkout sample that
+the provider took before its first base read, and the `DependencySelection` of
+working manifests, lockfiles, and dependency directories. A base that reads
+the working install also records the install state of each working
+`node_modules` root and the installed-module digests of its bundle. A tier-two
+base reads its own install, so it passes no working roots. `record` returns
+`None` when a file has a `filter` attribute or the install state of a root is
+not available.
+
+A provider must not keep a base without evidence. `PreparedBase` and
+`KeptBase` carry the evidence of the preparation unchanged.
+`Freshness::current` says whether that evidence still holds for the current
+checkout identity, dependency directories, working inputs, install records,
+and head bundle. The
+[freshness checks rule](../../docs/protocol/mokly-base-preparation.md#freshness-checks)
+owns what the checks cover and what they miss.
 
 `Changes` announces each comparison `Step` through its `dyn Steps` as the step
 starts, so a command can name the running step on its progress line. It
@@ -286,13 +313,22 @@ development dependencies, and no test uses the internet.
 - [`src/base_render.rs`](./src/base_render.rs) defines `ChangesService`,
   `Changes`, `BaseProvider`, `PreparedBase`, and `BasePreparationError`, which
   pin the base, prepare its sources, report whether its tier-two install ran
-  with lifecycle scripts off, and compare it with the head. The default
-  `BaseProvider::find_kept`, `keep`, and `release` methods keep nothing.
+  with lifecycle scripts off, carry its freshness evidence, and compare it with
+  the head. The default `BaseProvider::find_kept`, `keep`, and `release`
+  methods keep nothing.
 - [`src/base_retention.rs`](./src/base_retention.rs) defines
   `BaseRetentionRequest`, `KeptBase`, and `BaseReuse`: the inputs of the kept
   base's key and freshness checks, the kept capture with its source-failure
-  record and scripts-off flag, and one classification's access to it with its
-  own cancellation.
+  record, scripts-off flag, and freshness evidence, and one classification's
+  access to it with its own cancellation.
+- [`src/base_freshness.rs`](./src/base_freshness.rs) defines `Freshness`,
+  `FreshnessChecks`, `PreparationInputs`, `DependencySelection`,
+  `FreshnessRequest`, and `InstallInputs`: the evidence of one preparation and
+  the check that says whether a kept base is still current.
+- [`src/install_inputs.rs`](./src/install_inputs.rs) defines
+  `SystemInstallInputs`, the host reader that digests the install records and
+  the package entries of one working `node_modules` root, without package
+  file contents.
 - [`src/base_classification.rs`](./src/base_classification.rs) holds the
   classification path of `Changes`: one kept base or one fresh capture, the
   `review.base-tree` action, and the single fresh preparation after a failed

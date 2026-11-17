@@ -11,13 +11,14 @@ use mokly_graph::asset_delivery::AssetRead;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::{Closure, GeneratedResources};
 use mokly_graph::collection::ComparisonCollector;
+use mokly_graph::comparison_stream::ComparisonConsumer;
 use mokly_graph::error::{GraphError, Result};
 use mokly_graph::resource_inputs::ResourceObserver;
 use mokly_graph::types::{
     ComparisonCapture, ComparisonDocument, DocumentPlan, RenderGeneration, RenderSummary,
     TemporaryDocument,
 };
-use mokly_graph::workers::ComparisonWorker;
+use mokly_graph::workers::{ComparisonTask, ComparisonWorker};
 use mokly_model::data::Props;
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 
@@ -141,6 +142,24 @@ impl RenderGeneration for BaseReader {
     }
     fn comparison_parallelism(&self) -> usize {
         self.state.reuse.base.generation.comparison_parallelism()
+    }
+    fn schedule_comparison_tasks(&self, count: usize, task: &dyn ComparisonTask) {
+        self.state
+            .reuse
+            .base
+            .generation
+            .schedule_comparison_tasks(count, task);
+    }
+    fn schedule_comparison_stream(
+        &self,
+        task: &dyn ComparisonTask,
+        consumer: &mut dyn ComparisonConsumer,
+    ) {
+        self.state
+            .reuse
+            .base
+            .generation
+            .schedule_comparison_stream(task, consumer);
     }
     fn schedule_comparison(
         &self,

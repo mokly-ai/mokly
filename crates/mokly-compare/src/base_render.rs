@@ -10,6 +10,7 @@ use mokly_git::tree::Limits;
 use mokly_graph::types::RenderGeneration;
 use mokly_source_interface::tree::SourceTree;
 
+use crate::base_freshness::PreparationInputs;
 use crate::base_retention::{BaseRetentionRequest, BaseReuse, KeptBase};
 use crate::base_selection::{BaseLookup, PinnedBase};
 use crate::comparison_steps::Steps;
@@ -48,6 +49,8 @@ pub struct PreparedBase {
     pub generation: Arc<dyn RenderGeneration>,
     /// True only when a tier-two install supplied dependencies with scripts off.
     pub scripts_off: bool,
+    /// Original preparation evidence. None prevents production retention.
+    pub freshness: Option<PreparationInputs>,
 }
 
 /// A base preparation failure retains whether a scripts-off tier-two install completed.
