@@ -6,6 +6,7 @@ use mokly_cli::cancellation::Cancellation;
 use mokly_cli::grammar::Common;
 use mokly_cli::output::Style;
 use mokly_cli::redaction::Redactor;
+use mokly_compare::comparison_reuse;
 use mokly_compare::extraction_snapshots::ProcessSnapshots;
 use mokly_server::application::Application;
 use mokly_server::assets::{PackageAssets, ViewerAssets};
@@ -54,6 +55,7 @@ pub(super) fn states(input: StateInputs<'_>) -> Result<Arc<dyn ServeStateFactory
     let dist = viewer_assets::dist().ok_or(ServerError::InvalidAssets)?;
     Ok(Arc::new(NativeServeState {
         changes: Arc::new(ServeChanges {
+            reuse: Arc::new(comparison_reuse::MemoryComparisons::new(32 * 1024 * 1024)),
             sidecars: input.services.sidecars.clone(),
             progress: input.progress,
             refreshes: input.reporter,

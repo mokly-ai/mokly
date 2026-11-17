@@ -120,6 +120,8 @@ pub trait ChangeSource: Send + Sync {
         cancel: Arc<dyn ChangeCancellation>,
         progress: Arc<dyn ChangeProgress>,
     ) -> Result<ComparisonResult>;
+    /// Release unaccepted staging when an execution ends, without terminal output.
+    fn discarded(&self) {}
     /// Report only the accepted result, with preparation warnings before readiness.
     fn finished(
         &self,
@@ -229,3 +231,7 @@ pub trait ChangeRun: Send {
     /// Clear only this attempt's progress line.
     fn finish(&self);
 }
+
+#[cfg(test)]
+#[path = "_tests_/reuse_oracle/mod.rs"]
+mod reuse_oracle;

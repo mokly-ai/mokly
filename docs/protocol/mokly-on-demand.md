@@ -106,8 +106,8 @@ Shutdown ends the stream before its next comment.
 A source or configuration change replaces the catalogue model and the moved
 graph nodes together under the [watch contract](./mokly-watch.md); a failed
 candidate keeps the last-good state. Replacement invalidates the cached
-documents whose keys moved, every detail, and the comparison evidence; a
-resource edit invalidates the documents that reference it. Replacement and
+documents whose keys moved, every detail, and the published comparison
+evidence; a resource edit invalidates the documents that reference it. Replacement and
 shutdown cancel active Git commands and wait for their process and pipe
 closure before cleanup completes.
 

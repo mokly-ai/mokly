@@ -14,6 +14,8 @@ both sides. `mokly-server` and `mokly-static` publish the retained result.
 - Compare canonical trees, paired ignores, caller inputs, and component regions.
 - Pair moves, keep removed metadata, and resolve branch-point references.
 - Compare reached resources and use catalogue-wide CSS own-page proof.
+- Reuse the proven view comparisons of one accepted Serve classification
+  under a fixed byte bound.
 - Produce the typed review result, the private change snapshot, and
   affected-consumer chains.
 - Share public index state, eligibility, workspace lists, and input-change projection.
@@ -141,6 +143,22 @@ The comparison checks both generations for cancellation before each task and
 each ordered view. Results, warnings, the first error, `resource_work`, and the
 parsed CSS cache counts do not depend on the worker count.
 
+`MemoryComparisons` implements `dyn ComparisonReuse` for one Serve process.
+`MemoryComparisons::new` takes the fixed byte bound. `begin` takes an
+`Engine` and an optional `ReuseFence` of the adopted settings, and returns a
+`dyn ReuseAttempt`. `Changes` calls the attempt as its `dyn Comparison`.
+Without a fence, the attempt reuses and keeps nothing. Admission finds the
+kept view of each route. The worker of that view then checks its read set
+before preparation, through `comparison_identity` and the head's
+`comparison_document_proof`, with no base source read. A proven view skips
+preparation and takes its current head usage from that proof. The ordered
+pass adds its shared evidence, its warnings, and the current usage of both
+sides. Call
+`ReuseAttempt::accept` after the Ready publication and `discard` after a
+failure. `ReuseWork` returns the work and the charges of the timing span. The
+[reuse rules](../../docs/protocol/mokly-comparison-serving.md#view-comparison-reuse)
+own the admission, the invalidation, and the bound.
+
 The [comparison contract](../../docs/protocol/mokly-comparison.md) owns
 materiality, style ownership, resources, and Changes membership. Both sides
 retain trusted sidecar style owners. Authored owner attributes supply no
@@ -258,6 +276,11 @@ development dependencies, and no test uses the internet.
   boundary and its retained output.
 - [`src/comparison.rs`](./src/comparison.rs) defines `Engine`, the one
   catalogue-wide comparison for build, Serve, and static projection.
+- [`src/comparison_reuse.rs`](./src/comparison_reuse.rs) defines
+  `ComparisonReuse`, `ReuseAttempt`, `MemoryComparisons`, `ReuseFence`, and
+  `ReuseWork`, the bounded view comparison reuse of Serve. The private
+  `reuse_*.rs` modules record proof reads, charge the bound, and collect the
+  candidate.
 - [`src/base_render.rs`](./src/base_render.rs) defines `ChangesService`,
   `Changes`, `BaseProvider`, `PreparedBase`, and `BasePreparationError`, which
   pin the base, prepare its sources, report whether its tier-two install ran
@@ -305,7 +328,8 @@ development dependencies, and no test uses the internet.
 ### Related Docs
 
 - [Comparison](../../docs/protocol/mokly-comparison.md).
-- [Comparison serving](../../docs/protocol/mokly-comparison-serving.md).
+- [Comparison serving](../../docs/protocol/mokly-comparison-serving.md) and
+  [Changes serving](../../docs/protocol/mokly-changes-serving.md).
 - [Base preparation](../../docs/protocol/mokly-base-preparation.md),
   [base cache](../../docs/protocol/mokly-base-cache.md),
   [dependency installation](../../docs/protocol/mokly-base-dependencies.md),

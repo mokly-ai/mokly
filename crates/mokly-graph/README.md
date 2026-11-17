@@ -17,6 +17,7 @@ writes no files.
   their recipes.
 - Validate logical anchors across destination views.
 - Compute the referenced authored asset closure with one public policy.
+- Prove the inputs of comparison reads with content identities.
 
 ## What This Crate Does
 
@@ -207,6 +208,22 @@ The default returns `None`. A wrapper
 that adds checks returns `None` when a forward would bypass those checks or
 need source IO.
 
+`comparison_identity` proves one `ComparisonRead` of a route, a `Document`, a
+`Closure`, or a `Resource`, with a `ContentIdentity`. `None` means unknown,
+and the caller then compares the view in full. `ProofMode::Retained` permits
+no source IO, restoration, or fallback. `ProofMode::Current` lets a head proof
+read current resources, and a failed read returns `None`. A prepared
+generation derives document and closure identities from the plan key and one
+identity of the configuration, the roots, the sources, and the route sets.
+The default returns `None`. A wrapper that adds checks keeps that default or
+applies its checks to the identity.
+
+`comparison_document_proof` returns a `DocumentProof`: the current identity
+and usage of one head document from one checked read. A failed check or an
+unknown identity returns `None` and reports no error. The default calls this
+generation's `comparison_document` and `comparison_identity`, so the checks
+of a wrapper apply. An override must keep those checks.
+
 `FilePolicy` is the one policy of the public closure contract for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.
 Package directories come from the normalized `ResolvedConfig::package_roots`.
@@ -314,6 +331,11 @@ retention disabled.
 - [`src/comparison_stream.rs`](./src/comparison_stream.rs) defines
   `ComparisonConsumer`, which admits each index of an ordered comparison
   stream and consumes the finished indexes in order.
+- [`src/comparison_proof.rs`](./src/comparison_proof.rs) defines
+  `ComparisonRead`, `ProofMode`, `ContentIdentity`, and `DocumentProof`, the
+  content proofs of comparison reads.
+  [`src/session_proof.rs`](./src/session_proof.rs) answers them for a
+  prepared generation.
 - [`src/source_snapshot.rs`](./src/source_snapshot.rs) defines
   `SourceSnapshot`, the generation-scoped source reader.
 - [`src/asset_delivery.rs`](./src/asset_delivery.rs) defines `AssetRead`, the
@@ -327,3 +349,4 @@ retention disabled.
 - [Runtime](../../docs/protocol/mokly-runtime.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).
 - [Public closure](../../docs/protocol/mokly-public-closure.md).
+- [Proven view reuse](../../docs/protocol/mokly-changes-serving.md#proven-view-reuse).
