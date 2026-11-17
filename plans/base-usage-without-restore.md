@@ -1,6 +1,6 @@
 # Read captured base usage without document restore
 
-Status: Active. [PR #301](https://github.com/mokly-ai/mokly/pull/301) is open on branch `calummoore/mokly-base-usage-without-restore-g972`. It waits for the base reuse integration. The final commit deletes this plan.
+Status: Active. [PR #301](https://github.com/mokly-ai/mokly/pull/301) is open on branch `calummoore/mokly-base-usage-without-restore-g972`. Its implementation and reviews are complete. The final commit deletes this plan.
 
 Mokly compares a pinned base catalogue with the current catalogue. Its workspace
 projection adds caller-owned component input changes to public entry details.
@@ -224,11 +224,6 @@ The workspace orchestrator checks every delegated result and owns this work.
       Re-review once and record the final result.
 - [x] Prepare the final report with the commit, measurements, design calls,
       review outcomes, follow-up items, and checks.
-- [ ] After the base reuse branch reaches main, merge main with the git-merge
-      skill. Add the checked usage forward in `BaseReader`. Keep source
-      fallback and add red-first reused-base projection coverage with zero restores.
-- [ ] Run targeted graph, comparison, and server tests and the complete gate
-      on that merged tree. Commit, push, and review the complete updated diff.
 - [ ] Delete this plan under the plans skill. Preserve its dated calls and a
       permalink in the pull request description.
 - [ ] Open the pull request into `main`. Run the finish-work CI wait script after
@@ -261,13 +256,16 @@ was needed. Existing follow-up items retain the browser failure evidence.
 Evidence belongs in `.context/base-usage-without-restore/merged-gate-summary.json`,
 `gate-tail-results.json`, and the branch review folder under `.context/reviews/`.
 
-The performance orchestrator made a further call on 2026-11-17. Its combined
-profile found usage-only restores through the new base reuse `BaseReader`.
-After that branch merges first, this workspace must merge main. The reader
-must check cancellation, then forward usage to the kept capture. Failed or
-missing captured usage keeps the checked source fallback through the reader.
-This applies the metadata-read design while preserving the reader's checks.
-The user permits opening this PR before that integration and waiting for main.
-Keep this plan until the required integration, gate, and review finish.
-Evidence and the exact call belong in
+The performance orchestrator's first integration call of 2026-11-17 placed
+base reuse first. Its combined profile found usage-only restores through the
+new `BaseReader`. The reader must check cancellation, then forward usage to
+the kept capture. Failed or missing captured usage keeps checked fallback.
+The orchestrator superseded the merge order later on 2026-11-17. PR #301 now
+merges first because it is ready. Base reuse still needs review rounds and
+a repetition test. The usage forward belongs to whichever branch merges
+second. The base reuse branch now owns that forward and its regression.
+This PR has no waiting step or BaseReader implementation task. It retains
+both flaky-test follow-up edits. The branch that merges second resolves the
+MockLink follow-up conflict after the separate flake fix deletes that item.
+The exact integration calls belong in
 `.context/base-usage-without-restore/base-reader-integration-call.md`.
