@@ -127,6 +127,42 @@ The serialized tree length costs one charged integer per view and comes from enc
 
 Options-check evidence: `.context/binary-document-codec/plan-options.md`.
 
+### 4. Choose the binary format
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** Performance.
+- **Location:** `crates/mokly-graph/Cargo.toml`.
+- **Terms:** Postcard and bincode are binary serde libraries. A tree slice is a temporary buffer of inflated tree bytes.
+- **Background:** Release measurements use 64 real documents per corpus and 200 restores per document. Interleaved exact-baseline measurements control the host variance.
+- **Problem:** The candidates trade restore CPU against transient memory. RustSec also marks bincode permanently unmaintained.
+- **Impact if no action:** The implementation cannot finish its dependency and decoder choice.
+- **Root question:** Which qualifying binary codec best serves Changes speed and reliability?
+- **Options:**
+  - **A.** Use postcard with bounded streaming reads. It is maintained and avoids a full tree slice. Effort: Medium.
+  - **B.** Use bincode 2.0.1 with a trusted-size tree slice and a decoder allocation limit. Its upstream has stopped. Effort: Medium.
+  - **C.** Measure another maintained binary serde library or maintained bincode fork. It might combine these benefits, with more integration and review work. Effort: Medium.
+  - **D.** Use postcard with a trusted-size tree slice. It keeps an active upstream and measured lower CPU than streaming, with a larger temporary buffer. Effort: Medium.
+- **Left out:** Unbounded reads break the memory constraint. The measured bincode standard configuration also allocates strings before checking their slice bounds.
+  A custom format conflicts with item 1's call in force. Keeping JSON misses the CPU goal.
+- **Wider fix:** None. This choice has measured performance and dependency maintenance trade-offs.
+- **Previous examples:** RustSec `RUSTSEC-2025-0141` records permanent bincode abandonment with no patched version.
+- **Recommendation:** D, after the options check. The initial recommendation was A. D matches bincode CPU and removes the custom streaming reader.
+- **Action:** Apply D. Performance orchestrator's call of 2026-11-17 under the authority above.
+
+Shared assumptions: the task requires at most half restore CPU, no compressed payload growth, unchanged zlib settings, and exact restored fields.
+The task permits binary serde libraries beyond its two examples. Option C keeps that possibility.
+The performance orchestrator will measure the final choice on `mokly-cloud` after the implementation push.
+The maintenance advisory is informational, not a reported vulnerability in these measurements.
+Disable postcard's default features and enable `use-std` to avoid unused heapless dependencies.
+The performance orchestrator chose D for its maintained upstream, lower CPU, and simpler decoder.
+The temporary allocation comes from the encode-time tree length, and the existing worker bound limits concurrent restores.
+
+Options check, 2026-11-17: D recommended. Controlled paired measurements removed the initial bincode speed advantage.
+A and D meet the trusted-length allocation rule. The measured bincode standard configuration does not.
+
+Evidence: `.context/binary-document-codec/format-options.md`, `paired-repeats.json`, `size-comparison.json`, and `bincode-advisory.md`.
+
 ## Milestone 1: Documentation and contract audit
 
 Depends on: none
@@ -151,30 +187,35 @@ Delegate this domain to the `non-ui implementor`.
 Keep Cargo builds serial, use `CARGO_INCREMENTAL=0`, and check disk and memory before each large build.
 Use a separate checkout and target directory for release baseline and branch builds.
 
-- [ ] Measure the last merged `origin/main` in its own checkout and release target directory.
-- [ ] Compare postcard and bincode with real example and generated large documents. Record restore CPU and compressed bytes.
-- [ ] Select the qualifying format and record its dated design call, reason, and options check.
+- [x] Measure the last merged `origin/main` in its own checkout and release target directory.
+- [x] Compare postcard and bincode with real example and generated large documents. Record restore CPU and compressed bytes.
+- [x] Select the qualifying format and record its dated design call, reason, and options check.
       If no candidate qualifies, measure C or D of item 1 before changing scope. Ask the performance orchestrator for a scope decision if needed.
-- [ ] Audit all nested serde types. Add private records for incompatible types, including `SourceLocation`.
-- [ ] Replace every private JSON payload consumer and its typed error adapter. Keep zlib settings unchanged.
-- [ ] Bound decoded lengths by trusted encode-time tree length and require complete stream validation without unchecked allocation.
-- [ ] Extend round-trip coverage across every node kind and optional field, including export present and absent.
+- [x] Audit all nested serde types. Add private records for incompatible types, including `SourceLocation`.
+- [x] Replace every private JSON payload consumer and its typed error adapter. Keep zlib settings unchanged.
+- [x] Describe the selected runtime dependency's role in the feature protocol, as the dependency-security contract requires.
+- [x] Bound decoded lengths by trusted encode-time tree length and require complete stream validation without unchecked allocation.
+- [x] Extend round-trip coverage across every node kind and optional field, including export present and absent.
       Verify every restored field and preserve all existing assertions.
-- [ ] Verify corrupt and truncated payloads return typed codec errors. See new behaviour fail before its fix.
-- [ ] Run existing codec, cache, and capture tests unchanged except the format-specific invalid-tree fixture writer.
-- [ ] Measure branch release restore CPU, compressed bytes, and `mokly build` with Changes on the same inputs.
+- [x] Verify corrupt and truncated payloads return typed codec errors. See new behaviour fail before its fix.
+- [x] Run existing codec, cache, and capture tests unchanged except the format-specific invalid-tree fixture writer.
+- [x] Measure branch release restore CPU, compressed bytes, and `mokly build` with Changes on the same inputs.
       Confirm exact output equality as a one-time proof.
 
-Evidence: `.context/binary-document-codec/implementation.md` and `.context/binary-document-codec/measurements.md`.
+Evidence: `.context/binary-document-codec/implementation.md`, `measurements.md`, and `dependency-docs.md`.
+
+Milestone completed: postcard slice decoding meets the local restore and payload targets.
+All captured artifacts and all final Changes build output match exactly.
 
 ## Milestone 3: Verification, commit, review, and pull request
 
 Depends on: 1, 2
 
 The orchestrator owns the gate, review, and pull request.
+On 2026-11-17, the performance orchestrator directed the implementation push before the gate, so its cloud measurement can start.
 
-- [ ] Check the delegated work against every TODO and repository rule.
-- [ ] Use Git 2.45 or later first on `PATH` and install `git-lfs` before the gate.
+- [x] Check the delegated work against every TODO and repository rule.
+- [x] Use Git 2.45 or later first on `PATH` and install `git-lfs` before the gate.
 - [ ] Run targeted tests, `cargo xtask check --suite repository`, and `cargo xtask check`.
       Report each suite that cannot run and its blocker.
 - [ ] Commit with Conventional Commits and push. Send the implementation SHA to the performance orchestrator immediately.
