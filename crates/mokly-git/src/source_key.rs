@@ -42,8 +42,10 @@ impl GitRepository {
         if attributes
             .split(|byte| *byte == 0)
             .collect::<Vec<_>>()
-            .chunks_exact(3)
-            .any(|record| record[1] == b"filter")
+            .as_chunks::<3>()
+            .0
+            .iter()
+            .any(|[_, attribute, _]| *attribute == b"filter")
         {
             let salt = tempfile::Builder::new()
                 .prefix("mokly-filter-generation-")

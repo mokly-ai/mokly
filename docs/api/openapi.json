@@ -5314,7 +5314,7 @@
       },
       "Billing": {
         "type": "object",
-        "description": "The workspace's plan, seat usage and subscription facts, as\ndocs/protocol/billing.md defines them. Amounts are the verified unit amounts of the\ncatalogue-resolved prices in USD cents; the client computes the monthly total from\ncounts and amounts and never types a price.",
+        "description": "The workspace's plan, seat usage and subscription facts, as\ndocs/protocol/cloud/billing.md defines them. Amounts are the verified unit amounts of the\ncatalogue-resolved prices in USD cents; the client computes the monthly total from\ncounts and amounts and never types a price.",
         "required": [
           "plan",
           "seats",
@@ -6025,7 +6025,7 @@
       },
       "Error": {
         "type": "object",
-        "description": "The rpc-error envelope. `code` is one of rpc-error's fixed standard codes;\nupload refusals use HTTP 426 for unsupported versions, 408 for request\ndeadlines and 410 for expired or closed attempts; `reason`\nis this API's stable kebab-case identifier for the condition, catalogued in\ndocs/protocol/rest-api.md; `message` is client-safe; `request_id` correlates\nserver diagnostics. `error` is one closed variant per `data` type, keyed by\n`reason`, and one variant without `data` for every other reason.",
+        "description": "The rpc-error envelope. `code` is one of rpc-error's fixed standard codes;\nupload refusals use HTTP 426 for unsupported versions, 408 for request\ndeadlines and 410 for expired or closed attempts; `reason`\nis this API's stable kebab-case identifier for the condition, catalogued in\ndocs/protocol/cloud/rest-api.md; `message` is client-safe; `request_id` correlates\nserver diagnostics. `error` is one closed variant per `data` type, keyed by\n`reason`, and one variant without `data` for every other reason.",
         "required": [
           "error"
         ],

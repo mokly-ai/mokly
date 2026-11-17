@@ -1,4 +1,5 @@
-//! Explicit release-mode compression timing proof.
+//! Opt-in release-mode compression timing proof, built only with the
+//! `compression-benchmark` feature.
 
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -15,7 +16,6 @@ use super::compression_support::{full_file, representative_catalogue_json};
 use super::router;
 
 #[tokio::test(flavor = "current_thread")]
-#[ignore = "run explicitly in release mode on one pinned core"]
 async fn representative_five_mib_catalogue_brotli_benchmark() {
     let bytes = representative_catalogue_json();
     let served = bytes.clone();

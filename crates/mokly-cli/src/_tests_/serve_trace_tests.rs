@@ -231,7 +231,7 @@ fn each_successful_dependency_tier_is_a_numeric_end_field() {
         }
     });
     assert_eq!(records.len(), 6);
-    for (index, pair) in records.chunks_exact(2).enumerate() {
+    for (index, pair) in records.as_chunks::<2>().0.iter().enumerate() {
         assert!(pair[0].get("tier").is_none());
         assert_eq!(pair[1]["status"], "ok");
         assert_eq!(pair[1]["tier"], index + 1);

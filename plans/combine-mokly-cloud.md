@@ -225,9 +225,13 @@ Depends on: 2
 - [ ] Regenerate `Cargo.lock`. Run `cargo build --workspace`,
       `cargo clippy --workspace --all-targets`, and `cargo test` for each
       crate.
-- [ ] Move the ast-grep rules and `sgconfig.yml` so that they scan the
+- [x] Move the ast-grep rules and `sgconfig.yml` so that they scan the
       `mkc-` crates. Decide in this TODO whether they also scan the
-      `mokly-*` crates, and record the call.
+      `mokly-*` crates, and record the call. Decided on 2026-11-17: the
+      three Rust rules apply only to `crates/mkc-*`, because the
+      `mokly-*` crates have 1,677 findings of the cloud import style and
+      their own style passes Clippy and review. The TypeScript rules stay
+      limited to `apps/app/src`.
 
 ## Milestone 4: One npm workspace
 

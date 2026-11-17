@@ -13,6 +13,7 @@ use crate::router::{RouterBuilder, RouterFactory};
 use crate::test_support::locations;
 
 mod access_tests;
+#[cfg(feature = "compression-benchmark")]
 mod compression_benchmark_tests;
 mod compression_support;
 mod compression_tests;

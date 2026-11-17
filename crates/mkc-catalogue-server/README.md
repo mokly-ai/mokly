@@ -149,12 +149,14 @@ MKC_TEST_DATABASE_URL=postgres://postgres:postgres@localhost/mkc_test \
 cargo clippy -p mkc-catalogue-server --all-targets -- -D warnings
 ```
 
-Run the compression timing proof explicitly in release mode on one core; it
-asserts the one-second ceiling for a representative catalogue:
+The compression timing proof asserts the one-second ceiling for a
+representative catalogue. It builds only with the `compression-benchmark`
+feature, so the gate never runs it. Run it in release mode on one core:
 
 ```sh
-taskset -c 0 cargo test --release -p mkc-catalogue-server -- \
-  --ignored representative_five_mib_catalogue_brotli_benchmark --nocapture
+taskset -c 0 cargo test --release -p mkc-catalogue-server \
+  --features compression-benchmark -- \
+  representative_five_mib_catalogue_brotli_benchmark --nocapture
 ```
 
 The `publish_tests` integration test launches the real API and catalogue

@@ -159,7 +159,8 @@ adds `MOKLY_ENDPOINT` (the upload endpoint) and `MOKLY_TOKEN` (the upload
 token). The runner never runs bare `npx mokly`, which can resolve the
 unregistered unscoped `mokly` name. `<pin>` is the constant
 `CLOUD_MOKLY_VERSION` in `mkc-build-sandbox`, which `cargo xtask
-toolchain-pins` compares with `package.json` and which is never below
+toolchain-pins` compares with the workspace `@mokly/mokly` version in
+`packages/mokly/package.json` and which is never below
 `MIN_MOKLY_VERSION`. The fallback is 0.19.0 and the minimum is 0.18.0. The
 [build toolchain checks](./repository-layout.md#build-toolchain-checks) also
 validate the version in the failure sentence.

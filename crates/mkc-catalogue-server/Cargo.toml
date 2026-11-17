@@ -7,6 +7,10 @@ authors.workspace = true
 rust-version.workspace = true
 publish = false
 
+[features]
+# Opt-in release-mode timing proof; no gate suite enables it.
+compression-benchmark = []
+
 [dependencies]
 mkc-domain = { workspace = true }
 mkc-store-interface = { workspace = true }
