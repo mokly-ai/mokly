@@ -5,6 +5,8 @@ use mokly_html::tree::{Attribute, Region, RegionKind};
 use mokly_model::usage::ComponentInputOwner;
 use serde::{Deserialize, Serialize};
 
+use crate::document_records::OwnerRecord;
+
 #[derive(Deserialize, Serialize)]
 /// Private attribute codec record.
 pub(crate) struct AttributeRecord {
@@ -80,7 +82,7 @@ enum RegionKindRecord {
         key: String,
         instance_key: String,
         name: String,
-        owner: ComponentInputOwner,
+        owner: OwnerRecord,
     },
     Ignore {
         id: String,
@@ -112,7 +114,7 @@ impl From<&Region> for RegionRecord {
                 key: key.clone(),
                 instance_key: instance_key.clone(),
                 name: name.clone(),
-                owner: owner.clone(),
+                owner: OwnerRecord::from(owner),
             },
             RegionKind::Ignore { id, material_key } => RegionKindRecord::Ignore {
                 id: id.clone(),
@@ -150,7 +152,7 @@ impl From<RegionRecord> for Region {
                 key,
                 instance_key,
                 name,
-                owner,
+                owner: ComponentInputOwner::from(owner),
             },
             RegionKindRecord::Ignore { id, material_key } => {
                 RegionKind::Ignore { id, material_key }
