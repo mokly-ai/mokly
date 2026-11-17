@@ -6,7 +6,7 @@ use std::sync::Arc;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
 use mokly_graph::collection::ComparisonCollectorMock;
-use mokly_graph::error::GraphError;
+use mokly_graph::error::{GraphError, InternalError};
 use mokly_graph::types::{
     ComparisonDocument, RenderGeneration, RenderGenerationMock, RenderSummary,
 };
@@ -15,6 +15,7 @@ use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::comparison_graph::FrozenResources;
+use crate::error::ServerError;
 
 #[test]
 fn frozen_resources_preserve_the_generation_cancellation_error() {
@@ -105,6 +106,36 @@ fn an_evicted_document_must_reproduce_the_accepted_document_bytes() {
         .comparison_document("sample/index.mobile.html")
         .unwrap();
     assert!(graph.render("sample/index.mobile.html").is_err());
+}
+
+#[test]
+fn usage_reads_reject_document_mutation_with_the_existing_replacement_error() {
+    let artifact = |bytes: &[u8]| {
+        Arc::new(Artifact {
+            bytes: bytes.into(),
+            document: None,
+            fragment: None,
+            content_type: "text/html".into(),
+        })
+    };
+    let graph: &dyn RenderGeneration = &FrozenResources::new(Arc::new(Unimock::new(
+        RenderGenerationMock::comparison_document.stub(|each| {
+            each.call(matching!("sample/index.mobile.html"))
+                .answers_arc(Arc::new(move |_, _| Ok(artifact(b"accepted document"))))
+                .once()
+                .then()
+                .answers_arc(Arc::new(move |_, _| Ok(artifact(b"changed document"))));
+        }),
+    )));
+    graph
+        .comparison_document("sample/index.mobile.html")
+        .unwrap();
+    assert!(matches!(
+        graph.comparison_usage("sample/index.mobile.html"),
+        Err(GraphError::Internal(InternalError::Provider { source }))
+            if source.downcast_ref::<ServerError>()
+                .is_some_and(|error| matches!(error, ServerError::ChangesReplaced))
+    ));
 }
 
 #[test]

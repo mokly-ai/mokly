@@ -17,6 +17,7 @@ use mokly_graph::types::{
     ComparisonCapture, DocumentPlan, RenderGeneration, RenderSummary, TemporaryDocument,
 };
 use mokly_model::data::Props;
+use mokly_model::usage::CatalogueUsage;
 
 use crate::capture_collection::Collector;
 use crate::capture_restore::{DocumentRestorer, LosslessRestorer};
@@ -209,6 +210,12 @@ impl RenderGeneration for CapturedGeneration {
         }
         self.source.comparison_document(route)
     }
+    fn comparison_usage(&self, route: &str) -> Result<Option<CatalogueUsage>> {
+        if let Some(view) = self.views.get(route) {
+            return Ok(view.document.usage().cloned());
+        }
+        self.source.comparison_usage(route)
+    }
     fn closure(&self, route: &str) -> Result<Closure> {
         if let Some(view) = self.views.get(route) {
             return Ok(view.closure.clone());
@@ -287,3 +294,7 @@ mod capture_cancellation_tests;
 #[cfg(test)]
 #[path = "_tests_/capture_restore_tests.rs"]
 mod capture_restore_tests;
+
+#[cfg(test)]
+#[path = "_tests_/capture_usage/mod.rs"]
+mod capture_usage;

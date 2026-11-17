@@ -104,6 +104,11 @@ impl EncodedView {
         self.payload.len()
     }
 
+    /// Read retained usage without restoring document bytes or the tree.
+    pub fn usage(&self) -> Option<&CatalogueUsage> {
+        self.metadata.as_ref().map(|metadata| &metadata.usage)
+    }
+
     /// Conservative charge for payload, metadata, and container storage.
     pub fn retained_bytes(&self) -> usize {
         mem::size_of::<Self>()

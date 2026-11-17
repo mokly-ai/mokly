@@ -111,6 +111,11 @@ Reconsider D only if measurements identify this clone as material work.
 The fresh options check confirmed item 2's A and changed item 1 from A to D.
 Its full report is `.context/base-usage-without-restore/options-check.md`.
 
+Implementation calls of 2026-11-16: reuse the existing projection fixture
+helpers within the test crate to avoid duplicate setup. Use the task-approved
+counter restorer because an unused Unimock restorer rejects zero calls.
+Both calls preserve the required result and operation-count assertions.
+
 ## Replaced ways
 
 - Workspace input projection restores base documents to obtain usage. Move its
@@ -126,13 +131,15 @@ Its full report is `.context/base-usage-without-restore/options-check.md`.
 
 Depends on: none
 
+Completed: 2026-11-16.
+
 The docs implementor checks the contracts and documents the new graph boundary.
 This change preserves public requirements and needs no mockup work.
 
-- [ ] Check the serving and Changes contracts against the recorded calls.
-- [ ] Update graph and comparison README entry points for retained usage reads.
+- [x] Check the serving and Changes contracts against the recorded calls.
+- [x] Update graph and comparison README entry points for retained usage reads.
       Keep requirements unchanged and keep implementation mechanics out of protocol docs.
-- [ ] Record the separate removed-entry usage-only render path as a follow-up.
+- [x] Record the separate removed-entry usage-only render path as a follow-up.
       Its source read has different validation, so this change does not move it.
 
 Evidence belongs in `.context/base-usage-without-restore/docs-report.md`.
@@ -141,23 +148,25 @@ Evidence belongs in `.context/base-usage-without-restore/docs-report.md`.
 
 Depends on: 1
 
+Completed: 2026-11-17.
+
 The non-ui implementor adds the read and moves workspace projection to it.
 
-- [ ] Add the default comparison usage read and retained codec metadata accessor.
-- [ ] Read captured usage without calling the document restorer. Read uncaptured
+- [x] Add the default comparison usage read and retained codec metadata accessor.
+- [x] Read captured usage without calling the document restorer. Read uncaptured
       usage from the source. Forward through transparent wrappers. Keep the
       checked default for wrappers that add document checks.
-- [ ] Replace the workspace projection document read. Preserve filtering,
+- [x] Replace the workspace projection document read. Preserve filtering,
       counterpart rules, errors, literal input values, and input change order.
-- [ ] Cover changed entry-owned component inputs through a capture with literal
+- [x] Cover changed entry-owned component inputs through a capture with literal
       expected input changes. Retain all existing projection assertions.
-- [ ] Prove red first that workspace projection over a captured base restores
+- [x] Prove red first that workspace projection over a captured base restores
       zero documents, with a restorer double or restore counter.
-- [ ] Cover source fallback for an uncaptured view. Prove each new behavioural
+- [x] Cover source fallback for an uncaptured view. Prove each new behavioural
       test fails on an assertion before its implementation.
-- [ ] Cover a usage read through `FrozenResources` that rejects changed document
+- [x] Cover a usage read through `FrozenResources` that rejects changed document
       bytes with its existing error. Preserve the check on uncaptured reads.
-- [ ] Run targeted graph, comparison, and wrapper tests, Rust formatting, and
+- [x] Run targeted graph, comparison, and wrapper tests, Rust formatting, and
       Clippy. Record test cost and red/green results.
 
 Evidence belongs in `.context/base-usage-without-restore/implementation-report.md`.
