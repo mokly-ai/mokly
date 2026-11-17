@@ -2,7 +2,7 @@
 
 use std::collections::BTreeSet;
 
-use crate::command::DEFAULT_OUTPUT_LIMIT;
+use crate::command::{DEFAULT_OUTPUT_LIMIT, ProcessMode};
 use crate::error::{Error, Result};
 use crate::identity::{ObjectId, RepoPath};
 use crate::repository::GitRepository;
@@ -15,7 +15,8 @@ impl GitRepository {
         entries: &[Entry],
     ) -> Result<BTreeSet<RepoPath>> {
         let requested: BTreeSet<_> = entries.iter().map(|entry| entry.path.clone()).collect();
-        let autocrlf = match self.command(
+        let autocrlf = match self.command_with_mode(
+            ProcessMode::PlainGroup,
             &["config", "--get", "core.autocrlf"],
             Vec::new(),
             DEFAULT_OUTPUT_LIMIT,
@@ -34,7 +35,8 @@ impl GitRepository {
             .map(|entry| format!("{}\0", entry.path))
             .collect::<String>()
             .into_bytes();
-        let output = self.command(
+        let output = self.command_with_mode(
+            ProcessMode::PlainGroup,
             &[
                 &format!("--attr-source={commit}"),
                 "check-attr",

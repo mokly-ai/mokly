@@ -10,7 +10,7 @@ use std::time::Duration;
 use mokly_platform::processes::{ProcessGroup, ProcessGroups};
 
 use crate::cancellation::signal;
-use crate::command::{self, DEFAULT_OUTPUT_LIMIT, Output, Request};
+use crate::command::{self, DEFAULT_OUTPUT_LIMIT, Output, ProcessMode, Request};
 use crate::control::{Cancellation, Clock, Shutdown};
 use crate::error::{Error, InternalError, IoResult, Result};
 use crate::pipes::{capture, copy, copy_bounded, digest};
@@ -65,7 +65,11 @@ impl SystemRunner {
             "starting bounded Git command"
         );
         let mut command = git_command(request, environment);
-        if let Err(source) = self.groups.configure(&mut command) {
+        let configured = match request.process_mode {
+            ProcessMode::FullTree => self.groups.configure(&mut command),
+            ProcessMode::PlainGroup => self.groups.configure_plain(&mut command),
+        };
+        if let Err(source) = configured {
             return Err(Error::Platform { source });
         }
         let mut child = command.spawn().git()?;
