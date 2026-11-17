@@ -391,7 +391,7 @@ Docs evidence: `.context/parallel-compare-views/reports/final-docs.md`. The root
 
 Evidence: `.context/parallel-compare-views/reports/scheduling.md`. The root checked source order, batch ownership, all completed mutation failures, repeated-test results, and final clippy. Options evidence: `.context/parallel-compare-views/reports/tracing-options.md`.
 
-## Milestone 3b: Stream views through a bounded window
+## Milestone 3b: Stream views through a bounded window — completed
 
 Depends on: 3
 
@@ -407,13 +407,13 @@ Delegate to the `non-ui implementor`. This revision follows the performance orch
 - [x] Preserve exact results, warnings, resource/CSS counts, affected lookups, ordered errors across entries, cancellation, retained fallbacks, and span parentage.
 - [x] Run focused tests and clippy. Run each new asynchronous test ten times and record its cost.
 - [x] Update the crate READMEs after the scoped API is stable.
-- [ ] Commit and push the revision. Send its SHA immediately for a new external `mokly-cloud` measurement.
+- [x] Commit and push the revision. Send its SHA immediately for a new external `mokly-cloud` measurement.
 
 README evidence: `.context/parallel-compare-views/reports/window-docs.md`. The root aligned the normalized capacity and consumption wording with the source.
 
 Source acceptance evidence: `.context/parallel-compare-views/reports/root-window-acceptance.json`, `overlap-source-audit.json`, and `overlap-release.json` in that folder.
 
-## Milestone 4: Performance evidence
+## Milestone 4: Performance evidence — completed with recorded local blockers
 
 Depends on: 3b
 
@@ -435,13 +435,21 @@ Both large HTML Serve edit classifications completed before the same stop interr
 Neither after run started. No local Serve pair or speed ratio exists.
 Evidence: `.context/parallel-compare-views/reports/large-html-serve-content-cold-1.md` and `large-html-serve-stylesheet-cold-1.md` in that folder.
 
-- [ ] Measure before and after on `examples/basic` and the HTML and React large fixtures from `scripts/large/`.
-- [ ] Measure Changes build and Serve with one controlled screen-content edit on four CPUs.
-      Include `review.compare-views`, `changes.classify`, and peak native-process RSS.
-- [ ] Measure a shared stylesheet edit too. Assess both edit kinds. The supplied profile used a one-screen content edit.
-- [ ] Record base `uncapturedViews` from `review.capture-side` in every run and report its share with the target assessment.
-- [ ] Use the same inputs and settings for both versions. Confirm the large-catalogue comparison stage takes at most half the sequential time.
-- [ ] Check the bounded transient-input proof and RSS evidence. Report any unmet target to the performance orchestrator.
+On 2026-11-17, the performance orchestrator accepted the external rolling-window result and directed completion of the gate, review, pull request, and CI.
+The original half-time target was not met. The PR must include the supplied `mokly-cloud` table and the higher Serve RSS.
+The source and repeated count tests meet the 2P started/unconsumed-view bound. That count bound is not a process-RSS byte bound.
+The local rolling-window campaign produced no accepted pair: two basic BEFORE runs hit the unchanged RSS stop; the HTML content BEFORE build exited successfully, but its sampler failed as the process exited.
+The remaining independent cells were not started after that new sampler failure. No local AFTER version started, and no local ratio or equality result exists.
+The root kept all failed evidence and ended local measurement work without changing fixtures, limits, or the frozen sampler.
+
+- [x] Attempt before/after measurement on the unchanged basic, HTML, and React fixtures. Record each blocked or unstarted cell and use the accepted external evidence.
+- [x] Record available Changes-build and Serve content-edit timing and native-process RSS. State when a run failed before an accepted observation.
+- [x] Attempt the independent shared-stylesheet cells. Preserve the startup and sampler blockers without retries.
+- [x] Record available base `uncapturedViews`. Keep missing coverage counts distinct from zero and explain the evidence limits.
+- [x] Preserve inputs and settings. Assess the original half-time target and record the performance orchestrator's acceptance of the measured result.
+- [x] Check the transient-view count proof against available RSS evidence. Report the target miss and RSS rise without assigning an unproved allocator cause.
+
+Evidence: `.context/parallel-compare-views/reports/mokly-cloud-window.md`, `window-campaign.md`, `window-campaign-machine-release.json`, and the preserved per-cell failures under that context folder.
 
 ## Milestone 5: Verification, review, and pull request
 
@@ -455,7 +463,9 @@ Before every large Cargo build, check `df -h` and `free -m`.
 Set `CARGO_INCREMENTAL=0`. Run Cargo builds one at a time.
 
 - [x] Run targeted tests, Rust formatting, clippy, and `cargo xtask check --suite repository`.
-- [ ] Smoke-test a Changes build and a Serve edit. Run the required strict example build and smoke check when rendering changes require it.
+- [x] Smoke-test a Changes build and a Serve edit. Run the required strict example build and smoke check when rendering changes require it.
+      Smoke evidence: `.context/parallel-compare-views/reports/window-smoke-final.json` and `window-strict-example-build-result.json`. The two first temporary smoke scripts failed only on their npm-wrapper shutdown expectation; the corrected development-entry smoke passed.
+
 - [ ] Run `cargo xtask check`. If blocked, record the blocker and each suite that ran.
 - [ ] Commit with Conventional Commits and push. Start `scripts/ci-wait.sh` after each CI-triggering action.
 - [ ] Review the complete diff against `origin/main` with `implementation-review` after the push. Run finding checks and both permitted fix rounds.

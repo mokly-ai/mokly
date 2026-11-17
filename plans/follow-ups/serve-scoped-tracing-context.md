@@ -52,7 +52,7 @@
     `Span::current()` go to the global default. Under a scoped subscriber of
     the caller's thread, they do not reach that scoped subscriber.
   - The render pool of `mokly-graph` carries both values. `WorkerContext` in
-    `crates/mokly-graph/src/workers.rs` captures `tracing::Span::current()`
+    `crates/mokly-graph/src/worker_context.rs` captures `tracing::Span::current()`
     and `tracing::dispatcher::get_default(Clone::clone)`. It runs each job in
     `tracing::dispatcher::with_default(&dispatch, || parent.in_scope(job))`.
   - A code read shows that the Changes classification runs after a span-only
