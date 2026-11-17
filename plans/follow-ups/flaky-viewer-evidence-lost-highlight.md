@@ -52,6 +52,14 @@
   - The failed attempt saved a Playwright trace in the artifact
     `browser-failures-node-22.15.0-shard-4-attempt-1` of that run. Nobody
     read it yet.
+  - On 2026-11-17 the complete local gate of Serve comparison reuse at
+    `69ad2b326` failed with the same error at line 80. Its browser suite
+    passed 2,286 tests and failed this one. The exact focused rerun passed
+    one test with zero failures. The test and viewer code were unchanged.
+    The suspected source remains unconfirmed. The trace and error context
+    are saved under `.context/serve-comparison-reuse/pre-kept-base-browser-failure/`.
+    The run and rerun are recorded in `complete-gate-pre-kept-base-result.json`
+    and `viewer-lost-highlight-focused-rerun.log` in that context folder.
 - **Impact if no action:** The browser suite can fail at random on a correct
   change, in CI and in the complete gate. A real viewer defect can hide
   behind a flake label.

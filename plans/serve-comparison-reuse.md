@@ -194,7 +194,7 @@ Reset staging before each engine attempt. A kept-base retry cannot inherit the f
 - **Background:** Per-view evidence can grow with usage and CSS matches.
 - **Problem:** A result-count limit does not bound retained bytes.
 - **Impact if no action:** A large catalogue can exhaust process memory.
-- **Root question:** How can Serve retain reusable evidence within a fixed resident byte budget on the measured catalogues?
+- **Root question:** How can Serve keep reusable evidence for about 2,000 views within one fixed byte charge of at most 32 MiB?
 - **Options:**
   - **A.** Charge all retained payload and metadata bytes under a fixed bound. Retain nothing on overflow. Effort: Medium.
   - **B.** Evict individual views under a fixed byte bound. Effort: Medium.
@@ -202,11 +202,14 @@ Reset staging before each engine attempt. A kept-base retry cannot inherit the f
   - **D.** A, but read current usage through `comparison_usage` instead of retaining usage. Effort: Medium.
   - **E.** A, with shared immutable evidence charged once across the slot and candidate. Effort: Small.
   - **F.** Intern read entries once and retain compact per-view lists of those entries. Charge each shared entry once. Effort: Medium.
-- **Left out:** B violates the requested retain-nothing overflow rule. C adds unrequested persistent state. Unbounded retention violates the memory requirement.
+  - **G.** Keep the fixed 32 MiB bound. Every completed fixture fits, including default HTML at 58.6% of the bound. Effort: Small.
+  - **H.** Lower the fixed bound to 24 MiB. Every completed fixture fits, but default HTML has only 21.8% margin for different evidence and staged overlap. Effort: Small.
+  - **I.** Lower the fixed bound to 16 MiB. The 2,000-view projections fit, but default HTML overflows and loses all reuse. Effort: Small.
+- **Left out:** B violates the requested retain-nothing overflow rule. C adds unrequested persistent state. Unbounded retention violates the memory requirement. A bound above 32 MiB breaks the approved maximum. A dynamic bound or user setting breaks the fixed-bound requirement. These value choices share one approach because the fixed-bound requirement leaves only its size open.
 - **Wider fix:** A. One charging boundary covers each retained object and the staging overlap.
 - **Previous examples:** Bounded base captures and `ResourceMemo` byte charges.
-- **Assumptions:** Fixed byte accounting and full fallback on overflow come from the task. Both remain in force.
-- **Recommendation:** E with D, refining the original A. Sharing prevents duplicate charges, and fresh usage removes a large retained payload.
+- **Assumptions:** Fixed byte accounting and full fallback on overflow come from the task. Both remain in force. Per-view projections assume linear scaling, as the measurement call requests. Sequential edits do not measure a draining attempt, but the same ledger bounds it.
+- **Recommendation:** G with A, D, E, and F, refining the original E with D recommendation. Shared evidence and compact reads preserve capacity. The approved maximum keeps the measured default HTML fixture and leaves the most margin for staged overlap.
 - **Action:** fix now, apply A.
 
 Performance orchestrator's call, 2026-11-17: choose A. No change may increase memory exhaustion risk.
@@ -223,11 +226,42 @@ Do not apply the checker's suggestion to preserve an older slot after successful
 My call, 2026-11-17: read current usage instead of retaining it. This fits the nearby usage branch and reduces memory.
 Measure charged bytes on every fixture and peak RSS before final acceptance. Lower the bound if evidence requires it.
 The 200 ms and 0.6 second targets apply to `mokly-cloud`, with 1,508 views.
+Performance orchestrator's acceptance, 2026-11-17: accept the measured cloud result at `38b923b5c` against `03bedb6ec`.
+Mean edit comparison falls from 863 to 256 ms. Mean edit-to-Ready falls from 7.90 to 7.57 seconds.
+The 200 ms target was an estimate. Repeated base preparation hides part of the comparison gain until the separate base reuse change lands.
+First Changes rises 4.6%, and peak RSS rises 2.5%. Both meet the 5% limits.
 The large fixtures use their default dimensions: 30 areas, 40 screens, 12 rows, and 5,850 views.
 My refinement call, 2026-11-17: apply checked F and complete owned-style rule and ancestry charging before sizing.
 The preliminary basic run charges 8,742,640 resident bytes for 590 views in steady state.
 That projects to about 29.6 MB for 2,000 views before the identified undercharge is fixed.
 Compact read sets preserve capacity margin under the approved maximum. Do not lower the view goal or raise the maximum.
+
+My final sizing call, 2026-11-17: keep the fixed 32 MiB bound.
+At the third classification, these are the lifetime peaks and live charges before acceptance:
+
+| Fixture             | Views | Peak bytes | Live bytes | Peak bytes per view | Estimate for 2,000 views |
+| ------------------- | ----: | ---------: | ---------: | ------------------: | -----------------------: |
+| Basic               |   590 |  2,063,304 |  2,025,418 |               3,497 |              6,994,251 B |
+| Default HTML        | 5,850 | 19,667,054 | 19,249,170 |               3,362 |              6,723,779 B |
+| Supplementary React | 1,950 |  9,378,230 |  9,378,230 |               4,809 |              9,618,697 B |
+| Divergent HTML      | 1,950 |  8,536,796 |  8,421,076 |               4,378 |              8,755,688 B |
+
+No completed run overflows. The highest 2,000-view projection uses 9.17 MiB.
+It leaves more than 70% of the approved bound for other evidence shapes and staged overlap.
+The default HTML peak uses 58.6% of 32 MiB. A 16 MiB bound fits the 2,000-view projections but loses all reuse on that fixture.
+The supplementary React peak includes a staged candidate for almost every view.
+Live charges before acceptance include the previous accepted slot while it still lives.
+These are charged allocations, not RSS. Estimate from peak bytes, not the logical candidate charge.
+Both default 5,850-view React attempts fail the unchanged 300-second initial-Ready observer deadline.
+Neither reaches a complete classification. Keep these failures visible. Do not raise the deadline or retry.
+The separate 1,950-view React runs give supplementary capacity evidence under the same limits.
+The React edit changes most render identities: 20 views reuse and 1,930 compare in full.
+The full-size React capacity remains unmeasured. This limit does not alter the accepted cloud result.
+Local RSS includes native and full CLI-tree measurements. The HTML CLI tree rises 5.43%, and the supplementary React tree rises 12.86%.
+Native RSS rises 2.05% and falls 2.50%, respectively.
+Local first-classification timings have broad ranges. They do not replace the controlled cloud acceptance.
+Proof time and recorded-read counts for all initial, edited, and restored classifications are in the final measurement evidence.
+Summed worker proof time overlaps current-usage time and can exceed wall time. Do not add the sums.
 
 ### 5. Check every published byte
 
@@ -284,7 +318,7 @@ Use the `non-ui implementor` action. Keep the full comparison path authoritative
 - [x] Implement content proofs for every input in the inventory, including both-side resource absence and transitive memo reads.
 - [x] Preserve ordered failures, warning output, cancellation checks, and full-path work counters.
 - [x] Share immutable pending evidence before attribution. Read current usage and rerun all catalogue-wide steps.
-- [ ] Add complete byte charging. Check the measured fixed resident bound, at most 32 MiB, before retention allocation. Retain nothing on overflow.
+- [x] Add complete byte charging. Check the measured fixed resident bound, at most 32 MiB, before retention allocation. Retain nothing on overflow.
 - [x] Complete owned-rule and detached-ancestry charging. Use borrowed normalized observations in attribution.
 - [x] Move comparison and CSS test consumers to borrowed attribution. Delete the replaced owned-input API and deep-copy path.
 - [x] Share bounded record-time and revalidation identities. Use compact shared read sets and ordered duplicate lookup.
@@ -315,22 +349,31 @@ The orchestrator runs the release measurements and final gate.
 - [x] Show the oracle fails when reuse accepts changed inputs. Save red-first evidence outside the plan.
 - [x] Measure added test cost and run new asynchronous tests ten times if any are added.
 - [x] Prepare isolated checkouts and target directories for merged `main` and the branch. Serialize release builds with `CARGO_INCREMENTAL=0`.
-- [ ] Measure first classification, `review.compare-views`, edit-to-Changes-ready, and peak RSS on `examples/basic` and the large HTML and React fixtures.
-- [ ] Measure retained charge on each fixture, estimate bytes per view, and choose a fixed bound fitting about 2,000 views, at most 32 MiB.
-- [ ] Measure a divergent branch with a head-only shared stylesheet and a global CSS edit. Check reuse and the byte charge.
-- [ ] Record measured charges and the chosen bound in this plan. Report revalidation duration and recorded-read count for each classification.
-- [ ] Send the implementation SHA to the performance orchestrator immediately after the push for `mokly-cloud` measurements.
-- [ ] Confirm the cloud goals with the performance orchestrator: compare at most 200 ms, edit improvement at least 0.6 seconds, first classification within 5%, RSS within 5%.
+- [x] Measure first classification, `review.compare-views`, edit-to-Changes-ready, and peak RSS on `examples/basic` and the large HTML and React fixtures. Preserve the default React deadline outcome and supplement it near 2,000 views under the same limits.
+- [x] Measure retained charge on each fixture, estimate bytes per view, and choose a fixed bound fitting about 2,000 views, at most 32 MiB.
+- [x] Measure a divergent branch with a head-only shared stylesheet and a global CSS edit. Check reuse and the byte charge.
+- [x] Record measured charges and the chosen bound in this plan. Report revalidation duration and recorded-read count for each classification.
+- [x] Send the implementation SHA to the performance orchestrator immediately after the push for `mokly-cloud` measurements.
+- [x] Confirm cloud performance acceptance with the performance orchestrator. Record the accepted 256 ms comparison, 0.33 second edit improvement, first Changes within 5%, and RSS within 5%.
 - [x] Remove temporary protocol status lines after implementation and align crate READMEs and entry points.
+- [x] Record the performance orchestrator's requested proof-cost follow-up, with options and expected effort. Keep its choice open for a later branch and make no code change here.
 
+Final paired measurements: `.context/serve-comparison-reuse/refined-measurements/comparison-final.md`.
+Steady-state sizing: `.context/serve-comparison-reuse/refined-measurements/capacity-final.json`.
+Final sizing options check: `.context/serve-comparison-reuse/final-sizing-options-check.md`.
+Both default React deadline outcomes: `.context/serve-comparison-reuse/refined-measurements/default-react-deadline-outcomes.json`.
 Implementation evidence: `.context/serve-comparison-reuse/implementation-report.md`.
 Refinement evidence: `.context/serve-comparison-reuse/refinement-report.md`.
 Docs evidence: `.context/serve-comparison-reuse/final-docs-report.md`.
 Options check: `.context/serve-comparison-reuse/options-check.md`.
 Final options check: `.context/serve-comparison-reuse/final-options-check.md`.
 Preliminary basic measurements: `.context/serve-comparison-reuse/reporting-basic-v1.md`. Repeat after the checked refinements.
+Divergent measurement evidence: `.context/serve-comparison-reuse/refined-measurements/divergent-comparison.md`.
+Accepted cloud evidence: `.context/serve-comparison-reuse/mokly-cloud-evidence.md`.
+Default React main attempt: `.context/serve-comparison-reuse/refined-measurements/measurements-main-react-sse/sample-01/summary.json`. It did not reach initial Ready within the unchanged 300-second observer deadline.
 Integration audit: `.context/serve-comparison-reuse/main-additions-audit.txt` and `merged-usage.diff` in the same folder.
 The exporter-worker merge is audited in `.context/serve-comparison-reuse/main-03b-integration-audit.json`.
+The final main merge is audited in `.context/serve-comparison-reuse/final-main-preservation.json`; its choices are in `final-main-integration-decisions.md` in that folder.
 Evidence lives under `.context/serve-comparison-reuse/`.
 
 ## Milestone 4: Verify, review, and open the pull request
@@ -340,10 +383,39 @@ Depends on: 1, 2, 3
 The orchestrator owns these steps.
 
 - [x] Use Git 2.45 or later first on `PATH`, with `git-lfs` installed.
+- [ ] Finish the running gate, then merge main's kept-base change at `b881bfffb` under `git-merge` and preserve both changes.
+- [ ] Check retained-only proofs through `BaseReader`, including its cancellation, release, replacement, and fresh-base retry boundaries.
+- [ ] Run merged-tree targeted tests and the byte oracle. Push the combination and send its SHA before the complete gate for cloud measurement.
 - [ ] Run targeted tests, Rust format and clippy, `cargo xtask check --suite repository`, and `cargo xtask check`.
-- [ ] Run a watched Serve smoke test. Check disk and RAM before each large Cargo build.
-- [ ] Check every delegated TODO against the diff and repository rules.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Run a watched Serve smoke test. Check disk and RAM before each large Cargo build.
+- [x] Check every delegated TODO against the diff and repository rules.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the full pushed diff against `origin/main` with `implementation-review`. Check every finding, fix confirmed fix-now findings, record follow-ups, re-review, and use the second fix round if required.
 - [ ] Delete this plan under the `plans` skill after every other required TODO is complete.
 - [ ] Open the pull request into `main`. Preserve dated decisions and the plan permalink in its description. Watch CI with `scripts/ci-wait.sh`. Report to the performance orchestrator. Do not merge.
+
+The performance orchestrator requested the implementation push before the complete gate on 2026-11-17.
+Commit `38b923b5c` is pushed. Its complete gate remains required.
+The performance orchestrator also requested that newer `main` merge before the pull request, after these paired measurements.
+The performance orchestrator's call of 2026-11-17 adds the kept-base integration after the running gate.
+The combined SHA goes to the orchestrator immediately after targeted checks and the push, before the combined complete gate.
+
+## Post-merge follow-up (non-blocking)
+
+Performance orchestrator's call, 2026-11-17: record the measured proof cost without a code change in this pull request.
+Keep the choice open for a later branch in [Serve comparison proof cost](follow-ups/serve-comparison-proof-cost.md).
+The item gives measured work, the existing identity sharing, remaining checked head reads, and options with expected effort.
+This explicit deferral does not block this pull request.
+The options check also records an existing duplicate closure walk in [the separate closure item](follow-ups/duplicate-head-closure-walk.md).
+Its question belongs to a later branch and makes no change here.
+
+Merged-tree smoke evidence: `.context/serve-comparison-reuse/smoke-final-main/summary.json`.
+The strict example build is recorded in `strict-example-post-final-main.log` in that folder's parent.
+First complete gate attempt: `.context/serve-comparison-reuse/complete-gate-final-main-first-result.json`.
+The repository suite passes; viewer typechecking requires the machine's Bun upgrade from 1.3.14 to the repository pin, 1.4.4.
+The pre-kept-base gate result is in `.context/serve-comparison-reuse/complete-gate-pre-kept-base-result.json`.
+Repository and viewer suites pass. The browser suite has one unrelated failure and 2,286 passes.
+The exact failed case passes its focused rerun. The existing lost-highlight follow-up records this recurrence.
+Static delivery did not run after the browser failure. The complete gate remains required on the kept-base integration.
+
+Orchestrator source check: `.context/serve-comparison-reuse/orchestrator-source-check.md`.

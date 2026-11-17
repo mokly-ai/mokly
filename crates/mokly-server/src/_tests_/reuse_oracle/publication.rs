@@ -12,6 +12,7 @@ use unimock::Unimock;
 use crate::assets::File;
 use crate::changes::{self, Accepted, ChangeToken};
 use crate::comparison_capture::{Capturer, SnapshotCapture};
+use crate::detail_encoding::EncodedDetails;
 use crate::snapshot::{Projector, SnapshotFactory, SnapshotInput, encode};
 
 #[derive(Debug, Eq, PartialEq)]
@@ -54,7 +55,13 @@ pub(super) fn publish(result: ComparisonResult) -> Published {
         id: "f".repeat(64),
         result,
     });
-    let current = changes::project(&origin, ChangesStatus::Ready, Some(accepted.clone())).unwrap();
+    let current = changes::project(
+        &origin,
+        ChangesStatus::Ready,
+        Some(accepted.clone()),
+        &EncodedDetails,
+    )
+    .unwrap();
     let mut files = BTreeMap::new();
     insert(&mut files, "index.json".into(), encode(&current.index));
     for path in current.details.keys() {
