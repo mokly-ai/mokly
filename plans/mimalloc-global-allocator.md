@@ -120,8 +120,10 @@ Depends on: none
 
 Delegate this milestone to the `docs implementor` action.
 
-- [ ] Add one sentence to `docs/architecture/rust-core.md` on the binary's Rust allocator and its CPU and memory reason.
-- [ ] Keep protocol docs unchanged because observable behaviour does not change.
+- [x] Add one sentence to `docs/architecture/rust-core.md` on the binary's Rust allocator and its CPU and memory reason.
+- [x] Keep protocol docs unchanged because observable behaviour does not change.
+
+Milestone completed. The delegated report is `.context/global-allocator/docs-report.md`.
 
 ## Milestone 2: Select and inspect mimalloc
 
@@ -129,12 +131,14 @@ Depends on: 1
 
 Delegate this milestone to the `non-ui implementor` action.
 
-- [ ] Inspect the crate's features and add it with `cargo add` to `mokly-cli`.
-- [ ] Set the global allocator only in the binary composition root, with no target restriction or `override` feature.
-- [ ] Keep the lockfile change limited to the added dependency and its necessary transitive dependencies.
-- [ ] Inspect release builds, binary inspection, dependency auditing, and native bootstrap for compatibility.
+- [x] Inspect the crate's features and add it with `cargo add` to `mokly-cli`.
+- [x] Set the global allocator only in the binary composition root, with no target restriction or `override` feature.
+- [x] Keep the lockfile change limited to the added dependency and its necessary transitive dependencies.
+- [x] Inspect release builds, binary inspection, dependency auditing, and native bootstrap for compatibility.
       Inspect the bundled allocator's runtime page-size handling for Linux hosts with larger pages.
-- [ ] Run Rust formatting checks and report the exact dependency version and feature selection.
+- [x] Run Rust formatting checks and report the exact dependency version and feature selection.
+
+Milestone completed. The delegated report is `.context/global-allocator/implementation-report.md`.
 
 ## Milestone 3: Verification, commit, review, and pull request
 
@@ -146,20 +150,29 @@ Use `CARGO_INCREMENTAL=0` and bounded Cargo jobs.
 Run Cargo builds one at a time.
 Give each checkout its own target directory.
 
-- [ ] Run `cargo test -p mokly-cli` and `cargo xtask check --suite repository`.
-- [ ] Run the complete gate, `cargo xtask check`, and report each suite and any blocker.
-- [ ] Build release binaries from the last merged `origin/main` and this branch in separate target directories.
-- [ ] Run `MIMALLOC_VERBOSE=1 mokly --version` and save its allocator output.
-- [ ] Measure `examples/basic` builds with Changes and peak core RSS for both release binaries on the same catalogue and Git base.
-- [ ] Dispatch `release-check.yml` on this branch and report all five native targets and packaging smoke checks.
+- [x] Run `cargo test -p mokly-cli` and `cargo xtask check --suite repository`.
+- [x] Run the complete gate, `cargo xtask check`, and report each suite and any blocker.
+- [x] Build release binaries from the last merged `origin/main` and this branch in separate target directories.
+- [x] Run `MIMALLOC_VERBOSE=1 mokly --version` and save its allocator output.
+- [x] Measure `examples/basic` builds with Changes and peak core RSS for both release binaries on the same catalogue and Git base.
+- [x] After merging `origin/main` at `0b82cf6c0`, rebuild both release binaries and repeat the allocator and sanity checks.
+      Preserve the earlier measurements under `.context/global-allocator/before-main-merge/`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete diff against `origin/main` with `implementation-review` after the push.
       Check every new finding, apply the fix rule, and run the second review round.
       Use at most two fix rounds and record each remaining finding as a follow-up item.
 - [ ] Delete this plan after every other required TODO is complete and the review rounds are done.
 - [ ] Open the pull request into `main`, preserve this plan's dated calls and permalink, and wait for its final CI.
+      Dispatch `release-check.yml` on the final branch commit and report all five targets and packaging smoke checks.
       Leave the pull request open for the performance orchestrator to merge.
 
 Evidence goes under `.context/global-allocator/`.
+The conflict-free main integration audit is `main-integration-audit.log` in that folder.
+Release evidence is in `mimalloc-verbose.stderr`, `sanity.json`, and `sanity-summary.json` in that folder.
+Regression evidence is in `cli-tests-current-main.log`, `repository-check-final.log`, and `git-version-proof.json` in that folder.
+The inherited older-Git issue is recorded in `plans/follow-ups/missing-blob-diagnostics-older-git.md`.
 The options check and its disposition are in `plan-options-check.md` and `plan-options-disposition.md` in that folder.
 Review reports go under `.context/reviews/calummoore/mokly-mimalloc-global-allocator-i7qn/`.
+
+The complete local gate and the one unchanged-browser rerun are recorded in `.context/global-allocator/verification-summary.json`.
+The separate static HTTP and file delivery checks are in `.context/global-allocator/delivery.log`.
