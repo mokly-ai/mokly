@@ -2,7 +2,7 @@
 
 #![cfg(unix)]
 
-use std::io::{BufRead, BufReader, Read, Write};
+use std::io::{self, BufRead, BufReader, Read, Write};
 use std::process::{self, Child, Command, Stdio};
 use std::sync::mpsc;
 use std::thread;
@@ -86,13 +86,24 @@ fn plain_groups_keep_the_session_and_signal_members_after_reaping() {
 }
 
 fn identity(pid: u32) -> (String, String) {
-    let output = Command::new("ps")
-        .args(["-o", "pgid=", "-o", "sess=", "-p", &pid.to_string()])
-        .output()
-        .unwrap();
-    assert!(output.status.success());
-    let text = String::from_utf8(output.stdout).unwrap();
-    let fields: Vec<_> = text.split_whitespace().collect();
-    assert_eq!(fields.len(), 2, "unexpected process identity: {text}");
-    (fields[0].to_owned(), fields[1].to_owned())
+    let pid = libc::pid_t::try_from(pid).unwrap();
+    // SAFETY: The positive PID names this test or its live, unreaped child.
+    // getpgid reads kernel process metadata and accesses no caller memory.
+    let group = unsafe { libc::getpgid(pid) };
+    assert_ne!(
+        group,
+        -1,
+        "getpgid({pid}) failed: {}",
+        io::Error::last_os_error()
+    );
+    // SAFETY: The positive PID names this test or its live, unreaped child.
+    // getsid reads kernel process metadata and accesses no caller memory.
+    let session = unsafe { libc::getsid(pid) };
+    assert_ne!(
+        session,
+        -1,
+        "getsid({pid}) failed: {}",
+        io::Error::last_os_error()
+    );
+    (group.to_string(), session.to_string())
 }
