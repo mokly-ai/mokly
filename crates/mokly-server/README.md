@@ -40,12 +40,30 @@ Watch and Changes use these same boundaries. Shutdown fences and drains queued
 publications.
 
 Evidence revisions share the generation's assets, routes, backend, and shell.
-Unchanged detail payloads and index bytes also stay shared. Only changed
-details are encoded. Source replacements retain ready usage when
-its document key is equal. Public membership reads that document's shared
-closure records with the replacement's own policy. This includes a render
-that completes after the replacement is prepared. `Snapshot::detail` supplies
-the matching revision to typed consumers.
+Unchanged detail payloads and index bytes also stay shared. Source
+replacements retain ready usage when its document key is equal. Public
+membership reads that document's shared closure records with the
+replacement's own policy. This includes a render that completes after the
+replacement is prepared. `Snapshot::detail` supplies the matching revision to
+typed consumers.
+
+Rebuild, usage completion, and Changes publish details through one reuse rule.
+Each snapshot keeps at most four recent records for each current path, one for
+each publication kind: rebuild, usage completion, a Changes status update, and
+ready Changes evidence. A record shares a typed detail, its `detailId`, and its
+encoded payload. A new detail takes that id and payload only when it equals the
+record apart from `detailId` and `revision`, and both details have or both
+lack `revision`. A supplied id alone never proves equality. Reuse never
+changes the typed `revision` that a phase stamps on its details.
+
+A detail that matches no record serializes its
+[detail identity](../../docs/protocol/mokly-catalogue-serialization.md#detail-identity)
+preimage once. The hash fills only the top-level `detailId` slot, and the
+detail replaces only the record of its own kind. `RevisionFile` stores the
+bytes around the top-level `revision`, and each response inserts the current
+publication's revision. The records drop paths that leave the catalogue. They
+hold no snapshot, generation, render backend, or history. A candidate copies
+them, so a rejected candidate leaves the live records unchanged.
 
 `UsagePass` and `ChangesPass` run the background work of the
 [on-demand Serve contract](../../docs/protocol/mokly-on-demand.md): current
@@ -193,6 +211,19 @@ generations.
   ordered updates.
 - [`src/snapshot.rs`](./src/snapshot.rs) defines `Snapshot`,
   `SnapshotFactory`, and `Projector`, the canonical bytes of one revision.
+- [`src/replacement.rs`](./src/replacement.rs) provides `reuse_usage` and
+  `encode_details`, which retain ready usage and reuse equal details when a
+  rebuild projects a new snapshot.
+- [`src/evidence.rs`](./src/evidence.rs) and
+  [`src/changes.rs`](./src/changes.rs) provide `complete` and `project`, which
+  publish usage completion and Changes from the current snapshot.
+- [`src/detail_encoding.rs`](./src/detail_encoding.rs) defines
+  `DetailEncoder` and `EncodedDetails`, which hash and encode each detail that
+  matches no recent record.
+- [`src/detail_publication.rs`](./src/detail_publication.rs) defines
+  `RecentDetails`, the bounded equality records shared by the publication paths.
+- [`src/revision_file.rs`](./src/revision_file.rs) defines `RevisionFile`, the
+  shared payload that each response completes with the current revision.
 - [`src/backend.rs`](./src/backend.rs) defines `Documents` and
   `GraphDocuments`, the graph-backed documents and read-time confinement.
 - [`src/public_read.rs`](./src/public_read.rs) defines `ConfinedReader`, which
