@@ -215,21 +215,26 @@ The workspace orchestrator checks every delegated result and owns this work.
       batches and the final pull request when main has advanced. Preserve both
       scheduling and usage reads. Forward through each new transparent wrapper
       and preserve document checks in each checking wrapper.
-- [ ] Run targeted tests, `cargo xtask check --suite repository`, and the
+- [x] Run targeted tests, `cargo xtask check --suite repository`, and the
       complete `cargo xtask check` gate. Record every failed or blocked suite.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       implementation-review skill after the push. Check every new finding.
       Apply at most two fix rounds. Record deferred and open follow-up items.
       Re-review once and record the final result.
-- [ ] Prepare the final report with the commit, measurements, design calls,
-      review outcomes, follow-up items, and checks. Send it to the performance
-      orchestrator after the pull request opens and its CI completes.
+- [x] Prepare the final report with the commit, measurements, design calls,
+      review outcomes, follow-up items, and checks.
+- [ ] After the base reuse branch reaches main, merge main with the git-merge
+      skill. Add the checked usage forward in `BaseReader`. Keep source
+      fallback and add red-first reused-base projection coverage with zero restores.
+- [ ] Run targeted graph, comparison, and server tests and the complete gate
+      on that merged tree. Commit, push, and review the complete updated diff.
 - [ ] Delete this plan under the plans skill. Preserve its dated calls and a
       permalink in the pull request description.
 - [ ] Open the pull request into `main`. Run the finish-work CI wait script after
       each push and pull request creation. Fix branch-caused failures. Rerun an
-      unrelated failure once and record it. Leave the pull request open.
+      unrelated failure once and record it. Send the final report to the
+      performance orchestrator. Leave the pull request open.
 
 Merge evidence belongs in `.context/base-usage-without-restore/merge-integration-report.md`,
 `scheduling-merge-audit.log`, and `allocator-merge-audit.log`.
@@ -247,3 +252,22 @@ still reads no payload. The user stopped the earlier gate and required a new
 gate on this merged tree. Existing measurements remain valid evidence by the
 user's instruction. No measurement is repeated.
 Merge evidence belongs in `.context/base-usage-without-restore/binary-codec-merge-audit.log`.
+
+The merged-tree gate ran through the browser suite. Two unrelated browser
+failures passed their one selected rerun. Both static delivery modes then
+passed separately. The gate is recorded as failed, not as a complete pass.
+Two fresh implementation reviews found no in-scope findings. No fix round
+was needed. Existing follow-up items retain the browser failure evidence.
+Evidence belongs in `.context/base-usage-without-restore/merged-gate-summary.json`,
+`gate-tail-results.json`, and the branch review folder under `.context/reviews/`.
+
+The performance orchestrator made a further call on 2026-11-17. Its combined
+profile found usage-only restores through the new base reuse `BaseReader`.
+After that branch merges first, this workspace must merge main. The reader
+must check cancellation, then forward usage to the kept capture. Failed or
+missing captured usage keeps the checked source fallback through the reader.
+This applies the metadata-read design while preserving the reader's checks.
+The user permits opening this PR before that integration and waiting for main.
+Keep this plan until the required integration, gate, and review finish.
+Evidence and the exact call belong in
+`.context/base-usage-without-restore/base-reader-integration-call.md`.
