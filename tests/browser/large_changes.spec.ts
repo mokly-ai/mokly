@@ -7,15 +7,17 @@ import { prepareFixture } from "../../scripts/large/setup.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 import { test } from "./browser_test.js";
+import { cleanupLargeFixture } from "./large_fixture_evidence.js";
 
 for (const variant of ["html", "react"] as const) {
   test(`large changes delivers browser evidence for ${variant}`, async ({
     browser,
-  }) => {
+  }, testInfo) => {
     test.setTimeout(300_000);
     const root = await fs.mkdtemp(
       path.join(repositoryRoot, ".context/large-changes-"),
     );
+    let completed = false;
     try {
       const fixture = await prepareFixture(
         repositoryRoot,
@@ -70,7 +72,15 @@ for (const variant of ["html", "react"] as const) {
           );
         }
         assert.ok("comparison" in result && Array.isArray(result.comparison));
-        assert.equal(result.comparison.length, 1);
+        assert.equal(
+          result.comparison.length,
+          1,
+          `Expected one changes.classify end record: ${JSON.stringify({
+            state: "state" in result ? result.state : null,
+            count: result.comparison.length,
+            comparison: result.comparison,
+          })}`,
+        );
         assert.ok(
           "publication" in result &&
             typeof result.publication === "object" &&
@@ -91,8 +101,9 @@ for (const variant of ["html", "react"] as const) {
       await assert.rejects(fs.access(path.join(root, "mokly-static")), {
         code: "ENOENT",
       });
+      completed = true;
     } finally {
-      await fs.rm(root, { recursive: true, force: true });
+      await cleanupLargeFixture(root, testInfo, completed);
     }
   });
 }
