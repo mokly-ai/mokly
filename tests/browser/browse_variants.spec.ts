@@ -1,7 +1,9 @@
 import { expect, type Page } from "@playwright/test";
 
 import { test } from "./browser_test.js";
+import { nestedScriptNotice } from "./navigation_error_allowances.js";
 import {
+  routeNavigationNestedFrame,
   startNavigationFixture,
   type NavigationFixture,
 } from "./navigation_fixture.js";
@@ -21,6 +23,11 @@ test.beforeAll(async () => {
 
 test.afterAll(async () => {
   await navigation?.close();
+});
+
+test.beforeEach(async ({ page, allowBrowserError }) => {
+  allowBrowserError(nestedScriptNotice);
+  await routeNavigationNestedFrame(page);
 });
 
 /** Open the catalogue at a route whose variant list starts closed. */

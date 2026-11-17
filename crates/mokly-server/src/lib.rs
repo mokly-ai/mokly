@@ -28,6 +28,8 @@ mod comparison_requests;
 mod comparison_routes;
 pub mod comparison_store;
 mod detail_encoding;
+pub mod detail_publication;
+mod detail_slot;
 pub mod diagnostics;
 pub mod entropy;
 pub mod error;
@@ -97,3 +99,7 @@ mod quiet_http_completion_tests;
 #[cfg(test)]
 #[path = "_tests_/render_body_snapshot_tests.rs"]
 mod render_body_snapshot_tests;
+
+#[cfg(test)]
+#[path = "_tests_/publication_sequence/mod.rs"]
+mod publication_sequence;

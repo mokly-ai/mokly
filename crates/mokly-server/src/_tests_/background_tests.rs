@@ -49,6 +49,7 @@ fn snapshot(paths: Vec<String>, documents: Arc<dyn Documents>) -> Arc<Snapshot> 
             render_token: "secret".into(),
         }),
         details: Default::default(),
+        recent_details: Default::default(),
         completed: Default::default(),
         files: Default::default(),
         lease: Arc::new(RevisionLease::default()),
