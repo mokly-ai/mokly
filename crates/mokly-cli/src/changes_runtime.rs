@@ -76,6 +76,7 @@ pub(super) fn service(
             inner: Arc::new(NativeBase {
                 runtime,
                 cancellation,
+                freshness: None,
                 dependencies: Arc::new(NativeDependencies {
                     cancellation: token,
                     reporter,

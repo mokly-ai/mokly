@@ -14,9 +14,11 @@ the checkout with it.
 - Bound captured output on both streams.
 - Split path arguments into ordered, bounded batches.
 - Preserve binary input, output, and typed process failures.
-- Validate checkout identity before resolving a merge base.
+- Validate the checkout root before resolving a merge base.
 - Read changed paths, tree metadata, and checkout-converted regular source files.
 - Extract exact commit sources with the pinned commit's checkout attributes.
+- Identify the effective checkout settings of a commit for source cache keys
+  and base freshness checks.
 
 ## What This Crate Does
 
@@ -91,6 +93,21 @@ convert its files again one at a time. A deadline and process-tree
 cancellation supervise every conversion. Failed optional filters return typed
 `Conversion` errors instead of raw fallback bytes. Conversion includes line
 endings, encodings, filters, and LFS downloads.
+
+`Repository::source_key` and `Repository::checkout_identity` hash the
+effective checkout settings of one commit: the commit, the effective Git
+configuration, and the effective attributes of each regular file of the
+commit. `source_key` is the source cache key. When a file has a `filter`
+attribute, it adds a new salt in each call, so each preparation gets its own
+converted files. `checkout_identity` returns a `CheckoutIdentity` without
+that salt, so two samples stay equal while the settings stay equal. Without a
+`filter` attribute, its `digest` equals the source key. Its `filtered` field
+is true when a file has a `filter` attribute. Equal samples of such a commit
+do not prove equal bytes, because an external filter can give other bytes
+later. A configuration write that converts no file differently, such as a new
+upstream, also changes the digest. The
+[base cache contract](../../docs/protocol/mokly-base-cache.md#converted-source-identity)
+owns the source identity and the filter rule.
 
 `Repository::fingerprint_extracted` records a `Fingerprint` of each confined
 regular file of an extraction: its size, its times, and on Unix its change
@@ -174,8 +191,13 @@ extraction cleanup after cancellation during a streamed copy.
 - [`src/repository.rs`](./src/repository.rs) defines `Repositories`,
   `GitRepositories`, and `Repository`, which validate a checkout and read merge
   bases, changed paths, trees, blobs, and archives.
+  [`src/repository_access.rs`](./src/repository_access.rs) implements
+  `Repository` for the checkout that `GitRepositories::open` returns.
+- [`src/source_key.rs`](./src/source_key.rs) defines `CheckoutIdentity`, and
+  derives the source key and the checkout identity from one hash of the
+  checkout settings.
 - [`src/disk.rs`](./src/disk.rs) defines `Disk`, its host type `SystemDisk`,
-  and `Archive`, the filesystem boundary for checkout identity, working reads,
+  and `Archive`, the filesystem boundary for the checkout root, working reads,
   confined digests, and extraction.
 - [`src/extracted.rs`](./src/extracted.rs) defines `ExtractedFiles` and reads
   and hashes the converted files of an extraction, with Git for the files
@@ -201,4 +223,5 @@ extraction cleanup after cancellation during a streamed copy.
 - [Runtime](../../docs/protocol/mokly-runtime.md).
 - [Comparison](../../docs/protocol/mokly-comparison.md).
 - [Base preparation](../../docs/protocol/mokly-base-preparation.md).
+- [Base cache](../../docs/protocol/mokly-base-cache.md).
 - [Rust core architecture](../../docs/architecture/rust-core.md).

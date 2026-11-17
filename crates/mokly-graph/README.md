@@ -164,7 +164,10 @@ read. A comparison capture returns the retained usage of a kept view without a
 restore, and reads every other view from its source. A wrapper that adds no
 checks forwards this read, so that a capture below it still skips the restore.
 A wrapper that adds checks keeps the default, so that each source read runs
-those checks.
+those checks. It can forward the read only when the forwarded path still runs
+all of its own checks, such as a cancellation check. Failed or missing usage
+then goes to its own checked `comparison_document`, so its fallback checks and
+its error handling stay.
 
 `schedule_comparison_tasks` runs a caller's `ComparisonTask` once for every
 index on the generation's render workers. It returns when every index has run.

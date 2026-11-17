@@ -51,7 +51,7 @@ its files are installed. Its Serve duration includes queue time.
 | `watch.action`                                   | one watch action from debounce end to publication; carries `action`                                                                  |
 | `changes.classify`                               | one Changes classification, in Serve and in `build`                                                                                  |
 | `review.base-commit`                             | merge-base resolution and commit validation; a pinned commit reuses the result without another Git span                              |
-| `review.base-tree`                               | base source preparation and complete rendering, including bounded tree/blob reads, extraction, and dependency preparation            |
+| `review.base-tree`                               | bounded base reads, extraction, dependencies, and rendering, or a reuse of the kept base; carries `action`, `prepare` or `reuse`     |
 | `review.base-extraction`                         | the base source key, the cache lookup, and the extraction when no complete entry exists; carries `action`, `reuse` or `extract`      |
 | `review.base-dependencies`                       | the dependency tier decision and, in the second tier, the bounded install; the end carries `tier`                                    |
 | `review.compare-views`                           | the comparison loop; its `counts` record carries `views`, `unchanged`, `changed`, and `ignoredOnly`                                  |
@@ -70,7 +70,11 @@ under `changes.classify` in Serve and under `output.write` in `build`. The
 `review.capture-side` span carries `side`, with `base` for the base generation
 and `head` for the head generation. Build and publish emit the head capture
 under `output.write` before `changes.classify`. The base capture appears under
-`review.base-tree`. A repeated discovery for the same side, route, content
+`review.base-tree`. `review.base-tree` carries `action`: `prepare` for a new
+base, and `reuse` when Serve reuses the kept base of the
+[base lifetime rule](./mokly-base-preparation.md#serve-base-lifetime). A
+reuse emits no `review.base-extraction`, `review.base-dependencies`, or
+`review.capture-side` span. A repeated discovery for the same side, route, content
 digest, and exclusion identity is a defect. A contained parse or selector failure in
 `review.css-analysis` returns unresolved evidence with status `ok`; an
 escaping error ends the span with `error`. The spans log no paths,

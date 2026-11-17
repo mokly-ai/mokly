@@ -204,10 +204,11 @@ invalidation through the render graph, recovery, and publication.
 Both sides of a comparison render from sources with the current Mokly version,
 the head from the working tree and the base from the base commit's Git tree,
 under the [comparison contract](./mokly-comparison.md). Serve classifies Changes
-in background work after readiness and publishes the result as a revision.
-Comparison snapshots render on demand when the reader selects a diff, under the
-[comparison serving contract](./mokly-comparison-serving.md). `build` writes one
-complete comparison generation. There is no standalone comparison command.
+in background work after readiness and publishes the result as a revision. Serve
+keeps one [captured base](./mokly-base-preparation.md#serve-base-lifetime) between
+classifications. Comparison snapshots render on demand when the reader selects a
+diff, under the [comparison serving contract](./mokly-comparison-serving.md). `build`
+writes one complete comparison generation. There is no standalone comparison command.
 
 ## Shutdown
 
@@ -219,8 +220,7 @@ Shutdown runs in this order:
    remaining client connection, including incomplete requests.
    Event-stream connections have a 250 ms grace period to flush their final
    chunk before the other connections close.
-2. Stop the watcher and discard a configuration candidate that has not been
-   adopted.
+2. Stop the watcher and discard a configuration candidate that has not been adopted.
 3. Cancel outstanding render, background, and comparison work; drain the
    comparison generation work in flight before any generation is released.
 4. Cancel every Git process through its owned process tree, `SIGTERM` then

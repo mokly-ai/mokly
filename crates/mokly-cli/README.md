@@ -15,6 +15,8 @@ other crate depends on it.
 - Load JSON configuration, validate the catalogue, and render every HTML or
   JavaScript view.
 - Compute Changes from a pinned Git base and keep its validated result in memory.
+- Keep one captured base in Serve between classifications, and reuse it while
+  its key and its freshness checks hold.
 - Compose one rendering runtime, sidecar pool, and render cache per command.
 
 ## What This Crate Does
@@ -75,6 +77,38 @@ Serve captures one warning sink per preparation attempt and
 reports each warning once under the
 [build warnings contract](../../docs/protocol/mokly-build-warnings.md).
 Shutdown follows the [runtime shutdown order](../../docs/protocol/mokly-runtime.md).
+
+Serve keeps at most one captured base between classifications. The
+[Serve base lifetime rule](../../docs/protocol/mokly-base-preparation.md#serve-base-lifetime)
+owns what Serve keeps, the key, the freshness checks, the cancellation rule,
+and the release events. `ServeChanges` owns the one slot, and every `Source`
+of the process shares it. Each classification composes its own `ServeBase`
+provider around `NativeBase`, and that provider holds only a weak handle of
+the slot. A base reader keeps only its exact kept base, its cancellation, and
+a `ReleaseBase` capability, which also holds only a weak handle of the slot.
+It keeps no provider, so it holds no progress callback of the preparation and
+no strong handle of the slot. An old reader can keep only its own base alive.
+`ServeBase::find_kept` compares the `BaseKey`, then runs `Freshness::current`
+outside the slot lock. A current base returns a reader with the
+classification's own cancellation. Another key, a stale check, or a check
+error other than a cancellation releases the kept base before the fresh
+preparation. A cancelled classification keeps a valid kept base, and the
+lookup returns `Error::Cancelled`. A release, which `ServeBase::release` also
+makes through `ReleaseBase`, clears the slot only when the slot holds that
+exact base, so a late reader cannot clear a newer base.
+
+Only Serve gives `NativeBase` a `Freshness`. With it, `NativeBase` samples the
+checkout identity before its first base read and records the evidence of the
+preparation. `build` and `publish` take no sample and record no evidence. A
+sample or record failure, other than a cancellation, gives no evidence, and
+the fresh preparation continues without a kept base. The Git runner, the
+source tree, the dependency step, the sidecar pool handle, and the render
+workers of a fresh base follow one `PreparingBase` lifetime. Until the keep,
+the classification, its capture scope, and the command stop can cancel it.
+`ServeBase::keep` installs an eligible base in the slot inside the
+classification's commit callback, and it detaches the lifetime there. After
+that, only the command stop cancels the work of the kept base. A base that
+Serve does not keep stays on the classification lifetime.
 
 `build` validates the catalogue, renders every view into the bounded process
 cache, and captures the head once during the build check under its separate
@@ -181,6 +215,31 @@ reserves an 8 MiB main-thread stack through its linker settings in
 - [`src/changes_diagnostics.rs`](./src/changes_diagnostics.rs) presents
   comparison failures and unavailable Changes, and adds the scripts hint to
   every base failure after a scripts-off install.
+- [`src/changes_base.rs`](./src/changes_base.rs) defines `NativeBase`, the
+  base provider of every command. With a `Freshness`, it samples the checkout
+  identity before its first base read and records the evidence of the
+  preparation.
+- [`src/changes_freshness.rs`](./src/changes_freshness.rs) compares the HTML
+  dependency inputs, gives their `base-dependencies` warning, and builds the
+  `DependencySelection` of an HTML-only base. Its `SelectionRequest` and
+  `PreparedDependencies` carry the selection of a sidecar base from the
+  dependency step. It also checks whether a dependency fallback still allows a
+  kept base, and it selects the working `node_modules` roots.
+- [`src/serve_changes.rs`](./src/serve_changes.rs) defines `ServeChanges`,
+  which owns the kept-base slot, and `Source`, one Serve comparison source.
+  [`src/serve_changes_native.rs`](./src/serve_changes_native.rs) resolves the
+  base references and composes each classification with its `ServeBase`
+  provider and its cancellations.
+- [`src/serve_base.rs`](./src/serve_base.rs) defines `ServeBase`, which finds,
+  keeps, and releases the kept base, `BaseSlot`, the slot, and `ReleaseBase`,
+  the release-only capability that each reader keeps.
+- [`src/serve_base_cancel.rs`](./src/serve_base_cancel.rs) defines
+  `BaseLifetime` and `PreparingBase`, the cancellation of fresh base work that
+  detaches at the keep.
+- [`src/serve_base_key.rs`](./src/serve_base_key.rs) defines `BaseKey`: the
+  merge-base commit, a digest of the adopted configuration with its file,
+  repository root, roots, and authored inputs, and the effective
+  install-scripts setting.
 
 ### Related Docs
 
@@ -194,6 +253,8 @@ reserves an 8 MiB main-thread stack through its linker settings in
 - [Terminal errors](../../docs/protocol/mokly-terminal-errors.md).
 - [On-demand Serve](../../docs/protocol/mokly-on-demand.md) and
   [watch runtime](../../docs/protocol/mokly-watch-runtime.md).
+- [Base preparation](../../docs/protocol/mokly-base-preparation.md) and
+  [comparison serving](../../docs/protocol/mokly-comparison-serving.md).
 - [Static build](../../docs/protocol/mokly-export.md) and
   [upload](../../docs/protocol/mokly-upload.md).
 - [Rust core architecture](../../docs/architecture/rust-core.md).
