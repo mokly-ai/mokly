@@ -1,7 +1,5 @@
 # Startup Diagnostics And Scale Fixtures
 
-Status: In progress under the [bundle disk cache plan](../../plans/bundle-disk-cache.md).
-
 ## Opt-In Timings
 
 `--debug-timings` is a common boolean CLI option for `serve` (including the

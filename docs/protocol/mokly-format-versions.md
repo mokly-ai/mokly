@@ -1,7 +1,5 @@
 # Combined Path And Output Format Versions
 
-Status: In progress under the [bundle disk cache plan](../../plans/bundle-disk-cache.md).
-
 ## Version Inventory
 
 | Boundary                                | Version                   | Reason and reader                                                                                                                                                                                                                                   |

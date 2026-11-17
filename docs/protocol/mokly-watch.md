@@ -1,7 +1,5 @@
 # Watched Catalogue Development
 
-Status: In progress under the [bundle disk cache plan](../../plans/bundle-disk-cache.md).
-
 ## Watch Inputs
 
 `mokly serve` watches by default; `--no-watch` serves one snapshot. Watch

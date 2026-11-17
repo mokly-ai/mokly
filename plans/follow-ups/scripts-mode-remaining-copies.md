@@ -6,10 +6,10 @@
   `conductor/rust-rebuild-150-base-install-scripts-and-managers`: the rest
   of user item 155, from finding 51 of the review of user decision 135 B.
 - **Location:** `crates/mokly-cli/src/options.rs:62` to line 73,
-  `crates/mokly-cli/src/serve_services.rs:53` and `:106`,
-  `crates/mokly-cli/src/static_runtime.rs:91` and `:162`,
-  `crates/mokly-cli/src/changes_runtime.rs:50`, `:94`, and `:136` to line
-  158, `crates/mokly-graph/src/config_key.rs:10` to line 26, and
+  `crates/mokly-cli/src/serve_services.rs:78` and `:137`,
+  `crates/mokly-cli/src/static_runtime.rs:91` and `:161`,
+  `crates/mokly-cli/src/changes_runtime.rs:45`, `:81`, and `:123` to line
+  145, `crates/mokly-graph/src/config_key.rs:10` to line 26, and
   `crates/mokly-graph/src/planning.rs:127` to line 128.
 - **Reason:** The fix deletes a live configuration write on `origin/main`
   whose value reaches head document keys, and no user decision approves that
@@ -52,11 +52,11 @@
   - The configuration write, `options::apply_base_install_scripts` at
     `crates/mokly-cli/src/options.rs:62` to line 73, also puts the override
     into the in-memory resolved configuration. Serve calls it at
-    `crates/mokly-cli/src/serve_services.rs:53` and `:106`. `build` and
+    `crates/mokly-cli/src/serve_services.rs:78` and `:137`. `build` and
     `publish` call it at `crates/mokly-cli/src/static_runtime.rs:91`, also
     with `--no-changes`.
   - `PhasedChanges` in `crates/mokly-cli/src/changes_runtime.rs` keeps a
-    third copy, which `static_runtime.rs:162` passes to
+    third copy, which `static_runtime.rs:161` passes to
     `changes_runtime::service`. Its `classify` drops the parameter that its
     caller passes.
   - `config_key::resolved` at `crates/mokly-graph/src/config_key.rs:10` to
@@ -72,7 +72,7 @@
   - The base configuration loads from the base tree with no write, at
     `crates/mokly-cli/src/changes_base.rs:67` to line 80.
   - Both sides share one render cache, at
-    `crates/mokly-cli/src/changes_base.rs:132`. The lookup at
+    `crates/mokly-cli/src/changes_base.rs:133`. The lookup at
     `crates/mokly-graph/src/session_render.rs:42` uses the document key. So
     an unchanged base view reuses the head render only when the two
     configuration keys are equal.

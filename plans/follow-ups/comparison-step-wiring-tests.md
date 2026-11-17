@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-30, from branch `calummoore/loading-status-updates`, review round 1, finding 1 and two problems that its check found.
-- **Location:** `crates/mokly-cli/src/base_dependencies.rs:141`, `crates/mokly-cli/src/changes_runtime.rs:89`, `crates/mokly-cli/src/serve_changes_native.rs:151`, `crates/mokly-cli/tests/changes_names_tests.rs:239`.
+- **Location:** `crates/mokly-cli/src/base_dependencies.rs:141`, `crates/mokly-cli/src/changes_runtime.rs:76`, `crates/mokly-cli/src/serve_changes_native.rs:151`, `crates/mokly-cli/tests/changes_names_tests.rs:249`.
 - **Reason:** The comparison-label change merged without tests of its three
   composition wires.
 

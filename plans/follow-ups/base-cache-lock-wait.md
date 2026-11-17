@@ -54,8 +54,8 @@
     that ends when its holder exits. A suspended holder never exits on its
     own, so the waiter waits until its own cancellation.
   - In `build` and `publish`, that cancellation is the command's interrupt,
-    through `GitCancellation` in `crates/mokly-cli/src/changes_runtime.rs:168`
-    to line 179. In Serve, `CombinedCancel` in
+    through `GitCancellation` in `crates/mokly-cli/src/changes_runtime.rs:155`
+    to line 166. In Serve, `CombinedCancel` in
     `crates/mokly-cli/src/serve_changes_base.rs:31` to line 39 ends the wait
     when Serve stops, when a later Changes classification replaces this one,
     or when its capture scope is cancelled.

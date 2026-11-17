@@ -1,7 +1,5 @@
 # Base Preparation Cache
 
-Status: In progress under the [bundle disk cache plan](../../plans/bundle-disk-cache.md).
-
 The [base preparation contract](./mokly-base-preparation.md) defines source
 conversion and dependency selection. This page defines their retained storage.
 It also defines the bundle cache of compiled JavaScript, which both comparison
@@ -38,7 +36,9 @@ entry. In the source and dependency kinds, an unfinished key does not block
 access to another key. A source or dependency lookup without a build leases a
 completed entry or returns nothing. It creates no directory, and it reports the
 cache directory only when it leases an entry. The first bundle lookup of a
-process reports the cache directory, also when it finds no entry.
+process reports the cache directory, also when it finds no entry. The line of
+that report can wait under the
+[cache output rule](./mokly-terminal-cache.md#cache-directory).
 
 Shared leases and active builds are never evicted. Eviction removes the least
 recently used entries first. That order does not depend on wall-clock time. In
@@ -55,9 +55,10 @@ Missing, damaged or incomplete receipts and missing data roots rebuild. Failed
 builds remove partial data. A lock ends when its holder exits. Lock files
 remain. Deleting the cache is safe.
 
-Mokly reports the cache directory once per process for all cache kinds. Plain
-stdout is exactly `Mokly cache: <directory>` followed by LF. Rich output
-follows the [cache output rule](./mokly-terminal-cache.md#cache-directory).
+Mokly reports the cache directory at most once per process for all cache
+kinds. Plain stdout is exactly `Mokly cache: <directory>` followed by LF. The
+[cache output rule](./mokly-terminal-cache.md#cache-directory) says when the
+line prints and how rich output shows it.
 
 ## Bundle Entries
 

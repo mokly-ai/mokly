@@ -1063,6 +1063,41 @@ These are my calls, made on 2026-10-30 under the decision test.
     receipt field remains in schema 1. This correction belongs to open
     Milestone 4. Completed Milestone 3 remains history.
 
+27. My call, 2026-11-17: apply checked option D. Hold the shared cache
+    directory note only during head rendering in a static build. Start the
+    hold at Rendering. The next phase start, or successful validation,
+    releases the first held note before its own output and ends the hold.
+    Release before the plain-mode and empty-warning returns. Discard an
+    unreleased note on failure, cancellation, or drop. Outside that phase,
+    notes remain immediate. Keep Serve immediate. Reason: this preserves
+    both failed head-render stdout and the existing base-cache announcement
+    timing. It keeps every existing assertion. Cache warnings still go to
+    stderr and do not count as build warnings. This corrects the timing
+    detail of decision 7 C and call 20 within the approved shared-line rule.
+    Root question: when may build and publish print a head bundle's shared
+    cache line while preserving failed head-render stdout and base-cache
+    timing? Shared assumptions: the task preserves existing assertions, and
+    decision 7 C keeps one plain stdout directory line for all three kinds.
+    Serve has no strict mode. Options A to C also held base-cache lines, an
+    assumption that the options check removed.
+    A defers all static cache notes until validation. B holds the path in
+    native composition until the command succeeds. C buffers all plain
+    static stdout until success. D holds only head-render notes in the
+    terminal owner. E routes a deferred bundle reporter and an immediate
+    base reporter through one three-state announcement owner. F combines
+    that routing with a flush before each durable stdout writer. A to D are
+    Small. E and F are Medium. Recommendation D replaces the first A.
+    A changes the existing immediate-note assertion and drops a base line on
+    a later strict failure. C also delays the publish recovery-path line.
+    D is the structural wider fix: a future cache kind opened during head
+    rendering needs no extra wiring. E covers one more uncontracted failure
+    path but adds reporter state and per-kind choices. F adds more flush
+    points. Immediate stderr output breaks the stdout channel. Omitting the
+    line breaks the shared announcement rule. Disabling the cache for strict
+    builds removes the requested gain. Validation cannot precede bundling.
+    The performance session supplied the checked D on 2026-11-17. No user
+    choice remains open.
+
 The options check for the restored decisions and these calls is recorded
 under `.context/bundle-disk-cache/options-check-current.md` and
 `.context/bundle-disk-cache/options-check-calls-14-19.md`. Call 20 uses
@@ -1079,6 +1114,7 @@ uses `.context/bundle-disk-cache/options-check-call-23.md`.
 Call 24 uses `.context/bundle-disk-cache/options-check-call-24.md`.
 Call 25 uses the same options-check report.
 Call 26 uses `.context/bundle-disk-cache/options-check-call-26.md`.
+Call 27 uses `.context/bundle-disk-cache/options-check-call-27.md`.
 
 ## Milestone 1: Documentation and protocol
 
@@ -1219,6 +1255,13 @@ Evidence: `.context/bundle-disk-cache/reports/milestone-4.md`,
 
 Depends on: 4
 
+- [x] Preserve plain stdout when head rendering fails. Hold its cache directory
+      note until the next phase or successful validation, under call 27.
+      Keep the existing callback diagnostics assertion and prove one
+      announcement after successful validation.
+- [x] Give the callback, sidecar, and final-render diagnostic fixtures their
+      own external bundle cache. Keep it across each fixture's commands and
+      remove it with the fixture. Preserve every diagnostic assertion.
 - [ ] Measure with the method of the brief, interleaved with `origin/main`:
       three warm runs, the edit run, and the React fixture. Save the output
       under `.context/bundle-disk-cache/`. Count zero warm compile spans and
@@ -1230,7 +1273,7 @@ Depends on: 4
       byte-identical to a cold build. Save the proof under `.context/`.
 - [ ] Smoke test: restart Serve on `examples/basic`, open the catalogue, and
       check a JavaScript screen and its Changes view.
-- [ ] Remove the bundle-cache status from every changed protocol page and
+- [x] Remove the bundle-cache status from every changed protocol page and
       `docs/architecture/rust-core.md`. Keep the existing unrelated follow-up
       status in the runtime and terminal-errors pages.
 - [ ] Fetch and merge `origin/main` if it advanced. Preserve the render
@@ -1243,6 +1286,14 @@ Depends on: 4
       both successful build logs and different binary SHA-256 hashes before
       each paired run. Preserve the compact ceiling, capture bounds, and
       restore timing fields.
+
+Merge evidence: `.context/bundle-disk-cache/merge-notes.md` and
+`.context/bundle-disk-cache/merge-86-preservation.json`.
+
+Evidence: `.context/bundle-disk-cache/reports/test-cache-isolation.md` and
+`.context/bundle-disk-cache/logs/strict-output-d-cli-package.json`,
+`.context/bundle-disk-cache/reports/strict-output-fix.md`, and
+`.context/bundle-disk-cache/reports/final-docs.md`.
 
 ## Milestone 6: Verification, commit, review, and pull request
 

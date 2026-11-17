@@ -1,7 +1,5 @@
 # CLI Terminal Output
 
-Status: In progress under the [bundle disk cache plan](../../plans/bundle-disk-cache.md).
-
 ## Scope
 
 This contract defines the user-visible terminal behaviour of the `mokly` CLI

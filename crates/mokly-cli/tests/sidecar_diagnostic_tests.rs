@@ -1,51 +1,23 @@
 //! Complete terminal lines preserve typed consumer failures and source attribution.
 
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::process::{Command, Output};
+use std::path::Path;
+use std::process::Output;
 
-use tempfile::TempDir;
+mod diagnostic_support;
 
-fn workspace() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
-        .canonicalize()
-        .unwrap()
-}
-fn write(root: &Path, path: &str, text: &str) {
-    let file = root.join(path);
-    fs::create_dir_all(file.parent().unwrap()).unwrap();
-    fs::write(file, text).unwrap();
-}
-fn fixture() -> TempDir {
-    let directory = tempfile::tempdir().unwrap();
-    write(directory.path(), "mokly.config.json", "{}");
-    #[cfg(unix)]
-    std::os::unix::fs::symlink(
-        workspace().join("node_modules"),
-        directory.path().join("node_modules"),
-    )
-    .unwrap();
-    #[cfg(windows)]
-    std::os::windows::fs::symlink_dir(
-        workspace().join("node_modules"),
-        directory.path().join("node_modules"),
-    )
-    .unwrap();
-    directory
-}
-fn run(cwd: &Path) -> Output {
-    Command::new(env!("CARGO_BIN_EXE_mokly"))
+use diagnostic_support::fixture::{Fixture, fixture, write};
+
+fn run(root: &Fixture, cwd: &Path) -> Output {
+    root.command()
         .args(["build", "--strict", "--no-changes", "--sidecars", "1"])
         .current_dir(cwd)
-        .env("MOKLY_OUTPUT", "plain")
-        .env("MOKLY_PACKAGE_ROOT", workspace().join("packages/mokly"))
         .env_remove("MOKLY_SIDECAR_TIMEOUT_MS")
         .output()
         .unwrap()
 }
-fn failure(root: &Path, expected: &str) {
-    let output = run(root);
+fn failure(root: &Fixture, expected: &str) {
+    let output = run(root, root.path());
     assert_eq!(output.status.code(), Some(1));
     assert!(output.stdout.is_empty());
     assert_eq!(String::from_utf8(output.stderr).unwrap(), expected);
@@ -129,7 +101,7 @@ fn postcss_failures_use_exact_catalogued_codes_and_logical_paths() {
             "specs/a.screen.html",
             "---\ntitle: A\n---\n<p>A</p>",
         );
-        failure(root.path(), expected);
+        failure(&root, expected);
     }
 }
 
@@ -153,7 +125,7 @@ fn javascript_diagnostics_keep_module_exports_and_exact_variant_text() {
                 "import {{defineComponent}} from '@mokly/mokly'; export const widget=defineComponent({{path:'final',title:'Widget',description:'',relatedDocs:[],propSchema:{{type:'object',additionalProperties:false,properties:{{}}}},props:{{}},render:()=>null,variants:[{{slug:'one',title:'One',props:{{}},{field}}}]}});"
             ),
         );
-        failure(root.path(), expected);
+        failure(&root, expected);
     }
     write(
         root.path(),
@@ -161,7 +133,7 @@ fn javascript_diagnostics_keep_module_exports_and_exact_variant_text() {
         "import {definePage} from '@mokly/mokly'; export default definePage({title:'Page',description:'',relatedDocs:[],render:()=> '<!doctype html><html><head><title>Page</title></head><body><main>{{name}}</main></body></html>'});",
     );
     failure(
-        root.path(),
+        &root,
         "[mokly/build-invalid] specs/item.mockup.ts export default: [mokly/html-props] undeclared prop reference name\n",
     );
     write(
@@ -170,7 +142,7 @@ fn javascript_diagnostics_keep_module_exports_and_exact_variant_text() {
         "import {defineScreen} from '@mokly/mokly'; export const values=[defineScreen({title:'A',description:'',relatedDocs:[],props:{},render:()=> 'A'})];",
     );
     failure(
-        root.path(),
+        &root,
         "[mokly/build-invalid] [mokly/array-export] specs/item.mockup.ts export values: export values is an array; export one definition per export\n[mokly/build-invalid] [mokly/empty-module] specs/item.mockup.ts exports no Mokly definition\n",
     );
 }
@@ -184,7 +156,7 @@ fn bundle_and_render_failures_have_no_internal_wrapper_text() {
         "throw new Error('evaluation exploded'); export const data=1;",
     );
     failure(
-        root.path(),
+        &root,
         "[mokly/build-invalid] specs/item.mockup.ts: evaluation exploded\n",
     );
     write(
@@ -193,7 +165,7 @@ fn bundle_and_render_failures_have_no_internal_wrapper_text() {
         "import {defineScreen} from '@mokly/mokly'; export default defineScreen({title:'A',description:'',relatedDocs:[],props:{},render:()=> {throw new Error('render exploded')}});",
     );
     failure(
-        root.path(),
+        &root,
         "[mokly/build-invalid] specs/item.mockup.ts export default (desktop, light): render exploded\n[mokly/build-invalid] specs/item.mockup.ts export default (mobile, light): render exploded\n",
     );
 }
@@ -210,7 +182,7 @@ fn sidecars_start_in_the_resolved_repository_from_a_nested_invocation() {
             "import {{definePage}} from '@mokly/mokly'; export default definePage({{title:'Page',description:'',relatedDocs:[],render:()=> {{if(process.cwd()!=={expected}) throw new Error('wrong working directory'); return '<!doctype html><html><head><title>Page</title></head><body>Page</body></html>';}}}});"
         ),
     );
-    let output = run(&root.path().join("nested"));
+    let output = run(&root, &root.path().join("nested"));
     assert_eq!(
         output.status.code(),
         Some(0),
@@ -239,7 +211,7 @@ fn plugin_attribution_preserves_the_original_prepare_receiver() {
         "specs/a.screen.html",
         "---\ntitle: A\n---\n<p>A</p>",
     );
-    let output = run(root.path());
+    let output = run(&root, root.path());
     assert_eq!(
         output.status.code(),
         Some(0),

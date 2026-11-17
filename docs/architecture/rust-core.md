@@ -1,7 +1,5 @@
 # Rust Core Architecture
 
-Status: In progress under the [bundle disk cache plan](../../plans/bundle-disk-cache.md).
-
 Mokly is a Rust core, a Node render sidecar, and a browser viewer. This page is
 the map: the processes, the components and their responsibilities, the
 boundaries between them, and the flow of data from the sources to a delivered

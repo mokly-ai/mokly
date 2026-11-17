@@ -1,6 +1,6 @@
 # Mokly Build And Browse Runtime
 
-Status: In progress under the [bundle disk cache plan](../../plans/bundle-disk-cache.md). Follow-up work remains in the [macOS mid-walk orphan item](../../plans/follow-ups/macos-stop-mid-walk-orphans.md).
+Status: Follow-up work remains in the [macOS mid-walk orphan item](../../plans/follow-ups/macos-stop-mid-walk-orphans.md).
 
 This page is the runtime contract of `mokly serve` and `mokly build`: how a
 catalogue is discovered, rendered, cached, served, written, and shut down. The

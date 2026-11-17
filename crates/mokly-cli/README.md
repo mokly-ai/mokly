@@ -59,7 +59,10 @@ store prints the entry warning and the directory warning of the
 through the command's diagnostics. The bundle cache and the base caches share
 one announcement of the cache directory in each command. In `build` and
 `publish`, they share one `OnceReporter`, which `render_runtime` returns for
-the Changes of the command. In Serve, the `ServeDirectory` of the bundle cache
+the Changes of the command. Their terminal owner holds that line while the
+head renders, under the
+[cache directory rule](../../docs/protocol/mokly-terminal-cache.md#cache-directory).
+In Serve, the `ServeDirectory` of the bundle cache
 and the base cache notice of each comparison attempt share one flag.
 `ServeDirectory` does not depend on a comparison attempt.
 
@@ -206,6 +209,14 @@ reserves an 8 MiB main-thread stack through its linker settings in
 - [`src/static_build.rs`](./src/static_build.rs) defines `StaticBuild`, the
   shared pipeline between rendered catalogues, static assembly, and
   transactions.
+- [`src/one_shot/mod.rs`](./src/one_shot/mod.rs) defines `Lines`, the one
+  terminal owner of `build` and `publish`.
+  [`src/one_shot/phases.rs`](./src/one_shot/phases.rs) reports the phases,
+  the warnings, and the Changes result, and holds the cache directory line
+  while the head renders. [`src/one_shot/progress.rs`](./src/one_shot/progress.rs)
+  owns the animation and the upload progress, and
+  [`src/one_shot/output.rs`](./src/one_shot/output.rs) writes the durable
+  results and the recovery paths.
 - [`src/publication/mod.rs`](./src/publication/mod.rs) holds the
   `StaticOutput` adapter and the publish orchestration.
 - [`src/output.rs`](./src/output.rs), [`src/codes.rs`](./src/codes.rs), and

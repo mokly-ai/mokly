@@ -1,6 +1,6 @@
 # CLI Terminal Compatibility And Errors
 
-Status: In progress under the [bundle disk cache plan](../../plans/bundle-disk-cache.md). Follow-up work remains in the [rich scripts hint item](../../plans/follow-ups/rich-scripts-hint-cut.md).
+Status: Follow-up work remains in the [rich scripts hint item](../../plans/follow-ups/rich-scripts-hint-cut.md).
 
 This document supplements [CLI Terminal Output](./mokly-terminal-output.md)
 with the exact plain output, the rich error presentation, and the exit
