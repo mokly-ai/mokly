@@ -176,8 +176,8 @@ the database and performs a normal rollout.
 ## Development
 
 ```sh
-cargo xtask helm
-cargo xtask infrastructure-tests
+cargo xtask check --suite cloud-helm
+cargo xtask check --suite cloud-infrastructure
 python3 infra/helm/tests/check.py --update
 ```
 

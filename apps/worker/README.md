@@ -61,12 +61,14 @@ with the Worker credentials.
 ```sh
 npm run typecheck --workspace @mokly-cloud/worker
 npm test --workspace @mokly-cloud/worker
-cargo xtask origin-router
+cargo xtask check --suite cloud-origin-router
 ```
 
-Tests run in the Cloudflare Workers Vitest pool against a configuration
-rendered for `example.invalid` at `wrangler.test.json`, which leaves the
-operator's `wrangler.json` untouched, with network access disabled. After a
+Tests run in the Workers runtime through `@cloudflare/vitest-plugin` against a
+configuration rendered for `example.invalid` at `wrangler.test.json`, which
+leaves the operator's `wrangler.json` untouched. `tests/outbound.ts` answers
+each outbound request from an expected interceptor and fails any other
+request. After a
 site route or top-level site asset changes, run
 `npm run site:routes` to regenerate the segment module; the site
 build checks its outputs against that inventory, and the Worker, domain-layout

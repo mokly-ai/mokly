@@ -125,10 +125,10 @@ Run a package script as `npm run <script> --workspace @mokly-cloud/app`:
 | `api:generate` | Regenerate only the client types from `docs/api/openapi.json` |
 | `api:print`    | Print the client types from the generated JSON document       |
 
-`cargo xtask app-tests` runs `test` as a gate stage. From the repository root,
-`cargo xtask openapi` regenerates the OpenAPI JSON document and the typed
-client, and `cargo xtask openapi --check` and the `openapi-drift` stage check
-both committed generated files for drift. The suite reads these variables:
+`cargo xtask check --suite cloud-app` runs `test` as a gate suite. From the
+repository root, `cargo xtask openapi` regenerates the OpenAPI JSON document
+and the typed client, and `cargo xtask openapi --check` and the
+`cloud-openapi` suite check both committed generated files for drift. The suite reads these variables:
 
 | Variable                        | Moves                                                      |
 | ------------------------------- | ---------------------------------------------------------- |
@@ -142,11 +142,10 @@ it, or with an empty value, the suite runs every test. A malformed value fails
 the run. CI runs the suite as four shards, each in its own job with its own
 API and database, as
 [App shards](../../docs/protocol/cloud/repository-verification.md#app-shards)
-defines. `cargo xtask app-check` takes the shard from `--shard <n>/<total>`,
-or else from this variable, and builds the web app before the shard runs. To
-repeat the CI job App checks 2/4, run `cargo xtask app-check --shard 2/4` from
-the repository root. `cargo xtask app-tests` ignores the variable and runs the
-whole suite.
+defines. To repeat one shard, run
+`cargo xtask check --suite cloud-app --shard 2/4` from the repository root.
+It builds the web app before the shard runs.
+`cargo xtask check --suite cloud-app` without `--shard` runs the whole suite.
 
 ## Development
 

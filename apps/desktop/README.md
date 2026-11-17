@@ -85,11 +85,11 @@ malformed percent escapes return 400. There are no health/config endpoints.
 
 ```sh
 npm run test:logic --workspace @mokly-cloud/desktop
-cargo xtask desktop
-cargo xtask desktop-check
+cargo xtask check --suite cloud-desktop
 ```
 
-Stage 25 runs logic tests, the build, then the Playwright Electron smoke.
+The `cloud-desktop` suite runs the logic tests, the build, then the Playwright
+Electron smoke.
 Linux uses `xvfb-run -a`. It needs Postgres, Python, the Playwright Chromium
 browser and Electron's GTK 3, NSS and ALSA libraries. On Ubuntu, install
 Playwright system dependencies and `xvfb`. On Amazon Linux 2023, install

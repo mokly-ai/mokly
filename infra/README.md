@@ -90,15 +90,15 @@ warnings, and exit behaviour of the provider CLI.
 
 ```sh
 bash infra/scripts/install-tools.sh
-cargo xtask terraform
-cargo xtask helm
-cargo xtask infrastructure-tests
-cargo xtask workload-images
+cargo xtask check --suite cloud-terraform
+cargo xtask check --suite cloud-helm
+cargo xtask check --suite cloud-infrastructure
 cargo xtask check
 ```
 
-Use `cargo xtask origin-router` for the standalone Worker typecheck and
-test-pool suite.
+The `cloud-infrastructure` suite also builds the workload images. Use
+`cargo xtask check --suite cloud-origin-router` for the standalone Worker
+typecheck and tests.
 
 The domain-layout tests discover Expo's static root routes with the same rules
 as the Rust reservation drift test: route groups are flattened, platform file
