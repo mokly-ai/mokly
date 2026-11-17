@@ -39,6 +39,26 @@ On 2026-11-17, Cal chose these answers to the discussion in this workspace:
   The alternative was to keep exact pins on published npm releases. The
   cloud then deploys unreleased Mokly code from `main`.
 
+On 2026-11-17, after the options check of the `plans` skill, Cal answered
+the three open decisions. The check report is under
+`.context/combine-cloud/`.
+
+- License: AGPL-3.0 for the cloud paths, MIT for the rest. The
+  alternatives were MIT for everything, MIT with a trademark policy, a
+  source-available license for the cloud paths, and AGPL-3.0 for the whole
+  repository. The options check recommended MIT with a trademark policy. A
+  competing host of the cloud must publish its changes.
+- Operational content: import everything as it is. The alternatives were
+  to move the security follow-up items to private advisories, to keep the
+  ops content in a private repository, to review every path before the
+  push, to add a private reporting rule, and to fix the small known gaps
+  first. The options check recommended the fixes first. Cal accepted that
+  the ops pages, the infrastructure, and the follow-up items become public.
+- Cloud work in flight: freeze cloud `main` now. Open cloud work moves to
+  this repository after the merge. The alternatives were to land all open
+  work first, to copy later commits by hand, and to re-run a path-map
+  script before the merge. The options check recommended the script.
+
 ## Design calls
 
 Each call below is my call, made on 2026-11-17.
@@ -52,6 +72,13 @@ Each call below is my call, made on 2026-11-17.
   `diesel.toml`, `docker-compose.yml`, and `mokly.config.json` keep their
   paths. Cloud scripts move to `scripts/cloud/`. The cloud architecture page
   moves to `docs/architecture/cloud.md`.
+- License scope. `LICENSE` stays MIT and names the AGPL paths. The AGPL
+  paths are `apps/`, the `mkc-` crates, `packages/tokens/`, `infra/`, and
+  `scripts/cloud/`. Each AGPL path holds a `LICENSE` file with the
+  AGPL-3.0 text. Their manifests say `AGPL-3.0-only`. The `-only` form
+  keeps the terms under the control of this repository. Docs, plans, and
+  the cloud mockups stay MIT. The boundary rule below also keeps the MIT
+  packages free of AGPL code.
 - Crate names. The `mkc-` prefix stays, as Cal allowed. The two crates
   without a prefix become `mkc-email-interface` and `mkc-email-postmark`, so
   that every cloud crate has the prefix.
@@ -110,157 +137,6 @@ Each call below is my call, made on 2026-11-17.
   repository secrets and environments, the links in docs, and the Conductive
   repository list. Moved in Milestones 7 and 8. Archived after the merge.
 
-## Open decisions
-
-The options check of the `plans` skill ran over these decisions on
-2026-11-17. It added options and changed each recommendation. Its report is
-under `.context/combine-cloud/`.
-
-### 1. License of the cloud code
-
-- **Severity:** High. **Effort:** Small.
-- **Source:** Design.
-- **Category:** Process.
-- **Location:** `LICENSE`; `license = "UNLICENSED"` in the cloud
-  `Cargo.toml`; `"license": "MIT"` in the cloud `ts/site/package.json` and
-  `ts/worker/package.json`.
-- **Background:** This repository has one MIT `LICENSE`. The cloud has no
-  license file, and its manifests disagree. A public import puts the cloud
-  under the license that the repository gives it. A license cannot be taken
-  back from code that is already public. The cloud also adds the Mokly logos
-  to this repository. A code license does not cover a name or a logo. Cal is
-  the only human author of both repositories, and there is no contributor
-  agreement.
-- **Problem:** No decision says which terms cover the cloud code and the
-  Mokly brand.
-- **Impact if no action:** The import cannot start. The MIT default applies
-  without a recorded choice.
-- **Root question:** Which use of the public cloud code and of the Mokly
-  brand must stay reserved for the hosted business, if any?
-- **Options:**
-  - **A.** MIT for the whole repository. Anyone may host a competing cloud
-    from the code. Effort: Small.
-  - **B.** AGPL-3.0 for the cloud paths, MIT for the rest. A competing host
-    must publish its changes. Each contributor must know which license
-    covers a path. Effort: Small.
-  - **C.** A source-available license, such as FSL-1.1 that becomes MIT
-    after two years, for the cloud paths. It must leave out the desktop app
-    and the app that it loads, because desktop software must be open
-    source. Effort: Small.
-  - **D.** A, plus a `TRADEMARKS.md` policy. A line in `LICENSE` and the
-    README keeps the Mokly name and logos out of the MIT grant. A competing
-    host must use its own brand. Effort: Small.
-  - **E.** AGPL-3.0 for the whole repository, the published packages
-    included. Users who embed the CLI or the viewer in closed tools may
-    leave. Releases that are already published stay MIT. Effort: Small.
-- **Left out:** A private repository fails the user decision on direction.
-  A permissive license with a patent grant, such as Apache-2.0, is a
-  variant of A, not a separate approach.
-- **Wider fix:** None, because this is a one-time choice.
-- **Previous examples:** None found.
-- **Recommendation:** D, changed from A by the options check. It keeps one
-  code license, as the goal needs, and it protects the brand, which a
-  competing host cannot replace. B best protects the hosted code.
-- **Action:** ask the user, because a license choice is a business decision
-  that the agent cannot make.
-
-### 2. Operational content in public
-
-- **Severity:** High. **Effort:** Medium.
-- **Source:** Design.
-- **Category:** Security.
-- **Location:** `docs/ops/`, `infra/`, and `plans/follow-ups/` in
-  `mokly-ai/mokly-cloud`. The options-check report under
-  `.context/combine-cloud/` gives the exact lines.
-- **Background:** A secret scan of the cloud tree found only test fixtures.
-  Some ops pages and some infrastructure settings give detail that helps an
-  attacker reach the service past its protection. Some cloud follow-up
-  items describe open security gaps and an unconfirmed secret rotation.
-  This repository has no `SECURITY.md`, and its reviews write security
-  findings into public follow-up items.
-- **Problem:** Public detail can let an attacker get past the protection of
-  the service, or find an open gap. New findings after the merge will
-  also be public.
-- **Impact if no action:** The first push of the branch publishes this
-  detail. It cannot be taken back.
-- **Root question:** How does the public repository keep detail that an
-  attacker can use against the running service private, at the import and
-  after it?
-- **Options:**
-  - **A.** Import everything as it is. Effort: Small.
-  - **B.** Before the import, move each follow-up item that describes an
-    open security gap to a private GitHub security advisory. Import the
-    rest. Effort: Small.
-  - **C.** Do B. Also keep the ops runbooks and the environment values of
-    Terraform and Helm in a small private operations repository. Deploys
-    then need a second checkout. Effort: Medium.
-  - **D.** Do B. Also review every imported path before the first push:
-    ops pages, protocol pages, infrastructure, plans, and code comments.
-    Remove the detail that helps an attacker. Move the items about
-    unconfirmed rotations. Effort: Medium.
-  - **E.** Do D. Also add `SECURITY.md`, turn on private vulnerability
-    reporting, and add a rule to `AGENTS.md`: a security finding on the
-    deployed cloud goes to a private advisory, not to a public follow-up
-    item or a pull request body. Effort: Medium.
-  - **F.** Do E. Before the first push, also fix the small known gaps in
-    the cloud repository, as the report lists them. Confirm or rotate the
-    preview GitHub App secrets. Hide only what is left. It changes infrastructure during the
-    migration. Effort: Medium.
-- **Left out:** Fixing every security gap before the import fails the goal,
-  because it blocks the move for an unknown time. F fixes only the small,
-  known gaps.
-- **Wider fix:** E, changed from C by the options check. It also covers the
-  findings that arrive after the merge.
-- **Previous examples:** `plans/follow-ups/checkout-persisted-credentials.md`
-  is a public security item in this repository.
-- **Recommendation:** F, changed from B by the options check. B leaves
-  public detail that helps an attacker while the gaps are open. E is the
-  fallback if no infrastructure change may happen before the import.
-- **Action:** ask the user, because the choice sets what becomes public,
-  and that cannot be undone.
-
-### 3. Cloud work during the migration
-
-- **Severity:** Medium. **Effort:** Medium.
-- **Source:** Design.
-- **Category:** Process.
-- **Location:** Cloud `main`, the open pull requests #133, #132, #107, #93,
-  and #88, and 46 cloud branches that are not merged, in
-  `mokly-ai/mokly-cloud`.
-- **Background:** The import copies one commit of the cloud `main`.
-  Milestones 2 to 8 take days. Cloud `main` is active: #134 and #135 merged
-  on 2026-11-17. Pull request #132 changes 196 files, and #107 and #88
-  conflict with `main`. Cal wrote all the open work.
-- **Problem:** Cloud work that merges after the snapshot does not reach this
-  repository. A freeze at the start also blocks production fixes for the
-  whole migration.
-- **Impact if no action:** Work is lost, or it merges into a repository that
-  is about to be archived.
-- **Root question:** Where does cloud work happen between the snapshot and
-  the cutover, and how do its changes reach this repository?
-- **Options:**
-  - **A.** Freeze cloud `main` now. Open work moves to this repository after
-    the merge. Effort: Small.
-  - **B.** Land or close the open pull requests and branches, then freeze
-    cloud `main` and take the snapshot. Effort: Medium.
-  - **C.** Take the snapshot now. Before the merge, import each later cloud
-    commit again by hand as a path-mapped patch. Effort: Medium.
-  - **D.** Write the path map of the design calls once, as a script. The
-    script makes the first import. Before the merge, the script runs again
-    on the latest cloud `main`, and the difference lands as one commit.
-    Cloud work continues until a short freeze for the final sync. Changes
-    to the merged manifests and the renamed crates need manual fixes.
-    Effort: Medium.
-- **Left out:** New cloud work on this branch has no deploy path before
-  Milestone 8, so it ships no sooner than under A.
-- **Wider fix:** D. It brings over every later commit, whatever its
-  content.
-- **Previous examples:** None found.
-- **Recommendation:** D, changed from B by the options check. Cloud `main`
-  stays live for fixes, and the freeze is short.
-- **Action:** ask the user, because the choice sets when cloud work must
-  stop.
-
 ## Milestone 1: Documentation and protocol
 
 Depends on: none
@@ -281,25 +157,22 @@ status line that links this plan, until the behaviour exists.
 
 ## Milestone 2: Import the snapshot
 
-Depends on: 1, and the answers to decisions 1, 2, and 3
+Depends on: 1
 
 The cloud snapshot lands at its final paths. This repository is public, so
-the first push of an imported file publishes it. Do not push a commit of
-this milestone before decision 2 is applied.
+the first push of an imported file publishes it, as Cal decided.
 
-- [ ] Apply the cloud-side part of decision 2 in `mokly-ai/mokly-cloud`
-      first, when the chosen option has one.
-- [ ] Write the path map of the design calls as a script under
-      `scripts/cloud/`. It copies a cloud commit to its final paths and
-      leaves out the cloud `.git`, `Cargo.lock`, `ts/package-lock.json`, and
-      the root files that this repository already has.
-- [ ] Take the snapshot as decision 3 says. Record its commit in this plan.
+- [x] Freeze cloud `main`. The snapshot is commit `6d5163d6` of
+      `mokly-ai/mokly-cloud`.
+- [ ] Copy the snapshot to the paths of the design calls. Leave out the
+      cloud `.git`, `Cargo.lock`, `ts/package-lock.json`, and the root files
+      that this repository already has.
 - [ ] Merge `.gitignore`, `.prettierignore`, and `.dockerignore`.
-- [ ] Apply decision 1 to `LICENSE`, to `license` in `Cargo.toml`, and to
-      every cloud `package.json`. Keep the third-party notices, such as
-      `crates/mkc-domain/data/github-reserved-names-LICENSE` and the license
-      of the Inter font under `docs/mockups/styles/fonts/`.
-- [ ] Apply the import part of decision 2 to the snapshot.
+- [ ] Apply the license scope of the design calls. Add the AGPL `LICENSE`
+      files, update `LICENSE` and the README, and set `license` in each
+      cloud `Cargo.toml` and `package.json`. Keep the third-party notices,
+      such as `crates/mkc-domain/data/github-reserved-names-LICENSE` and
+      the license of the Inter font under `docs/mockups/styles/fonts/`.
 - [ ] Run the secret scan again over the imported paths. Save the report
       under `.context/combine-cloud/`.
 
@@ -401,7 +274,6 @@ commands and the checklist.
 - [ ] Apply the Terraform change of Milestone 7, so that Google Cloud trusts
       both repositories during the cutover.
 - [ ] Point the GitHub App and the preview environments at this repository.
-- [ ] Take the final sync of decision 3, when the chosen option has one.
 - [ ] Add the cloud services to the Conductive repository setup of this
       repository.
 
@@ -428,5 +300,7 @@ Depends on: every other milestone
       production.
 - [ ] Remove the old repository from the Terraform trust condition.
 - [ ] Archive `mokly-ai/mokly-cloud`. Point its README at this repository.
+- [ ] Reopen the open cloud pull requests #133, #132, #107, #93, and #88
+      against this repository, or close them.
 - [ ] Replace the cloud's own Mokly contract types in `mkc-mokly-contract`
       with the `mokly-model` types.
