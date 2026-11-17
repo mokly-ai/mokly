@@ -156,7 +156,16 @@ The performance orchestrator will measure the final choice on `mokly-cloud` afte
 The maintenance advisory is informational, not a reported vulnerability in these measurements.
 Disable postcard's default features and enable `use-std` to avoid unused heapless dependencies.
 The performance orchestrator chose D for its maintained upstream, lower CPU, and simpler decoder.
-The temporary allocation comes from the encode-time tree length, and the existing worker bound limits concurrent restores.
+The temporary tree buffer uses the encode-time tree length.
+The flat-record vector reserves the exact encode-time record count, and the existing worker bound limits concurrent restores.
+
+Review-fix design call, 2026-11-17: the performance orchestrator chose finding 1 option E and finding 2 option C.
+Record the flat-record count beside the tree length and reject a different declared count before decoding any record.
+Keep serde's count-based reservation cap of at most 1 MiB per nested collection.
+This residual reservation cost applies only to records that pass the zlib checksum but declare false nested counts.
+This call keeps exact pre-reservation for valid restores and avoids larger retained capacities from incremental growth.
+Use the slice-based zlib decoder and reject remaining compressed input after the final zero read.
+This call removes the extra reader buffers and requires complete compressed input consumption.
 
 Options check, 2026-11-17: D recommended. Controlled paired measurements removed the initial bincode speed advantage.
 A and D meet the trusted-length allocation rule. The measured bincode standard configuration does not.
