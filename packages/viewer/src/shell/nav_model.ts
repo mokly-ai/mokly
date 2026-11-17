@@ -37,7 +37,6 @@ export function catalogueNavSections(
       title: entry.title,
       tags: entry.tags,
       ...(folderTitles.length > 0 ? { folderTitles } : {}),
-      removedPage: entry.kind === "page" || entry.kind === "document",
       formerFolderTitles: [
         ...record.folderTitles,
         ...(record.parentTitle === undefined ? [] : [record.parentTitle]),

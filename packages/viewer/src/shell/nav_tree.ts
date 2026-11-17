@@ -27,8 +27,6 @@ export interface NavLeafNode {
    * is `Overview` when its title is also the folder's title.
    */
   index?: true;
-  /** A retained baseline page or document. Like every removed row, it is a Changes row. */
-  removedPage?: boolean;
   /** A retained baseline variant placed under its current or removed parent. */
   removedVariant?: boolean;
   /**

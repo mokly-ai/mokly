@@ -3,8 +3,8 @@
  * under the removed previews and folder contracts, in a narrow and a wide
  * window. The removed Markdown document keeps its title and its base-side
  * folder label in the crumbs and in Details, shows its previous version
- * without comparison controls, and is a row only in Changes, outside any
- * folder. A current document opens at its fragment, keeps it after a reload,
+ * without comparison controls, and is a row only in Changes, inside its
+ * deleted folder, which Changes shows again under its base title. A current document opens at its fragment, keeps it after a reload,
  * and its catalogue link navigates the shell.
  */
 
@@ -61,14 +61,11 @@ for (const width of [390, 1280])
       await expect(removed).toBeHidden();
       await chooseFilter(page, "changed");
       await expect(removed).toBeVisible();
+      const folder = page.locator('[data-nav-folder="folder:notes"]');
+      await expect(folder.locator("summary").first()).toContainText("Notes");
       await expect(
-        page.locator('[data-nav-folder="folder:notes"]'),
-      ).toHaveCount(0);
-      expect(
-        await removed.evaluate(
-          (row) => row.closest("details[data-nav-folder]") === null,
-        ),
-      ).toBe(true);
+        folder.locator(`[data-entry-id="${removedPath}"]`),
+      ).toHaveCount(1);
       await chooseFilter(page, "all");
       await expect(removed).toBeHidden();
 

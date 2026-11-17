@@ -168,14 +168,16 @@ test("a background baseline places a removed variant under its parent", async ({
   await changes.moveBase(withVariant);
   await combined.release();
 
-  await expect(list.locator(row)).toHaveCount(1);
   await expect(parentRow).toHaveAttribute("aria-current", "page");
   await expect(parentRow).toHaveAttribute("data-changed-variants", "true");
   // The parent itself is unchanged, so only its removed variant marks it.
   await expect(parentRow).not.toHaveAttribute("data-changed", "true");
-  await expect(row).toBeHidden();
+  // All lists no removed row, so the parent shows no list there.
+  await expect(list).toHaveCount(0);
+  await expect(row).toHaveCount(0);
 
   await chooseFilter(page, "changed");
+  await expect(list.locator(row)).toHaveCount(1);
   await expect(row).toBeVisible();
   await expect(row).toContainText("Plain extra · Removed");
   await expect(parentRow).toBeVisible();

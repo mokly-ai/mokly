@@ -44,6 +44,40 @@ test("a removed folder page is the first row of its surviving folder", () => {
   );
 });
 
+test("a removed row shows once in a folder that has its own page", () => {
+  assert.deepEqual(
+    sections({
+      documents: [publishedDocument("guide", "Guide")],
+      removedEntries: [
+        removedEntry(publishedDocument("guide/terms", "Terms", "removed"), [
+          "Guide",
+        ]),
+      ],
+      screens: [publishedScreen("guide/current", "Current")],
+      tree: [
+        {
+          children: [
+            { kind: "entry", path: "guide" },
+            { kind: "entry", path: "guide/current" },
+          ],
+          kind: "folder",
+          path: "guide",
+          title: "Guide",
+        },
+      ],
+    }).specs,
+    [
+      {
+        "folder:guide Guide": [
+          "entry:guide",
+          "entry:guide/current",
+          "removed:guide/terms",
+        ],
+      },
+    ],
+  );
+});
+
 test("a removed member joins the current screen row of its folder", () => {
   assert.deepEqual(
     sections({

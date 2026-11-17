@@ -19,6 +19,11 @@ interface Placement {
   appended: Map<string, NavNode[]>;
   /** Paths of the folders and entry rows the section shows. */
   containers: ReadonlySet<string>;
+  /**
+   * Paths of the folder rows. A folder's own page shares its folder's path,
+   * and the folder row, not the page row, holds the removed rows there.
+   */
+  folders: ReadonlySet<string>;
   /** Paths the section shows as variant rows, which hold no members. */
   variants: ReadonlySet<string>;
   /** A removed folder page, listed first in the folder at its own path. */
@@ -42,6 +47,7 @@ export function placeRemovedRows(
   const placement: Placement = {
     appended: new Map(),
     containers: shown.containers,
+    folders: shown.folders,
     own: new Map(),
     recreated: new Map(),
     titles: formerTitles(rows),
@@ -97,13 +103,16 @@ function withRemovedVariants(
  */
 function shownPaths(nodes: readonly NavNode[]): {
   containers: Set<string>;
+  folders: Set<string>;
   variants: Set<string>;
 } {
   const containers = new Set<string>();
+  const folders = new Set<string>();
   const variants = new Set<string>();
   const visit = (node: NavNode): void => {
     if (node.kind === "group") {
       containers.add(node.path);
+      folders.add(node.path);
       node.children.forEach(visit);
     } else {
       containers.add(node.entryId);
@@ -112,7 +121,7 @@ function shownPaths(nodes: readonly NavNode[]): {
     }
   };
   nodes.forEach(visit);
-  return { containers, variants };
+  return { containers, folders, variants };
 }
 
 /**
@@ -175,7 +184,9 @@ function fill(node: NavNode, placement: Placement): NavNode {
       ],
     };
   }
-  const added = placement.appended.get(node.entryId) ?? [];
+  const added = placement.folders.has(node.entryId)
+    ? []
+    : (placement.appended.get(node.entryId) ?? []);
   if (!node.members && added.length === 0) return node;
   return {
     ...node,

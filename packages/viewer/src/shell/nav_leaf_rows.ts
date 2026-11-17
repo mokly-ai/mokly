@@ -68,7 +68,9 @@ function navLink(
     kind: node.entryKind,
     label,
     removed: node.removed === true,
-    removedPage: node.removedPage === true,
+    removedPage:
+      node.removed === true &&
+      (node.entryKind === "page" || node.entryKind === "document"),
     removedVariant: node.removedVariant === true,
     route: entryRoute(node.entryId),
     tags: node.tags ?? [],
@@ -94,7 +96,11 @@ export function navLeaf(
   const variants = node.variants ?? [];
   const memberNodes = node.members ?? [];
   const parentId = node.entryId;
-  if ((variants.length === 0 && memberNodes.length === 0) || !parentId) {
+  if (
+    (variants.length === 0 && memberNodes.length === 0) ||
+    !parentId ||
+    !listShows(node, selection.view, store.context)
+  ) {
     const hidden = !navLeafVisible(node, selection, store.context);
     return { kind: "leaf", link: navLink(node, depth, hidden, source) };
   }
@@ -127,4 +133,25 @@ export function navLeaf(
       ),
     },
   };
+}
+
+/**
+ * Whether an entry's list holds a row that the selected filter can show,
+ * before search narrows it. All lists no removed row, so a current entry
+ * whose variants or members are all removed has no list there. Changes
+ * keeps every list, so a parent with only removed variants still opens one.
+ */
+function listShows(
+  node: NavLeafNode,
+  view: "all" | "changes",
+  context: ShellContext,
+): boolean {
+  if (view === "changes") return true;
+  const all = { view, search: "", tags: [] };
+  return (
+    (node.variants ?? []).some((variant) =>
+      navLeafVisible(variant, all, context),
+    ) ||
+    (node.members ?? []).some((member) => navNodeVisible(member, all, context))
+  );
 }

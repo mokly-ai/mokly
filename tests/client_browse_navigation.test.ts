@@ -82,7 +82,6 @@ test("removed pages and screens appear only in Changes", () => {
     ...glossary,
     key: `removed:${glossary.entryId}`,
     removed: true as const,
-    removedPage: true,
   };
   const removedScreen = {
     ...details,
