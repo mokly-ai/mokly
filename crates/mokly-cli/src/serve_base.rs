@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex, Weak};
 
 use mokly_compare::base_freshness::{Freshness, FreshnessRequest};
 use mokly_compare::base_render::{BasePreparationResult, BaseProvider, BaseRequest};
-use mokly_compare::base_retention::{BaseRetentionRequest, BaseReuse, KeptBase};
+use mokly_compare::base_retention::{BaseRelease, BaseRetentionRequest, BaseReuse, KeptBase};
 use mokly_compare::error::{Error, Result};
 use mokly_git::control::Cancellation;
 use mokly_render::runtime::Runtime;
@@ -99,6 +99,9 @@ impl BaseProvider for ServeBase {
             Ok(true) => Ok(Some(BaseReuse {
                 base,
                 cancellation: self.reader.clone(),
+                releaser: Arc::new(ReleaseBase {
+                    slot: self.slot.clone(),
+                }),
             })),
             Err(Error::Cancelled) => Err(Error::Cancelled),
             result => {
@@ -150,9 +153,26 @@ impl BaseProvider for ServeBase {
         Ok(Some(BaseReuse {
             base,
             cancellation: self.reader.clone(),
+            releaser: Arc::new(ReleaseBase {
+                slot: self.slot.clone(),
+            }),
         }))
     }
 
+    fn release(&self, base: &Arc<KeptBase>) {
+        ReleaseBase {
+            slot: self.slot.clone(),
+        }
+        .release(base);
+    }
+}
+
+/// A retained reader can release its exact base without owning Serve state.
+struct ReleaseBase {
+    slot: Weak<BaseSlot>,
+}
+
+impl BaseRelease for ReleaseBase {
     fn release(&self, base: &Arc<KeptBase>) {
         let Some(owner) = self.slot.upgrade() else {
             return;

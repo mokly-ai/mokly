@@ -23,7 +23,6 @@ use mokly_graph::workers::{ComparisonTask, ComparisonWorker};
 use mokly_model::data::Props;
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 
-use crate::base_render::BaseProvider;
 use crate::base_retention::BaseReuse;
 
 pub(crate) struct BaseReader {
@@ -33,16 +32,14 @@ pub(crate) struct BaseReader {
 struct ReadState {
     reuse: BaseReuse,
     failed: AtomicBool,
-    provider: Arc<dyn BaseProvider>,
 }
 
 impl BaseReader {
-    pub(crate) fn new(reuse: BaseReuse, provider: Arc<dyn BaseProvider>) -> Self {
+    pub(crate) fn new(reuse: BaseReuse) -> Self {
         Self {
             state: Arc::new(ReadState {
                 reuse,
                 failed: AtomicBool::new(false),
-                provider,
             }),
         }
     }
@@ -70,7 +67,7 @@ impl ReadState {
             && !self.reuse.cancellation.cancelled()
             && !self.failed.swap(true, Ordering::AcqRel)
         {
-            self.provider.release(&self.reuse.base);
+            self.reuse.releaser.release(&self.reuse.base);
         }
         result
     }

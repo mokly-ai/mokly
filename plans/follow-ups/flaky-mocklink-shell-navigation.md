@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-17, from the local complete gate of the branch `calummoore/mokly-mimalloc-global-allocator-i7qn` at `86dabdd3`, with its allocator change not yet committed.
-- **Location:** `tests/browser/browse_navigation.spec.ts:49`, the test "MockLink navigation reveals the destination and preserves shell state", with its `load` wait at lines 55-57 and the failed assertion at line 77. The nested frame of the suspected source is at `tests/browser/navigation_fixture.ts:32`.
+- **Location:** `tests/browser/browse_navigation.spec.ts:49`, the test "MockLink navigation reveals the destination and preserves shell state", with its `load` wait at lines 55-57 and the failed assertion at line 77. The nested frame of the suspected source is at `tests/browser/navigation_fixture.ts:32`. The test "keyboard navigation retains constraints that already show the destination" starts at line 115 of the same spec, and it fails in `tests/browser/navigation_destination.ts:4`, called at line 126.
 - **Reason:** The allocator branch changes only the memory allocator of the `mokly` binary and no browser, viewer, frame, or test code, and the test passed on its rerun.
 
 - **Source:** Implementation.
@@ -34,6 +34,11 @@
   - The test then searches for `home`, chooses the Changes filter, and clicks
     `#mock-link` in the mobile frame, at lines 72-75. Lines 77-79 expect the
     shell URL to end with `/view/fixture/nested/details/?fragment=section`.
+  - The keyboard test at line 115 opens the same Home screen, fills the
+    search with `details`, focuses `#mock-link` in the mobile frame, and
+    presses Enter, at lines 119-124. It waits for no frame state first. Its
+    helper `expectDestination`, at `tests/browser/navigation_destination.ts:4`,
+    expects the same Details URL.
   - The Home screen of the fixture, in `tests/browser/navigation_fixture.ts`,
     holds a nested frame with the source
     `https://cross-origin.example.test/nested.html`, at line 32. The `.test`
@@ -140,6 +145,33 @@
     event. CPU load from other work on the machine can also delay the `load`
     event. The trace does not rule out a receiver that the shell lost while
     the mount was still live.
+  - Second occurrence, 2026-11-17: the local complete gate of the branch
+    `calummoore/mokly-keep-base-side-in-memory-2-hjj4` at `134244c52` ran
+    2,287 browser tests. 2,285 passed, 2 failed, and none skipped. Both
+    failures were in this spec.
+    - The MockLink test failed at line 77 after 16.3 s. The shell URL stayed
+      `http://127.0.0.1:42721/view/fixture/nested/home/` for the 10,000 ms of
+      the assertion, with 24 unexpected values. Its snapshot shows Home, the
+      search text `home`, the Changes filter, Mobile, Dark, a disabled
+      Highlight button, and "This preview could not be loaded."
+    - The keyboard test failed in `navigation_destination.ts:4`, called at
+      line 126, after 10.6 s. The shell URL stayed
+      `http://127.0.0.1:43017/view/fixture/nested/home/`, with 24 unexpected
+      values. Its snapshot shows Home, the search text `details`, All, and
+      Both, and no preview error. So the two snapshots alone do not prove
+      that both tests lost their receiver in the same way.
+    - The keyboard trace records two requests to
+      `https://cross-origin.example.test/nested.html`, with the status and
+      the total time `-1`. This gives no exact DNS completion time.
+    - That branch changes no code under `packages/frame`, `packages/viewer`,
+      or `packages/mokly`, and neither this spec nor its fixtures. It changes
+      Rust Serve delivery and comparison code. The fixture starts
+      `serve --no-watch` and creates no Git repository. A read-only check did
+      not prove that the Rust change has no indirect effect.
+    - Rerun outcome: one unchanged run of both tests at `134244c52` passed 2
+      of 2, with no failure and no skip, and exit status 0. Playwright
+      reported `2 passed (46.2s)`, setup included. The MockLink test took
+      1.5 s, and the keyboard test took 628 ms.
 - **Impact if no action:** The browser suite can fail at random on a correct
   change, in the complete gate and in CI. Each failure costs a rerun of the
   browser suite, which took about 49 minutes in this run. A real frame
@@ -198,3 +230,10 @@
 - **Action:** fix after merge, investigate A first, because the allocator diff
   changes no navigation code or test. The investigation authorizes no product
   requirement change. Bring any later requirement choice to the user.
+- **Owner, 2026-11-17:** the branch
+  `calummoore/mokly-flaky-mocklink-navigation-test-meoa` owns the fix. The
+  performance orchestrator confirmed that both failures of the second
+  occurrence match this item. A held-request reproduction on that branch
+  passed 0 of 3 attempts before its fix and 10 of 10 after it. This
+  reproduction is newer than the "Not proven" note under **Problem**. The
+  complete gate of that branch is running.

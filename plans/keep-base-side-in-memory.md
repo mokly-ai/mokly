@@ -317,6 +317,54 @@ marks each change. Calls 14 to 24 are new calls of 2026-11-16.
     the gate, reviews, plan deletion, pull request, and CI without another
     smoke attempt. This call changes no paired measurement.
 
+44. The performance orchestrator's call, 2026-11-17: before the review
+    rounds end, run the exact React case of `large_changes.spec.ts` 30 times
+    on this branch at `134244c52` or later and 30 times on `main` at
+    `794b30a91`, sequentially on the same idle machine. A temporary local
+    change preserves each failed fixture's logs and comparison records; it
+    is not committed. If the branch fails and main does not, treat it as a
+    branch defect and fix it before the pull request, with the assertion
+    kept. Otherwise keep the test unchanged and defer evidence preservation
+    and a better assertion message, options F with E, to a separate branch.
+    Reason: the test covers Serve classifications, which this branch changes,
+    and no failed main CI run since 2026-11-01 named this spec. Options D and
+    G are rejected because they weaken coverage. Option H is rejected because
+    it changes product behavior without evidence. Send the counts to the
+    performance orchestrator and continue all remaining work.
+
+45. The continuation orchestrator's call, 2026-11-17, after the two-pass
+    review: give each reader a release-only capability that holds a weak
+    slot reference. Keep preparation services and their progress callbacks
+    outside the reader. Reason: the production callback closes a strong
+    ownership cycle through the published comparison. This violates decision
+    4A and call 38, although production exits at once after Serve stops.
+    No history grows across edits. Preserve immediate exact-base release,
+    reader cancellation, and retained-input forwarding. Strengthen the
+    existing ownership test with the real preparation wrappers and a
+    progress double that owns the slot. No assertion is removed.
+
+46. The performance orchestrator's call, 2026-11-17: PR #301 merges before
+    this branch. After the required React repetitions and finding 5's fix,
+    merge its main commit and keep both README texts. Forward
+    `comparison_usage` through the reader after its cancellation check.
+    Preserve a checked fallback for failed or missing captured usage.
+    Reason: the captured base must give projection its kept usage without
+    restoring documents. The default method restores through the reader
+    and loses that optimization. Add the zero-restore regression and rerun
+    the targeted checks and complete gate on the merged tree.
+
+47. The performance orchestrator's call, 2026-11-17: finish the React cause
+    step within 45 minutes of the call. Run one compact diagnostic with the
+    pinned tools. If it shows that this branch starts classification earlier
+    or keeps the rebuild window open longer than main on the same fixture,
+    fix that cause, keep the assertion, and run 30 branch cases again. If it
+    does not, record fixture timing and defer options F with E to a separate
+    branch. Reason: the retained evidence shows that the startup rebuild
+    begins before classification, the empty cold slot runs no freshness
+    check, and main also performs startup rebuilds. Preserve the counts and
+    overlap facts in the follow-up. Then continue call 45 and the remaining
+    work. This call qualifies the branch-defect criterion of call 44.
+
 ### Code facts on `main` at `a1d834fbe`
 
 The docs implementor checked these facts on 2026-11-16.
@@ -836,7 +884,19 @@ Evidence: `.context/keep-base-side-in-memory/merge-resolution.md` holds the
 preservation audits of the merges of `main` at `6d0fcbb46` and `f380e9462`.
 The pull request description copies their outcomes.
 
+The later main refresh at `794b30a91` preserves compact binary tree records
+and their runtime contract. Its audit is in the same merge evidence file.
+Accepted paired measurements remain at their recorded earlier SHAs.
+
+The refresh at `49f28d837` preserves captured-usage reads and the nested
+browser report fix. The compare README keeps both branches' text. Its
+preservation audit is in the same merge evidence file.
+
 Verification evidence: `.context/keep-base-side-in-memory/milestone-6-verification.md`.
+Repetition and cause evidence: `.context/keep-base-side-in-memory/milestone-6-repetitions-report.md`
+and `.context/keep-base-side-in-memory/milestone-6-react-watch-cause-report.md`.
+Ownership correction evidence: `.context/keep-base-side-in-memory/finding-5-fix-report.md`
+and `.context/keep-base-side-in-memory/finding-5-docs-report.md`.
 
 - [x] Remove the status lines that Milestone 1 added. Keep the macOS item of
       the runtime status line.
@@ -845,6 +905,16 @@ Verification evidence: `.context/keep-base-side-in-memory/milestone-6-verificati
 - [x] Align the deferred scripts-off flag option with preparation freshness
       evidence and the kept base. Keep its recommendation and grade.
 - [x] Merge `origin/main` with the `git-merge` skill.
+- [x] Run the exact React repetition comparison under dated call 44.
+      Preserve all failure evidence and apply its branch/main criteria.
+- [x] Finish the bounded cause step under dated call 47. Apply its outcome
+      and update the React follow-up before the review rounds end.
+- [x] Apply the confirmed review finding 5 with its checked option B and
+      dated call 45. Prove the ownership regression before the fix and
+      preserve the retained-input and late-reader tests.
+- [ ] After PR #301 merges into main, merge `origin/main` and keep both
+      README texts. Apply dated call 46's captured-usage forwarding and
+      zero-restore regression before the final gate.
 - [ ] Run `cargo xtask check --suite repository`, then the complete gate
       `cargo xtask check`.
 - [ ] Commit with Conventional Commits and push the branch.

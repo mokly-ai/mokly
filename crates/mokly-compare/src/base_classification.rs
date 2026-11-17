@@ -185,9 +185,7 @@ impl Changes {
                 prepare: false,
             };
         }
-        let reader = attempt
-            .reuse
-            .map(|reuse| Arc::new(BaseReader::new(reuse, self.provider.clone())));
+        let reader = attempt.reuse.map(|reuse| Arc::new(BaseReader::new(reuse)));
         let before: Arc<dyn RenderGeneration> = match &reader {
             Some(reader) => reader.clone(),
             None => base.generation.clone(),

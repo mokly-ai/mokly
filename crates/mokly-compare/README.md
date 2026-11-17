@@ -195,9 +195,10 @@ record, its scripts-off flag, and its freshness evidence. When `keep` returns a
 `BaseReuse`, that classification also compares through a reader. The reader
 checks the reuse's own cancellation before each call. Its first failed read,
 while that cancellation is not set, releases that exact `KeptBase` through
-`BaseProvider::release`. A reused base that fails this way gets one fresh
-preparation in the same classification. A reused base with a recorded source
-failure is released, and the classification fails with `Error::Base`. A head
+the `BaseRelease` of the reuse. The reader keeps only its `BaseReuse`, not the
+provider. A reused base that fails this way gets one fresh preparation in the
+same classification. A reused base with a recorded source failure is
+released, and the classification fails with `Error::Base`. A head
 failure or a cancelled reader keeps the base. `review.base-tree` records
 `action`, `reuse` or `prepare`. The default methods keep nothing, so `build`,
 `publish`, and a provider without retention prepare and capture the base in
@@ -271,8 +272,9 @@ the comparison coordinator. Call `InputReader::read` on `GitSources` and
 `WorkingInputs::read` on the same `dyn Repository`, with the base inputs,
 before dependency selection. Pass one cancellation token to the caches, the
 Git runner, and the install supervisor of one preparation. A provider that
-keeps a base detaches it from that token in `keep`, and gives each `BaseReuse`
-its own token. Then run the crate tests:
+keeps a base detaches it from that token in `keep`. It gives each `BaseReuse`
+its own token and a `BaseRelease` that holds no preparation service and no
+status callback. Then run the crate tests:
 
 ```bash
 cargo test -p mokly-compare
@@ -322,10 +324,11 @@ development dependencies, and no test uses the internet.
   the head. The default `BaseProvider::find_kept`, `keep`, and `release`
   methods keep nothing.
 - [`src/base_retention.rs`](./src/base_retention.rs) defines
-  `BaseRetentionRequest`, `KeptBase`, and `BaseReuse`: the inputs of the kept
-  base's key and freshness checks, the kept capture with its source-failure
-  record, scripts-off flag, and freshness evidence, and one classification's
-  access to it with its own cancellation.
+  `BaseRetentionRequest`, `KeptBase`, `BaseReuse`, and `BaseRelease`: the
+  inputs of the kept base's key and freshness checks, the kept capture with
+  its source-failure record, scripts-off flag, and freshness evidence, one
+  classification's access to it with its own cancellation, and the
+  release-only capability that frees that exact base.
 - [`src/base_freshness.rs`](./src/base_freshness.rs) defines `Freshness`,
   `FreshnessChecks`, `PreparationInputs`, `DependencySelection`,
   `FreshnessRequest`, and `InstallInputs`: the evidence of one preparation and
@@ -339,9 +342,9 @@ development dependencies, and no test uses the internet.
   `review.base-tree` action, and the single fresh preparation after a failed
   reuse.
 - [`src/base_reader.rs`](./src/base_reader.rs) defines `BaseReader`, the
-  per-classification reader of a kept base. It checks its reader's
-  cancellation before each call and releases the base after its own first
-  failed read.
+  per-classification reader of a kept base. It keeps only its `BaseReuse`,
+  checks its cancellation before each call, and releases the base through its
+  `BaseRelease` after its own first failed read.
 - [`src/comparison_steps.rs`](./src/comparison_steps.rs) defines `Step`,
   `Steps`, and `StepCache`, the comparison steps that a command shows while
   Changes runs.

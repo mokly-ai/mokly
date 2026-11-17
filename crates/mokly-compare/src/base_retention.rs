@@ -34,10 +34,19 @@ pub struct KeptBase {
     pub freshness: Option<PreparationInputs>,
 }
 
+/// Release-only capability with no preparation services or status callbacks.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = BaseReleaseMock))]
+pub trait BaseRelease: Send + Sync {
+    /// Release only this exact kept identity, preserving any newer slot entry.
+    fn release(&self, base: &Arc<KeptBase>);
+}
+
 /// One classification's access to a kept base, with independent cancellation.
 pub struct BaseReuse {
     /// Exact kept identity. Release must compare identities before clearing a slot.
     pub base: Arc<KeptBase>,
     /// Checked before each fallible read. It does not cancel the shared base.
     pub cancellation: Arc<dyn Cancellation>,
+    /// Releases this reader's base without retaining its preparation provider.
+    pub releaser: Arc<dyn BaseRelease>,
 }

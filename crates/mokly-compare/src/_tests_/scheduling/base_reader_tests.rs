@@ -15,8 +15,7 @@ use mokly_model::runtime_diagnostic::RuntimeCode;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::base_reader::BaseReader;
-use crate::base_render::BaseProviderMock;
-use crate::base_retention::{BaseReuse, KeptBase};
+use crate::base_retention::{BaseReleaseMock, BaseReuse, KeptBase};
 use crate::capture_generation::CapturedGeneration;
 use crate::capture_restore::DocumentRestorerMock;
 use crate::comparison_capture::CapturedView;
@@ -31,23 +30,21 @@ fn reader(
     cancelled: Arc<AtomicBool>,
     releases: Option<Arc<AtomicUsize>>,
 ) -> BaseReader {
-    BaseReader::new(
-        BaseReuse {
-            base: Arc::new(KeptBase {
-                generation,
-                failures: Arc::new(Unimock::new(())),
-                scripts_off: true,
-                freshness: None,
-            }),
-            cancellation: Arc::new(Unimock::new(
-                CancellationMock::cancelled
-                    .each_call(matching!())
-                    .answers_arc(Arc::new(move |_| cancelled.load(Ordering::Acquire))),
-            )),
-        },
-        Arc::new(if let Some(releases) = releases {
+    BaseReader::new(BaseReuse {
+        base: Arc::new(KeptBase {
+            generation,
+            failures: Arc::new(Unimock::new(())),
+            scripts_off: true,
+            freshness: None,
+        }),
+        cancellation: Arc::new(Unimock::new(
+            CancellationMock::cancelled
+                .each_call(matching!())
+                .answers_arc(Arc::new(move |_| cancelled.load(Ordering::Acquire))),
+        )),
+        releaser: Arc::new(if let Some(releases) = releases {
             Unimock::new(
-                BaseProviderMock::release
+                BaseReleaseMock::release
                     .each_call(matching!(_))
                     .answers_arc(Arc::new(move |_, _| {
                         releases.fetch_add(1, Ordering::AcqRel);
@@ -56,7 +53,7 @@ fn reader(
         } else {
             Unimock::new(())
         }),
-    )
+    })
 }
 
 #[test]

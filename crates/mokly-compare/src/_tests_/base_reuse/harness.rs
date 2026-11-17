@@ -9,10 +9,12 @@ use mokly_graph::types::{RenderGeneration, RenderGenerationMock};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::base_render::{
-    BaseProviderMock, BaseSourceFactoryMock, Changes, ChangesService, HistoricalSources,
-    PreparedBase,
+    BasePreparationResult, BaseProvider, BaseProviderMock, BaseRequest, BaseSourceFactoryMock,
+    Changes, ChangesService, HistoricalSources, PreparedBase,
 };
-use crate::base_retention::{BaseReuse, KeptBase};
+use crate::base_retention::{
+    BaseRelease, BaseReleaseMock, BaseRetentionRequest, BaseReuse, KeptBase,
+};
 use crate::base_selection::PinnedBase;
 use crate::comparison_error::CompareResult;
 use crate::comparison_steps::{Step, StepsMock};
@@ -41,6 +43,34 @@ pub(super) struct Harness {
     pub(super) state: Arc<Mutex<State>>,
     pub(super) cancelled: Arc<AtomicBool>,
     pub(super) head_failure: Arc<AtomicBool>,
+}
+
+/// Preparation stays strict while both release callers share one identity boundary.
+struct RetentionProvider {
+    inner: Arc<dyn BaseProvider>,
+    releaser: Arc<dyn BaseRelease>,
+}
+
+impl BaseProvider for RetentionProvider {
+    fn find_kept(&self, request: &BaseRetentionRequest<'_>) -> Result<Option<BaseReuse>> {
+        self.inner.find_kept(request)
+    }
+
+    fn prepare(&self, request: &BaseRequest<'_>) -> BasePreparationResult {
+        self.inner.prepare(request)
+    }
+
+    fn keep(
+        &self,
+        request: &BaseRetentionRequest<'_>,
+        base: Arc<KeptBase>,
+    ) -> Result<Option<BaseReuse>> {
+        self.inner.keep(request, base)
+    }
+
+    fn release(&self, base: &Arc<KeptBase>) {
+        self.releaser.release(base);
+    }
 }
 
 impl Harness {
@@ -86,20 +116,8 @@ impl Harness {
         } else {
             Unimock::new(())
         });
-        let retention = (
-            BaseProviderMock::find_kept
-                .each_call(matching!(_))
-                .answers_arc({
-                    let state = state.clone();
-                    let cancellation = cancellation.clone();
-                    Arc::new(move |_, _| {
-                        Ok(state.lock().unwrap().slot.clone().map(|base| BaseReuse {
-                            base,
-                            cancellation: cancellation.clone(),
-                        }))
-                    })
-                }),
-            BaseProviderMock::release
+        let releaser: Arc<dyn BaseRelease> = Arc::new(Unimock::new(
+            BaseReleaseMock::release
                 .each_call(matching!(_))
                 .answers_arc({
                     let state = state.clone();
@@ -116,7 +134,21 @@ impl Harness {
                         }
                     })
                 }),
-        );
+        ));
+        let retention = BaseProviderMock::find_kept
+            .each_call(matching!(_))
+            .answers_arc({
+                let state = state.clone();
+                let cancellation = cancellation.clone();
+                let releaser = releaser.clone();
+                Arc::new(move |_, _| {
+                    Ok(state.lock().unwrap().slot.clone().map(|base| BaseReuse {
+                        base,
+                        cancellation: cancellation.clone(),
+                        releaser: releaser.clone(),
+                    }))
+                })
+            });
         let provider = Arc::new(if let Some((fresh, _)) = &fresh {
             Unimock::new((
                 retention,
@@ -143,6 +175,7 @@ impl Harness {
                     }),
                 BaseProviderMock::keep.each_call(matching!(_)).answers_arc({
                     let state = state.clone();
+                    let releaser = releaser.clone();
                     Arc::new(move |_, _, base| {
                         let mut state = state.lock().unwrap();
                         state.keeps += 1;
@@ -150,12 +183,17 @@ impl Harness {
                         Ok(Some(BaseReuse {
                             base,
                             cancellation: cancellation.clone(),
+                            releaser: releaser.clone(),
                         }))
                     })
                 }),
             ))
         } else {
             Unimock::new(retention)
+        });
+        let provider = Arc::new(RetentionProvider {
+            inner: provider,
+            releaser,
         });
         let head_failure = Arc::new(AtomicBool::new(false));
         let capture = ComparisonMock::capture_base

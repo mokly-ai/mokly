@@ -84,14 +84,18 @@ owns what Serve keeps, the key, the freshness checks, the cancellation rule,
 and the release events. `ServeChanges` owns the one slot, and every `Source`
 of the process shares it. Each classification composes its own `ServeBase`
 provider around `NativeBase`, and that provider holds only a weak handle of
-the slot. A base reader keeps its provider, so an old reader can keep only its
-own base alive, not the slot. `ServeBase::find_kept` compares the `BaseKey`,
-then runs `Freshness::current` outside the slot lock. A current base returns a
-reader with the classification's own cancellation. Another key, a stale check,
-or a check error other than a cancellation releases the kept base before the
-fresh preparation. A cancelled classification keeps a valid kept base, and the
-lookup returns `Error::Cancelled`. A release clears the slot only when the
-slot holds that exact base, so a late reader cannot clear a newer base.
+the slot. A base reader keeps only its exact kept base, its cancellation, and
+a `ReleaseBase` capability, which also holds only a weak handle of the slot.
+It keeps no provider, so it holds no progress callback of the preparation and
+no strong handle of the slot. An old reader can keep only its own base alive.
+`ServeBase::find_kept` compares the `BaseKey`, then runs `Freshness::current`
+outside the slot lock. A current base returns a reader with the
+classification's own cancellation. Another key, a stale check, or a check
+error other than a cancellation releases the kept base before the fresh
+preparation. A cancelled classification keeps a valid kept base, and the
+lookup returns `Error::Cancelled`. A release, which `ServeBase::release` also
+makes through `ReleaseBase`, clears the slot only when the slot holds that
+exact base, so a late reader cannot clear a newer base.
 
 Only Serve gives `NativeBase` a `Freshness`. With it, `NativeBase` samples the
 checkout identity before its first base read and records the evidence of the
@@ -227,7 +231,8 @@ reserves an 8 MiB main-thread stack through its linker settings in
   base references and composes each classification with its `ServeBase`
   provider and its cancellations.
 - [`src/serve_base.rs`](./src/serve_base.rs) defines `ServeBase`, which finds,
-  keeps, and releases the kept base, and `BaseSlot`, the slot.
+  keeps, and releases the kept base, `BaseSlot`, the slot, and `ReleaseBase`,
+  the release-only capability that each reader keeps.
 - [`src/serve_base_cancel.rs`](./src/serve_base_cancel.rs) defines
   `BaseLifetime` and `PreparingBase`, the cancellation of fresh base work that
   detaches at the keep.
