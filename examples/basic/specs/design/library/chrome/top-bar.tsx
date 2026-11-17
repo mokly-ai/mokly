@@ -22,6 +22,7 @@ const propSchema = {
     query: text,
     viewport: { enum: ["mobile", "desktop"] },
     menu: { enum: ["none", "open", "close"] },
+    navigationHidden: flag,
     tags: tagRecords,
     activeTag: text,
     appearance: { enum: ["auto", "light", "dark"] },
@@ -67,6 +68,7 @@ export const topBar = defineComponent({
       label: "Menu",
       options: enumOptions(propSchema.properties.menu),
     },
+    navigationHidden: { kind: "boolean", label: "Navigation hidden" },
   },
   render: (props, context) => (
     <TopBarView

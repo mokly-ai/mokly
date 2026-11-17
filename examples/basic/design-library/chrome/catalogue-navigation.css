@@ -1,11 +1,55 @@
 /* The shipped catalogue navigation: the @mokly/ui stylesheets of the tree and
-   of the column that renders it, then the mockup's drawer flag. */
+   of the column that renders it, then the mockup's hide button and its
+   drawer and hidden-column flags. */
 @import "../../../../packages/ui/src/catalogue-tree/catalogue-tree.css";
 @import "../../../../packages/ui/src/catalogue-navigation/catalogue-navigation.css";
 
-/* The frame that carries the flag keeps the column its shell's flex item. */
+/* The frame that carries the flags keeps the column its shell's flex item. */
 .mbk-nav-frame {
   display: contents;
+}
+
+/* The hide button ends the column head, after Collapse all. It keeps the
+   head's height, and it is muted like Collapse all. The head stays on one
+   line at the narrowest column, also in a wide fallback font. */
+.mbk-nav-head > .mbk-nav-collapse:has(+ .mbk-nav-toggle) {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.mbk-nav-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin: -2px -5px -2px 4px;
+  border-radius: 6px;
+  color: var(--chrome-muted);
+}
+
+a.mbk-nav-toggle:hover {
+  background: var(--chrome-border);
+  color: var(--chrome-ink-2);
+}
+
+/* The picture of the button in a static depiction acts on nothing. */
+span.mbk-nav-toggle {
+  cursor: default;
+  pointer-events: none;
+}
+
+/* The hidden-column flag takes the closed column out of the layout at every
+   width. The drawer flag below draws the drawer of a hidden column. */
+.mbk-nav-frame[data-hidden] > .mbk-nav {
+  display: none;
+}
+
+/* Below the breakpoint a window has no hide button. */
+@media (width < 56.25rem) {
+  .mbk-nav-toggle {
+    display: none;
+  }
 }
 
 /* The drawer flag draws the open drawer at every width. Below its breakpoint

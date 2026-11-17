@@ -181,6 +181,18 @@
   },
   {
     "kind": "screen",
+    "path": "design/browse/states/navigation/hidden",
+    "colorSchemes": ["light"],
+    "variantOf": "design/browse/states/navigation"
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/states/navigation/hidden-drawer",
+    "colorSchemes": ["light"],
+    "variantOf": "design/browse/states/navigation"
+  },
+  {
+    "kind": "screen",
     "path": "design/browse/states/tag-filter",
     "colorSchemes": ["light"]
   },

@@ -43,6 +43,8 @@ design/library/chrome/top-bar -> design/browse/publication/changes
 design/library/chrome/top-bar -> design/browse/states/details
 design/library/chrome/top-bar -> design/browse/states/missing-route
 design/library/chrome/top-bar -> design/browse/states/navigation
+design/library/chrome/top-bar -> design/browse/states/navigation/hidden
+design/library/chrome/top-bar -> design/browse/states/navigation/hidden-drawer
 design/library/chrome/top-bar -> design/browse/states/tag-filter
 design/library/chrome/top-bar -> design/browse/variants/changed-views
 design/library/chrome/top-bar -> design/browse/variants/variant-changes

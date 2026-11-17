@@ -22,6 +22,8 @@ its feature contract.
 | `design/browse/states/details`                                | Browse shell › Shell states                                          | Expanded details inspector                                    |
 | `design/browse/states/missing-route`                          | Browse shell › Shell states                                          | Not-found view with navigation                                |
 | `design/browse/states/navigation`                             | Browse shell › Shell states                                          | Collapsed navigation drawer                                   |
+| `design/browse/states/navigation/hidden`                      | Browse shell › Shell states (variant)                                | Hidden column on a wide window, menu in the top bar           |
+| `design/browse/states/navigation/hidden-drawer`               | Browse shell › Shell states (variant)                                | Hidden column's drawer with Show catalogue navigation         |
 | `design/browse/states/tag-filter`                             | Browse shell › Shell states                                          | Tag picker over a filtered tree                               |
 | `design/browse/views/screen/tag-picker`                       | Browse shell › Catalogue views (variant)                             | Empty query, tag picker open                                  |
 | `design/browse/views/screen/tag-forms`                        | Browse shell › Catalogue views (variant)                             | Forms filter, picker closed                                   |
@@ -92,8 +94,10 @@ its feature contract.
 | `design/browse/loading/viewer-version`                        | Browse shell › Loading and recovery                                  | Catalogue from another Mokly version, with Reload             |
 | `design/browse/loading/preview-loading`                       | Browse shell › Loading and recovery                                  | Stage while the detail loads or the catalogue is replaced     |
 
-The six entries marked as variants are variants of `design/browse/views/screen` and
-stay under that entry in authored order rather than becoming folder members.
+The six Catalogue views entries marked as variants are variants of
+`design/browse/views/screen`, and the two Shell states entries marked as
+variants are variants of `design/browse/states/navigation`. Each stays under its
+entry in authored order rather than becoming a folder member.
 
 Additional owning groups keep each page at no more than five screens:
 
@@ -109,6 +113,12 @@ Additional owning groups keep each page at no more than five screens:
 - `design/browse/pages/view`, `design/browse/pages/details`, `design/browse/pages/navigation`, and
   `design/browse/pages/removed` specify full documents, metadata, the drawer, and
   deleted-parent behavior.
+- `design/browse/states/navigation/hidden` and
+  `design/browse/states/navigation/hidden-drawer` specify Welcome on a wide
+  window whose reader hid the navigation column, and that column open as the
+  drawer. They are variants of the navigation state, so Shell states keeps its
+  four screens. Their mobile views keep the narrow shell, because a narrow
+  window ignores the hidden column.
 - The `Previous document versions` and `Previous screen versions` folders hold
   the removed-preview child pages (loading, unavailable with retry,
   long-document scrolling, and, for screens, a viewport with no captured

@@ -1,5 +1,9 @@
 import { defineScreen } from "@mokly/mokly";
 
+import {
+  hiddenNavigationDrawerVariant,
+  hiddenNavigationVariant,
+} from "./browse/states/hidden-navigation.js";
 import { formsFilterVariant } from "./browse/states/tags/forms.js";
 import { onboardingPickerVariant } from "./browse/states/tags/onboarding-picker.js";
 import { onboardingFilterVariant } from "./browse/states/tags/onboarding.js";
@@ -217,10 +221,15 @@ export const navigationScreen = defineScreen({
   ...designMetadata,
   colorSchemes: ["light"],
   description: "Collapsed navigation opening as a drawer on narrow viewports.",
-  ...artboards({
-    desktop: <NarrowNavigationDesktop />,
-    mobile: <NarrowNavigationMobile />,
-  }),
   slug: "navigation",
   title: "Narrow navigation",
+  ...artboardStates(
+    {
+      state: "narrow",
+      title: "Narrow navigation",
+      desktop: <NarrowNavigationDesktop />,
+      mobile: <NarrowNavigationMobile />,
+    },
+    [hiddenNavigationVariant, hiddenNavigationDrawerVariant],
+  ),
 });

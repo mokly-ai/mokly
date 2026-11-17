@@ -97,6 +97,15 @@ top bar carries a compact flag that draws the narrow bar of a mobile render at
 every width, and a frame around the navigation carries a drawer flag that
 draws the open drawer of the drawer presentation and of every mobile render.
 
+`@mokly/ui` draws no hide button for the navigation column yet, so the
+catalogue navigation's view adds one to the end of the column head that the
+package component returns. It reads `Hide catalogue navigation` beside a wide
+column and `Show catalogue navigation` in the drawer of a hidden column. It is
+a link to the artboard of its outcome, or a picture of itself. Neither a mobile
+render nor the drawer of a narrow window draws it. A hidden column keeps its
+markup, and a hidden flag on its frame takes it out of the layout. A navigation
+flag on the top bar's frame then shows the menu at every width.
+
 The tag picker, the tag chip, the view controls and the change status are the
 shipped `@mokly/ui` components too. The search field ends with the tag picker:
 its button links to the artboard that shows the picker opened or closed, a

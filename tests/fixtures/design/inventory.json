@@ -36,6 +36,8 @@
     "design/browse/states/details",
     "design/browse/states/missing-route",
     "design/browse/states/navigation",
+    "design/browse/states/navigation/hidden",
+    "design/browse/states/navigation/hidden-drawer",
     "design/browse/states/tag-filter",
     "design/browse/variants/changed-views",
     "design/browse/variants/variant-changes",

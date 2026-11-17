@@ -21,11 +21,13 @@ function address(to: DesignDestination | undefined): string | undefined {
  * compact search, which needs a script, is left out. The search field ends
  * with the registered tag picker. The bar's frame carries the flags that this
  * component's stylesheet draws: the compact bar of a mobile render at every
- * width, and a bar without a menu.
+ * width, a bar without a menu, and the wide bar of a hidden navigation
+ * column, which shows the menu.
  */
 export function TopBarView({
   query,
   menu,
+  navigationHidden = false,
   tags,
   activeTag,
   appearance,
@@ -46,6 +48,7 @@ export function TopBarView({
       className="mbk-topbar-frame"
       data-compact={compact ? "" : undefined}
       data-menu={menu === "none" ? "none" : undefined}
+      data-navigation={navigationHidden ? "hidden" : undefined}
     >
       <TopBar
         brandHref={address(brandDestination)}

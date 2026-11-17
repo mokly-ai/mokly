@@ -24,6 +24,12 @@
   position: static;
 }
 
+/* The flag of a hidden navigation column shows the menu at every width. The
+   bar keeps its wide layout: the brand keeps its wordmark. */
+.mbk-topbar-frame[data-navigation="hidden"] .mbk-menu {
+  display: inline-flex;
+}
+
 /* A bar without a menu draws none at any width. */
 .mbk-topbar-frame[data-menu="none"] .mbk-menu {
   display: none;

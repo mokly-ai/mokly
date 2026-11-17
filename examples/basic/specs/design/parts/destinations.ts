@@ -22,6 +22,8 @@ export const DESTINATIONS = {
   inspector: "design/browse/states/details",
   missing: "design/browse/states/missing-route",
   navigation: "design/browse/states/navigation",
+  navigationHidden: "design/browse/states/navigation/hidden",
+  navigationHiddenDrawer: "design/browse/states/navigation/hidden-drawer",
   variantSelected: "design/browse/variants/variant-selected",
   variantChanges: "design/browse/variants/variant-changes",
   variantRemoved: "design/browse/variants/variant-removed",

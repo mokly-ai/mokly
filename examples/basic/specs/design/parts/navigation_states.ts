@@ -16,6 +16,8 @@ interface TagState {
 export interface NavigationState {
   inspector?: DesignDestination;
   drawer?: { open: boolean; to: DesignDestination };
+  /** The artboard that the hide or show button of the column head opens. */
+  columnToggle?: DesignDestination;
   all?: DesignDestination;
   changes?: DesignDestination;
   comparison?: Partial<Record<ComparisonMode, DesignDestination>>;
@@ -79,6 +81,15 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   },
   [D.missing]: {},
   [D.navigation]: {},
+  [D.navigationHidden]: {
+    ...welcomeBrowse,
+    drawer: { open: false, to: D.navigationHiddenDrawer },
+  },
+  [D.navigationHiddenDrawer]: {
+    ...welcomeBrowse,
+    drawer: { open: true, to: D.navigationHidden },
+    columnToggle: D.welcome,
+  },
   [D.variantSelected]: { all: D.welcome, changes: D.variantChanges },
   [D.variantChanges]: { all: D.variantSelected },
   [D.variantRemoved]: { all: D.welcome },
@@ -89,7 +100,7 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   [D.indexEntryChanges]: { all: D.indexEntry },
   [D.indexMemberChanges]: { all: D.indexMember },
   [D.tour]: {},
-  [D.welcome]: { ...welcomeBrowse },
+  [D.welcome]: { ...welcomeBrowse, columnToggle: D.navigationHidden },
   [D.welcomeAppearanceVariant]: { ...welcomeBrowse },
   [D.detailsAppearanceVariant]: { ...detailsFilters },
   [D.details]: { ...detailsFilters },

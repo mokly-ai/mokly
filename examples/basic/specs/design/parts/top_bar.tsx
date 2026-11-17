@@ -13,6 +13,8 @@ interface TopBarProps {
   /** Overrides the depicted setting; defaults to the rendered scheme. */
   appearanceChoice?: AppearanceChoice | undefined;
   appearanceChanged?: boolean | undefined;
+  /** Whether the reader hid the navigation column on a wide window. */
+  navigationHidden?: boolean | undefined;
   searchValue?: string | undefined;
   tagPickerOpen?: boolean | undefined;
   viewport: ArtboardViewport;
@@ -25,6 +27,7 @@ export function TopBar({
   appearanceChoice,
   appearanceChanged,
   drawerOpen,
+  navigationHidden,
   searchValue,
   tagPickerOpen,
   viewport,
@@ -37,6 +40,7 @@ export function TopBar({
       moklyInstance={useDesignInstance("top-bar")}
       viewport={viewport}
       menu={open ? "close" : "open"}
+      {...(navigationHidden ? { navigationHidden } : {})}
       tags={designTagRecords(navigation.tags)}
       pickerOpen={tagPickerOpen ?? false}
       appearance={appearanceChoice ?? rendered}

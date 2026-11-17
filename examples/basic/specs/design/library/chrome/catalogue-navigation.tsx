@@ -59,8 +59,10 @@ const propSchema = {
     changesStatus: { enum: ["ready", "pending", "preparing", "unavailable"] },
     showChanges: flag,
     presentation: { enum: ["responsive", "drawer"] },
+    columnHidden: flag,
     allDestination: destination,
     changesDestination: destination,
+    toggleDestination: destination,
   },
 } as const;
 export type CatalogueNavigationProps = LibraryProps<typeof propSchema>;
@@ -106,6 +108,7 @@ export const catalogueNavigation = defineComponent({
         { label: "Drawer", value: "drawer" },
       ],
     },
+    columnHidden: { kind: "boolean", label: "Column hidden" },
   },
   render: (props, context) => (
     <CatalogueNavigationView {...props} viewport={context.viewport} />

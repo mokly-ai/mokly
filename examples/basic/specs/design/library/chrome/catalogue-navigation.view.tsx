@@ -12,6 +12,7 @@ import {
   navigationSections,
   type NavigationRow,
 } from "./catalogue-navigation-sections.js";
+import { ColumnToggle, withHeadEnd } from "./catalogue-navigation-toggle.js";
 import type { CatalogueNavigationProps } from "./catalogue-navigation.js";
 
 type ChangesStatus = NonNullable<CatalogueNavigationProps["changesStatus"]>;
@@ -37,8 +38,10 @@ function navigationStatus(
  * filter links to the artboard that shows the other view, Collapse all and
  * the separator are pictures, and each section keeps its native disclosure.
  * Changes that is not ready shows its status line in place of the rows. Its
- * frame carries the drawer flag that this component's stylesheet draws: the
- * drawer presentation, and every mobile render, draw the open drawer.
+ * frame carries the flags that this component's stylesheet draws: the drawer
+ * presentation, and every mobile render, draw the open drawer, and a hidden
+ * column leaves the layout. A desktop render ends the column head with the
+ * hide button, and the drawer of a hidden column with the show button.
  */
 export function CatalogueNavigationView({
   activeDestination,
@@ -50,8 +53,10 @@ export function CatalogueNavigationView({
   showChanges = true,
   rows,
   presentation,
+  columnHidden = false,
   allDestination,
   changesDestination,
+  toggleDestination,
   viewport,
 }: CatalogueNavigationProps & { viewport: Viewport }) {
   const id = useId();
@@ -66,46 +71,60 @@ export function CatalogueNavigationView({
         : activeLabel !== undefined && row.label === activeLabel) ||
     (row.to !== undefined && currentPage(row.to) === "page");
   const drawer = presentation === "drawer" || viewport === "mobile";
+  // The drawer of a narrow window has no hide button.
+  const toggle = viewport === "desktop" && (!drawer || columnHidden);
+  const column = CatalogueNavigation({
+    busy:
+      changedOnly &&
+      (changesStatus === "pending" || changesStatus === "preparing"),
+    filter: showChanges
+      ? {
+          count: changedCount,
+          status: changesStatus,
+          view: changedOnly ? "changes" : "all",
+        }
+      : undefined,
+    filterHref: (view) => {
+      const to =
+        view === "all"
+          ? changedOnly
+            ? allDestination
+            : undefined
+          : changedOnly
+            ? undefined
+            : changesDestination;
+      return to === undefined ? undefined : mockLink(to);
+    },
+    id,
+    interactive: false,
+    maximumWidth: 480,
+    operable: false,
+    resizable: !drawer && !columnHidden,
+    sections: navigationSections(shown, { current, id }),
+    status: showChanges
+      ? navigationStatus(changesStatus, changedOnly, shown.length)
+      : undefined,
+    width: 248,
+  });
   return (
-    <div className="mbk-nav-frame" data-drawer={drawer ? "" : undefined}>
-      <CatalogueNavigation
-        busy={
-          changedOnly &&
-          (changesStatus === "pending" || changesStatus === "preparing")
-        }
-        filter={
-          showChanges
-            ? {
-                count: changedCount,
-                status: changesStatus,
-                view: changedOnly ? "changes" : "all",
+    <div
+      className="mbk-nav-frame"
+      data-drawer={drawer ? "" : undefined}
+      data-hidden={columnHidden && !drawer ? "" : undefined}
+    >
+      {toggle
+        ? withHeadEnd(
+            column,
+            <ColumnToggle
+              hidden={columnHidden}
+              href={
+                toggleDestination === undefined
+                  ? undefined
+                  : mockLink(toggleDestination)
               }
-            : undefined
-        }
-        filterHref={(view) => {
-          const to =
-            view === "all"
-              ? changedOnly
-                ? allDestination
-                : undefined
-              : changedOnly
-                ? undefined
-                : changesDestination;
-          return to === undefined ? undefined : mockLink(to);
-        }}
-        id={id}
-        interactive={false}
-        maximumWidth={480}
-        operable={false}
-        resizable={!drawer}
-        sections={navigationSections(shown, { current, id })}
-        status={
-          showChanges
-            ? navigationStatus(changesStatus, changedOnly, shown.length)
-            : undefined
-        }
-        width={248}
-      />
+            />,
+          )
+        : column}
     </div>
   );
 }

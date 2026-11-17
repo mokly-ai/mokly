@@ -39,6 +39,11 @@ interface ShellProps {
    * column with the narrow top bar, whose drawer is the `aside`.
    */
   collapsed?: boolean | undefined;
+  /**
+   * Depicts a wide window whose reader hid the navigation column: the wide
+   * top bar shows its menu, and `nav` is the hidden column or its drawer.
+   */
+  hidden?: boolean | undefined;
   nav: ReactNode;
   searchValue?: string | undefined;
   tagPickerOpen?: boolean | undefined;
@@ -64,6 +69,7 @@ export function Shell({
   children,
   collapsed = false,
   design,
+  hidden = false,
   nav,
   searchValue,
   tagPickerOpen,
@@ -83,6 +89,7 @@ export function Shell({
               appearanceChoice={appearanceChoice}
               changedViews={changedViews}
               design={design}
+              navigationHidden={hidden && !narrow}
               searchValue={searchValue}
               tagPickerOpen={tagPickerOpen}
               viewport={narrow ? "mobile" : "desktop"}
@@ -109,7 +116,7 @@ function ShellTopBar({
   | "searchValue"
   | "tagPickerOpen"
   | "viewport"
->) {
+> & { navigationHidden: boolean }) {
   const scheme = useRenderedAppearance();
   return (
     <TopBar

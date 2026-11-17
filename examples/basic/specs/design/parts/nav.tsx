@@ -21,6 +21,8 @@ interface NavTreeProps {
   changedCount?: number | undefined;
   changedOnly?: boolean | undefined;
   changesStatus?: ChangesStatus | undefined;
+  /** Whether the reader hid the column on a wide window. */
+  columnHidden?: boolean | undefined;
   nodes?: readonly NavNode[] | undefined;
 }
 
@@ -32,6 +34,7 @@ function CatalogueNavigation({
   changedCount,
   changedOnly,
   changesStatus,
+  columnHidden,
   nodes,
   drawer,
 }: NavTreeProps & { drawer: boolean }) {
@@ -44,12 +47,14 @@ function CatalogueNavigation({
       showChanges={changes}
       changedOnly={changedOnly ?? false}
       presentation={drawer ? "drawer" : "responsive"}
+      {...optional("columnHidden", columnHidden)}
       {...optional("changesStatus", changesStatus)}
       {...optional("activeDestination", activeDestination)}
       {...optional("activeKey", activeKey)}
       {...optional("activeLabel", activeLabel)}
       {...optional("allDestination", navigation.all)}
       {...optional("changesDestination", navigation.changes)}
+      {...optional("toggleDestination", navigation.columnToggle)}
     />
   );
 }
