@@ -1,5 +1,7 @@
 //! Mokly binary composition root.
 
+use mimalloc::MiMalloc;
+
 mod base_dependencies;
 mod changes_base;
 mod changes_runtime;
@@ -50,6 +52,9 @@ mod static_runtime;
 mod static_setup;
 mod terminal;
 mod viewer_assets;
+
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
 
 fn main() -> std::process::ExitCode {
     #[cfg(all(debug_assertions, unix))]
