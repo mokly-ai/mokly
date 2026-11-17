@@ -13,6 +13,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::bundle_store::{BundleStoreMock, ReadOutcome, RecordToken, WriteOutcome};
 use crate::compiled::CompiledGeneration;
 use crate::compiled_fixture::compiled;
+use crate::durable_recipe::DurableRecipe;
 use crate::methods::{Bundle, Call};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
@@ -55,8 +56,11 @@ fn answer(id: &str) -> MethodResult {
     }))
 }
 
-fn recipe(id: &str) -> ReusableRecipe {
-    ReusableRecipe::new(id.into(), params(), vec![], Arc::new(compilation(id, true))).unwrap()
+fn recipe(id: &str) -> DurableRecipe {
+    DurableRecipe::new(
+        ReusableRecipe::new(id.into(), params(), vec![], Arc::new(compilation(id, true))).unwrap(),
+    )
+    .unwrap()
 }
 
 fn hit(id: &str) -> ReadOutcome {
@@ -99,6 +103,7 @@ fn pool(store: Unimock, worker: Unimock) -> Arc<Pool> {
             Arc::new(Unimock::new(())),
             Arc::new(Unimock::new(())),
             Launch {
+                capture_durability: false,
                 node: "node".into(),
                 entry: "sidecar.js".into(),
                 repository: "/repo".into(),

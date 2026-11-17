@@ -128,10 +128,12 @@ test("evidence dropped for the frame bound gives each compilation a fresh genera
   const next = await bundle(params, build);
   assert.deepEqual(first.result.compiled.reuseEvidence, {
     complete: false,
+    durable: false,
     inputs: {},
   });
   assert.deepEqual(next.result.compiled.reuseEvidence, {
     complete: false,
+    durable: false,
     inputs: {},
   });
   assert.notEqual(first.result.generation, next.result.generation);
@@ -175,6 +177,7 @@ test("a grown directory rejects reuse before resolving an excess link", async (c
   assert.equal(
     await currentEvidence({
       complete: true,
+      durable: false,
       inputs: {
         [directoryKey]: {
           kind: "directory",
@@ -191,6 +194,7 @@ test("a grown directory rejects reuse before resolving an excess link", async (c
   assert.equal(
     await currentEvidence({
       complete: true,
+      durable: false,
       inputs: { [directoryKey]: { kind: "directory", entries: [] } },
     }),
     false,

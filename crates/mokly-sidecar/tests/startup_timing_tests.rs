@@ -48,6 +48,7 @@ fn failed_group_attachment_retires_the_created_child_under_spawn() {
         assert!(
             factory
                 .spawn(&Launch {
+                    capture_durability: false,
                     node: "node".into(),
                     entry: root.join("tests/fixtures/sidecar/shutdown-tail.mjs"),
                     repository: root,

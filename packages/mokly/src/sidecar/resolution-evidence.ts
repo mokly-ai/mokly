@@ -6,6 +6,7 @@ import type { Metafile, Plugin } from "esbuild";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
 import { previewCandidates } from "./bundle-entry.js";
+import type { CaptureDurability } from "./capture-durability.js";
 import { ConfigInputs } from "./config-inputs.js";
 import { jsonObject } from "./config-json.js";
 import { importerDirectory } from "./importer-resolution.js";
@@ -28,7 +29,7 @@ function substitution(pattern: string, name: string): string | undefined {
 
 /** Snapshot exact file paths and mapped candidate directories before esbuild resolves an edge. */
 export class ResolutionEvidence {
-  readonly physical = new PhysicalInputs();
+  readonly physical: PhysicalInputs;
   private readonly configs: ConfigInputs;
   private readonly packages = new Set<string>();
   private readonly aliases: Array<[string, string]>;
@@ -36,7 +37,9 @@ export class ResolutionEvidence {
   constructor(
     private readonly params: BundleParams,
     private readonly paths: ModulePaths,
+    durability?: CaptureDurability,
   ) {
+    this.physical = new PhysicalInputs(durability);
     this.configs = new ConfigInputs(this.physical, paths);
     this.aliases = Object.entries(paths.settings.aliases).sort(
       ([a], [b]) => b.length - a.length,

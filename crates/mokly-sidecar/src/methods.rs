@@ -7,6 +7,7 @@ use serde_json::Value;
 use ts_rs::TS;
 
 use crate::bindings::{Bindings, DisposeContext, EntryBinding, SlotInput};
+use crate::capture_hint::CaptureHint;
 use crate::compiled::RestoreGeneration;
 
 /// A request with no method parameters.
@@ -191,6 +192,10 @@ pub struct CssModules {
 #[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
 #[ts(rename = "HelloParams")]
 pub struct Hello {
+    /// Enable disk capture witnesses only when this pool has a bundle store.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub capture: Option<CaptureHint>,
     /// Enable process-local timing records on standard error for this session.
     #[serde(default, skip_serializing_if = "disabled")]
     #[ts(optional, as = "Option<bool>")]

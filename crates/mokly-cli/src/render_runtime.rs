@@ -86,6 +86,7 @@ impl Services {
                 ),
                 clock,
                 Launch {
+                    capture_durability: false,
                     node: SystemNodeExecutable.resolve().unwrap_or_else(|_| {
                         env::var_os("MOKLY_NODE_EXECUTABLE")
                             .map_or_else(|| PathBuf::from("node"), PathBuf::from)

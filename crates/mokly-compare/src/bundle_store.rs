@@ -5,8 +5,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use mokly_sidecar::bundle_outcomes::{EntryFault, SkipReason};
 use mokly_sidecar::bundle_store::{BundleStore, ReadMiss, ReadOutcome, RecordToken, WriteOutcome};
+use mokly_sidecar::durable_recipe::DurableRecipe;
 use mokly_sidecar::methods::Bundle;
-use mokly_sidecar::reusable_recipe::ReusableRecipe;
 
 use crate::bundle_cache_types::{BundleCache, CompilationRead, Mutation, RawRead};
 use crate::bundle_codec::{self, Codec, compilation_digest};
@@ -135,7 +135,7 @@ impl BundleStore for CachedBundles {
         }
     }
 
-    fn save(&self, recipe: &ReusableRecipe) -> WriteOutcome {
+    fn save(&self, recipe: &DurableRecipe) -> WriteOutcome {
         if !self.enabled.load(Ordering::Acquire) {
             return WriteOutcome::Disabled;
         }

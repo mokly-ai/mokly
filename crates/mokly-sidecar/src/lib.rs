@@ -5,6 +5,7 @@
 pub mod bindings;
 pub mod bundle_outcomes;
 pub mod bundle_store;
+pub mod capture_hint;
 pub mod client;
 pub mod codec;
 pub mod compiled;
@@ -12,6 +13,7 @@ pub mod controls;
 pub mod definition_metadata;
 pub mod definitions;
 pub mod diagnostics;
+pub mod durable_recipe;
 pub mod error;
 mod method_results;
 pub mod methods;

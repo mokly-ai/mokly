@@ -140,6 +140,7 @@ impl Pool {
             state.replacement_reasons.insert(index, Reason::Retry);
         }
         let launch = Launch {
+            capture_durability: self.bundle_store.is_some(),
             repository: source_root.into(),
             ..self.launch.clone()
         };

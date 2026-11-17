@@ -19,6 +19,7 @@ fn pool(mock: &Unimock) -> Arc<Pool> {
         Arc::new(mock.clone()),
         Arc::new(mock.clone()),
         Launch {
+            capture_durability: false,
             node: "node".into(),
             entry: "sidecar.js".into(),
             repository: "/repo".into(),

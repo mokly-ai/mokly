@@ -56,6 +56,7 @@ fn pool(root: &Path, counts: Arc<Counts>) -> Pool {
         )),
         clock,
         Launch {
+            capture_durability: false,
             node: "node".into(),
             entry: workspace.join("packages/mokly/dist/sidecar.js"),
             repository: root.into(),

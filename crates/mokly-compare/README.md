@@ -82,14 +82,17 @@ and draws the publication nonce. Each bundle receipt also holds
 `runtimeDigest`, the 32-byte SHA-256 digest of the runtime key of its
 compilation. `BundleCache::replace` takes that digest for the new receipt, and
 access-order updates keep the digest and the nonce. Source and dependency
-receipts hold neither field. Before `save` encodes a recipe,
+receipts hold neither field. `save` takes a `DurableRecipe`, and a `load` hit
+returns one. Before `save` encodes a recipe,
 `BundleCache::compilation` reads only the receipt of the entry, with one
 nonblocking shared stripe attempt, through `Storage::bundle_compilation`. An
 equal digest returns `Unchanged`, and a held stripe skips the write. In every
 other case, `save` replaces the entry. A damaged or unreadable receipt makes
 the result `WriteOutcome::EntryFault`, which adds that entry fault to the
 effects of the write. A `load` hit also checks that the receipt digest matches
-the decoded recipe, or it rejects the entry as damaged. The CLI adds this
+the decoded recipe, or it rejects the entry as damaged. A payload whose recipe
+lacks complete and durable reuse evidence is damaged too, because the decoder
+accepts only a `DurableRecipe`. The CLI adds this
 store to the sidecar pool of each command when `SystemLocations` gives a cache
 location. The
 [bundle cache contract](../../docs/protocol/mokly-base-cache.md#bundle-entries)
@@ -327,7 +330,8 @@ development dependencies, and no test uses the internet.
   write, and maintenance modules.
 - [`src/bundle_codec.rs`](./src/bundle_codec.rs) and its read and write
   modules encode the versioned header and the typed payload, stream the
-  hashes, and check the file and request sizes.
+  hashes, and check the file and request sizes. They write and decode only a
+  `DurableRecipe`.
 - [`src/bundle_inventory.rs`](./src/bundle_inventory.rs),
   [`src/bundle_storage.rs`](./src/bundle_storage.rs), and
   [`src/bundle_receipts.rs`](./src/bundle_receipts.rs) hold the confined IO,

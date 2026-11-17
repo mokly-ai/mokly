@@ -4,6 +4,7 @@ use std::io::{BufReader, Read, SeekFrom};
 use std::sync::Arc;
 
 use mokly_sidecar::bundle_outcomes::EntryFault;
+use mokly_sidecar::durable_recipe::DurableRecipe;
 use mokly_sidecar::methods::Bundle;
 use mokly_sidecar::reusable_recipe::ReusableRecipe;
 use sha2::{Digest, Sha256};
@@ -18,7 +19,7 @@ impl Codec {
         bytes: u64,
         params: &Bundle,
         version: &str,
-    ) -> Result<ReusableRecipe, EntryFault> {
+    ) -> Result<DurableRecipe, EntryFault> {
         if bytes > self.file_bytes as u64 {
             return Err(EntryFault::Damaged);
         }
@@ -95,6 +96,7 @@ impl Codec {
             stored.recipe.modules,
             Arc::new(stored.recipe.compiled),
         )
+        .and_then(DurableRecipe::new)
         .ok_or(EntryFault::Damaged)
     }
 }

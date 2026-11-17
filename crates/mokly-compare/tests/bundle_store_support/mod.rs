@@ -15,6 +15,7 @@ use mokly_platform::flush::SystemFlush;
 use mokly_platform::locks::SystemLocks;
 use mokly_sidecar::bundle_store::{ReadOutcome, RecordToken};
 use mokly_sidecar::compiled::{CompiledGeneration, ReuseEvidence};
+use mokly_sidecar::durable_recipe::DurableRecipe;
 use mokly_sidecar::methods::Bundle;
 use mokly_sidecar::reusable_recipe::ReusableRecipe;
 
@@ -64,30 +65,34 @@ pub fn params(entry: &str) -> Bundle {
 }
 
 /// A small complete compilation with distinct code and runtime identities.
-pub fn recipe(params: Bundle, code: &str) -> ReusableRecipe {
-    ReusableRecipe::new(
-        code.into(),
-        params,
-        vec![],
-        Arc::new(CompiledGeneration {
-            toolchain: "fixture".into(),
-            reuse_evidence: ReuseEvidence {
-                complete: true,
+pub fn recipe(params: Bundle, code: &str) -> DurableRecipe {
+    DurableRecipe::new(
+        ReusableRecipe::new(
+            code.into(),
+            params,
+            vec![],
+            Arc::new(CompiledGeneration {
+                toolchain: "fixture".into(),
+                reuse_evidence: ReuseEvidence {
+                    durable: true,
+                    complete: true,
+                    inputs: Default::default(),
+                },
+                unmapped_dependency_directories: None,
+                identity: code.into(),
+                code: code.into(),
+                runtime_key: format!("runtime:{code}"),
+                dependency_roots: vec![],
+                css_modules: vec![],
+                sources: Default::default(),
+                peers: Default::default(),
                 inputs: Default::default(),
-            },
-            unmapped_dependency_directories: None,
-            identity: code.into(),
-            code: code.into(),
-            runtime_key: format!("runtime:{code}"),
-            dependency_roots: vec![],
-            css_modules: vec![],
-            sources: Default::default(),
-            peers: Default::default(),
-            inputs: Default::default(),
-            metadata_inputs: Default::default(),
-            input_directories: Default::default(),
-            metadata_directories: Default::default(),
-        }),
+                metadata_inputs: Default::default(),
+                input_directories: Default::default(),
+                metadata_directories: Default::default(),
+            }),
+        )
+        .unwrap(),
     )
     .unwrap()
 }

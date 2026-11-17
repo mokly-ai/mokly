@@ -44,46 +44,49 @@ fn a_changed_disk_seed_and_each_valid_fast_path_revert_reach_the_store() {
 }
 
 #[test]
-fn incomplete_bundles_and_direct_serves_never_write() {
-    let saved = Arc::new(Mutex::new(vec![]));
-    let captured = saved.clone();
-    let store = Unimock::new((
-        BundleStoreMock::load
-            .each_call(matching!(_))
-            .returns(ReadOutcome::Miss(ReadMiss::Absent)),
-        BundleStoreMock::save
-            .each_call(matching!(_))
-            .answers_arc(Arc::new(move |_, recipe| {
-                captured
-                    .lock()
-                    .unwrap()
-                    .push(recipe.generation().to_owned());
-                WriteOutcome::Written
-            })),
-    ));
-    let incomplete = Unimock::new((
-        WorkerMock::request
-            .some_call(matching!(_, _))
-            .answers(&|_, _, _| {
-                let mut result = answer("partial");
-                if let MethodResult::Bundle(bundle) = &mut result {
-                    bundle.compiled.reuse_evidence.complete = false;
-                }
-                Ok(result)
-            }),
-        WorkerMock::resident_bytes
-            .some_call(matching!())
-            .returns(Ok(0)),
-    ));
-    let pool = pool(store, incomplete);
-    let result = bundle(&pool);
-    pool.served_generation(&result.generation, result.epoch);
-    assert_eq!(result.cache, Some(CacheOutcome::NoRecord));
-    assert_eq!(pool.lock().compiled.len(), 1);
-    assert_eq!(saved.lock().unwrap().len(), 0);
-    live(&pool, "complete", 8, true, false);
-    pool.served_generation("complete", 8);
-    assert_eq!(*saved.lock().unwrap(), ["complete"]);
+fn incomplete_or_unverified_bundles_and_direct_serves_never_write() {
+    for (complete, durable) in [(false, true), (true, false)] {
+        let saved = Arc::new(Mutex::new(vec![]));
+        let captured = saved.clone();
+        let store = Unimock::new((
+            BundleStoreMock::load
+                .each_call(matching!(_))
+                .returns(ReadOutcome::Miss(ReadMiss::Absent)),
+            BundleStoreMock::save
+                .each_call(matching!(_))
+                .answers_arc(Arc::new(move |_, recipe| {
+                    captured
+                        .lock()
+                        .unwrap()
+                        .push(recipe.generation().to_owned());
+                    WriteOutcome::Written
+                })),
+        ));
+        let incomplete = Unimock::new((
+            WorkerMock::request
+                .some_call(matching!(_, _))
+                .answers_arc(Arc::new(move |_, _, _| {
+                    let mut result = answer("partial");
+                    if let MethodResult::Bundle(bundle) = &mut result {
+                        bundle.compiled.reuse_evidence.complete = complete;
+                        bundle.compiled.reuse_evidence.durable = durable;
+                    }
+                    Ok(result)
+                })),
+            WorkerMock::resident_bytes
+                .some_call(matching!())
+                .returns(Ok(0)),
+        ));
+        let pool = pool(store, incomplete);
+        let result = bundle(&pool);
+        pool.served_generation(&result.generation, result.epoch);
+        assert_eq!(result.cache, Some(CacheOutcome::NoRecord));
+        assert_eq!(pool.lock().compiled.len(), 1);
+        assert_eq!(saved.lock().unwrap().len(), 0);
+        live(&pool, "complete", 8, true, false);
+        pool.served_generation("complete", 8);
+        assert_eq!(*saved.lock().unwrap(), ["complete"]);
+    }
 }
 
 #[test]

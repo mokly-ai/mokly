@@ -18,7 +18,7 @@ export class PhysicalInputs extends PhysicalInputReader {
   readonly inputs = new Map<string, PhysicalInput>();
   readonly identityInputs = new Map<string, string>();
   private bytes = Buffer.byteLength(
-    JSON.stringify({ complete: false, inputs: {} }),
+    JSON.stringify({ complete: false, durable: false, inputs: {} }),
   );
   private linkBytes = 0;
   private requestBytes = 0;
@@ -36,7 +36,7 @@ export class PhysicalInputs extends PhysicalInputReader {
     return {
       evidenceBytes: this.bytes,
       metadataBytes: this.metadataBytes,
-      visitedPathBytes: this.linkBytes,
+      visitedPathBytes: this.linkBytes + (this.durability?.bytes ?? 0),
       requestBytes: this.requestBytes,
     };
   }
@@ -220,12 +220,15 @@ export class PhysicalInputs extends PhysicalInputReader {
         return Promise.resolve();
       }
       this.linkBytes += bytes;
+      this.durability?.budget(this.linkBytes);
       result = (async () => {
         const parent = path.dirname(file);
         if (parent !== file) await this.pathLinks(parent);
         if (!this.complete) return;
         const target = await this.linkTarget(file);
-        if (target !== undefined) this.save(file, { kind: "link", target });
+        if (target !== undefined) {
+          this.save(file, { kind: "link", target });
+        }
       })();
       this.links.set(file, result);
     }
@@ -236,11 +239,13 @@ export class PhysicalInputs extends PhysicalInputReader {
     await this.pending;
     const value = {
       complete: this.complete,
+      durable: false,
       inputs: Object.fromEntries(
         [...this.inputs].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
       ),
     };
     value.complete = await currentEvidence(value);
+    value.durable = (await this.durability?.finish()) ?? false;
     return value;
   }
 }

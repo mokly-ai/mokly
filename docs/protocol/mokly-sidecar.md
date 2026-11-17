@@ -21,6 +21,9 @@ catalogue decisions, caching, invalidation, comparison, and output.
 - The first request is `hello`; the sidecar's first frame is its matching hello
   response with the package version. Reject a mismatch with `sidecar-version`
   before other traffic.
+  When the binary keeps a [bundle cache](./mokly-base-cache.md#stable-capture),
+  `hello` carries the private `capture` hint. It lists at most 64 supported
+  local macOS and Windows volumes in 64 KiB. Without it, no evidence is stable.
 - Recycle after 500 renders or over 1 GiB of resident memory across the sidecar
   and its Node descendants, under the [memory sampling](./mokly-sidecar-memory.md)
   rules. Finish in-flight work before recycling. Reload generations on demand.
@@ -54,7 +57,7 @@ both sides were rejected, because the copies drift and increase the code size.
 
 | Method              | Params                                                                                                            | Result                                                                    |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `hello`             | optional `timings` boolean, default `false`                                                                       | `{ version }`                                                             |
+| `hello`             | optional `timings` boolean, default `false`, and optional `capture` hint                                          | `{ version }`                                                             |
 | `bundle`            | entry files, renderer, stories files, resolution settings, source root, configuration directory, repository roots | `{ generation, modules, compiled }`                                       |
 | `restoreGeneration` | generation, original bundle params, module graph, immutable compiled recipe                                       | nothing                                                                   |
 | `describe`          | generation                                                                                                        | `{ screens, pages, useCases, folders, components, stories, diagnostics }` |

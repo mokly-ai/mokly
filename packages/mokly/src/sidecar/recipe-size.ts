@@ -22,7 +22,11 @@ export function checkRecipeSize(
     bytes > limit &&
     Object.keys(result.compiled.reuseEvidence.inputs).length
   ) {
-    result.compiled.reuseEvidence = { complete: false, inputs: {} };
+    result.compiled.reuseEvidence = {
+      complete: false,
+      durable: false,
+      inputs: {},
+    };
     return checkRecipeSize(params, result, limit);
   }
   if (bytes > limit)

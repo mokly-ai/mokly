@@ -3,6 +3,7 @@
 use std::sync::Arc;
 
 use mokly_sidecar::compiled::{CompiledGeneration, RestoreGeneration, ReuseEvidence};
+use mokly_sidecar::durable_recipe::DurableRecipe;
 use mokly_sidecar::methods::Bundle;
 use mokly_sidecar::reusable_recipe::ReusableRecipe;
 
@@ -27,6 +28,7 @@ pub(crate) fn restore() -> RestoreGeneration {
         compiled: CompiledGeneration {
             toolchain: "toolchain".into(),
             reuse_evidence: ReuseEvidence {
+                durable: true,
                 complete: true,
                 inputs: Default::default(),
             },
@@ -46,13 +48,16 @@ pub(crate) fn restore() -> RestoreGeneration {
     }
 }
 
-pub(crate) fn recipe() -> ReusableRecipe {
+pub(crate) fn recipe() -> DurableRecipe {
     let value = restore();
-    ReusableRecipe::new(
-        value.generation,
-        value.params,
-        value.modules,
-        Arc::new(value.compiled),
+    DurableRecipe::new(
+        ReusableRecipe::new(
+            value.generation,
+            value.params,
+            value.modules,
+            Arc::new(value.compiled),
+        )
+        .unwrap(),
     )
     .unwrap()
 }

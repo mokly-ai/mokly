@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use crate::bundle_outcomes::CacheOutcome;
 use crate::bundle_store::ReadOutcome;
+use crate::durable_recipe::DurableRecipe;
 use crate::error::{Error, Result};
 use crate::methods::{Bundle, Call};
 use crate::pool::Pool;
@@ -113,14 +114,16 @@ impl Pool {
             params.clone(),
             result.modules.clone(),
             Arc::new(result.compiled.clone()),
-        ) && let Some(cache) = self.save_served(&recipe)
+        )
+        .and_then(DurableRecipe::new)
+            && let Some(cache) = self.save_served(&recipe)
         {
             cause = cache;
         }
         result.cache = Some(reused.unwrap_or(cause));
     }
 
-    pub(super) fn save_served(&self, recipe: &ReusableRecipe) -> Option<CacheOutcome> {
+    pub(super) fn save_served(&self, recipe: &DurableRecipe) -> Option<CacheOutcome> {
         let store = self.bundle_store.as_ref()?;
         store.save(recipe).effects().cache
     }
@@ -142,6 +145,7 @@ impl Pool {
                 state.modules[generation].clone(),
                 state.compiled[generation].clone(),
             )
+            .and_then(DurableRecipe::new)
         };
         if let Some(recipe) = recipe {
             self.save_served(&recipe);

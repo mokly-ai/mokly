@@ -65,8 +65,8 @@ line prints and how rich output shows it.
 The bundle cache keeps compiled JavaScript bundles under the
 [compiled recipe rules](./mokly-sidecar-modules.md#compiled-recipes-and-release).
 It keeps one entry for each set of bundle settings: the latest compilation
-that a command served. The settings include the source root, so the head, the
-base, and each base extraction have separate entries.
+that a command served and could store. The settings include the source root,
+so the head, the base, and each base extraction have separate entries.
 Decision: the cache keeps compiled bundles only, and each side keeps its own
 entries. Stored descriptions were rejected, because a description also depends
 on peers, the environment, and the time, so a stored one can be stale. One
@@ -84,15 +84,16 @@ compares the digest with the first line.
 Each bundle cache event other than a hit or a stored write falls into one
 class:
 
-| Class        | Cases                                                                                                  | Output                         | Bundle cache afterwards         |
-| ------------ | ------------------------------------------------------------------------------------------------------ | ------------------------------ | ------------------------------- |
-| Entry fault  | A damaged, unreadable, or foreign entry                                                                | The entry warning at each read | Stays on                        |
-| Store fault  | A filesystem or platform error outside one entry, or an invalid cache location                         | The directory warning, once    | Off for the rest of the process |
-| Normal event | A held lock, no room for a write, incomplete reuse evidence, a failed bundle, or a cancelled operation | None                           | Stays on                        |
+| Class        | Cases                                                                                                              | Output                         | Bundle cache afterwards         |
+| ------------ | ------------------------------------------------------------------------------------------------------------------ | ------------------------------ | ------------------------------- |
+| Entry fault  | A damaged, unreadable, or foreign entry                                                                            | The entry warning at each read | Stays on                        |
+| Store fault  | A filesystem or platform error outside one entry, or an invalid cache location                                     | The directory warning, once    | Off for the rest of the process |
+| Normal event | A held lock, no room for a write, incomplete or unstable reuse evidence, a failed bundle, or a cancelled operation | None                           | Stays on                        |
 
 A damaged entry has a damaged receipt or first line, a wrong size or digest, a
-payload that does not parse, settings that do not match its key, or a receipt
-digest that does not match the runtime import key of its payload. A stored
+payload that does not parse or lacks complete and stable reuse evidence,
+settings that do not match its key, or a receipt digest that does not match the
+runtime import key of its payload. A stored
 compilation is damaged too when its `restoreGeneration` request returns an
 error, crashes the sidecar, or times out. A reuse check that declines a restored
 compilation, because its inputs changed, is a normal miss with no warning. The
@@ -117,8 +118,8 @@ timeout during the restore keeps only the existing
 [recovery](./mokly-sidecar.md#fail-closed-rules), and Mokly adds no retry. No
 bundle cache fault fails a command.
 
-Mokly offers each served compilation with complete reuse evidence to the
-bundle cache, also one served from memory. Before the bundle cache encodes the
+Mokly offers each served compilation with complete and stable reuse evidence to
+the bundle cache, also one served from memory. Before the bundle cache encodes the
 compilation, it reads only the receipt of the entry, under one shared attempt
 of the entry lock. It reads no payload and does not change the eviction order. When the
 receipt holds the digest of the served compilation's runtime import key, the
@@ -160,6 +161,38 @@ Decision: compiled bundles use a third kind of the same cache. The Mokly
 version in the first line keeps each release from parsing the entries of
 another release. A separate single-file store and an embedded database were
 rejected, because each adds a second set of cache rules.
+
+### Stable Capture
+
+The bundle cache stores a compilation only when its reuse evidence is
+complete and stable. Evidence is stable when the sidecar proves that no
+directory on the path to a recorded input, and no recorded configuration or
+manifest file, changed while it captured the evidence and compiled. The
+sidecar makes this proof only for a command that keeps a bundle cache, and
+only on a local volume of a supported file system:
+
+| Platform | File systems                                   |
+| -------- | ---------------------------------------------- |
+| Linux    | ext2, ext3, ext4, xfs, btrfs, tmpfs, overlayfs |
+| macOS    | APFS and HFS+                                  |
+| Windows  | NTFS and ReFS, on a fixed volume               |
+
+Evidence on any other volume, such as a network, FUSE, FAT, or exFAT volume,
+is never stable. On a supported volume, an unrelated change in a directory on
+the path to a recorded input can also prevent the store. A change too recent
+for the time resolution of the file system has the same effect. Before a
+compile, the sidecar waits once, for at most 50 ms, when a recent change could
+otherwise make its evidence unstable. It never waits before a reuse. A
+compilation with unstable evidence keeps every in-process reuse rule of the
+[compiled recipe rules](./mokly-sidecar-modules.md#compiled-recipes-and-release).
+A later process cannot reuse it, and Mokly prints nothing for it.
+Decision: stability decides only whether the bundle cache stores a
+compilation. A rule that also limits reuse inside a process was rejected,
+because a process would lose reuse that it has without the bundle cache. A
+Linux-only proof was rejected, because it turns the bundle cache off on macOS
+and Windows. A compile from an immutable copy of the inputs, and a second
+resolve in a mirror directory, were rejected, because the sidecar performs no
+file writes.
 
 ## Converted Source Identity
 

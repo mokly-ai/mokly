@@ -42,6 +42,7 @@ fn fixture() -> (State, Slot) {
         Arc::new(CompiledGeneration {
             toolchain: "fixture".into(),
             reuse_evidence: ReuseEvidence {
+                durable: true,
                 complete: true,
                 inputs: Default::default(),
             },

@@ -2,7 +2,8 @@
 
 use std::io::{self, Write};
 
-use mokly_sidecar::reusable_recipe::{ReusableRecipe, disk_seed_request};
+use mokly_sidecar::durable_recipe::DurableRecipe;
+use mokly_sidecar::reusable_recipe::disk_seed_request;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use thiserror::Error;
@@ -13,7 +14,7 @@ use crate::bundle_codec::{
 use crate::error::{InternalError, Result};
 
 impl Codec {
-    pub(crate) fn encode(&self, recipe: &ReusableRecipe, version: &str) -> Result<Option<Vec<u8>>> {
+    pub(crate) fn encode(&self, recipe: &DurableRecipe, version: &str) -> Result<Option<Vec<u8>>> {
         let mut header = Header {
             format_version: 1,
             mokly_version: version.into(),

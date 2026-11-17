@@ -53,6 +53,7 @@ fn pool(source: &Path, cache: &Path, counts: Arc<Counts>) -> Pool {
         )),
         clock,
         Launch {
+            capture_durability: false,
             node: "node".into(),
             entry: workspace.join("packages/mokly/dist/sidecar.js"),
             repository: source.into(),
@@ -86,12 +87,14 @@ fn bundle(pool: &Pool, source: &Path) -> results::Bundle {
 
 #[test]
 fn fresh_sidecars_skip_esbuild_and_changed_inputs_replace_the_disk_recipe() {
-    let temporary = tempfile::tempdir().unwrap();
+    let temporary = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
     let root = dunce::canonicalize(temporary.path()).unwrap();
     let source = root.join("source");
     let cache = root.join("cache");
     fs::create_dir(&source).unwrap();
     fs::create_dir(&cache).unwrap();
+    fs::write(source.join("package.json"), "{}").unwrap();
+    fs::write(source.join("tsconfig.json"), "{}").unwrap();
     let entry = source.join("entry.ts");
     fs::write(&entry, "export const value = 'X';").unwrap();
     let first_counts = Arc::new(Counts::default());

@@ -63,6 +63,8 @@ pub struct PhysicalEntry {
 pub struct ReuseEvidence {
     /// False when a limit, failed read, or unsupported resolution leaves a gap.
     pub complete: bool,
+    /// Capture witnesses proved a stable view on supported local volumes.
+    pub durable: bool,
     /// Physical paths and the observations that both reuse checks must reread.
     pub inputs: BTreeMap<String, PhysicalInput>,
 }
@@ -122,7 +124,8 @@ impl CompiledGeneration {
     pub(super) fn same_recipe(&self, other: &Self) -> bool {
         self.identity == other.identity
             && self.toolchain == other.toolchain
-            && self.reuse_evidence == other.reuse_evidence
+            && self.reuse_evidence.complete == other.reuse_evidence.complete
+            && self.reuse_evidence.inputs == other.reuse_evidence.inputs
             && self.inputs == other.inputs
             && self.input_directories == other.input_directories
             && self.unmapped_dependency_directories == other.unmapped_dependency_directories

@@ -3,6 +3,7 @@
 use std::sync::Arc;
 
 use crate::compiled::{CompiledGeneration, RestoreGeneration};
+use crate::durable_recipe::DurableRecipe;
 use crate::methods::{Bundle, Call};
 use crate::results::Module;
 use crate::wire::Request;
@@ -57,7 +58,7 @@ impl ReusableRecipe {
 }
 
 /// Build the exact request whose encoded size a disk write must permit.
-pub fn disk_seed_request(recipe: &ReusableRecipe) -> Request {
+pub fn disk_seed_request(recipe: &DurableRecipe) -> Request {
     Request {
         id: 1,
         call: Call::RestoreGeneration(Box::new(RestoreGeneration {

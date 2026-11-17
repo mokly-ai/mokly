@@ -37,6 +37,7 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
                     compiled: CompiledGeneration {
                         toolchain: "fixture".into(),
                         reuse_evidence: ReuseEvidence {
+                            durable: true,
                             complete: true,
                             inputs: Default::default(),
                         },
@@ -75,6 +76,7 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
         )),
         Arc::new(Unimock::new(())),
         Launch {
+            capture_durability: false,
             node: "node".into(),
             entry: "sidecar".into(),
             repository: "/repo".into(),

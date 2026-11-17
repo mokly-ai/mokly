@@ -1,8 +1,8 @@
 //! Optional disk recipes, recoverable outcomes, and publication identities.
 
 use crate::bundle_outcomes::{Effects, EntryFault, SkipReason, StoreEvent, StoreState};
+use crate::durable_recipe::DurableRecipe;
 use crate::methods::Bundle;
-use crate::reusable_recipe::ReusableRecipe;
 
 /// Identity of one publication, independent of its payload and access order.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -98,7 +98,7 @@ pub enum ReadOutcome {
     /// A complete recipe and the identity required to invalidate it safely.
     Hit {
         /// Complete compilation envelope.
-        recipe: Box<ReusableRecipe>,
+        recipe: Box<DurableRecipe>,
         /// Original publication identity, preserved by receipt touches.
         token: RecordToken,
         /// Optional access maintenance never discards this loaded recipe.
@@ -151,10 +151,10 @@ impl ReadOutcome {
 /// Optional persistent compilation recipes. No result fails a bundle command.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = BundleStoreMock))]
 pub trait BundleStore: Send + Sync {
-    /// Load a complete recipe and release every file and lock before returning.
+    /// Load a complete and durable recipe and release every file and lock before returning.
     fn load(&self, params: &Bundle) -> ReadOutcome;
-    /// Publish a complete recipe when its file and actual seed request fit.
-    fn save(&self, recipe: &ReusableRecipe) -> WriteOutcome;
+    /// Publish a complete and durable recipe when its file and actual seed request fit.
+    fn save(&self, recipe: &DurableRecipe) -> WriteOutcome;
     /// Remove a failed restore only if its publication still matches.
     fn invalidate(&self, params: &Bundle, token: &RecordToken) -> WriteOutcome;
 }

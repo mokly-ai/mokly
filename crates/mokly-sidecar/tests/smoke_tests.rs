@@ -46,6 +46,7 @@ fn pool_with_entry(version: &str, entry: &str) -> Pool {
         Arc::new(factory),
         clock,
         Launch {
+            capture_durability: false,
             node: "node".into(),
             entry: root.join(entry),
             repository: root,

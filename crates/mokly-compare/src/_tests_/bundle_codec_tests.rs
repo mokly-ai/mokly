@@ -73,6 +73,23 @@ fn damage_wrong_settings_and_incomplete_evidence_never_supply_a_disk_seed() {
     other.params.source_root = "/another-repository".into();
     let mut incomplete = restore();
     incomplete.compiled.reuse_evidence.complete = false;
+    let mut unverified = restore();
+    unverified.compiled.reuse_evidence.durable = false;
+    let unverified = serde_json::to_vec(&StoredBundle {
+        kind: StoredKind::Bundles,
+        recipe: unverified,
+    })
+    .unwrap();
+    let legacy = String::from_utf8(
+        serde_json::to_vec(&StoredBundle {
+            kind: StoredKind::Bundles,
+            recipe: restore(),
+        })
+        .unwrap(),
+    )
+    .unwrap()
+    .replace("\"durable\":true,", "")
+    .into_bytes();
     let wrong_settings = serde_json::to_vec(&StoredBundle {
         kind: StoredKind::Bundles,
         recipe: other,
@@ -97,6 +114,16 @@ fn damage_wrong_settings_and_incomplete_evidence_never_supply_a_disk_seed() {
     bad_digest.push(b' ');
     for (name, bytes, fault) in [
         ("digest", bad_digest, EntryFault::Damaged),
+        (
+            "unverified capture",
+            file(1, "current", &unverified),
+            EntryFault::Damaged,
+        ),
+        (
+            "legacy capture",
+            file(1, "current", &legacy),
+            EntryFault::Damaged,
+        ),
         (
             "typed payload",
             file(1, "current", b"invalid payload"),

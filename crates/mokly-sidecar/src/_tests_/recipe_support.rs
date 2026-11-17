@@ -36,6 +36,7 @@ fn compiled(id: &str) -> CompiledGeneration {
     CompiledGeneration {
         toolchain: "fixture".into(),
         reuse_evidence: ReuseEvidence {
+            durable: true,
             complete: true,
             inputs: Default::default(),
         },
@@ -118,6 +119,7 @@ impl Fixture {
                 ClockMock::now_ms.each_call(matching!()).returns(0_u64),
             )),
             Launch {
+                capture_durability: false,
                 node: "node".into(),
                 entry: "sidecar.js".into(),
                 repository: "/repo".into(),

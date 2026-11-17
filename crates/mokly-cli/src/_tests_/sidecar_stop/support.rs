@@ -16,6 +16,7 @@ pub(super) fn pool(factory: &Unimock, clock: &Unimock) -> Pool {
         Arc::new(factory.clone()),
         Arc::new(clock.clone()),
         Launch {
+            capture_durability: false,
             node: "private-node".into(),
             entry: "private-entry".into(),
             repository: "/private-root".into(),

@@ -74,6 +74,7 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
                         compiled: CompiledGeneration {
                             toolchain: "fixture".into(),
                             reuse_evidence: ReuseEvidence {
+                                durable: true,
                                 complete: true,
                                 inputs: Default::default(),
                             },

@@ -234,7 +234,8 @@ process can reuse it. Only a complete live or released compilation seeds a
 `bundle` request. Without such a seed, the pool
 installs the stored compilation with `restoreGeneration` before the request. The
 reuse check then accepts it, or the sidecar compiles. A replay still restores a
-live incomplete generation. The binary stores each served compilation that the
+live incomplete generation. The binary stores each served compilation with
+complete and [stable](./mokly-base-cache.md#stable-capture) evidence that the
 bundle cache lacks, also one served from memory. A failed bundle stores nothing.
 Decision: a stored compilation reaches a sidecar only through
 `restoreGeneration` and the reuse check. A check of the stored compilation in

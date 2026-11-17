@@ -6,6 +6,8 @@ use std::path::PathBuf;
 /// Process launch settings supplied by the binary's composition root.
 #[derive(Clone, Debug)]
 pub struct Launch {
+    /// The pool enables verified capture only when it owns a bundle store.
+    pub capture_durability: bool,
     /// Node executable, resolved through the inherited PATH when relative.
     pub node: PathBuf,
     /// Installed package's dist/sidecar.js.

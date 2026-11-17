@@ -95,6 +95,7 @@ fn leases_are_fifo_and_concurrent_requests_never_exceed_the_size_bound() {
             Arc::new(factory.clone()),
             Arc::new(clock.clone()),
             Launch {
+                capture_durability: false,
                 node: "node".into(),
                 entry: "sidecar.js".into(),
                 repository: "/repo".into(),

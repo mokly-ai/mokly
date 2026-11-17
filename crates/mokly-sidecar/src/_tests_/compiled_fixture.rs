@@ -8,6 +8,7 @@ pub(crate) fn compiled(identity: &str) -> CompiledGeneration {
     CompiledGeneration {
         toolchain: "fixture".into(),
         reuse_evidence: ReuseEvidence {
+            durable: true,
             complete: true,
             inputs: Default::default(),
         },

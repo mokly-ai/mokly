@@ -9,6 +9,10 @@ export type ReuseEvidence = {
  */
 complete: boolean,
 /**
+ * Capture witnesses proved a stable view on supported local volumes.
+ */
+durable: boolean,
+/**
  * Physical paths and the observations that both reuse checks must reread.
  */
 inputs: { [key in string]: PhysicalInput }, };

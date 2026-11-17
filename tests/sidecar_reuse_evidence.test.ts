@@ -214,7 +214,7 @@ test("a fresh sidecar reuses an unchanged recipe and rejects foreign or incomple
   await fresh.call("dispose", { generation: changed.generation });
   await restore({
     ...original.compiled,
-    reuseEvidence: { complete: false, inputs: {} },
+    reuseEvidence: { complete: false, durable: false, inputs: {} },
   });
   const incomplete = await fresh.call<BundleResult>("bundle", params);
   assert.notEqual(incomplete.compiled.runtimeKey, original.compiled.runtimeKey);

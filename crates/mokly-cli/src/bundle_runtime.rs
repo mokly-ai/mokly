@@ -17,8 +17,8 @@ use mokly_platform::flush::SystemFlush;
 use mokly_platform::locks::SystemLocks;
 use mokly_sidecar::bundle_outcomes::{Effects, EntryFault};
 use mokly_sidecar::bundle_store::{BundleStore, ReadMiss, ReadOutcome, RecordToken, WriteOutcome};
+use mokly_sidecar::durable_recipe::DurableRecipe;
 use mokly_sidecar::methods::Bundle;
-use mokly_sidecar::reusable_recipe::ReusableRecipe;
 use mokly_sidecar::workers::Diagnostics;
 
 /// Shared command directory reporter and the selected output mode.
@@ -88,7 +88,7 @@ impl BundleStore for Unavailable {
             ReadMiss::Disabled
         })
     }
-    fn save(&self, _: &ReusableRecipe) -> WriteOutcome {
+    fn save(&self, _: &DurableRecipe) -> WriteOutcome {
         self.fault()
     }
     fn invalidate(&self, _: &Bundle, _: &RecordToken) -> WriteOutcome {
@@ -126,7 +126,7 @@ impl BundleStore for Reported {
         self.report(result.effects());
         result
     }
-    fn save(&self, recipe: &ReusableRecipe) -> WriteOutcome {
+    fn save(&self, recipe: &DurableRecipe) -> WriteOutcome {
         let result = self.inner.save(recipe);
         self.report(result.effects());
         result

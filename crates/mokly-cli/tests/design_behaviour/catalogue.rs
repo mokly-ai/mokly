@@ -73,6 +73,7 @@ fn prepare() -> Catalogue {
         )),
         clock.clone(),
         Launch {
+            capture_durability: false,
             node: env::var_os("MOKLY_NODE_EXECUTABLE").map_or_else(|| "node".into(), PathBuf::from),
             entry: fixture::workspace().join("packages/mokly/dist/sidecar.js"),
             repository: config.repo_root.clone(),

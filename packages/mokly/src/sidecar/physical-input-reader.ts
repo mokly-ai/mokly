@@ -6,6 +6,7 @@ import type { PhysicalEntry } from "../generated/sidecar/PhysicalEntry.js";
 import type { PhysicalInput } from "../generated/sidecar/PhysicalInput.js";
 import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
+import type { CaptureDurability } from "./capture-durability.js";
 import { everyInput, missingFile } from "./file-digests.js";
 
 export const EVIDENCE_LIMIT = 8 * 1024 * 1024;
@@ -24,6 +25,8 @@ export abstract class PhysicalInputReader {
   complete = true;
   protected metadataBytes = 0;
 
+  constructor(protected readonly durability?: CaptureDurability) {}
+
   protected async readMetadata(file: string): Promise<CapturedMetadata> {
     let handle;
     try {
@@ -33,15 +36,17 @@ export abstract class PhysicalInputReader {
       throw error;
     }
     try {
-      const metadata = await handle.stat();
+      const metadata = await handle.stat({ bigint: true });
       if (
         !metadata.isFile() ||
-        metadata.size > METADATA_FILE_LIMIT ||
-        this.metadataBytes + metadata.size > EVIDENCE_LIMIT
+        metadata.size > BigInt(METADATA_FILE_LIMIT) ||
+        BigInt(this.metadataBytes) + metadata.size > BigInt(EVIDENCE_LIMIT)
       )
         throw new Error("metadata evidence limit");
-      this.metadataBytes += metadata.size;
-      const bytes = Buffer.alloc(metadata.size);
+      await this.durability?.observe(file, metadata, true, true);
+      const size = Number(metadata.size);
+      this.metadataBytes += size;
+      const bytes = Buffer.alloc(size);
       let length = 0;
       while (length < bytes.length) {
         const read = await handle.read(bytes, length, bytes.length - length);
@@ -50,7 +55,7 @@ export abstract class PhysicalInputReader {
       }
       if (
         length !== bytes.length ||
-        (await handle.stat()).size !== bytes.length
+        (await handle.stat({ bigint: true })).size !== BigInt(bytes.length)
       )
         throw new Error("metadata changed during capture");
       return {
@@ -82,8 +87,12 @@ export abstract class PhysicalInputReader {
 
   protected async linkTarget(file: string): Promise<string | undefined> {
     try {
-      if ((await fs.lstat(file)).isSymbolicLink())
+      const stat = await fs.lstat(file, { bigint: true });
+      if (stat.isDirectory()) await this.durability?.observe(file, stat, false);
+      if (stat.isSymbolicLink()) {
+        await this.durability?.target(file);
         return await this.realPath(file);
+      }
     } catch (error) {
       if (!missingFile(error)) throw error;
     }

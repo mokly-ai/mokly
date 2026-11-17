@@ -181,7 +181,8 @@ the packed contents of the package.
   compiles the catalogue modules. esbuild resolves most imports itself, and
   [`src/sidecar/native-plan.ts`](./src/sidecar/native-plan.ts) classifies the
   result. It plans a second compile when esbuild's own resolution would change
-  the bundle.
+  the bundle. One evidence owner and one preparation serve every attempt of one
+  call.
 - [`src/sidecar/bundle-recipe.ts`](./src/sidecar/bundle-recipe.ts) holds
   `bundleRecipe`, which turns one compile into its compiled recipe: the module
   graph, the input digests, the reuse evidence, the toolchain identity, and
@@ -214,6 +215,17 @@ the packed contents of the package.
   [`src/sidecar/physical-input-reader.ts`](./src/sidecar/physical-input-reader.ts).
   [`src/sidecar/file-digests.ts`](./src/sidecar/file-digests.ts) streams each
   file digest through one 64 KiB buffer and checks inputs with four workers.
+- [`src/sidecar/capture-durability.ts`](./src/sidecar/capture-durability.ts)
+  holds `CaptureDurability`, which decides the `durable` flag of the reuse
+  evidence when `hello` carries a `capture` hint. Before the first observation
+  of a compile, it can wait once, until at most 50 ms after the compile starts.
+  It records the stamps and the identity of each directory and metadata file
+  at the first touch, and it reads them again after the last attempt. It never
+  changes `complete`.
+  [`src/sidecar/capture-runtime.ts`](./src/sidecar/capture-runtime.ts) holds
+  the stat and clock boundary and the age guard, and
+  [`src/sidecar/capture-volumes.ts`](./src/sidecar/capture-volumes.ts)
+  classifies each volume by its Linux file system type or by the hint.
 - [`src/sidecar/postcss.ts`](./src/sidecar/postcss.ts) holds `PostcssWorkers`,
   which owns the PostCSS child processes.
 - [`src/generated/sidecar`](./src/generated/sidecar) holds the request and

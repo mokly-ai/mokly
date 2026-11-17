@@ -94,7 +94,7 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
                 epoch: 0,
                 compiled: CompiledGeneration {
                     toolchain: "fixture".into(),
-                    reuse_evidence: ReuseEvidence { complete: true, inputs: Default::default() },
+                    reuse_evidence: ReuseEvidence { durable: true, complete: true, inputs: Default::default() },
                     identity: "base-bundle".into(),
                     code: "module.exports={}".into(),
                     runtime_key: "fixture-runtime".into(),

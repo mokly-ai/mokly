@@ -78,10 +78,10 @@ configuration, terminal output, operation event, or timing name.
 
 `BundleStore` is the boundary of the bundle cache, which keeps compiled
 recipes across processes. `load` returns a `ReadOutcome`. A hit holds the
-`ReusableRecipe`, the `RecordToken` of its publication, and the outcome of its
+`DurableRecipe`, the `RecordToken` of its publication, and the outcome of its
 access-order maintenance. A miss names its reason. A rejection holds the entry
 fault and the outcome of one attempt to remove the rejected entry. `save`
-publishes a `ReusableRecipe`, or returns `Unchanged` when the entry already
+publishes a `DurableRecipe`, or returns `Unchanged` when the entry already
 holds its compilation. A save that finds a damaged or unreadable entry still
 writes, and it returns `WriteOutcome::EntryFault` with the bounded effects of
 the fault and of the write. `with_entry_fault` builds that outcome in one
@@ -91,15 +91,21 @@ removes only the publication that a `RecordToken` names. Both return a
 of each outcome maps it once to its `Effects`: the `cache` value of the timing
 record, at most one entry warning and one directory warning, and the
 `StoreState`. `ReusableRecipe::new` accepts only a compilation with complete
-reuse evidence, and `disk_seed_request` builds the `restoreGeneration` request
-of a stored recipe. Live generations keep their `CompiledGeneration` for
+reuse evidence. `DurableRecipe::new` accepts only such a recipe whose evidence
+is also durable, so no store caller can write or read a compilation without a
+stable capture. `disk_seed_request` builds the `restoreGeneration` request of a
+stored `DurableRecipe`. Live generations keep their `CompiledGeneration` for
 explicit restoration. `mokly-compare` implements the store over the OS cache.
 The
 [bundle cache contract](../../docs/protocol/mokly-base-cache.md#bundle-entries)
 owns the entry, fault, and lock rules.
 
 `Pool::with_bundle_store` adds an optional `BundleStore` to the pool. It
-starts no process and reads no file. When a `bundle` call has no complete live
+starts no process and reads no file. A pool with a store sets
+`Launch::capture_durability` for each worker that it starts, so `NodeFactory`
+sends a `CaptureHint` in `hello`. Without a store, the sidecar records no
+capture witnesses and proves no capture stable. When a `bundle` call has no
+complete live
 or released seed, the pool loads the entry of its settings from the bundle
 store. On a hit, it restores the entry with `disk_seed_request` under a
 private `disk:` seed id before the request. The pool reads the store at most
@@ -111,7 +117,8 @@ with the keys of the seeds and of the generations that the worker already
 holds. It sets the `cache` field of the result, which never
 crosses the wire, to `memory` or `hit` for a reused compilation, or else to
 the reason why the sidecar compiled. Then it offers the served recipe to
-`save` when its reuse evidence is complete. The store decides whether to
+`save` when its reuse evidence is complete and durable. The store decides
+whether to
 write it. The pool keeps no record of earlier store calls, and it calls the
 store outside its mutex. Without a store, the pool reads and writes no entry,
 and a compile without a memory seed reports `unavailable`.
@@ -264,6 +271,7 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `with_bundle_store`.
 - [`src/pool_options.rs`](./src/pool_options.rs) defines `Launch` and
   `PoolOptions`, the launch settings and the pool size and deadline override.
+  The pool sets `Launch::capture_durability` when it keeps a bundle store.
 - [`src/pool_recipes.rs`](./src/pool_recipes.rs) defines `Recipes`, the
   bounded store of released compiled recipes with complete reuse evidence.
 - [`src/pool_releases.rs`](./src/pool_releases.rs) keeps the recipe of each
@@ -283,9 +291,17 @@ spawn the built sidecar and render a component, screen, story, and page. The
   an entry fault to the effects of a write.
 - [`src/reusable_recipe.rs`](./src/reusable_recipe.rs) defines
   `ReusableRecipe`, which admits only complete reuse evidence, and
-  `disk_seed_request`, the restore request of a stored recipe.
+  `disk_seed_request`, the restore request of a stored `DurableRecipe`.
+- [`src/durable_recipe.rs`](./src/durable_recipe.rs) defines `DurableRecipe`,
+  the only recipe that the bundle store reads and writes. It admits a
+  `ReusableRecipe` only when its reuse evidence is also durable.
+- [`src/capture_hint.rs`](./src/capture_hint.rs) defines `CaptureHint`, the
+  private `hello` field that asks the sidecar for capture witnesses, and
+  `CaptureVolume`. `CaptureHint::from_volumes` keeps at most 64 volumes from
+  `mokly-platform` within 64 KiB.
 - [`src/process_factory.rs`](./src/process_factory.rs) defines `NodeFactory`,
-  the `WorkerFactory` that starts Node with whole-tree ownership.
+  the `WorkerFactory` that starts Node with whole-tree ownership. It sends the
+  `CaptureHint` in `hello` when the launch asks for capture durability.
 - [`src/process_environment.rs`](./src/process_environment.rs) holds the pure
   environment rule that `NodeFactory` applies to each sidecar command.
 - [`src/workers.rs`](./src/workers.rs) defines the injected `WorkerFactory`,

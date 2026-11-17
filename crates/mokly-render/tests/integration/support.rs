@@ -136,6 +136,7 @@ impl Consumer {
                 }),
                 clock,
                 Launch {
+                    capture_durability: false,
                     node: "node".into(),
                     entry: workspace.join("packages/mokly/dist/sidecar.js"),
                     repository: directory.path().into(),

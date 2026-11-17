@@ -12,6 +12,7 @@ use crate::physical_inputs::{PhysicalInputsMock, current};
 #[test]
 fn read_errors_reject_recorded_absence_and_incomplete_records_never_read() {
     let mut evidence = ReuseEvidence {
+        durable: true,
         complete: true,
         inputs: BTreeMap::from([("/outside/jsconfig.json".into(), PhysicalInput::Absent)]),
     };

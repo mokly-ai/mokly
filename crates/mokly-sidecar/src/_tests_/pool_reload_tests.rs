@@ -119,6 +119,7 @@ fn pair(first: Unimock, second: Unimock) -> Pool {
         Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(())),
         Launch {
+            capture_durability: false,
             node: "node".into(),
             entry: "sidecar.js".into(),
             repository: "/repo".into(),

@@ -16,6 +16,7 @@ import { entryModule } from "./bundle-entry.js";
 import { bundleDetail } from "./bundle-errors.js";
 import type { VirtualOrigin } from "./bundle-errors.js";
 import { bundleRecipe } from "./bundle-recipe.js";
+import type { CaptureDurability } from "./capture-durability.js";
 import { SidecarError } from "./errors.js";
 import { unmeasured } from "./measurements.js";
 import type { Measurements } from "./measurements.js";
@@ -67,6 +68,14 @@ interface NativeOutcome {
   plan?: ReadonlyMap<string, PlannedImport>;
 }
 
+interface BundleCapture {
+  durability?: CaptureDurability | undefined;
+  prepared?: {
+    evidence: ResolutionEvidence;
+    preview: string | null | undefined;
+  };
+}
+
 /**
  * Compile with native resolution first. A native result that a resolve
  * callback result could not reproduce compiles again from its plan, and a
@@ -76,16 +85,23 @@ export async function bundle(
   params: BundleParams,
   compile: typeof build,
   measurements: Measurements = unmeasured,
+  durability?: CaptureDurability,
 ): Promise<Bundled> {
-  const native = await bundleWith(params, compile, measurements, {
-    mode: "native",
-  });
+  const capture: BundleCapture = { durability };
+  const native = await bundleAttempt(
+    params,
+    compile,
+    measurements,
+    { mode: "native" },
+    capture,
+  );
   if ("generation" in native) return native;
-  return bundleWith(
+  return bundleAttempt(
     params,
     compile,
     measurements,
     native.plan ? { mode: "planned", plan: native.plan } : { mode: "full" },
+    capture,
   );
 }
 
@@ -108,15 +124,47 @@ export async function bundleWith(
   measurements: Measurements,
   resolution: Resolution,
 ): Promise<Bundled | NativeOutcome> {
+  return bundleAttempt(params, compile, measurements, resolution, {});
+}
+
+async function bundleAttempt(
+  params: BundleParams,
+  compile: typeof build,
+  measurements: Measurements,
+  resolution: Exclude<Resolution, { mode: "native" }>,
+  capture: BundleCapture,
+): Promise<Bundled>;
+async function bundleAttempt(
+  params: BundleParams,
+  compile: typeof build,
+  measurements: Measurements,
+  resolution: Resolution,
+  capture: BundleCapture,
+): Promise<Bundled | NativeOutcome>;
+async function bundleAttempt(
+  params: BundleParams,
+  compile: typeof build,
+  measurements: Measurements,
+  resolution: Resolution,
+  capture: BundleCapture,
+): Promise<Bundled | NativeOutcome> {
   const virtualOrigins = new Map<string, VirtualOrigin>();
   let sources: ModulePaths | undefined;
   try {
+    if (!capture.prepared) await capture.durability?.prepare(params);
     const runtimeKey = `mokly:runtime:${randomBytes(24).toString("hex")}`;
     params = { ...params, sourceRoot: await fs.realpath(params.sourceRoot) };
     const paths = await ModulePaths.create(params);
     sources = paths;
-    const evidence = new ResolutionEvidence(params, paths);
-    const capturedPreview = await evidence.prepare();
+    if (!capture.prepared) {
+      const evidence = new ResolutionEvidence(
+        params,
+        paths,
+        capture.durability,
+      );
+      capture.prepared = { evidence, preview: await evidence.prepare() };
+    }
+    const { evidence } = capture.prepared;
     const require = await consumerRequire(params, paths);
     const inputs = {
       files: new Map<string, Uint8Array>(),
@@ -125,8 +173,9 @@ export async function bundleWith(
     };
     const { contents, inputPaths, preview } = await entryModule(
       params,
-      capturedPreview,
+      capture.prepared.preview,
     );
+    capture.prepared.preview = preview ?? null;
     const settings = params.moduleResolution;
     const loaders = Object.fromEntries(
       Object.entries(settings.loaders).filter(

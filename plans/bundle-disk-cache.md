@@ -20,9 +20,9 @@ installs the stored bundle in the worker with the existing
 `restoreGeneration` request. The sidecar's `reuse` input check then accepts
 it or compiles. The check also gains the inputs that it misses today and the
 identity of the toolchain that compiled the code. The pool offers each
-complete served bundle to the store. The store skips a write when its current
-receipt names that compilation. Both comparison sides use it, because they share one
-pool. The plan does not cache the describe result, the CSS Modules class
+complete and durable served bundle to the store. The store skips a write when
+its current receipt names that compilation. Both comparison sides use it,
+because they share one pool. The plan does not cache the describe result, the CSS Modules class
 maps, or the stylesheet bundles of graph preparation. It does not change the
 Serve base lifetime, which perf 6 owns.
 
@@ -50,8 +50,9 @@ Contract owners:
 - The READMEs of [`@mokly/mokly`](../packages/mokly/README.md),
   [mokly-sidecar](../crates/mokly-sidecar/README.md),
   [mokly-compare](../crates/mokly-compare/README.md),
-  [mokly-render](../crates/mokly-render/README.md), and
-  [mokly-cli](../crates/mokly-cli/README.md).
+  [mokly-render](../crates/mokly-render/README.md),
+  [mokly-cli](../crates/mokly-cli/README.md), and, under call 30,
+  [mokly-platform](../crates/mokly-platform/README.md).
 
 ## Historical baseline
 
@@ -776,9 +777,10 @@ The approved options are 1 A, 2 A, 3 A, 4 D, 5 A, 6 D, 7 C, 8 A, and 9 C.
    every memory compilation available to the worker before the request.
    A match with a memory seed is `memory`. A match with a disk seed is
    `hit`. No match means that the sidecar compiled. The pool offers each
-   complete served envelope to the store. The store skips a write only when
-   the current receipt names that compilation, under current call 26. A core
-   fast-path hit sends the same served-generation notice to the pool.
+   complete and durable served envelope to the store, under call 30. The
+   store skips a write only when the current receipt names that compilation,
+   under current call 26. A core fast-path hit sends the same
+   served-generation notice to the pool.
 5. The pool returns the outcome with the result, in a field that never
    crosses the wire, as `epoch` does. The core's bundle call records it on
    the `catalogue.bundle` span. A damaged, unreadable, or foreign entry
@@ -793,13 +795,18 @@ The approved options are 1 A, 2 A, 3 A, 4 D, 5 A, 6 D, 7 C, 8 A, and 9 C.
   capture reuse-only resolution, peer, and configuration evidence through
   the bounded owner in `physical-inputs.ts`. `resolution-inputs.ts` keeps
   the existing render-key and watch metadata. `compiled.ts` compares the
-  toolchain and evidence in `reuse`.
+  toolchain and evidence in `reuse`. The capture owner also records the
+  witnesses of call 30, runs its barrier, and sets `durable`.
 - `crates/mokly-sidecar/src/compiled.rs`: the `toolchain` field of
   `CompiledGeneration` and typed physical evidence, with generated
   TypeScript types. The render core checks that evidence through
   `crates/mokly-render/src/physical_inputs.rs` on its own fast path.
 - `crates/mokly-sidecar`: a `BundleStore` boundary with `load` and `save`,
-  the outcome type, the pool seed and the pool write.
+  the outcome type, the pool seed and the pool write. Under call 30, `load`
+  returns and `save` accepts only the durable-recipe type. The pool sends
+  the private capture hint in `hello` only when it keeps a store.
+- `crates/mokly-platform`: the local volume enumeration of macOS and
+  Windows for that hint, under call 30.
 - `crates/mokly-compare`: the `bundles` kind, the replace operation, the
   entry codec, and the store over the cache.
 - `crates/mokly-cli`: the store composition in `render_runtime.rs`. One
@@ -1175,6 +1182,274 @@ These are my calls, made on 2026-10-30 under the decision test.
     external edits. A retry breaks the task. The checked E stays within
     the existing contract. No user decision is open.
 
+30. My call, 2026-11-17: apply checked option F, with the adaptive compile
+    maturity barrier and without the owned-root hint. Recommendation F
+    replaces my first B and the interim B′ of the options check. The
+    addendum of that check settled F on 2026-11-17. No user decision is
+    open.
+
+    Problem: the reuse evidence of a compilation must describe the
+    filesystem view from which esbuild selected each module. Three windows
+    broke that rule:
+
+    - Transient window: a higher-priority candidate of an open lookup
+      disappears while esbuild resolves, then returns before `finish()`.
+      esbuild compiles the lower candidate. The evidence and the filesystem
+      both show the higher candidate, so the evidence is complete for the
+      wrong code.
+    - Attempt window: each attempt of one `bundle()` call captured its own
+      evidence. The planned attempt captured after the native attempt had
+      selected its modules. A lasting change between the attempts then gave
+      complete evidence for an old selection.
+    - Cached-listing window: esbuild caches each directory listing at its
+      first read, for the whole build. Under call 28, an exact-file lookup
+      records no parent listing. A later open lookup in that directory
+      records a newer listing. A lasting change between the two reads gives
+      complete evidence for an old selection. A real esbuild 0.28.2
+      regression confirmed the cached listing on Linux.
+
+    Root question: how does a stored compilation prove that its evidence
+    equals the filesystem view from which esbuild selected each module,
+    without less in-process reuse than `origin/main` gives?
+
+    Shared assumptions, with their sources:
+
+    - The task and calls 9, 14, and 21 require no stale code, the warm
+      restart, no retry, bounded capture, and the incomplete-evidence
+      fallback. Every option keeps them.
+    - `mokly-sidecar-modules.md` requires that the sidecar writes no file.
+      Only C and G drop it, so both need the user.
+    - The text of B let a witness clear `complete`. That reason is gone,
+      because `complete` also gates in-process reuse and the identity.
+      `origin/main` has no completeness check, and two `origin/main` tests
+      assert its reuse. E and F drop the assumption.
+    - The comment on `ResolutionEvidence` implies that capture precedes
+      each esbuild read that it records. The attempt and cached-listing
+      windows prove this false. E and F drop it.
+    - The first draft assumed that only a transient change breaks the
+      evidence. This is false. E and F cover both lasting windows.
+    - The text of B took a nanosecond stamp field as proof of a fine clock.
+      This Linux 6.8 kernel stamps from a coarse clock. E and F add an age
+      guard.
+    - The text of B assumed that Node can classify every volume. Node
+      reports a file system type only on Linux. F drops the assumption.
+    - Calls 28 and 29 prefer a capture that copies no resolver rule. This is
+      a design preference, not a protocol requirement. So D may copy rules.
+
+    Options:
+
+    - A. Mark every open lookup incomplete. Small. It is safe, but package
+      and extensionless imports lose the warm restart. It also removes the
+      in-process reuse of `origin/main`.
+    - B. My first choice. Capture bounded mutation witnesses with identity
+      and fine change stamps. A changed or unreliable witness clears
+      `complete`. Medium. It removes in-process reuse and deterministic
+      identities on macOS and Windows. After a recent edit, it breaks two
+      `origin/main` assertions. It misses both lasting windows. The interim
+      B′ of the check kept these flaws.
+    - C. Compile and capture from one immutable filesystem snapshot. Large.
+      It prevents the class, but it needs sidecar file writes. It also
+      moves source, dependency, and path ownership.
+    - D. Bind each actual resolved winner to the captured candidates at the
+      resolver boundary. Large. It keeps all reuse and may copy resolver
+      precedence rules. A variant runs esbuild's own resolver over the
+      captured view through `esbuild-wasm`. That adds a dependency and a
+      file system shim.
+    - E. B corrected. One evidence owner serves all attempts. Witnesses run
+      from the first touch until after `finish()`, and they decide a new
+      `durable` flag only. A private `hello` hint names the binary-owned
+      cache root. Only Linux volumes qualify. Medium. The disk cache stays
+      off on macOS and Windows, so the branch's disk-hit test fails on
+      those CI jobs.
+    - F. E, plus volume classes from Rust in the private `hello` hint for
+      macOS and Windows. Large in total, and Medium beyond E. It needs a
+      one-time proof of the stamp behaviour on each CI runner type.
+    - G. Write the captured topology and metadata under a mirror root.
+      Resolve each open edge there once with esbuild. A different winner
+      blocks the store. Large. It needs sidecar file writes, a second
+      resolve for each open edge, and the right to create links on Windows.
+    - H. E with Linux inotify watches in place of stamps. Medium beyond E.
+      Each compile needs thousands of watches from a per-user limit of
+      65,536 here and 8,192 on older kernels. That can starve the watchers
+      of Serve or an editor. macOS and Windows stay off.
+
+    Left out:
+
+    - A witness from mtime alone, or stamps without identity and a precision
+      rule. tar, rsync, and `utimes` restore an mtime, and a coarse clock can
+      repeat a stamp.
+    - Multigrain stamps alone. They make a witness sound on Linux 6.13 and
+      later. This machine runs 6.8, so the warm goal fails here.
+    - A guard or witness that clears `complete`. It breaks the two
+      `origin/main` assertions and removes their reuse. E and F are better
+      on every point.
+    - A wait for each recent stamp before esbuild reads it. The first check
+      left it out as an open-ended sleep. The single bounded barrier that
+      Cal proposed on 2026-11-17 replaces it.
+    - Witnesses below the source root only. A flip of an ancestor
+      `node_modules`, `package.json`, or `tsconfig.json` then stays unseen.
+    - D without precedence rules, which requires a sole present candidate.
+      It is sound, but nested `node_modules` levels and packages with both
+      `main` and `module` targets never become durable.
+    - A check that the winner is still present. It misses the transient
+      window.
+    - One re-resolve after the compile, a second resolver on reuse, and
+      locks. The same transient state can occur during both resolves. The
+      reuse contract forbids an esbuild operation on reuse. Locks cannot
+      stop external edits.
+    - A proof in the pool, the disk store, the Rust fast path, or the reuse
+      check. They see only finished recipes. A stamp that reuse checks is a
+      persistent timestamp input, which decision 4 left out.
+    - The owned-root hint of E. The barrier ages the receipt and publication
+      writes that the cache makes before a base compile. Add the hint only
+      if the Milestone 5 measurement shows base misses.
+
+    Wider fix: C stays the structural wider fix. It is blocked, because it
+    needs sidecar file writes and moves source ownership. G is the detection
+    fix without platform limits. It is blocked for the same reason. F is the
+    best option that is not blocked.
+
+    Design of F:
+
+    - One `ResolutionEvidence` and one `prepare()` serve every attempt of
+      one `bundle()` call, with the captured preview selection. `finish()`
+      runs once, after the last attempt. `bundleWith()` keeps its signature
+      and a fresh capture for direct callers. This part needs no stamps. A
+      lasting change between attempts makes the evidence incomplete, also
+      for in-process reuse.
+    - A witness starts at the first touch and ends after `finish()`. A
+      directory witness is a bigint lstat in the ancestor walk of each
+      observed path: `dev`, `ino`, `ctimeNs`, and `mtimeNs`. A link also
+      gets a bigint stat of its target directory. A metadata-file witness is
+      a bigint stat of the open handle in the metadata read, with the same
+      fields and `size`. Source bodies get no witness, because their
+      consumed digests cover them.
+    - Each witness charges its path bytes and 48 bytes to the 8 MiB
+      visited-path bound. The barrier preflight also stays within that
+      bound. A compilation above the bound is not durable. Its completeness
+      does not change.
+    - The age guard at the first touch reads the realtime clock in
+      nanoseconds. A stamp younger than 50 ms makes the compilation not
+      durable. When `ctimeNs` and `mtimeNs` are both whole seconds, the
+      guard is 2.1 s. A zero stamp, or a stamp more than 1 s in the future,
+      is not durable. Two ticks of the largest clock tick prove a tick
+      boundary. That tick is 10 ms on Linux with `HZ=100` and on macOS, and
+      15.6 ms on Windows.
+    - After `finish()`, the four input workers stat each witness again. A
+      changed field, a read error, or a changed volume class makes the
+      compilation not durable. Witnesses never enter the recipe, and no
+      reuse check reads them.
+    - The adaptive barrier runs before the first observation of a real
+      compile. Its preflight takes bigint lstats of the ancestor chains of
+      the source root, the configuration directory, and each entry, stories,
+      and renderer file. A stamp within its age guard and not newer than the
+      request start makes the sidecar wait once. The wait ends at the
+      request start plus 50 ms at the latest.
+    - The barrier cap stays separate from the age guard. A whole-second
+      stamp keeps its 2.1 s guard at the first touch, so its compilation can
+      miss the store. No wait of 2.1 s exists.
+    - The barrier runs at most once for each real compile. It never runs on
+      memory or disk reuse. It does not wait when no recent change exists.
+    - `ReuseEvidence` gains `durable: boolean` on the wire. The bundle
+      format is unpublished, so the field stays in schema 1. Witnesses
+      decide `durable` only. They never change `complete`, the identity,
+      in-process reuse, memory seeds, released retention, or the Rust fast
+      path.
+    - The reusable-recipe type of call 23 stays complete-only, for memory
+      seeds and released retention. A separate durable-recipe type requires
+      complete and durable evidence. Disk saves and disk read results use
+      only that type. It also protects direct store callers and entry
+      decode. It adds no outcome, timing value, or setting.
+    - The pool sends the private `hello` hint only when it keeps a bundle
+      store. Only a sidecar with the hint records witnesses and runs the
+      barrier. Without the hint, no compilation is durable. In-process tests
+      and builds without a store then pay nothing.
+    - On Linux, a volume qualifies by its Node `statfs` type, cached for
+      each `dev`: `0xEF53` for ext2, ext3, and ext4, `0x58465342` for xfs,
+      `0x9123683E` for btrfs, `0x01021994` for tmpfs, and `0x794C7630` for
+      overlayfs.
+    - On macOS, `crates/mokly-platform` calls `getfsstat` with
+      `MNT_NOWAIT`. It keeps each `MNT_LOCAL` mount whose `f_fstypename` is
+      `apfs` or `hfs`. The hint sends the `st_dev` of its mount point and
+      its `f_type`. A durable `dev` must also show the hinted `f_type` in
+      Node `statfs`. That catches a `dev` that a later mount reuses.
+    - On Windows, `crates/mokly-platform` enumerates volumes with
+      `FindFirstVolumeW`. It keeps each `DRIVE_FIXED` volume whose
+      `GetVolumeInformationW` name is NTFS or ReFS. The hint sends the
+      serial number and the mount roots from
+      `GetVolumePathNamesForVolumeNameW`. A durable `dev` equals a hinted
+      serial on a path below that volume's drive letter or mount root. A UNC
+      path is never durable.
+    - The hint holds at most 64 volumes and 64 KiB. It uses only the
+      workspace crates `libc` and `windows-sys`, which already exist.
+    - Every other volume is not durable. Examples are NFS, SMB, AFP, WebDAV,
+      9p, FUSE, FAT, exFAT, and the Linux `ntfs3` driver.
+    - A complete compilation that is not durable keeps in-process reuse, its
+      identity, memory seeds, and released retention, as today. Only its
+      disk write does not happen. The command does not fail and prints no
+      warning. The next restart compiles.
+    - An unrelated change in a witnessed ancestor, such as the home or the
+      temporary directory, also skips a store. In production this costs one
+      compile at the next restart. Tests therefore use a private fixture
+      parent.
+
+    Tests keep every existing assertion. No test gets a wait, a sleep, a
+    skip, or a retry.
+
+    - Unit tests drive the decision through an injected stat, volume class,
+      and clock. They cover unchanged and changed witnesses, recent fine and
+      whole-second stamps, zero and future stamps, an unknown `dev`, an
+      unsupported type, the bound, and a witness that cannot change
+      `complete`.
+    - Fail-first regressions use a real filesystem, in-process `bundle()`,
+      a compile wrapper, and an injected clock. A transient higher candidate
+      gives complete evidence that is not durable. So does a higher
+      candidate created between an exact lookup and a later open lookup in
+      one directory. That fail-first run also confirms the esbuild listing
+      cache.
+    - The real-sidecar disk tests keep their assertions. Their fixture is
+      below a private parent, such as `CARGO_TARGET_TMPDIR`. The test writes
+      it before the pool starts, as production does.
+    - One-time platform proofs run on this machine and on the macOS 26 and
+      Windows 2025 runner types, with Node 22.15.0 and Node 24. A bigint stat
+      of a directory must change `ctimeNs` and `mtimeNs` after a child is
+      created, renamed, and deleted. Node's `stat.dev` must equal the hinted
+      value on macOS and Windows. Each proof records the Node and libuv
+      versions.
+    - The proof artifacts stay under `.context/`, and the pull request names
+      them. After the source commit, the root may run a temporary
+      context-only workflow on the existing runner types. No permanent
+      one-time test, platform semantic test, or gate change is added.
+
+    Cost: the barrier waits at most 50 ms for each real compile, and only
+    after a recent change. Milestone 5 measures it with the capture cost,
+    without an elapsed-time test. That measurement is pending.
+
+    Authorization under the decision test: F is my design call.
+
+    - It changes no requirement in force. A compilation that is not durable
+      only misses the disk cache, which the approved best-effort contract
+      permits.
+    - In-process behaviour, identities, and every existing assertion stay.
+    - It adds no error, gate, retry, test seam, or public setting. The
+      `hello` hint is private. The bounded wait is a design call with a
+      measured cost.
+    - The protocol and README updates record a mechanism within the approved
+      requirements, as calls 24 to 26 did. They land with the code.
+    - A user decision opens only in three cases. A one-time proof fails on
+      macOS or Windows, because a platform-specific test expectation then
+      changes the documented cache requirement. Someone chooses C or G,
+      because both need sidecar file writes. A fix of the in-process windows
+      reduces in-process reuse, because that removes `origin/main`
+      functionality.
+
+    In-process reuse keeps the transient and cached-listing exposure, which
+    `origin/main` also has in a wider form. The durable check protects only
+    the disk store. The follow-up item
+    [in-process-resolution-coherence.md](./follow-ups/in-process-resolution-coherence.md)
+    holds that work. Its recommended option binds the resolved winners and
+    keeps all reuse. It is Large.
+
 The options check for the restored decisions and these calls is recorded
 under `.context/bundle-disk-cache/options-check-current.md` and
 `.context/bundle-disk-cache/options-check-calls-14-19.md`. Call 20 uses
@@ -1194,6 +1469,7 @@ Call 26 uses `.context/bundle-disk-cache/options-check-call-26.md`.
 Call 27 uses `.context/bundle-disk-cache/options-check-call-27.md`.
 Call 28 uses `.context/bundle-disk-cache/options-check-call-28.md`.
 Call 29 uses `.context/bundle-disk-cache/options-check-call-29.md`.
+Call 30 uses `.context/bundle-disk-cache/options-check-call-30.md`.
 
 ## Milestone 1: Documentation and protocol
 
@@ -1341,6 +1617,42 @@ Depends on: 4
 - [x] Give the callback, sidecar, and final-render diagnostic fixtures their
       own external bundle cache. Keep it across each fixture's commands and
       remove it with the fixture. Preserve every diagnostic assertion.
+- [x] Share one evidence owner across native, planned, and full attempts.
+      Prepare once and finish after the last attempt, under call 30. Prove
+      that a lasting inter-attempt change rejects reuse.
+- [ ] Close the transient open-lookup capture window under checked call 30.
+      Close the cached-listing window for the disk store too. Preserve
+      existing reuse assertions on every supported platform.
+  - [x] Add `durable` to `ReuseEvidence` and regenerate the TypeScript
+        types. Keep the reusable-recipe type complete-only for memory. Add
+        the durable-recipe type for disk saves and disk read results. The
+        pool offers the store only complete and durable recipes.
+  - [x] Send the private `hello` capture hint only from a pool with a
+        bundle store. Without the hint, record no witness, run no barrier,
+        and mark no compilation durable.
+  - [x] Record the directory and metadata-file witnesses from the first
+        touch, with the age guards and stamp rules of call 30. Stat each
+        witness again after `finish()`. Charge the witnesses and the barrier
+        preflight to the visited-path bound. Change only `durable`.
+  - [x] Add the adaptive barrier before the first observation of a real
+        compile. End its one wait at the request start plus 50 ms at the
+        latest. Never wait on reuse.
+  - [x] Classify Linux volumes by Node `statfs`. Enumerate the local APFS
+        and HFS+ volumes of macOS and the fixed NTFS and ReFS volumes of
+        Windows in `crates/mokly-platform`. Bound the hint at 64 volumes and
+        64 KiB.
+  - [x] Add the decision unit tests with an injected stat, volume class,
+        and clock. Add fail-first regressions for the transient and
+        cached-listing windows. Keep every disk-hit assertion, with a
+        private fixture parent. Add no wait, sleep, skip, retry, or platform
+        semantic test.
+  - [ ] Prove once that directory stamps change and that `stat.dev` equals
+        the hint, on this machine and the macOS 26 and Windows 2025 runner
+        types, with Node 22.15.0 and 24. Keep the artifacts under
+        `.context/`. A failed proof on macOS or Windows goes to the user.
+  - [x] Update the protocol pages and the READMEs in the commit of the
+        code, after the source names settle and the root authorizes each
+        README.
 - [ ] Measure with the method of the brief, interleaved with `origin/main`:
       three warm runs, the edit run, and the React fixture. Save the output
       under `.context/bundle-disk-cache/`. Count zero warm compile spans and
@@ -1348,6 +1660,11 @@ Depends on: 4
 - [ ] Measure the added evidence-capture cost after an edit and a core
       fast-path rebuild. Assess whether the capture scheduling needs a
       change. Keep this as measurement evidence, not a time gate.
+- [ ] Measure the barrier of call 30 with the capture cost: how often it
+      waits, and its total wait on real compiles. Check that the first
+      Changes run stores a base entry and that the next run hits it. Add the
+      owned-root hint only if base misses remain. Keep this as measurement
+      evidence, not a time gate.
 - [ ] Prove once that `mokly build --strict` output with a cache hit is
       byte-identical to a cold build. Save the proof under `.context/`.
 - [ ] Smoke test: restart Serve on `examples/basic`, open the catalogue, and
@@ -1375,13 +1692,19 @@ Depends on: 4
       restore timing fields.
 
 Merge evidence: `.context/bundle-disk-cache/merge-notes.md` and
-`.context/bundle-disk-cache/merge-86-preservation.json`.
+`.context/bundle-disk-cache/merge-86-preservation.json`, and
+`.context/bundle-disk-cache/merge-f380-preservation.json`.
 
 Evidence: `.context/bundle-disk-cache/reports/preview-reuse-fix.md`,
 `.context/bundle-disk-cache/reports/test-cache-isolation.md`, and
 `.context/bundle-disk-cache/logs/strict-output-d-cli-package.json`,
 `.context/bundle-disk-cache/reports/strict-output-fix.md`, and
 `.context/bundle-disk-cache/reports/final-docs.md`.
+
+Call 30 evidence: `.context/bundle-disk-cache/reports/capture-window.md`
+and `.context/bundle-disk-cache/reports/durability-docs.md`,
+`.context/bundle-disk-cache/reports/durability.md`, and
+`.context/bundle-disk-cache/reports/durability-boundary-docs.md`.
 
 ## Milestone 6: Verification, commit, review, and pull request
 

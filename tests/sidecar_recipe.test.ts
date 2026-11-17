@@ -19,7 +19,7 @@ function compiled(): CompiledGeneration {
   return {
     identity: "compiled",
     toolchain: "fixture",
-    reuseEvidence: { complete: true, inputs: {} },
+    reuseEvidence: { complete: true, durable: false, inputs: {} },
     code: "module.exports={}",
     runtimeKey: "private",
     dependencyRoots: [],
@@ -65,6 +65,7 @@ test("bundle recipes carry one module graph and fail with a typed size diagnosti
   assert.doesNotThrow(() => checkRecipeSize(params, result, 2048));
   assert.deepEqual(result.compiled.reuseEvidence, {
     complete: false,
+    durable: false,
     inputs: {},
   });
 });
