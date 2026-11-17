@@ -3,7 +3,13 @@ import path from "node:path";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { CaptureHint } from "../generated/sidecar/CaptureHint.js";
 
-import { captureRuntime, mature, maturityGuard } from "./capture-runtime.js";
+import {
+  captureRuntime,
+  captureSnapshot,
+  mature,
+  maturityGuard,
+  sameCaptureStat,
+} from "./capture-runtime.js";
 import type { CaptureRuntime, CaptureStat } from "./capture-runtime.js";
 import { CaptureVolumes } from "./capture-volumes.js";
 import { everyInput, missingFile } from "./file-digests.js";
@@ -127,16 +133,26 @@ export class CaptureDurability {
     const key = JSON.stringify([file, follow]);
     if (this.witnesses.has(key)) return;
     const bytes = Buffer.byteLength(file) + 48;
+    const touched = this.runtime.now();
     if (
       this.visitedBytes + this.bytes + bytes > VISITED_LIMIT ||
-      !mature(stat, this.runtime.now()) ||
-      !(await this.volumes.supported(file, stat))
+      !mature(stat, touched)
     ) {
       this.reject();
       return;
     }
-    this.bytes += bytes;
-    this.witnesses.set(key, { file, follow, stat, metadata });
+    try {
+      if (!metadata)
+        stat = await captureSnapshot(this.runtime, file, stat, follow, false);
+      if (!(await this.volumes.supported(file, stat))) {
+        this.reject();
+        return;
+      }
+      this.bytes += bytes;
+      this.witnesses.set(key, { file, follow, stat, metadata });
+    } catch {
+      this.reject();
+    }
   }
 
   /** Recheck stamps and current volume classes after all physical evidence. */
@@ -144,16 +160,18 @@ export class CaptureDurability {
     if (!this.durable) return false;
     const volumes = new CaptureVolumes(this.hint, this.runtime);
     return everyInput([...this.witnesses.values()], async (witness) => {
-      const actual = await (witness.follow
+      const stat = await (witness.follow
         ? this.runtime.stat(witness.file)
         : this.runtime.lstat(witness.file));
-      const before = witness.stat;
+      const actual = await captureSnapshot(
+        this.runtime,
+        witness.file,
+        stat,
+        witness.follow,
+        witness.metadata,
+      );
       return (
-        actual.dev === before.dev &&
-        actual.ino === before.ino &&
-        actual.ctimeNs === before.ctimeNs &&
-        actual.mtimeNs === before.mtimeNs &&
-        (!witness.metadata || actual.size === before.size) &&
+        sameCaptureStat(witness.stat, actual, witness.metadata) &&
         (await volumes.supported(witness.file, actual))
       );
     });

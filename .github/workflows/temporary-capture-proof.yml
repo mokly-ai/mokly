@@ -62,6 +62,9 @@ jobs:
         run: npm run build --workspace @mokly/mokly
       - name: Read actual native volume hint
         run: cargo run --locked -p mokly-sidecar --example capture_volumes --quiet > capture-hint.json
+      - name: Prove Windows Node 22 handle stamps and junctions
+        if: runner.os == 'Windows'
+        run: node scripts/temporary-capture-handle-proof.mjs capture-hint.json | tee capture-handle-node-22.jsonl
       - name: Prove Node 22.15.0 stamps and native mapping
         run: node scripts/temporary-capture-volume-proof.mjs capture-hint.json | tee capture-proof-node-22.jsonl
       - name: Set up Node 24
@@ -70,6 +73,9 @@ jobs:
         with:
           node-version: 24
           package-manager-cache: false
+      - name: Prove Windows Node 24 handle stamps and junctions
+        if: always() && runner.os == 'Windows'
+        run: node scripts/temporary-capture-handle-proof.mjs capture-hint.json | tee capture-handle-node-24.jsonl
       - name: Prove Node 24 stamps and native mapping
         if: always()
         run: node scripts/temporary-capture-volume-proof.mjs capture-hint.json | tee capture-proof-node-24.jsonl
@@ -81,5 +87,6 @@ jobs:
           path: |
             capture-hint.json
             capture-proof-node-*.jsonl
+            capture-handle-node-*.jsonl
           if-no-files-found: error
           retention-days: 14
