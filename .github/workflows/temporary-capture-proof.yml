@@ -65,11 +65,13 @@ jobs:
       - name: Prove Node 22.15.0 stamps and native mapping
         run: node scripts/temporary-capture-volume-proof.mjs capture-hint.json | tee capture-proof-node-22.jsonl
       - name: Set up Node 24
+        if: always()
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version: 24
           package-manager-cache: false
       - name: Prove Node 24 stamps and native mapping
+        if: always()
         run: node scripts/temporary-capture-volume-proof.mjs capture-hint.json | tee capture-proof-node-24.jsonl
       - name: Retain one-time evidence
         if: always()
