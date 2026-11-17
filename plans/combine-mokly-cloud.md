@@ -74,11 +74,14 @@ Each call below is my call, made on 2026-11-17.
   moves to `docs/architecture/cloud.md`.
 - License scope. `LICENSE` stays MIT and names the AGPL paths. The AGPL
   paths are `apps/`, the `mkc-` crates, `packages/tokens/`, `infra/`, and
-  `scripts/cloud/`. Each AGPL path holds a `LICENSE` file with the
-  AGPL-3.0 text. Their manifests say `AGPL-3.0-only`. The `-only` form
+  `scripts/cloud/`. Their manifests say `AGPL-3.0-only`. The `-only` form
   keeps the terms under the control of this repository. Docs, plans, and
   the cloud mockups stay MIT. The boundary rule below also keeps the MIT
   packages free of AGPL code.
+- License text. Changed on 2026-11-17 during Milestone 2:
+  `LICENSES/AGPL-3.0-only.txt` holds the AGPL-3.0 text once, instead of a
+  copy in each AGPL path, because the `mkc-` crates alone would need 28
+  copies.
 - Crate names. The `mkc-` prefix stays, as Cal allowed. The two crates
   without a prefix become `mkc-email-interface` and `mkc-email-postmark`, so
   that every cloud crate has the prefix.
@@ -88,6 +91,12 @@ Each call below is my call, made on 2026-11-17.
 - Boundary. Mokly is app-independent. No `mokly-*` crate depends on an
   `mkc-` crate. No package under `packages/` imports a project under `apps/`.
   A check enforces both rules. The cloud may depend on Mokly.
+- Boundary, extended on 2026-11-17 after Milestone 1. MIT code never
+  depends on AGPL code. This also covers `packages/tokens/` and `xtask`.
+  The `stripe-catalogue` command of the cloud `xtask` therefore becomes a
+  binary of a cloud crate, which `xtask` runs as a subprocess. The cloud
+  imports only the documented exports of the Mokly packages and the public
+  API of the Mokly crates.
 - Native suite. The `mkc-` crates use Diesel with Postgres, which needs
   `libpq`. The hosted macOS and Windows native jobs build and test only the
   `mokly-*` crates and `xtask`. Linux runs every crate.
@@ -95,14 +104,40 @@ Each call below is my call, made on 2026-11-17.
   an existing Mokly suite or in a new cloud suite. The complete gate runs
   every suite. A cloud suite fails when its tool, such as Postgres, is
   missing, because Mokly suites reject skips.
+- Cloud Rust suite, decided on 2026-11-17 after Milestone 1. The Repository
+  suite formats every crate and runs Clippy on the `mokly-*` crates and
+  `xtask`. A cloud Rust suite runs Clippy and the tests of the `mkc-`
+  crates, which need `libpq` and Postgres. The Repository suite then runs on
+  every host. The remote executor runs the cloud suites too. The cloud app
+  suite accepts `--shard`, as the cloud CI splits it into four jobs.
 - Public CI. Fork pull requests never get secrets, preview environments, or
   cloud deploy credentials. Deploy and preview jobs run only for `main` and
-  for pull requests from branches of this repository. Production deploys
-  keep their GitHub environment protection.
+  for pull requests from branches of this repository. Only a push to the
+  protected `main` branch, or a manual run from `main`, deploys production,
+  as in the cloud repository today. The jobs use no approval environment.
 - Deploy trigger. Every push to `main` runs the cloud deploy, because a
   change under `packages/` changes the hosted viewer.
 - React. One React version serves the viewer and the cloud app, so that the
-  app has one React instance. Expo and React Native set the upper bound.
+  app has one React instance. Expo and React Native set the upper bound. On
+  2026-11-17 the workspace pinned React 19.2.3 exactly, the version that the
+  React Native 0.85.3 renderer of the cloud app needs. Mokly develops with
+  React 19.3.0 today. Its packages accept every React 19.
+- React Native libraries. On 2026-11-17 the root pinned `react-native`
+  0.85.3. The cloud projects adopted the versions that the Mokly lockfile
+  already resolved for the shared React Native, Lucide, Playwright, `tsx`,
+  `yaml`, `sharp`, and Node type packages, so that each has one copy. Each
+  step is a patch or minor step inside the React Native 0.85 range.
+  `@firna/ui` keeps two majors: 0.14 for the Mokly example and 4.0.0 for
+  the cloud, nested in each cloud workspace. `packages/tokens` declares the
+  React Native peers of `@firna/ui` as dev dependencies, so that npm does
+  not resolve a newer `react-native` for it.
+- Root scripts. The cloud root scripts `mockups:*`, `emails:*`, and `site:*`
+  keep their names at the root, because Mokly has no script with those
+  names. Only the colliding names change: `typecheck` becomes
+  `cloud:typecheck`, `test` becomes `cloud:test`, and `ci:install` becomes
+  `npm ci`.
+- Published docs. The `@mokly/mokly` npm package leaves out
+  `docs/protocol/cloud/`.
 - Contract fixtures. `cargo xtask mokly-fixtures` regenerates the contract
   fixtures from the workspace build, not from installed npm releases. The
   drift check stays.
@@ -145,13 +180,13 @@ The combined layout, the boundary rule, and the combined gate get their
 contracts before the code moves. Each new or changed page starts with a
 status line that links this plan, until the behaviour exists.
 
-- [ ] Add `docs/protocol/repository-layout.md`: the paths of the design
+- [x] Add `docs/protocol/repository-layout.md`: the paths of the design
       calls, the `mkc-` prefix rule, and the boundary rule.
-- [ ] Update `docs/protocol/ci-verification.md`,
+- [x] Update `docs/protocol/ci-verification.md`,
       `docs/protocol/ci-workflow.md`, and
       `docs/protocol/developer-test-commands.md` for the cloud suites, the
       Linux-only cloud crates, and the fork rule.
-- [ ] Update the root `README.md` and `AGENTS.md` for the combined product.
+- [x] Update the root `README.md` and `AGENTS.md` for the combined product.
       Move the cloud rules for one area into the README or the protocol doc
       next to that area, as the `agents-md` skill says.
 
@@ -164,12 +199,12 @@ the first push of an imported file publishes it, as Cal decided.
 
 - [x] Freeze cloud `main`. The snapshot is commit `6d5163d6` of
       `mokly-ai/mokly-cloud`.
-- [ ] Copy the snapshot to the paths of the design calls. Leave out the
+- [x] Copy the snapshot to the paths of the design calls. Leave out the
       cloud `.git`, `Cargo.lock`, `ts/package-lock.json`, and the root files
       that this repository already has.
-- [ ] Merge `.gitignore`, `.prettierignore`, and `.dockerignore`.
-- [ ] Apply the license scope of the design calls. Add the AGPL `LICENSE`
-      files, update `LICENSE` and the README, and set `license` in each
+- [x] Merge `.gitignore`, `.prettierignore`, and `.dockerignore`.
+- [x] Apply the license scope of the design calls. Add the AGPL text,
+      update `LICENSE` and the README, and set `license` in each
       cloud `Cargo.toml` and `package.json`. Keep the third-party notices,
       such as `crates/mkc-domain/data/github-reserved-names-LICENSE` and
       the license of the Inter font under `docs/mockups/styles/fonts/`.
@@ -180,12 +215,12 @@ the first push of an imported file publishes it, as Cal decided.
 
 Depends on: 2
 
-- [ ] Merge the workspace `Cargo.toml`: members, `[workspace.dependencies]`,
+- [x] Merge the workspace `Cargo.toml`: members, `[workspace.dependencies]`,
       `[workspace.lints]`, resolver 3, and Rust 1.98.1 in
       `rust-toolchain.toml` and `rust-version`.
-- [ ] Rename `email-interface` and `email-postmark` to `mkc-email-interface`
+- [x] Rename `email-interface` and `email-postmark` to `mkc-email-interface`
       and `mkc-email-postmark`, with every use.
-- [ ] Merge `.cargo/config.toml`. Keep the `target/xtask` target directory
+- [x] Merge `.cargo/config.toml`. Keep the `target/xtask` target directory
       of the Mokly alias.
 - [ ] Regenerate `Cargo.lock`. Run `cargo build --workspace`,
       `cargo clippy --workspace --all-targets`, and `cargo test` for each
@@ -204,7 +239,7 @@ Depends on: 2
 - [ ] Replace each exact `@mokly/*` pin of a cloud project with the
       workspace package. Add the cloud manifests to the Release Please
       `extra-files` when a pin must follow the release version.
-- [ ] Choose one React version for the viewer, the UI package, and the
+- [x] Choose one React version for the viewer, the UI package, and the
       app. Check that the app bundle holds one React copy.
 - [ ] Merge `.prettierrc.json` and `eslint.config.js`. Keep the Astro plugin
       and the Mokly intrinsic-element rule for `packages/viewer/src`.
@@ -241,6 +276,9 @@ Depends on: 3, 4, and 5
 - [ ] Limit the native suite on macOS and Windows to the `mokly-*` crates
       and `xtask`.
 - [ ] Add the boundary check of the design calls to the Repository suite.
+- [ ] Move the `stripe-catalogue` command into a binary of a cloud crate.
+- [ ] Make the remote executor run the cloud suites. Allow `--shard` for
+      the cloud app suite.
 - [ ] Delete the cloud `xtask`. Keep every Rust file at 300 lines or fewer.
 - [ ] Run `cargo xtask check`. Save the result under
       `.context/combine-cloud/`.
@@ -255,6 +293,7 @@ Depends on: 6
 - [ ] Apply the public CI rule of the design calls to every job that reads
       a secret or requests an OIDC token. Test the guard with a fork
       pull request event fixture.
+- [ ] Leave `docs/protocol/cloud/` out of the `@mokly/mokly` package.
 - [ ] Scope Release Please to the published packages. Keep the cloud
       projects out of the changelog and the version bump.
 - [ ] Change the repository and the workflow paths in the Workload Identity

@@ -1,0 +1,94 @@
+# Mockups README Key Code holds mechanics
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-10-30, found while the closed [PR #70](https://github.com/mokly-ai/mokly-cloud/pull/70) edited the file, outside its scope.
+- **Location:** `docs/mockups/README.md:195-262`, the Key Code section, and the doc comments of the code files that it names. Option D also covers `docs/mockups/README.md:125-142` and `:155-172`.
+- **Reason:** The user's approval of 2026-11-03 applied option A and kept B and C for the user, and the later options D and E each include B.
+- **Checked:** 2026-11-04, after option A and the merge of the overlay changes from `main` at `b2b30715`. The README has 290 lines. Its Key Code section at lines 195-262 still holds long entries of mechanics.
+- **Checked:** 2026-11-06, after the merge of `origin/main` at `967ab6c8` into `calummoore/skeleton-sizing-mismatch`. The README has 295 lines (291 on `main`). Its Key Code section is at lines 195-268 and still holds long entries of mechanics.
+- **Category:** Repository rule.
+
+- **Terms:**
+  - **Key Code:** The README section that names the entry points a reader opens first, each with one sentence, under the `documentation` skill.
+  - **Doc comment:** The comment at the top of a code file or an export that says what it does.
+  - **Authoring page:** `docs/mockups/add-or-change-a-screen.md`, the sibling page of the README that holds the steps to add or change a screen.
+  - **Area README:** A `README.md` beside the code of one part of the catalogue, such as `docs/mockups/src/fixtures/README.md`.
+- **Background:** The list below gives the facts.
+  - The always-on rules target about 200 lines per file and split a file that passes 300.
+  - The `documentation` skill keeps READMEs concise and high-signal. It puts entry points under Key Code in the crate or area README, and mechanics in the code and its doc comments.
+  - PR #51 created the Key Code section at commit `3989436d` on 2026-10-21. The README then had 316 lines, and Key Code had 46 entries with 9,922 characters.
+  - `docs/mockups/README.md` had 321 lines on `main` on 2026-10-30 and at commit `f568853e` on 2026-10-31. Its Key Code section then had 51 entries at lines 241-294.
+  - At commit `13ecc0a5` on `main`, on 2026-11-03, the README had 385 lines. Its Key Code section had 56 entries with 14,972 characters at lines 302-357.
+  - On 2026-11-03, the branch `conductor/follow-ups-mockup-tooling-and-splits` applied option A. It moved the full section "Add Or Change A Screen", README lines 120-228 at `13ecc0a5`, into the authoring page.
+  - The five steps, the entry sample and the closing paragraph moved word for word. The authoring page has 111 lines and links back to the README.
+  - The README keeps the heading "Add Or Change A Screen" and a link to the authoring page. Links to `#add-or-change-a-screen` still resolve.
+  - The same branch split two code modules. In Key Code, it replaced the one entry for `app-owners.ts` and `app-parity.ts` with six short entries, one for each app-parity file.
+  - It also added two short entries for `stage.tsx` and `unpublished-stage.tsx`, which `main` did not list.
+  - The README now has 290 physical lines, after the merge kept three new Key Code entries from the overlay change on `main`. That is under the split limit of 300 and over the target of 200.
+  - Key Code, lines 195-262, has 66 entries with 16,875 characters. 17 entries pass 300 characters. The longest, for `src/screens/product/viewer/published-viewer.tsx` at line 219, has 1136 characters.
+  - Each entry stays on one source line, because `.prettierrc.json` sets `proseWrap: "preserve"`. So Key Code holds about 55% of the README's characters in 66 lines.
+  - Key Code names 138 distinct code files and 10 directories. The count takes each backticked name that ends in `.ts`, `.tsx`, `.mjs`, `.js`, `.css` or `.json`.
+  - The item recorded 101 code files at `f568853e`. It did not record its counting method, so the two counts may differ in method.
+  - An options check on 2026-11-03 sampled the doc comments. 113 of the 118 TypeScript and JavaScript files that Key Code names have a doc comment, and 108 have it in their first 25 lines.
+  - The five files without one are four email and product test files and `src/components/review-illustration.tsx`.
+  - The same check read ten long Key Code entries against the doc comments of their files. The doc comments hold all facts of seven entries, part of two, and none of one:
+    - All facts: `src/document.tsx`, `definition-policy.ts`, `catalogue-index.ts`, `published-viewer.tsx` with `published-view.ts`, `responsive-menu.tsx`, the site parts, and the product stylesheets that have a header comment.
+    - Part of the facts: `panel.tsx` and `selector.tsx`.
+    - No facts: `styles/components.css`, which has no header comment. `styles/product/inventory.css` has no header comment either.
+  - A rough word-overlap check found 36 of the 63 entries with at least 60% of their words in the doc comments of their files.
+  - Two passages outside Key Code also have a home elsewhere:
+    - The steps under "Add Or Change A Registered Component", lines 125-142, are the twin of the screen steps that moved to the authoring page.
+    - The test harness paragraphs under Commands, lines 155-172, repeat `ts/mockups/README.md` on the strict build comparison, the suite order, the missing base ref and the capture folder.
+    - That README lacks two of their facts: the 390px mobile journey captures and the sorted order of the mismatch list.
+  - By the options check's estimate, B leaves about 20 Key Code entries and about 245 README lines. D leaves about 215 lines.
+  - No option other than A is applied.
+- **Problem:** The README is still over the 200-line target. Many Key Code entries hold several sentences of mechanics instead of one sentence on what the entry point does. Doc comments already hold most of those mechanics.
+- **Impact if no action:** Each change to the catalogue makes Key Code longer, and readers must read mechanics to find an entry point. Key Code grew from 46 entries on 2026-10-21 to 66 on 2026-11-04.
+- **Root question:** How does the mockups README stay short enough to read, and keep each fact in its home?
+- **Options:**
+  - **A.** Move the authoring steps under "Add Or Change A Screen" into a linked page beside the README. Effort: Small. Applied on 2026-11-03: the steps and the entry sample are now in `docs/mockups/add-or-change-a-screen.md`.
+  - **B.** Cut Key Code to the entry points that a reader opens first, with one sentence each. Move the mechanics into the code doc comments of those files. Doc comments already hold most of them, so B mostly deletes repeats. It adds a few comments, for example headers in `styles/components.css` and `styles/product/inventory.css`. Effort: Medium.
+  - **C.** Do A and B. A is already complete, so the remaining work of C is the work of B. C is now the same choice as B. Effort: Medium.
+  - **D.** Do B, and move two more passages that have a home elsewhere. Effort: Medium.
+    - Move the steps under "Add Or Change A Registered Component" to the authoring page or to a sibling page.
+    - Replace the test harness paragraphs under Commands, README lines 155-172, with the link to `ts/mockups/README.md`. That README already holds most of their facts. Move the other facts there.
+    - The README then has about 215 lines.
+    - Cost: a wider title or a sibling page, and one more README edit.
+  - **E.** Do B, but split Key Code by area. Effort: Medium.
+    - The README keeps one entry for each area and the few files that a reader opens first.
+    - A large area gets its own README beside its code. Examples are `src/_tests_/`, with 138 files and 18 entries now, and `src/screens/product/viewer/`, with 9 entries.
+    - Cost: two more READMEs to keep current, and one more link for a reader. An area README can also grow as this one did.
+- **Left out:** The list below gives the approaches that the options leave out.
+  - Change nothing more. The README meets the split rule, but Key Code still repeats facts that doc comments hold. It fails the goal of keeping each fact in its home.
+  - Move Key Code into a second linked page. The README gets shorter, but the mechanics stay in a doc. It fails the same goal. `docs/mockups/composition.md` already acts as such a page for some mechanics.
+  - Cut the mechanics from Key Code without moving them. Many of those facts already have a home in doc comments, and B also deletes those repeats. But text that has no other home would be lost, so it fails the goal.
+  - Generate Key Code from marked doc comments, with a drift check. The Key Code rule of the `documentation` skill is the wider fix in force, and a drift check is a new gate.
+  - Add a README note that repeats the one-sentence Key Code rule. It copies a rule that the `documentation` skill already holds.
+  - Wrap the entries at 80 columns. It moves no fact.
+- **Wider fix:** None. The Key Code rule of the `documentation` skill and the always-on length rules are the wider fix in force. `plans/follow-ups/changed-files-have-no-length-check.md` holds a length check for changed Markdown files. That check is a new gate, so it waits for the user.
+- **Previous examples:** `plans/follow-ups/app-test-files-pass-300-lines.md` records the same class for app test files. Commit [`88668a4b`](https://github.com/mokly-ai/mokly-cloud/commit/88668a4b71a9a1a83d2ce6c4554d1c8c2a553752), from PR #122 merged on 2026-11-04, fixed a case of the same class in `docs/mockups/composition.md` and `ts/mockups/README.md`. It removed repeated mechanics from those guides and kept each fact in its home, mostly a code doc comment.
+- **Related:** The list below gives the links.
+  - `plans/follow-ups/changed-files-have-no-length-check.md`, shared wider fix. It names this item as a current case of its class.
+- **Recommendation:** D. It moves the README toward the approximate 200-line target. It uses moves like A and leaves about 215 lines against about 245 for B. The recommendation was B before the options check of 2026-11-03.
+- **Action:** ask the user, because the user asked to decide these choices: the approval of 2026-11-03 applied A and kept B and C for the user, and D and E each include B.
+
+History. The list below keeps the earlier record of this item.
+
+- The item first had the kind Outside the scope, with the effort Small (estimate) of option A.
+- Its first reason was that the file already passed 300 lines on `main` before the closed pull request edited it.
+- Its first recommendation was B, which applies the Key Code rule of the `documentation` skill.
+- It then recommended A (estimate), because A brought the file under 300 lines with documentation only.
+- Its Action was `fix after merge, apply A`, because the file passed the limit on `main` before the branch that found it.
+- It sent B and C to the user because they are Large. An earlier decision test sent such options to the user.
+- The current decision test does not send an option to the user only because it is Large or edits more than five files.
+- It left out a single cohesive file. `AGENTS.md` allows that only when a split is not practical, and both cuts were practical.
+- After A, on 2026-11-03, the item recommended B. It graded B and C Large, because Key Code names 134 code files.
+- The options check of 2026-11-03 added D and E and recommended D. It graded B and C Medium, because doc comments already hold most of the mechanics.
+- At commit `f568853e`, the longest Key Code entry had 790 characters.
+- The closed PR #70 would have added two more lines to the README.
+
+Checks for the work:
+
+- Run `cargo xtask markdown-links`, `cargo xtask prettier` and `cargo xtask whitespace`.
+- B, C, D and E also edit code doc comments, so run `cargo xtask mockups` and `cargo xtask eslint`.

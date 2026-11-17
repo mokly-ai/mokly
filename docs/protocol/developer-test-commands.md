@@ -1,5 +1,7 @@
 # Developer Test Commands
 
+Status: The cloud crates and projects are not in the workspaces yet. The [combine plan](../../plans/combine-mokly-cloud.md) adds them.
+
 ## Public Commands And Preparation
 
 - `npm test -- [<file> ...] [<pattern> ...]` builds first with `npm run build`,
@@ -154,6 +156,21 @@ defines selected browser runs and the required static-delivery check.
 
 The [type check contract](./developer-type-checks.md) defines the type check
 commands, their shared project inventory, and the Bun provisioning rules.
+
+## Cloud Crates And Projects
+
+`cargo test -p <crate>` also runs the tests of one `mkc-` crate, and
+`cargo test --workspace` runs them for every `mkc-` crate. The `mkc-` crates
+use Diesel with Postgres, so they need `libpq` to build. Their database tests
+need a reachable Postgres, and `MKC_TEST_DATABASE_URL` selects the database.
+On macOS and Windows, the Native suite builds and tests only the `mokly-*`
+crates and `xtask`. On Linux, it covers every crate.
+
+Each cloud project under `apps/` and `packages/tokens/` runs its own tests with
+`npm run <script> --workspace <package>`, as its README says. Such a run, like
+a selected crate test, is partial verification. The
+[cloud suites](./ci-verification.md#cloud-suites) run every cloud check in the
+complete gate.
 
 ## Partial Verification
 

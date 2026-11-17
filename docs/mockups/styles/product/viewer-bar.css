@@ -1,0 +1,40 @@
+/* The cloud-owned viewer root and the compact composition of the top bar that
+   spans it. The root is the bar's container, so the bar's own width chooses
+   the full bar or the compact bar with More, at the one switch width in
+   `viewer.css`. Every rule here belongs to the compact bar, which a bar
+   narrower than that width draws. `viewer.css` imports this file, so these
+   rules come before its own. */
+.fo-viewer-screen {
+  container: fo-viewer-bar / inline-size;
+  display: flex;
+  flex-direction: column;
+  /* A fixed height for the package shell's `height: 100%`. No 100vh minimum
+     from `.folio-root`: it is taller than 100dvh while phone toolbars show. */
+  height: 100dvh;
+  min-height: 0;
+  position: relative;
+}
+/* The compact bar hides the publication's state and each part that only the
+   full bar draws. A desktop drawing draws both compositions in one bar, and
+   each part that only one of them draws is a flex box. A part's rule names
+   the viewer root, so it outweighs the part's own display. */
+.fo-package-slot-compact .fo-top-state,
+.fo-compact-publication .fo-top-state,
+.fo-viewer-screen .fo-full-bar-state .fo-top-state,
+.fo-viewer-screen .fo-full-bar-only {
+  display: none;
+}
+/* The App's probe of the switch, a part that only the full bar draws: a
+   hidden 1px box beside the viewer root. It has no box on a compact bar,
+   outside a viewer root or without these styles. Observing it reports each
+   change of composition, also one that only the reader's text size makes. */
+.fo-viewer-bar-probe {
+  display: none;
+  position: absolute;
+  top: 0;
+  inset-inline-end: 100%;
+  width: 1px;
+  height: 0;
+  visibility: hidden;
+  pointer-events: none;
+}

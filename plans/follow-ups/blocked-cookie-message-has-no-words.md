@@ -1,0 +1,31 @@
+# Blocked-cookie message has no words
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-02, from Decision 12 of the Mokly 0.18.0 upgrade on the branch `calummoore/mokly-cli-upgrade`. The Milestone 1 docs agent raised it on 2026-11-01, and an options check added options C and D.
+- **Location:** `docs/protocol/viewer.md`, section "Catalogue Isolation", the app card `ts/app/src/viewer/stage.tsx:252-256`, and the mockups `docs/mockups/src/screens/product/viewer/stage.tsx:170-176`.
+- **Reason:** On 2026-11-02 the user deferred the choice, and with it the blocked-cookie part of Decision 5.
+- **Category:** UX wording.
+
+- **Terms:**
+  - **Catalogue cookie:** the cookie on the web address of a private catalogue, which the app sets through `POST /_access`.
+  - **Decision 5:** the user's choice of 2026-11-01 to remove **Open catalogue in a new tab**, because the 0.18.0 standalone shell cannot load a private catalogue.
+- **Background:**
+  - Browsers that block third-party cookies, such as Safari, refuse the catalogue cookie. Decision 5 shows a final message without the action **Open catalogue in a new tab**.
+  - On iPhone and iPad, every browser uses WebKit, which also blocks the cookie.
+  - The app and the mockups still show the old card, whose new-tab action never loads a private catalogue in 0.18.0.
+  - These protocol statements describe Decision 5 and wait for this item: `viewer.md` on the final message and on no new tab, `catalogue-hosting.md` on the final message and no new-tab recovery, `product-mockups-viewer.md` on the blocked-cookie card, `viewer-chrome.md` on the final message, and `mokly-artifact-compatibility.md` on the removed action.
+- **Problem:** No one has chosen the words of the message, so the Decision 5 card cannot replace the old card.
+- **Impact if no action:** Readers in browsers that block the cookie get a new-tab action that opens a page that never loads.
+- **Root question:** What does the reader read when this browser cannot open a private publication?
+- **Options:**
+  - **A.** **This publication can’t open in this browser**, with "Open it in another browser." It is false on iPhone and iPad. Effort: Small.
+  - **B.** **Open this publication in another browser**, with "This browser blocks the cookie that private publications need." It is false on iPhone and iPad, and it uses a technical term. Effort: Small.
+  - **C.** **This publication can’t open in this browser**, with "Open it in Chrome, Edge or Firefox on a computer." It is true everywhere, but it names other products. Effort: Small.
+  - **D.** **This publication can’t open in this browser**, with "Allow cross-site cookies in this browser’s settings." It works on iPhone and iPad, but it weakens privacy for every site. Effort: Small.
+- **Left out:** A title with no way forward, because `docs/protocol/product-copy.md` asks an error for a recovery when one exists.
+- **Wider fix:** None. The restore is in `plans/follow-ups/private-catalogues-lose-changes-and-blocked-cookie-access.md`.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/private-comparison-overlay-blocks-current.md`, same code. Both answers change one card in `stage.tsx`.
+- **Recommendation:** C. It keeps the card's title form, and it gives one recovery that works on every platform.
+- **Action:** ask the user, because this is new user-facing text that no requirement states.

@@ -38,9 +38,28 @@
     "benchmark:large": "node --import tsx scripts/large/cli.ts benchmark",
     "test:browser": "npm run -s build && node scripts/verification/browser-developer.mjs",
     "test:browser:prepared": "node scripts/verification/run-browser.mjs",
-    "test:delivery:prepared": "node scripts/verification/static-delivery.mjs"
+    "test:delivery:prepared": "node scripts/verification/static-delivery.mjs",
+    "mockups:build": "npm run mockups:build --workspace @mokly-cloud/mockups",
+    "mockups:check": "npm run mockups:check --workspace @mokly-cloud/mockups",
+    "mockups:test": "npm run mockups:test --workspace @mokly-cloud/mockups",
+    "mockups:typecheck": "npm run mockups:typecheck --workspace @mokly-cloud/mockups",
+    "mockups:serve": "npm run mockups:serve --workspace @mokly-cloud/mockups",
+    "emails:build": "npm run emails:build --workspace @mokly-cloud/mockups",
+    "emails:check": "npm run emails:check --workspace @mokly-cloud/mockups",
+    "emails:test": "npm run emails:test --workspace @mokly-cloud/mockups",
+    "site:browser": "npm run browser --workspace @mokly-cloud/site",
+    "site:build": "npm run build --workspace @mokly-cloud/site",
+    "site:check": "npm run site:build && npm run site:typecheck && npm run site:test && npm run site:links && npm run site:browser",
+    "site:lighthouse": "npm run lighthouse --workspace @mokly-cloud/site",
+    "site:links": "npm run links --workspace @mokly-cloud/site",
+    "site:routes": "npm run routes:generate --workspace @mokly-cloud/site",
+    "site:test": "npm run test --workspace @mokly-cloud/site",
+    "site:typecheck": "npm run typecheck --workspace @mokly-cloud/site",
+    "cloud:typecheck": "npm run typecheck --workspace packages/tokens --workspace apps/app --workspace apps/desktop --workspace apps/mockups --workspace apps/site --workspace apps/worker",
+    "cloud:test": "npm run test --if-present --workspace packages/tokens --workspace apps/app --workspace apps/desktop --workspace apps/mockups --workspace apps/site --workspace apps/worker"
   },
   "devDependencies": {
+    "@ast-grep/cli": "0.45.3",
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/server": "^11.11.0",
@@ -48,9 +67,9 @@
     "@firna/ui": "^0.14.0",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@happy-dom/global-registrator": "^21.0.4",
-    "@mokly/ui": "0.19.0",
-    "@mokly/model": "0.19.0",
     "@mokly/frame": "0.19.0",
+    "@mokly/model": "0.19.0",
+    "@mokly/ui": "0.19.0",
     "@mokly/viewer": "0.19.0",
     "@playwright/test": "^1.61.1",
     "@storybook/react": "^10.6.2",
@@ -67,6 +86,7 @@
     "esbuild": "^0.28.2",
     "eslint": "^10.12.0",
     "eslint-plugin-import-x": "^4.17.1",
+    "eslint-plugin-react-hooks": "7.1.1",
     "globals": "^17.13.0",
     "happy-dom": "^21.0.4",
     "lightningcss": "^1.33.0",
@@ -79,8 +99,9 @@
     "postcss": "^8.5.29",
     "postcss-value-parser": "^4.2.0",
     "prettier": "^3.9.9",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
     "react-native-gesture-handler": "^2.33.0",
     "react-native-reanimated": "~4.3.4",
     "react-native-safe-area-context": "^5.10.1",
@@ -91,7 +112,7 @@
     "semver": "^7.7.3",
     "styled-components": "^6.6.0",
     "tailwindcss": "^4.3.3",
-    "tar": "^7.5.22",
+    "tar": "7.5.22",
     "terser": "^5.51.2",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",
@@ -115,6 +136,9 @@
     },
     "miniflare": {
       "undici": "7.30.1"
+    },
+    "@cloudflare/vitest-pool-workers": {
+      "wrangler": "4.113.0"
     }
   },
   "workspaces": [
@@ -122,7 +146,13 @@
     "packages/model",
     "packages/frame",
     "packages/viewer",
-    "packages/mokly"
+    "packages/mokly",
+    "packages/tokens",
+    "apps/app",
+    "apps/desktop",
+    "apps/mockups",
+    "apps/site",
+    "apps/worker"
   ],
   "private": true,
   "optionalDependencies": {

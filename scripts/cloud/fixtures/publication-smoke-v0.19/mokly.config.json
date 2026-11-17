@@ -1,0 +1,8 @@
+{
+  "repoRoot": ".",
+  "roots": [
+    { "dir": "catalogue/src/entries", "files": ["**/*.mockup.{ts,tsx}"] }
+  ],
+  "review": { "base": "origin/main" },
+  "moduleResolution": { "packageRoots": ["ts"] }
+}

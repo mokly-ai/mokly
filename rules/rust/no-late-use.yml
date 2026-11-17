@@ -1,0 +1,27 @@
+id: no-late-use
+language: Rust
+severity: error
+message: Move this use declaration above other items in the module.
+rule:
+  kind: use_declaration
+  inside:
+    any:
+      - kind: source_file
+      - kind: declaration_list
+    stopBy: neighbor
+  follows:
+    not:
+      any:
+        - kind: use_declaration
+        - all:
+            - kind: mod_item
+            - not:
+                has:
+                  kind: declaration_list
+        - kind: extern_crate_declaration
+        - kind: attribute_item
+        - kind: inner_attribute_item
+        - kind: line_comment
+        - kind: block_comment
+        - regex: "^\\{$"
+    stopBy: end

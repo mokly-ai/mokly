@@ -1,0 +1,49 @@
+# Private catalogues lose Changes and blocked-cookie access
+
+- **Severity:** High. **Likelihood:** Common. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-01, from decision 5 of the Mokly 0.18.0 upgrade on the branch `calummoore/mokly-cli-upgrade`. It merges `plans/follow-ups/private-viewer-artifacts-lack-transport.md`, added on 2026-10-30 from Milestone 13V of the deleted `plans/mokly-cloud-follow-ups.md`.
+- **Location:** `ts/app/src/viewer/stage.tsx`, the `AccessBlocked` stage. `crates/mkc-catalogue-server/src/response.rs:180` and `:194`, the catalogue cookie and its clearing cookie. `docs/protocol/viewer.md` and `docs/protocol/catalogue-hosting.md`, section "Private Access".
+- **Reason:** On 2026-11-01 the user chose to remove the new-tab fallback during the upgrade and to restore private access in a later change.
+- **Category:** Product bug.
+
+- **Terms:**
+  - **Private catalogue:** a publication of a private project. Private is the default visibility. Every file needs a 300-second cookie on the catalogue's own origin, which the app gets through an access grant.
+  - **Third-party cookie:** a cookie for a site that is not in the address bar. Inside the app, the catalogue origin is such a site.
+  - **Partitioned cookie:** a cookie with the `Partitioned` attribute. The browser keeps it separately for each top-level site, also where it blocks other third-party cookies.
+  - **Standalone shell:** the `index.html` page of a published catalogue, which shows the catalogue without the app.
+  - **Package-owned read:** a request that `@mokly/viewer` makes itself, such as a comparison document, a removed-entry preview or the standalone shell's index.
+- **Background:**
+  - The catalogue server sets the cookie only in its answer to the app's `POST /_access`. The cookie is `__Host-mkc_catalogue` with `Secure`, `HttpOnly`, `SameSite=None` and `Max-Age=300`, and without `Partitioned`.
+  - Chrome and Edge allow third-party cookies by default. Firefox keeps them in a separate store for each top-level site. Safari and iOS web views block them.
+  - The app pins `@mokly/viewer@0.18.0`. The app fetches the catalogue index and every entry detail itself, with the cookie, and passes them to the viewer as objects.
+  - The 0.18.0 viewer sends its package-owned reads with `credentials: "omit"`: comparison documents, removed-entry previews, and the standalone shell's index.
+  - On 2026-11-01 the user chose to remove **Open catalogue in a new tab**. A blocked cookie now shows a final message, and a private-comparison error shows an overlay without an action.
+  - The removed tab never had a cookie where the app's cookie was blocked: such a browser refuses the cookie or keeps it in the app's store. With 0.18.0, the standalone shell also cannot load a private index.
+  - The decisions in force forbid a patch of the package, a replacement of global `fetch`, a deep import, the exposure of private files, and a token in a URL query.
+  - Caniuse, read on 2026-11-01, lists `Set-Cookie: Partitioned` in Chrome and Edge 114, Firefox 141 and Safari 26.2, also on iOS. WebKit's Safari 26.2 notes confirm partitioned cookies in embedded cross-site frames.
+  - No repository doc names the supported browsers or their minimum versions.
+- **Problem:**
+  - Where third-party cookies are blocked, readers cannot open a private catalogue in the app, and no fallback exists.
+  - In every browser, private Changes and removed-entry previous versions fail, because the package-owned reads carry no cookie.
+- **Impact if no action:** Safari and iOS readers cannot read private catalogues, and no reader sees private Changes. Private is the default visibility, so most catalogues are affected.
+- **Root question:** How does a reader see a private catalogue, with its Changes, in every supported browser?
+- **Options:**
+  - **A.** Add the `Partitioned` attribute to the catalogue cookie and its clearing cookie. Private current screens then open inside the app in current Chrome, Edge, Firefox and Safari, also where third-party cookies are blocked. Older browsers keep the final message. A browser test must prove that the screen frames and the app's fetches share the cookie in each browser, because Chrome keys the partition also by a cross-site ancestor. The desktop shell's `mokly-app` origin needs its own test. The cookie rule of `docs/protocol/catalogue-hosting.md` changes. Private Changes still fail. Effort: Medium.
+  - **B.** Ask the open repository for a documented host transport that covers every package-owned read, and for a standalone shell that sends the cookie to its own origin. Adopt the release in a deliberate pin bump. At each viewer pin change, check whether a release documents such a transport. Then prove private Changes, the comparison modes and previous versions against the real local API and catalogue server. Keep public reads credential-free. Effort: Large.
+  - **C.** Do B, and bring back the new tab with a first-party grant exchange. The app posts a new grant from a top-level form to `/_access` in the new tab, so the grant never goes into a URL. The server then sets the cookie in its own store. It needs a form variant of `/_access` and a way to renew the 300-second cookie without an app session. It works in every browser, also in Safari before 26.2. Effort: Large.
+  - **D.** Replace the cookie with a secret hostname for each grant, so that no read needs a credential and every browser works. The secret travels in `Origin` headers to other hosts, and anyone with the URL can use it until it expires. Each renewal changes the origin and remounts the viewer, unless the hostname lives as long as the session. It overturns the rule that access tokens never go in URLs. Effort: Large.
+- **Left out:**
+  - A service worker that sends the package's reads again with a credential. It patches the package's documented `credentials: "omit"` rule, which the package boundary rule forbids.
+  - Reads through the API, or a bearer header. Screen frames and the package's own reads can carry neither, so it fails the goal.
+  - A token in the query or the path. The viewer resolves every read from the origin root, and the rule that tokens never go in a query stays.
+  - A catalogue domain on the app's site. It breaks the rule that user-authored HTML never shares a site with the app session.
+  - The Storage Access API. Only a document that asks gets access, and the frames hold user-authored HTML that the cloud must not change.
+  - A cloud viewer page on the catalogue origin. It breaks the rule that the app hosts the one pinned viewer, and it puts cloud code beside user-authored HTML.
+  - Text that asks readers to allow third-party cookies. A is better on every point.
+  - Private comparison files that need no credential. It breaks the rule that private files are never exposed.
+- **Wider fix:** D, because only a cookie-free access design covers the package's reads without credentials and browsers without partitioned cookies.
+- **Previous examples:** The 0.5.0 private artifact limit that `docs/protocol/viewer.md` stated before the upgrade.
+- **Related:** `plans/follow-ups/viewer-frames-refuse-desktop-host.md`, same code. The desktop shell's origin decides whether its frames and its cookie test can pass.
+- **Recommendation:** A. A partitioned cookie restores private current screens inside the app in every current browser with no token in a URL. B is still needed for private Changes, and D protects the codebase best.
+- **Action:** ask the user, because the recommended option changes the cookie rule of `docs/protocol/catalogue-hosting.md`, and the user deferred this choice on 2026-11-01.

@@ -1,0 +1,24 @@
+---
+element: "fixture-notice"
+title: "Notice"
+description: "Publication status."
+propSchema:
+  {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["label"],
+    "properties": { "label": { "type": "string" } },
+  }
+props: { "label": "Status" }
+variants:
+  [
+    { "slug": "draft", "title": "Draft", "props": { "label": "Draft" } },
+    {
+      "slug": "published",
+      "title": "Published",
+      "props": { "label": "Published" },
+    },
+  ]
+---
+
+<aside class="notice">Ready to review: {{ label }}</aside>

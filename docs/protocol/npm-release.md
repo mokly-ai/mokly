@@ -89,7 +89,7 @@ Missing inspection data or tools fail the release.
 ## Release Build Matrix And Publication Order
 
 The release workflow builds the binary once per target, in one build job per
-target on a runner of that operating system and architecture, with Rust 1.95.0
+target on a runner of that operating system and architecture, with Rust 1.98.1
 from `rust-toolchain.toml`. Each build job runs a locked release build, checks
 native TLS dependencies, and packs its platform package with npm
 11.21.0 and uploads the archive with its integrity, shasum, inventory, and size

@@ -1,0 +1,26 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "react": [
+        "../../node_modules/react/index.js",
+        "../../node_modules/@types/react/index.d.ts"
+      ],
+      "react/*": [
+        "../../node_modules/react/*.js",
+        "../../node_modules/@types/react/*.d.ts"
+      ],
+      "react-native": ["../../node_modules/react-native-web/dist/cjs/index.js"],
+      "react-native-web": [
+        "../../node_modules/react-native-web/dist/cjs/index.js"
+      ],
+      "@playwright/test": ["../../node_modules/@playwright/test/index.mjs"],
+      "@firna/ui/theme": ["./node_modules/@firna/ui/dist/node/theme.js"],
+      "@firna/ui/*": ["./node_modules/@firna/ui/dist/node/*/index.js"],
+      "@mokly-cloud/tokens/*": ["../../packages/tokens/src/*.ts"],
+      "lucide-react-native": [
+        "../../node_modules/lucide-react-native/dist/esm/lucide-react-native.js"
+      ]
+    }
+  }
+}

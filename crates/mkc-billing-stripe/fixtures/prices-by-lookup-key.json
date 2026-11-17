@@ -1,0 +1,72 @@
+{
+  "status": 200,
+  "headers": {
+    "content-type": "application/json",
+    "request-id": "req_prices_lookup_fixture"
+  },
+  "body": {
+    "object": "list",
+    "url": "/v1/prices",
+    "has_more": false,
+    "data": [
+      {
+        "id": "price_editor_fixture",
+        "object": "price",
+        "created": 1790380800,
+        "active": true,
+        "currency": "usd",
+        "lookup_key": "mokly_team_editor_usd_month",
+        "metadata": {
+          "mokly_seat_kind": "editor"
+        },
+        "nickname": "Editor seat",
+        "product": {
+          "id": "prod_team_fixture",
+          "object": "product",
+          "active": true,
+          "created": 1790380800,
+          "metadata": {
+            "mokly_lookup_key": "mokly_team"
+          },
+          "name": "Mokly Team"
+        },
+        "recurring": {
+          "interval": "month",
+          "interval_count": 1,
+          "usage_type": "licensed"
+        },
+        "tax_behavior": "exclusive",
+        "unit_amount": 2000
+      },
+      {
+        "id": "price_collaborator_fixture",
+        "object": "price",
+        "created": 1790380801,
+        "active": true,
+        "currency": "usd",
+        "lookup_key": "mokly_team_collaborator_usd_month",
+        "metadata": {
+          "mokly_seat_kind": "collaborator"
+        },
+        "nickname": "Collaborator seat",
+        "product": {
+          "id": "prod_team_fixture",
+          "object": "product",
+          "active": true,
+          "created": 1790380800,
+          "metadata": {
+            "mokly_lookup_key": "mokly_team"
+          },
+          "name": "Mokly Team"
+        },
+        "recurring": {
+          "interval": "month",
+          "interval_count": 1,
+          "usage_type": "licensed"
+        },
+        "tax_behavior": "exclusive",
+        "unit_amount": 500
+      }
+    ]
+  }
+}

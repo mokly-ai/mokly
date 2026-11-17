@@ -1,0 +1,41 @@
+# Settings skip link stays outside the open modal
+
+- **Severity:** Low (estimate). **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-03, from branch `conductor/follow-ups-mockup-overlay-focus`, outside its scope.
+- **Location:** `docs/mockups/src/screens/product/settings/surface.tsx:138-140` and `docs/mockups/src/_tests_/responsive.spec.ts:65-74`.
+- **Reason:** The link predates that branch, which may fix only the layers beneath an open layer, and the fix needs the user's choice.
+- **Checked:** 2026-11-03, on the working tree of the branch above, after `LayerBeneath` landed.
+- **Category:** Mockup.
+
+- **Terms:**
+  - **Skip link:** The link "Skip to content" to `#main` that a page draws as its first focusable element.
+  - **Confirmation modal:** A modal over a settings pane that asks about one row or field, such as a token revoke or a member removal.
+  - **`LayerBeneath`:** The helper in `docs/mockups/src/components/layer-beneath.tsx`. It sets `inert` and `aria-hidden` together on a layer beneath an open layer.
+  - **Responsive sweep:** The Playwright test in `docs/mockups/src/_tests_/responsive.spec.ts` that opens the light mobile view of each product screen at 320px.
+- **Background:**
+  - `SettingsSurface` always draws `<a className="skip-link" href="#main">Skip to content</a>` first, before the desktop page backdrop and `main`.
+  - With a confirmation modal open, `LayerBeneath` covers the frame, and the modal sits in `main` beside it. The skip link stays outside both, so a keyboard reader can focus it. Its target, `main`, holds the modal.
+  - The link skips nothing. On desktop the backdrop before `main` draws no control, and on mobile the link sits directly before `main`.
+  - The helper's first comment said that focus stays in the modal. The branch narrowed that comment to the covered frame on 2026-11-03. It changed no focus behavior.
+  - `docs/protocol/product-navigation.md:210` and `docs/protocol/web-app.md:146` say that every product screen owns one `main` landmark, one `h1` and a skip link.
+  - `docs/protocol/viewer-chrome.md:196-198` says that the viewer overlay screens carry no skip link, because everything before the panel is the inert backdrop.
+  - `docs/protocol/web-product-shell.md:148-151` says that the live stage keeps its cloud skip link only while no panel or settings overlay is open.
+  - No protocol says whether a settings mockup keeps its skip link while a modal is open.
+  - The responsive sweep requires at least one active plain link on each page without a viewer backdrop. Only an open viewer panel is exempt, because it carries no skip link. With the frame inert, the skip link can be the only active plain link of a settings modal page.
+- **Problem:** With a confirmation modal open, the settings skip link stays focusable outside the modal and the covered frame. The live app and the viewer overlay screens drop their skip link under an open layer.
+- **Impact if no action:** A keyboard reader of the settings modal mockups can focus one control outside the open modal.
+- **Root question:** Which focusable control may a settings mockup keep outside an open modal?
+- **Options:**
+  - **A.** Draw no skip link while a confirmation modal is open, in both viewports, as the viewer overlay screens do. Exempt those pages from the plain link of the responsive sweep, and require a link or a button instead, as for an open viewer panel. State the exception in `docs/protocol/settings-mockups.md`. It loosens a check and adds a mockup rule. Effort: Small.
+  - **B.** Keep the skip link on every settings page, as the screen rule says. It changes no check and no drawing, but the mockup keeps one control outside the open modal, unlike the live app. Effort: Small.
+  - **C.** Do A, and also draw no skip link on any desktop settings page, because the live app drops its cloud skip link while settings is open. It changes every desktop settings page. The sweep opens mobile views only, so the desktop part needs no sweep change. Effort: Medium.
+- **Left out:**
+  - Draw the skip link inside the layer that `LayerBeneath` covers. An inert link reaches no reader, and the sweep counts it as no link, so it meets the conflict of A with a link that does nothing.
+  - Change nothing is B.
+- **Wider fix:** A. A page whose subject is an open layer then draws nothing focusable before it, as the viewer overlay screens do. Option E of `plans/follow-ups/settings-policy-skips-inert-layers.md`, one rule for every open modal without class names, would detect this case, and it fails first on this link.
+- **Previous examples:** The viewer overlay screens dropped their skip link for the same reason, as `docs/protocol/viewer-chrome.md:196-198` records. The frame beneath an open mobile row-menu sheet also took focus until commit [`88668a4b`](https://github.com/mokly-ai/mokly-cloud/commit/88668a4b71a9a1a83d2ce6c4554d1c8c2a553752), from PR #122 merged on 2026-11-04. That fix draws the sheet through the same `modal` slot as a confirmation modal. So an answer here also applies to the two menu pages, `product/settings/github/menu` and `product/settings/tokens/revoke/menu`.
+- **Related:**
+  - `plans/follow-ups/settings-policy-skips-inert-layers.md`: its option E waits for this answer, because E fails on every desktop settings page while this link sits outside the dialog.
+- **Recommendation:** A. It keeps focus inside the open modal, as the live app and the viewer overlay screens do, and it extends an exemption that the sweep already makes for the same reason. C matches the live app on desktop too.
+- **Action:** ask the user, because A loosens the link check of the responsive sweep and adds a mockup rule. The screen rule of `docs/protocol/product-navigation.md:210` keeps a skip link on every product screen, and only the viewer overlay screens have a written exception.

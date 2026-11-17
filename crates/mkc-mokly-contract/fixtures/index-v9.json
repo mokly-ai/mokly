@@ -1,0 +1,455 @@
+{
+  "base": "HEAD~1",
+  "baseCommit": "4150326c615212f0fc9d9153cde75fae6aaf308f",
+  "changesStatus": "ready",
+  "comparisonUrl": "mokly-viewer/diffs/generations/fd07782f3590835627e0d1d3611854cd8220896283260385365134a4f53d9d63/",
+  "components": [
+    {
+      "changes": {
+        "included": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "comparison": {
+        "eligible": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "controls": {
+        "label": {
+          "kind": "text"
+        }
+      },
+      "detailId": "156c29eec631856b7653f53f63edc664add51d906374dad3b6fae67d456bb2de",
+      "details": {
+        "description": "Publication status.",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/notice.component.html"
+      },
+      "kind": "component",
+      "path": "notice",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "label": [
+          "string",
+          "Status"
+        ]
+      },
+      "slots": [],
+      "suppliedSlots": [],
+      "tags": [],
+      "title": "Notice",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "fbb2ed6cd925921b4a27498b6544c61ae538655bc6c4a8ffab2fb1dcfa00e9be",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "c6e7f3ec4fbeeaf88d84fd0f646a904aa1bf62706897947700f69b892a834917",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "included": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "comparison": {
+        "eligible": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "controls": {
+        "label": {
+          "kind": "text"
+        }
+      },
+      "detailId": "b441a30758e4cdfbf33d5958e4f8675d5f61a1e87097803fd61ebdfa461ebcb8",
+      "details": {
+        "description": "Publication status.",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/notice.component.html"
+      },
+      "kind": "component",
+      "path": "notice/draft",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "label": [
+          "string",
+          "Draft"
+        ]
+      },
+      "slots": [],
+      "suppliedSlots": [],
+      "tags": [],
+      "title": "Draft",
+      "variantOf": "notice",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "331258f0ce5950af5cdf82edba1f40c5ef79db193764567f92a0150234615574",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "898987f29cdedae39ff1526e31fa05a4c36a3e4c46fde8b660544450fe55ce72",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "included": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "comparison": {
+        "eligible": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "controls": {
+        "label": {
+          "kind": "text"
+        }
+      },
+      "detailId": "84538a7f842f5300aa4c5c787904a53063dfd6475163a44696934f72b765a70d",
+      "details": {
+        "description": "Publication status.",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/notice.component.html"
+      },
+      "kind": "component",
+      "path": "notice/published",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "label": [
+          "string",
+          "Published"
+        ]
+      },
+      "slots": [],
+      "suppliedSlots": [],
+      "tags": [],
+      "title": "Published",
+      "variantOf": "notice",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "83fe8c19776a594d952bc2390129251b67091611c4f34902b4d93f548dddb618",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "e1af6a84c00b0189506addb478dc5c24a92054641134f31fda4b2c6d91dead94",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "deploymentId": "adac863cb9d99d334cc1de8d09826c999a1e94d4944695b0c8545b35f734f0df",
+  "documents": [
+    {
+      "changes": {
+        "included": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "detailId": "c78b5045383e4ce912bc1ccffc5db42082db015515d830c6a72926088483e077",
+      "details": {
+        "description": "",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/guide.md"
+      },
+      "documentKeys": [
+        {
+          "colorScheme": "light",
+          "documentKey": "0f1d9163f1f3820d588c349018c88eda4f7097247504203a8654692d20c0eeb6"
+        }
+      ],
+      "kind": "document",
+      "path": "guide",
+      "tags": [],
+      "title": "Publication guide"
+    }
+  ],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "pages": [
+    {
+      "changes": {
+        "included": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "detailId": "7ee952280b59afee20a66a3175bd2355b76af58d2b050eeb5317b0e6b5304de3",
+      "details": {
+        "description": "A complete publication document.",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/page.page.html"
+      },
+      "documentKey": "0d9fe08ba77cb4e66a12645f47c1a5391076b940f04c32baa50a04454723bee4",
+      "kind": "page",
+      "path": "page",
+      "tags": [],
+      "title": "Publication page"
+    }
+  ],
+  "removedEntries": [],
+  "revision": 0,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "included": false,
+        "kind": "unmodified",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "5bd15affaf3f7a0e851dc13f055ee504172fbee45e0d2d4ab0c51ec1c69b08c8",
+      "details": {
+        "description": "Read publication details.",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/finish.screen.html"
+      },
+      "kind": "screen",
+      "path": "finish",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Finish",
+      "useCasePaths": [
+        "publish"
+      ],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "476f1e4283b9eb1f58de4423db77e571a010881900a45ed5cda2b026e9ffbd37",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "documentKey": "b7bc7f7a13fa56f9ba9fbf17e053fc15f111ebad0330c5625b19f393670a8b19",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "included": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "71fceda2f1fc947803abd0d11fc0501a362e0cb92a8b6cedddb2e28a07f88458",
+      "details": {
+        "description": "Review a draft.",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/start.screen.html"
+      },
+      "kind": "screen",
+      "path": "start",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Start",
+      "useCasePaths": [
+        "publish"
+      ],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "d68e53f8da2a4b2bf47f5736a42c539199cefebc7dd3079bb4fa394107483eeb",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "4ffc6296747d0fccddf225bda22682f636368187658f44d15451778dbe4b2233",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "finish"
+    },
+    {
+      "children": [
+        {
+          "kind": "entry",
+          "path": "notice/draft"
+        },
+        {
+          "kind": "entry",
+          "path": "notice/published"
+        }
+      ],
+      "kind": "entry",
+      "path": "notice"
+    },
+    {
+      "kind": "entry",
+      "path": "guide"
+    },
+    {
+      "kind": "entry",
+      "path": "page"
+    },
+    {
+      "kind": "entry",
+      "path": "publish"
+    },
+    {
+      "kind": "entry",
+      "path": "start"
+    }
+  ],
+  "useCases": [
+    {
+      "changes": {
+        "included": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "detailId": "044a6de5e4eda20bb12336c0e94a5cb6329873d136bd4314b78e9b1e1ed4c546",
+      "details": {
+        "description": "Review the draft and read its details.",
+        "relatedDocs": [],
+        "sourcePath": "catalogue/src/entries/publish.use-case.yaml"
+      },
+      "kind": "use-case",
+      "path": "publish",
+      "steps": [
+        {
+          "screenPath": "start",
+          "title": "Publish the draft"
+        },
+        {
+          "screenPath": "finish",
+          "title": "Read the details"
+        }
+      ],
+      "tags": [],
+      "title": "Publish a draft"
+    }
+  ]
+}

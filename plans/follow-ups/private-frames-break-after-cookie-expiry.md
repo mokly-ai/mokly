@@ -1,0 +1,34 @@
+# Private frames break after the cookie expires
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-02, from Decision 10 of the Mokly 0.18.0 upgrade on the branch `calummoore/mokly-cli-upgrade`. The Milestone 1 docs agent raised it on 2026-11-01, and an options check added options D and E.
+- **Location:** `docs/protocol/viewer-host.md`, section "Sources", `ts/app/src/viewer/access.ts:94`, and `crates/mkc-catalogue-server/src/response.rs:180`.
+- **Reason:** On 2026-11-02 the user deferred the choice. `origin/main` had the same limit before the upgrade.
+- **Category:** Product bug.
+
+- **Terms:**
+  - **Catalogue cookie:** the `__Host-mkc_catalogue` cookie on the web address of a private catalogue. Only the app's `POST /_access` sets it, and it lives 300 seconds.
+- **Background:**
+  - The app renews private access once when a detail read gets 401. `renewCatalogueAccess` in `access.ts` does this without a remount of the viewer.
+  - The viewer keeps each entry detail for the life of the page. Each screen frame needs the catalogue cookie.
+  - The catalogue server checks project membership on every private request, so removed access ends at once. The 300-second limit matters only after sign-out or for a stolen cookie.
+  - Viewer 0.18.0 sends no event when a frame fails to load. A frame that gets 401 shows "This preview could not be loaded."
+- **Problem:** A screen that opens again, or a viewport or colour change, loads new frames without a detail read. After 300 seconds those frames get 401, and nothing renews the cookie.
+- **Impact if no action:** A reader who stays more than five minutes on a private publication sees broken screens until they reload the page.
+- **Root question:** How does a reader keep reading a private publication for as long as the page stays open?
+- **Options:**
+  - **A.** Change nothing now. Effort: Small.
+  - **B.** Make the cookie live longer, for example 30 minutes. A cookie then works longer after sign-out or theft. Effort: Small.
+  - **C.** Renew on a timer, for example every four minutes, while the publication is open and the tab is visible. After a tab sleeps, frames stay broken until the next renewal. Effort: Medium.
+  - **D.** Renew right before a private read when the last renewal is older than four minutes. The detail loader checks before each read, and a small cloud frame adapter that wraps the public `postMessageAdapter` checks before each frame loads. One renewal serves reads that arrive together. A file that an open frame loads late is not covered. Effort: Medium.
+  - **E.** Tie catalogue access to the reader's app session. The catalogue server checks on each request that the session is still active, so it must read the session store. Effort: Large.
+- **Left out:**
+  - Renew and remount after a frame error, because the viewer reports no frame error.
+  - A service worker, because a worker on the app's address never sees the catalogue's frame loads.
+  - An upstream frame-failure event, because D is better on every point.
+  - A token in frame addresses, because tokens never go in URLs.
+- **Wider fix:** E, because no read meets an expired cookie while the session lives.
+- **Previous examples:** None found.
+- **Recommendation:** D. It renews right before each read that needs the cookie, works after a tab sleeps, and keeps the five-minute limit. E protects the code best.
+- **Action:** ask the user, because D adds a renewal rule at the catalogue boundary that no requirement covers.

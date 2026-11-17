@@ -243,6 +243,66 @@
         {
           "type": "generic",
           "path": "/packages/viewer/CHANGELOG.md"
+        },
+        {
+          "type": "json",
+          "path": "/apps/app/package.json",
+          "jsonpath": "$['dependencies']['@mokly/viewer']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['apps/app']['dependencies']['@mokly/viewer']"
+        },
+        {
+          "type": "json",
+          "path": "/apps/mockups/package.json",
+          "jsonpath": "$['devDependencies']['@mokly/mokly']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['apps/mockups']['devDependencies']['@mokly/mokly']"
+        },
+        {
+          "type": "json",
+          "path": "/apps/mockups/package.json",
+          "jsonpath": "$['devDependencies']['@mokly/ui']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['apps/mockups']['devDependencies']['@mokly/ui']"
+        },
+        {
+          "type": "json",
+          "path": "/apps/mockups/package.json",
+          "jsonpath": "$['devDependencies']['@mokly/viewer']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['apps/mockups']['devDependencies']['@mokly/viewer']"
+        },
+        {
+          "type": "json",
+          "path": "/apps/site/package.json",
+          "jsonpath": "$['devDependencies']['@mokly/mokly']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['apps/site']['devDependencies']['@mokly/mokly']"
+        },
+        {
+          "type": "json",
+          "path": "/apps/site/package.json",
+          "jsonpath": "$['devDependencies']['@mokly/viewer']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['apps/site']['devDependencies']['@mokly/viewer']"
         }
       ],
       "package-name": "@mokly/mokly"

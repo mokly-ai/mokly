@@ -3,9 +3,11 @@ members = ["xtask", "crates/*"]
 resolver = "3"
 
 [workspace.package]
+version = "0.1.0"
 edition = "2024"
 license = "MIT"
-rust-version = "1.95"
+authors = ["Mokly"]
+rust-version = "1.98.1"
 
 [workspace.dependencies]
 mokly-model = { path = "crates/mokly-model" }
@@ -26,3 +28,49 @@ mokly-server = { path = "crates/mokly-server" }
 
 mokly-static = { path = "crates/mokly-static" }
 mokly-watch = { path = "crates/mokly-watch" }
+
+# Mokly Cloud crates and their shared dependencies.
+utoipa = { version = "6.0.0", features = ["uuid", "chrono", "preserve_order", "preserve_path_order"] }
+rpc-error = { git = "https://github.com/futex-ai/rpc-error.git", rev = "ecf4e367342138911b9f45dbb97f73c9534c3136", version = "0.1.0", features = ["derive", "axum"] }
+internal-error = { git = "https://github.com/futex-ai/internal-error.git", rev = "6477922a1c4db8c3e35189af69f0147464004b99", package = "internal-error" }
+sandbox-interface = { git = "https://github.com/futex-ai/sandbox.git", rev = "86d82340715ed443b596565f3509ced58c299fc2" }
+sandbox-e2b = { git = "https://github.com/futex-ai/sandbox.git", rev = "86d82340715ed443b596565f3509ced58c299fc2" }
+
+mkc-api = { path = "crates/mkc-api" }
+mkc-auth = { path = "crates/mkc-auth" }
+mkc-billing = { path = "crates/mkc-billing" }
+mkc-billing-interface = { path = "crates/mkc-billing-interface" }
+mkc-billing-stripe = { path = "crates/mkc-billing-stripe" }
+mkc-build-interface = { path = "crates/mkc-build-interface" }
+mkc-build-sandbox = { path = "crates/mkc-build-sandbox" }
+mkc-config = { path = "crates/mkc-config" }
+mkc-db = { path = "crates/mkc-db" }
+mkc-domain = { path = "crates/mkc-domain" }
+mkc-email-interface = { path = "crates/mkc-email-interface" }
+mkc-email-postmark = { path = "crates/mkc-email-postmark" }
+mkc-email-templates = { path = "crates/mkc-email-templates" }
+mkc-file-store-gcs = { path = "crates/mkc-file-store-gcs" }
+mkc-file-store-interface = { path = "crates/mkc-file-store-interface" }
+mkc-file-store-local = { path = "crates/mkc-file-store-local" }
+mkc-github = { path = "crates/mkc-github" }
+mkc-github-double = { path = "crates/mkc-github-double" }
+mkc-github-interface = { path = "crates/mkc-github-interface" }
+mkc-mokly-contract = { path = "crates/mkc-mokly-contract" }
+mkc-publications = { path = "crates/mkc-publications" }
+mkc-store-interface = { path = "crates/mkc-store-interface" }
+mkc-store-pg = { path = "crates/mkc-store-pg" }
+mkc-test-pg = { path = "crates/mkc-test-pg" }
+mkc-test-support = { path = "crates/mkc-test-support" }
+mkc-upload-memory = { path = "crates/mkc-upload-memory" }
+mkc-upload-memory-interface = { path = "crates/mkc-upload-memory-interface" }
+
+# Only crates that set `[lints] workspace = true` use these lints. Every
+# Mokly Cloud crate sets it.
+[workspace.lints.rust]
+missing_docs = "warn"
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"

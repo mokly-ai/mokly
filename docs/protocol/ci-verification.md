@@ -1,5 +1,7 @@
 # CI Verification
 
+Status: The cloud suites, the boundary check, and the narrower native suite are not in place yet. The [combine plan](../../plans/combine-mokly-cloud.md) adds them.
+
 ## Verification Boundary
 
 `cargo xtask check` is the complete repository and release gate. The local
@@ -40,18 +42,22 @@ starts.
 
 | Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                                                      |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Repository       | Every check of the [repository gate list](./ci-verification-repository.md#repository-boundary), in the listed order.                                                                                                                                                                                                                             |
+| Repository       | Every check of the [repository gate list](./ci-verification-repository.md#repository-boundary), in the listed order, and the [boundary check](./repository-layout.md#boundary).                                                                                                                                                                  |
 | Viewer           | The [required type check](./developer-type-checks.md#required-type-check) of every project, then every discovered Node test file, including the frame probe size test of the [frame probe contract](./mokly-frame-probe.md), with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. The suite has no shard. |
 | Browser          | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with `fullyParallel: false`, the [shared worker count](./ci-suite-evidence.md#test-concurrency), the configured Playwright timeouts, and zero retries. A shard runs its whole-file partition.                                                               |
-| Native platforms | On macOS and Windows, build the `mokly` binary once, check Rust formatting and workspace Clippy with warnings denied, and run the Rust tests of every crate.                                                                                                                                                                                     |
-| Required CI      | Evaluate the results of the runtime profile job, the repository job, the viewer job, every browser shard, and the static-delivery job on each runtime selected for the event, and of both native platforms. Validate the viewer and browser report evidence.                                                                                     |
+| Native platforms | On macOS and Windows, build the `mokly` binary once, check Rust formatting, run Clippy with warnings denied, and run the Rust tests, for the `mokly-*` crates and `xtask` only.                                                                                                                                                                  |
+| Cloud suites     | The cloud checks that no Mokly suite runs, under [Cloud Suites](#cloud-suites).                                                                                                                                                                                                                                                                  |
+| Required CI      | Evaluate the results of the runtime profile job, the repository job, the viewer job, every browser shard, and the static-delivery job on each runtime selected for the event, of both native platforms, and of every cloud job. Validate the viewer and browser report evidence.                                                                 |
 
 Complete and selected local suites share gate definitions. Every Native
 command has local coverage; `npm run build` covers `cargo xtask build-native`.
 In-process auditors fail like subprocesses.
 The local Repository and Viewer suites cover the native build and Rust checks
 once. The selected Native suite repeats those checks on the hosted macOS and
-Windows runners. Required CI requires both native jobs.
+Windows runners, for the `mokly-*` crates and `xtask` only. On Linux, the
+Native suite covers every crate. Required CI requires both native jobs.
+Decision: the macOS and Windows runs leave out the `mkc-` crates, because
+those crates use Diesel with Postgres, which needs `libpq`.
 
 Viewer and Browser build the binary and viewer bundle first through
 `npm run build`. Native builds the host binary through
@@ -88,6 +94,29 @@ The strict runners skip the build, reject arguments other than the optional
 browser shard, and fail when the build output is missing. The Viewer and
 Browser suites run their Node and Playwright tests only through the strict
 runners.
+
+## Cloud Suites
+
+The suites also run the checks of Mokly Cloud. Rust formatting and the Rust
+file-length audit of the Repository suite cover the `mkc-` crates. Clippy of the
+Repository suite covers the `mokly-*` crates and `xtask` only. The cloud Rust
+suite runs Clippy and the Rust tests of the `mkc-` crates. The existing suites also run the cloud whitespace, Markdown
+link, Prettier, and ESLint checks. The cloud suites run the other cloud
+checks: the cloud Rust checks, the migration lock, the app, the mockups, the site, the OpenAPI
+document, the contract fixtures, the email templates, Terraform, the origin
+router, Helm, the infrastructure tests, and the desktop shell. The complete
+gate runs every cloud suite, and `--suite` selects one. Hosted CI runs the
+cloud suites on Linux.
+
+The cloud checks need tools that the Mokly checks do not need, such as
+Postgres. A suite fails when a tool that it needs is missing, because every
+suite rejects skips. Only the cloud suites need Postgres and `libpq`, so the
+Repository suite runs on every host.
+
+The contract fixtures check builds the fixtures from the workspace packages,
+not from installed npm releases, and fails when the committed fixtures differ.
+`cargo xtask mokly-fixtures` regenerates them under the
+[repository layout](./repository-layout.md#boundary).
 
 ## Deterministic Test Repository Inputs
 

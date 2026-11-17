@@ -1,0 +1,45 @@
+# API status overrides are copied by hand
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-10-30, from the review of the closed [PR #75](https://github.com/mokly-ai/mokly-cloud/pull/75), finding 2.
+- **Location:** `crates/mkc-api/src/response.rs:22-28`, `crates/mkc-api/src/contract/error.rs:23-28`, `crates/mkc-api/src/_tests_/error_tests.rs:42-44` and `crates/mkc-api/src/_tests_/severity_tests.rs:18-20`.
+- **Reason:** The review-fix rule leaves each code-structure finding to the user.
+- **Checked:** 2026-10-31, at commit `f568853e`. The decision is still open. `failure()` still holds the three overrides, and two tests and the envelope description still repeat them. No test renders `upload-timeout` through `failure()`.
+- **Category:** Code structure.
+
+- **Terms:**
+  - **Status override:** The `match` in `failure()` at `crates/mkc-api/src/response.rs:22-28` that sets 426, 408 or 410 in place of the standard status of a reason's code.
+  - **Standard status:** The HTTP status that the pinned `rpc-error` crate gives each code, for example 400 for `failed-precondition` and 504 for `deadline-exceeded`.
+  - **Envelope description:** The doc comment on `Envelope` in `crates/mkc-api/src/contract/error.rs:23-28`, which `utoipa` copies into the `Error` schema of the OpenAPI document.
+  - **`ErrorResponse`:** The shared OpenAPI response in `crates/mkc-api/src/contract/responses.rs`, which almost every operation uses for `4XX` and `5XX`.
+- **Background:**
+  - The code of each API error reason normally fixes its HTTP status.
+  - Three upload reasons are exceptions: `upload-unsupported-version` answers 426, `upload-timeout` answers 408 and `upload-expired` answers 410.
+  - `docs/protocol/rest-api.md:96`, `:107`, `:111` and `:122-125` record these statuses.
+  - The status override holds the three statuses as a `match` on three `UploadError` variants.
+  - The envelope description repeats the statuses in prose.
+  - Two tests repeat the three reason and status pairs in their own `match`, at `error_tests.rs:42-44` and `severity_tests.rs:18-20`.
+  - The test at `error_tests.rs:15-52` compares the `rest-api.md` table with its own copy, not with `failure()`.
+  - These four places are on `main` at commit `f568853e`.
+  - On `main`, the envelope description names only 426 and 408.
+  - The fix of `plans/follow-ups/openapi-error-description-omits-410.md` adds 410 to that description by hand.
+  - The derive of the pinned `rpc-error` crate accepts only `code`, `reason`, `message`, `severity` and `data`, so a variant cannot declare a status.
+- **Problem:** Hand copies of the three statuses sit beside `failure()` in the envelope description and in two tests. Nothing fails when a new override lands in `failure()` and a copy stays old. No Rust test checks that `failure()` renders `upload-timeout` as HTTP 408 at `response.rs:25`, because the status tests hard-code 408.
+- **Impact if no action:** The next override can make the OpenAPI document wrong again, as PR #34 did. The `rest-api.md` table test can also pass while `failure()` disagrees with the table.
+- **Root question:** How does each status override reach the code, the tests and the OpenAPI document from one source?
+- **Options:**
+  - **A.** Add a test to `crates/mkc-api/src/contract/_tests_/error_tests.rs` that asserts that the envelope description names 426, 408 and 410. The test is one more hand copy, and it does not catch a new override in `failure()`. It also tests description prose, which the `testing` skill excludes. Effort: Small.
+  - **B.** Keep the overrides in one table keyed by reason, beside `UploadError` in `crates/mkc-api/src/upload_error.rs`. Make `failure()` and both tests read the table. Make `Error::schema()` at `contract/error.rs:40-55` write the status part of the envelope description from the table, as it already writes `x-reasons`. Add a test that renders each table reason through `failure()`. That test also checks the 408 of `upload-timeout`. Effort: Medium.
+  - **C.** Add a status override to the variant attribute of the public `rpc-error` derive. Release a new version of that crate, and bump the pinned `rev`. Make `failure()`, both tests and `Error::schema()` read the status from the reason catalogue. It needs a change and a release in the separate `rpc-error` repository. Effort: Large.
+- **Left out:** Remove the status overrides, so that every reason uses the status of its code. The upload transport keeps the producer's 426, 408 and 410 statuses, a requirement in `rest-api.md`.
+- **Wider fix:** B. One table removes the copies, so a new override reaches the code, the tests and the generated document together. C is structural too, but it needs a release of another repository.
+- **Previous examples:**
+  - Commit `86ed8988` added the 426 and 408 overrides to `response.rs` and kept the `ErrorResponse` sentence that the standard code fixes the status.
+  - PR #34, commit `66d41826`, added 410 to `failure()` and `upload-expired` to the `Error` schema, but kept "426/408" in the description.
+  - PR #49, commit `44f2a5f3`, then copied that text into Rust.
+  - The `ErrorResponse` text at `crates/mkc-api/src/contract/responses.rs:10` is the same class, because it says that "the standard code fixes the status".
+  - The fix of `plans/follow-ups/openapi-error-description-omits-410.md` points that text to the `Error` schema, so option B then covers it too.
+- **Related:** `plans/follow-ups/openapi-error-description-omits-410.md`, same code. The copies are already on `main`. The fix of that item corrects the envelope description by hand, so answer this record when that work lands. Its option C is option B here.
+- **Recommendation:** B. It prevents this drift inside this repository, and the `rest-api.md` table test then checks the table that `failure()` uses.
+- **Action:** ask the user, because condition 6 holds: the review-fix rule leaves every code-structure finding to the user.

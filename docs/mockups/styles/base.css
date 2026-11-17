@@ -1,0 +1,285 @@
+/* Inter is self-hosted: the variable face and its SIL Open Font License are
+   copied from the pinned @mokly/mokly shell assets, and the token's system
+   stack is the fallback while it loads. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("fonts/InterVariable.woff2") format("woff2");
+}
+* {
+  box-sizing: border-box;
+}
+/* The document root is the element that carries the colour scheme: the
+   renderer's wrapper in a catalogue document, which also carries the
+   viewport and the palette scope, and `html` in the application. It fills
+   the viewport, so its palette's background is the page's, and it keeps a
+   child's margin inside it. Firna's DOM backend stylesheet, which every
+   document carries, already resets the body's margin. */
+:where([data-color-scheme]) {
+  display: flow-root;
+  min-height: 100vh;
+  background: var(--mk-color-background);
+  color: var(--mk-color-text);
+  font-family: var(--mk-font-sans);
+  font-size: var(--mk-type-body-size);
+  line-height: var(--mk-type-body-line);
+  overflow-wrap: anywhere;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-synthesis-weight: none;
+  /* Without geometric precision Chromium quantizes Inter's glyph advances to
+     whole device pixels and opens a visible gap inside short bold words
+     ("Em ail") on 2x displays. It is a document-level setting, not a
+     per-element correction. */
+  text-rendering: geometricPrecision;
+}
+:where(a:not([data-mokly-link-control])) {
+  -webkit-tap-highlight-color: transparent;
+  color: var(--mk-color-accent);
+  text-underline-offset: 0.2em;
+}
+:where(a:not([data-mokly-link-control])):hover {
+  color: var(--mk-color-accent-hover);
+}
+:where(a:not([data-mokly-link-control])):focus-visible {
+  outline: 2px solid var(--mk-color-focus);
+  outline-offset: 3px;
+  border-radius: var(--mk-radius-tight);
+}
+/* Every element that takes focus through `tabindex` — the build card's title
+   after Cancel, its output box — draws the token outline from the keyboard.
+   Registered controls keep their theme mapping, and the published viewer keeps
+   its own interface; the slots the cloud fills stay ours. Zero specificity,
+   so a component's own radius stays, as the output box's does. */
+:where(
+  [tabindex]:not(
+    .firna-view,
+    .firna-text,
+    .firna-textinput,
+    .mokly-viewer,
+    .mokly-viewer :not([data-mokly-slot], [data-mokly-slot] *)
+  )
+):focus-visible {
+  outline: 2px solid var(--mk-color-focus);
+  outline-offset: 3px;
+  border-radius: var(--mk-radius-tight);
+}
+:where(.folio-root a:not([data-mokly-link-control])) {
+  color: inherit;
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--mk-color-text) 40%,
+    transparent
+  );
+}
+:where(.folio-root a:not([data-mokly-link-control])):hover {
+  color: var(--mk-color-text);
+  text-decoration-color: currentcolor;
+}
+.catalogue-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mk-space-3);
+  padding: var(--mk-space-3) var(--mk-space-6);
+  border-top: 1px solid var(--mk-color-border);
+  font-size: var(--mk-type-small-size);
+  line-height: var(--mk-type-small-line);
+}
+.catalogue-links > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--mk-layout-row-min);
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+h1,
+h2,
+h3 {
+  letter-spacing: -0.02em;
+  font-weight: var(--mk-font-semibold);
+  text-wrap: balance;
+}
+h1 {
+  font-size: var(--mk-type-heading1-size);
+  line-height: var(--mk-type-heading1-line);
+}
+h2 {
+  font-size: var(--mk-type-heading2-size);
+  line-height: var(--mk-type-heading2-line);
+}
+h3 {
+  font-size: var(--mk-type-heading3-size);
+  line-height: var(--mk-type-heading3-line);
+}
+p {
+  max-width: var(--mk-layout-prose-max);
+}
+svg {
+  flex-shrink: 0;
+}
+code,
+pre,
+.mono {
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-type-small-size);
+  font-variant-numeric: tabular-nums;
+}
+pre {
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: var(--mk-space-6);
+  background: var(--mk-color-surface-muted);
+  border: 1px solid var(--mk-color-border);
+  border-radius: var(--mk-radius-medium);
+  line-height: 1.7;
+}
+.muted {
+  color: var(--mk-color-text-muted);
+}
+.eyebrow {
+  display: block;
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-caption-size);
+  font-weight: var(--mk-font-semibold);
+  line-height: var(--mk-type-caption-line);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.lead {
+  font-size: var(--mk-type-lead-size);
+  line-height: var(--mk-type-lead-line);
+  color: var(--mk-color-text-muted);
+}
+.actions {
+  display: flex;
+  gap: var(--mk-space-3);
+  flex-wrap: wrap;
+  align-items: center;
+}
+.component-document {
+  padding: var(--mk-space-6);
+}
+.component-example {
+  display: grid;
+  gap: var(--mk-space-8);
+  align-content: start;
+  justify-items: start;
+}
+.component-example > h1 {
+  font-size: var(--mk-type-heading2-size);
+}
+.component-example > .field-layout {
+  max-width: var(--mk-layout-form-max);
+  width: 100%;
+}
+.component-example > .fo-row-menu {
+  max-width: var(--mk-layout-form-max);
+  width: 100%;
+}
+.component-example > .page-frame {
+  min-height: auto;
+  width: 100%;
+}
+.component-example > .card,
+.component-example > .comment-thread {
+  max-width: var(--mk-layout-prose-max);
+}
+.tokens-page {
+  max-width: var(--mk-layout-content-max);
+  margin: auto;
+  padding: var(--mk-space-12) var(--mk-layout-gutter-mobile);
+}
+.tokens-page > section {
+  margin-top: var(--mk-space-12);
+}
+.tokens-page h1 {
+  margin: var(--mk-space-4) 0 var(--mk-space-6);
+}
+.tokens-page h2 {
+  margin-bottom: var(--mk-space-6);
+}
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: var(--mk-space-4);
+}
+.swatch {
+  padding: var(--mk-space-3);
+  border: 1px solid var(--mk-color-border);
+  border-radius: var(--mk-radius-medium);
+  background: var(--mk-color-surface);
+}
+.swatch > span {
+  display: block;
+  height: var(--mk-space-16);
+  border-radius: var(--mk-radius-small);
+  margin-bottom: var(--mk-space-2);
+  border: 1px solid var(--mk-color-border);
+}
+.swatch code {
+  font-size: var(--mk-type-caption-size);
+}
+.type-samples {
+  display: grid;
+  gap: var(--mk-space-6);
+}
+.type-samples p {
+  line-height: 1.25;
+  overflow-wrap: break-word;
+}
+.space-samples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mk-space-4);
+  align-items: end;
+}
+.space-samples > div {
+  display: grid;
+  gap: var(--mk-space-2);
+}
+.space-samples span {
+  display: block;
+  height: var(--mk-space-6);
+  background: var(--mk-color-accent);
+}
+.radius-samples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mk-space-4);
+  margin-top: var(--mk-space-8);
+}
+.radius-samples > div {
+  padding: var(--mk-space-6);
+  background: var(--mk-color-accent-soft);
+  border: 1px solid var(--mk-color-accent);
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media (forced-colors: active) {
+  :where(a:not([data-mokly-link-control])):focus-visible,
+  :where(
+    [tabindex]:not(
+      .firna-view,
+      .firna-text,
+      .firna-textinput,
+      .mokly-viewer,
+      .mokly-viewer :not([data-mokly-slot], [data-mokly-slot] *)
+    )
+  ):focus-visible {
+    outline-color: Highlight;
+  }
+}
