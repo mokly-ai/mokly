@@ -71,6 +71,9 @@ pub fn failure(style: &Style, error: &ServerError, redactor: &Redactor) -> Strin
 
 fn internal(error: &InternalError) -> String {
     match error {
+        InternalError::CanonicalDetailIdentity => {
+            "Serve could not publish catalogue data. Restart Serve.".into()
+        }
         InternalError::Provider { source } => source.to_string(),
         InternalError::Io { source } => source.to_string(),
         InternalError::Json { source } => source.to_string(),

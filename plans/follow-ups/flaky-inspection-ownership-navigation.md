@@ -49,7 +49,7 @@
     remote shard. That commit changes only files under `crates/` and `plans/`.
   - In that gate, the browser suite ran 2,287 tests: 2,285 passed, 2 failed,
     and none skipped. The other failure is recorded in
-    `plans/follow-ups/flaky-mocklink-shell-navigation.md`. Final CI of the
+    [the MockLink follow-up at its last main commit](https://github.com/mokly-ai/mokly/blob/03bedb6ec19d0e51100e82507e00a5b05ecc5c5f/plans/follow-ups/flaky-mocklink-shell-navigation.md). Final CI of the
     branch was still pending.
   - One focused rerun on the branch selected this test, and it passed in
     725 ms. No assertion, retry, or time limit changed. The suspected source
