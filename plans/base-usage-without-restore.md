@@ -1,6 +1,6 @@
 # Read captured base usage without document restore
 
-Status: Active. On branch `calummoore/mokly-base-usage-without-restore-g972`, no pull request yet. The pull request that completes this work deletes this plan.
+Status: Active. [PR #301](https://github.com/mokly-ai/mokly/pull/301) is open on branch `calummoore/mokly-base-usage-without-restore-g972`. It waits for the base reuse integration. The final commit deletes this plan.
 
 Mokly compares a pinned base catalogue with the current catalogue. Its workspace
 projection adds caller-owned component input changes to public entry details.
