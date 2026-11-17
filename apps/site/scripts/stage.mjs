@@ -58,7 +58,7 @@ async function buildMockups() {
   await promisify(execFile)(
     "npm",
     ["run", "mockups:build", "--workspace", "@mokly-cloud/mockups"],
-    { cwd: path.join(repository, "ts"), maxBuffer: 32 * 1024 * 1024 },
+    { cwd: repository, maxBuffer: 32 * 1024 * 1024 },
   );
 }
 

@@ -57,4 +57,3 @@ ROOTS = {
     "main-preview": Root("main-preview", ENVIRONMENT),
     "production": Root("production", ENVIRONMENT),
 }
-

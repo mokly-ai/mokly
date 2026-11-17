@@ -31,7 +31,7 @@ function manifest(directory: string): PackageManifest | undefined {
 }
 
 function packageRoot(): string {
-  const hoisted = repositoryPath("ts", "node_modules", "@mokly", "mokly");
+  const hoisted = repositoryPath("node_modules", "@mokly", "mokly");
   if (!existsSync(hoisted)) {
     throw new Error(
       `${PACKAGE_NAME} is not installed for apps/site; install the workspace from package-lock.json`,
@@ -39,9 +39,7 @@ function packageRoot(): string {
   }
   const resolved = realpathSync(hoisted);
   if (manifest(resolved)?.name !== PACKAGE_NAME) {
-    throw new Error(
-      `The hoisted ts workspace dependency is not ${PACKAGE_NAME}`,
-    );
+    throw new Error(`The hoisted workspace dependency is not ${PACKAGE_NAME}`);
   }
   return resolved;
 }

@@ -18,7 +18,7 @@ browser app.
 The main process serves bundled files, controls navigation, receives scheme
 addresses and supplies the platform menu. It contains no product screen,
 preload, renderer bridge or viewer implementation. Electron is pinned to
-44.7.2, with Chromium 152 and Node 24.21.0. The package's exact pins are in
+44.11.3, with Chromium 152 and Node 24.22.2. The package's exact pins are in
 [`package.json`](./package.json). The builder and the updater use the public
 `mokly-ai/mokly-desktop` GitHub feed, including pre-releases.
 The updater is off in development. A packaged Linux app without `APPIMAGE`
@@ -36,7 +36,7 @@ and framing admission work.
 
 ## Quick Start
 
-From the repository root, install with Node 24.21.0 and npm 11.11.0:
+From the repository root, install with Node 24.21.0 and npm 11.21.0:
 
 ```sh
 npm ci

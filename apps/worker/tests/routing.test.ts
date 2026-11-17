@@ -1,4 +1,4 @@
-import { fetchMock } from "cloudflare:test";
+import { fetchMock } from "./outbound";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import worker from "../src/index";

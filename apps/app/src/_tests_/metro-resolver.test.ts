@@ -20,7 +20,10 @@ const configuration = require(
 ) as MetroConfiguration;
 
 test("Metro uses Expo resolution with the shared workspace modules", () => {
-  assert.deepEqual(configuration.watchFolders, [resolve(repositoryRoot, "ts")]);
+  assert.deepEqual(configuration.watchFolders, [
+    resolve(repositoryRoot, "node_modules"),
+    resolve(repositoryRoot, "packages"),
+  ]);
   assert.deepEqual(configuration.resolver.nodeModulesPaths, [
     resolve(repositoryRoot, "apps/app/node_modules"),
     resolve(repositoryRoot, "node_modules"),

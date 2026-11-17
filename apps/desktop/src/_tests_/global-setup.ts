@@ -1,4 +1,4 @@
-import { rmSync } from "node:fs";
+import { readFileSync, rmSync } from "node:fs";
 import { expect } from "@playwright/test";
 import { startApi, startCatalogue } from "../../../app/src/_tests_/api-server";
 import {
@@ -13,13 +13,17 @@ import {
   screenshot,
 } from "./shell";
 
+const packageJson = JSON.parse(
+  readFileSync(new URL("../../package.json", import.meta.url), "utf8"),
+) as { devDependencies: { electron: string } };
+
 /** Open offline first, then prepare the app harness before its worker reads the schema URL. */
 export default async function setup(): Promise<void> {
   const profile = profileDirectory("offline-profile");
   const electron = await launch(profile);
   try {
     const versions = await electron.evaluate(() => process.versions);
-    expect(versions.electron).toBe("44.7.2");
+    expect(versions.electron).toBe(packageJson.devDependencies.electron);
     expect(versions.chrome?.split(".")[0]).toBe("152");
     const page = await electron.firstWindow();
     await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();

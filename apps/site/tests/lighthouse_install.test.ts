@@ -6,16 +6,17 @@ import { repositoryPath, sitePath } from "../src/workspace.js";
 
 test("Lighthouse uses exact dependencies in the single workspace lock", async () => {
   const root = JSON.parse(
-    await readFile(repositoryPath("ts", "package.json"), "utf8"),
+    await readFile(repositoryPath("package.json"), "utf8"),
   ) as { workspaces: string[] };
   assert.deepEqual(
     root.workspaces.filter(
-      (workspace) => workspace === "site" || workspace.startsWith("site/"),
+      (workspace) =>
+        workspace === "apps/site" || workspace.startsWith("apps/site/"),
     ),
-    ["site"],
+    ["apps/site"],
   );
   const lock = JSON.parse(
-    await readFile(repositoryPath("ts", "package-lock.json"), "utf8"),
+    await readFile(repositoryPath("package-lock.json"), "utf8"),
   ) as {
     packages: Record<
       string,

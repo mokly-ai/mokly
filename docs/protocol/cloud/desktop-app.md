@@ -27,8 +27,8 @@ the sign-in handoff, [Catalogue hosting](./catalogue-hosting.md) and
 
 The npm workspace is `@mokly-cloud/desktop` under `apps/desktop`, installed from
 the single `package-lock.json`. Its exact pins are in
-[`apps/desktop/package.json`](../../../apps/desktop/package.json). `electron` 44.7.2
-bundles Chromium 152 and Node 24.21.0, the repository's own Node pin.
+[`apps/desktop/package.json`](../../../apps/desktop/package.json). `electron` 44.11.3
+bundles Chromium 152 and Node 24.22.2.
 A bump of `electron` records the Chromium major it bundles, and the
 Electron smoke test in [desktop verification](./desktop-distribution.md#verification) is what proves the viewer on
 that engine.

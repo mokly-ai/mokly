@@ -13,8 +13,8 @@
     "typecheck": "../../node_modules/.bin/tsc --noEmit"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "0.12.20",
-    "vitest": "3.2.4",
-    "wrangler": "4.113.0"
+    "@cloudflare/vitest-plugin": "1.8.4",
+    "vitest": "4.1.12",
+    "wrangler": "4.164.0"
   }
 }

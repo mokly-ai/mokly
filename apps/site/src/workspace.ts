@@ -11,11 +11,7 @@ import path from "node:path";
 
 function locate(): string {
   const start = process.cwd();
-  for (const candidate of [
-    start,
-    path.join(start, "site"),
-    path.join(start, "ts", "site"),
-  ]) {
+  for (const candidate of [start, path.join(start, "apps", "site")]) {
     if (
       existsSync(path.join(candidate, "astro.config.mjs")) &&
       existsSync(path.join(candidate, "package.json"))
@@ -24,7 +20,7 @@ function locate(): string {
     }
   }
   throw new Error(
-    `The site build must run from apps/site, ts or the repository root; ${start} is none of them.`,
+    `The site build must run from apps/site or the repository root; ${start} is none of them.`,
   );
 }
 

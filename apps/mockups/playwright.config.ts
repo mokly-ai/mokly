@@ -36,7 +36,7 @@ export default defineConfig({
   use: {
     browserName: "chromium",
     headless: true,
-    reducedMotion: "reduce",
+    contextOptions: { reducedMotion: "reduce" },
     trace: "retain-on-failure",
   },
 });

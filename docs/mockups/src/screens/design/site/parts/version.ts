@@ -1,6 +1,6 @@
-/** The documentation mockup follows the workspace's exact Mokly release pin. */
+/** The documentation mockup follows the workspace `@mokly/mokly` version. */
 
-import workspace from "../../../../../../../package.json";
+import mokly from "../../../../../../../packages/mokly/package.json";
 
-/** The published `@mokly/mokly` version depicted in the chrome. */
-export const PACKAGE_VERSION = workspace.devDependencies["@mokly/mokly"];
+/** The `@mokly/mokly` version depicted in the chrome. */
+export const PACKAGE_VERSION = mokly.version;

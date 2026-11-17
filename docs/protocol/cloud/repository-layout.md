@@ -69,7 +69,7 @@ The [API contract guide](../../api/README.md) documents regeneration.
 | cert-manager chart  | v1.21.2                                                                                                           | `infra/toolchains.json` → `cert_manager_chart`                                                           |
 | Postgres image      | docker.io/library/postgres:16.15-bookworm@sha256:efedf3595f1d6f415c08568ba171029bf54052e754cc9f030e3f2412b21f3d67 | `infra/toolchains.json` → `postgres_image`                                                               |
 | Chromium            | —                                                                                                                 | Installed once at the Playwright version pinned by the TypeScript lockfile                               |
-| Electron            | 44.7.2                                                                                                            | `apps/desktop/package.json`; bundles Node 24.21.0, the Node pin, and Chromium 152                        |
+| Electron            | 44.11.3                                                                                                           | `apps/desktop/package.json`; bundles Node 24.22.2 and Chromium 152                                       |
 
 CI installs the active toolchains at exactly these versions; local development
 should match them. The table is the source of truth; update matching pin files

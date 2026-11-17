@@ -1,5 +1,5 @@
 {
-  "$schema": "./ts/node_modules/@mokly/mokly/config.schema.json",
+  "$schema": "./node_modules/@mokly/mokly/config.schema.json",
   "repoRoot": ".",
   "roots": [
     { "dir": "docs/mockups/src/entries", "files": ["**/*.mockup.{ts,tsx}"] }
@@ -11,7 +11,7 @@
     "conditions": ["react-native", "import", "module", "default"],
     "loaders": { ".js": "jsx" },
     "mainFields": ["react-native", "module", "main"],
-    "packageRoots": ["ts"],
+    "packageRoots": ["."],
     "resolveExtensions": [
       ".web.tsx",
       ".web.ts",

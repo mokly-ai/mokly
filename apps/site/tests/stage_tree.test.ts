@@ -25,7 +25,7 @@ test("stage rows match a real catalogue index with index titles, folder order an
     await mkdir(path.dirname(path.join(root, file)), { recursive: true });
     await writeFile(path.join(root, file), content);
   };
-  await write(".gitignore", "build/\nts/node_modules/\n");
+  await write(".gitignore", "build/\nnode_modules/\n");
   await write("package.json", '{"private":true}');
   await symlink(
     repositoryPath("node_modules"),
@@ -37,7 +37,7 @@ test("stage rows match a real catalogue index with index titles, folder order an
     JSON.stringify({
       repoRoot: ".",
       roots: [{ dir: "entries", files: ["**/*.mockup.tsx"] }],
-      moduleResolution: { packageRoots: ["ts"] },
+      moduleResolution: { packageRoots: ["."] },
     }),
   );
   await write("entries/_folder.json", '{"order":["product","..."]}');
