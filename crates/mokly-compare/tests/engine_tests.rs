@@ -8,6 +8,7 @@ use mokly_compare::comparison_types::Comparison;
 use mokly_compare::moves::Detector;
 use mokly_css::parsed_cache::MemoryParsedCss;
 use mokly_graph::cache::{MemoryCache, RenderCache};
+use mokly_graph::workers::{RenderWorkers, ThreadWorkers};
 use mokly_model::review::{EntryChangeReason, ReviewState};
 
 mod engine_support;
@@ -30,16 +31,19 @@ fn equal_key_base_capture_does_not_render_after_the_head_overflows_the_full_tier
         .collect();
     let fixture = Fixture::new(&files);
     let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(12 * 1024 * 1024, 1024 * 1024));
+    let workers: Arc<dyn RenderWorkers> = Arc::new(ThreadWorkers::new(1).unwrap());
     let head = engine_support::prepare(
         fixture.directory.path(),
         Arc::new(WorkingTree),
         cache.clone(),
+        workers.clone(),
     )
     .unwrap();
     let base = engine_support::prepare(
         fixture.directory.path(),
         fixture.base_tree(engine_support::runner(), 48 * 1024 * 1024),
         cache.clone(),
+        workers,
     )
     .unwrap();
     for (route, plan) in head.plans() {

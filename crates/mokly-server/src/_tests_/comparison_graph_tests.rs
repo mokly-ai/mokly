@@ -6,6 +6,7 @@ use std::sync::Arc;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
 use mokly_graph::collection::ComparisonCollectorMock;
+use mokly_graph::comparison_input::RetainedComparisonInput;
 use mokly_graph::error::GraphError;
 use mokly_graph::types::{
     ComparisonDocument, RenderGeneration, RenderGenerationMock, RenderSummary,
@@ -37,8 +38,32 @@ fn frozen_resources_preserve_the_generation_cancellation_error() {
 
 #[test]
 fn capture_reuse_cannot_bypass_frozen_resource_checks() {
-    let graph: &dyn RenderGeneration = &FrozenResources::new(Arc::new(Unimock::new(())));
+    let inner: Arc<dyn RenderGeneration> = Arc::new(Unimock::new(
+        RenderGenerationMock::retained_comparison_input
+            .each_call(matching!(_))
+            .answers(&|_, _| {
+                Some(RetainedComparisonInput::Ready(ComparisonDocument {
+                    artifact: Arc::new(Artifact {
+                        bytes: b"retained".to_vec(),
+                        content_type: "text/html".into(),
+                        document: None,
+                        fragment: None,
+                    }),
+                    closure: Closure::default(),
+                }))
+            }),
+    ));
+    assert!(matches!(
+        inner.retained_comparison_input("sample/index.html"),
+        Some(RetainedComparisonInput::Ready(_))
+    ));
+    let graph: &dyn RenderGeneration = &FrozenResources::new(inner);
     assert!(graph.comparison_capture().is_none());
+    assert!(
+        graph
+            .retained_comparison_input("sample/index.html")
+            .is_none()
+    );
 }
 
 #[test]

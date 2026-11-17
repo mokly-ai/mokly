@@ -5,7 +5,7 @@
 - **Added:** 2026-10-29, from PR #222 and its completed plan. The CI fix
   milestone of that plan put the problem outside the scope.
 - **Location:** `crates/mokly-server/src/backend.rs:186`,
-  `crates/mokly-graph/src/session.rs:225`,
+  `crates/mokly-graph/src/session.rs:236`,
   `crates/mokly-graph/src/public_inputs.rs:1`, and
   `docs/protocol/mokly-public-closure.md:71`.
 - **Reason:** The 404 comes from closure membership on `origin/main`, outside
@@ -25,7 +25,7 @@
     current generation, and only after the policy of that generation
     accepts the path. `GraphDocuments::authored` in
     `crates/mokly-server/src/backend.rs:186` asks `contains_public_file` in
-    `crates/mokly-graph/src/session.rs:225`.
+    `crates/mokly-graph/src/session.rs:236`.
   - In on-demand mode, the closure of a document joins its generation when
     the document renders.
   - On 2026-10-28, the CI browser test "large watch delivers browser

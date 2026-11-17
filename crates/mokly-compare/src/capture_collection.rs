@@ -10,8 +10,9 @@ use mokly_graph::error::Result;
 use mokly_graph::types::{ComparisonDocument, RenderSummary};
 
 use crate::capture_error::{self, CaptureResult};
+use crate::capture_generation::CapturedGeneration;
 use crate::capture_weight;
-use crate::comparison_capture::{CapturedGeneration, CapturedView};
+use crate::comparison_capture::CapturedView;
 
 pub(crate) struct Collector {
     bound: usize,
