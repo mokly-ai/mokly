@@ -51,12 +51,12 @@ test("component parent and variant identities round trip through selection", () 
     ...defaultSelection,
     screenPath: component.path,
   });
-  const selectedVariant = mergeSelection(fixture, noTitles, current, {
+  const selectedVariant = mergeSelection(fixture, noTitles, [], current, {
     screenPath: variant.path,
   });
   assert.equal(selectedVariant.screenPath, variant.path);
   assert.equal(
-    mergeSelection(fixture, noTitles, selectedVariant, {
+    mergeSelection(fixture, noTitles, [], selectedVariant, {
       screenPath: component.path,
     }).screenPath,
     component.path,
@@ -74,7 +74,7 @@ test("variant entry identity participates in equality and survives reveal", () =
     sameSelection(selected, { ...selected, screenPath: null }),
     false,
   );
-  assert.deepEqual(revealSelection(fixture, noTitles, selected), {
+  assert.deepEqual(revealSelection(fixture, noTitles, [], selected), {
     ...selected,
     search: "",
   });

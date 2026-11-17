@@ -197,11 +197,11 @@ test("navigation clears only a query that hides its destination", () => {
     tags: ["onboarding"],
   };
   assert.deepEqual(
-    revealSelection(model, noTitles, welcomeSelection),
+    revealSelection(model, noTitles, [], welcomeSelection),
     welcomeSelection,
   );
   assert.deepEqual(
-    revealSelection(model, noTitles, {
+    revealSelection(model, noTitles, [], {
       ...welcomeSelection,
       screenPath: "product/browse/details",
     }),
