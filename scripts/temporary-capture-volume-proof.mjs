@@ -4,6 +4,8 @@ import path from "node:path";
 import { setTimeout } from "node:timers/promises";
 import { pathToFileURL } from "node:url";
 
+import { diagnostics } from "./temporary-capture-stat-diagnostics.mjs";
+
 const moduleUrl = (name) => pathToFileURL(path.resolve(`packages/mokly/dist/sidecar/${name}.js`));
 const { CaptureDurability } = await import(moduleUrl("capture-durability"));
 const { captureRuntime, mature, maturityGuard } = await import(moduleUrl("capture-runtime"));
@@ -26,6 +28,7 @@ async function matureDirectory() {
 }
 
 try {
+  await diagnostics(root);
   for (const [name, change] of [
     ["create", () => fs.writeFile(path.join(root, "child"), "proof")],
     ["rename", () => fs.rename(path.join(root, "child"), path.join(root, "renamed"))],
