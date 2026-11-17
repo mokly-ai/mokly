@@ -192,13 +192,20 @@ the branch. Save both binaries before moving build inputs. Run builds serially.
       `.context/base-usage-without-restore/`. Use bounded harness memory and
       report noise and each unavailable measurement.
 
+Integration record of 2026-11-17: the user instructed this workspace to keep
+main's scheduling and Git process changes, then its CLI allocator change.
+The usage override now lives in `capture_generation.rs` beside the scheduling
+methods. Checking wrappers still use the document-based default.
+The release baseline is `6d0fcbb46`. Verification uses Git 2.45.4 first on `PATH`.
+This applies the existing design without another design choice.
+
 ## Milestone 4: Gate, review, and pull request
 
 Depends on: 1, 2, 3
 
 The workspace orchestrator checks every delegated result and owns this work.
 
-- [ ] Fetch and merge `origin/main` with the git-merge skill before delegation
+- [x] Fetch and merge `origin/main` with the git-merge skill before delegation
       batches and the final pull request when main has advanced. Preserve both
       scheduling and usage reads. Forward through each new transparent wrapper
       and preserve document checks in each checking wrapper.
@@ -217,3 +224,6 @@ The workspace orchestrator checks every delegated result and owns this work.
 - [ ] Open the pull request into `main`. Run the finish-work CI wait script after
       each push and pull request creation. Fix branch-caused failures. Rerun an
       unrelated failure once and record it. Leave the pull request open.
+
+Merge evidence belongs in `.context/base-usage-without-restore/merge-integration-report.md`,
+`scheduling-merge-audit.log`, and `allocator-merge-audit.log`.

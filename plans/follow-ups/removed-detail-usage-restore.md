@@ -6,10 +6,11 @@
   `calummoore/mokly-base-usage-without-restore-g972`, a new problem that the
   options check of its plan found.
 - **Location:** `crates/mokly-compare/src/projection_removed.rs:82` and
-  line 90, `crates/mokly-graph/src/session.rs:160` and line 176,
+  line 90, `crates/mokly-graph/src/session.rs:171` and line 187,
   `crates/mokly-graph/src/session_render.rs:68`,
-  `crates/mokly-server/src/comparison_graph.rs:82` and line 87, and
-  `CapturedGeneration::render` and `capture_with_bound` in
+  `crates/mokly-server/src/comparison_graph.rs:104` and line 109, and
+  `CapturedGeneration::render` in
+  `crates/mokly-compare/src/capture_generation.rs` and `capture_with_bound` in
   `crates/mokly-compare/src/comparison_capture.rs`.
 - **Reason:** The branch that found this path moved only workspace input
   projection to the new usage read, and this path reads through `render`,
@@ -19,7 +20,7 @@
 - **Category:** Performance.
 - **Terms:**
   - **Capture:** `CapturedGeneration` in
-    `crates/mokly-compare/src/comparison_capture.rs`. It is a bounded store of
+    `crates/mokly-compare/src/capture_generation.rs`. It is a bounded store of
     one side's compressed documents and their retained metadata, usage
     included.
   - **Kept view:** a view that the capture holds. The capture reads every
@@ -58,16 +59,16 @@
     stayed on `render`.
   - On a base without a capture, `render` checks more than
     `comparison_document`:
-    - `Session::render` at `crates/mokly-graph/src/session.rs:176` runs the
+    - `Session::render` at `crates/mokly-graph/src/session.rs:187` runs the
       document job at `crates/mokly-graph/src/session_render.rs:68` on the
       render worker pool. The job walks the public closure of the view again
       and checks the links. It wraps a closure or link failure in
       `GraphError::Attempt` with the document warnings.
     - `Session::comparison_document` at
-      `crates/mokly-graph/src/session.rs:160` checks only the links. It
+      `crates/mokly-graph/src/session.rs:171` checks only the links. It
       returns a link failure without that wrapper.
     - `FrozenResources` checks the document digest on both reads, at
-      `crates/mokly-server/src/comparison_graph.rs:82` and line 87.
+      `crates/mokly-server/src/comparison_graph.rs:104` and line 109.
     - Complete base validation walks every closure before the comparison
       starts, at `crates/mokly-graph/src/session_collection.rs:74`.
   - The performance task of 2026-11-16 that found this path required equal
