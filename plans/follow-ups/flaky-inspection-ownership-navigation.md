@@ -57,6 +57,13 @@
     Nobody confirmed it.
   - `plans/follow-ups/flaky-viewer-selection-navigation.md` records the same
     error in another spec, `tests/browser/viewer.spec.ts`.
+  - On 2026-11-17, the local complete gate at `2ecc62e95` met the same
+    error at line 79 in "same-origin obsolete highlight success preserves
+    frame replacement pick". The browser suite passed 2,285 tests and
+    failed two, with no skips. One selected rerun against the same build
+    passed one test, with no failures or skips. Its test time was 1.2
+    seconds. No test, assertion, timeout, or retry changed. The suspected
+    source remains host navigation during the awaited pick setup.
 - **Problem:** A navigation of the host page can happen while the test's
   `page.evaluate` still runs, so the test fails at random.
 - **Impact if no action:** The browser suite can fail on a correct change and
