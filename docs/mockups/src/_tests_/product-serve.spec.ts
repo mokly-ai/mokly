@@ -1,11 +1,13 @@
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { viewHref } from "@mokly/viewer/data";
 import { expect, test } from "@playwright/test";
 import type { Request } from "@playwright/test";
 
+import { viewHref } from "@mokly/viewer/data";
+
 import { mockupsOrigin as origin } from "../../../../apps/mockups/src/_tests_/origins";
+
 import { catalogueIndex } from "./catalogue-index";
 
 const screenshots = resolve(

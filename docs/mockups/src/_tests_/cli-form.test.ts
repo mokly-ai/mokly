@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { causes, onboarding, placeholders } from "../fixtures/product-states";
+
 import {
   actions,
   destination,

@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+
 import type { WebContents } from "electron";
+
 import { safeDiagnostic } from "../diagnostics.js";
-import { navigationError } from "./navigation-error.js";
 import { installNavigation, navigationTarget } from "../navigation.js";
+
+import { navigationError } from "./navigation-error.js";
 
 const app = "https://mokly.example";
 test("navigation permits only the desktop origin and exact round-trip origins", () => {

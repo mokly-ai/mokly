@@ -1,9 +1,11 @@
-import { spawnSync } from "node:child_process";
 import { Buffer } from "node:buffer";
+import { spawnSync } from "node:child_process";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+
 import { parse } from "yaml";
+
 import { publishRelease, releaseArtifacts } from "./release-assets.mjs";
 import { AppendOnlyPublisher, githubClient } from "./release-github.mjs";
 

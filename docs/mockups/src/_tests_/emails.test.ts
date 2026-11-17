@@ -12,6 +12,7 @@ import {
   EMAIL_BRAND_ROOT,
   EMAIL_STYLE_FILES,
 } from "../screens/design/email/parts/metadata";
+
 import { catalogueEntries } from "./catalogue-index";
 import {
   catalogueRoot,

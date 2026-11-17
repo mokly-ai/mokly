@@ -8,6 +8,7 @@ import type { View } from "react-native";
 import { Action } from "../components/action";
 import { icons } from "../components/icons";
 import { useCompact } from "../layout/viewport";
+
 import { SettingsModal } from "./modal";
 
 /** One of a row's own actions. */

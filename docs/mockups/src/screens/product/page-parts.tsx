@@ -1,9 +1,11 @@
-import { MockLink } from "@mokly/mokly";
 import type { ReactNode } from "react";
+
+import { MockLink } from "@mokly/mokly";
 
 import type { ButtonIcon } from "../../components/button";
 import { ErrorDetails } from "../../components/error-details";
 import { Button } from "../../entries/design/button.mockup";
+
 import { Icon, iconSize } from "./icons";
 import type { IconName } from "./icons";
 import { SectionHeading } from "./navigation";

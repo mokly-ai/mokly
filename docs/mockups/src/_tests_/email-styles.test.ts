@@ -16,6 +16,7 @@ import {
   overrideStyles,
 } from "../emails/styles";
 import type { EmailClass, EmailStyleTable } from "../emails/styles";
+
 import { catalogueRoot } from "./catalogue-paths";
 import { schemes, viewports } from "./email-messages";
 import { emailColors } from "./emails-policy";

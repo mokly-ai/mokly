@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 
+import { stateDocumentViolations } from "./document-policy";
 import {
   createProject,
   expect,
@@ -10,7 +11,6 @@ import {
   signIn,
   test,
 } from "./harness";
-import { stateDocumentViolations } from "./document-policy";
 import { expectScreenPolicy } from "./screen-policy";
 import { makeToken, rowMenu } from "./settings/tokens";
 

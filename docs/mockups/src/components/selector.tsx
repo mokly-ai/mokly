@@ -1,10 +1,10 @@
 import { DropdownSelector } from "@firna/ui/dropdown";
 import { inputSizeTokens } from "@firna/ui/input";
-
-import { workspace, sample } from "../fixtures/product";
 import type { ReactNode } from "react";
 
+import { workspace, sample } from "../fixtures/product";
 import { PendingName, TextBar } from "../screens/product/placeholders";
+
 import { componentInput, componentMetadata } from "./metadata";
 import { staticNoop } from "./static-controls";
 

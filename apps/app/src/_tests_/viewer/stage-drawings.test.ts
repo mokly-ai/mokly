@@ -4,6 +4,8 @@ import { test } from "node:test";
 import { expectedProductScreens } from "../../../../../docs/mockups/src/_tests_/product-inventory";
 import { wayBack } from "../../settings/write";
 import type { RequestControl } from "../../viewer/request-controls";
+
+import type { ReferenceKind } from "./stage-cases";
 import {
   bodyProblems,
   cardProblems,
@@ -20,7 +22,6 @@ import type {
   LineCase,
   RefusalCase,
 } from "./stage-problems";
-import type { ReferenceKind } from "./stage-cases";
 
 /**
  * Every card the empty stage chooses, every body a build card shows and every

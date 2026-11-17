@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { readFile, realpath, symlink } from "node:fs/promises";
+import { readdir, readFile, realpath, symlink } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
@@ -51,7 +51,16 @@ function flaggedFiles(report: unknown, root: string): string[] {
 test("the repository lint reads catalogue sources and skips generated output", async (t) => {
   const fixture = await policyFixture();
   t.after(fixture.cleanup);
-  for (const file of [".gitignore", "eslint.config.js", "package.json"])
+  const eslintModules = (await readdir(path.join(repository, "scripts/eslint")))
+    .filter((name) => name.endsWith(".mjs"))
+    .map((name) => "scripts/eslint/" + name);
+  for (const file of [
+    ".gitignore",
+    "eslint.config.js",
+    "package.json",
+    "apps/eslint-rules.mjs",
+    ...eslintModules,
+  ])
     await fixture.write(
       file,
       await readFile(path.join(repository, file), "utf8"),

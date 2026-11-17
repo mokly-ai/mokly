@@ -1,4 +1,5 @@
 import type { Session } from "electron";
+
 import { isDesktopAddress } from "./origin.js";
 
 /** Only the bundled main frame may write sanitized text to the clipboard. */

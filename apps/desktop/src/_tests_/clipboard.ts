@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import type { ElectronApplication, Page } from "@playwright/test";
+
 import { screenshot } from "./shell";
 
 /** Exercise the product action and read the native clipboard outside the renderer. */

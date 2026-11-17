@@ -1,6 +1,7 @@
 import { paletteColors } from "@mokly-cloud/tokens/palettes";
-import type { ColorScheme, Viewport } from "@mokly/mokly";
 import type { CSSProperties } from "react";
+
+import type { ColorScheme, Viewport } from "@mokly/mokly";
 
 import {
   currentScreen,

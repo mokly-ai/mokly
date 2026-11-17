@@ -1,3 +1,4 @@
+import { fillPullRequest, installedRepository } from "../database-fixture";
 import {
   createProject,
   expect,
@@ -8,7 +9,6 @@ import {
   test,
 } from "../harness";
 import { createToken, publish } from "../publish";
-import { fillPullRequest, installedRepository } from "../database-fixture";
 
 /**
  * A publication address names the pull request that produced it, whatever the

@@ -1,4 +1,5 @@
 import { Textarea } from "@firna/ui/input";
+
 import { componentInput, componentMetadata } from "./metadata";
 import { staticNoop } from "./static-controls";
 

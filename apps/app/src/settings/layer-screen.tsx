@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { PaneError } from "../components/resource-state";
 import { useCompact } from "../layout/viewport";
 import {
   replaceAddress,
@@ -10,17 +11,17 @@ import {
 import { signInHref } from "../navigation/destinations";
 import { dashboardPath } from "../navigation/paths";
 import { useSession } from "../session/context";
+
 import { useBackGuard } from "./back-guard";
 import { SettingsProvider } from "./context";
 import { useDirtyState } from "./dirty";
 import { DiscardConfirmation } from "./discard";
 import { useLayerAddress } from "./layer-address";
+import { PaneView, paneTitle } from "./pane-view";
 import { availablePanes, resolvePane } from "./panes";
 import type { SurfaceId } from "./panes";
-import { PaneError } from "../components/resource-state";
-import { PaneView, paneTitle } from "./pane-view";
-import { paneRoute } from "./routes";
 import { SettingsRouteWait } from "./route-wait";
+import { paneRoute } from "./routes";
 import { scopeSlugs, useSettingsScope } from "./scope";
 import { ScopeWait, scopePanes } from "./scope-wait";
 import { SettingsLayer } from "./surface";

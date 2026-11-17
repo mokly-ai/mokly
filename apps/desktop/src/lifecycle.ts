@@ -1,4 +1,5 @@
 import type { App, BrowserWindow } from "electron";
+
 import { createHandoff } from "./handoff.js";
 import type { HandoffExchange } from "./handoff.js";
 import { DESKTOP_ORIGIN } from "./origin.js";

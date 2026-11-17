@@ -6,6 +6,7 @@ import importPlugin, { createNodeResolver } from "eslint-plugin-import-x";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
+import cloudRules from "./apps/eslint-rules.mjs";
 import kebabCaseFileNames from "./scripts/eslint/kebab-case-file-names.mjs";
 import noArtifactPathLiterals from "./scripts/eslint/no-artifact-path-literals.mjs";
 import noDirectoryLiterals from "./scripts/eslint/no-directory-literals.mjs";
@@ -27,6 +28,11 @@ export default tseslint.config(
       "**/dist/**",
       "examples/basic/mokly-generated/**",
       "node_modules/**",
+      // The API client that the OpenAPI generator writes, and the frozen
+      // catalogues of the cloud contract fixtures, whose bytes the golden
+      // files record.
+      "apps/app/src/api/generated/**",
+      "crates/mkc-mokly-contract/fixtures/**/src/**",
       "target/**",
     ],
   },
@@ -230,4 +236,5 @@ export default tseslint.config(
       "mokly/no-artifact-path-literals": "error",
     },
   },
+  ...cloudRules,
 );

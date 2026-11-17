@@ -2,6 +2,7 @@
 
 import { invitationEmail } from "../../../emails/invitation";
 import { invitationContent } from "../../../fixtures/emails";
+
 import { EmailFrame } from "./parts/frame";
 
 /** The invitation email screen. */

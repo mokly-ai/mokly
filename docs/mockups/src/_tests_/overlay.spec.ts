@@ -3,6 +3,7 @@ import { pathToFileURL } from "node:url";
 import { expect, test } from "@playwright/test";
 
 import { githubAccounts, token } from "../fixtures/product";
+
 import { screenFile } from "./catalogue-paths";
 import { checkDiskOverlay } from "./disk-overlay-policy";
 import { documentViolations } from "./document-policy";

@@ -1,4 +1,5 @@
 import type { DocumentPalette } from "@mokly-cloud/tokens/palettes";
+
 import type { RenderInput } from "@mokly/mokly";
 
 /** The entry path roots whose screens render in the Folio palette. */

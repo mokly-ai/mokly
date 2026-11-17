@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { exampleToken } from "../fixtures/product-states";
+
 import { productRun, productSchemes, productViewports } from "./product-runs";
 import { settingsDocumentViolations } from "./settings-document-policy";
 

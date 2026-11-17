@@ -4,8 +4,9 @@ import { resolve } from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
 
-import { defineScreen } from "@mokly/mokly";
 import { createElement } from "react";
+
+import { defineScreen } from "@mokly/mokly";
 
 import { sourceTreeViolations } from "./catalogue-policy";
 import { entryExportViolations } from "./definition-policy";

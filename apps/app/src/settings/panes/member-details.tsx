@@ -1,15 +1,16 @@
 import { useCallback, useState } from "react";
 
+import { roleLabel } from "../../api/labels";
 import type { Member, Workspace } from "../../api/types";
 import { Action } from "../../components/action";
 import { Choice } from "../../components/controls";
-import { useWrite } from "../write";
 import { Facts } from "../../components/page-parts";
-import { roleLabel } from "../../api/labels";
 import { updateMember } from "../../data/workspaces";
+import { useWrite } from "../write";
+
+import { RemoveMember } from "./member-remove";
 import { inviteRoles, isInviteRole } from "./member-rows";
 import type { InviteRole } from "./member-rows";
-import { RemoveMember } from "./member-remove";
 
 /**
  * One member's role, and the way they lose access, which is asked in a modal

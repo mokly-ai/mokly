@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
+
 import {
   createProject,
   publicationPathFor,
@@ -7,6 +8,7 @@ import {
 import { createToken, publish } from "../../../app/src/_tests_/publish";
 import { makePrivate } from "../../../app/src/_tests_/visibility";
 import { DESKTOP_ORIGIN } from "../origin.js";
+
 import { screenshot } from "./shell";
 
 /** Prove the current package limit, separately from CORS and framing admission. */

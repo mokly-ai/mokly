@@ -3,10 +3,10 @@ import type { ReactNode } from "react";
 
 import { unexpectedError } from "../../api/errors";
 import type { Session } from "../../api/types";
-import { formFailure } from "../../components/form-failure";
 import { Action } from "../../components/action";
 import { StatusBadge } from "../../components/controls";
 import { Field } from "../../components/field";
+import { formFailure } from "../../components/form-failure";
 import { Facts, Section } from "../../components/page-parts";
 import { ControlPlaceholder, TextBar } from "../../components/placeholders";
 import { connectGitHub, updateAccount } from "../../data/auth";
@@ -17,6 +17,7 @@ import { useSettings } from "../context";
 import { useDraft } from "../dirty";
 import { draftKey } from "../drafts";
 import { alwaysSendable, nothingToDo, useWrite } from "../write";
+
 import { BadgePlaceholder } from "./row-placeholders";
 
 /** Disconnect GitHub's width in px, with its icon, at a page action's size. */

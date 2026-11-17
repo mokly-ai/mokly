@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { Buffer } from "node:buffer";
-import { httpExecutor } from "builder-util";
 import test from "node:test";
+
+import { httpExecutor } from "builder-util";
+
 import { AppendOnlyPublisher } from "../../scripts/release-github.mjs";
 
 const now = Date.parse("2026-10-16T12:00:00Z");

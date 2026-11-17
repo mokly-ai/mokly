@@ -1,3 +1,5 @@
+import type { ApiDataReason, ApiErrorData } from "../api/error-data";
+import type { ApiReason } from "../api/reasons";
 import type {
   Branch,
   Build,
@@ -7,8 +9,6 @@ import type {
   Project,
   PullRequest,
 } from "../api/types";
-import type { ApiDataReason, ApiErrorData } from "../api/error-data";
-import type { ApiReason } from "../api/reasons";
 
 /** A refusal, with the data the generated contract gives its reason. */
 export type Refusal =

@@ -1,3 +1,6 @@
+import type { Page } from "@playwright/test";
+
+import { installedRepository, manageUrl } from "./database-fixture";
 import {
   chooseRepository,
   createProject,
@@ -13,8 +16,6 @@ import {
   test,
 } from "./harness";
 import type { ApiBody } from "./harness";
-import { installedRepository, manageUrl } from "./database-fixture";
-import type { Page } from "@playwright/test";
 
 test("onboarding creates a workspace and a project from a repository", async ({
   page,

@@ -13,6 +13,7 @@ import {
   setupStep,
 } from "../screens/product/setup-destinations";
 import type { Installation } from "../screens/product/setup-destinations";
+
 import { destination, drawnPage, links, stepsDone } from "./drawn-page";
 import { inventoryPages } from "./product-inventory";
 

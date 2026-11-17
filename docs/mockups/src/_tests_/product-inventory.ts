@@ -8,9 +8,9 @@
 
 import type { DocumentPalette } from "@mokly-cloud/tokens/palettes";
 
-import { situationIdentityViolations } from "./product-situation-policy";
 import { screenVariantLimit, variantParent } from "./catalogue-variants";
 import type { InventoryRecord } from "./catalogue-variants";
+import { situationIdentityViolations } from "./product-situation-policy";
 import {
   callbackLandingPages,
   callbackLandingScreens,

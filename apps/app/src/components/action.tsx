@@ -7,6 +7,7 @@ import type { ComponentProps } from "react";
 import { useCompact } from "../layout/viewport";
 import { follow } from "../navigation/follow";
 import type { Write } from "../settings/write";
+
 import { Icon, icons } from "./icons";
 import type { IconName } from "./icons";
 import { PendingName } from "./pending-name";

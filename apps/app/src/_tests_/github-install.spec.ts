@@ -1,3 +1,5 @@
+import type { Workspace } from "../api/types";
+
 import {
   callbackUrl,
   codeVerifier,
@@ -13,7 +15,6 @@ import {
 } from "./auth-callbacks";
 import type { ApiBody } from "./harness";
 import { expect, open, ready, test } from "./harness";
-import type { Workspace } from "../api/types";
 
 function workspace(): Workspace {
   return {

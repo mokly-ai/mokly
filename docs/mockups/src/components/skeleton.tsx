@@ -12,6 +12,7 @@ import {
   StatePlaceholder,
   TextBar,
 } from "../screens/product/placeholders";
+
 import { componentInput, componentMetadata } from "./metadata";
 
 /** The placeholder forms of the Wait composition that the variants draw. */

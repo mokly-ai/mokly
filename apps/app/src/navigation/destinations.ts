@@ -1,7 +1,8 @@
-import type { Workspace, Project } from "../api/types";
 import { asApiError } from "../api/errors";
+import type { Workspace, Project } from "../api/types";
 import { getProject, listProjects } from "../data/projects";
 import { listWorkspaces } from "../data/workspaces";
+
 import { readLastProject } from "./last-opened";
 import {
   createWorkspacePath,

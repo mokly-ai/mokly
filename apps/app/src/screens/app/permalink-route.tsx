@@ -7,12 +7,12 @@ import { Action } from "../../components/action";
 import { ErrorDetails } from "../../components/error-details";
 import { StateMessage } from "../../components/page-parts";
 import { getProject } from "../../data/projects";
-import { getWorkspace } from "../../data/workspaces";
-import { useResource } from "../../data/use-resource";
 import {
   workspaceResourceScope,
   projectResourceScope,
 } from "../../data/resource-invalidation";
+import { useResource } from "../../data/use-resource";
+import { getWorkspace } from "../../data/workspaces";
 import {
   replaceAddress,
   useAddressPathname,
@@ -23,6 +23,7 @@ import { dashboardPath, workspacePath } from "../../navigation/paths";
 import { RequireSession } from "../../session/guard";
 import { AccountShell } from "../account/account-shell";
 import type { WaitingIdentity } from "../account/account-shell";
+
 import { ResolverWait } from "./resolver-wait";
 
 /** The permalink's wait, for the identity the header draws while it runs. */

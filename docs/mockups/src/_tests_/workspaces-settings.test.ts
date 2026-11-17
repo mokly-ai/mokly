@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { githubAccounts } from "../fixtures/product";
+
 import {
   attribute,
   byClass,

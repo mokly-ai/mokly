@@ -19,6 +19,7 @@ import { invitationEmail } from "../emails/invitation";
 import { signInEmail } from "../emails/sign-in";
 import { invitationContent, signInContent } from "../fixtures/emails";
 import { EMAIL_BRAND_ROOT } from "../screens/design/email/parts/metadata";
+
 import { repositoryFilePath, screenView } from "./catalogue-paths";
 import { authoredPath } from "./catalogue-reads";
 

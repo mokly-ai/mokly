@@ -4,6 +4,7 @@ import type { Viewport } from "@mokly/mokly";
 import { CatalogueLinks } from "../../../components/catalogue-links";
 import { sample } from "../../../fixtures/product";
 import { denseViewerChrome } from "../../../fixtures/product-states";
+
 import {
   StageFailed,
   StageWorkspaceUnreadable,

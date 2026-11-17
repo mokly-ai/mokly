@@ -8,6 +8,7 @@ import type { paths } from "../../api/generated/schema";
 import type { Branch, Publication, PullRequest } from "../../api/types";
 import type { Page, PublicationRef } from "../../data/publications";
 import { readLatestPublication } from "../../viewer/latest";
+
 import { attempt, branchRow, pullRow } from "./build-fixtures";
 import { publication } from "./fixtures";
 

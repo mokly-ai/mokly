@@ -1,15 +1,14 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import path from "node:path";
 import test from "node:test";
+import { pathToFileURL } from "node:url";
 
 import { createSatteriMarkdownProcessor } from "@astrojs/markdown-satteri";
 
 import { guideDocument, validateGuideReference } from "../src/docs/guides.js";
 import { DOCS_PAGES, GUIDE_CONTENT } from "../src/docs/pages.js";
 import { sitePath } from "../src/workspace.js";
-
-import path from "node:path";
-import { pathToFileURL } from "node:url";
 
 test("guides keep allowlisted Reference links with their query and fragment", async () => {
   const href = "/docs/reference/navigation/?view=all#catalogue-urls";

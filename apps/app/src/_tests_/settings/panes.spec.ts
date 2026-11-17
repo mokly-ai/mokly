@@ -1,3 +1,5 @@
+import type { Page } from "@playwright/test";
+
 import {
   countRequests,
   createProject,
@@ -13,12 +15,12 @@ import {
   test,
   unloadGuard,
 } from "../harness";
-import { makePrivate } from "../visibility";
-import { apiOrigin } from "../origins";
-import type { Page } from "@playwright/test";
 import { addMember } from "../members";
-import { chooseRevoke, makeToken } from "./tokens";
+import { apiOrigin } from "../origins";
+import { makePrivate } from "../visibility";
 import { pressWrite } from "../writes";
+
+import { chooseRevoke, makeToken } from "./tokens";
 
 /** Every pane opens, shows its own scope and acts against the real API. */
 

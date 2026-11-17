@@ -1,8 +1,10 @@
-import type { Viewport } from "@mokly/mokly";
 import type { ReactNode } from "react";
+
+import type { Viewport } from "@mokly/mokly";
 
 import type { ScreenState } from "../../../fixtures/product-states";
 import { stateScreenPath } from "../../../fixtures/product-states";
+
 import { AccountShell } from "./account-shell";
 import { RepositoryForm } from "./choose-repository-form";
 import type { RepositoryActivity } from "./choose-repository-form";

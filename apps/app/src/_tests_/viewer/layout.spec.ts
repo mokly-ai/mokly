@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 
 import { expect, open, test } from "../harness";
+
 import { taggedLayoutFixture } from "./layout-fixture";
 import { expectReadableBar, verticalCentreDifference } from "./layout-geometry";
 import { makePublic, publishedProject, publishedViewerReady } from "./support";

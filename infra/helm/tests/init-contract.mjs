@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { runInNewContext } from "node:vm";
+
 import { parseAllDocuments } from "yaml";
 
 const golden = await readFile(

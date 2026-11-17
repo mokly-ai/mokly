@@ -2,20 +2,17 @@ import type { ReactElement, ReactNode } from "react";
 
 import type { ApiError } from "../api/errors";
 import type { Build, Workspace, Project } from "../api/types";
-import type { AccessState } from "./access";
 import type { Resource } from "../data/use-resource";
+
+import type { AccessState } from "./access";
 import { buildStageView } from "./build-stage";
 import type { BuildWatch } from "./build-watch";
 import type { ViewerEntry } from "./entry";
 import { ForkPullRequest } from "./fork-card";
 import type { ViewerStatus } from "./host";
-import { workspaceRole } from "./workspace-role";
 import { StagePublish, StagePublishReader } from "./publish-card";
 import { stageStatus } from "./resolution";
 import type { SourceState } from "./source-store";
-import { planRefusalFailure, unpublishedStage } from "./stage-view-decision";
-import type { UnpublishedStage } from "./stage-view-decision";
-import { VersionFailure } from "./version-failure";
 import {
   AccessBlocked,
   AccessRefused,
@@ -28,6 +25,10 @@ import {
   UnpublishedPullRequest,
 } from "./stage";
 import { StageWait } from "./stage-card";
+import { planRefusalFailure, unpublishedStage } from "./stage-view-decision";
+import type { UnpublishedStage } from "./stage-view-decision";
+import { VersionFailure } from "./version-failure";
+import { workspaceRole } from "./workspace-role";
 
 /** What the stage reports and what it draws for one resolved address. */
 export interface StageView {

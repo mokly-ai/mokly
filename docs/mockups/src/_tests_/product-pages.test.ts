@@ -18,6 +18,7 @@ import {
 } from "../fixtures/product";
 import { membership, onboarding, profile } from "../fixtures/product-states";
 import { site, siteOrigin } from "../fixtures/site";
+
 import { catalogueRoot, screenFile } from "./catalogue-paths";
 import { drawnPage, pendingLabels } from "./drawn-page";
 import { inventoryPages } from "./product-inventory";

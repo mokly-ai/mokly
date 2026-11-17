@@ -2,6 +2,7 @@ import { useId, useMemo } from "react";
 
 import type { Build } from "../api/types";
 import { StateDot } from "../components/controls";
+
 import { buildSteps, stepWords } from "./build-copy";
 import { outputLines } from "./build-log";
 import type { LogView, OutputLine } from "./build-log";

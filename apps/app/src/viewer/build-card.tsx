@@ -10,6 +10,7 @@ import { site } from "../config";
 import { cancelBuild } from "../data/builds";
 import { buildPath, publicationPath } from "../navigation/paths";
 import { alwaysSendable, nothingToDo, useWrite } from "../settings/write";
+
 import { awaitsOwnerAction, buildAction } from "./build-action";
 import type { BuildAction } from "./build-action";
 import {
@@ -30,9 +31,9 @@ import {
   buildReferenceLabel,
 } from "./build-state";
 import { ControlWithGuide } from "./control-guide";
-import type { WorkspaceRole } from "./workspace-role";
 import { refusedLabel } from "./request-controls";
 import { shortSha } from "./resolution";
+import type { WorkspaceRole } from "./workspace-role";
 
 /** Everything one build's card needs; every value comes from the API. */
 export interface BuildCardProps {

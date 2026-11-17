@@ -1,7 +1,8 @@
-import { fetchMock } from "./outbound";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import worker from "../src/index";
+
+import { fetchMock } from "./outbound";
 
 const env = { DOMAIN: "example.invalid" };
 

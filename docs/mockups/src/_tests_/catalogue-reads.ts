@@ -10,8 +10,9 @@ import { relative, resolve } from "node:path";
 
 import { documentPalettes } from "@mokly-cloud/tokens/palettes";
 import type { DocumentPalette } from "@mokly-cloud/tokens/palettes";
-import type { CatalogueRecord } from "@mokly/viewer";
 import { parseFragment } from "parse5";
+
+import type { CatalogueRecord } from "@mokly/viewer";
 
 import { catalogueEntries } from "./catalogue-index";
 import { catalogueRoot, screenFile } from "./catalogue-paths";

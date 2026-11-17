@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { openSource } from "../fixtures/site";
+
 import { catalogueEntries } from "./catalogue-index";
 import { screenView } from "./catalogue-paths";
 import {

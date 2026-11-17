@@ -3,6 +3,7 @@
 import type { CatalogueNode } from "@mokly/viewer";
 
 import type { StageRow } from "../../src/stage.js";
+
 import type { CatalogueEntry, CatalogueTree } from "./catalogue.js";
 
 export interface StageNode {

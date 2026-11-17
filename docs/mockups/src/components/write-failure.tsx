@@ -1,5 +1,6 @@
 import { Button } from "../entries/design/button.mockup";
 import { causes, failureReference } from "../fixtures/product-states";
+
 import { ErrorReference } from "./error-reference";
 import { componentInput, componentMetadata } from "./metadata";
 

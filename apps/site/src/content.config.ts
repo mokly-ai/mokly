@@ -2,13 +2,13 @@ import { glob } from "astro/loaders";
 import { defineCollection } from "astro:content";
 
 import { docsSchema } from "./docs/frontmatter.js";
-import { moklyPackagePath, requiredMoklyPackagePath } from "./mokly-package.js";
 import {
   REFERENCE_DIRECTORY,
   REFERENCE_DOCUMENTS,
   referenceFile,
 } from "./docs/reference-allowlist.js";
 import { legalSchema } from "./legal.js";
+import { moklyPackagePath, requiredMoklyPackagePath } from "./mokly-package.js";
 
 /** Legal Markdown, rendered in the site's readable document column. */
 const legal = defineCollection({

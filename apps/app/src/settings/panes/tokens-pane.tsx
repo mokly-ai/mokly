@@ -12,9 +12,10 @@ import { PaneResource } from "../../components/resource-state";
 import { listTokens } from "../../data/tokens";
 import { useResource } from "../../data/use-resource";
 import { RowMenu } from "../row-menu";
+
+import { BadgePlaceholder, MenuTriggerPlaceholder } from "./row-placeholders";
 import { CreateToken } from "./tokens-create";
 import { RevokeToken } from "./tokens-revoke";
-import { BadgePlaceholder, MenuTriggerPlaceholder } from "./row-placeholders";
 
 /**
  * One publishing token, with its own actions behind a single three-dot

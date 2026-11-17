@@ -1,5 +1,7 @@
 import type { Page } from "@playwright/test";
 
+import { defaultPageSize, referencePageLimit } from "../../data/publications";
+import { fillBranches, fillHistory } from "../database-fixture";
 import {
   createProject,
   expect,
@@ -10,8 +12,7 @@ import {
   test,
 } from "../harness";
 import { createToken, publish } from "../publish";
-import { fillBranches, fillHistory } from "../database-fixture";
-import { defaultPageSize, referencePageLimit } from "../../data/publications";
+
 import { publishedViewerReady } from "./support";
 
 /** Count every request to one address, without holding it open. */

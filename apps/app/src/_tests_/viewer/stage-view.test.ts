@@ -5,6 +5,7 @@ import { ApiError } from "../../api/errors";
 import type { Project } from "../../api/types";
 import { closedState, fromFork } from "../../viewer/resolution";
 import { unpublishedStage } from "../../viewer/stage-view-decision";
+
 import { branchRow, pullRow } from "./build-fixtures";
 
 const project: Project = {

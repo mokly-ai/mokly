@@ -8,6 +8,7 @@ import type { ViewStyle } from "react-native";
 import { Button as RegisteredButton } from "../entries/design/button.mockup";
 import { Panel } from "../entries/design/panel.mockup";
 import { icons } from "../screens/product/icons";
+
 import { componentInput, componentMetadata } from "./metadata";
 import { staticNoop } from "./static-controls";
 

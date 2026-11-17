@@ -2,9 +2,10 @@ import type { ApiError } from "../api/errors";
 import type { Build, Workspace, Project } from "../api/types";
 import type { PublicationRef } from "../data/publications";
 import type { Resource } from "../data/use-resource";
+
+import type { ClosedPullRequestState } from "./resolution";
 import { workspaceRole } from "./workspace-role";
 import type { WorkspaceRole } from "./workspace-role";
-import type { ClosedPullRequestState } from "./resolution";
 
 /** The card an unpublished address needs once its project is known. */
 export type UnpublishedStage =

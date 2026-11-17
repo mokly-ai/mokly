@@ -1,4 +1,5 @@
 import type { Project } from "../api/types";
+
 import { workspacePath, projectPath } from "./paths";
 
 function tailAfter(pathname: string, segments: number): string {

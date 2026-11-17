@@ -13,6 +13,7 @@ import { listBranches } from "../../data/publications";
 import { useResource } from "../../data/use-resource";
 import { projectPath } from "../../navigation/paths";
 import { buildActive } from "../../viewer/build-state";
+
 import { AccountShell } from "./account-shell";
 import type { ShellWait, WaitingIdentity } from "./account-shell";
 

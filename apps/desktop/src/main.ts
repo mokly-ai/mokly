@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { readFile, realpath, stat } from "node:fs/promises";
 import { extname, resolve, sep } from "node:path";
+
 import {
   app,
   BrowserWindow,
@@ -13,6 +14,7 @@ import {
   shell,
 } from "electron";
 import electronUpdater from "electron-updater";
+
 import { contentSecurityPolicy, readConfiguration } from "./config.js";
 import { safeDiagnostic } from "./diagnostics.js";
 import { exportHandler, registerScheme } from "./export-handler.js";

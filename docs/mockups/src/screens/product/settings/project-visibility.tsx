@@ -2,6 +2,7 @@ import { WriteFailure } from "../../../entries/design/write-failure.mockup";
 import { sample } from "../../../fixtures/product";
 import { billing, failureReference } from "../../../fixtures/product-states";
 import { Action } from "../page-parts";
+
 import { SettingsModal } from "./settings-modal";
 
 /** Who can open the project's publications. */

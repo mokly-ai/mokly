@@ -11,6 +11,7 @@ import {
   onboarding,
 } from "../../../fixtures/product-states";
 import { Action } from "../page-parts";
+
 import type { EntryMode, EntrySituation } from "./entry-layout";
 
 /** What the email control reads in each situation these two screens draw. */

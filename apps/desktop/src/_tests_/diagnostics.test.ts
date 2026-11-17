@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+
 import { safeDiagnostic } from "../diagnostics.js";
+
 import { navigationError } from "./navigation-error.js";
 
 const credential = "e".repeat(64);

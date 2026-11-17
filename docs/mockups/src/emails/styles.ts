@@ -10,14 +10,13 @@
  * because classic Outlook does not support rem units.
  */
 
-import type { CSSProperties } from "react";
-
 import { paletteColors } from "@mokly-cloud/tokens/palettes";
 import { tokens } from "@mokly-cloud/tokens/tokens";
 import type {
   TokenColorScheme,
   TokenViewport,
 } from "@mokly-cloud/tokens/tokens";
+import type { CSSProperties } from "react";
 
 /** Every class the email carries. Each exists only for the override block. */
 export type EmailClass =

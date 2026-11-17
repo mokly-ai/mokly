@@ -1,5 +1,7 @@
 import { EventEmitter } from "node:events";
+
 import type { App, BrowserWindow } from "electron";
+
 import type { DesktopLifecycleDependencies } from "../lifecycle.js";
 
 export function deferred() {

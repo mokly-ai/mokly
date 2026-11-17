@@ -6,6 +6,7 @@ import { expect, test } from "@playwright/test";
 import { sample } from "../fixtures/product";
 import { publication } from "../fixtures/publications";
 import { currentScreen } from "../fixtures/viewer-catalogue";
+
 import { screenFile } from "./catalogue-paths";
 import type { Scheme } from "./catalogue-paths";
 import { rgb } from "./color-metrics";

@@ -1,6 +1,7 @@
 import { useGlobalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { PaneError } from "../components/resource-state";
 import { useCompact } from "../layout/viewport";
 import {
   readQuery,
@@ -12,14 +13,14 @@ import {
 } from "../navigation/address";
 import { settingsPath } from "../navigation/paths";
 import { useSession } from "../session/context";
+
 import { useBackGuard } from "./back-guard";
 import { SettingsProvider } from "./context";
 import { useDirtyState } from "./dirty";
 import { DiscardConfirmation } from "./discard";
+import { PaneView, paneTitle } from "./pane-view";
 import { availablePanes, resolvePane } from "./panes";
 import type { SurfaceId } from "./panes";
-import { PaneError } from "../components/resource-state";
-import { PaneView, paneTitle } from "./pane-view";
 import {
   pageBeneath,
   paneQuery,

@@ -10,6 +10,7 @@ import {
   publication,
   publicationAddress,
 } from "../fixtures/publications";
+
 import { screenFile } from "./catalogue-paths";
 
 /**

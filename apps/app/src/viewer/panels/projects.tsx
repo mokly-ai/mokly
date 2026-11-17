@@ -3,14 +3,14 @@ import type { ReactNode } from "react";
 import type { Workspace, Project } from "../../api/types";
 import { Action } from "../../components/action";
 import { ContentList } from "../../components/controls";
+import { Pending, StateMessage } from "../../components/page-parts";
 import { ControlPlaceholder, TextBar } from "../../components/placeholders";
 import { PaneResource } from "../../components/resource-state";
-import { Pending, StateMessage } from "../../components/page-parts";
+import { appAddress } from "../../config";
 import { listInstallations } from "../../data/installations";
 import { listProjects } from "../../data/projects";
-import { listWorkspaces } from "../../data/workspaces";
 import { useResource } from "../../data/use-resource";
-import { appAddress } from "../../config";
+import { listWorkspaces } from "../../data/workspaces";
 import { projectPath } from "../../navigation/paths";
 
 /** One workspace the reader can open, with the projects inside it. */

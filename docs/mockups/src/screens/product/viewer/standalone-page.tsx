@@ -1,9 +1,11 @@
-import type { Viewport } from "@mokly/mokly";
 import type { ReactNode } from "react";
 
-import { publication } from "../../../fixtures/publications";
+import type { Viewport } from "@mokly/mokly";
+
 import { sample } from "../../../fixtures/product";
 import type { ScreenState } from "../../../fixtures/product-states";
+import { publication } from "../../../fixtures/publications";
+
 import type { AccountLabel } from "./chrome";
 import { ViewerScreen, isPublishedPath } from "./screen";
 import type { SlotMeta } from "./slots";

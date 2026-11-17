@@ -1,11 +1,11 @@
 import { useCallback } from "react";
 import type { ReactNode } from "react";
 
-import { formFailure } from "../../components/form-failure";
 import { planLabel, roleLabel } from "../../api/labels";
 import type { Workspace } from "../../api/types";
 import { Action } from "../../components/action";
 import { Field } from "../../components/field";
+import { formFailure } from "../../components/form-failure";
 import { Facts } from "../../components/page-parts";
 import {
   ControlPlaceholder,
@@ -20,6 +20,7 @@ import { useDraft } from "../dirty";
 import { draftKey } from "../drafts";
 import { PaneLink } from "../pane-link";
 import { useWrite } from "../write";
+
 import { SlugEditor } from "./slug-editor";
 import { GitHubAccountsFact, GitHubAccountsFactWait } from "./workspace-github";
 import {

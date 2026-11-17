@@ -1,5 +1,6 @@
-import type { CatalogueReadModel, DetailSource } from "@mokly/viewer";
 import type { ReactNode } from "react";
+
+import type { CatalogueReadModel, DetailSource } from "@mokly/viewer";
 
 import type { CatalogueSource } from "./source-store";
 

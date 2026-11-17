@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { appOriginFor, siteLinks, siteOriginFor } from "../config";
+
 import { fixtureDesktopOrigin } from "./desktop-fixture";
 import { shellPage, tabAt, withWindow } from "./page-window";
 

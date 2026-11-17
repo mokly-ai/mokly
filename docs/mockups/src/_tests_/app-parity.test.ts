@@ -3,6 +3,11 @@ import { test } from "node:test";
 
 import { parityPages, sentences } from "./app-owners";
 import {
+  labelDivergences,
+  pendingModeDivergences,
+  stateTitleDivergences,
+} from "./app-parity";
+import {
   allowed,
   allowedOwnerViolations,
   allowedPendingModes,
@@ -10,11 +15,6 @@ import {
   assertOwned,
 } from "./app-parity-allowances";
 import type { PendingModeAllowance } from "./app-parity-allowances";
-import {
-  labelDivergences,
-  pendingModeDivergences,
-  stateTitleDivergences,
-} from "./app-parity";
 import { announcerViolations, ownerViolations } from "./app-parity-owners";
 import { appSource, drawnLabels, unwrittenLabels } from "./app-parity-reads";
 import { screenView } from "./catalogue-paths";

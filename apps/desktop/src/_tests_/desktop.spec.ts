@@ -1,9 +1,8 @@
 import { rmSync } from "node:fs";
+
 import { test, expect } from "@playwright/test";
 import type { ElectronApplication } from "@playwright/test";
-import { freshEmail, ready } from "../../../app/src/_tests_/harness";
-import { mailedLink } from "../../../app/src/_tests_/sign-in-links";
-import { apiOrigin, appOrigin } from "../../../app/src/_tests_/origins";
+
 import {
   codeVerifier,
   flowKeys,
@@ -11,7 +10,12 @@ import {
   seedFlow,
   storedFlow,
 } from "../../../app/src/_tests_/auth-callbacks";
+import { freshEmail, ready } from "../../../app/src/_tests_/harness";
+import { apiOrigin, appOrigin } from "../../../app/src/_tests_/origins";
+import { mailedLink } from "../../../app/src/_tests_/sign-in-links";
 import { DESKTOP_ORIGIN } from "../origin.js";
+
+import { expectShareClipboard } from "./clipboard";
 import {
   captureOpener,
   deliverHandoff,
@@ -24,7 +28,6 @@ import {
   signedInEmail,
 } from "./shell";
 import { viewerProof } from "./viewer";
-import { expectShareClipboard } from "./clipboard";
 
 test("the bundled shell keeps its origin, session, navigation and catalogue boundary", async ({
   page: browser,

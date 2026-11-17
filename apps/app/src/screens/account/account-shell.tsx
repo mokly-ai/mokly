@@ -1,17 +1,17 @@
 import type { ReactNode } from "react";
 
-import { useDocumentTitle } from "../../layout/document-title";
-
 import type { User } from "../../api/types";
+import { AppLink } from "../../components/app-link";
 import {
   AccountIdentity,
   AccountIdentityPlaceholder,
   Brand,
   SiteBrand,
 } from "../../components/brand";
-import { AppLink } from "../../components/app-link";
 import { TextBar } from "../../components/placeholders";
 import { site } from "../../config";
+import { useDocumentTitle } from "../../layout/document-title";
+
 import { SetupProgress } from "./setup-progress";
 import type { SetupStep } from "./setup-progress";
 

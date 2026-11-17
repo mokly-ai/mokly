@@ -1,9 +1,9 @@
 import type { Page, Route } from "@playwright/test";
 
 import { previewSignInEmail, previewSignInSecret } from "./api-server";
-import { apiOrigin, appOrigin } from "./origins";
 import { stateDocumentViolations } from "./document-policy";
 import { apiFailure, expect, navigateMagicLink, ready, test } from "./harness";
+import { apiOrigin, appOrigin } from "./origins";
 
 const callbackPath = "/auth/preview/callback";
 const wrongSecret = "3".repeat(64);

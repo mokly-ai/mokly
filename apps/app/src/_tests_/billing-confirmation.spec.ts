@@ -1,6 +1,8 @@
 import type { Page } from "@playwright/test";
 
 import { startCheckoutThrough, subscribe } from "./billing";
+import { sql } from "./database-fixture";
+import { failureShape } from "./fragment";
 import {
   apiFailure,
   createProject,
@@ -14,8 +16,6 @@ import {
   signIn,
   test,
 } from "./harness";
-import { failureShape } from "./fragment";
-import { sql } from "./database-fixture";
 
 /** The read a Checkout return polls until its webhook has changed the plan. */
 const billingRead = "**/v1/workspaces/*/billing";

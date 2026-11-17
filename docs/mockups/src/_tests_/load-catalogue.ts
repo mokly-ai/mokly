@@ -2,6 +2,8 @@ import { readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
+import type { ReactNode } from "react";
+
 import type {
   ComponentDefinition,
   ComponentVariantInput,
@@ -11,7 +13,6 @@ import type {
   ScreenVariantInput,
   UseCaseDefinition,
 } from "@mokly/mokly";
-import type { ReactNode } from "react";
 
 /**
  * A screen's or component's render as a method. TypeScript compares a

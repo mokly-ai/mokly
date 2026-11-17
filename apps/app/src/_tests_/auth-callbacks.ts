@@ -1,6 +1,7 @@
 import type { Page, Route } from "@playwright/test";
 
 import type { Connection, Session, SessionIssued } from "../api/types";
+
 import { appOrigin } from "./origins";
 
 export const githubState = "a".repeat(64);

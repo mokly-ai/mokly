@@ -8,6 +8,7 @@ import { tokens } from "@mokly-cloud/tokens/tokens";
 
 import { logoFiles } from "../emails/document";
 import { canvasGradient, emailStyles } from "../emails/styles";
+
 import { catalogueRoot } from "./catalogue-paths";
 import { brandRoot, messages, schemes, viewports } from "./email-messages";
 import { emailImportViolations, emailSubtreeViolations } from "./emails-policy";

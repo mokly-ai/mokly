@@ -1,7 +1,8 @@
 import type { Route } from "@playwright/test";
 
-import type { Branch, Build, Project, PullRequest } from "../api/types";
 import type { ApiReason } from "../api/reasons";
+import type { Branch, Build, Project, PullRequest } from "../api/types";
+
 import type { BuildDouble } from "./build-double";
 import { failureFor } from "./failures";
 

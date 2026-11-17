@@ -6,6 +6,7 @@ import type { GitHubAccount } from "../../../fixtures/product";
 import { Action, ExternalLink, Section } from "../page-parts";
 import { NoteRowPlaceholder } from "../placeholder-rows";
 import { ControlPlaceholder } from "../placeholders";
+
 import { MenuTriggerPlaceholder } from "./row-placeholders";
 
 /**

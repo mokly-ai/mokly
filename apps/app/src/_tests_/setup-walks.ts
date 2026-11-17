@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 
 import { createWorkspacePath, installPath } from "../navigation/paths";
+
 import { secondInstallation } from "./database-fixture";
 import {
   answerGitHubPages,

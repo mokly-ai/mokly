@@ -2,12 +2,12 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { ApiError } from "../api/errors";
-import { missingSettingsScope } from "../settings/scope";
 import {
   workspaceResourceScope,
   projectResourceScope,
   resourceInvalidationVersion,
 } from "../data/resource-invalidation";
+import { missingSettingsScope } from "../settings/scope";
 
 function failure(reason: string, status: number): ApiError {
   return new ApiError({

@@ -3,10 +3,10 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { test } from "node:test";
 
-import type { Billing, Subscription } from "../api/types";
-import { formError } from "../api/form-error";
 import { ApiError } from "../api/errors";
+import { formError } from "../api/form-error";
 import { askAnOwnerToUpgrade, planLabel, publicOnFree } from "../api/labels";
+import type { Billing, Subscription } from "../api/types";
 import {
   day,
   money,
@@ -17,6 +17,7 @@ import {
   trialDays,
 } from "../settings/panes/billing-facts";
 import { paneRoute } from "../settings/routes";
+
 import { repositoryRoot } from "./root";
 
 const editorCents = 2000;

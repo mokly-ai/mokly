@@ -3,8 +3,9 @@ import { SharedUiThemeProvider } from "@firna/ui/theme";
 import { documentPalettes } from "@mokly-cloud/tokens/palettes";
 import { staticUiTheme } from "@mokly-cloud/tokens/shared-ui-theme";
 import { tokenCss } from "@mokly-cloud/tokens/token-css";
-import type { ColorScheme, RenderInput, Viewport } from "@mokly/mokly";
 import type { ReactNode } from "react";
+
+import type { ColorScheme, RenderInput, Viewport } from "@mokly/mokly";
 
 import { documentPalette } from "./document-palette";
 import { MockupRenderContext } from "./render-context";

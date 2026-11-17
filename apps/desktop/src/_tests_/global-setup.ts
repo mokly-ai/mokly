@@ -1,11 +1,14 @@
 import { readFileSync, rmSync } from "node:fs";
+
 import { expect } from "@playwright/test";
+
 import { startApi, startCatalogue } from "../../../app/src/_tests_/api-server";
 import {
   startGitHubDouble,
   stopGitHubDouble,
 } from "../../../app/src/_tests_/github-double";
 import { DESKTOP_ORIGIN } from "../origin.js";
+
 import {
   expectShellSettings,
   launch,

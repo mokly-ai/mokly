@@ -1,6 +1,8 @@
-import { open, openDialog } from "../harness";
-import type { Subject } from "./subject";
 import type { Page } from "@playwright/test";
+
+import { open, openDialog } from "../harness";
+
+import type { Subject } from "./subject";
 
 /**
  * Every write whose input the reader can undo.

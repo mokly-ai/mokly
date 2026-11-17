@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import { readViewerState, viewerHref } from "../../viewer/selection";
 import { shareSelection } from "../../viewer/share-selection";
+
 import { defaults } from "./fixtures";
 
 test("valid entry paths keep their case and share identity", () => {

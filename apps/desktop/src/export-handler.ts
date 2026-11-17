@@ -1,4 +1,5 @@
 import type { Protocol } from "electron";
+
 import { isDesktopAddress } from "./origin.js";
 
 export interface ExportFiles {

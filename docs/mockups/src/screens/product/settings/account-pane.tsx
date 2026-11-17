@@ -11,6 +11,7 @@ import {
 } from "../../../fixtures/product-states";
 import { Action, Facts, Pending, Section } from "../page-parts";
 import { factPlaceholder } from "../placeholders";
+
 import type { AccountWait } from "./account-github";
 import { GithubSection } from "./account-github";
 import { SettingsSurface } from "./surface";

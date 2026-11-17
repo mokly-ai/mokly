@@ -7,6 +7,10 @@
  * message resolves that its content does not carry.
  */
 
+import type {
+  TokenColorScheme,
+  TokenViewport,
+} from "@mokly-cloud/tokens/tokens";
 import type { CSSProperties, ReactElement, ReactNode } from "react";
 
 import type { EmailKind } from "./content";
@@ -19,10 +23,6 @@ import {
   overrideStyles,
 } from "./styles";
 import type { EmailStyleTable } from "./styles";
-import type {
-  TokenColorScheme,
-  TokenViewport,
-} from "@mokly-cloud/tokens/tokens";
 
 /** The published logo, one lockup for each scheme, drawn as the brand. */
 export const logoFiles = {

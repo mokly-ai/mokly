@@ -10,6 +10,7 @@ import {
   SECTION_TITLES,
 } from "../../../../apps/site/src/docs/sections";
 import { DOCS_SECTIONS } from "../screens/design/site/parts/docs_data";
+
 import { repositoryRoot } from "./design-site-test-helpers";
 
 function pageLabels(directory: string) {

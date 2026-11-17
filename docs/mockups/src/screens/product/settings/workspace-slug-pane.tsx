@@ -1,6 +1,7 @@
 import type { Viewport } from "@mokly/mokly";
 
 import type { ScreenState } from "../../../fixtures/product-states";
+
 import { SlugEditor } from "./slug-editor";
 
 function WorkspaceSlugScreen({

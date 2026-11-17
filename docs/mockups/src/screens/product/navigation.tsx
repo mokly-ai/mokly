@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { Avatar } from "../../entries/design/avatar.mockup";
 import { sample } from "../../fixtures/product";
 import { site } from "../../fixtures/site";
+
 import { MoklyMark } from "./mark";
 import { TextBar } from "./placeholders";
 

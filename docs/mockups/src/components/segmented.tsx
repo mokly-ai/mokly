@@ -1,4 +1,5 @@
 import { SegmentedControl } from "@firna/ui/segmented";
+
 import { componentInput, componentMetadata } from "./metadata";
 import { staticNoop } from "./static-controls";
 

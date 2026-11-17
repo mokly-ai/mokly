@@ -4,9 +4,10 @@ import type { ReactNode } from "react";
 import type { Member, Workspace } from "../../api/types";
 import { Pending, Section } from "../../components/page-parts";
 import type { SectionTitle } from "../../components/page-parts";
-import { listMembers, removeMember } from "../../data/workspaces";
-import { useResource } from "../../data/use-resource";
 import { PaneResource } from "../../components/resource-state";
+import { useResource } from "../../data/use-resource";
+import { listMembers, removeMember } from "../../data/workspaces";
+
 import { MemberDetails } from "./member-details";
 import { InviteForm, InviteWait } from "./member-invite";
 import {

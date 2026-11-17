@@ -12,6 +12,7 @@ import { EmailBody } from "../../../../emails/document";
 import type { EmailDefinition } from "../../../../emails/document";
 import { useMockupRenderContext } from "../../../../render-context";
 import { useRepositoryFile } from "../../../../resource-root";
+
 import { EMAIL_BRAND_ROOT } from "./metadata";
 
 /** One email screen: inbox lines above, the delivered message below. */

@@ -6,9 +6,10 @@ import { PaneError } from "../components/resource-state";
 import type { Resource } from "../data/use-resource";
 import { ViewerMain } from "../screens/viewer/body";
 import { ViewerStage } from "../viewer/placeholder";
+
+import { paneTitle } from "./pane-view";
 import { availablePanes } from "./panes";
 import type { SurfaceId } from "./panes";
-import { paneTitle } from "./pane-view";
 import { paneRoute } from "./routes";
 import type { SettingsScopeSlugs } from "./routes";
 import { scopeSlugs } from "./scope";

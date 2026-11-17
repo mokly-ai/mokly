@@ -6,6 +6,7 @@ import { test } from "node:test";
 import { parse } from "parse5";
 
 import { causes, failureReference } from "../fixtures/product-states";
+
 import { drawings } from "./build-drawings";
 import type { Drawing } from "./build-drawings";
 import { catalogueRoot, screenFile } from "./catalogue-paths";

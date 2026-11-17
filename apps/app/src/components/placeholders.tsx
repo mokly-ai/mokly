@@ -5,6 +5,7 @@ import { SkeletonBar, SkeletonPulseProvider } from "@firna/ui/skeleton";
 import type { ReactNode } from "react";
 
 import { useCompact } from "../layout/viewport";
+
 import { touchTarget } from "./action";
 import { PendingName } from "./pending-name";
 

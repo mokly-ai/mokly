@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+
 import { safeDiagnostic } from "../diagnostics.js";
-import { navigationError } from "./navigation-error.js";
 import { createHandoff, exchangeObserver, handoffToken } from "../handoff.js";
+
 import { deferred, settled } from "./lifecycle-fixture.js";
+import { navigationError } from "./navigation-error.js";
 
 const token = "a".repeat(64);
 const address = `mokly://auth/email/callback#token=${token}`;

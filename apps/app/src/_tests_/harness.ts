@@ -4,8 +4,6 @@ import { resolve } from "node:path";
 import { expect, test as base } from "@playwright/test";
 import type { Dialog, Page, Route } from "@playwright/test";
 
-import { installedRepository, releaseRecordedGitHub } from "./database-fixture";
-import { apiOrigin, appOrigin, githubOrigin } from "./origins";
 import type { operations } from "../api/generated/schema";
 import type { ApiReason } from "../api/reasons";
 import {
@@ -19,7 +17,10 @@ import {
   settingsPath,
   signUpPath,
 } from "../navigation/paths";
+
+import { installedRepository, releaseRecordedGitHub } from "./database-fixture";
 import { failureFor } from "./failures";
+import { apiOrigin, appOrigin, githubOrigin } from "./origins";
 import { admitLinkRequest, mailedLink } from "./sign-in-links";
 
 /**

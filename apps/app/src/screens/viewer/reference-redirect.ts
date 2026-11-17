@@ -5,6 +5,7 @@ import { replaceAddress } from "../../navigation/address";
 import type { AddressRouter } from "../../navigation/address";
 import { publicationPath } from "../../navigation/paths";
 import { referenceResolutionHref } from "../../viewer/selection";
+
 import type { ViewerAddressState } from "./address-state";
 
 /**

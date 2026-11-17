@@ -2,8 +2,8 @@ import type { Screen } from "../../api/types";
 import { Action } from "../../components/action";
 import { ContentList } from "../../components/controls";
 import type { WaitingContentRow } from "../../components/controls";
-import { PaneResource } from "../../components/resource-state";
 import { Pending, StateMessage } from "../../components/page-parts";
+import { PaneResource } from "../../components/resource-state";
 import { getShareLink, listScreens } from "../../data/publications";
 import type { PagedItems } from "../../data/publications";
 import { useResource } from "../../data/use-resource";
@@ -13,6 +13,7 @@ import { shareableScreens } from "../screens";
 import type { SelectionDefaults } from "../selection";
 import { sharedViewerUrl } from "../share-selection";
 import { shareLinkState } from "../share-state";
+
 import { Link, LinkWait } from "./share-link";
 
 /**

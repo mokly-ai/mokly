@@ -6,10 +6,11 @@ import type { Session } from "../api/types";
 import { Action } from "../components/action";
 import { ErrorDetails } from "../components/error-details";
 import { StateMessage } from "../components/page-parts";
-import { useSession } from "./context";
 import { replaceAddress } from "../navigation/address";
 import { signInHref } from "../navigation/destinations";
 import { SignInWait } from "../screens/account/entry-screen";
+
+import { useSession } from "./context";
 
 function Frame({ children }: { children: ReactNode }) {
   return (

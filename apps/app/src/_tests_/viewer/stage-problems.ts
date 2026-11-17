@@ -6,8 +6,6 @@ import { awaitsOwnerAction, buildAction } from "../../viewer/build-action";
 import type { BuildAction } from "../../viewer/build-action";
 import { buildLine } from "../../viewer/build-copy";
 import type { BuildLine } from "../../viewer/build-copy";
-import { workspaceRole } from "../../viewer/workspace-role";
-import type { WorkspaceRole } from "../../viewer/workspace-role";
 import { refusedLabel, requestControls } from "../../viewer/request-controls";
 import type { RequestControl } from "../../viewer/request-controls";
 import {
@@ -15,6 +13,9 @@ import {
   unpublishedStage,
 } from "../../viewer/stage-view-decision";
 import type { UnpublishedStage } from "../../viewer/stage-view-decision";
+import type { WorkspaceRole } from "../../viewer/workspace-role";
+import { workspaceRole } from "../../viewer/workspace-role";
+
 import {
   closingsOf,
   flags,

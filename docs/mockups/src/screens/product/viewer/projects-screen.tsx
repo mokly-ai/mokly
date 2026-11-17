@@ -1,13 +1,15 @@
-import type { Viewport } from "@mokly/mokly";
 import type { ReactNode } from "react";
 
+import type { Viewport } from "@mokly/mokly";
+
 import { ContentList } from "../../../entries/design/content-list.mockup";
-import { workspaces } from "../../../fixtures/publications";
 import { addresses, sample } from "../../../fixtures/product";
 import type { ScreenState } from "../../../fixtures/product-states";
 import { failureReference } from "../../../fixtures/product-states";
+import { workspaces } from "../../../fixtures/publications";
 import { Action, Pending, StateMessage } from "../page-parts";
 import { ControlPlaceholder, TextBar } from "../placeholders";
+
 import { ViewerPanelScreen } from "./screen";
 
 const title = "Projects";

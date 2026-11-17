@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { follow, leavesApplication } from "../navigation/follow";
+
 import { tabAt, withWindow } from "./page-window";
 
 /** A page and a router that record where each one was sent. */

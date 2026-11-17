@@ -1,3 +1,5 @@
+import type { Page } from "@playwright/test";
+
 import {
   createProject,
   currentWorkspaceId,
@@ -9,7 +11,6 @@ import {
 } from "../harness";
 import { addMember } from "../members";
 import { makePrivate } from "../visibility";
-import type { Page } from "@playwright/test";
 import { pressWrite } from "../writes";
 
 /** The one workspace, project, colleague and token every write acts on. */

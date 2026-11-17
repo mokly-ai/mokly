@@ -14,6 +14,7 @@ import ts from "typescript";
 
 import { logoFiles } from "../emails/document";
 import { canvasGradient, logoHeight, logoWidth } from "../emails/styles";
+
 import type { SourceFile } from "./source-policy";
 
 type Element = DefaultTreeAdapterMap["element"];

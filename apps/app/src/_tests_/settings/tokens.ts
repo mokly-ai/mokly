@@ -1,5 +1,6 @@
-import { expect } from "../harness";
 import type { Page } from "@playwright/test";
+
+import { expect } from "../harness";
 
 /** Make a token through the create modal, leaving its secret on screen. */
 export async function makeToken(page: Page, name: string): Promise<void> {

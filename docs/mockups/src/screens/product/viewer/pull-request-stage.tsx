@@ -6,6 +6,7 @@
  */
 
 import { Action, StateMessage } from "../page-parts";
+
 import { StageCard } from "./stage-card";
 
 /** A pull request whose check has not published a catalogue yet. */

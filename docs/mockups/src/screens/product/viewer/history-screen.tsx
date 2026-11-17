@@ -3,10 +3,11 @@ import type { Viewport } from "@mokly/mokly";
 import { ContentList } from "../../../entries/design/content-list.mockup";
 import type { HistoryEntry } from "../../../fixtures/build-history";
 import { referenceHistory } from "../../../fixtures/build-history";
-import { publication, publicationTones } from "../../../fixtures/publications";
 import type { ScreenState } from "../../../fixtures/product-states";
 import { failureReference } from "../../../fixtures/product-states";
+import { publication, publicationTones } from "../../../fixtures/publications";
 import { Action, Pending, StateMessage } from "../page-parts";
+
 import { ViewerPanelScreen } from "./screen";
 
 const title = "Publication history";

@@ -1,16 +1,17 @@
 import { useState } from "react";
 
 import { Action } from "../../components/action";
-import { Field } from "../../components/field";
 import type { ContentRow } from "../../components/controls";
-import { PaneResource } from "../../components/resource-state";
+import { Field } from "../../components/field";
 import { Pending, StateMessage } from "../../components/page-parts";
-import { useResource } from "../../data/use-resource";
+import { PaneResource } from "../../components/resource-state";
 import { everyBranch, everyPullRequest } from "../../data/publications";
+import { useResource } from "../../data/use-resource";
 import type { ReferenceRowState } from "../build-state";
 import { publicationTones, publishedDay, shortSha } from "../resolution";
 import { rowTarget } from "../switcher-row";
 import type { RefRow } from "../switcher-row";
+
 import { RefGroup } from "./ref-group";
 
 /** Everything the switcher shows, read so that no row states another's facts. */

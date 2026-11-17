@@ -1,5 +1,6 @@
 import type { Branch, Publication, PullRequest } from "../api/types";
 import type { PublicationRef } from "../data/publications";
+
 import type { ViewerStatus } from "./host";
 
 /** How a reference or a history row reads: what its newest attempt did. */

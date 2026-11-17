@@ -5,8 +5,9 @@
  * changes one field of a fresh copy.
  */
 
-import { defineComponent, defineScreen, defineUseCase } from "@mokly/mokly";
 import { createElement } from "react";
+
+import { defineComponent, defineScreen, defineUseCase } from "@mokly/mokly";
 
 import type { CatalogueDefinition } from "./load-catalogue";
 

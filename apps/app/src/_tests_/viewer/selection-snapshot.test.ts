@@ -2,13 +2,14 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { readQuery } from "../../navigation/address";
+import type { ViewerSelection } from "../../viewer/host";
 import {
   carriedQuery,
   readViewerState,
   referenceResolutionHref,
   viewerHref,
 } from "../../viewer/selection";
-import type { ViewerSelection } from "../../viewer/host";
+
 import { defaults, removed } from "./fixtures";
 
 const path = "/acme/website/publications/p1";

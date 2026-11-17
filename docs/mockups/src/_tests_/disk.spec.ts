@@ -3,11 +3,13 @@ import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { tokens } from "@mokly-cloud/tokens/tokens";
-import { VIEWER_DIRECTORY, currentDocumentPath } from "@mokly/viewer/data";
 import { expect, test } from "@playwright/test";
 import type { Route } from "@playwright/test";
 
+import { VIEWER_DIRECTORY, currentDocumentPath } from "@mokly/viewer/data";
+
 import { currentScreen } from "../fixtures/viewer-catalogue";
+
 import { catalogueIndex } from "./catalogue-index";
 import {
   catalogueRoot,

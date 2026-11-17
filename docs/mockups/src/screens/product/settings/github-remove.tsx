@@ -2,6 +2,7 @@ import type { Viewport } from "@mokly/mokly";
 
 import { githubAccounts } from "../../../fixtures/product";
 import { Action } from "../page-parts";
+
 import { GitHubPane } from "./github-pane";
 import { SettingsModal } from "./settings-modal";
 

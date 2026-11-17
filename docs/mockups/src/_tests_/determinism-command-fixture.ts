@@ -6,6 +6,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 
 import { fixtureGitEnvironment } from "../../../../apps/mockups/src/_tests_/git-environment.mjs";
+
 import { indexPath, screenView } from "./catalogue-paths";
 import {
   outputDirectory,

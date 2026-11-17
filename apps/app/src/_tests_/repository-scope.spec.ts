@@ -1,5 +1,7 @@
 import type { Page } from "@playwright/test";
 
+import { createWorkspacePath, installPath } from "../navigation/paths";
+
 import {
   bindAnotherInstallation,
   installedRepository,
@@ -18,7 +20,6 @@ import {
   signIn,
   test,
 } from "./harness";
-import { createWorkspacePath, installPath } from "../navigation/paths";
 import { atRepositoryStep, installSecondAccount } from "./setup-walks";
 
 /**

@@ -7,6 +7,7 @@ import { View } from "react-native";
 import type { ViewStyle } from "react-native";
 
 import { githubAccounts, sample } from "../fixtures/product";
+
 import { componentInput, componentMetadata } from "./metadata";
 import { staticNoop } from "./static-controls";
 

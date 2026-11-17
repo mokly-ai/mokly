@@ -10,6 +10,7 @@ import {
   isDesktopShell,
   offersDesktopHandoff,
 } from "../navigation/desktop-shell";
+
 import { fixtureDesktopOrigin } from "./desktop-fixture";
 import { shellPage, tabAt, withWindow } from "./page-window";
 import { repositoryRoot } from "./root";

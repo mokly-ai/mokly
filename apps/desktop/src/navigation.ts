@@ -1,4 +1,5 @@
 import type { WebContents } from "electron";
+
 import { DESKTOP_ORIGIN, isDesktopAddress } from "./origin.js";
 import { SITE_FIRST_SEGMENTS } from "./site-segments.js";
 

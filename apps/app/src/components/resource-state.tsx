@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import type { ApiError } from "../api/errors";
 import type { Resource } from "../data/use-resource";
+
 import { Action } from "./action";
 import { ErrorDetails } from "./error-details";
 import { StateMessage } from "./page-parts";

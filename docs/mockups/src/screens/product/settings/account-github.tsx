@@ -3,6 +3,7 @@ import type { ScreenState } from "../../../fixtures/product-states";
 import { profile } from "../../../fixtures/product-states";
 import { Action, Section } from "../page-parts";
 import { ControlPlaceholder, TextBar } from "../placeholders";
+
 import { BadgePlaceholder } from "./row-placeholders";
 
 /**

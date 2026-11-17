@@ -1,4 +1,5 @@
 import { Action } from "../page-parts";
+
 import { compactLabel } from "./published-bar";
 import type { SlotBar } from "./published-bar";
 

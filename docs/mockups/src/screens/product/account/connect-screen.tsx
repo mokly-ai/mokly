@@ -1,5 +1,6 @@
-import type { Viewport } from "@mokly/mokly";
 import type { ReactNode } from "react";
+
+import type { Viewport } from "@mokly/mokly";
 
 import { Selector } from "../../../entries/design/selector.mockup";
 import { sample } from "../../../fixtures/product";
@@ -11,6 +12,7 @@ import {
 import { workspaces } from "../../../fixtures/publications";
 import { Action, Facts, StateMessage } from "../page-parts";
 import { ControlPlaceholder } from "../placeholders";
+
 import { AccountShell } from "./account-shell";
 
 /**

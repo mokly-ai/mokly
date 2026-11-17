@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { fieldRefusals } from "../fixtures/product-states";
 import { TextBar } from "../screens/product/placeholders";
+
 import { componentInput, componentMetadata } from "./metadata";
 import { staticNoop } from "./static-controls";
 

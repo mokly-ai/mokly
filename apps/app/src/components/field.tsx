@@ -3,6 +3,7 @@ import { useSharedUiTheme } from "@firna/ui/theme";
 import type { ReactNode } from "react";
 
 import { useCompact } from "../layout/viewport";
+
 import { TextBar } from "./placeholders";
 
 /**

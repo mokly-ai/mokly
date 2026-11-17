@@ -1,3 +1,5 @@
+import type { Page } from "@playwright/test";
+
 import {
   createProject,
   currentWorkspaceId,
@@ -10,7 +12,7 @@ import {
 } from "../harness";
 import { addMember } from "../members";
 import { makePrivate } from "../visibility";
-import type { Page } from "@playwright/test";
+
 import { chooseRevoke, makeToken, rowMenu } from "./tokens";
 
 /**

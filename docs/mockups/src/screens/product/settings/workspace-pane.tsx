@@ -4,9 +4,10 @@ import type { ScreenState } from "../../../fixtures/product-states";
 import { failureReference } from "../../../fixtures/product-states";
 import { Action, Pending, StateMessage } from "../page-parts";
 import type { Installation } from "../setup-destinations";
+
 import { SettingsSurface } from "./surface";
-import type { AccountsRead } from "./workspace-github";
 import { WorkspaceForm } from "./workspace-form";
+import type { AccountsRead } from "./workspace-github";
 import { Projects } from "./workspace-projects";
 import type { Plan, Role } from "./workspace-projects";
 

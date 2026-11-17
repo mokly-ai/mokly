@@ -4,6 +4,7 @@ import type { PublicationState } from "../../../fixtures/publications";
 import { SiteLink } from "../page-parts";
 import { WaitingDot } from "../placeholder-rows";
 import { ControlPlaceholder, TextBar } from "../placeholders";
+
 import { PublicationMeta } from "./chrome";
 import { slotBars } from "./published-bar";
 import { ReferenceTrigger } from "./reference-trigger";

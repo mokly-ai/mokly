@@ -7,6 +7,7 @@
 
 import { lifetimePhrase } from "../emails/content";
 import type { InvitationContent, SignInContent } from "../emails/content";
+
 import { members, sample } from "./product";
 import { siteOrigin } from "./site";
 

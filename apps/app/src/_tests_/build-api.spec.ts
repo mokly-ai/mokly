@@ -1,3 +1,4 @@
+import { releaseBuild, test } from "./fake-build-api";
 import {
   branchPathFor,
   createProject,
@@ -7,7 +8,6 @@ import {
   publicationPathFor,
   signIn,
 } from "./harness";
-import { releaseBuild, test } from "./fake-build-api";
 
 test("a real API build publishes this branch and opens its catalogue", async ({
   page,

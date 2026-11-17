@@ -5,10 +5,11 @@
  * this wrapper; `document.test.ts` checks that part in the build output.
  */
 
-import type { ColorScheme, Viewport } from "@mokly/mokly";
 import { createElement } from "react";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+
+import type { ColorScheme, Viewport } from "@mokly/mokly";
 
 import { MockupDocument } from "../document";
 

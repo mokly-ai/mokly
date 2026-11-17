@@ -1,6 +1,7 @@
+import type { ReactNode } from "react";
+
 import type { Viewport } from "@mokly/mokly";
 import { MockLink } from "@mokly/mokly";
-import type { ReactNode } from "react";
 
 import { LayerBeneath } from "../../../components/layer-beneath";
 import { SettingsDialog } from "../../../entries/design/settings-dialog.mockup";
@@ -11,6 +12,7 @@ import { Icon } from "../icons";
 import { Brand } from "../navigation";
 import { Action } from "../page-parts";
 import { ViewerStage } from "../shell";
+
 import type { PaneId, SurfaceId } from "./panes";
 import { paneScreenPath, panes, sections } from "./panes";
 

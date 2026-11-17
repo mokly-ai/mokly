@@ -7,11 +7,11 @@ import { Action } from "../../components/action";
 import { ErrorDetails } from "../../components/error-details";
 import { StateMessage } from "../../components/page-parts";
 import { getProjectBySlug } from "../../data/projects";
-import { useResource } from "../../data/use-resource";
 import {
   workspaceResourceScope,
   projectResourceScope,
 } from "../../data/resource-invalidation";
+import { useResource } from "../../data/use-resource";
 import {
   replaceAddress,
   useAddressPathname,

@@ -4,9 +4,10 @@ import { resolve } from "node:path";
 import { test } from "node:test";
 
 import { readQuery } from "../../navigation/address";
-import { readViewerState, viewerHref } from "../../viewer/selection";
 import type { ViewerSelection } from "../../viewer/host";
+import { readViewerState, viewerHref } from "../../viewer/selection";
 import { repositoryRoot } from "../root";
+
 import { defaults } from "./fixtures";
 
 function selection(over: Partial<ViewerSelection> = {}): ViewerSelection {

@@ -1,22 +1,24 @@
 import { Body } from "@firna/ui/typography";
-import type { ColorScheme, Viewport } from "@mokly/mokly";
 import type { ReactNode } from "react";
+
+import type { ColorScheme, Viewport } from "@mokly/mokly";
 
 import { Badge } from "../../../entries/design/badge.mockup";
 import { ContentList } from "../../../entries/design/content-list.mockup";
 import { Input } from "../../../entries/design/input.mockup";
-import type { PublicationScreen } from "../../../fixtures/publications";
+import { sample } from "../../../fixtures/product";
+import type { ScreenState } from "../../../fixtures/product-states";
+import { failureReference } from "../../../fixtures/product-states";
 import {
   listedScreens,
   publicationLink,
   shareSelection,
 } from "../../../fixtures/publications";
-import { sample } from "../../../fixtures/product";
-import type { ScreenState } from "../../../fixtures/product-states";
-import { failureReference } from "../../../fixtures/product-states";
+import type { PublicationScreen } from "../../../fixtures/publications";
 import { useMockupRenderContext } from "../../../render-context";
 import { Action, Pending, StateMessage } from "../page-parts";
 import { TextBar } from "../placeholders";
+
 import { ViewerPanelScreen } from "./screen";
 
 const title = "Share";

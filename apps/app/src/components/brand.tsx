@@ -3,6 +3,7 @@ import { SkeletonCircle } from "@firna/ui/skeleton";
 import { displayName } from "../api/labels";
 import type { User } from "../api/types";
 import { site } from "../config";
+
 import { PersonAvatar } from "./controls";
 import { TextBar } from "./placeholders";
 

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+
 import type {
   App,
   BrowserWindow,
@@ -7,9 +8,10 @@ import type {
   Menu,
   MenuItem,
 } from "electron";
-import { createWindow, windowBounds } from "../window.js";
+
 import { installLifecycle, singleInstance } from "../lifecycle.js";
 import { installMenu } from "../menu.js";
+import { createWindow, windowBounds } from "../window.js";
 
 const bounds = { x: 50, y: 60, width: 1000, height: 700 };
 test("the window restores valid visible bounds and recovers from missing or off-screen state", () => {

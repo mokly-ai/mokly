@@ -2,6 +2,7 @@ import { Body, Label } from "@firna/ui/typography";
 
 import { Avatar } from "../entries/design/avatar.mockup";
 import { Badge } from "../entries/design/badge.mockup";
+
 import { componentInput, componentMetadata } from "./metadata";
 
 export const commentThreadInput = componentInput({

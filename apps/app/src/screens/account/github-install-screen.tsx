@@ -16,6 +16,7 @@ import type { GitHubInstallationAttempt } from "../../navigation/github-flow";
 import { useLeavePage } from "../../navigation/leave-page";
 import { installPath } from "../../navigation/paths";
 import { useSession } from "../../session/context";
+
 import { AccountShell } from "./account-shell";
 
 function title(

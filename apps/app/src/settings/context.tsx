@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 import type { ReactNode } from "react";
 
 import type { Workspace, Project, Session } from "../api/types";
+
 import type { SurfaceId } from "./panes";
 
 /** Everything a pane needs about the surface it is hosted on. */

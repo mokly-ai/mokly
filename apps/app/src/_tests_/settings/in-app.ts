@@ -1,5 +1,6 @@
-import { expect, open } from "../harness";
 import type { Page } from "@playwright/test";
+
+import { expect, open } from "../harness";
 
 // The reader's own way into the dialog is a step inside the running
 // application, not a page load, and only that path exercises the router's

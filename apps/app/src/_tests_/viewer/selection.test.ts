@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { ViewerSelection } from "../../viewer/host";
 import {
   carriedQuery,
   readViewerState,
@@ -8,7 +9,7 @@ import {
   viewerHref,
 } from "../../viewer/selection";
 import { sharedViewerUrl, shareSelection } from "../../viewer/share-selection";
-import type { ViewerSelection } from "../../viewer/host";
+
 import { defaults, removed } from "./fixtures";
 
 function selection(over: Partial<ViewerSelection> = {}): ViewerSelection {

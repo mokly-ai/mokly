@@ -1,5 +1,6 @@
 import { WaitingDot } from "../components/placeholder-rows";
 import { ControlPlaceholder, TextBar } from "../components/placeholders";
+
 import { Slot } from "./chrome";
 
 /**

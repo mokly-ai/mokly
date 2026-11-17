@@ -3,12 +3,14 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { test } from "node:test";
 
-import type { RenderContext } from "@mokly/mokly";
 import { createElement } from "react";
+
+import type { RenderContext } from "@mokly/mokly";
 
 import { settingsDialogInput } from "../components/settings-dialog";
 import { settingsLayerInput } from "../components/settings-layer";
 import { panes, sections } from "../screens/product/settings/panes";
+
 import { catalogueRoot, screenFile } from "./catalogue-paths";
 import { loadCatalogue } from "./load-catalogue";
 import { situationStatePaths } from "./product-situations";

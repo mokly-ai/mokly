@@ -16,8 +16,9 @@ import {
   invitationAcceptancePath,
   workspacePath,
 } from "../../navigation/paths";
-import { RequireSession } from "../../session/guard";
 import { useSession } from "../../session/context";
+import { RequireSession } from "../../session/guard";
+
 import { AccountShell } from "./account-shell";
 import type { WaitingIdentity } from "./account-shell";
 

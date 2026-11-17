@@ -2,6 +2,7 @@ import { Table, TableCell } from "@firna/ui/table";
 import { Body } from "@firna/ui/typography";
 
 import { TextBar } from "../screens/product/placeholders";
+
 import { componentInput, componentMetadata } from "./metadata";
 
 export const tableInput = componentInput({

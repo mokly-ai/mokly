@@ -1,10 +1,10 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { repositoryRoot } from "./root";
-
 import type { ApiCode } from "../api/errors";
 import type { ApiReason } from "../api/reasons";
+
+import { repositoryRoot } from "./root";
 
 /** How the API answers one reason: with this code, at this status. */
 export interface CataloguedFailure {

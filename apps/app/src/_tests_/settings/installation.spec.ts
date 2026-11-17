@@ -1,6 +1,11 @@
 import type { Page } from "@playwright/test";
 
 import {
+  disconnectInstallation,
+  installedAccount,
+  suspendInstallation,
+} from "../database-fixture";
+import {
   createProject,
   currentWorkspaceId,
   expect,
@@ -10,11 +15,6 @@ import {
   signIn,
   test,
 } from "../harness";
-import {
-  disconnectInstallation,
-  installedAccount,
-  suspendInstallation,
-} from "../database-fixture";
 import { addMember, switchSession } from "../members";
 
 /**

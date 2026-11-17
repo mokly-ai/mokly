@@ -1,6 +1,7 @@
 import type { Session } from "../api/types";
 import { Pending } from "../components/page-parts";
 import { TextBar } from "../components/placeholders";
+
 import { availablePanes } from "./panes";
 import type { PaneDefinition, SurfaceId } from "./panes";
 import { AccessWait } from "./panes/access-pane";

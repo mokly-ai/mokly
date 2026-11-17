@@ -6,6 +6,7 @@ import { expect, test } from "@playwright/test";
 import { sample } from "../fixtures/product";
 import { denseViewerChrome } from "../fixtures/product-states";
 import { publication, pullRequest } from "../fixtures/publications";
+
 import { screenFile } from "./catalogue-paths";
 import { rgb } from "./color-metrics";
 import { viewerDocumentViolations } from "./viewer-document-policy";

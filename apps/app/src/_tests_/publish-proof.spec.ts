@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { request } from "node:http";
 
+import { fixtureDesktopOrigin } from "./desktop-fixture";
 import {
   test,
   expect,
@@ -11,7 +12,6 @@ import {
 } from "./harness";
 import { apiOrigin, appOrigin, catalogueOrigin } from "./origins";
 import { createToken, fixture, publicationBody, uploadBody } from "./publish";
-import { fixtureDesktopOrigin } from "./desktop-fixture";
 import { makePrivate } from "./visibility";
 
 /**

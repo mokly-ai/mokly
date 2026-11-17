@@ -21,6 +21,7 @@ import {
   installStepPath,
 } from "../../navigation/paths";
 import { alwaysSendable, nothingToDo, useWrite } from "../../settings/write";
+
 import { AccountShell } from "./account-shell";
 import type { WaitingIdentity } from "./account-shell";
 import { connectDestination } from "./connect-destination";

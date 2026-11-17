@@ -3,6 +3,7 @@
 import stagedScreen from "../../../../entries/product/account/project-created.mockup";
 import { siteStage } from "../../../../fixtures/site";
 import { useEntryDocument } from "../../../../resource-root";
+
 import {
   ChevronGlyph,
   ComponentGlyph,

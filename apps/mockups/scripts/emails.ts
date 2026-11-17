@@ -14,9 +14,9 @@ import {
   signInPlaceholderContent,
 } from "../../../docs/mockups/src/emails/content";
 import { EmailDocument } from "../../../docs/mockups/src/emails/document";
+import type { EmailDefinition } from "../../../docs/mockups/src/emails/document";
 import { invitationEmail } from "../../../docs/mockups/src/emails/invitation";
 import { signInEmail } from "../../../docs/mockups/src/emails/sign-in";
-import type { EmailDefinition } from "../../../docs/mockups/src/emails/document";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const defaultOut = resolve(root, "crates/mkc-email-templates/templates");

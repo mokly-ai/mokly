@@ -6,6 +6,7 @@ import test from "node:test";
 import { promisify } from "node:util";
 
 import { scratchDirectory } from "../../_tests_/scratch.mjs";
+
 import { catalogueIndex } from "./helpers/catalogue-index.js";
 
 const repository = path.resolve(import.meta.dirname, "../../..");

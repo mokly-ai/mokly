@@ -3,6 +3,7 @@ import { BrowserFrame, PhoneFrame } from "@mokly/ui/device-frame";
 import { PreviewFrame } from "@mokly/ui/preview-frame";
 
 import { currentScreen } from "../../../fixtures/viewer-catalogue";
+
 import { shownView } from "./published-view";
 import { SampleScreen } from "./sample-screen";
 

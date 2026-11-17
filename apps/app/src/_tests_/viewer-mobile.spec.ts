@@ -1,6 +1,11 @@
 import type { ElementHandle, Page } from "@playwright/test";
 
 import {
+  fillPullRequest,
+  installedRepository,
+  suspendInstallation,
+} from "./database-fixture";
+import {
   createProject,
   currentWorkspaceId,
   expect,
@@ -14,11 +19,6 @@ import {
 } from "./harness";
 import { createToken, publish } from "./publish";
 import { publishedViewerReady, publishedProject } from "./viewer/support";
-import {
-  fillPullRequest,
-  installedRepository,
-  suspendInstallation,
-} from "./database-fixture";
 import { pressWrite } from "./writes";
 
 /** How far the document scrolls sideways; anything but zero is a defect. */

@@ -1,8 +1,9 @@
 import type { Viewport } from "@mokly/mokly";
 
-import { publication } from "../../../fixtures/publications";
 import { sample } from "../../../fixtures/product";
+import { publication } from "../../../fixtures/publications";
 import { Action, StateMessage } from "../page-parts";
+
 import { ViewerScreen } from "./screen";
 import { BranchSlot } from "./slots";
 import { StageCard } from "./stage-card";

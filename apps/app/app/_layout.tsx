@@ -1,8 +1,8 @@
 import { ToastProvider } from "@firna/ui/toast";
 import { Slot } from "expo-router";
 
-import { SessionProvider } from "../src/session/context";
 import { ResourceInvalidationProvider } from "../src/data/resource-invalidation";
+import { SessionProvider } from "../src/session/context";
 import { SettingsDialogHost } from "../src/settings/dialog-host";
 import { DirtyProvider } from "../src/settings/dirty";
 import { AppTheme } from "../src/theme/provider";

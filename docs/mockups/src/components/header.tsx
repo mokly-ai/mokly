@@ -2,6 +2,7 @@ import { MockLink } from "@mokly/mokly";
 
 import { Button } from "../entries/design/button.mockup";
 import { site } from "../fixtures/site";
+
 import { componentInput, componentMetadata } from "./metadata";
 
 export const headerInput = componentInput({

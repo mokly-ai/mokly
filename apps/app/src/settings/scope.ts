@@ -3,14 +3,15 @@ import { useCallback } from "react";
 import { asApiError } from "../api/errors";
 import type { Workspace, Project } from "../api/types";
 import { getProject, getProjectBySlug, listProjects } from "../data/projects";
-import { getWorkspaceBySlug, listWorkspaces } from "../data/workspaces";
-import { useResource } from "../data/use-resource";
-import type { Resource } from "../data/use-resource";
 import {
   workspaceResourceScope,
   projectResourceScope,
 } from "../data/resource-invalidation";
+import { useResource } from "../data/use-resource";
+import type { Resource } from "../data/use-resource";
+import { getWorkspaceBySlug, listWorkspaces } from "../data/workspaces";
 import { readLastProject } from "../navigation/last-opened";
+
 import type { SettingsScopeSlugs } from "./routes";
 
 /** The workspace and project one settings surface was opened against. */

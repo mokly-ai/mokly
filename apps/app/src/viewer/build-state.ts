@@ -6,7 +6,9 @@ import type {
 } from "../api/types";
 import type { StatusTone } from "../components/controls";
 import type { PublicationRef } from "../data/publications";
-import { buildSteps, stepWords } from "./build-copy";
+
+import type { stepWords } from "./build-copy";
+import { buildSteps } from "./build-copy";
 import type { PublicationState } from "./resolution";
 import { publicationState, publishedDay } from "./resolution";
 

@@ -1,8 +1,9 @@
-import { expect, test } from "@playwright/test";
 import { tokens } from "@mokly-cloud/tokens/tokens";
+import { expect, test } from "@playwright/test";
 
 import { notices, onboarding } from "../fixtures/product-states";
 import { site } from "../fixtures/site";
+
 import { rgb } from "./color-metrics";
 import { productRun, productSchemes, productViewports } from "./product-runs";
 

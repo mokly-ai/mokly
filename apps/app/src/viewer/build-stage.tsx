@@ -2,13 +2,14 @@ import type { ApiError } from "../api/errors";
 import type { Build, Project } from "../api/types";
 import { ErrorDetails } from "../components/error-details";
 import { StateMessage } from "../components/page-parts";
+
 import { BuildCard } from "./build-card";
 import { buildStageCopy } from "./build-copy";
 import type { BuildWatch } from "./build-watch";
-import type { WorkspaceRole } from "./workspace-role";
 import { ChooseAnother, StageError } from "./stage";
 import { StageCard, StageWait } from "./stage-card";
 import type { StageView } from "./stage-view";
+import type { WorkspaceRole } from "./workspace-role";
 
 /** What the reader can do about a build the stage shows. */
 export interface BuildStageActions {

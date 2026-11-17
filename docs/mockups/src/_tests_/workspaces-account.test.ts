@@ -7,13 +7,15 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { ComponentInstanceRecord } from "@mokly/viewer";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+
+import type { ComponentInstanceRecord } from "@mokly/viewer";
 
 import { selectorInput } from "../components/selector";
 import { MockupDocument } from "../document";
 import { githubAccounts, sample } from "../fixtures/product";
+
 import { catalogueEntries, viewUsage } from "./catalogue-index";
 import {
   actions,

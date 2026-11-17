@@ -3,10 +3,10 @@ import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
 
-import { dashboardPath, signInPath, signUpPath } from "../navigation/paths";
 import { callbackLandings } from "../navigation/callback-input";
 import type { CallbackLanding } from "../navigation/callback-input";
 import { desktopClient } from "../navigation/desktop-shell";
+import { dashboardPath, signInPath, signUpPath } from "../navigation/paths";
 
 const repository = path.resolve(import.meta.dirname, "../../../..");
 

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
-import type { Billing } from "../../api/types";
 import { ownerManagesBilling } from "../../api/labels";
+import type { Billing } from "../../api/types";
 import { Action } from "../../components/action";
 import {
   ExternalLink,
@@ -16,6 +16,7 @@ import {
 } from "../../components/placeholders";
 import { site } from "../../config";
 import type { Write } from "../write";
+
 import { money, seatRows, trialDays, unitAmount } from "./billing-facts";
 import type { PlanSituation } from "./billing-facts";
 

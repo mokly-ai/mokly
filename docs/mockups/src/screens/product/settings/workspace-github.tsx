@@ -4,6 +4,7 @@ import { githubAccounts, workspace } from "../../../fixtures/product";
 import { Action } from "../page-parts";
 import { ControlPlaceholder } from "../placeholders";
 import type { Installation } from "../setup-destinations";
+
 import type { Role } from "./workspace-projects";
 
 /** The width of Manage at the fact's action size, in px. */

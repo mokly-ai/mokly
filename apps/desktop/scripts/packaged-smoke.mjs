@@ -3,8 +3,11 @@ import { spawnSync } from "node:child_process";
 import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { resolve } from "node:path";
+
 import { _electron, expect } from "@playwright/test";
+
 import { scratchDirectory } from "../../_tests_/scratch.mjs";
+
 import { packageArtifact } from "./package.mjs";
 
 const desktop = resolve(import.meta.dirname, "..");

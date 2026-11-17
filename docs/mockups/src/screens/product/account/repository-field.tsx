@@ -1,5 +1,6 @@
-import { MockLink } from "@mokly/mokly";
 import type { ReactNode } from "react";
+
+import { MockLink } from "@mokly/mokly";
 
 import { OptionsList } from "../../../entries/design/options-list.mockup";
 import { Selector } from "../../../entries/design/selector.mockup";

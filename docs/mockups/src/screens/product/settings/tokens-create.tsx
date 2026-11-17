@@ -9,6 +9,7 @@ import {
   fieldRefusals,
 } from "../../../fixtures/product-states";
 import { Action } from "../page-parts";
+
 import { SettingsModal } from "./settings-modal";
 import { TokensPane } from "./tokens-pane";
 

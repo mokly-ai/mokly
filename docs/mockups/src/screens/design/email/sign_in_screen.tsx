@@ -2,6 +2,7 @@
 
 import { signInEmail } from "../../../emails/sign-in";
 import { signInContent } from "../../../fixtures/emails";
+
 import { EmailFrame } from "./parts/frame";
 
 /** The sign-in email screen. */

@@ -2,8 +2,8 @@ import { satteri } from "@astrojs/markdown-satteri";
 import react from "@astrojs/react";
 import { defineConfig } from "astro/config";
 
-import { guideDocument } from "./src/docs/guides.ts";
 import { codePanel } from "./src/docs/code-panel.ts";
+import { guideDocument } from "./src/docs/guides.ts";
 import { referenceDocument } from "./src/docs/reference.ts";
 import { settings } from "./src/settings.ts";
 

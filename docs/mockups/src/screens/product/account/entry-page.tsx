@@ -1,6 +1,7 @@
 import { MockLink } from "@mokly/mokly";
 
 import { stateScreenPath } from "../../../fixtures/product-states";
+
 import { AccountEntry } from "./account-entry";
 import { AccountShell } from "./account-shell";
 import { entryCopy } from "./entry-layout";

@@ -1,10 +1,10 @@
 import { useLocalSearchParams } from "expo-router";
 
+import { parseInstallationId } from "../src/navigation/installation-id";
 import {
   CreateWorkspaceScreen,
   CreateWorkspaceWait,
 } from "../src/screens/account/create-workspace-screen";
-import { parseInstallationId } from "../src/navigation/installation-id";
 import { RequireSession } from "../src/session/guard";
 
 /**

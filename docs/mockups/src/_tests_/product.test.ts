@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { exampleToken } from "../fixtures/product-states";
+
 import { catalogueEntries } from "./catalogue-index";
 import { screenFile } from "./catalogue-paths";
 import { drawnPalette } from "./catalogue-reads";

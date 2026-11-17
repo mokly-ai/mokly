@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 
+import { fillHistory, fillPullRequest } from "../database-fixture";
 import {
   branchPathFor,
   createProject,
@@ -13,7 +14,7 @@ import {
   test,
 } from "../harness";
 import { createToken, publish } from "../publish";
-import { fillHistory, fillPullRequest } from "../database-fixture";
+
 import { pullRequest } from "./fixtures";
 import { publishedViewerReady } from "./support";
 

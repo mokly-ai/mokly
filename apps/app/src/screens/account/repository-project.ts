@@ -7,6 +7,7 @@ import { createProject, suggestProjectSlug } from "../../data/projects";
 import { useSuggestedSlug } from "../../data/use-slug-suggestion";
 import { projectSetupPath } from "../../navigation/paths";
 import { useWrite } from "../../settings/write";
+
 import { projectName } from "./project-name";
 
 /**

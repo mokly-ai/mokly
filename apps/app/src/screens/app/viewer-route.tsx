@@ -1,14 +1,15 @@
 import type { Project, PullRequest, Session } from "../../api/types";
 import type { PublicationRef } from "../../data/publications";
 import { everyPullRequest } from "../../data/publications";
-import { useResource } from "../../data/use-resource";
 import {
   workspaceResourceScope,
   projectResourceScope,
 } from "../../data/resource-invalidation";
+import { useResource } from "../../data/use-resource";
 import { getWorkspace } from "../../data/workspaces";
 import { ViewerFrameWait } from "../viewer/frame-wait";
 import { ViewerScreen } from "../viewer/viewer-screen";
+
 import { ProjectRoute } from "./project-route";
 
 /** What the address named, before the viewer resolves it to a publication. */

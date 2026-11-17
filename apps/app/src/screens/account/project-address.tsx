@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 
 import { Action } from "../../components/action";
-import { Field } from "../../components/field";
 import { ErrorDetails } from "../../components/error-details";
+import { Field } from "../../components/field";
 import {
   AddressPreview,
   Pending,

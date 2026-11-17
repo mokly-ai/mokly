@@ -2,6 +2,7 @@ import type { Viewport } from "@mokly/mokly";
 
 import { workspace } from "../../../fixtures/product";
 import { publication } from "../../../fixtures/publications";
+
 import { ViewerScreen } from "./screen";
 import { SlotPlaceholder } from "./slots";
 import { StageWait } from "./stage-card";

@@ -1,14 +1,15 @@
+import { useCallback, useContext, useMemo, useRef, useState } from "react";
+
 import { MoklyViewer, postMessageAdapter } from "@mokly/viewer";
 import type { ViewerError, ViewerSlots as PackageSlots } from "@mokly/viewer";
-import { useCallback, useContext, useMemo, useRef, useState } from "react";
 
 import { packageSlots } from "./bar";
 import { catalogueArtifactOrigin } from "./catalogue-source.web";
 import type { ViewerHostProps } from "./host";
 import { fromPackageSelection, toPackageSelection } from "./package-selection";
 import { PlaceholderViewer } from "./placeholder";
-import { AccessBlocked } from "./stage";
 import { CatalogueSourceContext } from "./source-context";
+import { AccessBlocked } from "./stage";
 
 function comparisonOverlay(
   catalogueOrigin: string,

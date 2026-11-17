@@ -1,5 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 
+import { projectPath, settingsPath } from "../navigation/paths";
+
 import {
   chooseRepository,
   expect,
@@ -8,7 +10,6 @@ import {
   openDialog,
 } from "./harness";
 import { createWorkspaceStep, uniqueSlug } from "./readable-addresses-support";
-import { projectPath, settingsPath } from "../navigation/paths";
 
 async function expectIdentifier(
   field: Locator,

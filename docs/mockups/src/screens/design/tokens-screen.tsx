@@ -1,6 +1,7 @@
 import { tokens } from "@mokly-cloud/tokens/tokens";
-import { MockLink } from "@mokly/mokly";
 import type { CSSProperties } from "react";
+
+import { MockLink } from "@mokly/mokly";
 
 import { Button } from "../../entries/design/button.mockup";
 

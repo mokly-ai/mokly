@@ -3,6 +3,7 @@ import { dirname, relative } from "node:path";
 import { test } from "node:test";
 
 import { openSource, siteStage } from "../fixtures/site";
+
 import { screenView } from "./catalogue-paths";
 import {
   attribute,

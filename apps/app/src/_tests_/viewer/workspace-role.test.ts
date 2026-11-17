@@ -7,11 +7,12 @@ import type { Workspace, Project } from "../../api/types";
 import type { Resource } from "../../data/use-resource";
 import { buildAction } from "../../viewer/build-action";
 import { buildLine } from "../../viewer/build-copy";
-import { workspaceRole } from "../../viewer/workspace-role";
 import {
   planRefusalFailure,
   unpublishedStage,
 } from "../../viewer/stage-view-decision";
+import { workspaceRole } from "../../viewer/workspace-role";
+
 import { build } from "./build-fixtures";
 
 const workspace: Workspace = {

@@ -4,9 +4,9 @@ import type { ReactNode } from "react";
 
 import type { User } from "../../api/types";
 import { Action } from "../../components/action";
+import { ErrorDetails } from "../../components/error-details";
 import { Field } from "../../components/field";
 import { formFailure, slugFieldOwners } from "../../components/form-failure";
-import { ErrorDetails } from "../../components/error-details";
 import {
   AddressPreview,
   Pending,
@@ -17,6 +17,7 @@ import { useSuggestedSlug } from "../../data/use-slug-suggestion";
 import { createWorkspace, suggestWorkspaceSlug } from "../../data/workspaces";
 import { installStepPath, workspacePath } from "../../navigation/paths";
 import { useWrite } from "../../settings/write";
+
 import { AccountShell } from "./account-shell";
 import type { AccountIdentityKind, ShellWait } from "./account-shell";
 

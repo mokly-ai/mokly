@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+
 import { startDesktop } from "../lifecycle.js";
 import { DESKTOP_ORIGIN } from "../origin.js";
+
 import { deferred, lifecycleFixture, settled } from "./lifecycle-fixture.js";
 
 const address = `mokly://auth/email/callback#token=${"a".repeat(64)}`;

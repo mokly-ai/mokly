@@ -2,6 +2,7 @@ import { Badge } from "@firna/ui/badge";
 import { StatusDot as FirnaStatusDot } from "@firna/ui/status-dot";
 
 import { Action } from "../page-parts";
+
 import { slotBars, slotClass } from "./published-bar";
 import type { SlotBar } from "./published-bar";
 import { ReferenceTrigger } from "./reference-trigger";

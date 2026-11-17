@@ -15,6 +15,7 @@ import { consumeGitHubCallback } from "../../navigation/github-flow";
 import type { GitHubCallbackAttempt } from "../../navigation/github-flow";
 import { validateReturnTo } from "../../navigation/return-to";
 import { useSession } from "../../session/context";
+
 import { AccountShell } from "./account-shell";
 
 interface Recovery {

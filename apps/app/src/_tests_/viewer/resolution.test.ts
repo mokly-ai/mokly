@@ -9,6 +9,7 @@ import {
   stageStatus,
   standalonePublication,
 } from "../../viewer/resolution";
+
 import { branch, publication } from "./fixtures";
 
 test("standalone entry opens the default branch's newest ready publication", () => {

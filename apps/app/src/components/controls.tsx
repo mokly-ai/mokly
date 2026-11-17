@@ -7,6 +7,7 @@ import { Table, TableCell } from "@firna/ui/table";
 import type { ReactNode } from "react";
 
 import { useCompact } from "../layout/viewport";
+
 import { Action } from "./action";
 import { AppLink } from "./app-link";
 import { WaitingListRow } from "./placeholder-rows";

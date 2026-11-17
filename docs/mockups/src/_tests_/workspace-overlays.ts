@@ -8,6 +8,7 @@
 import { expect, test } from "@playwright/test";
 
 import { githubAccounts } from "../fixtures/product";
+
 import { settingsDocumentViolations } from "./settings-document-policy";
 
 /** One run of the checks: a page size, its label, and the page addresses. */

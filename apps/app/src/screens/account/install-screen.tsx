@@ -19,6 +19,7 @@ import {
 } from "../../navigation/paths";
 import { currentReturnTo } from "../../navigation/return-to";
 import { alwaysSendable, nothingToDo, useWrite } from "../../settings/write";
+
 import { AccountShell } from "./account-shell";
 import type { ShellWait, WaitingIdentity } from "./account-shell";
 import { InstallRefusal } from "./install-refusal";

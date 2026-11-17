@@ -1,4 +1,5 @@
 import { panes } from "../screens/product/settings/panes";
+
 import { drawnComponent } from "./definition-policy";
 import type { CatalogueDefinition } from "./load-catalogue";
 import { productSituations } from "./product-situations";

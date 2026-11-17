@@ -237,20 +237,20 @@ Depends on: 2
 
 Depends on: 2
 
-- [ ] Add `apps/*` and `packages/tokens` to the root `workspaces`. Remove
+- [x] Add `apps/*` and `packages/tokens` to the root `workspaces`. Remove
       `ts/package.json` and its lockfile. Move its scripts to the root
       `package.json` under a `cloud:` prefix.
-- [ ] Replace each exact `@mokly/*` pin of a cloud project with the
+- [x] Replace each exact `@mokly/*` pin of a cloud project with the
       workspace package. Add the cloud manifests to the Release Please
       `extra-files` when a pin must follow the release version.
 - [x] Choose one React version for the viewer, the UI package, and the
       app. Check that the app bundle holds one React copy.
-- [ ] Merge `.prettierrc.json` and `eslint.config.js`. Keep the Astro plugin
+- [x] Merge `.prettierrc.json` and `eslint.config.js`. Keep the Astro plugin
       and the Mokly intrinsic-element rule for `packages/viewer/src`.
 - [ ] Make the cloud build of the app, the site, the mockups, and the
       desktop bundle use the built workspace packages. Make
       `cargo xtask mokly-fixtures` read the workspace build.
-- [ ] Regenerate `package-lock.json`. Run `npm ci`, `npm run build`, and the
+- [x] Regenerate `package-lock.json`. Run `npm ci`, `npm run build`, and the
       type check of each cloud project.
 
 ## Milestone 5: Docs, plans, and repository rules

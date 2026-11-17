@@ -1,5 +1,6 @@
 import { StateMessage } from "../components/page-parts";
 import { useDocumentTitle } from "../layout/document-title";
+
 import { useSettings } from "./context";
 import { panes } from "./panes";
 import type { SurfaceId } from "./panes";
@@ -9,10 +10,10 @@ import { BillingPane } from "./panes/billing-pane";
 import { DangerPane } from "./panes/danger-pane";
 import { GitHubPane } from "./panes/github-pane";
 import { MembersPane } from "./panes/members-pane";
-import { WorkspacePane } from "./panes/workspace-pane";
 import { ProjectPane } from "./panes/project-pane";
 import { SectionsPane } from "./panes/sections-pane";
 import { TokensPane } from "./panes/tokens-pane";
+import { WorkspacePane } from "./panes/workspace-pane";
 
 /** The heading one surface carries, which is also the document's single `h1`. */
 export function paneTitle(pane: SurfaceId): string {

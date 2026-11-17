@@ -1,3 +1,5 @@
+import { settingsPath } from "../navigation/paths";
+
 import {
   createProject,
   expect,
@@ -8,7 +10,6 @@ import {
   test,
   unloadGuard,
 } from "./harness";
-import { settingsPath } from "../navigation/paths";
 import {
   captureReadableAddress,
   uniqueSlug,

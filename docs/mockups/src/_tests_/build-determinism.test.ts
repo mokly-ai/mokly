@@ -4,6 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { checkBuildDeterminism } from "../../../../apps/mockups/scripts/determinism.mjs";
+
 import { indexPath, screenView } from "./catalogue-paths";
 import { outputFixture } from "./generated-output-fixture";
 import { policyFixture } from "./policy-fixture";

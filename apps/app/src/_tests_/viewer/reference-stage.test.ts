@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { referenceStage } from "../../viewer/reference-stage";
+
 import { attempt, branchRow, pullRow, summary } from "./build-fixtures";
 
 /** Both plans: one that lets the project publish and one that refuses. */

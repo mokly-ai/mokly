@@ -10,6 +10,7 @@ import {
   emailStyles,
   overrideStyles,
 } from "../../../docs/mockups/src/emails/styles";
+
 import { buildEmailTemplates, emailTemplates } from "./emails";
 
 test("email lengths use pixel values in every composition", () => {

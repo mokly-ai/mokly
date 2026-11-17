@@ -10,12 +10,12 @@ import {
   readBilling,
   startCheckout,
 } from "../../data/billing";
-import { useResource } from "../../data/use-resource";
 import {
   workspaceResourceScope,
   projectResourceScope,
   useInvalidateResources,
 } from "../../data/resource-invalidation";
+import { useResource } from "../../data/use-resource";
 import {
   readQuery,
   useAddressPathname,
@@ -23,6 +23,7 @@ import {
   writeAddress,
 } from "../../navigation/address";
 import { alwaysSendable, nothingToDo, useWrite } from "../write";
+
 import { planSituation } from "./billing-facts";
 import { FreePlan, TeamPlan, TeamPlanWait } from "./billing-plans";
 

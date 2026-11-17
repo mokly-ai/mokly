@@ -2,12 +2,13 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
+import { parse, type DefaultTreeAdapterMap } from "parse5";
+
 import type {
   CatalogueNode,
   CatalogueRecord,
   CatalogueScreen,
 } from "@mokly/viewer";
-import { parse, type DefaultTreeAdapterMap } from "parse5";
 
 import { catalogueEntries, catalogueIndex } from "./catalogue-index";
 import { catalogueRoot, screenFile, screenView } from "./catalogue-paths";

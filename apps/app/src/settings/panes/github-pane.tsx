@@ -28,6 +28,7 @@ import { settingsPath } from "../../navigation/paths";
 import { useSettings } from "../context";
 import { RowMenu } from "../row-menu";
 import { alwaysSendable, nothingToDo, useWrite } from "../write";
+
 import { RemoveInstallation } from "./github-remove";
 import { MenuTriggerPlaceholder } from "./row-placeholders";
 

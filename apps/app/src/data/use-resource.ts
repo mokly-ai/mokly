@@ -2,11 +2,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { asApiError, unexpectedError } from "../api/errors";
 import type { ApiError } from "../api/errors";
-import { resourceForKey } from "./resource-key";
+
 import {
   resourceInvalidationVersion,
   useResourceInvalidationVersions,
 } from "./resource-invalidation";
+import { resourceForKey } from "./resource-key";
 
 /** What a screen knows about one loaded thing. */
 export type Resource<T> =

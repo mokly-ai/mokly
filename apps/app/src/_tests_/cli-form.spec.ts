@@ -1,5 +1,7 @@
 import type { Page } from "@playwright/test";
 
+import { projectNameLimit } from "../screens/account/project-name";
+
 import {
   expect,
   freshEmail,
@@ -9,7 +11,6 @@ import {
   workspaceAddress,
 } from "./harness";
 import { createWorkspace, expectCompletedSteps } from "./setup-walks";
-import { projectNameLimit } from "../screens/account/project-name";
 
 /**
  * A project with no repository the App reads publishes with the Mokly CLI.

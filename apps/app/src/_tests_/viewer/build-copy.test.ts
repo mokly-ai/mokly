@@ -3,8 +3,8 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { test } from "node:test";
 
-import type { BuildFailure } from "../../api/types";
 import { askAnOwnerToUpgrade } from "../../api/labels";
+import type { BuildFailure } from "../../api/types";
 import {
   buildLine,
   buildSteps,
@@ -15,6 +15,7 @@ import {
 } from "../../viewer/build-copy";
 import type { WorkspaceRole } from "../../viewer/workspace-role";
 import { repositoryRoot } from "../root";
+
 import { build, buildPullRequest } from "./build-fixtures";
 
 const owner: WorkspaceRole = { kind: "owner" };

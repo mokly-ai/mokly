@@ -1,13 +1,15 @@
-import type { Viewport } from "@mokly/mokly";
 import type { ReactNode } from "react";
 
+import type { Viewport } from "@mokly/mokly";
+
 import { StatusDot } from "../../../entries/design/status-dot.mockup";
+import { sample } from "../../../fixtures/product";
 import type { PublicationState } from "../../../fixtures/publications";
 import { publicationTones } from "../../../fixtures/publications";
-import { sample } from "../../../fixtures/product";
 import { Pending } from "../page-parts";
 import { StatePlaceholder } from "../placeholders";
 import { ViewerStage } from "../shell";
+
 import { ViewerBar } from "./bar";
 import type {
   PublishedAccountLabel,

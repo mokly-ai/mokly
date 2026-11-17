@@ -11,6 +11,7 @@ import {
 import { referenceStage } from "../../viewer/reference-stage";
 import { rowTarget } from "../../viewer/switcher-row";
 import type { RefRow } from "../../viewer/switcher-row";
+
 import { attempt, branchRow, pullRow, summary } from "./build-fixtures";
 
 /**

@@ -1,5 +1,6 @@
 import type { BuildLog, BuildLogChunk, BuildLogElision } from "../api/types";
 import { logWindowLimit } from "../data/builds";
+
 import { elisionText } from "./build-copy";
 
 /**

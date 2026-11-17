@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 
-import { failureRecovery } from "../../../fixtures/publications";
 import type { ScreenState } from "../../../fixtures/product-states";
 import { failureReference } from "../../../fixtures/product-states";
+import { failureRecovery } from "../../../fixtures/publications";
 import { Action, StateMessage } from "../page-parts";
+
 import { StageCard, StageWait } from "./stage-card";
 
 /** An expired, deleted or unreadable publication; the switcher recovers it. */

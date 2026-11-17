@@ -11,10 +11,10 @@ import {
 } from "../../viewer/catalogue-source.web";
 import type { CatalogueTransport } from "../../viewer/catalogue-source.web";
 import { repositoryRoot } from "../root";
+
 import { removed } from "./fixtures";
 
-const fixtures =
-  repositoryRoot + "/docs/protocol/fixtures/";
+const fixtures = repositoryRoot + "/docs/protocol/fixtures/";
 const indexFile: unknown = JSON.parse(
   readFileSync(fixtures + "catalogue-v9.json", "utf8"),
 );

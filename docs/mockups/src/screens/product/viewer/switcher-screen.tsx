@@ -1,10 +1,11 @@
 import type { Viewport } from "@mokly/mokly";
 
 import { Input } from "../../../entries/design/input.mockup";
-import { listedBranches, pullRequests } from "../../../fixtures/publications";
 import type { ScreenState } from "../../../fixtures/product-states";
 import { failureReference } from "../../../fixtures/product-states";
+import { listedBranches, pullRequests } from "../../../fixtures/publications";
 import { Action, Pending, StateMessage } from "../page-parts";
+
 import { RefGroup } from "./rows";
 import { ViewerPanelScreen } from "./screen";
 

@@ -12,6 +12,7 @@ import { dashboardPath } from "../../navigation/paths";
 import { RequireSession } from "../../session/guard";
 import { AccountShell } from "../account/account-shell";
 import type { WaitingIdentity } from "../account/account-shell";
+
 import { ResolverWait } from "./resolver-wait";
 import { WorkspaceRoute } from "./workspace-route";
 

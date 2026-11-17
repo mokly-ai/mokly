@@ -1,5 +1,6 @@
-import type { Viewport } from "@mokly/mokly";
 import type { ReactNode } from "react";
+
+import type { Viewport } from "@mokly/mokly";
 
 import type { RowMenuContent } from "../../../components/responsive-menu";
 import { MenuSheet } from "../../../components/responsive-menu";
@@ -11,6 +12,7 @@ import { failureReference } from "../../../fixtures/product-states";
 import { Action, Pending, Section, StateMessage } from "../page-parts";
 import { NoteRowPlaceholder } from "../placeholder-rows";
 import { ControlPlaceholder } from "../placeholders";
+
 import { BadgePlaceholder, MenuTriggerPlaceholder } from "./row-placeholders";
 import { SettingsSurface } from "./surface";
 

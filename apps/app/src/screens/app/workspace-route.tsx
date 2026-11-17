@@ -6,13 +6,13 @@ import type { Workspace, Session } from "../../api/types";
 import { Action } from "../../components/action";
 import { ErrorDetails } from "../../components/error-details";
 import { StateMessage } from "../../components/page-parts";
+import { workspaceResourceScope } from "../../data/resource-invalidation";
+import { useResource } from "../../data/use-resource";
 import {
   getWorkspace,
   getWorkspaceBySlug,
   listWorkspaces,
 } from "../../data/workspaces";
-import { useResource } from "../../data/use-resource";
-import { workspaceResourceScope } from "../../data/resource-invalidation";
 import {
   replaceAddress,
   useAddressPathname,

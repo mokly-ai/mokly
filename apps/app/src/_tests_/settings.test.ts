@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { ApiError, unexpectedError } from "../api/errors";
+import { nonRetryable } from "../api/form-error";
+import { formFailure } from "../components/form-failure";
+import { createDrafts, draftKey } from "../settings/drafts";
+import { gestureHome, guardSurface, judgeGesture } from "../settings/gestures";
 import {
   availablePanes,
   isPaneId,
@@ -8,13 +13,8 @@ import {
   resolvePane,
   sections,
 } from "../settings/panes";
-import { nonRetryable } from "../api/form-error";
-import { ApiError, unexpectedError } from "../api/errors";
-import { formFailure } from "../components/form-failure";
-import { createDrafts, draftKey } from "../settings/drafts";
-import { failureAfterInput, wayBack, writeLabel } from "../settings/write";
-import { gestureHome, guardSurface, judgeGesture } from "../settings/gestures";
 import { pageBeneath, paneQuery, paneRoute } from "../settings/routes";
+import { failureAfterInput, wayBack, writeLabel } from "../settings/write";
 
 const scope = { workspaceSlug: "acme", projectSlug: "website" };
 

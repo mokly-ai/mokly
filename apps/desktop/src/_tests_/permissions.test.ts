@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+
 import type { Session } from "electron";
+
 import { DESKTOP_ORIGIN } from "../origin.js";
 import { installPermissions, permissionAllowed } from "../permissions.js";
 

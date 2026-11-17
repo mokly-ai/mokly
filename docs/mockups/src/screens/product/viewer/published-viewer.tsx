@@ -5,9 +5,10 @@ import { TopBar } from "@mokly/ui/top-bar";
 import "@mokly/ui/styles.css";
 
 import "../../../../styles/product/viewer-depiction.css";
-import { publication } from "../../../fixtures/publications";
 import { sample } from "../../../fixtures/product";
+import { publication } from "../../../fixtures/publications";
 import { useMockupRenderContext } from "../../../render-context";
+
 import {
   catalogueFilter,
   catalogueSections,

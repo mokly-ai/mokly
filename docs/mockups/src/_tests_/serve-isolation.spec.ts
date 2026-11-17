@@ -1,6 +1,7 @@
-import { readCatalogueIndex } from "@mokly/viewer";
 import { expect, test } from "@playwright/test";
 import type { APIRequestContext } from "@playwright/test";
+
+import { readCatalogueIndex } from "@mokly/viewer";
 
 import { mockupsOrigin as origin } from "../../../../apps/mockups/src/_tests_/origins";
 import {
@@ -8,6 +9,7 @@ import {
   recordedState,
   servedState,
 } from "../../../../apps/mockups/src/_tests_/served-files";
+
 import { catalogueEntries } from "./catalogue-index";
 import { indexPath } from "./catalogue-paths";
 

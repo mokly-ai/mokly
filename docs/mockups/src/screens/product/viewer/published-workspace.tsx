@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import type { ColorScheme, Viewport } from "@mokly/mokly";
 import { ChangeStatus } from "@mokly/ui/change-status";
 import { ComparisonStage } from "@mokly/ui/comparison-stage";
@@ -8,10 +10,10 @@ import { Stage } from "@mokly/ui/stage";
 import type { ViewMark } from "@mokly/ui/view-controls";
 import { ViewControls } from "@mokly/ui/view-controls";
 import { WorkspaceLayout } from "@mokly/ui/workspace-layout";
-import type { ReactNode } from "react";
 
 import { staticNoop } from "../../../components/static-controls";
 import { currentScreen } from "../../../fixtures/viewer-catalogue";
+
 import { PublishedFrame } from "./published-frame";
 import { shownView } from "./published-view";
 

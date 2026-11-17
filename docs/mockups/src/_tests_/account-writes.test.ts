@@ -11,6 +11,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { onboarding } from "../fixtures/product-states";
+
 import type { Viewport } from "./catalogue-paths";
 import {
   attribute,

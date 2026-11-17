@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { addresses, workspace, sample } from "../fixtures/product";
 import { billing, onboarding } from "../fixtures/product-states";
+
 import { productRun, productSchemes, productViewports } from "./product-runs";
 
 /**

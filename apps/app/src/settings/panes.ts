@@ -1,5 +1,5 @@
-import type { IconName } from "../components/icons";
 import type { Role } from "../api/types";
+import type { IconName } from "../components/icons";
 
 /** The settings sections and panes, shared by the dialog rail and the index. */
 export const panes = [

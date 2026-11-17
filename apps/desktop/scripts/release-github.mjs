@@ -1,6 +1,8 @@
 import { createReadStream } from "node:fs";
+
 import { CancellationToken } from "electron-builder";
 import { GitHubPublisher } from "electron-publish";
+
 import { releaseFailure } from "./release-assets.mjs";
 
 /**

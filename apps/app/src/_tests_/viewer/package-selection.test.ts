@@ -5,6 +5,7 @@ import {
   fromPackageSelection,
   toPackageSelection,
 } from "../../viewer/package-selection";
+
 import { removed } from "./fixtures";
 
 test("the package selection adapter round-trips every controlled field", () => {

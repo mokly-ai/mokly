@@ -22,6 +22,7 @@ import {
   shortSha,
 } from "../../viewer/resolution";
 import type { ViewerPanel } from "../../viewer/selection";
+
 import type { SlotRefs } from "./carriers";
 import { MoreMenu } from "./more-menu";
 import type { ChromeSubject } from "./subject";

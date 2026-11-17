@@ -1,10 +1,12 @@
-import { MockLink } from "@mokly/mokly";
 import type { ReactNode } from "react";
+
+import { MockLink } from "@mokly/mokly";
 
 import { site } from "../../../fixtures/site";
 import { Account, AccountPlaceholder, Brand, SiteBrand } from "../navigation";
 import { Pending } from "../page-parts";
 import { TextBar } from "../placeholders";
+
 import { SetupProgress } from "./setup-progress";
 import type { SetupStep } from "./setup-progress";
 

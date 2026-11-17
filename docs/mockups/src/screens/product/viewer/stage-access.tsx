@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { failureReference } from "../../../fixtures/product-states";
 import { Action, StateMessage } from "../page-parts";
+
 import { StageCard, StageWait } from "./stage-card";
 
 /**

@@ -1,11 +1,13 @@
-import type { Viewport } from "@mokly/mokly";
 import type { ReactNode } from "react";
+
+import type { Viewport } from "@mokly/mokly";
 
 import { MenuSheet } from "../../../components/responsive-menu";
 import { githubAccounts } from "../../../fixtures/product";
 import type { ScreenState } from "../../../fixtures/product-states";
 import { failureReference } from "../../../fixtures/product-states";
 import { Action, Pending, StateMessage } from "../page-parts";
+
 import { accountMenu, ConnectedAccounts } from "./github-accounts";
 import type { Reader } from "./github-accounts";
 import { SettingsSurface } from "./surface";

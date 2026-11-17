@@ -13,6 +13,7 @@ import { test } from "node:test";
 
 import { githubAccounts, sample, token, workspace } from "../fixtures/product";
 import { billing, membership } from "../fixtures/product-states";
+
 import type { Viewport } from "./catalogue-paths";
 import {
   attribute,

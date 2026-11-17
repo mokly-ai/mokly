@@ -1,3 +1,6 @@
+import type { ElementHandle, Page } from "@playwright/test";
+
+import { installedAccount } from "../database-fixture";
 import {
   createProject,
   expect,
@@ -8,10 +11,9 @@ import {
   signIn,
   test,
 } from "../harness";
-import { installedAccount } from "../database-fixture";
-import { corrected, publishedViewerReady, publishedProject } from "./support";
 import { appOrigin } from "../origins";
-import type { ElementHandle, Page } from "@playwright/test";
+
+import { corrected, publishedViewerReady, publishedProject } from "./support";
 
 function requestGate() {
   let release: () => void = () => undefined;

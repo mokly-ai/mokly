@@ -6,10 +6,10 @@ import { Action } from "../../components/action";
 import { ContentList } from "../../components/controls";
 import type { WaitingContentRow } from "../../components/controls";
 import { Pending, Section } from "../../components/page-parts";
+import { PaneResource } from "../../components/resource-state";
 import { listProjectGrants } from "../../data/projects";
 import { useResource } from "../../data/use-resource";
 import { PaneLink } from "../pane-link";
-import { PaneResource } from "../../components/resource-state";
 
 /**
  * The Access pane's layout, which the pane and its wait both draw: the access

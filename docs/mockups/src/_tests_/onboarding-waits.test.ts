@@ -13,6 +13,7 @@ import { test } from "node:test";
 
 import { addresses, sample } from "../fixtures/product";
 import { billing, onboarding } from "../fixtures/product-states";
+
 import { screenFile } from "./catalogue-paths";
 import type { Viewport } from "./catalogue-paths";
 import {

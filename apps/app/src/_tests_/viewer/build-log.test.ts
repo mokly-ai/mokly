@@ -8,6 +8,7 @@ import {
   receiveWindow,
   windowFull,
 } from "../../viewer/build-log";
+
 import { chunk, logWindow } from "./build-fixtures";
 
 test("windows append in order and continue after the last sequence", () => {

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import type { ApiError } from "../api/errors";
+
 import { ErrorDetails } from "./error-details";
 
 /**

@@ -10,6 +10,7 @@ import type { PublicationRef } from "../../data/publications";
 import type { Resource } from "../../data/use-resource";
 import { buildActive } from "../../viewer/build-state";
 import type { ClosedPullRequestState } from "../../viewer/resolution";
+
 import { build } from "./build-fixtures";
 
 /**

@@ -2,6 +2,7 @@ import type { Viewport } from "@mokly/mokly";
 
 import { token } from "../../../fixtures/product";
 import { Action } from "../page-parts";
+
 import { SettingsModal } from "./settings-modal";
 import { TokensPane } from "./tokens-pane";
 

@@ -1,3 +1,4 @@
+import { write } from "./build-double";
 import {
   boxOutline,
   numbered,
@@ -5,7 +6,6 @@ import {
   scrollSettled,
   tokenBoxOutline,
 } from "./build-output";
-import { write } from "./build-double";
 import { buildScenario } from "./build-scenario";
 import { expect, open, test } from "./harness";
 import { build, buildId } from "./viewer/build-fixtures";

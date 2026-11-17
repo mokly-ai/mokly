@@ -1,6 +1,7 @@
 import createClient from "openapi-fetch";
 
 import { apiOrigin, appOrigin } from "../config";
+
 import { decodeApiError, transportError } from "./errors";
 import type { paths } from "./generated/schema";
 

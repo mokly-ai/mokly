@@ -1,9 +1,11 @@
-import type { Viewport } from "@mokly/mokly";
 import type { ReactNode } from "react";
 
-import { pullRequest } from "../../../fixtures/publications";
+import type { Viewport } from "@mokly/mokly";
+
 import { sample } from "../../../fixtures/product";
 import type { ScreenState } from "../../../fixtures/product-states";
+import { pullRequest } from "../../../fixtures/publications";
+
 import type { AccountLabel } from "./chrome";
 import { StageUnpublishedPullRequest } from "./pull-request-stage";
 import { ViewerScreen, isPublishedPath } from "./screen";

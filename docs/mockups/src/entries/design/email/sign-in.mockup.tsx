@@ -1,10 +1,10 @@
 import { defineScreen } from "@mokly/mokly";
 
-import { EmailSignInScreen } from "../../../screens/design/email/sign_in_screen";
 import {
   EMAIL_RELATED_DOCS,
   EMAIL_TAGS,
 } from "../../../screens/design/email/parts/metadata";
+import { EmailSignInScreen } from "../../../screens/design/email/sign_in_screen";
 
 export default defineScreen({
   description:

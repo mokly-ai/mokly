@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import type { User, Workspace } from "../../api/types";
 import { Action } from "../../components/action";
 import { AppLink } from "../../components/app-link";
-import { Field } from "../../components/field";
 import { ErrorDetails } from "../../components/error-details";
+import { Field } from "../../components/field";
 import { formFailure, slugFieldOwners } from "../../components/form-failure";
 import { Pending, StateMessage } from "../../components/page-parts";
 import { workspaceResourceScope } from "../../data/resource-invalidation";
@@ -16,6 +16,7 @@ import {
   workspaceCliProjectPath,
 } from "../../navigation/paths";
 import { carrySettings } from "../../settings/routes";
+
 import type { WaitingIdentity } from "./account-shell";
 import { ExistingProject } from "./existing-project";
 import { ProjectAddress } from "./project-address";

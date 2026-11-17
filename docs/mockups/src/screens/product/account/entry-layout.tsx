@@ -1,4 +1,5 @@
 import type { ScreenState } from "../../../fixtures/product-states";
+
 import type { AccountIdentity } from "./account-shell";
 
 /** The two logged-out entry screens; every difference between them lives here. */

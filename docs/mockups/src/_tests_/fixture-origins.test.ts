@@ -15,6 +15,7 @@ import {
 } from "../fixtures/emails";
 import { publicationLink } from "../fixtures/publications";
 import { app, siteOrigin } from "../fixtures/site";
+
 import { catalogueEntries } from "./catalogue-index";
 import { entryDetailPath, indexPath, outputRoot } from "./catalogue-paths";
 

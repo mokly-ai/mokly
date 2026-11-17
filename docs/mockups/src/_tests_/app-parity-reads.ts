@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 
 import { sample } from "../fixtures/product";
 import { denseViewerChrome } from "../fixtures/product-states";
+
 import { ownerOf, regionEnds, regions, repository } from "./app-owners";
 import type { ScreenId } from "./app-owners";
 import { outputRoot } from "./catalogue-paths";

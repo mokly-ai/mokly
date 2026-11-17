@@ -12,11 +12,6 @@ import { setImmediate } from "node:timers/promises";
 
 import { saveApiEnvironment, savedApiEnvironment } from "./api-environment";
 import { databaseSkipReason } from "./database";
-import {
-  startStripeDouble,
-  stopStripeDouble,
-  stripeOrigin,
-} from "./stripe-double";
 import { githubEnvironment } from "./github-double";
 import { apiBind, apiOrigin, stripeWebhookSecret } from "./origins";
 import {
@@ -32,6 +27,11 @@ import {
   stopRecorded,
 } from "./server-process";
 import type { StartOutcome } from "./server-process";
+import {
+  startStripeDouble,
+  stopStripeDouble,
+  stripeOrigin,
+} from "./stripe-double";
 
 // Keep the shared harness entry point stable for app and desktop consumers.
 export { apiOrigin, appOrigin } from "./origins";

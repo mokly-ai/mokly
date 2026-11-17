@@ -23,6 +23,7 @@ import {
   MOKLY_PACKAGE_VERSION,
   moklyPackagePath,
 } from "../src/mokly-package.js";
+
 import { publishedProtocols } from "./helpers/published-protocols.js";
 
 const source = (document: { source: string }) =>

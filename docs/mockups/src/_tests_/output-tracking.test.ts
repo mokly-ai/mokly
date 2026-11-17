@@ -7,6 +7,7 @@ import test from "node:test";
 import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 
 import { fixtureGitEnvironment } from "../../../../apps/mockups/src/_tests_/git-environment.mjs";
+
 import {
   indexPath,
   outputRoot,

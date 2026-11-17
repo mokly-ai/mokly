@@ -13,6 +13,7 @@ import {
 } from "../../../fixtures/product-states";
 import { Action, AddressPreview, Pending, StateMessage } from "../page-parts";
 import { TextBar } from "../placeholders";
+
 import { AccountShell } from "./account-shell";
 
 type SlugRefusal = "taken" | "reserved";

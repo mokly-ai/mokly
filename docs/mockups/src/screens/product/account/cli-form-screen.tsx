@@ -1,6 +1,7 @@
+import type { ReactNode } from "react";
+
 import { MockLink } from "@mokly/mokly";
 import type { Viewport } from "@mokly/mokly";
-import type { ReactNode } from "react";
 
 import { Input } from "../../../entries/design/input.mockup";
 import { WriteFailure } from "../../../entries/design/write-failure.mockup";
@@ -17,6 +18,7 @@ import {
 import { Action, AddressPreview, BackLink } from "../page-parts";
 import { projectCreated, setupStep } from "../setup-destinations";
 import type { Installation } from "../setup-destinations";
+
 import { AccountShell } from "./account-shell";
 import type { SetupStep } from "./setup-progress";
 

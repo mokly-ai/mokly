@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import test from "node:test";
+
 import { contentSecurityPolicy, readConfiguration } from "../config.js";
 
 const config = {

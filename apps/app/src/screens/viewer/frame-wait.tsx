@@ -16,6 +16,7 @@ import type { ViewerSlots } from "../../viewer/host";
 import { ViewerStage } from "../../viewer/placeholder";
 import { StageCard } from "../../viewer/stage-card";
 import type { WaitingIdentity } from "../account/account-shell";
+
 import { ViewerMain } from "./body";
 import { moreMenu } from "./more-menu";
 import { accountLabel } from "./slots";

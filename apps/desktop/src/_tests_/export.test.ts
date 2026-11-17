@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { extname, resolve, sep } from "node:path";
 import test from "node:test";
+
 import {
   exportHandler,
   registerScheme,

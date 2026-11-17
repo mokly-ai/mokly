@@ -5,6 +5,7 @@ import {
   readViewerState,
   referenceResolutionHref,
 } from "../../viewer/selection";
+
 import { defaults } from "./fixtures";
 
 test("a branch alias keeps History open on its resolved publication", () => {

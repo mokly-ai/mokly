@@ -1,9 +1,11 @@
 import { List, ListItem } from "@firna/ui/list";
 import { StatusDot } from "@firna/ui/status-dot";
+
 import { MockLink } from "@mokly/mokly";
 
 import { Button } from "../entries/design/button.mockup";
 import { WaitingListRow } from "../screens/product/placeholder-rows";
+
 import { componentInput, componentMetadata } from "./metadata";
 
 const tones = {

@@ -17,6 +17,7 @@ import { generatedResourcePath } from "@mokly/viewer/data";
 
 import { scratchDirectory } from "../../../../apps/_tests_/scratch.mjs";
 import { fixtureGitEnvironment } from "../../../../apps/mockups/src/_tests_/git-environment.mjs";
+
 import { outputRoot } from "./catalogue-paths";
 
 const execute = promisify(execFile);

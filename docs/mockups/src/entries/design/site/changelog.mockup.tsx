@@ -1,8 +1,8 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { SiteChangelogScreen } from "../../../screens/design/site/changelog_screen";
-import { RELEASES } from "../../../screens/design/site/parts/releases";
 import { SITE_METADATA } from "../../../screens/design/site/parts/metadata";
+import { RELEASES } from "../../../screens/design/site/parts/releases";
 
 export default defineScreen({
   ...SITE_METADATA,

@@ -2,6 +2,7 @@ import { Button } from "@firna/ui/button";
 import { Label } from "@firna/ui/typography";
 
 import { Icon, icons } from "../screens/product/icons";
+
 import { componentInput, componentMetadata } from "./metadata";
 import { staticNoop } from "./static-controls";
 

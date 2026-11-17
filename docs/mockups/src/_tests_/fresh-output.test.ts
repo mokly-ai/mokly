@@ -6,6 +6,7 @@ import test from "node:test";
 import { promisify } from "node:util";
 
 import { fixtureGitEnvironment } from "../../../../apps/mockups/src/_tests_/git-environment.mjs";
+
 import { indexPath } from "./catalogue-paths";
 import {
   determinismCommandFixture,

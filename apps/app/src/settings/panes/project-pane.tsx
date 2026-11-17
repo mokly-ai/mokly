@@ -1,11 +1,11 @@
 import { useCallback, useState } from "react";
 import type { ReactNode } from "react";
 
-import { formFailure } from "../../components/form-failure";
 import { publishesFromCi, visibilityLabel } from "../../api/labels";
 import type { Project } from "../../api/types";
 import { Action } from "../../components/action";
 import { Field } from "../../components/field";
+import { formFailure } from "../../components/form-failure";
 import { Facts } from "../../components/page-parts";
 import {
   ControlPlaceholder,
@@ -20,6 +20,7 @@ import { useSettings } from "../context";
 import { useDraft } from "../dirty";
 import { draftKey } from "../drafts";
 import { useWrite } from "../write";
+
 import { AutomaticBuilds, AutomaticBuildsLayout } from "./project-builds";
 import { ChangeVisibility } from "./project-visibility";
 import { SlugEditor } from "./slug-editor";

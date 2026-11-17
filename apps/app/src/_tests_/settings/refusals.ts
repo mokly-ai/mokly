@@ -1,3 +1,7 @@
+import type { Page } from "@playwright/test";
+
+import { buildDouble } from "../build-double";
+import { routeBuilds } from "../build-routes";
 import {
   chooseRepository,
   createProject,
@@ -8,12 +12,10 @@ import {
   openDialog,
   publicationPathFor,
 } from "../harness";
-import { buildDouble } from "../build-double";
-import { routeBuilds } from "../build-routes";
 import { createToken, publish } from "../publish";
-import { field, writes } from "./undoable-writes";
+
 import type { Subject } from "./subject";
-import type { Page } from "@playwright/test";
+import { field, writes } from "./undoable-writes";
 
 /**
  * Every control the write-failure rule in `folio-chrome.md` covers, and how to

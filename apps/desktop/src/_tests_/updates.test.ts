@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+
 import { startUpdates, updateDialog, updateMode } from "../updates.js";
 import type { Updater, UpdateDependencies } from "../updates.js";
 

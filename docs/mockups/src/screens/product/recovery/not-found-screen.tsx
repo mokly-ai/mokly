@@ -1,7 +1,7 @@
 import type { Viewport } from "@mokly/mokly";
 
-import { Action, StateMessage } from "../page-parts";
 import { Brand } from "../navigation";
+import { Action, StateMessage } from "../page-parts";
 
 function NotFoundPage({ screen }: { screen: string }) {
   return (

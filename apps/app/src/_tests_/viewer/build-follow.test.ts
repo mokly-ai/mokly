@@ -5,6 +5,7 @@ import type { Build } from "../../api/types";
 import { followBuild } from "../../viewer/build-follow";
 import type { BuildFollower } from "../../viewer/build-follow";
 import type { BuildWatch } from "../../viewer/build-watch";
+
 import { build, buildId, logWindow } from "./build-fixtures";
 
 /** One build read a test answers when it chooses. */

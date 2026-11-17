@@ -5,6 +5,7 @@ import type { Resource } from "../data/use-resource";
 import { replaceAddress } from "../navigation/address";
 import { resolveHome } from "../navigation/destinations";
 import { projectPath, settingsPath } from "../navigation/paths";
+
 import type { SurfaceId } from "./panes";
 import { paneQuery, paneRoute } from "./routes";
 import { scopeSlugs } from "./scope";

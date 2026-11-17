@@ -17,13 +17,13 @@ import {
   unloadGuard,
 } from "./harness";
 import { appOrigin } from "./origins";
-import { publishedViewerReady, publishedProject } from "./viewer/support";
 import {
   captureReadableAddress,
   settingsAddress,
   shareSelection,
   uniqueSlug,
 } from "./readable-addresses-support";
+import { publishedViewerReady, publishedProject } from "./viewer/support";
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] });
 

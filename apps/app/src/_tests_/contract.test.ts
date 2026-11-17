@@ -6,9 +6,10 @@ import { test } from "node:test";
 import { apiDataReasons } from "../api/error-data";
 import { apiCodes } from "../api/errors";
 import { apiReasons } from "../api/reasons";
+import { icons } from "../components/icons";
+
 import { cataloguedFailures } from "./failures";
 import { repositoryRoot } from "./root";
-import { icons } from "../components/icons";
 
 function read(path: string): string {
   return readFileSync(resolve(repositoryRoot, path), "utf8");

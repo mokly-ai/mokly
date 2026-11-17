@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { readReleases } from "../../src/changelog/releases.js";
 import { SITE_PATHS } from "../../src/navigation.js";
+
 import { BREAKPOINT } from "./routes.js";
 
 const RELEASES = readReleases();

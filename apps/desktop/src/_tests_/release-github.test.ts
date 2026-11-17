@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { Readable } from "node:stream";
 import test from "node:test";
+
 import { githubClient } from "../../scripts/release-github.mjs";
 
 const info = { owner: "mokly-ai", repo: "mokly-desktop" };

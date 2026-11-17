@@ -1,7 +1,8 @@
 /** The four legal documents in the site's shared readable document layout. */
 
-import { MockLink } from "@mokly/mokly";
 import type { ReactNode } from "react";
+
+import { MockLink } from "@mokly/mokly";
 
 import { SiteLayout } from "./parts/chrome.js";
 import {

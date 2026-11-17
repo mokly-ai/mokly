@@ -1,3 +1,5 @@
+import type { Page } from "@playwright/test";
+
 import {
   createProject,
   currentWorkspaceId,
@@ -13,7 +15,6 @@ import {
   unloadGuard,
 } from "./harness";
 import { addMember } from "./members";
-import type { Page } from "@playwright/test";
 
 test("the compact index lists every section as a full-screen layer", async ({
   page,

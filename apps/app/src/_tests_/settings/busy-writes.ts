@@ -1,7 +1,9 @@
+import type { Page } from "@playwright/test";
+
 import { expect, freshEmail, openDialog } from "../harness";
+
 import type { Subject } from "./subject";
 import type { WriteUnderTest } from "./undoable-writes";
-import type { Page } from "@playwright/test";
 
 /**
  * What a write's own control says while the write works, as Write in progress

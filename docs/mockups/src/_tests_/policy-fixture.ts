@@ -6,6 +6,7 @@ import path from "node:path";
 
 import { scratchDirectory } from "../../../../apps/_tests_/scratch.mjs";
 import { fixtureGitEnvironment } from "../../../../apps/mockups/src/_tests_/git-environment.mjs";
+
 import { repository } from "./generated-output-fixture";
 
 export async function policyFixture() {

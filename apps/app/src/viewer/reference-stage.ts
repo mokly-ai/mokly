@@ -1,4 +1,5 @@
 import type { Branch, PullRequest } from "../api/types";
+
 import { buildActive, failedAfter } from "./build-state";
 import { closedState, fromFork } from "./resolution";
 import type { ClosedPullRequestState } from "./resolution";

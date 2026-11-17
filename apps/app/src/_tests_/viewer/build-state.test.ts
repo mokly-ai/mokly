@@ -11,6 +11,7 @@ import {
   stepProgress,
 } from "../../viewer/build-state";
 import type { BuildStepId } from "../../viewer/build-state";
+
 import { attempt, build, buildPullRequest, summary } from "./build-fixtures";
 
 /** The three steps' progress, in order, for one build. */

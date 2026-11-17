@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { publicOnFree } from "../../api/labels";
 import { BackLink } from "../../components/page-parts";
+
 import { AccountShell } from "./account-shell";
 import type { ShellWait, WaitingIdentity } from "./account-shell";
 import { completedSteps } from "./setup-progress";

@@ -5,10 +5,9 @@ import type { Workspace, Project, PullRequest, Session } from "../../api/types";
 import type { PagedItems, PublicationRef } from "../../data/publications";
 import type { Resource } from "../../data/use-resource";
 import { useDocumentTitle } from "../../layout/document-title";
+import { undoAddress, writeAddress } from "../../navigation/address";
 import { writeLastProject } from "../../navigation/last-opened";
 import { publicationPath } from "../../navigation/paths";
-import { undoAddress, writeAddress } from "../../navigation/address";
-import { useViewerAddressState } from "./address-state";
 import type { SurfaceId } from "../../settings/panes";
 import { paneQuery } from "../../settings/routes";
 import { useReaderScheme } from "../../theme/scheme";
@@ -24,12 +23,14 @@ import { ViewerHost } from "../../viewer/published";
 import { viewerHref } from "../../viewer/selection";
 import type { ViewerPanel } from "../../viewer/selection";
 import { stageView } from "../../viewer/stage-view";
+
+import { useViewerAddressState } from "./address-state";
 import { ViewerBody } from "./body";
 import { carrierLookup, useSlotRefs } from "./carriers";
 import { ViewerPanelHost } from "./panel-host";
 import { useReferenceRedirect } from "./reference-redirect";
-import { chromeSubject } from "./subject";
 import { viewerSlots } from "./slots";
+import { chromeSubject } from "./subject";
 import { memberAccess, useViewerBuild } from "./viewer-build";
 import { useViewerCatalogue } from "./viewer-catalogue";
 
