@@ -6,6 +6,7 @@ import {
   releaseInspection,
   startInspection,
 } from "./viewer_inspection_fixture.js";
+import { startViewerPick } from "./viewer_pick.js";
 
 let fixture: Awaited<ReturnType<typeof followupFixture>>;
 test.beforeAll(async () => {
@@ -76,9 +77,9 @@ for (const cross of [false, true]) {
         }) => {
           await page.goto(fixture.host.url);
           await startInspection(page, cross);
-          await page.evaluate(async (operation) => {
+          await startViewerPick(page);
+          await page.evaluate((operation) => {
             const host = window.viewerHarness.get("one");
-            await host.ref.current.startPick();
             const probe = window.inspectionProbe;
             probe.hold =
               operation === "geometry" || operation === "labels"
@@ -104,13 +105,13 @@ for (const cross of [false, true]) {
             }
           }, operation);
           await page.waitForFunction(() => window.inspectionProbe.waiting);
-          await page.evaluate(async (replacement) => {
+          await page.evaluate((replacement) => {
             const host = window.viewerHarness.get("one");
             if (replacement === "frame")
               host.ref.current.select({ viewport: "desktop" });
             else host.ref.current.cancelPick();
-            await host.ref.current.startPick();
           }, replacement);
+          await startViewerPick(page);
           const labels = page.locator("[data-mokly-label-layer] button");
           await expect(labels).toHaveCount(1);
           const label = await labels.elementHandle();
