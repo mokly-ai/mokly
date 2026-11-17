@@ -4,12 +4,13 @@
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-17, from the branch
   `calummoore/resetting-search-filter-5hud`, as the wider fix of its review
-  items 1 and 2.
+  items 1, 2, and 3, and a problem outside the scope of its second review.
 - **Location:** `packages/viewer/src/shell/selection.ts:99-172`,
   `packages/viewer/src/shell/nav_model.ts:74-134` and `:143-156`,
   `packages/viewer/src/shell/nav_reveal.ts:32-66`,
   `packages/viewer/src/shell/store_host.ts:137-143` and `:187-198`, and
-  `packages/viewer/src/shell/store_filters.ts:26-50`.
+  `packages/viewer/src/shell/store_filters.ts:26-50`, and
+  `packages/viewer/src/shell/changes_activation.ts:103-124`.
 - **Reason:** The change reaches folder reveal and every test fixture that
   builds a bare model, so it needs its own branch and its own tests after the
   search reset fix merges.
@@ -48,6 +49,17 @@
     entry-alone check is still needed for three cases: a variant (the row
     lookup does not search variant rows), a removed-entry snapshot route, and
     an entry in a hidden folder (the tree hides the row under All).
+  - For a snapshot route, the reveal skips the row lookup with
+    `value.snapshotId ? undefined : navEntryRow(...)`. A removed entry and a
+    current entry can share one path. Without the guard, a snapshot route to
+    the removed entry would ask the tree about the current row of that path.
+    The test "a snapshot route judges the search against the removed row, not
+    a current row of its path" in `packages/viewer/tests/route_reveal.test.ts`
+    holds this behaviour.
+  - `firstVisibleChangedEntry` in `changes_activation.ts` calls
+    `catalogueNavSections(catalogue)` and builds the whole tree again on each
+    Changes activation, though the store already holds the memoized
+    sections. This was already so before the search reset fix.
   - `revealSelection` and `mergeSelection` take the model, the folder
     titles, and the sections as separate arguments. The tests that build a
     bare model pass `[]` or `() => []` for them.
@@ -58,6 +70,9 @@
   - Folder reveal holds a third version of the same rule.
   - A caller can pass an empty or unrelated tree, and the reveal then falls
     back to the entry-alone check without an error.
+  - A guard, not the row lookup, keeps a snapshot route off the current row
+    of the same path.
+  - Changes activation pays for a full tree build on each row click.
 - **Impact if no action:** The reveal and the tree can drift apart again. The
   search reset was the second such drift, after the folder title case. A new
   kind of listed row, or a new tree rule, can bring back a search reset with
@@ -68,9 +83,10 @@
   - **A.** Change nothing. The two checks agree today, but the class of drift
     stays. Effort: Small.
   - **B.** Make the row lookup find every destination row: current entries,
-    variants, and removed snapshot rows. Decide only with the tree rule: the
-    query hides the row when the row is visible without the query and hidden
-    with it. Delete the entry-alone check and the `folderTitles` argument.
+    variants, and removed snapshot rows, with the `removed:{path}` row for a
+    snapshot route. Delete the snapshot guard. Decide only with the tree
+    rule: the query hides the row when the row is visible without the query
+    and hidden with it. Delete the entry-alone check and the `folderTitles` argument.
     Keep the current result for an entry in a hidden folder, where the query
     does not hide the row. Add tests for a variant, a snapshot, and a hidden
     row. Effort: Medium.
@@ -81,14 +97,16 @@
     reveal and `folderRevealSelection` call with a tree node. The function
     holds the query rule, the Changes-to-All rule, and the rule for a row
     that the query and Changes hide only together. The tests under `tests/`
-    that use bare models build a catalogue with `createCatalogue`.
-    Effort: Medium.
+    that use bare models build a catalogue with `createCatalogue`. Changes
+    activation reads the same cached tree. Effort: Medium.
 - **Left out:** A detection test that compares the reveal with the tree for
   every fixture row. It catches the drift, but C removes it.
 - **Wider fix:** C. No type lets a caller give the wrong tree, and one
   function decides "the filter hides this row" for every reveal.
 - **Previous examples:** `f08d02dfb` (folder title matches) and the search
-  reset fix (listed-row matches) each fixed one drift of this class.
+  reset fix (listed-row matches) each fixed one drift of this class. The
+  same review also added a test for the snapshot guard, a third place where
+  the reveal and the tree can disagree.
 - **Recommendation:** C. It removes the second rule and the empty-tree case,
   so the tree and the reveal cannot drift apart.
 - **Action:** fix after merge, apply C, because it changes folder reveal and

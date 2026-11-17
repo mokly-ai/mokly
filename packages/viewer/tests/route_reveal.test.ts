@@ -16,15 +16,19 @@ import { createInitialShellState } from "../src/shell/store_initial.js";
 
 import {
   publishedModel,
+  publishedPage,
   publishedScreen,
+  removedEntry,
 } from "./published_entries_fixture.js";
 
 /**
  * A Welcome screen that lists the Empty variant and the Settings folder
  * member, beside an unrelated Billing screen. Welcome and Empty changed.
+ * A removed Welcome page can share the current Welcome path.
  */
-function fixture() {
+function fixture(removedEntries: ReturnType<typeof removedEntry>[] = []) {
   const model = publishedModel({
+    removedEntries,
     screens: [
       publishedScreen("welcome", "Welcome", "changed"),
       publishedScreen("welcome/empty", "Empty", "changed", "welcome"),
@@ -92,6 +96,28 @@ test("a route reveal under Changes keeps a search that a changed listed row matc
     }),
     { ...selection, search: "" },
   );
+});
+
+test("a snapshot route judges the search against the removed row, not a current row of its path", () => {
+  const removed = removedEntry(
+    publishedPage("welcome", "Welcome", "removed"),
+    [],
+  );
+  const { catalogue, model, sections } = fixture([removed]);
+  const selection = {
+    ...defaultSelection,
+    screenPath: "welcome",
+    snapshotId: removed.snapshotId,
+    view: "changes" as const,
+  };
+  const revealed = (search: string) =>
+    revealSelection(model, folderTitleLookup(catalogue.hierarchy), sections, {
+      ...selection,
+      search,
+    });
+  assert.equal(revealed("empty").snapshotId, removed.snapshotId);
+  assert.equal(revealed("empty").search, "");
+  assert.equal(revealed("welcome").search, "welcome");
 });
 
 test("a host route proposal keeps a search that a listed row of the destination matches", () => {
