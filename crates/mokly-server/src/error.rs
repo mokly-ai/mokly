@@ -63,6 +63,9 @@ pub enum ServerError {
 /// Original source types retained across the internal boundary.
 #[derive(Debug, Error)]
 pub enum InternalError {
+    /// The canonical detail preimage has no fixed-width zero identity token.
+    #[error("canonical detail identity is not a quoted 64-zero value")]
+    CanonicalDetailIdentity,
     /// An injected runtime provider failed.
     #[error("runtime provider failed: {source}")]
     Provider {

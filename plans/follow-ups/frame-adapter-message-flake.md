@@ -72,14 +72,14 @@
     Its confirmed source: the preparation poll accepted the committed URL
     while the document still loaded. The fix of 2026-11-01 also waits for a
     complete document and its action link.
-  - [flaky-viewer-selection-navigation.md](flaky-viewer-selection-navigation.md)
+  - [flaky-viewer-selection-navigation.md](https://github.com/mokly-ai/mokly/blob/49f28d83747f3008dc55958124a195b3a0f5df54/plans/follow-ups/flaky-viewer-selection-navigation.md)
 - **Related:**
-  - [flaky-viewer-selection-navigation.md](flaky-viewer-selection-navigation.md)
+  - [flaky-viewer-selection-navigation.md](https://github.com/mokly-ai/mokly/blob/49f28d83747f3008dc55958124a195b3a0f5df54/plans/follow-ups/flaky-viewer-selection-navigation.md)
     is a separate case of the same recorded class: a browser test that failed
     once and passed on its rerun. Its test is in
     `tests/browser/viewer.spec.ts`. That test reads no frame events, and its
     suspected source is a page navigation. The two items share no test code.
-  - [flaky-viewer-events-active-picks.md](flaky-viewer-events-active-picks.md)
+  - [flaky-viewer-events-active-picks.md](https://github.com/mokly-ai/mokly/blob/49f28d83747f3008dc55958124a195b3a0f5df54/plans/follow-ups/flaky-viewer-events-active-picks.md)
     is a separate case of the same recorded class: a browser test that failed
     once and passed on its rerun. Its test is in
     `tests/browser/viewer_events.spec.ts`. Both tests serve their

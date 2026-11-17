@@ -1,0 +1,5018 @@
+---
+source: crates/mokly-server/src/_tests_/publication_sequence/oracle_tests.rs
+expression: output
+---
+=== edit 0: rebuild, revision 1 ===
+screen-0: 795b651804038a01a710fb496cc7982db38621b19bafb4bf0c12abb8dbbc9c56, typed revision Some(1)
+screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, typed revision Some(1)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "controlOrder": [],
+  "detailId": "795b651804038a01a710fb496cc7982db38621b19bafb4bf0c12abb8dbbc9c56",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 1,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "controlOrder": [],
+  "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 1,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "main",
+  "changesStatus": "pending",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 1,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "795b651804038a01a710fb496cc7982db38621b19bafb4bf0c12abb8dbbc9c56",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 0: foreground usage, revision 2 ===
+screen-0: d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37, typed revision Some(2)
+screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, typed revision Some(1)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "controlOrder": [],
+  "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 2,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "controlOrder": [],
+  "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 2,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "main",
+  "changesStatus": "pending",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 2,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 0: preparing, revision 3 ===
+screen-0: d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37, typed revision Some(3)
+screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, typed revision Some(3)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "controlOrder": [],
+  "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 3,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "controlOrder": [],
+  "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 3,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "main",
+  "changesStatus": "preparing",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 3,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "status": "preparing"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "preparing"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 0: complete usage, revision 4 ===
+screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(4)
+screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(4)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "controlOrder": [],
+  "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 4,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ],
+  "workspace": {
+    "affected": [],
+    "comparisonEligible": false,
+    "inputChanges": [],
+    "relatedComponents": [],
+    "usedBy": []
+  }
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "controlOrder": [],
+  "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 4,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ],
+  "workspace": {
+    "affected": [],
+    "comparisonEligible": false,
+    "inputChanges": [],
+    "relatedComponents": [],
+    "usedBy": []
+  }
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "main",
+  "changesStatus": "preparing",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 4,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "status": "preparing"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "preparing"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 0: ready Changes, revision 5 ===
+screen-0: 6c625652346c0b178a1280aad0aff8dcbdd73984f3746021a60625ee01456adf, typed revision Some(5)
+screen-1: 75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc, typed revision Some(5)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "before": {
+    "path": "screen-0",
+    "props": {},
+    "title": "Sample"
+  },
+  "controlOrder": [],
+  "detailId": "6c625652346c0b178a1280aad0aff8dcbdd73984f3746021a60625ee01456adf",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "reasons": [
+    {
+      "kind": "material"
+    }
+  ],
+  "revision": 5,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "ignoredIds": [],
+      "resourceEvidence": {
+        "resources": [],
+        "rules": []
+      },
+      "state": "changed",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ],
+  "workspace": {
+    "affected": [],
+    "comparisonEligible": true,
+    "inputChanges": [],
+    "relatedComponents": [],
+    "usedBy": []
+  }
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "before": {
+    "path": "screen-1",
+    "props": {},
+    "title": "Sample"
+  },
+  "controlOrder": [],
+  "detailId": "75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "reasons": [
+    {
+      "kind": "material"
+    }
+  ],
+  "revision": 5,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "ignoredIds": [],
+      "resourceEvidence": {
+        "resources": [],
+        "rules": []
+      },
+      "state": "changed",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ],
+  "workspace": {
+    "affected": [],
+    "comparisonEligible": true,
+    "inputChanges": [],
+    "relatedComponents": [],
+    "usedBy": []
+  }
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "base",
+  "baseCommit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "changesStatus": "ready",
+  "comparisonUrl": "mokly-viewer/diffs/generations/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/",
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 5,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "included": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "6c625652346c0b178a1280aad0aff8dcbdd73984f3746021a60625ee01456adf",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "included": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 0: Pending, revision 6 ===
+screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(6)
+screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(6)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "controlOrder": [],
+  "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 6,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ],
+  "workspace": {
+    "affected": [],
+    "comparisonEligible": false,
+    "inputChanges": [],
+    "relatedComponents": [],
+    "usedBy": []
+  }
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "controlOrder": [],
+  "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 6,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ],
+  "workspace": {
+    "affected": [],
+    "comparisonEligible": false,
+    "inputChanges": [],
+    "relatedComponents": [],
+    "usedBy": []
+  }
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "base",
+  "changesStatus": "pending",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 6,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 0: Disabled, revision 7 ===
+screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(7)
+screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(7)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "controlOrder": [],
+  "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 7,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ],
+  "workspace": {
+    "affected": [],
+    "comparisonEligible": false,
+    "inputChanges": [],
+    "relatedComponents": [],
+    "usedBy": []
+  }
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "controlOrder": [],
+  "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 7,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ],
+  "workspace": {
+    "affected": [],
+    "comparisonEligible": false,
+    "inputChanges": [],
+    "relatedComponents": [],
+    "usedBy": []
+  }
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "base",
+  "changesStatus": "disabled",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 7,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "status": "disabled"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "disabled"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "disabled"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "disabled"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "disabled"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "disabled"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 0: Preparing, revision 8 ===
+screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(8)
+screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(8)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "controlOrder": [],
+  "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 8,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ],
+  "workspace": {
+    "affected": [],
+    "comparisonEligible": false,
+    "inputChanges": [],
+    "relatedComponents": [],
+    "usedBy": []
+  }
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "controlOrder": [],
+  "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 8,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ],
+  "workspace": {
+    "affected": [],
+    "comparisonEligible": false,
+    "inputChanges": [],
+    "relatedComponents": [],
+    "usedBy": []
+  }
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "base",
+  "changesStatus": "preparing",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 8,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "status": "preparing"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "preparing"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000000",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 1: rebuild, revision 9 ===
+screen-0: 795b651804038a01a710fb496cc7982db38621b19bafb4bf0c12abb8dbbc9c56, typed revision Some(9)
+screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, typed revision Some(9)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "controlOrder": [],
+  "detailId": "795b651804038a01a710fb496cc7982db38621b19bafb4bf0c12abb8dbbc9c56",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 9,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "controlOrder": [],
+  "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 9,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "main",
+  "changesStatus": "pending",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000001"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 9,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "795b651804038a01a710fb496cc7982db38621b19bafb4bf0c12abb8dbbc9c56",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 1: foreground usage, revision 10 ===
+screen-0: d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37, typed revision Some(10)
+screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, typed revision Some(9)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "controlOrder": [],
+  "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 10,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "controlOrder": [],
+  "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 10,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "main",
+  "changesStatus": "pending",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000001"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 10,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 1: preparing, revision 11 ===
+screen-0: d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37, typed revision Some(11)
+screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, typed revision Some(11)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "controlOrder": [],
+  "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 11,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "controlOrder": [],
+  "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 11,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "main",
+  "changesStatus": "preparing",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000001"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 11,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "status": "preparing"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "preparing"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 1: complete usage, revision 12 ===
+screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(12)
+screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(12)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "controlOrder": [],
+  "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 12,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ],
+  "workspace": {
+    "affected": [],
+    "comparisonEligible": false,
+    "inputChanges": [],
+    "relatedComponents": [],
+    "usedBy": []
+  }
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "controlOrder": [],
+  "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 12,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ],
+  "workspace": {
+    "affected": [],
+    "comparisonEligible": false,
+    "inputChanges": [],
+    "relatedComponents": [],
+    "usedBy": []
+  }
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "main",
+  "changesStatus": "preparing",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000001"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 12,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "status": "preparing"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "preparing"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 1: ready Changes, revision 13 ===
+screen-0: 6c625652346c0b178a1280aad0aff8dcbdd73984f3746021a60625ee01456adf, typed revision Some(13)
+screen-1: 75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc, typed revision Some(13)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "before": {
+    "path": "screen-0",
+    "props": {},
+    "title": "Sample"
+  },
+  "controlOrder": [],
+  "detailId": "6c625652346c0b178a1280aad0aff8dcbdd73984f3746021a60625ee01456adf",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "reasons": [
+    {
+      "kind": "material"
+    }
+  ],
+  "revision": 13,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "ignoredIds": [],
+      "resourceEvidence": {
+        "resources": [],
+        "rules": []
+      },
+      "state": "changed",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ],
+  "workspace": {
+    "affected": [],
+    "comparisonEligible": true,
+    "inputChanges": [],
+    "relatedComponents": [],
+    "usedBy": []
+  }
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "before": {
+    "path": "screen-1",
+    "props": {},
+    "title": "Sample"
+  },
+  "controlOrder": [],
+  "detailId": "75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "reasons": [
+    {
+      "kind": "material"
+    }
+  ],
+  "revision": 13,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "ignoredIds": [],
+      "resourceEvidence": {
+        "resources": [],
+        "rules": []
+      },
+      "state": "changed",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ],
+  "workspace": {
+    "affected": [],
+    "comparisonEligible": true,
+    "inputChanges": [],
+    "relatedComponents": [],
+    "usedBy": []
+  }
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "base",
+  "baseCommit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "changesStatus": "ready",
+  "comparisonUrl": "mokly-viewer/diffs/generations/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/",
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000001"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 13,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "included": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "6c625652346c0b178a1280aad0aff8dcbdd73984f3746021a60625ee01456adf",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "included": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "75353df4a6b9d82568c4cc16c3ac3595ed6c0183eb1814bda1f6a0b5d1c684dc",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 1: Pending, revision 14 ===
+screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(14)
+screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(14)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "controlOrder": [],
+  "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 14,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ],
+  "workspace": {
+    "affected": [],
+    "comparisonEligible": false,
+    "inputChanges": [],
+    "relatedComponents": [],
+    "usedBy": []
+  }
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "controlOrder": [],
+  "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 14,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ],
+  "workspace": {
+    "affected": [],
+    "comparisonEligible": false,
+    "inputChanges": [],
+    "relatedComponents": [],
+    "usedBy": []
+  }
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "base",
+  "changesStatus": "pending",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000001"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 14,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 1: Disabled, revision 15 ===
+screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(15)
+screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(15)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "controlOrder": [],
+  "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 15,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ],
+  "workspace": {
+    "affected": [],
+    "comparisonEligible": false,
+    "inputChanges": [],
+    "relatedComponents": [],
+    "usedBy": []
+  }
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "controlOrder": [],
+  "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 15,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ],
+  "workspace": {
+    "affected": [],
+    "comparisonEligible": false,
+    "inputChanges": [],
+    "relatedComponents": [],
+    "usedBy": []
+  }
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "base",
+  "changesStatus": "disabled",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000001"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 15,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "status": "disabled"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "disabled"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "disabled"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "disabled"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "disabled"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "disabled"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 1: Preparing, revision 16 ===
+screen-0: 7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651, typed revision Some(16)
+screen-1: 2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba, typed revision Some(16)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "controlOrder": [],
+  "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 16,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ],
+  "workspace": {
+    "affected": [],
+    "comparisonEligible": false,
+    "inputChanges": [],
+    "relatedComponents": [],
+    "usedBy": []
+  }
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "controlOrder": [],
+  "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 16,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ],
+  "workspace": {
+    "affected": [],
+    "comparisonEligible": false,
+    "inputChanges": [],
+    "relatedComponents": [],
+    "usedBy": []
+  }
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "base",
+  "changesStatus": "preparing",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000001"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 16,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "status": "preparing"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "7d9eb24815d37a65953a2d350506729bea3ab8697418f6a0a64e12f287a72651",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "preparing"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "2691a80e8f565b36cb36e9a5092af9d76336d39655e4a1d706bc19def6ae75ba",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000001",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 2: rebuild, revision 17 ===
+screen-0: 795b651804038a01a710fb496cc7982db38621b19bafb4bf0c12abb8dbbc9c56, typed revision Some(17)
+screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, typed revision Some(17)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "controlOrder": [],
+  "detailId": "795b651804038a01a710fb496cc7982db38621b19bafb4bf0c12abb8dbbc9c56",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 17,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "controlOrder": [],
+  "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 17,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "main",
+  "changesStatus": "pending",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000002"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 17,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "795b651804038a01a710fb496cc7982db38621b19bafb4bf0c12abb8dbbc9c56",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 2: foreground usage, revision 18 ===
+screen-0: d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37, typed revision Some(18)
+screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, typed revision Some(17)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "controlOrder": [],
+  "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 18,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "controlOrder": [],
+  "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 18,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "main",
+  "changesStatus": "pending",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000002"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 18,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 2: preparing, revision 19 ===
+screen-0: d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37, typed revision Some(19)
+screen-1: 896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a, typed revision Some(19)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "controlOrder": [],
+  "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 19,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "controlOrder": [],
+  "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 19,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "pending"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "main",
+  "changesStatus": "preparing",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000002"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 19,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "status": "preparing"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "d9bc55a5e876215289e4c9f3d2e47b1990a67ab27a82fa49d38a3d9d686d7e37",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "preparing"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "896fff4d40ea52791110c416597c0ffd10d34f550f020716b335e0b68db2253a",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 2: complete usage, revision 20 ===
+screen-0: 7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682, typed revision Some(20)
+screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, typed revision Some(20)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "controlOrder": [],
+  "detailId": "7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 20,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "controlOrder": [],
+  "detailId": "de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 20,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "unavailable"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "unavailable"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "main",
+  "changesStatus": "preparing",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000002"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 20,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "status": "preparing"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "preparing"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 2: ready Changes, revision 21 ===
+screen-0: 9b059ed25499d5ba48cb2166750678338527bf21718d8d2c00cab2963510aa5a, typed revision Some(21)
+screen-1: 09548df70137fe4c6b2bb2c9435f8339ff8c5e98ac2e22a95c998488ebd474f3, typed revision Some(21)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "before": {
+    "path": "screen-0",
+    "props": {},
+    "title": "Sample"
+  },
+  "controlOrder": [],
+  "detailId": "9b059ed25499d5ba48cb2166750678338527bf21718d8d2c00cab2963510aa5a",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "reasons": [
+    {
+      "kind": "material"
+    }
+  ],
+  "revision": 21,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "ignoredIds": [],
+      "resourceEvidence": {
+        "resources": [],
+        "rules": []
+      },
+      "state": "changed",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "before": {
+    "path": "screen-1",
+    "props": {},
+    "title": "Sample"
+  },
+  "controlOrder": [],
+  "detailId": "09548df70137fe4c6b2bb2c9435f8339ff8c5e98ac2e22a95c998488ebd474f3",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "reasons": [
+    {
+      "kind": "material"
+    }
+  ],
+  "revision": 21,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "ignoredIds": [],
+      "resourceEvidence": {
+        "resources": [],
+        "rules": []
+      },
+      "state": "changed",
+      "usage": {
+        "status": "unavailable"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "unavailable"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "base",
+  "baseCommit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "changesStatus": "ready",
+  "comparisonUrl": "mokly-viewer/diffs/generations/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/",
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000002"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 21,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "included": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "9b059ed25499d5ba48cb2166750678338527bf21718d8d2c00cab2963510aa5a",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "included": true,
+        "kind": "changed",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "09548df70137fe4c6b2bb2c9435f8339ff8c5e98ac2e22a95c998488ebd474f3",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": true,
+            "kind": "changed",
+            "status": "ready"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 2: Pending, revision 22 ===
+screen-0: 7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682, typed revision Some(22)
+screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, typed revision Some(22)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "controlOrder": [],
+  "detailId": "7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 22,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "controlOrder": [],
+  "detailId": "de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 22,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "unavailable"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "unavailable"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "base",
+  "changesStatus": "pending",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000002"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 22,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 2: Disabled, revision 23 ===
+screen-0: 7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682, typed revision Some(23)
+screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, typed revision Some(23)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "controlOrder": [],
+  "detailId": "7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 23,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "controlOrder": [],
+  "detailId": "de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 23,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "unavailable"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "unavailable"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "base",
+  "changesStatus": "disabled",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000002"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 23,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "status": "disabled"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "disabled"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "disabled"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "disabled"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "disabled"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "disabled"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}
+
+=== edit 2: Preparing, revision 24 ===
+screen-0: 7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682, typed revision Some(24)
+screen-1: de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac, typed revision Some(24)
+--- mokly-viewer/entries/screen-0.json ---
+{
+  "controlOrder": [],
+  "detailId": "7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-0"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 24,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "instances": [],
+        "ranges": [],
+        "slots": [],
+        "status": "ready"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/entries/screen-1.json ---
+{
+  "controlOrder": [],
+  "detailId": "de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac",
+  "entry": {
+    "kind": "screen",
+    "path": "screen-1"
+  },
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "revision": 24,
+  "schemaVersion": 4,
+  "views": [
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "unavailable"
+      },
+      "viewport": "mobile"
+    },
+    {
+      "colorScheme": "light",
+      "usage": {
+        "status": "unavailable"
+      },
+      "viewport": "desktop"
+    }
+  ]
+}
+
+--- mokly-viewer/index.json ---
+{
+  "base": "base",
+  "changesStatus": "preparing",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "0000000000000000000000000000000000000000000000000000000000000002"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 24,
+  "schemaVersion": 9,
+  "screens": [
+    {
+      "changes": {
+        "status": "preparing"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "7e74db8a0b622f0c3e27474fe885b5684da17f6b2eda2ed40a7f39cdb48ed682",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-0.html"
+      },
+      "kind": "screen",
+      "path": "screen-0",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 0: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "preparing"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {},
+      "detailId": "de4e0e81c3705dc1cec80cb9af9a5a9cc7fd89e84606ac486561b06c02cbfdac",
+      "details": {
+        "description": "A \\\"quoted\\\" value\nwith a tab\tand \\ slash",
+        "relatedDocs": [],
+        "sourcePath": "specs/screen-1.html"
+      },
+      "kind": "screen",
+      "path": "screen-1",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "props": {},
+      "tags": [],
+      "title": "Screen 1: café 😀",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "preparing"
+          },
+          "documentKey": "0000000000000000000000000000000000000000000000000000000000000002",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "kind": "entry",
+      "path": "screen-0"
+    },
+    {
+      "kind": "entry",
+      "path": "screen-1"
+    }
+  ],
+  "useCases": []
+}

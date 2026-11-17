@@ -39,6 +39,7 @@ pub(super) fn initial() -> Arc<Snapshot> {
         document_keys: BTreeMap::new(),
         index,
         details: BTreeMap::new(),
+        recent_details: Default::default(),
         completed: BTreeMap::new(),
         files: BTreeMap::new(),
         lease: Arc::new(RevisionLease::default()),

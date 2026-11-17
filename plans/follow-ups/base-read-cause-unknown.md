@@ -49,16 +49,16 @@
       its input path unchanged, so `configuration_alias` returns at
       `config_paths.rs:70` to line 71 before any read.
     - `config.rs:194` runs only without an explicit file. The base load in
-      `crates/mokly-cli/src/changes_base.rs:77` passes one, so only the test
+      `crates/mokly-cli/src/changes_base.rs:88` passes one, so only the test
       fixture below reaches it.
     - `discovery_walk.rs:96`, `:132`, and `:191` run in the base discovery
       walk. They receive base Git failures.
     - `preparation.rs:91` and `:136` run in the base preparation. They
       receive base Git failures.
     - `discovery.rs:114` reads only an output path. The base discovery at
-      `changes_base.rs:83` passes none, so it receives no Git failure.
-  - In a build, `crates/mokly-compare/src/base_render.rs:215` to line 223
-    reports the stored failure before the catalogue error. A genuine Git
+      `changes_base.rs:94` passes none, so it receives no Git failure.
+  - In a build, `crates/mokly-compare/src/base_classification.rs:123` to line
+    129 reports the stored failure before the catalogue error. A genuine Git
     failure then fails the command as `git-failed`, with its cause.
   - A conversion failure is not the stored failure. In `build` and
     `publish`, `crates/mokly-cli/src/changes_policy.rs:20` to line 25 then
@@ -72,7 +72,7 @@
     `docs/protocol/mokly-base-preparation.md:91` to line 93, which makes
     base diagnostics detail lines.
   - Serve prints the same failure as a `review-invalid` error block, at
-    `crates/mokly-cli/src/serve_changes.rs:166` to line 171. Its detail holds
+    `crates/mokly-cli/src/serve_changes.rs:169` to line 174. Its detail holds
     the same "unknown" text.
   - In rich mode, that block ends with the hint "Fix the reported comparison
     input and retry.", at `crates/mokly-cli/src/output.rs:170`.
@@ -81,8 +81,9 @@
   - Serve gives no "base validation failed" reason. Only
     `crates/mokly-cli/src/build_changes.rs:58` reaches
     `changes_policy::unavailable`.
-  - That path shows no `base-conversion` warning, because `base_render.rs:273`
-    adds those warnings only to a successful result.
+  - That path shows no `base-conversion` warning, because
+    `base_classification.rs:218` adds those warnings only to a successful
+    result.
   - `crates/mokly-cli/src/build_output.rs:206` to line 212 prints a
     `config-invalid` issue of the head build. Head reads use the working tree,
     so no base read reaches that output.
@@ -129,7 +130,8 @@
   catalogue caller reports it?
 - **Options:**
   - **A.** In the test fixtures that prepare a base `GitTree`, report the
-    stored failure before the catalogue error, as `base_render.rs:215` does.
+    stored failure before the catalogue error, as
+    `base_classification.rs:123` does.
     - It changes no product behaviour.
     - The conversion case of a user stays as it is.
     - Effort: Small.

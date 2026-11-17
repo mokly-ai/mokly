@@ -45,7 +45,7 @@
     prefetch in `mokly-compare` keeps its own literal. Effort: Small.
   - **C.** Export `BATCH_BYTES` and a named file count from `mokly-git`. Use
     both in the extraction and in the prefetch. The `checkout_batch` module
-    is private at `crates/mokly-git/src/lib.rs:30`, and no named file count
+    is private at `crates/mokly-git/src/lib.rs:31`, and no named file count
     exists. So C changes four code files: `lib.rs` for the export,
     `checkout_batch.rs` for the named count, `extraction.rs`, and
     `crates/mokly-compare/src/git_prefetch.rs`. Review both callers and run the affected crate tests. Effort: Small.

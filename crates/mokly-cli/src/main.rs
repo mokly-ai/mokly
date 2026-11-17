@@ -4,6 +4,7 @@ use mimalloc::MiMalloc;
 
 mod base_dependencies;
 mod changes_base;
+mod changes_freshness;
 mod changes_runtime;
 mod changes_static;
 mod command_diagnostics;
@@ -16,6 +17,9 @@ mod one_shot;
 mod one_shot_summary;
 mod publication_runtime;
 mod render_runtime;
+mod serve_base;
+mod serve_base_cancel;
+mod serve_base_key;
 mod serve_candidates;
 mod serve_capture_cancel;
 mod serve_changes;

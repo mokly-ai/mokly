@@ -11,6 +11,7 @@ use mokly_css::dependencies::DirectoryDependency;
 use mokly_css::types::{OpaqueAsset, StylesheetRoot};
 use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::data::Props;
+use mokly_model::usage::CatalogueUsage;
 
 use crate::cache::Artifact;
 use crate::closure::{Closure, GeneratedResources};
@@ -109,6 +110,17 @@ pub trait RenderGeneration: GeneratedResources {
     /// Checking wrappers keep this default when forwarding would bypass their checks.
     fn retained_comparison_input(&self, _route: &str) -> Option<RetainedComparisonInput> {
         None
+    }
+    /// Read comparison usage, or None when the artifact has no composed document.
+    /// The default preserves the document read's checks and errors.
+    /// Transparent wrappers forward this read. Checking wrappers may forward when
+    /// they preserve their own checks. Failed or missing usage must use their checked document read.
+    fn comparison_usage(&self, route: &str) -> Result<Option<CatalogueUsage>> {
+        Ok(self
+            .comparison_document(route)?
+            .document
+            .as_ref()
+            .map(|document| document.usage.clone()))
     }
     /// Maximum number of transient comparison inputs in one scheduled batch.
     fn comparison_parallelism(&self) -> usize {
@@ -211,3 +223,7 @@ pub struct TemporaryDocument {
     /// Resources checked through the generation's public-file policy.
     pub closure: Closure,
 }
+
+#[cfg(test)]
+#[path = "_tests_/comparison_usage_tests.rs"]
+mod comparison_usage_tests;

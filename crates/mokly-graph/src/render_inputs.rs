@@ -10,7 +10,9 @@ use mokly_model::material::digest;
 use serde_json::to_vec;
 
 use crate::key::NodeKey;
-use crate::render_closure::{Records, additional, chain, closure, handle_module};
+use crate::render_closure::{Records, chain, closure, handle_module};
+use crate::render_exporters;
+use crate::workers::RenderWorkers;
 
 /// Storybook preview candidates in the sidecar's selection order.
 pub const PREVIEWS: [&str; 6] = [
@@ -63,7 +65,26 @@ impl RenderKeys {
     /// does not name. The stories then use `fallback`, which covers the preview, and the
     /// shared part leaves the digest out.
     pub fn build(inputs: &RenderInputs<'_>, fallback: NodeKey) -> Self {
-        let modules = match build_modules(inputs) {
+        Self::build_keys(inputs, fallback, None)
+    }
+
+    /// Build the same keys on the supplied render workers with caller tracing context.
+    /// Only finished keys remain between exporter jobs.
+    pub fn build_with_workers(
+        inputs: &RenderInputs<'_>,
+        fallback: NodeKey,
+        workers: &dyn RenderWorkers,
+    ) -> Self {
+        Self::build_keys(inputs, fallback, Some(workers))
+    }
+
+    #[tracing::instrument(name = "render.inputs", skip_all)]
+    fn build_keys(
+        inputs: &RenderInputs<'_>,
+        fallback: NodeKey,
+        workers: Option<&dyn RenderWorkers>,
+    ) -> Self {
+        let modules = match build_modules(inputs, workers) {
             Ok(modules) => modules,
             Err(error) => {
                 tracing::error!(%error, "render inputs could not serialize; using whole-bundle keys");
@@ -102,7 +123,10 @@ impl RenderKeys {
 }
 
 /// Prepare shared closures once and merge only each exporter's additional records.
-fn build_modules(inputs: &RenderInputs<'_>) -> serde_json::Result<BTreeMap<String, NodeKey>> {
+fn build_modules(
+    inputs: &RenderInputs<'_>,
+    workers: Option<&dyn RenderWorkers>,
+) -> serde_json::Result<BTreeMap<String, NodeKey>> {
     let generation = inputs.generation;
     let graph = &generation.modules;
     let stories: BTreeSet<_> = inputs
@@ -166,17 +190,19 @@ fn build_modules(inputs: &RenderInputs<'_>) -> serde_json::Result<BTreeMap<Strin
     let renderer = records.parts(inputs.renderer.map_or_else(BTreeSet::new, |renderer| {
         closure(graph, [renderer.to_owned()])
     }));
-    let mut modules = BTreeMap::new();
-    for module in exporters {
-        let story = stories.contains(module);
-        if (story && unnamed_preview) || (!story && unnamed_renderer) {
-            continue;
-        }
-        let common = if story { &preview } else { &renderer };
-        let extra = records.parts(additional(graph, [module.to_owned()], &common.members));
-        modules.insert(module.to_owned(), common.key(&extra, &shared));
-    }
-    Ok(modules)
+    let exporters = exporters
+        .into_iter()
+        .filter_map(|module| {
+            let story = stories.contains(module);
+            if (story && unnamed_preview) || (!story && unnamed_renderer) {
+                return None;
+            }
+            Some((module, if story { &preview } else { &renderer }))
+        })
+        .collect();
+    Ok(render_exporters::build(
+        graph, &records, &shared, exporters, workers,
+    ))
 }
 
 /// Whether a name is the manifest of a runtime package other than React.
@@ -257,6 +283,9 @@ mod render_fallback_tests;
 #[cfg(test)]
 #[path = "_tests_/render_inputs_tests.rs"]
 mod render_inputs_tests;
+#[cfg(test)]
+#[path = "_tests_/render_parallel_tests.rs"]
+mod render_parallel_tests;
 #[cfg(test)]
 #[path = "_tests_/render_reference.rs"]
 mod render_reference;

@@ -19,6 +19,7 @@ use mokly_graph::types::{
 };
 use mokly_graph::workers::{ComparisonTask, ComparisonWorker};
 use mokly_model::data::Props;
+use mokly_model::usage::CatalogueUsage;
 
 use crate::capture_fallback::RestoreFallback;
 use crate::capture_restore::DocumentRestorer;
@@ -58,6 +59,12 @@ impl GeneratedResources for CapturedGeneration {
 }
 
 impl RenderGeneration for CapturedGeneration {
+    fn comparison_usage(&self, route: &str) -> Result<Option<CatalogueUsage>> {
+        if let Some(view) = self.views.get(route) {
+            return Ok(view.document.usage().cloned());
+        }
+        self.source.comparison_usage(route)
+    }
     fn comparison_parallelism(&self) -> usize {
         self.source.comparison_parallelism()
     }

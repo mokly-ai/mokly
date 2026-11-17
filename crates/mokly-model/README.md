@@ -182,7 +182,8 @@ cargo xtask generate-types
 - [`src/versions.rs`](./src/versions.rs) holds every independent format
   number, such as `CATALOGUE_INDEX` and `ENTRY_DETAIL`.
 - [`src/canonical.rs`](./src/canonical.rs) provides `to_string`, the
-  canonical JSON encoder.
+  canonical JSON encoder, and `detail_preimage`, the zeroed canonical bytes
+  shared by detail hashing and Serve publication.
 - [`src/validation.rs`](./src/validation.rs) defines `PropValidator`, the one
   validator for the `PropSchema` profile of
   [`src/prop_schema.rs`](./src/prop_schema.rs) and for complete props.

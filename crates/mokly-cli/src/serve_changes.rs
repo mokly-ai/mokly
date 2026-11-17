@@ -23,6 +23,7 @@ use mokly_server::changes::{
 use mokly_server::comparison_graph::FrozenResources;
 use mokly_server::error::{Result, ServerError};
 
+use crate::serve_base::BaseSlot;
 use crate::serve_capture_cancel::{CaptureCancellation, CaptureScopes};
 use crate::serve_git::GitWork;
 use crate::serve_pool::PoolScheduling;
@@ -41,6 +42,8 @@ pub(super) trait ChangeSources: Send + Sync {
 
 #[derive(Clone)]
 pub(super) struct ServeChanges {
+    /// All source generations share one optional captured base.
+    pub(super) kept_base: Arc<BaseSlot>,
     pub(super) sidecars: Arc<dyn PoolScheduling>,
     pub(super) progress: Arc<dyn Progress>,
     pub(super) refreshes: Arc<dyn GitRefresh>,
