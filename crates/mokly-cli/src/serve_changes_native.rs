@@ -10,7 +10,7 @@ use mokly_compare::comparison::Engine;
 use mokly_compare::comparison_types::ComparisonResult;
 use mokly_compare::moves::Detector;
 use mokly_css::parsed_cache::MemoryParsedCss;
-use mokly_git::command::Request;
+use mokly_git::command::{ProcessMode, Request};
 use mokly_git::disk::SystemDisk;
 use mokly_git::repository::GitRepositories;
 use mokly_git::tree::Limits;
@@ -41,6 +41,7 @@ impl Source {
             selected_base(&self.config, self.services.base.as_deref()),
         ] {
             let request = Request {
+                process_mode: ProcessMode::PlainGroup,
                 directory: self.config.repo_root.clone(),
                 args: [
                     "--no-optional-locks",
@@ -71,6 +72,7 @@ impl Source {
             return Ok(base.clone());
         }
         let request = Request {
+            process_mode: ProcessMode::PlainGroup,
             directory: self.config.repo_root.clone(),
             args: ["--no-optional-locks", "merge-base"]
                 .into_iter()

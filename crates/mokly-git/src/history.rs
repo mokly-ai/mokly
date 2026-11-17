@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 
 use crate::changes::{self, Change, ChangedPath, Kind};
-use crate::command::DEFAULT_OUTPUT_LIMIT;
+use crate::command::{DEFAULT_OUTPUT_LIMIT, ProcessMode};
 use crate::error::{Error, Result};
 use crate::identity::ObjectId;
 use crate::repository::GitRepository;
@@ -16,13 +16,19 @@ impl GitRepository {
     /// as in unrelated or shallow histories, and maps to `NoMergeBase`.
     pub(crate) fn merge_base_of(&self, base: &str) -> Result<ObjectId> {
         let reference = format!("{base}^{{commit}}");
-        let resolved = self.command(
+        let resolved = self.command_with_mode(
+            ProcessMode::PlainGroup,
             &["rev-parse", "--verify", "--end-of-options", &reference],
             vec![],
             1024,
         )?;
         let resolved = ObjectId::parse(text(&resolved)?.trim())?;
-        match self.command(&["merge-base", resolved.as_str(), "HEAD"], vec![], 1024) {
+        match self.command_with_mode(
+            ProcessMode::PlainGroup,
+            &["merge-base", resolved.as_str(), "HEAD"],
+            vec![],
+            1024,
+        ) {
             Ok(output) => ObjectId::parse(text(&output)?.trim()),
             Err(Error::CommandFailed {
                 status: Some(1), ..

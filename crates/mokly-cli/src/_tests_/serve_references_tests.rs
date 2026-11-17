@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 use mokly_cli::cancellation::ServeCancellation;
 use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
-use mokly_git::command::{Output, Runner, RunnerMock};
+use mokly_git::command::{Output, ProcessMode, Runner, RunnerMock};
 use mokly_render::runtime::Runtime;
 use mokly_server::changes::{ChangeSource, ChangeToken};
 use unimock::{MockFn, Unimock, matching};
@@ -28,7 +28,7 @@ fn moved_and_restored_tips_keep_the_resolved_merge_base_identity() {
     );
     let runner: Arc<dyn Runner> = Arc::new(Unimock::new(
         RunnerMock::run
-            .each_call(matching!(_))
+            .each_call(matching!((request) if request.process_mode == ProcessMode::PlainGroup))
             .answers_arc(Arc::new(move |_, request| {
                 observed.lock().unwrap().push(request.args.clone());
                 Ok(Output {

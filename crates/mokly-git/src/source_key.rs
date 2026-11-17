@@ -2,7 +2,7 @@
 
 use sha2::{Digest, Sha256};
 
-use crate::command::DEFAULT_OUTPUT_LIMIT;
+use crate::command::{DEFAULT_OUTPUT_LIMIT, ProcessMode};
 use crate::error::{IoResult, Result};
 use crate::identity::ObjectId;
 use crate::repository::{GitRepository, Repository};
@@ -10,7 +10,8 @@ use crate::tree::Limits;
 
 impl GitRepository {
     pub(crate) fn checkout_key(&self, commit: &ObjectId) -> Result<String> {
-        let config = self.command(
+        let config = self.command_with_mode(
+            ProcessMode::PlainGroup,
             &["config", "--null", "--list", "--includes"],
             vec![],
             DEFAULT_OUTPUT_LIMIT,
@@ -21,7 +22,8 @@ impl GitRepository {
             input.extend_from_slice(entry.path.as_str().as_bytes());
             input.push(0);
         }
-        let attributes = self.command(
+        let attributes = self.command_with_mode(
+            ProcessMode::PlainGroup,
             &[
                 &format!("--attr-source={commit}"),
                 "check-attr",

@@ -4,7 +4,9 @@ use std::collections::BTreeSet;
 use std::ffi::OsString;
 use std::time::Duration;
 
-use crate::command::{Cancellation, DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Request};
+use crate::command::{
+    Cancellation, DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, ProcessMode, Request,
+};
 use crate::error::{Error, Result};
 use crate::identity::ObjectId;
 use crate::repository::GitRepository;
@@ -40,7 +42,8 @@ impl GitRepository {
             .map(|id| format!("{id}\n"))
             .collect::<String>()
             .into_bytes();
-        let output = self.command(
+        let output = self.command_with_mode(
+            ProcessMode::PlainGroup,
             &[
                 "rev-list",
                 "--objects",
@@ -69,6 +72,7 @@ impl GitRepository {
         let mut last = None;
         for remote in remotes {
             let request = Request {
+                process_mode: Default::default(),
                 directory: self.directory.clone(),
                 args: [
                     "--no-optional-locks",
@@ -116,7 +120,8 @@ impl GitRepository {
     }
 
     fn promisor_remotes(&self) -> Result<Vec<String>> {
-        let output = match self.command(
+        let output = match self.command_with_mode(
+            ProcessMode::PlainGroup,
             &["config", "--null", "--get-regexp", "remote\\..*\\.promisor"],
             vec![],
             DEFAULT_OUTPUT_LIMIT,
