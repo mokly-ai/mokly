@@ -5,8 +5,8 @@ its traits to prepare a Git base, compare annotated documents, attribute
 component impact, and retain the review result and the change snapshot. Its
 base preparation also leases extracted sources and selects sidecar
 dependencies. `mokly-git` owns Git IO. `mokly-platform` owns locks and process
-groups. `mokly-sidecar` owns the bundle settings type. `mokly-render` renders
-both sides. `mokly-server` and `mokly-static` publish the retained result.
+groups. `mokly-sidecar` owns the bundle settings type and the bundle store
+boundary, which this crate implements. `mokly-render` renders both sides. `mokly-server` and `mokly-static` publish the retained result.
 
 ## Responsibilities
 
@@ -19,7 +19,8 @@ both sides. `mokly-server` and `mokly-static` publish the retained result.
 - Share public index state, eligibility, workspace lists, and input-change projection.
 - Read checkout-converted base files with preserved POSIX paths.
 - Extract JavaScript sources only when a caller requests them.
-- Store source and dependency caches outside the repository.
+- Store source, dependency, and bundle caches outside the repository.
+- Implement the sidecar's bundle store over the bounded `bundles` kind.
 - Bound cache bytes, retain active leases, and evict the least used entries.
 - Compare all package manifests and lockfiles before dependency selection.
 - Install base dependencies with scripts disabled by default, a deadline, and a
@@ -56,15 +57,39 @@ needs files on disk. Its `review.base-extraction` span times the source key,
 the cache lookup, and a build, and records `action`: `reuse` for a complete
 entry and `extract` for a build. `Extraction::existing` and `Cache::lease`
 lease a complete entry without a build, so base preparation can read an
-earlier extraction before it knows whether the base needs one. `DiskCache` keeps the source and dependency namespaces
-under the directory that `SystemLocations` selects, with OS locks for
-namespace mutation and entry leases. When `SystemLocations` checks that the
+earlier extraction before it knows whether the base needs one. `DiskCache` keeps the source, dependency, and bundle
+namespaces under the directory that `SystemLocations` selects, with OS locks
+for namespace mutation and entry leases. When `SystemLocations` checks that the
 cache lies outside the repository, it compares both paths in one form,
 without a Windows verbatim drive or network prefix. The
 [base cache contract](../../docs/protocol/mokly-base-cache.md) owns the
 location, the byte bounds, the receipts, the leases, and eviction. The CLI
-shares one `OnceReporter` across both namespaces and uses `plain_line` for the
-exact cache announcement.
+shares one `OnceReporter` across the namespaces that it opens and uses
+`plain_line` for the exact cache announcement.
+
+`CachedBundles` implements the `BundleStore` of `mokly-sidecar` over a
+`dyn BundleCache`. `CachedBundles::new` takes that cache and the running Mokly
+version, and `settings_key` gives the entry key of one set of bundle settings.
+`DiskCache` implements `BundleCache` for the `bundles` kind of the same
+namespace. Each entry streams as one file through `BundleInput` and
+`RawEntry`, with bounded receipt and inventory values. The codec writes a
+versioned header line and a typed payload, hashes the payload while it
+streams, and checks the size of the whole file and of the exact
+`restoreGeneration` request against their limits. The inventory, storage, and
+receipt code confines every path, bounds each scan, writes durable receipts,
+and draws the publication nonce. No production caller uses this store yet.
+The
+[bundle cache contract](../../docs/protocol/mokly-base-cache.md#bundle-entries)
+owns the entry format, the fault classes, the locks, and the bound.
+
+`entry_lock_path` in `cache_lock.rs` maps each kind and key to its lock file
+in one place. The bundle kind uses 256 fixed stripes, selected by the first
+byte of the key. The source and dependency kinds keep one lock file for each
+key, because their callers wait for locks and hold long leases. A shared
+stripe there could make a build wait for an unrelated lease, or for its own.
+The stripe layout is fixed for the `bundles` directory, because every release
+must use the same lock file for an entry. A later layout needs a new
+directory.
 
 `DependencyTiers` implements `dyn Dependencies`. `InputReader` and
 `WorkingInputs` read manifests and lockfiles from the base blobs and from the
@@ -253,8 +278,25 @@ development dependencies, and no test uses the internet.
   `CachedExtraction`, the on-demand commit extraction.
 - [`src/cache.rs`](./src/cache.rs) and
   [`src/locations.rs`](./src/locations.rs) define `DiskCache`, the leased
-  source and dependency caches, and `SystemLocations`, which selects their
-  directory.
+  source and dependency caches and the `BundleCache` of the bundle kind, and
+  `SystemLocations`, which selects their directory.
+  [`src/cache_lock.rs`](./src/cache_lock.rs) holds the one lock-path mapping
+  of every kind.
+- [`src/bundle_store.rs`](./src/bundle_store.rs) defines `CachedBundles`, the
+  `BundleStore` implementation, and `settings_key`, the entry key of one set
+  of bundle settings.
+- [`src/bundle_cache_types.rs`](./src/bundle_cache_types.rs) defines
+  `BundleCache`, the streaming `BundleInput` and `RawEntry`, and the bounded
+  receipt and inventory values. `DiskCache` implements `BundleCache` in the
+  private [`src/bundle_cache.rs`](./src/bundle_cache.rs) module and its read,
+  write, and maintenance modules.
+- [`src/bundle_codec.rs`](./src/bundle_codec.rs) and its read and write
+  modules encode the versioned header and the typed payload, stream the
+  hashes, and check the file and request sizes.
+- [`src/bundle_inventory.rs`](./src/bundle_inventory.rs),
+  [`src/bundle_storage.rs`](./src/bundle_storage.rs), and
+  [`src/bundle_receipts.rs`](./src/bundle_receipts.rs) hold the confined IO,
+  the bounded scans, the durable receipts, and the publication nonce.
 - [`src/dependencies.rs`](./src/dependencies.rs) and
   [`src/dependency_types.rs`](./src/dependency_types.rs) define
   `Dependencies`, `DependencyTiers`, `Request`, and `Resolved`, the dependency

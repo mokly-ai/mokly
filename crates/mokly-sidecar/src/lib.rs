@@ -3,6 +3,8 @@
 #![warn(unreachable_pub)]
 
 pub mod bindings;
+pub mod bundle_outcomes;
+pub mod bundle_store;
 pub mod client;
 pub mod codec;
 pub mod compiled;
@@ -46,6 +48,7 @@ mod process_worker;
 pub mod render_records;
 mod request_display;
 pub mod results;
+pub mod reusable_recipe;
 pub mod typescript;
 pub mod usage;
 pub mod wire;

@@ -12,6 +12,8 @@ The Node implementation lives in `@mokly/mokly`.
 - Start Node lazily and require an exact-version hello.
 - Queue requests fairly and spread independent calls across the pool.
 - Enforce deadlines, retry, recycling, and bounded shutdown.
+- Define the bundle store boundary and the outcomes of compiled recipes that
+  outlive a process.
 
 ## What This Crate Does
 
@@ -69,6 +71,23 @@ call loads stored entries. Replays of live generations never do.
 `shutdown`, `abort`, and `cancel_requests` clear the store. A late release
 cannot refill a stopped pool. The store writes no file. It adds no
 configuration, terminal output, operation event, or timing name.
+
+`BundleStore` is the boundary of the bundle cache, which keeps compiled
+recipes across processes. `load` returns a `ReadOutcome`. A hit holds the
+`ReusableRecipe`, the `RecordToken` of its publication, and the outcome of its
+access-order maintenance. A miss names its reason. A rejection holds the entry
+fault and the outcome of one attempt to remove the rejected entry. `save`
+publishes a `ReusableRecipe`, and `invalidate` removes only the publication
+that a `RecordToken` names. Both return a `WriteOutcome`. The `effects` method
+of each outcome maps it once to its `Effects`: the `cache` value of the timing
+record, at most one entry warning and one directory warning, and the
+`StoreState`. `ReusableRecipe::new` accepts only a compilation with complete
+reuse evidence, and `disk_seed_request` builds the `restoreGeneration` request
+of a stored recipe. Live generations keep their `CompiledGeneration` for
+explicit restoration. `mokly-compare` implements the store over the OS cache.
+The pool does not call it yet. The
+[bundle cache contract](../../docs/protocol/mokly-base-cache.md#bundle-entries)
+owns the entry, fault, and lock rules.
 
 Bundle results include the digests of the bytes consumed by each module. An
 optional evaluation digest isolates CSS Modules and resolved configuration
@@ -217,6 +236,15 @@ spawn the built sidecar and render a component, screen, story, and page. The
   final release in that store, and
   [`src/pool_preparation.rs`](./src/pool_preparation.rs) selects the seeds
   of each `bundle` call.
+- [`src/bundle_store.rs`](./src/bundle_store.rs) defines `BundleStore` with
+  `load`, `save`, and `invalidate`, its `ReadOutcome` and `WriteOutcome`, and
+  `RecordToken`, the id of one publication.
+- [`src/bundle_outcomes.rs`](./src/bundle_outcomes.rs) defines `Effects` and
+  `StoreState`, the one exhaustive mapping of each store outcome to its timing
+  value, its warnings, and the store state.
+- [`src/reusable_recipe.rs`](./src/reusable_recipe.rs) defines
+  `ReusableRecipe`, which admits only complete reuse evidence, and
+  `disk_seed_request`, the restore request of a stored recipe.
 - [`src/process_factory.rs`](./src/process_factory.rs) defines `NodeFactory`,
   the `WorkerFactory` that starts Node with whole-tree ownership.
 - [`src/process_environment.rs`](./src/process_environment.rs) holds the pure
@@ -243,6 +271,7 @@ spawn the built sidecar and render a component, screen, story, and page. The
 ### Related Docs
 
 - [Sidecar contract](../../docs/protocol/mokly-sidecar.md).
+- [Bundle cache entries](../../docs/protocol/mokly-base-cache.md#bundle-entries).
 - [Cancellation and timeouts](../../docs/protocol/mokly-sidecar-lifecycle.md).
 - [Memory sampling](../../docs/protocol/mokly-sidecar-memory.md).
 - [Timing records](../../docs/protocol/mokly-sidecar-timings.md).

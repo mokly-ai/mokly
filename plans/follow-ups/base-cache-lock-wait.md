@@ -5,9 +5,9 @@
 - **Added:** 2026-11-16, from the options check of design calls 14 to 19 of
   the bundle disk cache plan on branch `calummoore/lisbon-h906`. The check
   put this problem outside the scope of that change.
-- **Location:** `crates/mokly-compare/src/cache.rs:36` to line 50,
-  `crates/mokly-compare/src/cache.rs:61`, `:67`, `:116`, and `:140`,
-  `crates/mokly-compare/src/cache_transient.rs:16`, and
+- **Location:** `crates/mokly-compare/src/cache.rs:38` to line 52,
+  `crates/mokly-compare/src/cache.rs:63`, `:69`, `:115`, and `:140`,
+  `crates/mokly-compare/src/cache_transient.rs:17`, and
   `crates/mokly-compare/src/dependencies.rs:104`.
 - **Reason:** The wait predates the bundle disk cache change, and every fix
   changes a base cache rule or the terminal output, which needs the user.
@@ -28,21 +28,25 @@
     without ending it, for example after Ctrl+Z in a shell, a `SIGSTOP`, or a
     debugger pause. It keeps every file lock that it holds.
 - **Background:**
-  - `DiskCache::lock` in `crates/mokly-compare/src/cache.rs:36` to line 50
+  - `DiskCache::lock` in `crates/mokly-compare/src/cache.rs:38` to line 52
     tries the lock. When another holder has it, the loop pauses 5 ms and tries
     again. The loop has no time limit. Only `check()`, which reads the cache's
     cancellation, ends it with `Error::Cancelled`.
   - These steps wait in that loop:
-    - `hit` takes the shared entry lock at `cache.rs:61`, then the namespace
-      lock at `cache.rs:67`. Both `get` and `lease`, the lookup without a
+    - `hit` takes the shared entry lock at `cache.rs:63`, then the namespace
+      lock at `cache.rs:69`. Both `get` and `lease`, the lookup without a
       build, run `hit`.
-    - `build` takes the namespace lock at `cache.rs:116` and at
+    - `build` takes the namespace lock at `cache.rs:115` and at
       `cache.rs:140`.
     - `transient` takes the namespace lock at
-      `crates/mokly-compare/src/cache_transient.rs:16`.
-  - `build` tries the entry lock once, at `cache.rs:100` to line 108. When
+      `crates/mokly-compare/src/cache_transient.rs:17`.
+  - `build` tries the entry lock once, at `cache.rs:102` to line 109. When
     another holder has it, `get` runs `hit` again, and `hit` waits for the
     shared entry lock.
+  - Each entry lock path comes from `entry_lock_path` in
+    `crates/mokly-compare/src/cache_lock.rs:9`, the one lock-path mapping of
+    every kind. It gives each source or dependency key its own lock file.
+    The bundle kind gets its fixed stripe files from the same function.
   - A shared lease of a damaged entry also blocks its repair. `get` then
     repeats `hit` and `build` until the lease ends, with the same cancellation
     as its only other exit.
@@ -144,6 +148,9 @@
   - [keep-base-side-in-memory.md](./keep-base-side-in-memory.md): a kept base
     would hold its shared leases longer. A repair of a damaged entry would
     then wait longer too.
+  - [base-cache-lock-file-growth.md](./base-cache-lock-file-growth.md): the
+    same lock code and its lock files. A fix of either item must keep the
+    rules of the other. Each item can merge alone.
 - **Recommendation:** B. It ends every wait with a result that the protocol
   already describes, at Medium effort. Its dependency half reuses the
   existing 120-second budget and fallback. D best avoids a fallback for a

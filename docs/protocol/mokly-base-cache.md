@@ -23,20 +23,21 @@ Source, dependency, and bundle namespaces have separate byte bounds. Each
 complete entry reserves 1,024 bytes for its receipt. Retained size counts
 regular-file bytes and link targets without following links. A hit checks the
 bounded completion receipt and recounts the data bytes. Only receipt schema 1 is
-valid; another schema or unknown field is incomplete. Source and dependency hits
-do not hash file contents: a durable completion receipt replaces repeated
-content verification. A completed entry survives a crash, because its data and
-directory metadata are durable before its receipt is published. A valid entry
-may retain consumer cache files as long as its recounted size fits the bound. An
-entry that exceeds the bound rebuilds.
+valid; another schema or unknown field is incomplete. A bundle receipt also
+holds a random 256-bit publication id from its write, and an access-order update
+keeps that id. Source and dependency hits do not hash file contents: a durable
+completion receipt replaces repeated content verification. A completed entry
+survives a crash, because its data and directory metadata are durable before its
+receipt is published. A valid entry may retain consumer cache files as long as
+its recounted size fits the bound. An entry that exceeds the bound rebuilds.
 
-Any number of callers may lease one completed entry. One caller at a time
-builds or repairs an entry. A caller that waits for that build uses the
-completed entry. An unfinished key does not block access to another key. A
-source or dependency lookup without a build leases a completed entry or
-returns nothing. It creates no directory, and it reports the cache directory
-only when it leases an entry. The first bundle lookup of a process reports the
-cache directory, also when it finds no entry.
+Any number of callers may lease one completed entry. One caller at a time builds
+or repairs an entry. A caller that waits for that build uses the completed
+entry. In the source and dependency kinds, an unfinished key does not block
+access to another key. A source or dependency lookup without a build leases a
+completed entry or returns nothing. It creates no directory, and it reports the
+cache directory only when it leases an entry. The first bundle lookup of a
+process reports the cache directory, also when it finds no entry.
 
 Shared leases and active builds are never evicted. Eviction removes the least
 recently used entries first. That order does not depend on wall-clock time. In
@@ -90,33 +91,40 @@ class:
 A damaged entry has a damaged receipt or first line, a wrong size or digest, a
 payload that does not parse, or settings that do not match its key. A stored
 compilation is damaged too when its `restoreGeneration` request returns an
-error, crashes the sidecar, or times out. A reuse check that declines a
-restored compilation, because its inputs changed, is a normal miss with no
-warning. The sidecar then compiles, and the new compilation replaces the entry
-when a write is allowed. A foreign entry has another format or Mokly version. An unreadable entry
-has a file that Mokly cannot read. A store fault is an error on a directory
-of the bundle namespace, a lock file, a staged write, a rename, or data that
-waits for deletion, during a read or a write. It makes the bundle cache directory
-unusable for the rest of the process. The
+error, crashes the sidecar, or times out. A reuse check that declines a restored
+compilation, because its inputs changed, is a normal miss with no warning. The
+sidecar then compiles, and the new compilation replaces the entry when a write
+is allowed. A foreign entry has another format or Mokly version. An unreadable
+entry has a file that Mokly cannot read. A store fault is an error on a
+directory of the bundle namespace, a lock file, a staged write, a rename, or
+data that waits for deletion, during a read or a write. It makes the bundle
+cache directory unusable for the rest of the process. The
 [cache warnings](./mokly-terminal-cache.md#cache-warnings) give the text of the
 entry warning and the directory warning.
 
-After an entry fault, Mokly tries once, without waiting, to remove the
-rejected entry. It removes the entry only when no other writer has replaced
-it. Then it compiles again and stores the new compilation, unless a normal
-event or a store fault prevents the write. The removal keeps a rejected entry
-from warning again when the new compilation cannot be stored. When the
-`restoreGeneration` request of a stored compilation fails, the request compiles
-without that stored compilation. A sidecar crash or timeout during the restore
-keeps only the existing
+After an entry fault, Mokly tries once, without waiting, to remove the rejected
+entry. It removes the entry only while the entry keeps the publication id that
+the read found, or while its receipt still does not mark it complete. A complete
+replacement by another writer stays. Then it compiles again and stores the new
+compilation, unless a normal event or a store fault prevents the write. The
+removal keeps a rejected entry from warning again when the new compilation
+cannot be stored. When the `restoreGeneration` request of a stored compilation
+fails, the request compiles without that stored compilation. A sidecar crash or
+timeout during the restore keeps only the existing
 [recovery](./mokly-sidecar.md#fail-closed-rules), and Mokly adds no retry. No
 bundle cache fault fails a command.
 
-A write replaces the entry of its settings under the entry lock, so no reader
-sees a partial entry. No bundle cache operation waits for a lock. A held lock
-skips a write, and a held entry lock turns a read into a miss. A read that
-cannot update the eviction order still serves its entry. A failure of the
-bundle cache, including a cancelled operation, never fails a bundle.
+Bundle entries share a fixed set of entry locks. A write replaces the entry of
+its settings under its entry lock, so no reader sees a partial entry. No bundle
+cache operation waits for a lock. A held lock skips a write, and a held entry
+lock turns a read into a miss, also when the holder works on another entry that
+shares the lock. A read that cannot update the eviction order still serves its
+entry. A failure of the bundle cache, including a cancelled operation, never
+fails a bundle.
+Decision: a fixed set of entry locks bounds the lock files of the bundle kind. A
+lock file for each set of settings was rejected, because the files grow with
+each new source root, and deleting one can split one lock between two files. One
+lock for all entries was rejected, because it adds contention.
 
 The bundle namespace [bound](./mokly-timings.md#budgets) counts complete
 entries, the staged writes of every process, and replaced or evicted data that

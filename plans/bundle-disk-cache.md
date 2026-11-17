@@ -1124,21 +1124,25 @@ Evidence: `.context/bundle-disk-cache/reports/milestone-2.md` and
 
 Depends on: 1, 2
 
-- [ ] Define the `BundleStore` boundary and its outcome type in
+- [x] Define the `BundleStore` boundary and its outcome type in
       `crates/mokly-sidecar`. Apply call 20 D to reads, writes, rejected-entry
       retirement, warnings, cancellation, and normal contention. Define the
       reusable-recipe type of call 23 B for the write boundary.
-- [ ] Add the `bundles` kind with its 512 MiB bound, the replace operation
+- [x] Add the `bundles` kind with its 512 MiB bound, the replace operation
       under the entry lock, the entry codec version 1 with the format
       version, the Mokly version, and the payload digest, and the store over
       the cache in `crates/mokly-compare`. Apply call 21 D to the whole stored
       file and the actual encoded disk-seed request, before every write.
-- [ ] Tests: an entry of another format or Mokly version that the reader
+- [x] Tests: an entry of another format or Mokly version that the reader
       rejects before the payload, a damaged entry, two writers of one key
       that never expose a partial entry, and a replace past the bound that
       evicts the least recently used other entry. See each fail first.
-- [ ] Update `crates/mokly-compare/README.md` and
+- [x] Update `crates/mokly-compare/README.md` and
       `crates/mokly-sidecar/README.md`.
+
+Evidence: `.context/bundle-disk-cache/reports/milestone-3.md`,
+`.context/bundle-disk-cache/reports/m3-readmes-docs.md`, and
+`.context/bundle-disk-cache/reports/m3-followup-locations.md`.
 
 ## Milestone 4: Pool restore, write, composition, output, and timing
 

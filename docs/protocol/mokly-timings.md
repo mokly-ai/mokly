@@ -116,7 +116,7 @@ serves it. So its `cache` field names the outcome of the request, and the
 - `damaged`: the bundle cache entry is damaged or unreadable, or holds other
   settings.
 - `unavailable`: the bundle cache directory is unusable, or another caller
-  holds the entry lock.
+  holds the entry lock, also while it works on another entry that shares it.
 
 The sidecar compiled for every value except `memory` and `hit`. A reuse inside
 the core sends no `bundle` request, so it makes no `catalogue.bundle` span.
