@@ -18,7 +18,10 @@ use super::{Application, Cli, Command, Xtask};
 
 #[test]
 fn parses_every_verification_suite() {
-    for suite in ["repository", "viewer", "browser", "native"] {
+    for suite in ["repository", "viewer", "browser", "native"]
+        .into_iter()
+        .chain(VerificationSuite::CLOUD.map(VerificationSuite::as_str))
+    {
         let cli =
             Cli::try_parse_from(["xtask", "check", "--suite", suite]).expect("known suite parses");
         let Command::Check {

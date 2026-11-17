@@ -25,3 +25,11 @@ uuid = { version = "1.29.3", features = ["v4"] }
 
 [lints]
 workspace = true
+
+[[test]]
+name = "cli"
+path = "tests/cli/mod.rs"
+
+[dev-dependencies]
+tempfile = "3.27.0"
+tiny_http = "0.12.0"

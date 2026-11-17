@@ -71,6 +71,7 @@ fn repository_commands(dependency_audit: DependencyAudit) -> Vec<CommandSpec> {
         cargo(&["fmt", "--all", "--", "--check"]),
         rust_clippy(),
         design_matrix_clippy(),
+        cargo(&["xtask", "build-native"]),
         npm(&["run", "build", "--workspace", "@mokly/ui"]),
         npm(&["run", "build", "--workspace", "@mokly/model"]),
         npm(&["run", "build", "--workspace", "@mokly/frame"]),

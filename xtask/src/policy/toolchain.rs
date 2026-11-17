@@ -13,6 +13,10 @@ pub(super) struct ToolchainCheck {
     pub(super) environment: Arc<dyn Environment>,
 }
 
+#[cfg(test)]
+#[path = "_tests_/toolchain_tests.rs"]
+mod toolchain_tests;
+
 impl ToolchainCheck {
     pub(super) fn check(&self) -> Result<()> {
         let environment = self.environment.as_ref();

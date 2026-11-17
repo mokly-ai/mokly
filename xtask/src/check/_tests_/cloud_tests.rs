@@ -53,6 +53,28 @@ fn app_shards_build_independently_and_run_logic_only_on_the_first_shard() {
 }
 
 #[test]
+fn app_stage_clears_an_inherited_shard() {
+    let commands = commands_for(VerificationSuite::CloudApp, None, DependencyAudit::Baseline);
+    assert_eq!(
+        commands.last(),
+        Some(
+            &CommandSpec::new("npm")
+                .args(["run", "test:browser", "--workspace", "@mokly-cloud/app"])
+                .with_environment("MKC_APP_SHARD", None)
+                .with_environment("CI", Some("1"))
+                .reject_skips()
+        )
+    );
+    assert_eq!(
+        commands
+            .iter()
+            .filter(|command| command.display().contains("test:logic"))
+            .count(),
+        1
+    );
+}
+
+#[test]
 fn fixture_suite_builds_workspace_mokly_before_the_drift_check_and_dogfood() {
     let actual = commands_for(
         VerificationSuite::CloudFixtures,

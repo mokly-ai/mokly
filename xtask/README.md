@@ -1,7 +1,7 @@
 # Mokly xtask
 
 `xtask` owns repository-local verification for Mokly and Mokly Cloud. It is an
-internal binary and is not published to npm or crates.io.
+internal task runner and is not published to npm or crates.io.
 
 ## Responsibilities
 
@@ -263,9 +263,14 @@ commands use `target/`, and native artifact builds use `target/native/`.
 These separate directories prevent workspace tests from replacing the running
 xtask executable on Windows.
 
+The CLI integration fixtures use the built workspace packages and host native
+binary. After `npm ci`, prepare those outputs before standalone crate tests.
+Repository and Native prepare these outputs before their Rust tests.
+
 Run the crate tests directly when you change command orchestration:
 
 ```bash
+npm run build
 cargo test -p xtask
 cargo fmt --all -- --check
 cargo clippy -p xtask --all-targets -- -D warnings
@@ -286,9 +291,13 @@ code.
 
 ### Key Code
 
+- [`src/lib.rs`](./src/lib.rs) owns the internal library. The thin
+  [`src/main.rs`](./src/main.rs) calls its CLI entry point.
 - [`src/artifacts.rs`](./src/artifacts.rs) owns native package builds,
   generated TypeScript, and the standalone generated-byte check.
 - [`src/cli.rs`](./src/cli.rs) parses and dispatches commands.
+  Its `run_at` entry point supplies a workspace to isolated integration
+  fixtures. The binary retains its build-time workspace root.
   [`src/application.rs`](./src/application.rs) selects the effective
   executor, and [`src/executor.rs`](./src/executor.rs) parses executor modes
   and flag precedence.

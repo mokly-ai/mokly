@@ -22,8 +22,8 @@ The repository suite runs these checks in this order:
 12. Rust formatting for every crate.
 13. Clippy with warnings denied for `mokly-*` and `xtask`.
 14. Clippy with warnings denied for the `mokly-cli` `design-matrix` feature.
-15. The `@mokly/ui`, `@mokly/model`, `@mokly/frame`, `@mokly/viewer`, and
-    `@mokly/mokly` builds, in that order.
+15. `cargo xtask build-native`, then the `@mokly/ui`, `@mokly/model`,
+    `@mokly/frame`, `@mokly/viewer`, and `@mokly/mokly` builds, in that order.
 16. The Rust tests of `mokly-*` and `xtask`.
 17. The Rust file-length audit of every crate and xtask.
 
@@ -53,9 +53,11 @@ Generated TypeScript must match the Rust-owned types byte for byte. Missing,
 changed, or extra generated files fail the repository suite and its CI job.
 The check writes no files. Authors regenerate and commit changed output.
 
-The repository and native suites build the five JavaScript packages in the
-order of item 15 before the Mokly Rust tests. The real sidecar smoke tests
-require these fresh package outputs on every host, including a clean checkout.
+The repository and native suites build the host native package and the five
+JavaScript packages in the order of item 15 before the Mokly Rust tests. The
+real sidecar smoke tests and the `xtask` fixtures that run the workspace
+`mokly` command require these fresh outputs on every host, including a clean
+checkout.
 
 Every xtask subprocess starts at the workspace root, even when xtask starts
 elsewhere.
