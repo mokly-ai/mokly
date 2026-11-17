@@ -1,23 +1,15 @@
-import type { ElementHandle, Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
-import {
-  fillPullRequest,
-  installedRepository,
-  suspendInstallation,
-} from "./database-fixture";
-import {
-  createProject,
-  currentWorkspaceId,
-  expect,
-  failWith,
-  freshEmail,
-  open,
-  workspaceAddress,
-  publicationPathFor,
-  signIn,
-  test,
-} from "./harness";
+import { publicationPathFor } from "./addresses";
+import { fillPullRequest } from "./database-fixture";
+import { expect, freshEmail, open, signIn, test } from "./harness";
+import { createProject } from "./project-setup";
 import { createToken, publish } from "./publish";
+import {
+  holdCatalogueHandoff,
+  openHeldViewer,
+  openShareFromMore,
+} from "./viewer/compact-handoff";
 import { publishedViewerReady, publishedProject } from "./viewer/support";
 import { pressWrite } from "./writes";
 
@@ -32,96 +24,6 @@ function sidewaysOverflow(page: Page): Promise<number> {
 
 /** The two widths the viewer protocol names: legible at 390px, usable at 320px. */
 const mobileWidths = [390, 320];
-
-function requestGate() {
-  let release: () => void = () => undefined;
-  let seen = false;
-  const pending = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  return {
-    hold: async () => {
-      seen = true;
-      await pending;
-    },
-    release: () => release(),
-    seen: () => seen,
-  };
-}
-
-async function holdCatalogueHandoff(page: Page, catalogueUrl: string) {
-  const catalogueOrigin = new URL(catalogueUrl).origin;
-  const access = requestGate();
-  const catalogue = requestGate();
-  await page.route(
-    (url) => url.origin === catalogueOrigin && url.pathname === "/",
-    async (route) => {
-      await access.hold();
-      await route.continue();
-    },
-  );
-  await page.route("**/mokly-viewer/index.json", async (route) => {
-    await catalogue.hold();
-    await route.continue();
-  });
-  return { access, catalogue, catalogueOrigin };
-}
-
-/**
- * Let the package become ready while the press is held: the access exchange,
- * then the host's index read. The press keeps the fallback control it began
- * on until the activation concludes.
- */
-async function releaseAccessDuringCompactPress(
-  page: Page,
-  previous: ElementHandle<HTMLElement | SVGElement>,
-  handoff: Awaited<ReturnType<typeof holdCatalogueHandoff>>,
-): Promise<void> {
-  const confirmed = page.waitForResponse((response) => {
-    const url = new URL(response.url());
-    return url.origin === handoff.catalogueOrigin && url.pathname === "/";
-  });
-  const indexed = page.waitForResponse((response) => {
-    const url = new URL(response.url());
-    return (
-      url.origin === handoff.catalogueOrigin &&
-      url.pathname === "/mokly-viewer/index.json"
-    );
-  });
-  handoff.access.release();
-  await confirmed;
-  await expect.poll(handoff.catalogue.seen).toBe(true);
-  handoff.catalogue.release();
-  await indexed;
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve) => {
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-      }),
-  );
-  expect(await previous.evaluate((element) => element.isConnected)).toBe(true);
-  await expect(page.getByTestId("viewer-more")).toBeVisible();
-}
-
-async function openHeldViewer(
-  page: Page,
-  path: string,
-  accessSeen: () => boolean,
-): Promise<void> {
-  await open(page, path);
-  await expect(page.getByTestId("viewer-publication")).toContainText("main");
-  await expect.poll(accessSeen).toBe(true);
-}
-
-async function openShareFromMore(page: Page) {
-  await page.getByTestId("viewer-more").click();
-  const menu = page.getByRole("menu", { name: "Viewer actions" });
-  await expect(menu).toBeVisible();
-  await menu.getByText("Share", { exact: true }).click();
-  const panel = page.getByTestId("viewer-panel-share");
-  await expect(panel).toBeVisible();
-  return panel;
-}
 
 test("the compact bar keeps every action in More and a panel is a sheet", async ({
   page,
@@ -161,119 +63,6 @@ test("the compact bar keeps every action in More and a panel is a sheet", async 
     .poll(async () => (await more.boundingBox())?.height ?? 0)
     .toBeGreaterThanOrEqual(44);
   await expect(page.getByTestId("viewer-more")).toBeFocused();
-});
-
-test("a late package slot does not take deliberately moved focus", async ({
-  page,
-}) => {
-  const made = await publishedProject(page, "compact-focus-moved");
-  const handoff = await holdCatalogueHandoff(page, made.catalogueUrl as string);
-  await openHeldViewer(page, made.publicationPath, handoff.access.seen);
-  const panel = await openShareFromMore(page);
-  handoff.access.release();
-  await expect.poll(handoff.catalogue.seen).toBe(true);
-  await page.getByTestId("close-share").click();
-  await expect(panel).toHaveCount(0);
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve) => {
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-      }),
-  );
-
-  const destination = page
-    .getByRole("link", { name: "Skip to content" })
-    .first();
-  await destination.focus();
-  expect(
-    await destination.evaluate((element) => document.activeElement === element),
-  ).toBe(true);
-  handoff.catalogue.release();
-  await expect(page.locator("[data-mokly-shell]")).toBeVisible();
-  await expect(destination).toBeFocused();
-  await expect(page.getByTestId("viewer-more")).not.toBeFocused();
-});
-
-test("a later pointer action cancels the package slot restore", async ({
-  page,
-}) => {
-  const made = await publishedProject(page, "compact-pointer-moved");
-  const handoff = await holdCatalogueHandoff(page, made.catalogueUrl as string);
-  await openHeldViewer(page, made.publicationPath, handoff.access.seen);
-  const panel = await openShareFromMore(page);
-  handoff.access.release();
-  await expect.poll(handoff.catalogue.seen).toBe(true);
-  await page.getByTestId("close-share").click();
-  await expect(panel).toHaveCount(0);
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-
-  // A press on the stage's pending card, away from every slot, while the
-  // host still reads the index.
-  await page.getByText("Opening the catalogue").click();
-  handoff.catalogue.release();
-  await expect(page.locator("[data-mokly-shell]")).toBeVisible();
-  await expect(page.getByTestId("viewer-more")).not.toBeFocused();
-});
-
-test("a late package slot does not restore after leaving its path", async ({
-  page,
-}) => {
-  const made = await publishedProject(page, "compact-path-left");
-  const handoff = await holdCatalogueHandoff(page, made.catalogueUrl as string);
-  await openHeldViewer(page, made.publicationPath, handoff.access.seen);
-  const panel = await openShareFromMore(page);
-  handoff.access.release();
-  await expect.poll(handoff.catalogue.seen).toBe(true);
-  await page.getByTestId("close-share").click();
-  await expect(panel).toHaveCount(0);
-
-  await page.evaluate(() => window.history.pushState({}, "", "/focus-left"));
-  await expect(page).toHaveURL(/\/focus-left$/);
-  handoff.catalogue.release();
-  await expect(page.locator("[data-mokly-shell]")).toBeVisible();
-  await expect(page.getByTestId("viewer-more")).not.toBeFocused();
-});
-
-test("a More press survives the package slot handoff", async ({ page }) => {
-  const made = await publishedProject(page, "compact-more-handoff");
-  const handoff = await holdCatalogueHandoff(page, made.catalogueUrl as string);
-  await openHeldViewer(page, made.publicationPath, handoff.access.seen);
-  const historyLength = await page.evaluate(() => window.history.length);
-  const trigger = page.getByTestId("viewer-more");
-  const previous = await trigger.elementHandle();
-  expect(previous).not.toBeNull();
-  const before = await trigger.boundingBox();
-  expect(before).not.toBeNull();
-  await page.mouse.move(
-    (before?.x ?? 0) + (before?.width ?? 0) / 2,
-    (before?.y ?? 0) + (before?.height ?? 0) / 2,
-  );
-  await page.mouse.down();
-  await releaseAccessDuringCompactPress(
-    page,
-    previous as NonNullable<typeof previous>,
-    handoff,
-  );
-  const after = await page.getByTestId("viewer-more").boundingBox();
-  expect(after).not.toBeNull();
-  await page.mouse.move(
-    (after?.x ?? 0) + (after?.width ?? 0) / 2,
-    (after?.y ?? 0) + (after?.height ?? 0) / 2,
-  );
-  await page.mouse.up();
-
-  await expect.poll(handoff.catalogue.seen).toBe(true);
-  handoff.catalogue.release();
-  await publishedViewerReady(page);
-  const menu = page.getByRole("menu", { name: "Viewer actions" });
-  await expect(menu).toBeVisible();
-  await expect(menu).toHaveCount(1);
-  await menu.getByText("Share", { exact: true }).click();
-  await expect(page.getByTestId("viewer-panel-share")).toBeVisible();
-  expect(await page.evaluate(() => window.history.length)).toBe(
-    historyLength + 1,
-  );
 });
 
 test("the bar fits a person who has not set a name, at 320px", async ({
@@ -383,47 +172,4 @@ test("a reader who set a name is called by it, at every width", async ({
       ).toHaveCount(0);
     }
   }
-});
-
-test("an unavailable installation offers another attempt", async ({ page }) => {
-  await signIn(page, freshEmail("suspended-compact"));
-  await open(page, "/new");
-  await page.getByLabel("Workspace name").fill("Suspended Org");
-  await page.getByRole("button", { name: "Create workspace" }).click();
-  await page.waitForURL(/\/install/);
-
-  await failWith(
-    page,
-    "**/v1/github/installations",
-    "POST",
-    "operation-unavailable",
-  );
-  await page.getByTestId("install-app").click();
-  const refusal = page.getByTestId("install-refusal");
-  await expect(refusal).toBeVisible();
-  await expect(refusal).toContainText("App installation opens soon");
-  // No retry helps, so the refusal invents no retry time.
-  await expect(refusal).not.toContainText("Try again shortly.");
-  await expect(page.getByTestId("install-app")).toHaveText("Try again");
-});
-
-test("a suspended installation is kept out of the repository picker", async ({
-  page,
-}) => {
-  await signIn(page, freshEmail("picker-compact"));
-  const projectId = await createProject(page, "Picker Org");
-  const workspaceId = await currentWorkspaceId(page);
-  // A bound installation GitHub has suspended, exactly as reconciliation
-  // records one. A suspended installation reads no repository, so the step
-  // that would list them is not where the reader belongs.
-  suspendInstallation(workspaceId);
-
-  const workspace = await workspaceAddress(page, workspaceId);
-  await open(page, `${workspace.path}/-/new`);
-  await page.waitForURL((url) => url.pathname === "/install");
-  await expect(page.getByText(installedRepository)).toHaveCount(0);
-  await expect(
-    page.getByRole("link", { name: "Resume on GitHub" }),
-  ).toBeVisible();
-  expect(projectId.length).toBeGreaterThan(0);
 });

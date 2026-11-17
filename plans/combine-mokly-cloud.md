@@ -281,9 +281,9 @@ Depends on: 2
 
 - [ ] Fix every moved path and every link to `mokly-ai/mokly-cloud` in the
       docs, the READMEs, the follow-up items, and the scripts.
-- [ ] Merge the cloud plans and follow-up items into `plans/`. Rewrite each
+- [x] Merge the cloud plans and follow-up items into `plans/`. Rewrite each
       item whose subject the replaced ways remove.
-- [ ] Split each imported TypeScript or JavaScript file over 300 lines,
+- [x] Split each imported TypeScript or JavaScript file over 300 lines,
       except generated files, which the length audit excludes by path. Split
       each protocol page over 250 lines, or add its exact cap to
       `xtask/protocol-document-caps.json`.

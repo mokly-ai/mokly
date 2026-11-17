@@ -5,8 +5,8 @@
  */
 
 import type { SignInContent } from "./content";
-import { ActionRow, ExpiryRow, FallbackRow, HeadingRow } from "./document";
 import type { EmailBodyRenderProps, EmailDefinition } from "./document";
+import { ActionRow, ExpiryRow, FallbackRow, HeadingRow } from "./rows";
 
 const subject = "Sign in to Mokly";
 const action = "Sign in";

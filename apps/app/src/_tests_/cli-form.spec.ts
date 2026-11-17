@@ -2,14 +2,9 @@ import type { Page } from "@playwright/test";
 
 import { projectNameLimit } from "../screens/account/project-name";
 
-import {
-  expect,
-  freshEmail,
-  installApp,
-  signIn,
-  test,
-  workspaceAddress,
-} from "./harness";
+import { workspaceAddress } from "./addresses";
+import { installApp } from "./github-installation";
+import { expect, freshEmail, signIn, test } from "./harness";
 import { createWorkspace, expectCompletedSteps } from "./setup-walks";
 
 /**

@@ -2,15 +2,10 @@ import type { Page } from "@playwright/test";
 
 import { createWorkspacePath, installPath } from "../navigation/paths";
 
+import { workspaceSettingsPathFor } from "./addresses";
 import { secondInstallation } from "./database-fixture";
-import {
-  answerGitHubPages,
-  expect,
-  open,
-  ready,
-  startGitHubFlow,
-  workspaceSettingsPathFor,
-} from "./harness";
+import { answerGitHubPages, startGitHubFlow } from "./github-installation";
+import { expect, open, ready } from "./harness";
 
 /**
  * GitHub's setup return with no flow behind it, as Redirect on update sends it

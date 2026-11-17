@@ -1,13 +1,8 @@
 import type { Page } from "@playwright/test";
 
-import {
-  createProject,
-  expect,
-  freshEmail,
-  projectPathFor,
-  signIn,
-  test,
-} from "../harness";
+import { projectPathFor } from "../addresses";
+import { expect, freshEmail, signIn, test } from "../harness";
+import { createProject } from "../project-setup";
 
 /**
  * Every settings wait draws the layout that it waits for, as Wait in

@@ -1,6 +1,6 @@
 /** Validate situation ownership independently of the derived product inventory. */
 
-import { productFamilies } from "./product-situations";
+import { productFamilies } from "./product-families";
 
 export interface ProductSituationIdentity {
   path: string;

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { parityPages, sentences } from "./app-owners";
+import { parityPages } from "./app-owners";
 import {
   labelDivergences,
   pendingModeDivergences,
@@ -17,6 +17,7 @@ import {
 import type { PendingModeAllowance } from "./app-parity-allowances";
 import { announcerViolations, ownerViolations } from "./app-parity-owners";
 import { appSource, drawnLabels, unwrittenLabels } from "./app-parity-reads";
+import { sentences } from "./app-sentences";
 import { screenView } from "./catalogue-paths";
 import { inventoryPages } from "./product-inventory";
 

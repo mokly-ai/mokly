@@ -1,21 +1,22 @@
 import type { Page } from "@playwright/test";
 
+import { workspaceAddress, projectPathFor } from "./addresses";
 import { installedRepository, manageUrl } from "./database-fixture";
+import { installApp } from "./github-installation";
 import {
-  chooseRepository,
-  createProject,
   currentWorkspaceId,
   expect,
   freshEmail,
-  installApp,
   open,
-  workspaceAddress,
-  projectPathFor,
-  repositoryField,
   signIn,
   test,
 } from "./harness";
 import type { ApiBody } from "./harness";
+import {
+  chooseRepository,
+  createProject,
+  repositoryField,
+} from "./project-setup";
 
 test("onboarding creates a workspace and a project from a repository", async ({
   page,

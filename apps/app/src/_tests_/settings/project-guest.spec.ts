@@ -1,13 +1,7 @@
-import {
-  createProject,
-  expect,
-  freshEmail,
-  openDialog,
-  projectAddress,
-  signIn,
-  test,
-} from "../harness";
+import { projectAddress } from "../addresses";
+import { expect, freshEmail, openDialog, signIn, test } from "../harness";
 import { currentUserId, grantProject } from "../members";
+import { createProject } from "../project-setup";
 import { captureReadableAddress } from "../readable-addresses-support";
 
 test("a project-only guest sees project settings without workspace panes", async ({

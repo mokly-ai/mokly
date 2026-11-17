@@ -1,18 +1,15 @@
 import type { Page } from "@playwright/test";
 
+import { projectPathFor, projectQueryPathFor } from "./addresses";
+import { apiFailure } from "./api-responses";
 import { endSubscription, subscribe } from "./billing";
+import { installApp } from "./github-installation";
 import {
-  apiFailure,
-  chooseRepository,
-  createProject,
   currentWorkspaceId,
   expect,
   freshEmail,
-  installApp,
   open,
   openDialog,
-  projectPathFor,
-  projectQueryPathFor,
   readyScreen,
   signIn,
   test,
@@ -23,6 +20,7 @@ import {
   grantProject,
   switchSession,
 } from "./members";
+import { chooseRepository, createProject } from "./project-setup";
 import { setVisibility } from "./visibility";
 
 /** How the plan reads everywhere in the product outside the Billing pane. */

@@ -1,15 +1,15 @@
+import { workspaceSettingsPathFor } from "./addresses";
+import { failWith } from "./api-responses";
 import { periodEndsOn, subscribe } from "./billing";
 import {
-  createProject,
   currentWorkspaceId,
   expect,
-  failWith,
   freshEmail,
   open,
-  workspaceSettingsPathFor,
   signIn,
   test,
 } from "./harness";
+import { createProject } from "./project-setup";
 
 /** The Billing pane as a full-screen route, which is also Stripe's return. */
 

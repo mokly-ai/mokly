@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 
-import { expect, failWith, freshEmail, signIn, test } from "./harness";
+import { failWith } from "./api-responses";
+import { expect, freshEmail, signIn, test } from "./harness";
 
 /**
  * The workspace step's own write, refused: each refusal is reported beside

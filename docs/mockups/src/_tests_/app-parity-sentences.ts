@@ -2,8 +2,9 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { ownerOf, parityPages, repository } from "./app-owners";
-import type { ScreenId, SentenceDeclaration } from "./app-owners";
+import type { ScreenId } from "./app-owners";
 import { source } from "./app-parity-reads";
+import type { SentenceDeclaration } from "./app-sentences";
 import { outputRoot } from "./catalogue-paths";
 
 /** Where one declared sentence appears across a screen and its application. */

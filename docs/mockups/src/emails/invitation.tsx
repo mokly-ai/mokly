@@ -5,14 +5,8 @@
  */
 
 import type { InvitationContent } from "./content";
-import {
-  ActionRow,
-  ExpiryRow,
-  FallbackRow,
-  HeadingRow,
-  TextRow,
-} from "./document";
 import type { EmailBodyRenderProps, EmailDefinition } from "./document";
+import { ActionRow, ExpiryRow, FallbackRow, HeadingRow, TextRow } from "./rows";
 
 const action = "Accept invitation";
 const accept = "Sign in with this email address to accept";

@@ -3,14 +3,9 @@ import { resolve } from "node:path";
 
 import type { Page } from "@playwright/test";
 
-import {
-  currentWorkspaceId,
-  expect,
-  freshEmail,
-  installApp,
-  workspaceAddress,
-  signIn,
-} from "./harness";
+import { workspaceAddress } from "./addresses";
+import { installApp } from "./github-installation";
+import { currentWorkspaceId, expect, freshEmail, signIn } from "./harness";
 import { apiOrigin } from "./origins";
 
 /** A promise a routed response can hold until the test releases it. */

@@ -1,16 +1,10 @@
 import type { Page } from "@playwright/test";
 
 import { siteLinks } from "../../config";
-import {
-  createProject,
-  expect,
-  freshEmail,
-  open,
-  projectPathFor,
-  signIn,
-  test,
-} from "../harness";
+import { projectPathFor } from "../addresses";
+import { expect, freshEmail, open, signIn, test } from "../harness";
 import { appOrigin } from "../origins";
+import { createProject } from "../project-setup";
 
 /**
  * The CI setup guide Set up publishing opens. In a browser tab the public

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import type { FixtureBuild } from "../../../fixtures/builds";
+import type { FixtureBuild } from "../../../fixtures/build-types";
 import { failureReference } from "../../../fixtures/product-states";
 import { site } from "../../../fixtures/site";
 import { Action, ExternalLink, Pending, StateMessage } from "../page-parts";

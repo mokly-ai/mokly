@@ -1,17 +1,19 @@
 import {
-  createProject,
+  projectPathFor,
+  projectQueryPathFor,
+  projectSettingsPathFor,
+} from "../addresses";
+import {
   expect,
   freshEmail,
   leaveDocument,
   open,
   openDialog,
-  projectPathFor,
-  projectQueryPathFor,
-  projectSettingsPathFor,
   signIn,
   test,
   unloadGuard,
 } from "../harness";
+import { createProject } from "../project-setup";
 
 /** What the reader has typed, and what it takes to lose it. */
 

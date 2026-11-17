@@ -1,15 +1,15 @@
+import { projectPathFor } from "./addresses";
+import { installApp } from "./github-installation";
 import {
-  createProject,
   currentWorkspaceId,
   expect,
   freshEmail,
-  installApp,
   open,
-  projectPathFor,
   ready,
   signIn,
   test,
 } from "./harness";
+import { createProject } from "./project-setup";
 
 test("/dashboard sends an account with no workspace to the workspace step", async ({
   page,

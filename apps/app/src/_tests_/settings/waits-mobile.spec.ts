@@ -1,14 +1,14 @@
 import type { Page } from "@playwright/test";
 
+import { workspaceSettingsPathFor } from "../addresses";
 import {
-  createProject,
   currentWorkspaceId,
   expect,
   freshEmail,
   signIn,
   test,
-  workspaceSettingsPathFor,
 } from "../harness";
+import { createProject } from "../project-setup";
 
 /**
  * On a compact surface each pane is a full-screen layer, and while the

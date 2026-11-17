@@ -1,16 +1,15 @@
+import { projectPathFor, projectQueryPathFor } from "../addresses";
 import {
-  createProject,
   expect,
   freshEmail,
   leaveDocument,
   open,
   openDialog,
-  projectPathFor,
-  projectQueryPathFor,
   signIn,
   test,
   unloadGuard,
 } from "../harness";
+import { createProject } from "../project-setup";
 
 import { openDialogInApp } from "./in-app";
 

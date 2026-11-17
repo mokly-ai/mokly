@@ -2,11 +2,13 @@ import type { Page } from "@playwright/test";
 
 import { buildPath, branchPath, pullRequestPath } from "../navigation/paths";
 
+import { projectAddress } from "./addresses";
+import type { ProjectAddress } from "./addresses";
 import { buildDouble } from "./build-double";
 import type { BuildDouble } from "./build-double";
 import { routeBuilds } from "./build-routes";
-import { createProject, freshEmail, projectAddress, signIn } from "./harness";
-import type { ProjectAddress } from "./harness";
+import { freshEmail, signIn } from "./harness";
+import { createProject } from "./project-setup";
 
 /** One signed-in owner, their real project, and the double for its builds. */
 export interface BuildScenario {

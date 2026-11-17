@@ -1,12 +1,6 @@
-import {
-  createProject,
-  expect,
-  freshEmail,
-  openDialog,
-  projectQueryPathFor,
-  signIn,
-  test,
-} from "../harness";
+import { projectQueryPathFor } from "../addresses";
+import { expect, freshEmail, openDialog, signIn, test } from "../harness";
+import { createProject } from "../project-setup";
 
 /** The dialog's geometry under a window too short for its content. */
 

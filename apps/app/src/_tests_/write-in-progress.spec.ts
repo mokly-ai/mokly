@@ -2,17 +2,11 @@ import type { Page } from "@playwright/test";
 
 import { githubFlowKeys } from "../navigation/github-flow";
 
+import { countRequests } from "./api-responses";
 import { connection, githubState, json, storedFlow } from "./auth-callbacks";
 import { releaseRecordedGitHub } from "./database-fixture";
-import {
-  answerGitHubPages,
-  countRequests,
-  expect,
-  freshEmail,
-  open,
-  signIn,
-  test,
-} from "./harness";
+import { answerGitHubPages } from "./github-installation";
+import { expect, freshEmail, open, signIn, test } from "./harness";
 import { githubOrigin } from "./origins";
 
 /**

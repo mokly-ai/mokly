@@ -2,9 +2,10 @@ import type { Page } from "@playwright/test";
 
 import { settingsPath } from "../navigation/paths";
 
+import { apiFailure } from "./api-responses";
 import { write } from "./build-double";
 import { buildScenario } from "./build-scenario";
-import { apiFailure, expect, open, test } from "./harness";
+import { expect, open, test } from "./harness";
 import { branchRow, build, buildId, summary } from "./viewer/build-fixtures";
 import { pressWrite } from "./writes";
 

@@ -1,4 +1,5 @@
-import { expect, open, publicationPathFor, test } from "../harness";
+import { publicationPathFor } from "../addresses";
+import { expect, open, test } from "../harness";
 import { publish } from "../publish";
 
 import { makePublic, publishedViewerReady, publishedProject } from "./support";

@@ -1,12 +1,11 @@
 import { existsSync, mkdirSync, readdirSync } from "node:fs";
-import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
+import { dirname, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { tokens } from "@mokly-cloud/tokens/tokens";
 import { expect, test } from "@playwright/test";
-import type { Route } from "@playwright/test";
 
-import { VIEWER_DIRECTORY, currentDocumentPath } from "@mokly/viewer/data";
+import { currentDocumentPath } from "@mokly/viewer/data";
 
 import { currentScreen } from "../fixtures/viewer-catalogue";
 
@@ -23,6 +22,7 @@ import {
   controlPolicyInput,
 } from "./controls-document-policy";
 import { checkDiskOverlay } from "./disk-overlay-policy";
+import { serveOutput } from "./disk-requests";
 import { documentViolations } from "./document-policy";
 import { focusPolicyViolations } from "./focus-policy";
 import { inventoryPages } from "./product-inventory";
@@ -68,34 +68,6 @@ const files = readdirSync(resolve(outputRoot, repositoryFilePath("")), {
   .filter((path) => path.endsWith(".html"))
   .map((path) => repositoryFilePath(path.split(sep).join("/")))
   .sort();
-
-/**
- * Mokly's frame probe script, which the build injects into every document from
- * the site root (`mokly-published-frame-probe.md`). Opened from disk, that path
- * leaves the output, so the harness serves this one file from the output.
- */
-const frameProbe = VIEWER_DIRECTORY + "/client/frame-probe.js";
-
-/** Whether a file lies inside the output. */
-function insideOutput(file: string): boolean {
-  const local = relative(outputRoot, file);
-  return local !== "" && local.split(sep)[0] !== ".." && !isAbsolute(local);
-}
-
-/**
- * Answer one request of a document opened from disk: the frame probe from the
- * output, as a server at the output root would; any other file of the output
- * as it is; and nothing outside the output, so that the request fails and the
- * test reports it.
- */
-async function serveOutput(route: Route): Promise<void> {
-  const url = new URL(route.request().url());
-  if (url.href === pathToFileURL("/" + frameProbe).href)
-    return route.fulfill({ path: resolve(outputRoot, frameProbe) });
-  if (url.protocol === "file:" && insideOutput(fileURLToPath(url)))
-    return route.continue();
-  return route.abort("blockedbyclient");
-}
 
 /** Product states whose controls are drawn disabled on purpose. */
 const disabledStates = new Set(

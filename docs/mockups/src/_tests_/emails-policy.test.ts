@@ -6,12 +6,13 @@ import { test } from "node:test";
 import { paletteColors } from "@mokly-cloud/tokens/palettes";
 import { tokens } from "@mokly-cloud/tokens/tokens";
 
-import { logoFiles } from "../emails/document";
+import { logoFiles } from "../emails/brand";
 import { canvasGradient, emailStyles } from "../emails/styles";
 
 import { catalogueRoot } from "./catalogue-paths";
+import { emailImportViolations } from "./email-import-policy";
 import { brandRoot, messages, schemes, viewports } from "./email-messages";
-import { emailImportViolations, emailSubtreeViolations } from "./emails-policy";
+import { emailSubtreeViolations } from "./emails-policy";
 
 test("the message table preserves the rounded card border", () => {
   for (const scheme of schemes)
@@ -121,9 +122,11 @@ test("the email source imports only React, the tokens and its own siblings", () 
   const directory = resolve(catalogueRoot, "src/emails");
   const files = readdirSync(directory, { encoding: "utf8" }).sort();
   assert.deepEqual(files, [
+    "brand.tsx",
     "content.ts",
     "document.tsx",
     "invitation.tsx",
+    "rows.tsx",
     "sign-in.tsx",
     "styles.ts",
   ]);

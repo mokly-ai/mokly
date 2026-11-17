@@ -1,18 +1,12 @@
 import type { Page } from "@playwright/test";
 
+import { projectAddress } from "./addresses";
 import { buildDouble } from "./build-double";
 import { routeBuilds } from "./build-routes";
 import { buildScenario } from "./build-scenario";
-import {
-  createProject,
-  expect,
-  freshEmail,
-  openDialog,
-  projectAddress,
-  signIn,
-  test,
-} from "./harness";
+import { expect, freshEmail, openDialog, signIn, test } from "./harness";
 import { apiOrigin } from "./origins";
+import { createProject } from "./project-setup";
 import { branchRow, build, buildId, summary } from "./viewer/build-fixtures";
 import { pressWrite } from "./writes";
 

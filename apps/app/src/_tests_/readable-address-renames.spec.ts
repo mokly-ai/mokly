@@ -1,22 +1,22 @@
 import type { Page } from "@playwright/test";
 
+import { projectAddress } from "./addresses";
 import {
   disconnectInstallation,
   installedRepository,
 } from "./database-fixture";
 import {
-  createProject,
   currentWorkspaceId,
   expect,
   freshEmail,
   open,
   openDialog,
-  projectAddress,
   signIn,
   test,
   unloadGuard,
 } from "./harness";
 import { appOrigin } from "./origins";
+import { createProject } from "./project-setup";
 import {
   captureReadableAddress,
   settingsAddress,

@@ -1,13 +1,7 @@
+import { publicationPathFor } from "../addresses";
 import { fillPullRequest, installedRepository } from "../database-fixture";
-import {
-  createProject,
-  expect,
-  freshEmail,
-  open,
-  publicationPathFor,
-  signIn,
-  test,
-} from "../harness";
+import { expect, freshEmail, open, signIn, test } from "../harness";
+import { createProject } from "../project-setup";
 import { createToken, publish } from "../publish";
 
 /**

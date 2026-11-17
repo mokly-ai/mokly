@@ -1,16 +1,11 @@
 import { spawnSync } from "node:child_process";
 import { request } from "node:http";
 
+import { publicationPathFor } from "./addresses";
 import { fixtureDesktopOrigin } from "./desktop-fixture";
-import {
-  test,
-  expect,
-  createProject,
-  freshEmail,
-  publicationPathFor,
-  signIn,
-} from "./harness";
+import { test, expect, freshEmail, signIn } from "./harness";
 import { apiOrigin, appOrigin, catalogueOrigin } from "./origins";
+import { createProject } from "./project-setup";
 import { createToken, fixture, publicationBody, uploadBody } from "./publish";
 import { makePrivate } from "./visibility";
 

@@ -2,14 +2,8 @@ import type { Page, Route } from "@playwright/test";
 
 import type { Session } from "../../api/types";
 import { settingsPath, signInPath } from "../../navigation/paths";
-import {
-  apiFailure,
-  expect,
-  freshEmail,
-  openDialog,
-  signIn,
-  test,
-} from "../harness";
+import { apiFailure } from "../api-responses";
+import { expect, freshEmail, openDialog, signIn, test } from "../harness";
 import { apiOrigin } from "../origins";
 
 const sessionUrl = `${apiOrigin}/v1/session`;

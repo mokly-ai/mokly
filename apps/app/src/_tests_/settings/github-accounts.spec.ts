@@ -1,25 +1,24 @@
 import type { Page } from "@playwright/test";
 
+import { projectQueryPathFor } from "../addresses";
+import { apiFailure } from "../api-responses";
 import {
   installedAccount,
   manageUrl,
   releaseRecordedGitHub,
   suspendInstallation,
 } from "../database-fixture";
+import { answerGitHubPages, startGitHubFlow } from "../github-installation";
 import {
-  answerGitHubPages,
-  apiFailure,
-  createProject,
   currentWorkspaceId,
   expect,
   freshEmail,
   openDialog,
-  projectQueryPathFor,
   signIn,
-  startGitHubFlow,
   test,
 } from "../harness";
 import { addMember, switchSession } from "../members";
+import { createProject } from "../project-setup";
 
 /**
  * The GitHub accounts pane lists every account the workspace connects. Owners

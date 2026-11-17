@@ -1,16 +1,9 @@
 import type { Locator, Page } from "@playwright/test";
 
+import { projectPathFor, pullRequestPathFor } from "../addresses";
 import { fillPullRequest } from "../database-fixture";
-import {
-  createProject,
-  expect,
-  freshEmail,
-  open,
-  projectPathFor,
-  pullRequestPathFor,
-  signIn,
-  test,
-} from "../harness";
+import { expect, freshEmail, open, signIn, test } from "../harness";
+import { createProject } from "../project-setup";
 import { createToken, publish } from "../publish";
 
 import { pullRequest } from "./fixtures";

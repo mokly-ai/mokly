@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-import { readFrontmatter } from "../src/docs/frontmatter.js";
 import { assertUniqueHeadings, onThisPage } from "../src/docs/headings.js";
 import {
   DOCS_OVERVIEW,
@@ -27,132 +26,8 @@ import {
   MOKLY_PACKAGE_VERSION,
   moklyPackagePath,
 } from "../src/mokly-package.js";
-import { repositoryPath } from "../src/workspace.js";
 
-const page = (id: string) => DOCS_PAGES.find((entry) => entry.id === id);
-
-/** Every page written from the cloud protocol docs, in reading order. */
-const AHEAD_PAGES = [
-  "cloud/overview",
-  "cloud/connect-a-repository",
-  "cloud/builds",
-  "cloud/branches-and-pull-requests",
-  "cloud/sharing-and-access",
-  "cloud/workspaces-and-roles",
-  "cloud/settings",
-  "cloud/plans-and-billing",
-  "review/comments",
-  "review/approvals",
-  "review/pull-request-sync",
-  "review/agent-sessions",
-  "review/click-to-reference",
-];
-
-/** The cloud repository documents an ahead page may cite as its source. */
-const CLOUD_DOCUMENTS = [
-  "product-direction.md",
-  "protocol/approvals.md",
-  "protocol/billing-plan-gates.md",
-  "protocol/billing-subscriptions.md",
-  "protocol/billing.md",
-  "protocol/cloud-build-runner.md",
-  "protocol/cloud-builds.md",
-  "protocol/product-accounts-and-roles.md",
-  "protocol/product-navigation.md",
-  "protocol/screen-comments.md",
-  "protocol/settings-dialog.md",
-  "protocol/settings-dialog-github.md",
-  "protocol/viewer-builds.md",
-  "protocol/viewer.md",
-];
-
-test("frontmatter is read and validated against the content model", () => {
-  const { data, body } = readFrontmatter(
-    '---\ntitle: "Install"\ndescription: "Add Mokly."\nsection: "start"\norder: 1\n---\n\nBody.\n',
-    "start/install.md",
-  );
-  assert.deepEqual(data, {
-    description: "Add Mokly.",
-    order: 1,
-    section: "start",
-    title: "Install",
-  });
-  assert.equal(body.trim(), "Body.");
-});
-
-test("frontmatter rejects an unknown section and a missing field", () => {
-  assert.throws(
-    () =>
-      readFrontmatter(
-        '---\ntitle: "T"\ndescription: "D"\nsection: "guides"\norder: 1\n---\n',
-        "guides/t.md",
-      ),
-    /section/,
-  );
-  assert.throws(
-    () =>
-      readFrontmatter(
-        '---\ntitle: "T"\nsection: "cli"\norder: 1\n---\n',
-        "cli/t.md",
-      ),
-    /description/,
-  );
-  assert.throws(
-    () => readFrontmatter("Body only\n", "cli/t.md"),
-    /frontmatter/,
-  );
-});
-
-test("an ahead page keeps its status and it is never rendered", () => {
-  const { data } = readFrontmatter(
-    '---\ntitle: "Overview"\ndescription: "D"\nsection: "cloud"\norder: 1\nstatus: "ahead"\n---\n',
-    "cloud/overview.md",
-  );
-  assert.equal(data.status, "ahead");
-  assert.deepEqual(
-    DOCS_PAGES.filter((entry) => entry.status === "ahead").map(
-      (entry) => entry.id,
-    ),
-    AHEAD_PAGES,
-    "the ahead pages are the cloud and review sections",
-  );
-});
-
-test("every ahead page cites the cloud document it was written from", () => {
-  for (const entry of DOCS_PAGES.filter((page) => page.status === "ahead")) {
-    const { body } = readFrontmatter(
-      readFileSync(entry.source, "utf8"),
-      entry.id,
-    );
-    const cited =
-      /^<!-- Source: mokly-cloud ([\w./-]+\.md(?:, [\w./-]+\.md)*) -->$/m.exec(
-        body,
-      );
-    assert.ok(cited, `${entry.id} names no cloud protocol document`);
-    for (const document of (cited[1] ?? "").split(", ")) {
-      assert.ok(
-        CLOUD_DOCUMENTS.includes(document),
-        `${entry.id} cites ${document}, which is not a cloud protocol document`,
-      );
-      assert.ok(
-        readFileSync(repositoryPath("docs", document), "utf8").length > 0,
-        `${entry.id} cites missing docs/${document}`,
-      );
-    }
-  }
-});
-
-test("only the cloud and review sections are written ahead of release", () => {
-  const ahead = new Set(AHEAD_PAGES.map((id) => id.split("/")[0]));
-  assert.deepEqual([...ahead].sort(), ["cloud", "review"]);
-  for (const entry of DOCS_PAGES) {
-    assert.equal(
-      entry.status === "ahead",
-      ahead.has(entry.section),
-      `${entry.id} disagrees with its section's release status`,
-    );
-  }
-});
+export const page = (id: string) => DOCS_PAGES.find((entry) => entry.id === id);
 
 test("every section has a title, a summary and its place in the order", () => {
   for (const [index, id] of SECTION_IDS.entries()) {

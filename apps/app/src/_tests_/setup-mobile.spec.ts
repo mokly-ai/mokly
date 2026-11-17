@@ -1,13 +1,7 @@
 import type { Page } from "@playwright/test";
 
-import {
-  expect,
-  freshEmail,
-  open,
-  signIn,
-  test,
-  workspaceAddress,
-} from "./harness";
+import { workspaceAddress } from "./addresses";
+import { expect, freshEmail, open, signIn, test } from "./harness";
 import { atConnectSituation, createWorkspace } from "./setup-walks";
 
 /**

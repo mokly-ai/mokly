@@ -1,15 +1,8 @@
 import { settingsPath } from "../navigation/paths";
 
-import {
-  createProject,
-  expect,
-  freshEmail,
-  open,
-  projectAddress,
-  signIn,
-  test,
-  unloadGuard,
-} from "./harness";
+import { projectAddress } from "./addresses";
+import { expect, freshEmail, open, signIn, test, unloadGuard } from "./harness";
+import { createProject } from "./project-setup";
 import {
   captureReadableAddress,
   uniqueSlug,

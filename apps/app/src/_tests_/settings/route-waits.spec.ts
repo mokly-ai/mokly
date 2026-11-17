@@ -1,16 +1,15 @@
 import type { Page } from "@playwright/test";
 
 import { settingsPath } from "../../navigation/paths";
+import { projectPathFor, workspaceSettingsPathFor } from "../addresses";
 import {
-  createProject,
   currentWorkspaceId,
   expect,
   freshEmail,
-  projectPathFor,
   signIn,
   test,
-  workspaceSettingsPathFor,
 } from "../harness";
+import { createProject } from "../project-setup";
 
 /**
  * A durable settings route on a wide surface hands over to the dialog over

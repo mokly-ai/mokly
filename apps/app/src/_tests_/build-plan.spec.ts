@@ -1,7 +1,8 @@
 import type { Page } from "@playwright/test";
 
+import { apiFailure } from "./api-responses";
 import { buildScenario } from "./build-scenario";
-import { apiFailure, expect, open, test } from "./harness";
+import { expect, open, test } from "./harness";
 import { build, buildId } from "./viewer/build-fixtures";
 
 /**

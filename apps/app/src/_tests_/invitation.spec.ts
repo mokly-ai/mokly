@@ -1,21 +1,19 @@
 import type { Page } from "@playwright/test";
 
+import { workspaceAddress, projectQueryPathFor } from "./addresses";
+import { apiFailure, failWith } from "./api-responses";
 import { magicLinkFor } from "./api-server";
 import {
-  apiFailure,
-  createProject,
   currentWorkspaceId,
   expect,
-  failWith,
   freshEmail,
   open,
   openDialog,
   openMagicLink,
-  workspaceAddress,
-  projectQueryPathFor,
   signIn,
   test,
 } from "./harness";
+import { createProject } from "./project-setup";
 
 async function expectErrorReference(page: Page) {
   const details = page.locator(".fo-error-details");

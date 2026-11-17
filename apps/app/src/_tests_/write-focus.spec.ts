@@ -1,16 +1,9 @@
 import type { Locator, Page } from "@playwright/test";
 
-import {
-  apiFailure,
-  createProject,
-  expect,
-  freshEmail,
-  open,
-  openDialog,
-  projectAddress,
-  signIn,
-  test,
-} from "./harness";
+import { projectAddress } from "./addresses";
+import { apiFailure } from "./api-responses";
+import { expect, freshEmail, open, openDialog, signIn, test } from "./harness";
+import { createProject } from "./project-setup";
 
 /**
  * A refused write keeps the reader's keyboard position, as Write failure and

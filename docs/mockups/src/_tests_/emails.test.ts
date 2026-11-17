@@ -6,7 +6,7 @@ import { test } from "node:test";
 import { tokenCss } from "@mokly-cloud/tokens/token-css";
 import { parse, parseFragment, serialize, serializeOuter } from "parse5";
 
-import { logoFiles } from "../emails/document";
+import { logoFiles } from "../emails/brand";
 import {
   EMAIL_BRAND_FILES,
   EMAIL_BRAND_ROOT,

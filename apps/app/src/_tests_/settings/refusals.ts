@@ -1,17 +1,11 @@
 import type { Page } from "@playwright/test";
 
+import { publicationPathFor } from "../addresses";
+import { failWith } from "../api-responses";
 import { buildDouble } from "../build-double";
 import { routeBuilds } from "../build-routes";
-import {
-  chooseRepository,
-  createProject,
-  expect,
-  failWith,
-  freshEmail,
-  open,
-  openDialog,
-  publicationPathFor,
-} from "../harness";
+import { expect, freshEmail, open, openDialog } from "../harness";
+import { chooseRepository, createProject } from "../project-setup";
 import { createToken, publish } from "../publish";
 
 import type { Subject } from "./subject";

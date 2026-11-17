@@ -1,5 +1,6 @@
 import type { ApiReason } from "../api/reasons";
 
+import { apiFailure } from "./api-responses";
 import {
   callbackUrl,
   flowKeys,
@@ -7,7 +8,7 @@ import {
   seedFlow,
   storedFlow,
 } from "./auth-callbacks";
-import { apiFailure, expect, open, ready, test } from "./harness";
+import { expect, open, ready, test } from "./harness";
 
 const installationRefusals: readonly {
   reason: ApiReason;

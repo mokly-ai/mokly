@@ -1,5 +1,7 @@
 import { installedRepository } from "./database-fixture";
-import { chooseRepository, expect, installApp, open, test } from "./harness";
+import { installApp } from "./github-installation";
+import { expect, open, test } from "./harness";
+import { chooseRepository } from "./project-setup";
 import {
   captureReadableAddress,
   createWorkspaceStep,

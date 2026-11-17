@@ -1,12 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import {
-  droppedSentences,
-  ownerOf,
-  parityPages,
-  sentences,
-} from "./app-owners";
+import { ownerOf, parityPages } from "./app-owners";
 import type { ScreenId } from "./app-owners";
 import { allowedSentences, assertOwned } from "./app-parity-allowances";
 import {
@@ -15,6 +10,7 @@ import {
   saysSentence,
   sentencePresence,
 } from "./app-parity-sentences";
+import { droppedSentences, sentences } from "./app-sentences";
 
 test("a page no label can compare is compared by what it says", () => {
   for (const [screen, said] of Object.entries(sentences)) {

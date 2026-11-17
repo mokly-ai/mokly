@@ -1,5 +1,5 @@
-import { publicationScreens, shareSelection } from "./publications";
-import type { ScreenView } from "./publications";
+import { publicationScreens, shareSelection } from "./publication-screens";
+import type { ScreenView } from "./publication-screens";
 
 /**
  * How one view compares with the publication's base: the completed

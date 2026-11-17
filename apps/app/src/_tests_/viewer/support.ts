@@ -1,13 +1,8 @@
 import type { Locator, Page } from "@playwright/test";
 
-import {
-  createProject,
-  expect,
-  freshEmail,
-  projectAddress,
-  publicationPathFor,
-  signIn,
-} from "../harness";
+import { projectAddress, publicationPathFor } from "../addresses";
+import { expect, freshEmail, signIn } from "../harness";
+import { createProject } from "../project-setup";
 import { createToken, publish } from "../publish";
 import type { PublishInput } from "../publish";
 import { makePrivate, setVisibility } from "../visibility";

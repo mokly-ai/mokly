@@ -4,11 +4,11 @@ import { expect, test } from "@playwright/test";
 
 import { referenceHistory } from "../fixtures/build-history";
 import { sample } from "../fixtures/product";
+import { publicationAddress } from "../fixtures/publication-screens";
 import {
   branches,
   buildingPullRequest,
   publication,
-  publicationAddress,
 } from "../fixtures/publications";
 
 import { screenFile } from "./catalogue-paths";

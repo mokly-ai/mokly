@@ -1,19 +1,18 @@
 import type { Page } from "@playwright/test";
 
+import { projectPathFor, publicationPathFor } from "../addresses";
 import {
-  createProject,
   currentWorkspaceId,
   expect,
   freshEmail,
   open,
-  projectPathFor,
-  publicationPathFor,
   ready,
   signIn,
   test,
 } from "../harness";
 import { addMember, switchSession } from "../members";
 import { apiOrigin } from "../origins";
+import { createProject } from "../project-setup";
 import { createToken, publish } from "../publish";
 
 import {

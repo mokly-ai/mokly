@@ -19,16 +19,12 @@ import {
 import { membership, onboarding, profile } from "../fixtures/product-states";
 import { site, siteOrigin } from "../fixtures/site";
 
+import { callbackLandingPages } from "./callback-landings";
 import { catalogueRoot, screenFile } from "./catalogue-paths";
 import { drawnPage, pendingLabels } from "./drawn-page";
+import { productFamilies, productStates } from "./product-families";
 import { inventoryPages } from "./product-inventory";
-import {
-  callbackLandingPages,
-  productFamilies,
-  productSituations,
-  productStates,
-  situationStatePaths,
-} from "./product-situations";
+import { productSituations, situationStatePaths } from "./product-situations";
 
 const repository = resolve(catalogueRoot, "../..");
 

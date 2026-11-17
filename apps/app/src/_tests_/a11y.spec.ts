@@ -1,16 +1,9 @@
 import type { Page } from "@playwright/test";
 
+import { projectAddress } from "./addresses";
 import { stateDocumentViolations } from "./document-policy";
-import {
-  createProject,
-  expect,
-  freshEmail,
-  open,
-  openDialog,
-  projectAddress,
-  signIn,
-  test,
-} from "./harness";
+import { expect, freshEmail, open, openDialog, signIn, test } from "./harness";
+import { createProject } from "./project-setup";
 import { expectScreenPolicy } from "./screen-policy";
 import { makeToken, rowMenu } from "./settings/tokens";
 

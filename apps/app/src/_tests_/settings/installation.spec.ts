@@ -1,21 +1,21 @@
 import type { Page } from "@playwright/test";
 
+import { projectQueryPathFor } from "../addresses";
 import {
   disconnectInstallation,
   installedAccount,
   suspendInstallation,
 } from "../database-fixture";
 import {
-  createProject,
   currentWorkspaceId,
   expect,
   freshEmail,
   openDialog,
-  projectQueryPathFor,
   signIn,
   test,
 } from "../harness";
 import { addMember, switchSession } from "../members";
+import { createProject } from "../project-setup";
 
 /**
  * What the Workspace pane says about the GitHub accounts it connects.

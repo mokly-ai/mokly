@@ -1,15 +1,15 @@
 import type { Page } from "@playwright/test";
 
+import { projectAddress } from "../addresses";
 import {
-  createProject,
   currentWorkspaceId,
   expect,
   freshEmail,
   openDialog,
-  projectAddress,
   signIn,
 } from "../harness";
 import { addMember } from "../members";
+import { createProject } from "../project-setup";
 import { makePrivate } from "../visibility";
 import { pressWrite } from "../writes";
 

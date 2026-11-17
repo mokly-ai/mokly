@@ -1,5 +1,6 @@
 import type { ApiReason } from "../api/reasons";
 
+import { apiFailure } from "./api-responses";
 import {
   callbackUrl,
   connection,
@@ -13,7 +14,7 @@ import {
   session,
   storedFlow,
 } from "./auth-callbacks";
-import { apiFailure, expect, open, ready, test } from "./harness";
+import { expect, open, ready, test } from "./harness";
 import { githubOrigin } from "./origins";
 
 test("the installation landing rejects missing and mismatched local state", async ({

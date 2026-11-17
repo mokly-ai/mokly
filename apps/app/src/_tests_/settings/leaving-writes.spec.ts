@@ -1,18 +1,18 @@
 import type { Locator, Page } from "@playwright/test";
 
+import { projectQueryPathFor } from "../addresses";
 import { connection, githubState, json } from "../auth-callbacks";
 import { subscribe } from "../billing";
 import {
-  createProject,
   currentWorkspaceId,
   expect,
   freshEmail,
   openDialog,
-  projectQueryPathFor,
   signIn,
   test,
 } from "../harness";
 import { githubOrigin } from "../origins";
+import { createProject } from "../project-setup";
 
 /**
  * A pane write that leaves for GitHub or Stripe, as Write in progress in

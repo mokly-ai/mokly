@@ -13,7 +13,7 @@ import {
   invitationIds,
   signInContent,
 } from "../fixtures/emails";
-import { publicationLink } from "../fixtures/publications";
+import { publicationLink } from "../fixtures/publication-screens";
 import { app, siteOrigin } from "../fixtures/site";
 
 import { catalogueEntries } from "./catalogue-index";

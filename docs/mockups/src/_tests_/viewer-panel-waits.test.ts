@@ -12,10 +12,12 @@ import { test } from "node:test";
 
 import { sample } from "../fixtures/product";
 import {
-  branches,
-  publication,
   publicationAddress,
   publicationScreens,
+} from "../fixtures/publication-screens";
+import {
+  branches,
+  publication,
   pullRequests,
   workspaces,
 } from "../fixtures/publications";

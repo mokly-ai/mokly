@@ -1,4 +1,5 @@
-import { expect, failWith, open, test } from "../harness";
+import { failWith } from "../api-responses";
+import { expect, open, test } from "../harness";
 import { apiOrigin, appOrigin } from "../origins";
 
 import {

@@ -1,5 +1,7 @@
 import type { Page } from "@playwright/test";
 
+import { projectQueryPathFor } from "./addresses";
+import { failWith } from "./api-responses";
 import {
   failPayment,
   periodEndsOn,
@@ -9,17 +11,15 @@ import {
   trialEndsOn,
 } from "./billing";
 import {
-  createProject,
   currentWorkspaceId,
   expect,
-  failWith,
   freshEmail,
   openDialog,
-  projectQueryPathFor,
   signIn,
   test,
 } from "./harness";
 import { addMember, switchSession } from "./members";
+import { createProject } from "./project-setup";
 
 /** The Billing pane against the real API, its real provider and its worker. */
 

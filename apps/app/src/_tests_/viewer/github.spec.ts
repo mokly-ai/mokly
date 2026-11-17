@@ -1,4 +1,5 @@
-import { expect, failWith, freshEmail, open, signIn, test } from "../harness";
+import { failWith } from "../api-responses";
+import { expect, freshEmail, open, signIn, test } from "../harness";
 
 test("an unavailable installation offers another attempt", async ({ page }) => {
   await signIn(page, freshEmail("suspended"));

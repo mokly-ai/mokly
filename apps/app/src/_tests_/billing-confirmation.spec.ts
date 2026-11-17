@@ -1,21 +1,23 @@
 import type { Page } from "@playwright/test";
 
+import {
+  workspaceSettingsPathFor,
+  projectPathFor,
+  projectQueryPathFor,
+} from "./addresses";
+import { apiFailure } from "./api-responses";
 import { startCheckoutThrough, subscribe } from "./billing";
 import { sql } from "./database-fixture";
 import { failureShape } from "./fragment";
 import {
-  apiFailure,
-  createProject,
   currentWorkspaceId,
   expect,
   freshEmail,
   open,
-  workspaceSettingsPathFor,
-  projectPathFor,
-  projectQueryPathFor,
   signIn,
   test,
 } from "./harness";
+import { createProject } from "./project-setup";
 
 /** The read a Checkout return polls until its webhook has changed the plan. */
 const billingRead = "**/v1/workspaces/*/billing";

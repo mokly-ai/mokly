@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import { StatusDot } from "../../../entries/design/status-dot.mockup";
 import { causeSentence, elisionText } from "../../../fixtures/build-copy";
-import type { BuildStep, FixtureBuild } from "../../../fixtures/builds";
+import type { BuildStep, FixtureBuild } from "../../../fixtures/build-types";
 import { buildSteps, shortSha } from "../../../fixtures/builds";
 import { billing } from "../../../fixtures/product-states";
 import { Icon } from "../icons";

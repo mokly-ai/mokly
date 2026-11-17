@@ -1,6 +1,7 @@
+import { publicationPathFor } from "./addresses";
 import { advance } from "./build-double";
 import { buildScenario } from "./build-scenario";
-import { expect, open, publicationPathFor, test } from "./harness";
+import { expect, open, test } from "./harness";
 import { createToken, publish } from "./publish";
 import {
   attempt,

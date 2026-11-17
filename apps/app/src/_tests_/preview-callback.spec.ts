@@ -1,8 +1,9 @@
 import type { Page, Route } from "@playwright/test";
 
+import { apiFailure } from "./api-responses";
 import { previewSignInEmail, previewSignInSecret } from "./api-server";
 import { stateDocumentViolations } from "./document-policy";
-import { apiFailure, expect, navigateMagicLink, ready, test } from "./harness";
+import { expect, navigateMagicLink, ready, test } from "./harness";
 import { apiOrigin, appOrigin } from "./origins";
 
 const callbackPath = "/auth/preview/callback";

@@ -11,7 +11,6 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { addresses, sample } from "../fixtures/product";
 import { billing, onboarding } from "../fixtures/product-states";
 
 import { screenFile } from "./catalogue-paths";
@@ -33,88 +32,12 @@ import {
   stepsDone,
 } from "./drawn-page";
 import type { DrawnPage } from "./drawn-page";
+import { waits } from "./onboarding-wait-cases";
 import { inventoryPages } from "./product-inventory";
 
 const viewports: readonly Viewport[] = ["desktop", "mobile"];
-const cli = "Publish with the CLI instead";
 
-/**
- * Each wait and the loaded drawing whose layout it draws: what screen readers
- * and sighted readers hear, where a shown name sits, whether the heading is
- * known, how many steps the strip claims, whether the line to the CLI form is
- * drawn, and the answer's values that the wait must not show.
- */
-const waits = [
-  {
-    wait: "product/account/create-workspace/loading",
-    loaded: "product/account/create-workspace",
-    heard: ["Opening Mokly…", "screen-reader-only"],
-    place: undefined,
-    heading: "known",
-    steps: 0,
-    cli: false,
-    hidden: [onboarding.workspace, onboarding.workspaceSlug],
-  },
-  {
-    wait: "product/account/install-app/loading",
-    loaded: "product/account/install-app",
-    heard: ["Loading your workspace…", "visible"],
-    place: "fo-account-detail",
-    heading: "known",
-    steps: 1,
-    cli: true,
-    hidden: ["Choose the repositories Mokly can read."],
-  },
-  {
-    wait: "product/account/install-app/connect/loading",
-    loaded: "product/account/install-app/connect",
-    heard: ["Loading your workspaces…", "visible"],
-    place: "fo-wait-field",
-    heading: "known",
-    steps: 0,
-    cli: false,
-    hidden: [sample.workspace],
-  },
-  {
-    wait: "product/account/choose-repository/loading",
-    loaded: "product/account/choose-repository",
-    heard: ["Loading repositories…", "visible"],
-    place: "fo-wait-field",
-    heading: "known",
-    steps: 2,
-    cli: true,
-    hidden: [sample.repository, onboarding.config, onboarding.projectSlug],
-  },
-  {
-    wait: "product/account/choose-repository/cli/workspace-loading",
-    loaded: "product/account/choose-repository/cli",
-    heard: ["Loading your workspace…", "visible"],
-    place: "fo-address-preview",
-    heading: "known",
-    steps: 2,
-    cli: false,
-    hidden: [
-      onboarding.cliRepository,
-      onboarding.config,
-      onboarding.workspaceSlug,
-    ],
-  },
-  {
-    wait: "product/account/project-created/loading",
-    loaded: "product/account/project-created/empty",
-    heard: ["Opening your project…", "screen-reader-only"],
-    place: undefined,
-    heading: "bar",
-    steps: 0,
-    cli: false,
-    hidden: [
-      sample.project,
-      sample.repository,
-      sample.config,
-      addresses.project,
-    ],
-  },
-] as const;
+export const cli = "Publish with the CLI instead";
 
 /** The one element of a class that the test needs, or a failure naming it. */
 function only(node: DrawnPage["main"] | Element, className: string): Element {
@@ -132,7 +55,7 @@ function shape(body: Element): string[] {
 }
 
 /** The page's one heading. */
-function heading(page: DrawnPage): Element {
+export function heading(page: DrawnPage): Element {
   const [found, ...more] = elements(
     page.main,
     (element) => element.tagName === "h1",

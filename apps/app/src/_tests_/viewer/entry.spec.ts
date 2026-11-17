@@ -1,18 +1,14 @@
 import type { Page } from "@playwright/test";
 
-import { fillHistory, fillPullRequest } from "../database-fixture";
 import {
   branchPathFor,
-  createProject,
-  expect,
-  freshEmail,
-  open,
   projectPathFor,
   publicationPathFor,
   pullRequestPathFor,
-  signIn,
-  test,
-} from "../harness";
+} from "../addresses";
+import { fillHistory, fillPullRequest } from "../database-fixture";
+import { expect, freshEmail, open, signIn, test } from "../harness";
+import { createProject } from "../project-setup";
 import { createToken, publish } from "../publish";
 
 import { pullRequest } from "./fixtures";

@@ -1,16 +1,10 @@
 import type { Page } from "@playwright/test";
 
 import { defaultPageSize, referencePageLimit } from "../../data/publications";
+import { publicationPathFor } from "../addresses";
 import { fillBranches, fillHistory } from "../database-fixture";
-import {
-  createProject,
-  expect,
-  freshEmail,
-  open,
-  publicationPathFor,
-  signIn,
-  test,
-} from "../harness";
+import { expect, freshEmail, open, signIn, test } from "../harness";
+import { createProject } from "../project-setup";
 import { createToken, publish } from "../publish";
 
 import { publishedViewerReady } from "./support";

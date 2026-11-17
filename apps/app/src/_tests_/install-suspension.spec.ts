@@ -1,13 +1,7 @@
+import { apiFailure } from "./api-responses";
 import { manageUrl, suspendInstallation } from "./database-fixture";
-import {
-  apiFailure,
-  expect,
-  freshEmail,
-  installApp,
-  open,
-  signIn,
-  test,
-} from "./harness";
+import { installApp } from "./github-installation";
+import { expect, freshEmail, open, signIn, test } from "./harness";
 import { createWorkspace } from "./setup-walks";
 
 /**

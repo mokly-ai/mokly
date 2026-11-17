@@ -2,13 +2,9 @@ import type { Locator, Page } from "@playwright/test";
 
 import { projectPath, settingsPath } from "../navigation/paths";
 
-import {
-  chooseRepository,
-  expect,
-  installApp,
-  open,
-  openDialog,
-} from "./harness";
+import { installApp } from "./github-installation";
+import { expect, open, openDialog } from "./harness";
+import { chooseRepository } from "./project-setup";
 import { createWorkspaceStep, uniqueSlug } from "./readable-addresses-support";
 
 async function expectIdentifier(

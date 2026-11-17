@@ -6,7 +6,7 @@
  */
 
 import { causeSentences } from "../fixtures/build-copy";
-import type { FixtureBuild } from "../fixtures/builds";
+import type { FixtureBuild } from "../fixtures/build-types";
 import { builds } from "../fixtures/builds";
 import { billing, causes } from "../fixtures/product-states";
 import { site } from "../fixtures/site";

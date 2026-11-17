@@ -1,10 +1,8 @@
 import { expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import {
-  createProject,
-  publicationPathFor,
-} from "../../../app/src/_tests_/harness";
+import { publicationPathFor } from "../../../app/src/_tests_/addresses";
+import { createProject } from "../../../app/src/_tests_/project-setup";
 import { createToken, publish } from "../../../app/src/_tests_/publish";
 import { makePrivate } from "../../../app/src/_tests_/visibility";
 import { DESKTOP_ORIGIN } from "../origin.js";

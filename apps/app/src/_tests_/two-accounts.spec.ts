@@ -6,15 +6,9 @@ import {
   releaseSecondInstallation,
   secondInstallation,
 } from "./database-fixture";
-import {
-  chooseRepository,
-  expect,
-  freshEmail,
-  installApp,
-  repositoryField,
-  signIn,
-  test,
-} from "./harness";
+import { installApp } from "./github-installation";
+import { expect, freshEmail, signIn, test } from "./harness";
+import { chooseRepository, repositoryField } from "./project-setup";
 import {
   addSecondAccount,
   atRepositoryStep,

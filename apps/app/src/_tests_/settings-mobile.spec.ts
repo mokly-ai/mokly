@@ -1,20 +1,22 @@
 import type { Page } from "@playwright/test";
 
 import {
-  createProject,
+  workspaceSettingsPathFor,
+  projectQueryPathFor,
+  projectSettingsPathFor,
+} from "./addresses";
+import {
   currentWorkspaceId,
   expect,
   freshEmail,
   leaveDocument,
   open,
-  workspaceSettingsPathFor,
-  projectQueryPathFor,
-  projectSettingsPathFor,
   signIn,
   test,
   unloadGuard,
 } from "./harness";
 import { addMember } from "./members";
+import { createProject } from "./project-setup";
 
 test("the compact index lists every section as a full-screen layer", async ({
   page,

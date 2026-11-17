@@ -1,17 +1,11 @@
+import { workspaceSettingsPathFor } from "./addresses";
 import {
   installedAccount,
   releaseSecondInstallation,
   secondInstallation,
 } from "./database-fixture";
-import {
-  expect,
-  freshEmail,
-  installApp,
-  open,
-  signIn,
-  test,
-  workspaceSettingsPathFor,
-} from "./harness";
+import { installApp } from "./github-installation";
+import { expect, freshEmail, open, signIn, test } from "./harness";
 import {
   addSecondAccount,
   createWorkspace,

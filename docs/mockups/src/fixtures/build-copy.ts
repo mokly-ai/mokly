@@ -1,4 +1,4 @@
-import type { FixtureBuild } from "./builds";
+import type { FixtureBuild } from "./build-types";
 
 /**
  * What a failed or timed-out build's card says about its cause, keyed as the

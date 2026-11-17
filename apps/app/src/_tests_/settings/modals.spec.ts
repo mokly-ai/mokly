@@ -1,16 +1,16 @@
 import type { Page } from "@playwright/test";
 
+import { projectQueryPathFor } from "../addresses";
 import {
-  createProject,
   currentWorkspaceId,
   expect,
   freshEmail,
   openDialog,
-  projectQueryPathFor,
   signIn,
   test,
 } from "../harness";
 import { addMember } from "../members";
+import { createProject } from "../project-setup";
 import { makePrivate } from "../visibility";
 
 import { chooseRevoke, makeToken, rowMenu } from "./tokens";

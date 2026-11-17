@@ -1,13 +1,8 @@
 import type { Page } from "@playwright/test";
 
-import {
-  expect,
-  freshEmail,
-  installApp,
-  repositoryField,
-  signIn,
-  test,
-} from "./harness";
+import { installApp } from "./github-installation";
+import { expect, freshEmail, signIn, test } from "./harness";
+import { repositoryField } from "./project-setup";
 import { expectCompletedSteps } from "./setup-walks";
 
 /**

@@ -10,14 +10,12 @@ import { tokens } from "@mokly-cloud/tokens/tokens";
 import type { TokenColorScheme } from "@mokly-cloud/tokens/tokens";
 import { parseFragment } from "parse5";
 import type { DefaultTreeAdapterMap } from "parse5";
-import ts from "typescript";
 
-import { logoFiles } from "../emails/document";
+import { logoFiles } from "../emails/brand";
 import { canvasGradient, logoHeight, logoWidth } from "../emails/styles";
 
-import type { SourceFile } from "./source-policy";
-
 type Element = DefaultTreeAdapterMap["element"];
+
 type Node = DefaultTreeAdapterMap["node"];
 
 /** Tags a delivered message never carries, whatever a client would do. */
@@ -295,28 +293,4 @@ export function emailSubtreeViolations(
       problems.push("the action is shorter than a control: " + height);
   }
   return problems;
-}
-
-/** What `src/emails/` may import, so a catalogue change cannot reach a message. */
-export function emailImportViolations(file: SourceFile): string[] {
-  const source = ts.createSourceFile(
-    file.path,
-    file.text,
-    ts.ScriptTarget.Latest,
-    true,
-    ts.ScriptKind.TSX,
-  );
-  return source.statements.flatMap((node) => {
-    if (
-      !ts.isImportDeclaration(node) ||
-      !ts.isStringLiteral(node.moduleSpecifier)
-    )
-      return [];
-    const specifier = node.moduleSpecifier.text;
-    const allowed =
-      specifier === "react" ||
-      specifier.startsWith("@mokly-cloud/tokens/") ||
-      (specifier.startsWith("./") && !specifier.includes(".."));
-    return allowed ? [] : [file.path + ": emails cannot import " + specifier];
-  });
 }

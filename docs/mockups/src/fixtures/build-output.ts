@@ -1,5 +1,5 @@
 import { sample } from "./product";
-import { publicationAddress } from "./publications";
+import { publicationAddress } from "./publication-screens";
 
 /**
  * What the fixture builds wrote, as the build log read returns it: the

@@ -1,3 +1,4 @@
+import { workspaceSettingsPathFor } from "../addresses";
 import {
   disconnectInstallation,
   installedAccount,
@@ -5,15 +6,14 @@ import {
   suspendInstallation,
 } from "../database-fixture";
 import {
-  createProject,
   currentWorkspaceId,
   expect,
   freshEmail,
   open,
   signIn,
   test,
-  workspaceSettingsPathFor,
 } from "../harness";
+import { createProject } from "../project-setup";
 
 /**
  * On a compact surface the GitHub accounts pane is a full-screen layer, and a

@@ -1,12 +1,6 @@
-import {
-  createProject,
-  expect,
-  freshEmail,
-  open,
-  projectPathFor,
-  signIn,
-  test,
-} from "../harness";
+import { projectPathFor } from "../addresses";
+import { expect, freshEmail, open, signIn, test } from "../harness";
+import { createProject } from "../project-setup";
 
 import { holdReads, projectRead } from "./held-reads";
 

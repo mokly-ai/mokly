@@ -1,21 +1,15 @@
 import type { Page } from "@playwright/test";
 
+import { workspaceAddress } from "./addresses";
+import { apiFailure } from "./api-responses";
 import { installedRepository, releaseRecordedGitHub } from "./database-fixture";
+import { answerGitHubPages, startGitHubFlow } from "./github-installation";
+import { expect, freshEmail, open, ready, signIn, test } from "./harness";
 import {
-  answerGitHubPages,
-  apiFailure,
   chooseRepository,
   createProject,
-  expect,
-  freshEmail,
-  open,
-  ready,
   repositoryField,
-  signIn,
-  startGitHubFlow,
-  test,
-  workspaceAddress,
-} from "./harness";
+} from "./project-setup";
 import {
   atConnectSituation,
   atRepositoryStep,

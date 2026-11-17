@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import type { Viewport } from "@mokly/mokly";
 
-import type { FixtureBuild } from "../../../fixtures/builds";
+import type { FixtureBuild } from "../../../fixtures/build-types";
 import { builds } from "../../../fixtures/builds";
 import { publication } from "../../../fixtures/publications";
 

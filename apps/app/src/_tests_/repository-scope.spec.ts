@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 
 import { createWorkspacePath, installPath } from "../navigation/paths";
 
+import { workspaceAddress } from "./addresses";
 import {
   bindAnotherInstallation,
   installedRepository,
@@ -10,16 +11,14 @@ import {
   secondInstallation,
 } from "./database-fixture";
 import {
-  createProject,
   currentWorkspaceId,
   expect,
   freshEmail,
   open,
-  workspaceAddress,
-  repositoryField,
   signIn,
   test,
 } from "./harness";
+import { createProject, repositoryField } from "./project-setup";
 import { atRepositoryStep, installSecondAccount } from "./setup-walks";
 
 /**

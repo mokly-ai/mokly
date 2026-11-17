@@ -13,8 +13,8 @@ import {
   listedScreens,
   publicationLink,
   shareSelection,
-} from "../../../fixtures/publications";
-import type { PublicationScreen } from "../../../fixtures/publications";
+} from "../../../fixtures/publication-screens";
+import type { PublicationScreen } from "../../../fixtures/publication-screens";
 import { useMockupRenderContext } from "../../../render-context";
 import { Action, Pending, StateMessage } from "../page-parts";
 import { TextBar } from "../placeholders";

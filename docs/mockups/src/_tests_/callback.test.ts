@@ -11,6 +11,10 @@ import { test } from "node:test";
 
 import { parseFragment } from "parse5";
 
+import {
+  callbackLandingPages,
+  callbackLandingScreens,
+} from "./callback-landings";
 import { catalogueEntries } from "./catalogue-index";
 import { screenFile } from "./catalogue-paths";
 import { drawnPalette } from "./catalogue-reads";
@@ -26,10 +30,6 @@ import {
   inventoryPages,
   productInventoryViolations,
 } from "./product-inventory";
-import {
-  callbackLandingPages,
-  callbackLandingScreens,
-} from "./product-situations";
 
 test("the callback landing owns every protocol state in screens of at most four variants", () => {
   const entries = catalogueEntries();
