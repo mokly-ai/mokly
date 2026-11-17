@@ -55,7 +55,8 @@ requires remounting. Never mutate supplied objects or arrays.
 The viewer rebuilds `variantOf` for current and removed entries of both kinds
 from the index, so its hierarchy, breadcrumbs, details rows, aggregate mark,
 and removed-variant adoption match Serve; removed variants attach only to a
-current non-variant parent, otherwise each stays one flat fallback row, and
+current or removed non-variant parent, otherwise each stays one fallback row
+at its base path, and
 every removed entry appears exactly once. A shell-link activation while `view`
 is `changes` proposes one atomic selection: an aggregate-only parent proposes
 its first visible changed variant, and a changed destination opened from an

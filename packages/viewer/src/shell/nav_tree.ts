@@ -10,6 +10,7 @@ import type {
   HierarchyNode,
 } from "../registry/hierarchy.js";
 
+import { placeRemovedRows } from "./nav_removed_rows.js";
 import {
   adoptedVariants,
   attachRemovedVariants,
@@ -24,21 +25,22 @@ export interface NavLeafNode {
    * is `Overview` when its title is also the folder's title.
    */
   index?: true;
-  /**
-   * A retained baseline page or document: a flat Changes row that All and
-   * search hide, as removed screens are not.
-   */
+  /** A retained baseline page or document. Like every removed row, it is a Changes row. */
   removedPage?: boolean;
-  /**
-   * A retained baseline variant placed under its surviving parent. Like a
-   * removed page it is a Changes row: All hides it, Changes shows it.
-   */
+  /** A retained baseline variant placed under its current or removed parent. */
   removedVariant?: boolean;
   /**
    * Entry id of the current parent a retained baseline variant attaches to,
    * as the branch-point lookup resolved it from the variant's baseline parent.
    */
   parentId?: string;
+  /** Entry id of the removed parent a retained baseline variant attaches to. */
+  removedParentId?: string;
+  /**
+   * Branch-point titles of the folders at or above a removed row's path,
+   * outermost first, used to name a former folder the section no longer has.
+   */
+  formerFolderTitles?: readonly string[];
   /** The branch-point path of an entry a move paired; Changes labels it Moved. */
   movedFrom?: string;
   entryKind: "component" | "document" | "screen" | "use-case" | "page";
@@ -127,15 +129,17 @@ export function buildNavSections(
       attached,
     ),
   };
-  const flat = additionalLeaves.filter((leaf) => !attached.has(leaf));
+  const placed = additionalLeaves.filter((leaf) => !attached.has(leaf));
   return (["specs", "components"] as const).flatMap((id) => {
-    const current = tree[id];
-    const additional = flat.filter((leaf) =>
-      id === "components"
-        ? leaf.entryKind === "component"
-        : leaf.entryKind !== "component",
+    const children = placeRemovedRows(
+      tree[id],
+      placed.filter((leaf) =>
+        id === "components"
+          ? leaf.entryKind === "component"
+          : leaf.entryKind !== "component",
+      ),
+      (path) => hierarchy.byPath.has(path),
     );
-    const children = [...current, ...additional];
     if (children.length === 0) return [];
     return [
       id === "specs"

@@ -139,7 +139,7 @@ export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
   welcomeErrorReparented: {
     description: "Welcome after saving failed was removed from the catalogue.",
     rationale:
-      "Welcome is now another screen's variant, so this removed state stays as one flat Changes row instead of nesting a second variant level.",
+      "Welcome is now another screen's variant, so this removed state stays as one Changes row in Screens instead of nesting a second variant level.",
     relatedDocs: false,
     schemes: "light, dark",
     source: "Previous version",

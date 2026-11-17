@@ -102,19 +102,27 @@ unavailable Git repository keeps the runtime's unavailable behaviour, and
 watch keeps its last good generation. A base whose sources fail current
 validation makes Changes unavailable with those diagnostics.
 
-## Removed Page And Document Presentation
+## Removed Entry Presentation
 
-When Changes is selected, append removed pages and documents as flat
-root-level leaf rows after the filtered current hierarchy, ordered by path.
-Reuse the removed-screen row style, the page or document icon, and removed-row
-identity; the visible label is `<title> · Removed`. There is no recreated
-folder, historical folder, extra App root, or expandable Removed group.
+Removed rows of every kind appear only when Changes is selected. All shows the
+current catalogue, so it hides every removed row and every folder that holds
+only removed rows. Decision: All does not keep removed screens or components,
+because a row in All for an entry that no longer exists confuses readers.
 
-A removed row's identity is `removed:<path>`. It is unique because a removed
-record exists only while no current entry has that path.
+Each removed row stands where its entry stood at the branch point, as a
+deleted file does in a code diff. The row joins the deepest folder, or
+screen or component folder page, of its base path that the section still
+shows, after that folder's current rows, in the canonical removal order. A
+removed folder page is the first row of the folder at its own path. A base
+folder that the section no longer shows comes back as a folder row labelled
+with its base title, and it holds the removed rows below it. A removed row
+with no base folder stands at the section root after the current rows. There
+is no extra App root and no expandable Removed group.
 
-Removed page and document rows are hidden from All; removed screens stay
-visible there. Removed variant placement, fallback, and order follow
+A removed row reuses the row style and the icon of its kind; the visible
+label is `<title> · Removed`. Its identity is `removed:<path>`. It is unique
+because a removed record exists only while no current entry has that path.
+Removed variant placement and order follow
 [variant navigation](./mokly-variant-navigation.md). Search and tag filtering
 use base path segments, title, and tags like current leaves. Home totals and the tag picker use current entries.
 The home view recreates no removed folder.
@@ -122,8 +130,8 @@ The home view recreates no removed folder.
 The removed page or document view shows the base document from the same
 snapshot, under the [removed previews](./mokly-removed-previews.md) contract.
 Its details show the base title, path, description, tags, related docs, and
-folder titles. Historical titles are informational text, not folder nodes or
-links that pretend the old hierarchy still exists. Changing a surviving
+folder titles. Historical titles in details and breadcrumbs are informational
+text, not links that pretend the old hierarchy still exists. Changing a surviving
 folder's title does not rewrite the base titles. Keep the view available at
 `/view/<path>/` even when All is selected.
 

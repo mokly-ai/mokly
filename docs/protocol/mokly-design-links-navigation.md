@@ -56,8 +56,9 @@ drawer and closes back to its view. Its page row targets
 `design/browse/pages/view`; Welcome and Example tour keep their design
 destinations. The shared synthetic document takes an explicit Welcome
 destination so its design variant stays inside the design catalogue, while the
-real document links to `example/screens/welcome`. The removed-page state keeps a
-flat row and returns to catalogue home without inventing parents.
+real document links to `example/screens/welcome`. The removed-page state lists
+its rows in the recreated Handbook folder and returns to catalogue home from
+All.
 
 `design/browse/publication/catalogue` omits filter and comparison controls.
 `design/browse/publication/changes` offers the Welcome comparison
@@ -96,7 +97,8 @@ stage shows the variant's inert previous version. In the reparented state, only
 the removed child is a Changes row: it is a removed entry whose former parent
 now names a variant. The Changes filter therefore hides the unmodified current
 parent and its variant (the former parent), and shows the removed child as one
-flat screen row outside their former folder hierarchy. The historical breadcrumb
+screen row in the Screens folder, because no folder is recreated at a path that a
+current entry holds. The historical breadcrumb
 stays visible on the screen itself with the former parent's title as plain text,
 but the Changes rail contains no parent or nested variant list. The depicted All
 control links to the canonical catalogue home artboard; the reparented hierarchy

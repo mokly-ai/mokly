@@ -129,13 +129,13 @@ export const variantReparentedScreen = defineScreen({
   ...designMetadata,
   colorSchemes: ["light"],
   description:
-    "A removed variant kept as a flat Changes row because its former parent is now another screen's variant.",
+    "A removed variant kept as a Changes row in Screens because its former parent is now another screen's variant.",
   ...artboards({
     desktop: <RemovedVariant {...reparented} viewport="desktop" />,
     mobile: <RemovedVariant {...reparented} viewport="mobile" />,
   }),
   slug: "variant-reparented",
   rationale:
-    "A current variant cannot own its own variant list. When the former parent id is reused as a variant, only the historical child changes: Changes hides the unmodified parent and its variant and shows the child once as a flat Removed row.",
+    "A current variant cannot own its own variant list. When the former parent id is reused as a variant, only the historical child changes: Changes hides the unmodified parent and its variant and shows the child once as a Removed row in the folder it was in.",
   title: "Removed variant after reparenting",
 });

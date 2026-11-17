@@ -2,7 +2,8 @@
  * Removed rows follow real background baselines in Serve: base moves add and
  * reconcile removed rows in place, a changed historical record replaces the
  * previous one rather than showing stale content, and a removed screen
- * variant joins its surviving parent's list.
+ * variant joins its surviving parent's list. Removed rows stand in their base
+ * folders, and only Changes shows them.
  */
 
 import { expect, type Page } from "@playwright/test";
@@ -61,7 +62,8 @@ test("background baselines reconcile removed rows and invalidate changed histori
 
   await changes.moveBase(withoutComponent);
   await combined.release();
-  await expect(removedRow(page, removedScreen)).toBeVisible();
+  await expect(removedRow(page, removedScreen)).toHaveCount(1);
+  await expect(removedRow(page, removedScreen)).toBeHidden();
   await expect(removedRow(page, removedPage)).toBeHidden();
   await expect(removedRow(page, removedComponent)).toHaveCount(0);
   const retained = await removedRow(page, removedScreen).elementHandle();
@@ -83,34 +85,23 @@ test("background baselines reconcile removed rows and invalidate changed histori
   await expect(
     page.locator("[data-mokly-nav-scroll] > a[data-nav-removed]"),
   ).toHaveCount(0);
-  // Flat removed rows follow the current tree in the server's order.
-  const flat = (await changes.index()).removedEntries
-    .filter(
-      ({ entry }) =>
-        entry.kind !== "component" &&
-        !("variantOf" in entry && entry.variantOf !== undefined),
-    )
-    .map(({ entry }) => `${entry.path}/index.html`);
-  expect(flat).toEqual(
-    expect.arrayContaining([
-      `${removedPage}/index.html`,
-      `${removedScreen}/index.html`,
-    ]),
-  );
-  expect(
-    await page
-      .locator(
-        '[data-nav-section="specs"] a[data-nav-removed]:not([data-removed-variant])',
-      )
-      .evaluateAll((rows) => rows.map((row) => row.getAttribute("data-route"))),
-  ).toEqual(flat);
+  // Each removed row stands in the folder of its base path.
+  for (const entryPath of [removedScreen, removedPage, removedComponent]) {
+    const folder = entryPath.split("/").slice(0, -1).join("/");
+    await expect(
+      page.locator(
+        `[data-nav-folder="folder:${folder}"] a[data-nav-removed][data-route="${entryPath}/index.html"]`,
+      ),
+    ).toHaveCount(1);
+  }
   expect(await retained!.evaluate((row) => row.isConnected)).toBe(true);
-  await expect(removedRow(page, removedComponent)).toBeVisible();
-  await expect(removedRow(page, removedPage)).toBeHidden();
+  for (const entryPath of [removedScreen, removedPage, removedComponent])
+    await expect(removedRow(page, entryPath)).toBeHidden();
   await expect(root).toHaveAttribute("data-test-retained", "true");
 
   await chooseFilter(page, "changed");
-  await expect(removedRow(page, removedPage)).toBeVisible();
+  for (const entryPath of [removedScreen, removedPage, removedComponent])
+    await expect(removedRow(page, entryPath)).toBeVisible();
   expect(previews).toEqual([]);
   await removedRow(page, removedPage).click();
   await expect(

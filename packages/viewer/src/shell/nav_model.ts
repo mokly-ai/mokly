@@ -14,35 +14,40 @@ import { queryConstrains, rowMatchesQuery, searchRow } from "./search_query.js";
 
 /**
  * Build the complete current-and-removed tree displayed in the rail. A removed
- * variant attaches to the current parent the branch-point lookup resolves for
- * it, so a moved or case-renamed parent keeps its removed siblings, while its
- * record keeps the baseline `variantOf`.
+ * variant attaches to the current or removed parent the branch-point lookup
+ * resolves for it, so a moved or case-renamed parent keeps its removed
+ * siblings, while its record keeps the baseline `variantOf`. Every other
+ * removed row stands at its branch-point path.
  */
 export function catalogueNavSections(
   catalogue: Catalogue,
 ): readonly NavSectionNode[] {
   const lookup = branchPoints(catalogue);
-  const removed: NavLeafNode[] = catalogue.removedEntries.map(
-    ({ entry, snapshotId }) => {
-      const parent = lookup.parentOf(entry);
-      const folderTitles = folderTitlesAt(catalogue.hierarchy, entry.path);
-      return {
-        kind: "leaf",
-        key: `removed:${entry.path}`,
-        entryId: entry.path,
-        entryKind: entry.kind,
-        label: `${entry.title} · Removed`,
-        title: entry.title,
-        tags: entry.tags,
-        ...(folderTitles.length > 0 ? { folderTitles } : {}),
-        removedPage: entry.kind === "page" || entry.kind === "document",
-        ...(snapshotId ? { snapshotId } : {}),
-        ...(parent?.source === "current"
-          ? { parentId: parent.entry.path }
-          : {}),
-      };
-    },
-  );
+  const removed: NavLeafNode[] = catalogue.removedEntries.map((record) => {
+    const { entry, snapshotId } = record;
+    const parent = lookup.parentOf(entry);
+    const folderTitles = folderTitlesAt(catalogue.hierarchy, entry.path);
+    return {
+      kind: "leaf",
+      key: `removed:${entry.path}`,
+      entryId: entry.path,
+      entryKind: entry.kind,
+      label: `${entry.title} · Removed`,
+      title: entry.title,
+      tags: entry.tags,
+      ...(folderTitles.length > 0 ? { folderTitles } : {}),
+      removedPage: entry.kind === "page" || entry.kind === "document",
+      formerFolderTitles: [
+        ...record.folderTitles,
+        ...(record.parentTitle === undefined ? [] : [record.parentTitle]),
+      ],
+      ...(snapshotId ? { snapshotId } : {}),
+      ...(parent?.source === "current" ? { parentId: parent.entry.path } : {}),
+      ...(parent?.source === "removed"
+        ? { removedParentId: parent.entry.path }
+        : {}),
+    };
+  });
   return withMovedRows(buildNavSections(catalogue.hierarchy, removed), lookup);
 }
 
@@ -83,7 +88,7 @@ export function navLeafVisible(
   if (
     selection.view === "changes"
       ? !context.changedEntries?.includes(leaf.entryId)
-      : leaf.removedPage || leaf.removedVariant
+      : isRemovedRow(leaf)
   )
     return false;
   return rowMatchesQuery(
@@ -97,6 +102,11 @@ export function navLeafVisible(
       leaf.folderTitles ?? [],
     ),
   );
+}
+
+/** Whether a row shows a removed entry, which only Changes lists. */
+function isRemovedRow(leaf: NavLeafNode): boolean {
+  return leaf.key.startsWith("removed:");
 }
 
 /** Whether a group should remain in the filtered tree. */

@@ -43,14 +43,14 @@ const CHANGED_NODES: readonly NavNode[] = [
     label: "Details",
     to: DESTINATIONS.added,
   },
-  ...MOVED_ROWS,
   ...REMOVED_SCREEN_ROWS.map((entry) => ({
     key: entry.key,
-    depth: 0,
+    depth: 2,
     kind: "screen" as const,
     label: `${entry.title} · Removed`,
     to: entry.design,
   })),
+  ...MOVED_ROWS,
 ];
 
 /** Changes uses the same catalogue navigation and filter as All. */

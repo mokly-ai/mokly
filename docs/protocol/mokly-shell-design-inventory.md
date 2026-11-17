@@ -32,7 +32,7 @@ its feature contract.
 | `design/browse/variants/variant-selected`                     | Browse shell › Screen variants                                       | Selected variant under its parent screen                      |
 | `design/browse/variants/variant-changes`                      | Browse shell › Screen variants                                       | Changed variant row inside its parent group                   |
 | `design/browse/variants/variant-removed`                      | Browse shell › Screen variants                                       | Removed variant under a surviving parent                      |
-| `design/browse/variants/variant-reparented`                   | Browse shell › Screen variants                                       | Removed variant kept flat after its parent becomes variant    |
+| `design/browse/variants/variant-reparented`                   | Browse shell › Screen variants                                       | Removed variant in Screens after its parent becomes variant   |
 | `design/browse/variants/changed-views`                        | Browse shell › Screen variants                                       | Change confined to the views that are not shown               |
 | `design/browse/index-entries/screen`                          | Browse shell › Index entries                                         | Folder's own screen selected, variants and members listed     |
 | `design/browse/index-entries/member`                          | Browse shell › Index entries                                         | Folder member selected, its crumb ending in that screen       |
@@ -133,7 +133,7 @@ Additional owning groups keep each page at no more than five screens:
   `design/browse/variants/changed-views` specify a screen's variants: the
   disclosed variant list with one variant selected, a changed variant row under
   a parent whose own render is unmodified, a deleted variant retained under its
-  surviving parent, a deleted variant kept flat when its former parent becomes
+  surviving parent, a deleted variant kept in Screens when its former parent becomes
   another screen's variant, and a change confined to views other than the one
   shown. `design/browse/variants/variant-selected` is the group's canonical screen.
   Their behavior contract is [variants](./mokly-variants.md).

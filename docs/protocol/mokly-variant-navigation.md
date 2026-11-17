@@ -81,14 +81,17 @@ The parent's variant bar lists the removed variant in the same place, and the
 removed variant's own page opens with that parent's workspace in Serve, the
 static output, and the embedded viewer.
 A parent with no current variants still discloses the list. Removing both
-parent and variant yields one removed entry for each.
+parent and variant yields one removed entry for each, and the removed parent
+row discloses its removed variants in base order.
 
-If the lookup has no eligible parent, keep the
-removed variant as one flat fallback row. Its breadcrumbs still show the
+If the lookup has no eligible parent, the removed variant stands at its base
+path as one fallback row, under the
+[removed entry placement](./mokly-catalogue-changes.md#removed-entry-presentation).
+Its breadcrumbs still show the
 folder titles of the base commit and the former parent's title; the former-parent crumb is plain
-text because it has no eligible destination. Hierarchy construction removes a
-row from flat fallback only after successful attachment, so every removed entry
-appears exactly once.
+text because it has no eligible destination. Hierarchy construction places a
+fallback row only when attachment fails, so every removed entry appears
+exactly once.
 
 Removed screen variants show their read-only previous version without
 comparison controls. Removed component variants are eligible for comparison

@@ -62,8 +62,9 @@ test("All counts every child row a folder shows", () => {
 });
 
 test("Changes counts only the child rows it keeps", () => {
+  // Product also keeps the removed page that stood in it at the branch point.
   assert.deepEqual(counts({ view: "changes" }), {
-    "folder:product": "2",
+    "folder:product": "3",
     "folder:product/browse": "1",
   });
 });

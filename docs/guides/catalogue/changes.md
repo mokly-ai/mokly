@@ -173,8 +173,7 @@ A screen or component variant is its own row in Changes and counts on its own.
 When only a variant changed, the parent still shows a changed mark on its row
 so the group stays visible, and opening the parent from Changes takes you to
 the first changed variant. A deleted variant keeps a Removed row under the
-parent it belonged to, shown in Changes and hidden in All; if the parent went
-too, the row joins the others at the top level. A change confined to one
+parent it belonged to, also when the parent went too. A change confined to one
 viewport or scheme, such as a dark-only edit, puts a dot on the control that
 would take you to it: the theme control when the change is in the other theme,
 the viewport control when it is in the other viewport. Details names those
@@ -189,6 +188,12 @@ dots and Changed views point to changes elsewhere.
 
 An added entry shows its current preview and an Added status, with no
 comparison controls, because there is no earlier version.
+
+A removed entry appears only in Changes, never in All. Its Removed row stands
+where the entry used to be, as a deleted file does in a code diff: in its old
+folder, after the folder's current rows. When you deleted the whole folder,
+Changes shows the folder again under its old title, with the removed entries
+inside it.
 
 A removed page, document or screen keeps its Removed status and opens the
 version from the branch point instead, labelled "Showing previous version". A

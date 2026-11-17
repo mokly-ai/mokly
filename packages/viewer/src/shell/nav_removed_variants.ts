@@ -1,7 +1,7 @@
 /**
  * Removed-variant attachment: each retained baseline variant joins the list of
  * the current parent the branch-point lookup resolved for it, after the
- * current variants. A row that cannot attach stays a flat removed row.
+ * current variants. A row that cannot attach stands at its branch-point path.
  */
 
 import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
@@ -11,7 +11,7 @@ import type { NavLeafNode, NavNode } from "./nav_tree.js";
 
 /**
  * Retained baseline variants grouped by the surviving same-kind parent the
- * lookup resolved for them. An ineligible variant keeps its flat removed row.
+ * lookup resolved for them. An ineligible variant stands at its own path.
  */
 export function adoptedVariants(
   hierarchy: CatalogueHierarchy<ShellCatalogueRoutedEntry>,
