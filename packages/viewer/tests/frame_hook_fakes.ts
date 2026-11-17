@@ -29,6 +29,8 @@ export interface HookHost {
   pendingMounts: Deferred<MountedFrame>[];
   pendingUpdates: Deferred<void>[];
   registry: ShellFrameRegistry | undefined;
+  /** Mounts the frame again, as Try again does. */
+  retry: (() => void) | undefined;
   root: Root;
   source: string;
   status: string;

@@ -173,6 +173,7 @@ export function StageFrame({
           ? { kind: "flow" }
           : { kind: component ? "canvas" : "frame", viewport }
       }
+      retry={{ onClick: mounted.retry }}
       scheme={preview?.colorScheme ?? selected?.colorScheme ?? "light"}
     >
       {framed}

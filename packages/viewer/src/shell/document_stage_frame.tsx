@@ -87,6 +87,7 @@ export function DocumentStageFrame({
       <DocumentFrame
         error={mounted.status === "error"}
         ref={stage}
+        retry={{ onClick: mounted.retry }}
         scheme={scheme}
       >
         {source ? (

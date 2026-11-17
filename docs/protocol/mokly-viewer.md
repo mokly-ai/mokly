@@ -100,6 +100,9 @@ Omitted `frameAdapter` uses `sameOriginAdapter()`. Cross-origin hosts
 explicitly provide `postMessageAdapter({ frameOrigin })` under the
 [adapter protocol](./mokly-frame-adapter.md). One adapter can mount several
 independent frames; it owns no global document state.
+A preview frame whose mount rejects, or that reports an error, shows
+`This preview could not be loaded.` below the frame with `Try again`. Try again
+mounts that frame again and keeps the rest of the shell as it is.
 
 ## Selection, Events And Imperative Use
 

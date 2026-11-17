@@ -155,7 +155,9 @@ catalogue, and the controls' wording, which the design catalogue shares.
 `Stage` draws the dotted stage of a preview. `PreviewFrame` draws one frame on
 it: the wrapper that records the scheme of the shown render, the viewport's
 label with the `LightOnlyNote` of `scheme-fallback`, and the lines of a
-preview that is unavailable or that failed to load. `DocumentFrame` hosts a
+preview that is unavailable or that failed to load. The failed line shows Try
+again when the host passes `retry`: a callback, or an address in a static
+depiction. `DocumentFrame` hosts a
 whole document, and `PreviewIframe` is the `<iframe>` element itself, always
 sandboxed without scripts. The host passes the frame's `ref`, its `src` or
 `srcDoc`, its `key`, and its data attributes in their order, and it loads and

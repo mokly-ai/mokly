@@ -55,6 +55,10 @@ export function mountLocalDocument(
     let operations: LocalOperations | undefined;
     let disposed = false;
     let release = () => {};
+    // The document may load for as long as the server needs. A load that
+    // brings no accepted document gives the mount five seconds to see one.
+    let timer: number | undefined;
+    let accepted = false;
     const emit = (event: FrameEvent) =>
       notifyFrameListeners(win, listeners, event);
     const disposeActivation = () => {
@@ -140,10 +144,14 @@ export function mountLocalDocument(
             );
       }
     };
-    const timer = win.setTimeout(() => {
-      reject(new FrameError("timeout"));
-      dispose();
-    }, 5000);
+    const awaitAcceptedDocument = () => {
+      if (accepted) return;
+      win.clearTimeout(timer);
+      timer = win.setTimeout(() => {
+        reject(new FrameError("timeout"));
+        dispose();
+      }, 5000);
+    };
     const adoptLoadedDocument = () => {
       const doc = localFrameAccess(frame).document();
       if (!doc || doc.defaultView?.frameElement !== frame) {
@@ -156,7 +164,10 @@ export function mountLocalDocument(
         url,
       );
       if (!authenticated) {
-        if (assignedFrameResource(frame, url)) return;
+        if (assignedFrameResource(frame, url)) {
+          awaitAcceptedDocument();
+          return;
+        }
         reject(new FrameError("origin"));
         dispose();
         return;
@@ -178,6 +189,7 @@ export function mountLocalDocument(
       operations = create(authenticated, emit);
       operationsDocument = authenticated;
       operations.subscribe(listeners.size > 0);
+      accepted = true;
       resolve({
         updateUsage: (usage) => run(() => operations!.updateUsage(usage)),
         listInstanceBoundaries: () => run(() => operations!.list()),

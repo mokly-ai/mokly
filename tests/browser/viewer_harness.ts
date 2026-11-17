@@ -45,6 +45,7 @@ interface FrameHookHarness {
   rerender(id: string): void;
   resolveMount(id: string): void;
   resolveUpdate(id: string): void;
+  retry(id: string): void;
   snapshot(id: string): {
     activeSubscriptions: number;
     disposals: number;

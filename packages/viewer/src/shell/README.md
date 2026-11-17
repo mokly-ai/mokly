@@ -481,6 +481,7 @@ and expanded state, so geometry never reads package selectors. Each shell root
 owns one `frame_registry.tsx` instance, so frame
 path-keyed identity, readiness, validated usage revisions and disposal cannot cross an
 independent embedded viewer. `frame_mount_hook.ts` mounts each frame, and
+mounts it again when the reader presses Try again after a failed load, and
 `frame_session_usage.ts` adopts changed usage. A mount reports ready in the same
 step as its last usage-revision check, so usage adopted during mounting always
 reaches the frame. Public-handle inspection and

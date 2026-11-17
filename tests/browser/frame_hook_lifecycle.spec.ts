@@ -73,7 +73,7 @@ test("a custom adapter that resolves after unmount is disposed", async ({
     .toMatchObject({ disposals: 1, pendingMounts: 0, sessions: 0 });
 });
 
-test("a custom adapter rejection reports an owned frame error", async ({
+test("a custom adapter rejection reports an owned frame error, and retry mounts again", async ({
   page,
 }) => {
   await page.evaluate(() =>
@@ -96,6 +96,21 @@ test("a custom adapter rejection reports an owned frame error", async ({
   expect(
     await page.evaluate(() => window.frameHookHarness.ready("rejected-frame")),
   ).toBe("rejected");
+
+  await page.evaluate(() => window.frameHookHarness.retry("rejected-frame"));
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.frameHookHarness.snapshot("rejected-frame")),
+    )
+    .toMatchObject({ mounts: 2, pendingMounts: 1, status: "loading" });
+  await page.evaluate(() =>
+    window.frameHookHarness.resolveMount("rejected-frame"),
+  );
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.frameHookHarness.snapshot("rejected-frame")),
+    )
+    .toMatchObject({ pendingMounts: 0, sessions: 1, status: "ready" });
 });
 
 test("an adapter without updateUsage replaces its frame for new evidence", async ({

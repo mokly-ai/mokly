@@ -42,9 +42,13 @@ interface MountedFrameInput {
   usage: CatalogueUsage;
 }
 
-/** Mount one frame and adopt evidence without replacing its DOM element. */
+/**
+ * Mount one frame and adopt evidence without replacing its DOM element.
+ * `retry` mounts the same element again, such as after a failed load.
+ */
 export function useMountedShellFrame(input: MountedFrameInput): {
   frameRef: RefObject<HTMLIFrameElement | null>;
+  retry(): void;
   status: ShellFrameStatus;
 } {
   const registry = useOptionalShellFrameRegistry();
@@ -188,7 +192,7 @@ export function useMountedShellFrame(input: MountedFrameInput): {
         : undefined);
   }, [input.identity, input.layout, input.sources, input.usage, registry]);
 
-  return { frameRef, status };
+  return { frameRef, retry: replace, status };
 }
 
 function sameFrameIdentity(
