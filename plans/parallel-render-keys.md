@@ -128,12 +128,15 @@ Depends on: 1
 The non-ui implementor changes calculation and its runtime call together.
 It keeps the records, closure rules, hashes, and serialization unchanged.
 
-- [ ] Run exporter calculations on existing bounded render workers with caller tracing context.
-- [ ] Preserve deterministic module association and the unchanged fallback.
-- [ ] Add the permitted build timing span and allowlist entry. Run the existing timing reporter tests.
-- [ ] Keep the five existing render key test modules unchanged. Add the missing many-exporter worker case and prove it fails on a wrong result.
-- [ ] Have the docs implementor add the worker entry to the graph README. Clarify indexed task guidance if keys reuse that boundary.
-- [ ] Run focused Rust tests, formatting, and clippy. Report test cost.
+- [x] Run exporter calculations on existing bounded render workers with caller tracing context.
+- [x] Preserve deterministic module association and the unchanged fallback.
+- [x] Add the permitted build timing span and allowlist entry. Run the existing timing reporter tests.
+- [x] Keep the five existing render key test modules unchanged. Add the missing many-exporter worker case and prove it fails on a wrong result.
+- [x] Have the docs implementor add the worker entry to the graph README. Clarify indexed task guidance if keys reuse that boundary.
+- [x] Run focused Rust tests, formatting, and clippy. Report test cost.
+
+Evidence: `.context/parallel-render-keys/implementation/report.md` and
+`.context/parallel-render-keys/documentation-implementation.md`.
 
 ## Milestone 3: Measurements and verification
 
@@ -142,16 +145,23 @@ Depends on: 2
 The orchestrator keeps builds sequential. Check disk and memory before each
 large Cargo build. Set `CARGO_INCREMENTAL=0` and distinct target directories.
 
-- [ ] Build release `origin/main` and the branch in separate checkouts and target directories.
-- [ ] Measure `examples/basic`, HTML and React fixtures from `scripts/large/`, and builds with Changes. Compare elapsed time and core peak RSS.
+- [x] Build release `origin/main` and the branch in separate checkouts and target directories.
+- [x] Measure `examples/basic`, HTML and React fixtures from `scripts/large/`, and builds with Changes. Compare elapsed time and core peak RSS.
+- [x] Run the canonical strict example build and a Serve HTTP smoke test. Record the blocked desktop visual smoke.
 - [ ] Send the implementation SHA to the performance orchestrator at once after push. Obtain the target catalogue's 4-vCPU Serve measurement, including active renders, before completion.
 - [ ] Run targeted tests, `cargo xtask check --suite repository`, and `cargo xtask check`. Put Git 2.45 or later first on PATH and install git-lfs.
 
 Evidence lives under `.context/parallel-render-keys/`.
+Measurement summary: `.context/parallel-render-keys/measurements-summary.md`.
+Smoke evidence: `.context/parallel-render-keys/smoke-report.md`.
 
 ## Milestone 4: Commit, review, and pull request
 
-Depends on: 1, 2, 3
+Depends on: 1, 2, and the local checks of 3
+
+The initial implementation push starts the target catalogue measurement in
+Milestone 3. Its result holds plan deletion and pull request completion.
+Independent review can run while that measurement runs.
 
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the `implementation-review` skill after push. Check each new finding. Apply up to two fix rounds and re-review. Record follow-up items for other findings.

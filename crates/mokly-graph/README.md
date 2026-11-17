@@ -181,7 +181,10 @@ generation. `RenderWorkers` wrappers forward `comparison_parallelism`,
 `comparison`, `comparison_tasks`, and `comparison_stream` in the same way.
 Without these forwards, the comparison runs one view at a time. A scheduled
 task still calls the wrapper's own methods, so the wrapper's checks stay
-active.
+active. `RenderKeys::build_with_workers` also runs one key job for each
+exporting module through `comparison_tasks` on the shared render workers.
+Without the `comparison_tasks` forward, the key calculation runs one module at
+a time.
 
 `retained_comparison_input` returns a comparison input that the generation
 already holds. It reads no source and logs nothing. `Ready` holds the decoded
@@ -273,7 +276,7 @@ retention disabled.
   capture share.
 - [`src/workers.rs`](./src/workers.rs) defines `RenderWorkers` and
   `ThreadWorkers`, the injected worker pool, and `ComparisonTask`, one indexed
-  comparison job. Its `stylesheets` method runs one `StylesheetWorker` job for
+  job. Its `stylesheets` method runs one `StylesheetWorker` job for
   each stylesheet root, keeps the root order, and returns the first failure in
   root order. Its `comparison_tasks` method runs every index of a
   `ComparisonTask` once and returns when all of them have run. Its
@@ -284,6 +287,8 @@ retention disabled.
 - [`src/render_inputs.rs`](./src/render_inputs.rs) defines `RenderInputs` and
   `RenderKeys`, the render input key of each entry module over its module
   closure, resolution files, bindings, and bundle environment.
+  `RenderKeys::build_with_workers` calculates the same keys as
+  `RenderKeys::build` on injected `RenderWorkers`.
 - [`src/public_inputs.rs`](./src/public_inputs.rs) defines `ClosureInputs`,
   the leased closure-file records shared by equal document keys across
   generations.
