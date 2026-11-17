@@ -1903,8 +1903,13 @@ Depends on: 1, 2, 3, 4, 5
       request. Audit preservation with the `git-merge` skill.
   - [x] Merge main `03bedb6ec` with its comparison-usage, render-worker, and
         browser-error isolation changes. Preserve every incoming path.
-  - [ ] Repeat the release pairs against exact main `03bedb6ec`, with
+  - [x] Repeat the release pairs against exact main `03bedb6ec`, with
         separate checkouts and target directories. Keep every earlier run.
+  - [x] Merge main `0accb6818` with its detail-publication reuse and
+        MockLink fixture changes. Preserve every incoming path.
+  - [ ] Repeat the release pairs against exact main `0accb6818`. Archive
+        each checkout's measured programs before its source changes. Keep
+        each checkout's own Cargo target and all earlier evidence.
   - [ ] Run repository verification on the combined source before the final
         implementation review. Let final CI verify the combined branch.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
@@ -1928,6 +1933,12 @@ Main integration evidence:
 `.context/bundle-disk-cache/merge-03bedb6ec/preservation.json`,
 `.context/bundle-disk-cache/merge-03bedb6ec/decisions.md`, and
 `.context/bundle-disk-cache/logs/merge-03bedb6ec-audit.log`.
+The repeated release evidence is under
+`.context/bundle-disk-cache/m5-final-03bedb6e/`.
+Latest main integration evidence:
+`.context/bundle-disk-cache/merge-0accb6818/preservation.json`,
+`.context/bundle-disk-cache/merge-0accb6818/decisions.md`, and
+`.context/bundle-disk-cache/logs/merge-0accb6818-audit.log`.
 
 ## Post-merge follow-up (non-blocking)
 
