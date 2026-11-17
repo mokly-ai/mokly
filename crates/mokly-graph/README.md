@@ -123,7 +123,9 @@ render.
 compact tier and the base and head captures of `mokly-compare` share it.
 `EncodedView::restore` rebuilds the exact bytes, parsed tree, and trusted
 annotations without parsing authored HTML, or returns a
-`document_error::CodecError`.
+`document_error::CodecError`. An encoded view also lends its retained usage
+records without a restore. An artifact without a composed document retains no
+usage.
 
 `collect_comparison` streams complete side validation to an ordered
 `ComparisonCollector`. Each view composes once, including when the artifact
@@ -155,6 +157,15 @@ returns to the original source recipes. Wrappers that add checks must return
 `None` from `comparison_capture`, so rebuilding cannot bypass their checks.
 Production callers supply fresh base generations.
 
+`RenderGeneration::comparison_usage` returns the usage records of one view's
+comparison document, or `None` when its artifact has no composed document. Its
+default reads `comparison_document`, so it has the checks and errors of that
+read. A comparison capture returns the retained usage of a kept view without a
+restore, and reads every other view from its source. A wrapper that adds no
+checks forwards this read, so that a capture below it still skips the restore.
+A wrapper that adds checks keeps the default, so that each source read runs
+those checks.
+
 `schedule_comparison_tasks` runs a caller's `ComparisonTask` once for every
 index on the generation's render workers. It returns when every index has run.
 The caller sizes each of these calls by `comparison_parallelism`.
@@ -181,7 +192,10 @@ generation. `RenderWorkers` wrappers forward `comparison_parallelism`,
 `comparison`, `comparison_tasks`, and `comparison_stream` in the same way.
 Without these forwards, the comparison runs one view at a time. A scheduled
 task still calls the wrapper's own methods, so the wrapper's checks stay
-active.
+active. `RenderKeys::build_with_workers` also runs one key job for each
+exporting module through `comparison_tasks` on the shared render workers.
+Without the `comparison_tasks` forward, the key calculation runs one module at
+a time.
 
 `retained_comparison_input` returns a comparison input that the generation
 already holds. It reads no source and logs nothing. `Ready` holds the decoded
@@ -273,7 +287,7 @@ retention disabled.
   capture share.
 - [`src/workers.rs`](./src/workers.rs) defines `RenderWorkers` and
   `ThreadWorkers`, the injected worker pool, and `ComparisonTask`, one indexed
-  comparison job. Its `stylesheets` method runs one `StylesheetWorker` job for
+  job. Its `stylesheets` method runs one `StylesheetWorker` job for
   each stylesheet root, keeps the root order, and returns the first failure in
   root order. Its `comparison_tasks` method runs every index of a
   `ComparisonTask` once and returns when all of them have run. Its
@@ -284,6 +298,8 @@ retention disabled.
 - [`src/render_inputs.rs`](./src/render_inputs.rs) defines `RenderInputs` and
   `RenderKeys`, the render input key of each entry module over its module
   closure, resolution files, bindings, and bundle environment.
+  `RenderKeys::build_with_workers` calculates the same keys as
+  `RenderKeys::build` on injected `RenderWorkers`.
 - [`src/public_inputs.rs`](./src/public_inputs.rs) defines `ClosureInputs`,
   the leased closure-file records shared by equal document keys across
   generations.

@@ -18,7 +18,7 @@ use crate::comparison_types::{ComparisonResult, DocumentComparison, EntryClassif
 use crate::move_types::{EntryPair, MovePair, Pairing};
 use crate::{projection_index, snapshots};
 
-pub(super) fn entry(path: &str, kind: EntryKind, parent: Option<&str>) -> ModelEntry {
+pub(crate) fn entry(path: &str, kind: EntryKind, parent: Option<&str>) -> ModelEntry {
     let visual = VisualEntry {
         control_order: Vec::new(),
         color_schemes: vec![ColorScheme::Light],
@@ -69,7 +69,7 @@ fn generation(model: CatalogueModel) -> Arc<dyn RenderGeneration> {
     ))
 }
 
-pub(super) fn classified(path: &str, kind: EntryKind, state: ReviewState) -> EntryClassification {
+pub(crate) fn classified(path: &str, kind: EntryKind, state: ReviewState) -> EntryClassification {
     EntryClassification {
         kind,
         path: path.into(),
@@ -96,7 +96,7 @@ pub(super) fn classified(path: &str, kind: EntryKind, state: ReviewState) -> Ent
     }
 }
 
-pub(super) fn result(
+pub(crate) fn result(
     before: Vec<ModelEntry>,
     after: Vec<ModelEntry>,
     entries: Vec<EntryClassification>,
@@ -181,7 +181,7 @@ fn finish_result(
     }
 }
 
-pub(super) fn details(model: &CatalogueModel) -> BTreeMap<String, EntryDetailV4> {
+pub(crate) fn details(model: &CatalogueModel) -> BTreeMap<String, EntryDetailV4> {
     let state = projection_index::publication("mokly.config.json".into(), "base");
     let index = projection::index(model, &[], &state);
     let mut details = projection::pending_details(model, &index, &[]);
