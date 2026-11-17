@@ -54,5 +54,10 @@
 - **Done when:** Base comparison capture jobs run on their own pool, and a
   test shows that a foreground render finishes while base jobs wait at the
   admission gate.
+- **Related:** `plans/follow-ups/css-bundling-global-pool.md` measures the
+  global Rayon pool that base stylesheet bundles start on the classification
+  thread. Both items come from the same admission gate. The base pool of this
+  item is one candidate direction there, because it would also hold the base
+  bundle loads.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/ee7d8ea739bd103aacd001f8e75e5aa144929348/plans/stylesheet-bundle-performance.md?plain=1#L639).

@@ -138,7 +138,7 @@ impl JavaScriptGraph {
                     Some((source.handle.clone(), entry.metadata.source.path.clone()))
                 })
                 .collect();
-            let keys = Arc::new(RenderKeys::build(
+            let keys = Arc::new(RenderKeys::build_with_workers(
                 &RenderInputs {
                     generation,
                     bindings: &catalogue.javascript.bindings,
@@ -147,6 +147,7 @@ impl JavaScriptGraph {
                     declarations: &declaring,
                 },
                 NodeKey(fingerprint),
+                self.runtime.workers.as_ref(),
             ));
             fragments = Arc::new(MemoFragments::new(
                 keys.clone(),
