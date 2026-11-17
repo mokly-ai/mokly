@@ -25,6 +25,7 @@ use mokly_source_interface::tree::{SourceTree, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::changes_base::NativeBase;
+use crate::serve_base_cancel::PreparingBase;
 use crate::serve_capture_cancel::CaptureCancellation;
 use crate::serve_changes::{ServeChanges, Source};
 use crate::serve_changes_base::CombinedCancel;
@@ -46,6 +47,7 @@ fn source(
         head: Arc::new(Unimock::new(())),
         warnings: scopes(terminal).begin(),
         services: ServeChanges {
+            kept_base: Arc::default(),
             sidecars: Arc::new(Unimock::new(
                 PoolSchedulingMock::pool
                     .next_call(matching!(Some(_)))
@@ -96,11 +98,11 @@ fn replaced_run_cancels_a_prepared_base_generation_without_cancelling_the_comman
     let command = Arc::new(ServeCancellation::default());
     let run = Arc::new(ChangeToken::default());
     let operation = Arc::new(CaptureCancellation::default());
-    let cancellation = Arc::new(CombinedCancel {
+    let cancellation = Arc::new(PreparingBase::new(Arc::new(CombinedCancel {
         operation: operation.clone(),
         command: command.clone(),
         generation: run.clone(),
-    });
+    })));
     let pool: Arc<dyn SidecarPool> = Arc::new(Unimock::new(()));
     let head = head(
         pool.clone(),
@@ -210,11 +212,11 @@ fn root(path: &str) -> StylesheetRoot {
 fn background_base_workers_bundle_stylesheet_roots_on_the_classification_thread() {
     let command = Arc::new(ServeCancellation::default());
     let operation = Arc::new(CaptureCancellation::default());
-    let cancellation = Arc::new(CombinedCancel {
+    let cancellation = Arc::new(PreparingBase::new(Arc::new(CombinedCancel {
         operation: operation.clone(),
         command: command.clone(),
         generation: Arc::new(ChangeToken::default()),
-    });
+    })));
     let pool: Arc<dyn SidecarPool> = Arc::new(Unimock::new(()));
     let head = head(
         pool.clone(),

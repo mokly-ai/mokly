@@ -14,7 +14,7 @@ the same, so this work repeats for the same commit. On 2026-10-29, `main` at
 on the baseline machine. The base side took 5.0 s of it. On 2026-10-30 a
 machine 1.6 to 1.9 times slower measured 22.1 s and 9.7 s. That evidence
 stayed in the closed perf 6 workspace. Milestone 5 measures again from
-`main` at `c42755bcd`.
+the last merged `main`, now `f380e9462`.
 
 Serve keeps the last prepared base side in memory: the captured base
 generation with its render graph, its sources, its leases, its bundle
@@ -233,6 +233,39 @@ marks each change. Calls 14 to 24 are new calls of 2026-11-16.
     methods through `BaseReader`, and keep its retained-input path and
     `comparison_capture` result of `None`. Reason: the scheduling of `main`
     stays active, with the reader's cancellation and owned failure checks.
+
+33. The continuation orchestrator's call, 2026-11-17: put one shared kept-base
+    slot on `ServeChanges`, and put retention policy in a provider wrapper.
+    Hash the adopted configuration, its resolved paths and authored inputs,
+    the merge-base commit, and the scripts setting. Release by `Arc` identity.
+    Reason: every source shares one bounded slot, and an old reader cannot
+    clear a newer base.
+34. The continuation orchestrator's call, 2026-11-17: give fresh base work one
+    detachable cancellation token. Before keep it follows the classification,
+    capture scope, and command stop. An eligible keep detaches inside the
+    original classification's commit callback. Reason: replacement cannot
+    race the handoff, and a base that is not kept keeps its earlier lifetime.
+35. The continuation orchestrator's call, 2026-11-17: keep each reader's
+    `CombinedCancel` separate from the detachable base token. The new Git
+    repository uses the still-attached base token during freshness checks.
+    Reason: a cancelled reader cannot poison a kept base, and a freshness
+    check can still stop promptly before reuse.
+36. The continuation orchestrator's call, 2026-11-17: take a slot snapshot and
+    run freshness checks outside its lock. Choose head catalogue directories
+    for HTML evidence, and runtime usage and unmapped directories for sidecar
+    evidence. End stale local handles before fresh preparation. Reason: slow
+    IO holds no slot lock, and the check uses the exact selection inputs.
+37. The continuation orchestrator's call, 2026-11-17: the Serve provider checks
+    evidence and source eligibility, installs the kept base without a new
+    sample, and returns the existing `BaseReuse` reader path. Reason: the
+    original sample, typed failure ownership, and bounded fallback stay in
+    force for both the first result and later classifications.
+
+38. The non-UI implementor's call, 2026-11-17: `ServeChanges` owns the slot
+    strongly, and each classification's provider holds only a weak slot
+    handle. Reason: `BaseReader` retains its provider. An old in-flight reader
+    must not keep a newer slot entry after the last Serve state drops. Its
+    own base can remain until the reader ends, as decision 4A permits.
 
 ### Code facts on `main` at `a1d834fbe`
 
@@ -653,40 +686,44 @@ Depends on: 3
 
 The `non-ui implementor` keeps the base in Serve and reuses it.
 
-- [ ] Add one kept-base slot to `ServeChanges`, shared by every `Source`.
-- [ ] Prepare the base under decision 2. Until the keep, the base's Git
+- [x] Add one kept-base slot to `ServeChanges`, shared by every `Source`.
+- [x] Prepare the base under decision 2. Until the keep, the base's Git
       runner, source tree, sidecar pool handle, and render workers follow
       the preparing classification. At the keep they detach, and then they
       follow only Serve's stop.
-- [ ] Give each classification its own reader of the kept base. A selected
+- [x] Give each classification its own reader of the kept base. A selected
       capture keeps its own check before each document and each resource.
-- [ ] Reuse only for an equal key and current freshness checks.
-- [ ] Release on the base events, and at stop when the last Serve state
+- [x] Reuse only for an equal key and current freshness checks.
+- [x] Release on the base events, and at stop when the last Serve state
       drops, under decision 4.
-- [ ] Apply design calls 1 to 5, 7 to 10, 14, and 15.
-- [ ] Test: a second classification with the same merge base prepares once.
-- [ ] Test: a merge-base move prepares again and drops the old base.
-- [ ] Test: a checkout setting that changes after the first base read and
+- [x] Apply design calls 1 to 5, 7 to 10, 14, and 15.
+- [x] Test: a second classification with the same merge base prepares once.
+- [x] Test: a merge-base move prepares again and drops the old base.
+- [x] Test: a checkout setting that changes after the first base read and
       before the keep releases the slot at the next classification and
       prepares again, under design call 25.
-- [ ] Test: cancel the preparing classification after the keep, and cancel a
+- [x] Test: cancel the preparing classification after the keep, and cancel a
       capture in a base read. Then a reuse reads a document and a resource.
-- [ ] Test: a changed frozen resource on a reuse releases the base, and the
+- [x] Test: a changed frozen resource on a reuse releases the base, and the
       same classification prepares once.
-- [ ] Test: after the last Serve state drops, a weak handle of the base is
+- [x] Test: after the last Serve state drops, a weak handle of the base is
       empty.
-- [ ] See each new test fail once. Run the targeted tests of `mokly-compare`,
+- [x] See each new test fail once. Run the targeted tests of `mokly-compare`,
       `mokly-git`, `mokly-cli`, and `mokly-server` when it changed.
-- [ ] Update `crates/mokly-cli/README.md` for the kept base.
+- [x] Update `crates/mokly-cli/README.md` for the kept base.
+
+Evidence: `.context/keep-base-side-in-memory/milestone-4-report.md` and
+`.context/keep-base-side-in-memory/milestone-4-docs-report.md`.
 
 ## Milestone 5: Measurement and smoke test
 
 Depends on: 4
 
-- [ ] Build the after binary with `cargo build --release -p mokly-cli`. The
-      before binary is `.context/keep-base-side-in-memory/before-mokly`,
-      built from `c42755bcd`. When the branch merged a later `main` that
-      changes Changes, build a new before binary from that merge base.
+- [ ] Build release binaries of the branch and the last merged `main`,
+      `f380e9462`, with `cargo build --release -p mokly-cli`. Each checkout
+      has its own target directory. The before checkout is
+      `.context/before-checkout`, with `.context/target-before`. Refresh
+      `.context/keep-base-side-in-memory/before-mokly` from that build.
 - [ ] Interleave three before runs and three after runs, in the order before,
       after, before, after, before, after. Measure the Serve edit on
       `examples/basic` and on the React fixture of the
@@ -714,8 +751,8 @@ Depends on: 4
 Depends on: every other milestone
 
 Evidence: `.context/keep-base-side-in-memory/merge-resolution.md` holds the
-conflict decisions of the merge of `main` at `c42755bcd`. The pull request
-description copies them.
+preservation audits of the merges of `main` at `6d0fcbb46` and `f380e9462`.
+The pull request description copies their outcomes.
 
 - [ ] Remove the status lines that Milestone 1 added. Keep the macOS item of
       the runtime status line.
