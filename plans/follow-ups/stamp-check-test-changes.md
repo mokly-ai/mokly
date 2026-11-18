@@ -24,9 +24,10 @@
 - **Options:**
   - **A.** Keep the two test changes. No work. Effort: Small.
   - **B.** Restore the two tests, and remove the early exit, so that the check reads every entry again. Serve edits lose the saving. Effort: Small.
+  - **C.** Apply A. Also move the two tests of `crates/mokly-render/src/_tests_/asset_stamp_tests.rs` from the test reference `InputStamp::current` in `crates/mokly-render/src/_tests_/stamp_reference.rs` to `InputStamp::matches`, with every assertion. Each `stamp == stamp.current(&tree)` becomes `stamp.matches(&tree)`, and each `!=` becomes `!stamp.matches(&tree)`. Their `next_call` clauses become `some_call`, as the Rust mock rule asks for changed tests. Each asset and identity test then runs the check that the product runs. It changes two more existing tests. Effort: Small.
 - **Left out:** Restore the two tests and keep the early exit, because the two tests then fail, and the gate fails.
 - **Wider fix:** None, because the problem is one rule of one task message, not a class.
 - **Previous examples:** None found.
 - **Related:** None.
-- **Recommendation:** A. The changes keep every assertion about a result, and they follow the behaviour that the task message asked for.
+- **Recommendation:** A. The changes keep every assertion about a result, and they follow the behaviour that the task message asked for. C also suits when the answer allows more changes to existing tests.
 - **Action:** ask the user, because the task message asked to keep every existing test unchanged, and no recorded decision allows these two changes.

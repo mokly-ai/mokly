@@ -8,25 +8,33 @@ use crate::postcss_scan::Scan;
 use super::{directory_files, membership};
 
 impl InputStamp {
-    /// The stamp that `tree` gives for the keys of this stamp.
+    /// The stamp that `tree` gives for the keys of this stamp. It names every field, so a new
+    /// field does not compile until the reference reads it.
     pub(crate) fn current(&self, tree: &dyn SourceTree) -> Self {
+        let Self {
+            memberships,
+            files,
+            assets,
+            identities,
+            directories,
+        } = self;
         let mut result = Self::default();
-        for path in self.memberships.keys() {
+        for path in memberships.keys() {
             result
                 .memberships
                 .insert(path.clone(), membership(tree, path));
         }
-        for path in self.files.keys() {
+        for path in files.keys() {
             result.file(tree, path.clone());
         }
-        for path in self.assets.keys() {
+        for path in assets.keys() {
             result.asset(tree, path.clone());
         }
-        for path in self.identities.keys() {
+        for path in identities.keys() {
             result.identity(tree, path.clone());
         }
         let mut scan = Scan::default();
-        for (path, pattern) in self.directories.keys() {
+        for (path, pattern) in directories.keys() {
             let files = directory_files(&mut scan, tree, path, pattern);
             result
                 .directories

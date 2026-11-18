@@ -45,10 +45,12 @@ const PAIRS: [(State, State); 9] = [
     (Missing, Missing),
 ];
 
-/// An in-memory tree that records each digested path in call order.
+/// An in-memory tree that records each path that `digest` reads, in call order. It keeps
+/// the digests of opaque inputs apart, so only `digest_unretained` reads an asset target.
 #[derive(Default)]
 struct MemoryTree {
     digests: BTreeMap<PathBuf, String>,
+    unretained: BTreeMap<PathBuf, String>,
     nodes: BTreeMap<PathBuf, Node>,
     objects: BTreeMap<PathBuf, String>,
     children: BTreeMap<PathBuf, Vec<Child>>,
@@ -74,6 +76,12 @@ impl SourceTree for MemoryTree {
     fn digest(&self, path: &Path) -> Result<String> {
         self.digested.lock().unwrap().push(path.into());
         self.digests.get(path).cloned().ok_or_else(|| missing(path))
+    }
+    fn digest_unretained(&self, path: &Path) -> Result<String> {
+        self.unretained
+            .get(path)
+            .cloned()
+            .ok_or_else(|| missing(path))
     }
 }
 
@@ -129,12 +137,12 @@ fn tree(states: [State; ENTRIES]) -> MemoryTree {
     }
     if let Some(target) = value(logo, "/repo/assets/first.svg", "/repo/assets/second.svg") {
         tree.nodes.insert("/repo/logo.svg".into(), node(target));
-        tree.digests.insert(target.into(), "same bytes".into());
+        tree.unretained.insert(target.into(), "same bytes".into());
     }
     if let Some(bytes) = value(icon, "first bytes", "second bytes") {
         tree.nodes
             .insert("/repo/icon.svg".into(), node("/repo/assets/icon.svg"));
-        tree.digests
+        tree.unretained
             .insert("/repo/assets/icon.svg".into(), bytes.into());
     }
     if let Some(object) = value(identity, "device:first", "device:second") {
