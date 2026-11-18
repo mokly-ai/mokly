@@ -67,7 +67,7 @@ test("the embedded stylesheet names its own font and has no scope", () => {
 });
 
 const stubAuto =
-  /@media \(prefers-color-scheme: dark\)\s*\{[^{]*\.mbk-document:not\(\[data-mokly-theme\]\)[^{]*\{[^}]*--chrome-bg: #161512;/;
+  /@media \(prefers-color-scheme: dark\)\s*\{[^{]*\.mbk-document:not\(\[data-mokly-theme\]\)[^{]*\{[^}]*--chrome-bg: #18181b;/;
 
 test("the stub's document takes the system appearance until the bundle marks it", () => {
   assert.match(STANDALONE_CSS, stubAuto);

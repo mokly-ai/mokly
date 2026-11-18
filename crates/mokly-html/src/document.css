@@ -18,10 +18,10 @@ html {
 }
 
 html[style*="dark"] {
-  --document-bg: #161512;
-  --document-surface: #221f1b;
-  --document-ink: #f0ece4;
-  --document-border: #302d28;
+  --document-bg: #18181b;
+  --document-surface: #232326;
+  --document-ink: #f4f4f5;
+  --document-border: #34343a;
   --document-accent: #a5cdb6;
 }
 
