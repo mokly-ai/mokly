@@ -1,6 +1,6 @@
 # Reuse unchanged Serve view comparisons
 
-Status: Active. On branch `calummoore/mokly-comparison-reuse-1see`, no pull request exists yet. The completing pull request deletes this plan.
+Status: Implementation complete. On branch `calummoore/mokly-comparison-reuse-1see`, no pull request exists yet. The next commit deletes this plan before the pull request opens.
 
 Mokly compares a catalogue against a pinned Git base to produce Changes.
 Serve repeats that comparison after watched edits. Most views keep the same inputs.
@@ -392,7 +392,7 @@ The orchestrator owns these steps.
 - [x] Run a watched Serve smoke test. Check disk and RAM before each large Cargo build.
 - [x] Check every delegated TODO against the diff and repository rules.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the full pushed diff against `origin/main` with `implementation-review`. Check every finding, fix confirmed fix-now findings, record follow-ups, re-review, and use the second fix round if required.
+- [x] Review the full pushed diff against `origin/main` with `implementation-review`. Check every finding, fix confirmed fix-now findings, record follow-ups, re-review, and use the second fix round if required.
 - [ ] Delete this plan under the `plans` skill after every other required TODO is complete.
 - [ ] Open the pull request into `main`. Preserve dated decisions and the plan permalink in its description. Watch CI with `scripts/ci-wait.sh`. Report to the performance orchestrator. Do not merge.
 
@@ -447,3 +447,8 @@ final tree remains required. This supersedes the local rerun requirement
 above. Keep both unrelated failures and their reruns in the pull request.
 Per-suite evidence: `.context/serve-comparison-reuse/per-suite-verification.json`.
 Static delivery evidence: `.context/serve-comparison-reuse/static-delivery-final-result.json`.
+
+Formal review, 2026-11-18: the fresh first-pass review found no findings in
+the full pushed diff at `1ccbaaef0` against `origin/main` at `e8c964cb1`.
+No finding check or fix round is required. The full report and ledger are
+in `.context/reviews/calummoore/mokly-comparison-reuse-1see/`.
