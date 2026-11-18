@@ -18,11 +18,15 @@ pub mod pool;
 mod pool_affinity;
 mod pool_cleanup;
 mod pool_exchange;
+mod pool_head;
+mod pool_leases;
 pub mod pool_options;
 mod pool_preparation;
 mod pool_recipes;
 mod pool_releases;
 mod pool_requests;
+mod pool_return;
+mod pool_return_spawn;
 mod pool_shutdown;
 mod pool_sources;
 mod pool_state;
@@ -55,6 +59,10 @@ mod memory_schedule;
 mod memory_table;
 mod memory_tree;
 mod pool_recycle;
+
+#[cfg(test)]
+#[path = "_tests_/head_return/mod.rs"]
+mod head_return_tests;
 
 #[cfg(test)]
 #[path = "_tests_/trace_capture.rs"]

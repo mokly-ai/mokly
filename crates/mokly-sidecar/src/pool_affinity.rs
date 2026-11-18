@@ -5,7 +5,13 @@ use std::path::Path;
 use crate::methods::Call;
 use crate::pool_state::{Affinity, State};
 
-pub(super) fn acquire(state: &mut State, call: &Call, root: &Path, limit: usize) -> Option<usize> {
+pub(super) fn acquire(
+    state: &mut State,
+    call: &Call,
+    root: &Path,
+    limit: usize,
+    protected: Option<usize>,
+) -> Option<usize> {
     let context = match call {
         Call::ProcessCss(params) => Some(params.context.as_str()),
         _ => None,
@@ -20,6 +26,16 @@ pub(super) fn acquire(state: &mut State, call: &Call, root: &Path, limit: usize)
             .position(|candidate| *candidate == index)?;
         state.available.remove(position)?
     } else {
+        let reused = (!state.head.candidates.is_empty())
+            .then(|| {
+                state.available.iter().position(|index| {
+                    !state.head.candidates.contains_key(index)
+                        && state.slots[*index]
+                            .as_ref()
+                            .is_some_and(|slot| slot.source_root == root)
+                })
+            })
+            .flatten();
         let matching = state.available.iter().position(|index| {
             state.slots[*index]
                 .as_ref()
@@ -29,13 +45,18 @@ pub(super) fn acquire(state: &mut State, call: &Call, root: &Path, limit: usize)
             .available
             .iter()
             .position(|index| state.slots[*index].is_none());
-        if let Some(position) = matching.or(unspawned) {
+        if let Some(position) = reused.or(matching).or(unspawned) {
             state.available.remove(position)?
         } else if state.slots.len() < limit {
             state.slots.push(None);
             state.slots.len() - 1
         } else {
-            state.available.pop_front()?
+            let position = state
+                .available
+                .iter()
+                .position(|index| Some(*index) != protected)
+                .unwrap_or(0);
+            state.available.remove(position)?
         }
     };
     if let Some(context) = context {

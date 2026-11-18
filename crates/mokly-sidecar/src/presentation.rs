@@ -58,7 +58,7 @@ impl Error {
                     _ => message.clone(),
                 },
             ),
-            Self::Internal(_) => return None,
+            Self::HeadReturnDisabled { .. } | Self::Internal(_) => return None,
         };
         Some(RuntimeDiagnostic { code, message })
     }

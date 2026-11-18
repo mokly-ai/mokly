@@ -27,7 +27,9 @@ A process serves one source root. A request for another root replaces the
 process before replay, and a debug event records the slot and both roots. All
 roots share the configured pool bound, so a one-worker pool replaces its
 process when the source root changes. All requests of one live PostCSS context
-reach the same process.
+reach the same process. The
+[source root scheduling rules](./mokly-sidecar-root-scheduling.md) choose the
+process that changes root.
 
 ## Source And Dependency Files
 
