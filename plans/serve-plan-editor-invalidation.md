@@ -140,10 +140,18 @@ Replaced ways:
 
 Depends on: none
 
-- [ ] State G, the resolution-only key, typed tables, conservative exactness, and unchanged bounds in the plan protocol.
-- [ ] Keep recipe and disk rules. Explain the plan-only exception to the no-resolver-model decision where needed.
-- [ ] Update README entry points. Add the editor-file restart cache follow-up with E's limits.
-- [ ] Update the start-cost follow-up for table work taken into this branch. Verify outside-scope exactness reports separately.
+- [x] State G, the resolution-only key, typed tables, conservative exactness, and unchanged bounds in the plan protocol.
+- [x] Keep recipe and disk rules. Explain the plan-only exception to the no-resolver-model decision where needed.
+- [x] Update README entry points for the changed plan owners.
+
+Evidence: `.context/serve-plan-editor-invalidation/docs-milestone-1-report.md` and `docs-milestone-1-checks.log`.
+
+## Milestone 1a: Follow-up ownership
+
+Depends on: 1
+
+- [ ] Add the editor-file restart cache follow-up with E's limits.
+- [ ] Update the start-cost item for table work taken here. Record the verified outside-scope risks with their evidence limits.
 
 ## Milestone 2: Resolution-only plan records
 
@@ -176,7 +184,7 @@ Depends on: 1, 3
 
 ## Milestone 5: Verification, measurement, and review
 
-Depends on: 2, 3, 4
+Depends on: 1a, 2, 3, 4
 
 - [ ] Run targeted plan, oracle, bound, invalidation, warm-start, and cache tests. Record red assertions, costs, and ten runs of new asynchronous tests.
 - [ ] Smoke-test examples/basic. Measure alternating release main and branch in separate checkouts, targets, and matching dists.

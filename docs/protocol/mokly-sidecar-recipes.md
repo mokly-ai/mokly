@@ -93,11 +93,14 @@ marked or not, gets a fresh identity at each compile, also when the sidecar
 drops its evidence to fit the frame limit. The binary then never reuses the
 definitions of an earlier generation for it. A complete compilation keeps a
 deterministic identity.
-Decision: a reuse check compares recorded digests, directory entries, and link
-targets with the filesystem, so it copies no resolver rule. A second resolve
-with esbuild was rejected, because it runs an esbuild operation on each reuse.
-Package-manager install state files were rejected, because a manual link change
-keeps them.
+Decision: a reuse check of a compilation compares recorded digests, whole
+directory entries, and link targets with the filesystem, so it copies no
+resolver rule. A second resolve with esbuild was rejected, because it runs an
+esbuild operation on each reuse. Package-manager install state files were
+rejected, because a manual link change keeps them. The plan check of a Serve
+edit reuses no compilation. The
+[Serve edit plan rules](./mokly-sidecar-plans.md#candidate-names) define its
+own comparison.
 
 A marked compilation is reused only by a `serveEdit` request. Its reuse
 checks are the live checks alone: equal settings, equal resolved roots, an

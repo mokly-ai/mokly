@@ -1,5 +1,7 @@
 # @mokly/mokly
 
+Status: The [Serve plan change](../../plans/serve-plan-editor-invalidation.md) adds the path table and candidate names described here.
+
 `@mokly/mokly` is the Mokly command-line tool and authoring API. Mokly turns
 product screens into a searchable static catalogue. A screen is an HTML file
 with YAML front matter, a React component, or a Storybook story. Mokly renders
@@ -214,9 +216,11 @@ the packed contents of the package.
   without a toolchain identity gets no marker.
 - [`src/sidecar/captured-plan.ts`](./src/sidecar/captured-plan.ts) holds
   `capturedPlan`, which gives the result of a `full` compile its native plan
-  only with complete, durable, and unmarked evidence. The plan and the
-  evidence must fit 8 MiB together. It counts their JSON bytes without
-  building an oversized string.
+  only with complete, durable, and unmarked evidence. It lists each path of
+  the plan once in its path table, and it adds the candidate names of the
+  recorded directories. The plan, its candidate names, and the evidence must
+  fit 8 MiB together. It counts their JSON bytes without building an
+  oversized string.
 - [`src/sidecar/compiled.ts`](./src/sidecar/compiled.ts) holds `reuse`, which
   accepts an earlier compilation only while its settings, dependency roots,
   toolchain, input digests, and directory lists still match. It tries the
@@ -230,7 +234,11 @@ the packed contents of the package.
 - [`src/sidecar/resolution-evidence.ts`](./src/sidecar/resolution-evidence.ts)
   holds `ResolutionEvidence`, the esbuild plugin that records the candidate
   directories, manifests, and configurations of each import before esbuild
-  resolves it. A form that it cannot map makes the evidence incomplete.
+  resolves it. A form that it cannot map makes the evidence incomplete. With
+  esbuild 0.28.2, it also collects the candidate names that esbuild can look
+  up in each recorded directory. A directory whose names it cannot derive, or
+  that has a non-ASCII candidate or recorded entry name, gets none. The reuse evidence itself
+  keeps whole directory listings.
   [`src/sidecar/resolution-request.ts`](./src/sidecar/resolution-request.ts)
   applies written plugin names and aliases before built-in filtering.
   [`src/sidecar/config-inputs.ts`](./src/sidecar/config-inputs.ts) records

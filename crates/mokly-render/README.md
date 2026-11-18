@@ -1,5 +1,7 @@
 # mokly-render
 
+Status: The [Serve plan change](../../plans/serve-plan-editor-invalidation.md) adds the resolution settings key and candidate comparisons described here.
+
 `mokly-render` connects the optional Node sidecar to Mokly's Rust catalogue,
 CSS pipeline, and document graph. Depend on its `Runtime` factories for a
 JavaScript or mixed catalogue. HTML composition stays in `mokly-html`.
@@ -255,16 +257,21 @@ view after the edit and counts real process starts and hello calls.
   one.
 - [`src/edit_plans.rs`](./src/edit_plans.rs) defines `Records`, the plan
   record owner of a Serve head, and `Record`, which pairs a `ResolutionPlan`
-  with the `ReuseEvidence` of its compilation. `Records::insert` keeps only
-  captured and durable evidence, replaces the record of equal settings, and
-  removes the oldest records to keep the serialized total within
-  `RECORD_BYTES`. A record that it cannot keep leaves the older record in
-  place.
+  with the `ReuseEvidence` of its compilation. `Records` keeps each record by
+  the resolution settings of its request: the bundle settings without the
+  entry files, the stories files, the renderer, and the evaluation digest.
+  `Records::insert` keeps only captured and durable evidence, replaces the
+  record of equal resolution settings, and removes the oldest records to keep
+  the serialized total within `RECORD_BYTES`. A record that it cannot keep
+  leaves the older record in place.
 - [`src/physical_inputs.rs`](./src/physical_inputs.rs) defines
   `PhysicalInputs`, the reader that checks the captured reuse evidence of a
   compiled recipe outside the side tree, and `SystemPhysicalInputs`, its
-  filesystem implementation. Its `current` check rejects marked evidence. It
-  does not read the `durable` flag of the evidence.
+  filesystem implementation. Its `current` check rejects marked evidence and
+  compares whole directories. It does not read the `durable` flag of the
+  evidence. The plan check of a Serve edit uses the same reader. It compares a
+  recorded directory that has candidate names only on those names, under the
+  [candidate name rules](../../docs/protocol/mokly-sidecar-plans.md#candidate-names).
 - [`src/side.rs`](./src/side.rs) defines `BaseSide`, the leased base
   extraction and dependency selection of a historical render.
 - [`src/dependency_usage.rs`](./src/dependency_usage.rs) defines
@@ -284,9 +291,10 @@ view after the edit and counts real process starts and hello calls.
   request with the `capture` mode of the runtime in its `catalogue.bundle`
   span, gives each result's lifetime epoch to a `BundleLease`, and sends the
   served-generation notice after a core reuse, only in the `Full` mode.
-  Before a `ServeEdit` request of a head runtime, it sends the plan of a
-  record whose evidence `physical_inputs::current` accepts. It offers each
-  `Full` result with a plan and a toolchain identity to `Records`.
+  Before a `ServeEdit` request of a head runtime, it runs the plan check on
+  the record of the request's resolution settings, and it sends the plan when
+  the check passes. It offers each `Full` result with a plan and a toolchain
+  identity to `Records`.
 - [`src/render_environment.rs`](./src/render_environment.rs) derives the inputs
   that every render input key of one side shares, and names their paths
   without the checkout folder.
