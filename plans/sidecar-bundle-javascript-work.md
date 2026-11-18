@@ -154,9 +154,9 @@ Depends on: 1
 - [x] Delegate implementation and tests to the `non-ui implementor`.
 - [x] Prove new read-reuse and size-count behaviour red first.
 - [x] Keep every existing assertion when moving the read interceptions.
-- [ ] Prove missing and unreadable files keep their whole diagnostic text against the saved `main` package, also at stack limits 2 and 3 with several failing loads.
+- [x] Prove missing and unreadable files keep their whole diagnostic text against the saved `main` package, also at stack limits 2 and 3 with several failing loads.
 - [x] Prove final records exclude a CSS module that only the native attempt loaded, and use compiled bytes.
-- [ ] Compare `main` and branch compiled output and input bytes for native, planned, and full paths.
+- [x] Compare `main` and branch compiled output and input bytes for native, planned, and full paths.
 - [x] Update the `bundle.ts` entry of the package README for the per-call reads.
 - [x] Run existing sidecar tests and repeat each new asynchronous test ten times.
 - [x] Check the combined change against the design and repository rules.
@@ -167,9 +167,16 @@ Evidence belongs under `.context/sidecar-bundle-javascript-work/`.
 
 Depends on: 2
 
-- [ ] Run the targeted checks and the early repository suite with the required tool versions.
-- [ ] Commit with Conventional Commits and push. Send the implementation SHA to the performance orchestrator immediately.
-- [ ] Measure `main` and branch Serve edit cycles on `examples/basic` and the default large HTML and React fixtures.
+On 2026-11-18 the performance orchestrator measured `87fbf79ae` on `mokly-cloud` and accepted it.
+Each edit bundle took 338 ms less, and each edit reached Changes ready 0.33 s sooner, with the same memory and sidecar count.
+
+Design call of this workspace's orchestrator, 2026-11-18: the default large React fixture gets a standalone `bundle()` benchmark with warm and cold page caches in place of Serve edit cycles.
+On this 4-vCPU machine, one large React edit takes about 240 s to reach Changes ready, so a 0.3 s saving is below the noise of a few runs.
+The default large HTML fixture compiles no bundle, so its Serve edits cannot show this change.
+
+- [x] Run the targeted checks and the early repository suite with the required tool versions.
+- [x] Commit with Conventional Commits and push. Send the implementation SHA to the performance orchestrator immediately.
+- [ ] Measure `main` and branch Serve edit cycles on `examples/basic`, and `bundle()` on the default large React fixture.
 - [ ] Record `sidecar.bundle`, edit-to-Changes readiness, and peak memory. Measure one cold-cache start if the machine allows it.
 - [ ] Run the complete gate with the required tool versions.
 - [ ] Review the complete diff against `origin/main` with the `implementation-review` skill after the push. Fix confirmed fix-now findings, record follow-ups, and re-review once.
