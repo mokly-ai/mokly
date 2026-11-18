@@ -7,6 +7,7 @@ use crate::methods::Call;
 use crate::pool::Pool;
 use crate::pool_bundle_cache::BundleAttempt;
 use crate::pool_cleanup;
+use crate::pool_preparation::Prerequisites;
 use crate::pool_state::Slot;
 use crate::wire::{MethodResult, Request};
 
@@ -23,19 +24,13 @@ impl Pool {
             self.seed_bundle(slot, params, attempt)?;
         }
         if let Some(generation) = generation(call) {
+            let prerequisites = Prerequisites::for_call(call);
             self.prepare(
                 slot,
                 generation,
-                !matches!(call, Call::CssModules(_)),
-                matches!(
-                    call,
-                    Call::Bindings(_)
-                        | Call::RenderScreen(_)
-                        | Call::RenderComponent(_)
-                        | Call::RenderStory(_)
-                        | Call::RenderPage(_)
-                ),
-                !matches!(call, Call::Bindings(_)),
+                prerequisites.maps,
+                prerequisites.description,
+                prerequisites.bindings,
             )?;
         }
         if matches!(

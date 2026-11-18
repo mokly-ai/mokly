@@ -40,7 +40,12 @@ disposal to each affected slot. Busy slots apply it before their next request.
 Each worker keeps the request source root as its working directory for its
 whole lifetime. A change of source root replaces the worker before replay.
 Independent requests prefer an idle worker in the same source root, then an
-unspawned slot, then the oldest idle slot. The launch root is the head root.
+unspawned slot, then the oldest idle slot. Among the idle workers of one root,
+a call that names a generation prefers a worker that holds its current epoch
+and each input that the call needs, then another worker with that epoch.
+Ties and calls without a generation keep queue order. A call can use another
+available slot while the worker that holds its generation is busy. The launch
+root is the head root.
 A base request takes the warm head worker only when no other slot is
 available. That worker bundled the newest head generation, or rendered it last
 after a successful render. The pool bound covers all roots.
@@ -48,10 +53,10 @@ Replacement drops the old root's affinities for that slot and emits one debug
 event. PostCSS context affinity prevents duplicate workers. A busy affine
 request does not block independent work on another available slot. Returning
 slots recheck pending releases before becoming idle. `cancel_requests` kills
-and reaps busy sidecars before `shutdown` drains idle sidecars. Scheduling and
-cleanup use one staleness rule: a missing bundle or a missing or different
-epoch makes a loaded generation stale. Cleanup stops when a pass changes no
-state.
+and reaps busy sidecars before `shutdown` drains idle sidecars. Scheduling,
+the generation rank, and cleanup use one staleness rule: a missing bundle or a
+missing or different epoch makes a loaded generation stale. The rank counts a
+missing record as not loaded. Cleanup stops when a pass changes no state.
 
 Serve, in `mokly-cli`, schedules one return pass after each Changes
 publication and drives the pass from its own background worker. The pool owns
@@ -59,7 +64,8 @@ each step and the stop state. Each step takes one idle base worker while no
 base request waits. It kills and reaps that worker, then starts a head worker
 through hello. A waiting request takes the slot at a safe point. While the
 pass has candidates, a base request prefers an idle worker of its root that
-already left the pass. When a step cannot confirm a reap, only that slot
+already left the pass. The generation rank orders workers only inside that
+group and the candidates. When a step cannot confirm a reap, only that slot
 retires: its control stays registered, and the pool never reuses the slot. The
 first failed reap also ends background return for the life of the pool. The
 other slots keep serving requests and switch roots on demand. A call affine to
@@ -278,7 +284,12 @@ Unit tests use `unimock` at process, pipe, clock, and reporter boundaries.
 They verify frame limits, hello, deadlines, retry, recycling,
 FIFO order, concurrency bounds, queue cancellation, and UTF-8 diagnostic lines.
 Replay tests keep complete inputs for fresh workers, omit already loaded
-inputs, and preserve binding updates across workers. Recipe store tests
+inputs, and preserve binding updates across workers. Generation affinity tests
+check that a worker with every input that a call needs comes before other
+holders and non-holders, with FIFO ties. Stale epochs and missing records
+never win the rank. Calls without a generation keep FIFO order, and context
+affinity and the pass preference still come first. Parallel renders use every
+available slot and start no process. Recipe store tests
 check the seed choice, eviction by use order, the replacement of an entry
 with equal settings, the exact envelope bound, and clearing on every stop.
 They retain a selected live seed when its final lease ends during restoration.
@@ -307,7 +318,8 @@ spawn the built sidecar and render a component, screen, story, and page. The
   from base requests, removes each taken slot from the return pass, and fails
   a call affine to a retired slot.
   [`src/pool_affinity.rs`](./src/pool_affinity.rs) chooses the slot that a
-  request takes.
+  request takes. Its pure rank orders the idle slots of one root by the
+  generation state that a call needs.
 - [`src/pool_head.rs`](./src/pool_head.rs) defines `Head`, which holds the
   warm head worker, the candidates of the return pass, and the
   `return_disabled` flag, and `Pool::record_head`, which records each
@@ -329,7 +341,9 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [`src/pool_releases.rs`](./src/pool_releases.rs) keeps the recipe of each
   final release in that store, and
   [`src/pool_preparation.rs`](./src/pool_preparation.rs) selects the memory
-  seeds that each `bundle` call's capture admits, captured seeds first.
+  seeds that each `bundle` call's capture admits, captured seeds first. Its
+  `Prerequisites` gives the inputs that each generation call needs, for
+  replay and for the rank alike.
 - [`src/pool_bundle_cache.rs`](./src/pool_bundle_cache.rs) seeds a `bundle`
   call from the bundle store, keeps the request-local provenance of its
   seeds, sets the `cache` outcome of its result, and offers the served recipe
