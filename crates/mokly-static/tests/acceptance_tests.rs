@@ -4,7 +4,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use mokly_model::output::artifact::{Artifact, File};
+use mokly_model::output::artifact::Artifact;
+use mokly_model::output::inventory::Inventory;
 use mokly_platform::rename::{Rename, SystemRename};
 use mokly_static::error::Error;
 use mokly_static::filesystem::SystemFiles;
@@ -33,15 +34,9 @@ fn writer(rename: Arc<dyn Rename>) -> OutputTransactions {
     }
 }
 fn artifact(output: &Path, text: &'static [u8]) -> Artifact {
-    Artifact::finalize(
-        output.into(),
-        vec![File {
-            path: "index.html".into(),
-            bytes: text.into(),
-        }],
-        None,
-    )
-    .unwrap()
+    let mut files = Inventory::default();
+    files.insert("index.html".into(), text.into()).unwrap();
+    Artifact::finalize(output.into(), files, None).unwrap()
 }
 fn owned(output: &Path, text: &'static [u8]) {
     fs::create_dir(output).unwrap();

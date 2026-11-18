@@ -4,12 +4,12 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use mokly_graph::closure::GeneratedResourcesMock;
 use mokly_graph::types::RenderGenerationMock;
+use mokly_model::output::inventory::Inventory;
 use mokly_model::review_affected::ReviewSide;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::comparison_files;
 use crate::error::Error;
-use crate::inventory::Inventory;
 use crate::transaction::CancellationMock;
 
 use super::support::plans;
@@ -53,7 +53,7 @@ fn cancellation_precedes_document_generated_resource_and_authored_resource_reads
             comparison_files::side(&graph, ReviewSide::Before, &mut inventory, &cancellation),
             Err(Error::Cancelled)
         ));
-        assert!(inventory.into_files().is_empty());
+        assert_eq!(inventory.files().len(), 0);
     }
 }
 
