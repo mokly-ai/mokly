@@ -113,20 +113,21 @@ fn worker(
             .answers_arc(Arc::new(move |_, request, _| {
                 let label = match &request.call {
                     Call::ProcessCss(params) => params.context.clone(),
-                    Call::Bundle(params) => params.entry_files[0].clone(),
+                    Call::Bundle(params) => params.params.entry_files[0].clone(),
                     _ => request.call.to_string(),
                 };
                 let event = Event::Request(id, label);
                 request_events.emit(event.clone());
                 request_hook(event);
                 Ok(match &request.call {
-                    Call::Bundle(params) => MethodResult::Bundle(results::Bundle {
-                        generation: params.entry_files[0].clone(),
+                    Call::Bundle(params) => MethodResult::Bundle(Box::new(results::Bundle {
+                        generation: params.params.entry_files[0].clone(),
                         epoch: 0,
-                        compiled: compiled(&params.entry_files[0]),
+                        cache: None,
+                        compiled: Arc::new(compiled(&params.params.entry_files[0])),
                         modules: vec![],
                         unmapped_dependency_directories: None,
-                    }),
+                    })),
                     _ => MethodResult::Empty,
                 })
             })),

@@ -27,6 +27,7 @@ flate2 = "1.1.10"
 yaml-rust2 = "0.13.0"
 percent-encoding = "2.3.2"
 dunce = "1.0.5"
+getrandom = "0.4.3"
 
 [features]
 mock = ["dep:unimock"]

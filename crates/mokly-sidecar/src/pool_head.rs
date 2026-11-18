@@ -48,7 +48,7 @@ impl Pool {
         };
         match (call, result) {
             (Call::Bundle(bundle), MethodResult::Bundle(result))
-                if Path::new(&bundle.source_root) == self.launch.repository =>
+                if Path::new(&bundle.params.source_root) == self.launch.repository =>
             {
                 state.head.warm = Some(WarmHead {
                     generation: result.generation.clone(),

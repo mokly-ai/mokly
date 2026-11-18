@@ -1,6 +1,7 @@
 //! Remote error replies retain their diagnostics.
 
 use serde_json::json;
+use serde_json::value::to_raw_value;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::client::{Client, SidecarClient, TransportMock};
@@ -24,7 +25,7 @@ fn bundle_render_and_definition_errors_allow_another_request() {
                 .next_call(matching!())
                 .returns(Ok(Frame::Response(Response::Success {
                     id: 0,
-                    result: json!({"version":"fixture-version"}),
+                    result: to_raw_value(&json!({"version":"fixture-version"})).unwrap(),
                 }))),
             TransportMock::send
                 .next_call(matching!((request) if request.id == 1))
@@ -46,7 +47,7 @@ fn bundle_render_and_definition_errors_allow_another_request() {
                 .next_call(matching!())
                 .returns(Ok(Frame::Response(Response::Success {
                     id: 2,
-                    result: json!(null),
+                    result: to_raw_value(&json!(null)).unwrap(),
                 }))),
         ));
         let mut client = Client::new(
@@ -84,7 +85,7 @@ fn a_remote_protocol_failure_retains_its_code() {
             .next_call(matching!())
             .returns(Ok(Frame::Response(Response::Success {
                 id: 0,
-                result: json!({"version":"fixture-version"}),
+                result: to_raw_value(&json!({"version":"fixture-version"})).unwrap(),
             }))),
         TransportMock::send.next_call(matching!(_)).returns(Ok(())),
         TransportMock::receive

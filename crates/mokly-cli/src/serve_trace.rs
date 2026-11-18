@@ -196,6 +196,10 @@ where
 }
 
 #[cfg(test)]
+#[path = "_tests_/bundle_timing_tests.rs"]
+mod bundle_timing_tests;
+
+#[cfg(test)]
 #[path = "_tests_/cache_trace_tests.rs"]
 mod cache_trace_tests;
 

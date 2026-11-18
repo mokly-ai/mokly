@@ -24,6 +24,7 @@ mod registry_matrix_tests;
 mod render_key_tests;
 mod render_tests;
 mod renderer_path_tests;
+mod reuse_evidence_tests;
 mod review_validation_tests;
 mod side_reuse_tests;
 mod slot_order_tests;

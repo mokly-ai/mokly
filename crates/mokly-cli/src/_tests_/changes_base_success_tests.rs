@@ -18,6 +18,7 @@ use mokly_git::source_key::CheckoutIdentity;
 use mokly_graph::workers::RenderWorkersMock;
 use mokly_render::runtime::Runtime;
 use mokly_render::side::BaseSide;
+use mokly_sidecar::compiled::{CompiledGeneration, ReuseEvidence};
 use mokly_sidecar::definitions::Definitions;
 use mokly_sidecar::methods::{Call, ModuleResolution};
 use mokly_sidecar::pool::PoolMock;
@@ -89,12 +90,15 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
     let pool = Unimock::new((
         PoolMock::request
             .next_call(matching!((call) if matches!(call, Call::Bundle(bundle)
-                if Path::new(&bundle.source_root) == Path::new("/base")
-                    && bundle.entry_files == ["specs/card.mockup.ts"])))
-            .returns(Ok(MethodResult::Bundle(Bundle {
+                if Path::new(&bundle.params.source_root) == Path::new("/base")
+                    && bundle.params.entry_files == ["specs/card.mockup.ts"])))
+            .returns(Ok(MethodResult::Bundle(Box::new(Bundle {
+                cache: None,
                 unmapped_dependency_directories: None,
                 epoch: 0,
-                compiled: mokly_sidecar::compiled::CompiledGeneration {
+                compiled: Arc::new(CompiledGeneration {
+                    toolchain: "fixture".into(),
+                    reuse_evidence: Arc::new(ReuseEvidence { uncaptured: None, durable: true, complete: true, inputs: Default::default() }),
                     identity: "base-bundle".into(),
                     code: "module.exports={}".into(),
                     runtime_key: "fixture-runtime".into(),
@@ -107,14 +111,14 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
                     input_directories: BTreeMap::new(),
                     metadata_directories: BTreeMap::new(),
                     unmapped_dependency_directories: None,
-                },
+                }),
                 generation: "base-bundle".into(),
                 modules: vec![Module {
                     path: "specs/card.mockup.ts".into(),
                     imports: Vec::new(),
                     digest: Some("source".into()),
                 }],
-            }))),
+            })))),
         PoolMock::request
             .next_call(matching!((call) if matches!(call, Call::CssModules(params) if params.generation == "base-bundle")))
             .returns(Ok(MethodResult::Empty)),
@@ -138,6 +142,7 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
     ));
     let provider: &dyn BaseProvider = &NativeBase {
         runtime: Arc::new(Runtime::new(
+            Arc::new(Unimock::new(())),
             Arc::new(Unimock::new(())),
             Arc::new(Unimock::new(())),
             Arc::new(pool),

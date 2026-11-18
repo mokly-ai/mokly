@@ -16,6 +16,7 @@ mod fragments;
 mod graph;
 mod input_stamp;
 mod leases;
+pub mod physical_inputs;
 mod postcss;
 mod postcss_cache;
 mod postcss_inventory;

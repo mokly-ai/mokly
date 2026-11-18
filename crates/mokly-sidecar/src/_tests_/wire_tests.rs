@@ -3,7 +3,7 @@
 use serde_json::{Value, json};
 
 use crate::compiled_fixture::compiled;
-use crate::methods::Call;
+use crate::methods::{Call, Hello};
 use crate::wire::{MethodResult, Request, Response};
 
 #[test]
@@ -70,7 +70,8 @@ fn every_method_and_result_round_trips() {
         assert_eq!(encoded["method"], method);
         let _: Call =
             serde_json::from_value(json!({"method":method,"params":encoded["params"]})).unwrap();
-        let response: Response = serde_json::from_value(json!({"id":12,"result":result})).unwrap();
+        let response: Response =
+            serde_json::from_str(&json!({"id":12,"result":result}).to_string()).unwrap();
         response.decode_result(&request).unwrap();
     }
 }
@@ -81,7 +82,8 @@ fn authoring_metadata_is_preserved_until_catalogue_validation() {
     let request: Request =
         serde_json::from_value(json!({"id":1,"method":"describe","params":{"generation":"g"}}))
             .unwrap();
-    let response: Response = serde_json::from_value(json!({"id":1,"result":result})).unwrap();
+    let response: Response =
+        serde_json::from_str(&json!({"id":1,"result":result}).to_string()).unwrap();
     let MethodResult::Definitions(definitions) = response.decode_result(&request).unwrap() else {
         panic!()
     };
@@ -100,4 +102,23 @@ fn authoring_metadata_is_preserved_until_catalogue_validation() {
             .unwrap()
             .contains_key("tone")
     );
+}
+
+#[test]
+fn duplicate_result_fields_keep_the_last_payload_value() {
+    let request = Request {
+        id: 1,
+        call: Call::Hello(Hello::default()),
+    };
+    let response: Response =
+        serde_json::from_str(r#"{"id":1,"result":{"version":"first","version":"last"}}"#).unwrap();
+    let decoded = response.decode_result(&request);
+    assert!(
+        decoded.is_ok(),
+        "legacy last-key result rejected: {decoded:?}"
+    );
+    let MethodResult::Hello(hello) = decoded.unwrap() else {
+        panic!("hello selected another result");
+    };
+    assert_eq!(hello.version, "last");
 }

@@ -5,11 +5,15 @@ use std::sync::Weak;
 use crate::error::{Error, FailureKind, Result};
 use crate::methods::Call;
 use crate::pool::{Pool, ReturnWake, SidecarPool};
+use crate::pool_bundle_cache::BundleAttempt;
 use crate::pool_releases::Release;
 use crate::pool_timing::Reason;
 use crate::wire::MethodResult;
 
 impl SidecarPool for Pool {
+    fn served_generation(&self, generation: &str, epoch: u64) {
+        self.served(generation, epoch);
+    }
     fn schedule_head_return(&self) {
         self.schedule_return();
     }
@@ -45,6 +49,7 @@ impl SidecarPool for Pool {
         }
         let deadline = self.options.timeout_ms.unwrap_or_else(|| call.timeout_ms());
         let mut outcome = Err(Error::Crashed);
+        let mut bundle_attempt = BundleAttempt::default();
         for attempt in 0..2 {
             if self.lock().stopped {
                 outcome = Err(Error::Cancelled);
@@ -67,7 +72,7 @@ impl SidecarPool for Pool {
                     }
                 },
             };
-            outcome = self.execute(&mut current, &call, deadline);
+            outcome = self.execute(&mut current, &call, deadline, &mut bundle_attempt);
             if let Ok(result) = &outcome {
                 self.record_head(index, &call, result);
             }

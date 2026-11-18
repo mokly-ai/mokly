@@ -26,6 +26,7 @@ fn busy_cancellation_kills_then_reaps_every_process() {
         Arc::new(Unimock::new(())),
         Arc::new(mock.clone()),
         Launch {
+            capture_durability: false,
             node: "node".into(),
             entry: "sidecar.js".into(),
             repository: "/repo".into(),

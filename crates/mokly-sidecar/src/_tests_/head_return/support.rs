@@ -6,7 +6,7 @@ use unimock::Unimock;
 
 use super::process::{self, Fault, Mode};
 use crate::bindings::Bindings;
-use crate::methods::{Bundle, Call, CssModules, ProcessCss, RenderPage};
+use crate::methods::{Bundle, BundleRequest, Call, CssModules, ProcessCss, RenderPage};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
 
@@ -112,6 +112,7 @@ impl Harness {
                 Arc::new(factory.clone()),
                 Arc::new(factory.clone()),
                 Launch {
+                    capture_durability: false,
                     repository: "/head".into(),
                     node: "node".into(),
                     entry: "sidecar.js".into(),
@@ -146,15 +147,18 @@ pub(super) fn css(root: &str, context: &str) -> Call {
 }
 
 pub(super) fn bundle(root: &str, generation: &str) -> Call {
-    Call::Bundle(Bundle {
-        source_root: root.into(),
-        configuration_directory: ".".into(),
-        entry_files: vec![generation.into()],
-        renderer: None,
-        stories_files: vec![],
-        repository_roots: vec![],
-        module_resolution: Default::default(),
-        evaluation: None,
+    Call::Bundle(BundleRequest {
+        params: Bundle {
+            source_root: root.into(),
+            configuration_directory: ".".into(),
+            entry_files: vec![generation.into()],
+            renderer: None,
+            stories_files: vec![],
+            repository_roots: vec![],
+            module_resolution: Default::default(),
+            evaluation: None,
+        },
+        capture: None,
     })
 }
 

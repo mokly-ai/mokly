@@ -9,11 +9,13 @@ use mokly_cli::cancellation::Cancellation;
 use mokly_cli::cancelled_work::CancellableWorkers;
 use mokly_cli::grammar::Common;
 use mokly_cli::version::VERSION;
+use mokly_compare::cache_types::Reporter;
 use mokly_compare::node_executable::{NodeExecutable, SystemNodeExecutable};
 use mokly_graph::cache::{MemoryCache, RenderCache};
 use mokly_graph::error::Result;
 use mokly_graph::workers::{RenderWorkers, ThreadWorkers};
 use mokly_platform::processes::SystemProcessGroups;
+use mokly_render::physical_inputs::SystemPhysicalInputs;
 use mokly_render::runtime::Runtime;
 use mokly_sidecar::pool::{Pool, SidecarPool};
 use mokly_sidecar::pool_options::{Launch, PoolOptions};
@@ -22,6 +24,8 @@ use mokly_sidecar::process_factory::NodeFactory;
 use mokly_sidecar::process_memory::SystemMemory;
 use mokly_sidecar::workers::Diagnostics;
 use mokly_source_interface::tree::SourceTree;
+
+use crate::bundle_runtime::{self, Reporting};
 
 /// Shared capacity for full artifacts and compact documents.
 const RENDER_CACHE_BYTES: usize = 256 * 1024 * 1024;
@@ -40,9 +44,14 @@ pub(super) fn cache() -> Arc<dyn RenderCache> {
 pub(super) struct Services {
     pub(super) runtime: Arc<Runtime>,
     pub(super) pool: Arc<dyn SidecarPool>,
+    pub(super) reporter: Arc<dyn Reporter>,
 }
 
 impl Services {
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "the composition root passes independent runtime seams"
+    )]
     pub(super) fn new(
         tree: Arc<dyn SourceTree>,
         cwd: &Path,
@@ -51,36 +60,48 @@ impl Services {
         diagnostics: Arc<dyn Diagnostics>,
         cancellation: Arc<dyn Cancellation>,
         cache: Arc<dyn RenderCache>,
+        reporting: Reporting,
     ) -> Result<Self> {
         let clock = Arc::new(SystemClock::new());
         let size = common.sidecars.and_then(NonZeroUsize::new).expect(
             "CLI option normalization sets a positive sidecar count before runtime creation",
         );
-        let pool: Arc<dyn SidecarPool> = Arc::new(Pool::new(
-            Arc::new(
-                NodeFactory::new(
-                    Arc::new(SystemProcessGroups),
-                    clock.clone(),
-                    diagnostics.clone(),
-                    Arc::new(SystemMemory),
-                )
-                .with_timings(common.debug_timings),
-            ),
-            clock,
-            Launch {
-                node: SystemNodeExecutable.resolve().unwrap_or_else(|_| {
-                    env::var_os("MOKLY_NODE_EXECUTABLE")
-                        .map_or_else(|| PathBuf::from("node"), PathBuf::from)
-                }),
-                entry: sidecar_entry(cwd),
-                repository: repository.to_owned(),
-                version: VERSION.into(),
-            },
-            PoolOptions {
-                size,
-                timeout_ms: common.sidecar_timeout_ms,
-            },
-        ));
+        let reporter = reporting.directory.clone();
+        let bundles = bundle_runtime::store(
+            repository,
+            cancellation.clone(),
+            reporting,
+            diagnostics.clone(),
+        );
+        let pool: Arc<dyn SidecarPool> = Arc::new(
+            Pool::new(
+                Arc::new(
+                    NodeFactory::new(
+                        Arc::new(SystemProcessGroups),
+                        clock.clone(),
+                        diagnostics.clone(),
+                        Arc::new(SystemMemory),
+                    )
+                    .with_timings(common.debug_timings),
+                ),
+                clock,
+                Launch {
+                    capture_durability: false,
+                    node: SystemNodeExecutable.resolve().unwrap_or_else(|_| {
+                        env::var_os("MOKLY_NODE_EXECUTABLE")
+                            .map_or_else(|| PathBuf::from("node"), PathBuf::from)
+                    }),
+                    entry: sidecar_entry(cwd),
+                    repository: repository.to_owned(),
+                    version: VERSION.into(),
+                },
+                PoolOptions {
+                    size,
+                    timeout_ms: common.sidecar_timeout_ms,
+                },
+            )
+            .with_bundle_store(bundles),
+        );
         let runtime = runtime(
             tree,
             pool.clone(),
@@ -90,7 +111,11 @@ impl Services {
             cancellation,
             cache,
         );
-        Ok(Self { runtime, pool })
+        Ok(Self {
+            runtime,
+            pool,
+            reporter,
+        })
     }
 }
 
@@ -107,6 +132,7 @@ fn runtime(
     Arc::new(Runtime::new(
         tree.clone(),
         tree,
+        Arc::new(SystemPhysicalInputs),
         pool,
         cache,
         Arc::new(CancellableWorkers {

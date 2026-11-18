@@ -20,6 +20,7 @@ fn pool(mock: Unimock) -> Pool {
         Arc::new(Unimock::new(())),
         Arc::new(mock),
         Launch {
+            capture_durability: false,
             node: "node".into(),
             entry: "sidecar.js".into(),
             repository: "/repo".into(),

@@ -17,7 +17,7 @@ fn schema_mistakes_reach_the_single_rust_profile_validator() {
     for keyword in ["default", "pattern", "$ref"] {
         let mut schema = json!({"type":"object","additionalProperties":false});
         schema[keyword] = json!("unsupported");
-        let response: Response = serde_json::from_value(json!({"id":1,"result":{"screens":[],"pages":[],"useCases":[],"folders":[],"components":[{"handle":"ui/button.tsx#Button","propSchema":schema}],"stories":[],"diagnostics":[]}})).unwrap();
+        let response: Response = serde_json::from_str(&json!({"id":1,"result":{"screens":[],"pages":[],"useCases":[],"folders":[],"components":[{"handle":"ui/button.tsx#Button","propSchema":schema}],"stories":[],"diagnostics":[]}}).to_string()).unwrap();
         let request = Request {
             id: 1,
             call: Call::Describe(Generation {
@@ -59,8 +59,8 @@ fn describe_diagnostics_and_error_replies_keep_the_authoring_code() {
         Some("default")
     );
     for code in ["array-export", "empty-module", "invalid-definition"] {
-        let response: Response = serde_json::from_value(
-            json!({"id":1,"error":{"code":code,"message":"module diagnostic"}}),
+        let response: Response = serde_json::from_str(
+            &json!({"id":1,"error":{"code":code,"message":"module diagnostic"}}).to_string(),
         )
         .unwrap();
         assert!(matches!(
