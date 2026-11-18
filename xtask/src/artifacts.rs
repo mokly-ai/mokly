@@ -156,6 +156,7 @@ impl Artifacts for DefaultArtifacts {
             &CommandSpec::new("cargo")
                 .args([
                     "build",
+                    "--locked",
                     "--package",
                     "mokly-cli",
                     "--bin",

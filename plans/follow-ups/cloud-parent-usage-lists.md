@@ -1,15 +1,19 @@
-# Teach Mokly Cloud to request parent usage details
+# Check parent usage lists in Mokly Cloud
 
 - **Severity:** High. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #223 and its completed plan, an unchecked
   post-merge task.
 - **Location:** None in this repository. The `detail` source of the embedded
-  viewer lives in `mokly-ai/mokly-cloud`. The rule is in
-  `docs/protocol/mokly-viewer.md:104`, and the viewer request is built in
+  viewer lives in `mokly-ai/mokly-cloud`, in
+  [`ts/app/src/viewer/catalogue-source.web.ts:151-167`](https://github.com/mokly-ai/mokly-cloud/blob/767be7b25b1c2aa3138491f32afcc43f20fb2f4f/ts/app/src/viewer/catalogue-source.web.ts#L151-L167).
+  Its browser spec
+  [`ts/app/src/_tests_/viewer/entry.spec.ts:147-170`](https://github.com/mokly-ai/mokly-cloud/blob/767be7b25b1c2aa3138491f32afcc43f20fb2f4f/ts/app/src/_tests_/viewer/entry.spec.ts#L147-L170)
+  opens a variant. The rule is in `docs/protocol/mokly-viewer.md:104`, and
+  the viewer request is built in
   `packages/viewer/src/catalogue/detail_fences.ts:25`.
-- **Reason:** Mokly Cloud pins released Mokly versions, and release 0.17.0
-  with PR #223 shipped only on 2026-10-29.
+- **Reason:** Mokly Cloud now answers the parent's path, but no check proves
+  that a published variant in Mokly Cloud shows both lists of its parent.
 
 - **Terms:**
   - **Entry detail:** the JSON file of one screen or component that the
@@ -33,27 +37,31 @@
     `packages/viewer/src/catalogue/detail_fences.ts:25` names the parent's
     path for a current variant. So the embedded viewer calls the host's
     `detail` source with that path.
+  - Facts about Mokly Cloud, checked on 2026-11-18 at its `main` commit
+    `767be7b2`:
+    - `ts/app/package.json:22` pins `@mokly/viewer` 0.19.0, a later release
+      than 0.17.0.
+    - `detailSource` in `ts/app/src/viewer/catalogue-source.web.ts:151-167`
+      reads each path that the viewer requests. So it also answers the
+      parent's path of a current variant.
+    - The browser spec `ts/app/src/_tests_/viewer/entry.spec.ts:147-170`
+      opens the variant `notice/draft`. It does not check the Used by list
+      or the Affected list.
 - **Task:**
-  1. In `mokly-ai/mokly-cloud`, pin release 0.17.0 or a later release of
-     `@mokly/viewer`.
-  2. Make the `detail` source of the embedded viewer answer the parent's
-     path when the current route is a component variant.
+  1. Done: Mokly Cloud pins `@mokly/viewer` 0.19.0, a later release than
+     0.17.0.
+  2. Done: the `detail` source of the embedded viewer answers each requested
+     path, which includes the parent's path of a component variant.
   3. Publish a catalogue with a component variant. Open the variant in
-     Mokly Cloud and check that its Usage panel shows the parent's Used by
-     list.
-- **Impact if no action:** A component variant page in Mokly Cloud shows no
-  Used by or Affected list, or shows an error, because the viewer cannot
-  load the parent's detail.
-- **Needs:** Release 0.17.0 on npm, and write and deploy access to
-  `mokly-ai/mokly-cloud`.
+     Mokly Cloud. Check that its Usage panel shows the parent's Used by list
+     and the parent's Affected list.
+- **Impact if no action:** Nobody confirms that a component variant page in
+  Mokly Cloud shows the Used by and Affected lists of its parent. A defect
+  in the host can then hide both lists, or show an error, without notice.
+- **Needs:** A catalogue with a component variant, published to Mokly Cloud,
+  and access to open it there. The pin and the `detail` source are already
+  in Mokly Cloud.
 - **Done when:** A current component variant in Mokly Cloud shows the Used
   by and Affected lists of its parent.
-- **Related:**
-  - [cloud-without-review-json.md](./cloud-without-review-json.md) and
-    [cloud-gzip-decoder-rollout.md](./cloud-gzip-decoder-rollout.md) also
-    pin release 0.17.0 in `mokly-ai/mokly-cloud`. One pin can serve all
-    three tasks.
-  - [mokly-cloud-index-v9.md](./mokly-cloud-index-v9.md) upgrades the same
-    embedded viewer again for the next release.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/usage-list-in-parent-detail.md?plain=1#L395).
