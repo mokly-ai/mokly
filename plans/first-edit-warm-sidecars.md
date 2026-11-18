@@ -296,9 +296,13 @@ Depends on: 1, 2, 3, 4, 5
 
 Gate evidence: `.context/first-edit-warm-sidecars/full-gate-result.json`. Invocation corrections and prior failed attempts are in `.context/first-edit-warm-sidecars/gate-environment-note.md`. Current `origin/main` remains `bc4f4cc40` and is already merged.
 
+The fresh review found no in-scope findings. Its three outside-scope observations already have follow-up items. No finding check or fix round was needed. Report: `.context/reviews/calummoore/mokly-first-edit-warm-sidecars-8npz/round-1-review.md`.
+
+The implementation remains `5c682a8bf`. Only plan records changed after its accepted cloud measurement.
+
 - [x] Run the complete gate. Record each failed, skipped, or blocked check and its reason.
 - [x] Fetch and merge current `origin/main` with the git-merge skill before the final pull request. Preserve nearby changes.
-- [ ] Commit and push each required follow-up fix. Send a new pool or Serve implementation SHA to the performance orchestrator at once.
-- [ ] Review the complete local diff against `origin/main` with the implementation-review skill. Check each finding, apply its fix rule for at most two fix rounds, and record follow-up items for the rest.
+- [x] Commit and push each required follow-up fix. Send a new pool or Serve implementation SHA to the performance orchestrator at once.
+- [x] Review the complete local diff against `origin/main` with the implementation-review skill. Check each finding, apply its fix rule for at most two fix rounds, and record follow-up items for the rest.
 - [ ] Delete this plan when every earlier TODO is complete and the review rounds are done.
 - [ ] Open the pull request into `main`. Preserve the dated decisions and this plan's permalink in its description. Wait for CI with `scripts/ci-wait.sh`. Send the full report to the performance orchestrator. Do not merge.
