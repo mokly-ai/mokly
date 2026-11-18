@@ -2,21 +2,27 @@
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use mokly_css::match_tree::MatchTree;
 use mokly_graph::cache::Artifact;
 use mokly_graph::comparison_input::{ComparisonFallback, RetainedComparisonInput};
 use mokly_graph::types::RenderGeneration;
 use mokly_html::composition::Composed;
+use mokly_model::review_affected::ReviewSide;
 
 use crate::comparison_error::CompareResult;
 use crate::comparison_resources::{self, Resources};
 use crate::error::Result;
 use crate::matching_tree;
+use crate::reuse_generation::RecordingGeneration;
+use crate::reuse_probes::Probes;
+use crate::reuse_reads::Recorder;
 use crate::view_material::{self, MaterialComparison};
 
 /// Owned transient inputs, released after the ordered consumer finishes one view.
 pub(crate) struct PreparedView {
+    pub(crate) recorder: Option<Arc<Recorder>>,
     /// Base and head artifacts, with no borrowed document fields.
     pub(crate) artifacts: [Option<Arc<Artifact>>; 2],
     /// Validated closures with no relocation aliases yet.
@@ -52,6 +58,8 @@ pub(crate) trait ViewPreparation: Send + Sync {
 
 /// Generation dependencies and accepted path mappings for independent preparation.
 pub(crate) struct Preparation<'a> {
+    pub(crate) recording: Option<&'a AtomicBool>,
+    pub(crate) probes: Option<&'a Arc<Probes>>,
     /// Checked base generation.
     pub(crate) before: &'a dyn RenderGeneration,
     /// Checked head generation.
@@ -67,6 +75,33 @@ impl ViewPreparation for Preparation<'_> {
         after: Option<&str>,
         moved: bool,
     ) -> Result<ViewInput> {
+        if let Some(recorder) = self.new_recorder() {
+            let previous = RecordingGeneration {
+                inner: self.before,
+                recorder: &recorder,
+                side: ReviewSide::Before,
+            };
+            let current = RecordingGeneration {
+                inner: self.after,
+                recorder: &recorder,
+                side: ReviewSide::After,
+            };
+            let input = Preparation {
+                before: &previous,
+                after: &current,
+                paths: self.paths,
+                probes: None,
+                recording: None,
+            }
+            .retained(before, after, moved)?;
+            return Ok(match input {
+                ViewInput::Ready(mut prepared) => {
+                    prepared.recorder = Some(recorder);
+                    ViewInput::Ready(prepared)
+                }
+                deferred => deferred,
+            });
+        }
         let retained = before.and_then(|route| self.before.retained_comparison_input(route));
         match retained {
             Some(RetainedComparisonInput::Deferred(recipe)) => {
@@ -86,6 +121,32 @@ impl ViewPreparation for Preparation<'_> {
         moved: bool,
         retained: Option<RetainedComparisonInput>,
     ) -> Result<PreparedView> {
+        if let Some(recorder) = self.new_recorder() {
+            let previous = RecordingGeneration {
+                inner: self.before,
+                recorder: &recorder,
+                side: ReviewSide::Before,
+            };
+            let current = RecordingGeneration {
+                inner: self.after,
+                recorder: &recorder,
+                side: ReviewSide::After,
+            };
+            let fallback = matches!(&retained, Some(RetainedComparisonInput::Deferred(_)));
+            let mut prepared = Preparation {
+                before: &previous,
+                after: &current,
+                paths: self.paths,
+                probes: None,
+                recording: None,
+            }
+            .prepare(before_route, after_route, moved, retained)?;
+            if fallback {
+                recorder.invalidate();
+            }
+            prepared.recorder = Some(recorder);
+            return Ok(prepared);
+        }
         let before = match (&retained, before_route) {
             (Some(RetainedComparisonInput::Ready(input)), _) => Some(input.artifact.clone()),
             (Some(RetainedComparisonInput::Deferred(recipe)), Some(route)) => {
@@ -122,11 +183,24 @@ impl ViewPreparation for Preparation<'_> {
             _ => None,
         };
         Ok(PreparedView {
+            recorder: None,
             artifacts,
             resources,
             trees,
             material,
         })
+    }
+}
+
+impl Preparation<'_> {
+    fn new_recorder(&self) -> Option<Arc<Recorder>> {
+        if !self
+            .recording
+            .is_some_and(|recording| recording.load(Ordering::Acquire))
+        {
+            return None;
+        }
+        self.probes.and_then(Recorder::new)
     }
 }
 

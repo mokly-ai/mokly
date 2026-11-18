@@ -160,7 +160,7 @@ pub(super) fn own_pages(path: &str) -> OwnPageMatches {
         &document(nodes(), "blue", path),
         &BTreeMap::new(),
     );
-    attribution::attribute(vec![PageObservation {
+    attribution::attribute(&[PageObservation {
         component: Some(path.into()),
         rules: changes.rules,
     }])
