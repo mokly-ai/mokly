@@ -1,13 +1,15 @@
 # Stabilize the PostCSS context release test
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Fix after merge.
+- **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #225 and its completed plan, which put the
   failure outside the scope of its review.
 - **Location:** `crates/mokly-render/tests/integration/watch_lifetimes_tests.rs:13`,
   with the wait in `crates/mokly-render/tests/integration/process_counts.rs:59`.
 - **Reason:** On 2026-11-03 the user chose option A, a reproduction on
-  Windows before the fix, and asked for it in a later branch.
+  Windows before the fix, and asked for it in a later branch. On
+  2026-11-18, 100 Windows repetitions passed. The source remains unknown,
+  so the Work list requires another user decision before a code change.
 
 - **Source:** Review.
 - **Category:** Test.
@@ -31,12 +33,23 @@
   - Failure: the test failed once on Windows in CI run 40674917367, during
     PR #225 on 2026-10-28.
   - Failure text: the 30-second wait saw no `PostcssStop` record after the
-    test dropped the original generation. The exact panic text was not
-    recorded.
+    test dropped the original generation. On 2026-11-18, the original log
+    confirmed `assertion left == right failed`, with `left: 0` and
+    `right: 1`, at `process_counts.rs:68:9`.
   - Rerun outcome: the next full CI run passed it, and the CI of
     `origin/main` passed it.
   - Suspected source: the asynchronous PostCSS context release with real
     Node processes on a busy runner. Nobody confirmed it.
+  - Reproduction on 2026-11-18: 100 of 100 isolated repetitions passed on
+    `blacksmith-8vcpu-windows-2025`, with Node 22.15.0 and Rust 1.95.0.
+    [CI run 44317218307](https://github.com/mokly-ai/mokly/actions/runs/44317218307)
+    passed at temporary commit `3469453aa0e9bd344f6b494ee705e754fc5e6615`.
+    Each repetition ran exactly one test. None failed or skipped. These
+    isolated passes do not rule out a failure under full suite load.
+  - The current helper uses a condition variable that receives operation
+    notifications. The investigation found no confirmed lost notification.
+    The full logs, pass counts, and source report are saved under
+    `.context/flaky-postcss-context-release/` in the investigation workspace.
 - **Impact if no action:** The native Windows suite can fail at random on a
   correct change. A real leak of a PostCSS context can hide behind a flake
   label.
@@ -58,10 +71,11 @@
 - **Previous examples:** PR #222 fixed another Windows-only failure of a
   timing-layer test on 2026-10-28. Its cache mock was released on another
   thread. That failure had a different cause.
-- **Recommendation:** A. The user chose it on 2026-11-03. It removes the
-  race and keeps every assertion.
-- **Action:** fix after merge, apply A, because the user chose A on
-  2026-11-03 and asked for it in a later branch.
+- **Recommendation:** B. Keep the test unchanged until another failure
+  gives evidence of the source. The user chose A on 2026-11-03, but its
+  required Windows reproduction did not fail on 2026-11-18.
+- **Action:** ask the user, because 100 Windows repetitions did not
+  reproduce the failure and the source remains unknown.
 - **Work:**
   - Repeat the test on Windows until it fails, and record the pass counts
     under `.context/`, as the flaky-test rule of the `testing` skill says.
