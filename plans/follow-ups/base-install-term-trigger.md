@@ -70,7 +70,7 @@
     in one place. The two pages then state the HTML-only rule twice, and
     the two copies can drift. Effort: Small.
 - **Left out:**
-  - Change nothing. The three items stay wrong, so it fails the goal.
+  - Change nothing. The two items stay wrong, so it fails the goal.
   - Replace the condition with a link to the two protocol pages. It breaks
     the rule of the `plans` skill that an item copies each fact that its
     work needs.
