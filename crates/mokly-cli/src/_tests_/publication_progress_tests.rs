@@ -7,7 +7,8 @@ use std::time::Duration;
 use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
 use mokly_git::command::CancellationMock;
-use mokly_model::output::artifact::{Artifact, File};
+use mokly_model::output::artifact::Artifact;
+use mokly_model::output::inventory::Inventory;
 use mokly_model::output::repository::Repository;
 use mokly_model::output::upload::{BuildInventory, Publication};
 use mokly_model::output::validation::digest;
@@ -39,20 +40,19 @@ fn prepared() -> Prepared {
             comparison: None,
         })
         .unwrap();
-    let files = [
+    let mut files = Inventory::default();
+    for (path, bytes) in [
         ("index.html", "shell"),
         ("404.html", "shell"),
         ("static/one.txt", "one"),
         ("static/copy.txt", "one"),
         ("static/two.txt", "two"),
         ("mokly-viewer/index.json", r#"{"schemaVersion":9}"#),
-    ]
-    .into_iter()
-    .map(|(path, bytes)| File {
-        path: path.into(),
-        bytes: bytes.as_bytes().to_vec().into(),
-    })
-    .collect();
+    ] {
+        files
+            .insert(path.into(), bytes.as_bytes().to_vec().into())
+            .unwrap();
+    }
     Prepared::new(&Artifact::finalize("/private/site".into(), files, Some(metadata)).unwrap())
         .unwrap()
 }

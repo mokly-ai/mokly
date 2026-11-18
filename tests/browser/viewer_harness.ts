@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import type {
   EntryDetailV4,
+  FrameEvent,
   MoklyViewerHandle,
   MoklyViewerProps,
   ViewerMarker,
@@ -27,6 +28,7 @@ interface Harness {
   thrower(error: unknown): ReactNode;
 }
 interface FrameHookHarness {
+  emit(id: string, event: FrameEvent): string[];
   highlight(id: string): Promise<void>;
   ready(id: string): Promise<string>;
   rejectMount(id: string): void;
@@ -51,6 +53,7 @@ interface FrameHookHarness {
     mounts: number;
     pendingMounts: number;
     pendingUpdates: number;
+    sessionStatus: string | undefined;
     sessions: number;
     status: string;
     highlightedKeys: string[];

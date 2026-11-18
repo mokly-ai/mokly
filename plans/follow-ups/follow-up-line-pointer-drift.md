@@ -112,7 +112,12 @@
   by name, so the class stays fixed when the code changes shape.
 - **Previous examples:** Commit `6e02b32dd` of 2026-11-01 re-anchored line
   pointers in `plans/follow-ups/nested-own-preview-matches.md` after code
-  moved. The five fixes of 2026-11-17 above.
+  moved. The five fixes of 2026-11-17 above. On 2026-11-18, the branch
+  `calummoore/fu-linked-renderer-stylesheet-root-crva` moved configuration
+  validation to `crates/mokly-catalogue/src/config_inputs.rs`. It re-anchored
+  27 pointers that its change shifted in nine items. Each pointer now has
+  a symbol name near it. Option D still owns file-and-symbol anchors in the
+  shared skills.
 - **Related:**
   - `plans/follow-ups/isolated-git-in-every-test-helper.md`: it holds the
     wrong pointer at line 60. Fix that pointer with option A or B of this

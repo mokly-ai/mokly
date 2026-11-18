@@ -3,7 +3,6 @@
 
 pub mod error;
 pub mod filesystem;
-pub mod inventory;
 pub mod location;
 pub mod transaction;
 
@@ -25,6 +24,7 @@ mod fingerprint_walk;
 
 pub mod modules;
 
+mod admission;
 mod artifact;
 
 #[cfg(test)]

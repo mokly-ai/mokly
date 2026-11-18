@@ -172,6 +172,7 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
         roots: Vec::new(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
     };
     let prepared = provider

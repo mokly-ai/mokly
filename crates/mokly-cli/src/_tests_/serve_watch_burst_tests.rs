@@ -36,6 +36,7 @@ async fn a_watcher_burst_during_an_action_runs_exactly_one_later_action() {
             input: Config::default(),
             file: "/repo/mokly.config.json".into(),
             repo_root: "/repo".into(),
+            modules: Default::default(),
             authored_inputs: vec![],
             roots: vec![],
         },
@@ -81,6 +82,7 @@ async fn a_watcher_burst_during_an_action_runs_exactly_one_later_action() {
                         input: Config::default(),
                         file: "/repo/mokly.config.json".into(),
                         repo_root: "/repo".into(),
+                        modules: Default::default(),
                         authored_inputs: vec![],
                         roots: vec![],
                     })

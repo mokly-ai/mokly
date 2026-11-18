@@ -59,7 +59,7 @@ pub(crate) fn describe(
     let mut candidates: Vec<_> = candidates
         .into_values()
         .filter(|state| {
-            state.stamp.current(tree.as_ref()) == state.stamp
+            state.stamp.matches(tree.as_ref())
                 && (physical_inputs::current(
                     &state.reuse_evidence,
                     runtime.physical_inputs.as_ref(),

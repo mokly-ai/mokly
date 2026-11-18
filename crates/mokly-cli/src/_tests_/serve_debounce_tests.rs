@@ -23,6 +23,7 @@ async fn accepted_events_reset_the_deadline_and_ignored_events_keep_it() {
         input: Config::default(),
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: vec![],
         roots: vec![],
     };

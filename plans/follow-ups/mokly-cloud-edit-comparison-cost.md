@@ -10,7 +10,7 @@
   `crates/mokly-compare/src/comparison_preparation.rs:150-160`,
   `crates/mokly-graph/src/session_render.rs:15-55`,
   `crates/mokly-server/src/comparison_graph.rs:59-72`, and
-  `crates/mokly-graph/src/session_proof.rs:36-41`.
+  `crates/mokly-graph/src/session_proof.rs:37-42`, in `Session::input_identity`.
 - **Reason:** The change of the branch that measured this cost shares link
   checks, which leaves this cost unchanged, and no timing split names its main
   part yet.
@@ -64,7 +64,7 @@
     - A head document identity combines the plan key of the view with the
       digest of its bytes, at
       `crates/mokly-server/src/comparison_graph.rs:59-72` and
-      `crates/mokly-graph/src/session_proof.rs:36-41`. So a view whose plan
+      `crates/mokly-graph/src/session_proof.rs:37-42`, in `Session::input_identity`. So a view whose plan
       key changed fails its proof, also when its bytes stayed equal.
   - Requirements that stay:
     - A classification that reuses comparisons publishes the same bytes as a

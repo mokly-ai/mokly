@@ -18,6 +18,7 @@ fn package_manifests_use_only_normalized_roots() {
         },
         file: "/repo/tools/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
         roots: Vec::new(),
     };
