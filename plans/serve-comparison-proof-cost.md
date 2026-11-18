@@ -47,6 +47,24 @@ the decision in `plans/follow-ups/serve-comparison-proof-cost.md`.
    This is the performance orchestrator's call of 2026-11-18 after the
    options check. Report the index size beside the pair-store charge.
 
+On 2026-11-18, the performance orchestrator asked for the final product
+source before the complete gate ends. Its `mokly-cloud` A/B takes about
+25 minutes and can run beside verification. Commit `2c46ed670` is that
+product source. A later product change requires a new cloud measurement.
+
+On 2026-11-18, the performance orchestrator accepted the `mokly-cloud`
+measurement of `2c46ed670`. The edit comparison mean stayed at 246 ms.
+It accepted this neutral React result with the large HTML improvement.
+This supersedes the initial requirement for a shorter cloud comparison.
+It requested a separate follow-up to split the remaining cloud proof work
+before choosing a fix. That optimization stays outside this branch.
+
+Main later added the sidecar-return change at `24b238ca4`. The workspace
+merged it without conflicts at `c0a72c7ae`. The performance orchestrator's
+call of 2026-11-18 requires no new cloud measurement for that merge.
+The graph source is unchanged. The accepted cloud table remains bound to
+`2c46ed670` against `bc4f4cc40`. Final CI checks the combined head.
+
 The split used current `main` at `bc4f4cc40`, with release builds. Link checks
 took 88.1% of summed checked-head work on the default 5,850-view HTML fixture.
 On `examples/basic`, full-tier insertion weight was the largest measured
@@ -207,13 +225,23 @@ Depends on: 1
 Evidence: `.context/serve-comparison-proof-cost/implementation-report.md`
 and `.context/serve-comparison-proof-cost/readme-report.md`.
 
-## Milestone 3: Verification and release measurements
+## Milestone 2a: Push source for cloud measurement — completed
+
+Depends on: 2
+
+- [x] Commit and push the final product source with the preservation audit.
+- [x] Send its SHA immediately so the performance orchestrator can measure
+      `mokly-cloud` while this workspace finishes the complete gate.
+
+Evidence: `.context/serve-comparison-proof-cost/implementation-audit-after.log`.
+
+## Milestone 3: Verification and release measurements — completed
 
 Depends on: 2
 
 - [x] Run targeted graph, comparison, and server tests. Keep the existing
       reuse byte oracle and comparison tests unchanged.
-- [ ] Run the early repository suite with Git 2.45 or later, git-lfs, and
+- [x] Run the early repository suite with Git 2.45 or later, git-lfs, and
       pinned Bun. Run the complete repository gate. Name any blocker.
 - [x] Build and smoke-test the example catalogue under the repository rules.
 - [x] Measure three edit and exact-restore samples on `examples/basic` and
@@ -222,16 +250,35 @@ Depends on: 2
       most 953.5 ms, half its 1,907 ms baseline. Keep reuse and retention equal.
 - [x] Measure and report immutable index size and charged pair-store usage
       on both fixtures. Check the 2 MiB pair ceiling without permanent telemetry.
+- [x] Record the unrelated manager-fixture PATH failure and its verified
+      environment workaround as a standalone follow-up item.
 
 Evidence: `.context/serve-comparison-proof-cost/` holds checks and measurements.
+Cloud acceptance: `.context/serve-comparison-proof-cost/cloud-acceptance.md`.
+
+## Milestone 3a: Verify main integration
+
+Depends on: 3
+
+- [x] Merge main's nearby sidecar-return change without dropping either
+      implementation. Audit both parents and preserve all 44 main paths.
+- [x] Run the repository suite on the merged head.
+- [ ] Delegate the release A/B on the latest main and merged branch. Keep
+      their checkouts, targets, and editable fixtures separate from review.
+- [x] Record the performance orchestrator's cloud remeasurement waiver.
+
+Evidence: `.context/serve-comparison-proof-cost/merge-audit.log` and
+`.context/serve-comparison-proof-cost/integrated/`.
 
 ## Milestone 4: Commit, review, and pull request
 
-Depends on: 1, 1a, 2, 3
+Depends on: 1, 1a, 2, 2a, 3, 3a
 
-- [ ] Commit and push the implementation with the preservation audit.
-- [ ] Send the implementation SHA immediately after push. Obtain the
-      performance orchestrator's `mokly-cloud` comparison measurement.
+- [x] Obtain the performance orchestrator's `mokly-cloud` comparison
+      measurement. Send any changed product SHA for a new measurement.
+- [x] Delegate the requested cloud comparison profiling follow-up to the
+      `docs implementor`. Do not start that optimization in this branch.
+
 - [ ] Review against `origin/main` with `implementation-review`. Check each
       finding, apply the fix rule, and complete its two allowed fix rounds.
       Record deferred work as follow-up items. Preserve merged nearby changes.
@@ -241,3 +288,6 @@ Depends on: 1, 1a, 2, 3
 - [ ] Open the pull request into `main`. Watch its final CI with the shared
       `scripts/ci-wait.sh`. Fix branch failures. Send the complete report to
       the performance orchestrator. Do not merge the pull request.
+
+Follow-ups: `plans/follow-ups/manager-fixture-path-drops-git.md` and
+`plans/follow-ups/mokly-cloud-edit-comparison-cost.md`.
