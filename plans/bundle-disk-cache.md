@@ -2141,7 +2141,7 @@ Depends on: 6
 
 The performance orchestrator reopened this work on 2026-11-18, under the
 user's delegation of 2026-11-16. The `mokly-cloud` edit measurement at
-`e253021fb` blocks the merge. The orchestrator selected option D of
+`e253021fb` blocks the merge. The orchestrator selected the original option D of
 [the capture-cost item](./follow-ups/sequential-evidence-capture-cost.md)
 and moved it into this pull request. Profile one real compile with
 `--cpu-prof` first. Then measure synchronous filesystem calls in the existing
@@ -2304,6 +2304,62 @@ start describes only the earlier local `RUN.md` harnesses.
 Then root pushes and sends the source SHA and its dist build commit. The
 orchestrator runs its own A/B before any merge. Root does not merge PR #312.
 
+The performance orchestrator accepted the product at `d9561ad63` on
+2026-11-18, under the user's delegation of 2026-11-16. Its comparison used
+`main` at `24b238ca4`, with each release's own core and sidecar dist. The
+edit and memory gates pass. The orchestrator explicitly accepts the cold
+strict build increase of 7.3% and the fully cold first Changes increase of
+5.1%, although they exceed the 5% gate. The reasons are unchanged edit
+time, faster warm starts and builds, a faster first Changes after kept
+edits, equal memory, and the foundation for plan reuse. Record the full
+table in the PR description. Keep the cold costs visible in a follow-up:
+move the physical finish check and recipe save off the bundle response
+path, and trim capture further. Keep the idle head-warming item. No new
+product change is authorized by this acceptance. Root finishes the gate
+and final CI, then sends the final head and CI result. The orchestrator
+owns the merge.
+
+The performance orchestrator replaced the pending local matrix with its
+accepted `mokly-cloud` A/B on 2026-11-18, because the product is unchanged.
+Root skips that matrix and records this replacement in the PR description.
+Root pushes the test and records first. The complete local gate then runs
+in parallel with final-head CI. Root reports any branch defect at once.
+
+The performance orchestrator chose A for the directory-link test failure
+on 2026-11-18, under the same delegation. After restoring the directory,
+set its hidden parent's timestamps explicitly with
+`fs.utimes(path.dirname(store), 0, 0)`. Keep every real link operation and
+every assertion. Prove that omission of the target-parent witness rule
+still fails the test, and run ten fixed repetitions. Reason: stat witnesses
+can detect the parent mutation only when its timestamp changes. The test
+must supply that state and must not depend on a clock tick. The rejected
+B was one unchanged CI rerun; it would keep a timing-dependent required
+test. The bounded local investigation did not reproduce the CI failure,
+so this call does not assert its cause. Record the product limit: a replace
+and restore inside one timestamp tick can leave all witnesses unchanged
+and can remain durable. State its likelihood and effect in the witness
+contract or a covering follow-up. Change no product code for this limit.
+
+The fresh options check kept both final calls on 2026-11-18. For the
+performance call, its additional options are C, measure and document CI
+cache persistence; D, a per-run opt-out, which changes a boundary; and E,
+uncaptured cold Serve startup with later warming, which changes C1. None
+is selected. The cold follow-up must also keep the dirty-restart ready
+cost of 0.91 s, hosted runners that lose their cache, and the wall time of
+a one-shot build, whose save can overlap work but must end before exit.
+
+For the test call, the check adds C, an explicit old parent stamp before
+capture; D, a shared explicit-stamp test helper; E, a conditional product
+limit record; F, a wall-clock rollback rejection; and G, the existing
+coherence follow-up as the home of the limit. A stays selected. E and G
+describe the chosen record. No product rejection or shared test helper is
+authorized. The age guard normally excludes a fresh first witness, so
+same-tick operations alone do not demonstrate a production failure. The
+limit requires every checked value to remain unchanged; no production
+case or cause of the CI failure is proved. The check also notes a
+source-only timing concern in the sibling intermediate-link test. It has
+not failed, and this call changes only the authorized regression.
+
 Replaced ways for this milestone:
 
 - Promise-based capture filesystem reads become synchronous reads within
@@ -2325,7 +2381,7 @@ Replaced ways for this milestone:
 - [ ] Check evidence equality, bounds, first-touch order, and all capture
       regressions. Run the early repository check and the complete gate,
       or record their concrete blockers.
-- [ ] Measure the same real compile after each retained cut. Check byte-identical
+- [x] Measure the same real compile after each retained cut. Check byte-identical
       evidence and bounds. If A stays above 150 ms, evaluate the authorized
       dedicated worker and measure edit-to-Changes time. Ask before option C.
   - [x] Compare the dedicated worker with sync-4 and main in one product
@@ -2352,7 +2408,7 @@ Replaced ways for this milestone:
 - [x] Record C4 as the follow-up item
       [serve-pause-warm-head.md](./follow-ups/serve-pause-warm-head.md) for
       the plan reuse work.
-- [ ] Attribute the extra core RSS to measured allocations. Reduce it to
+- [x] Attribute the extra core RSS to measured allocations. Reduce it to
       within 20 MiB of main, or give the bound and the reason it must stay.
   - [x] Measure the allocations of the actual response decoder in a
         one-thread probe.
@@ -2368,23 +2424,29 @@ Replaced ways for this milestone:
     - [x] Run the library tests of the four affected crates, clippy for all
           their targets, and the generated type check.
     - [x] Run the one-time allocation, serialization, and sharing proof.
-  - [ ] Measure the core Serve peak RSS against main on `mokly-cloud`.
-- [ ] Update the README entry points and PR decision record. Delete the
-      capture-cost follow-up only after its work is complete.
-- [ ] Run the six local measurements of 2026-11-18 against the current
-      `main` before the push.
+  - [x] Measure the core Serve peak RSS against main on `mokly-cloud`.
+- [x] Update the README entry points and PR decision record. Keep the
+      capture-cost follow-up for the accepted remaining cold cost, as the
+      performance orchestrator directed on 2026-11-18.
+- [x] Replace the six local measurements with the performance orchestrator's
+      accepted `mokly-cloud` A/B, as it directed on 2026-11-18. Skip the local
+      matrix. Keep its static preparation and completed main build as evidence.
 - [x] Commit the `recipe-size.ts` cut on its own, apart from the capture and
       memory changes.
 - [ ] Commit and push. Send the SHA and the dist build commit to the
       performance orchestrator at once.
-- [ ] If `calummoore/mokly-bundle-hot-path-2-1bc5` merges into `main` first,
+- [x] If `calummoore/mokly-bundle-hot-path-2-1bc5` merges into `main` first,
       merge `origin/main` under the `git-merge` skill. Keep one byte-count
       implementation, with this branch's fallback that drops the evidence.
       Run the 24 UTF-8 length comparisons and the 60 boundary and fallback
       comparisons again on the merged code.
-- [ ] Review the complete diff against `origin/main` with the
+- [x] Review the complete diff against `origin/main` with the
       `implementation-review` skill. Apply the fix rule and re-review once.
-- [ ] Complete the performance orchestrator's three-round merge measurement.
+- [x] Complete the performance orchestrator's three-round merge measurement.
+      The orchestrator accepted the stated cold-run exception on 2026-11-18.
+- [x] Apply the authorized explicit timestamp data to the directory-link
+      regression. Keep its assertions, prove its parent-witness fault, and
+      run ten fixed repetitions. Record the product timestamp limit.
 - [ ] Delete this plan under the `plans` skill.
 - [ ] Update the open PR with the decisions, measurements, and follow-ups.
 
@@ -2398,6 +2460,8 @@ Context-only worker prototype:
 `.context/bundle-disk-cache/reports/synchronous-capture-worker-prototype.md`.
 Recipe-size cut:
 `.context/bundle-disk-cache/reports/synchronous-capture-recipe-size.md`.
+Merged recipe-size proof:
+`.context/bundle-disk-cache/sync-perf-20261118/sync-4/recipe-size-proof-f499.json`.
 Coordination with `calummoore/mokly-bundle-hot-path-2-1bc5`:
 `.context/bundle-disk-cache/pr-decision-record.md`.
 Shared ownership source change:
@@ -2425,6 +2489,16 @@ C1 and B source reports:
 C1 and B documentation: `.context/bundle-disk-cache/reports/c1-docs.md`.
 C1 product measurement preparation and the cold aggregation call:
 `.context/bundle-disk-cache/sync-perf-20261118/c1-product/PREPARATION.md`.
+Performance acceptance and the stated cold-run exception:
+`.context/bundle-disk-cache/reports/c1-performance-acceptance-20261118.md`.
+Directory-link CI investigation:
+`.context/bundle-disk-cache/sync-perf-20261118/link-parent-flake/REPORT.md`.
+Authorized timestamp fixture and parent-witness fault proof:
+`.context/bundle-disk-cache/sync-perf-20261118/link-parent-flake/authorized-fix/REPORT.md`.
+Final cold-cost and witness-limit records:
+`.context/bundle-disk-cache/reports/c1-final-docs.md`.
+Options check of the final two calls:
+`.context/bundle-disk-cache/reports/c1-final-decisions-options-check.md`.
 
 ## Post-merge follow-up (non-blocking)
 

@@ -78,6 +78,7 @@ test("a directory-entry link witnesses every target parent through replacement a
   assert.equal(await fs.realpath(chosen), path.join(other, "a"));
   await fs.rm(store);
   await fs.rename(held, store);
+  await fs.utimes(path.dirname(store), 0, 0);
   const evidence = await inputs.finish();
   assert.equal(await fs.realpath(chosen), path.join(store, "a"));
   assert.equal(evidence.complete, true);

@@ -169,11 +169,13 @@ rejected, because each adds a second set of cache rules.
 ### Stable Capture
 
 The bundle cache stores a compilation only when its reuse evidence is
-complete and stable. Evidence is stable when the sidecar proves that no
-directory on the path to a recorded input, and no recorded configuration or
-manifest file, changed while it captured the evidence and compiled. The
-sidecar makes this proof only for a command that keeps a bundle cache, and
-only on a local volume of a supported file system:
+complete and stable. Evidence is stable when the sidecar finds the same
+identity and the same change stamps, at its first observation and after
+the compile, for each directory on the path to a recorded input and for
+each recorded configuration or manifest file. This check detects a change
+during the capture and the compile, with the one limit below. The sidecar
+makes this check only for a command that keeps a bundle cache, and only on
+a local volume of a supported file system:
 
 | Platform | File systems                                   |
 | -------- | ---------------------------------------------- |
@@ -186,8 +188,21 @@ is never stable. On a supported volume, an unrelated change in a directory on
 the path to a recorded input can also prevent the store. A change too recent
 for the time resolution of the file system has the same effect. Before a
 compile, the sidecar waits once, for at most 50 ms, when a recent change could
-otherwise make its evidence unstable. It never waits before a reuse. A
-compilation with unstable evidence keeps every in-process reuse rule of the
+otherwise make its evidence unstable. It never waits before a reuse.
+
+The check has one known limit. A path can be replaced and restored after its
+first observation, inside one timestamp tick of the file system. When every
+checked identity and stamp then returns to its first value, and the recorded
+evidence matches the files at the final read, the evidence counts as stable.
+The bundle cache can then store a compilation whose module selection came
+from the intermediate state. The likelihood is Rare: both changes of the
+path must fall inside one tick after its first observation, and every
+checked identity and stamp must return to its first value. No production
+case is known. The rule for recent changes applies only at each first
+observation, where it rejects a stamp too recent for the time resolution. It
+does not exclude a replace and restore after that observation.
+
+A compilation with unstable evidence keeps every in-process reuse rule of the
 [compiled recipe rules](./mokly-sidecar-recipes.md).
 A later process cannot reuse it, and Mokly prints nothing for it.
 Decision: stability decides only whether the bundle cache stores a

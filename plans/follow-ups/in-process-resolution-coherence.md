@@ -11,7 +11,9 @@
   `packages/mokly/src/sidecar/physical-inputs.ts:166`, and
   `crates/mokly-render/src/bundle.rs:63`.
 - **Reason:** The exposure predates the bundle disk cache change, which keeps
-  it out of the disk cache, and its fix that keeps all reuse is Large.
+  it out of the disk cache, except in the documented limit of the durable
+  check when every witness returns unchanged. Its fix that keeps all reuse is
+  Large.
 
 - **Source:** Review.
 - **Category:** Product bug.
@@ -122,6 +124,21 @@
     false. The age guard is 50 ms, or 2.1 s for stamps in whole seconds. The
     bundle cache stores only a compilation with complete and
     durable evidence.
+  - On 2026-11-18 the performance orchestrator recorded a limit of the
+    durable check, with no product fix. A path can be replaced and restored
+    after its first observation, inside one timestamp tick of the file
+    system. This needs the identity and the stamps of each witness to return
+    to their first values, and the evidence to match the files at the final
+    read. The durable check then passes. So the bundle cache can store a
+    compilation whose selection came from the intermediate state, as in the
+    transient window. The age guard keeps a fresh change from passing as an
+    old first observation, but it does not exclude such a change after the
+    first observation. Its likelihood is Rare: both changes of the path must
+    fall inside one tick after its first observation, and every checked
+    identity and stamp must return to its first value. No production case is
+    known, and nobody has shown that this case caused a test failure or a
+    stale output. The section "Stable Capture" of
+    `docs/protocol/mokly-base-cache.md` states the limit.
   - The durable check never changes `complete`, the identity, or in-process
     reuse. Two in-process reuse tests of `main` depend on that. One is
     "evaluation-only bundles share compilation and fresh workers restore
@@ -151,17 +168,21 @@
 - **Problem:** In-process reuse can accept a compilation whose evidence
   describes a newer filesystem view than the one from which esbuild selected
   a module. The transient window and the cached-listing window allow it. The
-  durable check keeps such a compilation out of the disk cache only.
+  durable check keeps such a compilation out of the disk cache only, except
+  in its limit of 2026-11-18, when every witness returns unchanged.
 - **Impact if no action:** Rarely, Serve or a build keeps an old module after
   a candidate changes during a compile. It keeps it until a change to a
   recorded input forces a compile. A restart compiles again, because on a
-  supported volume the bundle cache does not store such a compilation.
+  supported volume the bundle cache does not store such a compilation. The
+  one exception is the limit of the durable check, when every witness
+  returns unchanged.
 - **Root question:** How does in-process reuse prove that the evidence of a
   compilation describes the filesystem view from which esbuild selected each
   module, without less reuse for a coherent compilation?
 - **Options:**
   - **A.** Change nothing. In-process reuse keeps both windows, and the
-    durable check keeps them out of the disk cache. Effort: Small.
+    durable check keeps them out of the disk cache, except in its documented
+    same-stamp limit, which is Rare. Effort: Small.
   - **B.** Clear `complete` when a witness of the durable check sees a change
     during the compile. Keep reuse when the check cannot decide, for example
     on an unsupported volume. An unrelated change in a witnessed ancestor,
@@ -236,7 +257,10 @@
 - **Recommendation:** D. It closes both windows in process and on disk
   without stamps, keeps the reuse of each coherent compilation, and writes
   no file. E copies no rule, but it adds a dependency and an esbuild run to
-  each compile.
+  each compile. D compares each selected winner with the captured
+  candidates and reads no stamp, so it also covers the limit of the durable
+  check when the selection changed.
 - **Action:** fix after merge, apply D, because the exposure predates the
   bundle disk cache change, the durable check keeps it out of the disk
-  cache, and D is Large new work at the capture boundary.
+  cache except in its documented same-stamp limit, which is Rare, and D is
+  Large new work at the capture boundary.

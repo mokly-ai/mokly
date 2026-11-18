@@ -7,7 +7,7 @@
   reviewed the reopened design of the synchronous bundle cache write.
 - **Location:** `crates/mokly-sidecar/src/pool_bundle_cache.rs:112` to line
   118, `crates/mokly-compare/src/bundle_codec_write.rs:60`,
-  `crates/mokly-sidecar/src/pool_bundle_cache.rs:60`, and
+  `crates/mokly-sidecar/src/pool_bundle_cache.rs:59`, and
   `crates/mokly-compare/src/bundle_cache_write.rs:44`.
 - **Reason:** No run has split the cost of these stages. The warm-restart
   goal passes, and this profile can keep every response, timing, and warning
@@ -30,8 +30,10 @@
     whole filesystem reaches the disk.
 - **Background:**
   - The pool of `crates/mokly-sidecar` sends each `bundle` request to a Node
-    sidecar. After each successful request, `complete_bundle` at
-    `crates/mokly-sidecar/src/pool_bundle_cache.rs:97` makes the offer.
+    sidecar. After each successful request in the `full` capture mode,
+    `complete_bundle` at `crates/mokly-sidecar/src/pool_bundle_cache.rs:96`
+    makes the offer. Since the capture decision C1 of 2026-11-18, a
+    `serveEdit` request of a Serve head makes none.
     `crates/mokly-sidecar/src/pool_requests.rs:144` to line 145 runs it
     before the request returns. So the store call is part of the bundle
     response.
@@ -55,22 +57,27 @@
     that day ran no compile and no esbuild operation. The same save code gave
     every sample.
   - Four sources of request cost have no profile:
-    - The offer copy: `pool_bundle_cache.rs:112` to line 118 deep-copies the
-      compilation and the module list of the result for each offer. The copy
-      comes before the receipt check, so a disk hit or a memory reuse that
-      writes nothing also pays it. It also comes before the type checks that
-      reject a compilation without complete and durable evidence.
+    - The offer copy: `pool_bundle_cache.rs:112` to line 118 copies the
+      settings and the module list of the result for each offer. Since the
+      `Arc` change of 2026-11-18, the offer shares the compilation through
+      an `Arc`. Before that change, it also deep-copied the compilation. The
+      copy comes before the receipt check, so a disk hit or a memory reuse
+      that writes nothing also pays it. It also comes before the type checks
+      that reject a compilation without complete and durable evidence.
     - The frame count: after `encode` serializes the entry, it builds the
       `restoreGeneration` request with `disk_seed_request`, at
       `crates/mokly-compare/src/bundle_codec_write.rs:60`. That function
-      deep-copies the settings, the module list, and the compilation, at
-      `crates/mokly-sidecar/src/reusable_recipe.rs:66` to line 68. `encode`
-      serializes this copy a second time only to count its bytes against the
-      64 MiB frame limit.
+      copies the settings and the module list, and it shares the
+      compilation through an `Arc`, at
+      `crates/mokly-sidecar/src/reusable_recipe.rs:68` to line 70. Before
+      the `Arc` change, it also deep-copied the compilation. `encode`
+      serializes this request a second time only to count its bytes against
+      the 64 MiB frame limit.
     - The restore copy: on a disk hit, the store returns an owned recipe
-      snapshot. `pool_bundle_cache.rs:60` builds the `restoreGeneration`
-      request from it with `disk_seed_request`, so it copies the recipe
-      again. After that, line 77 uses only its runtime key.
+      snapshot. `pool_bundle_cache.rs:59` builds the `restoreGeneration`
+      request from it with `disk_seed_request`, so it copies the settings
+      and the module list again and shares the compilation. After that,
+      line 76 uses only its runtime key.
     - The Linux flush: `bundle_replace` flushes the stage data at
       `crates/mokly-compare/src/bundle_cache_write.rs:44`, through `sync_tree`
       at `crates/mokly-compare/src/durability.rs:98`. On Linux, line 104 calls
@@ -156,17 +163,19 @@
     - Only complete and durable evidence reaches the disk, through
       `ReusableRecipe::new` at `reusable_recipe.rs:22` and
       `DurableRecipe::new` at `crates/mokly-sidecar/src/durable_recipe.rs:13`.
-    - Every served compilation with complete and stable evidence is offered,
-      also one served from memory. The receipt check decides whether to
-      write. `docs/protocol/mokly-base-cache.md:121` to line 138 rejects a
-      table of earlier offers.
+    - In the `full` capture mode, every served compilation with complete and
+      stable evidence is offered, also one served from memory. Since
+      2026-11-18, a Serve head preparation in the `serveEdit` mode offers
+      nothing. The receipt check decides whether to write.
+      `docs/protocol/mokly-base-cache.md:121` to line 142 rejects a table of
+      earlier offers.
     - Data and directory metadata are durable before the receipt, at
       `mokly-base-cache.md:29`. Publication stays atomic, and a hit still
       checks the payload digest.
     - The 512 MiB namespace bound of `docs/protocol/mokly-timings.md:192` and
       the 64 MiB frame limit of `docs/protocol/mokly-sidecar.md:38` stay.
     - No bundle cache operation waits for a lock, at
-      `mokly-base-cache.md:141`.
+      `mokly-base-cache.md:145`.
     - The warning behaviour stays. `mokly-base-cache.md:84` to line 91 gives
       the fault classes and their output. `Reported` at
       `crates/mokly-cli/src/bundle_runtime.rs:129` emits the warnings of each
@@ -180,9 +189,10 @@
     - No time gate and no new runtime setting are added. Every existing test
       and assertion stays.
 - **Problem:** A bundle request runs optional bundle cache work that nobody
-  profiled. Each offer copies the recipe, the frame count copies and
-  serializes it again, and each disk hit copies it for the restore. On Linux,
-  each write also flushes the whole filesystem.
+  profiled. Each offer copies the settings and the module list, the frame
+  count copies them and serializes the recipe again, and each disk hit
+  copies them for the restore. On Linux, each write also flushes the whole
+  filesystem.
 - **Impact if no action:** Each compiling request keeps its synchronous save.
   The probes measured 23.400 to 122.441 ms for a first write, and the product
   spans estimate about 1 to 7 percent of a compiling request. Each disk hit
@@ -205,12 +215,16 @@
       example, serialize a borrowed view of the restore request. Or compute
       the count from the payload length and the fixed wrapper lengths, with a
       test that compares it with a real serialization.
-    - Build the restore request at `pool_bundle_cache.rs:60` from the owned
+    - Build the restore request at `pool_bundle_cache.rs:59` from the owned
       recipe of the disk hit, in place of a copy. Read its runtime key first.
     - Each change keeps the bytes of each stored entry and each request.
     - It changes types of `crates/mokly-sidecar`, for example the `compiled`
       field of `results::Bundle`, and their test literals. No run has
       measured its gain.
+    - Since the `Arc` change of 2026-11-18, the result, the offer, and the
+      restore request already share the compilation, and `results::Bundle`
+      holds it in an `Arc`. The copies of the settings and the module list
+      remain.
     - Effort: Medium.
   - **C.** Flush only the bundle entry on Linux:
     - In `bundle_replace`, at `bundle_cache_write.rs:44`, flush the one data
@@ -273,8 +287,8 @@
   - A smaller payload, for example compression. It changes the entry format
     and adds a dependency, and no sample shows that the data size is the
     main cost.
-  - The sidecar as the writer. `docs/protocol/mokly-sidecar-modules.md:240`
-    to line 244 rejects it, because the sidecar performs no file writes.
+  - The sidecar as the writer. `docs/protocol/mokly-sidecar-recipes.md:169`
+    to line 173 rejects it, because the sidecar performs no file writes.
   - A writer daemon. The pool writer of E is better on every point.
   - A repeat of the probe until each value is below 100 ms. Dropped samples
     hide evidence. D keeps every sample.
@@ -283,14 +297,21 @@
   its `cache` value, and its warnings belong to the bundle response under
   the decision of 2026-11-16. B and C are direct fixes of single causes.
 - **Previous examples:**
-  - `docs/protocol/mokly-base-cache.md:132` to line 138 records an earlier
+  - `docs/protocol/mokly-base-cache.md:136` to line 142 records an earlier
     bound of this class: the receipt check replaced a full write after each
     hit.
-  - `mokly-base-cache.md:141` to line 150 records another: no bundle cache
+  - `mokly-base-cache.md:145` to line 154 records another: no bundle cache
     operation waits for a lock.
   - `plans/follow-ups/sequential-evidence-capture-cost.md` records a cost of
-    the same change on the compile path, with the same rule: measure before
-    any change.
+    the same change on the compile path. Its trims also keep only measured
+    gains.
+- **Related:** `plans/follow-ups/sequential-evidence-capture-cost.md`, a
+  shared wider fix. Its option C moves the physical finish check and the
+  recipe save off the critical path of the bundle result. For the save, it
+  uses option E of this item and does not design a second writer. Apply E
+  with that option C. The decision of 2026-11-16 that blocks E also applies
+  to that save. This item keeps the profile, the copies, and the flush of
+  the save path.
 - **Recommendation:** D. It keeps every requirement, and it changes a copy, a
   serialization, or a flush only after repeated measurements show a gain. E
   best protects the codebase from this class, but it stays blocked until a

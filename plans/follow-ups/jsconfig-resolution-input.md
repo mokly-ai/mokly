@@ -7,9 +7,9 @@
   identity call 22 of the bundle disk cache change added the `extends`
   target case.
 - **Location:** `packages/mokly/src/sidecar/resolution-inputs.ts:70`,
-  `packages/mokly/src/sidecar/config-inputs.ts:128` to line 133,
-  `crates/mokly-graph/src/render_closure.rs:6`,
-  `crates/mokly-graph/src/render_inputs.rs:77` to line 85, and
+  `packages/mokly/src/sidecar/config-inputs.ts:112` to line 117,
+  `crates/mokly-graph/src/render_closure.rs:10`,
+  `crates/mokly-graph/src/render_inputs.rs:140` to line 148, and
   `docs/protocol/mokly-watch.md:70`.
 - **Reason:** The exhaustive watch-input and render-key rule omits these
   files, so the user must choose whether that requirement changes.
@@ -43,29 +43,28 @@
     - `ConfigInputs` in `packages/mokly/src/sidecar/config-inputs.ts`
       records each `jsconfig.json` candidate beside each `tsconfig.json`
       candidate, also above the source root, in the reuse evidence. See
-      `configuration` at line 66 and `candidateInputs` at line 75.
-    - `readConfig`, at lines 128 to 133 of the same file, records each
+      `configuration` at line 61 and `candidateInputs` at line 70.
+    - `readConfig`, at lines 112 to 117 of the same file, records each
       relative extends target, with or without its `.json` suffix, in the
       reuse evidence.
-    - The sidecar's `reuse` in `packages/mokly/src/sidecar/compiled.ts:105`
+    - The sidecar's `reuse` in `packages/mokly/src/sidecar/compiled.ts:106`
       and the core's in-process reuse at
-      `crates/mokly-render/src/bundle.rs:62` reject an earlier compilation
+      `crates/mokly-render/src/bundle.rs:63` reject an earlier compilation
       when that evidence changed.
     - The content of each present `jsconfig.json` and extends target also
       enters the compilation identity, at
-      `packages/mokly/src/sidecar/bundle-recipe.ts:121`. So the next bundle
+      `packages/mokly/src/sidecar/bundle-recipe.ts:136`. So the next bundle
       after an edit gives a new generation id.
-    - The section "Compiled Recipes And Release" of
-      `docs/protocol/mokly-sidecar-modules.md` states these rules.
+    - `docs/protocol/mokly-sidecar-recipes.md` states these rules.
   - The reuse evidence never enters the metadata inputs. So it reaches no
     watch input and no render input key:
     - `derive` builds the resolution digests of the render input keys from
       the metadata inputs only, at
       `crates/mokly-render/src/render_environment.rs:110`.
-    - `stamp`, at `crates/mokly-render/src/bundle_attempt.rs:60` to line 87,
+    - `stamp`, at `crates/mokly-render/src/bundle_attempt.rs:82` to line 109,
       builds the input stamp from the metadata inputs and the module digests.
       The stamp gives the `resolution_files` that the watcher observes, at
-      `crates/mokly-render/src/bundle.rs:189` and
+      `crates/mokly-render/src/bundle.rs:199` and
       `crates/mokly-cli/src/serve_watch.rs:248`.
     - The section "Watch Targets And Readiness" of
       `docs/protocol/mokly-watch.md` says that this evidence is not a watch
@@ -81,11 +80,12 @@
     target such as `./tsconfig.base.json`, or a `tsconfig.json` in a
     directory on no module chain, is not a metadata input.
   - In Rust, `RESOLUTION_FILES` in
-    `crates/mokly-graph/src/render_closure.rs:6` lists `package.json` and
-    `tsconfig.json`. `chain`, at line 35, lists them in a module's directory
-    and its parents.
-  - `RenderInputs::build` in `crates/mokly-graph/src/render_inputs.rs:77` to
-    line 85 splits the present resolution files:
+    `crates/mokly-graph/src/render_closure.rs:10` lists `package.json` and
+    `tsconfig.json`. `chain`, at line 158, lists them in a module's
+    directory and its parents.
+  - `RenderInputs::build`, through `build_modules` at
+    `crates/mokly-graph/src/render_inputs.rs:140` to line 148, splits the
+    present resolution files:
     - A file on a module chain enters only the keys whose closures hold that
       module.
     - A file on no module chain enters the shared part of every key of its
@@ -101,7 +101,7 @@
   - `docs/protocol/mokly-watch.md:57` to line 59 makes the render-key input
     list exhaustive with "and only then". `mokly-watch.md:70` names the
     `package.json` and `tsconfig.json` candidates.
-  - `docs/protocol/mokly-runtime.md:44` says that a watched change renders
+  - `docs/protocol/mokly-runtime.md:46` says that a watched change renders
     again the outputs whose inputs changed.
 - **Problem:** An edit of a `jsconfig.json`, or of an extends target that is
   not a module chain candidate, is not a watch input, so watched Serve does
@@ -129,7 +129,7 @@
     reuse evidence only. Update `docs/protocol/mokly-watch.md:70`. Effort:
     Medium.
   - **B.** Apply A. Also add `jsconfig.json` to `RESOLUTION_FILES` in
-    `crates/mokly-graph/src/render_closure.rs:6`, so that a `jsconfig.json`
+    `crates/mokly-graph/src/render_closure.rs:10`, so that a `jsconfig.json`
     edit moves only the keys whose closures hold a module on its chain, as a
     `tsconfig.json` edit does. An extends target edit still moves every key
     of its side, because target names vary. It changes no message between

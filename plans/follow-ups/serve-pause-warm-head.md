@@ -44,6 +44,11 @@
     than main. C1 accepts this head compile. The local measurement for PR
     #312 reports the `serve.ready` time and the first Changes time of this
     restart against main.
+  - The orchestrator's final check of 2026-11-18 measured this restart. It
+    compared the change at `d9561ad63` with `main` at `24b238ca4` on
+    `mokly-cloud`, in interleaved runs on 4 vCPU with pool size 4. The
+    restart reached `serve.ready` at 2.91 s on `main` and 3.82 s with the
+    change, and its first Changes at 15.2 s and 14.7 s.
   - C4, the orchestrator's variant: C1, plus one captured head compile of the
     current head after a fixed quiet period, when nothing else runs. At most
     one extra request runs for each pause. A new edit or a stop cancels it
@@ -162,6 +167,11 @@
     kills and reaps a worker.
   - `plans/follow-ups/root-switch-reap-wait.md`, the same code: a replacement
     starts before the old process is reaped. B replaces the cancelled worker.
+  - `plans/follow-ups/sequential-evidence-capture-cost.md`, the same code:
+    each pause compile of B is a captured compile, and a restart after
+    unreverted edits compiles the head with capture. Its option C moves the
+    physical finish check and the recipe save off the critical path of the
+    bundle result, which shortens both.
 - **Recommendation:** B, with the plan reuse work. It makes restarts after a
   pause warm and keeps each edit on the C1 path. C and D stay alternatives
   for that work. C is smaller, but the restart stays cold. D shares the

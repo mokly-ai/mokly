@@ -6,10 +6,10 @@
   bundle disk cache branch `calummoore/lisbon-h906`, finding 1, and its
   finding check. On 2026-11-18, finding 4 of round 3 repeated this defect.
   Its finding check added the one-worker trigger and option F.
-- **Location:** `crates/mokly-sidecar/src/pool_preparation.rs:24` to line 29,
+- **Location:** `crates/mokly-sidecar/src/pool_preparation.rs:26` to line 31,
   `crates/mokly-sidecar/src/pool_requests.rs:84` to line 92,
-  `crates/mokly-sidecar/src/pool_bundle_cache.rs:103` to line 110, and
-  `crates/mokly-sidecar/src/compiled.rs:124`.
+  `crates/mokly-sidecar/src/pool_bundle_cache.rs:102` to line 109, and
+  `crates/mokly-sidecar/src/compiled.rs:157`.
 - **Reason:** The defect is Rare and affects only the optional timing output.
   No current command flow was found to send two equal bundles at the same
   time. The one-worker trigger needs unusual timing, and only a trace through
@@ -22,7 +22,7 @@
     sidecar pool. It holds the compiled recipe that the pool retains for that
     generation.
   - **Runtime key:** the private import name that each compile creates, in
-    `packages/mokly/src/sidecar/bundle.ts:155`.
+    `packages/mokly/src/sidecar/bundle.ts:161`.
   - **Evaluation digest:** the core's digest of the resolved configuration and
     the CSS Modules maps. It separates evaluation lifetimes of equal compiled
     code, and the generation id includes it.
@@ -35,31 +35,41 @@
 - **Background:**
   - The pool runs requests in independent Node workers. Each compile creates a
     fresh runtime key. A complete compilation keeps a deterministic identity
-    without that key, at `packages/mokly/src/sidecar/bundle-recipe.ts:116`
-    and under `docs/protocol/mokly-sidecar-modules.md:193`.
+    without that key, at `packages/mokly/src/sidecar/bundle-recipe.ts:132`
+    and under `docs/protocol/mokly-sidecar-recipes.md:94`.
   - `crates/mokly-sidecar/src/pool_requests.rs:85` to line 92 makes the pool
     record of a new bundle result share any retained compilation with an
-    equal recipe. `same_recipe` at `crates/mokly-sidecar/src/compiled.rs:124`
+    equal recipe. `same_recipe` at `crates/mokly-sidecar/src/compiled.rs:157`
     compares neither `runtime_key` nor `code`. So equal compiles share one
     record, also with different evaluation digests. Each worker still holds
     its own compilation with its own key.
   - The sidecar reuses the first live generation that is still current, with
-    that generation's own key, at `packages/mokly/src/sidecar/session.ts:68`
-    and `packages/mokly/src/sidecar/compiled.ts:114`.
+    that generation's own key, at `packages/mokly/src/sidecar/session.ts:69`
+    and `packages/mokly/src/sidecar/compiled.ts:131`. Since the capture
+    decisions of 2026-11-18, it tries the generations with captured evidence
+    first. A `serveEdit` request then also tries the generations with the
+    explicit `uncaptured: "serveEdit"` marker. A `full` request never takes a
+    marked generation.
   - `seed_compilation` at `crates/mokly-sidecar/src/pool_preparation.rs:17`
     collects the installed runtime keys of a worker through the pool records,
-    at lines 24 to 29. When it finds a complete seed,
-    `crates/mokly-sidecar/src/pool_bundle_cache.rs:44` to line 46 sets the
+    at lines 26 to 31. Since 2026-11-18, it seeds only what the capture mode
+    of the call admits: the released recipe of its settings and the live
+    generation that comes first, a captured one before a marked one, then
+    the highest epoch. When that live seed is captured, a `serveEdit` call
+    also restores the newest marked live generation as an explicit
+    fallback, at lines 64 to 78 and 103 to 106. Each restored seed adds its
+    runtime key to the list. When it finds an admitted seed,
+    `crates/mokly-sidecar/src/pool_bundle_cache.rs:42` to line 44 sets the
     cause `stamp-mismatch`.
-  - `complete_bundle` at `pool_bundle_cache.rs:97` classifies the result at
-    lines 103 to 110. A result key in that list gives `memory`. A key equal
+  - `complete_bundle` at `pool_bundle_cache.rs:96` classifies the result at
+    lines 102 to 109. A result key in that list gives `memory`. A key equal
     to the disk seed key gives `hit`. Any other key keeps the cause.
   - The timing rule is in `docs/protocol/mokly-timings.md`. Line 99 says:
     "The sidecar compiled for every value except `memory` and `hit`." Lines
     105 to 106 say: "Replay and evaluation-only reuse add no `esbuild`
     count." The span is `catalogue.bundle`, at
     `crates/mokly-render/src/bundle_attempt.rs:22`.
-  - `crates/mokly-sidecar/README.md:115` says that the pool compares the
+  - `crates/mokly-sidecar/README.md:146` says that the pool compares the
     result with the keys of the generations that the worker holds. The code
     compares it with the keys of their pool records.
   - Two workers make a split in two forms:
@@ -73,11 +83,11 @@
     - Serve runs one rebuild at a time, at
       `crates/mokly-cli/src/serve_rebuild.rs:127`.
     - Serve runs one background loop, at
-      `crates/mokly-cli/src/entry_serve.rs:265`. That loop waits for a
+      `crates/mokly-cli/src/entry_serve.rs:266`. That loop waits for a
       cancelled Changes attempt before it starts the next one, at
       `crates/mokly-server/src/changes_background.rs:103`.
     - One core runtime runs its describes one at a time under a lock, at
-      `crates/mokly-render/src/runtime.rs:175`.
+      `crates/mokly-render/src/runtime.rs:179`.
     - The Changes base has its own runtime, at
       `crates/mokly-cli/src/changes_base.rs:140`. Its source root differs
       from the head, so its recipes never equal head recipes.
@@ -88,7 +98,7 @@
     `crates/mokly-cli/src/options.rs:45`.
   - One worker can also make a split:
     - A short-lived input change makes the reuse check of the sidecar fail,
-      at `packages/mokly/src/sidecar/compiled.ts:124`.
+      at `packages/mokly/src/sidecar/compiled.ts:140`.
     - The worker compiles after the change ends. So it makes an equal recipe
       with a new runtime key.
     - The pool record keeps the retained compilation. It is the live record,
@@ -113,7 +123,8 @@
     the compilation of the pool record. It can have another runtime key than
     the compilation that `complete_bundle` offered, so the bundle store writes
     an equal recipe again. In a current command, only the one-worker trigger
-    was found to make a split on the head side.
+    was found to make a split on the head side. Since 2026-11-18, the core
+    sends the notice that calls `served()` only in the `full` capture mode.
   - Every option must keep these goals:
     - Recipe sharing after reuse and the deterministic identity of each
       complete compilation stay. Reuse returns the key of the reused
