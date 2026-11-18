@@ -1929,9 +1929,13 @@ Depends on: 1, 2, 3, 4, 5
   - [x] Merge main `51f356574`, with kept-base reuse and the viewer pick
         completion fix. Audit all incoming paths and preserve the completed
         follow-up deletions. Adapt only the new test constructor arguments.
-  - [ ] Repeat the release comparison against exact main `51f356574`.
+  - [x] Merge main `e8c964cb1`, with the settled large browser fixtures and
+        failure evidence. Keep every incoming path exactly as main, including
+        the completed follow-up deletion.
+  - [ ] Repeat the release comparison against exact main `e8c964cb1`.
         Preserve the complete `0accb6818` and `f032dd04c` programs, sources,
-        reports, and raw evidence before updating the private checkouts.
+        reports, and raw evidence before updating the private checkouts. Keep
+        the archived `51f356574` and `423e23930` build-only programs as well.
   - [x] Run repository verification on the latest combined source before
         its review. Let final CI verify all suites of the combined branch.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
@@ -1975,6 +1979,10 @@ The resolved integration is recorded in
 `.context/bundle-disk-cache/merge-51f35657/decisions.md`,
 `.context/bundle-disk-cache/reports/merge-51f-review-docs.md`, and
 `.context/bundle-disk-cache/logs/repository-51f-combined.log`.
+
+Latest main fixture integration evidence:
+`.context/bundle-disk-cache/merge-e8c964cb/preservation.json` and
+`.context/bundle-disk-cache/merge-e8c964cb/decisions.md`.
 
 First source fix evidence:
 `.context/bundle-disk-cache/reports/review-fix-round-1.md` and
