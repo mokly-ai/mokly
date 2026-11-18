@@ -6,6 +6,7 @@ use mokly_html::composition::Composed;
 use mokly_html::fragment::Fragment;
 use mokly_html::tree::{Node, element};
 use mokly_model::usage::CatalogueUsage;
+use mokly_test_support::capture::Trace;
 
 use crate::cache::{Artifact, CacheStats, MemoryCache, RenderCache, compact_cost, entry_cost};
 use crate::document_codec::EncodedView;
@@ -205,16 +206,17 @@ fn failed_compact_restore_removes_the_entry_and_counts_a_miss() {
         .unwrap()
         .compact
         .insert(node("aa"), Arc::new(encoded), cost);
-    let (restored, events) = cache_failure_events::capture(|| cache.get(&node("aa")));
+    let trace = Trace::default();
+    let restored = trace.in_scope(|| cache.get(&node("aa")));
+    let events = trace.events();
     assert!(restored.is_none());
+    assert_eq!(events.len(), 1);
+    assert_eq!(events[0].level, tracing::Level::ERROR);
     assert_eq!(
-        events,
+        events[0].fields,
         [(
-            tracing::Level::ERROR,
-            vec![(
-                "message".into(),
-                "render cache document restore failed".into()
-            )]
+            "message".into(),
+            "render cache document restore failed".into()
         )]
     );
     assert_eq!(
@@ -260,6 +262,3 @@ fn reinserting_a_compact_key_keeps_it_compact() {
     assert_eq!(cache.stats().bytes, full * 45 + compact);
     assert_eq!(cache.stats().evictions, 0);
 }
-
-#[path = "cache_failure_events.rs"]
-mod cache_failure_events;

@@ -35,8 +35,16 @@
     `crates/mokly-cli/src/serve_trace.rs:46`. A global default is the default
     dispatch of every thread.
   - Tests can use scoped subscribers instead. For example,
-    `crates/mokly-cli/src/_tests_/serve_trace_tests.rs:87` captures records
-    with `tracing::subscriber::with_default`.
+    `crates/mokly-cli/src/_tests_/serve_trace_tests.rs:88` captures records
+    with `mokly_test_support::subscriber::with_default`. That helper calls
+    `tracing::subscriber::with_default`, so the subscriber is the default
+    dispatch of the calling thread only.
+  - Every Rust test capture uses the test-only crate
+    `crates/mokly-test-support`. The first capture in a test process installs
+    a global subscriber that records nothing. It makes each span ask the
+    dispatch of its own thread, so parallel tests do not lose the spans of a
+    scoped capture. It does not carry a dispatch across a thread hop. A test
+    binary that uses the crate cannot install another global subscriber.
   - Seven Serve thread hops carry the caller's span, but not its dispatch:
     - `changes_execution.rs:41-43`, `:75-77`, and `:182-184` call
       `spawn_blocking` with `parent.in_scope(...)`.
@@ -72,6 +80,14 @@
   - No test or run has checked which spans, events, and status records a
     scoped subscriber loses at these hops. This effect follows from the
     `tracing` rules above. Nobody reproduced it.
+  - The Serve trace test
+    `spans_keep_blocking_parents_and_report_only_committed_work_as_ok` in
+    `crates/mokly-server/src/_tests_/changes_trace_tests.rs` runs in
+    `in_runtime` of `crates/mokly-server/src/_tests_/changes_trace_support.rs`.
+    That current-thread test runtime runs spawned tasks on the calling thread,
+    which uses the capture. It makes the capture the default dispatch of each
+    blocking thread when the thread starts. So that test sees the work after
+    the hops, and it cannot show this loss.
   - No production symptom was observed.
 - **Problem:** Seven Serve thread hops carry the caller's span but not the
   caller's subscriber. Under a scoped subscriber, the spans, events, and
@@ -116,10 +132,6 @@
   `crates/mokly-graph/src/workers.rs` used the same span-only pattern. On
   2026-11-17, the parallel comparison branch added `WorkerContext` to carry
   the dispatch too.
-- **Related:** `plans/follow-ups/scoped-tracing-test-captures.md` makes
-  scoped captures safe in parallel tests. A stable scoped test for this item
-  needs that capture safety. The two problems differ: that item covers the
-  callsite interest cache, and this item covers dispatch propagation.
 - **Recommendation:** D. One shared helper keeps the span and the subscriber
   together at every thread hop. It adds no public behaviour.
 - **Action:** fix after merge, apply D, because the hops are outside the

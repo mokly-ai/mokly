@@ -3,9 +3,8 @@
 use std::sync::Arc;
 
 use mokly_model::axes::ColorScheme;
-use tracing_subscriber::layer::SubscriberExt;
+use mokly_test_support::capture::Trace;
 
-use crate::changes_trace_support::Traces;
 use crate::publication::{PublicationWriter, Publications, SharedPublication};
 use crate::snapshot::SnapshotFactory;
 
@@ -13,15 +12,9 @@ use super::support::{generation, generation_in_scheme, input, projector};
 
 #[test]
 fn candidates_isolate_records_and_rebuild_slots_evict_and_prune_old_details() {
-    let traces = Traces::default();
-    tracing::subscriber::with_default(tracing_subscriber::registry().with(traces.clone()), || {
-        let builds = || {
-            traces
-                .records()
-                .iter()
-                .filter(|record| record.name == "detail.build")
-                .count()
-        };
+    let traces = Trace::default();
+    traces.in_scope(|| {
+        let builds = || traces.closed("detail.build").len();
         let projector = projector();
         let origin = projector.create(generation(4, 0), input(1)).unwrap();
         let shared = SharedPublication::new(origin.clone());
