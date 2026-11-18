@@ -2027,11 +2027,23 @@ Depends on: 1, 2, 3, 4, 5
   - [x] Merge main `f13a5d979`, with retained comparison proofs from PR #310.
         Preserve the incoming comparison, capture, trace, and documentation
         changes alongside the bundle cache.
-  - [ ] Repeat the release comparison against exact main `f13a5d979`.
-        Preserve the complete `e8c964cb1` and `1c3545ddf` programs, sources,
-        reports, and raw evidence before updating the private checkouts.
-  - [ ] Verify the merged timing fields and release proofs after the
-        comparison-proof merge. Let final CI verify every combined suite.
+  - [x] Preserve the complete `e8c964cb1` and `1c3545ddf` programs,
+        dependencies, sources, reports, and raw evidence before updating the
+        private checkouts for `f13a5d979`.
+  - [x] Audit the merged timing fields after the comparison-proof merge.
+        Keep all cache values and comparison reuse fields.
+  - [ ] Preserve the unfinished `f13a5d979` setup after main advances.
+        It contains one successful main npm stage and no optimized f13
+        release or product measurement. Keep its mixed program sources
+        explicit. Do not report it as an accepted comparison.
+  - [x] Merge main `bc4f4cc40`, with the source-read, POSIX-path, and
+        style-adapter filter changes of PR #311. Preserve all seven incoming
+        paths byte for byte, including tests and the new follow-up.
+  - [ ] Repeat the release comparison against exact main `bc4f4cc40`.
+        Keep separate checkouts and target directories. Preserve all earlier
+        archives and accepted measurements.
+  - [ ] Verify the new combined sidecar paths and release proofs. Let
+        final CI verify every combined suite.
 - [x] Reopen the synchronous-save call after its review trigger. Run a
       fresh options check and record checked call 32 A. Keep all original
       samples and the true threshold observation.
@@ -2102,6 +2114,13 @@ Comparison-proof integration evidence:
 `.context/bundle-disk-cache/merge-f13a5d97/decisions.md`,
 `.context/bundle-disk-cache/merge-f13a5d97/one-sided-preservation.json`, and
 `.context/bundle-disk-cache/merge-f13a5d97/follow-up-pointers.md`.
+
+Latest sidecar optimization integration evidence:
+`.context/bundle-disk-cache/merge-bc4f4cc4/preservation.json`,
+`.context/bundle-disk-cache/merge-bc4f4cc4/post-merge-audit.json`, and
+`.context/bundle-disk-cache/merge-bc4f4cc4/decisions.md`.
+The unfinished setup is recorded in
+`.context/bundle-disk-cache/m5-final-f13a5d97/metadata/stage-hold-bc4f4cc4.json`.
 
 ## Post-merge follow-up (non-blocking)
 
