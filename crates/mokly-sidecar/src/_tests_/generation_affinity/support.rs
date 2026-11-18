@@ -139,5 +139,5 @@ fn slot(state: &State, root: &str, loaded: Loaded) -> Slot {
 }
 
 pub(super) fn acquire(pool: &Pool, call: &Call, root: &str) -> usize {
-    pool.acquire(call, Some(root.as_ref())).unwrap().0
+    pool.acquire(call, Some(root.as_ref()), None).unwrap().0
 }

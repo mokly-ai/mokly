@@ -42,6 +42,8 @@ pub trait Worker: Send {
 /// Concurrent shutdown access retained while a worker has an in-flight request.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ControlMock))]
 pub trait WorkerControl: Send + Sync {
+    /// Read current resident memory without borrowing the request session.
+    fn resident_bytes(&self) -> Result<u64>;
     /// Enqueue shutdown behind any in-flight request without blocking on its pipe.
     fn shutdown(&self) -> Result<()>;
     /// Stop the whole process tree and arrange for the child to be reaped.

@@ -6,6 +6,12 @@ pub mod bindings;
 pub mod bundle_outcomes;
 pub mod bundle_store;
 pub mod capture_hint;
+#[cfg(target_os = "linux")]
+mod cgroup_discovery;
+#[cfg(target_os = "linux")]
+mod cgroup_level;
+#[cfg(target_os = "linux")]
+pub mod cgroup_memory;
 pub mod client;
 pub mod codec;
 pub mod compiled;
@@ -15,12 +21,15 @@ pub mod definitions;
 pub mod diagnostics;
 pub mod durable_recipe;
 pub mod error;
+pub mod host_memory;
 mod method_results;
 pub mod methods;
 pub mod operations;
 pub mod pool;
+pub mod pool_admission;
 mod pool_affinity;
 mod pool_bundle_cache;
+pub mod pool_claim;
 mod pool_cleanup;
 mod pool_exchange;
 mod pool_head;

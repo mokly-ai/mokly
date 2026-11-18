@@ -10,7 +10,8 @@ The Node implementation lives in `@mokly/mokly`.
 - Type each request, result, event, and source diagnostic.
 - Bound UTF-8 NDJSON frames to 64 MiB of JSON bytes.
 - Start Node lazily and require an exact-version hello.
-- Queue requests fairly and spread independent calls across the pool.
+- Queue requests fairly, spread independent calls, admit default growth by
+  memory, and grant call claims.
 - Enforce deadlines, retry, recycling, and bounded shutdown.
 - Define the bundle store boundary and the outcomes of compiled recipes that
   outlive a process.
@@ -29,7 +30,25 @@ core can carry author order into the read model.
 `SidecarPool`. Constructing it starts no process. FIFO order per eligible slot
 bounds active processes to `PoolOptions::size`. The CLI resolves
 `--sidecars`, `MOKLY_SIDECARS`, and the core count. `PoolOptions` takes the
-parsed `NonZeroUsize` and timeout override.
+parsed `NonZeroUsize` and timeout override. An explicit count is exact. A
+default pool always admits its first sidecar. It adds another only when
+available memory holds the unused budgets of its sidecars, the budgets that
+call claims hold, the new budget, and spare memory. Reserved slots stay through
+recycling and root changes. Serve admits each call with a claim on the same
+capacity, and a claim that starts no new slot ends with its call. The
+[memory contract](../../docs/protocol/mokly-sidecar-memory.md) owns these rules.
+
+`Pool::new` keeps the supplied size exact. For a default size, the composition
+root calls `Pool::with_memory_admission` with `dyn HostMemory`.
+`PoolCapacity::capacity` reads the same prospective capacity that reserves new
+slots, and it holds nothing. `PoolCapacity::try_claim` atomically holds a place
+for one call in a `CallClaim`, or returns `None` when the live claims fill the
+capacity. `SidecarPool::request_claimed` runs a call with its claim. When that
+call starts a new slot, it takes a held budget without a new memory check, and
+the slot keeps that reservation. Dropping the `CallClaim` ends the claim.
+`MemoryEstimate` combines `dyn HostProbe` and `dyn MemoryLimits`.
+`SysinfoMemory` reads physical total minus used memory. On Linux,
+`CgroupMemory` reads finite v1 or v2 controller limits through `dyn MemoryFiles`.
 
 Every bundle result includes its compiled recipe. The pool retains these
 recipes, CSS Modules maps, and resolved handle tables. A new process restores
@@ -198,6 +217,10 @@ process. All processes share one grace deadline. Survivors are killed and
 reaped. The [lifecycle contract](../../docs/protocol/mokly-sidecar-lifecycle.md)
 owns stderr drainage at that deadline.
 
+The worker and its `WorkerControl` share that monitor. Admission can read
+current resident memory during a request without borrowing its session.
+Exact pools and default pools at their slot ceiling take no admission samples.
+
 `NodeFactory::with_timings` enables timing through hello and forwards complete
 sidecar records through `Diagnostics::timing`. The default leaves timings off.
 The [timing records contract](../../docs/protocol/mokly-sidecar-timings.md)
@@ -309,7 +332,8 @@ spawn the built sidecar and render a component, screen, story, and page. The
 
 - [`src/pool.rs`](./src/pool.rs) defines `SidecarPool`, the boundary that
   catalogue and render services call, with `served_generation` for a core
-  reuse, and `Pool`, its lazy bounded implementation, with
+  reuse and `request_claimed` for a call that holds a `CallClaim`, and
+  `Pool`, its lazy bounded implementation, with
   `with_bundle_store`. Its `schedule_head_return` and `maintain_head_return`
   methods are the return pass boundary, and `ReturnWake` is the weak wake that
   Serve registers through `observe_head_return`.
@@ -335,6 +359,14 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [`src/pool_options.rs`](./src/pool_options.rs) defines `Launch` and
   `PoolOptions`, the launch settings and the pool size and deadline override.
   The pool sets `Launch::capture_durability` when it keeps a bundle store.
+- [`src/pool_admission.rs`](./src/pool_admission.rs) defines `PoolCapacity`,
+  with the read-only `capacity` and the atomic `try_claim`, and the shared slot
+  reservation calculation. [`src/pool_claim.rs`](./src/pool_claim.rs) defines
+  `CallClaim`, the call-scoped hold that ends on drop, and the held budgets
+  that a claimed call takes when it starts a new slot.
+- [`src/host_memory.rs`](./src/host_memory.rs) defines `HostMemory`,
+  `MemoryEstimate`, and the injected host and process-limit boundaries.
+  [`src/cgroup_memory.rs`](./src/cgroup_memory.rs) supplies the Linux limit adapter.
 - [`src/pool_recipes.rs`](./src/pool_recipes.rs) defines `Recipes`, the
   bounded store of released compiled recipes with captured reuse evidence or
   the Serve edit marker. It seeds only a recipe that the call's capture admits.
@@ -411,7 +443,7 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [Bundle cache entries](../../docs/protocol/mokly-base-cache.md#bundle-entries).
 - [Compiled recipes and capture modes](../../docs/protocol/mokly-sidecar-recipes.md).
 - [Cancellation and timeouts](../../docs/protocol/mokly-sidecar-lifecycle.md).
-- [Memory sampling](../../docs/protocol/mokly-sidecar-memory.md).
+- [Memory admission and sampling](../../docs/protocol/mokly-sidecar-memory.md).
 - [Timing records](../../docs/protocol/mokly-sidecar-timings.md).
 - [PostCSS contexts and evidence](../../docs/protocol/mokly-sidecar-postcss.md).
 - [Definition transport](../../docs/protocol/mokly-sidecar-definitions.md).

@@ -117,6 +117,8 @@ impl WorkerFactory for NodeFactory {
             Err(source) => return Err(InternalError::Platform { source }.into()),
         };
         let pid = child.0.id();
+        let memory = Arc::from(self.memory.monitor(pid));
+        let discover_memory = Arc::new(AtomicBool::new(false));
         let stdin = child.0.stdin.take().expect("stdin is configured as a pipe");
         let stdout = child
             .0
@@ -133,6 +135,8 @@ impl WorkerFactory for NodeFactory {
         let (exited_tx, exited) = mpsc::sync_channel(1);
         let (drained, diagnostics_done) = mpsc::sync_channel(1);
         let control: Arc<dyn WorkerControl> = Arc::new(ProcessControl {
+            memory: Arc::clone(&memory),
+            discover_memory: Arc::clone(&discover_memory),
             group,
             outgoing: outgoing.clone(),
             exited: Mutex::new(exited),
@@ -197,8 +201,8 @@ impl WorkerFactory for NodeFactory {
                 diagnostics: self.diagnostics.clone(),
                 client: Box::new(client),
                 clock: Arc::clone(&self.clock),
-                memory: self.memory.monitor(pid),
-                discover_memory: AtomicBool::new(false),
+                memory,
+                discover_memory,
                 deadlines,
                 phases,
             }),

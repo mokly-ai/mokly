@@ -1,5 +1,6 @@
 //! Shared process-tree control, shutdown enqueueing, and guaranteed kill on drop.
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{Receiver, SyncSender};
 use std::sync::{Arc, Mutex, PoisonError, Weak};
 
@@ -10,11 +11,14 @@ use crate::codec::encode;
 use crate::error::{InternalError, Result};
 use crate::methods::{Call, Empty};
 use crate::process_clock::Wait;
+use crate::process_memory::ResidentMemory;
 use crate::process_startup::StartupTiming;
 use crate::wire::Request;
 use crate::workers::WorkerControl;
 
 pub(super) struct ProcessControl {
+    pub(super) memory: Arc<dyn ResidentMemory>,
+    pub(super) discover_memory: Arc<AtomicBool>,
     pub(super) group: Box<dyn ProcessGroup>,
     pub(super) outgoing: SyncSender<Vec<u8>>,
     pub(super) exited: Mutex<Receiver<()>>,
@@ -37,6 +41,11 @@ impl ProcessControl {
 }
 
 impl WorkerControl for ProcessControl {
+    fn resident_bytes(&self) -> Result<u64> {
+        self.memory
+            .resident_bytes(self.discover_memory.load(Ordering::Relaxed))
+    }
+
     fn shutdown(&self) -> Result<()> {
         let frame = encode(&Request {
             id: 9_007_199_254_740_991,

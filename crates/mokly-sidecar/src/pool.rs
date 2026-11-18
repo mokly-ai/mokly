@@ -7,7 +7,9 @@ use std::sync::{Arc, Condvar, Mutex, MutexGuard, Weak};
 
 use crate::bundle_store::BundleStore;
 use crate::error::{Error, Result};
+use crate::host_memory::HostMemory;
 use crate::methods::Call;
+use crate::pool_claim::CallClaim;
 use crate::pool_cleanup;
 use crate::pool_options::{Launch, PoolOptions};
 use crate::pool_releases::Notice;
@@ -28,6 +30,10 @@ pub trait ReturnWake: Send + Sync {
 pub trait SidecarPool: Send + Sync {
     /// Enqueue one request and return its complete result, or fail closed.
     fn request(&self, call: Call) -> Result<MethodResult>;
+    /// Execute a call with the temporary capacity held by its admission owner.
+    fn request_claimed(&self, call: Call, _claim: &CallClaim) -> Result<MethodResult> {
+        self.request(call)
+    }
     /// Record an epoch-specific final lease release without waiting for a worker.
     fn release_generation(&self, generation: &str, epoch: u64);
     /// Apply the served-recipe write rule after the core directly reuses a live state.
@@ -52,6 +58,7 @@ pub trait SidecarPool: Send + Sync {
 
 /// Process pool composed from explicit process and clock boundaries.
 pub struct Pool {
+    pub(super) admission: Option<Arc<dyn HostMemory>>,
     pub(super) factory: Arc<dyn WorkerFactory>,
     pub(super) starting: Mutex<()>,
     pub(super) clock: Arc<dyn Clock>,
@@ -73,6 +80,7 @@ impl Pool {
     ) -> Self {
         let (sender, receiver) = mpsc::channel();
         let pool = Self {
+            admission: None,
             factory,
             starting: Mutex::new(()),
             clock,

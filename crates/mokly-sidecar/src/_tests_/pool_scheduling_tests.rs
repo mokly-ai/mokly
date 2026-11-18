@@ -46,10 +46,10 @@ fn css() -> Call {
 fn a_render_uses_an_idle_slot_while_an_earlier_affine_call_waits() {
     let factory = Unimock::new(());
     let pool = pool(&factory);
-    let (busy, _) = pool.acquire(&css(), None).unwrap();
+    let (busy, _) = pool.acquire(&css(), None, None).unwrap();
     let queued = pool.clone();
     let waiting = thread::spawn(move || {
-        let (index, slot) = queued.acquire(&css(), None).unwrap();
+        let (index, slot) = queued.acquire(&css(), None, None).unwrap();
         queued.release(index, slot);
         index
     });
@@ -68,6 +68,7 @@ fn a_render_uses_an_idle_slot_while_an_earlier_affine_call_waits() {
                     generation: "g".into(),
                     handle: "page#default".into(),
                 }),
+                None,
                 None,
             )
             .unwrap();

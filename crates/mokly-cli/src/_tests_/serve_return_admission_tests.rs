@@ -12,6 +12,7 @@ use mokly_sidecar::error::Error;
 use mokly_sidecar::pool::{PoolMock, ReturnWake};
 use unimock::{MockFn, Unimock, matching};
 
+use crate::serve_pool::serve_pool_support::capacity;
 use crate::serve_pool::{PoolScheduling, ServePool};
 use crate::serve_progress::ServeProgress;
 use crate::serve_return::ReturnAdmission;
@@ -22,7 +23,7 @@ use super::serve_pool_support::css;
 #[test]
 fn waiting_base_admission_defers_returns_until_the_wait_is_cancelled() {
     let inner = Unimock::new(());
-    let scheduler = ServePool::new(Arc::new(inner.clone()), 1);
+    let scheduler = ServePool::new(Arc::new(inner.clone()), capacity(1));
     let _foreground = scheduler.enter();
     let cancellation: Arc<dyn ChangeCancellation> = Arc::new(ChangeToken::default());
     let base = scheduler.pool(Some(cancellation.clone()));
@@ -81,7 +82,8 @@ fn a_background_return_failure_reaches_the_terminal_without_timing_output() {
                 .then()
                 .answers(&|_| Ok(false));
         }));
-        let scheduler = ServePool::new(Arc::new(inner.clone()), 1).with_diagnostics(diagnostics);
+        let scheduler =
+            ServePool::new(Arc::new(inner.clone()), capacity(1)).with_diagnostics(diagnostics);
         let wake = scheduler
             .gate
             .return_wake

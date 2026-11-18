@@ -34,6 +34,7 @@ pub mod public_inputs;
 mod public_locations;
 pub mod reference_index;
 pub mod references;
+pub mod render_class;
 mod render_closure;
 mod render_exporters;
 pub mod render_inputs;

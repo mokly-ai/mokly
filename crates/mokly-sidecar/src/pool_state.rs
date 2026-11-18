@@ -38,6 +38,7 @@ pub(super) struct Affinity {
 pub(super) struct Waiting {
     pub(super) context: Option<String>,
     pub(super) root: PathBuf,
+    pub(super) claim: Option<u64>,
 }
 
 #[derive(Default)]
@@ -47,6 +48,8 @@ pub(super) struct State {
     pub(super) replacement_reasons: BTreeMap<usize, Reason>,
     pub(super) memory: BTreeMap<usize, MemorySchedule>,
     pub(super) slots: Vec<Option<Slot>>,
+    pub(super) claims: BTreeMap<u64, usize>,
+    pub(super) next_claim: u64,
     pub(super) available: VecDeque<usize>,
     pub(super) controls: BTreeMap<usize, Arc<dyn WorkerControl>>,
     pub(super) retired: BTreeSet<usize>,

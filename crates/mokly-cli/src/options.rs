@@ -6,7 +6,7 @@ use mokly_publish::settings::Token;
 use url::Url;
 
 use crate::errors::Failure;
-use crate::grammar::{Cli, Publish, Verb};
+use crate::grammar::{Cli, Publish, SidecarSource, Verb};
 
 /// Environment values read once at the binary composition root.
 #[derive(Default)]
@@ -35,6 +35,11 @@ pub fn validate(cli: &mut Cli, environment: &Environment) -> Result<(), Failure>
         serve.port.get_or_insert(4173);
     }
     let common = cli.common_mut();
+    common.sidecar_source = if common.sidecars.is_none() && environment.sidecars.is_none() {
+        SidecarSource::Default
+    } else {
+        SidecarSource::Explicit
+    };
     let sidecars = match common.sidecars {
         Some(value) => value,
         None => match environment.sidecars.as_deref() {
@@ -58,6 +63,10 @@ pub fn validate(cli: &mut Cli, environment: &Environment) -> Result<(), Failure>
     }
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "_tests_/sidecar_source_tests.rs"]
+mod sidecar_source_tests;
 
 /// Apply a one-run CLI override without reading the historical configuration.
 pub fn apply_base_install_scripts(config: &mut ResolvedConfig, override_value: Option<bool>) {

@@ -4,8 +4,23 @@ use std::sync::{Arc, Mutex};
 
 use mokly_sidecar::methods::{Call, ProcessCss};
 use mokly_sidecar::pool::{PoolMock, SidecarPool};
+use mokly_sidecar::pool_admission::{CapacityMock, PoolCapacity};
+use mokly_sidecar::pool_claim::CallClaim;
 use mokly_sidecar::wire::MethodResult;
 use unimock::{MockFn, Unimock, matching};
+
+/// Inject the exact capacity of an existing scheduling scenario.
+pub(crate) fn capacity(count: usize) -> Arc<dyn PoolCapacity> {
+    Arc::new(
+        Unimock::new((
+            CapacityMock::capacity.each_call(matching!()).returns(count),
+            CapacityMock::try_claim
+                .each_call(matching!())
+                .answers(&|_| Some(CallClaim::fixed())),
+        ))
+        .no_verify_in_drop(),
+    )
+}
 
 #[derive(Default)]
 pub(super) struct Observed {

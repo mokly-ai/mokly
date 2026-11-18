@@ -14,7 +14,7 @@ Contract owners:
 
 ## Evidence and requirements
 
-The release baseline is `bc858df427b0ffe2cb53dbf3fe35a44e032475cc`. It has its own checkout and Cargo target directory. The Linux machine has four cores and 8,131,944 KiB physical memory. Baseline Serve sessions include a start, a visible edit, and its restoration. Each waits for the published Changes result.
+The initial measurement baseline is `bc858df427b0ffe2cb53dbf3fe35a44e032475cc`. It has its own checkout and Cargo target directory. The Linux machine has four cores and 8,131,944 KiB physical memory. Baseline Serve sessions include a start, a visible edit, and its restoration. Each waits for the published Changes result.
 
 Basic used four sidecars and peaked at 2,498,232 KiB. Large React used four and peaked at 2,211,068 KiB. Large HTML used none and peaked at 1,145,408 KiB. No safety stop fired. The largest worker tree was 716,916 KiB on basic and 507,004 KiB on React. All sessions restored the exact authored bytes and reaped every owned process. The measured workers fit below the existing one-GiB recycling reference.
 
@@ -112,6 +112,36 @@ Shared assumptions: one-GiB worker budgets and one-GiB spare host memory. Measur
 
 ## Design and integration
 
+### 4. Preserve priority when memory changes
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** performance.
+- **Location:** `crates/mokly-cli/src/serve_pool.rs`, `serve_delivery.rs`, and `crates/mokly-sidecar/src/pool_admission.rs`.
+- **Terms:**
+  - **Reservation:** A pool slot whose worker budget passed memory admission and remains available through worker replacement.
+- **Background:** Serve checks pool capacity before it starts background views or admits sidecar calls. The pool checks memory again when a call needs a slot.
+- **Problem:** Memory can fall between those checks. An accepted background call can then queue for an unreserved slot ahead of foreground work.
+- **Impact if no action:** A foreground request can wait for two background calls in sequence instead of the first busy worker alone.
+- **Root question:** How do Serve calls stay within admitted sidecars while foreground requests keep priority over queued background work?
+- **Options:**
+  - **A.** Keep capacity queries alone. It changes nothing but leaves the demonstrated interleaving. Effort: Small.
+  - **B.** Reserve the needed slots atomically when Serve admits calls and background views. Keep capacity queries read-only and reuse the same budget calculation. Effort: Medium.
+  - **C.** Carry foreground and background priority into the core pool queue. This changes queue ownership and every relevant call boundary. Effort: Medium as first recorded; the check estimates Large when it includes propagation through graph workers.
+  - **D.** Use temporary claims at both Serve boundaries, with one gate owner. Count base calls separately from the larger of started views and admitted head calls. Convert claims only when a new sidecar slot starts. Release unused claims with their demand. This prevents unused reservations, but leaves a started view's calls equal to HTTP calls at the gate. Effort: Medium.
+  - **E.** Use temporary claims at the Serve call gate and carry a background-view call class through the render workers. Waiting HTTP calls take priority over waiting background-view calls. Keep the background window's read-only capacity bound. An unused claim ends with its call. A new worker converts its claim into a retained reservation. This preserves priority when memory falls and when an old base call overlaps a replacement pass. Effort: Large.
+- **Left out:** Serializing all work loses healthy concurrency. A smaller fixed pool can reduce the required four-worker case. Returning denied calls to the gate leaves head-background calls equal to HTTP calls. Checking a permanent empty reservation at first spawn restores the same pool-queue gap. Per-view claim identities require the propagation of E with more ownership state.
+- **Wider fix:** E. All Serve call classes share atomic resource admission and keep their priority through worker boundaries.
+- **Previous examples:** The pool already creates reservations under its state lock. The first three decisions preserve the foreground-priority contract.
+- **Recommendation:** E, changed from B after the check recommended D. D still leaves the checked priority races. E preserves the existing requirement without permanent unused reservations or a changed progress rule.
+- **Action:** fix now, apply E. This is the workspace orchestrator's call of 2026-11-18. The existing foreground-priority and memory-admission requirements settle the outcome.
+
+Shared assumptions: explicit sizes remain exact, first-worker progress remains possible, and reservations of workers that started survive a later low reading. The task requires these rules. A capacity query remains read-only. A temporary call claim does not become a permanent reservation unless a new worker starts. Preserve cancellation, retirement, generation ranking, root changes, and the core-count bound. Propagate background priority through graph thread-pool work; a marker on only the original thread is insufficient.
+
+The non-ui implementor traced the gap with a busy base call, a second base call, and a later foreground request. The options check confirmed it, the head-background variant, permanent unused reservations, and overlapping base and head work. The check recommended D. The workspace orchestrator chose E because D leaves HTTP calls equal to queued background-view calls, including when the progress rule starts one view while base calls hold all slots. E also avoids the separate claim count and wake mechanism that D needs at the view window. It adds no new requirement. An HTTP request that shares an already active view still waits for that view under the existing coalescing rule.
+
+Options-check evidence: `.context/sidecar-memory-guard/decision-4-options-check.md`. The out-of-gate return and cleanup waits also exist on main. They do not depend on memory admission and are outside this correction.
+
 Preserve whether the count came from the command, the environment, or the default before option normalization loses that fact. Inject the system memory boundary only for a default pool. Keep the integer count as the scheduler's upper bound.
 
 Check admission only for additional live or reserved processes. A matching idle worker needs no new reservation. A root change replaces an owned worker in its existing reservation. The first usable reservation always succeeds. Unknown worker memory reserves its whole remaining budget. Unknown host memory allows no extra reservation.
@@ -128,15 +158,21 @@ Options-check report: `.context/sidecar-memory-guard/plan-options-check.md`. The
 
 Use `unimock` at the memory boundary. Use channel handshakes for concurrent tests. Do not use time-based assertions, sleeps, or retries. Keep the existing pool and Serve tests and their assertions.
 
+## Replaced ways
+
+The fixed Serve gate bound and `UsagePass::batch` become live capacity boundaries. The consumers are CLI delivery composition and the background constructors in the server unit and HTTP tests. Move every consumer in this branch. Keep fixed-capacity test inputs behind the same boundary, with every existing assertion. No external converter remains.
+
 ## Milestone 1: State the memory contract
 
 Depends on: none
 
 The docs implementor records the authorized default admission rule before the code changes.
 
-- [ ] Update the memory protocol with default admission, budgets, cache-aware signal, progress, overrides, and unknown readings.
-- [ ] Align the lifecycle default-count sentence and the sidecar crate's public behavior.
-- [ ] Mark pending protocol behavior with the single required plan status line. Keep mechanics in code or the crate README.
+- [x] Update the memory protocol with default admission, budgets, cache-aware signal, progress, overrides, and unknown readings.
+- [x] Align the lifecycle default-count sentence and the sidecar crate's public behavior.
+- [x] Mark pending protocol behavior with the single required plan status line. Keep mechanics in code or the crate README.
+
+Evidence: `.context/sidecar-memory-guard/docs-report.md`.
 
 ## Milestone 2: Implement default admission
 
@@ -144,21 +180,43 @@ Depends on: 1
 
 The non-ui implementor changes the shared pool and its CLI composition.
 
-- [ ] Add failing behavior tests for low memory, recovery, first-worker progress, exact overrides, and healthy full capacity.
-- [ ] Cover simultaneous reservations, unknown readings, and foreground priority under reduced memory capacity without timing assertions. Capture the red output.
-- [ ] Keep explicit-count provenance through CLI and environment validation.
-- [ ] Add the injected host signal and per-worker budget accounting. Honor finite process cgroup limits without charging reclaimable file cache twice.
-- [ ] Share memory-permitted capacity with the Serve gate and its sliding background window. Preserve foreground priority and allow growth after recovery.
-- [ ] Gate default growth without blocking existing reusable workers or the first usable worker.
-- [ ] Preserve the current affinity, root, recycle, cancellation, shutdown, and return behavior.
-- [ ] Run the targeted sidecar, pool, option, and Serve tests. Run each new concurrent test ten times.
-- [ ] Align the crate README with actual entry points. Remove pending status lines when implementation meets the contract.
+- [x] Add failing behavior tests for low memory, recovery, first-worker progress, exact overrides, and healthy full capacity.
+- [x] Cover simultaneous reservations, unknown readings, and foreground priority under reduced memory capacity without timing assertions. Capture the red output.
+- [x] Keep explicit-count provenance through CLI and environment validation.
+- [x] Add the injected host signal and per-worker budget accounting. Honor finite process cgroup limits without charging reclaimable file cache twice.
+- [x] Share memory-permitted capacity with the Serve gate and its sliding background window. Preserve foreground priority and allow growth after recovery.
+- [x] Move CLI delivery composition from the captured batch to the live capacity boundary.
+- [x] Move the background constructors in `background_tests`, `quiet_background_tests`, `background_batch/script`, and HTTP `evidence_tests` to that boundary. Keep every assertion.
+- [x] Remove the fixed gate field and `UsagePass::batch` after all consumers move.
+- [x] Gate default growth without blocking existing reusable workers or the first usable worker.
+- [x] Preserve the current affinity, root, recycle, cancellation, shutdown, and return behavior.
+- [x] Run the targeted sidecar, pool, option, and Serve tests. Run each new concurrent test ten times.
+- [x] Align the sidecar and CLI crate READMEs with actual entry points and capacity behavior. Update the server crate README if its public background boundary changes. Remove pending status lines when implementation meets the contract.
 
-## Milestone 3: Measure and verify
+Evidence: `.context/sidecar-memory-guard/implementation-report.md` and `.context/sidecar-memory-guard/integration-report.md`. The orchestrator checked the capacity calculation, composition, reservation lock, caller migrations, and protocol text.
+
+## Milestone 2a: Bind scheduling to reservations
 
 Depends on: 2
 
+The non-ui implementor closes the confirmed scheduling gap before measurements. The docs retain the existing priority and memory requirements.
+
+- [x] Complete the options check for decision 4 and save its report.
+- [x] Add failing event-order regressions for stale gate capacity and background-view priority when memory falls or base work overlaps.
+- [x] Add atomic temporary call claims under the pool lock. Retain the read-only capacity query. Convert only actual new worker slots to durable reservations. Release unused claims on completion and cancellation.
+- [x] Use claims in Serve gate admission. Carry background-view priority through the graph worker boundary. Keep the live background window, exact counts, and healthy concurrency.
+- [x] Keep generation ranking from PR #315 within the admitted slots. Preserve cancellation, root changes, recycling, and retirement.
+- [x] Align public entry-point documentation. Run targeted checks and each affected new concurrent test ten times.
+
+Evidence: `.context/sidecar-memory-guard/priority-correction-report.md` and `.context/sidecar-memory-guard/priority-protocol-report.md`. The orchestrator checked the claim budget, claim forwarding, call order, class restoration, generation ranking, and mutation restoration. The strict release build smoke passed.
+
+## Milestone 3: Measure and verify
+
+Depends on: 2a
+
 The orchestrator runs the combined checks and compares separate release builds.
+
+PR #315 advanced `main` to `2e6bde9c2`. The final comparison rebuilds that baseline in its separate checkout and target directory. Each run uses its own empty external cache directory, so the bundle disk cache starts in the same state. The initial measurements above remain the evidence for the budget choice. The partial `e60c16532` comparison is superseded. Its interrupted HTML run and full cleanup proof remain under `.context/sidecar-memory-guard/`.
 
 - [ ] Measure branch Serve start and two edits on basic and default large HTML and React fixtures with the baseline harness.
 - [ ] Compare count, process tree peak, first Changes, and edit times against the baseline. Confirm the healthy four-worker count.
@@ -174,6 +232,10 @@ Evidence: `.context/sidecar-memory-guard/`. Use Git 2.47.3 in its own first PATH
 Depends on: 3
 
 The orchestrator owns the gate, reviews, and the pull request. Merge updated `origin/main` with preservation audits when necessary. Keep nearby generation affinity, startup base overlap, and bundle-cache changes.
+
+Integration evidence: `.context/sidecar-memory-guard/pre-main-merge/merge-audit.log`. Merge `d9c0678c0` preserves PR #312. The saved memory changes are then integrated path by path.
+
+Generation-affinity integration evidence: `.context/sidecar-memory-guard/pre-affinity-merge/merge-audit.log`. Merge `285460e8f` preserves PR #315. Memory admission sets the growth bound. Generation ranking selects an available slot within it.
 
 - [ ] Commit with Conventional Commits and push the branch. Start `ci-wait.sh` after every push.
 - [ ] Review the complete diff against `origin/main` with the implementation-review skill. Check each finding in a fresh second pass.
