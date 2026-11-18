@@ -1,22 +1,23 @@
 import path from "node:path";
 
+import type { CaptureKind } from "./capture-kind.js";
 import type { CaptureRuntime, CaptureStat } from "./capture-runtime.js";
+
+interface Observation {
+  target?: string;
+  expansionBytes?: number;
+}
 
 /** Raw link expansions keep every target-parent directory in the capture. */
 export class CapturePaths {
-  private readonly observations = new Map<
-    string,
-    Promise<string | undefined>
-  >();
+  private readonly observations = new Map<string, Observation>();
+  private physical?: ReadonlyMap<string, CaptureKind | undefined>;
   private visitedBytes = 0;
   private expansionBytes = 0;
 
   constructor(
     private readonly runtime: CaptureRuntime,
-    private readonly directory: (
-      file: string,
-      stat: CaptureStat,
-    ) => Promise<boolean>,
+    private readonly directory: (file: string, stat: CaptureStat) => boolean,
     private readonly fits: (bytes: number) => boolean,
   ) {}
 
@@ -29,39 +30,47 @@ export class CapturePaths {
     this.visitedBytes = 0;
   }
 
-  private read(file: string): Promise<string | undefined> {
+  share(kinds: ReadonlyMap<string, CaptureKind | undefined>): void {
+    this.physical = kinds;
+  }
+
+  private read(file: string): string | undefined {
     const existing = this.observations.get(file);
-    if (existing) return existing;
+    if (existing) return existing.target;
     const bytes = Buffer.byteLength(file);
     if (!this.fits(bytes)) throw new Error("capture visited-path limit");
     this.visitedBytes += bytes;
-    const observation = (async () => {
-      const stat = await this.runtime.lstat(file);
-      if (stat.isDirectory() && !(await this.directory(file, stat)))
-        throw new Error("capture directory rejected");
-      if (!stat.isSymbolicLink()) return undefined;
-      const target = await this.runtime.readlink(file);
+    const kind = this.physical?.get(file);
+    if (kind === "absent") throw new Error("capture path is absent");
+    const stat = kind === undefined ? this.runtime.lstat(file) : undefined;
+    if (stat?.isDirectory() && !this.directory(file, stat))
+      throw new Error("capture directory rejected");
+    let target: string | undefined;
+    if (kind === "link" || stat?.isSymbolicLink()) {
+      target = this.runtime.readlink(file);
       const bytes = Buffer.byteLength(target);
       if (!this.fits(bytes)) throw new Error("capture visited-path limit");
       this.visitedBytes += bytes;
-      return target;
-    })();
-    this.observations.set(file, observation);
-    return observation;
+    }
+    this.observations.set(file, target === undefined ? {} : { target });
+    return target;
   }
 
-  async walk(file: string): Promise<boolean> {
+  walk(file: string): boolean {
     const paths = this.runtime.platform === "win32" ? path.win32 : path.posix;
     const separator = this.runtime.platform === "win32" ? /[\\/]+/ : /\/+/;
     const seen = new Set<string>();
     let stateBytes = 0;
     try {
       const absolute = paths.resolve(file);
+      const existing = this.observations.get(absolute);
+      if (existing?.expansionBytes !== undefined)
+        return this.fits(existing.expansionBytes);
       let current = paths.parse(absolute).root;
       let remaining = absolute.slice(current.length).split(separator);
       let index = 0;
       let expansions = 0;
-      await this.read(current);
+      this.read(current);
       while (index < remaining.length) {
         if (!this.fits(0)) return false;
         const component = remaining[index++]!;
@@ -71,7 +80,7 @@ export class CapturePaths {
           continue;
         }
         const selected = paths.join(current, component);
-        const target = await this.read(selected);
+        const target = this.read(selected);
         if (target === undefined) {
           current = selected;
           continue;
@@ -88,10 +97,12 @@ export class CapturePaths {
         const root = paths.parse(target).root;
         if (paths.isAbsolute(target)) {
           current = paths.parse(paths.resolve(current, target)).root;
-          await this.read(current);
+          this.read(current);
           remaining = [...target.slice(root.length).split(separator), ...tail];
         } else remaining = [...target.split(separator), ...tail];
       }
+      const observation = this.observations.get(absolute);
+      if (observation) observation.expansionBytes = stateBytes;
       return true;
     } catch {
       return false;

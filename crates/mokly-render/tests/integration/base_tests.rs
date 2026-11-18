@@ -141,13 +141,16 @@ fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
     let calls = head.pool.calls.lock().unwrap();
     let Call::Bundle(bundle) = calls
         .iter()
-        .find(|call| matches!(call, Call::Bundle(bundle) if bundle.source_root == base.root().to_string_lossy()))
+        .find(|call| matches!(call, Call::Bundle(bundle) if bundle.params.source_root == base.root().to_string_lossy()))
         .unwrap()
     else {
         panic!("bundle")
     };
-    assert_eq!(bundle.source_root, base.root().to_string_lossy());
-    assert_eq!(bundle.repository_roots[0], head.root().to_string_lossy());
+    assert_eq!(bundle.params.source_root, base.root().to_string_lossy());
+    assert_eq!(
+        bundle.params.repository_roots[0],
+        head.root().to_string_lossy()
+    );
     assert!(
         calls
             .iter()

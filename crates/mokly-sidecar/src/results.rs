@@ -1,5 +1,7 @@
 //! Typed result payloads and diagnostic records.
 
+use std::sync::Arc;
+
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
@@ -51,7 +53,7 @@ pub struct Bundle {
     #[ts(skip)]
     pub cache: Option<CacheOutcome>,
     /// Immutable code for restoration and evaluation-only reuse.
-    pub compiled: CompiledGeneration,
+    pub compiled: Arc<CompiledGeneration>,
     /// Content-addressed bundle id.
     pub generation: String,
     /// Complete module graph.

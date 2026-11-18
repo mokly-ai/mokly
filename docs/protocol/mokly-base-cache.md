@@ -63,7 +63,7 @@ line prints and how rich output shows it.
 ## Bundle Entries
 
 The bundle cache keeps compiled JavaScript bundles under the
-[compiled recipe rules](./mokly-sidecar-modules.md#compiled-recipes-and-release).
+[compiled recipe rules](./mokly-sidecar-recipes.md).
 It keeps one entry for each set of bundle settings: the latest compilation
 that a command served and could store. The settings include the source root,
 so the head, the base, and each base extraction have separate entries.
@@ -109,17 +109,21 @@ entry warning and the directory warning.
 After an entry fault, Mokly tries once, without waiting, to remove the rejected
 entry. It removes the entry only while the entry keeps the publication id that
 the read found, or while its receipt still does not mark it complete. A complete
-replacement by another writer stays. Then it compiles again and stores the new
-compilation, unless a normal event or a store fault prevents the write. The
-removal keeps a rejected entry from warning again when the new compilation
-cannot be stored. When the `restoreGeneration` request of a stored compilation
-fails, the request compiles without that stored compilation. A sidecar crash or
-timeout during the restore keeps only the existing
-[recovery](./mokly-sidecar.md#fail-closed-rules), and Mokly adds no retry. No
-bundle cache fault fails a command.
+replacement by another writer stays. Then it compiles again. In the `full`
+capture mode, it stores the new compilation, unless a normal event or a store
+fault prevents the write. The removal keeps a rejected entry from warning
+again when the new compilation cannot be stored. When the `restoreGeneration`
+request of a stored compilation fails, the request compiles without that stored
+compilation. A sidecar crash or timeout during the restore keeps only the
+existing [recovery](./mokly-sidecar.md#fail-closed-rules), and Mokly adds no
+retry. No bundle cache fault fails a command.
 
-Mokly offers each served compilation with complete and stable reuse evidence to
-the bundle cache, also one served from memory. Before the bundle cache encodes the
+In the `full` mode of the
+[capture modes](./mokly-sidecar-recipes.md#capture-modes), Mokly offers each
+served compilation with complete and stable reuse evidence to the bundle
+cache, also one served from memory. A Serve head preparation in the
+`serveEdit` mode offers nothing, also for a retained state that it serves
+without a `bundle` request. Before the bundle cache encodes the
 compilation, it reads only the receipt of the entry, under one shared attempt
 of the entry lock. It reads no payload and does not change the eviction order. When the
 receipt holds the digest of the served compilation's runtime import key, the
@@ -154,9 +158,9 @@ entries, the staged writes of every process, and replaced or evicted data that
 is not yet deleted. Before a write, Mokly makes room for the whole new entry.
 It removes the replaced entry first, then evicts other entries under the
 eviction rule above. When it cannot make room, it skips the write. Deleting
-the cache directory removes every bundle entry. A running process stores each
-compilation that it serves after the deletion again. A later process compiles
-each other bundle again.
+the cache directory removes every bundle entry. After the deletion, a running
+process stores again each compilation that it serves in the `full` capture
+mode. A later process compiles each other bundle again.
 Decision: compiled bundles use a third kind of the same cache. The Mokly
 version in the first line keeps each release from parsing the entries of
 another release. A separate single-file store and an embedded database were
@@ -184,7 +188,7 @@ for the time resolution of the file system has the same effect. Before a
 compile, the sidecar waits once, for at most 50 ms, when a recent change could
 otherwise make its evidence unstable. It never waits before a reuse. A
 compilation with unstable evidence keeps every in-process reuse rule of the
-[compiled recipe rules](./mokly-sidecar-modules.md#compiled-recipes-and-release).
+[compiled recipe rules](./mokly-sidecar-recipes.md).
 A later process cannot reuse it, and Mokly prints nothing for it.
 Decision: stability decides only whether the bundle cache stores a
 compilation. A rule that also limits reuse inside a process was rejected,

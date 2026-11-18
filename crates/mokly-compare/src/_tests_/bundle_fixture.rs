@@ -25,13 +25,14 @@ pub(crate) fn restore() -> RestoreGeneration {
         generation: "generation".into(),
         params: params(),
         modules: vec![],
-        compiled: CompiledGeneration {
+        compiled: Arc::new(CompiledGeneration {
             toolchain: "toolchain".into(),
-            reuse_evidence: ReuseEvidence {
+            reuse_evidence: Arc::new(ReuseEvidence {
+                uncaptured: None,
                 durable: true,
                 complete: true,
                 inputs: Default::default(),
-            },
+            }),
             unmapped_dependency_directories: None,
             identity: "identity".into(),
             code: "quoted \"code\"\n Unicode é".into(),
@@ -44,7 +45,7 @@ pub(crate) fn restore() -> RestoreGeneration {
             metadata_inputs: Default::default(),
             input_directories: Default::default(),
             metadata_directories: Default::default(),
-        },
+        }),
     }
 }
 
@@ -55,7 +56,7 @@ pub(crate) fn recipe() -> DurableRecipe {
             value.generation,
             value.params,
             value.modules,
-            Arc::new(value.compiled),
+            value.compiled,
         )
         .unwrap(),
     )

@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::compiled::{CompiledGeneration, ReuseEvidence};
-use crate::methods::{Bundle, Call};
+use crate::methods::{Bundle, BundleRequest, Call};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
 use crate::results;
@@ -34,13 +34,14 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
                     generation: id.clone(),
                     modules: vec![],
 
-                    compiled: CompiledGeneration {
+                    compiled: Arc::new(CompiledGeneration {
                         toolchain: "fixture".into(),
-                        reuse_evidence: ReuseEvidence {
+                        reuse_evidence: Arc::new(ReuseEvidence {
+                            uncaptured: None,
                             durable: true,
                             complete: true,
                             inputs: Default::default(),
-                        },
+                        }),
                         unmapped_dependency_directories: Some(vec![id]),
                         identity: "same".into(),
                         code: "code".into(),
@@ -53,7 +54,7 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
                         metadata_inputs: Default::default(),
                         input_directories: Default::default(),
                         metadata_directories: Default::default(),
-                    },
+                    }),
                 })))
             }))
             .n_times(2),
@@ -88,15 +89,18 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
         },
     );
     for evaluation in ["first", "second"] {
-        pool.request(Call::Bundle(Bundle {
-            evaluation: Some(evaluation.into()),
-            entry_files: vec![],
-            renderer: None,
-            stories_files: vec![],
-            module_resolution: Default::default(),
-            source_root: "/repo".into(),
-            configuration_directory: ".".into(),
-            repository_roots: vec![],
+        pool.request(Call::Bundle(BundleRequest {
+            params: Bundle {
+                evaluation: Some(evaluation.into()),
+                entry_files: vec![],
+                renderer: None,
+                stories_files: vec![],
+                module_resolution: Default::default(),
+                source_root: "/repo".into(),
+                configuration_directory: ".".into(),
+                repository_roots: vec![],
+            },
+            capture: None,
         }))
         .unwrap();
     }

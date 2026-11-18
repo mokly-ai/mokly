@@ -12,45 +12,40 @@ export interface PathSettings {
 
 /** Capture nearest configurations and every supported extends target before resolution. */
 export class ConfigInputs {
-  private readonly scopes = new Map<string, Promise<PathSettings>>();
-  private readonly configs = new Map<string, Promise<PathSettings>>();
-  private readonly manifests = new Map<string, Promise<void>>();
-  private readonly candidates = new Map<string, Promise<void>>();
+  private readonly scopes = new Map<string, PathSettings>();
+  private readonly configs = new Map<string, PathSettings>();
+  private readonly manifests = new Set<string>();
+  private readonly candidates = new Set<string>();
 
   constructor(
     private readonly inputs: PhysicalInputs,
     private readonly paths: ModulePaths,
   ) {}
 
-  scope(directory: string): Promise<PathSettings> {
-    if (!this.inputs.complete) return Promise.resolve({});
+  scope(directory: string): PathSettings {
+    if (!this.inputs.complete) return {};
     let result = this.scopes.get(directory);
     if (!result) {
-      result = this.configuration(directory).catch(() => {
+      try {
+        result = this.configuration(directory);
+      } catch {
         this.inputs.complete = false;
-        return {};
-      });
+        result = {};
+      }
       this.scopes.set(directory, result);
     }
     return result;
   }
 
-  manifest(directory: string): Promise<void> {
-    if (!this.inputs.complete) return Promise.resolve();
-    let result = this.manifests.get(directory);
-    if (!result) {
-      result = (async () => {
-        const value = await this.inputs.file(
-          path.join(directory, "package.json"),
-          this.aboveSourceRoot(directory),
-        );
-        const parent = path.dirname(directory);
-        if (value?.kind === "absent" && parent !== directory)
-          await this.manifest(parent);
-      })();
-      this.manifests.set(directory, result);
-    }
-    return result;
+  manifest(directory: string): void {
+    if (!this.inputs.complete || this.manifests.has(directory)) return;
+    this.manifests.add(directory);
+    const value = this.inputs.file(
+      path.join(directory, "package.json"),
+      this.aboveSourceRoot(directory),
+    );
+    const parent = path.dirname(directory);
+    if (value?.kind === "absent" && parent !== directory) this.manifest(parent);
   }
 
   private aboveSourceRoot(directory: string): boolean {
@@ -60,44 +55,36 @@ export class ConfigInputs {
     );
   }
 
-  private async configuration(directory: string): Promise<PathSettings> {
-    await this.candidateInputs(directory);
+  private configuration(directory: string): PathSettings {
+    this.candidateInputs(directory);
     if (directory.split(path.sep).includes("node_modules")) return {};
     for (const name of ["tsconfig.json", "jsconfig.json"]) {
       const file = path.join(directory, name);
-      const value = await this.inputs.file(file, name === "jsconfig.json");
+      const value = this.inputs.file(file, name === "jsconfig.json");
       if (value?.kind === "file") return this.config(file, []);
     }
     const parent = path.dirname(directory);
     return parent === directory ? {} : this.scope(parent);
   }
 
-  private candidateInputs(directory: string): Promise<void> {
-    let result = this.candidates.get(directory);
-    if (!result) {
-      result = (async () => {
-        const ts = await this.inputs.file(
-          path.join(directory, "tsconfig.json"),
-          this.aboveSourceRoot(directory),
-        );
-        const js = await this.inputs.file(
-          path.join(directory, "jsconfig.json"),
-          true,
-        );
-        const outside =
-          !inside(this.paths.sourceRoot, directory) &&
-          !this.paths.dependencyDirectory(directory);
-        if (outside && (ts?.kind === "file" || js?.kind === "file")) return;
-        const parent = path.dirname(directory);
-        if (parent !== directory && this.inputs.complete)
-          await this.candidateInputs(parent);
-      })();
-      this.candidates.set(directory, result);
-    }
-    return result;
+  private candidateInputs(directory: string): void {
+    if (this.candidates.has(directory)) return;
+    this.candidates.add(directory);
+    const ts = this.inputs.file(
+      path.join(directory, "tsconfig.json"),
+      this.aboveSourceRoot(directory),
+    );
+    const js = this.inputs.file(path.join(directory, "jsconfig.json"), true);
+    const outside =
+      !inside(this.paths.sourceRoot, directory) &&
+      !this.paths.dependencyDirectory(directory);
+    if (outside && (ts?.kind === "file" || js?.kind === "file")) return;
+    const parent = path.dirname(directory);
+    if (parent !== directory && this.inputs.complete)
+      this.candidateInputs(parent);
   }
 
-  private config(file: string, chain: string[]): Promise<PathSettings> {
+  private config(file: string, chain: string[]): PathSettings {
     if (chain.includes(file) || chain.length >= 32)
       throw new Error("configuration extends cycle or limit");
     let result = this.configs.get(file);
@@ -108,11 +95,8 @@ export class ConfigInputs {
     return result;
   }
 
-  private async readConfig(
-    file: string,
-    chain: string[],
-  ): Promise<PathSettings> {
-    const json = await this.inputs.json(
+  private readConfig(file: string, chain: string[]): PathSettings {
+    const json = this.inputs.json(
       file,
       chain.length > 1 || path.basename(file) === "jsconfig.json",
     );
@@ -128,10 +112,10 @@ export class ConfigInputs {
       if (typeof extension !== "string" || !extension.startsWith("."))
         throw new Error("unsupported configuration extends");
       const candidate = path.resolve(path.dirname(file), extension);
-      const exact = await this.inputs.file(candidate, true);
+      const exact = this.inputs.file(candidate, true);
       const target = exact?.kind === "file" ? candidate : candidate + ".json";
-      await this.inputs.file(target, true);
-      settings = { ...settings, ...(await this.config(target, chain)) };
+      this.inputs.file(target, true);
+      settings = { ...settings, ...this.config(target, chain) };
     }
     if (json.compilerOptions === undefined) return settings;
     if (!jsonObject(json.compilerOptions))

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import fs from "node:fs/promises";
+import fs from "node:fs";
 import test from "node:test";
 
 import type { CaptureHint } from "../packages/mokly/src/generated/sidecar/CaptureHint.js";
@@ -39,22 +39,22 @@ function fixture(metadata = false, dev = 0n) {
     wait: async () => {
       throw new Error("unexpected barrier");
     },
-    lstat: async () => {
+    lstat: () => {
       reads.push("lstat");
       return pathStat;
     },
-    stat: async () => {
+    stat: () => {
       reads.push("stat");
       return pathStat;
     },
-    readlink: async () => {
+    readlink: () => {
       throw new Error("unexpected link read");
     },
-    handleStat: async () => {
+    handleStat: () => {
       reads.push("handle");
       return openedStat;
     },
-    filesystem: async () => {
+    filesystem: () => {
       throw new Error("Windows must use its volume hint");
     },
   };
@@ -75,7 +75,7 @@ function fixture(metadata = false, dev = 0n) {
   };
 }
 
-test("Windows witnesses use the handle serial and keep metadata's original handle snapshot", async () => {
+test("Windows witnesses use the handle serial and keep metadata's original handle snapshot", () => {
   for (const [name, follow, metadata] of [
     ["directory", false, false],
     ["linked directory", true, false],
@@ -83,22 +83,22 @@ test("Windows witnesses use the handle serial and keep metadata's original handl
   ] satisfies Array<[string, boolean, boolean]>) {
     const io = fixture(metadata);
     const capture = new CaptureDurability(hint, io.runtime);
-    if (name === "linked directory") await capture.target(file);
+    if (name === "linked directory") capture.target(file);
     else
-      await capture.observe(
+      capture.observe(
         file,
         metadata ? io.opened() : io.path(),
         follow,
         metadata,
       );
     const openedAtFirstTouch = io.reads.includes("handle");
-    assert.equal(await capture.finish(), true, name);
+    assert.equal(capture.finish(), true, name);
     assert.equal(openedAtFirstTouch, !metadata, name);
     assert.equal(io.reads.includes(follow ? "lstat" : "stat"), false, name);
   }
 });
 
-test("Windows witnesses reject a different handle and a replacement directory link", async () => {
+test("Windows witnesses reject a different handle and a replacement directory link", () => {
   for (const when of ["first touch", "finish"]) {
     for (const change of [
       "handle identity",
@@ -110,9 +110,9 @@ test("Windows witnesses reject a different handle and a replacement directory li
     ]) {
       const io = fixture(false, serial);
       const capture = new CaptureDurability(hint, io.runtime);
-      if (when === "finish") await capture.observe(file, io.path(), false);
+      if (when === "finish") capture.observe(file, io.path(), false);
       const original = io.runtime.handleStat;
-      io.runtime.handleStat = async (selected) => {
+      io.runtime.handleStat = (selected) => {
         if (change === "handle identity") io.changeHandle({ ino: 3n });
         if (change === "handle ctime") io.changeHandle({ ctimeNs: 3n });
         if (change === "handle mtime") io.changeHandle({ mtimeNs: 3n });
@@ -126,57 +126,54 @@ test("Windows witnesses reject a different handle and a replacement directory li
           });
         return original(selected);
       };
-      if (when === "first touch") await capture.observe(file, io.path(), false);
-      assert.equal(await capture.finish(), false, `${when}: ${change}`);
+      if (when === "first touch") capture.observe(file, io.path(), false);
+      assert.equal(capture.finish(), false, `${when}: ${change}`);
     }
   }
   const io = fixture(false, serial);
   const capture = new CaptureDurability(hint, io.runtime);
-  await capture.observe(file, io.path(), false);
+  capture.observe(file, io.path(), false);
   io.changePath({ isDirectory: () => false, isSymbolicLink: () => true });
-  assert.equal(
-    await capture.finish(),
-    false,
-    "a link exists before the recheck",
-  );
+  assert.equal(capture.finish(), false, "a link exists before the recheck");
   assert.equal(io.reads.filter((read) => read === "handle").length, 1);
 });
 
-test("Windows handle failures keep physical evidence complete and close every opened witness", async (context) => {
+test("Windows handle failures keep physical evidence complete and close every opened witness", (context) => {
   let failure = "";
   const reads: string[] = [];
   const io = fixture(false, serial);
-  context.mock.method(fs, "open", async (selected: string, flags: string) => {
+  context.mock.method(fs, "openSync", (selected: string, flags: string) => {
     assert.equal(selected, file);
     assert.equal(flags, "r");
     reads.push("open");
     if (failure === "open")
       throw Object.assign(new Error("open failed"), { code: "ENOENT" });
-    return {
-      stat: async (options: { bigint: boolean }) => {
-        assert.deepEqual(options, { bigint: true });
-        reads.push("stat");
-        if (failure === "stat")
-          throw Object.assign(new Error("stat failed"), { code: "EPERM" });
-        return io.opened();
-      },
-      close: async () => {
-        reads.push("close");
-        if (failure === "close") throw new Error("close failed");
-      },
-    };
+    return 1;
+  });
+  context.mock.method(
+    fs,
+    "fstatSync",
+    (_handle: number, options: { bigint: boolean }) => {
+      assert.deepEqual(options, { bigint: true });
+      reads.push("stat");
+      if (failure === "stat")
+        throw Object.assign(new Error("stat failed"), { code: "EPERM" });
+      return io.opened();
+    },
+  );
+  context.mock.method(fs, "closeSync", () => {
+    reads.push("close");
+    if (failure === "close") throw new Error("close failed");
   });
   io.runtime.handleStat = captureRuntime.handleStat;
   class Inputs extends PhysicalInputs {
-    protected override async linkTarget(selected: string) {
+    protected override linkTarget(selected: string) {
       if (selected === file)
-        await this.durability?.observe(selected, io.path(), false);
+        this.durability?.observe(selected, io.path(), false);
       return undefined;
     }
 
-    protected override async readFilePath(
-      selected: string,
-    ): Promise<FilePathProbe> {
+    protected override readFilePath(selected: string): FilePathProbe {
       return { kind: "file", path: selected };
     }
   }
@@ -186,12 +183,12 @@ test("Windows handle failures keep physical evidence complete and close every op
       failure = when === "first touch" ? operation : "";
       const capture = new CaptureDurability(hint, io.runtime);
       const inputs = new Inputs(capture);
-      assert.equal(await inputs.exactFile(file), true);
+      assert.equal(inputs.exactFile(file), true);
       if (when === "finish") {
         failure = operation;
         reads.length = 0;
       }
-      assert.equal(await capture.finish(), false, `${when}: ${operation}`);
+      assert.equal(capture.finish(), false, `${when}: ${operation}`);
       assert.equal(inputs.complete, true, `${when}: ${operation}`);
       assert.deepEqual(
         reads,
@@ -202,16 +199,16 @@ test("Windows handle failures keep physical evidence complete and close every op
   }
 });
 
-test("Windows handle latency cannot mature a stamp that was recent at first touch", async () => {
+test("Windows handle latency cannot mature a stamp that was recent at first touch", () => {
   const io = fixture();
   io.changePath({ ctimeNs: start - 1n });
   io.changeHandle({ ctimeNs: start - 1n });
   const capture = new CaptureDurability(hint, io.runtime);
   const original = io.runtime.handleStat;
-  io.runtime.handleStat = async (selected) => {
+  io.runtime.handleStat = (selected) => {
     io.advance();
     return original(selected);
   };
-  await capture.observe(file, io.path(), false);
-  assert.equal(await capture.finish(), false);
+  capture.observe(file, io.path(), false);
+  assert.equal(capture.finish(), false);
 });

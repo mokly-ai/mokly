@@ -1,11 +1,11 @@
 //! Actual request spans report all cache outcomes, while direct serves only notify.
 
 use std::collections::BTreeMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use mokly_sidecar::bundle_outcomes::CacheOutcome;
 use mokly_sidecar::compiled::{CompiledGeneration, ReuseEvidence};
-use mokly_sidecar::methods::Bundle;
+use mokly_sidecar::methods::{Bundle, BundleCapture};
 use mokly_sidecar::pool::PoolMock;
 use mokly_sidecar::results;
 use mokly_sidecar::wire::MethodResult;
@@ -39,13 +39,14 @@ fn result(cache: CacheOutcome) -> MethodResult {
         cache: Some(cache),
         modules: vec![],
         unmapped_dependency_directories: None,
-        compiled: CompiledGeneration {
+        compiled: Arc::new(CompiledGeneration {
             toolchain: "fixture".into(),
-            reuse_evidence: ReuseEvidence {
+            reuse_evidence: Arc::new(ReuseEvidence {
+                uncaptured: None,
                 durable: true,
                 complete: true,
                 inputs: Default::default(),
-            },
+            }),
             identity: "identity".into(),
             code: String::new(),
             runtime_key: "runtime".into(),
@@ -58,7 +59,7 @@ fn result(cache: CacheOutcome) -> MethodResult {
             metadata_inputs: Default::default(),
             input_directories: Default::default(),
             metadata_directories: Default::default(),
-        },
+        }),
     }))
 }
 
@@ -112,12 +113,19 @@ fn actual_bundle_requests_record_the_cache_outcome_and_success_status() {
 }
 
 #[test]
-fn direct_serves_notify_the_pool_without_creating_a_bundle_request_span() {
+fn direct_serves_notify_only_for_full_capture_without_creating_bundle_request_spans() {
     let capture = Capture::default();
-    let runtime = runtime(Unimock::new((
+    let notices = Arc::new(Mutex::new(Vec::new()));
+    let recorded = notices.clone();
+    let mut runtime = runtime(Unimock::new((
         PoolMock::served_generation
             .some_call(matching!("generation", 7))
-            .returns(()),
+            .answers_arc(Arc::new(move |_, generation, epoch| {
+                recorded
+                    .lock()
+                    .unwrap()
+                    .push((generation.to_owned(), epoch));
+            })),
         PoolMock::release_generation
             .some_call(matching!("generation", 7))
             .returns(()),
@@ -127,6 +135,13 @@ fn direct_serves_notify_the_pool_without_creating_a_bundle_request_span() {
         epoch: 7,
         pool: runtime.pool.clone(),
     };
-    tracing::subscriber::with_default(capture.clone(), || served(&runtime, &lease));
+    tracing::subscriber::with_default(capture.clone(), || {
+        runtime.bundle_capture = BundleCapture::ServeEdit;
+        served(&runtime, &lease);
+        assert_eq!(*notices.lock().unwrap(), Vec::<(String, u64)>::new());
+        runtime.bundle_capture = BundleCapture::Full;
+        served(&runtime, &lease);
+        assert_eq!(*notices.lock().unwrap(), [("generation".to_owned(), 7)]);
+    });
     assert_eq!(capture.fields().len(), 0);
 }

@@ -54,7 +54,7 @@ test("an intermediate link switch keeps live reuse but rejects a durable bundle"
   );
   const compiled = captured.result.compiled;
   assert.equal(compiled.reuseEvidence.complete, true);
-  assert.equal(await currentEvidence(compiled.reuseEvidence), true);
+  assert.equal(currentEvidence(compiled.reuseEvidence), true);
   assert.equal(compiled.reuseEvidence.durable, false);
   const reused = await reuse([captured.generation], params);
   assert.equal(reused?.compiled.runtimeKey, compiled.runtimeKey);
@@ -71,7 +71,7 @@ test("a directory-entry link witnesses every target parent through replacement a
   const chosen = path.join(root, "listed/chosen");
   await link(path.join(store, "a"), chosen);
   const inputs = new PhysicalInputs(capture());
-  await inputs.directory(path.dirname(chosen));
+  inputs.directory(path.dirname(chosen));
   assert.equal(await fs.realpath(chosen), path.join(store, "a"));
   await fs.rename(store, held);
   await link(other, store);
@@ -81,6 +81,6 @@ test("a directory-entry link witnesses every target parent through replacement a
   const evidence = await inputs.finish();
   assert.equal(await fs.realpath(chosen), path.join(store, "a"));
   assert.equal(evidence.complete, true);
-  assert.equal(await currentEvidence(evidence), true);
+  assert.equal(currentEvidence(evidence), true);
   assert.equal(evidence.durable, false);
 });

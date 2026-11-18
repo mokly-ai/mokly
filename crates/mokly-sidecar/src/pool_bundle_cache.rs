@@ -1,12 +1,10 @@
 //! Optional bundle seeding and served-recipe offers outside pool IO locks.
 
-use std::sync::Arc;
-
 use crate::bundle_outcomes::CacheOutcome;
 use crate::bundle_store::ReadOutcome;
 use crate::durable_recipe::DurableRecipe;
 use crate::error::{Error, Result};
-use crate::methods::{Bundle, Call};
+use crate::methods::{BundleCapture, BundleRequest, Call};
 use crate::pool::Pool;
 use crate::pool_state::Slot;
 use crate::results;
@@ -35,11 +33,11 @@ impl Pool {
     pub(super) fn seed_bundle(
         &self,
         slot: &mut Slot,
-        params: &Bundle,
+        request: &BundleRequest,
         attempt: &mut BundleAttempt,
     ) -> Result<()> {
         attempt.disk = None;
-        let (complete, memory) = self.seed_compilation(slot, params)?;
+        let (complete, memory) = self.seed_compilation(slot, request)?;
         attempt.memory = memory;
         if complete {
             attempt.cause = CacheOutcome::StampMismatch;
@@ -52,6 +50,7 @@ impl Pool {
         let Some(store) = &self.bundle_store else {
             return Ok(());
         };
+        let params = &request.params;
         let loaded = store.load(params);
         attempt.cause = loaded.effects().cache.unwrap_or(CacheOutcome::NoRecord);
         let ReadOutcome::Hit { recipe, token, .. } = loaded else {
@@ -96,7 +95,7 @@ impl Pool {
 
     pub(super) fn complete_bundle(
         &self,
-        params: &Bundle,
+        request: &BundleRequest,
         result: &mut results::Bundle,
         attempt: &BundleAttempt,
     ) {
@@ -109,13 +108,14 @@ impl Pool {
             None
         };
         let mut cause = attempt.cause;
-        if let Some(recipe) = ReusableRecipe::new(
-            result.generation.clone(),
-            params.clone(),
-            result.modules.clone(),
-            Arc::new(result.compiled.clone()),
-        )
-        .and_then(DurableRecipe::new)
+        if request.capture.unwrap_or_default() == BundleCapture::Full
+            && let Some(recipe) = ReusableRecipe::new(
+                result.generation.clone(),
+                request.params.clone(),
+                result.modules.clone(),
+                result.compiled.clone(),
+            )
+            .and_then(DurableRecipe::new)
             && let Some(cache) = self.save_served(&recipe)
         {
             cause = cache;

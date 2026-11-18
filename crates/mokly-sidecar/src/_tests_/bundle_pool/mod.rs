@@ -14,7 +14,7 @@ use crate::bundle_store::{BundleStoreMock, ReadOutcome, RecordToken, WriteOutcom
 use crate::compiled::CompiledGeneration;
 use crate::compiled_fixture::compiled;
 use crate::durable_recipe::DurableRecipe;
-use crate::methods::{Bundle, Call};
+use crate::methods::{Bundle, BundleRequest, Call};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
 use crate::pool_state::Slot;
@@ -41,14 +41,14 @@ fn params() -> Bundle {
 fn compilation(id: &str, complete: bool) -> CompiledGeneration {
     let mut value = compiled(id);
     value.runtime_key = format!("runtime:{id}");
-    value.reuse_evidence.complete = complete;
+    Arc::make_mut(&mut value.reuse_evidence).complete = complete;
     value
 }
 
 fn answer(id: &str) -> MethodResult {
     MethodResult::Bundle(Box::new(results::Bundle {
         generation: id.into(),
-        compiled: compilation(id, true),
+        compiled: Arc::new(compilation(id, true)),
         cache: None,
         epoch: 0,
         modules: vec![],
@@ -157,7 +157,13 @@ fn live(pool: &Pool, id: &str, epoch: u64, complete: bool, installed: bool) {
 }
 
 fn bundle(pool: &Pool) -> results::Bundle {
-    let MethodResult::Bundle(result) = pool.request(Call::Bundle(params())).unwrap() else {
+    let MethodResult::Bundle(result) = pool
+        .request(Call::Bundle(BundleRequest {
+            params: params(),
+            capture: None,
+        }))
+        .unwrap()
+    else {
         panic!("expected bundle")
     };
     *result

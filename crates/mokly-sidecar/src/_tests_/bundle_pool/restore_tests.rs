@@ -7,7 +7,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::bundle_outcomes::CacheOutcome;
 use crate::bundle_store::{BundleStoreMock, RecordToken, WriteOutcome};
 use crate::error::{Error, RemoteCode, RequestCode};
-use crate::methods::Call;
+use crate::methods::{BundleRequest, Call};
 use crate::pool::SidecarPool;
 use crate::wire::MethodResult;
 use crate::workers::{ControlMock, FactoryMock, Spawned, WorkerMock};
@@ -157,7 +157,10 @@ fn cancellation_during_restore_does_not_retire_or_write_the_record() {
     ));
     let pool = pool(store, worker);
     assert!(matches!(
-        pool.request(Call::Bundle(params())),
+        pool.request(Call::Bundle(BundleRequest {
+            params: params(),
+            capture: None
+        })),
         Err(Error::Cancelled)
     ));
     assert_eq!(pool.lock().compiled.len(), 0);
@@ -184,7 +187,8 @@ fn a_restore_retirement_store_fault_reports_unavailable_for_an_incomplete_result
                 Call::Bundle(_) => {
                     let mut result = answer("partial");
                     if let MethodResult::Bundle(bundle) = &mut result {
-                        bundle.compiled.reuse_evidence.complete = false;
+                        let compiled = Arc::make_mut(&mut bundle.compiled);
+                        Arc::make_mut(&mut compiled.reuse_evidence).complete = false;
                     }
                     Ok(result)
                 }

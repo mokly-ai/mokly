@@ -8,7 +8,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use mokly_compare::bundle_store::CachedBundles;
 use mokly_platform::processes::SystemProcessGroups;
 use mokly_sidecar::bundle_outcomes::CacheOutcome;
-use mokly_sidecar::methods::{Bundle, Call};
+use mokly_sidecar::methods::{Bundle, BundleRequest, Call};
 use mokly_sidecar::operations::Operation;
 use mokly_sidecar::pool::{Pool, SidecarPool};
 use mokly_sidecar::pool_options::{Launch, PoolOptions};
@@ -71,15 +71,18 @@ fn pool(source: &Path, cache: &Path, counts: Arc<Counts>) -> Pool {
 }
 
 fn bundle(pool: &Pool, source: &Path) -> results::Bundle {
-    pool.request(Call::Bundle(Bundle {
-        evaluation: None,
-        entry_files: vec!["entry.ts".into()],
-        renderer: None,
-        stories_files: vec![],
-        source_root: source.to_string_lossy().into_owned(),
-        configuration_directory: ".".into(),
-        repository_roots: vec![],
-        module_resolution: Default::default(),
+    pool.request(Call::Bundle(BundleRequest {
+        params: Bundle {
+            evaluation: None,
+            entry_files: vec!["entry.ts".into()],
+            renderer: None,
+            stories_files: vec![],
+            source_root: source.to_string_lossy().into_owned(),
+            configuration_directory: ".".into(),
+            repository_roots: vec![],
+            module_resolution: Default::default(),
+        },
+        capture: None,
     }))
     .unwrap()
     .into_bundle()

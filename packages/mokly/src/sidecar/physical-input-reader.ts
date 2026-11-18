@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import fs from "node:fs/promises";
+import fs from "node:fs";
 import path from "node:path";
 
 import type { PhysicalEntry } from "../generated/sidecar/PhysicalEntry.js";
@@ -7,7 +7,9 @@ import type { PhysicalInput } from "../generated/sidecar/PhysicalInput.js";
 import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
 import type { CaptureDurability } from "./capture-durability.js";
-import { everyInput, missingFile } from "./file-digests.js";
+import { captureKind } from "./capture-kind.js";
+import type { CaptureKind } from "./capture-kind.js";
+import { missingFile } from "./file-digests.js";
 
 export const EVIDENCE_LIMIT = 8 * 1024 * 1024;
 const METADATA_FILE_LIMIT = 1024 * 1024;
@@ -24,38 +26,55 @@ export type FilePathProbe =
 export abstract class PhysicalInputReader {
   complete = true;
   protected metadataBytes = 0;
+  protected readonly pathKinds = new Map<string, CaptureKind | undefined>();
 
-  constructor(protected readonly durability?: CaptureDurability) {}
+  constructor(protected readonly durability?: CaptureDurability) {
+    durability?.sharePaths(this.pathKinds);
+  }
 
-  protected async readMetadata(file: string): Promise<CapturedMetadata> {
+  private kind(file: string, known?: CaptureKind): CaptureKind {
+    return known && known !== "link"
+      ? known
+      : captureKind(fs.statSync(file, { throwIfNoEntry: false }));
+  }
+
+  protected readMetadata(file: string, known?: CaptureKind): CapturedMetadata {
     let handle;
     try {
-      handle = await fs.open(file, "r");
+      if (this.kind(file, known) === "absent")
+        return { input: { kind: "absent" } };
+      handle = fs.openSync(file, "r");
     } catch (error) {
       if (missingFile(error)) return { input: { kind: "absent" } };
       throw error;
     }
     try {
-      const metadata = await handle.stat({ bigint: true });
+      const metadata = fs.fstatSync(handle, { bigint: true });
       if (
         !metadata.isFile() ||
         metadata.size > BigInt(METADATA_FILE_LIMIT) ||
         BigInt(this.metadataBytes) + metadata.size > BigInt(EVIDENCE_LIMIT)
       )
         throw new Error("metadata evidence limit");
-      await this.durability?.observe(file, metadata, true, true);
+      this.durability?.observe(file, metadata, true, true);
       const size = Number(metadata.size);
       this.metadataBytes += size;
       const bytes = Buffer.alloc(size);
       let length = 0;
       while (length < bytes.length) {
-        const read = await handle.read(bytes, length, bytes.length - length);
-        if (!read.bytesRead) break;
-        length += read.bytesRead;
+        const read = fs.readSync(
+          handle,
+          bytes,
+          length,
+          bytes.length - length,
+          null,
+        );
+        if (!read) break;
+        length += read;
       }
       if (
         length !== bytes.length ||
-        (await handle.stat({ bigint: true })).size !== BigInt(bytes.length)
+        fs.fstatSync(handle, { bigint: true }).size !== BigInt(bytes.length)
       )
         throw new Error("metadata changed during capture");
       return {
@@ -66,19 +85,21 @@ export abstract class PhysicalInputReader {
         bytes,
       };
     } finally {
-      await handle.close();
+      fs.closeSync(handle);
     }
   }
 
-  protected async realPath(file: string): Promise<string> {
-    await this.durability?.path(file);
-    return fs.realpath(file);
+  protected realPath(file: string): string {
+    this.durability?.path(file);
+    return fs.realpathSync.native(file);
   }
 
-  protected async readFilePath(file: string): Promise<FilePathProbe> {
+  protected readFilePath(file: string, known?: CaptureKind): FilePathProbe {
     try {
-      return (await fs.stat(file)).isFile()
-        ? { kind: "file", path: await this.realPath(file) }
+      const kind = this.kind(file, known);
+      if (kind === "absent") return { kind: "absent" };
+      return kind === "file"
+        ? { kind: "file", path: this.realPath(file) }
         : { kind: "other" };
     } catch (error) {
       if (missingFile(error)) return { kind: "absent" };
@@ -86,62 +107,80 @@ export abstract class PhysicalInputReader {
     }
   }
 
-  protected async linkTarget(file: string): Promise<string | undefined> {
+  protected linkTarget(file: string): string | undefined {
     try {
-      const stat = await fs.lstat(file, { bigint: true });
-      if (stat.isDirectory()) await this.durability?.observe(file, stat, false);
+      const stat = fs.lstatSync(file, {
+        bigint: true,
+        throwIfNoEntry: false,
+      });
+      this.pathKinds.set(file, captureKind(stat));
+      if (!stat) return undefined;
+      if (stat.isDirectory()) this.durability?.observe(file, stat, false);
       if (stat.isSymbolicLink()) {
-        await this.durability?.target(file);
-        return await this.realPath(file);
+        this.durability?.target(file);
+        return this.realPath(file);
       }
     } catch (error) {
       if (!missingFile(error)) throw error;
+      if (this.pathKinds.get(file) === undefined)
+        this.pathKinds.set(file, "absent");
     }
     return undefined;
   }
 
-  protected async readDirectory(
+  protected readDirectory(
     directory: string,
     limit: number,
     entryLimit = Infinity,
-  ): Promise<PhysicalInput | undefined> {
+    known?: CaptureKind,
+  ): PhysicalInput | undefined {
     const entries: PhysicalEntry[] = [];
     let bytes = Buffer.byteLength(
       JSON.stringify({ kind: "directory", entries }),
     );
     let handle;
     try {
-      handle = await fs.opendir(directory);
+      const kind = this.kind(directory, known);
+      if (kind === "absent" && known === "absent") return { kind: "absent" };
+      if (kind !== "absent" && kind !== "directory") return undefined;
+      if (kind === "directory") handle = fs.opendirSync(directory);
     } catch (error) {
       if (!missingFile(error)) throw error;
+    }
+    if (!handle) {
       try {
-        await fs.lstat(directory);
-        return undefined;
+        return fs.lstatSync(directory, { throwIfNoEntry: false })
+          ? undefined
+          : { kind: "absent" };
       } catch (error) {
         if (missingFile(error)) return { kind: "absent" };
         throw error;
       }
     }
-    for await (const entry of handle) {
-      if (entries.length >= entryLimit)
-        throw new Error("directory membership changed");
-      const value: PhysicalEntry = {
-        name: entry.name,
-        kind: entry.isSymbolicLink()
-          ? "link"
-          : entry.isFile()
-            ? "file"
-            : entry.isDirectory()
-              ? "directory"
-              : "other",
-        target: entry.isSymbolicLink()
-          ? await this.realPath(path.join(directory, entry.name))
-          : null,
-      };
-      bytes +=
-        Buffer.byteLength(JSON.stringify(value)) + (entries.length ? 1 : 0);
-      if (bytes > limit) throw new Error("directory evidence limit");
-      entries.push(value);
+    try {
+      for (let entry = handle.readSync(); entry; entry = handle.readSync()) {
+        if (entries.length >= entryLimit)
+          throw new Error("directory membership changed");
+        const value: PhysicalEntry = {
+          name: entry.name,
+          kind: entry.isSymbolicLink()
+            ? "link"
+            : entry.isFile()
+              ? "file"
+              : entry.isDirectory()
+                ? "directory"
+                : "other",
+          target: entry.isSymbolicLink()
+            ? this.realPath(path.join(directory, entry.name))
+            : null,
+        };
+        bytes +=
+          Buffer.byteLength(JSON.stringify(value)) + (entries.length ? 1 : 0);
+        if (bytes > limit) throw new Error("directory evidence limit");
+        entries.push(value);
+      }
+    } finally {
+      handle.closeSync();
     }
     entries.sort((a, b) =>
       Buffer.compare(Buffer.from(a.name), Buffer.from(b.name)),
@@ -150,35 +189,35 @@ export abstract class PhysicalInputReader {
   }
 
   /** A check allocates at most its recorded directory bytes and bounded metadata. */
-  async current(evidence: ReuseEvidence): Promise<boolean> {
+  current(evidence: ReuseEvidence): boolean {
     if (!evidence.complete) return false;
-    return everyInput(
-      Object.entries(evidence.inputs),
-      async ([file, expected]) => {
+    try {
+      return Object.entries(evidence.inputs).every(([file, expected]) => {
         switch (expected.kind) {
           case "filePath": {
-            const actual = await this.readFilePath(file);
+            const actual = this.readFilePath(file);
             return actual.kind === "file" && actual.path === file;
           }
           case "absent":
             try {
-              await fs.lstat(file);
-              return false;
+              return (
+                fs.lstatSync(file, { throwIfNoEntry: false }) === undefined
+              );
             } catch (error) {
               return missingFile(error);
             }
           case "file": {
-            if ((await this.realPath(file)) !== file) return false;
-            const actual = (await this.readMetadata(file)).input;
+            if (this.realPath(file) !== file) return false;
+            const actual = this.readMetadata(file).input;
             return actual.kind === "file" && actual.digest === expected.digest;
           }
           case "link":
             return (
-              (await fs.lstat(file)).isSymbolicLink() &&
-              (await this.realPath(file)) === expected.target
+              fs.lstatSync(file).isSymbolicLink() &&
+              this.realPath(file) === expected.target
             );
           case "directory": {
-            const actual = await this.readDirectory(
+            const actual = this.readDirectory(
               file,
               Buffer.byteLength(JSON.stringify(expected)),
               expected.entries.length,
@@ -194,11 +233,13 @@ export abstract class PhysicalInputReader {
                   entry.target === saved.target
                 );
               }) &&
-              (await this.realPath(file)) === file
+              this.realPath(file) === file
             );
           }
         }
-      },
-    );
+      });
+    } catch {
+      return false;
+    }
   }
 }

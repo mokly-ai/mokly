@@ -6,7 +6,7 @@ use std::sync::Arc;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::compiled_fixture::compiled;
-use crate::methods::{Bundle, Call, CssModules};
+use crate::methods::{Bundle, BundleRequest, Call, CssModules};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
 use crate::results;
@@ -14,15 +14,18 @@ use crate::wire::MethodResult;
 use crate::workers::{FactoryMock, Spawned, WorkerMock};
 
 fn bundle() -> Call {
-    Call::Bundle(Bundle {
-        evaluation: None,
-        entry_files: vec![],
-        stories_files: vec![],
-        renderer: None,
-        source_root: "/repo".into(),
-        configuration_directory: ".".into(),
-        repository_roots: vec![],
-        module_resolution: Default::default(),
+    Call::Bundle(BundleRequest {
+        params: Bundle {
+            evaluation: None,
+            entry_files: vec![],
+            stories_files: vec![],
+            renderer: None,
+            source_root: "/repo".into(),
+            configuration_directory: ".".into(),
+            repository_roots: vec![],
+            module_resolution: Default::default(),
+        },
+        capture: None,
     })
 }
 
@@ -39,7 +42,7 @@ fn a_late_old_epoch_release_preserves_the_same_ids_new_lifetime() {
                     unmapped_dependency_directories: None,
                     epoch: 0,
                     cache: None,
-                    compiled: compiled("g"),
+                    compiled: Arc::new(compiled("g")),
                     generation: "g".into(),
                     modules: vec![],
                 })))

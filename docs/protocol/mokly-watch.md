@@ -146,10 +146,13 @@ required files not covered by one of them; a required file with a denied
 directory between a root and itself stays an explicit target. Resolution
 metadata includes missing manifest and tsconfig candidates. File additions and
 removals in a consumed-module directory invalidate compilation reuse. The other
-[reuse evidence](./mokly-sidecar-modules.md#compiled-recipes-and-release) of a
+[reuse evidence](./mokly-sidecar-recipes.md#reuse-and-identity) of a
 compilation, such as `jsconfig.json` candidates, `extends` targets, and peer
 manifests, also invalidates compilation reuse. It is not a watch input and
 moves no render input key, so a change to it takes effect at the next bundle.
+A Serve edit compilation records none of this other evidence. Of these
+inputs, only its consumed files, its resolution metadata, and the membership
+of its consumed-module directories invalidate its reuse.
 Linux renews a registration after its directory is replaced. Vanished directories
 are skipped. A new matching file in a watched directory causes one rebuild.
 Notifications coalesce by path. A classifier exception is reported once, that

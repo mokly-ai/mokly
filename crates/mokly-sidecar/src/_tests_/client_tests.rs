@@ -3,6 +3,7 @@
 use std::sync::Arc;
 
 use serde_json::json;
+use serde_json::value::to_raw_value;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::client::{Client, EventsMock, SidecarClient, TransportMock};
@@ -32,7 +33,7 @@ fn hello_communicates_timing_opt_in_without_changing_default_wire_bytes() {
                 .next_call(matching!())
                 .returns(Ok(Frame::Response(Response::Success {
                     id: 0,
-                    result: json!({"version":"fixture"}),
+                    result: to_raw_value(&json!({"version":"fixture"})).unwrap(),
                 }))),
         ));
         let mut client: Box<dyn SidecarClient> = Box::new(
@@ -63,7 +64,7 @@ fn client_requires_an_exact_version_hello_before_requests() {
             .next_call(matching!())
             .returns(Ok(Frame::Response(Response::Success {
                 id: 0,
-                result: json!({"version":"fixture-version"}),
+                result: to_raw_value(&json!({"version":"fixture-version"})).unwrap(),
             }))),
         TransportMock::send
             .next_call(matching!((request) if request.id == 1))
@@ -82,7 +83,7 @@ fn client_requires_an_exact_version_hello_before_requests() {
             .next_call(matching!())
             .returns(Ok(Frame::Response(Response::Success {
                 id: 1,
-                result: json!(null),
+                result: to_raw_value(&json!(null)).unwrap(),
             }))),
     ));
     let mut client: Box<dyn SidecarClient> = Box::new(Client::new(
@@ -107,7 +108,7 @@ fn wrong_versions_and_first_events_fail() {
         (
             Frame::Response(Response::Success {
                 id: 0,
-                result: json!({"version":"other-version"}),
+                result: to_raw_value(&json!({"version":"other-version"})).unwrap(),
             }),
             true,
         ),
@@ -148,7 +149,7 @@ fn invalid_result_payload_fails_json_decoding() {
     };
     let response = Response::Success {
         id: 7,
-        result: json!({"invalid":"payload"}),
+        result: to_raw_value(&json!({"invalid":"payload"})).unwrap(),
     };
     assert!(matches!(
         response.decode_result(&request),

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import syncFs from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -98,6 +99,10 @@ test("unsupported config evidence disables reuse without failing a valid compila
   );
   assert.equal(result.result.compiled.reuseEvidence.complete, false);
   assert.equal(await reuse([result.generation], params), undefined);
+  assert.equal(
+    await reuse([result.generation], params, "serveEdit"),
+    undefined,
+  );
   const next = await bundle(params, build);
   assert.notEqual(
     next.result.generation,
@@ -138,6 +143,7 @@ test("evidence dropped for the frame bound gives each compilation a fresh genera
   });
   assert.notEqual(first.result.generation, next.result.generation);
   assert.equal(await reuse([first.generation], params), undefined);
+  assert.equal(await reuse([first.generation], params, "serveEdit"), undefined);
 });
 
 test("duplicate resolution requests keep complete evidence without depending on queue scheduling", async (context) => {
@@ -162,20 +168,20 @@ test("a grown directory rejects reuse before resolving an excess link", async (c
   await fs.symlink(target, path.join(directory, "alias"), "junction");
   const selected = await fs.realpath(target);
   const directoryKey = await fs.realpath(directory);
-  const original = fs.realpath;
+  const original = syncFs.realpathSync.native;
   let reads = 0;
   let canonicalReads = 0;
   context.mock.method(
-    fs,
-    "realpath",
-    (...args: Parameters<typeof fs.realpath>) => {
+    syncFs.realpathSync,
+    "native",
+    (...args: Parameters<typeof syncFs.realpathSync.native>) => {
       if (args[0] === directoryKey) canonicalReads++;
       else reads++;
       return original(...args);
     },
   );
   assert.equal(
-    await currentEvidence({
+    currentEvidence({
       complete: true,
       durable: false,
       inputs: {
@@ -192,7 +198,7 @@ test("a grown directory rejects reuse before resolving an excess link", async (c
   reads = 0;
   canonicalReads = 0;
   assert.equal(
-    await currentEvidence({
+    currentEvidence({
       complete: true,
       durable: false,
       inputs: { [directoryKey]: { kind: "directory", entries: [] } },
@@ -213,11 +219,11 @@ test("metadata capture stops at its total byte bound before retaining another pa
   for (let index = 0; index < 14; index++) await write(`${index}.json`, text);
   for (let index = 0; index < 13; index++)
     assert.equal(
-      (await inputs.json(path.join(root, `${index}.json`)))?.name,
+      inputs.json(path.join(root, `${index}.json`))?.name,
       "captured",
     );
   assert.equal(inputs.complete, true);
-  assert.equal(await inputs.json(path.join(root, "13.json")), undefined);
+  assert.equal(inputs.json(path.join(root, "13.json")), undefined);
   assert.equal(inputs.complete, false);
   assert.ok(inputs.usage.metadataBytes <= 8 * 1024 * 1024);
 });
@@ -233,30 +239,22 @@ test("canonical file records reject an introduced source directory link", async 
   const paths = new PhysicalInputs();
   const contents = new PhysicalInputs();
   const directories = new PhysicalInputs();
-  assert.equal(await paths.exactFile(file), true);
-  await contents.file(file);
-  await directories.directory(path.dirname(file));
+  assert.equal(paths.exactFile(file), true);
+  contents.file(file);
+  directories.directory(path.dirname(file));
   const records = await Promise.all([
     paths.finish(),
     contents.finish(),
     directories.finish(),
   ]);
-  assert.deepEqual(await Promise.all(records.map(currentEvidence)), [
-    true,
-    true,
-    true,
-  ]);
+  assert.deepEqual(records.map(currentEvidence), [true, true, true]);
   await fs.rename(path.join(root, "chosen"), path.join(root, "retained"));
   await fs.symlink(
     path.join(root, "changed/nested"),
     path.join(root, "chosen"),
     "junction",
   );
-  assert.deepEqual(await Promise.all(records.map(currentEvidence)), [
-    false,
-    false,
-    false,
-  ]);
+  assert.deepEqual(records.map(currentEvidence), [false, false, false]);
 });
 
 test("exact file observations upgrade to bounded metadata content", async (context) => {
@@ -264,14 +262,14 @@ test("exact file observations upgrade to bounded metadata content", async (conte
   await write("entry.ts", "export const value=1;");
   const file = path.join(root, "entry.ts");
   const inputs = new PhysicalInputs();
-  assert.equal(await inputs.exactFile(file), true);
-  await inputs.file(file);
+  assert.equal(inputs.exactFile(file), true);
+  inputs.file(file);
   const captured = await inputs.finish();
   assert.equal(captured.complete, true);
   await write("entry.ts", "export const value=2;");
-  assert.equal(await currentEvidence(captured), false);
+  assert.equal(currentEvidence(captured), false);
   const bounded = new PhysicalInputs();
-  assert.equal(await bounded.exactFile(file), true);
+  assert.equal(bounded.exactFile(file), true);
   const original = Buffer.byteLength;
   context.mock.method(
     Buffer,
@@ -283,6 +281,6 @@ test("exact file observations upgrade to bounded metadata content", async (conte
         : original(...args);
     },
   );
-  await bounded.file(file);
+  bounded.file(file);
   assert.equal((await bounded.finish()).complete, false);
 });

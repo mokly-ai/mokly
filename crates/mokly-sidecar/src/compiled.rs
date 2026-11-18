@@ -1,11 +1,12 @@
 //! Immutable compiled recipes restore live generations without reading changed sources.
 
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
-use crate::methods::Bundle;
+use crate::methods::{Bundle, BundleCapture};
 use crate::results::Module;
 
 /// One physical filesystem observation used only to validate compilation reuse.
@@ -58,6 +59,14 @@ pub struct PhysicalEntry {
     pub target: Option<String>,
 }
 
+/// A deliberate omission of capture, admitted only by the matching live request.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq, TS)]
+#[serde(rename_all = "camelCase")]
+pub enum UncapturedEvidence {
+    /// Serve edit compilation kept the existing live reuse inputs only.
+    ServeEdit,
+}
+
 /// Bounded physical observations kept apart from render-key and watch metadata.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, TS)]
 pub struct ReuseEvidence {
@@ -65,8 +74,32 @@ pub struct ReuseEvidence {
     pub complete: bool,
     /// Capture witnesses proved a stable view on supported local volumes.
     pub durable: bool,
+    /// Explicit live-only capture omission, never a durable recipe.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub uncaptured: Option<UncapturedEvidence>,
     /// Physical paths and the observations that both reuse checks must reread.
     pub inputs: BTreeMap<String, PhysicalInput>,
+}
+
+impl ReuseEvidence {
+    /// Physical inputs cover the compilation without an explicit capture omission.
+    pub fn captured(&self) -> bool {
+        self.complete && self.uncaptured.is_none()
+    }
+
+    /// Only the explicit empty Serve edit omission can enter live-only reuse.
+    pub fn serve_edit(&self) -> bool {
+        self.uncaptured == Some(UncapturedEvidence::ServeEdit)
+            && !self.complete
+            && !self.durable
+            && self.inputs.is_empty()
+    }
+
+    /// Full requests require captured inputs; Serve edits also admit their marker.
+    pub fn reusable(&self, capture: BundleCapture) -> bool {
+        self.captured() || capture == BundleCapture::ServeEdit && self.serve_edit()
+    }
 }
 
 /// Private compiled code retained for live generations and bounded release reuse.
@@ -76,7 +109,7 @@ pub struct CompiledGeneration {
     /// The Mokly, esbuild, Node, package-root, and installed program identity.
     pub toolchain: String,
     /// Cache-only physical inputs, never exported as render or watch inputs.
-    pub reuse_evidence: ReuseEvidence,
+    pub reuse_evidence: Arc<ReuseEvidence>,
     /// Dependency lookup provenance retained across restored worker generations.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
@@ -116,7 +149,7 @@ pub struct RestoreGeneration {
     /// Module graph, stored once outside the compiled program.
     pub modules: Vec<Module>,
     /// Immutable compilation.
-    pub compiled: CompiledGeneration,
+    pub compiled: Arc<CompiledGeneration>,
 }
 
 impl CompiledGeneration {
@@ -125,6 +158,7 @@ impl CompiledGeneration {
         self.identity == other.identity
             && self.toolchain == other.toolchain
             && self.reuse_evidence.complete == other.reuse_evidence.complete
+            && self.reuse_evidence.uncaptured == other.reuse_evidence.uncaptured
             && self.reuse_evidence.inputs == other.reuse_evidence.inputs
             && self.inputs == other.inputs
             && self.input_directories == other.input_directories

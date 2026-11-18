@@ -85,17 +85,23 @@ cache cleanup without waiting for worker requests or the PostCSS cache lock.
 Failed candidates release their own contexts. Bundle metadata stamps include
 resolved React manifests, ancestor package and tsconfig candidates, absent
 Storybook previews, and file membership in consumed-module directories.
-Bundle reuse also reads the reuse evidence of the compiled recipe again through
-the injected `PhysicalInputs` reader, outside the side tree. A read error
-rejects reuse, also for a recorded absence, and incomplete evidence never
-permits reuse.
+Bundle reuse also reads the captured reuse evidence of the compiled recipe
+again through the injected `PhysicalInputs` reader, outside the side tree. A
+read error rejects reuse, also for a recorded absence. Incomplete evidence
+never permits reuse, with one exception in the Serve edit capture mode: a
+retained state with a toolchain identity whose evidence holds only the
+`uncaptured` marker is reused while its module digests and metadata stamps
+stay current. A captured state is tried before a marked one.
 Each core `bundle` request runs in a `catalogue.bundle` span, which records the
-`cache` outcome that the pool sets on the result. A `BundleLease` owns the
-lifetime epoch of each result from its return. When the core serves a retained
-evaluated state without a `bundle` request, it sends the pool the
-served-generation notice with the id and the epoch of that state. The pool can
-then store that compilation in the bundle cache. Only that direct return of a
-retained state sends the notice.
+`cache` outcome that the pool sets on the result. The request carries the
+`capture` mode of the runtime: `full` by default, and `serveEdit` for each
+Serve head preparation after the first published state. A `BundleLease` owns
+the lifetime epoch of each result from its return. When the core serves a
+retained evaluated state without a `bundle` request in the `full` mode, it
+sends the pool the served-generation notice with the id and the epoch of that
+state. The pool can then store that compilation in the bundle cache. Only that
+direct return of a retained state sends the notice. The `serveEdit` mode sends
+no notice.
 The pool restores compatible code before evaluation-only bundles across slots
 and recycling. It gives each loaded lifetime an epoch. A stale process replays
 maps, describe, and bindings before rendering. Metadata invalidation still recomputes class maps before reusing
@@ -238,11 +244,14 @@ view after the edit and counts real process starts and hello calls.
 
 - [`src/runtime.rs`](./src/runtime.rs) defines `Runtime`, which implements
   `DefinitionProvider` and `GraphFactory` over the injected source readers,
-  physical input reader, sidecar pool, workers, and render cache.
+  physical input reader, sidecar pool, workers, and render cache. Its
+  `bundle_capture` field holds the `BundleCapture` of each core `bundle`
+  request: `Full` by default, and `ServeEdit` when Serve prepares its head
+  after the first published state.
 - [`src/physical_inputs.rs`](./src/physical_inputs.rs) defines
-  `PhysicalInputs`, the reader that checks the reuse evidence of a compiled
-  recipe outside the side tree, and `SystemPhysicalInputs`, its filesystem
-  implementation.
+  `PhysicalInputs`, the reader that checks the captured reuse evidence of a
+  compiled recipe outside the side tree, and `SystemPhysicalInputs`, its
+  filesystem implementation. Its `current` check rejects marked evidence.
 - [`src/side.rs`](./src/side.rs) defines `BaseSide`, the leased base
   extraction and dependency selection of a historical render.
 - [`src/dependency_usage.rs`](./src/dependency_usage.rs) defines
@@ -254,11 +263,14 @@ view after the edit and counts real process starts and hello calls.
   same composition path.
 - [`src/bundle.rs`](./src/bundle.rs) bundles only changed JavaScript and
   isolates class maps across retained graphs. It sends the served-generation
-  notice only at its direct return of a retained state.
+  notice only at its direct return of a retained state. Its `BundleState`
+  shares the reuse evidence of the actual result through an `Arc` and keeps
+  its toolchain identity. It tries retained states with captured evidence
+  first, and it admits a marked state only in the `ServeEdit` mode.
 - [`src/bundle_attempt.rs`](./src/bundle_attempt.rs) sends each core `bundle`
-  request in its `catalogue.bundle` span, gives each result's lifetime epoch
-  to a `BundleLease`, and sends the served-generation notice after a core
-  reuse.
+  request with the `capture` mode of the runtime in its `catalogue.bundle`
+  span, gives each result's lifetime epoch to a `BundleLease`, and sends the
+  served-generation notice after a core reuse, only in the `Full` mode.
 - [`src/render_environment.rs`](./src/render_environment.rs) derives the inputs
   that every render input key of one side shares, and names their paths
   without the checkout folder.
@@ -277,7 +289,7 @@ view after the edit and counts real process starts and hello calls.
 ### Related Docs
 
 - [Sidecar protocol](../../docs/protocol/mokly-sidecar.md).
-- [Compiled recipes and reuse](../../docs/protocol/mokly-sidecar-modules.md#compiled-recipes-and-release).
+- [Compiled recipes and reuse](../../docs/protocol/mokly-sidecar-recipes.md).
 - [Render records](../../docs/protocol/mokly-sidecar-render-records.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).
 - [PostCSS contexts and evidence](../../docs/protocol/mokly-sidecar-postcss.md).

@@ -5,7 +5,7 @@ use std::sync::Arc;
 use crate::bindings::Bindings;
 use crate::compiled::{CompiledGeneration, RestoreGeneration};
 use crate::error::{Error, Result};
-use crate::methods::{Bundle, Call, CssModules, Generation};
+use crate::methods::{Bundle, BundleRequest, Call, CssModules, Generation};
 use crate::pool::Pool;
 use crate::pool_recipes::same_settings;
 use crate::pool_state::{Slot, State};
@@ -17,9 +17,11 @@ impl Pool {
     pub(super) fn seed_compilation(
         &self,
         slot: &mut Slot,
-        params: &Bundle,
+        request: &BundleRequest,
     ) -> Result<(bool, Vec<String>)> {
-        let (stored, candidate, mut keys) = {
+        let params = &request.params;
+        let capture = request.capture.unwrap_or_default();
+        let (stored, mut candidate, fallback, mut keys) = {
             let mut state = self.lock();
             let keys: Vec<_> = slot
                 .generations
@@ -27,8 +29,8 @@ impl Pool {
                 .filter_map(|id| state.compiled.get(id))
                 .map(|compiled| compiled.runtime_key.clone())
                 .collect();
-            let stored = state.recipes.seed(params);
-            let candidate = state
+            let stored = state.recipes.seed(params, capture);
+            let candidates = state
                 .bundles
                 .iter()
                 .filter(|(_, retained)| same_settings(retained, params))
@@ -39,26 +41,66 @@ impl Pool {
                         state.modules[id].clone(),
                         state.compiled[id].clone(),
                     )
+                    .filter(|recipe| recipe.compiled().reuse_evidence.reusable(capture))
                     .map(|recipe| (id, recipe))
+                });
+            let candidate = candidates
+                .clone()
+                .max_by_key(|(id, recipe)| {
+                    (
+                        recipe.compiled().reuse_evidence.captured(),
+                        state.epochs[*id],
+                        *id,
+                    )
                 })
-                .max_by_key(|(id, _)| (state.epochs[*id], *id))
                 .map(|(id, recipe)| {
                     (
                         id.clone(),
                         recipe.compiled().runtime_key.clone(),
                         Preparation::snapshot(&state, slot, id, false, false, false),
+                        recipe.compiled().reuse_evidence.captured(),
                     )
                 });
-            (stored, candidate, keys)
+            let fallback = candidate
+                .as_ref()
+                .filter(|(_, _, _, captured)| *captured)
+                .and_then(|_| {
+                    candidates
+                        .filter(|(_, recipe)| recipe.compiled().reuse_evidence.serve_edit())
+                        .max_by_key(|(id, _)| (state.epochs[*id], *id))
+                        .map(|(id, recipe)| {
+                            (
+                                id.clone(),
+                                recipe.compiled().runtime_key.clone(),
+                                Preparation::snapshot(&state, slot, id, false, false, false),
+                            )
+                        })
+                });
+            (stored, candidate, fallback, keys)
         };
         let complete = stored.is_some() || candidate.is_some();
+        if stored
+            .as_ref()
+            .is_some_and(|recipe| !recipe.compiled.reuse_evidence.captured())
+            && candidate
+                .as_ref()
+                .is_some_and(|(_, _, _, captured)| *captured)
+            && let Some((generation, runtime, preparation, _)) = candidate.take()
+        {
+            self.restore(slot, &generation, false, preparation)?;
+            keys.push(runtime);
+        }
         if let Some(recipe) = stored {
             keys.push(recipe.compiled.runtime_key.clone());
             let generation = recipe.generation.clone();
             self.prerequisite(slot, Call::RestoreGeneration(recipe))?;
             slot.generations.insert(generation, 0);
         }
-        if let Some((generation, runtime, preparation)) = candidate {
+        if let Some((generation, runtime, preparation, _)) = candidate {
+            self.restore(slot, &generation, false, preparation)?;
+            keys.push(runtime);
+        }
+        if let Some((generation, runtime, preparation)) = fallback {
             self.restore(slot, &generation, false, preparation)?;
             keys.push(runtime);
         }
@@ -107,7 +149,7 @@ impl Pool {
                     generation: generation.into(),
                     params: recipe.params,
                     modules: recipe.modules,
-                    compiled: (*recipe.compiled).clone(),
+                    compiled: recipe.compiled,
                 })),
             )?;
             slot.generations.insert(generation.into(), epoch);

@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import type { BundleCapture } from "../generated/sidecar/BundleCapture.js";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
 import { logical } from "./path-scope.js";
@@ -20,6 +21,7 @@ export const previewCandidates = ["tsx", "ts", "jsx", "js", "mjs", "cjs"].map(
 export async function entryModule(
   params: BundleParams,
   capturedPreview: string | null | undefined,
+  capture: BundleCapture = "full",
 ) {
   const files = [
     ...params.entryFiles,
@@ -37,12 +39,16 @@ export async function entryModule(
     preview = params.storiesFiles.length
       ? (
           await Promise.all(
-            previewCandidates.map(
-              async (file) =>
-                await fs.access(path.resolve(params.sourceRoot, file)).then(
-                  () => file,
-                  () => null,
-                ),
+            previewCandidates.map(async (file) =>
+              capture === "serveEdit"
+                ? await fs.stat(path.resolve(params.sourceRoot, file)).then(
+                    (stat) => (stat.isFile() ? file : null),
+                    () => null,
+                  )
+                : await fs.access(path.resolve(params.sourceRoot, file)).then(
+                    () => file,
+                    () => null,
+                  ),
             ),
           )
         ).find(Boolean)

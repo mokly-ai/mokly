@@ -111,7 +111,7 @@ fn real_path(path: &Path) -> io::Result<String> {
 }
 
 pub(crate) fn current(evidence: &ReuseEvidence, reader: &dyn PhysicalInputs) -> bool {
-    evidence.complete
+    evidence.captured()
         && evidence
             .inputs
             .iter()

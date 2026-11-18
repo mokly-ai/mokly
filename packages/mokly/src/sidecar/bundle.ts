@@ -5,6 +5,7 @@ import path from "node:path";
 import type { build, BuildResult, Loader } from "esbuild";
 
 import type { AuthoringRuntime } from "../authoring/runtime.js";
+import type { BundleCapture } from "../generated/sidecar/BundleCapture.js";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { BundleResult } from "../generated/sidecar/BundleResult.js";
 import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration.js";
@@ -68,12 +69,11 @@ interface NativeOutcome {
   plan?: ReadonlyMap<string, PlannedImport>;
 }
 
-interface BundleCapture {
+interface BundleCaptureState {
+  mode: BundleCapture;
   durability?: CaptureDurability | undefined;
-  prepared?: {
-    evidence: ResolutionEvidence;
-    preview: string | null | undefined;
-  };
+  evidence?: ResolutionEvidence;
+  preview?: string | null | undefined;
 }
 
 /**
@@ -86,8 +86,12 @@ export async function bundle(
   compile: typeof build,
   measurements: Measurements = unmeasured,
   durability?: CaptureDurability,
+  captureMode: BundleCapture = "full",
 ): Promise<Bundled> {
-  const capture: BundleCapture = { durability };
+  const capture: BundleCaptureState = {
+    mode: captureMode,
+    ...(captureMode === "full" ? { durability } : {}),
+  };
   const native = await bundleAttempt(
     params,
     compile,
@@ -124,7 +128,9 @@ export async function bundleWith(
   measurements: Measurements,
   resolution: Resolution,
 ): Promise<Bundled | NativeOutcome> {
-  return bundleAttempt(params, compile, measurements, resolution, {});
+  return bundleAttempt(params, compile, measurements, resolution, {
+    mode: "full",
+  });
 }
 
 async function bundleAttempt(
@@ -132,39 +138,40 @@ async function bundleAttempt(
   compile: typeof build,
   measurements: Measurements,
   resolution: Exclude<Resolution, { mode: "native" }>,
-  capture: BundleCapture,
+  capture: BundleCaptureState,
 ): Promise<Bundled>;
 async function bundleAttempt(
   params: BundleParams,
   compile: typeof build,
   measurements: Measurements,
   resolution: Resolution,
-  capture: BundleCapture,
+  capture: BundleCaptureState,
 ): Promise<Bundled | NativeOutcome>;
 async function bundleAttempt(
   params: BundleParams,
   compile: typeof build,
   measurements: Measurements,
   resolution: Resolution,
-  capture: BundleCapture,
+  capture: BundleCaptureState,
 ): Promise<Bundled | NativeOutcome> {
   const virtualOrigins = new Map<string, VirtualOrigin>();
   let sources: ModulePaths | undefined;
   try {
-    if (!capture.prepared) await capture.durability?.prepare(params);
+    if (!capture.evidence) await capture.durability?.prepare(params);
     const runtimeKey = `mokly:runtime:${randomBytes(24).toString("hex")}`;
     params = { ...params, sourceRoot: await fs.realpath(params.sourceRoot) };
     const paths = await ModulePaths.create(params);
     sources = paths;
-    if (!capture.prepared) {
+    if (capture.mode === "full" && !capture.evidence) {
       const evidence = new ResolutionEvidence(
         params,
         paths,
         capture.durability,
       );
-      capture.prepared = { evidence, preview: await evidence.prepare() };
+      capture.preview = await evidence.prepare();
+      capture.evidence = evidence;
     }
-    const { evidence } = capture.prepared;
+    const { evidence } = capture;
     const require = await consumerRequire(params, paths);
     const inputs = {
       files: new Map<string, Uint8Array>(),
@@ -173,9 +180,10 @@ async function bundleAttempt(
     };
     const { contents, inputPaths, preview } = await entryModule(
       params,
-      capture.prepared.preview,
+      capture.preview,
+      capture.mode,
     );
-    capture.prepared.preview = preview ?? null;
+    capture.preview = preview ?? null;
     const settings = params.moduleResolution;
     const loaders = Object.fromEntries(
       Object.entries(settings.loaders).filter(
@@ -210,7 +218,7 @@ async function bundleAttempt(
         ? { logOverride: nativeLogOverride }
         : {}),
       plugins: [
-        evidence.plugin,
+        ...(evidence ? [evidence.plugin] : []),
         ...consumerPlugins(
           params,
           inputs,
@@ -251,6 +259,7 @@ async function bundleAttempt(
         preview,
         runtimeKey,
         evidence,
+        capture: capture.mode,
       },
       measurements,
     );

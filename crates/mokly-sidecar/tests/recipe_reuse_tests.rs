@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use mokly_platform::processes::SystemProcessGroups;
-use mokly_sidecar::methods::{Bundle, Call};
+use mokly_sidecar::methods::{Bundle, BundleRequest, Call};
 use mokly_sidecar::operations::Operation;
 use mokly_sidecar::pool::{Pool, SidecarPool};
 use mokly_sidecar::pool_options::{Launch, PoolOptions};
@@ -35,7 +35,13 @@ impl Diagnostics for Counts {
 }
 
 fn bundle(pool: &Pool, params: &Bundle) -> results::Bundle {
-    let MethodResult::Bundle(result) = pool.request(Call::Bundle(params.clone())).unwrap() else {
+    let MethodResult::Bundle(result) = pool
+        .request(Call::Bundle(BundleRequest {
+            params: params.clone(),
+            capture: None,
+        }))
+        .unwrap()
+    else {
         panic!("expected bundle")
     };
     *result

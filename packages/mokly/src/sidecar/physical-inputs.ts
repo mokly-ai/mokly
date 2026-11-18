@@ -24,13 +24,9 @@ export class PhysicalInputs extends PhysicalInputReader {
   private requestBytes = 0;
   private pending = Promise.resolve();
   private readonly requests = new Map<string, Promise<void>>();
-  private readonly directories = new Map<string, Promise<void>>();
-  private readonly files = new Map<
-    string,
-    Promise<CapturedMetadata | undefined>
-  >();
+  private readonly directories = new Set<string>();
+  private readonly files = new Map<string, CapturedMetadata>();
   private readonly jsonFiles = new Map<string, Record<string, unknown>>();
-  private readonly links = new Map<string, Promise<void>>();
 
   get usage() {
     return {
@@ -42,11 +38,7 @@ export class PhysicalInputs extends PhysicalInputReader {
   }
 
   /** Duplicates share their own observation before they can join the capture queue. */
-  request(
-    name: string,
-    directory: string,
-    capture: () => Promise<void>,
-  ): Promise<void> {
+  request(name: string, directory: string, capture: () => void): Promise<void> {
     if (!this.complete) return Promise.resolve();
     if (
       Buffer.byteLength(name) + Buffer.byteLength(directory) >
@@ -64,10 +56,10 @@ export class PhysicalInputs extends PhysicalInputReader {
       return Promise.resolve();
     }
     this.requestBytes += bytes;
-    const result = this.pending.then(async () => {
+    const result = this.pending.then(() => {
       if (!this.complete) return;
       try {
-        await capture();
+        capture();
       } catch {
         this.complete = false;
       }
@@ -97,13 +89,13 @@ export class PhysicalInputs extends PhysicalInputReader {
   }
 
   /** Exact resolution needs the canonical file path; source owners check its content. */
-  async exactFile(file: string): Promise<boolean> {
-    return (await this.capturePath(file))?.kind === "file" && this.complete;
+  exactFile(file: string): boolean {
+    return this.capturePath(file)?.kind === "file" && this.complete;
   }
 
   /** Optional selection observes absence and regular-file paths without reading bodies. */
-  async optionalFile(file: string): Promise<boolean | undefined> {
-    const value = await this.capturePath(file);
+  optionalFile(file: string): boolean | undefined {
+    const value = this.capturePath(file);
     if (!value || !this.complete) return undefined;
     if (value.kind === "other") {
       this.complete = false;
@@ -112,12 +104,12 @@ export class PhysicalInputs extends PhysicalInputReader {
     return value.kind === "file";
   }
 
-  private async capturePath(file: string): Promise<FilePathProbe | undefined> {
+  private capturePath(file: string): FilePathProbe | undefined {
     if (!this.complete) return undefined;
     try {
-      await this.pathLinks(file);
+      this.pathLinks(file);
       if (!this.complete) return undefined;
-      const value = await this.readFilePath(file);
+      const value = this.readFilePath(file, this.pathKinds.get(file));
       if (value.kind === "file") this.save(value.path, { kind: "filePath" });
       if (value.kind === "absent") this.save(file, value);
       return value;
@@ -127,46 +119,38 @@ export class PhysicalInputs extends PhysicalInputReader {
     }
   }
 
-  async file(
-    file: string,
-    identity = false,
-  ): Promise<PhysicalInput | undefined> {
-    const value = (await this.captureFile(file))?.input;
+  file(file: string, identity = false): PhysicalInput | undefined {
+    const value = this.captureFile(file)?.input;
     if (identity && value?.kind === "file")
       this.identityInputs.set(file, value.digest);
     return value;
   }
 
-  private captureFile(file: string): Promise<CapturedMetadata | undefined> {
-    if (!this.complete) return Promise.resolve(undefined);
-    let result = this.files.get(file);
-    if (!result) {
-      result = (async () => {
-        await this.pathLinks(file);
-        if (!this.complete) return undefined;
-        const value = await this.readMetadata(file);
-        this.save(
-          value.input.kind === "absent" ? file : await this.realPath(file),
-          value.input,
-        );
-        return value;
-      })().catch(() => {
-        this.complete = false;
-        return undefined;
-      });
-      this.files.set(file, result);
+  private captureFile(file: string): CapturedMetadata | undefined {
+    if (!this.complete) return undefined;
+    const existing = this.files.get(file);
+    if (existing) return existing;
+    try {
+      this.pathLinks(file);
+      if (!this.complete) return undefined;
+      const value = this.readMetadata(file, this.pathKinds.get(file));
+      this.save(
+        value.input.kind === "absent" ? file : this.realPath(file),
+        value.input,
+      );
+      this.files.set(file, value);
+      return value;
+    } catch {
+      this.complete = false;
+      return undefined;
     }
-    return result;
   }
 
-  async json(
-    file: string,
-    identity = false,
-  ): Promise<Record<string, unknown> | undefined> {
-    if ((await this.file(file, identity))?.kind !== "file") return undefined;
+  json(file: string, identity = false): Record<string, unknown> | undefined {
+    if (this.file(file, identity)?.kind !== "file") return undefined;
     const existing = this.jsonFiles.get(file);
     if (existing) return existing;
-    const value = await this.captureFile(file);
+    const value = this.captureFile(file);
     if (!value?.bytes) return undefined;
     try {
       const json = parseJson(value.bytes.toString("utf8"));
@@ -179,60 +163,53 @@ export class PhysicalInputs extends PhysicalInputReader {
     }
   }
 
-  directory(directory: string): Promise<void> {
-    if (!this.complete) return Promise.resolve();
-    let result = this.directories.get(directory);
-    if (!result) {
-      result = (async () => {
-        await this.pathLinks(directory);
-        if (!this.complete) return;
-        const value = await this.readDirectory(
-          directory,
-          EVIDENCE_LIMIT - this.bytes,
+  directory(directory: string): void {
+    if (!this.complete || this.directories.has(directory)) return;
+    this.directories.add(directory);
+    try {
+      this.pathLinks(directory);
+      if (!this.complete) return;
+      const value = this.readDirectory(
+        directory,
+        EVIDENCE_LIMIT - this.bytes,
+        Infinity,
+        this.pathKinds.get(directory),
+      );
+      if (value)
+        this.save(
+          value.kind === "absent" ? directory : this.realPath(directory),
+          value,
         );
-        if (value)
-          this.save(
-            value.kind === "absent"
-              ? directory
-              : await this.realPath(directory),
-            value,
-          );
-      })().catch(() => {
-        this.complete = false;
-      });
-      this.directories.set(directory, result);
+    } catch {
+      this.complete = false;
     }
-    return result;
   }
 
-  async candidate(base: string): Promise<void> {
-    await this.directory(path.dirname(base));
-    await this.directory(base);
+  candidate(base: string): void {
+    this.directory(path.dirname(base));
+    this.directory(base);
   }
 
-  private pathLinks(file: string): Promise<void> {
-    if (!this.complete) return Promise.resolve();
-    let result = this.links.get(file);
-    if (!result) {
-      const bytes = Buffer.byteLength(file);
-      if (this.linkBytes + bytes > EVIDENCE_LIMIT) {
-        this.complete = false;
-        return Promise.resolve();
-      }
-      this.linkBytes += bytes;
-      this.durability?.budget(this.linkBytes);
-      result = (async () => {
-        const parent = path.dirname(file);
-        if (parent !== file) await this.pathLinks(parent);
-        if (!this.complete) return;
-        const target = await this.linkTarget(file);
-        if (target !== undefined) {
-          this.save(file, { kind: "link", target });
-        }
-      })();
-      this.links.set(file, result);
+  private pathLinks(file: string): void {
+    if (!this.complete || this.pathKinds.has(file)) return;
+    const bytes = Buffer.byteLength(file);
+    if (this.linkBytes + bytes > EVIDENCE_LIMIT) {
+      this.complete = false;
+      return;
     }
-    return result;
+    this.linkBytes += bytes;
+    this.durability?.budget(this.linkBytes);
+    this.pathKinds.set(file, undefined);
+    const parent = path.dirname(file);
+    if (parent !== file) this.pathLinks(parent);
+    if (!this.complete) return;
+    const kind = this.pathKinds.get(parent);
+    if (parent !== file && kind && kind !== "directory" && kind !== "link") {
+      this.pathKinds.set(file, "absent");
+      return;
+    }
+    const target = this.linkTarget(file);
+    if (target !== undefined) this.save(file, { kind: "link", target });
   }
 
   async finish(): Promise<ReuseEvidence> {
@@ -244,13 +221,13 @@ export class PhysicalInputs extends PhysicalInputReader {
         [...this.inputs].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
       ),
     };
-    value.complete = await currentEvidence(value);
-    value.durable = (await this.durability?.finish()) ?? false;
+    value.complete = currentEvidence(value);
+    value.durable = this.durability?.finish() ?? false;
     return value;
   }
 }
 
 /** Each check owns fresh bounded reads, independent of capture's retained bytes. */
-export function currentEvidence(evidence: ReuseEvidence): Promise<boolean> {
+export function currentEvidence(evidence: ReuseEvidence): boolean {
   return new PhysicalInputs().current(evidence);
 }

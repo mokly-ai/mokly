@@ -75,32 +75,32 @@ export class ResolutionEvidence {
     let preview: string | null = null;
     if (this.params.storiesFiles.length)
       for (const file of previewCandidates) {
-        const present = await this.physical.optionalFile(
+        const present = this.physical.optionalFile(
           path.resolve(this.params.sourceRoot, file),
         );
         if (present && preview === null) preview = file;
       }
-    await this.configs.scope(
+    this.configs.scope(
       path.resolve(this.params.sourceRoot, this.params.configurationDirectory),
     );
-    await this.configs.manifest(this.params.sourceRoot);
+    this.configs.manifest(this.params.sourceRoot);
     return this.physical.complete ? preview : undefined;
   }
 
-  async peers(peers: Readonly<Record<string, string | null>>): Promise<void> {
+  peers(peers: Readonly<Record<string, string | null>>): void {
     for (const [name, file] of Object.entries(peers)) {
       if (!file) continue;
       const boundary = path.join("node_modules", packageName(name));
       const manifests: string[] = [];
       for (let directory = path.dirname(file); this.physical.complete;) {
         const manifest = path.join(directory, "package.json");
-        const json = await this.physical.json(manifest);
+        const json = this.physical.json(manifest);
         if (json) manifests.push(manifest);
         if (
           json?.name === packageName(name) ||
           directory.endsWith(path.sep + boundary)
         ) {
-          for (const file of manifests) await this.physical.file(file, true);
+          for (const file of manifests) this.physical.file(file, true);
           break;
         }
         const parent = path.dirname(directory);
@@ -132,24 +132,24 @@ export class ResolutionEvidence {
     );
   }
 
-  private async candidate(base: string): Promise<void> {
+  private candidate(base: string): void {
     if (!this.physical.complete) return;
     const extension = path.extname(base).toLowerCase();
     if (
       !extension ||
       [".js", ".jsx", ".mjs", ".cjs"].includes(extension) ||
-      !(await this.physical.exactFile(base))
+      !this.physical.exactFile(base)
     )
-      await this.physical.candidate(base);
-    await this.configs.manifest(path.dirname(base));
-    await this.configs.manifest(base);
-    await this.configs.scope(path.dirname(base));
-    await this.configs.scope(base);
+      this.physical.candidate(base);
+    this.configs.manifest(path.dirname(base));
+    this.configs.manifest(base);
+    this.configs.scope(path.dirname(base));
+    this.configs.scope(base);
   }
 
-  private async capture(name: string, directory: string): Promise<void> {
-    const config = await this.configs.scope(directory);
-    await this.configs.manifest(directory);
+  private capture(name: string, directory: string): void {
+    const config = this.configs.scope(directory);
+    this.configs.manifest(directory);
     if (
       name.startsWith("#") ||
       (!path.isAbsolute(name) && /^[a-z]+:/i.test(name)) ||
@@ -157,7 +157,7 @@ export class ResolutionEvidence {
     )
       throw new Error("unsupported module specifier");
     if (!bareSpecifier(name) || path.isAbsolute(name)) {
-      await this.candidate(path.resolve(directory, name));
+      this.candidate(path.resolve(directory, name));
       return;
     }
     if (config.paths) {
@@ -165,7 +165,7 @@ export class ResolutionEvidence {
         const matched = substitution(pattern, name);
         if (matched === undefined) continue;
         for (const target of targets)
-          await this.candidate(
+          this.candidate(
             path.resolve(
               config.baseUrl ?? config.paths.directory,
               target.replace("*", matched),
@@ -173,15 +173,12 @@ export class ResolutionEvidence {
           );
       }
     }
-    if (config.baseUrl)
-      await this.candidate(path.resolve(config.baseUrl, name));
+    if (config.baseUrl) this.candidate(path.resolve(config.baseUrl, name));
     for (let current = directory; ;) {
-      const manifest = await this.physical.json(
-        path.join(current, "package.json"),
-      );
+      const manifest = this.physical.json(path.join(current, "package.json"));
       if (manifest) {
         if (manifest.name === packageName(name))
-          await this.targets(current, name, manifest);
+          this.targets(current, name, manifest);
         break;
       }
       const parent = path.dirname(current);
@@ -206,27 +203,27 @@ export class ResolutionEvidence {
       roots.add(root);
     for (const root of roots) {
       if (!this.physical.complete) break;
-      await this.package(root, name);
+      this.package(root, name);
     }
   }
 
-  private async package(root: string, name: string): Promise<void> {
+  private package(root: string, name: string): void {
     const pkg = path.join(root, packageName(name));
-    await this.candidate(pkg);
-    await this.candidate(path.join(root, name));
+    this.candidate(pkg);
+    this.candidate(path.join(root, name));
     const key = JSON.stringify([pkg, name]);
     if (this.packages.has(key) || !this.physical.complete) return;
     this.packages.add(key);
-    const manifest = await this.physical.json(path.join(pkg, "package.json"));
+    const manifest = this.physical.json(path.join(pkg, "package.json"));
     if (!manifest) return;
-    await this.targets(pkg, name, manifest);
+    this.targets(pkg, name, manifest);
   }
 
-  private async targets(
+  private targets(
     pkg: string,
     name: string,
     manifest: Record<string, unknown>,
-  ): Promise<void> {
+  ): void {
     for (const field of new Set([
       "main",
       "module",
@@ -234,10 +231,10 @@ export class ResolutionEvidence {
     ])) {
       const target = manifest[field];
       if (typeof target === "string" && target)
-        await this.candidate(path.resolve(pkg, target));
+        this.candidate(path.resolve(pkg, target));
     }
     const subpath = name.slice(packageName(name).length);
-    await this.exports(
+    this.exports(
       pkg,
       manifest.exports,
       subpath ? "." + subpath : ".",
@@ -246,24 +243,22 @@ export class ResolutionEvidence {
     );
   }
 
-  private async exports(
+  private exports(
     pkg: string,
     value: unknown,
     requested: string,
     matched: string | undefined,
     depth: number,
-  ): Promise<void> {
+  ): void {
     if (!this.physical.complete) return;
     if (depth > 32) throw new Error("package export evidence limit");
     if (typeof value === "string") {
       if (value.includes("*") && matched === undefined)
         throw new Error("unmapped export pattern");
-      await this.candidate(
-        path.resolve(pkg, value.replaceAll("*", matched ?? "")),
-      );
+      this.candidate(path.resolve(pkg, value.replaceAll("*", matched ?? "")));
     } else if (Array.isArray(value)) {
       for (const item of value)
-        await this.exports(pkg, item, requested, matched, depth + 1);
+        this.exports(pkg, item, requested, matched, depth + 1);
     } else if (jsonObject(value)) {
       for (const [key, target] of Object.entries(value)) {
         if (key.startsWith(".")) {
@@ -271,14 +266,14 @@ export class ResolutionEvidence {
             throw new Error("unsupported export pattern");
           const match = substitution(key, requested);
           if (match !== undefined)
-            await this.exports(pkg, target, requested, match, depth + 1);
-        } else await this.exports(pkg, target, requested, matched, depth + 1);
+            this.exports(pkg, target, requested, match, depth + 1);
+        } else this.exports(pkg, target, requested, matched, depth + 1);
       }
     } else if (value !== undefined && value !== null)
       throw new Error("unsupported package exports");
   }
 
-  async finish(metafile: Metafile) {
+  finish(metafile: Metafile) {
     for (const [file, input] of Object.entries(metafile.inputs)) {
       if (!path.isAbsolute(file)) continue;
       for (const edge of input.imports) {

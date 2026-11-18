@@ -6,10 +6,10 @@
   bundle disk cache change on branch `calummoore/lisbon-h906`. The check put
   this in-process exposure outside the new functionality of that call and
   asked for a follow-up item.
-- **Location:** `packages/mokly/src/sidecar/compiled.ts:105`,
+- **Location:** `packages/mokly/src/sidecar/compiled.ts:106`,
   `packages/mokly/src/sidecar/resolution-evidence.ts:135` to line 143,
-  `packages/mokly/src/sidecar/physical-inputs.ts:182`, and
-  `crates/mokly-render/src/bundle.rs:62`.
+  `packages/mokly/src/sidecar/physical-inputs.ts:166`, and
+  `crates/mokly-render/src/bundle.rs:63`.
 - **Reason:** The exposure predates the bundle disk cache change, which keeps
   it out of the disk cache, and its fix that keeps all reuse is Large.
 
@@ -42,16 +42,32 @@
     `packages/mokly/src/sidecar/physical-inputs.ts` owns every read. After
     the last attempt, `finish()` reads the whole evidence again. A
     difference makes the evidence incomplete.
-  - `reuse()` at `packages/mokly/src/sidecar/compiled.ts:105` accepts an
+  - `reuse()` at `packages/mokly/src/sidecar/compiled.ts:106` accepts an
     earlier compilation while its toolchain, settings, dependency roots,
     consumed file digests, consumed directory lists, and complete reuse
     evidence still match. The core's bundle fast path checks the same
-    evidence at `crates/mokly-render/src/bundle.rs:62`.
+    evidence at `crates/mokly-render/src/bundle.rs:63`.
   - The section "Compiled Recipes And Release" of
     `docs/protocol/mokly-sidecar-modules.md` states the rules. A compilation
     is reused only while its inputs stay unchanged. An incomplete
     compilation is never reused and never stored, and it gets a fresh
     identity at each compile.
+    - On 2026-11-18 these rules moved to
+      `docs/protocol/mokly-sidecar-recipes.md`. On the same date, the
+      performance orchestrator added one deliberate exception, under the
+      user's delegation of 2026-11-16. After Serve publishes its first
+      state, each head preparation sends `capture: "serveEdit"`. Such an
+      edit compile records no reuse evidence. Its evidence carries the
+      marker `uncaptured: "serveEdit"`, with `complete` and `durable`
+      false. A later `serveEdit` request of the same process reuses it
+      under the live checks of `main` alone: equal settings, roots, and
+      toolchain identity, unchanged consumed file digests, and unchanged
+      directory lists. In the same mode, the core's fast path also reuses
+      it while its stamps stay current. A `full` request never reuses it,
+      the bundle cache never stores it, and it still gets a fresh
+      identity. An unmarked incomplete compilation is still never reused.
+      So a marked compilation keeps the exposure of `main` that the next
+      bullet describes.
   - Before the bundle disk cache change, `main` at commit `f380e9462`
     recorded the consumed directory lists after the compile, in
     `resolutionInputs` of `packages/mokly/src/sidecar/resolution-inputs.ts`.
@@ -67,7 +83,7 @@
       `packages/mokly/src/sidecar/resolution-evidence.ts:135` to line 143
       records the file path and no listing. A later open lookup in the same
       directory records the listing through
-      `packages/mokly/src/sidecar/physical-inputs.ts:182`. A candidate that
+      `packages/mokly/src/sidecar/physical-inputs.ts:166`. A candidate that
       appears between the two reads enters the evidence, but not the
       selection of esbuild.
   - Two real esbuild regressions in `tests/sidecar_capture_mutations.test.ts`
@@ -118,12 +134,19 @@
     `packages/mokly/src/sidecar/resolution.ts`.
   - The fix must keep these goals:
     - No stale code: a compilation is reused only while it equals a fresh
-      compile of the current files.
+      compile of the current files. Since 2026-11-18, a marked Serve edit
+      compile is a deliberate exception: the orchestrator gave it the live
+      checks of `main`, which do not prove this. This item keeps that
+      exception. A fix that also covers marked compilations needs a new
+      decision, because the orchestrator removed capture from edit
+      compiles for edit time.
     - Every coherent compilation keeps its reuse, and each complete
       compilation keeps a deterministic identity. An option that reduces
       that reuse removes functionality of `main`, so it needs the user.
     - The sidecar performs no file writes, and a reuse check runs no esbuild
-      operation. Both rules are in `docs/protocol/mokly-sidecar-modules.md`.
+      operation. The first rule is in
+      `docs/protocol/mokly-sidecar-modules.md`, and the second is in
+      `docs/protocol/mokly-sidecar-recipes.md`.
     - Capture memory stays within its 8 MiB bounds, and no retry is added.
 - **Problem:** In-process reuse can accept a compilation whose evidence
   describes a newer filesystem view than the one from which esbuild selected

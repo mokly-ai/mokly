@@ -59,6 +59,7 @@ pub mod reusable_recipe;
 pub mod typescript;
 pub mod usage;
 pub mod wire;
+mod wire_decode;
 pub mod workers;
 
 mod memory_schedule;

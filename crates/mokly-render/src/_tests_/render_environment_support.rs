@@ -2,6 +2,7 @@
 
 use std::collections::BTreeMap;
 use std::path::Path;
+use std::sync::Arc;
 
 use mokly_sidecar::compiled::{CompiledGeneration, ReuseEvidence};
 use mokly_sidecar::methods::{Bundle, ModuleResolution};
@@ -89,13 +90,14 @@ pub(super) fn result(dependency_root: &str, react: &str) -> results::Bundle {
         unmapped_dependency_directories: None,
         epoch: 0,
         cache: None,
-        compiled: CompiledGeneration {
+        compiled: Arc::new(CompiledGeneration {
             toolchain: "fixture".into(),
-            reuse_evidence: ReuseEvidence {
+            reuse_evidence: Arc::new(ReuseEvidence {
+                uncaptured: None,
                 durable: true,
                 complete: true,
                 inputs: Default::default(),
-            },
+            }),
             unmapped_dependency_directories: None,
             identity: "identity".into(),
             code: String::new(),
@@ -108,7 +110,7 @@ pub(super) fn result(dependency_root: &str, react: &str) -> results::Bundle {
             metadata_inputs: BTreeMap::from([("package.json".to_owned(), Some("root".to_owned()))]),
             input_directories: BTreeMap::new(),
             metadata_directories: BTreeMap::new(),
-        },
+        }),
         generation: "generation".into(),
         modules: Vec::new(),
     }

@@ -7,6 +7,7 @@ import type { TestContext } from "node:test";
 
 import { build } from "esbuild";
 
+import { entryModule } from "../packages/mokly/src/sidecar/bundle-entry.js";
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
 import { reuse } from "../packages/mokly/src/sidecar/compiled.js";
 import { ResolutionEvidence } from "../packages/mokly/src/sidecar/resolution-evidence.js";
@@ -123,4 +124,49 @@ test("an imported manifest restored during compilation keeps its consumed digest
   assert.equal(captured.result.compiled.reuseEvidence.complete, true);
   assert.match(captured.result.compiled.code, /during/);
   assert.equal(await reuse([captured.generation], params), undefined);
+});
+
+test("uncaptured Storybook discovery selects a regular preview file", async (context) => {
+  const { root, preview, params } = await source(context);
+  await fs.mkdir(path.join(root, ".storybook/preview.tsx"));
+  await fs.writeFile(preview, "export default {};");
+  const entry = await entryModule(params, undefined, "serveEdit");
+  assert.equal(entry.preview, ".storybook/preview.ts");
+  assert.match(entry.contents, /preview\.ts"; export \{ preview \}/);
+});
+
+test("uncaptured Storybook selection survives a failed native compile", async (context) => {
+  const { root, preview, params } = await source(context);
+  await fs.writeFile(preview, "export default {};");
+  const retained = path.join(root, "retained-preview.ts");
+  const entries: Array<string | undefined> = [];
+  let attempts = 0;
+  const compile: typeof build = async (options) => {
+    attempts++;
+    entries.push(options.stdin?.contents);
+    if (attempts === 1) {
+      await fs.rename(preview, retained);
+      throw new Error("native compile fixture");
+    }
+    await fs.rename(retained, preview);
+    return build(options);
+  };
+  const compiled = await bundle(
+    params,
+    compile,
+    undefined,
+    undefined,
+    "serveEdit",
+  );
+  assert.equal(attempts, 2);
+  assert.ok(
+    entries.every((entry) =>
+      entry?.includes('preview.ts"; export { preview }'),
+    ),
+  );
+  assert.deepEqual(
+    compiled.result.modules.map((module) => module.path),
+    [".storybook/preview.ts", "story.stories.tsx"],
+  );
+  assert.equal(compiled.result.compiled.reuseEvidence.uncaptured, "serveEdit");
 });

@@ -232,6 +232,7 @@ pub(super) fn run(
                 reserved = Some(server);
                 return Ok(ExitCode::SUCCESS);
             }
+            services.head_published();
             timing.ready();
             if options.open {
                 serve_controls::open(&url, style, &redactor, terminal.as_ref());

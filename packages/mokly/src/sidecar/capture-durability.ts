@@ -3,6 +3,7 @@ import path from "node:path";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { CaptureHint } from "../generated/sidecar/CaptureHint.js";
 
+import type { CaptureKind } from "./capture-kind.js";
 import { CapturePaths } from "./capture-paths.js";
 import {
   captureRuntime,
@@ -13,7 +14,7 @@ import {
 } from "./capture-runtime.js";
 import type { CaptureRuntime, CaptureStat } from "./capture-runtime.js";
 import { CaptureVolumes } from "./capture-volumes.js";
-import { everyInput, missingFile } from "./file-digests.js";
+import { missingFile } from "./file-digests.js";
 
 const VISITED_LIMIT = 8 * 1024 * 1024;
 interface Witness {
@@ -55,8 +56,8 @@ export class CaptureDurability {
     this.volumes = new CaptureVolumes(hint, runtime);
     this.paths = new CapturePaths(
       runtime,
-      async (file, stat) => {
-        await this.observe(file, stat, false);
+      (file, stat) => {
+        this.observe(file, stat, false);
         return this.durable;
       },
       (bytes) =>
@@ -70,7 +71,7 @@ export class CaptureDurability {
   }
 
   /** Preflight is not evidence. No observation is retained across a wait. */
-  async preflight(params: BundleParams): Promise<bigint> {
+  preflight(params: BundleParams): bigint {
     const paths = new Set<string>();
     let bytes = 0;
     for (let file of initialPaths(params)) {
@@ -90,7 +91,7 @@ export class CaptureDurability {
     let guard = 0n;
     for (const file of paths) {
       try {
-        const stat = await this.runtime.lstat(file);
+        const stat = this.runtime.lstat(file);
         const limit = maturityGuard(stat);
         if (
           stat.ctimeNs > 0n &&
@@ -109,7 +110,7 @@ export class CaptureDurability {
   /** A request can wait once, before prepare or any capture observation. */
   async prepare(params: BundleParams): Promise<void> {
     if (!this.durable) return;
-    const guard = await this.preflight(params);
+    const guard = this.preflight(params);
     const remaining = this.started + 50_000_000n - this.runtime.now();
     if (guard && remaining > 0n)
       await this.runtime.wait(Number((remaining + 999_999n) / 1_000_000n));
@@ -128,28 +129,33 @@ export class CaptureDurability {
     this.paths.clear();
   }
 
+  /** The physical owner already witnessed each borrowed directory kind. */
+  sharePaths(kinds: ReadonlyMap<string, CaptureKind | undefined>): void {
+    this.paths.share(kinds);
+  }
+
   /** Topology failures affect disk storage only; physical readers keep their checks. */
-  async path(file: string): Promise<void> {
-    if (this.durable && !(await this.paths.walk(file))) this.reject();
+  path(file: string): void {
+    if (this.durable && !this.paths.walk(file)) this.reject();
   }
 
   /** Following a directory link adds a witness but cannot change completeness. */
-  async target(file: string): Promise<void> {
+  target(file: string): void {
     if (!this.durable) return;
     try {
-      const stat = await this.runtime.stat(file);
-      if (stat.isDirectory()) await this.observe(file, stat, true);
+      const stat = this.runtime.stat(file);
+      if (stat.isDirectory()) this.observe(file, stat, true);
     } catch {
       this.reject();
     }
   }
 
-  async observe(
+  observe(
     file: string,
     stat: CaptureStat,
     follow: boolean,
     metadata = false,
-  ): Promise<void> {
+  ): void {
     if (!this.durable) return;
     const key = JSON.stringify([file, follow]);
     if (this.witnesses.has(key)) return;
@@ -164,8 +170,8 @@ export class CaptureDurability {
     }
     try {
       if (!metadata)
-        stat = await captureSnapshot(this.runtime, file, stat, follow, false);
-      if (!(await this.volumes.supported(file, stat))) {
+        stat = captureSnapshot(this.runtime, file, stat, follow, false);
+      if (!this.volumes.supported(file, stat)) {
         this.reject();
         return;
       }
@@ -177,24 +183,30 @@ export class CaptureDurability {
   }
 
   /** Recheck stamps and current volume classes after all physical evidence. */
-  async finish(): Promise<boolean> {
+  finish(): boolean {
     if (!this.durable) return false;
     const volumes = new CaptureVolumes(this.hint, this.runtime);
-    return everyInput([...this.witnesses.values()], async (witness) => {
-      const stat = await (witness.follow
-        ? this.runtime.stat(witness.file)
-        : this.runtime.lstat(witness.file));
-      const actual = await captureSnapshot(
-        this.runtime,
-        witness.file,
-        stat,
-        witness.follow,
-        witness.metadata,
-      );
-      return (
-        sameCaptureStat(witness.stat, actual, witness.metadata) &&
-        (await volumes.supported(witness.file, actual))
-      );
-    });
+    try {
+      for (const witness of this.witnesses.values()) {
+        const stat = witness.follow
+          ? this.runtime.stat(witness.file)
+          : this.runtime.lstat(witness.file);
+        const actual = captureSnapshot(
+          this.runtime,
+          witness.file,
+          stat,
+          witness.follow,
+          witness.metadata,
+        );
+        if (
+          !sameCaptureStat(witness.stat, actual, witness.metadata) ||
+          !volumes.supported(witness.file, actual)
+        )
+          return false;
+      }
+      return true;
+    } catch {
+      return false;
+    }
   }
 }

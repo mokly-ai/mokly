@@ -71,13 +71,14 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
                         cache: None,
                         unmapped_dependency_directories: None,
                         epoch: 0,
-                        compiled: CompiledGeneration {
+                        compiled: Arc::new(CompiledGeneration {
                             toolchain: "fixture".into(),
-                            reuse_evidence: ReuseEvidence {
+                            reuse_evidence: Arc::new(ReuseEvidence {
+                                uncaptured: None,
                                 durable: true,
                                 complete: true,
                                 inputs: Default::default(),
-                            },
+                            }),
                             identity: "bundle".into(),
                             code: "module.exports={}".into(),
                             runtime_key: "fixture-runtime".into(),
@@ -90,7 +91,7 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
                             input_directories: BTreeMap::new(),
                             metadata_directories: BTreeMap::new(),
                             unmapped_dependency_directories: None,
-                        },
+                        }),
                         generation: "bundle".into(),
 
                         modules: vec![

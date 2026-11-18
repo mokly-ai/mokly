@@ -4,8 +4,10 @@ import path from "node:path";
 
 import type { BuildResult } from "esbuild";
 
+import type { BundleCapture } from "../generated/sidecar/BundleCapture.js";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration.js";
+import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
 import { previewCandidates } from "./bundle-entry.js";
 import { moduleGraph } from "./bundle-graph.js";
@@ -29,7 +31,8 @@ export interface CompiledBundle {
   inputPaths: Map<string, string>;
   preview: string | null | undefined;
   runtimeKey: string;
-  evidence: ResolutionEvidence;
+  evidence: ResolutionEvidence | undefined;
+  capture: BundleCapture;
 }
 
 /** The module graph, consumed digests, resolution inputs, and the recipe. */
@@ -44,6 +47,7 @@ export async function bundleRecipe(
     preview,
     runtimeKey,
     evidence,
+    capture,
   }: CompiledBundle,
   measurements: Measurements,
 ): Promise<Bundled> {
@@ -108,16 +112,28 @@ export async function bundleRecipe(
     resolutionInputs(paths, physical.values(), physicalInputs, metadataInputs),
   );
   const peers = require.snapshot();
-  await evidence.peers(peers);
-  const reuseEvidence = await evidence.finish(compiled.metafile!);
+  evidence?.peers(peers);
+  const reuseEvidence: ReuseEvidence = evidence
+    ? await evidence.finish(compiled.metafile!)
+    : {
+        complete: false,
+        durable: false,
+        inputs: {},
+        ...(capture === "serveEdit"
+          ? { uncaptured: "serveEdit" as const }
+          : {}),
+      };
   const toolchain = await toolchainIdentity();
-  if (!toolchain) reuseEvidence.complete = false;
+  if (!toolchain) {
+    reuseEvidence.complete = false;
+    delete reuseEvidence.uncaptured;
+  }
   const reusable = reuseEvidence.complete;
   if (!reusable) hash.update(JSON.stringify(runtimeKey));
   hash.update(
     JSON.stringify([
       toolchain,
-      [...evidence.physical.identityInputs].sort(([a], [b]) =>
+      [...(evidence?.physical.identityInputs ?? [])].sort(([a], [b]) =>
         a < b ? -1 : a > b ? 1 : 0,
       ),
       Object.entries(peers).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),

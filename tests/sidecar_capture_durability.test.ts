@@ -42,16 +42,16 @@ function fixture(
       waits.push(milliseconds);
       now += BigInt(milliseconds) * 1_000_000n;
     },
-    lstat: async (file) => {
+    lstat: (file) => {
       reads.push(file);
       return current;
     },
-    stat: async () => current,
-    readlink: async () => {
+    stat: () => current,
+    readlink: () => {
       throw new Error("unexpected link read");
     },
-    handleStat: async () => current,
-    filesystem: async () => type,
+    handleStat: () => current,
+    filesystem: () => type,
   };
   return {
     runtime,
@@ -67,25 +67,25 @@ function fixture(
   };
 }
 
-test("capture witnesses reject changed fields and read errors without storing stamps", async () => {
+test("capture witnesses reject changed fields and read errors without storing stamps", () => {
   for (const field of ["dev", "ino", "ctimeNs", "mtimeNs", "size"] as const) {
     const io = fixture();
     const capture = new CaptureDurability(hint, io.runtime);
-    await capture.observe(file, io.stat(), true, true);
-    assert.equal(await capture.finish(), true, field);
+    capture.observe(file, io.stat(), true, true);
+    assert.equal(capture.finish(), true, field);
     io.change({ [field]: io.stat()[field] + 1n });
-    assert.equal(await capture.finish(), false, field);
+    assert.equal(capture.finish(), false, field);
   }
   const io = fixture();
   const capture = new CaptureDurability(hint, io.runtime);
-  await capture.observe(file, io.stat(), true);
-  io.runtime.stat = async () => {
+  capture.observe(file, io.stat(), true);
+  io.runtime.stat = () => {
     throw new Error("unreadable witness");
   };
-  assert.equal(await capture.finish(), false);
+  assert.equal(capture.finish(), false);
 });
 
-test("capture maturity rejects recent, zero, and future stamps", async () => {
+test("capture maturity rejects recent, zero, and future stamps", () => {
   for (const [name, values, durable] of [
     ["fine mature", {}, true],
     ["fine recent", { ctimeNs: start - 1n }, false],
@@ -106,13 +106,13 @@ test("capture maturity rejects recent, zero, and future stamps", async () => {
   ] satisfies Array<[string, Partial<CaptureStat>, boolean]>) {
     const io = fixture(values);
     const capture = new CaptureDurability(hint, io.runtime);
-    await capture.observe(file, io.stat(), false);
-    assert.equal(await capture.finish(), durable, name);
+    capture.observe(file, io.stat(), false);
+    assert.equal(capture.finish(), durable, name);
     assert.deepEqual(io.waits, [], name);
   }
 });
 
-test("capture checks Linux types and native device and root hints again at finish", async () => {
+test("capture checks Linux types and native device and root hints again at finish", () => {
   const cases: Array<{
     platform: NodeJS.Platform;
     file: string;
@@ -200,18 +200,18 @@ test("capture checks Linux types and native device and root hints again at finis
     const io = fixture({}, item.platform);
     io.filesystem(item.type);
     const capture = new CaptureDurability(item.hint, io.runtime);
-    await capture.observe(item.file, io.stat(), false);
+    capture.observe(item.file, io.stat(), false);
     assert.equal(
-      await capture.finish(),
+      capture.finish(),
       item.durable,
       `${item.platform} ${item.file} ${item.type}`,
     );
   }
   const io = fixture();
   const capture = new CaptureDurability(hint, io.runtime);
-  await capture.observe(file, io.stat(), false);
+  capture.observe(file, io.stat(), false);
   io.filesystem(0x6969n);
-  assert.equal(await capture.finish(), false, "the volume class changed");
+  assert.equal(capture.finish(), false, "the volume class changed");
 });
 
 test("the adaptive barrier waits once before observations and never waits for concurrent changes", async () => {
@@ -241,12 +241,8 @@ test("the adaptive barrier waits once before observations and never waits for co
       path.join(file, "renderer.ts"),
     ])
       assert.equal(io.reads.includes(required), true, required);
-    await capture.observe(file, io.stat(), false);
-    assert.equal(
-      await capture.finish(),
-      name === "old" || name === "recent",
-      name,
-    );
+    capture.observe(file, io.stat(), false);
+    assert.equal(capture.finish(), name === "old" || name === "recent", name);
   }
 });
 
@@ -254,8 +250,8 @@ test("witnesses and preflight stay within the visited-path and hello bounds", as
   const io = fixture();
   const capture = new CaptureDurability(hint, io.runtime);
   capture.budget(8 * 1024 * 1024 - Buffer.byteLength(file) - 47);
-  await capture.observe(file, io.stat(), false);
-  assert.equal(await capture.finish(), false);
+  capture.observe(file, io.stat(), false);
+  assert.equal(capture.finish(), false);
   assert.equal(capture.bytes, 0);
   const preflight = new CaptureDurability(hint, io.runtime);
   const byteLength = Buffer.byteLength;
@@ -267,7 +263,7 @@ test("witnesses and preflight stay within the visited-path and hello bounds", as
   );
   await preflight.prepare(bundleParams({ sourceRoot: file }));
   assert.deepEqual(io.reads, []);
-  assert.equal(await preflight.finish(), false);
+  assert.equal(preflight.finish(), false);
   for (const volumes of [
     Array.from({ length: 65 }, () => ({
       kind: "macos" as const,
@@ -277,6 +273,6 @@ test("witnesses and preflight stay within the visited-path and hello bounds", as
     [{ kind: "windows" as const, dev: "1", roots: ["x".repeat(64 * 1024)] }],
   ]) {
     const oversized = new CaptureDurability({ volumes }, io.runtime);
-    assert.equal(await oversized.finish(), false);
+    assert.equal(oversized.finish(), false);
   }
 });

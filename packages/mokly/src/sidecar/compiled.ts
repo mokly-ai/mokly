@@ -3,6 +3,7 @@ import { createRequire, isBuiltin } from "node:module";
 import path from "node:path";
 
 import { AuthoringRuntime } from "../authoring/runtime.js";
+import type { BundleCapture } from "../generated/sidecar/BundleCapture.js";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { BundleResult } from "../generated/sidecar/BundleResult.js";
 import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration.js";
@@ -105,24 +106,38 @@ export function bundleResult(generation: Generation): BundleResult {
 export async function reuse(
   generations: Iterable<Generation>,
   params: BundleParams,
+  capture: BundleCapture = "full",
 ): Promise<Generation | undefined> {
   const paths = await ModulePaths.create(params);
   params = { ...params, sourceRoot: paths.sourceRoot };
   const settings = (value: BundleParams) =>
     JSON.stringify({ ...value, evaluation: undefined });
   const toolchain = await toolchainIdentity();
-  for (const generation of generations) {
+  const candidates = [...generations];
+  const captured = candidates.filter(
+    ({ compiled: { reuseEvidence } }) =>
+      reuseEvidence.complete && reuseEvidence.uncaptured === undefined,
+  );
+  const uncaptured =
+    capture === "serveEdit"
+      ? candidates.filter(
+          ({ compiled: { reuseEvidence } }) =>
+            !reuseEvidence.complete &&
+            !reuseEvidence.durable &&
+            reuseEvidence.uncaptured === "serveEdit" &&
+            Object.keys(reuseEvidence.inputs).length === 0,
+        )
+      : [];
+  for (const generation of [...captured, ...uncaptured]) {
     if (
       !toolchain ||
       generation.compiled.toolchain !== toolchain ||
-      !generation.compiled.reuseEvidence.complete ||
       settings(generation.params) !== settings(params) ||
       JSON.stringify(generation.dependencyRoots) !==
         JSON.stringify(paths.dependencyRoots)
     )
       continue;
     const current =
-      (await currentEvidence(generation.compiled.reuseEvidence)) &&
       (await everyInput(
         Object.entries(generation.compiled.inputs),
         async ([file, digest]) => (await fileDigest(file)) === digest,
@@ -132,7 +147,9 @@ export async function reuse(
         async ([directory, names]) =>
           JSON.stringify(await directoryFiles(directory)) ===
           JSON.stringify(names),
-      ));
+      )) &&
+      (!generation.compiled.reuseEvidence.complete ||
+        currentEvidence(generation.compiled.reuseEvidence));
     if (current)
       return restore(params, generation.compiled, generation.modules);
   }

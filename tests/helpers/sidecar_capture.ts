@@ -13,7 +13,7 @@ export function capture() {
       ...captureRuntime,
       platform: "linux",
       now: () => now,
-      filesystem: async () => 0xef53n,
+      filesystem: () => 0xef53n,
     },
   );
 }

@@ -68,20 +68,30 @@ remains, as in a one-slot pool, the pool stops. The
 [source root scheduling contract](../../docs/protocol/mokly-sidecar-root-scheduling.md)
 owns these rules.
 
-After the final release of a generation with complete reuse evidence, the
+After the final release of a generation with captured reuse evidence, the
 pool keeps its bundle settings, module graph, compiled code, input digests,
-and directory lists in a bounded memory store. The final release of an
-incomplete generation removes the older entry with equal settings and keeps
-nothing. The
-[compiled recipes contract](../../docs/protocol/mokly-sidecar-modules.md#compiled-recipes-and-release)
+and directory lists in a bounded memory store. Captured evidence is complete
+and carries no marker. The pool also keeps a Serve edit generation with a
+toolchain identity whose evidence holds only the `uncaptured` marker. The
+final release of an unmarked incomplete generation removes the older entry
+with equal settings and keeps nothing. The
+[compiled recipes contract](../../docs/protocol/mokly-sidecar-recipes.md)
 owns the retention rule and the bound. Each entry costs the bytes of its
 serialized `restoreGeneration` envelope, with its private seed id and
 without the LF delimiter. `MAX_FRAME_BYTES` bounds the total. A use counter,
 not a clock, orders eviction. Keeping or seeding an entry counts as a use.
 Before a `bundle` call, the pool restores the stored entry with equal
-settings under a private seed id. It then prepares the complete live
-generation with equal settings and the highest epoch. The generation id breaks
-an epoch tie. An incomplete generation never seeds a `bundle` call.
+settings under a private seed id. It then prepares the first live generation
+with equal settings: a captured generation before a marked one, then the
+highest epoch. The generation id breaks a tie. The `BundleCapture` of the
+call admits each seed. A `Full` call takes only captured seeds, and a
+`ServeEdit` call also takes marked ones. When the stored seed is marked and
+the live seed is captured, the pool prepares the live seed first. An unmarked
+incomplete generation never seeds a `bundle` call. After a captured live
+seed, a `ServeEdit` call also prepares the newest admissible marked live
+generation. Thus an older captured generation cannot hide the edit fallback
+on another worker. Captured candidates still take priority in the sidecar's
+reuse check.
 Directory membership can change without a change of the content id. The
 private seed id keeps a stored and a live recipe with the same content id
 apart, so both reach the sidecar's `reuse` check. Bundle results carry the
@@ -108,11 +118,14 @@ removes only the publication that a `RecordToken` names. Both return a
 `WriteOutcome`. The `effects` method
 of each outcome maps it once to its `Effects`: the `cache` value of the timing
 record, at most one entry warning and one directory warning, and the
-`StoreState`. `ReusableRecipe::new` accepts only a compilation with complete
-reuse evidence. `DurableRecipe::new` accepts only such a recipe whose evidence
-is also durable, so no store caller can write or read a compilation without a
-stable capture. `disk_seed_request` builds the `restoreGeneration` request of a
-stored `DurableRecipe`. Live generations keep their `CompiledGeneration` for
+`StoreState`. `ReusableRecipe::new` accepts a compilation with captured reuse
+evidence. It also accepts a Serve edit compilation with a toolchain identity
+whose evidence holds only the `uncaptured` marker, with `complete` and
+`durable` false and no inputs. `DurableRecipe::new` accepts only a recipe
+whose evidence is captured and durable, with no marker, so no store caller
+can write or read a compilation without a stable capture.
+`disk_seed_request` builds the `restoreGeneration` request of a stored
+`DurableRecipe`. Live generations keep their `CompiledGeneration` for
 explicit restoration. `mokly-compare` implements the store over the OS cache.
 The
 [bundle cache contract](../../docs/protocol/mokly-base-cache.md#bundle-entries)
@@ -123,10 +136,10 @@ starts no process and reads no file. A pool with a store sets
 `Launch::capture_durability` for each worker that it starts, so `NodeFactory`
 sends a `CaptureHint` in `hello`. Without a store, the sidecar records no
 capture witnesses and proves no capture stable. When a `bundle` call has no
-complete live
-or released seed, the pool loads the entry of its settings from the bundle
-store. On a hit, it restores the entry with `disk_seed_request` under a
-private `disk:` seed id before the request. The pool reads the store at most
+live or released seed that its capture admits, the pool loads the entry of
+its settings from the bundle store, in both capture modes. On a hit, it
+restores the entry with `disk_seed_request` under a private `disk:` seed id
+before the request. The pool reads the store at most
 once for each call, also when the call runs again after a crash or a timeout.
 A failed restore invalidates that publication, and the result reports
 `damaged`, or `unavailable` when that removal finds the store unusable. After
@@ -134,18 +147,18 @@ a successful `bundle` call, the pool compares the runtime key of the result
 with the keys of the seeds and of the generations that the worker already
 holds. It sets the `cache` field of the result, which never
 crosses the wire, to `memory` or `hit` for a reused compilation, or else to
-the reason why the sidecar compiled. Then it offers the served recipe to
-`save` when its reuse evidence is complete and durable. The store decides
-whether to
-write it. The pool keeps no record of earlier store calls, and it calls the
-store outside its mutex. Without a store, the pool reads and writes no entry,
+the reason why the sidecar compiled. A `Full` call then offers the served
+recipe to `save` when its reuse evidence is captured and durable. A
+`ServeEdit` call offers nothing. The store decides whether to write it. The
+pool keeps no record of earlier store calls, and it calls the store outside
+its mutex. Without a store, the pool reads and writes no entry,
 and a compile without a memory seed reports `unavailable`.
 
 The core calls `SidecarPool::served_generation` with the id and the epoch of a
-live generation when it serves that generation without a `bundle` call. The
-pool then offers the recipe of that generation to `save` in the same way. It
-offers nothing after a stop or after the release of that epoch. The method
-returns no error.
+live generation when it serves that generation without a `bundle` call, but
+only in the `Full` capture mode. The pool then offers the recipe of that
+generation to `save` in the same way. It offers nothing after a stop or after
+the release of that epoch. The method returns no error.
 
 Bundle results include the digests of the bytes consumed by each module. An
 optional evaluation digest isolates CSS Modules and resolved configuration
@@ -311,15 +324,16 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `PoolOptions`, the launch settings and the pool size and deadline override.
   The pool sets `Launch::capture_durability` when it keeps a bundle store.
 - [`src/pool_recipes.rs`](./src/pool_recipes.rs) defines `Recipes`, the
-  bounded store of released compiled recipes with complete reuse evidence.
+  bounded store of released compiled recipes with captured reuse evidence or
+  the Serve edit marker. It seeds only a recipe that the call's capture admits.
 - [`src/pool_releases.rs`](./src/pool_releases.rs) keeps the recipe of each
   final release in that store, and
-  [`src/pool_preparation.rs`](./src/pool_preparation.rs) selects the complete
-  memory seeds of each `bundle` call.
+  [`src/pool_preparation.rs`](./src/pool_preparation.rs) selects the memory
+  seeds that each `bundle` call's capture admits, captured seeds first.
 - [`src/pool_bundle_cache.rs`](./src/pool_bundle_cache.rs) seeds a `bundle`
   call from the bundle store, keeps the request-local provenance of its
-  seeds, sets the `cache` outcome of its result, and offers served recipes to
-  the store.
+  seeds, sets the `cache` outcome of its result, and offers the served recipe
+  of each `Full` call to the store.
 - [`src/bundle_store.rs`](./src/bundle_store.rs) defines `BundleStore` with
   `load`, `save`, and `invalidate`, its `ReadOutcome` and `WriteOutcome`, and
   `RecordToken`, the id of one publication.
@@ -328,11 +342,13 @@ spawn the built sidecar and render a component, screen, story, and page. The
   value, its warnings, and the store state. `Effects::with_entry_fault` adds
   an entry fault to the effects of a write.
 - [`src/reusable_recipe.rs`](./src/reusable_recipe.rs) defines
-  `ReusableRecipe`, which admits only complete reuse evidence, and
+  `ReusableRecipe`, which admits captured reuse evidence or a marked Serve
+  edit compilation with a toolchain identity, and
   `disk_seed_request`, the restore request of a stored `DurableRecipe`.
 - [`src/durable_recipe.rs`](./src/durable_recipe.rs) defines `DurableRecipe`,
   the only recipe that the bundle store reads and writes. It admits a
-  `ReusableRecipe` only when its reuse evidence is also durable.
+  `ReusableRecipe` only when its reuse evidence is captured and durable, with
+  no marker.
 - [`src/capture_hint.rs`](./src/capture_hint.rs) defines `CaptureHint`, the
   private `hello` field that asks the sidecar for capture witnesses, and
   `CaptureVolume`. `CaptureHint::from_volumes` keeps at most 64 volumes from
@@ -350,10 +366,24 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [`src/client.rs`](./src/client.rs) defines `Client`, which performs hello,
   forwards diagnostic events, and decodes each result.
 - [`src/codec.rs`](./src/codec.rs) frames NDJSON messages within
-  `MAX_FRAME_BYTES`.
+  `MAX_FRAME_BYTES`. After each complete frame, its `Decoder` keeps at most
+  16 KiB of buffer capacity.
 - [`src/methods.rs`](./src/methods.rs), [`src/results.rs`](./src/results.rs),
   and [`src/wire.rs`](./src/wire.rs) define the request payloads, the result
-  payloads, and the envelopes of the wire protocol.
+  payloads, and the envelopes of the wire protocol. `BundleRequest` flattens
+  the persisted `Bundle` settings and adds the optional request-only
+  `BundleCapture`, `Full` by default or `ServeEdit`. Pool state, store calls,
+  and restore requests take only the `Bundle` settings. A successful `Response`
+  keeps its result as owned raw JSON until `decode_result` decodes the type of
+  the pending request. The private [`src/wire_decode.rs`](./src/wire_decode.rs)
+  decodes each envelope field by field, with no generic JSON tree.
+  `results::Bundle` and the `RestoreGeneration` of
+  [`src/compiled.rs`](./src/compiled.rs) hold the compilation in an `Arc`, and
+  a compilation holds its `ReuseEvidence` in an `Arc`. Pool records, store
+  offers, and restore requests share the compilation instead of copying it.
+  `ReuseEvidence` can carry the `UncapturedEvidence` marker of a deliberate
+  Serve edit omission. Its `captured`, `serve_edit`, and `reusable` methods
+  decide which candidates a call admits.
 - [`src/definitions.rs`](./src/definitions.rs) defines `Definitions`, the
   inventory that `describe` returns.
 - [`src/error.rs`](./src/error.rs) defines `Error`, the fail-closed error
@@ -365,6 +395,7 @@ spawn the built sidecar and render a component, screen, story, and page. The
 
 - [Sidecar contract](../../docs/protocol/mokly-sidecar.md).
 - [Bundle cache entries](../../docs/protocol/mokly-base-cache.md#bundle-entries).
+- [Compiled recipes and capture modes](../../docs/protocol/mokly-sidecar-recipes.md).
 - [Cancellation and timeouts](../../docs/protocol/mokly-sidecar-lifecycle.md).
 - [Memory sampling](../../docs/protocol/mokly-sidecar-memory.md).
 - [Timing records](../../docs/protocol/mokly-sidecar-timings.md).

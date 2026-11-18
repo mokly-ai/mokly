@@ -41,11 +41,12 @@ fn fixture() -> (State, Slot) {
         "g".into(),
         Arc::new(CompiledGeneration {
             toolchain: "fixture".into(),
-            reuse_evidence: ReuseEvidence {
+            reuse_evidence: Arc::new(ReuseEvidence {
+                uncaptured: None,
                 durable: true,
                 complete: true,
                 inputs: Default::default(),
-            },
+            }),
             unmapped_dependency_directories: None,
             identity: "compiled".into(),
             code: "code".into(),

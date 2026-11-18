@@ -1,6 +1,7 @@
 //! Foreign headers, typed damage, and both independent encoded byte limits.
 
 use std::io::{self, Cursor, Read, Seek, SeekFrom};
+use std::sync::Arc;
 
 use mokly_sidecar::bundle_outcomes::EntryFault;
 use mokly_sidecar::reusable_recipe::disk_seed_request;
@@ -72,9 +73,11 @@ fn damage_wrong_settings_and_incomplete_evidence_never_supply_a_disk_seed() {
     let mut other = restore();
     other.params.source_root = "/another-repository".into();
     let mut incomplete = restore();
-    incomplete.compiled.reuse_evidence.complete = false;
+    let compiled = Arc::make_mut(&mut incomplete.compiled);
+    Arc::make_mut(&mut compiled.reuse_evidence).complete = false;
     let mut unverified = restore();
-    unverified.compiled.reuse_evidence.durable = false;
+    let compiled = Arc::make_mut(&mut unverified.compiled);
+    Arc::make_mut(&mut compiled.reuse_evidence).durable = false;
     let unverified = serde_json::to_vec(&StoredBundle {
         kind: StoredKind::Bundles,
         recipe: unverified,

@@ -11,11 +11,8 @@ pub struct DurableRecipe(ReusableRecipe);
 impl DurableRecipe {
     /// Admit only complete evidence from a verified stable capture.
     pub fn new(recipe: ReusableRecipe) -> Option<Self> {
-        recipe
-            .compiled()
-            .reuse_evidence
-            .durable
-            .then_some(Self(recipe))
+        let evidence = &recipe.compiled().reuse_evidence;
+        (evidence.captured() && evidence.durable).then_some(Self(recipe))
     }
 }
 

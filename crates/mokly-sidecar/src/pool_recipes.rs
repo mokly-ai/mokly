@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crate::codec::{self, MAX_FRAME_BYTES};
 use crate::compiled::{CompiledGeneration, RestoreGeneration};
-use crate::methods::{Bundle, Call};
+use crate::methods::{Bundle, BundleCapture, Call};
 use crate::results::Module;
 use crate::reusable_recipe::ReusableRecipe;
 use crate::wire::Request;
@@ -30,7 +30,7 @@ impl Recipe {
             generation: seed_id(self.reusable.generation()),
             params: self.reusable.params().clone(),
             modules: self.reusable.modules().to_vec(),
-            compiled: (**self.reusable.compiled()).clone(),
+            compiled: self.reusable.compiled().clone(),
         })
     }
 }
@@ -95,8 +95,20 @@ impl Recipes {
     }
 
     /// Touch and materialize a retained recipe for a bundle request.
-    pub(super) fn seed(&mut self, params: &Bundle) -> Option<Box<RestoreGeneration>> {
+    pub(super) fn seed(
+        &mut self,
+        params: &Bundle,
+        capture: BundleCapture,
+    ) -> Option<Box<RestoreGeneration>> {
         let index = self.find(params)?;
+        if !self.entries[index]
+            .reusable
+            .compiled()
+            .reuse_evidence
+            .reusable(capture)
+        {
+            return None;
+        }
         self.counter += 1;
         self.entries[index].used = self.counter;
         Some(self.entries[index].restore())

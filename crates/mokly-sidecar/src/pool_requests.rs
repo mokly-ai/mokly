@@ -81,18 +81,18 @@ impl Pool {
                         .or_default()
                         .insert(epoch);
                     let compiled = &result.compiled;
-                    let restored = state.recipes.take_reused(bundle, compiled);
+                    let restored = state.recipes.take_reused(&bundle.params, compiled);
                     let shared = state
                         .compiled
                         .values()
                         .find(|value| value.same_recipe(compiled))
                         .cloned()
                         .or(restored)
-                        .unwrap_or_else(|| Arc::new(compiled.clone()));
+                        .unwrap_or_else(|| compiled.clone());
                     state.compiled.insert(result.generation.clone(), shared);
                     state
                         .bundles
-                        .insert(result.generation.clone(), bundle.clone());
+                        .insert(result.generation.clone(), bundle.params.clone());
                     slot.generations.insert(result.generation.clone(), epoch);
                     slot.maps.remove(&result.generation);
                     slot.described.remove(&result.generation);

@@ -65,17 +65,25 @@ export class Session {
     if (request.method === "hello") protocol("hello already completed");
     switch (request.method) {
       case "bundle": {
-        const previous = await reuse(this.generations.values(), request.params);
+        const { capture = "full", ...params } = request.params;
+        const previous = await reuse(
+          this.generations.values(),
+          params,
+          capture,
+        );
         const { generation, result } = previous
           ? { generation: previous, result: bundleResult(previous) }
           : await bundle(
-              request.params,
+              params,
               (options) => {
                 this.operation("esbuild");
                 return this.compile(options);
               },
               this.measurements,
-              this.capture ? new CaptureDurability(this.capture) : undefined,
+              capture === "full" && this.capture
+                ? new CaptureDurability(this.capture)
+                : undefined,
+              capture,
             );
         this.generations.set(generation.id, generation);
         return result;

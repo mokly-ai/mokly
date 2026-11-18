@@ -7,7 +7,7 @@ import type {
   CaptureStat,
 } from "../packages/mokly/src/sidecar/capture-runtime.js";
 
-test("retained raw link targets cannot exceed the visited-path bound", async () => {
+test("retained raw link targets cannot exceed the visited-path bound", () => {
   const directory: CaptureStat = {
     dev: 1n,
     ino: 2n,
@@ -29,19 +29,19 @@ test("retained raw link targets cannot exceed the visited-path bound", async () 
     wait: async () => {
       throw new Error("unexpected barrier");
     },
-    lstat: async (file) =>
+    lstat: (file) =>
       file.startsWith("/capture/links/link-") ? link : directory,
-    stat: async () => directory,
-    readlink: async () => "./".repeat(2000) + "../shared",
-    handleStat: async () => {
+    stat: () => directory,
+    readlink: () => "./".repeat(2000) + "../shared",
+    handleStat: () => {
       throw new Error("unexpected handle stat");
     },
-    filesystem: async () => 0xef53n,
+    filesystem: () => 0xef53n,
   };
   const capture = new CaptureDurability({ volumes: [] }, runtime);
-  await capture.path("/capture/links/link-0");
-  assert.equal(await capture.finish(), true);
+  capture.path("/capture/links/link-0");
+  assert.equal(capture.finish(), true);
   for (let index = 1; index < 2300; index++)
-    await capture.path(`/capture/links/link-${index}`);
-  assert.equal(await capture.finish(), false);
+    capture.path(`/capture/links/link-${index}`);
+  assert.equal(capture.finish(), false);
 });

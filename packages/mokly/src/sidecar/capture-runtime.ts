@@ -1,5 +1,5 @@
+import fs from "node:fs";
 import type { BigIntStats } from "node:fs";
-import fs from "node:fs/promises";
 
 /** Only the fields used to verify a capture, with no integer precision loss. */
 export type CaptureStat = Pick<
@@ -19,11 +19,11 @@ export interface CaptureRuntime {
   platform: NodeJS.Platform;
   now(): bigint;
   wait(milliseconds: number): Promise<void>;
-  lstat(file: string): Promise<CaptureStat>;
-  stat(file: string): Promise<CaptureStat>;
-  readlink(file: string): Promise<string>;
-  handleStat(file: string): Promise<CaptureStat>;
-  filesystem(file: string): Promise<bigint>;
+  lstat(file: string): CaptureStat;
+  stat(file: string): CaptureStat;
+  readlink(file: string): string;
+  handleStat(file: string): CaptureStat;
+  filesystem(file: string): bigint;
 }
 
 export const captureRuntime: CaptureRuntime = {
@@ -31,20 +31,20 @@ export const captureRuntime: CaptureRuntime = {
   now: () => BigInt(Date.now()) * 1_000_000n,
   wait: (milliseconds) =>
     new Promise((resolve) => setTimeout(resolve, milliseconds)),
-  lstat: (file) => fs.lstat(file, { bigint: true }),
-  stat: (file) => fs.stat(file, { bigint: true }),
-  readlink: (file) => fs.readlink(file),
+  lstat: (file) => fs.lstatSync(file, { bigint: true }),
+  stat: (file) => fs.statSync(file, { bigint: true }),
+  readlink: (file) => fs.readlinkSync(file),
   // Affected libuv path-stat layouts read the wrong Windows device bytes.
   // Handle stats query the volume directly and preserve its real serial.
-  handleStat: async (file) => {
-    const handle = await fs.open(file, "r");
+  handleStat: (file) => {
+    const handle = fs.openSync(file, "r");
     try {
-      return await handle.stat({ bigint: true });
+      return fs.fstatSync(handle, { bigint: true });
     } finally {
-      await handle.close();
+      fs.closeSync(handle);
     }
   },
-  filesystem: async (file) => (await fs.statfs(file, { bigint: true })).type,
+  filesystem: (file) => fs.statfsSync(file, { bigint: true }).type,
 };
 
 function sameStamp(
@@ -82,18 +82,18 @@ export function sameCaptureStat(
 }
 
 /** Windows handles supply dev; path reads retain the requested link semantics. */
-export async function captureSnapshot(
+export function captureSnapshot(
   runtime: CaptureRuntime,
   file: string,
   stat: CaptureStat,
   follow: boolean,
   metadata: boolean,
-): Promise<CaptureStat> {
+): CaptureStat {
   if (runtime.platform !== "win32") return stat;
   if (metadata ? !stat.isFile() : !stat.isDirectory())
     throw new Error("capture witness kind changed");
-  const opened = await runtime.handleStat(file);
-  const after = await (follow ? runtime.stat(file) : runtime.lstat(file));
+  const opened = runtime.handleStat(file);
+  const after = follow ? runtime.stat(file) : runtime.lstat(file);
   if (
     !samePathStat(stat, opened, metadata) ||
     !samePathStat(after, opened, metadata)

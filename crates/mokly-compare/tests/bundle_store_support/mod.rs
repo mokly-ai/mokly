@@ -73,11 +73,12 @@ pub fn recipe(params: Bundle, code: &str) -> DurableRecipe {
             vec![],
             Arc::new(CompiledGeneration {
                 toolchain: "fixture".into(),
-                reuse_evidence: ReuseEvidence {
+                reuse_evidence: Arc::new(ReuseEvidence {
+                    uncaptured: None,
                     durable: true,
                     complete: true,
                     inputs: Default::default(),
-                },
+                }),
                 unmapped_dependency_directories: None,
                 identity: code.into(),
                 code: code.into(),

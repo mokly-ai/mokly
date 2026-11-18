@@ -62,6 +62,18 @@ test("bundle recipes carry one module graph and fail with a typed size diagnosti
     kind: "directory",
     entries: [{ name: "a".repeat(4096), kind: "file", target: null }],
   };
+  const oversized = result.compiled.reuseEvidence;
+  assert.doesNotThrow(() => checkRecipeSize(params, result, 2048));
+  assert.deepEqual(result.compiled.reuseEvidence, {
+    complete: false,
+    durable: false,
+    inputs: {},
+  });
+  result.compiled.reuseEvidence = {
+    ...oversized,
+    complete: false,
+    uncaptured: "serveEdit",
+  };
   assert.doesNotThrow(() => checkRecipeSize(params, result, 2048));
   assert.deepEqual(result.compiled.reuseEvidence, {
     complete: false,

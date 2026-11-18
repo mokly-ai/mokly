@@ -7,7 +7,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::bundle_outcomes::CacheOutcome;
 use crate::bundle_store::{BundleStoreMock, ReadMiss, ReadOutcome, WriteOutcome};
 use crate::error::{Error, RemoteCode, RequestCode};
-use crate::methods::Call;
+use crate::methods::{BundleCapture, BundleRequest, Call};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_state::State;
 use crate::wire::MethodResult;
@@ -68,8 +68,10 @@ fn incomplete_or_unverified_bundles_and_direct_serves_never_write() {
                 .answers_arc(Arc::new(move |_, _, _| {
                     let mut result = answer("partial");
                     if let MethodResult::Bundle(bundle) = &mut result {
-                        bundle.compiled.reuse_evidence.complete = complete;
-                        bundle.compiled.reuse_evidence.durable = durable;
+                        let compiled = Arc::make_mut(&mut bundle.compiled);
+                        let evidence = Arc::make_mut(&mut compiled.reuse_evidence);
+                        evidence.complete = complete;
+                        evidence.durable = durable;
                     }
                     Ok(result)
                 })),
@@ -123,7 +125,10 @@ fn failed_bundle_requests_never_publish_the_unserved_live_recipe() {
     ));
     let pool = pool(store, worker);
     live(&pool, "old", 1, true, false);
-    let result = pool.request(Call::Bundle(super::params()));
+    let result = pool.request(Call::Bundle(BundleRequest {
+        params: super::params(),
+        capture: None,
+    }));
     assert!(matches!(
         result,
         Err(Error::Remote {
@@ -164,4 +169,31 @@ fn served_notices_release_the_pool_mutex_before_optional_store_io() {
     live(&pool, "served", 1, true, false);
     pool.served_generation("served", 1);
     assert_eq!(*offered.lock().unwrap(), ["served"]);
+}
+
+#[test]
+fn edit_requests_never_offer_even_captured_results_and_full_requests_still_offer_them() {
+    let offered = Arc::new(Mutex::new(vec![]));
+    let saved = offered.clone();
+    let store = Unimock::new(
+        BundleStoreMock::save
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, recipe| {
+                saved.lock().unwrap().push(recipe.generation().to_owned());
+                WriteOutcome::Written
+            })),
+    );
+    let pool = pool(store, worker(Arc::default(), "captured"));
+    live(&pool, "old", 1, true, false);
+    let edited = pool
+        .request(Call::Bundle(BundleRequest {
+            params: super::params(),
+            capture: Some(BundleCapture::ServeEdit),
+        }))
+        .unwrap()
+        .into_bundle();
+    assert_eq!(*offered.lock().unwrap(), Vec::<String>::new());
+    assert_eq!(pool.lock().bundles[&edited.generation], super::params());
+    bundle(&pool);
+    assert_eq!(*offered.lock().unwrap(), ["captured"]);
 }

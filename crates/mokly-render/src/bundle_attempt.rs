@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Weak};
 
 use mokly_sidecar::bundle_outcomes::CacheOutcome;
-use mokly_sidecar::methods::{Bundle, Call};
+use mokly_sidecar::methods::{Bundle, BundleCapture, BundleRequest, Call};
 use mokly_sidecar::results;
 
 use crate::bundle::BundleState;
@@ -25,7 +25,10 @@ pub(crate) fn request(
         cache = tracing::field::Empty
     );
     let _scope = span.enter();
-    let result = match runtime.pool.request(Call::Bundle(params.clone())) {
+    let result = match runtime.pool.request(Call::Bundle(BundleRequest {
+        params: params.clone(),
+        capture: Some(runtime.bundle_capture),
+    })) {
         Ok(result) => result.into_bundle(),
         Err(source) => return Err(RenderError::Sidecar { source }),
     };
@@ -44,7 +47,9 @@ pub(crate) fn request(
 
 /// Apply disk publication when the core serves a retained state directly.
 pub(crate) fn served(runtime: &Runtime, lease: &BundleLease) {
-    runtime.pool.served_generation(&lease.id, lease.epoch);
+    if runtime.bundle_capture == BundleCapture::Full {
+        runtime.pool.served_generation(&lease.id, lease.epoch);
+    }
 }
 /// Find a retained evaluated state without extending the registry lifetime.
 pub(crate) fn existing(runtime: &Runtime, id: &str) -> Option<Arc<BundleState>> {

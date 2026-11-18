@@ -69,6 +69,13 @@ head renders, under the
 In Serve, the `ServeDirectory` of the bundle cache
 and the base cache notice of each comparison attempt share one flag.
 `ServeDirectory` does not depend on a comparison attempt.
+Serve prepares its head in the `full` mode of the
+[capture modes](../../docs/protocol/mokly-sidecar-recipes.md#capture-modes)
+until it publishes its first state. After that publication, and before Serve
+reports readiness, `ServeServices::head_published` switches each later head
+preparation to `serveEdit`. Those preparations capture no reuse evidence and
+offer nothing to the bundle cache. The base side of Serve, `build`, and
+`publish` keep the `full` mode.
 
 Serve validates an HTML, JavaScript, or mixed catalogue before it reserves a
 loopback port, then serves it through `mokly-server` under the
@@ -239,6 +246,9 @@ reserves an 8 MiB main-thread stack through its linker settings in
   cache across Serve preparation and live views. It gives the sidecar gate
   the command's `Diagnostics` reporter. `ServeServices::new` takes that
   `ServeOutput` and creates the one announcement flag of the Serve process.
+  `ServeServices::head_published` sets the flag that gives each later head
+  preparation the `ServeEdit` capture mode. `entry_serve.rs` calls it after
+  the first successful publication, before readiness.
   [`src/serve_delivery.rs`](./src/serve_delivery.rs) passes that flag to the
   base caches of Serve Changes.
 - [`src/serve_pool.rs`](./src/serve_pool.rs) defines `ServePool`, the

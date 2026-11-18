@@ -2,7 +2,7 @@
 
 use std::path::Path;
 use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
 use mokly_catalogue::discovery::Discoverer;
@@ -19,6 +19,7 @@ use mokly_cli::serve_settings::ServeSettings;
 use mokly_graph::cache::RenderCache;
 use mokly_graph::source_snapshot::SourceSnapshot;
 use mokly_render::runtime::Runtime;
+use mokly_sidecar::methods::BundleCapture;
 use mokly_sidecar::pool::SidecarPool;
 use mokly_sidecar::workers::Diagnostics;
 use mokly_source_interface::tree::SourceTree;
@@ -38,6 +39,7 @@ pub(super) struct ServeServices {
     pub(super) preparation: Arc<dyn ServePreparation>,
     pub(super) pool: Arc<dyn SidecarPool>,
     pub(super) cache_announced: Arc<AtomicBool>,
+    head_published: Arc<AtomicBool>,
 }
 
 /// Command output needed to share a directory notice with later base attempts.
@@ -48,6 +50,11 @@ pub(super) struct ServeOutput {
 }
 
 impl ServeServices {
+    /// Only an installed initial head and successful Serve readiness end startup capture.
+    pub(super) fn head_published(&self) {
+        self.head_published.store(true, Ordering::Release);
+    }
+
     pub(super) fn new(
         cwd: &Path,
         common: &Common,
@@ -107,10 +114,12 @@ impl ServeServices {
         let mut runtime = (*services.runtime).clone();
         runtime.pool = pool.clone();
         let runtime = Arc::new(runtime);
+        let head_published = Arc::new(AtomicBool::new(false));
         let preparation = Arc::new(AttemptPreparation {
             tree: tree.clone(),
             runtime: runtime.clone(),
             settings: ServeSettings::new(&config),
+            head_published: head_published.clone(),
         });
         Ok(Self {
             sidecars,
@@ -120,6 +129,7 @@ impl ServeServices {
             preparation,
             pool,
             cache_announced,
+            head_published,
         })
     }
 }
@@ -128,6 +138,7 @@ struct AttemptPreparation {
     settings: ServeSettings,
     tree: Arc<dyn SourceTree>,
     runtime: Arc<Runtime>,
+    head_published: Arc<AtomicBool>,
 }
 impl ServePreparation for AttemptPreparation {
     fn prepare(&self, cwd: &Path, options: &Common) -> Result<PreparedServe, BuildError> {
@@ -139,7 +150,13 @@ impl ServePreparation for AttemptPreparation {
         };
         options::apply_base_install_scripts(&mut config, options.base_install_scripts_override());
         self.settings.validate(&config)?;
-        let runtime = Arc::new(self.runtime.with_tree(tree.clone()));
+        let mut runtime = self.runtime.with_tree(tree.clone());
+        runtime.bundle_capture = if self.head_published.load(Ordering::Acquire) {
+            BundleCapture::ServeEdit
+        } else {
+            BundleCapture::Full
+        };
+        let runtime = Arc::new(runtime);
         let preparation: &dyn ServePreparation = &CatalogueServe {
             config: Arc::new(PreparedConfig(config)),
             catalogue: Arc::new(Builder {

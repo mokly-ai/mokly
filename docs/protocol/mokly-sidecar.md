@@ -55,22 +55,22 @@ both sides were rejected, because the copies drift and increase the code size.
 
 ## Methods
 
-| Method              | Params                                                                                                            | Result                                                                    |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `hello`             | optional `timings` boolean, default `false`, and optional `capture` hint                                          | `{ version }`                                                             |
-| `bundle`            | entry files, renderer, stories files, resolution settings, source root, configuration directory, repository roots | `{ generation, modules, compiled }`                                       |
-| `restoreGeneration` | generation, original bundle params, module graph, immutable compiled recipe                                       | nothing                                                                   |
-| `describe`          | generation                                                                                                        | `{ screens, pages, useCases, folders, components, stories, diagnostics }` |
-| `renderScreen`      | generation, handle, effective entry, props, viewport, colour scheme                                               | render result                                                             |
-| `renderComponent`   | generation, handle, effective entry, props, tagged slots, viewport, colour scheme, enclosing ignore scope         | render result                                                             |
-| `renderStory`       | generation, story id, props, viewport, colour scheme                                                              | render result                                                             |
-| `renderPage`        | generation, handle                                                                                                | `{ html, resources }`                                                     |
-| `processCss`        | context, source root, repository roots, resolution settings, PostCSS module, source path, text                    | `{ text, dependencies, readEvidence }`                                    |
-| `bindings`          | generation, handle-to-path-and-title table                                                                        | nothing                                                                   |
-| `disposeContext`    | PostCSS context                                                                                                   | nothing                                                                   |
-| `cssModules`        | generation, class maps by stylesheet path                                                                         | nothing                                                                   |
-| `dispose`           | generation                                                                                                        | nothing                                                                   |
-| `shutdown`          | none                                                                                                              | nothing                                                                   |
+| Method              | Params                                                                                                                                    | Result                                                                    |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `hello`             | optional `timings` boolean, default `false`, and optional `capture` hint                                                                  | `{ version }`                                                             |
+| `bundle`            | entry files, renderer, stories files, resolution settings, source root, configuration directory, repository roots, and optional `capture` | `{ generation, modules, compiled }`                                       |
+| `restoreGeneration` | generation, original bundle params, module graph, immutable compiled recipe                                                               | nothing                                                                   |
+| `describe`          | generation                                                                                                                                | `{ screens, pages, useCases, folders, components, stories, diagnostics }` |
+| `renderScreen`      | generation, handle, effective entry, props, viewport, colour scheme                                                                       | render result                                                             |
+| `renderComponent`   | generation, handle, effective entry, props, tagged slots, viewport, colour scheme, enclosing ignore scope                                 | render result                                                             |
+| `renderStory`       | generation, story id, props, viewport, colour scheme                                                                                      | render result                                                             |
+| `renderPage`        | generation, handle                                                                                                                        | `{ html, resources }`                                                     |
+| `processCss`        | context, source root, repository roots, resolution settings, PostCSS module, source path, text                                            | `{ text, dependencies, readEvidence }`                                    |
+| `bindings`          | generation, handle-to-path-and-title table                                                                                                | nothing                                                                   |
+| `disposeContext`    | PostCSS context                                                                                                                           | nothing                                                                   |
+| `cssModules`        | generation, class maps by stylesheet path                                                                                                 | nothing                                                                   |
+| `dispose`           | generation                                                                                                                                | nothing                                                                   |
+| `shutdown`          | none                                                                                                                                      | nothing                                                                   |
 
 The [render records contract](./mokly-sidecar-render-records.md) defines the
 render result, bindings, entry context, usage drafts, and slot inputs. Page results follow the [pages contract](./mokly-pages.md).
@@ -100,7 +100,7 @@ part of the key, so a base with its own installation shares no JavaScript
 render.
 Decision: equal inputs share entries across sides. A side marker in every key
 was rejected, because the base would render every unchanged view again.
-[Compiled recipes](./mokly-sidecar-modules.md#compiled-recipes-and-release)
+[Compiled recipes](./mokly-sidecar-recipes.md)
 define replay and release.
 
 The module graph reports the digest of each module's consumed bytes, sources,

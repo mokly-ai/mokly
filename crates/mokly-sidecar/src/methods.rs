@@ -76,6 +76,29 @@ pub struct Bundle {
     pub repository_roots: Vec<String>,
 }
 
+/// Request-local evidence capture policy, absent from persisted bundle settings.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub enum BundleCapture {
+    /// Capture complete physical inputs and optional durability witnesses.
+    #[default]
+    Full,
+    /// Keep only the existing live reuse inputs after Serve publishes its head.
+    ServeEdit,
+}
+
+/// Compile settings and a request-only capture policy.
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+pub struct BundleRequest {
+    /// Persisted compilation settings, with no capture control.
+    #[serde(flatten)]
+    pub params: Bundle,
+    /// Omission selects full capture.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub capture: Option<BundleCapture>,
+}
+
 /// Preview colour scheme.
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "lowercase")]
@@ -213,7 +236,7 @@ pub enum Call {
     /// Exchange package versions.
     Hello(Hello),
     /// Compile without evaluating consumer modules.
-    Bundle(Bundle),
+    Bundle(BundleRequest),
     /// Restore an immutable compiled generation in another worker.
     RestoreGeneration(Box<RestoreGeneration>),
     /// Evaluate and inventory definitions.

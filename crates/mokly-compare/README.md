@@ -97,10 +97,10 @@ other case, `save` replaces the entry. A damaged or unreadable receipt makes
 the result `WriteOutcome::EntryFault`, which adds that entry fault to the
 effects of the write. A `load` hit also checks that the receipt digest matches
 the decoded recipe, or it rejects the entry as damaged. A payload whose recipe
-lacks complete and durable reuse evidence is damaged too, because the decoder
-accepts only a `DurableRecipe`. The CLI adds this
-store to the sidecar pool of each command when `SystemLocations` gives a cache
-location. The
+lacks captured and durable reuse evidence, or carries the `uncaptured` marker,
+is damaged too, because the decoder accepts only a `DurableRecipe`. The CLI
+adds this store to the sidecar pool of each command when `SystemLocations`
+gives a cache location. The
 [bundle cache contract](../../docs/protocol/mokly-base-cache.md#bundle-entries)
 owns the entry format, the fault classes, the locks, and the bound.
 

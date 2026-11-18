@@ -8,7 +8,9 @@ use unimock::{MockFn, Unimock, matching};
 use crate::bindings::{Bindings, EntryBinding};
 use crate::compiled_fixture::compiled;
 use crate::definitions::Definitions;
-use crate::methods::{Bundle, Call, CssModules, Generation, ModuleResolution, RenderPage};
+use crate::methods::{
+    Bundle, BundleRequest, Call, CssModules, Generation, ModuleResolution, RenderPage,
+};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
 use crate::pool_state::Slot;
@@ -50,7 +52,7 @@ fn worker(expected: &[&str], calls: usize) -> Unimock {
                         unmapped_dependency_directories: None,
                         epoch: 0,
                         cache: None,
-                        compiled: compiled("g"),
+                        compiled: Arc::new(compiled("g")),
                         generation: "g".into(),
                         modules: Vec::new(),
                     })),
@@ -198,7 +200,11 @@ fn a_busy_second_process_reloads_maps_after_release_and_rebundle() {
     );
     pool.release_generation("g", 0);
     pool.synchronize_releases();
-    pool.request(Call::Bundle(bundle())).unwrap();
+    pool.request(Call::Bundle(BundleRequest {
+        params: bundle(),
+        capture: None,
+    }))
+    .unwrap();
     pool.request(Call::CssModules(maps("new-control"))).unwrap();
     pool.request(Call::Describe(Generation {
         generation: "g".into(),

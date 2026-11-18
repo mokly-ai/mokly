@@ -1,7 +1,6 @@
 //! Reject foreign headers before payload reads, then hash and decode bounded data.
 
 use std::io::{BufReader, Read, SeekFrom};
-use std::sync::Arc;
 
 use mokly_sidecar::bundle_outcomes::EntryFault;
 use mokly_sidecar::durable_recipe::DurableRecipe;
@@ -94,7 +93,7 @@ impl Codec {
             stored.recipe.generation,
             stored.recipe.params,
             stored.recipe.modules,
-            Arc::new(stored.recipe.compiled),
+            stored.recipe.compiled,
         )
         .and_then(DurableRecipe::new)
         .ok_or(EntryFault::Damaged)

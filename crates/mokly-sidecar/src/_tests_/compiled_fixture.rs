@@ -1,17 +1,19 @@
 //! Complete immutable recipes for pool boundary fixtures.
 
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use crate::compiled::{CompiledGeneration, ReuseEvidence};
 
 pub(crate) fn compiled(identity: &str) -> CompiledGeneration {
     CompiledGeneration {
         toolchain: "fixture".into(),
-        reuse_evidence: ReuseEvidence {
+        reuse_evidence: Arc::new(ReuseEvidence {
+            uncaptured: None,
             durable: true,
             complete: true,
             inputs: Default::default(),
-        },
+        }),
         identity: identity.into(),
         code: "module.exports={}".into(),
         runtime_key: "fixture-runtime".into(),
