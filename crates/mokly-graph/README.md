@@ -106,7 +106,10 @@ It promotes the entry to the full tier only
 when the same key was restored before within fewer cache operations than the
 full tier has entries. An `insert` of a key that transit or the compact tier
 holds keeps the entry there, so a caller that stores a restored artifact again
-does not promote it. A failed restore removes the entry, counts as a miss and as a
+does not promote it. When the full tier already holds the same artifact handle,
+and a replacement would keep the same charge, an `insert` only refreshes its
+access order. It computes no new charge, and it still counts as a cache
+operation. A failed restore removes the entry, counts as a miss and as a
 restore failure, and logs an error without document data. `stats` reports the
 charged bytes of both tiers, transit, and encoder leases, retained artifact
 entries, and the hit,
@@ -115,10 +118,27 @@ restore, restore failure, miss, and eviction counts of the
 Oversized artifacts return to the caller without retention. Plans keep
 recipes rather than a complete set of parsed documents.
 Eviction changes work only. Cross-view anchor checks retain successful
-destination renders in this same bounded cache. Repeated links reuse those
-documents. Each requested fragment is still checked in every destination view,
-including cache hits. Concurrent checks of one destination share its active
-render.
+destination renders in this same bounded cache. A repeated check of one
+destination view and fragment uses the stored result of the generation when it
+has one, and reads no document. Concurrent checks of one destination share its
+active render.
+
+Each generation builds one immutable link index when it is created, and drops
+it with the generation. The index holds two positions for each catalogue entry
+and nothing else, so it copies no plan, route, or document. It finds the
+destination views of a logical link in route order without a scan of every
+plan. Its memory is outside the bound of the result store.
+
+Each generation also keeps one result store with the presence of each checked
+fragment in each destination view. Its records, their fragment bytes, and its
+bookkeeping count against a fixed 2 MiB bound. A result that does not fit is
+not kept, so the next check of that view and fragment reads the destination
+again. Growth can briefly hold one more copy of the record slice, so the peak
+stays within 4 MiB before allocator overhead. A new generation starts with an
+empty store, and complete validation records the presence that it finds in
+each destination view that it checks. A stored result holds no error, so each
+failure names the referring route of the current check and the destination
+route.
 
 `document_codec::EncodedView` is the lossless compact form of one document. The
 compact tier and the base and head captures of `mokly-compare` share it.
@@ -351,5 +371,6 @@ retention disabled.
 - [Render graph](../../docs/architecture/rust-core.md#render-graph).
 - [Runtime](../../docs/protocol/mokly-runtime.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).
+- [Final logical link validation](../../docs/protocol/mokly-link-validation.md).
 - [Public closure](../../docs/protocol/mokly-public-closure.md).
 - [Proven view reuse](../../docs/protocol/mokly-changes-serving.md#proven-view-reuse).

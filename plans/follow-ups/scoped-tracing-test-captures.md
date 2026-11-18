@@ -4,10 +4,11 @@
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: user item 196, the wider class of user item 193.
 - **Location:** `crates/mokly-cli/src/_tests_/serve_trace_tests.rs:87`,
-  `crates/mokly-render/src/_tests_/stylesheet_trace_tests.rs:84`, and
-  `crates/mokly-sidecar/src/_tests_/trace_capture.rs:15`.
+  `crates/mokly-render/src/_tests_/stylesheet_trace_tests.rs:84`,
+  `crates/mokly-compare/src/_tests_/scheduling/trace_tests.rs:82` and line 86,
+  and `crates/mokly-sidecar/src/_tests_/trace_capture.rs:15`.
 - **Reason:** The Rust rebuild merged with this test risk open, and the shared
-  capture adds a test support crate for three crates, so it needs a separate
+  capture adds a test support crate for several crates, so it needs a separate
   branch.
 
 - **Source:** Review.
@@ -32,9 +33,10 @@
   - `crates/mokly-graph/tests/routing_work_tests.rs` also captures spans.
     It is an integration test binary with one test, so its own process
     isolates its callsites, as its module comment says.
-- **Problem:** `serve_trace_tests.rs` and `stylesheet_trace_tests.rs` capture
-  spans with scoped subscribers and no guard. PR #242 added
-  `stylesheet_trace_tests.rs` on 2026-10-29. Both run in a test binary with
+- **Problem:** `serve_trace_tests.rs`, `stylesheet_trace_tests.rs`, and
+  `crates/mokly-compare/src/_tests_/scheduling/trace_tests.rs` capture spans
+  with scoped subscribers and no guard. PR #242 added
+  `stylesheet_trace_tests.rs` on 2026-10-29. Each runs in a test binary with
   many other tests. While parallel tests
   register and drop their subscribers, a thread without a capture can
   register a callsite first and cache `never`. The span then disappears
@@ -62,18 +64,51 @@
     request started its own CI run.
   - The confidence is High since 2026-11-01, because this log shows the
     problem.
-- **Impact if no action:** Both tests can fail at random without a product
+  - A second recorded failure, in another capture without a guard, has the
+    same symptom. Its cause is suspected, not proven:
+    - On 2026-11-18 the test
+      `scheduling_tests::trace_tests::closure_failure_marks_the_resource_graph_span_as_error_under_comparison`
+      failed in the Windows job of CI run 44250631581, job 134620201655, in
+      the step "Run native verification".
+    - The job ran for pull request #314, at the head
+      `4f41780f35add971b211f36211f59d7c1de75934`. `main` was at
+      `24b238ca400e949684267636fff39785ddded399`, and the head was not behind
+      it.
+    - The failure text, at
+      `crates/mokly-compare/src/_tests_/scheduling/trace_tests.rs:86`, is:
+
+      ```text
+      assertion `left == right` failed
+        left: []
+       right: [["review.compare-views", "review.resource-graph"]]
+      ```
+
+    - The crate result was 257 passed, 1 failed, and 0 ignored.
+    - The capture saw no ERROR event. It installs its subscriber with
+      `with_default`, records the entered spans of each thread, and has no
+      interest guard. That pull request changes no file under
+      `crates/mokly-compare/`.
+    - The local complete gate passed on `2c46ed670`, and the local repository
+      suite passed on `c0a72c7ae`, for the same pull request.
+    - The job log is
+      [CI job 134620201655](https://github.com/mokly-ai/mokly/actions/runs/44250631581/job/134620201655).
+    - The suspected source is the callsite interest race above. Nobody has
+      proved it for this failure.
+    - The full CI run of the next head of pull request #314, which commits
+      this record, counts as the one permitted Windows retest. Its outcome is
+      pending.
+- **Impact if no action:** These tests can fail at random without a product
   change, as the sidecar test did.
 - **Root question:** How should every span capture in the test suites see
   its spans while other tests run in parallel?
 - **Options:**
-  - **A.** Install the same once-per-process interest guard in both
-    captures. Effort: Small.
+  - **A.** Install the same once-per-process interest guard in each
+    capture that has no guard. Effort: Small.
   - **B.** Keep the scoped subscribers until one of the tests flakes.
     Effort: Small.
   - **C.** Move the trace capture and its guard into one shared test
-    support crate that all three crates use. This adds a crate.
-    Effort: Large.
+    support crate that every crate with a span capture uses. This adds a
+    crate. Effort: Large.
 - **Left out:** Running the suites one test at a time hides the shared
   state and slows verification.
 - **Wider fix:** C. One shared capture gives every crate the guard. A
@@ -82,8 +117,9 @@
   `298ede89`. An earlier CI-gates run also saw zero stop spans in
   `cleanup_retirement_keeps_only_the_cause_after_active_or_idle_failure`.
 - **Recommendation:** C. One shared capture owns the existing interest guard for
-  all three crates. Its wider migration affects effort, not approval.
+  every crate with a span capture. Its wider migration affects effort, not
+  approval.
 - **Action:** fix after merge, apply C, because the shared capture changes only
-  the test support of three crates, and it adds no gate.
+  test support code, and it adds no gate.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6531).
