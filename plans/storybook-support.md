@@ -1,9 +1,11 @@
 # Storybook Support
 
 Status: Active. On branch `calummoore/mokly-storybook-integration`, no pull
-request yet. The work lands as a stack of five pull requests, one for each
-slice, as design call 1 says. Each earlier pull request keeps this plan. The
-last one deletes it, as the `plans` skill says.
+request yet. Each track runs in its own Conductor workspace in the "mokly
+storybook" section and opens a pull request into this branch, as design
+calls 1 and 25 say. Pull requests from this branch into `main` land at slice
+boundaries. Each earlier one keeps this plan, and the last one deletes it, as
+the `plans` skill says.
 
 Mokly reads each `*.stories.*` file that a root matches as one component
 entry. It composes the stories with `composeStories` from `@storybook/react`,
@@ -62,8 +64,8 @@ Replaced ways:
   `packages/mokly/src/sidecar/bundle-recipe.ts`,
   `crates/mokly-graph/src/render_inputs.rs`,
   `crates/mokly-render/src/render_environment.rs`, their tests, and
-  `plans/follow-ups/fallback-keys-checkout-folder.md`. Moved in Milestone 10.
-  Deleted in Milestone 10.
+  `plans/follow-ups/fallback-keys-checkout-folder.md`. Moved in Milestone 19.
+  Deleted in Milestone 19.
 - The meta page, which renders the meta's args alone → the first story as
   the parent page. Consumers: `packages/mokly/src/sidecar/stories.ts`,
   `crates/mokly-sidecar/src/definitions.rs`, `tests/sidecar_methods.test.ts`,
@@ -72,8 +74,8 @@ Replaced ways:
 - The `dataurl` advice for assets that JavaScript imports → asset files that
   Mokly delivers. Consumers: `docs/guides/authoring/styles.md`, the `file`
   loader error in `packages/mokly/src/sidecar/plugins.ts`, and its row in
-  `docs/protocol/mokly-imported-styles-errors.md`. Moved in Milestone 16.
-  Deleted in Milestone 16.
+  `docs/protocol/mokly-imported-styles-errors.md`. Moved in Milestone 10.
+  Deleted in Milestone 10.
 
 ## Decisions
 
@@ -111,7 +113,7 @@ and 11 needed no decision, and Milestone 3 fixes them.
   Rejected: `mokly init --storybook`, A; the folder field alone, B;
   composition with the framework package, D. Reason: an existing Storybook
   works with one root entry. Decision 20 below is open: it settles how the
-  `stories` field reaches discovery, and it blocks Milestone 11.
+  `stories` field reaches discovery, and it blocks Milestone 20.
 - **12. Story setup: B.** Mokly awaits `story.load()`, runs `beforeAll` once,
   and warns about `sb.mock()` when the Vite adapter is off. Rejected: load
   only, A; a Mokly copy of `sb.mock()`, C. Reason: Storybook's own plugins
@@ -120,7 +122,7 @@ and 11 needed no decision, and Milestone 3 fixes them.
   `component` records an instance of that stories entry. Rejected: no change,
   A; a `fromStories` helper, B. Reason: projects get usage evidence with no
   change to their screens. Decisions 19 and 21 below are open and block
-  Milestone 25.
+  Milestone 34.
 - **14. The catalogue and the Storybook sidebar: A.** Storybook story names,
   custom tags, the docs description, and the `dev` tag filter. Paths stay
   file-derived. Rejected: title paths, B; auto titles, C. Reason: no path
@@ -133,13 +135,13 @@ and 11 needed no decision, and Milestone 3 fixes them.
   default. Rejected: esbuild plugins, A; JavaScript only, B; Vite for every
   project, D; webpack and Rspack too, E. Reason: Vite is Storybook's default
   builder, and C removes both the JavaScript and the CSS copies. Decision 22
-  below is open and blocks Milestone 19.
+  below is open and blocks Milestone 14.
 - **17. The Vite setup: E.** With a Storybook folder, Mokly loads
   Storybook's merged Vite setup for every JavaScript entry. An optional
   `mokly.vite.config.ts` can change that setup. Rejected: the app config only,
   A; a file that the project writes, B; two setups, C; D without the
   optional file. Reason: stories match Storybook, and each module loads once.
-  Decision 18 below is open and blocks Milestone 23.
+  Decision 18 below is open and blocks Milestone 30.
 
 The options check of 2026-11-06 rewrote the root questions of decisions 18
 and 19, added options E and F to each, and raised decisions 20, 21, and 22.
@@ -201,7 +203,7 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
   in one module graph.
 - **Previous examples:** None found.
 - **Related:** Decision 17 sets one setup for each catalogue. Design calls 18
-  and 22 cover a catalogue with one Storybook folder. Milestone 23 waits for
+  and 22 cover a catalogue with one Storybook folder. Milestone 30 waits for
   this answer.
 - **Recommendation:** B. A project can name the setup, the default needs no
   extra configuration, and the warning names the two ways to fix a mismatch.
@@ -268,7 +270,7 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
   stays possible.
 - **Previous examples:** React keys repeated children by position when no
   `key` is given.
-- **Related:** Decisions 13 and 21. Milestone 25 waits for this answer.
+- **Related:** Decisions 13 and 21. Milestone 34 waits for this answer.
 - **Recommendation:** B. It is the smallest option that builds every screen
   with no edit and keeps a selection for each use. Record F as a follow-up
   item that removes B's wrong pairs. E is better if no wrong pair matters
@@ -314,7 +316,7 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
   discovery: those files would skip classification and source protection.
 - **Wider fix:** C. It reads every form of `stories`.
 - **Previous examples:** None found.
-- **Related:** Decision 9. Milestone 11 waits for this answer.
+- **Related:** Decision 9. Milestone 20 waits for this answer.
 - **Recommendation:** B. Most `main.*` files list literal entries, and B
   keeps configuration and discovery free of Node on both sides. C also reads
   computed entries, at the cost of Node and a base install before discovery.
@@ -354,7 +356,7 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
   files then need edits that only Mokly reads, and A covers the same content.
 - **Wider fix:** A. Every input that a screen gives stays visible.
 - **Previous examples:** None found.
-- **Related:** Decisions 13 and 19. Milestone 25 waits for this answer.
+- **Related:** Decisions 13 and 19. Milestone 34 waits for this answer.
 - **Recommendation:** A. Every content edit stays visible, and screens and
   stories need no change.
 - **Action:** ask the user, because A adds a rule to the Changes contract.
@@ -390,12 +392,16 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
 
 ## Design calls
 
-These calls are mine, made on 2026-11-06.
+These calls are mine, made on 2026-11-06 unless a call gives another date.
 
-1. The work lands as five stacked pull requests: story compatibility,
-   Storybook folders and links, imported assets, the Vite adapter, and story
-   component usage. Reason: each slice works alone, and reviews stay small,
-   as the stack of the UI package plan did.
+1. Changed on 2026-11-18. The work runs as nine tracks, each in its own
+   Conductor workspace, and each track opens a pull request into this branch.
+   After its review, the orchestrator merges it and runs the complete gate.
+   A pull request from this branch into `main` lands at each slice boundary:
+   after tracks A to D, after tracks E to G, and after tracks H and I.
+   Reason: each track works alone, reviews stay small, and value reaches
+   `main` early. The first version, five stacked pull requests into `main`,
+   gave no parallel work.
 2. One story reader reads Storybook's composed result: args, argTypes,
    parameters, and tags. It composes from a copy of the meta. Reason:
    Storybook changes the annotation objects that it receives.
@@ -470,6 +476,41 @@ These calls are mine, made on 2026-11-06.
     only Storybook's browser runtime sets it, and Mokly renders in Node. If
     this fails, `__mocks__` redirects still work, and the limit becomes a
     decision.
+25. Made on 2026-11-18. Each track starts with its own documentation
+    milestone, so that each workspace states its requirements before its
+    code. The user reviews the docs, the decisions, and the review findings
+    of a track in its workspace. The mockup milestone stays Milestone 1 and
+    blocks only the tracks with UI work, F and G. Reason: on 2026-11-18 the
+    user asked for a separate workspace for each part that can run in
+    isolation, and said that they review each finding there. One
+    documentation milestone for every track would let only the mockups
+    start.
+
+## Tracks
+
+Each track runs in its own workspace, as design calls 1 and 25 say. A track
+starts when each milestone on the `Depends on:` lines of its first milestones
+has merged into this branch, and when the open decisions that block it have
+answers. The ledger of the workspaces is in
+`.context/storybook-support/workspaces.md`.
+
+| Track                      | Milestones | Starts after                                     |
+| -------------------------- | ---------- | ------------------------------------------------ |
+| A. Mockups                 | 1          | Nothing                                          |
+| B. Story reading           | 2 to 8     | Nothing                                          |
+| C. Imported assets         | 9 to 12    | Nothing                                          |
+| D. Vite adapter            | 13 to 17   | Nothing. Milestone 14 also waits for decision 22 |
+| E. Storybook folders       | 18 to 22   | Track B. Milestone 20 also waits for decision 20 |
+| F. Failed stories          | 23 to 25   | Tracks A and B                                   |
+| G. Storybook links         | 26 to 29   | Tracks A and E                                   |
+| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, and E, and decision 18              |
+| I. Story component usage   | 34 to 36   | Tracks B and D, and decisions 19 and 21          |
+
+The last milestone of each track runs the targeted tests and the complete
+gate, commits, pushes, and runs the `implementation-review` skill against
+this branch. The track's workspace gives the findings and the decisions to
+the user in its own session, applies the fix rule, and opens a pull request
+into this branch. The orchestrator merges it.
 
 ## Milestone 1: Mockups
 
@@ -477,9 +518,10 @@ Tags: mockup
 
 Depends on: none
 
-Two product areas change. A story that cannot render shows an error document
-in its preview, on its component page and in Changes. The component page of
-a stories entry links to the same story in a published Storybook.
+Track A. Two product areas change. A story that cannot render shows an error
+document in its preview, on its component page and in Changes. The
+component page of a stories entry links to the same story in a published
+Storybook.
 
 - [ ] Add the state of a story that could not render to the component design
       pages under `examples/basic/specs/design/components/states`, desktop
@@ -497,50 +539,24 @@ a stories entry links to the same story in a published Storybook.
       pages through `npm run dev`.
 - [ ] Update the design and the TODOs of this plan for each problem that the
       mockups show.
+- [ ] Commit, push, review against this branch, give the findings to the
+      user, apply the fix rule, and open a pull request into this branch.
 
-## Milestone 2: Documentation and protocol
+## Milestone 2: Story reading documentation
 
-Depends on: 1
+Depends on: none
 
-The protocol docs state the decided requirements. Each page whose behaviour
-is not implemented yet gets the status line that `AGENTS.md` asks for, linked
-to this plan. The guides change in the milestones that ship the behaviour,
-because they describe the released product. A rule that waits for an open
-decision goes in with the milestone that applies the answer.
+Track B. The protocol states the reading rules of decisions 3, 7, 8, 12, and
+14, and of findings 2, 10, and 11.
 
 - [ ] Move the Storybook section of `docs/protocol/mokly-sidecar.md` to a new
       page, `docs/protocol/mokly-storybook.md`, and link it from the sidecar
-      page and `docs/protocol/README.md`. Write there the decided rules:
-      CSF 2, CSF 3, and CSF Factories files; the first story as the parent;
-      args and their classification; names, tags, and the description; the
-      `dev` and `!mokly` filters; `story.load()` and `beforeAll`; the
-      `mokly` parameter; render failures; Storybook folders and `main.*`;
-      and the Storybook link.
-- [ ] Add `docs/protocol/mokly-vite-adapter.md`: the `vite` field, the setup
-      for a catalogue with one Storybook folder or none, the optional file,
-      the duties of Mokly's plugin, one React runtime, the base side,
-      invalidation in Serve, stylesheet transforms, and the tested Storybook
-      range. Link it from `docs/protocol/README.md`.
-- [ ] Add the delivery of imported assets to
-      `docs/protocol/mokly-imported-styles-assets.md`, or to a new linked
-      page when that page would pass 250 lines. Update the `file` loader row
-      of `docs/protocol/mokly-imported-styles-errors.md`.
-- [ ] Update `docs/protocol/mokly-rendering.md`: a story document links the
-      preview file's bundled stylesheet directly after the renderer's.
-- [ ] Update `docs/protocol/mokly-configuration.md` with the root `storybook`
-      field and the top-level `vite` field.
-- [ ] Update `docs/protocol/mokly-configuration-imported-styles.md`: under
-      the Vite adapter, Vite transforms each local stylesheet in place of the
-      PostCSS module.
-- [ ] Update `docs/protocol/mokly-build-warnings.md` with
-      `story-render-failed` and `storybook-mock-without-vite`. In
-      `docs/protocol/mokly-sidecar.md`, update the `render-failed` row and
-      the rule that there is no fallback render, for stories.
-- [ ] Update `docs/protocol/mokly-component-design.md` with the failed story
-      state and the Storybook link.
-- [ ] Update `docs/architecture/rust-core.md` and
-      `docs/architecture/package-boundary.md` for the Vite adapter as a
-      second compile path.
+      page and `docs/protocol/README.md`.
+- [ ] Write there the rules for CSF 2, CSF 3, and CSF Factories files; the
+      first story as the parent; args and their classification; names, tags,
+      and the description; the `dev` and `!mokly` filters; `story.load()`
+      and `beforeAll`; and the `mokly` parameter. Add the status line that
+      `AGENTS.md` asks for.
 - [ ] Run `npm run format:check` and
       `npm test -- tests/markdown_links.test.ts`.
 
@@ -610,21 +626,7 @@ The first included story becomes the parent page, as decision 3 says.
 - [ ] Test that a meta without args builds, and that no base state repeats.
 - [ ] Update `docs/guides/authoring/storybook.md`.
 
-## Milestone 7: Story render failures
-
-Depends on: 1, 4
-
-A story that cannot render no longer stops the build, as decision 5 says.
-
-- [ ] Turn a story render failure into the warning of design call 9. Keep
-      `--strict` failing on it.
-- [ ] Write the error document of Milestone 1 in place of each failed view,
-      so that the catalogue shows the story and the reason.
-- [ ] Test that a portal story gives the warning and the error document, that
-      the other stories render, and that `--strict` fails.
-- [ ] Update `docs/guides/authoring/storybook.md`.
-
-## Milestone 8: Globals from the `mokly` parameter
+## Milestone 7: Globals from the `mokly` parameter
 
 Depends on: 3
 
@@ -632,111 +634,38 @@ Existing theme decorators follow Mokly's views, as decision 8 says.
 
 - [ ] Set the globals of the `mokly` parameter for each view before render,
       as design call 11 says.
-- [ ] Test that an `@storybook/addon-themes` decorator renders the dark theme
-      in dark views when the parameter maps it.
+- [ ] Test that a theme decorator that reads a `theme` global renders the
+      dark theme in dark views when the parameter maps it.
 - [ ] Update `docs/guides/authoring/storybook.md`.
 
-## Milestone 9: Slice 1 verification, review, and pull request
+## Milestone 8: Story reading verification, review, and pull request
 
-Depends on: 1, 2, 3, 4, 5, 6, 7, 8
+Depends on: 2, 3, 4, 5, 6, 7
 
-- [ ] Remove each status line whose page slice 1 completes.
+- [ ] Remove each status line whose page this track completes.
 - [ ] Run the targeted tests and `cargo xtask check`.
-- [ ] Rerun `.context/storybook/reproduce.sh` and save the result under
-      `.context/storybook-support/`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the diff against `origin/main` with the `implementation-review`
-      skill after the push. Report the findings, then apply the fix rule:
-      fix the `fix now` findings, record follow-up items under
-      `plans/follow-ups/` for the rest, re-review once, and report.
-- [ ] Open the slice 1 pull request with the decisions and design calls of
-      this slice. This plan stays.
+- [ ] Rerun `.context/storybook/reproduce.sh` from the primary workspace and
+      save the result under `.context/storybook-support/`.
+- [ ] Commit, push, review against this branch, give the findings to the
+      user, apply the fix rule, and open a pull request into this branch.
 
-## Milestone 10: A Storybook folder for each root
+## Milestone 9: Imported assets documentation
 
-Depends on: 3
+Depends on: none
 
-Monorepos keep the preview file of their own Storybook, as decision 9 says.
+Track C. The protocol states the asset rules of decision 6.
 
-- [ ] Add the root `storybook` field to the configuration and to
-      `config.schema.json`, as design call 12 says.
-- [ ] Apply each root's preview file to the stories of that root in the
-      sidecar and in the render keys of `crates/mokly-graph`. Delete the
-      fixed list of preview paths, as "Replaced ways" says.
-- [ ] Load `main.*` in the sidecar as design call 13 says, and resolve
-      `@storybook/react` as design call 14 says.
-- [ ] Test a monorepo with `packages/ui/.storybook`, a project that installs
-      only a framework package, and a catalogue with the default folder.
-- [ ] Update `plans/follow-ups/fallback-keys-checkout-folder.md` for the new
-      preview inputs.
-- [ ] Update `docs/guides/authoring/storybook.md` and
-      `docs/guides/authoring/config.md`.
+- [ ] Add the delivery of imported assets to
+      `docs/protocol/mokly-imported-styles-assets.md`, or to a new linked
+      page when that page would pass 250 lines. Add the status line.
+- [ ] Update the `file` loader row of
+      `docs/protocol/mokly-imported-styles-errors.md`.
+- [ ] Run `npm run format:check` and
+      `npm test -- tests/markdown_links.test.ts`.
 
-## Milestone 11: Roots from the `stories` field of `main.*`
+## Milestone 10: Imported assets in documents
 
-Depends on: 10, and the answer to decision 20
-
-- [ ] Apply the answer to decision 20 on both sides of a comparison.
-- [ ] Update `docs/protocol/mokly-configuration.md` and
-      `docs/protocol/mokly-root-discovery.md` with that answer.
-- [ ] Test a root with `storybook` and without `dir`, on the head and the
-      base side.
-- [ ] Update `docs/guides/authoring/config.md`.
-
-## Milestone 12: Preview CSS in story documents
-
-Depends on: 10
-
-The CSS that a preview file imports reaches its stories, as decision 4 says.
-
-- [ ] Give each preview file a bundled stylesheet route, as the renderer has,
-      and link it as design call 15 says.
-- [ ] Watch the preview's stylesheets and add them to the render keys, as for
-      the renderer.
-- [ ] Test that a preview that imports global CSS styles its stories, and
-      that Changes shows an edit of that CSS.
-- [ ] Update `docs/guides/authoring/storybook.md`.
-
-## Milestone 13: Storybook story links
-
-Depends on: 10
-
-Each story page knows its story in the published Storybook, as decision 15
-says.
-
-- [ ] Derive each story's Storybook id from its meta title, or from the auto
-      title of its `main.*` entry, with Storybook's own helpers.
-- [ ] Add the story URL to the catalogue read model when the root's
-      `storybook.url` is set, with generated shared types.
-- [ ] Test the ids of titled and untitled files.
-
-## Milestone 14: The Storybook link in the shell
-
-Tags: ui
-
-Depends on: 1, 13
-
-- [ ] Add the link to `@mokly/ui` as the mockup shows, and render it from
-      the viewer container for entries with a Storybook URL.
-- [ ] Render the package component in the design library, as `AGENTS.md`
-      requires.
-- [ ] Add tests under `packages/ui/tests` and `packages/viewer/tests`, and a
-      browser spec.
-
-## Milestone 15: Slice 2 verification, review, and pull request
-
-Depends on: 10, 11, 12, 13, 14
-
-- [ ] Remove each status line whose page slice 2 completes.
-- [ ] Run the targeted tests and `cargo xtask check`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the diff against `origin/main` with the `implementation-review`
-      skill after the push, and apply the fix rule.
-- [ ] Open the slice 2 pull request. This plan stays.
-
-## Milestone 16: Imported assets in documents
-
-Depends on: 2
+Depends on: 9
 
 Components that import images render them, as decision 6 says.
 
@@ -751,28 +680,49 @@ Components that import images render them, as decision 6 says.
       Serve and `build`, and that Changes shows an edited image.
 - [ ] Update `docs/guides/authoring/styles.md`.
 
-## Milestone 17: Imported assets in collected styles
+## Milestone 11: Imported assets in collected styles
 
-Depends on: 16
+Depends on: 10
 
 - [ ] Rewrite asset tokens in the CSS-in-JS styles that the sidecar collects,
       such as Emotion and styled-components `url()` values.
 - [ ] Test an Emotion style with an imported background image.
 
-## Milestone 18: Slice 3 verification, review, and pull request
+## Milestone 12: Imported assets verification, review, and pull request
 
-Depends on: 16, 17
+Depends on: 9, 10, 11
 
-- [ ] Remove each status line whose page slice 3 completes.
+- [ ] Remove each status line whose page this track completes.
 - [ ] Run the targeted tests and `cargo xtask check`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the diff against `origin/main` with the `implementation-review`
-      skill after the push, and apply the fix rule.
-- [ ] Open the slice 3 pull request. This plan stays.
+- [ ] Commit, push, review against this branch, give the findings to the
+      user, apply the fix rule, and open a pull request into this branch.
 
-## Milestone 19: Vite adapter core
+## Milestone 13: Vite adapter documentation
 
-Depends on: 2, and the answer to decision 22
+Depends on: none
+
+Track D. The protocol states the compiler rules of decisions 16 and 17 for a
+catalogue with one Storybook folder or none.
+
+- [ ] Add `docs/protocol/mokly-vite-adapter.md`: the `vite` field, the setup
+      for a catalogue without a Storybook folder, the optional file, the
+      duties of Mokly's plugin, one React runtime, the base side,
+      invalidation in Serve, and stylesheet transforms. Link it from
+      `docs/protocol/README.md` and from the bundling section of
+      `docs/protocol/mokly-sidecar.md`. Add the status line.
+- [ ] Update `docs/protocol/mokly-configuration.md` with the `vite` field.
+- [ ] Update `docs/protocol/mokly-configuration-imported-styles.md`: under
+      the Vite adapter, Vite transforms each local stylesheet in place of the
+      PostCSS module.
+- [ ] Update `docs/architecture/rust-core.md` and
+      `docs/architecture/package-boundary.md` for the Vite adapter as a
+      second compile path.
+- [ ] Run `npm run format:check` and
+      `npm test -- tests/markdown_links.test.ts`.
+
+## Milestone 14: Vite adapter core
+
+Depends on: 13, and the answer to decision 22
 
 The project's Vite setup compiles JavaScript, as decision 16 says.
 
@@ -793,26 +743,18 @@ The project's Vite setup compiles JavaScript, as decision 16 says.
 - [ ] Add `docs/guides/authoring/vite.md`, and update the
       `packages/mokly/README.md` key code.
 
-## Milestone 20: Vite adapter on the base side and in Serve
+## Milestone 15: Vite adapter on the base side and in Serve
 
-Depends on: 19
+Depends on: 14
 
 - [ ] Compile the base side with the base commit's Vite setup in its
       extraction, with the selected installation.
 - [ ] Invalidate changed modules from Mokly's watcher in Serve.
 - [ ] Test Changes between two commits of a Vite fixture, and a Serve edit.
 
-## Milestone 21: Imported assets on the Vite adapter
+## Milestone 16: Stylesheets through Vite
 
-Depends on: 17, 19
-
-- [ ] Turn Vite's asset URLs into Mokly asset tokens, so that the delivery
-      of Milestone 16 applies.
-- [ ] Test an imported image under the adapter.
-
-## Milestone 22: Stylesheets through Vite
-
-Depends on: 19
+Depends on: 14
 
 - [ ] Transform each local stylesheet as design call 21 says, in place of
       the configured PostCSS module.
@@ -821,9 +763,199 @@ Depends on: 19
 - [ ] Update `docs/guides/authoring/vite.md` and
       `docs/guides/authoring/styles.md`.
 
-## Milestone 23: Storybook's setup on the Vite adapter
+## Milestone 17: Vite adapter verification, review, and pull request
 
-Depends on: 10, 20, and the answer to decision 18
+Depends on: 13, 14, 15, 16
+
+- [ ] Remove each status line whose page this track completes.
+- [ ] Run the targeted tests and `cargo xtask check`.
+- [ ] Commit, push, review against this branch, give the findings to the
+      user, apply the fix rule, and open a pull request into this branch.
+
+## Milestone 18: Storybook folders documentation
+
+Depends on: 8
+
+Track E. The protocol states the rules of decisions 4 and 9.
+
+- [ ] Add the rules for Storybook folders and `main.*` to
+      `docs/protocol/mokly-storybook.md`, without the rule that decision 20
+      settles.
+- [ ] Update `docs/protocol/mokly-configuration.md` with the root `storybook`
+      field.
+- [ ] Update `docs/protocol/mokly-rendering.md`: a story document links the
+      preview file's bundled stylesheet directly after the renderer's.
+- [ ] Add the status lines, and run `npm run format:check` and
+      `npm test -- tests/markdown_links.test.ts`.
+
+## Milestone 19: A Storybook folder for each root
+
+Depends on: 18
+
+Monorepos keep the preview file of their own Storybook, as decision 9 says.
+
+- [ ] Add the root `storybook` field to the configuration and to
+      `config.schema.json`, as design call 12 says.
+- [ ] Apply each root's preview file to the stories of that root in the
+      sidecar and in the render keys of `crates/mokly-graph`. Delete the
+      fixed list of preview paths, as "Replaced ways" says.
+- [ ] Load `main.*` in the sidecar as design call 13 says, and resolve
+      `@storybook/react` as design call 14 says.
+- [ ] Test a monorepo with `packages/ui/.storybook`, a project that installs
+      only a framework package, and a catalogue with the default folder.
+- [ ] Update `plans/follow-ups/fallback-keys-checkout-folder.md` for the new
+      preview inputs.
+- [ ] Update `docs/guides/authoring/storybook.md` and
+      `docs/guides/authoring/config.md`.
+
+## Milestone 20: Roots from the `stories` field of `main.*`
+
+Depends on: 19, and the answer to decision 20
+
+- [ ] Apply the answer to decision 20 on both sides of a comparison.
+- [ ] Update `docs/protocol/mokly-storybook.md`,
+      `docs/protocol/mokly-configuration.md`, and
+      `docs/protocol/mokly-root-discovery.md` with that answer.
+- [ ] Test a root with `storybook` and without `dir`, on the head and the
+      base side.
+- [ ] Update `docs/guides/authoring/config.md`.
+
+## Milestone 21: Preview CSS in story documents
+
+Depends on: 19
+
+The CSS that a preview file imports reaches its stories, as decision 4 says.
+
+- [ ] Give each preview file a bundled stylesheet route, as the renderer has,
+      and link it as design call 15 says.
+- [ ] Watch the preview's stylesheets and add them to the render keys, as for
+      the renderer.
+- [ ] Test that a preview that imports global CSS styles its stories, and
+      that Changes shows an edit of that CSS.
+- [ ] Update `docs/guides/authoring/storybook.md`.
+
+## Milestone 22: Storybook folders verification, review, and pull request
+
+Depends on: 18, 19, 20, 21
+
+- [ ] Remove each status line whose page this track completes.
+- [ ] Run the targeted tests and `cargo xtask check`.
+- [ ] Commit, push, review against this branch, give the findings to the
+      user, apply the fix rule, and open a pull request into this branch.
+
+## Milestone 23: Failed stories documentation
+
+Depends on: 1, 8
+
+Track F. The protocol states the failure rules of decision 5.
+
+- [ ] Add the render failure rules to `docs/protocol/mokly-storybook.md`.
+- [ ] Update `docs/protocol/mokly-build-warnings.md` with
+      `story-render-failed`. In `docs/protocol/mokly-sidecar.md`, update the
+      `render-failed` row and the rule that there is no fallback render, for
+      stories.
+- [ ] Update `docs/protocol/mokly-component-design.md` with the failed story
+      state of Milestone 1.
+- [ ] Add the status lines, and run `npm run format:check` and
+      `npm test -- tests/markdown_links.test.ts`.
+
+## Milestone 24: Story render failures
+
+Depends on: 23
+
+A story that cannot render no longer stops the build, as decision 5 says.
+
+- [ ] Turn a story render failure into the warning of design call 9. Keep
+      `--strict` failing on it.
+- [ ] Write the error document of Milestone 1 in place of each failed view,
+      so that the catalogue shows the story and the reason.
+- [ ] Test that a portal story gives the warning and the error document, that
+      the other stories render, and that `--strict` fails.
+- [ ] Update `docs/guides/authoring/storybook.md`.
+
+## Milestone 25: Failed stories verification, review, and pull request
+
+Depends on: 23, 24
+
+- [ ] Remove each status line whose page this track completes.
+- [ ] Run the targeted tests and `cargo xtask check`.
+- [ ] Commit, push, review against this branch, give the findings to the
+      user, apply the fix rule, and open a pull request into this branch.
+
+## Milestone 26: Storybook links documentation
+
+Depends on: 1, 22
+
+Track G. The protocol states the link rules of decision 15.
+
+- [ ] Add the Storybook link rule to `docs/protocol/mokly-storybook.md`.
+- [ ] Update `docs/protocol/mokly-component-design.md` with the Storybook
+      link of Milestone 1.
+- [ ] Add the status lines, and run `npm run format:check` and
+      `npm test -- tests/markdown_links.test.ts`.
+
+## Milestone 27: Storybook story links
+
+Depends on: 26
+
+Each story page knows its story in the published Storybook, as decision 15
+says.
+
+- [ ] Derive each story's Storybook id from its meta title, or from the auto
+      title of its `main.*` entry, with Storybook's own helpers.
+- [ ] Add the story URL to the catalogue read model when the root's
+      `storybook.url` is set, with generated shared types.
+- [ ] Test the ids of titled and untitled files.
+
+## Milestone 28: The Storybook link in the shell
+
+Tags: ui
+
+Depends on: 27
+
+- [ ] Add the link to `@mokly/ui` as the mockup shows, and render it from
+      the viewer container for entries with a Storybook URL.
+- [ ] Render the package component in the design library, as `AGENTS.md`
+      requires.
+- [ ] Add tests under `packages/ui/tests` and `packages/viewer/tests`, and a
+      browser spec.
+
+## Milestone 29: Storybook links verification, review, and pull request
+
+Depends on: 26, 27, 28
+
+- [ ] Remove each status line whose page this track completes.
+- [ ] Run the targeted tests and `cargo xtask check`.
+- [ ] Commit, push, review against this branch, give the findings to the
+      user, apply the fix rule, and open a pull request into this branch.
+
+## Milestone 30: Storybook setup on Vite documentation
+
+Depends on: 12, 17, 22, and the answer to decision 18
+
+Track H. The protocol states the Storybook setup rules of decision 17, with
+the answer to decision 18, and the `sb.mock()` warning of decision 12.
+
+- [ ] Add the Storybook setup rules to `docs/protocol/mokly-vite-adapter.md`,
+      with the answer to decision 18.
+- [ ] Update `docs/protocol/mokly-configuration.md` for the answer to
+      decision 18.
+- [ ] Update `docs/protocol/mokly-build-warnings.md` with
+      `storybook-mock-without-vite`.
+- [ ] Add the status lines, and run `npm run format:check` and
+      `npm test -- tests/markdown_links.test.ts`.
+
+## Milestone 31: Imported assets on the Vite adapter
+
+Depends on: 12, 17
+
+- [ ] Turn Vite's asset URLs into Mokly asset tokens, so that the delivery
+      of Milestone 10 applies.
+- [ ] Test an imported image under the adapter.
+
+## Milestone 32: Storybook's setup on the Vite adapter
+
+Depends on: 30
 
 - [ ] Load Storybook's merged setup with its preset loader, with
       `viteCorePlugins` and `viteFinal`, for every JavaScript entry when a
@@ -833,9 +965,7 @@ Depends on: 10, 20, and the answer to decision 18
 - [ ] Remove Storybook's browser-only plugins, as design call 20 says.
 - [ ] Add the optional file and `@mokly/mokly/vite`, as design call 22 says.
 - [ ] Install the mocker global of design call 24.
-- [ ] Apply the answer to decision 18, and update
-      `docs/protocol/mokly-vite-adapter.md`,
-      `docs/protocol/mokly-configuration.md`, and `config.schema.json` with
+- [ ] Apply the answer to decision 18, and update `config.schema.json` with
       it.
 - [ ] Add the `storybook-mock-without-vite` warning, as design call 23 says.
 - [ ] Test the supported Storybook range in CI with a `react-vite` fixture
@@ -848,20 +978,30 @@ Depends on: 10, 20, and the answer to decision 18
 - [ ] Update `docs/guides/authoring/vite.md` and
       `docs/guides/authoring/storybook.md`.
 
-## Milestone 24: Slice 4 verification, review, and pull request
+## Milestone 33: Storybook setup on Vite verification, review, and pull request
 
-Depends on: 19, 20, 21, 22, 23
+Depends on: 30, 31, 32
 
-- [ ] Remove each status line whose page slice 4 completes.
+- [ ] Remove each status line whose page this track completes.
 - [ ] Run the targeted tests and `cargo xtask check`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the diff against `origin/main` with the `implementation-review`
-      skill after the push, and apply the fix rule.
-- [ ] Open the slice 4 pull request. This plan stays.
+- [ ] Commit, push, review against this branch, give the findings to the
+      user, apply the fix rule, and open a pull request into this branch.
 
-## Milestone 25: Story component usage
+## Milestone 34: Story component usage documentation
 
-Depends on: 6, 19, and the answers to decisions 19 and 21
+Depends on: 8, 17, and the answers to decisions 19 and 21
+
+Track I. The protocol states the usage rules of decision 13, with the
+answers to decisions 19 and 21.
+
+- [ ] Update `docs/protocol/mokly-instances.md` and
+      `docs/protocol/mokly-component-changes.md` with those answers.
+- [ ] Add the status lines, and run `npm run format:check` and
+      `npm test -- tests/markdown_links.test.ts`.
+
+## Milestone 35: Story component usage
+
+Depends on: 34
 
 Screens that render a story component record its use, as decision 13 says.
 
@@ -870,9 +1010,6 @@ Screens that render a story component record its use, as decision 13 says.
       wrapper of it, on both compile paths.
 - [ ] Give each such use the id that decision 19 chooses.
 - [ ] Keep the content of each use in Changes as decision 21 chooses.
-- [ ] Update `docs/protocol/mokly-instances.md` and
-      `docs/protocol/mokly-component-changes.md` with the answers to
-      decisions 19 and 21.
 - [ ] Record option F of decision 19 as a follow-up item when the answer is
       B.
 - [ ] Test repeated uses, a wrapped component, an edit of a use's children,
@@ -881,7 +1018,16 @@ Screens that render a story component record its use, as decision 13 says.
 - [ ] Update `docs/guides/authoring/storybook.md` and
       `docs/guides/authoring/components.md`.
 
-## Milestone 26: Verification, commit, review, and pull request
+## Milestone 36: Story component usage verification, review, and pull request
+
+Depends on: 34, 35
+
+- [ ] Remove each status line whose page this track completes.
+- [ ] Run the targeted tests and `cargo xtask check`.
+- [ ] Commit, push, review against this branch, give the findings to the
+      user, apply the fix rule, and open a pull request into this branch.
+
+## Milestone 37: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
