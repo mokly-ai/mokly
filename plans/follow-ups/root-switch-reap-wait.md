@@ -7,7 +7,7 @@
   recycle part comes from the failed-reap options check of the same plan, on
   the same day.
 - **Location:** `crates/mokly-sidecar/src/pool_sources.rs:36` and line 42,
-  `crates/mokly-sidecar/src/pool_exchange.rs:55`,
+  `crates/mokly-sidecar/src/pool_exchange.rs:60`,
   `crates/mokly-sidecar/src/pool_recycle.rs:46-59`,
   `crates/mokly-sidecar/src/process_control.rs:51` and line 58, and
   `crates/mokly-sidecar/src/pool_return.rs:109`.
@@ -37,7 +37,7 @@
   - At a root switch, `Pool::isolate` sends the kill through
     `Reason::RootSwitch.kill`, at `pool_sources.rs:36`. It empties the slot at
     line 42. The request then starts the new process, at
-    `pool_exchange.rs:55`.
+    `pool_exchange.rs:60`.
   - `ProcessControl::kill`, at `process_control.rs:51`, only sends SIGKILL to
     the process group on Unix. It does not wait for the exit. `finish`, at
     line 58, waits for the exit, reaps the child, and waits for the stderr
@@ -114,6 +114,9 @@
     end-and-reap step, the shared step of C included, waits without a
     deadline after a forced kill. A fix there changes what a failed reap
     means here.
+  - [serve-pause-warm-head.md](./serve-pause-warm-head.md), the same code:
+    its option B cancels one worker and starts a replacement in that slot. A
+    fix here sets the reap rule of that replacement.
 - **Recommendation:** C. One end-and-reap transition keeps every replacement
   inside the bound and reports every failure, with no second path that can
   drift.

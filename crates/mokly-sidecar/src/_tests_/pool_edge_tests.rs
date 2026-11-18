@@ -31,6 +31,7 @@ fn pool(worker: Unimock, clock: Unimock) -> Pool {
         Arc::new(Unimock::new(())),
         Arc::new(clock),
         Launch {
+            capture_durability: false,
             node: "node".into(),
             entry: "sidecar.js".into(),
             repository: "/repo".into(),

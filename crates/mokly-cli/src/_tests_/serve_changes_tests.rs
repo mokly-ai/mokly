@@ -94,6 +94,7 @@ fn refresh_uses_current_and_cancelled_attempts_print_no_warnings_or_result() {
                 Arc::new(Unimock::new(())),
                 Arc::new(Unimock::new(())),
                 Arc::new(Unimock::new(())),
+                Arc::new(Unimock::new(())),
                 "test".into(),
                 None,
             )),

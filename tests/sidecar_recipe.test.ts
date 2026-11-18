@@ -18,6 +18,8 @@ import { dependency, sidecarSources } from "./helpers/sidecar_sources.js";
 function compiled(): CompiledGeneration {
   return {
     identity: "compiled",
+    toolchain: "fixture",
+    reuseEvidence: { complete: true, durable: false, inputs: {} },
     code: "module.exports={}",
     runtimeKey: "private",
     dependencyRoots: [],
@@ -56,6 +58,28 @@ test("bundle recipes carry one module graph and fail with a typed size diagnosti
     },
   );
   checkRecipeSize(params, result);
+  result.compiled.reuseEvidence.inputs["/candidate"] = {
+    kind: "directory",
+    entries: [{ name: "a".repeat(4096), kind: "file", target: null }],
+  };
+  const oversized = result.compiled.reuseEvidence;
+  assert.doesNotThrow(() => checkRecipeSize(params, result, 2048));
+  assert.deepEqual(result.compiled.reuseEvidence, {
+    complete: false,
+    durable: false,
+    inputs: {},
+  });
+  result.compiled.reuseEvidence = {
+    ...oversized,
+    complete: false,
+    uncaptured: "serveEdit",
+  };
+  assert.doesNotThrow(() => checkRecipeSize(params, result, 2048));
+  assert.deepEqual(result.compiled.reuseEvidence, {
+    complete: false,
+    durable: false,
+    inputs: {},
+  });
 });
 
 test("failed peer resolution cannot fall through to a native parent installation", () => {

@@ -14,6 +14,7 @@ use crate::workers::{ClockMock, ControlMock, FactoryMock, Spawned, WorkerMock};
 
 fn launch() -> Launch {
     Launch {
+        capture_durability: false,
         node: "node".into(),
         entry: "sidecar.js".into(),
         repository: "/repo".into(),

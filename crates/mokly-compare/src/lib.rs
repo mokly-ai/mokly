@@ -2,7 +2,20 @@
 
 #![warn(unreachable_pub)]
 
+mod bundle_cache;
+mod bundle_cache_maintenance;
+mod bundle_cache_read;
+pub mod bundle_cache_types;
+mod bundle_cache_write;
+mod bundle_codec;
+mod bundle_codec_read;
+mod bundle_codec_write;
+mod bundle_inventory;
+mod bundle_receipts;
+mod bundle_storage;
+pub mod bundle_store;
 pub mod cache;
+mod cache_lock;
 pub mod cache_types;
 pub mod commands;
 pub mod dependencies;
@@ -216,6 +229,10 @@ mod capture_engine_tests;
 mod capture_producer;
 
 mod capture_collection;
+
+#[cfg(test)]
+#[path = "_tests_/bundle_fixture.rs"]
+mod bundle_fixture;
 
 #[cfg(test)]
 #[path = "_tests_/scheduling/mod.rs"]

@@ -71,10 +71,14 @@ impl Builder for Announced<'_> {
     }
 
     fn build(&self, destination: &Path) -> Result<()> {
-        self.steps.step(match self.kind {
-            Kind::Sources => Step::Extracting,
-            Kind::Dependencies => Step::Installing,
-        });
+        let step = match self.kind {
+            Kind::Sources => Some(Step::Extracting),
+            Kind::Dependencies => Some(Step::Installing),
+            Kind::Bundles => None,
+        };
+        if let Some(step) = step {
+            self.steps.step(step);
+        }
         self.inner.build(destination)
     }
 }

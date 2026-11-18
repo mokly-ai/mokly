@@ -100,6 +100,7 @@ export default {plugins:[{postcssPlugin:'pid',Once(root){
         )),
         clock,
         Launch {
+            capture_durability: false,
             node: "node".into(),
             entry: workspace.join("packages/mokly/dist/sidecar.js"),
             repository: root.path().into(),

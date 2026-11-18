@@ -39,6 +39,7 @@ fn cleanup_retirement_keeps_only_the_cause_after_active_or_idle_failure() {
                     Arc::new(factory.clone()),
                     Arc::new(clock.clone()),
                     Launch {
+                        capture_durability: false,
                         node: "private-node".into(),
                         entry: "private-entry".into(),
                         repository: "/private-root".into(),

@@ -7,7 +7,9 @@ use std::sync::{Arc, Mutex, mpsc};
 use std::thread;
 
 use mokly_platform::processes::ProcessGroups;
+use mokly_platform::volumes::{CaptureVolumes, SystemCaptureVolumes};
 
+use crate::capture_hint::CaptureHint;
 use crate::client::Client;
 use crate::error::{Error, InternalError, Result};
 use crate::pool_options::Launch;
@@ -33,6 +35,7 @@ pub struct NodeFactory {
     diagnostics: Arc<dyn Diagnostics>,
     memory: Arc<dyn MemoryFactory>,
     timings: bool,
+    volumes: Arc<dyn CaptureVolumes>,
 }
 
 impl NodeFactory {
@@ -50,6 +53,7 @@ impl NodeFactory {
             diagnostics,
             memory,
             timings: false,
+            volumes: Arc::new(SystemCaptureVolumes),
         }
     }
 
@@ -181,7 +185,12 @@ impl WorkerFactory for NodeFactory {
             }),
             launch.version.clone(),
         )
-        .with_timings(self.timings);
+        .with_timings(self.timings)
+        .with_capture(
+            launch
+                .capture_durability
+                .then(|| CaptureHint::from_volumes(self.volumes.local())),
+        );
         startup.hand_off();
         Ok(Spawned {
             worker: Box::new(ProcessWorker {

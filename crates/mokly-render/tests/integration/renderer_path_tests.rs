@@ -87,7 +87,7 @@ fn a_renderer_named_through_a_parent_segment_keeps_per_entry_keys() {
         .unwrap()
         .iter()
         .filter_map(|call| match call {
-            Call::Bundle(params) => Some(params.renderer.clone()),
+            Call::Bundle(request) => Some(request.params.renderer.clone()),
             _ => None,
         })
         .collect();

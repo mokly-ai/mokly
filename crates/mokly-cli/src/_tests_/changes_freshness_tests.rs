@@ -66,6 +66,7 @@ fn checkout_change_after_first_base_read_preserves_the_sample_and_invalidates_re
             )),
             Arc::new(Unimock::new(())),
             Arc::new(Unimock::new(())),
+            Arc::new(Unimock::new(())),
             Arc::new(Unimock::new(
                 RenderWorkersMock::stylesheets
                     .some_call(matching!(_))

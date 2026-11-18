@@ -139,8 +139,9 @@ fn prepare(
 ) -> BasePreparationError {
     let head = Arc::new(Runtime::new(
         Arc::new(Unimock::new(())), Arc::new(Unimock::new(())),
+        Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(PoolMock::request.next_call(matching!((call) if matches!(call,
-            Call::Bundle(bundle) if bundle.source_root == "/base" && bundle.entry_files == ["specs/card.mockup.ts"]
+            Call::Bundle(bundle) if bundle.params.source_root == "/base" && bundle.params.entry_files == ["specs/card.mockup.ts"]
         ))).returns(Err(mokly_sidecar::error::Error::Protocol(ProtocolError::Handshake))))),
         Arc::new(Unimock::new(())), Arc::new(Unimock::new(())), "test".into(), None,
     ));

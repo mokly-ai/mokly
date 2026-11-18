@@ -96,6 +96,7 @@ fn checkout_change_after_first_read_keeps_old_sample_then_prepares_and_reuses_ne
         )),
         Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(())),
+        Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(
             RenderWorkersMock::stylesheets
                 .each_call(matching!(_))

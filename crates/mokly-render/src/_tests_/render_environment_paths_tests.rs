@@ -2,6 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
+use std::sync::Arc;
 
 use super::render_environment_support::{
     cache_params, derive_at, maps, params, params_at, physical, result,
@@ -18,7 +19,9 @@ fn environment_settings_map_every_physical_path_and_keep_null_peers() {
         "/work/repo/node_modules",
         "/work/repo/node_modules/react/index.js",
     );
-    compiled.compiled.peers.insert("optional".into(), None);
+    Arc::make_mut(&mut compiled.compiled)
+        .peers
+        .insert("optional".into(), None);
     let working_root = physical("/work/repo");
     let cache_namespace = physical("/cache/namespace");
     let mut paths = PathMapper::new(Path::new(&working_root), Some(Path::new(&cache_namespace)));

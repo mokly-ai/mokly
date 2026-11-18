@@ -8,7 +8,8 @@ use mokly_platform::locks::FileLock;
 use sha2::{Digest, Sha256};
 
 use crate::cache::DiskCache;
-use crate::cache_types::{Lease, Storage};
+use crate::cache_lock::entry_lock_path;
+use crate::cache_types::{Kind, Lease, Storage};
 use crate::error::{InternalError, Result};
 
 impl DiskCache {
@@ -27,14 +28,15 @@ impl DiskCache {
                 .map(|byte| format!("{byte:02x}"))
                 .collect::<String>();
             sequence = sequence.wrapping_add(1);
-            let guard = match self
-                .locks
-                .try_lock(&namespace.join("locks").join(format!("{private}.lock")))
-            {
-                Ok(guard) => guard,
-                Err(error::Error::Locked { .. }) => continue,
-                Err(source) => return Err(InternalError::Platform { source }.into()),
-            };
+            let guard =
+                match self
+                    .locks
+                    .try_lock(&entry_lock_path(namespace, Kind::Sources, &private))
+                {
+                    Ok(guard) => guard,
+                    Err(error::Error::Locked { .. }) => continue,
+                    Err(source) => return Err(InternalError::Platform { source }.into()),
+                };
             let target = namespace.join("staging").join(private);
             if self.storage.directory(&target)? {
                 continue;

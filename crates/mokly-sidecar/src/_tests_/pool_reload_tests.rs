@@ -8,7 +8,9 @@ use unimock::{MockFn, Unimock, matching};
 use crate::bindings::{Bindings, EntryBinding};
 use crate::compiled_fixture::compiled;
 use crate::definitions::Definitions;
-use crate::methods::{Bundle, Call, CssModules, Generation, ModuleResolution, RenderPage};
+use crate::methods::{
+    Bundle, BundleRequest, Call, CssModules, Generation, ModuleResolution, RenderPage,
+};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
 use crate::pool_state::Slot;
@@ -46,13 +48,14 @@ fn worker(expected: &[&str], calls: usize) -> Unimock {
                     label(&request.call)
                 );
                 Ok(match &request.call {
-                    Call::Bundle(_) => MethodResult::Bundle(results::Bundle {
+                    Call::Bundle(_) => MethodResult::Bundle(Box::new(results::Bundle {
                         unmapped_dependency_directories: None,
                         epoch: 0,
-                        compiled: compiled("g"),
+                        cache: None,
+                        compiled: Arc::new(compiled("g")),
                         generation: "g".into(),
                         modules: Vec::new(),
-                    }),
+                    })),
                     Call::Describe(_) => MethodResult::Definitions(Definitions {
                         screens: Vec::new(),
                         pages: Vec::new(),
@@ -118,6 +121,7 @@ fn pair(first: Unimock, second: Unimock) -> Pool {
         Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(())),
         Launch {
+            capture_durability: false,
             node: "node".into(),
             entry: "sidecar.js".into(),
             repository: "/repo".into(),
@@ -196,7 +200,11 @@ fn a_busy_second_process_reloads_maps_after_release_and_rebundle() {
     );
     pool.release_generation("g", 0);
     pool.synchronize_releases();
-    pool.request(Call::Bundle(bundle())).unwrap();
+    pool.request(Call::Bundle(BundleRequest {
+        params: bundle(),
+        capture: None,
+    }))
+    .unwrap();
     pool.request(Call::CssModules(maps("new-control"))).unwrap();
     pool.request(Call::Describe(Generation {
         generation: "g".into(),
