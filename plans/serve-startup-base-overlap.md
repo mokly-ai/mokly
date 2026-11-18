@@ -462,6 +462,26 @@ E to G add no exception to the authorized PSS rule or raw RSS guard.
 Without the required transition evidence, the memory item stays open.
 A guard stop remains a stop, including a suspected accounting artifact.
 
+Performance orchestrator's measurement call of 2026-11-18 refines D with E:
+
+- A proved `vfork` or `CLONE_VM` child shares its parent's address space until exec. Its raw RSS and PSS rows can therefore count the same address space twice.
+- Prove that shared address space with trace clone flags or live `kcmp` with `KCMP_VM`. Equal memory values alone prove no such relationship.
+- Count a proved shared address space once in both arms' RSS and PSS sums, for samples between clone and exec.
+- Report raw sums and corrected sums side by side. This corrects accounting and adds no acceptance exception.
+- No transition evidence means no memory closure. Any guard stop still stops the run. The corrected PSS peak must stay within 5% of main.
+
+The call does not make an older trace contain clone flags or a past `kcmp`
+read. An interval without that evidence stays uncorrected and is reported
+with its limit.
+
+The performance orchestrator authorized two extra diagnostic runs under D
+on 2026-11-18. Keep the current main run and its audit as a raw baseline.
+Add `task:task_newtask` with `clone_flags` to the recorder. Then run the
+frozen candidate once and main once more with that same recording. Keep
+every guard and the sampler unchanged. These are extra diagnostics, not
+retries of a failed acceptance run. Report raw and corrected sums. The
+current main recording cannot supply a shared-address-space correction.
+
 ### 11. Give HTML-only bases the serial path
 
 - **Severity:** High. **Effort:** Medium.
@@ -603,7 +623,7 @@ Commit the accepted test-only review fix with this change.
 - [x] Observe assertion failures for the new behaviour, then pass every new asynchronous test in ten runs. Keep synchronous `NativeBase` tests synchronous. They need no repeated runs.
 - [x] Update the early preparation protocol page and the CLI README entry points with the implementation's names.
 - [x] Run the focused tests and `cargo xtask check --suite repository`.
-- [ ] Commit the HTML change and the accepted test-only review fix together. Push the branch, then send the new SHA to the performance orchestrator for the cloud remeasurement.
+- [x] Commit the HTML change and the accepted test-only review fix together. Push the branch, then send the new SHA to the performance orchestrator for the cloud remeasurement.
 
 Evidence: `.context/startup-base-overlap/html-serial-docs-report.md` records the docs change.
 Evidence: `.context/startup-base-overlap/html-serial-validation-report.md` and `.context/startup-base-overlap/html-serial-repository-summary.json` record the Rust checks and the combined repository suite.
