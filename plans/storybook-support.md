@@ -578,8 +578,9 @@ more questions, which became design calls 26 and 27.
 - **Category:** Docs or spec.
 - **Location:** `examples/basic/specs/design/components/parts/component_info.tsx`.
 - **Background:**
-  - The mockups build the link from the shell's metadata link, which opens
-    in the same tab.
+  - The shell's metadata link opens in the same tab. The mockups draw the
+    Storybook link as a picture without an address, because a design link
+    opens a design entry.
   - In Serve, leaving the page discards the reader's prop edits.
   - A React host that embeds the viewer also leaves its own page.
 - **Problem:** No rule says where the published Storybook opens.
@@ -588,7 +589,8 @@ more questions, which became design calls 26 and 27.
 - **Root question:** How does a reader open the story in the published
   Storybook without losing their place or their prop edits?
 - **Options:**
-  - **A.** Open it in the same tab, as the mockups show now. Effort: Small.
+  - **A.** Open it in the same tab, as the shell's metadata link does.
+    Effort: Small.
   - **B.** Open it in a new tab, with `rel="noreferrer"`, and with an icon and
     a screen-reader label that say so. Effort: Small.
   - **C.** Keep the same tab, and keep the edits in the tab's session storage,
@@ -721,8 +723,9 @@ These calls are mine, made on 2026-11-06 unless a call gives another date.
     gives the reason last, under "Reason". Changes shows a failed story as an
     ordinary changed variant. The Storybook link is a Details row,
     "Storybook", directly below Source, with the text "Open in Storybook".
-    Reason: the page around the document already names the component, and
-    the shell does not change for failed stories.
+    The mockups draw it as a picture without an address. Reason: the page
+    around the document already names the component, the shell does not
+    change for failed stories, and a design link opens a design entry.
 
 ## Tracks
 
@@ -1168,7 +1171,9 @@ Depends on: 27
 - [ ] Add the link to `@mokly/ui` as the mockup shows, and render it from
       the viewer container for entries with a Storybook URL.
 - [ ] Render the package component in the design library, as `AGENTS.md`
-      requires.
+      requires. Give it a form without an address there, as the mockups draw
+      it, because a design link opens a design entry and the design library
+      checks reject an external address.
 - [ ] Add tests under `packages/ui/tests` and `packages/viewer/tests`, and a
       browser spec.
 

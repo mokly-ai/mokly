@@ -74,7 +74,10 @@ export interface ComponentEntryMetadata {
   variantOf?: ComponentId;
   /**
    * The address of the entry's story in the published Storybook, which a
-   * stories entry has when the configuration gives that Storybook's URL.
+   * stories entry has when the configuration gives that Storybook's URL. The
+   * artboards draw the link to it without the address, because a design link
+   * opens a design entry, so this field records the address that the product
+   * link opens.
    */
   storybook?: string;
 }
