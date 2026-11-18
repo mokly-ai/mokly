@@ -72,26 +72,17 @@ impl InputStamp {
     }
 
     pub(crate) fn file(&mut self, tree: &dyn SourceTree, path: PathBuf) {
-        let hash = tree.digest(&path).ok();
+        let hash = file_digest(tree, &path);
         self.files.insert(path, hash);
     }
 
     pub(crate) fn asset(&mut self, tree: &dyn SourceTree, path: PathBuf) {
-        let stamp = tree.project(&path).ok().flatten().and_then(|node| {
-            tree.digest_unretained(&node.identity)
-                .ok()
-                .map(|hash| (node, hash))
-        });
+        let stamp = asset_stamp(tree, &path);
         self.assets.insert(path, stamp);
     }
 
     pub(crate) fn identity(&mut self, tree: &dyn SourceTree, path: PathBuf) {
-        let value = tree.project(&path).ok().flatten().and_then(|node| {
-            tree.file_object(&path)
-                .ok()
-                .flatten()
-                .map(|object| (node, object))
-        });
+        let value = file_identity(tree, &path);
         self.identities.insert(path, value);
     }
 
@@ -104,29 +95,50 @@ impl InputStamp {
         let mut scan = Scan::default();
         for directory in directories {
             let path = root.join(&directory.path);
-            let files = scan
-                .matching_files(tree, &path, &directory.glob, &|| {
-                    Ok(glob(&directory.glob)
-                        .expect("retained PostCSS directory globs passed dependency validation"))
-                })
-                .ok()
-                .map(|files| files.to_vec());
+            let files = directory_files(&mut scan, tree, &path, &directory.glob);
             self.directories
                 .insert((path, directory.glob.clone()), files);
         }
     }
 
+    /// Whether `current(tree)` equals this stamp. `current` reads each entry under its own
+    /// key, so the check compares entry by entry and stops at the first entry that differs.
+    /// It reads repository files first, then files below `node_modules`, memberships,
+    /// assets, identities, and directory scans. The order changes only the number of reads.
+    pub(crate) fn matches(&self, tree: &dyn SourceTree) -> bool {
+        let Self {
+            memberships,
+            files,
+            assets,
+            identities,
+            directories,
+        } = self;
+        let file = |(path, digest): (&PathBuf, &Option<String>)| file_digest(tree, path) == *digest;
+        let mut scan = Scan::default();
+        files.iter().filter(|(path, _)| !dependency(path)).all(file)
+            && files.iter().filter(|(path, _)| dependency(path)).all(file)
+            && memberships
+                .iter()
+                .all(|(path, names)| membership(tree, path) == *names)
+            && assets
+                .iter()
+                .all(|(path, stamp)| asset_stamp(tree, path) == *stamp)
+            && identities
+                .iter()
+                .all(|(path, value)| file_identity(tree, path) == *value)
+            && directories.iter().all(|((path, pattern), found)| {
+                directory_files(&mut scan, tree, path, pattern) == *found
+            })
+    }
+
+    /// The stamp that `tree` gives for the keys of this stamp. Tests compare `matches` with it.
+    #[cfg(test)]
     pub(crate) fn current(&self, tree: &dyn SourceTree) -> Self {
         let mut result = Self::default();
         for path in self.memberships.keys() {
-            let names = tree.children(path).ok().map(|children| {
-                children
-                    .into_iter()
-                    .filter(|child| matches!(child.kind, FileKind::File | FileKind::Symlink))
-                    .map(|child| PathBuf::from(child.name))
-                    .collect()
-            });
-            result.memberships.insert(path.clone(), names);
+            result
+                .memberships
+                .insert(path.clone(), membership(tree, path));
         }
         for path in self.files.keys() {
             result.file(tree, path.clone());
@@ -139,13 +151,7 @@ impl InputStamp {
         }
         let mut scan = Scan::default();
         for (path, pattern) in self.directories.keys() {
-            let files = scan
-                .matching_files(tree, path, pattern, &|| {
-                    Ok(glob(pattern)
-                        .expect("retained PostCSS directory globs passed dependency validation"))
-                })
-                .ok()
-                .map(|files| files.to_vec());
+            let files = directory_files(&mut scan, tree, path, pattern);
             result
                 .directories
                 .insert((path.clone(), pattern.clone()), files);
@@ -154,6 +160,62 @@ impl InputStamp {
     }
 }
 
+/// Whether a path has a `node_modules` component. `InputStamp::matches` reads these last.
+fn dependency(path: &Path) -> bool {
+    path.components()
+        .any(|component| component.as_os_str() == "node_modules")
+}
+
+fn file_digest(tree: &dyn SourceTree, path: &Path) -> Option<String> {
+    tree.digest(path).ok()
+}
+
+fn asset_stamp(tree: &dyn SourceTree, path: &Path) -> Option<(Node, String)> {
+    tree.project(path).ok().flatten().and_then(|node| {
+        tree.digest_unretained(&node.identity)
+            .ok()
+            .map(|hash| (node, hash))
+    })
+}
+
+fn file_identity(tree: &dyn SourceTree, path: &Path) -> Option<(Node, String)> {
+    tree.project(path).ok().flatten().and_then(|node| {
+        tree.file_object(path)
+            .ok()
+            .flatten()
+            .map(|object| (node, object))
+    })
+}
+
+/// The names of the files and symbolic links directly in a directory.
+fn membership(tree: &dyn SourceTree, path: &Path) -> Option<BTreeSet<PathBuf>> {
+    tree.children(path).ok().map(|children| {
+        children
+            .into_iter()
+            .filter(|child| matches!(child.kind, FileKind::File | FileKind::Symlink))
+            .map(|child| PathBuf::from(child.name))
+            .collect()
+    })
+}
+
+/// The files below `path` that match a retained directory dependency glob.
+fn directory_files(
+    scan: &mut Scan,
+    tree: &dyn SourceTree,
+    path: &Path,
+    pattern: &str,
+) -> Option<Vec<PathBuf>> {
+    scan.matching_files(tree, path, pattern, &|| {
+        Ok(glob(pattern).expect("retained PostCSS directory globs passed dependency validation"))
+    })
+    .ok()
+    .map(|files| files.to_vec())
+}
+
 #[cfg(test)]
 #[path = "_tests_/asset_stamp_tests.rs"]
 mod asset_stamp_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stamp_match_tests.rs"]
+mod stamp_match_tests;
