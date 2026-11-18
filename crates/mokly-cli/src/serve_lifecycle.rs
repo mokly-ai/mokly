@@ -1,16 +1,38 @@
 //! Serve orders observer shutdown, busy-worker cancellation, and idle-worker shutdown.
 
+use std::io;
 use std::sync::{Arc, Mutex};
+use std::thread;
 
 use async_trait::async_trait;
 use mokly_cli::cancellation::Cancellation;
 use mokly_server::error::Result;
 use mokly_server::shutdown::Lifecycle;
+use mokly_server::work::parallelism;
 use mokly_sidecar::pool::SidecarPool;
+use tokio::runtime::{Builder, Runtime};
+use tokio::sync::watch;
+use tokio::task::JoinHandle;
 
 use crate::serve_git::GitWork;
+use crate::serve_progress::Progress;
 use crate::serve_shutdown;
 use crate::serve_watch::WatchInputs;
+
+/// Construct the Serve runtime with the same capacity used by background work.
+pub(super) fn runtime() -> io::Result<(u32, Runtime)> {
+    let workers = parallelism(thread::available_parallelism().map_or(1, usize::from));
+    let runtime = Builder::new_multi_thread()
+        .worker_threads(workers as usize)
+        .enable_all()
+        .build()?;
+    Ok((workers, runtime))
+}
+
+/// Start progress animation with a command-owned stop receiver.
+pub(super) fn animate(progress: Arc<dyn Progress>, stop: watch::Receiver<bool>) -> JoinHandle<()> {
+    tokio::spawn(async move { progress.animate(stop).await })
+}
 
 pub(super) struct ServeLifecycle {
     pub(super) git: Arc<dyn GitWork>,

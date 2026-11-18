@@ -2,7 +2,20 @@
 
 #![warn(unreachable_pub)]
 
+mod bundle_cache;
+mod bundle_cache_maintenance;
+mod bundle_cache_read;
+pub mod bundle_cache_types;
+mod bundle_cache_write;
+mod bundle_codec;
+mod bundle_codec_read;
+mod bundle_codec_write;
+mod bundle_inventory;
+mod bundle_receipts;
+mod bundle_storage;
+pub mod bundle_store;
 pub mod cache;
+mod cache_lock;
 pub mod cache_types;
 pub mod commands;
 pub mod dependencies;
@@ -59,14 +72,21 @@ mod move_candidates;
 pub mod move_types;
 pub mod moves;
 
-mod capture_codec;
 mod capture_error;
-mod capture_nodes;
+mod capture_fallback;
+mod capture_generation;
+mod capture_restore;
 mod capture_styles;
 mod comparison_capture;
+mod comparison_consumer;
 mod comparison_error;
+mod comparison_pipeline;
+mod comparison_preparation;
+mod comparison_routes;
+mod comparison_slots;
 
 mod comparison_resources;
+pub mod comparison_reuse;
 pub mod comparison_steps;
 pub mod comparison_types;
 mod entry_metadata;
@@ -84,9 +104,14 @@ mod review_projection;
 mod snapshots;
 
 pub mod ancestor_roots;
+mod base_classification;
+pub mod base_freshness;
+mod base_reader;
 pub mod base_render;
+pub mod base_retention;
 pub mod base_selection;
 pub mod comparison;
+pub mod install_inputs;
 
 pub mod lookup;
 
@@ -193,8 +218,6 @@ mod manager_arguments_tests;
 #[path = "_tests_/manager_confinement_tests.rs"]
 mod manager_confinement_tests;
 
-mod capture_annotations;
-mod capture_usage;
 mod capture_weight;
 
 #[cfg(test)]
@@ -206,3 +229,22 @@ mod capture_engine_tests;
 mod capture_producer;
 
 mod capture_collection;
+
+#[cfg(test)]
+#[path = "_tests_/bundle_fixture.rs"]
+mod bundle_fixture;
+
+#[cfg(test)]
+#[path = "_tests_/scheduling/mod.rs"]
+mod scheduling_tests;
+
+mod reuse_budget;
+mod reuse_collection;
+mod reuse_digest;
+mod reuse_generation;
+mod reuse_memo;
+mod reuse_probes;
+mod reuse_reads;
+mod reuse_usage;
+mod reuse_weight;
+mod rule_weight;

@@ -53,7 +53,7 @@ test("the daily Rust audit cannot access the update job's write credentials", as
   );
   assert.doesNotMatch(JSON.stringify(job), /secrets\./);
   const checkout = steps(job).find((step) =>
-    String(step.uses ?? "").startsWith("useblacksmith/checkout@"),
+    String(step.uses ?? "").startsWith("actions/checkout@"),
   );
   assert.ok(checkout);
   assert.equal(record(checkout.with).ref, "main");

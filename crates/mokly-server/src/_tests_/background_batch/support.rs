@@ -62,7 +62,23 @@ impl Renders {
         failing: &[&str],
         warned: &[&str],
     ) -> (Self, Arc<dyn Documents>) {
+        Self::configured(gated, failing, warned, &[])
+    }
+
+    /// Record the given starts in order, without waiting for an earlier render to end.
+    pub(super) fn ordered(gated: &[&str], starts: &[&str]) -> (Self, Arc<dyn Documents>) {
+        Self::configured(gated, &[], &[], starts)
+    }
+
+    fn configured(
+        gated: &[&str],
+        failing: &[&str],
+        warned: &[&str],
+        starts: &[&str],
+    ) -> (Self, Arc<dyn Documents>) {
         let started = Arc::new(Mutex::new(Vec::new()));
+        let starts_ready = Arc::new(Condvar::new());
+        let start_order: Vec<String> = starts.iter().map(|route| (*route).to_owned()).collect();
         let events = Arc::new(Mutex::new(Vec::new()));
         let (signal, signals) = mpsc::unbounded_channel();
         let gates: Vec<(String, Gate)> = gated
@@ -84,9 +100,21 @@ impl Renders {
             let active = active.clone();
             let peak = peak.clone();
             move |route: &str| {
-                started.lock().unwrap().push(route.to_owned());
-                peak.fetch_max(active.fetch_add(1, Ordering::SeqCst) + 1, Ordering::SeqCst);
-                let _ = signal.send(route.to_owned());
+                {
+                    let mut recorded = started.lock().unwrap();
+                    if let Some(position) = start_order.iter().position(|name| name == route) {
+                        while !start_order[..position]
+                            .iter()
+                            .all(|name| recorded.contains(name))
+                        {
+                            recorded = starts_ready.wait(recorded).unwrap();
+                        }
+                    }
+                    recorded.push(route.to_owned());
+                    peak.fetch_max(active.fetch_add(1, Ordering::SeqCst) + 1, Ordering::SeqCst);
+                    let _ = signal.send(route.to_owned());
+                    starts_ready.notify_all();
+                }
                 if let Some((_, gate)) = gates.iter().find(|(name, _)| name == route) {
                     let mut released = gate.0.lock().unwrap();
                     while !*released {

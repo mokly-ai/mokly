@@ -49,7 +49,12 @@ and `snapshotId` and `detailId` equal that record. Held details stay installed
 when a new index lists the same `detailId`; a current detail also keeps its
 `revision`.
 
-Every fetch uses ordinary GET without custom headers and `credentials: "omit"`.
+Every fetch uses ordinary GET without custom headers. The standalone shell
+sends `credentials: "same-origin"` with every read, and an embedded viewer
+sends `credentials: "omit"`. Decision: the standalone shell reads only the
+stub's origin, which can need its cookie, for example behind a private preview
+proxy; `omit` was rejected because such a proxy then rejects every read after
+the page loads.
 URL sources use HTTP(S) without userinfo or fragments. Fetches stay same-origin
 and reject cross-origin redirects. Serve JSON uses `Cache-Control: no-store`.
 Static hosts may cache the immutable index and details under the [static revalidation rules](./mokly-export-delivery.md#headers-caching-and-revalidation).

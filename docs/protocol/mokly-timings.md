@@ -39,7 +39,7 @@ its files are installed. Its Serve duration includes queue time.
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
 | `config.load`                                    | configuration discovery, loading, and validation                                                                                     |
 | `catalogue.discover`                             | the root walk, front matter and folder parsing, and path derivation                                                                  |
-| `catalogue.describe`                             | the wait for the sidecar's `bundle` and `describe` results and their validation                                                      |
+| `catalogue.bundle`                               | one core `bundle` request: the bundle cache lookup and restore, the sidecar's answer, and the bundle cache write; carries `cache`    |
 | `catalogue.validate`                             | registry, relationship, link, marker, and stylesheet validation                                                                      |
 | `graph.prepare`                                  | stylesheet inputs, render plans, and generation keys before document rendering                                                       |
 | `render.document`                                | one composed document: substitution, slots, composition, link rewriting, and assembly; carries `viewport` and `scheme`               |
@@ -51,7 +51,7 @@ its files are installed. Its Serve duration includes queue time.
 | `watch.action`                                   | one watch action from debounce end to publication; carries `action`                                                                  |
 | `changes.classify`                               | one Changes classification, in Serve and in `build`                                                                                  |
 | `review.base-commit`                             | merge-base resolution and commit validation; a pinned commit reuses the result without another Git span                              |
-| `review.base-tree`                               | base source preparation and complete rendering, including bounded tree/blob reads, extraction, and dependency preparation            |
+| `review.base-tree`                               | bounded base reads, extraction, dependencies, and rendering, or a reuse of the kept base; carries `action`, `prepare` or `reuse`     |
 | `review.base-extraction`                         | the base source key, the cache lookup, and the extraction when no complete entry exists; carries `action`, `reuse` or `extract`      |
 | `review.base-dependencies`                       | the dependency tier decision and, in the second tier, the bounded install; the end carries `tier`                                    |
 | `review.compare-views`                           | the comparison loop; its `counts` record carries `views`, `unchanged`, `changed`, and `ignoredOnly`                                  |
@@ -64,26 +64,6 @@ its files are installed. Its Serve duration includes queue time.
 | `output.recheck`                                 | final selected membership, identity, and live digest verification; carries `inputPaths` and `retainedBytes`                          |
 | `output.input-read`                              | a static captured-tree read; carries `action` (`private` or `public`), `readBytes`, and `retainedBytes`                              |
 | `upload.plan`, `upload.blobs`, `upload.complete` | the exchange rounds of `publish`                                                                                                     |
-
-Review spans use the same session, role, and parent context as their caller:
-under `changes.classify` in Serve and under `output.write` in `build`. The
-`review.capture-side` span carries `side`, with `base` for the base generation
-and `head` for the head generation. Build and publish emit the head capture
-under `output.write` before `changes.classify`. The base capture appears under
-`review.base-tree`. A repeated discovery for the same side, route, content
-digest, and exclusion identity is a defect. A contained parse or selector failure in
-`review.css-analysis` returns unresolved evidence with status `ok`; an
-escaping error ends the span with `error`. The spans log no paths,
-selectors, CSS, or document text.
-
-Dependency `tier` is numeric: 1 for working dependencies, 2 for the base
-installation, and 3 for fallback. A successful fallback has status `ok`.
-Comparison counts cover the final view and document union. `changed` includes
-added and removed views; `unchanged` and `ignoredOnly` are separate totals.
-Only a completed comparison emits these counts. `review.base-extraction`,
-`review.base-dependencies`, and `review.compare-views` start with error status and
-record `ok` only after successful work. A `review.base-extraction` lookup
-without a build that finds no complete entry ends without an `action`.
 
 Static input counters on `output.*` stages are observations. Their
 `retainedBytes` counts private source payload once per captured path.
@@ -98,6 +78,27 @@ bound, `stamp-mismatch` when an input of the record changed, and
 `inconsistent-evidence` when the read evidence of the earlier bundle
 disagreed, so its record stayed in its attempt.
 
+`catalogue.bundle` records every core `bundle` request, also when a cache
+serves it. So its `cache` field names the outcome of the request, and the
+`cache` field of `css.bundle` names only why a cache missed. The values are:
+
+- `memory`: the sidecar reused a compilation that the pool kept in memory.
+- `hit`: the sidecar reused the compilation of the
+  [bundle cache](./mokly-base-cache.md#bundle-entries).
+- `no-record`: neither the pool nor the bundle cache kept a compilation of
+  the request's settings.
+- `stamp-mismatch`: the reuse check rejected the compilation that the pool or
+  the bundle cache kept.
+- `version-mismatch`: the bundle cache entry has another format or Mokly
+  version.
+- `damaged`: the bundle cache entry is damaged or unreadable, or holds other
+  settings.
+- `unavailable`: the bundle cache directory is unusable, or another caller
+  holds the entry lock, also while it works on another entry that shares it.
+
+The sidecar compiled for every value except `memory` and `hit`. A reuse inside
+the core sends no `bundle` request, so it makes no `catalogue.bundle` span.
+
 `sidecar.operation` carries `event: "counts"`, `count: 1`, `operation`, and
 `worker`, the sidecar PID. Operations are `esbuild`, `postcss-start`, and
 `postcss-stop`. The worker emits each event at the actual operation boundary,
@@ -109,29 +110,27 @@ including failed compilations. Replay and evaluation-only reuse add no
 `output.write` span. It comes before that span's end record, also when the
 span ends with `error`. Its `parentId` is that span, and `phase` names the
 span's stage. Between the start and the end of the span, `hits` counts the
-render cache lookups that found an entry, `misses` the lookups that found
-none, and `evictions` the entries removed to make room. These counts cover
-every cache operation of the process in that interval, including nested
-spans and concurrent foreground work. `chargedBytes` and `entries` give the
-cache's charged bytes and retained entries at the end of the span. Charged
-bytes are the cache's estimate under the
+render cache lookups that either tier served. `restores` counts the lookups
+that the compact tier served, so `hits` includes `restores`. `misses` counts
+the lookups that no tier served. `restoreFailures` counts the compact
+documents that failed to restore. Each failure also counts as a miss, and the
+cache logs an error for it that holds no document data. `evictions` counts the
+entries that left the cache. A move between the tiers is not an eviction. These
+counts cover every cache operation of the process in that interval, including
+nested spans and concurrent foreground work. `chargedBytes` and `entries` give
+the charged bytes and the retained entries of both tiers at the end of the span.
+Charged bytes are the cache's estimate under the
 [runtime bound](./mokly-runtime.md#render-graph-and-cache), not measured
 memory. The `cacheHits` count of `serve.background` counts only the
-documents of that pass that came from the cache.
+documents of that pass that came from either tier of the cache.
 Decision: one counts record for each phase. Fields on each phase's own
 counts record were rejected, because they would rename `cacheHits` and lose
 the counts of a failed review phase.
 
-`review.capture-side` starts with status `error` and records `ok` only after
-successful work. Completed captures emit counts, including a zero-view capture
-when no input fits. `views` counts retained documents on `side`.
-`uncapturedViews` counts documents that use that side's source fallback. These
-counts sum to the number of documents on that side, including on reuse.
-`encodedBytes` counts compressed document and CSS payloads. `retainedBytes` adds
-the capture's metadata, closures, generated digests, route keys, and
-conservative container charges. Each side has a separate 256 MiB capture bound
-beside the render cache. These charges are not measured RSS. Serve can hold an
-accepted capture while building its replacement.
+## Review Spans
+
+[Review timing records](./mokly-review-timings.md) define the parent context,
+the counts, the fields, and the status of each `review.*` span.
 
 ## Sidecar Spans
 
@@ -190,6 +189,7 @@ CI's small correctness fixtures have
 | sidecar deadlines and recycling    | the values of the [sidecar contract](./mokly-sidecar.md#cancellation-and-timeouts)                                             |
 | base dependency preparation        | 120 seconds (120,000 ms) shared by version discovery and all selected installs; expiry uses the documented dependency fallback |
 | comparison cache namespace         | 2 GiB (2,147,483,648 bytes) per repository and namespace, separately for extraction and dependency installs                    |
+| bundle cache namespace             | 512 MiB (536,870,912 bytes) per repository, complete and staged bundle data together                                           |
 | render cache bounds                | the byte bounds of the [runtime contract](./mokly-runtime.md#render-graph-and-cache)                                           |
 | `build` time and peak memory       | recorded per variant from scenario 1                                                                                           |
 | `changesReadyMs` and the CSS share | recorded per variant from scenarios 2 and 3                                                                                    |

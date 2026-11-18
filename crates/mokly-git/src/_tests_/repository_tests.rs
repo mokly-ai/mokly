@@ -7,7 +7,7 @@ use std::sync::Arc;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::changes::{self, ChangedPath, Kind};
-use crate::command::{Output, RunnerMock};
+use crate::command::{Output, ProcessMode, RunnerMock};
 use crate::disk::DiskMock;
 use crate::error::{Error, Result};
 use crate::identity::{ObjectId, RepoPath};
@@ -37,9 +37,9 @@ fn repository(mock: Unimock) -> GitRepository {
 #[test]
 fn merge_base_resolves_refs_without_option_injection() {
     let repo = repository(Unimock::new((
-        RunnerMock::run.next_call(matching!((request) if request.args[2..] == ["rev-parse", "--verify", "--end-of-options", "--danger^{commit}"].map(OsString::from)))
+        RunnerMock::run.next_call(matching!((request) if request.process_mode == ProcessMode::PlainGroup && request.args[2..] == ["rev-parse", "--verify", "--end-of-options", "--danger^{commit}"].map(OsString::from)))
             .returns(output(format!("{}\n", id()).as_bytes())),
-        RunnerMock::run.next_call(matching!((request) if request.args[2..] == ["merge-base", id().as_str(), "HEAD"].map(OsString::from)))
+        RunnerMock::run.next_call(matching!((request) if request.process_mode == ProcessMode::PlainGroup && request.args[2..] == ["merge-base", id().as_str(), "HEAD"].map(OsString::from)))
             .returns(output(format!("{}\n", id()).as_bytes())),
     )));
     assert_eq!(repo.merge_base("--danger").unwrap(), id());
@@ -74,7 +74,7 @@ fn root_projection_rejects_nested_repositories_and_preserves_aliases() {
     let factory: &dyn Repositories = &GitRepositories {
         runner: Arc::new(Unimock::new(
             RunnerMock::run
-                .next_call(matching!(_))
+                .next_call(matching!((request) if request.process_mode == ProcessMode::PlainGroup))
                 .returns(output(b"/repo\n")),
         )),
         disk: Arc::new(disk),
@@ -89,12 +89,12 @@ fn changes_preserve_renames_and_add_untracked_paths() {
     let repo = repository(Unimock::new((
         RunnerMock::run
             .next_call(
-                matching!((request) if request.args.iter().any(|arg| arg == "--find-renames")),
+                matching!((request) if request.process_mode == ProcessMode::FullTree && request.args.iter().any(|arg| arg == "--find-renames")),
             )
             .returns(output(b"R100\0old\0new\0M\0edit\0")),
         RunnerMock::run
             .next_call(
-                matching!((request) if request.args.iter().any(|arg| arg == "--exclude-standard")),
+                matching!((request) if request.process_mode == ProcessMode::FullTree && request.args.iter().any(|arg| arg == "--exclude-standard")),
             )
             .returns(output(b"untracked\0edit\0")),
     )));

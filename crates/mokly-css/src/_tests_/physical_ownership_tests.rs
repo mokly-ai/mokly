@@ -52,12 +52,8 @@ fn page(
 
 #[test]
 fn a_declared_receiver_claims_supplied_content_without_an_own_page_match() {
-    let result = attribution::attribute(vec![page(
-        None,
-        Some("receiver"),
-        &[("receiver", false)],
-        &[],
-    )]);
+    let result =
+        attribution::attribute(&[page(None, Some("receiver"), &[("receiver", false)], &[])]);
     assert_eq!(
         result.pages[0][0].owner,
         EvidenceOwner::Component {
@@ -70,7 +66,7 @@ fn a_declared_receiver_claims_supplied_content_without_an_own_page_match() {
 
 #[test]
 fn an_outer_supplier_cannot_block_the_receivers_declared_claim() {
-    let result = attribution::attribute(vec![
+    let result = attribution::attribute(&[
         page(
             Some("supplier"),
             None,
@@ -95,9 +91,9 @@ fn an_outer_supplier_cannot_block_the_receivers_declared_claim() {
 #[test]
 fn an_unowned_receiver_needs_catalogue_proof_for_supplied_content() {
     let consumer = || page(None, None, &[("receiver", false)], &[]);
-    let result = attribution::attribute(vec![consumer()]);
+    let result = attribution::attribute(&[consumer()]);
     assert_eq!(result.pages[0][0].owner, EvidenceOwner::Entry);
-    let result = attribution::attribute(vec![
+    let result = attribution::attribute(&[
         page(Some("receiver"), None, &[("receiver", true)], &[]),
         consumer(),
     ]);
@@ -111,7 +107,7 @@ fn an_unowned_receiver_needs_catalogue_proof_for_supplied_content() {
 
 #[test]
 fn a_nested_receiver_cannot_take_its_suppliers_declared_rule() {
-    let result = attribution::attribute(vec![
+    let result = attribution::attribute(&[
         page(
             Some("supplier"),
             Some("supplier"),
@@ -145,7 +141,7 @@ fn a_nested_receiver_cannot_take_its_suppliers_declared_rule() {
 
 #[test]
 fn nested_own_proof_takes_a_page_wide_copy_outside_supplied_content() {
-    let result = attribution::attribute(vec![
+    let result = attribution::attribute(&[
         page(
             Some("supplier"),
             Some("supplier"),

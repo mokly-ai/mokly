@@ -516,6 +516,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c9ea0ac24bc397ab3c98583a3c9ba74fa56b09a4449bbe172b9b1ddb016027a"
 
 [[package]]
+name = "cobs"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0fa961b519f0b462e3a3b4a34b64d119eeaca1d59af726fe450bbba07a9fc0a1"
+dependencies = [
+ "thiserror",
+]
+
+[[package]]
 name = "colorchoice"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -925,6 +934,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "embedded-io"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef1a6892d9eef45c8fa6b9e0086428a2cca8491aca8f787c534a3d6d0bcb3ced"
+
+[[package]]
+name = "embedded-io"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "edd0f118536f44f5ccd48bcb8b111bdc3de888b58c74639dfb034a357d0f206d"
+
+[[package]]
 name = "encode_unicode"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -990,9 +1011,9 @@ checksum = "aedcfb3409746eddb02b9e19ebda1c3394f759a152e48ee875a0844d1b955484"
 
 [[package]]
 name = "flate2"
-version = "1.1.10"
+version = "1.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e634e2e0ebac1ee034020da1ca582e17ffe4e0f5e985823721e168928136dcb"
+checksum = "626d4928326b646e70f65ed36fc7cf9f206bdb68a0019ee7c6b4709da4e084c4"
 dependencies = [
  "crc32fast",
  "miniz_oxide",
@@ -1859,6 +1880,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ce5d3ddc6d3fa000eb1536d85e147bfe31aacaba692ed6a876f95cb7c855be78"
 
 [[package]]
+name = "libmimalloc-sys"
+version = "0.1.49"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a45a52f43e1c16f667ccfe4dd8c85b7f7c204fd5e3bf46c5b0db9a5c3c0b8e9"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "libredox"
 version = "0.1.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2011,6 +2041,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a86d3146ed3995b5913c414f6664344b9617457320782e64f0bb44afd49d74"
 
 [[package]]
+name = "mimalloc"
+version = "0.1.52"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d4139bb28d14ad1facf21d5eb8825051b326e172d216b39f6d31df53cc97862"
+dependencies = [
+ "libmimalloc-sys",
+]
+
+[[package]]
 name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2087,6 +2126,7 @@ dependencies = [
  "dunce",
  "insta",
  "libc",
+ "mimalloc",
  "mokly-catalogue",
  "mokly-compare",
  "mokly-css",
@@ -2101,6 +2141,7 @@ dependencies = [
  "mokly-sidecar",
  "mokly-source-interface",
  "mokly-static",
+ "mokly-test-support",
  "mokly-watch",
  "serde_json",
  "signal-hook",
@@ -2122,6 +2163,7 @@ dependencies = [
  "directories",
  "dunce",
  "flate2",
+ "getrandom 0.4.3",
  "mokly-catalogue",
  "mokly-css",
  "mokly-git",
@@ -2131,6 +2173,7 @@ dependencies = [
  "mokly-platform",
  "mokly-sidecar",
  "mokly-source-interface",
+ "mokly-test-support",
  "percent-encoding",
  "serde",
  "serde_json",
@@ -2180,6 +2223,7 @@ dependencies = [
 name = "mokly-graph"
 version = "0.14.0"
 dependencies = [
+ "flate2",
  "globset",
  "insta",
  "mokly-catalogue",
@@ -2187,10 +2231,14 @@ dependencies = [
  "mokly-html",
  "mokly-model",
  "mokly-source-interface",
+ "mokly-test-support",
  "percent-encoding",
+ "postcard",
  "pulldown-cmark",
  "rayon",
+ "serde",
  "serde_json",
+ "sha2",
  "tempfile",
  "thiserror",
  "tracing",
@@ -2292,6 +2340,7 @@ dependencies = [
  "mokly-platform",
  "mokly-sidecar",
  "mokly-source-interface",
+ "mokly-test-support",
  "serde",
  "serde_json",
  "tempfile",
@@ -2321,6 +2370,7 @@ dependencies = [
  "mokly-html",
  "mokly-model",
  "mokly-source-interface",
+ "mokly-test-support",
  "percent-encoding",
  "rand 0.10.3",
  "reqwest",
@@ -2332,7 +2382,6 @@ dependencies = [
  "tokio",
  "tower",
  "tracing",
- "tracing-subscriber",
  "unimock",
 ]
 
@@ -2345,6 +2394,7 @@ dependencies = [
  "libc",
  "mokly-model",
  "mokly-platform",
+ "mokly-test-support",
  "serde",
  "serde_json",
  "sysinfo",
@@ -2394,6 +2444,14 @@ dependencies = [
  "tracing",
  "unimock",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "mokly-test-support"
+version = "0.14.0"
+dependencies = [
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -3098,6 +3156,18 @@ checksum = "ec242d7eccbb2fd8b3b5b6e3cf89f94a91a800f469005b44d154359609f8af72"
 dependencies = [
  "higher-kinded-types",
  "never-say-never",
+]
+
+[[package]]
+name = "postcard"
+version = "1.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6764c3b5dd454e283a30e6dfe78e9b31096d9e32036b5d1eaac7a6119ccb9a24"
+dependencies = [
+ "cobs",
+ "embedded-io 0.4.0",
+ "embedded-io 0.6.1",
+ "serde",
 ]
 
 [[package]]

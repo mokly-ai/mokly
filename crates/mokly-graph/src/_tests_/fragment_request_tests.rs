@@ -133,7 +133,7 @@ fn fragment_adapters_keep_independent_request_registries() {
 
 #[test]
 fn adapters_with_equal_render_input_keys_share_one_cached_fragment() {
-    let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(1024 * 1024));
+    let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(1024 * 1024, 0));
     let head = MemoFragments::new(
         whole("equal inputs"),
         Arc::new(Unimock::new(

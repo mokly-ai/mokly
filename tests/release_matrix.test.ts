@@ -81,18 +81,18 @@ test("native release jobs build locked targets and gate publication on the matri
     step.uses?.includes("/checkout@"),
   );
   assert.equal(checkouts.length, 2);
-  const intel = checkouts.find(
-    (step) => step.if === "matrix.target == 'darwin-x64'",
+  const githubHosted = checkouts.find(
+    (step) => step.if === "!startsWith(matrix.runner, 'blacksmith-')",
   );
-  const other = checkouts.find(
-    (step) => step.if === "matrix.target != 'darwin-x64'",
+  const blacksmith = checkouts.find(
+    (step) => step.if === "startsWith(matrix.runner, 'blacksmith-')",
   );
   assert.equal(
-    intel?.uses,
+    githubHosted?.uses,
     "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
   );
   assert.equal(
-    other?.uses,
+    blacksmith?.uses,
     "useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a",
   );
   for (const checkout of checkouts) {

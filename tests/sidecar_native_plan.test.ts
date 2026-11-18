@@ -5,11 +5,11 @@ import test from "node:test";
 import { build } from "esbuild";
 
 import type { BundleParams } from "../packages/mokly/src/generated/sidecar/BundleParams.js";
+import type { PlannedImport } from "../packages/mokly/src/generated/sidecar/PlannedImport.js";
 import type { Bundled } from "../packages/mokly/src/sidecar/bundle.js";
 import { bundle, bundleWith } from "../packages/mokly/src/sidecar/bundle.js";
 import { evaluate } from "../packages/mokly/src/sidecar/evaluate.js";
 import { unmeasured } from "../packages/mokly/src/sidecar/measurements.js";
-import type { PlannedImport } from "../packages/mokly/src/sidecar/native-resolution.js";
 
 import {
   assertFullPathResult,

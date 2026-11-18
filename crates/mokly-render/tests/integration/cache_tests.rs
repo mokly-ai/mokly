@@ -12,7 +12,7 @@ use super::support::Consumer;
 #[test]
 fn evicted_styles_keep_the_generation_source_snapshot() {
     let mut consumer = Consumer::new();
-    Arc::get_mut(&mut consumer.runtime).unwrap().cache = Arc::new(MemoryCache::new(0));
+    Arc::get_mut(&mut consumer.runtime).unwrap().cache = Arc::new(MemoryCache::new(0, 0));
     let generation = consumer.generation(consumer.prepare().unwrap());
     let route = "styles/specs/components/chip.mockup.tsx.css";
     let original = generation.resource(route).unwrap().unwrap();

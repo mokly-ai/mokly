@@ -1,3 +1,4 @@
+import nodeFs from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -30,6 +31,7 @@ export function consumerPlugins(
   paths: ModulePaths,
   runtimeKey = "mokly:runtime",
   resolution: Resolution = { mode: "full" },
+  reads = inputs.files,
 ): Plugin[] {
   const root = params.sourceRoot;
   const ownPackage = path.resolve(import.meta.dirname, "../..");
@@ -53,8 +55,26 @@ export function consumerPlugins(
             attributeLoaders[args.with.type ?? ""] ??
             (extension === ".txt" ? "text" : undefined);
           if (!loader) return undefined;
-          const contents =
-            inputs.files.get(args.path) ?? (await fs.readFile(args.path));
+          let contents = reads.get(args.path);
+          if (contents === undefined) {
+            try {
+              contents = nodeFs.readFileSync(args.path);
+            } catch {
+              try {
+                contents = await new Promise<Buffer>((resolve, reject) => {
+                  nodeFs.readFile(args.path, (error, bytes) => {
+                    if (error) reject(error);
+                    else resolve(bytes);
+                  });
+                });
+              } catch (error) {
+                if (error && typeof error === "object")
+                  Error.captureStackTrace(error);
+                throw error;
+              }
+            }
+            reads.set(args.path, contents);
+          }
           inputs.files.set(args.path, contents);
           return { contents, loader: loader as Loader };
         });
@@ -201,10 +221,12 @@ export function consumerPlugins(
         });
         build.onLoad({ filter: /.*/, namespace: "mokly-css" }, async (args) => {
           const file = paths.name(args.path);
-          inputs.files.set(
-            args.path,
-            inputs.files.get(args.path) ?? (await fs.readFile(args.path)),
-          );
+          let contents = reads.get(args.path);
+          if (contents === undefined) {
+            contents = await fs.readFile(args.path);
+            reads.set(args.path, contents);
+          }
+          inputs.files.set(args.path, contents);
           const module = args.path.endsWith(".module.css");
           const loaders = params.moduleResolution.loaders;
           const empty =

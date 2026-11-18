@@ -7,6 +7,7 @@ use mokly_model::detail_context;
 use mokly_model::readers;
 use mokly_model::usage::CatalogueUsage;
 use mokly_server::background::{Background, UsagePass};
+use mokly_server::background_capacity::FixedCapacity;
 use mokly_server::diagnostics::TracingDiagnostics;
 use mokly_server::publication::{PublicationWriter, Publications};
 use mokly_server::snapshot::{Projector, SnapshotFactory, SnapshotInput};
@@ -64,7 +65,7 @@ async fn on_demand_usage_and_the_background_pass_publish_complete_consumers_once
     );
     let (stop, receiver) = watch::channel(false);
     let pass = UsagePass {
-        batch: 2,
+        capacity: Arc::new(FixedCapacity(2)),
         changes: None,
         publications: harness.publications.clone(),
         work: Arc::new(Workers::new(2, Arc::new(TracingDiagnostics))),

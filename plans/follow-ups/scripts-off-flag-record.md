@@ -5,12 +5,12 @@
 - **Added:** 2026-11-01, from the branch
   `conductor/rust-rebuild-150-base-install-scripts-and-managers`, the wider
   fix of finding 2 of its first review.
-- **Location:** `crates/mokly-compare/src/base_render.rs:48` to line 77,
-  `crates/mokly-compare/src/base_render.rs:112`,
-  `crates/mokly-compare/src/base_render.rs:199` to line 269,
-  `crates/mokly-cli/src/changes_base.rs:42` and `:103`,
+- **Location:** `crates/mokly-compare/src/base_render.rs:48` to line 79,
+  `crates/mokly-compare/src/base_render.rs:114`,
+  `crates/mokly-compare/src/base_classification.rs:103` to line 233,
+  `crates/mokly-cli/src/changes_base.rs:42` and `:130`,
   `crates/mokly-cli/src/changes_static.rs:24` and `:30`, and
-  `crates/mokly-cli/src/serve_changes_base.rs:130` and `:136`.
+  `crates/mokly-cli/src/serve_changes_base.rs:129` and `:135`.
 - **Reason:** On 2026-10-29 the user kept this wider fix out of the pull
   request that added the flag, and applied the direct fix there.
 
@@ -30,7 +30,7 @@
     base. `StaticBase` and `AttemptBase` in `mokly-cli` wrap another
     provider.
   - **`BaseRequest`:** the input of `BaseProvider::prepare`.
-    `Changes::classify` builds it for each comparison.
+    `Changes::classify` builds it for each fresh base preparation.
 - **Background:**
   - On 2026-10-28 the user chose that `Error::Base` carries a typed
     scripts-off flag. One helper adds the scripts hint to every base failure
@@ -40,13 +40,16 @@
     the flag after the dependency install.
   - The flag travels in each provider result: `PreparedBase` on success and
     `BasePreparationError` on failure. Both are public types in
-    `base_render.rs`.
+    `base_render.rs`. A kept base holds the flag in `KeptBase`, in
+    `crates/mokly-compare/src/base_retention.rs`, so a failure of a reuse gets
+    the same hint.
   - `StaticBase` in `changes_static.rs` and `AttemptBase` in
     `serve_changes_base.rs` copy the flag from the result of their inner
     provider into their own result.
   - `Changes::classify` copies the flag onto each `Error::Base` that it
-    builds: a preparation failure, a capture failure, and three paths for a
-    source failure.
+    builds, through `base_error` in
+    `crates/mokly-compare/src/base_classification.rs`: a preparation failure,
+    a capture failure, a failed keep, and four paths for a source failure.
   - `Changes::classify` already reads source failures through
     `HistoricalSources.failures` after `prepare` returns. The flag can use
     the same kind of channel.
@@ -83,12 +86,15 @@
   - **D.** Record the scripts-off state once, in a write-once field of
     `BaseRequest`. `NativeBase` sets it where it computes the flag.
     `Changes::classify` reads it after `prepare` returns and uses it for
-    every `Error::Base`. The provider result goes back to
-    `Result<Arc<dyn RenderGeneration>>`. `PreparedBase`,
-    `BasePreparationError`, and the copies in `StaticBase` and `AttemptBase`
-    then go away. The request type gets a field that `NativeBase` writes
-    through a shared reference. The public `mokly-compare` API changes, and
-    the change spans two packages. Effort: Large.
+    every `Error::Base`. The provider result becomes `Result<PreparedBase>`.
+    `PreparedBase` keeps the generation and the freshness evidence, and its
+    copied `scripts_off` field goes away. `BasePreparationError` and the
+    copies in `StaticBase` and `AttemptBase` also go away. `KeptBase` keeps
+    the same shared write-once record in place of its own flag, so a later
+    failure of a reuse reads that record. So D still removes each copy of the
+    flag. The request type gets a field that `NativeBase` writes through a
+    shared reference. The public `mokly-compare` API changes, and the change
+    spans two packages. Effort: Large.
   - **E.** Do B. Also send a true flag through the third `StaticBase` arm
     and the source failure paths of `Changes::classify`, and assert it each
     time. The change is test code only. The pull request that added the

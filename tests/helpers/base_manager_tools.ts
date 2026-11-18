@@ -5,6 +5,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
+import { preserveGitPrograms } from "./base_manager_programs.js";
 import { write } from "./static_changes.js";
 
 const execute = promisify(execFile);
@@ -105,6 +106,7 @@ export async function managerPath(
   root: string,
   manager: Manager,
   missing: boolean,
+  originalPath = process.env.PATH ?? "",
 ) {
   const bin = path.join(path.dirname(root), "bin");
   await fs.mkdir(bin, { recursive: true });
@@ -147,7 +149,8 @@ export async function managerPath(
       await fs.symlink(cli(manager), path.join(bin, name));
     }
   }
-  const original = (process.env.PATH ?? "").split(path.delimiter);
+  const original = originalPath.split(path.delimiter);
+  await preserveGitPrograms(bin, original);
   const safe: string[] = [bin];
   for (const directory of original) {
     if (!path.isAbsolute(directory)) continue;

@@ -94,7 +94,8 @@ equivalent validator policy, so the next navigation sees the new deployment.
 The deployment file, index, and details of one deployment never change, so a
 validator answers `304` until the next deployment. The shell keeps the index
 and details for the page's lifetime and requests the deployment file at each
-check, with `credentials: "omit"`. A comparison generation
+check, with the credentials of the
+[shell fetch rules](./mokly-shell-fences.md#fetch-and-fences). A comparison generation
 is immutable at its content-addressed path: a host may cache its files for the
 deployment's lifetime or serve them with `Cache-Control: no-store`, and it
 must not rewrite one generation's URL to another generation.

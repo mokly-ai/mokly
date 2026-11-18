@@ -1,16 +1,18 @@
 //! Per-entry-module render input keys: every input that can change a module's renders.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, btree_map::Entry};
 use std::iter;
 
 use mokly_catalogue::render_sources::{
     JavaScriptGeneration, RenderMethod, RenderSource, ResolvedDefinition,
 };
 use mokly_model::material::digest;
-use serde_json::{Value, json};
+use serde_json::to_vec;
 
-use crate::key::{NodeKey, NodeKind, data_key};
-use crate::render_closure::{chain, closure, handle_module};
+use crate::key::NodeKey;
+use crate::render_closure::{Records, chain, closure, handle_module};
+use crate::render_exporters;
+use crate::workers::RenderWorkers;
 
 /// Storybook preview candidates in the sidecar's selection order.
 pub const PREVIEWS: [&str; 6] = [
@@ -63,104 +65,32 @@ impl RenderKeys {
     /// does not name. The stories then use `fallback`, which covers the preview, and the
     /// shared part leaves the digest out.
     pub fn build(inputs: &RenderInputs<'_>, fallback: NodeKey) -> Self {
-        let generation = inputs.generation;
-        let graph = &generation.modules;
-        let stories: BTreeSet<_> = inputs
-            .entries
-            .values()
-            .filter(|source| source.method == RenderMethod::Story)
-            .filter_map(|source| handle_module(graph, &source.handle))
-            .collect();
-        let records = records(generation);
-        let chains: BTreeMap<_, _> = graph.keys().map(|path| (path, chain(path))).collect();
-        let chained: BTreeSet<&String> = chains.values().flatten().collect();
-        let shared: Vec<_> = generation
-            .resolution_digests
-            .iter()
-            .filter(|(name, _)| {
-                !chained.contains(name)
-                    && !runtime_manifest(generation, name)
-                    && !PREVIEWS.contains(&name.as_str())
-            })
-            .collect();
-        let unattributed: Vec<_> = inputs
-            .bindings
-            .iter()
-            .filter(|(handle, _)| generation.unattributed.contains(*handle))
-            .map(|(handle, binding)| json!([handle, binding.path, binding.title]))
-            .collect();
-        let shared = text_digest(&json!([generation.environment, shared, unattributed]));
-        let preview = PREVIEWS
-            .iter()
-            .find(|candidate| graph.contains_key(**candidate))
-            .map(|candidate| closure(graph, [(*candidate).to_owned()]));
-        let renderer = inputs
-            .renderer
-            .map(|renderer| closure(graph, [renderer.to_owned()]));
-        // A renderer or preview that the module graph does not name has no content to
-        // key, so the modules that render with it keep the whole-bundle fallback.
-        let unnamed_renderer = inputs
-            .renderer
-            .is_some_and(|renderer| !graph.contains_key(renderer));
-        let unnamed_preview = PREVIEWS
-            .iter()
-            .any(|candidate| generation.resolution_digests.contains_key(*candidate));
-        let mut bindings: BTreeMap<&str, Vec<Value>> = BTreeMap::new();
-        let mut exporters = BTreeSet::new();
-        for (handle, binding) in inputs.bindings {
-            let Some(exporter) = handle_module(graph, handle) else {
-                continue;
-            };
-            exporters.insert(exporter);
-            let declarer = inputs
-                .declarations
-                .get(handle)
-                .map(String::as_str)
-                .filter(|module| *module != exporter && graph.contains_key(*module));
-            for module in iter::once(exporter).chain(declarer) {
-                bindings.entry(module).or_default().push(json!([
-                    handle,
-                    binding.path,
-                    binding.title
-                ]));
+        Self::build_keys(inputs, fallback, None)
+    }
+
+    /// Build the same keys on the supplied render workers with caller tracing context.
+    /// Only finished keys remain between exporter jobs.
+    pub fn build_with_workers(
+        inputs: &RenderInputs<'_>,
+        fallback: NodeKey,
+        workers: &dyn RenderWorkers,
+    ) -> Self {
+        Self::build_keys(inputs, fallback, Some(workers))
+    }
+
+    #[tracing::instrument(name = "render.inputs", skip_all)]
+    fn build_keys(
+        inputs: &RenderInputs<'_>,
+        fallback: NodeKey,
+        workers: Option<&dyn RenderWorkers>,
+    ) -> Self {
+        let modules = match build_modules(inputs, workers) {
+            Ok(modules) => modules,
+            Err(error) => {
+                tracing::error!(%error, "render inputs could not serialize; using whole-bundle keys");
+                BTreeMap::new()
             }
-        }
-        let mut modules = BTreeMap::new();
-        for module in exporters {
-            if (stories.contains(module) && unnamed_preview)
-                || (!stories.contains(module) && unnamed_renderer)
-            {
-                continue;
-            }
-            let extra = if stories.contains(module) {
-                preview.as_ref()
-            } else {
-                renderer.as_ref()
-            };
-            let mut members = closure(graph, [module.to_owned()]);
-            members.extend(extra.into_iter().flatten().cloned());
-            let resolution: BTreeSet<_> = members
-                .iter()
-                .filter_map(|path| chains.get(path))
-                .flatten()
-                .filter_map(|name| generation.resolution_digests.get_key_value(name))
-                .collect();
-            let exported: Vec<_> = members
-                .iter()
-                .filter_map(|path| bindings.get(path.as_str()))
-                .flatten()
-                .collect();
-            let key = data_key(
-                NodeKind::RenderInputs,
-                json!({
-                    "shared": shared,
-                    "modules": members.iter().map(|path| (path, records.get(path))).collect::<Vec<_>>(),
-                    "resolution": resolution,
-                    "bindings": exported,
-                }),
-            );
-            modules.insert(module.to_owned(), key);
-        }
+        };
         Self { modules, fallback }
     }
 
@@ -192,6 +122,89 @@ impl RenderKeys {
     }
 }
 
+/// Prepare shared closures once and merge only each exporter's additional records.
+fn build_modules(
+    inputs: &RenderInputs<'_>,
+    workers: Option<&dyn RenderWorkers>,
+) -> serde_json::Result<BTreeMap<String, NodeKey>> {
+    let generation = inputs.generation;
+    let graph = &generation.modules;
+    let stories: BTreeSet<_> = inputs
+        .entries
+        .values()
+        .filter(|source| source.method == RenderMethod::Story)
+        .filter_map(|source| handle_module(graph, &source.handle))
+        .collect();
+    let mut records = records(generation)?;
+    let chained: BTreeSet<&String> = records.chains.values().flatten().collect();
+    let shared: Vec<_> = generation
+        .resolution_digests
+        .iter()
+        .filter(|(name, _)| {
+            !chained.contains(name)
+                && !runtime_manifest(generation, name)
+                && !PREVIEWS.contains(&name.as_str())
+        })
+        .collect();
+    let unattributed: Vec<_> = inputs
+        .bindings
+        .iter()
+        .filter(|(handle, _)| generation.unattributed.contains(*handle))
+        .map(|(handle, binding)| (handle, &binding.path, &binding.title))
+        .collect();
+    let shared = digest(&to_vec(&(&generation.environment, shared, unattributed))?);
+    let unnamed_renderer = inputs
+        .renderer
+        .is_some_and(|renderer| !graph.contains_key(renderer));
+    let unnamed_preview = PREVIEWS
+        .iter()
+        .any(|candidate| generation.resolution_digests.contains_key(*candidate));
+    let mut exporters = BTreeSet::new();
+    for (handle, binding) in inputs.bindings {
+        let Some(exporter) = handle_module(graph, handle) else {
+            continue;
+        };
+        exporters.insert(exporter);
+        let declarer = inputs
+            .declarations
+            .get(handle)
+            .map(String::as_str)
+            .filter(|module| *module != exporter && graph.contains_key(*module));
+        let encoded = to_vec(&(handle, &binding.path, &binding.title))?;
+        for module in iter::once(exporter).chain(declarer) {
+            records
+                .bindings
+                .entry(module)
+                .or_default()
+                .push(encoded.clone());
+        }
+    }
+    let preview = records.parts(
+        PREVIEWS
+            .iter()
+            .find(|candidate| graph.contains_key(**candidate))
+            .map_or_else(BTreeSet::new, |candidate| {
+                closure(graph, [(*candidate).to_owned()])
+            }),
+    );
+    let renderer = records.parts(inputs.renderer.map_or_else(BTreeSet::new, |renderer| {
+        closure(graph, [renderer.to_owned()])
+    }));
+    let exporters = exporters
+        .into_iter()
+        .filter_map(|module| {
+            let story = stories.contains(module);
+            if (story && unnamed_preview) || (!story && unnamed_renderer) {
+                return None;
+            }
+            Some((module, if story { &preview } else { &renderer }))
+        })
+        .collect();
+    Ok(render_exporters::build(
+        graph, &records, &shared, exporters, workers,
+    ))
+}
+
 /// Whether a name is the manifest of a runtime package other than React.
 ///
 /// The environment identifies runtime packages by their resolved paths. Only React's
@@ -221,34 +234,58 @@ fn dependency_root(prefix: &str) -> bool {
             .is_some_and(|(_, index)| !index.is_empty() && !index.contains('/'))
 }
 
-/// One digest per module: its path, its ordered imports, and its content value.
-fn records(generation: &JavaScriptGeneration) -> BTreeMap<&String, String> {
-    let mut records = BTreeMap::new();
+/// Encode every module and resolution record once, including explicit missing imports.
+fn records(generation: &JavaScriptGeneration) -> serde_json::Result<Records<'_>> {
+    let mut modules = BTreeMap::new();
     for (path, imports) in &generation.modules {
         let content = if path.ends_with(".module.css") {
-            generation.class_map_digests.get(path).cloned()
+            generation.class_map_digests.get(path)
         } else if path.ends_with(".css") {
             None
         } else {
-            generation.module_digests.get(path).cloned().flatten()
+            generation.module_digests.get(path).and_then(Option::as_ref)
         };
-        records.insert(path, text_digest(&json!([path, imports, content])));
+        let record = digest(&to_vec(&(path, imports, content))?);
+        modules.insert(path.as_str(), to_vec(&(path, Some(record)))?);
     }
-    records
-}
-
-fn text_digest(value: &Value) -> String {
-    let bytes =
-        serde_json::to_vec(value).expect("JSON values with string object keys always serialize");
-    digest(&bytes)
+    for path in generation.modules.values().flatten() {
+        if let Entry::Vacant(entry) = modules.entry(path.as_str()) {
+            entry.insert(to_vec(&(path, Option::<&str>::None))?);
+        }
+    }
+    let resolution = generation
+        .resolution_digests
+        .iter()
+        .map(|(name, value)| Ok((name.as_str(), to_vec(&(name, value))?)))
+        .collect::<serde_json::Result<_>>()?;
+    let chains = generation
+        .modules
+        .keys()
+        .map(|path| (path.as_str(), chain(path)))
+        .collect();
+    Ok(Records {
+        modules,
+        resolution,
+        chains,
+        bindings: BTreeMap::new(),
+    })
 }
 
 #[cfg(test)]
 #[path = "_tests_/render_bindings_tests.rs"]
 mod render_bindings_tests;
 #[cfg(test)]
+#[path = "_tests_/render_equivalence_tests.rs"]
+mod render_equivalence_tests;
+#[cfg(test)]
 #[path = "_tests_/render_fallback_tests.rs"]
 mod render_fallback_tests;
 #[cfg(test)]
 #[path = "_tests_/render_inputs_tests.rs"]
 mod render_inputs_tests;
+#[cfg(test)]
+#[path = "_tests_/render_parallel_tests.rs"]
+mod render_parallel_tests;
+#[cfg(test)]
+#[path = "_tests_/render_reference.rs"]
+mod render_reference;

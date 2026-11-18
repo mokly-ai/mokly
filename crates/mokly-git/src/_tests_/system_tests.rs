@@ -7,7 +7,7 @@ use mokly_platform::error;
 use mokly_platform::processes::ProcessGroupsMock;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::command::{self, DEFAULT_OUTPUT_LIMIT, Request, Runner};
+use crate::command::{self, DEFAULT_OUTPUT_LIMIT, ProcessMode, Request, Runner};
 use crate::control::CancellationMock;
 use crate::error::Error;
 use crate::system::SystemRunner;
@@ -56,11 +56,58 @@ fn limits_at_or_below_the_maximum_reach_the_platform_boundary() {
 
 fn request(limit: usize) -> Request {
     Request {
+        process_mode: Default::default(),
         directory: PathBuf::from("/checkout"),
         args: vec!["--version".into()],
         stdin: vec![],
         output_limit: limit,
         stderr_limit: 1024 * 1024,
+    }
+}
+
+#[test]
+fn request_mode_alone_selects_process_configuration() {
+    for (mode, groups) in [
+        (
+            ProcessMode::default(),
+            Unimock::new(
+                ProcessGroupsMock::configure
+                    .some_call(matching!(_))
+                    .returns(Err(error::Error::InvalidPath {
+                        path: PathBuf::from("mode-probe"),
+                    })),
+            ),
+        ),
+        (
+            ProcessMode::PlainGroup,
+            Unimock::new(
+                ProcessGroupsMock::configure_plain
+                    .some_call(matching!(_))
+                    .returns(Err(error::Error::InvalidPath {
+                        path: PathBuf::from("mode-probe"),
+                    })),
+            ),
+        ),
+    ] {
+        let runner: &dyn Runner = &SystemRunner {
+            clock: Arc::new(Unimock::new(())),
+            cancellation: Arc::new(Unimock::new(
+                CancellationMock::cancelled
+                    .some_call(matching!())
+                    .returns(false),
+            )),
+            groups: Arc::new(groups),
+        };
+        let request = Request {
+            process_mode: mode,
+            args: vec!["rev-parse".into(), "--show-toplevel".into()],
+            ..request(1024)
+        };
+        assert!(matches!(
+            runner.run(&request),
+            Err(Error::Platform { source: error::Error::InvalidPath { path } })
+                if path == Path::new("mode-probe")
+        ));
     }
 }
 

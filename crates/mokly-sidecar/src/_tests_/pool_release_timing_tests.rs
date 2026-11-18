@@ -3,6 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
+use mokly_test_support::capture::Trace;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::error::Error;
@@ -10,7 +11,6 @@ use crate::pool::Pool;
 use crate::pool_options::{Launch, PoolOptions};
 use crate::pool_state::Slot;
 use crate::pool_timing::Reason;
-use crate::trace_capture::Trace;
 use crate::workers::{ControlMock, WorkerMock};
 
 use super::clean_idle;
@@ -39,6 +39,7 @@ fn cleanup_retirement_keeps_only_the_cause_after_active_or_idle_failure() {
                     Arc::new(factory.clone()),
                     Arc::new(clock.clone()),
                     Launch {
+                        capture_durability: false,
                         node: "private-node".into(),
                         entry: "private-entry".into(),
                         repository: "/private-root".into(),
@@ -66,11 +67,11 @@ fn cleanup_retirement_keeps_only_the_cause_after_active_or_idle_failure() {
                     state.slots.push(None);
                     state.controls.insert(0, Arc::new(worker.clone()));
                 }
-                tracing::subscriber::with_default(trace.clone(), || {
+                trace.in_scope(|| {
                     if active {
                         let caller = tracing::info_span!("caller");
                         let _scope = caller.enter();
-                        pool.release(0, Some(slot));
+                        pool.release(0, Some(slot), None);
                     } else {
                         {
                             let mut state = pool.lock();
@@ -86,7 +87,7 @@ fn cleanup_retirement_keeps_only_the_cause_after_active_or_idle_failure() {
                 assert!(!state.controls.contains_key(&0));
                 assert!(matches!(state.replacement_reasons[&0], Reason::Replacement));
             }
-            let stops = trace.stopped();
+            let stops = trace.closed("sidecar.stop");
             assert_eq!(stops.len(), 1);
             assert_eq!(stops[0].parent.is_some(), active);
             assert_eq!(stops[0].fields["reason"], "replacement");

@@ -205,8 +205,13 @@ test("a route reveal keeps a search that the destination's folder title matches"
   assert.ok(details);
   assert.equal(navLeafVisible(details, selected, context), true);
   assert.deepEqual(
-    revealSelection(model, folderTitleLookup(catalogue.hierarchy), selected),
+    revealSelection(
+      model,
+      folderTitleLookup(catalogue.hierarchy),
+      [],
+      selected,
+    ),
     selected,
   );
-  assert.equal(revealSelection(model, () => [], selected).search, "");
+  assert.equal(revealSelection(model, () => [], [], selected).search, "");
 });

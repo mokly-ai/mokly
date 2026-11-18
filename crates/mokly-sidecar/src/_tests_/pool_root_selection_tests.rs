@@ -54,6 +54,7 @@ fn pool(size: usize) -> (Pool, Arc<Mutex<Vec<Event>>>) {
         Arc::new(factory),
         Arc::new(Unimock::new(())),
         Launch {
+            capture_durability: false,
             repository: "/head".into(),
             node: "node".into(),
             entry: "/package/sidecar.js".into(),

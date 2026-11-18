@@ -14,6 +14,10 @@ struct CapturingGroups {
 }
 
 impl ProcessGroups for CapturingGroups {
+    fn configure_plain(&self, command: &mut Command) -> Result<()> {
+        self.inner.configure_plain(command)
+    }
+
     fn configure(&self, command: &mut Command) -> Result<()> {
         for name in [
             "GIT_DIR",
@@ -62,6 +66,7 @@ fn environment_probe() {
     };
     let result = runner
         .run(&Request {
+            process_mode: Default::default(),
             directory: std::env::current_dir().unwrap(),
             args: vec![
                 "config".into(),

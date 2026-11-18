@@ -24,7 +24,7 @@ npm install --save-dev react react-dom
 <!-- x-release-please-start-version -->
 
 The package is `@mokly/mokly` and its executable is `mokly`. This
-documentation describes version 0.18.0.
+documentation describes version 0.19.0.
 <!-- x-release-please-end -->
 
 ## Run the command
@@ -51,7 +51,7 @@ version rather than the range:
 <!-- x-release-please-start-version -->
 
 ```shell
-npm install --save-dev @mokly/mokly@0.18.0
+npm install --save-dev @mokly/mokly@0.19.0
 ```
 
 <!-- x-release-please-end -->
@@ -59,7 +59,9 @@ npm install --save-dev @mokly/mokly@0.18.0
 ## What you need
 
 - Node.js 22.15 or newer, excluding Node 23 and Node 24.14 through 24.18. If you use Node 24,
-  select 24.19 or later to avoid the affected runtime releases.
+  select 24.19 or later to avoid the affected runtime releases. On an
+  excluded version, the install succeeds and `mokly` stops at its first
+  command with a message that names the Node version to install.
 - A repository that holds your screens and components, or somewhere to write
   new ones.
 - Git, once you want to compare a branch with its base.

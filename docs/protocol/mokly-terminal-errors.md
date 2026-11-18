@@ -29,8 +29,8 @@ The counted lines show the exact plural rule for any counted summary:
 singular only for one. `<outDir>` is the output directory relative to the
 repository. `Mokly publish build: <directory>` appears once per `publish` process, before
 its build starts, and names the output inside the private directory that
-`publish` keeps after a failed upload. `Mokly cache: <directory>` appears at most once per process, when the command first opens the base-side
-extraction cache or the dependency install cache, and names the directory
+`publish` keeps after a failed upload. `Mokly cache: <directory>` appears at most once per process, under the
+[cache directory rule](./mokly-terminal-cache.md#cache-directory), and names the directory
 under the operating system's cache directory. `<uploaded>` and `<unchanged>`
 use the same decimal counts as rich mode. A publish prints one counted line
 or the already-published line. `<viewer-url>` appears only when accepted and

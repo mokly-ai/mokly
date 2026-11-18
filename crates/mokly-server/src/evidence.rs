@@ -8,7 +8,9 @@ use mokly_model::namespace::viewer;
 use mokly_model::projection_usage;
 use mokly_model::usage::CatalogueUsage;
 
-use crate::detail_encoding::{DetailEncoder, detail_id};
+use crate::detail_encoding::DetailEncoder;
+use crate::detail_publication::PublicationKind;
+use crate::error::Result;
 use crate::revision::RevisionLease;
 use crate::snapshot::{Snapshot, encode_index};
 
@@ -38,7 +40,7 @@ pub(crate) fn complete(
     current: &Snapshot,
     updates: &[(String, CatalogueUsage)],
     encoder: &dyn DetailEncoder,
-) -> Option<Arc<Snapshot>> {
+) -> Result<Option<Arc<Snapshot>>> {
     let changed: Vec<_> = updates
         .iter()
         .filter_map(|(route, usage)| {
@@ -47,7 +49,7 @@ pub(crate) fn complete(
         })
         .collect();
     if changed.is_empty() {
-        return None;
+        return Ok(None);
     }
     let mut next = current.clone();
     let mut dirty = BTreeSet::new();
@@ -102,26 +104,23 @@ pub(crate) fn complete(
         }
     });
     if dirty.is_empty() {
-        return Some(Arc::new(next));
+        return Ok(Some(Arc::new(next)));
     }
-    let revision = current.index.revision.checked_add(1)?;
+    let Some(revision) = current.index.revision.checked_add(1) else {
+        return Ok(None);
+    };
     next.lease = Arc::new(RevisionLease::default());
     next.index.revision = revision;
     for path in &dirty {
         if let Some(detail) = next.details.get_mut(path) {
-            let detail = Arc::make_mut(detail);
-            detail.detail_id = detail_id(detail);
+            Arc::make_mut(detail).revision = Some(revision);
+            let route = viewer(&format!("entries/{path}.json"));
+            let adjacent = current.details.get(path).zip(current.files.get(&route));
+            let file =
+                next.recent_details
+                    .publish(PublicationKind::Usage, detail, adjacent, encoder)?;
             mokly_model::projection::set_detail_id(&mut next.index, path, &detail.detail_id);
-            detail.revision = Some(revision);
-        }
-    }
-    for path in dirty {
-        if let Some(detail) = next.details.get_mut(&path) {
-            let detail = Arc::make_mut(detail);
-            next.files.insert(
-                viewer(&format!("entries/{path}.json")),
-                encoder.encode(detail),
-            );
+            next.files.insert(route, file);
         }
     }
     let index_file = encode_index(&next.index);
@@ -129,5 +128,5 @@ pub(crate) fn complete(
         viewer("index.json"),
         crate::revision_file::RevisionFile::new(index_file),
     );
-    Some(Arc::new(next))
+    Ok(Some(Arc::new(next)))
 }

@@ -15,5 +15,6 @@ mod unix_group_members;
 mod unix_process_table;
 #[cfg(unix)]
 mod unix_process_tree;
+pub mod volumes;
 #[cfg(windows)]
 mod windows;

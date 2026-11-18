@@ -9,11 +9,15 @@ writes no files.
 ## Responsibilities
 
 - Compute content-addressed node keys before document rendering.
-- Keep rendered artifacts in a byte-bounded LRU process cache.
+- Keep rendered artifacts in a byte-bounded LRU process cache, with a compact
+  tier for evicted documents.
+- Encode documents losslessly for the compact tier and the comparison capture.
 - Render all views through an injected worker pool.
-- Reconstruct evicted documents and stylesheet resources from their recipes.
+- Reconstruct documents and stylesheet resources that left the cache from
+  their recipes.
 - Validate logical anchors across destination views.
 - Compute the referenced authored asset closure with one public policy.
+- Prove the inputs of comparison reads with content identities.
 
 ## What This Crate Does
 
@@ -77,18 +81,72 @@ routing inventory serves each generation. Opaque entries share its complete
 key. Explicit case spellings, moved aliases, and missing targets keep their
 requested identities in the document key.
 
-`MemoryCache` implements `dyn RenderCache`. It charges document bytes, parsed
-trees, and evidence, including registry ownership in documents and fragments.
-The charge is an estimate of retained memory. Usage, instance, and slot
-records count at twice their JSON length. `stats` reports the charged bytes,
-the retained entries, and the hit, miss, and eviction counts.
-It evicts by access order. Oversized artifacts return to the caller without
-retention. Plans keep recipes rather than a complete set of parsed documents.
+`MemoryCache` implements `dyn RenderCache` with a full tier and a compact tier
+under one total byte bound. `MemoryCache::new` takes that total and the ceiling
+of the compact tier. One sixteenth of the total is fixed headroom for documents
+in transit and their encoding workspace. The full and compact tiers share the
+rest. Each tier evicts by access order. The full tier charges document bytes,
+parsed trees, and evidence, including registry ownership in documents and fragments. The charge
+is an estimate of retained memory. Usage, instance, and slot records count at
+twice their JSON length. When the full tier evicts a document, the cache
+reserves its charge plus twice that charge for encoding from the headroom.
+The same locked step takes one of eight reusable encoder leases. Each encoder
+allocates on first use and keeps a 384 KiB headroom charge while idle or active,
+up to 3 MiB for all eight. The encoder reuses its compressor and serialization
+buffers between documents. If the document and workspace charges do not fit,
+or no lease is free, the document leaves the cache and counts as an eviction.
+Inserts never wait. A reservation handle releases the document charge and
+returns the lease on every exit path, including encoding failure. Encoding runs outside the lock. Its
+completion transfers the document from transit to the compact tier in one
+locked step. The compact tier uses room from evicted full entries up to its
+ceiling. Every other evicted artifact leaves the cache. A lookup reads the full
+tier, then transit documents, then the compact tier. A transit hit returns the
+full artifact without a restore. A compact hit returns the restored artifact.
+It promotes the entry to the full tier only
+when the same key was restored before within fewer cache operations than the
+full tier has entries. An `insert` of a key that transit or the compact tier
+holds keeps the entry there, so a caller that stores a restored artifact again
+does not promote it. When the full tier already holds the same artifact handle,
+and a replacement would keep the same charge, an `insert` only refreshes its
+access order. It computes no new charge, and it still counts as a cache
+operation. A failed restore removes the entry, counts as a miss and as a
+restore failure, and logs an error without document data. `stats` reports the
+charged bytes of both tiers, transit, and encoder leases, retained artifact
+entries, and the hit,
+restore, restore failure, miss, and eviction counts of the
+[`render.cache` record](../../docs/protocol/mokly-timings.md#core-spans).
+Oversized artifacts return to the caller without retention. Plans keep
+recipes rather than a complete set of parsed documents.
 Eviction changes work only. Cross-view anchor checks retain successful
-destination renders in this same bounded cache. Repeated links reuse those
-documents. Each requested fragment is still checked in every destination view,
-including cache hits. Concurrent checks of one destination share its active
-render.
+destination renders in this same bounded cache. A repeated check of one
+destination view and fragment uses the stored result of the generation when it
+has one, and reads no document. Concurrent checks of one destination share its
+active render.
+
+Each generation builds one immutable link index when it is created, and drops
+it with the generation. The index holds two positions for each catalogue entry
+and nothing else, so it copies no plan, route, or document. It finds the
+destination views of a logical link in route order without a scan of every
+plan. Its memory is outside the bound of the result store.
+
+Each generation also keeps one result store with the presence of each checked
+fragment in each destination view. Its records, their fragment bytes, and its
+bookkeeping count against a fixed 2 MiB bound. A result that does not fit is
+not kept, so the next check of that view and fragment reads the destination
+again. Growth can briefly hold one more copy of the record slice, so the peak
+stays within 4 MiB before allocator overhead. A new generation starts with an
+empty store, and complete validation records the presence that it finds in
+each destination view that it checks. A stored result holds no error, so each
+failure names the referring route of the current check and the destination
+route.
+
+`document_codec::EncodedView` is the lossless compact form of one document. The
+compact tier and the base and head captures of `mokly-compare` share it.
+`EncodedView::restore` rebuilds the exact bytes, parsed tree, and trusted
+annotations without parsing authored HTML, or returns a
+`document_error::CodecError`. An encoded view also lends its retained usage
+records without a restore. An artifact without a composed document retains no
+usage.
 
 `collect_comparison` streams complete side validation to an ordered
 `ComparisonCollector`. Each view composes once, including when the artifact
@@ -119,6 +177,77 @@ retaining another encoded copy of the same base. A smaller capture budget
 returns to the original source recipes. Wrappers that add checks must return
 `None` from `comparison_capture`, so rebuilding cannot bypass their checks.
 Production callers supply fresh base generations.
+
+`RenderGeneration::comparison_usage` returns the usage records of one view's
+comparison document, or `None` when its artifact has no composed document. Its
+default reads `comparison_document`, so it has the checks and errors of that
+read. A comparison capture returns the retained usage of a kept view without a
+restore, and reads every other view from its source. A wrapper that adds no
+checks forwards this read, so that a capture below it still skips the restore.
+A wrapper that adds checks keeps the default, so that each source read runs
+those checks. It can forward the read only when the forwarded path still runs
+all of its own checks, such as a cancellation check. Failed or missing usage
+then goes to its own checked `comparison_document`, so its fallback checks and
+its error handling stay.
+
+`schedule_comparison_tasks` runs a caller's `ComparisonTask` once for every
+index on the generation's render workers. It returns when every index has run.
+The caller sizes each of these calls by `comparison_parallelism`.
+
+`schedule_comparison_stream` runs a `ComparisonTask` as one ordered stream. Its
+`ComparisonConsumer` admits each index into a slot that the caller owns. The
+calling thread consumes the finished indexes in index order. At most twice
+`comparison_parallelism().max(1)` indexes are started and not yet consumed. Each
+consumption lets one more index start. A `false` from `admit` ends the stream.
+A `false` from `consume`, or a task panic, stops new admission and
+consumption. The call still waits for every admitted task, and a task panic
+then reaches the caller. A stream that starts on a worker of the same pool
+prepares and consumes one index at a time.
+
+In both operations, the caller keeps the results, the errors, and the
+cancellation checks. `ThreadWorkers` carries the caller's tracing span,
+subscriber, and `RenderClass` through one shared context for all worker
+methods. So a background render keeps its class in every worker job, and
+Serve can order the sidecar calls of that render. The trait
+defaults have a capacity of one. They run the indexes in order on the caller,
+and the stream default prepares and consumes one index at a time.
+
+Wrappers forward `comparison_parallelism`, `schedule_comparison`,
+`schedule_comparison_tasks`, and `schedule_comparison_stream` to their inner
+generation. `RenderWorkers` wrappers forward `comparison_parallelism`,
+`comparison`, `comparison_tasks`, and `comparison_stream` in the same way.
+Without these forwards, the comparison runs one view at a time. A scheduled
+task still calls the wrapper's own methods, so the wrapper's checks stay
+active. `RenderKeys::build_with_workers` also runs one key job for each
+exporting module through `comparison_tasks` on the shared render workers.
+Without the `comparison_tasks` forward, the key calculation runs one module at
+a time.
+
+`retained_comparison_input` returns a comparison input that the generation
+already holds. It reads no source and logs nothing. `Ready` holds the decoded
+document and its closure. `Deferred` holds the `ComparisonFallback` of one
+failed restore. Its `document` logs the failure and reads the original source.
+Its `closure` returns the kept closure.
+
+The default returns `None`. A wrapper
+that adds checks returns `None` when a forward would bypass those checks or
+need source IO.
+
+`comparison_identity` proves one `ComparisonRead` of a route, a `Document`, a
+`Closure`, or a `Resource`, with a `ContentIdentity`. `None` means unknown,
+and the caller then compares the view in full. `ProofMode::Retained` permits
+no source IO, restoration, or fallback. `ProofMode::Current` lets a head proof
+read current resources, and a failed read returns `None`. A prepared
+generation derives document and closure identities from the plan key and one
+identity of the configuration, the roots, the sources, and the route sets.
+The default returns `None`. A wrapper that adds checks keeps that default or
+applies its checks to the identity.
+
+`comparison_document_proof` returns a `DocumentProof`: the current identity
+and usage of one head document from one checked read. A failed check or an
+unknown identity returns `None` and reports no error. The default calls this
+generation's `comparison_document` and `comparison_identity`, so the checks
+of a wrapper apply. An override must keep those checks.
 
 `FilePolicy` is the one policy of the public closure contract for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.
@@ -156,7 +285,7 @@ use std::sync::Arc;
 use mokly_graph::cache::{Artifact, MemoryCache, RenderCache};
 use mokly_graph::key::{NodeKind, key};
 
-let cache: &dyn RenderCache = &MemoryCache::new(1024 * 1024);
+let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(16 * 1024 * 1024, 4 * 1024 * 1024));
 let key = key(NodeKind::Document, &[b"entry-source", b"light"]);
 cache.insert(key.clone(), Arc::new(Artifact {
     bytes: b"<!doctype html>".to_vec(),
@@ -192,17 +321,32 @@ retention disabled.
   `DeliveryInputs`, the sidecar-reported stylesheet metadata of a generation.
 - [`src/key.rs`](./src/key.rs) provides `key` and `NodeKind`, the
   content-addressed node keys.
-- [`src/cache.rs`](./src/cache.rs) defines `RenderCache`, `MemoryCache`, and
-  `Artifact`, the byte-bounded LRU render cache.
+- [`src/cache.rs`](./src/cache.rs) defines `RenderCache`, `MemoryCache`,
+  `Artifact`, and `CacheStats`, the render cache with its full and compact
+  tiers.
+- [`src/document_codec.rs`](./src/document_codec.rs) defines `EncodedView`,
+  the lossless compact document that the compact tier and the comparison
+  capture share.
 - [`src/workers.rs`](./src/workers.rs) defines `RenderWorkers` and
-  `ThreadWorkers`, the injected worker pool. Its `stylesheets` method runs one
-  `StylesheetWorker` job for each stylesheet root, keeps the root order, and
-  returns the first failure in root order.
+  `ThreadWorkers`, the injected worker pool, and `ComparisonTask`, one indexed
+  job. Its `stylesheets` method runs one `StylesheetWorker` job for
+  each stylesheet root, keeps the root order, and returns the first failure in
+  root order. Its `comparison_tasks` method runs every index of a
+  `ComparisonTask` once and returns when all of them have run. Its
+  `comparison_stream` method runs a `ComparisonTask` as an ordered stream, with
+  at most twice the pool size started and not yet consumed.
+- [`src/render_class.rs`](./src/render_class.rs) defines `RenderClass`, the
+  scheduling class of a blocking render, `Foreground` by default.
+  `RenderClass::in_scope` sets a class for one operation and restores the
+  earlier class. `RenderClass::current` reads it. The private `WorkerContext`
+  captures it with the tracing span for each worker job.
 - [`src/fragments.rs`](./src/fragments.rs) defines `MemoFragments`, which
   memoizes JavaScript fragments in the same bounded cache.
 - [`src/render_inputs.rs`](./src/render_inputs.rs) defines `RenderInputs` and
   `RenderKeys`, the render input key of each entry module over its module
   closure, resolution files, bindings, and bundle environment.
+  `RenderKeys::build_with_workers` calculates the same keys as
+  `RenderKeys::build` on injected `RenderWorkers`.
 - [`src/public_inputs.rs`](./src/public_inputs.rs) defines `ClosureInputs`,
   the leased closure-file records shared by equal document keys across
   generations.
@@ -211,6 +355,17 @@ retention disabled.
   closure walk.
 - [`src/collection.rs`](./src/collection.rs) defines `ComparisonCollector`,
   which consumes validated comparison inputs in route order.
+- [`src/comparison_input.rs`](./src/comparison_input.rs) defines
+  `RetainedComparisonInput` and `ComparisonFallback`, a retained comparison
+  input and the deferred source read of a failed restore.
+- [`src/comparison_stream.rs`](./src/comparison_stream.rs) defines
+  `ComparisonConsumer`, which admits each index of an ordered comparison
+  stream and consumes the finished indexes in order.
+- [`src/comparison_proof.rs`](./src/comparison_proof.rs) defines
+  `ComparisonRead`, `ProofMode`, `ContentIdentity`, and `DocumentProof`, the
+  content proofs of comparison reads.
+  [`src/session_proof.rs`](./src/session_proof.rs) answers them for a
+  prepared generation.
 - [`src/source_snapshot.rs`](./src/source_snapshot.rs) defines
   `SourceSnapshot`, the generation-scoped source reader.
 - [`src/asset_delivery.rs`](./src/asset_delivery.rs) defines `AssetRead`, the
@@ -223,4 +378,6 @@ retention disabled.
 - [Render graph](../../docs/architecture/rust-core.md#render-graph).
 - [Runtime](../../docs/protocol/mokly-runtime.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).
+- [Final logical link validation](../../docs/protocol/mokly-link-validation.md).
 - [Public closure](../../docs/protocol/mokly-public-closure.md).
+- [Proven view reuse](../../docs/protocol/mokly-changes-serving.md#proven-view-reuse).

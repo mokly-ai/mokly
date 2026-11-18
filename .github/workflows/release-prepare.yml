@@ -23,7 +23,7 @@ permissions:
   contents: read
 jobs:
   prepare:
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     outputs:
       artifact_run_id: ${{ steps.publish_artifacts.outputs.artifact_run_id || github.run_id }}
       artifact_name: ${{ steps.publish_artifacts.outputs.artifact_name || format('mokly-release-{0}', steps.package.outputs.mokly_version) }}
@@ -36,7 +36,7 @@ jobs:
       CARGO_INCREMENTAL: 0
     steps:
       - name: Check out immutable release tag
-        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
           ref: ${{ inputs.publish_ref }}

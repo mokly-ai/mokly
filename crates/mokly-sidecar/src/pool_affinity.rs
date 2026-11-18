@@ -1,11 +1,60 @@
-//! One PostCSS context uses one slot until release or process recycling.
+//! Context affinity and call-ready generations rank eligible same-root slots.
 
 use std::path::Path;
 
 use crate::methods::Call;
-use crate::pool_state::{Affinity, State};
+use crate::pool_cleanup::stale_generation;
+use crate::pool_preparation::Prerequisites;
+use crate::pool_requests::generation;
+use crate::pool_state::{Affinity, Slot, State};
 
-pub(super) fn acquire(state: &mut State, call: &Call, root: &Path, limit: usize) -> Option<usize> {
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum Loaded {
+    Ready,
+    Generation,
+    Missing,
+}
+
+fn loaded(state: &State, slot: &Slot, call: &Call) -> Loaded {
+    let Some(generation) = generation(call) else {
+        return Loaded::Missing;
+    };
+    if slot
+        .generations
+        .get(generation)
+        .is_none_or(|epoch| stale_generation(state, generation, *epoch))
+    {
+        Loaded::Missing
+    } else if Prerequisites::for_call(call).loaded(state, slot, generation) {
+        Loaded::Ready
+    } else {
+        Loaded::Generation
+    }
+}
+
+fn matching(state: &State, call: &Call, root: &Path, outside_pass: bool) -> Option<usize> {
+    state
+        .available
+        .iter()
+        .enumerate()
+        .filter(|(_, index)| !outside_pass || !state.head.candidates.contains_key(*index))
+        .filter_map(|(position, index)| {
+            state.slots[*index]
+                .as_ref()
+                .filter(|slot| slot.source_root == root)
+                .map(|slot| (position, loaded(state, slot, call)))
+        })
+        .min_by_key(|(position, rank)| (*rank, *position))
+        .map(|(position, _)| position)
+}
+
+pub(super) fn acquire(
+    state: &mut State,
+    call: &Call,
+    root: &Path,
+    limit: usize,
+    protected: Option<usize>,
+) -> Option<usize> {
     let context = match call {
         Call::ProcessCss(params) => Some(params.context.as_str()),
         _ => None,
@@ -20,22 +69,28 @@ pub(super) fn acquire(state: &mut State, call: &Call, root: &Path, limit: usize)
             .position(|candidate| *candidate == index)?;
         state.available.remove(position)?
     } else {
-        let matching = state.available.iter().position(|index| {
-            state.slots[*index]
-                .as_ref()
-                .is_some_and(|slot| slot.source_root == root)
-        });
+        let reused = (!state.head.candidates.is_empty())
+            .then(|| matching(state, call, root, true))
+            .flatten();
+        let matching = matching(state, call, root, false);
         let unspawned = state
             .available
             .iter()
             .position(|index| state.slots[*index].is_none());
-        if let Some(position) = matching.or(unspawned) {
+        if let Some(position) = reused.or(matching).or(unspawned) {
             state.available.remove(position)?
-        } else if state.slots.len() < limit {
-            state.slots.push(None);
-            state.slots.len() - 1
+        } else if state.allocated() < limit {
+            state.free.pop_first().unwrap_or_else(|| {
+                state.slots.push(None);
+                state.slots.len() - 1
+            })
         } else {
-            state.available.pop_front()?
+            let position = state
+                .available
+                .iter()
+                .position(|index| Some(*index) != protected)
+                .unwrap_or(0);
+            state.available.remove(position)?
         }
     };
     if let Some(context) = context {
@@ -55,10 +110,14 @@ pub(super) fn runnable(state: &State, context: Option<&str>, limit: usize) -> bo
     if let Some(affinity) = context.and_then(|id| state.affinity.get(id)) {
         state.available.contains(&affinity.index)
     } else {
-        !state.available.is_empty() || state.slots.len() < limit
+        !state.available.is_empty() || state.allocated() < limit
     }
 }
 
 #[cfg(test)]
 #[path = "_tests_/pool_root_selection_tests.rs"]
 mod pool_root_selection_tests;
+
+#[cfg(test)]
+#[path = "_tests_/generation_affinity/mod.rs"]
+mod generation_affinity_tests;

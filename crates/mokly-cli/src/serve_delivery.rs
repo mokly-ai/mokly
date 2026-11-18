@@ -6,10 +6,12 @@ use mokly_cli::cancellation::Cancellation;
 use mokly_cli::grammar::Common;
 use mokly_cli::output::Style;
 use mokly_cli::redaction::Redactor;
+use mokly_compare::comparison_reuse;
 use mokly_compare::extraction_snapshots::ProcessSnapshots;
 use mokly_server::application::Application;
 use mokly_server::assets::{PackageAssets, ViewerAssets};
 use mokly_server::background::{Background, UsagePass};
+use mokly_server::background_capacity::BackgroundCapacity;
 use mokly_server::changes_background::ChangesPass;
 use mokly_server::clock::MonotonicClock;
 use mokly_server::comparison_capture::SnapshotCapture;
@@ -54,10 +56,12 @@ pub(super) fn states(input: StateInputs<'_>) -> Result<Arc<dyn ServeStateFactory
     let dist = viewer_assets::dist().ok_or(ServerError::InvalidAssets)?;
     Ok(Arc::new(NativeServeState {
         changes: Arc::new(ServeChanges {
+            reuse: Arc::new(comparison_reuse::MemoryComparisons::new(32 * 1024 * 1024)),
+            kept_base: Arc::default(),
             sidecars: input.services.sidecars.clone(),
             progress: input.progress,
             refreshes: input.reporter,
-            cache_announced: Arc::new(false.into()),
+            cache_announced: input.services.cache_announced.clone(),
             extraction_snapshots: Arc::new(ProcessSnapshots::default()),
             warnings: input.warnings,
             runtime: input.services.runtime.clone(),
@@ -94,7 +98,10 @@ pub(super) fn create(
     sidecars: Arc<dyn PoolScheduling>,
 ) -> Delivery {
     let publications = Arc::new(SharedPublication::new(snapshot));
-    let batch = background_batch(workers, sidecars.limit());
+    let capacity: Arc<dyn BackgroundCapacity> = Arc::new(UsageCapacity {
+        workers,
+        sidecars: sidecars.clone(),
+    });
     let work = Arc::new(Workers::new(workers, diagnostics.clone()).with_foreground(sidecars));
     let comparisons = Arc::new(MemoryComparisons::new(
         Arc::new(MonotonicClock::default()),
@@ -104,7 +111,7 @@ pub(super) fn create(
         diagnostics.clone(),
     ));
     let background: Arc<dyn Background> = Arc::new(UsagePass {
-        batch,
+        capacity,
         changes: Some(Arc::new(ChangesPass {
             publications: publications.clone(),
             comparisons: comparisons.clone(),
@@ -129,6 +136,17 @@ pub(super) fn create(
         publications,
         background,
         app: Arc::new(app),
+    }
+}
+
+struct UsageCapacity {
+    workers: u32,
+    sidecars: Arc<dyn PoolScheduling>,
+}
+
+impl BackgroundCapacity for UsageCapacity {
+    fn capacity(&self) -> usize {
+        background_batch(self.workers, self.sidecars.limit())
     }
 }
 

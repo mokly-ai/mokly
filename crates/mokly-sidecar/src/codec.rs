@@ -6,6 +6,8 @@ use crate::wire::{Frame, Request};
 /// Maximum bytes of JSON in one frame, excluding its LF delimiter.
 pub const MAX_FRAME_BYTES: usize = 64 * 1024 * 1024;
 
+const RETAINED_FRAME_BYTES: usize = 16_384;
+
 /// Incremental decoder; it never retains more than one bounded partial frame.
 #[derive(Default)]
 pub struct Decoder {
@@ -36,7 +38,11 @@ impl Decoder {
                     Err(source) => return Err(Error::Protocol(ProtocolError::Json { source })),
                 };
                 frames.push(frame);
-                self.pending.clear();
+                if self.pending.capacity() > RETAINED_FRAME_BYTES {
+                    self.pending = Vec::new();
+                } else {
+                    self.pending.clear();
+                }
             }
         }
         Ok(frames)

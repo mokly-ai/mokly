@@ -56,9 +56,10 @@
 - **Previous examples:** PR #222 corrected the record charge, the other
   part of the same cache problem.
 - **Related:**
-  - [head-cache-through-base-render.md](./head-cache-through-base-render.md):
-    smaller charges leave more room for head entries while the base
-    renders.
+  - The render cache keeps evicted documents in a compact tier since
+    2026-11-16, so a head document that the base render evicts restores
+    instead of rendering again. Smaller tree charges still leave more room
+    for full entries, which restore without a decode.
 - **Recommendation:** B. It is a contained change that roughly halves node
   memory. Measure the node size and the slots again before the change.
 - **Action:** fix after merge, apply B, because no open branch owns the

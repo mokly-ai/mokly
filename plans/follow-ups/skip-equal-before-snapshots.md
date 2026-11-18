@@ -6,7 +6,7 @@
   unmerged plan at commit `181e44f2` on branch
   `conductor/dedup-4-skip-equal-before-snapshots`.
 - **Location:** `crates/mokly-static/src/comparison_files.rs:31`,
-  `crates/mokly-compare/src/comparison_views.rs:58`,
+  `crates/mokly-compare/src/comparison_consumer.rs:50`,
   `crates/mokly-compare/src/projection_detail.rs:13`,
   `crates/mokly-server/src/comparison_capture.rs:33`,
   `crates/mokly-model/src/detail_validation.rs:17`, and
@@ -69,6 +69,13 @@
     and Serve memory, and file count, not upload bytes. In the example the
     rule removes 98.4% of the before side. In the comparison fixture, with
     real changes, it removed 24.3% on 2026-10-27.
+  - On 2026-11-03, Mokly Cloud removed its `review.json` reader in its
+    commit `908484d2`. Its receiver now reads Changes from the index. The
+    deleted item
+    [`cloud-without-review-json.md`](https://github.com/mokly-ai/mokly/blob/be242a628db21c24212b105c5a1f7277de2e8a29/plans/follow-ups/cloud-without-review-json.md?plain=1)
+    tracked that Cloud work. This item records no later check of the
+    receiver rule of decision 2. Check that rule in Mokly Cloud before you
+    answer decision 2.
 - **Problem:** A build with Changes writes a second copy of each unchanged
   view document.
 - **Impact if no action:** Each output carries about 12 MB of copies in the
@@ -119,8 +126,6 @@
     two rules work together.
   - [variant-prop-schema-copies.md](./variant-prop-schema-copies.md): it
     also needs a new index number. One release can carry both.
-  - [cloud-without-review-json.md](./cloud-without-review-json.md): the
-    Mokly Cloud work that decision 2 depends on.
   - [embedded-document-closures.md](./embedded-document-closures.md): its
     option C gives the list of embedded documents that option 5A needs.
 - **Recommendation:** 1A, 2A, 3A, 4A, 5A. Shared view documents are 98.4% of

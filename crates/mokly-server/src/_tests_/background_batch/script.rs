@@ -6,6 +6,7 @@ use tokio::sync::{broadcast, watch};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::background::UsagePass;
+use crate::background_capacity::FixedCapacity;
 use crate::diagnostics::{Diagnostics, DiagnosticsMock};
 use crate::publication::{PublicationEvent, PublicationsMock, Subscription};
 use crate::snapshot::Snapshot;
@@ -92,7 +93,7 @@ pub(super) fn pass(
         Unimock::new(reads)
     };
     let pass = UsagePass {
-        batch,
+        capacity: Arc::new(FixedCapacity(batch)),
         changes: None,
         publications: Arc::new(mock.clone()),
         work,

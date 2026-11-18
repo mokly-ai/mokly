@@ -6,10 +6,10 @@
   `conductor/rust-rebuild-150-base-install-scripts-and-managers`: the rest
   of user item 155, from finding 51 of the review of user decision 135 B.
 - **Location:** `crates/mokly-cli/src/options.rs:62` to line 73,
-  `crates/mokly-cli/src/serve_services.rs:53` and `:106`,
-  `crates/mokly-cli/src/static_runtime.rs:91` and `:162`,
-  `crates/mokly-cli/src/changes_runtime.rs:50`, `:94`, and `:136` to line
-  158, `crates/mokly-graph/src/config_key.rs:10` to line 26, and
+  `crates/mokly-cli/src/serve_services.rs:78` and `:137`,
+  `crates/mokly-cli/src/static_runtime.rs:91` and `:161`,
+  `crates/mokly-cli/src/changes_runtime.rs:45`, `:82`, and `:124` to line
+  146, `crates/mokly-graph/src/config_key.rs:9` to line 24, and
   `crates/mokly-graph/src/planning.rs:127` to line 128.
 - **Reason:** The fix deletes a live configuration write on `origin/main`
   whose value reaches head document keys, and no user decision approves that
@@ -36,8 +36,9 @@
     in `generation` of `live.json`. It hashes the configuration key and every
     document key.
 - **Background:**
-  - `Changes::classify` at `crates/mokly-compare/src/base_render.rs:180` to
-    line 188 prefers the override over `review.baseInstallScripts`. Every
+  - `Changes::classify` prefers the override over
+    `review.baseInstallScripts`, in `Changes::classify_base` at
+    `crates/mokly-compare/src/base_classification.rs:47` to line 55. Every
     command passes the override to it.
   - The test
     `install_scripts_override_takes_precedence_over_the_working_setting` in
@@ -52,15 +53,15 @@
   - The configuration write, `options::apply_base_install_scripts` at
     `crates/mokly-cli/src/options.rs:62` to line 73, also puts the override
     into the in-memory resolved configuration. Serve calls it at
-    `crates/mokly-cli/src/serve_services.rs:53` and `:106`. `build` and
+    `crates/mokly-cli/src/serve_services.rs:78` and `:137`. `build` and
     `publish` call it at `crates/mokly-cli/src/static_runtime.rs:91`, also
     with `--no-changes`.
   - `PhasedChanges` in `crates/mokly-cli/src/changes_runtime.rs` keeps a
-    third copy, which `static_runtime.rs:162` passes to
+    third copy, which `static_runtime.rs:161` passes to
     `changes_runtime::service`. Its `classify` drops the parameter that its
     caller passes.
-  - `config_key::resolved` at `crates/mokly-graph/src/config_key.rs:10` to
-    line 26 serializes all of `config.input`. Lines 127 and 128 of
+  - `config_key::resolved` at `crates/mokly-graph/src/config_key.rs:9` to
+    line 24 serializes all of `config.input`. Lines 127 and 128 of
     `crates/mokly-graph/src/planning.rs` put the configuration key into each
     document key. So the write can enter each head document key and the Serve
     live generation.
@@ -70,9 +71,9 @@
     value counts as different. When the file already stores the flag's value,
     the configuration key stays the same.
   - The base configuration loads from the base tree with no write, at
-    `crates/mokly-cli/src/changes_base.rs:67` to line 80.
+    `crates/mokly-cli/src/changes_base.rs:78` to line 91.
   - Both sides share one render cache, at
-    `crates/mokly-cli/src/changes_base.rs:132`. The lookup at
+    `crates/mokly-cli/src/changes_base.rs:145`. The lookup at
     `crates/mokly-graph/src/session_render.rs:42` uses the document key. So
     an unchanged base view reuses the head render only when the two
     configuration keys are equal.

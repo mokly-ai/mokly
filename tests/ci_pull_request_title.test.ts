@@ -48,10 +48,10 @@ test("pull request title workflow passes untrusted titles only through env", asy
   const job = workflow.jobs.title;
   assert.ok(job);
   assert.equal(job.name, "Pull Request Title");
-  assert.equal(job["runs-on"], "blacksmith-2vcpu-ubuntu-2404");
+  assert.equal(job["runs-on"], "ubuntu-24.04");
   assert.equal(job["timeout-minutes"], 5);
   const checkout = job.steps.find((step) =>
-    step.uses?.startsWith("useblacksmith/checkout@"),
+    step.uses?.startsWith("actions/checkout@"),
   );
   const setup = job.steps.find((step) =>
     step.uses?.startsWith("actions/setup-node@"),

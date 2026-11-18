@@ -1,7 +1,12 @@
 //! Mokly binary composition root.
 
+use mimalloc::MiMalloc;
+
 mod base_dependencies;
+mod bundle_runtime;
+mod cache_directory;
 mod changes_base;
+mod changes_freshness;
 mod changes_runtime;
 mod changes_static;
 mod command_diagnostics;
@@ -14,6 +19,9 @@ mod one_shot;
 mod one_shot_summary;
 mod publication_runtime;
 mod render_runtime;
+mod serve_base;
+mod serve_base_cancel;
+mod serve_base_key;
 mod serve_candidates;
 mod serve_capture_cancel;
 mod serve_changes;
@@ -22,6 +30,7 @@ mod serve_changes_native;
 mod serve_controls;
 mod serve_debounce;
 mod serve_delivery;
+mod serve_gate;
 mod serve_git;
 #[cfg(unix)]
 mod serve_keyboard_keys;
@@ -34,6 +43,7 @@ mod serve_progress;
 mod serve_rebuild;
 mod serve_rebuild_action;
 mod serve_reporter;
+mod serve_return;
 mod serve_services;
 mod serve_shutdown;
 mod serve_signals;
@@ -41,6 +51,7 @@ mod serve_state;
 mod serve_timing;
 mod serve_trace;
 mod serve_trace_cache;
+mod serve_trace_fields;
 mod serve_trace_stages;
 mod serve_warnings;
 mod serve_watch;
@@ -50,6 +61,9 @@ mod static_runtime;
 mod static_setup;
 mod terminal;
 mod viewer_assets;
+
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
 
 fn main() -> std::process::ExitCode {
     #[cfg(all(debug_assertions, unix))]

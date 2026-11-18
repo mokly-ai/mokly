@@ -1,16 +1,17 @@
 //! Startup ownership drops and explicit kills share one stop without extra lifecycle calls.
 
 use std::io;
+use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex, mpsc};
 
 use mokly_platform::error;
 use mokly_platform::processes::ProcessGroupMock;
+use mokly_test_support::capture::Trace;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::process_control::ProcessControl;
 use crate::process_reaper::{ReapMock, reap};
 use crate::process_startup::StartupTiming;
-use crate::trace_capture::Trace;
 use crate::workers::WorkerControl;
 
 struct PendingTask {
@@ -86,7 +87,7 @@ fn startup_cleanup_in_either_drop_order_keeps_one_parent_and_sticky_failure() {
             ));
             let clock = Unimock::new(());
             let trace = Trace::default();
-            tracing::subscriber::with_default(trace.clone(), || {
+            trace.in_scope(|| {
                 let caller = tracing::info_span!("sidecar.spawn", status = "error");
                 let _scope = caller.enter();
                 let startup = Arc::new(StartupTiming::default());
@@ -113,7 +114,7 @@ fn startup_cleanup_in_either_drop_order_keeps_one_parent_and_sticky_failure() {
                     };
                 }
             });
-            let stops = trace.stopped();
+            let stops = trace.closed("sidecar.stop");
             assert_eq!(stops.len(), 1);
             assert_eq!(stops[0].parent.as_ref().unwrap().into_u64(), 1);
             assert_eq!(stops[0].fields["reason"], "retry");
@@ -150,6 +151,8 @@ fn control(group: &Unimock, clock: &Unimock, startup: &Arc<StartupTiming>) -> Pr
     let (_, exited) = mpsc::sync_channel(1);
     let (_, drained) = mpsc::sync_channel(1);
     ProcessControl {
+        memory: Arc::new(Unimock::new(())),
+        discover_memory: Arc::new(AtomicBool::new(false)),
         group: Box::new(group.clone()),
         outgoing,
         exited: Mutex::new(exited),
@@ -167,17 +170,17 @@ fn successful_handoff_keeps_no_stop_or_parent_for_later_cleanup() {
     ));
     let trace = Trace::default();
     let startup = Arc::new(StartupTiming::default());
-    tracing::subscriber::with_default(trace.clone(), || {
+    trace.in_scope(|| {
         let caller = tracing::info_span!("sidecar.spawn");
         let _scope = caller.enter();
         startup.hand_off();
     });
     assert!(startup.active().is_disabled());
-    tracing::subscriber::with_default(trace.clone(), || {
+    trace.in_scope(|| {
         let _pending = PendingTask {
             child: child.clone(),
             startup: startup.clone(),
         };
     });
-    assert!(trace.stopped().is_empty());
+    assert!(trace.closed("sidecar.stop").is_empty());
 }

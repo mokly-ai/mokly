@@ -43,7 +43,7 @@ fn prepare(root: &Path, cache: &Arc<dyn RenderCache>) -> Arc<dyn RenderGeneratio
 }
 
 fn cache() -> Arc<dyn RenderCache> {
-    Arc::new(MemoryCache::new(8 * 1024 * 1024))
+    Arc::new(MemoryCache::new(8 * 1024 * 1024, 0))
 }
 
 #[test]

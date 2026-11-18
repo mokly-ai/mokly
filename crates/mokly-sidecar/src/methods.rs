@@ -1,13 +1,16 @@
 //! Request payloads for every sidecar method.
 
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use ts_rs::TS;
 
 use crate::bindings::{Bindings, DisposeContext, EntryBinding, SlotInput};
+use crate::capture_hint::CaptureHint;
 use crate::compiled::RestoreGeneration;
+use crate::resolution_plan::ResolutionPlan;
 
 /// A request with no method parameters.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
@@ -73,6 +76,33 @@ pub struct Bundle {
     pub configuration_directory: String,
     /// Physical repository roots whose local packages map into this side.
     pub repository_roots: Vec<String>,
+}
+
+/// Request-local evidence capture policy, absent from persisted bundle settings.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub enum BundleCapture {
+    /// Capture complete physical inputs and optional durability witnesses.
+    #[default]
+    Full,
+    /// Keep only the existing live reuse inputs after Serve publishes its head.
+    ServeEdit,
+}
+
+/// Compile settings and a request-only capture policy.
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+pub struct BundleRequest {
+    /// Persisted compilation settings, with no capture control.
+    #[serde(flatten)]
+    pub params: Bundle,
+    /// Omission selects full capture.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub capture: Option<BundleCapture>,
+    /// Current captured targets for this Serve edit only, never persisted settings.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub plan: Option<Arc<ResolutionPlan>>,
 }
 
 /// Preview colour scheme.
@@ -191,6 +221,10 @@ pub struct CssModules {
 #[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
 #[ts(rename = "HelloParams")]
 pub struct Hello {
+    /// Enable disk capture witnesses only when this pool has a bundle store.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub capture: Option<CaptureHint>,
     /// Enable process-local timing records on standard error for this session.
     #[serde(default, skip_serializing_if = "disabled")]
     #[ts(optional, as = "Option<bool>")]
@@ -208,7 +242,7 @@ pub enum Call {
     /// Exchange package versions.
     Hello(Hello),
     /// Compile without evaluating consumer modules.
-    Bundle(Bundle),
+    Bundle(BundleRequest),
     /// Restore an immutable compiled generation in another worker.
     RestoreGeneration(Box<RestoreGeneration>),
     /// Evaluate and inventory definitions.

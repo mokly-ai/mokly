@@ -7,6 +7,7 @@ use std::thread;
 use mokly_cli::redaction::Redactor;
 use mokly_graph::cache::{MemoryCache, RenderCache};
 use mokly_sidecar::workers::ClockMock;
+use mokly_test_support::subscriber::with_default;
 use serde_json::Value;
 use tracing::{Dispatch, Subscriber};
 use tracing_subscriber::Layer;
@@ -32,7 +33,7 @@ pub(super) fn capture_cache(cache: Arc<dyn RenderCache>, run: impl FnOnce()) -> 
 
 /// An empty cache whose statistics stay zero, for records that are not about the cache.
 fn empty_cache() -> MemoryCache {
-    MemoryCache::new(0)
+    MemoryCache::new(0, 0)
 }
 
 pub(super) fn capture_lines(run: impl FnOnce()) -> Vec<String> {
@@ -84,7 +85,7 @@ fn collect_lines(
         cache,
     };
     let (released, finished) = mpsc::sync_channel(1);
-    tracing::subscriber::with_default(
+    with_default(
         tracing_subscriber::registry()
             .with(CaptureReleased(released))
             .with(layer),
@@ -165,9 +166,13 @@ fn comparison_records_keep_counts_and_parent_context_without_authored_data() {
     assert_eq!(counts["ignoredOnly"], 2);
     assert!(counts.get("documents").is_none());
     assert_eq!(records[5]["stage"], "render.cache");
+    assert_eq!(records[5]["restores"], 0);
+    assert_eq!(records[5]["restoreFailures"], 0);
     assert_eq!(records[5]["parentId"], comparison["id"]);
     assert_eq!(records[6]["status"], "ok");
     assert_eq!(records[7]["stage"], "render.cache");
+    assert_eq!(records[7]["restores"], 0);
+    assert_eq!(records[7]["restoreFailures"], 0);
     assert_eq!(records[7]["parentId"], output["id"]);
     assert_eq!(records[8]["id"], output["id"]);
     for record in [&records[1], &records[5], &records[6], &records[7]] {
@@ -206,6 +211,8 @@ fn unsuccessful_review_spans_remain_error_and_emit_no_complete_counts() {
         .collect();
     assert_eq!(counts.len(), 1);
     assert_eq!(counts[0]["stage"], "render.cache");
+    assert_eq!(counts[0]["restores"], 0);
+    assert_eq!(counts[0]["restoreFailures"], 0);
     assert_eq!(counts[0]["phase"], "review.compare-views");
     assert!(counts[0].get("views").is_none());
 }

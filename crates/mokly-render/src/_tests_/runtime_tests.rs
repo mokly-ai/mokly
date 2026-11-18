@@ -21,6 +21,7 @@ fn runtime() -> Runtime {
         Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(())),
+        Arc::new(Unimock::new(())),
         "version".into(),
         None,
     )

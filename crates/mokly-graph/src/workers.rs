@@ -13,8 +13,23 @@ use rayon::prelude::*;
 
 use crate::cache::Artifact;
 use crate::closure::Closure;
+use crate::comparison_stream::{self, ComparisonConsumer};
 use crate::error::{GraphError, InternalError, Result};
 use crate::types::ComparisonDocument;
+use crate::worker_context::WorkerContext;
+
+/// Indexed preparation or comparison work with caller-owned results and checks.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ComparisonTaskMock))]
+pub trait ComparisonTask: Send + Sync {
+    /// Complete one index. Scheduling must call every index exactly once.
+    fn run(&self, index: usize);
+}
+
+impl fmt::Debug for dyn ComparisonTask + '_ {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("ComparisonTask")
+    }
+}
 
 /// A transient comparison input collected on an existing render worker.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ComparisonWorkerMock))]
@@ -85,6 +100,19 @@ impl fmt::Debug for dyn StylesheetWorker + '_ {
 /// Worker scheduling is an injectable runtime boundary.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderWorkersMock))]
 pub trait RenderWorkers: Send + Sync {
+    /// Complete the bounded indexed batch before returning. Results and errors
+    /// remain with the supplied task, including cancellation checks. Pure preparation
+    /// jobs can submit all indexes when they retain only finished results.
+    fn comparison_tasks(&self, count: usize, task: &dyn ComparisonTask) {
+        for index in 0..count {
+            task.run(index);
+        }
+    }
+    /// Prepare and consume in order. Stop on false and join all admitted work.
+    /// The default prepares one view at a time on the calling thread.
+    fn comparison_stream(&self, task: &dyn ComparisonTask, consumer: &mut dyn ComparisonConsumer) {
+        comparison_stream::sequential(task, consumer);
+    }
     /// Existing capacity for bounded comparison batches.
     fn comparison_parallelism(&self) -> usize {
         1
@@ -142,6 +170,17 @@ impl ThreadWorkers {
 }
 
 impl RenderWorkers for ThreadWorkers {
+    fn comparison_stream(&self, task: &dyn ComparisonTask, consumer: &mut dyn ComparisonConsumer) {
+        comparison_stream::parallel(&self.pool, task, consumer);
+    }
+    fn comparison_tasks(&self, count: usize, task: &dyn ComparisonTask) {
+        let context = WorkerContext::current();
+        self.pool.install(|| {
+            (0..count).into_par_iter().for_each(|index| {
+                context.in_scope(|| task.run(index));
+            });
+        });
+    }
     fn comparison_parallelism(&self) -> usize {
         self.pool.current_num_threads()
     }
@@ -150,30 +189,30 @@ impl RenderWorkers for ThreadWorkers {
         routes: &[String],
         worker: &dyn ComparisonWorker,
     ) -> Vec<Result<ComparisonDocument>> {
-        let parent = tracing::Span::current();
+        let context = WorkerContext::current();
         self.pool.install(|| {
             routes
                 .par_iter()
-                .map(|route| parent.in_scope(|| worker.input(route)))
+                .map(|route| context.in_scope(|| worker.input(route)))
                 .collect()
         })
     }
     fn closure(&self, route: &str, worker: &dyn ArtifactWorker) -> Result<Closure> {
-        let parent = tracing::Span::current();
+        let context = WorkerContext::current();
         self.pool
-            .install(|| parent.in_scope(|| worker.closure_job(route)))
+            .install(|| context.in_scope(|| worker.closure_job(route)))
     }
     fn document(&self, route: &str, worker: &dyn ArtifactWorker) -> Result<Arc<Artifact>> {
-        let parent = tracing::Span::current();
+        let context = WorkerContext::current();
         self.pool
-            .install(|| parent.in_scope(|| worker.artifact(route)))
+            .install(|| context.in_scope(|| worker.artifact(route)))
     }
     fn stylesheets(
         &self,
         roots: &[StylesheetRoot],
         worker: &dyn StylesheetWorker,
     ) -> Result<Vec<Bundle>> {
-        let parent = tracing::Span::current();
+        let context = WorkerContext::current();
         let failed = AtomicUsize::new(usize::MAX);
         let results: Vec<_> = self.pool.install(|| {
             roots
@@ -183,7 +222,7 @@ impl RenderWorkers for ThreadWorkers {
                     if index > failed.load(Ordering::Relaxed) {
                         return None;
                     }
-                    let result = parent.in_scope(|| worker.stylesheet(root));
+                    let result = context.in_scope(|| worker.stylesheet(root));
                     if result.is_err() {
                         failed.fetch_min(index, Ordering::Relaxed);
                     }
@@ -195,11 +234,11 @@ impl RenderWorkers for ThreadWorkers {
         results.into_iter().flatten().collect()
     }
     fn run(&self, routes: &[String], worker: &dyn DocumentWorker) -> Vec<Result<ValidatedView>> {
-        let parent = tracing::Span::current();
+        let context = WorkerContext::current();
         self.pool.install(|| {
             routes
                 .par_iter()
-                .map(|route| parent.in_scope(|| worker.validate(route)))
+                .map(|route| context.in_scope(|| worker.validate(route)))
                 .collect()
         })
     }
@@ -222,6 +261,10 @@ pub(crate) fn check_cancelled(workers: &dyn RenderWorkers) -> Result<()> {
 #[cfg(test)]
 #[path = "_tests_/comparison_workers_tests.rs"]
 mod comparison_workers_tests;
+
+#[cfg(test)]
+#[path = "_tests_/indexed_workers_tests.rs"]
+mod indexed_workers_tests;
 
 #[cfg(test)]
 #[path = "_tests_/stylesheet_workers_tests.rs"]

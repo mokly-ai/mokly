@@ -24,7 +24,7 @@ use crate::error::{RenderError, Result};
 use crate::fragments::Fragments;
 use crate::runtime::Runtime;
 use crate::source_lease::LeasedTree;
-use crate::{sources, stylesheets};
+use crate::{definition_handle, sources, stylesheets};
 
 pub(crate) struct JavaScriptGraph {
     pub(crate) runtime: Runtime,
@@ -138,7 +138,7 @@ impl JavaScriptGraph {
                     Some((source.handle.clone(), entry.metadata.source.path.clone()))
                 })
                 .collect();
-            let keys = Arc::new(RenderKeys::build(
+            let keys = Arc::new(RenderKeys::build_with_workers(
                 &RenderInputs {
                     generation,
                     bindings: &catalogue.javascript.bindings,
@@ -147,6 +147,7 @@ impl JavaScriptGraph {
                     declarations: &declaring,
                 },
                 NodeKey(fingerprint),
+                self.runtime.workers.as_ref(),
             ));
             fragments = Arc::new(MemoFragments::new(
                 keys.clone(),
@@ -164,12 +165,7 @@ impl JavaScriptGraph {
                 .map(|(path, source)| {
                     (
                         path.clone(),
-                        source
-                            .handle
-                            .split('#')
-                            .next()
-                            .expect("splitting a handle always yields its module segment")
-                            .to_owned(),
+                        definition_handle::split(&source.handle).0.to_owned(),
                     )
                 })
                 .collect();

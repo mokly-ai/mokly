@@ -27,7 +27,9 @@ A process serves one source root. A request for another root replaces the
 process before replay, and a debug event records the slot and both roots. All
 roots share the configured pool bound, so a one-worker pool replaces its
 process when the source root changes. All requests of one live PostCSS context
-reach the same process.
+reach the same process. The
+[source root scheduling rules](./mokly-sidecar-root-scheduling.md) choose the
+process that changes root.
 
 ## Source And Dependency Files
 
@@ -137,61 +139,7 @@ cache, or the bundler's implementation path.
 
 ## Compiled Recipes And Release
 
-Every private `bundle` result carries `compiled`: code, runtime import key,
-captured entry text, resolved peers, physical input digests,
-logical metadata digests, and the compilation identity. `restoreGeneration`
-installs that recipe with its original parameters, module graph, and evaluated generation id. The bundle result carries the graph once.
-It reads no current source file and invokes no compiler. Peer packages retain
-the selected physical installation. Failed peer resolutions remain explicit and
-raise `MODULE_NOT_FOUND`; native fallback cannot bypass that failure. Equal
-compilations keep independent maps, bindings, and authoring registrations.
-A `restoreGeneration` envelope above the
-[frame limit](./mokly-sidecar.md) fails with `bundle-failed` before the sidecar
-installs anything.
-
-A compilation is reused only while its inputs stay unchanged. These inputs
-include the ancestor `package.json` and `tsconfig.json` candidates of each
-consumed module up to its source or selected dependency root, the resolved
-`react/package.json`, and the Storybook preview candidates, each including
-absent files. Added or removed files in a consumed-module directory invalidate
-reuse, so a higher-priority module cannot remain hidden. Manual `r` uses these
-same input checks. Resolution metadata and directory membership remain
-observable. CSS bytes belong to stylesheet processing rather than the
-JavaScript compilation.
-
-Each `bundle` call starts an unevaluated lifetime, also when the content id
-matches an earlier evaluated lifetime. The core installs its maps,
-description, and bindings before rendering. Releasing a generation or a
-PostCSS context reaches every process that used it and starts no sidecar.
-
-After the final graph or request releases a generation, the pool keeps its
-compiled recipe in memory for later `bundle` calls. The pool keeps at most
-one released recipe for each set of bundle settings: the last one released.
-The pool compares settings without the evaluation digest. A later `bundle`
-call can reuse that recipe. Equal settings, equal resolved roots, and the
-input rule above are the only reuse checks, for released and live
-compilations alike.
-
-The pool counts each released recipe at the size of its serialized
-`restoreGeneration` envelope. The released recipes of one pool use at most
-64 MiB in total, the value of the frame limit. The pool does not keep a
-recipe above that bound. When a new recipe takes the total above the bound,
-the pool removes the least recently used recipes until the total fits. The
-pool discards every released recipe when it stops: on shutdown,
-cancellation, and forced termination. A release after the stop keeps
-nothing.
-
-Decision: the pool keeps the last released recipe of each set of bundle
-settings, in practice one head and one base recipe. The bound equals the
-frame limit, so every recipe that a sidecar can restore fits. In a measured
-Serve session with two edits and two reverts, this served all 6 of 10
-bundles that repeated an earlier compile, with about 6.4 MiB of recipes.
-Stores of many recipes within 16, 32, or 64 MiB were rejected. A `bundle`
-call restores only one released recipe of its settings, so older recipes
-would hold memory and never serve a bundle. A 128 MiB bound was rejected,
-because it differs from 64 MiB only for a recipe above 32 MiB.
-
-A worker emits an `operation` event for each catalogue `esbuild` call and each
-PostCSS worker start or stop. The payload contains the operation and sidecar
-PID. The core uses these events for exact counts, including failed calls.
-They carry no source, CSS, props, or file paths.
+[Compiled recipes and release](./mokly-sidecar-recipes.md) define the
+compiled recipe of each `bundle` result, the capture modes of a `bundle`
+request, reuse and identity, released recipes, bundle cache seeding, and the
+operation events of a worker.

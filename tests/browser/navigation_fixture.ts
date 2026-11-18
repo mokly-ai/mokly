@@ -1,4 +1,16 @@
+import type { Page } from "@playwright/test";
+
 import { serveCatalogue } from "./catalogue_fixture.js";
+
+export async function routeNavigationNestedFrame(
+  page: Page,
+  body = "<p>Cross-origin</p>",
+): Promise<void> {
+  await page.route("https://cross-origin.example.test/nested.html", (route) =>
+    route.fulfill({ body, contentType: "text/html" }),
+  );
+}
+
 export type NavigationFixture = Awaited<ReturnType<typeof serveCatalogue>>;
 export function startNavigationFixture(): Promise<NavigationFixture> {
   return serveCatalogue(

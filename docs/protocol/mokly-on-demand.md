@@ -28,8 +28,9 @@ A request for `/static/mokly-generated/<route>` renders the document on first
 request. A JavaScript fragment renders through the
 [sidecar](./mokly-sidecar.md) under its deadlines; an HTML screen or component
 renders without the sidecar. The finished document stays in the render cache
-until an input changes or the byte bound evicts it; the next request for an
-evicted document renders it again.
+until an input changes or it leaves the cache under the
+[cache bounds](./mokly-runtime.md#render-graph-and-cache). The next request for
+a document that left the cache renders it again.
 
 Concurrent requests for one document share one render. Foreground requests
 take priority over background work: a background render that has not started
@@ -64,9 +65,11 @@ render cache and the usage of every detail, then classifies Changes, which
 renders the base side under the
 [comparison contract](./mokly-comparison.md#sides). This background pass
 renders a bounded batch of views at a time: at most the smaller of the worker
-count and the [sidecar pool size](./mokly-sidecar.md#lifecycle), and at least
-one. The worker count is the machine's core count, up to eight. The next view
-starts as soon as any view of the batch ends, and views start in catalogue
+count and the [sidecar capacity](./mokly-sidecar-memory.md#capacity), and at
+least one. The worker count is the machine's core count, up to eight. Each
+view start reads the current capacity and takes no
+[claim](./mokly-sidecar-memory.md#claims). The next view starts as soon as the
+batch has fewer views than its bound, and views start in catalogue
 order: when several views wait for one free worker, the first in catalogue
 order starts. Each view's build warnings and a failed render's diagnostic
 report once, in catalogue order, after every earlier view of the pass has
@@ -84,17 +87,39 @@ finishes under its deadlines. `--no-watch` runs this work once.
 Decision: the batch is a sliding window. Fixed batches, which wait for their
 slowest view before the next batch starts, were rejected, because one slow
 view leaves the other workers idle. Decision: the batch is bounded by the
-smaller of the worker count and the sidecar pool size. The worker count alone
-was rejected, because with fewer sidecars its extra renders wait in the
-sidecar queue beside foreground calls. Keeping one worker free for foreground
-requests was rejected, because it slows every pass. Decision: warnings and
+smaller of the worker count and the sidecar capacity. The worker count alone
+and the pool size alone were rejected, because renders beyond the capacity
+would wait for a sidecar while they hold workers that foreground renders need.
+Keeping one worker free for foreground requests was rejected, because it slows
+every pass. Decision: a view start takes no claim. A claim for each started
+view was rejected, because an HTML view would hold sidecar capacity that it
+never uses, and the call order of sidecar admission already keeps foreground
+priority. Decision: warnings and
 failures report in catalogue order. Reporting each view when its render ends
 was rejected, because the order of the lines would change between runs.
 
 Sidecar admission preserves foreground priority for each whole HTTP render.
-Queued base calls wait until those requests finish their sidecar work. Active
-calls finish under their deadlines. Both sides share the configured sidecar
-pool size, including when the pool has one sidecar.
+Queued base calls wait until those requests finish their sidecar work. The
+queued calls of started background views go after the other queued head calls,
+such as the calls of HTTP renders. A call of a started view does not wait for
+the end of an HTTP request. Active calls finish under their deadlines.
+
+Head and base calls share the
+[sidecar capacity](./mokly-sidecar-memory.md#capacity), including a capacity
+of one. Each admitted call holds a [claim](./mokly-sidecar-memory.md#claims)
+on that capacity until the call ends.
+
+Decision: each admitted call holds a claim. The pool size was rejected,
+because calls that a default pool cannot start would wait in its queue ahead
+of later foreground calls. A capacity reading alone was rejected, because
+memory can fall before the call reaches the pool, with the same result.
+
+Decision: the queued calls of started background views go after the other
+queued head calls. Equal order was rejected, because a view that started
+before memory fell, or while base calls held the sidecars, would then delay a
+foreground render. A wait for the end of each HTTP request was rejected,
+because that request can share the render of the view, and neither would then
+finish.
 
 The event stream sends a comment after 15 seconds without a publication to
 keep idle connections active during background work. These comments carry no
@@ -105,10 +130,13 @@ Shutdown ends the stream before its next comment.
 A source or configuration change replaces the catalogue model and the moved
 graph nodes together under the [watch contract](./mokly-watch.md); a failed
 candidate keeps the last-good state. Replacement invalidates the cached
-documents whose keys moved, every detail, and the comparison evidence; a
-resource edit invalidates the documents that reference it. Replacement and
+documents whose keys moved, every detail, and the published comparison
+evidence; a resource edit invalidates the documents that reference it. Replacement and
 shutdown cancel active Git commands and wait for their process and pipe
-closure before cleanup completes.
+closure before cleanup completes. A Git read of the kept base finishes after
+a replacement, under the
+[kept base cancellation rule](./mokly-base-preparation.md#cancellation).
+Shutdown still cancels it.
 
 ## Comparison Snapshots
 

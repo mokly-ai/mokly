@@ -5,6 +5,7 @@ import type { MoklyViewerHandle, ViewerSelection } from "@mokly/viewer";
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import { test } from "./browser_test.js";
+import { startViewerPick } from "./viewer_pick.js";
 
 import type {} from "./viewer_harness.js";
 let fixture: Awaited<ReturnType<typeof viewerFixture>>;
@@ -30,9 +31,9 @@ test("uncontrolled selection, slots and handle lifecycle", async ({ page }) => {
   );
   await page.getByText("Host start").click();
   await expect(page.getByText("Annotation")).toBeVisible();
-  await page.evaluate(async () => {
+  await startViewerPick(page);
+  await page.evaluate(() => {
     const host = window.viewerHarness.get("one");
-    await host.ref.current.startPick();
     host.ref.current.cancelPick();
     host.ref.current.cancelPick();
     host.ref.current.select({ screenPath: null });

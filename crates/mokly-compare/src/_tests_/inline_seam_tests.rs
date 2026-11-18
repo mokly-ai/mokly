@@ -49,7 +49,7 @@ fn inline_rules_without_own_page_proof_keep_entry_records() {
             Some(&tree),
             Some(&tree),
         );
-        let result = attribution::attribute(vec![PageObservation {
+        let result = attribution::attribute(&[PageObservation {
             component: None,
             rules: observations,
         }]);
@@ -121,7 +121,7 @@ fn inline_own_page_proof_joins_rule_identity_across_document_routes() {
         ),
     })
     .collect();
-    let result = attribution::attribute(pages);
+    let result = attribution::attribute(pages.iter());
     assert_eq!(
         result.changed_components.into_iter().collect::<Vec<_>>(),
         ["card"]

@@ -58,6 +58,7 @@ fn shutdown_cancels_queued_and_inflight_work_with_one_shared_deadline() {
             Arc::new(factory.clone()),
             Arc::new(factory.clone()),
             Launch {
+                capture_durability: false,
                 node: "node".into(),
                 entry: "sidecar.js".into(),
                 repository: "/repo".into(),
