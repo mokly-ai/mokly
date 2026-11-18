@@ -33,6 +33,7 @@ getrandom = "0.4.3"
 mock = ["dep:unimock"]
 
 [dev-dependencies]
+mokly-test-support = { workspace = true }
 mokly-source-interface = { workspace = true, features = ["mock"] }
 tempfile = "3.27.0"
 unimock = "0.6.8"

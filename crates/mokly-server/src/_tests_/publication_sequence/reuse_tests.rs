@@ -1,10 +1,9 @@
 //! Equal phase records avoid repeated hash and encoding work after source edits.
 
 use mokly_model::public_metadata::ChangesStatus;
-use tracing_subscriber::layer::SubscriberExt;
+use mokly_test_support::capture::Trace;
 
 use crate::changes::ChangeToken;
-use crate::changes_trace_support::Traces;
 use crate::detail_encoding::EncodedDetails;
 use crate::evidence;
 use crate::publication::{Publications, SharedPublication};
@@ -16,16 +15,9 @@ use super::support::{accepted, generation, input, projector};
 #[test]
 fn repeated_edit_phases_do_not_build_equal_details_again_at_either_catalogue_size() {
     for count in [4, 16] {
-        let traces = Traces::default();
-        let subscriber = tracing_subscriber::registry().with(traces.clone());
-        tracing::subscriber::with_default(subscriber, || {
-            let builds = || {
-                traces
-                    .records()
-                    .iter()
-                    .filter(|record| record.name == "detail.build")
-                    .count()
-            };
+        let traces = Trace::default();
+        traces.in_scope(|| {
+            let builds = || traces.closed("detail.build").len();
             let projector = projector();
             let mut current = projector.create(generation(count, 0), input(1)).unwrap();
             assert_eq!(builds(), count);

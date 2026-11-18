@@ -7,6 +7,7 @@ use std::thread;
 use mokly_cli::redaction::Redactor;
 use mokly_graph::cache::{MemoryCache, RenderCache};
 use mokly_sidecar::workers::ClockMock;
+use mokly_test_support::subscriber::with_default;
 use serde_json::Value;
 use tracing::{Dispatch, Subscriber};
 use tracing_subscriber::Layer;
@@ -84,7 +85,7 @@ fn collect_lines(
         cache,
     };
     let (released, finished) = mpsc::sync_channel(1);
-    tracing::subscriber::with_default(
+    with_default(
         tracing_subscriber::registry()
             .with(CaptureReleased(released))
             .with(layer),
