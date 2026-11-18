@@ -6,6 +6,7 @@ import type { BrowserUsage } from "../../packages/viewer/tests/browser_documents
 import { test } from "./browser_test.js";
 import {
   crossOriginFixture,
+  waitForFrameEvent,
   type FrameTestWindow,
 } from "./frame_adapter_fixture.js";
 
@@ -53,7 +54,9 @@ test("same-origin interface supports geometry, hover, click, scroll and disposal
     (window as unknown as FrameTestWindow).mounted.listInstanceBoundaries(),
   );
   expect(boundaries).toHaveLength(fixture.usage.instances.length);
-  await frame.getByRole("button", { name: "Visible", exact: true }).hover();
+  await waitForFrameEvent(page, "hover", () =>
+    frame.getByRole("button", { name: "Visible", exact: true }).hover(),
+  );
   await expect
     .poll(() =>
       page.evaluate(
@@ -65,7 +68,9 @@ test("same-origin interface supports geometry, hover, click, scroll and disposal
       ),
     )
     .toBe(true);
-  await frame.getByRole("button", { name: "Visible", exact: true }).click();
+  await waitForFrameEvent(page, "click", () =>
+    frame.getByRole("button", { name: "Visible", exact: true }).click(),
+  );
   await expect
     .poll(() =>
       page.evaluate(
@@ -121,10 +126,12 @@ test("valid local logical navigation works without instance usage", async ({
       state.frameEvents.push(event),
     );
   });
-  await page
-    .frameLocator("#frame")
-    .getByRole("link", { name: "Open Action" })
-    .click();
+  await waitForFrameEvent(page, "navigation", () =>
+    page
+      .frameLocator("#frame")
+      .getByRole("link", { name: "Open Action" })
+      .click(),
+  );
   await expect
     .poll(() =>
       page.evaluate(() =>
@@ -182,10 +189,12 @@ test("temporary previews keep pick listeners without drawing and preserve logica
   );
 
   await expect(page.locator(".mbk-highlight-layer")).toHaveCount(0);
-  await page
-    .frameLocator("#frame")
-    .getByRole("link", { name: "Open Action" })
-    .click();
+  await waitForFrameEvent(page, "navigation", () =>
+    page
+      .frameLocator("#frame")
+      .getByRole("link", { name: "Open Action" })
+      .click(),
+  );
   await expect
     .poll(() =>
       page.evaluate(() =>

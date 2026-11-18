@@ -6,6 +6,7 @@ import type { BrowserUsage } from "../../packages/viewer/tests/browser_documents
 import { test } from "./browser_test.js";
 import {
   crossOriginFixture,
+  waitForFrameEvent,
   type FrameTestWindow,
 } from "./frame_adapter_fixture.js";
 
@@ -163,10 +164,12 @@ for (const kind of ["current", "temporary"] as const) {
       replaced: true,
       boundaries: fixture.usage.instances.length,
     });
-    await page
-      .frameLocator("#frame")
-      .getByRole("link", { name: "Open Action" })
-      .click();
+    await waitForFrameEvent(page, "navigation", () =>
+      page
+        .frameLocator("#frame")
+        .getByRole("link", { name: "Open Action" })
+        .click(),
+    );
     await expect
       .poll(() =>
         page.evaluate(() =>

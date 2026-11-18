@@ -4,6 +4,7 @@ import { test } from "./browser_test.js";
 import {
   crossOriginFixture,
   mountCrossFrame,
+  waitForFrameEvent,
   type FrameTestWindow,
 } from "./frame_adapter_fixture.js";
 
@@ -40,7 +41,9 @@ test("cross-origin native activations report bounded targets and modifiers witho
     await page.evaluate(() => {
       (window as unknown as FrameTestWindow).frameEvents = [];
     });
-    await frame.getByRole("link", { name, exact: true }).click();
+    await waitForFrameEvent(page, "navigation", () =>
+      frame.getByRole("link", { name, exact: true }).click(),
+    );
     await expect
       .poll(() =>
         page.evaluate(() =>
@@ -63,13 +66,15 @@ test("cross-origin native activations report bounded targets and modifiers witho
     await page.evaluate(() => {
       (window as unknown as FrameTestWindow).frameEvents = [];
     });
-    await frame
-      .getByRole("link", { name: "Self", exact: true })
-      .click(
-        "modifiers" in options
-          ? { modifiers: [...options.modifiers] }
-          : options,
-      );
+    await waitForFrameEvent(page, "navigation", () =>
+      frame
+        .getByRole("link", { name: "Self", exact: true })
+        .click(
+          "modifiers" in options
+            ? { modifiers: [...options.modifiers] }
+            : options,
+        ),
+    );
     await expect
       .poll(() =>
         page.evaluate(() =>
