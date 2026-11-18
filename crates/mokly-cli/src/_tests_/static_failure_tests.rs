@@ -3,7 +3,7 @@
 use std::path::{Path, PathBuf};
 
 use mokly_static::error::{Error, InternalError};
-use mokly_static::inspector_error::InspectorFailure;
+use mokly_static::frame_probe_error::FrameProbeFailure;
 
 use crate::build::BuildError;
 use crate::build_output::failure;
@@ -43,10 +43,10 @@ fn static_errors_show_safe_paths_bounded_entries_and_each_cause_once() {
             source: Error::Empty,
         },
         BuildError::Static {
-            source: Error::Inspector {
+            source: Error::FrameProbe {
                 route: "home/index.html".into(),
-                reason: InspectorFailure::Reserved {
-                    attribute: "data-mokly-inspector-link",
+                reason: FrameProbeFailure::Reserved {
+                    attribute: "data-mokly-frame-probe-link",
                 },
             },
         },

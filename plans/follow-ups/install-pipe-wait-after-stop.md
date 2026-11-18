@@ -29,7 +29,7 @@
 - **Background:**
   - The base needs JavaScript rendering when its catalogue has a JavaScript
     entry module or a stories file, or its configuration names a renderer
-    or PostCSS. `crates/mokly-cli/src/changes_base.rs:87` to line 102
+    or PostCSS. `crates/mokly-cli/src/changes_base.rs:98` to line 114
     prepares base dependencies only then. An HTML-only catalogue needs no
     install. The dependency inputs are the tracked package manifests and
     lockfiles. With pnpm or Yarn lockfiles, they also hold the manager
@@ -58,7 +58,7 @@
     kills the group from its reader thread. The other reader still waits
     for its own pipe.
   - The time limit of a base install is 120 seconds, at
-    `crates/mokly-cli/src/base_dependencies.rs:170`.
+    `crates/mokly-cli/src/base_dependencies.rs:173`.
   - `docs/protocol/mokly-base-install-processes.md#bounds-and-stops`
     states two limits of a stop. On macOS, a stop does not signal a
     descendant outside the manager's process group whose parent exited

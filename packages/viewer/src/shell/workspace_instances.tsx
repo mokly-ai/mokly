@@ -5,16 +5,14 @@
  * tree, its disclosures, and the viewport choice.
  */
 
+import type { ComponentInstanceRecord } from "@mokly/model";
 import {
   InstanceTree,
   type InstanceNode,
   type InstanceTreeUsage,
 } from "@mokly/ui/instance-tree";
 
-import type {
-  ComponentInstanceRecord,
-  ComponentViewRecord,
-} from "../components/view_types.js";
+import type { ComponentViewRecord } from "../components/view_types.js";
 import { orderedInstances } from "../components/views.js";
 import type { GeneratedComponentView } from "../components/views.js";
 

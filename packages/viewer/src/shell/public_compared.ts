@@ -1,10 +1,11 @@
 /** The routed entry's comparison facts from its index record and its held detail. */
 
+import type { EntryDetailV4 } from "@mokly/model";
+
 import type {
   ShellCatalogueComponent,
   ShellCatalogueScreen,
 } from "../catalogue/scoped_types.js";
-import type { EntryDetailV4 } from "../catalogue/types.js";
 import type { ComparedEntry, ReviewView } from "../review/types.js";
 
 /**

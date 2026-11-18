@@ -128,15 +128,15 @@ test("throws, promises, invalid nodes and forged markers fail each render", asyn
   await sidecar.call("shutdown");
 });
 
-test("unknown methods and missing hello fail closed", async (context) => {
-  for (const method of ["unknown", "shutdown"]) {
-    const sidecar = startSidecar(context);
-    await assert.rejects(sidecar.call(method), { code: "sidecar-protocol" });
-    await new Promise<void>((resolve) =>
-      sidecar.child.once("exit", () => resolve()),
-    );
-    assert.equal(sidecar.child.exitCode, 1);
-  }
+test("missing hello fails closed", async (context) => {
+  const sidecar = startSidecar(context);
+  await assert.rejects(sidecar.call("shutdown"), {
+    code: "sidecar-protocol",
+  });
+  await new Promise<void>((resolve) =>
+    sidecar.child.once("exit", () => resolve()),
+  );
+  assert.equal(sidecar.child.exitCode, 1);
 });
 
 test("declared non-data props report their property path", async (context) => {

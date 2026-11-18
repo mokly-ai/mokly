@@ -220,8 +220,8 @@ fn base_admission_never_exceeds_the_configured_worker_count() {
 }
 
 #[test]
-fn the_admission_limit_is_the_sidecar_count_and_at_least_one() {
-    for (size, limit) in [(0, 1), (1, 1), (3, 3)] {
+fn the_admission_limit_matches_configured_positive_sidecar_counts() {
+    for (size, limit) in [(1, 1), (3, 3)] {
         let scheduler = ServePool::new(Arc::new(Unimock::new(())), size);
         assert_eq!(scheduler.limit(), limit);
     }

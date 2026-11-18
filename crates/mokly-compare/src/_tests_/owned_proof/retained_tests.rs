@@ -40,17 +40,17 @@ fn catalogue_view(elements: usize, matching: bool) -> Changes {
 #[test]
 fn retained_owned_state_is_equal_at_one_and_four_catalogue_sizes() {
     for matching in [false, true] {
-        let mut small = catalogue_view(32, matching);
-        let mut large = catalogue_view(128, matching);
+        let small = catalogue_view(32, matching);
+        let large = catalogue_view(128, matching);
         assert_eq!(small.retained_counts(), large.retained_counts());
         assert_eq!(small.retained_counts(), (4, 4, 2));
         let small: Vec<_> = small
-            .proofs(&BTreeMap::new())
+            .instances(&BTreeMap::new())
             .into_iter()
             .map(record)
             .collect();
         let large: Vec<_> = large
-            .proofs(&BTreeMap::new())
+            .instances(&BTreeMap::new())
             .into_iter()
             .map(record)
             .collect();
@@ -78,7 +78,7 @@ fn added_and_removed_views_retain_no_owned_proof_chains() {
         [(0, 0, 0), (0, 0, 0)]
     );
     for view in &mut views {
-        assert!(view.proofs(&BTreeMap::new()).is_empty());
+        assert!(view.instances(&BTreeMap::new()).is_empty());
     }
 }
 
@@ -102,10 +102,10 @@ fn unpaired_and_changed_input_owners_retain_only_the_eligible_chain() {
         "blue",
         "owner",
     );
-    let mut changes = compare(&before, &after, &BTreeMap::new());
+    let changes = compare(&before, &after, &BTreeMap::new());
     assert_eq!(changes.retained_counts(), (2, 2, 1));
     let proofs: Vec<_> = changes
-        .proofs(&BTreeMap::new())
+        .instances(&BTreeMap::new())
         .into_iter()
         .map(record)
         .collect();
@@ -139,14 +139,14 @@ fn input_only_instances_do_not_retain_their_physical_ancestors() {
                 ),
             ]
         };
-        let mut changes = compare(
+        let changes = compare(
             &document(nodes(), "red", "owner"),
             &document(nodes(), "blue", "owner"),
             &BTreeMap::new(),
         );
         assert_eq!(changes.retained_counts(), (4, 2, 1));
         let proofs: Vec<_> = changes
-            .proofs(&BTreeMap::new())
+            .instances(&BTreeMap::new())
             .into_iter()
             .map(record)
             .collect();

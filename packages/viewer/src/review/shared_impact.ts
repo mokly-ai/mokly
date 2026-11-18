@@ -4,9 +4,10 @@
  * a changed component that the entry's detail names.
  */
 
-import type { ResourceEvidence, RuleEvidence } from "../catalogue/types.js";
+import type { ResourceEvidence, RuleEvidence } from "@mokly/model";
 
 /** One view's records: an entry detail's view evidence or a review view. */
+
 interface ViewRecords {
   readonly rules?: readonly RuleEvidence[];
   readonly resources?: readonly ResourceEvidence[];

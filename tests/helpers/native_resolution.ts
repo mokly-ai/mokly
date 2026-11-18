@@ -110,7 +110,6 @@ interface Fingerprint {
 
 /** Every bundle result field, with the random runtime key replaced. */
 export function fingerprint(result: BundleResult): Fingerprint {
-  if (!result.compiled) throw new Error("the bundle result has no recipe");
   const { runtimeKey, ...compiled } = result.compiled;
   return {
     modules: result.modules,

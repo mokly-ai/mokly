@@ -2,6 +2,8 @@
 
 import fs from "node:fs";
 
+import type { CatalogueReadModel, EntryDetailV4 } from "@mokly/model";
+
 import {
   detailKey,
   type DetailRequest,
@@ -10,10 +12,6 @@ import { readEntryDetail } from "../src/catalogue/detail_reader.js";
 import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
 import type { ShellCatalogueReadModel } from "../src/catalogue/scoped_types.js";
 import { shellCatalogueModel } from "../src/catalogue/shell_model.js";
-import type {
-  CatalogueReadModel,
-  EntryDetailV4,
-} from "../src/catalogue/types.js";
 import type { Catalogue } from "../src/shell/catalogue.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 

@@ -2,6 +2,7 @@
 
 use std::collections::BTreeSet;
 use std::path::Path;
+use std::sync::Arc;
 
 use mokly_source_interface::tree::FileKind;
 
@@ -37,9 +38,6 @@ impl Builder {
             .collect();
         if !javascript.is_empty() || config.input.renderer.is_some() {
             let described = self.definitions.describe(config, &javascript)?;
-            if !described.deferred {
-                prepared.deferred_modules.clear();
-            }
             prepared.model.folders.extend(described.folders);
             prepared.javascript.generation = described.generation;
             prepared.javascript.bindings = described.bindings;
@@ -147,6 +145,14 @@ impl Builder {
                             &mut result.entries,
                             &definition.rendering,
                         );
+                        if let Some(validator) = result.validator {
+                            let validator = Arc::new(validator);
+                            for entry in &result.entries {
+                                prepared
+                                    .prop_validators
+                                    .insert(entry.metadata.path.clone(), validator.clone());
+                            }
+                        }
                         if result.failed {
                             failed.extend(
                                 result

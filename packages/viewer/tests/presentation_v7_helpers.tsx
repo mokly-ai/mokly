@@ -6,12 +6,10 @@
 
 import { renderToStaticMarkup, renderToString } from "react-dom/server";
 
+import type { CatalogueReadModel, EntryDetailV4 } from "@mokly/model";
+
 import type { DetailRequest } from "../src/catalogue/detail_fences.js";
 import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
-import type {
-  CatalogueReadModel,
-  EntryDetailV4,
-} from "../src/catalogue/types.js";
 import type {
   ViewerSelection,
   ViewerSlots,

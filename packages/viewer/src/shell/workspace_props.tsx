@@ -7,6 +7,7 @@
 
 import type { ReactNode } from "react";
 
+import type { ComponentInstanceRecord } from "@mokly/model";
 import {
   PropsMessage,
   PropsPanel,
@@ -19,10 +20,7 @@ import type {
   ComponentWireProps,
   PropValue as WirePropValue,
 } from "../components/prop_types.js";
-import type {
-  ComponentInstanceRecord,
-  ComponentViewRecord,
-} from "../components/view_types.js";
+import type { ComponentViewRecord } from "../components/view_types.js";
 import { viewHref } from "../navigation/routes.js";
 
 import { CONTROLS_COPY } from "./component_controls_copy.js";

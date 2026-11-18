@@ -9,8 +9,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test, { type TestContext } from "node:test";
 
-import type { CatalogueReadModel } from "../packages/viewer/src/generated/catalogue/CatalogueReadModel.js";
-import type { EntryDetailV4 } from "../packages/viewer/src/generated/catalogue/EntryDetailV4.js";
+import type {
+  CatalogueReadModel,
+  EntryDetailV4,
+} from "../packages/model/dist/index.js";
 
 import { completed, serve } from "./helpers/mokly_serve.js";
 import { build, fixture } from "./helpers/static_changes.js";

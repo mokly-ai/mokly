@@ -1,18 +1,17 @@
 //! Memory recycling keeps its back-off across worker replacements in one slot.
 
-use crate::error::Result;
 use crate::pool::Pool;
 use crate::pool_state::Slot;
 use crate::pool_timing::Reason;
 
 impl Pool {
-    pub(super) fn recycle(&self, index: usize, slot: &mut Option<Slot>) -> Result<()> {
+    pub(super) fn recycle(&self, index: usize, slot: &mut Option<Slot>) {
         let Some(current) = slot.as_mut() else {
-            return Ok(());
+            return;
         };
         current.requests += 1;
         let due = self
-            .lock()?
+            .lock()
             .memory
             .entry(index)
             .or_default()
@@ -24,7 +23,7 @@ impl Pool {
         };
         let pressure = match memory {
             Some(bytes) => self
-                .lock()?
+                .lock()
                 .memory
                 .entry(index)
                 .or_default()
@@ -35,10 +34,10 @@ impl Pool {
             current.worker.memory_pressure();
         }
         if current.renders < 500 && pressure.is_none() {
-            return Ok(());
+            return;
         }
         let stopped = {
-            let mut state = self.lock()?;
+            let mut state = self.lock();
             state.replacement_reasons.insert(index, Reason::Recycle);
             state.stopped
         };
@@ -58,6 +57,5 @@ impl Pool {
             span.record("status", "ok");
         }
         *slot = None;
-        Ok(())
     }
 }

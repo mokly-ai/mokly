@@ -18,8 +18,8 @@ Pages use the light
 Selection loads only the requested document scheme. A screen uses only the
 detail's views whose state is `removed`. The preview waits for the route's
 detail. A failed or rejected detail shows the unavailable state, and Retry
-loads that route detail again. `requestPreview` also checks the selected
-snapshot identity.
+loads that route detail again. The route's fences bind that detail to the
+selected snapshot, so the preview does not check the detail again.
 Before it accepts a page or document, it recomputes the selected historical
 identity from the metadata's baseline commit. This keeps a late response or
 Retry from replacing an open historical record after the baseline changes.
@@ -87,7 +87,7 @@ cargo xtask check --suite viewer
 - [`../shell/previews.tsx`](../shell/previews.tsx) renders the loading,
   unavailable, and loaded stages with the device chrome of current screens.
 
-Related boundaries: [the Browse client](../client/README.md), the
+Related boundaries: [the frame adapters](../../../frame/README.md#frames-without-an-adapter), the
 [shared shell](../shell/README.md), the
 [selected comparison contract](../../../../docs/protocol/mokly-selected-comparisons.md),
 the [comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md),

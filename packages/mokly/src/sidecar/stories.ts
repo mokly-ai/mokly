@@ -66,13 +66,7 @@ export async function describeStories(
       description: "",
       relatedDocs: [],
       tags: [],
-      props: storyProps(
-        generation,
-        meta.args ?? {},
-        meta.argTypes ?? {},
-        `${file}#default`,
-        excludedProps,
-      ),
+      props: storyProps(meta.args ?? {}, meta.argTypes ?? {}, excludedProps),
       argTypes: {} as Record<string, StoryHints>,
       variants: [] as Definitions["components"][number]["variants"],
       slots: [],
@@ -91,13 +85,7 @@ export async function describeStories(
       const id = `${file}#${exportName}`;
       const hints = { ...meta.argTypes, ...annotation.argTypes };
       const excludedProps: string[] = [];
-      const props = storyProps(
-        generation,
-        story.args,
-        hints,
-        id,
-        excludedProps,
-      );
+      const props = storyProps(story.args, hints, excludedProps);
       const title = annotation.name ?? exportName;
       const argTypes: Record<string, StoryHints> = {};
       for (const [key, value] of Object.entries(hints)) {
@@ -138,10 +126,8 @@ export async function describeStories(
 }
 
 function storyProps(
-  generation: Generation,
   args: Record<string, unknown>,
   hints: Record<string, Record<string, unknown>>,
-  location: string,
   excluded: string[],
 ) {
   const kept = Object.fromEntries(
@@ -162,5 +148,5 @@ function storyProps(
       );
     }),
   );
-  return dataProps(kept, false, location, generation.warnings, excluded);
+  return dataProps(kept, false, excluded);
 }

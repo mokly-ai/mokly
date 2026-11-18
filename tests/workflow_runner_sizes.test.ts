@@ -23,6 +23,8 @@ interface Workflow {
 
 /** npm trusted publishing creates provenance only on GitHub-hosted runners. */
 const PROVENANCE_PUBLISH_RUNNER = "ubuntu-24.04";
+/** Small Linux x64 jobs run on the GitHub-hosted runner, free for public repositories. */
+const SMALL_LINUX_RUNNER = "ubuntu-24.04";
 /**
  * Linux jobs above the smallest tier: the design matrix, CI Rust builds, and
  * the Testbox job, which runs the same suites on the same runner as CI.
@@ -44,7 +46,7 @@ const INTEL_MACOS_WORKFLOWS = [
   "native-bootstrap.yml",
 ];
 
-test("workflows use the smallest Blacksmith tiers and publish to npm from GitHub-hosted runners", async () => {
+test("workflows use GitHub-hosted small Linux runners, the smallest Blacksmith tiers elsewhere, and publish to npm from GitHub-hosted runners", async () => {
   const workflowsDirectory = path.join(repositoryRoot, ".github", "workflows");
   const workflowNames = (await fs.readdir(workflowsDirectory)).filter(
     (name) => name.endsWith(".yml") || name.endsWith(".yaml"),
@@ -131,8 +133,14 @@ function publishesWithProvenance(job: WorkflowJob): boolean {
 }
 
 function assertMinimumRunner(label: string, context: string): void {
+  if (label === SMALL_LINUX_RUNNER) return;
   const match = /^blacksmith-(\d+)vcpu-(.+)$/.exec(label);
   assert.ok(match, `${context} must use a sized Blacksmith runner`);
+  assert.notEqual(
+    match[2],
+    "ubuntu-2404",
+    `${context} must use ${SMALL_LINUX_RUNNER} for a small Linux x64 job`,
+  );
   const expected = match[2]!.startsWith("macos-") ? 6 : 2;
   assert.equal(
     Number(match[1]),

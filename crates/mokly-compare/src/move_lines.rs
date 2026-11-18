@@ -55,9 +55,14 @@ impl RenderedMoves<'_> {
                 };
                 let before = self.before.comparison_document(before_route).compare()?;
                 let after = self.after.comparison_document(after_route).compare()?;
-                let (Some(before), Some(after)) = (&before.document, &after.document) else {
-                    return Ok(None);
-                };
+                let before = before
+                    .document
+                    .as_ref()
+                    .expect("the graph composes a document for every base page plan");
+                let after = after
+                    .document
+                    .as_ref()
+                    .expect("the graph composes a document for every current page plan");
                 let (left, right) = view_material::projections(
                     before,
                     after,

@@ -26,6 +26,10 @@ pub struct Artifact {
     pub directory: PathBuf,
     /// Every regular output file, with the ownership marker last.
     pub files: Vec<File>,
+    /// Typed inventory from the same finalization that wrote the marker.
+    pub ownership: Ownership,
+    /// Publication envelope from the same finalization that wrote its bytes.
+    pub metadata: Option<UploadMetadata>,
 }
 
 impl Artifact {
@@ -37,14 +41,11 @@ impl Artifact {
         mut files: Vec<File>,
         metadata: Option<UploadMetadata>,
     ) -> Result<Self> {
-        if let Some(metadata) = metadata {
+        if let Some(metadata) = &metadata {
             files.push(File {
                 path: MANIFEST.to_owned(),
                 bytes: metadata.bytes()?.into(),
             });
-        }
-        if files.iter().any(|file| file.bytes.len() > FILE_LIMIT) {
-            return Err(FormatError::TooLarge);
         }
         files.sort_by(|left, right| left.path.encode_utf16().cmp(right.path.encode_utf16()));
         let ownership = Ownership {
@@ -58,16 +59,22 @@ impl Artifact {
                 })
                 .collect(),
         };
-        let Ok(mut marker) = serde_json::to_vec_pretty(&ownership) else {
-            return Err(FormatError::InvalidBundle);
-        };
+        let mut marker = serde_json::to_vec_pretty(&ownership)
+            .expect("Ownership contains only strings, integer sizes, and a list of entries");
         marker.push(b'\n');
-        Ownership::parse(&marker)?;
+        if marker.len() > FILE_LIMIT {
+            return Err(FormatError::TooLarge);
+        }
         files.push(File {
             path: MARKER.to_owned(),
             bytes: marker.into(),
         });
-        Ok(Self { directory, files })
+        Ok(Self {
+            directory,
+            files,
+            ownership,
+            metadata,
+        })
     }
 }
 

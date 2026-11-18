@@ -9,7 +9,6 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
-use mokly_catalogue::definition_provider::DeferredDefinitions;
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::preparation::{Builder, CatalogueBuilder};
 use mokly_catalogue::working_tree::WorkingTree;
@@ -225,7 +224,7 @@ fn the_first_failed_root_in_root_order_gives_the_error_when_a_later_root_fails_f
     let prepared = Builder {
         tree: tree.clone(),
         discovery: Arc::new(Discoverer { tree: tree.clone() }),
-        definitions: Arc::new(DeferredDefinitions),
+        definitions: Arc::new(support::definitions::EmptyDefinitions),
     }
     .prepare(&config, None)
     .unwrap();
@@ -253,7 +252,7 @@ fn the_first_failed_root_in_root_order_gives_the_error_when_a_later_root_fails_f
             fragments: Arc::new(DeferredFragments),
         }),
         stylesheets: stylesheets.clone(),
-        cache: Arc::new(MemoryCache::new(1024 * 1024)),
+        cache: Arc::new(MemoryCache::new(1024 * 1024, 0)),
         workers: Arc::new(ThreadWorkers::new(3).unwrap()),
         version: "fixture".into(),
     };

@@ -1,4 +1,4 @@
-//! Compact state preserves complete proof values and their original order.
+//! Compact state preserves exact selected instances and their original order.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -15,13 +15,13 @@ fn nested_owner_copies_preserve_both_proofs_in_pair_order_after_a_move() {
             vec![instance(path, "a-inner", vec![hit(), hit()])],
         )]
     };
-    let mut changes = compare(
+    let changes = compare(
         &document(nodes("old"), "red", "old"),
         &document(nodes("owner"), "blue", "owner"),
         &BTreeMap::from([("old".into(), "owner".into())]),
     );
     let proofs: Vec<_> = changes
-        .proofs(&BTreeMap::new())
+        .instances(&BTreeMap::new())
         .into_iter()
         .map(record)
         .collect();
@@ -50,7 +50,7 @@ fn a_receivers_own_page_match_does_not_block_a_different_slot_supplier() {
             )],
         )]
     };
-    let mut changes = compare(
+    let changes = compare(
         &document(nodes(), "red", "owner"),
         &document(nodes(), "blue", "owner"),
         &BTreeMap::new(),
@@ -61,7 +61,7 @@ fn a_receivers_own_page_match_does_not_block_a_different_slot_supplier() {
         pages.get(&identity),
         Some(&BTreeSet::from(["other".into()]))
     );
-    let proofs: Vec<_> = changes.proofs(&pages).into_iter().map(record).collect();
+    let proofs: Vec<_> = changes.instances(&pages).into_iter().map(record).collect();
     assert_eq!(proofs, [expected("owner", "supplier")]);
 }
 
@@ -76,16 +76,16 @@ fn another_components_own_page_match_blocks_the_outer_owner() {
     };
     let before = document(nodes(), "red", "owner");
     let after = document(nodes(), "blue", "owner");
-    let mut changes = compare(&before, &after, &BTreeMap::new());
+    let changes = compare(&before, &after, &BTreeMap::new());
     let identity = changes.rules[0].identity.clone();
     let pages = own_pages("other");
     assert_eq!(
         pages.get(&identity),
         Some(&BTreeSet::from(["other".into()]))
     );
-    assert!(changes.proofs(&pages).is_empty());
+    assert!(changes.instances(&pages).is_empty());
     let proofs: Vec<_> = compare(&before, &after, &BTreeMap::new())
-        .proofs(&BTreeMap::new())
+        .instances(&BTreeMap::new())
         .into_iter()
         .map(record)
         .collect();
@@ -105,7 +105,7 @@ fn a_blocked_chain_keeps_the_inner_owner_copy() {
             )],
         )]
     };
-    let mut changes = compare(
+    let changes = compare(
         &document(nodes(), "red", "owner"),
         &document(nodes(), "blue", "owner"),
         &BTreeMap::new(),
@@ -116,6 +116,6 @@ fn a_blocked_chain_keeps_the_inner_owner_copy() {
         pages.get(&identity),
         Some(&BTreeSet::from(["other".into()]))
     );
-    let proofs: Vec<_> = changes.proofs(&pages).into_iter().map(record).collect();
+    let proofs: Vec<_> = changes.instances(&pages).into_iter().map(record).collect();
     assert_eq!(proofs, [expected("owner", "inner")]);
 }

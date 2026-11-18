@@ -4,7 +4,7 @@ use mokly_model::output::error::FormatError;
 use mokly_model::output::repository::Repository;
 use mokly_model::output::upload::UploadMetadata;
 use mokly_model::output::validation::{portable_path, timestamp};
-use serde_json::{Value, json};
+use serde_json::Value;
 
 use crate::identity::ActionsContext;
 use crate::redaction::Secret;
@@ -13,27 +13,13 @@ use crate::settings::{Settings, Token};
 use super::support::{inventory, publication};
 
 #[test]
-fn publication_metadata_is_exact_bounded_and_round_trips() {
+fn publication_metadata_has_exact_fields_and_comparison_values() {
     for comparison in [false, true] {
         let metadata = publication().metadata(&inventory(comparison)).unwrap();
         let bytes = metadata.bytes().unwrap();
-        assert_eq!(
-            UploadMetadata::parse(&bytes).unwrap().base_sha.is_some(),
-            comparison
-        );
+        assert_eq!(metadata.base_sha.is_some(), comparison);
         let object: Value = serde_json::from_slice(&bytes).unwrap();
         assert_eq!(object.as_object().unwrap().len(), 10);
-        for field in object.as_object().unwrap().keys() {
-            let mut invalid = object.clone();
-            invalid.as_object_mut().unwrap().remove(field);
-            assert!(
-                UploadMetadata::parse(&serde_json::to_vec(&invalid).unwrap()).is_err(),
-                "missing {field}"
-            );
-        }
-        let mut invalid = object.clone();
-        invalid["extra"] = json!(true);
-        assert!(UploadMetadata::parse(&serde_json::to_vec(&invalid).unwrap()).is_err());
         insta::assert_snapshot!(
             if comparison {
                 "comparison_metadata"
@@ -47,44 +33,45 @@ fn publication_metadata_is_exact_bounded_and_round_trips() {
 
 #[test]
 fn metadata_validates_each_primitive_and_comparison_pair() {
-    let valid: Value = serde_json::from_slice(
-        &publication()
-            .metadata(&inventory(true))
-            .unwrap()
-            .bytes()
-            .unwrap(),
-    )
-    .unwrap();
-    for (field, value) in [
-        ("moklyVersion", json!("not-semver")),
-        ("moklyVersion", json!("v1.0.0")),
-        ("branch", json!("bad\u{85}")),
-        ("branch", json!("x".repeat(256))),
-        ("headSha", json!("A".repeat(40))),
-        ("headSha", json!("a".repeat(39))),
-        ("baseRef", json!("")),
-        ("baseSha", json!("tip")),
-        ("pullRequest", json!(0)),
-        ("pullRequest", json!(9_007_199_254_740_992_u64)),
-        ("configPath", json!("../config.json")),
-        ("exportedAt", json!("2026-02-30T00:00:00.000Z")),
-        ("comparisonPath", Value::Null),
-        ("schemaVersion", json!(2)),
-    ] {
+    type MetadataCase = (&'static str, fn(&mut UploadMetadata));
+
+    let valid = publication().metadata(&inventory(true)).unwrap();
+    let cases: &[MetadataCase] = &[
+        ("non-semver", |m| m.mokly_version = "not-semver".into()),
+        ("prefixed-semver", |m| m.mokly_version = "v1.0.0".into()),
+        ("branch-control", |m| m.branch = "bad\u{85}".into()),
+        ("branch-length", |m| m.branch = "x".repeat(256)),
+        ("head-uppercase", |m| m.head_sha = "A".repeat(40)),
+        ("head-length", |m| m.head_sha = "a".repeat(39)),
+        ("empty-base-ref", |m| m.base_ref = Some(String::new())),
+        ("base-sha", |m| m.base_sha = Some("tip".into())),
+        ("pull-request-zero", |m| m.pull_request = Some(0)),
+        ("pull-request-unsafe", |m| {
+            m.pull_request = Some(9_007_199_254_740_992)
+        }),
+        ("config-path", |m| m.config_path = "../config.json".into()),
+        ("timestamp", |m| {
+            m.exported_at = "2026-02-30T00:00:00.000Z".into()
+        }),
+        ("unpaired-base", |m| m.base_sha = None),
+    ];
+    for (name, change) in cases {
         let mut invalid = valid.clone();
-        invalid[field] = value;
+        change(&mut invalid);
         assert!(
-            UploadMetadata::parse(&serde_json::to_vec(&invalid).unwrap()).is_err(),
-            "{field}"
+            matches!(invalid.validate(), Err(FormatError::InvalidBundle)),
+            "{name}"
         );
     }
-    let mut unpaired = valid.clone();
-    unpaired["baseSha"] = Value::Null;
-    assert!(UploadMetadata::parse(&serde_json::to_vec(&unpaired).unwrap()).is_err());
+    let mut invalid = valid.clone();
+    invalid.schema_version = 2;
     assert!(matches!(
-        UploadMetadata::parse(&vec![b' '; 16 * 1024 + 1]),
-        Err(FormatError::TooLarge)
+        invalid.validate(),
+        Err(FormatError::UnsupportedVersion)
     ));
+    let mut oversized = valid;
+    oversized.branch = "x".repeat(16 * 1024);
+    assert!(matches!(oversized.bytes(), Err(FormatError::TooLarge)));
     assert!(portable_path("format\u{200d}/é.png").is_ok());
     for value in [
         "2026-02-29T00:00:00.000Z",
@@ -195,23 +182,6 @@ fn endpoint_and_token_validation_preserve_queries_without_echoing_secrets() {
     );
     assert!(!format!("{settings:?}").contains("-secret/a=="));
     assert!(!format!("{:?}", Secret::new("-secret/a==")).contains("-secret/a=="));
-}
-
-#[test]
-fn json_numeric_versions_and_pull_request_integers_accept_decimal_spelling() {
-    let bytes = publication()
-        .metadata(&inventory(false))
-        .unwrap()
-        .bytes()
-        .unwrap();
-    let text = String::from_utf8(bytes)
-        .unwrap()
-        .replace("\"schemaVersion\": 2", "\"schemaVersion\": 2.0")
-        .replace("\"pullRequest\": null", "\"pullRequest\": 1e0");
-    assert_eq!(
-        UploadMetadata::parse(text.as_bytes()).unwrap().pull_request,
-        Some(1)
-    );
 }
 
 #[test]

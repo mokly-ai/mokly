@@ -1,19 +1,23 @@
 # mokly-platform
 
 `mokly-platform` isolates operating-system primitives for the Mokly core.
-Use its traits for output transactions, cache locks, and child-tree ownership.
+Use its traits for output transactions, cache locks, child-tree ownership, and
+local volume enumeration.
 `mokly-git`, `mokly-sidecar`, and `mokly-compare` own child processes through
-it. `mokly-static` moves output with its exclusive rename. It depends on no
+it. `mokly-static` moves output with its exclusive rename. `mokly-sidecar`
+lists the local volumes for its capture hint through it. It depends on no
 other workspace crate.
 
 ## Responsibilities
 
 - Rename files and directories atomically without replacing a destination.
 - Acquire nonblocking shared and exclusive file locks with handle-scoped release.
-- Own child process trees. On Unix, own a process group and each descendant
-  that its parent links reach, also in a new session. On Windows, own a
-  kill-on-close job object.
+- Own child process trees or plain groups for helper-free commands. On Unix,
+  reach descendants through parent links, also in a new session. On Windows,
+  own a kill-on-close job object in both modes.
 - Flush cache data with a filesystem barrier or plain file synchronization.
+- List the local APFS and HFS+ volumes of macOS and the fixed NTFS and ReFS
+  volumes of Windows, at most 64, without a write.
 - Expose typed errors that callers can handle without string matching.
 
 ## What This Crate Does
@@ -27,9 +31,13 @@ guard releases the lock and leaves the lock file intact.
 
 `ProcessGroups` configures a child before spawn, then attaches an ownership
 guard immediately after spawn. The caller retains the child and its pipes.
-On Unix, the child starts a new session, so it leads its own process group.
+`configure` starts a new Unix session, so the child leads its own group.
 On Linux, it also becomes a subreaper, so an orphan inside the owned tree
-keeps a parent link to it while it runs.
+keeps a parent link to it while it runs. `configure_plain` uses
+`Command::process_group(0)` without a `pre_exec` hook for helper-free commands.
+The child keeps the parent's session. This permits the standard library's
+`posix_spawn` path on macOS and Linux with glibc 2.29 or newer, including a
+checkout directory. Both modes use the same `attach` guard.
 
 The guard records the child's identity, its PID and start time, before the
 caller can reap the child. A reused PID therefore never receives a signal. The
@@ -54,7 +62,7 @@ result counts as stopped only after enumeration confirms no live member. An
 unreadable member status keeps the original signal error.
 
 The Windows
-implementation starts the child suspended, attaches a kill-on-close job, and
+implementation starts the child suspended in both modes, attaches a kill-on-close job, and
 resumes its primary thread. This keeps descendants inside the job from their
 first instruction. It requests a console break for
 graceful termination, and terminates the job for forceful cancellation.
@@ -66,9 +74,18 @@ plain Unix `fsync`, which avoids a macOS drive-cache barrier for each data
 file. Windows flushes individual files. The `mokly-compare` cache coordinator
 publishes its completion receipt only after data synchronization.
 
-The FFI is isolated in the Unix modules, the Windows module, and the flush
-module. Each unsafe call documents its pointer, handle, or process-identity
-requirements.
+`CaptureVolumes::local` lists the volumes whose directory change stamps can
+verify a sidecar capture. On macOS, it reads at most 64 mounts with
+`getfsstat` and `MNT_NOWAIT`. It keeps each `MNT_LOCAL` mount of type `apfs` or
+`hfs`, with the device number of its mount point and its file system type
+number. On Windows, it reads at most 64 volumes with `FindFirstVolumeW`. It
+keeps each `DRIVE_FIXED` NTFS or ReFS volume, with its serial number and its
+mount roots. On Linux, the list is empty, because the sidecar classifies Linux
+volumes itself. A failed call leaves a volume out and never fails a compile.
+
+The FFI is isolated in the Unix modules, the Windows module, the flush module,
+and the volume modules. Each unsafe call documents its pointer, handle, or
+process-identity requirements.
 
 ## Quick Start
 
@@ -112,10 +129,16 @@ Consumers enable the `mock` feature to use every public trait with unimock.
   `ProcessGroup` guard that terminates or kills the whole tree.
 - [`src/flush.rs`](./src/flush.rs) defines `Flush` and `SystemFlush`, which
   flush a filesystem, a file, or a directory before a cache entry is published.
+- [`src/volumes/mod.rs`](./src/volumes/mod.rs) defines `CaptureVolumes`,
+  `SystemCaptureVolumes`, and `LocalVolume`, the bounded list of local volumes
+  for the sidecar capture hint. [`macos.rs`](./src/volumes/macos.rs) calls
+  `getfsstat`, and [`windows.rs`](./src/volumes/windows.rs) enumerates the
+  fixed volumes.
 - [`src/error.rs`](./src/error.rs) defines `Error`, the typed failure that
   every trait returns.
-- [`src/unix.rs`](./src/unix.rs) starts a Unix child in a new session, makes
-  it a Linux subreaper in `configure`, and records its identity in `attach`.
+- [`src/unix.rs`](./src/unix.rs) starts a Unix session and Linux subreaper in
+  `configure`, selects a plain group in `configure_plain`, and records the
+  child identity in `attach`.
   [`src/windows.rs`](./src/windows.rs) holds the Windows FFI calls.
 - [`src/unix_process_tree/group.rs`](./src/unix_process_tree/group.rs)
   defines `UnixGroup`, the Unix `ProcessGroup`. It stops the group, finds the
@@ -143,4 +166,5 @@ Consumers enable the `mock` feature to use every public trait with unimock.
 - [Rust architecture](../../docs/architecture/rust-core.md).
 - [Runtime shutdown](../../docs/protocol/mokly-runtime.md#shutdown).
 - [Base install bounds and stops](../../docs/protocol/mokly-base-install-processes.md#bounds-and-stops).
+- [Stable capture of the bundle cache](../../docs/protocol/mokly-base-cache.md#stable-capture).
 - [Static output recovery](../../docs/protocol/mokly-export-recovery.md).

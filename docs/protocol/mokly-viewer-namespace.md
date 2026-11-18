@@ -1,5 +1,7 @@
 # Portable Viewer Namespace And Version Gates
 
+Status: No receiver rejects `usage` or `resourceEvidence` in an index yet. The [receiver read-model validation item](../../plans/follow-ups/receiver-read-model-validation.md) adds that check to Mokly Cloud. Some asynchronous document failures still bypass the error and retry state. The [asynchronous catalogue failures item](../../plans/follow-ups/asynchronous-catalogue-failures.md) owns that fix.
+
 ## Paths And Single Ownership
 
 `mokly-viewer/` is the root of every package-owned public and Serve route.
@@ -16,7 +18,7 @@ fixed.
 | `diffs/generations/<generation>/entries/<entry path>.json`   | the entry detail v4 of a removed entry                          | Serve, output |
 | `diffs/generations/<generation>/snapshots/**`, `previews/**` | snapshot documents and resources, removed page preview metadata | Serve, output |
 | `diffs/generations/<generation>/`                            | the generation root, which renews a retained generation         | Serve only    |
-| `client/**`, `shell.css`, `fonts/**`                         | the shell bundle, the inspector, styles, and fonts              | Serve, output |
+| `client/**`, `shell.css`, `fonts/**`                         | the shell bundle, the frame probe, styles, and fonts            | Serve, output |
 | `live.json`                                                  | the live descriptor v3                                          | Serve only    |
 | `events`                                                     | the event stream, one message per publication                   | Serve only    |
 | `diffs/selection`                                            | the on-demand selected comparison endpoint                      | Serve only    |
@@ -56,7 +58,7 @@ contains a review file. The upload Plan contains only `mokly-upload.json`,
 `.mokly-export-artifact`, and `mokly-viewer/index.json`, without a
 full-artifact upload; Blob digest, size, and snapshot
 accounting follow the [upload exchange](./mokly-upload-exchange.md).
-Catalogue references, frame URLs, the inspector, geometry and navigation
+Catalogue references, frame URLs, the frame probe, geometry and navigation
 checks, CORS allowlists, deployment hashing, receiver fixtures, archive
 assertions, and provider adapters all use these exact paths. `/view/` and
 `/static/` keep their meanings. No other file or alias
@@ -86,8 +88,9 @@ Serve never writes or answers it. No other envelope exists.
 Index v9 carries identity-only entries: no layout prefix, per-entry route,
 `documentPath`, or `fragmentPath`. A reader derives every file from the
 entry's path, viewport, and scheme through the artifact path contract. The
-index carries no `usage` and no `resourceEvidence`, and its reader rejects
-either field anywhere; the detail carries them. Ownership v3 uses the
+index carries no `usage` and no `resourceEvidence`. The detail carries them.
+A receiver's [upload check](./mokly-upload-validation.md#catalogue-content)
+rejects an index that carries either field anywhere. Ownership v3 uses the
 `{ path, sha256, size }` inventory with its limits, collision rules,
 classification precedence, content-delta semantics, and duplicate-JSON-key
 checks. Upload v3 requires the strict field list, limits, metadata identity,
@@ -119,9 +122,10 @@ viewer exposes a typed version failure that a host can distinguish from
 malformed data; its diagnostic is
 `Unsupported Mokly <boundary> version <version>; this viewer supports version <supported>.`
 with boundary `catalogue`, `detail`, or `live` and the supported version of
-the format inventory. A malformed current document is invalid data, not a version
-failure. No reader infers a version from file existence or falls back to
-another URL.
+the format inventory. A malformed document of the supported version is not a
+version failure. It shows the error and retry state of the
+[embeddable viewer contract](./mokly-viewer.md#package-and-props). No reader
+infers a version from file existence or falls back to another URL.
 
 Every host shows one headline for a version failure:
 `This catalogue needs a compatible viewer`. The standalone shell shows it in its

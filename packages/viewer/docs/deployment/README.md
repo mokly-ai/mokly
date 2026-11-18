@@ -27,10 +27,9 @@ define the complete path, header, sandbox, and CSP requirements.
   of the catalogue. Use
   `Vary: Origin` when you select the allowed origin dynamically. The viewer uses
   no wildcard CORS and no credentials; it fetches with `credentials: "omit"`.
-  Frames use `sandbox="allow-same-origin allow-scripts"`, so the published
-  inspector at `mokly-viewer/client/inspector.js` runs inside current
-  documents, and the host must ignore the `mokly-host` query parameter for file
-  lookup.
+  Frames use `sandbox="allow-same-origin allow-scripts"`, so the frame probe
+  at `mokly-viewer/client/frame-probe.js` runs inside current documents, and
+  the host must ignore the `mokly-host` query parameter for file lookup.
 - **Caching:** the deployment file, index, and details of one deployment never change. Serve
   them with revalidation, `Cache-Control: no-cache` or an equivalent validator
   policy, so the next navigation sees a new deployment. A comparison generation

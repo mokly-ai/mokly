@@ -29,7 +29,7 @@ import {
   VariantChips,
   VariantOfChip,
 } from "./details_rows.js";
-import { useOptionalShellStore } from "./store_context.js";
+import { useShellStore } from "./store_context.js";
 import type { RouteTarget } from "./target.js";
 import { SCHEME_LABELS, type ChangedView } from "./view_marks.js";
 
@@ -88,7 +88,7 @@ export function EntryDetailsBody(props: {
       ) : null}
       <VariantOfChip catalogue={props.catalogue} entry={entry} />
       <VariantChips catalogue={props.catalogue} entry={entry} />
-      <TagChips values={entry.tags ?? []} />
+      <TagChips values={entry.tags} />
       {entry.details.relatedDocs.length > 0 ? (
         <MetadataRow label="Related docs">
           <RelatedDocChips
@@ -117,13 +117,13 @@ export function DetailsPanel(props: {
   children?: ReactNode;
   target: RouteTarget;
 }) {
-  const store = useOptionalShellStore();
+  const store = useShellStore();
   return (
     <DetailsPanelView
       onOpenChange={
-        store?.interactive ? (open) => store.setDetails(open) : undefined
+        store.interactive ? (open) => store.setDetails(open) : undefined
       }
-      open={store?.state.detailsOpen ?? false}
+      open={store.state.detailsOpen}
     >
       <EntryDetailsBody
         catalogue={props.catalogue}

@@ -10,12 +10,14 @@ mod definition_input;
 mod definitions;
 pub mod dependency_usage;
 mod diagnostics;
+mod edit_plans;
 pub mod error;
 mod failures;
 mod fragments;
 mod graph;
 mod input_stamp;
 mod leases;
+pub mod physical_inputs;
 mod postcss;
 mod postcss_cache;
 mod postcss_inventory;
@@ -35,6 +37,7 @@ mod stylesheet_record;
 mod stylesheet_store;
 mod stylesheet_weight;
 mod stylesheets;
+mod transport_values;
 
 #[cfg(test)]
 #[path = "_tests_/nested_tests.rs"]

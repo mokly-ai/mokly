@@ -6,11 +6,7 @@ use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_graph::closure::Closure;
 use mokly_graph::resource_reach::ResourceReach;
 use mokly_graph::types::RenderSummary;
-use mokly_html::composition::Composed;
-use mokly_html::links::Reference;
 use mokly_model::evidence::{EvidenceOwner, ResourceEvidence};
-
-use crate::capture_usage;
 
 /// Base capture capacity, independent of catalogue size.
 pub(crate) const DEFAULT_BASE_CAPTURE_BYTES: usize = 256 * 1024 * 1024;
@@ -42,24 +38,6 @@ impl Budget {
         self.retained += bytes;
         true
     }
-}
-
-/// Charge Rust metadata that stays outside the compressed tree payload.
-pub(crate) fn metadata(document: &Composed) -> usize {
-    capture_usage::usage(&document.usage)
-        + warnings(&document.warnings)
-        + strings(&document.resources)
-        + strings(&document.components)
-        + document.links.capacity() * mem::size_of::<Reference>()
-        + document
-            .links
-            .iter()
-            .map(|link| {
-                link.source_route.capacity()
-                    + link.target.capacity()
-                    + link.fragment.as_ref().map_or(0, String::capacity)
-            })
-            .sum::<usize>()
 }
 
 /// Charge validation summary storage, including its closure and warnings.

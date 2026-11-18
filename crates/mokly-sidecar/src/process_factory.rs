@@ -7,7 +7,9 @@ use std::sync::{Arc, Mutex, mpsc};
 use std::thread;
 
 use mokly_platform::processes::ProcessGroups;
+use mokly_platform::volumes::{CaptureVolumes, SystemCaptureVolumes};
 
+use crate::capture_hint::CaptureHint;
 use crate::client::Client;
 use crate::error::{Error, InternalError, Result};
 use crate::pool_options::Launch;
@@ -33,6 +35,7 @@ pub struct NodeFactory {
     diagnostics: Arc<dyn Diagnostics>,
     memory: Arc<dyn MemoryFactory>,
     timings: bool,
+    volumes: Arc<dyn CaptureVolumes>,
 }
 
 impl NodeFactory {
@@ -50,6 +53,7 @@ impl NodeFactory {
             diagnostics,
             memory,
             timings: false,
+            volumes: Arc::new(SystemCaptureVolumes),
         }
     }
 
@@ -113,16 +117,17 @@ impl WorkerFactory for NodeFactory {
             Err(source) => return Err(InternalError::Platform { source }.into()),
         };
         let pid = child.0.id();
-        let (Some(stdin), Some(stdout), Some(stderr)) = (
-            child.0.stdin.take(),
-            child.0.stdout.take(),
-            child.0.stderr.take(),
-        ) else {
-            let span = startup.stop();
-            let _scope = span.enter();
-            startup.observe(group.kill().is_ok());
-            return Err(InternalError::Synchronization.into());
-        };
+        let stdin = child.0.stdin.take().expect("stdin is configured as a pipe");
+        let stdout = child
+            .0
+            .stdout
+            .take()
+            .expect("stdout is configured as a pipe");
+        let stderr = child
+            .0
+            .stderr
+            .take()
+            .expect("stderr is configured as a pipe");
         let (outgoing, outgoing_frames) = mpsc::sync_channel(2);
         let (incoming_frames, incoming) = mpsc::sync_channel(2);
         let (exited_tx, exited) = mpsc::sync_channel(1);
@@ -180,7 +185,12 @@ impl WorkerFactory for NodeFactory {
             }),
             launch.version.clone(),
         )
-        .with_timings(self.timings);
+        .with_timings(self.timings)
+        .with_capture(
+            launch
+                .capture_durability
+                .then(|| CaptureHint::from_volumes(self.volumes.local())),
+        );
         startup.hand_off();
         Ok(Spawned {
             worker: Box::new(ProcessWorker {

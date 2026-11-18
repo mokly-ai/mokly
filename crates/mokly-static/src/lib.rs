@@ -15,8 +15,8 @@ pub mod changes;
 mod comparison_details;
 mod comparison_files;
 mod comparison_output;
+pub mod frame_probe;
 pub mod identity;
-pub mod inspector;
 
 pub mod fingerprint;
 mod fingerprint_evidence;
@@ -49,8 +49,8 @@ mod file_read;
 mod windows_identity;
 
 #[cfg(test)]
-#[path = "_tests_/inspector_tests.rs"]
-mod inspector_tests;
+#[path = "_tests_/frame_probe_tests.rs"]
+mod frame_probe_tests;
 
 mod input_selection;
 
@@ -70,11 +70,11 @@ mod fingerprint_boundary_tests;
 #[path = "_tests_/fingerprint_discovery_tests.rs"]
 mod fingerprint_discovery_tests;
 
-pub mod inspector_error;
+pub mod frame_probe_error;
 
 #[cfg(test)]
-#[path = "_tests_/inspector_map_tests.rs"]
-mod inspector_map_tests;
+#[path = "_tests_/frame_probe_map_tests.rs"]
+mod frame_probe_map_tests;
 
 #[cfg(test)]
 #[path = "_tests_/assembly_support.rs"]

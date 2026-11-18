@@ -31,19 +31,16 @@ fn effective(
     controls: &BTreeMap<String, ComponentControl>,
 ) -> BTreeMap<String, ComponentControl> {
     let mut effective = controls.clone();
-    for (name, control) in &mut effective {
-        let Some(property) = schema
-            .properties
-            .as_ref()
-            .and_then(|properties| properties.get(name))
-        else {
-            continue;
-        };
-        if let ControlInput::Number {
-            minimum,
-            maximum,
-            step,
-        } = &mut control.input
+    for (name, property) in schema.properties.iter().flatten() {
+        if let Some(ComponentControl {
+            input:
+                ControlInput::Number {
+                    minimum,
+                    maximum,
+                    step,
+                },
+            ..
+        }) = effective.get_mut(name)
         {
             *minimum = minimum.clone().or_else(|| property.minimum.clone());
             *maximum = maximum.clone().or_else(|| property.maximum.clone());
@@ -170,19 +167,15 @@ fn validate(
                     variant: None,
                     kind: AuthoringKind::JavaScript,
                 };
-                let raw = match serde_json::to_value(schema) {
-                    Ok(raw) => raw,
-                    Err(_) => return Err(failure()),
-                };
+                let raw = serde_json::to_value(schema)
+                    .expect("prop schemas contain only JSON values and string property names");
                 let validator = match PropValidator::compile(&raw, &context) {
                     Ok(validator) => validator,
                     Err(_) => return Err(failure()),
                 };
                 for option in options {
-                    let value = match serde_json::to_value(&option.value) {
-                        Ok(value) => value,
-                        Err(_) => return Err(failure()),
-                    };
+                    let value = serde_json::to_value(&option.value)
+                        .expect("control options are JSON primitives");
                     if option.label.is_empty() || !seen.insert(value.to_string()) {
                         return Err(failure());
                     }
@@ -192,10 +185,8 @@ fn validate(
                         Err(_) => return Err(failure()),
                     };
                     complete.insert(key.clone(), data);
-                    let raw = match serde_json::to_value(complete) {
-                        Ok(raw) => raw,
-                        Err(_) => return Err(failure()),
-                    };
+                    let raw = serde_json::to_value(complete)
+                        .expect("complete props contain only JSON data and string keys");
                     if validator.validate(&raw, &context).is_err() {
                         return Err(failure());
                     }
@@ -213,10 +204,8 @@ fn validate(
             variant: None,
             kind: AuthoringKind::JavaScript,
         };
-        let raw = match serde_json::to_value(complete_schema) {
-            Ok(raw) => raw,
-            Err(_) => return Err(failure()),
-        };
+        let raw = serde_json::to_value(complete_schema)
+            .expect("control bounds preserve the JSON prop schema types");
         if PropValidator::compile(&raw, &context).is_err() {
             return Err(failure());
         }

@@ -44,7 +44,6 @@ test("TypeScript assertions, fixture arrays, and ordinary props work together", 
     generation,
   });
   assert.deepEqual(definitions.diagnostics, []);
-  assert.equal(definitions.warnings.length, 1);
   await installBindings(sidecar, generation);
   for (let i = 0; i < 2; i++) {
     const result = await sidecar.call<RenderResult>("renderScreen", {
@@ -56,7 +55,6 @@ test("TypeScript assertions, fixture arrays, and ordinary props work together", 
       colorScheme: "light",
     });
     assert.equal(result.html, "plain");
-    assert.deepEqual(result.warnings, []);
   }
 });
 

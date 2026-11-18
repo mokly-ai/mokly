@@ -12,6 +12,8 @@ use mokly_catalogue::error::CatalogueError;
 use mokly_catalogue::working_tree::WorkingTree;
 use tempfile::TempDir;
 
+#[path = "support/definitions.rs"]
+mod definitions;
 mod support;
 
 #[test]

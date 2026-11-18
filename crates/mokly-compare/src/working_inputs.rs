@@ -89,11 +89,6 @@ impl WorkingInputs for SystemWorkingInputs {
             inputs.files.insert(path, bytes);
         }
         let hashes = repository.working_hashes(&changed, limits.blob).base()?;
-        if hashes.len() != changed.len() {
-            return Err(Error::Git {
-                source: error::Error::MalformedOutput,
-            });
-        }
         for (path, object) in changed.into_iter().zip(hashes) {
             if base.objects.get(&path) == Some(&object)
                 && let Some(bytes) = base.files.get(&path)

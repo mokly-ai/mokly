@@ -1,5 +1,7 @@
 # Viewer Markers And Multi-Instance Highlights
 
+Status: A cleanup error of marker content that the viewer removes or hides can still become a catalogue error, until the [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) moves host content above the catalogue catcher.
+
 ## Purpose And Boundary
 
 `@mokly/viewer` positions host-owned React content on component instances and

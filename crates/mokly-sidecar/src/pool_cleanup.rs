@@ -1,18 +1,15 @@
 //! Dispose stale loaded state before a worker takes another request.
 
-use std::sync::{Mutex, MutexGuard};
+use std::sync::{Mutex, MutexGuard, PoisonError};
 
 use crate::bindings::DisposeContext;
-use crate::error::{InternalError, Result};
+use crate::error::Result;
 use crate::methods::{Call, Generation};
 use crate::pool_state::{Slot, State};
 use crate::wire::Request;
 
-pub(super) fn lock(state: &Mutex<State>) -> Result<MutexGuard<'_, State>> {
-    match state.lock() {
-        Ok(state) => Ok(state),
-        Err(_) => Err(InternalError::Synchronization.into()),
-    }
+pub(super) fn lock(state: &Mutex<State>) -> MutexGuard<'_, State> {
+    state.lock().unwrap_or_else(PoisonError::into_inner)
 }
 
 pub(super) fn pending(state: &State, slot: &Slot) -> bool {
@@ -22,16 +19,17 @@ pub(super) fn pending(state: &State, slot: &Slot) -> bool {
         || !slot.contexts.is_subset(&state.contexts)
 }
 
-fn stale_generation(state: &State, id: &str, epoch: u64) -> bool {
+/// Cleanup and acquisition share the retained-bundle and current-epoch boundary.
+pub(super) fn stale_generation(state: &State, id: &str, epoch: u64) -> bool {
     !state.bundles.contains_key(id) || state.epochs.get(id) != Some(&epoch)
 }
 
 pub(super) fn cleanup(state: &Mutex<State>, slot: &mut Slot, timeout: Option<u64>) -> Result<bool> {
-    if lock(state)?.stopped {
+    if lock(state).stopped {
         return Ok(false);
     }
     let stale = {
-        let state = lock(state)?;
+        let state = lock(state);
         slot.generations
             .iter()
             .filter(|(id, epoch)| stale_generation(&state, id, **epoch))
@@ -55,7 +53,7 @@ pub(super) fn cleanup(state: &Mutex<State>, slot: &mut Slot, timeout: Option<u64
         slot.bindings.remove(&generation);
     }
     let stale_contexts = {
-        let state = lock(state)?;
+        let state = lock(state);
         slot.contexts
             .difference(&state.contexts)
             .cloned()

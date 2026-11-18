@@ -8,11 +8,9 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
+import type { CatalogueReadModel, EntryDetailV4 } from "@mokly/model";
+
 import { detailKey } from "../src/catalogue/detail_fences.js";
-import type {
-  CatalogueReadModel,
-  EntryDetailV4,
-} from "../src/catalogue/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { publicWorkspace } from "../src/shell/public_workspace.js";
 import { WorkspaceEvidence } from "../src/shell/workspace_evidence.js";

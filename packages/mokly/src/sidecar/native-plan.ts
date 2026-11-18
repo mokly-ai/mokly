@@ -2,10 +2,11 @@ import path from "node:path";
 
 import type { Metafile, OnResolveArgs, OnResolveResult } from "esbuild";
 
+import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
+
 import { detail } from "./errors.js";
 import type { ModulePaths } from "./module-paths.js";
 import { nativeImport, planKey } from "./native-resolution.js";
-import type { PlannedImport } from "./native-resolution.js";
 import { PackageScope } from "./package-scope.js";
 
 interface Target extends PlannedImport {
@@ -29,10 +30,9 @@ export interface NativePlan {
  * recorded. An import that may have taken a fallback path stays unplanned.
  */
 export async function planNative(
-  metafile: Metafile | undefined,
+  metafile: Metafile,
   paths: ModulePaths,
 ): Promise<NativePlan> {
-  if (!metafile) throw new Error("the native compile returned no metafile");
   const scope = new PackageScope();
   const targets = new Map<string, Promise<Target | undefined>>();
   const target = (file: string) => {

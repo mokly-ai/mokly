@@ -4,16 +4,16 @@
  * the model crate; the presentation types are views the shell derives.
  */
 
-import type { ComponentWireProps } from "../components/prop_types.js";
-import type { ColorScheme, Viewport } from "../data/axes.js";
-import type { EntryChangeReason } from "../generated/catalogue/EntryChangeReason.js";
-import type { ResourceEvidence } from "../generated/catalogue/ResourceEvidence.js";
-import type { ReviewState } from "../generated/catalogue/ReviewState.js";
-import type { RuleEvidence } from "../generated/catalogue/RuleEvidence.js";
+import type {
+  ColorScheme,
+  EntryChangeReason,
+  ResourceEvidence,
+  ReviewState,
+  RuleEvidence,
+  Viewport,
+} from "@mokly/model";
 
-export type { EntryChangeReason } from "../generated/catalogue/EntryChangeReason.js";
-export type { RemovedPagePreview } from "../generated/catalogue/RemovedPagePreview.js";
-export type { ReviewState } from "../generated/catalogue/ReviewState.js";
+import type { ComponentWireProps } from "../components/prop_types.js";
 
 /** One ready view of a compared entry, from its detail: axes, state, ignore ids, and evidence. */
 export interface ReviewView {

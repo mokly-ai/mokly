@@ -1,4 +1,4 @@
-//! Pure kind-aware branch-point lookup fenced to one accepted generation.
+//! Pure kind-aware branch-point lookup borrowed from one comparison generation.
 
 use std::collections::BTreeMap;
 
@@ -7,7 +7,6 @@ use mokly_model::catalogue::{CatalogueModel, ModelEntry};
 use mokly_model::review_affected::ReviewSide;
 use mokly_model::snapshot::RemovedEntrySnapshot;
 use mokly_model::snapshot_records::EntryRecord;
-use thiserror::Error;
 
 use crate::move_types::MovePair;
 
@@ -29,22 +28,10 @@ pub enum Parent<'a> {
     Title(&'a str),
 }
 
-/// Invalid or stale accepted lookup context.
-#[derive(Debug, Error)]
-pub enum LookupError {
-    /// A request attempts to use another generation's identity map.
-    #[error("[mokly-compare/lookup] reference belongs to another generation")]
-    Generation,
-    /// Accepted pairs violate their existing-identity exclusion rule.
-    #[error("[mokly-compare/lookup] accepted pair conflicts with a current identity")]
-    PairInvariant,
-}
-
 type Key = (EntryKind, String);
 
 /// Indexed immutable lookup inputs borrowed from one generation.
 pub struct Lookup<'a> {
-    generation: &'a str,
     current: BTreeMap<Key, &'a ModelEntry>,
     base: BTreeMap<Key, &'a ModelEntry>,
     removed: BTreeMap<Key, &'a RemovedEntrySnapshot>,
@@ -53,23 +40,17 @@ pub struct Lookup<'a> {
 }
 
 impl<'a> Lookup<'a> {
-    /// Validate the accepted-pair/current-path invariant once.
+    /// Index the accepted pairs and selected removals of one comparison.
     pub fn new(
-        generation: &'a str,
         current: &'a CatalogueModel,
         base: Option<&'a CatalogueModel>,
         removed: &'a [RemovedEntrySnapshot],
         moves: &'a [MovePair],
-    ) -> Result<Self, LookupError> {
+    ) -> Self {
         let current = entries(current);
         let mut previous = BTreeMap::new();
         let mut moved = BTreeMap::new();
         for pair in moves {
-            if current.contains_key(&key(pair.kind, &pair.previous_path))
-                || pair.path.eq_ignore_ascii_case(&pair.previous_path)
-            {
-                return Err(LookupError::PairInvariant);
-            }
             previous
                 .entry(key(pair.kind, &pair.previous_path))
                 .or_insert(pair);
@@ -81,102 +62,72 @@ impl<'a> Lookup<'a> {
                 .entry(key(record.entry.kind(), &record.entry.metadata().path))
                 .or_insert(record);
         }
-        Ok(Self {
-            generation,
+        Self {
             current,
             base: base.map(entries).unwrap_or_default(),
             removed: removals,
             previous,
             moved,
-        })
+        }
     }
 
     /// Read original side metadata without following moves or removals.
-    pub fn entry(
-        &self,
-        generation: &str,
-        side: ReviewSide,
-        kind: EntryKind,
-        path: &str,
-    ) -> Result<Option<&'a ModelEntry>, LookupError> {
-        self.fence(generation)?;
+    pub fn entry(&self, side: ReviewSide, kind: EntryKind, path: &str) -> Option<&'a ModelEntry> {
         let entries = match side {
             ReviewSide::Before => &self.base,
             ReviewSide::After => &self.current,
         };
-        Ok(entries.get(&key(kind, path)).copied())
+        entries.get(&key(kind, path)).copied()
     }
 
     /// Resolve before references through accepted pairs, current identities, then removals.
     pub fn reference(
         &self,
-        generation: &str,
         side: ReviewSide,
         kind: EntryKind,
         path: &str,
-    ) -> Result<Option<Destination<'a>>, LookupError> {
-        self.fence(generation)?;
+    ) -> Option<Destination<'a>> {
         let identity = key(kind, path);
         if side == ReviewSide::Before
             && let Some(pair) = self.previous.get(&identity)
         {
-            return Ok(self.current(kind, &pair.path).map(Destination::Current));
+            return self.current(kind, &pair.path).map(Destination::Current);
         }
         if let Some(entry) = self.current.get(&identity) {
-            return Ok(Some(Destination::Current(entry)));
+            return Some(Destination::Current(entry));
         }
         if side == ReviewSide::After {
-            return Ok(None);
+            return None;
         }
-        Ok(self
-            .removed
+        self.removed
             .get(&identity)
             .copied()
-            .map(Destination::Removed))
+            .map(Destination::Removed)
     }
 
     /// Prove a current entry's original base spelling, without guessing from the current path.
-    pub fn counterpart(
-        &self,
-        generation: &str,
-        kind: EntryKind,
-        path: &str,
-    ) -> Result<Option<&'a str>, LookupError> {
-        self.fence(generation)?;
+    pub fn counterpart(&self, kind: EntryKind, path: &str) -> Option<&'a str> {
         let identity = key(kind, path);
         if !self.current.contains_key(&identity) {
-            return Ok(None);
+            return None;
         }
         if let Some(pair) = self.moved.get(&identity) {
-            return Ok(Some(&pair.previous_path));
+            return Some(&pair.previous_path);
         }
-        Ok(self
-            .base
+        self.base
             .get(&identity)
-            .map(|entry| entry.metadata.path.as_str()))
+            .map(|entry| entry.metadata.path.as_str())
     }
 
     /// A previous path exists exactly on an accepted move, never on a case-only rename.
-    pub fn previous(
-        &self,
-        generation: &str,
-        kind: EntryKind,
-        path: &str,
-    ) -> Result<Option<&'a str>, LookupError> {
-        self.fence(generation)?;
-        Ok(self
-            .moved
+    pub fn previous(&self, kind: EntryKind, path: &str) -> Option<&'a str> {
+        self.moved
             .get(&key(kind, path))
-            .map(|pair| pair.previous_path.as_str()))
+            .map(|pair| pair.previous_path.as_str())
     }
 
     /// Resolve a variant's parent with explicit reference side and role checks.
-    pub fn parent(
-        &self,
-        generation: &str,
-        variant: Destination<'a>,
-    ) -> Result<Option<Parent<'a>>, LookupError> {
-        self.fence(generation)?;
+    pub fn parent(&self, variant: Destination<'a>) -> Option<Parent<'a>> {
         let (side, kind, parent, title) = match variant {
             Destination::Current(entry) => (
                 ReviewSide::After,
@@ -191,29 +142,19 @@ impl<'a> Lookup<'a> {
                 record.parent_title.as_deref(),
             ),
         };
-        let Some(parent) = parent else {
-            return Ok(None);
-        };
-        let resolved = self.reference(generation, side, kind, parent)?;
+        let parent = parent?;
+        let resolved = self.reference(side, kind, parent);
         let eligible = resolved.filter(|destination| match destination {
             Destination::Current(entry) => entry.metadata.variant_of.is_none(),
             Destination::Removed(record) => record_parent(&record.entry).is_none(),
         });
-        Ok(eligible
+        eligible
             .map(Parent::Entry)
-            .or_else(|| title.map(Parent::Title)))
+            .or_else(|| title.map(Parent::Title))
     }
 
     fn current(&self, kind: EntryKind, path: &str) -> Option<&'a ModelEntry> {
         self.current.get(&key(kind, path)).copied()
-    }
-
-    fn fence(&self, generation: &str) -> Result<(), LookupError> {
-        if generation == self.generation {
-            Ok(())
-        } else {
-            Err(LookupError::Generation)
-        }
     }
 }
 

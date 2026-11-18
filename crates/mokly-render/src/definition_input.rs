@@ -13,13 +13,13 @@ use mokly_sidecar::controls::StoryHints;
 use mokly_sidecar::definition_metadata;
 use mokly_sidecar::definitions::Definition;
 
-use crate::error::{Result, convert};
+use crate::transport_values;
 
 pub(crate) fn location(definition: &Definition) -> SourceLocation {
     let (file, export) = definition
         .handle
         .rsplit_once('#')
-        .unwrap_or((&definition.handle, "default"));
+        .expect("sidecar definition handles contain the module and export separator");
     SourceLocation {
         path: definition
             .source_path
@@ -31,15 +31,11 @@ pub(crate) fn location(definition: &Definition) -> SourceLocation {
     }
 }
 
-pub(crate) fn entry(
-    definition: &Definition,
-    kind: EntryKind,
-    story: bool,
-) -> Result<ProvidedDefinition> {
+pub(crate) fn entry(definition: &Definition, kind: EntryKind, story: bool) -> ProvidedDefinition {
     let (exporting_file, _) = definition
         .handle
         .rsplit_once('#')
-        .unwrap_or((&definition.handle, "default"));
+        .expect("sidecar definition handles contain the module and export separator");
     let metadata = &definition.metadata;
     let mut rendering = ProvidedRendering::default();
     let method = if story {
@@ -100,13 +96,15 @@ pub(crate) fn entry(
                 key: key.clone(),
             });
         }
-        let mut value: serde_json::Value = convert(variant)?;
-        if let Some(object) = value.as_object_mut() {
-            object.remove("excludedProps");
-            object.remove("useCasePaths");
-            if kind != EntryKind::Component {
-                object.remove("slots");
-            }
+        let mut value = serde_json::to_value(variant)
+            .expect("sidecar variants contain only JSON values and string-keyed maps");
+        let object = value
+            .as_object_mut()
+            .expect("the sidecar variant struct serializes as a JSON object");
+        object.remove("excludedProps");
+        object.remove("useCasePaths");
+        if kind != EntryKind::Component {
+            object.remove("slots");
         }
         variants.push(value);
     }
@@ -124,11 +122,14 @@ pub(crate) fn entry(
         moved_from: metadata.moved_from.clone(),
         rationale: metadata.rationale.clone(),
         related_docs: metadata.related_docs.clone(),
-        color_schemes: convert(&definition.color_schemes)?,
+        color_schemes: definition
+            .color_schemes
+            .as_ref()
+            .map(|schemes| schemes.iter().map(transport_values::color_scheme).collect()),
         address: definition.address.clone(),
         use_case_paths: Vec::new(),
         prop_schema: definition.prop_schema.clone(),
-        props: convert(&definition.props)?,
+        props: transport_values::props(&definition.props),
         variants,
         element: definition.element.clone(),
         slots: definition.slots.clone(),
@@ -141,20 +142,17 @@ pub(crate) fn entry(
                 description: step.description.clone(),
             })
             .collect(),
-        controls: match &definition.controls {
-            Some(controls) => Some(convert(controls)?),
-            None => None,
-        },
+        controls: definition.controls.as_ref().map(transport_values::controls),
         infer_component_schema: story,
         control_order: definition.control_order.clone(),
     };
-    Ok(ProvidedDefinition {
+    ProvidedDefinition {
         exporting_file: exporting_file.into(),
         source: location(definition),
         kind,
         input,
         rendering,
-    })
+    }
 }
 
 fn reference(value: &definition_metadata::EntryReference) -> EntryReference {

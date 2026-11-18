@@ -1,12 +1,13 @@
 /** Deterministic fakes of the shell's index, detail and live transports. */
 
-import type { DetailRequest } from "../src/catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
   DeploymentFileV1,
   EntryDetailV4,
   LiveDescriptorV3,
-} from "../src/catalogue/types.js";
+} from "@mokly/model";
+
+import type { DetailRequest } from "../src/catalogue/detail_fences.js";
 import type {
   ComponentRenderRequest,
   ComponentRenderSuccess,

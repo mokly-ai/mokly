@@ -1,7 +1,7 @@
 /** One cancellable inspection owner shared by a React shell root. */
 
-import { FrameError } from "../client/frame_error.js";
-import { InspectionWork } from "../client/inspection_work.js";
+import { FrameError } from "@mokly/frame/internal";
+
 import type { InstanceRef } from "../host/types.js";
 
 import type {
@@ -22,6 +22,7 @@ import type {
   ShellFrameRegistry,
   ShellFrameSession,
 } from "./frame_registry.js";
+import { InspectionWork } from "./inspection_work.js";
 
 interface InspectionOperation {
   readonly cancellation: AbortController;

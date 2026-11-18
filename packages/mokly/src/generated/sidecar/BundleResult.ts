@@ -2,10 +2,14 @@
 
 import type { CompiledGeneration } from "./CompiledGeneration.js";
 import type { Module } from "./Module.js";
-import type { Warning } from "./Warning.js";
+import type { ResolutionPlan } from "./ResolutionPlan.js";
 
 // prettier-ignore
 export type BundleResult = {
+/**
+ * Optional native plan paired with this compilation's reuse evidence.
+ */
+plan?: ResolutionPlan,
 /**
  * Used repository dependency directories whose importer lookup is not mapped.
  */
@@ -13,7 +17,7 @@ unmappedDependencyDirectories?: Array<string>,
 /**
  * Immutable code for restoration and evaluation-only reuse.
  */
-compiled?: CompiledGeneration,
+compiled: CompiledGeneration,
 /**
  * Content-addressed bundle id.
  */
@@ -21,8 +25,4 @@ generation: string,
 /**
  * Complete module graph.
  */
-modules: Array<Module>,
-/**
- * Nonfatal bundling diagnostics.
- */
-warnings: Array<Warning>, };
+modules: Array<Module>, };

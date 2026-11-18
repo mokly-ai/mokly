@@ -9,19 +9,19 @@ use mokly_catalogue::discovery::SourceFile;
 use mokly_catalogue::render_sources::JavaScriptGeneration;
 use mokly_css::types::{StylesheetBundler, StylesheetRoot};
 use mokly_model::material::digest;
+use mokly_sidecar::compiled::ReuseEvidence;
 use mokly_sidecar::definitions::Definitions;
-use mokly_sidecar::methods::{Bundle, Call, CssModules, Generation};
+use mokly_sidecar::methods::{Bundle, BundleCapture, Call, CssModules, Generation};
 use mokly_sidecar::results;
-use mokly_sidecar::wire::MethodResult;
 
-use crate::error::{InternalError, RenderError, Result};
+use crate::error::{RenderError, Result};
 use crate::input_stamp::InputStamp;
 use crate::leases::{BundleLease, PreparedLease};
 use crate::render_environment::{ClassMaps, RenderEnvironment};
 use crate::runtime::Runtime;
 use crate::side::SideInputs;
 use crate::{bundle_attempt, bundle_inputs, render_environment};
-use crate::{sources, stylesheets};
+use crate::{physical_inputs, sources, stylesheets};
 
 pub(crate) struct BundleState {
     pub(crate) repository: PathBuf,
@@ -33,6 +33,8 @@ pub(crate) struct BundleState {
     pub(crate) module_digests: BTreeMap<String, Option<String>>,
     pub(crate) render: RenderEnvironment,
     pub(crate) stamp: InputStamp,
+    pub(crate) toolchain: String,
+    pub(crate) reuse_evidence: Arc<ReuseEvidence>,
 }
 
 pub(crate) fn describe(
@@ -40,7 +42,7 @@ pub(crate) fn describe(
     config: &ResolvedConfig,
     files: &[SourceFile],
 ) -> Result<(JavaScriptGeneration, Definitions)> {
-    let side = runtime.side(config)?;
+    let side = runtime.side(config);
     let mut params = bundle_inputs::params(config, files, &side);
     let cache_key =
         bundle_inputs::cache_key(config, &params, &side, runtime.dependency_tree.as_ref())?;
@@ -54,26 +56,36 @@ pub(crate) fn describe(
         .map(|state| (state.lease.id.clone(), state))
         .collect();
     let tree = sources::reader(runtime, config, &side);
-    let candidates: Vec<_> = candidates
+    let mut candidates: Vec<_> = candidates
         .into_values()
-        .filter(|state| state.stamp.current(tree.as_ref()) == state.stamp)
+        .filter(|state| {
+            state.stamp.current(tree.as_ref()) == state.stamp
+                && (physical_inputs::current(
+                    &state.reuse_evidence,
+                    runtime.physical_inputs.as_ref(),
+                ) || runtime.bundle_capture == BundleCapture::ServeEdit
+                    && !state.toolchain.is_empty()
+                    && state.reuse_evidence.serve_edit())
+        })
         .collect();
+    candidates.sort_by_key(|state| !state.reuse_evidence.captured());
     let compiler = stylesheets::compiler(runtime, config, &side);
     let mut prepared_maps = None;
     if let Some(previous) = candidates.first() {
         let maps = class_maps(compiler.as_ref(), &previous.modules, &params)?;
-        let digest = maps_digest(&maps)?;
+        let digest = maps_digest(&maps);
         if let Some(existing) = candidates
             .iter()
             .find(|state| state.class_maps_digest == digest)
         {
+            bundle_attempt::served(runtime, &existing.lease);
             return finish(runtime, side, compiler, existing.clone());
         }
         prepared_maps = Some(maps);
     }
     let mut evaluation = cache_key.clone();
     if let Some(maps) = &prepared_maps {
-        evaluation.push_str(&maps_digest(maps)?);
+        evaluation.push_str(&maps_digest(maps));
     }
     params.evaluation = Some(digest(evaluation.as_bytes()));
     let (mut result, mut lease) = bundle_attempt::request(runtime, &params)?;
@@ -83,7 +95,7 @@ pub(crate) fn describe(
         Some(maps) => maps,
         None => class_maps(compiler.as_ref(), &modules, &params)?,
     };
-    let class_maps_digest = maps_digest(&maps)?;
+    let class_maps_digest = maps_digest(&maps);
     if bundle_attempt::existing(runtime, &result.generation)
         .is_some_and(|previous| previous.class_maps_digest != class_maps_digest)
     {
@@ -104,7 +116,7 @@ pub(crate) fn describe(
             .base
             .as_ref()
             .and_then(|base| base.cache_namespace.as_deref()),
-    )?;
+    );
     let stamp = bundle_attempt::stamp(&result, &config.repo_root);
     let module_digests = result
         .modules
@@ -122,6 +134,8 @@ pub(crate) fn describe(
             module_digests,
             render,
             stamp,
+            toolchain: result.compiled.toolchain.clone(),
+            reuse_evidence: result.compiled.reuse_evidence.clone(),
         });
         bundle_attempt::remember(runtime, &existing);
         return finish(runtime, side, compiler, existing);
@@ -130,19 +144,13 @@ pub(crate) fn describe(
         generation: lease.id.clone(),
         class_maps: maps,
     })) {
-        Ok(MethodResult::Empty) => {}
-        Ok(_) => {
-            return Err(RenderError::ResultKind {
-                method: "cssModules",
-            });
-        }
+        Ok(_) => {}
         Err(source) => return Err(RenderError::Sidecar { source }),
     }
     let definitions = match runtime.pool.request(Call::Describe(Generation {
         generation: lease.id.clone(),
     })) {
-        Ok(MethodResult::Definitions(result)) => result,
-        Ok(_) => return Err(RenderError::ResultKind { method: "describe" }),
+        Ok(result) => result.into_definitions(),
         Err(source) => return Err(RenderError::Sidecar { source }),
     };
     let state = Arc::new(BundleState {
@@ -155,6 +163,8 @@ pub(crate) fn describe(
         module_digests,
         render,
         stamp,
+        toolchain: result.compiled.toolchain.clone(),
+        reuse_evidence: result.compiled.reuse_evidence.clone(),
     });
     bundle_attempt::remember(runtime, &state);
     finish(runtime, side, compiler, state)
@@ -219,11 +229,10 @@ fn finish(
     ))
 }
 
-fn maps_digest(maps: &ClassMaps) -> Result<String> {
-    match serde_json::to_vec(maps) {
-        Ok(bytes) => Ok(digest(&bytes)),
-        Err(source) => Err(InternalError::Json { source }.into()),
-    }
+fn maps_digest(maps: &ClassMaps) -> String {
+    let bytes = serde_json::to_vec(maps)
+        .expect("CSS Modules maps contain only strings and string-keyed maps");
+    digest(&bytes)
 }
 
 fn class_maps(

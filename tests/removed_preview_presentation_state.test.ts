@@ -7,6 +7,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { LoadedPreview } from "../packages/viewer/dist/previews/request.js";
 import { ReadyPreview } from "../packages/viewer/dist/shell/previews.js";
 
+import { inShellStore } from "./helpers/viewer_catalogue.js";
+
 const SNAPSHOT =
   "https://catalogue.test/mokly-viewer/diffs/generations/preview/snapshots/before/archive/removed.html";
 
@@ -20,18 +22,20 @@ test("an incomplete ready state renders the retryable unavailable state", () => 
   let html = "";
   assert.doesNotThrow(() => {
     html = renderToStaticMarkup(
-      createElement(ReadyPreview, {
-        colorScheme: "light",
-        data: {
-          path: "removed-page",
-          kind: "page",
-          title: "Removed page",
-        },
-        loaded,
-        presentations: new Map(),
-        retry: () => undefined,
-        viewport: "both",
-      }),
+      inShellStore(
+        createElement(ReadyPreview, {
+          colorScheme: "light",
+          data: {
+            path: "removed-page",
+            kind: "page",
+            title: "Removed page",
+          },
+          loaded,
+          presentations: new Map(),
+          retry: () => undefined,
+          viewport: "both",
+        }),
+      ),
     );
   });
   assert.match(

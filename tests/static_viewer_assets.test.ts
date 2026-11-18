@@ -23,10 +23,10 @@ test(
           "browser.manifest.json",
           JSON.stringify({
             schemaVersion: 1,
-            modules: ["shell.js", "inspector.js"],
+            modules: ["shell.js", "frame-probe.js"],
           }),
         ],
-        ["browser/inspector.js", "export {};"],
+        ["browser/frame-probe.js", "export {};"],
         ["shell.css", ""],
         ["assets/brand.svg", "<svg/>"],
         ["assets/fonts/InterVariable.woff2", ""],

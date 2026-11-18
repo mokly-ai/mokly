@@ -18,14 +18,16 @@ use mokly_graph::resource_inputs::{MemoryResourceInputs, ResourceInputs};
 use mokly_graph::source_snapshot::SourceSnapshot;
 use mokly_graph::types::{GraphFactory, RenderGraph};
 use mokly_graph::workers::RenderWorkers;
+use mokly_sidecar::methods::BundleCapture;
 use mokly_sidecar::pool::SidecarPool;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::bundle::BundleState;
 use crate::dependency_usage::{DependencyUsage, UsedDependencies};
-use crate::error::Result;
+use crate::edit_plans::Records;
 use crate::graph::JavaScriptGraph;
 use crate::leases::PreparedLease;
+use crate::physical_inputs::PhysicalInputs;
 use crate::postcss_cache::CssCache;
 use crate::side::{BaseSide, SideInputs};
 use crate::stylesheet_store::StylesheetCache;
@@ -41,8 +43,12 @@ pub struct Runtime {
     pub(crate) inventory_tree: Arc<dyn SourceTree>,
     /// Physical reader for the selected installed third-party dependencies.
     pub dependency_tree: Arc<dyn SourceTree>,
+    /// Filesystem reader for physical compilation evidence outside the side tree.
+    pub physical_inputs: Arc<dyn PhysicalInputs>,
     /// Lazily started Node processes.
     pub pool: Arc<dyn SidecarPool>,
+    /// Per-request evidence policy; Serve selects edit mode after its first publication.
+    pub bundle_capture: BundleCapture,
     /// Shared byte-bounded render cache.
     pub cache: Arc<dyn RenderCache>,
     /// Worker scheduler supplied by the composition root.
@@ -62,9 +68,18 @@ pub struct Runtime {
     pub(crate) describing: Arc<Mutex<()>>,
     pub(crate) css: Arc<Mutex<CssCache>>,
     pub(crate) bundles: Arc<Mutex<BTreeMap<String, Weak<BundleState>>>>,
+    pub(crate) edit_plans: Option<Arc<Mutex<Records>>>,
 }
 
 impl Runtime {
+    /// Keep bounded captured plans for the head preparations of one Serve command.
+    pub fn with_serve_edit_plans(mut self) -> Self {
+        if self.base.is_none() && self.edit_plans.is_none() {
+            self.edit_plans = Some(Arc::new(Mutex::new(Records::default())));
+        }
+        self
+    }
+
     /// Clone the factories over one attempt's source snapshot and shared runtime caches.
     pub fn with_tree(&self, tree: Arc<dyn SourceTree>) -> Self {
         let mut runtime = self.clone();
@@ -84,9 +99,14 @@ impl Runtime {
             })
     }
     /// Assemble runtime services without starting a sidecar or reading sources.
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "source trees and physical reuse evidence have separate injectable read boundaries"
+    )]
     pub fn new(
         tree: Arc<dyn SourceTree>,
         dependency_tree: Arc<dyn SourceTree>,
+        physical_inputs: Arc<dyn PhysicalInputs>,
         pool: Arc<dyn SidecarPool>,
         cache: Arc<dyn RenderCache>,
         workers: Arc<dyn RenderWorkers>,
@@ -97,7 +117,9 @@ impl Runtime {
             inventory_tree: tree.clone(),
             tree,
             dependency_tree,
+            physical_inputs,
             pool,
+            bundle_capture: BundleCapture::Full,
             cache,
             workers,
             version,
@@ -110,15 +132,16 @@ impl Runtime {
             describing: Arc::new(Mutex::new(())),
             css: Arc::new(Mutex::new(CssCache::default())),
             bundles: Arc::new(Mutex::new(BTreeMap::new())),
+            edit_plans: None,
         }
     }
 
-    pub(crate) fn side(&self, config: &ResolvedConfig) -> Result<SideInputs> {
+    pub(crate) fn side(&self, config: &ResolvedConfig) -> SideInputs {
         let mut side = side::inputs(
             config,
             self.base.as_ref(),
             CONTEXT_SEQUENCE.fetch_add(1, Ordering::Relaxed),
-        )?;
+        );
         let mut roots = Vec::new();
         let ancestors = ancestor_roots::directories(&side.configuration_directory);
         for (original, root) in side.dependency_roots.into_iter().enumerate() {
@@ -154,7 +177,7 @@ impl Runtime {
             }
         }
         side.dependency_roots = roots;
-        Ok(side)
+        side
     }
 }
 
@@ -195,3 +218,7 @@ impl GraphFactory for Runtime {
 #[cfg(test)]
 #[path = "_tests_/runtime_tests.rs"]
 mod runtime_tests;
+
+#[cfg(test)]
+#[path = "_tests_/bundle_reuse_tests.rs"]
+mod bundle_reuse_tests;

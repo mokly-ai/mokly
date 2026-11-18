@@ -23,15 +23,18 @@ their bytes across deployments. The rejected record-and-detail id misses
 viewer-only deployments and removed comparisons.
 
 The shell checks every current route detail, including a variant's parent
-detail, in this order: `revision`, then `detailId`, then identity and content.
-Revision comes first because newer Serve details have new ids. A revision
+detail, in this order: `revision`, then `detailId`, then identity.
+Revision comes first because newer Serve details have new ids. Decision: the
+fence compares no other field of a detail with its index record, because the
+`detailId` already binds the detail to that record, and a further comparison
+checks the content, which the viewer trusts. A revision
 mismatch refetches the index once. If the revision still disagrees, the entry
 shows its unavailable state with retry. If the revision matches but the
 `detailId` differs, the detail has the replaced status in a static build and in
 Serve. The standalone shell performs a full page load, and an embedded host
 receives one `onError` and keeps its state. From then on the shell loads no
 index or detail, closes the event stream, and reports no later failure. An
-identity or content mismatch leaves the entry unavailable with retry. A route
+identity mismatch leaves the entry unavailable with retry. A route
 shows that state only after each of its details has arrived, failed, or been
 replaced. Until then its stage keeps loading, and an embedded host still
 receives the `onError` of each failure at once. A failed parent detail makes
@@ -46,7 +49,12 @@ and `snapshotId` and `detailId` equal that record. Held details stay installed
 when a new index lists the same `detailId`; a current detail also keeps its
 `revision`.
 
-Every fetch uses ordinary GET without custom headers and `credentials: "omit"`.
+Every fetch uses ordinary GET without custom headers. The standalone shell
+sends `credentials: "same-origin"` with every read, and an embedded viewer
+sends `credentials: "omit"`. Decision: the standalone shell reads only the
+stub's origin, which can need its cookie, for example behind a private preview
+proxy; `omit` was rejected because such a proxy then rejects every read after
+the page loads.
 URL sources use HTTP(S) without userinfo or fragments. Fetches stay same-origin
 and reject cross-origin redirects. Serve JSON uses `Cache-Control: no-store`.
 Static hosts may cache the immutable index and details under the [static revalidation rules](./mokly-export-delivery.md#headers-caching-and-revalidation).

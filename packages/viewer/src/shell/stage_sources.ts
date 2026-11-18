@@ -1,17 +1,18 @@
 /** Source and usage projection for saved and temporary stage views. */
 
 import {
-  currentDocumentPath,
   VIEWER_DIRECTORY,
-} from "../catalogue/delivery_paths.js";
+  currentDocumentPath,
+  encodeUrlPath,
+} from "@mokly/model";
+import type { CatalogueUsage } from "@mokly/model";
+
 import type {
   ShellCatalogueUsage,
   ShellCatalogueView,
 } from "../catalogue/scoped_types.js";
-import type { CatalogueUsage } from "../catalogue/types.js";
 import type { ComponentViewRecord } from "../components/view_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
-import { encodeUrlPath } from "../data/paths.js";
 import { viewRoute } from "../navigation/routes.js";
 
 export const unavailableUsage: CatalogueUsage = { status: "unavailable" };

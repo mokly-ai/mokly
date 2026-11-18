@@ -6,10 +6,10 @@ The catalogue model lives in process memory. Its
 entry records are the private form of the
 [catalogue read model](./mokly-catalogue.md), which is their public form. The
 generated
-[`CatalogueModel`](../../packages/viewer/src/generated/catalogue/CatalogueModel.ts)
+[`CatalogueModel`](../../packages/model/src/generated/catalogue/CatalogueModel.ts)
 type defines the shape of the model, its entry records, and its folder
 records. The generated
-[`EntryRecord`](../../packages/viewer/src/generated/catalogue/EntryRecord.ts)
+[`EntryRecord`](../../packages/model/src/generated/catalogue/EntryRecord.ts)
 type defines the flat historical form of a screen, page, document, or
 component record that the
 [catalogue change snapshot](./mokly-catalogue-changes.md) carries.

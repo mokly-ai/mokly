@@ -28,7 +28,7 @@ export function ComparisonModeProvider({ children }: { children: ReactNode }) {
     view.kind === "target"
       ? workspaceKey(store.catalogue, view.target.entry)
       : "";
-  const ownerKey = `${owner}\u0000${store.catalogue.publicModel.revision ?? 0}`;
+  const ownerKey = `${owner}\u0000${store.catalogue.publicModel.revision}`;
   const [state, setState] = useState<ModeState>({ mode: "current", ownerKey });
   // Discard a departed workspace's mode before another route can reuse it.
   if (state.ownerKey !== ownerKey) setState({ mode: "current", ownerKey });

@@ -59,8 +59,8 @@ impl Display for ColorScheme {
 mod request_display_tests;
 
 fn location(handle: &str) -> String {
-    handle.rsplit_once('#').map_or_else(
-        || handle.into(),
-        |(module, export)| format!("{module} export {export}"),
-    )
+    let (module, export) = handle
+        .rsplit_once('#')
+        .expect("sidecar definition handles contain the module and export separator");
+    format!("{module} export {export}")
 }

@@ -2,8 +2,6 @@
 
 use std::path::Path;
 
-use mokly_model::error::ModelError;
-use mokly_model::readers::ReadError;
 use mokly_server::error::{InternalError, ServerError};
 
 use crate::codes::Code;
@@ -73,25 +71,13 @@ pub fn failure(style: &Style, error: &ServerError, redactor: &Redactor) -> Strin
 
 fn internal(error: &InternalError) -> String {
     match error {
+        InternalError::CanonicalDetailIdentity => {
+            "Serve could not publish catalogue data. Restart Serve.".into()
+        }
         InternalError::Provider { source } => source.to_string(),
         InternalError::Io { source } => source.to_string(),
         InternalError::Json { source } => source.to_string(),
         InternalError::Task { .. } => "A server worker did not finish. Restart Serve.".into(),
-        InternalError::Model { source } => match source {
-            ModelError::Schema(diagnostic) | ModelError::Props(diagnostic) => {
-                diagnostic.to_string()
-            }
-            ModelError::Internal(source) => source.to_string(),
-        },
-        InternalError::Read { source } => match source {
-            ReadError::Version {
-                boundary,
-                expected,
-                received,
-            } => format!("{boundary} requires schemaVersion {expected}; received {received:?}"),
-            ReadError::Invalid { boundary, source } => format!("Invalid {boundary}: {source}"),
-            ReadError::Contract { boundary, message } => format!("Invalid {boundary}: {message}"),
-        },
     }
 }
 

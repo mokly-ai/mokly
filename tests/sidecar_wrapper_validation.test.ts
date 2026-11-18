@@ -15,7 +15,7 @@ const source = `
 let calls = 0;
 export const leaf = defineComponent({...metadata,path:'leaf',title:'Leaf',
   propSchema:{type:'object',additionalProperties:false,required:['count'],
-    properties:{count:{type:'integer',minimum:1}}},
+    properties:{count:{type:'integer',minimum:1},constructor:{type:'null'}}},
   props:{count:1},slots:['children'],
   render:({count,children})=>{calls++;return <b>{count}{children}</b>;}});
 export const screen = defineScreen({...metadata,path:'screen',title:'Screen',
@@ -62,13 +62,16 @@ test("dynamic wrapper props fail the profile before the adapter runs", async (co
     });
     assert.match(probe.html, /<body>0<\/body>/u);
   }
-  const valid = await sidecar.call<RenderResult>("renderScreen", {
+  const rendering = sidecar.call<RenderResult>("renderScreen", {
     ...params,
-    props: { value: { count: 2 } },
+    props: { value: { count: 2, moklyInstance: "con" } },
   });
+  await assert.doesNotReject(rendering);
+  const valid = await rendering;
   assert.match(valid.html, /<b>2/u);
   assert.match(valid.html, /<i>Slot<\/i>/u);
   assert.equal(valid.instances.length, 1);
+  assert.equal(valid.instances[0]!.id, "con");
   assert.deepEqual(valid.instances[0]!.props, { count: ["number", "2"] });
   const probe = await sidecar.call<PageResult>("renderPage", {
     generation,

@@ -1,8 +1,9 @@
 /** URL-derived route state for the standalone shell. */
 
+import { isLogicalFragment } from "@mokly/model";
+
 import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
 import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
-import { isLogicalFragment } from "../navigation/logical.js";
 import { parseViewHref, viewHref } from "../navigation/routes.js";
 import { parseViewAxes } from "../navigation/view_axes.js";
 

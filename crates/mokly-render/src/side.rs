@@ -12,8 +12,8 @@ use mokly_compare::dependency_types::Resolved;
 use mokly_sidecar::methods::ModuleResolution;
 use mokly_source_interface::tree::SourceTree;
 
-use crate::error::{Result, convert};
 use crate::source_paths;
+use crate::transport_values;
 
 /// A base extraction and its selected dependency tier stay leased together.
 /// The base runtime and the source trees of its graphs hold this value, so both
@@ -53,15 +53,18 @@ pub(crate) fn inputs(
     config: &ResolvedConfig,
     base: Option<&Arc<BaseSide>>,
     sequence: u64,
-) -> Result<SideInputs> {
-    let directory = config.file.parent().unwrap_or(&config.repo_root);
+) -> SideInputs {
+    let directory = config
+        .file
+        .parent()
+        .expect("resolved configuration files have an absolute parent directory");
     let configuration_directory = relative(directory, &config.repo_root);
     let authored = config.input.module_resolution.clone().unwrap_or_default();
     let mut resolution = ModuleResolution {
         dependency_root: Some(config.repo_root.to_string_lossy().into_owned()),
         aliases: authored.aliases.clone().unwrap_or_default(),
         conditions: authored.conditions.clone().unwrap_or_default(),
-        loaders: convert(&authored.loaders.clone().unwrap_or_default())?,
+        loaders: transport_values::loaders(&authored.loaders.clone().unwrap_or_default()),
         main_fields: authored.main_fields.clone().unwrap_or_default(),
         package_roots: Vec::new(),
         resolve_extensions: authored.resolve_extensions.clone().unwrap_or_default(),
@@ -94,7 +97,7 @@ pub(crate) fn inputs(
         ),
     };
     let selected_roots = selected_roots(&source_root, &module_resolution);
-    Ok(SideInputs {
+    SideInputs {
         dependency_roots: selected_roots,
         dependency_aliases: BTreeMap::new(),
         source_root,
@@ -102,7 +105,7 @@ pub(crate) fn inputs(
         module_resolution,
         configuration_directory,
         context: format!("{identity}:{}:{sequence}", config.file.display()),
-    })
+    }
 }
 
 /// Selected dependency roots in the sidecar's logical root order.

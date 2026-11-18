@@ -1,8 +1,9 @@
-import type { Box } from "../client/frame_adapter.js";
+import type { Box } from "@mokly/frame";
 import {
   intersectRectangles,
   type CoordinateRect,
-} from "../client/geometry.js";
+} from "@mokly/frame/internal";
+
 import type { MarkerStatus } from "../host/types.js";
 
 import type { MarkerRect } from "./marker_store.js";

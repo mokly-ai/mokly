@@ -21,7 +21,6 @@ function folderTitles<T extends HierarchyEntry>(
   for (const [path, crumbs] of hierarchy.ancestorsByPath) {
     if (hierarchy.variantParentByPath.has(path)) continue;
     const segments = path.split("/").slice(0, -1);
-    if (segments.length !== crumbs.length) continue;
     crumbs.forEach((title, index) =>
       titles.set(segments.slice(0, index + 1).join("/"), title),
     );

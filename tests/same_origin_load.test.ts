@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { registerFrameSession } from "../packages/viewer/dist/client/frame_session.js";
-import { createMountAuthentication } from "../packages/viewer/dist/client/same_origin_identity.js";
-import { initialFrameLoad } from "../packages/viewer/dist/client/same_origin_load.js";
+import { registerFrameSession } from "../packages/frame/dist/adapters/frame_session.js";
+import { createMountAuthentication } from "../packages/frame/dist/adapters/same_origin_identity.js";
+import { initialFrameLoad } from "../packages/frame/dist/adapters/same_origin_load.js";
 
 const light = new URL("https://app.test/static/screen.mobile.html");
 const dark = new URL("https://app.test/static/screen.mobile.dark.html");
@@ -118,7 +118,6 @@ function fakeFrame(source: URL): HTMLIFrameElement {
     ownerDocument: { baseURI: "https://app.test/" },
   } as unknown as HTMLIFrameElement;
   registerFrameSession(frame, {
-    identity: {},
     sources: [light.href, dark.href],
   });
   return frame;

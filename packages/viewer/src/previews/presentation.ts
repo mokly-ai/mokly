@@ -7,7 +7,7 @@ import { presentSnapshotDocument } from "./presentation_document.js";
 import {
   confinedSnapshot,
   snapshotGeneration,
-  snapshotSideSet,
+  type SnapshotSide,
   type SnapshotSides,
 } from "./snapshot_address.js";
 
@@ -58,7 +58,7 @@ export function createSnapshotPresentationLoader(
   delivery: ComparisonDelivery,
   environment: SnapshotPresentationEnvironment,
 ): SnapshotPresentationLoader {
-  const allowedSides = snapshotSideSet(sides);
+  const allowedSides = new Set<SnapshotSide>(sides);
   const failureCopy = allowedSides.has("after")
     ? COMPARISON_UNAVAILABLE
     : PREVIOUS_VERSION_UNAVAILABLE;

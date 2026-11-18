@@ -4,6 +4,7 @@ use std::error;
 
 use mokly_catalogue::error::CatalogueError;
 use mokly_static::error::Error;
+use mokly_static::frame_probe_error::FrameProbeFailure;
 
 use crate::build::BuildError;
 use crate::changes_diagnostics;
@@ -59,8 +60,8 @@ impl BuildFailure for BuildError {
                 source:
                     Error::Cancelled
                     | Error::Empty
-                    | Error::Inspector {
-                        reason: mokly_static::inspector_error::InspectorFailure::Reserved { .. },
+                    | Error::FrameProbe {
+                        reason: FrameProbeFailure::Reserved { .. },
                         ..
                     },
             }

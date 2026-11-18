@@ -41,32 +41,16 @@ export interface Ledger {
   initializeGeneration: (generation: string) => void;
 }
 
-/** Every ledger function, for the shape check and the dispatch test. */
-export const ledgerMembers: readonly (keyof Ledger)[] = [
-  "readEvidence",
-  "resetGeneration",
-  "initializeGeneration",
-];
 const ledger: Readonly<Ledger> = Object.freeze({
   readEvidence,
   resetGeneration: resetReadEvidence,
   initializeGeneration: markGeneration,
 });
 
-function isLedger(value: unknown): value is Ledger {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    ledgerMembers.every(
-      (name) => typeof Reflect.get(value, name) === "function",
-    )
-  );
-}
-
 /** The preload's ledger, when this copy runs beside the CommonJS preload. */
 function sharedLedger(): Ledger | undefined {
-  const value: unknown = Reflect.get(globalThis, ledgerKey);
-  return isLedger(value) && value !== ledger ? value : undefined;
+  const value = Reflect.get(globalThis, ledgerKey) as Ledger | undefined;
+  return value !== ledger ? value : undefined;
 }
 
 /** A CommonJS preload and the ESM worker share one installed observer. */

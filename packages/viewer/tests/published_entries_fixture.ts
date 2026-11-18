@@ -2,9 +2,6 @@
 
 import { createHash } from "node:crypto";
 
-import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
-import type { ShellCatalogueReadModel } from "../src/catalogue/scoped_types.js";
-import { shellCatalogueModel } from "../src/catalogue/shell_model.js";
 import type {
   CatalogueComponent,
   CatalogueDocument,
@@ -14,7 +11,11 @@ import type {
   CatalogueScreen,
   CatalogueUseCase,
   RemovedEntry,
-} from "../src/catalogue/types.js";
+} from "@mokly/model";
+
+import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
+import type { ShellCatalogueReadModel } from "../src/catalogue/scoped_types.js";
+import { shellCatalogueModel } from "../src/catalogue/shell_model.js";
 import type { Catalogue } from "../src/shell/catalogue.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 

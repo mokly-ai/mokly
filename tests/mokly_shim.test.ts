@@ -51,14 +51,38 @@ test("the shim accepts the complete Node engine range", () => {
     "24.18.99",
     "invalid",
   ]) {
-    assert.throws(() => assertNodeVersion(version), /Install a supported Node/);
+    assert.throws(
+      () => assertNodeVersion(version),
+      /Install Node\.js 24\.19 or later/,
+    );
   }
+});
+
+test("an affected Node 24 release names the crash and the fix", () => {
+  assert.throws(
+    () => assertNodeVersion("24.18.1"),
+    (error) => {
+      assert.ok(error instanceof Error);
+      assert.equal(
+        error.message,
+        `Mokly requires Node.js ${SUPPORTED_NODE_RANGE}; found 24.18.1. A Node.js bug in 24.14 through 24.18 can crash Mokly. Install Node.js 24.19 or later, then run mokly again.`,
+      );
+      return true;
+    },
+  );
+  assert.throws(
+    () => assertNodeVersion("22.14.0"),
+    (error) => error instanceof Error && !error.message.includes("Node.js bug"),
+  );
 });
 
 test("Node 23 is excluded before package lookup or native execution", async () => {
   for (const version of ["23.0.0", "23.4.0", "23.5.0", "23.11.1", "23.99.0"]) {
     assert.equal(satisfies(version, SUPPORTED_NODE_RANGE), false);
-    assert.throws(() => assertNodeVersion(version), /Install a supported Node/);
+    assert.throws(
+      () => assertNodeVersion(version),
+      /Install Node\.js 24\.19 or later/,
+    );
     await assert.rejects(
       runShim(
         [],
@@ -172,7 +196,7 @@ test("binary startup errors give a safe recovery message", async () => {
   );
 });
 
-test("the dependency-free shim gate agrees with npm engines at every support boundary", () => {
+test("the dependency-free shim gate agrees with the supported range at every boundary", () => {
   for (let major = 20; major <= 27; major += 1) {
     for (const minor of [0, 13, 14, 15, 18, 19, 21, 99]) {
       for (const patch of [0, 1, 99]) {
@@ -182,7 +206,7 @@ test("the dependency-free shim gate agrees with npm engines at every support bou
         else
           assert.throws(
             () => assertNodeVersion(version),
-            /Install a supported Node/,
+            /Install Node\.js 24\.19 or later/,
           );
       }
     }

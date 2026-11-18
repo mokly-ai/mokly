@@ -19,7 +19,6 @@ fn ready() -> BuildChanges {
     BuildChanges::Ready(Arc::new(ComparisonResult {
         resource_work: Default::default(),
         affected_lookups: 0,
-        validation_lookups: 0,
         warnings: vec![],
         review: ReviewResultV8 {
             schema_version: 8,

@@ -20,6 +20,8 @@
   <a href="#development">Development</a>
 </p>
 
+Status: Some cleanup errors from removed host content can become catalogue failures. The [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) owns that fix. Some asynchronous document failures leave an entry loading or keep the old catalogue. The [asynchronous catalogue failures item](../../plans/follow-ups/asynchronous-catalogue-failures.md) owns that fix.
+
 `@mokly/viewer` is an open-source React library that renders a Mokly catalogue
 inside another product. It reads the catalogue that `mokly serve` serves or
 `mokly build` writes, and it renders the same Browse shell as the standalone
@@ -50,9 +52,9 @@ of its navigation, branding, authentication, and collaboration UI.
   application, in `mokly serve`, and in the static output of `mokly build`. It
   renders only in the browser, from two JSON shapes: the catalogue index and
   one entry detail per entry.
-- **Typed and validated.** The package ships TypeScript declarations generated
-  from Mokly's Rust model, and it validates every index and detail at its
-  public boundary.
+- **Typed and version-checked.** The package ships TypeScript declarations
+  generated from Mokly's Rust model. It rejects an index or a detail of another
+  format version with a typed error.
 
 ## Requirements
 
@@ -117,9 +119,10 @@ export function CataloguePage({ origin }: { origin: string }) {
 
 `index` is an absolute HTTP(S) URL such as
 `https://app.example.com/mokly-viewer/index.json`, or the index object with a
-`baseUrl`. The viewer validates the index, then calls `detail` for each entry
-it needs. A current entry's detail is `mokly-viewer/entries/<path>.json`. A
-removed entry's detail lives in the comparison generation that the index's
+`baseUrl`. The viewer checks the index's format version, then calls `detail`
+for each entry it needs. A current entry's detail is
+`mokly-viewer/entries/<path>.json`. A removed entry's detail lives in the
+comparison generation that the index's
 `comparisonUrl` names. Every path resolves from the catalogue's origin root,
 never from the embedding page. When the catalogue files share the application's
 origin, the default frame adapter is all you need.
@@ -159,7 +162,8 @@ export function IsolatedCataloguePage({ origin }: { origin: string }) {
 ```
 
 The catalogue host must allow the embedding application's exact origin and
-serve the shell bundle and the inspector that Mokly writes beside the catalogue.
+serve the shell bundle and the frame probe script that Mokly writes beside the
+catalogue.
 Read [Deployment and security](./docs/deployment/README.md) before you ship this
 configuration.
 
@@ -177,12 +181,20 @@ configuration.
 ## Responsibilities
 
 `@mokly/viewer` owns the shell state, the readers of the catalogue index and the
-entry detail, the selection model, navigation, the comparison and inspection
-logic, instance resolution, the preview frames with the frame adapters and the
-in-frame inspector, and the browser entry. `@mokly/ui` owns every element and
-every style rule of the Browse shell. The viewer's containers read the shell
-state and render the package components with props and callbacks, so the
-viewer renders no element of its own. The containers reach measured and focused
+entry detail with their version gates, the delivery fences of each detail, the
+selection model, navigation, the comparison and inspection logic, instance
+resolution, the preview frames, and the browser entry.
+`@mokly/ui` owns every element and every style rule of the Browse shell.
+`@mokly/frame` owns the frame adapter types, the built-in frame adapters and
+their shared event core, and the frame probe script that runs inside published
+pages. The viewer re-exports the public adapters and frame types.
+`@mokly/model` owns the path and link
+grammar, the current document paths, the route and the id grammar of temporary
+renders, the directory names, and the generated types of the Rust model crate.
+The viewer imports them from that package, and `@mokly/viewer/data` re-exports
+the ones that it lists. The viewer's containers read the shell state and
+render the package components with props and callbacks, so the viewer renders
+no element of its own. The containers reach measured and focused
 elements through package refs. A root context shares those refs across the shell.
 Comparison and appearance state reach package components through props.
 The viewer makes no analytics or
@@ -201,9 +213,11 @@ catalogue.
 The repository is an npm workspace. The Rust core is a Cargo workspace under
 `crates/`. `packages/mokly` holds the `@mokly/mokly` shim, the render sidecar,
 and the authoring API. `packages/ui` holds `@mokly/ui`, every element and
-every stylesheet of the shell. `packages/viewer` holds this package; its
-shared shapes are the generated TypeScript types of the Rust model crate. From
-the repository root:
+every stylesheet of the shell. `packages/model` holds `@mokly/model`, the
+catalogue rules and the generated TypeScript types of the Rust model crate,
+which are the shared shapes of this package. `packages/frame` holds
+`@mokly/frame`, the frame adapter types, the built-in frame adapters, and the
+frame probe. `packages/viewer` holds this package. From the repository root:
 
 ```bash
 npm ci
@@ -213,14 +227,17 @@ npm run test:browser
 cargo xtask check
 ```
 
-`npm run build` builds the host native target, the shim, the sidecar, the UI
-package, and the viewer. The viewer build writes `shell.css` and `styles.css`
+`npm run build` builds the host native target, the UI package, the model
+package, the frame package, the viewer, and then the shim and the sidecar, in
+that order. The viewer build bundles the standalone shell into
+`dist/browser/shell.js` and copies the frame probe that `@mokly/frame` builds
+into `dist/browser/frame-probe.js`. It writes `shell.css` and `styles.css`
 from the `@font-face` rule of the shell font and the UI package's `styles.css`,
 whose rules keep the cascade order that `packages/ui/src/styles.css` lists.
 The embedded `styles.css` needs no `@scope` rule, because no package rule
 reaches the host page or host slot content. The build records every browser
-output in the browser module inventory; `mokly build` copies exactly those
-files, and Serve serves exactly them.
+output in the browser module inventory, `dist/browser.manifest.json`;
+`mokly build` copies exactly those files, and Serve serves exactly them.
 `npm test -- packages/viewer/tests/<file> --test-name-pattern=<regex>`
 runs one viewer test. `cargo xtask check` is the complete repository gate; it
 runs the viewer typecheck, the viewer's Node tests, and the Playwright Browse
@@ -230,6 +247,12 @@ and Review regressions against `mokly serve` of the example catalogue.
 
 - [`../ui/src`](../ui/src) — the `@mokly/ui` presentational components the
   shell composes, one directory per component with its CSS beside it
+- [`../model/src`](../model/src) — the `@mokly/model` catalogue rules and
+  generated types that the shell and the frame code import
+- [`../frame/src`](../frame/src) — the `@mokly/frame` frame adapter types, the
+  built-in adapters and their message transport, the shared event core, and
+  the React-free frame probe that runs inside published pages; the viewer
+  source imports them only from `@mokly/frame` and `@mokly/frame/internal`
 - [`src/viewer`](./src/viewer) — the embedded `MoklyViewer`: React lifecycle,
   source loading, host integration, and instance operations; it imports the
   shared shell, which has no dependency on this directory
@@ -289,6 +312,12 @@ and Review regressions against `mokly serve` of the example catalogue.
   embedded root's loading and failure states, and
   `src/shell/marker_layer.tsx` and `src/viewer/inspection_layer.tsx` place
   the host's markers and inspection labels
+- [`src/shell/catalogue_boundary.tsx`](./src/shell/catalogue_boundary.tsx) —
+  `CatalogueBoundary`, the catcher around the ready shell of the embedded and
+  the standalone root: a document of the supported version that the shell
+  cannot render, an entry detail included, becomes the root's failure state
+  with Try again, and a value that host code throws passes on to the host;
+  `hostErrors` records those values for one viewer
 - [`src/shell/comparison_views.tsx`](./src/shell/comparison_views.tsx) and
   [`src/shell/comparison_viewport.tsx`](./src/shell/comparison_viewport.tsx) —
   the containers of the comparison sections and panes, which own each
@@ -300,12 +329,17 @@ and Review regressions against `mokly serve` of the example catalogue.
   the UI package's `styles.css`: the font's address in each delivery, the
   embedded font family, and the fallbacks that let a host's accent overrides
   inherit
-- [`src/catalogue`](./src/catalogue) — the readers of the catalogue index and
-  the entry detail, and the public catalogue types
+- [`src/catalogue`](./src/catalogue) — the readers of the catalogue index, the
+  entry detail, and the live descriptor, which gate the format version and
+  return a typed copy; the reader of the optional deployment file; the detail
+  fences of `detail_fences.ts`; and the public catalogue types
 - [`src/catalogue/sources.ts`](./src/catalogue/sources.ts) — the shared object
   and URL source validation and the index, detail, and deployment transports
 - [`src/data.ts`](./src/data.ts) — the `./data` entry: path functions,
-  directory names, the path and link grammar, and the prop schema validators
+  directory names, the path and link grammar, and the prop checks
+  `validatePropSchema`, `validateProps`, and `validatePropValues`; it
+  re-exports the directory names, the current document paths, and the
+  grammar from `@mokly/model`
 - [`src/navigation/routes.ts`](./src/navigation/routes.ts) — entry, view,
   snapshot, preview, and shell URL derivation
 - [`src/shell/catalogue.ts`](./src/shell/catalogue.ts) — the shell's lookups of
@@ -315,9 +349,9 @@ and Review regressions against `mokly serve` of the example catalogue.
   tree's navigation records and the Specs and Components sections
 - [`src/registry/nav_paths.ts`](./src/registry/nav_paths.ts) — the shared
   comparator for each section's sibling order
-- [`src/client`](./src/client) — the frame adapters, message transport, and
-  geometry
-- [`src/inspector`](./src/inspector) — the React-free in-frame inspector
+- [`src/shell/component_geometry.ts`](./src/shell/component_geometry.ts) —
+  `visibleFrameBox`, which clips a frame to the host viewport and its
+  ancestors
 - [`src/previews`](./src/previews) — the removed-entry previews
 - [`src/previews/descriptor.ts`](./src/previews/descriptor.ts) — the identity
   key of a route-owned previous-version request
@@ -348,16 +382,15 @@ and Review regressions against `mokly serve` of the example catalogue.
 - [`src/shell/comparison_request.ts`](./src/shell/comparison_request.ts) — the
   generation root of a comparison: the pinned root a static catalogue names,
   or the root that Serve's selection redirects to and its renewal
-- [`src/catalogue/detail_comparison.ts`](./src/catalogue/detail_comparison.ts)
-  and [`src/shell/public_compared.ts`](./src/shell/public_compared.ts) — the
-  detail's view states, ignore ids, and base side, and the routed entry's
-  comparison facts that the panes and Details read from them
-- [`src/catalogue/detail_reasons.ts`](./src/catalogue/detail_reasons.ts) and
-  [`src/catalogue/reason_order.ts`](./src/catalogue/reason_order.ts) — the
-  entry detail's `reasons` and the reason order it shares with review v8
+- [`src/shell/public_compared.ts`](./src/shell/public_compared.ts) — the
+  routed entry's comparison facts that the panes and Details read from the
+  detail's view states, ignore ids, and base side
+- [`src/catalogue/detail_reader.ts`](./src/catalogue/detail_reader.ts) — the
+  entry detail reader; its typed copy keeps the detail's `reasons` in the
+  review v8 order of the core's
+  [`review_order.rs`](../../crates/mokly-model/src/review_order.rs)
 - [`src/shell/public_reasons.ts`](./src/shell/public_reasons.ts) — the
-  detail reasons that Details shows: listed records only, without the reasons
-  that contradict the record
+  detail reasons that Details shows, for a record that Changes lists
 - [`tests`](./tests) — package-level conformance tests
 
 ### Related Docs
@@ -368,6 +401,8 @@ and Review regressions against `mokly serve` of the example catalogue.
 - [Path-derived artifact paths](../../docs/protocol/mokly-artifact-paths.md)
 - [Paths, roots, and identity](../../docs/protocol/mokly-paths.md)
 - [Viewer namespace and version gates](../../docs/protocol/mokly-viewer-namespace.md)
+- [Model package contract](../../docs/protocol/mokly-model-package.md)
+- [Frame package contract](../../docs/protocol/mokly-frame-package.md)
 - [Frame adapter protocol](../../docs/protocol/mokly-frame-adapter.md)
 - [Markers and multi-instance highlights](../../docs/protocol/mokly-viewer-markers.md)
 - [Component instance identity](../../docs/protocol/mokly-instances.md)

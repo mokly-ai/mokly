@@ -2,12 +2,11 @@
 
 use std::collections::BTreeMap;
 use std::path::Path;
+use std::sync::Arc;
 
-use mokly_sidecar::compiled::CompiledGeneration;
+use mokly_sidecar::compiled::{CompiledGeneration, ReuseEvidence};
 use mokly_sidecar::methods::{Bundle, ModuleResolution};
 use mokly_sidecar::results;
-
-use crate::error::Result;
 
 use super::{ClassMaps, RenderEnvironment};
 
@@ -23,7 +22,7 @@ pub(super) fn derive(
     params: &Bundle,
     result: &results::Bundle,
     maps: &ClassMaps,
-) -> Result<RenderEnvironment> {
+) -> RenderEnvironment {
     super::derive(
         params,
         result,
@@ -39,7 +38,7 @@ pub(super) fn derive_at(
     maps: &ClassMaps,
     working_root: &str,
     cache_namespace: Option<&str>,
-) -> Result<RenderEnvironment> {
+) -> RenderEnvironment {
     let working_root = physical(working_root);
     let cache_namespace = cache_namespace.map(physical);
     super::derive(
@@ -88,9 +87,18 @@ pub(super) fn params_at(root: &str) -> Bundle {
 
 pub(super) fn result(dependency_root: &str, react: &str) -> results::Bundle {
     results::Bundle {
+        plan: None,
         unmapped_dependency_directories: None,
         epoch: 0,
-        compiled: Some(CompiledGeneration {
+        cache: None,
+        compiled: Arc::new(CompiledGeneration {
+            toolchain: "fixture".into(),
+            reuse_evidence: Arc::new(ReuseEvidence {
+                uncaptured: None,
+                durable: true,
+                complete: true,
+                inputs: Default::default(),
+            }),
             unmapped_dependency_directories: None,
             identity: "identity".into(),
             code: String::new(),
@@ -106,7 +114,6 @@ pub(super) fn result(dependency_root: &str, react: &str) -> results::Bundle {
         }),
         generation: "generation".into(),
         modules: Vec::new(),
-        warnings: Vec::new(),
     }
 }
 

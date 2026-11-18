@@ -12,7 +12,7 @@ use crate::application::{Application, HttpApplication};
 use crate::application_evidence::{CompletionQueue, EvidencePublisher};
 use crate::assets::File;
 use crate::backend::DocumentsMock;
-use crate::detail_encoding::{DetailEncoder, DetailEncoderMock, ValidatedDetails};
+use crate::detail_encoding::{DetailEncoder, DetailEncoderMock, EncodedDetails};
 use crate::publication::{Publications, PublicationsMock, SharedPublication};
 use crate::publication_support::{ready, snapshot};
 use crate::work::WorkMock;
@@ -54,17 +54,17 @@ async fn cached_document_response_settles_while_a_batch_publication_is_blocked()
                 content_type: "text/html".into(),
             }))),
         DetailEncoderMock::encode
-            .each_call(matching!(_, _, _))
+            .each_call(matching!(_))
             .answers_arc(Arc::new({
                 let entered = entered.clone();
                 let release = release.clone();
-                move |_, detail, index, schemas| {
+                move |_, detail| {
                     entered.notify_one();
                     let (lock, signal) = &*release;
                     let _released = signal
                         .wait_while(lock.lock().unwrap(), |released| !*released)
                         .unwrap();
-                    ValidatedDetails.encode(detail, index, schemas)
+                    EncodedDetails.encode(detail)
                 }
             })),
     ));

@@ -1,0 +1,476 @@
+{
+  "values": [
+    {
+      "name": "string code points",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2
+          }
+        },
+        "required": ["value"]
+      },
+      "value": {
+        "value": "😀a"
+      },
+      "valid": true,
+      "pointer": ""
+    },
+    {
+      "name": "long string",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "type": "string",
+            "maxLength": 2
+          }
+        },
+        "required": ["value"]
+      },
+      "value": {
+        "value": "😀ab"
+      },
+      "valid": false,
+      "pointer": "/value"
+    },
+    {
+      "name": "integer",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "type": "integer"
+          }
+        },
+        "required": ["value"]
+      },
+      "value": {
+        "value": 2
+      },
+      "valid": true,
+      "pointer": ""
+    },
+    {
+      "name": "fractional integer",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "type": "integer"
+          }
+        },
+        "required": ["value"]
+      },
+      "value": {
+        "value": 2.5
+      },
+      "valid": false,
+      "pointer": "/value"
+    },
+    {
+      "name": "decimal multiple",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1,
+            "multipleOf": 0.1
+          }
+        },
+        "required": ["value"]
+      },
+      "value": {
+        "value": 0.3
+      },
+      "valid": true,
+      "pointer": ""
+    },
+    {
+      "name": "off multiple",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "type": "number",
+            "multipleOf": 0.1
+          }
+        },
+        "required": ["value"]
+      },
+      "value": {
+        "value": 0.35
+      },
+      "valid": false,
+      "pointer": "/value"
+    },
+    {
+      "name": "primitive enum",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "enum": ["yes", 1, false, null]
+          }
+        },
+        "required": ["value"]
+      },
+      "value": {
+        "value": false
+      },
+      "valid": true,
+      "pointer": ""
+    },
+    {
+      "name": "enum does not coerce",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "enum": [1]
+          }
+        },
+        "required": ["value"]
+      },
+      "value": {
+        "value": "1"
+      },
+      "valid": false,
+      "pointer": "/value"
+    },
+    {
+      "name": "null constant",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "const": null
+          }
+        },
+        "required": ["value"]
+      },
+      "value": {
+        "value": null
+      },
+      "valid": true,
+      "pointer": ""
+    },
+    {
+      "name": "wrong constant",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "const": null
+          }
+        },
+        "required": ["value"]
+      },
+      "value": {
+        "value": "null"
+      },
+      "valid": false,
+      "pointer": "/value"
+    },
+    {
+      "name": "single oneOf match",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "oneOf": [
+              {
+                "const": "a"
+              },
+              {
+                "const": "b"
+              }
+            ]
+          }
+        },
+        "required": ["value"]
+      },
+      "value": {
+        "value": "a"
+      },
+      "valid": true,
+      "pointer": ""
+    },
+    {
+      "name": "overlapping oneOf",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "oneOf": [
+              {
+                "const": 1
+              },
+              {
+                "const": 1
+              }
+            ]
+          }
+        },
+        "required": ["value"]
+      },
+      "value": {
+        "value": 1
+      },
+      "valid": false,
+      "pointer": "/value"
+    },
+    {
+      "name": "overlapping anyOf",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "const": 1
+              }
+            ]
+          }
+        },
+        "required": ["value"]
+      },
+      "value": {
+        "value": 1
+      },
+      "valid": true,
+      "pointer": ""
+    },
+    {
+      "name": "anyOf mismatch",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": ["value"]
+      },
+      "value": {
+        "value": false
+      },
+      "valid": false,
+      "pointer": "/value"
+    },
+    {
+      "name": "array items",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "type": "array",
+            "items": {
+              "type": "boolean"
+            },
+            "minItems": 1,
+            "maxItems": 2
+          }
+        },
+        "required": ["value"]
+      },
+      "value": {
+        "value": [true, false]
+      },
+      "valid": true,
+      "pointer": ""
+    },
+    {
+      "name": "wrong array item",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "type": "array",
+            "items": {
+              "type": "boolean"
+            }
+          }
+        },
+        "required": ["value"]
+      },
+      "value": {
+        "value": [true, 0]
+      },
+      "valid": false,
+      "pointer": "/value/1"
+    },
+    {
+      "name": "closed object",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "on": {
+                "type": "boolean"
+              }
+            },
+            "required": ["on"]
+          }
+        },
+        "required": ["value"]
+      },
+      "value": {
+        "value": {
+          "on": false
+        }
+      },
+      "valid": true,
+      "pointer": ""
+    },
+    {
+      "name": "missing nested required",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "on": {
+                "type": "boolean"
+              }
+            },
+            "required": ["on"]
+          }
+        },
+        "required": ["value"]
+      },
+      "value": {
+        "value": {}
+      },
+      "valid": false,
+      "pointer": "/value/on"
+    },
+    {
+      "name": "unknown nested key",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {}
+          }
+        },
+        "required": ["value"]
+      },
+      "value": {
+        "value": {
+          "extra": 1
+        }
+      },
+      "valid": false,
+      "pointer": "/value/extra"
+    },
+    {
+      "name": "reserved nested array key",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "type": "array"
+          }
+        },
+        "required": ["value"]
+      },
+      "value": {
+        "value": [
+          {
+            "constructor": 0
+          }
+        ]
+      },
+      "valid": false,
+      "pointer": "/value/0/constructor"
+    }
+  ],
+  "reservedProperties": ["__proto__", "constructor", "prototype"],
+  "limits": [
+    {
+      "name": "node boundary",
+      "kind": "wide",
+      "size": 9998,
+      "probe": false,
+      "valid": true
+    },
+    {
+      "name": "node excess",
+      "kind": "wide",
+      "size": 9999,
+      "probe": false,
+      "valid": false
+    },
+    {
+      "name": "anyOf node boundary",
+      "kind": "wide",
+      "size": 9998,
+      "probe": true,
+      "valid": true
+    },
+    {
+      "name": "anyOf node excess",
+      "kind": "wide",
+      "size": 9999,
+      "probe": true,
+      "valid": false
+    },
+    {
+      "name": "depth boundary",
+      "kind": "nested",
+      "size": 63,
+      "probe": false,
+      "valid": true
+    },
+    {
+      "name": "depth excess",
+      "kind": "nested",
+      "size": 64,
+      "probe": false,
+      "valid": false
+    }
+  ]
+}

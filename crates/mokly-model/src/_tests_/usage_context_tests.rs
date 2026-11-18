@@ -21,7 +21,7 @@ fn fixture() -> (
     .unwrap();
     let component = &index.components[0];
     let props = wire_decode::decode(&component.visual.props).unwrap();
-    let key = material::instance_key(&ComponentInputOwner::Entry, None, "action").unwrap();
+    let key = material::instance_key(&ComponentInputOwner::Entry, None, "action");
     let usage = CatalogueUsage::Ready {
         instances: vec![ComponentInstanceRecord {
             key: key.clone(),
@@ -31,7 +31,7 @@ fn fixture() -> (
             slot_key: None,
             order: 0,
             props: component.visual.props.clone(),
-            props_key: material::props_key(&props).unwrap(),
+            props_key: material::props_key(&props),
             source: None,
         }],
         slots: vec![],
@@ -42,6 +42,70 @@ fn fixture() -> (
         }],
     };
     (usage, index.components)
+}
+
+#[test]
+fn explicit_instance_ids_follow_shared_kebab_cases_without_device_restrictions() {
+    #[derive(serde::Deserialize)]
+    struct Cases {
+        instances: Vec<Case>,
+    }
+    #[derive(serde::Deserialize)]
+    struct Case {
+        value: String,
+        valid: bool,
+    }
+    let cases: Cases = serde_json::from_str(include_str!(
+        "../../../../packages/viewer/tests/fixtures/author-checks/navigation.json"
+    ))
+    .unwrap();
+    for case in cases.instances {
+        let (mut usage, components) = fixture();
+        let CatalogueUsage::Ready {
+            instances, ranges, ..
+        } = &mut usage
+        else {
+            unreachable!()
+        };
+        let instance = &mut instances[0];
+        instance.id = case.value.clone();
+        instance.key = material::instance_key(&instance.owner, None, &instance.id);
+        ranges[0].target = ComponentRangeTarget::Instance {
+            instance_key: instance.key.clone(),
+        };
+        let rejected = match validate(&usage, EntryKind::Screen, &components) {
+            Ok(()) => false,
+            Err(crate::readers::ReadError::Contract {
+                message: crate::read_contract::ContractViolation::UsageKey,
+                ..
+            }) => true,
+            Err(error) => panic!("unexpected rejection: {error}"),
+        };
+        assert_eq!(rejected, !case.valid, "{}", case.value);
+    }
+}
+
+#[test]
+fn derived_instance_ids_keep_the_component_path_spelling() {
+    let (mut usage, mut components) = fixture();
+    components[0].entry.path = "components/Action_Button".into();
+    let CatalogueUsage::Ready {
+        instances, ranges, ..
+    } = &mut usage
+    else {
+        unreachable!()
+    };
+    let instance = &mut instances[0];
+    instance.component_id = components[0].entry.path.clone();
+    instance.id = "Action_Button".into();
+    instance.key = material::instance_key(&instance.owner, None, &instance.id);
+    ranges[0].target = ComponentRangeTarget::Instance {
+        instance_key: instance.key.clone(),
+    };
+    assert_eq!(
+        validate(&usage, EntryKind::Screen, &components).map_err(|error| error.to_string()),
+        Ok(())
+    );
 }
 
 #[test]
@@ -95,7 +159,7 @@ fn slot_forwarding_cycles_and_missing_input_owners_are_rejected() {
     };
     let mut second = instances[0].clone();
     second.id = "second".into();
-    second.key = material::instance_key(&second.owner, None, &second.id).unwrap();
+    second.key = material::instance_key(&second.owner, None, &second.id);
     second.order = 1;
     ranges.push(ComponentRangeRecord {
         id: "r-1".into(),
@@ -105,8 +169,8 @@ fn slot_forwarding_cycles_and_missing_input_owners_are_rejected() {
         parent_id: None,
     });
     instances.push(second);
-    let first_slot = material::slot_key(&instances[0].key, "content").unwrap();
-    let second_slot = material::slot_key(&instances[1].key, "content").unwrap();
+    let first_slot = material::slot_key(&instances[0].key, "content");
+    let second_slot = material::slot_key(&instances[1].key, "content");
     for (instance, key, earlier) in [
         (&instances[0], &first_slot, &second_slot),
         (&instances[1], &second_slot, &first_slot),
@@ -138,7 +202,7 @@ fn slot_forwarding_cycles_and_missing_input_owners_are_rejected() {
     instances[0].owner = ComponentInputOwner::Instance {
         instance_key: "d".repeat(64),
     };
-    instances[0].key = material::instance_key(&instances[0].owner, None, &instances[0].id).unwrap();
+    instances[0].key = material::instance_key(&instances[0].owner, None, &instances[0].id);
     ranges[0].target = ComponentRangeTarget::Instance {
         instance_key: instances[0].key.clone(),
     };

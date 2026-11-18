@@ -1,6 +1,7 @@
-import type { ComponentInstanceRecord } from "./view_types.js";
+import type { ComponentInstanceRecord } from "@mokly/model";
 
 /** Record-only resolution within one catalogue entry/variant/view scope. */
+
 export type InstanceResolution = "present" | "moved" | "missing";
 
 /** Resolve a previously selected instance using validated records from the same view. */

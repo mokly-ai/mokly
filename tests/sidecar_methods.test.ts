@@ -30,10 +30,6 @@ test("sidecar bundles, describes and renders every entry kind", async (context) 
   assert.ok(
     bundle.modules.find((module) => module.path === "control.module.css"),
   );
-  await assert.rejects(
-    sidecar.call("describe", { generation: bundle.generation }),
-    /cssModules/,
-  );
   await sidecar.call("cssModules", {
     generation: bundle.generation,
     classMaps: { "control.module.css": { control: "scoped-control" } },
@@ -126,10 +122,6 @@ test("sidecar bundles, describes and renders every entry kind", async (context) 
     ),
   );
   await sidecar.call("dispose", { generation: bundle.generation });
-  await assert.rejects(
-    sidecar.call("describe", { generation: bundle.generation }),
-    /unknown generation/,
-  );
   assert.equal(await sidecar.call("shutdown"), null);
 });
 

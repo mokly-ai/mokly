@@ -15,7 +15,11 @@ record carries the detail's content `detailId`.
 | `index`  | A `CatalogueReadModel` object                           | Requires `baseUrl`, the origin root of the catalogue files                          |
 | `detail` | `(entryPath, snapshotId?) => detail, URL, or a promise` | Called once per entry the viewer does not hold; a URL must be on the origin root    |
 
-The viewer validates the index and each detail before it reads a field. An
+The viewer checks the format version of the index and of each detail before it
+reads a field. It does not check their other content, so supply the files that
+Mokly wrote, unchanged. A document that the viewer cannot render, an entry
+detail included, replaces the whole catalogue with its failure state and Try
+again, and `onError` reports it with code `catalogue`. An
 embedded viewer checks `mokly-viewer/deployment.json` only when its index came
 from a URL. It checks with each detail request of an in-shell navigation and
 before a comparison or removed-entry request. An object index does not request
@@ -158,8 +162,8 @@ marker container is pointer-inert; opt an interactive child in with its own
 `pointer-events` style. Geometry stays viewer-owned and is not a host API.
 
 Served and built documents keep the `mokly-instance` and `mokly-slot` comment
-markers of every region the core composed. The published inspector resolves
-instance regions in the live page from them.
+markers of every region the core composed. The frame probe resolves instance
+regions in the live page from them.
 
 ## Live controls
 

@@ -28,9 +28,9 @@ pub(crate) fn entries(
         };
         let previous = pair.before.map(|index| &before.entries[index]);
         let current = pair.after.map(|index| &after.entries[index]);
-        let Some(entry) = current.or(previous) else {
-            continue;
-        };
+        let entry = current
+            .or(previous)
+            .expect("the move detector pairs entries from the union of both catalogues");
         let parent = (kind == ReviewKind::Component)
             .then_some(entry.metadata.variant_of.as_ref())
             .flatten();

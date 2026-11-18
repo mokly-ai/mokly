@@ -10,7 +10,6 @@ use crate::prop_schema::{JsonType, Primitive, PropSchema, Types};
 
 /// User-facing select option.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(deny_unknown_fields)]
 pub struct ControlOption {
     /// Nonempty display label.
     pub label: String,
@@ -36,8 +35,8 @@ pub struct ComponentControl {
 }
 
 /// Control behavior, excluding optionality which comes from the schema.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, Serialize, TS)]
+#[serde(tag = "kind", rename_all = "camelCase")]
 pub enum ControlInput {
     /// String input.
     Text {

@@ -2,6 +2,8 @@
 
 use mokly_catalogue::diagnostic::WarningSubject;
 
+#[path = "support/definitions.rs"]
+mod definitions;
 mod support;
 
 #[test]

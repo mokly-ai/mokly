@@ -6,13 +6,14 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
-use mokly_catalogue::definition_provider::DeferredDefinitions;
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::error::Result;
 use mokly_catalogue::preparation::{Builder, CatalogueBuilder, PreparedCatalogue};
 use mokly_source_interface::error::SourceError;
 use mokly_source_interface::tree::{Child, FileKind, Node, SourceTree};
 use serde_json::{Value, json};
+
+use crate::definitions::EmptyDefinitions;
 
 pub(super) fn prepare(fixture: &Value) -> Result<PreparedCatalogue> {
     let root = Path::new("/repo");
@@ -43,7 +44,7 @@ pub(super) fn prepare(fixture: &Value) -> Result<PreparedCatalogue> {
     let builder: &dyn CatalogueBuilder = &Builder {
         tree: tree.clone(),
         discovery: Arc::new(Discoverer { tree }),
-        definitions: Arc::new(DeferredDefinitions),
+        definitions: Arc::new(EmptyDefinitions),
     };
     builder.prepare(&config, None)
 }

@@ -22,6 +22,12 @@ at the deadline is killed. Diagnostics are forwarded in pieces of at most
 64 KiB of input, split at UTF-8 boundaries. A terminating newline does not
 bypass this bound.
 
+Shutdown, cancellation, and forced termination also stop a
+[return pass](./mokly-sidecar-root-scheduling.md#background-return). After a
+stop starts, the pass starts no process and gives no process back to the
+pool. The stop ends a process that the pass holds, as it ends every other
+sidecar.
+
 A closed parent output pipe or IPC channel ends the sidecar or PostCSS child
 with exit code 0. Late response, operation-count, and diagnostic writes emit
 no crash stack or extra diagnostic. Other output errors remain failures.

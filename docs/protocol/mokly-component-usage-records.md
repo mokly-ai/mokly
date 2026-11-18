@@ -1,12 +1,14 @@
 # Component Usage Records
 
+Status: No receiver checks the usage records of an upload yet. The [receiver read-model validation item](../../plans/follow-ups/receiver-read-model-validation.md) adds that check to Mokly Cloud.
+
 ## Record Shapes
 
 Usage records derive from the ownership regions of the composed trees under
 the [comparison contract](./mokly-comparison.md#tree-model). A view's usage travels as the `usage` of that view in the
 [entry detail](./mokly-shell-delivery.md#entry-detail) and feeds the
 [comparison records](./mokly-component-comparison-records.md). The generated
-[`CatalogueUsage`](../../packages/viewer/src/generated/catalogue/CatalogueUsage.ts)
+[`CatalogueUsage`](../../packages/model/src/generated/catalogue/CatalogueUsage.ts)
 type and the record types that it imports define the shapes.
 
 References are local to one view except `componentId`, which names a
@@ -98,8 +100,9 @@ mobile/light, mobile/dark, desktop/light, desktop/dark. A view with no
 instances has an explicit empty record. In the entry detail a view's `usage`
 is `ready`, `pending`, or `unavailable` and never omitted.
 
-The core's readers reject unknown fields, invalid hashes, missing
-references, cycles, incorrect ordering, duplicate records, invalid source
-locations, and owners absent from the view. The viewer's readers apply the
-same rules but ignore unknown fields, under the
-[serialization contract](./mokly-catalogue-serialization.md#versions).
+A receiver's [upload check](./mokly-upload-validation.md#catalogue-content)
+rejects invalid hashes, missing references, cycles, incorrect ordering,
+duplicate records, invalid source locations, and owners absent from the view.
+It ignores unknown fields, under the
+[serialization contract](./mokly-catalogue-serialization.md#versions). The
+viewer trusts the usage records of a detail of its version.

@@ -1,7 +1,7 @@
 /** Usage adoption for one mounted frame session, including mount completion. */
 
-import type { CatalogueUsage } from "../catalogue/types.js";
-import { FrameError } from "../client/frame_error.js";
+import { FrameError } from "@mokly/frame/internal";
+import type { CatalogueUsage } from "@mokly/model";
 
 import { adoptedFrameReadiness } from "./frame_readiness.js";
 import type {

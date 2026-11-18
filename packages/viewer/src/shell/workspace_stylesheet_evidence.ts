@@ -55,31 +55,10 @@ export function stylesheetEvidence(
     return {
       path,
       outcomes: found.length
-        ? ruleOutcomes(
-            mergeCssAnalysis(found.map(withRules)).rules,
-            wording,
-            ownId,
-          )
+        ? ruleOutcomes(mergeCssAnalysis(found).rules, wording, ownId)
         : [],
     };
   });
-}
-
-/** Keep rule records, or rebuild one unkeyed record from a bare summary. */
-function withRules(analysis: DependencyAnalysis): DependencyAnalysis {
-  return analysis.rules.length
-    ? analysis
-    : {
-        ...analysis,
-        rules: [
-          {
-            status: analysis.status,
-            selectors: analysis.selectors,
-            changedComponentPaths: [],
-            pageSelectors: [],
-          },
-        ],
-      };
 }
 
 /**

@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use mokly_html::error::HtmlError;
+use mokly_html::error::{self, HtmlError};
 use mokly_model::catalogue::EntryContent;
 use mokly_model::controls;
 use mokly_model::data::Props;
@@ -12,7 +12,7 @@ use mokly_model::validation::PropValidator;
 use crate::cache::Artifact;
 use crate::closure::{Closure, ClosureBuilder};
 use crate::document_composition;
-use crate::error::{GraphError, InternalError, Result, invalid};
+use crate::error::{GraphError, Result, invalid};
 use crate::session::Session;
 use crate::session_render::with_closure_warnings;
 use crate::types::TemporaryDocument;
@@ -71,34 +71,27 @@ impl ArtifactWorker for PropsJob<'_> {
                 AuthoringKind::Html
             },
         };
-        let schema = match serde_json::to_value(&visual.prop_schema) {
-            Ok(value) => value,
-            Err(source) => return Err(InternalError::Json { source }.into()),
-        };
-        let props = match serde_json::to_value(self.props) {
-            Ok(value) => value,
-            Err(source) => return Err(InternalError::Json { source }.into()),
-        };
-        let validator = match PropValidator::compile(&schema, &context) {
-            Ok(validator) => validator,
-            Err(source) => {
-                return Err(GraphError::Html {
-                    source: HtmlError::Props { source },
-                });
-            }
-        };
+        let props =
+            serde_json::to_value(self.props).expect("props contain only JSON data and string keys");
+        let validator = self
+            .session
+            .state
+            .catalogue
+            .prop_validators
+            .get(&entry.metadata.path)
+            .ok_or_else(|| GraphError::Html {
+                source: HtmlError::Internal(error::InternalError::MissingPropValidator {
+                    entry: entry.metadata.path.clone(),
+                }),
+            })?;
         if let Err(source) = validator.validate(&props, &context) {
             return Err(GraphError::Html {
                 source: HtmlError::Props { source },
             });
         }
-        let schema = match serde_json::to_value(controls::with_bounds(
-            &visual.prop_schema,
-            &visual.controls,
-        )) {
-            Ok(value) => value,
-            Err(source) => return Err(InternalError::Json { source }.into()),
-        };
+        let schema =
+            serde_json::to_value(controls::with_bounds(&visual.prop_schema, &visual.controls))
+                .expect("control bounds preserve the JSON prop schema types");
         let validator = match PropValidator::compile(&schema, &context) {
             Ok(validator) => validator,
             Err(source) => {
@@ -126,7 +119,7 @@ impl ArtifactWorker for PropsJob<'_> {
         let document = artifact
             .document
             .as_ref()
-            .ok_or_else(|| invalid(route, "temporary document has no tree"))?;
+            .expect("temporary document artifacts carry their composed tree");
         validation::links(self.session, &document.links)?;
         self.session
             .preview_walker()
@@ -148,7 +141,7 @@ impl ArtifactWorker for Rendered<'_> {
             .artifact
             .document
             .as_ref()
-            .ok_or_else(|| invalid(route, "temporary document has no tree"))?;
+            .expect("temporary document artifacts carry their composed tree");
         validation::links(self.session, &document.links)?;
         self.session
             .preview_walker()

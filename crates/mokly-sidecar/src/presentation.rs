@@ -22,14 +22,6 @@ impl Error {
                 RuntimeCode::Render,
                 "sidecar exited during a request".into(),
             ),
-            Self::UnknownGeneration { generation } => (
-                RuntimeCode::Bundle,
-                format!("unknown generation {generation}"),
-            ),
-            Self::GenerationChanged { generation } => (
-                RuntimeCode::Bundle,
-                format!("generation {generation} changed while reloading"),
-            ),
             Self::RequestTimeout {
                 call,
                 deadline_ms,
@@ -66,7 +58,7 @@ impl Error {
                     _ => message.clone(),
                 },
             ),
-            Self::Internal(_) => return None,
+            Self::HeadReturnDisabled { .. } | Self::Internal(_) => return None,
         };
         Some(RuntimeDiagnostic { code, message })
     }

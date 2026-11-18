@@ -134,9 +134,9 @@ error, not a fourth resolution state.
 
 An instance record may carry its invocation site in its optional `source`
 field. The generated
-[`ComponentInstanceRecord`](../../packages/viewer/src/generated/catalogue/ComponentInstanceRecord.ts)
+[`ComponentInstanceRecord`](../../packages/model/src/generated/catalogue/ComponentInstanceRecord.ts)
 and
-[`ComponentSourceLocation`](../../packages/viewer/src/generated/catalogue/ComponentSourceLocation.ts)
+[`ComponentSourceLocation`](../../packages/model/src/generated/catalogue/ComponentSourceLocation.ts)
 types are the shapes.
 
 `path` is a nonempty repository-relative POSIX path to the invocation site,
@@ -173,8 +173,8 @@ no marker. For a sidecar render, the fragment carries each instance as a
 `mokly-instance` comment pair and each supplied slot as a `mokly-slot` pair;
 the core reads them into regions when it grafts the fragment and writes the
 same pairs around every composed region, HTML components included. Served and
-built documents keep those markers, so the inspector resolves each region in
-the live page. Region ids `r-n` are allocated in
+built documents keep those markers, so the [frame probe](./mokly-frame-probe.md)
+resolves each region in the live page. Region ids `r-n` are allocated in
 document order and recorded in the view's usage with each region's parent.
 
 Every instance of a view has at least one region. Slot content that a

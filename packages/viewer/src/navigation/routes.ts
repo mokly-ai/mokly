@@ -1,7 +1,7 @@
-import { generatedResourcePath } from "../catalogue/delivery_paths.js";
-import type { ColorScheme, Viewport } from "../data/axes.js";
+import { isEntryPath, isSafeRepositoryPath } from "@mokly/model";
+import type { ColorScheme, Viewport } from "@mokly/model";
 
-import { isEntryPath, isSafeRepositoryPath } from "./logical.js";
+import { generatedResourcePath } from "../catalogue/delivery_paths.js";
 
 /** Entry kinds with canonical catalogue documents. */
 export type EntryRouteKind =

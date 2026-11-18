@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import type { EntryDetailV4 } from "../../packages/viewer/dist/catalogue/types.js";
+import type { EntryDetailV4 } from "../../packages/model/dist/index.js";
 import type { ReviewView } from "../../packages/viewer/dist/review/types.js";
 import type { RemovedPreviewData } from "../../packages/viewer/dist/shell/previews.js";
 
@@ -26,20 +26,17 @@ export const pagePath = `mokly-viewer/diffs/generations/${GENERATION}/previews/r
 /** The removed detail address of screen `removed-screen` inside the generation. */
 export const screenPath = `mokly-viewer/diffs/generations/${GENERATION}/entries/removed-screen.json`;
 
-/**
- * The entry detail v4 of a removed screen with these captured views, which
- * names this snapshot id and, by default, the screen `removed-screen`.
- */
-export function removedDetail(
-  views: ReviewView[],
-  snapshotId = "e".repeat(64),
-  path = "removed-screen",
-): EntryDetailV4 {
+/** The entry detail v4 of the removed screen `removed-screen` with these captured views. */
+export function removedDetail(views: ReviewView[]): EntryDetailV4 {
   return {
     schemaVersion: 4,
     identity: { id: "c".repeat(64), title: "Mokly" },
     detailId: "d".repeat(64),
-    entry: { kind: "screen", path, snapshotId },
+    entry: {
+      kind: "screen",
+      path: "removed-screen",
+      snapshotId: "e".repeat(64),
+    },
     reasons: [{ kind: "removed" }],
     views: views.map((view) => ({
       ...view,

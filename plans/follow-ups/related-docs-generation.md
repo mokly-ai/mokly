@@ -9,7 +9,7 @@
   `crates/mokly-compare/src/projection_removed.rs:19`,
   `crates/mokly-compare/src/entry_metadata.rs:104`,
   `docs/protocol/mokly-documents.md:181` and `:184`, and
-  `packages/viewer/src/catalogue/references.ts:101`.
+  `packages/viewer/src/shell/details_rows.tsx:51`.
 - **Reason:** The status-line sweep of 2026-10-26 changed only documentation,
   so it left this code gap for a separate branch.
 
@@ -27,9 +27,8 @@
   - `docs/protocol/mokly-documents.md:181` says that when an entry's
     `relatedDocs` path names a current document, the index carries
     `mock:{document path}` in its `details.relatedDocs`.
-  - The same page says at line 184: "Other paths stay display labels, and
-    removed entries keep the base side's labels. Readers validate the logical
-    reference against current documents."
+  - The same page keeps other paths as display labels and preserves the base
+    side's labels for removed entries.
   - The viewer's Related docs row links each reference to the document and
     labels it with the document's title.
     `docs/protocol/mokly-catalogue-delivery.md` states the same rule. Both
@@ -42,17 +41,16 @@
   - The retained base snapshot keeps each removed entry's authored labels in
     `related_docs`, at `crates/mokly-model/src/snapshot_records.rs:32`, from
     the base model at `crates/mokly-compare/src/snapshots.rs:131`.
-  - The viewer checks each `mock:` link of current and removed records
-    against the current documents, at `references.ts:101`. A failed check
-    rejects the whole index.
+  - The viewer resolves each current reference against current documents in
+    `details_rows.tsx:79`. A missing target stays a plain label. Removed
+    entries keep plain labels.
 - **Problem:** `projection_records::metadata` copies authored labels
   unchanged, and only `entry_metadata.rs` resolves them for change detection.
-  A naive mapping in shared `projection::index` also gives removed records
-  references to base documents. The viewer rejects such a reference when its
-  document is not current.
+  A naive mapping in shared `projection::index` also replaces removed records'
+  authored labels with references to base documents.
 - **Impact if no action:** The row shows raw paths, and two protocol pages
-  keep status lines. An unguarded fix can make the viewer reject an index
-  while the Rust build accepts it.
+  keep status lines. An unguarded fix can replace removed entries' authored
+  labels with unresolved references.
 - **Root question:** How should the catalogue index tell the viewer which
   related documents are catalogue documents?
 - **Options:**
@@ -62,7 +60,7 @@
     removed records in `crates/mokly-compare/src/projection_removed.rs`.
     Restore them from the retained snapshot through a match over the five
     record kinds, because `CatalogueRecord` has no details accessor. Remove
-    both status lines. Review current and removed records together, including viewer validation of their references. Effort: Small.
+    both status lines. Check current and removed records together, including their Related docs rows. Effort: Small.
   - **B.** Keep display labels only, and remove the reference rule from
     both protocol pages. This drops a requirement. Effort: Small.
   - **C.** Apply A through one shared resolver that the index projection and

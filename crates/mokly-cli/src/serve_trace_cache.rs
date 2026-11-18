@@ -20,6 +20,14 @@ pub(super) fn counts(start: &CacheStats, end: &CacheStats) -> Map<String, Value>
     Map::from_iter([
         ("hits".into(), json!(end.hits.saturating_sub(start.hits))),
         (
+            "restores".into(),
+            json!(end.restores.saturating_sub(start.restores)),
+        ),
+        (
+            "restoreFailures".into(),
+            json!(end.restore_failures.saturating_sub(start.restore_failures)),
+        ),
+        (
             "misses".into(),
             json!(end.misses.saturating_sub(start.misses)),
         ),

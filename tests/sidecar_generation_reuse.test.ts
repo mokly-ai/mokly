@@ -38,7 +38,6 @@ test("evaluation-only bundles share compilation and fresh workers restore captur
     evaluation: "old",
   });
   const old = await first.call<BundleResult>("bundle", params);
-  assert.ok(old.compiled);
   await first.call("cssModules", {
     generation: old.generation,
     classMaps: { "card.module.css": { card: "old" } },
@@ -49,7 +48,7 @@ test("evaluation-only bundles share compilation and fresh workers restore captur
     evaluation: "new",
   });
   assert.notEqual(changed.generation, old.generation);
-  assert.equal(changed.compiled?.identity, old.compiled.identity);
+  assert.equal(changed.compiled.identity, old.compiled.identity);
   assert.equal(
     first.operations.filter((event) => event.operation === "esbuild").length,
     1,

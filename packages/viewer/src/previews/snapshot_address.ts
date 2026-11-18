@@ -6,21 +6,6 @@ export type SnapshotSide = "after" | "before";
 /** The non-empty snapshot-side set configured for one loader. */
 export type SnapshotSides = readonly [SnapshotSide, ...SnapshotSide[]];
 
-/** Validate and deduplicate the loader's configured snapshot sides. */
-export function snapshotSideSet(
-  sides: SnapshotSides,
-): ReadonlySet<SnapshotSide> {
-  if (sides.length === 0)
-    throw new TypeError("A loader requires at least one snapshot side.");
-  const result = new Set<SnapshotSide>();
-  for (const side of sides) {
-    if (side !== "after" && side !== "before")
-      throw new TypeError("A loader received an unsupported snapshot side.");
-    result.add(side);
-  }
-  return result;
-}
-
 /** Resolve and validate the one immutable generation owned by a loader. */
 export function snapshotGeneration(
   value: string | URL,

@@ -60,7 +60,7 @@ pub enum DefinitionCode {
 
 /// One failure attributed to its module and optional export.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct DefinitionDiagnostic {
     /// Exact authoring diagnostic category.
     pub code: DefinitionCode,

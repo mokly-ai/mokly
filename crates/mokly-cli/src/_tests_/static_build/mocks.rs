@@ -75,7 +75,6 @@ pub(super) fn mocks_with_cancellation(
                             } else {
                                 vec![]
                             },
-                            deferred_modules: vec![],
                         },
                     })
                 })),

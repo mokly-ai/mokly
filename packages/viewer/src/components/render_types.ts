@@ -1,7 +1,6 @@
 /** The private Serve render route of the controls contract; never catalogue data. */
 
-import type { CatalogueUsage } from "../catalogue/types.js";
-import type { ColorScheme, Viewport } from "../data/axes.js";
+import type { CatalogueUsage, ColorScheme, Viewport } from "@mokly/model";
 
 import type { ComponentWireProps, PropValue } from "./prop_types.js";
 

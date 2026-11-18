@@ -6,9 +6,9 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import type { EntryDetailV4 } from "../packages/model/dist/index.js";
 import { platformPackage } from "../packages/mokly/src/platform.mjs";
 import { systemRuntime } from "../packages/mokly/src/runtime.mjs";
-import type { EntryDetailV4 } from "../packages/viewer/src/generated/catalogue/EntryDetailV4.js";
 import { prepareFixture } from "../scripts/large/setup.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";

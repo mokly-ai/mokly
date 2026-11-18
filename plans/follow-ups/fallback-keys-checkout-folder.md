@@ -5,7 +5,7 @@
 - **Added:** 2026-11-01, from review round 1, finding 1, of the branch
   `conductor/rust-rebuild-133-folder-keys`. The final call split the
   finding: that branch applied option D, and this item holds option A.
-- **Location:** `crates/mokly-graph/src/render_inputs.rs:131`,
+- **Location:** `crates/mokly-graph/src/render_inputs.rs:155`,
   `crates/mokly-render/src/graph.rs:126`,
   `packages/mokly/src/sidecar/bundle-recipe.ts:109`,
   `crates/mokly-graph/src/graph.rs:268`,
@@ -44,12 +44,12 @@
     keys, and their builds give the same `deploymentId`. The status line of
     that page links this item.
   - `RenderKeys::build` in `crates/mokly-graph/src/render_inputs.rs` gives
-    each entry module its own render input key. Lines 101 to 108 and 131 to
-    135 skip a stories file when a preview exists that the module graph does
+    each entry module its own render input key. Lines 101 to 108 and 155 to
+    159 skip a stories file when a preview exists that the module graph does
     not name. They skip every other entry module when the graph does not
     name the configured renderer. These modules use the fallback key, as
     `docs/protocol/mokly-watch.md:80-82` requires.
-  - `PREVIEWS`, at `render_inputs.rs:17`, lists only `.storybook/preview.*`
+  - `PREVIEWS`, at `render_inputs.rs:19`, lists only `.storybook/preview.*`
     names. The module graph names each module by its real path. When
     `.storybook` is a symbolic link to an in-repository folder, such as
     `storybook`, the graph names `storybook/preview.tsx`, so the preview is

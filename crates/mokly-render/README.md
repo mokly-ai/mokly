@@ -17,8 +17,8 @@ JavaScript or mixed catalogue. HTML composition stays in `mokly-html`.
 ## What This Crate Does
 
 `Runtime` implements `DefinitionProvider` and `GraphFactory`. The CLI injects
-its source readers, sidecar pool, worker scheduler, and byte-bounded render
-cache. Construction starts no sidecar. Description is serialized across clones of one
+its source readers, physical input reader, sidecar pool, worker scheduler, and
+byte-bounded render cache. Construction starts no sidecar. Description is serialized across clones of one
 runtime. Each attempt has fresh source and dependency snapshots. An HTML-only catalogue with no renderer has
 no bundle, class-map exchange, description, or render request. A configured
 renderer is bundled and inventoried even without JavaScript entries. Consumer PostCSS can run
@@ -85,6 +85,26 @@ cache cleanup without waiting for worker requests or the PostCSS cache lock.
 Failed candidates release their own contexts. Bundle metadata stamps include
 resolved React manifests, ancestor package and tsconfig candidates, absent
 Storybook previews, and file membership in consumed-module directories.
+Bundle reuse also reads the captured reuse evidence of the compiled recipe
+again through the injected `PhysicalInputs` reader, outside the side tree. A
+read error rejects reuse, also for a recorded absence. Incomplete evidence
+never permits reuse, with one exception in the Serve edit capture mode: a
+retained state with a toolchain identity whose evidence holds only the
+`uncaptured` marker is reused while its module digests and metadata stamps
+stay current. A captured state is tried before a marked one.
+Each core `bundle` request runs in a `catalogue.bundle` span, which records the
+`cache` outcome that the pool sets on the result. The request carries the
+`capture` mode of the runtime: `full` by default, and `serveEdit` for each
+Serve head preparation after the first published state. A `BundleLease` owns
+the lifetime epoch of each result from its return. When the core serves a
+retained evaluated state without a `bundle` request in the `full` mode, it
+sends the pool the served-generation notice with the id and the epoch of that
+state. The pool can then store that compilation in the bundle cache. Only that
+direct return of a retained state sends the notice. The `serveEdit` mode sends
+no notice. The head runtime of Serve also keeps the plan records of the
+[Serve edit plan rules](../../docs/protocol/mokly-sidecar-plans.md). It keeps
+a record from a `full` result, and it sends the plan of a current record with
+each `serveEdit` request.
 The pool restores compatible code before evaluation-only bundles across slots
 and recycling. It gives each loaded lifetime an epoch. A stale process replays
 maps, describe, and bindings before rendering. Metadata invalidation still recomputes class maps before reusing
@@ -163,16 +183,19 @@ without splitting the delivered CSS text or changing its style-block grouping.
 
 ## Quick Start
 
-The composition root builds one `Runtime` and consumes it through both
-factory traits:
+The composition root builds one `Runtime` with the shared render cache and
+consumes it through both factory traits. See the
+[`mokly-graph` construction example](../mokly-graph/README.md#quick-start)
+to create the cache:
 
 ```rust
 use std::sync::Arc;
 
 use mokly_catalogue::definition_provider::DefinitionProvider;
-use mokly_graph::cache::MemoryCache;
+use mokly_graph::cache::RenderCache;
 use mokly_graph::types::GraphFactory;
 use mokly_graph::workers::RenderWorkers;
+use mokly_render::physical_inputs::SystemPhysicalInputs;
 use mokly_render::runtime::Runtime;
 use mokly_sidecar::pool::SidecarPool;
 use mokly_source_interface::tree::SourceTree;
@@ -180,14 +203,16 @@ use mokly_source_interface::tree::SourceTree;
 fn services(
     tree: Arc<dyn SourceTree>,
     pool: Arc<dyn SidecarPool>,
+    cache: Arc<dyn RenderCache>,
     workers: Arc<dyn RenderWorkers>,
     version: String,
 ) -> (Arc<dyn DefinitionProvider>, Arc<dyn GraphFactory>) {
     let runtime = Arc::new(Runtime::new(
         tree.clone(),
         tree,
+        Arc::new(SystemPhysicalInputs),
         pool,
-        Arc::new(MemoryCache::new(256 * 1024 * 1024)),
+        cache,
         workers,
         version,
         None,
@@ -222,7 +247,24 @@ view after the edit and counts real process starts and hello calls.
 
 - [`src/runtime.rs`](./src/runtime.rs) defines `Runtime`, which implements
   `DefinitionProvider` and `GraphFactory` over the injected source readers,
-  sidecar pool, workers, and render cache.
+  physical input reader, sidecar pool, workers, and render cache. Its
+  `bundle_capture` field holds the `BundleCapture` of each core `bundle`
+  request: `Full` by default, and `ServeEdit` when Serve prepares its head
+  after the first published state. `Runtime::with_serve_edit_plans` gives
+  the head runtime of Serve its plan record owner. A base runtime never gets
+  one.
+- [`src/edit_plans.rs`](./src/edit_plans.rs) defines `Records`, the plan
+  record owner of a Serve head, and `Record`, which pairs a `ResolutionPlan`
+  with the `ReuseEvidence` of its compilation. `Records::insert` keeps only
+  captured and durable evidence, replaces the record of equal settings, and
+  removes the oldest records to keep the serialized total within
+  `RECORD_BYTES`. A record that it cannot keep leaves the older record in
+  place.
+- [`src/physical_inputs.rs`](./src/physical_inputs.rs) defines
+  `PhysicalInputs`, the reader that checks the captured reuse evidence of a
+  compiled recipe outside the side tree, and `SystemPhysicalInputs`, its
+  filesystem implementation. Its `current` check rejects marked evidence. It
+  does not read the `durable` flag of the evidence.
 - [`src/side.rs`](./src/side.rs) defines `BaseSide`, the leased base
   extraction and dependency selection of a historical render.
 - [`src/dependency_usage.rs`](./src/dependency_usage.rs) defines
@@ -233,10 +275,23 @@ view after the edit and counts real process starts and hello calls.
 - [`src/graph.rs`](./src/graph.rs) resolves bindings before both sides use the
   same composition path.
 - [`src/bundle.rs`](./src/bundle.rs) bundles only changed JavaScript and
-  isolates class maps across retained graphs.
+  isolates class maps across retained graphs. It sends the served-generation
+  notice only at its direct return of a retained state. Its `BundleState`
+  shares the reuse evidence of the actual result through an `Arc` and keeps
+  its toolchain identity. It tries retained states with captured evidence
+  first, and it admits a marked state only in the `ServeEdit` mode.
+- [`src/bundle_attempt.rs`](./src/bundle_attempt.rs) sends each core `bundle`
+  request with the `capture` mode of the runtime in its `catalogue.bundle`
+  span, gives each result's lifetime epoch to a `BundleLease`, and sends the
+  served-generation notice after a core reuse, only in the `Full` mode.
+  Before a `ServeEdit` request of a head runtime, it sends the plan of a
+  record whose evidence `physical_inputs::current` accepts. It offers each
+  `Full` result with a plan and a toolchain identity to `Records`.
 - [`src/render_environment.rs`](./src/render_environment.rs) derives the inputs
   that every render input key of one side shares, and names their paths
   without the checkout folder.
+- [`src/transport_values.rs`](./src/transport_values.rs) maps typed sidecar
+  props, controls, owners, and source coordinates into catalogue records.
 - [`src/postcss.rs`](./src/postcss.rs) runs consumer PostCSS in an explicit
   side-specific context before scoping.
 - [`src/stylesheet_cache.rs`](./src/stylesheet_cache.rs) defines
@@ -250,6 +305,8 @@ view after the edit and counts real process starts and hello calls.
 ### Related Docs
 
 - [Sidecar protocol](../../docs/protocol/mokly-sidecar.md).
+- [Compiled recipes and reuse](../../docs/protocol/mokly-sidecar-recipes.md).
+- [Serve edit plans](../../docs/protocol/mokly-sidecar-plans.md).
 - [Render records](../../docs/protocol/mokly-sidecar-render-records.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).
 - [PostCSS contexts and evidence](../../docs/protocol/mokly-sidecar-postcss.md).

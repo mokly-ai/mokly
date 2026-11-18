@@ -9,9 +9,9 @@ use mokly_model::public_detail::EntryDetailV4;
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::routes;
 use mokly_model::usage::CatalogueUsage;
-use mokly_model::usage_schemas::UsageSchemas;
 
-use crate::detail_encoding::{DetailEncoder, detail_id};
+use crate::detail_encoding::DetailEncoder;
+use crate::detail_publication::{PublicationKind, RecentDetails, equivalent};
 use crate::error::Result;
 use crate::evidence::Completion;
 use crate::revision_file::RevisionFile;
@@ -68,44 +68,27 @@ pub(crate) fn reuse_usage(
 }
 
 pub(crate) fn encode_details(
-    mut details: BTreeMap<String, EntryDetailV4>,
+    details: BTreeMap<String, EntryDetailV4>,
     index: &mut CatalogueReadModel,
     previous: Option<&Snapshot>,
+    recent: &mut RecentDetails,
     files: &mut BTreeMap<String, RevisionFile>,
     encoder: &dyn DetailEncoder,
 ) -> Result<BTreeMap<String, Arc<EntryDetailV4>>> {
     let mut result = BTreeMap::new();
-    for (path, detail) in details.iter_mut() {
-        if let Some(previous) = previous
-            && let Some(old) = previous.details.get(path)
-        {
-            detail.revision = old.revision;
-            detail.detail_id = old.detail_id.clone();
-            if detail != old.as_ref() {
-                detail.revision = Some(index.revision);
-                detail.detail_id = detail_id(detail)?;
-            }
-        } else {
-            detail.revision = Some(index.revision);
-            detail.detail_id = detail_id(detail)?;
-        }
-        mokly_model::projection::set_detail_id(index, path, &detail.detail_id);
-    }
-    let mut schemas = UsageSchemas::new(&index.components);
+    recent.retain_paths(&details);
     for (path, mut detail) in details {
         let route = viewer(&format!("entries/{path}.json"));
-        if let Some(previous) = previous
-            && let (Some(old), Some(bytes)) =
-                (previous.details.get(&path), previous.files.get(&route))
-            && detail == **old
-        {
-            files.insert(route, bytes.clone());
-            result.insert(path, old.clone());
-            continue;
-        }
-        detail.revision = Some(index.revision);
-        files.insert(route, encoder.encode(&detail, index, &mut schemas)?);
-        result.insert(path, Arc::new(detail));
+        let adjacent = previous
+            .and_then(|previous| previous.details.get(&path).zip(previous.files.get(&route)));
+        detail.revision = adjacent
+            .filter(|(old, _)| equivalent(&detail, old))
+            .map_or(Some(index.revision), |(old, _)| old.revision);
+        let mut detail = Arc::new(detail);
+        let file = recent.publish(PublicationKind::Rebuild, &mut detail, adjacent, encoder)?;
+        mokly_model::projection::set_detail_id(index, &path, &detail.detail_id);
+        files.insert(route, file);
+        result.insert(path, detail);
     }
     Ok(result)
 }

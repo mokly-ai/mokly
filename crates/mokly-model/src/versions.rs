@@ -12,8 +12,8 @@ pub const REVIEW_RESULT: u32 = 8;
 pub const CHANGE_SNAPSHOT: u32 = 4;
 /// Live render capability descriptor version.
 pub const LIVE_DESCRIPTOR: u32 = 3;
-/// Inspector message envelope version.
-pub const INSPECTOR_WIRE: u32 = 2;
+/// Frame probe message envelope version.
+pub const FRAME_PROBE_WIRE: u32 = 3;
 /// Removed page and document metadata version.
 pub const REMOVED_PREVIEW: u32 = 3;
 /// Static output ownership version.

@@ -2,8 +2,8 @@
 import { expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
+import type { CatalogueReadModel } from "../../packages/model/dist/index.js";
 import { readCatalogueIndex } from "../../packages/viewer/src/catalogue/index_reader.js";
-import type { CatalogueReadModel } from "../../packages/viewer/src/catalogue/types.js";
 
 export type Publication = Pick<
   CatalogueReadModel,

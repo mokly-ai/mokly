@@ -10,7 +10,6 @@ use bytes::Bytes;
 use flate2::read::GzDecoder;
 use futures_util::future::BoxFuture;
 use mokly_model::output::artifact::Artifact;
-use mokly_model::output::upload::UploadMetadata;
 use mokly_model::output::validation::{MANIFEST, MARKER};
 use mokly_publish::completion::Outcome;
 use mokly_publish::exchange::{Client, Exchange};
@@ -50,15 +49,7 @@ fn file(path: &str, bytes: &[u8]) -> mokly_model::output::artifact::File {
 
 fn prepared() -> (Prepared, BTreeMap<String, Bytes>, Artifact) {
     let base = artifact(PathBuf::from("/unused/frozen"), true);
-    let metadata = UploadMetadata::parse(
-        &base
-            .files
-            .iter()
-            .find(|file| file.path == MANIFEST)
-            .unwrap()
-            .bytes,
-    )
-    .unwrap();
+    let metadata = base.metadata.clone().unwrap();
     let compressible: Bytes = vec![b'a'; 8192].into();
     let mut state = 0x1234_5678_u32;
     let mut random = Vec::with_capacity(8192);

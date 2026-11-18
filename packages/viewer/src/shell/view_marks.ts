@@ -5,9 +5,10 @@
 // viewport or scheme changes, so every render agrees without a second state
 // channel.
 
-import type { ColorScheme, Viewport } from "../data/axes.js";
+import type { ColorScheme, Viewport } from "@mokly/model";
 
 /** One generated view of an entry, named by its viewport and color scheme. */
+
 export interface ChangedView {
   colorScheme: ColorScheme;
   viewport: Viewport;

@@ -5,7 +5,7 @@ use ts_rs::TS;
 
 /// API-generated placement, captured before consumer HTML is interpreted.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct MarkerDraft {
     /// Fragment-local marker id.
     pub id: String,
@@ -19,7 +19,7 @@ pub struct MarkerDraft {
 
 /// A consumer comment cannot create any of these operations.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
+#[serde(tag = "kind", rename_all = "camelCase")]
 pub enum MarkerPayload {
     /// Adapter output before the consumer renderer adds wrappers.
     Output,
@@ -49,7 +49,6 @@ pub enum MarkerPayload {
 
 /// One collected rule list, with construction-proved component owners.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(deny_unknown_fields)]
 pub struct CollectedStyle {
     /// Rendered CSS text.
     pub css: String,
@@ -63,7 +62,6 @@ pub struct CollectedStyle {
 
 /// Rendered rule bytes and the components whose renders used them.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(deny_unknown_fields)]
 pub struct StyleAttribution {
     /// CSS emitted by the adapter for this rule identity.
     pub css: String,

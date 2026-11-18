@@ -16,7 +16,7 @@ export function registerComponentInspector(
   });
   const unexpectedDesignScripts = () =>
     mode === "static"
-      ? 'script:not([src="/mokly-viewer/client/inspector.js"])'
+      ? 'script:not([src="/mokly-viewer/client/frame-probe.js"])'
       : servedScripts();
   const { componentDesignUrl } = componentDesignFixture(
     test,

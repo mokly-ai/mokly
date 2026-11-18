@@ -21,7 +21,6 @@ fn comparison(entry: EntryClassification) -> ComparisonResult {
     ComparisonResult {
         resource_work: Default::default(),
         affected_lookups: 0,
-        validation_lookups: 0,
         warnings: vec![],
         review: ReviewResultV8 {
             schema_version: 8,
@@ -168,7 +167,7 @@ fn viewed_details() -> std::collections::BTreeMap<String, EntryDetailV4> {
         color_scheme: ColorScheme::Light,
         key: "a".repeat(64),
     }];
-    let index = projection::index(&catalogue, &keys, &state).unwrap();
+    let index = projection::index(&catalogue, &keys, &state);
     projection::pending_details(&catalogue, &index, &keys)
 }
 

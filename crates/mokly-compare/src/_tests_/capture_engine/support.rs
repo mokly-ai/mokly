@@ -150,9 +150,10 @@ pub(super) fn generation(
         documents: BTreeMap::new(),
         slot_fragments: BTreeMap::new(),
         elements: BTreeMap::new(),
+        prop_validators: Default::default(),
         javascript: Default::default(),
         dependency_directories: Default::default(),
-        deferred_modules: vec![],
+
         warnings: vec![],
     };
     let routes = resources
@@ -245,7 +246,13 @@ pub(super) fn generation(
         .each_call(matching!())
         .answers(&|_| Ok(()));
     if side == "head" {
-        Arc::new(Unimock::new((common, validation, render, read)))
+        Arc::new(Unimock::new((
+            common,
+            validation,
+            render,
+            read,
+            cancellation,
+        )))
     } else if capture {
         Arc::new(Unimock::new((
             common,

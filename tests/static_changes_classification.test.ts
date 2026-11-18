@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import type { EntryDetailV4 } from "../packages/viewer/src/generated/catalogue/EntryDetailV4.js";
+import type { EntryDetailV4 } from "../packages/model/dist/index.js";
 
 import { build, git, json, screen, write } from "./helpers/static_changes.js";
 import { publicationFixture } from "./helpers/static_publication.js";

@@ -33,7 +33,6 @@ fn ready(warnings: Vec<Warning>) -> ComparisonResult {
     ComparisonResult {
         resource_work: Default::default(),
         affected_lookups: 0,
-        validation_lookups: 0,
         warnings,
         review: ReviewResultV8 {
             schema_version: 8,

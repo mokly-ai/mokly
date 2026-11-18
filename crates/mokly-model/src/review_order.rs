@@ -2,13 +2,12 @@
 
 use crate::axes::{ColorScheme, Viewport};
 use crate::canonical::{compare_utf16, to_string};
-use crate::error::Result;
 use crate::evidence::{EvidenceOwner, ResourceEvidence, RuleEvidence, RuleStatus};
 use crate::review::{EntryChangeReason, ReviewEntry, ReviewResultV8};
 use crate::review_affected::{AffectedConsumer, AffectedUsageEvidence, ConsumerKind, ReviewSide};
 
 /// Normalize a producer result. Readers compare the supplied order instead.
-pub fn normalize(result: &mut ReviewResultV8) -> Result<()> {
+pub fn normalize(result: &mut ReviewResultV8) {
     result
         .entries
         .sort_by(|left, right| (left.kind, &left.path).cmp(&(right.kind, &right.path)));
@@ -19,13 +18,12 @@ pub fn normalize(result: &mut ReviewResultV8) -> Result<()> {
     for affected in &mut result.affected {
         let mut keyed = Vec::new();
         for evidence in std::mem::take(&mut affected.evidence) {
-            keyed.push((usage_key(&evidence)?, evidence));
+            keyed.push((usage_key(&evidence), evidence));
         }
         keyed.sort_by(|left, right| left.0.cmp(&right.0));
         keyed.dedup_by(|left, right| left.0 == right.0);
         affected.evidence = keyed.into_iter().map(|(_, evidence)| evidence).collect();
     }
-    Ok(())
 }
 
 fn entry_order(entry: &mut ReviewEntry) {
@@ -116,15 +114,18 @@ pub type UsageOrderKey = (
 );
 
 /// Canonical usage order includes the complete ordered ownership chain.
-pub fn usage_key(evidence: &AffectedUsageEvidence) -> Result<UsageOrderKey> {
-    Ok((
+pub fn usage_key(evidence: &AffectedUsageEvidence) -> UsageOrderKey {
+    (
         evidence.side,
         evidence.context.kind,
         utf16(&evidence.context.entry.path),
         evidence.context.viewport,
         evidence.context.color_scheme,
-        utf16(&to_string(&evidence.via)?),
-    ))
+        utf16(
+            &to_string(&evidence.via)
+                .expect("affected usage chains contain only typed JSON fields and string keys"),
+        ),
+    )
 }
 
 fn utf16(value: &str) -> Vec<u16> {

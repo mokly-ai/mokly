@@ -5,7 +5,8 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use mokly_catalogue::config::relative;
-use mokly_catalogue::config_types::ResolvedConfig;
+use mokly_catalogue::config_types::{ModuleLoader, ResolvedConfig};
+use mokly_compare::base_freshness::DependencySelection;
 use mokly_compare::base_render::BaseRequest;
 use mokly_compare::cache::DiskCache;
 use mokly_compare::cache_types::{Cache, Lease, Reporter, Storage};
@@ -13,7 +14,7 @@ use mokly_compare::commands::TimedCommands;
 use mokly_compare::comparison_steps::StepCache;
 use mokly_compare::dependencies::{Dependencies, DependencyTiers};
 use mokly_compare::dependency_types::{Request, Tier};
-use mokly_compare::error::{Error, InternalError, Result};
+use mokly_compare::error::{Error, Result};
 use mokly_compare::extraction::{CachedExtraction, Extraction};
 use mokly_compare::inputs::{InputReader, SourceInputs};
 use mokly_compare::locations::{Locations, SystemLocations};
@@ -29,6 +30,8 @@ use mokly_platform::processes::SystemProcessGroups;
 use mokly_render::side::BaseSide;
 use mokly_sidecar::methods::ModuleResolution;
 
+use crate::changes_freshness::{PreparedDependencies, SelectionRequest};
+
 #[cfg_attr(test, unimock::unimock(api = BaseDependenciesMock))]
 pub(super) trait BaseDependencies: Send + Sync {
     /// Lease the complete extraction of the base commit when one exists, without a build.
@@ -38,10 +41,9 @@ pub(super) trait BaseDependencies: Send + Sync {
         &self,
         request: &BaseRequest<'_>,
         config: &ResolvedConfig,
-        used_directories: &[String],
-        unmapped_directories: &[String],
+        selection: &SelectionRequest<'_>,
         sources: Option<Arc<Lease>>,
-    ) -> Result<Arc<BaseSide>>;
+    ) -> Result<PreparedDependencies>;
 }
 
 /// The source and dependency caches of one repository, with their storage and clock.
@@ -72,17 +74,10 @@ impl BaseDependencies for NativeDependencies {
         &self,
         request: &BaseRequest<'_>,
         config: &ResolvedConfig,
-        used_directories: &[String],
-        unmapped_directories: &[String],
+        selection: &SelectionRequest<'_>,
         sources: Option<Arc<Lease>>,
-    ) -> Result<Arc<BaseSide>> {
-        match self.prepare_side(
-            request,
-            config,
-            used_directories,
-            unmapped_directories,
-            sources,
-        ) {
+    ) -> Result<PreparedDependencies> {
+        match self.prepare_side(request, config, selection, sources) {
             Err(Error::Git { source }) if source.is_limit() => Err(Error::Limit {
                 path: ".".into(),
                 source,
@@ -131,10 +126,9 @@ impl NativeDependencies {
         &self,
         request: &BaseRequest<'_>,
         config: &ResolvedConfig,
-        used_directories: &[String],
-        unmapped_directories: &[String],
+        selection_request: &SelectionRequest<'_>,
         sources: Option<Arc<Lease>>,
-    ) -> Result<Arc<BaseSide>> {
+    ) -> Result<PreparedDependencies> {
         let Caches {
             root: cache_namespace,
             cache,
@@ -166,6 +160,12 @@ impl NativeDependencies {
         let base = reader.read(request.sources.sources.as_ref(), Limits::default())?;
         let working: &dyn WorkingInputs = &SystemWorkingInputs;
         let head = working.read(request.repository.as_ref(), &base, Limits::default())?;
+        let selection = selection_request.record.then(|| DependencySelection {
+            inputs: head.clone(),
+            paths: None,
+            directories: selection_request.directories.to_vec(),
+            unmapped: selection_request.unmapped.to_vec(),
+        });
         let tiers: &dyn Dependencies = &DependencyTiers {
             cache,
             storage: storage.clone(),
@@ -189,23 +189,26 @@ impl NativeDependencies {
             base,
             head,
             source_root: sources.directory.clone(),
-            used_directories: used_directories.to_vec(),
-            unmapped_directories: unmapped_directories.to_vec(),
+            used_directories: selection_request.directories.to_vec(),
+            unmapped_directories: selection_request.unmapped.to_vec(),
             source_identity: request.commit.to_string(),
             install_scripts: request.install_scripts,
             head_root: config.repo_root.clone(),
             configuration,
-            resolution: resolution(config)?,
+            resolution: resolution(config),
         })?;
         span.record("tier", tier_number(dependencies.tier));
         span.record("status", "ok");
-        Ok(Arc::new(BaseSide {
-            working_root: request.working_config.repo_root.clone(),
-            sources,
-            dependencies,
-            cache_namespace: Some(cache_namespace),
-            identity: request.commit.to_string(),
-        }))
+        Ok(PreparedDependencies {
+            selection,
+            side: Arc::new(BaseSide {
+                working_root: request.working_config.repo_root.clone(),
+                sources,
+                dependencies,
+                cache_namespace: Some(cache_namespace),
+                identity: request.commit.to_string(),
+            }),
+        })
     }
 }
 
@@ -217,15 +220,30 @@ fn tier_number(tier: Tier) -> u64 {
     }
 }
 
-fn resolution(config: &ResolvedConfig) -> Result<ModuleResolution> {
+fn resolution(config: &ResolvedConfig) -> ModuleResolution {
     let authored = config.input.module_resolution.clone().unwrap_or_default();
-    let loaders = match serde_json::to_value(authored.loaders.unwrap_or_default())
-        .and_then(serde_json::from_value)
-    {
-        Ok(loaders) => loaders,
-        Err(source) => return Err(InternalError::Json { source }.into()),
-    };
-    Ok(ModuleResolution {
+    let loaders = authored
+        .loaders
+        .unwrap_or_default()
+        .into_iter()
+        .map(|(extension, loader)| {
+            let name = match loader {
+                ModuleLoader::Base64 => "base64",
+                ModuleLoader::Binary => "binary",
+                ModuleLoader::Dataurl => "dataurl",
+                ModuleLoader::Empty => "empty",
+                ModuleLoader::File => "file",
+                ModuleLoader::Js => "js",
+                ModuleLoader::Json => "json",
+                ModuleLoader::Jsx => "jsx",
+                ModuleLoader::Text => "text",
+                ModuleLoader::Ts => "ts",
+                ModuleLoader::Tsx => "tsx",
+            };
+            (extension, name.into())
+        })
+        .collect();
+    ModuleResolution {
         dependency_root: None,
         aliases: authored.aliases.unwrap_or_default(),
         conditions: authored.conditions.unwrap_or_default(),
@@ -233,7 +251,7 @@ fn resolution(config: &ResolvedConfig) -> Result<ModuleResolution> {
         main_fields: authored.main_fields.unwrap_or_default(),
         resolve_extensions: authored.resolve_extensions.unwrap_or_default(),
         package_roots: config.package_roots(),
-    })
+    }
 }
 
 #[cfg(test)]

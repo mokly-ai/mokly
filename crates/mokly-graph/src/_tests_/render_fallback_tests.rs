@@ -61,7 +61,6 @@ fn keys(renderer: &str, preview: &str, resolution: &[(&str, &str)]) -> RenderKey
         },
         fallback(),
     )
-    .unwrap()
 }
 
 #[test]

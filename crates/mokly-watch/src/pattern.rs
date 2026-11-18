@@ -26,6 +26,11 @@ pub(crate) fn compile(patterns: &[String]) -> Result<GlobSet> {
     }
 }
 
+pub(crate) fn configured(patterns: &[String]) -> GlobSet {
+    compile(patterns)
+        .expect("source and watch rule globs were validated when loading configuration")
+}
+
 pub(crate) fn denied(name: &str) -> bool {
     matches!(
         name,

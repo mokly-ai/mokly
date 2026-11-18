@@ -9,7 +9,7 @@ use crate::attribution::{OwnPageMatches, PageObservation};
 use crate::attribution_membership;
 
 pub(crate) fn reduce(
-    pages: &[PageObservation],
+    pages: &[&PageObservation],
     changed: &OwnPageMatches,
     unfiltered: &OwnPageMatches,
 ) -> Vec<Vec<RuleEvidence>> {

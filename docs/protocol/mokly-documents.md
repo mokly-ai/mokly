@@ -181,9 +181,8 @@ empty. The [read model](./mokly-catalogue.md) emits `CatalogueDocument` with
 Details show the description, tags, and source path. When another entry's
 `relatedDocs` repository path names a current document, the index carries
 `mock:<document path>` in that entry's `details.relatedDocs`. Other paths stay
-display labels, and removed entries keep the base side's labels. Readers
-validate the logical reference against current documents. The viewer derives
-the URL: the Related docs row shows each such reference as a link to the
+display labels, and removed entries keep the base side's labels. The viewer
+derives the URL: the Related docs row shows each such reference as a link to the
 document's `/view/<path>/`, labelled with the document's title, and every
 other value as its display label.
 

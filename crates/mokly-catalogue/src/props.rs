@@ -51,12 +51,7 @@ pub(crate) fn validate(
             AuthoringKind::Html
         },
     };
-    let value = match serde_json::to_value(props) {
-        Ok(value) => value,
-        Err(error) => {
-            return Err(Issue::new(Code::HtmlAttribute, error.to_string()).at(source.clone()));
-        }
-    };
+    let value = serde_json::to_value(props).expect("props contain only JSON data and string keys");
     match validator.validate(&value, &context) {
         Ok(()) => Ok(()),
         Err(error) => Err(from_model(error, parsed, source, "props", variant)),

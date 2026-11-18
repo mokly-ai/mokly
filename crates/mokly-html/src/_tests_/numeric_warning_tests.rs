@@ -4,8 +4,10 @@ use std::sync::Arc;
 
 use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::catalogue::EntryContent;
+use mokly_model::diagnostic::{AuthoringKind, Context};
 use mokly_model::material::{instance_key, props_key};
 use mokly_model::usage::ComponentInputOwner;
+use mokly_model::validation::PropValidator;
 use mokly_model::wire_props;
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
@@ -93,12 +95,24 @@ fn javascript_instance_drafts_name_their_component_and_id() {
         }))
         .unwrap();
         visual.props = serde_json::from_value(json!({"count": 1})).unwrap();
+        let validator = PropValidator::compile(
+            &serde_json::to_value(&visual.prop_schema).unwrap(),
+            &Context {
+                entry: "components/js".into(),
+                variant: None,
+                kind: AuthoringKind::JavaScript,
+            },
+        )
+        .unwrap();
+        catalogue
+            .prop_validators
+            .insert("components/js".into(), Arc::new(validator));
     } else {
         panic!("expected component entry");
     }
     let props = serde_json::from_value(json!({"count": 9007199254740993_u64})).unwrap();
-    let key = instance_key(&ComponentInputOwner::Entry, None, "draft").unwrap();
-    let props_key = props_key(&props).unwrap();
+    let key = instance_key(&ComponentInputOwner::Entry, None, "draft");
+    let props_key = props_key(&props);
     let renderer = Arc::new(Unimock::new(
         FragmentRendererMock::render
             .next_call(matching!(_))

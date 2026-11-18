@@ -76,7 +76,7 @@ impl Plan {
             for path in [&root.directory, &root.identity] {
                 plan.roots.insert(path.clone());
                 plan.source_roots
-                    .push((path.clone(), pattern::compile(&patterns)?));
+                    .push((path.clone(), pattern::configured(&patterns)));
             }
         }
         for path in config
@@ -119,7 +119,7 @@ impl Plan {
                 }
             }
             plan.rules
-                .push((rule.action, pattern::compile(&rule.paths)?));
+                .push((rule.action, pattern::configured(&rule.paths)));
         }
         plan.resources(resources);
         Ok(plan)

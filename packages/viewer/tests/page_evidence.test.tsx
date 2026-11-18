@@ -1,8 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { renderToStaticMarkup } from "react-dom/server";
-
 import { detailKey } from "../src/catalogue/detail_fences.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { ShellMain } from "../src/shell/views.js";
@@ -25,7 +23,7 @@ import {
   section,
   status,
 } from "./page_evidence_fixture.js";
-import { standaloneMarkup } from "./shell_markup.js";
+import { standaloneMarkup, storeMarkup } from "./shell_markup.js";
 
 const { model: fixture } = componentWorkspaceFixture();
 const CHANGED_PAGE = {
@@ -118,7 +116,7 @@ test("a removed document keeps its Removed badge and no comparison details", () 
     ({ entry }) => entry.path === "product/removed-page",
   );
   assert.ok(removed?.entry.kind === "page");
-  const markup = renderToStaticMarkup(
+  const markup = storeMarkup(
     <ShellMain
       catalogue={catalogue}
       context={{ base: BASE }}

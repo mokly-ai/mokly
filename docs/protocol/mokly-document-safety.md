@@ -74,10 +74,10 @@ They are resource inputs outside the Markdown attribute allowlist.
 
 The document template contains no script. It does not add a
 `script-src 'none'` CSP meta: the static build adds Mokly's bounded
-inspector script for authenticated link and frame behavior. That CSP would block
-the package's instrumentation too. Raw Markdown is literal text, and the
-independent final allowlist prevents a renderer error from introducing executable
-elements or attributes. A raw `code`, `pre`, `kbd`, or `script` open tag, in any
+[frame probe](./mokly-frame-probe.md) script for authenticated link and frame
+behavior. That CSP would block the package's instrumentation too. Raw Markdown
+is literal text, and the independent final allowlist prevents a renderer error
+from introducing executable elements or attributes. A raw `code`, `pre`, `kbd`, or `script` open tag, in any
 letter case and with any attributes, is literal text too. Such a tag never
 hides the content that follows it. Historical frames use the script-disabled
 sandbox of the [removed previews contract](./mokly-removed-previews.md#frames-and-lifecycle).

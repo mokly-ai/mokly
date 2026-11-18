@@ -40,7 +40,7 @@
     base equal to `HEAD`. No view of 580 was comparable. The build still
     wrote 1,262 snapshot files: 1,180 documents of 24,621,400 bytes and 82
     resources. The whole output was 2,383 files and 56,728,211 bytes.
-  - Snapshot documents lack the inspector script of the current documents,
+  - Snapshot documents lack the frame probe script of the current documents,
     so the after side is unique content. `mokly publish` uploads it, and
     Mokly Cloud stores it. `build` holds the whole output in memory before
     it writes the files.

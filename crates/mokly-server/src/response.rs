@@ -50,7 +50,8 @@ pub(crate) fn empty(status: StatusCode) -> Response {
 }
 
 pub(crate) fn error(status: StatusCode, code: &'static str, message: &'static str) -> Response {
-    let bytes = serde_json::to_vec(&PublicError { code, message }).unwrap_or_default();
+    let bytes = serde_json::to_vec(&PublicError { code, message })
+        .expect("PublicError contains only two string fields");
     self::bytes(status, "application/json; charset=utf-8", bytes.into())
 }
 

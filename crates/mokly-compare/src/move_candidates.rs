@@ -89,8 +89,8 @@ impl<'a> Candidates<'a> {
             .entries
             .iter()
             .filter_map(|pair| {
-                let left = self.before.entries.get(pair.before?)?;
-                let right = self.after.entries.get(pair.after?)?;
+                let left = &self.before.entries[pair.before?];
+                let right = &self.after.entries[pair.after?];
                 (left.metadata.variant_of.is_none() && right.metadata.variant_of.is_none())
                     .then_some((
                         left.metadata.path.clone(),

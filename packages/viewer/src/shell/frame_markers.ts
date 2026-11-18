@@ -1,7 +1,7 @@
 /** Host marker placement over registry-owned frame sessions. */
 
-import { visibleFrameBox } from "../client/component_geometry.js";
-import { intersectRectangles } from "../client/geometry.js";
+import { intersectRectangles } from "@mokly/frame/internal";
+
 import type {
   InstanceRef,
   MarkerState,
@@ -9,6 +9,7 @@ import type {
   ViewerMarker,
 } from "../host/types.js";
 
+import { visibleFrameBox } from "./component_geometry.js";
 import type { ShellGeometrySnapshot } from "./frame_geometry.js";
 import type { ShellFrameGeometryController } from "./frame_geometry_controller.js";
 import {

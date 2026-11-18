@@ -13,7 +13,7 @@ use mokly_model::material::digest;
 use mokly_model::review_affected::ReviewSide;
 
 use crate::comparison_error::CompareResult;
-use crate::error::{InternalError, Result};
+use crate::error::Result;
 use crate::resource_memo_state::{MemoState, PairKey};
 
 /// Operation counts and retained-byte charges, independent of elapsed time.
@@ -119,18 +119,14 @@ impl ResourceMemo for Memo {
             return Ok(fact);
         }
         self.read(side, route)?;
-        self.state
+        Ok(self
+            .state
             .lock()
             .unwrap_or_else(|error| error.into_inner())
             .facts
             .get(&(side, route.into()))
             .cloned()
-            .ok_or_else(|| {
-                InternalError::MissingResourceFact {
-                    route: route.into(),
-                }
-                .into()
-            })
+            .expect("reading a resource inserts its fact, and facts are never evicted"))
     }
 
     fn read(&self, side: ReviewSide, route: &str) -> Result<Option<Arc<[u8]>>> {

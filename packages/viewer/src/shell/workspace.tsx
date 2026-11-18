@@ -18,7 +18,7 @@ import { ScreenHead, targetHead } from "./head.js";
 import { Inspector } from "./inspector.js";
 import { useInspectorResize } from "./inspector_resize.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
-import { useOptionalShellStore } from "./store_context.js";
+import { useShellStore } from "./store_context.js";
 import { useComparison } from "./use_comparison.js";
 import { useActiveWorkspace } from "./workspace_context.js";
 import { WorkspaceControls } from "./workspace_controls.js";
@@ -45,7 +45,7 @@ export function ComponentWorkspace({
   context: ShellContext;
   entry: WorkspaceData["entry"];
 }) {
-  const store = useOptionalShellStore();
+  const store = useShellStore();
   const workspaceRef = useRef<HTMLElement>(null);
   const panesRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
@@ -64,8 +64,7 @@ export function ComponentWorkspace({
     data.changedViews,
     variantPath,
   );
-  const viewport = store?.state.selection.viewport ?? "both";
-  const colorScheme = store?.state.selection.colorScheme ?? "light";
+  const { colorScheme, viewport } = store.state.selection;
   const savedViews = resolvedView.views;
   const comparison = useComparison({
     effectiveColorScheme: resolvedView.colorScheme,
@@ -103,11 +102,7 @@ export function ComponentWorkspace({
       ),
     [colorScheme, controls.previewViews, data, variantPath, viewport],
   );
-  const sizing = useInspectorResize(
-    inspectorRef,
-    panesRef,
-    store?.interactive ?? false,
-  );
+  const sizing = useInspectorResize(inspectorRef, panesRef, store.interactive);
   const {
     selectedInstance,
     selectedKey,

@@ -5,16 +5,17 @@ use std::sync::Arc;
 
 use mokly_model::axes::EntryKind;
 use mokly_model::catalogue::CatalogueModel;
+use mokly_model::diagnostic::{AuthoringKind, Context};
 use mokly_model::projection;
 use mokly_model::public_detail::{DetailEntry, DetailView, EntryDetailV4};
-use mokly_model::public_index::CatalogueNode;
+use mokly_model::public_index::{CatalogueNode, CatalogueReadModel};
 use mokly_model::public_metadata::{CatalogueChanges, ComparisonSelection};
 use mokly_model::readers;
 use mokly_model::usage::CatalogueUsage;
-use mokly_model::usage_schemas::UsageSchemas;
+use mokly_model::validation::PropValidator;
 
 use crate::backend::Documents;
-use crate::detail_encoding::{DetailEncoder, ValidatedDetails};
+use crate::detail_encoding::{DetailEncoder, EncodedDetails};
 use crate::evidence::{self, RenderRoute};
 use crate::generation::Generation;
 use crate::revision::RevisionLease;
@@ -96,22 +97,18 @@ pub(crate) fn snapshot(count: usize, documents: Arc<dyn Documents>) -> Arc<Snaps
                 children: None,
             }),
     );
-    for (path, detail) in &details {
-        projection::set_detail_id(&mut index, path, &detail.detail_id);
-    }
-    let mut schemas = UsageSchemas::new(&index.components);
-    for (path, detail) in &details {
+    for (path, detail) in &mut details {
         files.insert(
             format!("mokly-viewer/entries/{path}.json"),
-            ValidatedDetails
-                .encode(detail, &index, &mut schemas)
-                .unwrap(),
+            EncodedDetails.encode(Arc::make_mut(detail)).unwrap(),
         );
+        projection::set_detail_id(&mut index, path, &detail.detail_id);
     }
     Arc::new(Snapshot {
         changes: None,
         document_keys: BTreeMap::new(),
         generation: Arc::new(Generation {
+            prop_validators: prop_validators(&index),
             model: Arc::new(empty_model()),
             view_keys: Vec::new(),
             config_path: "mokly.config.json".into(),
@@ -128,11 +125,47 @@ pub(crate) fn snapshot(count: usize, documents: Arc<dyn Documents>) -> Arc<Snaps
             render_token: "secret".into(),
         }),
         details,
+        recent_details: Default::default(),
         files,
         index,
         completed: BTreeMap::new(),
         lease: Arc::new(RevisionLease::default()),
     })
+}
+
+fn prop_validators(index: &CatalogueReadModel) -> BTreeMap<String, Arc<PropValidator>> {
+    let mut schemas = BTreeMap::new();
+    index
+        .screens
+        .iter()
+        .map(|entry| (&entry.entry.path, &entry.visual.prop_schema))
+        .chain(
+            index
+                .components
+                .iter()
+                .map(|entry| (&entry.entry.path, &entry.visual.prop_schema)),
+        )
+        .map(|(path, schema)| {
+            let schema = serde_json::to_value(schema).unwrap();
+            let validator = schemas
+                .entry(schema.to_string())
+                .or_insert_with(|| {
+                    Arc::new(
+                        PropValidator::compile(
+                            &schema,
+                            &Context {
+                                entry: path.clone(),
+                                variant: None,
+                                kind: AuthoringKind::Html,
+                            },
+                        )
+                        .unwrap(),
+                    )
+                })
+                .clone();
+            (path.clone(), validator)
+        })
+        .collect()
 }
 
 pub(crate) fn ready() -> CatalogueUsage {
@@ -160,7 +193,7 @@ pub(crate) fn unrecorded_ready(count: usize, documents: Arc<dyn Documents>) -> A
         .iter()
         .map(|view| (view.route.clone(), ready()))
         .collect::<Vec<_>>();
-    let published = evidence::complete(&initial, &updates, &ValidatedDetails)
+    let published = evidence::complete(&initial, &updates, &EncodedDetails)
         .unwrap()
         .unwrap();
     let mut unrecorded = (*published).clone();

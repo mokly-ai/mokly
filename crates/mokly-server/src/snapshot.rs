@@ -7,22 +7,20 @@ use std::sync::Arc;
 use mokly_compare::projection_index;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::canonical;
-use mokly_model::catalogue::CatalogueModel;
-use mokly_model::error::ModelError;
 use mokly_model::namespace::viewer;
-use mokly_model::projection::{self, Publication, ViewKey};
+use mokly_model::projection::{self, Publication};
 use mokly_model::public_detail::EntryDetailV4;
 use mokly_model::public_detail::{LiveDescriptorV3, RenderCapability};
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::public_metadata::ChangesStatus;
-use mokly_model::readers;
 use mokly_model::shell;
 
 use crate::assets::File;
 use crate::backend::Documents;
 use crate::changes::Accepted;
-use crate::detail_encoding::ValidatedDetails;
-use crate::error::{InternalError, Result};
+use crate::detail_encoding::EncodedDetails;
+use crate::detail_publication::RecentDetails;
+use crate::error::Result;
 use crate::evidence::{Completion, RenderRoute};
 use crate::generation::Generation;
 use crate::replacement;
@@ -38,8 +36,10 @@ pub struct Snapshot {
     pub document_keys: BTreeMap<String, String>,
     /// Shared routes, assets, and backend for this generation.
     pub generation: Arc<Generation>,
-    /// Validated payloads; their wire revision is supplied by this snapshot.
+    /// Typed payloads; their wire revision is supplied by this snapshot.
     pub details: BTreeMap<String, Arc<EntryDetailV4>>,
+    /// Bounded shared detail records copied when a candidate is projected.
+    pub recent_details: RecentDetails,
     /// Completed visual usage; a recorded route is never published twice.
     pub completed: BTreeMap<String, Completion>,
     /// Validity of live work admitted under this revision.
@@ -153,7 +153,7 @@ impl Projector {
             changes_status: ChangesStatus::Pending,
             live_generation: Some(live_generation.clone()),
         };
-        let mut index = build_index(&generation.catalogue().model, &keys, &state)?;
+        let mut index = projection::index(&generation.catalogue().model, &keys, &state);
         let mut assets = input.assets;
         let mut files = BTreeMap::new();
         let document_keys = generation
@@ -163,16 +163,20 @@ impl Projector {
             .collect();
         let mut details = projection::pending_details(&generation.catalogue().model, &index, &keys);
         let completed = replacement::reuse_usage(&mut details, &index, &document_keys, previous);
+        let mut recent_details = previous
+            .map(|snapshot| snapshot.recent_details.clone())
+            .unwrap_or_default();
         let details = replacement::encode_details(
             details,
             &mut index,
             previous,
+            &mut recent_details,
             &mut files,
-            &ValidatedDetails,
+            &EncodedDetails,
         )?;
         files.insert(
             viewer("index.json"),
-            RevisionFile::new(checked_index(&index)?)?,
+            RevisionFile::new(encode_index(&index)),
         );
         let render_token = self.render_token.clone();
         let descriptor = LiveDescriptorV3 {
@@ -183,7 +187,7 @@ impl Projector {
                 token: render_token.clone(),
             },
         };
-        assets.insert(viewer("live.json"), encode(&descriptor)?);
+        assets.insert(viewer("live.json"), encode(&descriptor));
         let mut plans: Vec<_> = generation.plans().values().collect();
         plans.sort_by_key(|plan| (plan.entry, plan.viewport, plan.color_scheme));
         let routes: Vec<RenderRoute> = plans
@@ -204,6 +208,7 @@ impl Projector {
             .map(|route| (route.route.clone(), route.clone()))
             .collect();
         let shared = Arc::new(Generation {
+            prop_validators: generation.catalogue().prop_validators.clone(),
             model: Arc::new(generation.catalogue().model.clone()),
             view_keys: keys,
             config_path: state.config_path,
@@ -227,6 +232,7 @@ impl Projector {
             generation: shared,
             document_keys,
             details,
+            recent_details,
             completed,
             lease: Arc::new(RevisionLease::default()),
             index,
@@ -235,37 +241,16 @@ impl Projector {
     }
 }
 
-pub(crate) fn encode(value: &impl serde::Serialize) -> Result<File> {
-    json_file(canonical::to_string(value))
-}
-
-fn json_file(text: std::result::Result<String, ModelError>) -> Result<File> {
-    match text {
-        Ok(text) => Ok(File {
-            bytes: text.into_bytes().into(),
-            content_type: "application/json; charset=utf-8".into(),
-        }),
-        Err(source) => Err(InternalError::Model { source }.into()),
+pub(crate) fn encode(value: &impl serde::Serialize) -> File {
+    let text = canonical::to_string(value)
+        .expect("The private Serve encoder receives only Mokly JSON shapes with string map keys");
+    File {
+        bytes: text.into_bytes().into(),
+        content_type: "application/json; charset=utf-8".into(),
     }
 }
 
-fn build_index(
-    model: &CatalogueModel,
-    keys: &[ViewKey],
-    state: &Publication,
-) -> Result<CatalogueReadModel> {
-    let index = match projection::index(model, keys, state) {
-        Ok(index) => index,
-        Err(source) => return Err(InternalError::Model { source }.into()),
-    };
-    Ok(index)
-}
-
-#[tracing::instrument(name = "index.build", skip_all, err)]
-pub(crate) fn checked_index(index: &CatalogueReadModel) -> Result<File> {
-    let encoded = encode(index)?;
-    if let Err(source) = readers::index(&String::from_utf8_lossy(&encoded.bytes)) {
-        return Err(InternalError::Read { source }.into());
-    }
-    Ok(encoded)
+#[tracing::instrument(name = "index.build", skip_all)]
+pub(crate) fn encode_index(index: &CatalogueReadModel) -> File {
+    encode(index)
 }

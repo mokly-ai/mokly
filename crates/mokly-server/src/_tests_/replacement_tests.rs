@@ -9,7 +9,7 @@ use mokly_model::routes;
 use mokly_model::usage::CatalogueUsage;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::detail_encoding::{DetailEncoder, DetailEncoderMock, ValidatedDetails};
+use crate::detail_encoding::{DetailEncoder, DetailEncoderMock, EncodedDetails};
 use crate::replacement::encode_details;
 use crate::replacement::reuse_usage;
 
@@ -32,7 +32,15 @@ fn unchanged_details_share_payload_and_encoded_bytes_across_rebuilds() {
     let mut files = BTreeMap::new();
     let encoder = Unimock::new(());
     let mut index = index;
-    let reused = encode_details(details, &mut index, Some(&origin), &mut files, &encoder).unwrap();
+    let reused = encode_details(
+        details,
+        &mut index,
+        Some(&origin),
+        &mut origin.recent_details.clone(),
+        &mut files,
+        &encoder,
+    )
+    .unwrap();
     assert_eq!(reused.len(), origin.details.len());
     for (path, detail) in reused {
         assert!(Arc::ptr_eq(&detail, &origin.details[&path]));
@@ -54,15 +62,20 @@ fn one_changed_detail_encodes_once_at_both_catalogue_sizes() {
         details.get_mut("screen-0").unwrap().views[0].usage = publication_support::ready();
         let encoder = Unimock::new(
             DetailEncoderMock::encode
-                .next_call(matching!(_, _, _))
-                .answers(&|_, detail, index, schemas| {
-                    ValidatedDetails.encode(detail, index, schemas)
-                }),
+                .next_call(matching!(_))
+                .answers(&|_, detail| EncodedDetails.encode(detail)),
         );
         let mut files = BTreeMap::new();
         let mut index = index;
-        let result =
-            encode_details(details, &mut index, Some(&origin), &mut files, &encoder).unwrap();
+        let result = encode_details(
+            details,
+            &mut index,
+            Some(&origin),
+            &mut origin.recent_details.clone(),
+            &mut files,
+            &encoder,
+        )
+        .unwrap();
         assert_eq!(result.len(), count);
         assert!(!Arc::ptr_eq(
             &result["screen-0"],
@@ -88,11 +101,19 @@ fn changed_detail_gets_a_new_content_id_and_unchanged_detail_keeps_its_id() {
     details.get_mut("screen-0").unwrap().views[0].usage = publication_support::ready();
     let encoder = Unimock::new(
         DetailEncoderMock::encode
-            .next_call(matching!(_, _, _))
-            .answers(&|_, detail, index, schemas| ValidatedDetails.encode(detail, index, schemas)),
+            .next_call(matching!(_))
+            .answers(&|_, detail| EncodedDetails.encode(detail)),
     );
     let mut files = BTreeMap::new();
-    let result = encode_details(details, &mut index, Some(&origin), &mut files, &encoder).unwrap();
+    let result = encode_details(
+        details,
+        &mut index,
+        Some(&origin),
+        &mut origin.recent_details.clone(),
+        &mut files,
+        &encoder,
+    )
+    .unwrap();
     let changed = &result["screen-0"];
     let changed_id = canonical::detail_id(changed.as_ref()).unwrap();
     assert_eq!(changed.detail_id, changed_id);

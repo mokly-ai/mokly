@@ -165,7 +165,7 @@ function leafNode(
     kind: "leaf",
     label: entry.title,
     title: entry.title,
-    ...(entry.tags && entry.tags.length > 0 ? { tags: [...entry.tags] } : {}),
+    ...(entry.tags.length > 0 ? { tags: [...entry.tags] } : {}),
     ...(folderTitles.length > 0 ? { folderTitles } : {}),
     ...(variants.length > 0 ? { variants } : {}),
     ...(members.length > 0 ? { members } : {}),

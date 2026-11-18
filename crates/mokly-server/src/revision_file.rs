@@ -5,10 +5,9 @@ use axum::http::{HeaderValue, StatusCode};
 use axum::response::Response;
 
 use crate::assets::File;
-use crate::error::{Result, ServerError};
 use crate::response;
 
-/// Immutable slices around a validated top-level revision number.
+/// Immutable slices around an encoded Serve record's top-level revision number.
 #[derive(Clone)]
 pub struct RevisionFile {
     before: Bytes,
@@ -16,49 +15,14 @@ pub struct RevisionFile {
 }
 
 impl RevisionFile {
-    pub(crate) fn new(file: File) -> Result<Self> {
+    pub(crate) fn new(file: File) -> Self {
         let bytes = file.bytes;
-        let mut depth = 0;
-        let mut quoted = false;
-        let mut escaped = false;
-        for (offset, byte) in bytes.iter().copied().enumerate() {
-            if quoted {
-                if escaped {
-                    escaped = false;
-                } else if byte == b'\\' {
-                    escaped = true;
-                } else if byte == b'"' {
-                    quoted = false;
-                }
-                continue;
-            }
-            if depth == 1 && bytes[offset..].starts_with(b"\"revision\":") {
-                let value = offset + b"\"revision\":".len();
-                let start = value
-                    + bytes[value..]
-                        .iter()
-                        .take_while(|byte| byte.is_ascii_whitespace())
-                        .count();
-                let end = start
-                    + bytes[start..]
-                        .iter()
-                        .take_while(|b| b.is_ascii_digit())
-                        .count();
-                if end > start {
-                    return Ok(Self {
-                        before: bytes.slice(..start),
-                        after: bytes.slice(end..),
-                    });
-                }
-            }
-            match byte {
-                b'"' => quoted = true,
-                b'{' | b'[' => depth += 1,
-                b'}' | b']' => depth -= 1,
-                _ => {}
-            }
+        let (start, end) = revision_range(&bytes)
+            .expect("Serve indexes and current details always encode a numeric revision");
+        Self {
+            before: bytes.slice(..start),
+            after: bytes.slice(end..),
         }
-        Err(ServerError::InvalidAssets)
     }
 
     pub(crate) fn response(&self, revision: u64) -> Response {
@@ -81,6 +45,47 @@ impl RevisionFile {
         });
         response
     }
+}
+
+fn revision_range(bytes: &[u8]) -> Option<(usize, usize)> {
+    let mut depth = 0;
+    let mut quoted = false;
+    let mut escaped = false;
+    for (offset, byte) in bytes.iter().copied().enumerate() {
+        if quoted {
+            if escaped {
+                escaped = false;
+            } else if byte == b'\\' {
+                escaped = true;
+            } else if byte == b'"' {
+                quoted = false;
+            }
+            continue;
+        }
+        if depth == 1 && bytes[offset..].starts_with(b"\"revision\":") {
+            let value = offset + b"\"revision\":".len();
+            let start = value
+                + bytes[value..]
+                    .iter()
+                    .take_while(|byte| byte.is_ascii_whitespace())
+                    .count();
+            let end = start
+                + bytes[start..]
+                    .iter()
+                    .take_while(|b| b.is_ascii_digit())
+                    .count();
+            if end > start {
+                return Some((start, end));
+            }
+        }
+        match byte {
+            b'"' => quoted = true,
+            b'{' | b'[' => depth += 1,
+            b'}' | b']' => depth -= 1,
+            _ => {}
+        }
+    }
+    None
 }
 
 #[cfg(test)]

@@ -1,12 +1,13 @@
 /** The transports one shell root reads its index, details and live state through. */
 
-import type { DetailRequest } from "../catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
   DeploymentFileV1,
   EntryDetailV4,
   LiveDescriptorV3,
-} from "../catalogue/types.js";
+} from "@mokly/model";
+
+import type { DetailRequest } from "../catalogue/detail_fences.js";
 import type {
   ComponentRenderRequest,
   ComponentRenderSuccess,

@@ -1,6 +1,7 @@
 //! The shared marker writer serves both plain build and publication finalization.
 
 use crate::output::artifact::{Artifact, File};
+use crate::output::error::FormatError;
 use crate::output::ownership::Ownership;
 use crate::output::validation::{MANIFEST, MARKER, digest};
 use crate::versions::EXPORT_OWNERSHIP;
@@ -54,4 +55,23 @@ fn marker_writer_has_no_publication_file_count_ceiling() {
             .len(),
         20_000
     );
+}
+
+#[test]
+fn marker_writer_rejects_a_marker_above_the_regular_file_limit() {
+    let first_padding = "p".repeat(245);
+    let segment = "p".repeat(249);
+    let leaf = "p".repeat(24);
+    let suffix = format!("{segment}/{segment}/{segment}/{leaf}");
+    // Each distinct portable path has 1,024 ASCII bytes. Their text alone is 64 MiB.
+    let files = (0..65_536)
+        .map(|index| File {
+            path: format!("{index:04x}{first_padding}/{suffix}"),
+            bytes: Vec::new().into(),
+        })
+        .collect();
+    assert!(matches!(
+        Artifact::finalize("/site".into(), files, None),
+        Err(FormatError::TooLarge)
+    ));
 }

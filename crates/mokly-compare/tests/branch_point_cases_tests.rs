@@ -123,28 +123,22 @@ fn check(case: &Case) {
         affected_destinations(&result);
     }
     let lookup = Lookup::new(
-        "generation",
         &result.after.catalogue().model,
         Some(&result.before.catalogue().model),
         &result.snapshot.removed_entries,
         &result.pairing.moves,
-    )
-    .unwrap();
+    );
     for pair in &result.pairing.moves {
         assert!(
-            matches!(lookup.reference("generation", ReviewSide::Before, pair.kind, &pair.previous_path).unwrap(), Some(Destination::Current(entry)) if entry.metadata.path == pair.path)
+            matches!(lookup.reference(ReviewSide::Before, pair.kind, &pair.previous_path), Some(Destination::Current(entry)) if entry.metadata.path == pair.path)
         );
         assert_eq!(
-            lookup
-                .counterpart("generation", pair.kind, &pair.path)
-                .unwrap(),
+            lookup.counterpart(pair.kind, &pair.path),
             Some(pair.previous_path.as_str())
         );
     }
     for removed in &result.snapshot.removed_entries {
-        let parent = lookup
-            .parent("generation", Destination::Removed(removed))
-            .unwrap();
+        let parent = lookup.parent(Destination::Removed(removed));
         assert!(parent.is_some());
         if case.name == "moved-parent" {
             assert!(
@@ -175,7 +169,7 @@ fn check(case: &Case) {
             .find(|entry| entry.metadata.path == "receiver/arrived")
             .unwrap();
         assert!(
-            matches!(lookup.parent("generation", Destination::Current(variant)).unwrap(), Some(Parent::Entry(Destination::Current(parent))) if parent.metadata.path == "receiver")
+            matches!(lookup.parent(Destination::Current(variant)), Some(Parent::Entry(Destination::Current(parent))) if parent.metadata.path == "receiver")
         );
     }
     if case.name == "moved-variant" {
@@ -188,38 +182,20 @@ fn check(case: &Case) {
             .find(|entry| entry.metadata.path == "branch/variant/receiver/primary")
             .unwrap();
         assert!(
-            matches!(lookup.parent("generation", Destination::Current(variant)).unwrap(), Some(Parent::Entry(Destination::Current(parent))) if parent.metadata.path == "branch/variant/receiver")
+            matches!(lookup.parent(Destination::Current(variant)), Some(Parent::Entry(Destination::Current(parent))) if parent.metadata.path == "branch/variant/receiver")
         );
     }
 
     if case.name == "case-renames" {
         assert_eq!(
-            lookup
-                .counterpart(
-                    "generation",
-                    EntryKind::Component,
-                    "branch/case/action/primary"
-                )
-                .unwrap(),
+            lookup.counterpart(EntryKind::Component, "branch/case/action/primary"),
             Some("branch/case/Action/Primary")
         );
         assert_eq!(
-            lookup
-                .previous("generation", EntryKind::Screen, "branch/case/receipt")
-                .unwrap(),
+            lookup.previous(EntryKind::Screen, "branch/case/receipt"),
             None
         );
     }
-    assert!(
-        lookup
-            .reference(
-                "superseded",
-                ReviewSide::Before,
-                EntryKind::Screen,
-                "branch/case/receipt"
-            )
-            .is_err()
-    );
 }
 
 /// User decision 103 C: each Affected destination of Tally has its own detail
@@ -229,7 +205,7 @@ fn check(case: &Case) {
 fn affected_destinations(result: &ComparisonResult) {
     let model = &result.after.catalogue().model;
     let state = projection_index::publication("mokly.config.json".into(), "fixture-base");
-    let index = projection::index(model, &[], &state).unwrap();
+    let index = projection::index(model, &[], &state);
     let mut details = projection::pending_details(model, &index, &[]);
     let workspace_details: BTreeMap<_, _> = details
         .iter()

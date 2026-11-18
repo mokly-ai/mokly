@@ -2,10 +2,6 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 
-import {
-  currentDocumentPath,
-  currentDocumentRoute,
-} from "../packages/viewer/dist/catalogue/delivery_paths.js";
 import { readCatalogueIndex } from "../packages/viewer/dist/catalogue/index_reader.js";
 import { MoklyVersionError } from "../packages/viewer/dist/catalogue/version_error.js";
 
@@ -25,19 +21,6 @@ test("current catalogues require the generated layout and reject earlier version
       (error: unknown) =>
         error instanceof MoklyVersionError && error.supported === 9,
     );
-  const route = "home/index.mobile.html";
-  assert.equal(currentDocumentPath(route), `static/mokly-generated/${route}`);
-  assert.equal(currentDocumentPath(route), `static/mokly-generated/${route}`);
-  assert.equal(currentDocumentRoute(`/static/mokly-generated/${route}`), route);
-  assert.equal(currentDocumentRoute(`/static/mokly-generated/${route}`), route);
-  for (const pathname of [
-    `/static/${route}`,
-    "/static/mokly-generated/../home/index.mobile.html",
-    "/static/mokly-generated/screens%2Fhome.mobile.html",
-  ]) {
-    assert.equal(currentDocumentRoute(pathname), undefined);
-    assert.equal(currentDocumentRoute(pathname), undefined);
-  }
 });
 
 test("current frame paths require no serialized layout field", () => {

@@ -1,14 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { CatalogueReadModel, EntryDetailV4 } from "@mokly/model";
+
 import {
   workspaceDetailRequest,
   type DetailRequest,
 } from "../src/catalogue/detail_fences.js";
-import type {
-  CatalogueReadModel,
-  EntryDetailV4,
-} from "../src/catalogue/types.js";
 import {
   loadRefresh,
   routeDetailRequests,

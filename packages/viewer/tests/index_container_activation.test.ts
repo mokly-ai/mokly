@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { CatalogueNode } from "../src/catalogue/types.js";
+import type { CatalogueNode } from "@mokly/model";
+
 import type { ViewerSelection } from "../src/host/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { changesActivation } from "../src/shell/changes_activation.js";

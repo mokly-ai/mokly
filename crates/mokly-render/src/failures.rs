@@ -26,12 +26,6 @@ impl RenderError {
             Self::Css {
                 source: CssError::Transform { message, .. } | CssError::Asset { message, .. },
             } => message.clone(),
-            Self::ResultKind { method } => {
-                return Some(RuntimeDiagnostic {
-                    code: RuntimeCode::Protocol,
-                    message: format!("unexpected result for {method}"),
-                });
-            }
             Self::Input { key } => format!("conflicting fragment input {key}"),
             Self::NestedImport {
                 plugin,

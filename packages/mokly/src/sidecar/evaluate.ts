@@ -13,17 +13,6 @@ import { SidecarError, detail } from "./errors.js";
 /** Evaluate only after the generation's complete class-map table is installed. */
 export function evaluate(generation: Generation): BundleExports {
   if (generation.exports) return generation.exports;
-  if (!generation.maps)
-    throw new SidecarError(
-      "bundle-failed",
-      "cssModules must supply the generation's map table before evaluation",
-    );
-  for (const file of generation.cssModules)
-    if (!Object.hasOwn(generation.maps, file))
-      throw new SidecarError(
-        "bundle-failed",
-        `missing CSS Modules map: ${file}`,
-      );
   try {
     let react: typeof React | undefined;
     try {

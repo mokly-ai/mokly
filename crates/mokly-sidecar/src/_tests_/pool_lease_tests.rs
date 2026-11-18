@@ -5,7 +5,8 @@ use std::sync::Arc;
 
 use unimock::{MockFn, Unimock, matching};
 
-use crate::methods::{Bundle, Call, CssModules};
+use crate::compiled_fixture::compiled;
+use crate::methods::{Bundle, BundleRequest, Call, CssModules};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
 use crate::results;
@@ -13,15 +14,19 @@ use crate::wire::MethodResult;
 use crate::workers::{FactoryMock, Spawned, WorkerMock};
 
 fn bundle() -> Call {
-    Call::Bundle(Bundle {
-        evaluation: None,
-        entry_files: vec![],
-        stories_files: vec![],
-        renderer: None,
-        source_root: "/repo".into(),
-        configuration_directory: ".".into(),
-        repository_roots: vec![],
-        module_resolution: Default::default(),
+    Call::Bundle(BundleRequest {
+        plan: None,
+        params: Bundle {
+            evaluation: None,
+            entry_files: vec![],
+            stories_files: vec![],
+            renderer: None,
+            source_root: "/repo".into(),
+            configuration_directory: ".".into(),
+            repository_roots: vec![],
+            module_resolution: Default::default(),
+        },
+        capture: None,
     })
 }
 
@@ -34,14 +39,15 @@ fn a_late_old_epoch_release_preserves_the_same_ids_new_lifetime() {
         WorkerMock::request
             .next_call(matching!((request, _) if matches!(request.call, Call::Bundle(_))))
             .answers(&|_, _, _| {
-                Ok(MethodResult::Bundle(results::Bundle {
+                Ok(MethodResult::Bundle(Box::new(results::Bundle {
+                    plan: None,
                     unmapped_dependency_directories: None,
                     epoch: 0,
-                    compiled: None,
+                    cache: None,
+                    compiled: Arc::new(compiled("g")),
                     generation: "g".into(),
                     modules: vec![],
-                    warnings: vec![],
-                }))
+                })))
             })
             .n_times(2),
         WorkerMock::request
@@ -69,6 +75,7 @@ fn a_late_old_epoch_release_preserves_the_same_ids_new_lifetime() {
         Arc::new(factory.clone()),
         Arc::new(Unimock::new(())),
         Launch {
+            capture_durability: false,
             node: "node".into(),
             entry: "sidecar.js".into(),
             repository: "/repo".into(),
@@ -88,19 +95,19 @@ fn a_late_old_epoch_release_preserves_the_same_ids_new_lifetime() {
     assert_ne!(old.epoch, new.epoch);
     pool.release_generation("g", old.epoch);
     pool.synchronize_releases();
-    assert!(pool.lock().unwrap().bundles.contains_key("g"));
+    assert!(pool.lock().bundles.contains_key("g"));
     pool.request(Call::CssModules(CssModules {
         generation: "g".into(),
         class_maps: BTreeMap::new(),
     }))
     .unwrap();
     pool.release_generation("g", old.epoch);
-    assert!(pool.lock().unwrap().maps.contains_key("g"));
+    assert!(pool.lock().maps.contains_key("g"));
     pool.release_generation("g", new.epoch);
     pool.synchronize_releases();
-    assert!(pool.lock().unwrap().bundles.is_empty());
+    assert!(pool.lock().bundles.is_empty());
     assert!(
-        pool.lock().unwrap().slots[0]
+        pool.lock().slots[0]
             .as_ref()
             .unwrap()
             .generations

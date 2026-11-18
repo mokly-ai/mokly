@@ -85,7 +85,7 @@ test("the public test host applies exact-origin CORS and headers to copied files
     "mokly-viewer/index.json",
     "mokly-viewer/entries/example/screens/welcome.json",
     "static/mokly-generated/example/screens/welcome/index.mobile.html",
-    "mokly-viewer/client/inspector.js",
+    "mokly-viewer/client/frame-probe.js",
     "mokly-viewer/shell.css",
     `mokly-viewer/fonts/${fonts[0]}`,
     "mokly-viewer/missing.json",

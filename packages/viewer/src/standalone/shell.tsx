@@ -2,11 +2,12 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
+import type { CatalogueReadModel } from "@mokly/model";
 import { RootState, ShellLayout } from "@mokly/ui/shell-layout";
 
 import { deploymentCheck } from "../catalogue/sources.js";
-import type { CatalogueReadModel } from "../catalogue/types.js";
 import { MoklyVersionError } from "../catalogue/version_error.js";
+import { CatalogueBoundary } from "../shell/catalogue_boundary.js";
 import type { ComparisonEnvironment } from "../shell/comparison_context.js";
 import { storedScrollTogether } from "../shell/comparison_scroll_preference.js";
 import { useFocusAfter } from "../shell/focus_after.js";
@@ -43,7 +44,10 @@ type IndexState =
 /** The browser surface of the standalone shell. */
 export type ShellWindow = Window & typeof globalThis & StandaloneWindow;
 
-/** Fetch the index, then render the shell; a version failure replaces it. */
+/**
+ * Fetch the index, then render the shell. A version failure replaces it, and
+ * an index that the shell cannot render shows the failure state.
+ */
 export function StandaloneShell({
   preferences,
   win,
@@ -103,13 +107,15 @@ export function StandaloneShell({
       <RootState focusRef={focus.ref("loading")} root={root} state="loading" />
     );
   return (
-    <ReadyShell
-      appearance={appearance}
-      index={state.index}
-      onVersionError={(error) => setState({ kind: "version", error })}
-      preferences={preferences}
-      win={win}
-    />
+    <CatalogueBoundary onFailure={() => setState({ kind: "failed" })}>
+      <ReadyShell
+        appearance={appearance}
+        index={state.index}
+        onVersionError={(error) => setState({ kind: "version", error })}
+        preferences={preferences}
+        win={win}
+      />
+    </CatalogueBoundary>
   );
 }
 
@@ -129,28 +135,30 @@ function ReadyShell({
   const [source] = useState(() =>
     standaloneDataSource(win, index.live === undefined),
   );
-  const comparison = useMemo<ComparisonEnvironment>(
-    () => ({
+  const comparison = useMemo<ComparisonEnvironment>(() => {
+    // The same-origin credentials of `ownOriginFetch`, for any request input.
+    const fetch: ComparisonEnvironment["fetch"] = (input, init) =>
+      win.fetch(input, { ...init, credentials: "same-origin" });
+    return {
       baseUrl: win.location.origin,
       delivery: () =>
         index.live
           ? { kind: "live" }
           : { kind: "pinned", comparisonUrl: index.comparisonUrl },
-      fetch: (input, init) => win.fetch(input, init),
+      fetch,
       ...(index.live === undefined
         ? {
             deploymentCheck: deploymentCheck(
               new URL("/", win.location.href),
               index.deploymentId,
-              win.fetch,
+              fetch,
               () => win.location.reload(),
             ),
           }
         : {}),
       scrollTogether: storedScrollTogether(() => win.localStorage),
-    }),
-    [index, win],
-  );
+    };
+  }, [index, win]);
   return (
     <ShellStoreProvider
       comparisonEnvironment={comparison}
@@ -208,9 +216,7 @@ export function StandaloneShellContents({
         />
       }
       mainHref="#mb-main"
-      navigation={
-        <CatalogueNav catalogue={store.catalogue} context={store.context} />
-      }
+      navigation={<CatalogueNav context={store.context} />}
       ref={shellRoot?.ref ?? shell}
       statusId="mb-status"
       theme={appearance.theme}

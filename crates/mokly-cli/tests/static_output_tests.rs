@@ -89,7 +89,7 @@ fn builds_twice_with_identical_bytes_and_complete_public_fences() {
     assert_eq!(index.revision, 0);
     assert!(index.live.is_none());
     assert!(index.base.is_none());
-    assert!(index.comparison_url.is_none());
+    assert!(index.comparison_url.0.is_none());
     assert_eq!(files[Path::new("index.html")], files[Path::new("404.html")]);
     assert_eq!(
         files[Path::new("index.html")],
@@ -115,9 +115,9 @@ fn builds_twice_with_identical_bytes_and_complete_public_fences() {
                 .is_some_and(|extension| extension == "html")
         {
             let html = std::str::from_utf8(bytes).unwrap();
-            let metadata = html.find("data-mokly-inspector").unwrap();
+            let metadata = html.find("data-mokly-frame-probe").unwrap();
             assert!(metadata < html.find("</head>").unwrap());
-            assert!(html.contains("/mokly-viewer/client/inspector.js"));
+            assert!(html.contains("/mokly-viewer/client/frame-probe.js"));
         }
     }
     assert!(views > 0);

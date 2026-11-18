@@ -1,3 +1,5 @@
+import type { ComponentWireValue } from "@mokly/model";
+
 import {
   assertPlainData,
   DataBudget,
@@ -8,7 +10,6 @@ import {
 import type {
   ComponentPropsData,
   ComponentWireProps,
-  ComponentWireValue,
   PropValue,
 } from "./prop_types.js";
 

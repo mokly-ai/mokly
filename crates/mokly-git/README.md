@@ -1,9 +1,12 @@
 # mokly-git
 
-`mokly-git` runs bounded Git commands for the Mokly core. Use the runner trait
-for Git IO and the batch trait for path queries. `mokly-platform` supplies
-process groups and Windows job objects. `mokly-compare` reads base sources
-through this crate, and `mokly-publish` checks the checkout with it.
+`mokly-git` runs bounded Git commands for the Mokly core. `Runner` runs one
+bounded Git command. `Repository` supplies path queries. `Repositories::open`
+returns that interface.
+
+`mokly-platform` supplies process groups and Windows job objects.
+`mokly-compare` reads base sources through this crate. `mokly-publish` checks
+the checkout with it.
 
 ## Responsibilities
 
@@ -11,9 +14,11 @@ through this crate, and `mokly-publish` checks the checkout with it.
 - Bound captured output on both streams.
 - Split path arguments into ordered, bounded batches.
 - Preserve binary input, output, and typed process failures.
-- Validate checkout identity before resolving a merge base.
+- Validate the checkout root before resolving a merge base.
 - Read changed paths, tree metadata, and checkout-converted regular source files.
 - Extract exact commit sources with the pinned commit's checkout attributes.
+- Identify the effective checkout settings of a commit for source cache keys
+  and base freshness checks.
 
 ## What This Crate Does
 
@@ -28,11 +33,21 @@ escalates to a forceful kill, reaps the child, and drains both pipes. Only an
 operation that acted on cancellation returns `Cancelled`. Other typed failures
 keep their own category.
 
-`BoundedRunner` consumes `dyn Runner`. The default budgets are 128 path
-arguments and 16 KiB of conservative encoded argument cost. A path too large
+Each `Request` selects a typed `ProcessMode`. Its default is `FullTree`.
+Audited helper-free calls select `PlainGroup`: `rev-parse`, `merge-base`,
+`ls-tree`, `rev-list` with lazy fetch disabled, read-only `config`, and
+`check-attr`. The runner sets `GIT_NO_LAZY_FETCH=1` for ordinary commands.
+On Unix, the plain group avoids the exec hook that forces a fork of the core.
+Every other call keeps the session and Linux subreaper setup, including
+filters, fetches, diffs, and working-path queries. Windows uses the same job
+setup for both modes. The runner selects setup from the field without parsing
+arguments. Both modes keep the same ownership guard and supervision.
+
+Path batching uses default budgets of 128 path arguments and 16 KiB of
+conservative encoded argument cost. A path too large
 for one batch fails before any command runs. Empty path input issues no
-command. A failed batch stops the sequence. Merge-base, changed-path, tree,
-blob, and source archive operations build on this boundary.
+command. A failed batch stops the sequence. Tree, blob, and source archive
+operations build on this boundary.
 
 `GitRepositories::open` compares canonical filesystem identities with Git's
 checkout root. `SystemDisk` resolves these identities with `dunce`, so on
@@ -78,6 +93,21 @@ convert its files again one at a time. A deadline and process-tree
 cancellation supervise every conversion. Failed optional filters return typed
 `Conversion` errors instead of raw fallback bytes. Conversion includes line
 endings, encodings, filters, and LFS downloads.
+
+`Repository::source_key` and `Repository::checkout_identity` hash the
+effective checkout settings of one commit: the commit, the effective Git
+configuration, and the effective attributes of each regular file of the
+commit. `source_key` is the source cache key. When a file has a `filter`
+attribute, it adds a new salt in each call, so each preparation gets its own
+converted files. `checkout_identity` returns a `CheckoutIdentity` without
+that salt, so two samples stay equal while the settings stay equal. Without a
+`filter` attribute, its `digest` equals the source key. Its `filtered` field
+is true when a file has a `filter` attribute. Equal samples of such a commit
+do not prove equal bytes, because an external filter can give other bytes
+later. A configuration write that converts no file differently, such as a new
+upstream, also changes the digest. The
+[base cache contract](../../docs/protocol/mokly-base-cache.md#converted-source-identity)
+owns the source identity and the filter rule.
 
 `Repository::fingerprint_extracted` records a `Fingerprint` of each confined
 regular file of an extraction: its size, its times, and on Unix its change
@@ -150,19 +180,24 @@ extraction cleanup after cancellation during a streamed copy.
 
 ### Key Code
 
-- [`src/command.rs`](./src/command.rs) defines `Request`, `Output`, and
-  `Runner`, the boundary for one bounded Git invocation.
+- [`src/command.rs`](./src/command.rs) defines `Request`, its `ProcessMode`,
+  `Output`, and `Runner`, the boundary for one bounded Git invocation.
 - [`src/system.rs`](./src/system.rs) defines `SystemRunner`, the host runner
   that owns the process tree, the cancellation, and the clock.
 - [`src/control.rs`](./src/control.rs) defines the `Cancellation` and `Clock`
   traits and their host types `Token` and `SystemClock`.
-- [`src/batches.rs`](./src/batches.rs) defines `Batches` and `BoundedRunner`,
-  which split path arguments into ordered, bounded batches.
+- [`src/batches.rs`](./src/batches.rs) provides `split`, which splits path
+  arguments into ordered, bounded batches.
 - [`src/repository.rs`](./src/repository.rs) defines `Repositories`,
   `GitRepositories`, and `Repository`, which validate a checkout and read merge
   bases, changed paths, trees, blobs, and archives.
+  [`src/repository_access.rs`](./src/repository_access.rs) implements
+  `Repository` for the checkout that `GitRepositories::open` returns.
+- [`src/source_key.rs`](./src/source_key.rs) defines `CheckoutIdentity`, and
+  derives the source key and the checkout identity from one hash of the
+  checkout settings.
 - [`src/disk.rs`](./src/disk.rs) defines `Disk`, its host type `SystemDisk`,
-  and `Archive`, the filesystem boundary for checkout identity, working reads,
+  and `Archive`, the filesystem boundary for the checkout root, working reads,
   confined digests, and extraction.
 - [`src/extracted.rs`](./src/extracted.rs) defines `ExtractedFiles` and reads
   and hashes the converted files of an extraction, with Git for the files
@@ -188,4 +223,5 @@ extraction cleanup after cancellation during a streamed copy.
 - [Runtime](../../docs/protocol/mokly-runtime.md).
 - [Comparison](../../docs/protocol/mokly-comparison.md).
 - [Base preparation](../../docs/protocol/mokly-base-preparation.md).
+- [Base cache](../../docs/protocol/mokly-base-cache.md).
 - [Rust core architecture](../../docs/architecture/rust-core.md).

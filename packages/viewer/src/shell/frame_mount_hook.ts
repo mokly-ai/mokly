@@ -9,12 +9,11 @@ import {
 } from "react";
 import type { RefObject } from "react";
 
-import type { CatalogueUsage } from "../catalogue/types.js";
-import { runCleanup } from "../client/cleanup.js";
-import type { FrameAdapter, FrameEvent } from "../client/frame_adapter.js";
-import { FrameError } from "../client/frame_error.js";
-import { cancelFrameMount } from "../client/frame_mount.js";
+import type { FrameAdapter, FrameEvent } from "@mokly/frame";
+import { FrameError, cancelFrameMount } from "@mokly/frame/internal";
+import type { CatalogueUsage } from "@mokly/model";
 
+import { runCleanup } from "./cleanup.js";
 import type { FrameLayout } from "./frame_layout_context.js";
 import { mountedFrameReadiness } from "./frame_readiness.js";
 import {
@@ -28,6 +27,7 @@ import {
   type ActiveSession,
   type ShellFrameStatus,
 } from "./frame_session_usage.js";
+import { hostCleanup, useHostCleanupMark } from "./host_cleanup.js";
 
 interface MountedFrameInput {
   adapter?: FrameAdapter;
@@ -48,6 +48,9 @@ export function useMountedShellFrame(input: MountedFrameInput): {
   status: ShellFrameStatus;
 } {
   const registry = useOptionalShellFrameRegistry();
+  // A frame with its own adapter, such as a temporary preview, runs viewer code.
+  const rootMark = useHostCleanupMark();
+  const hostMark = input.adapter ? undefined : rootMark;
   const frameRef = useRef<HTMLIFrameElement>(null);
   const active = useRef<ActiveSession | undefined>(undefined);
   const latestEvent = useRef(input.onEvent);
@@ -153,8 +156,9 @@ export function useMountedShellFrame(input: MountedFrameInput): {
           registry.changed();
         }
       });
-    return () => disposeSession(registry, session, active);
+    return () => disposeSession(registry, session, active, hostMark);
   }, [
+    hostMark,
     input.adapter,
     input.enabled,
     input.generation,
@@ -204,13 +208,14 @@ function disposeSession(
   registry: ShellFrameRegistry,
   session: ActiveSession,
   active: RefObject<ActiveSession | undefined>,
+  hostMark: ((error: unknown) => void) | undefined,
 ): void {
   if (active.current === session) active.current = undefined;
   runCleanup([
     () => session.rejectReady(new FrameError("disposed")),
     () => session.controller.abort(),
-    () => session.unsubscribe?.(),
-    () => session.mounted?.dispose(),
+    () => hostCleanup(() => session.unsubscribe?.(), hostMark),
+    () => hostCleanup(() => session.mounted?.dispose(), hostMark),
     () => cancelFrameMount(session.element),
     () => registry.remove(session),
   ]);

@@ -44,8 +44,8 @@ fn deep_values_compare_hash_and_drop_without_using_tree_depth_as_stack_depth() {
         );
         assert!(left == same);
         assert!(left != changed);
-        assert_eq!(fingerprint(&left).unwrap(), fingerprint(&same).unwrap());
-        assert_ne!(fingerprint(&left).unwrap(), fingerprint(&changed).unwrap());
+        assert_eq!(fingerprint(&left), fingerprint(&same));
+        assert_ne!(fingerprint(&left), fingerprint(&changed));
         assert_eq!(move_text::page(&left), ["leaf"]);
     })
     .join()
@@ -159,10 +159,7 @@ fn fingerprints_distinguish_child_boundaries_node_kinds_and_empty_forests() {
     for (i, left) in values.iter().enumerate() {
         for (j, right) in values.iter().enumerate() {
             assert_eq!(left == right, i == j);
-            assert_eq!(
-                fingerprint(left).unwrap() == fingerprint(right).unwrap(),
-                i == j
-            );
+            assert_eq!(fingerprint(left) == fingerprint(right), i == j);
         }
     }
 }

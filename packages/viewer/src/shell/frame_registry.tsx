@@ -3,17 +3,17 @@
 import { createContext, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
-import type { CatalogueUsage } from "../catalogue/types.js";
-import type {
-  FrameAdapter,
-  FrameEvent,
-  MountedFrame,
-} from "../client/frame_adapter.js";
+import {
+  sameOriginAdapter,
+  type FrameAdapter,
+  type FrameEvent,
+  type MountedFrame,
+} from "@mokly/frame";
 import {
   registerFrameSession,
   releaseFrameSession,
-} from "../client/frame_session.js";
-import { sameOriginAdapter } from "../client/same_origin_adapter.js";
+} from "@mokly/frame/internal";
+import type { CatalogueUsage } from "@mokly/model";
 
 import { ShellFrameGeometryController } from "./frame_geometry_controller.js";
 import { ShellInspectionController } from "./frame_inspection_controller.js";

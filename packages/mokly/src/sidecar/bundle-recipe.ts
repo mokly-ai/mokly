@@ -4,17 +4,24 @@ import path from "node:path";
 
 import type { BuildResult } from "esbuild";
 
+import type { BundleCapture } from "../generated/sidecar/BundleCapture.js";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration.js";
+import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
+import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
 import { previewCandidates } from "./bundle-entry.js";
 import { moduleGraph } from "./bundle-graph.js";
 import type { Bundled } from "./bundle.js";
-import { bundleResult, fileDigest, restore } from "./compiled.js";
+import { capturedPlan } from "./captured-plan.js";
+import { bundleResult, generationId, restore } from "./compiled.js";
+import { metadataDigest } from "./file-digests.js";
 import type { Measurements } from "./measurements.js";
 import type { ModulePaths } from "./module-paths.js";
 import type { ConsumerRequire } from "./paths.js";
+import type { ResolutionEvidence } from "./resolution-evidence.js";
 import { resolutionInputs } from "./resolution-inputs.js";
+import { toolchainIdentity } from "./toolchain.js";
 
 /** One finished compile and the state that its plugins recorded. */
 export interface CompiledBundle {
@@ -26,6 +33,9 @@ export interface CompiledBundle {
   inputPaths: Map<string, string>;
   preview: string | null | undefined;
   runtimeKey: string;
+  evidence: ResolutionEvidence | undefined;
+  capture: BundleCapture;
+  plan: ReadonlyMap<string, PlannedImport> | undefined;
 }
 
 /** The module graph, consumed digests, resolution inputs, and the recipe. */
@@ -39,6 +49,9 @@ export async function bundleRecipe(
     inputPaths,
     preview,
     runtimeKey,
+    evidence,
+    capture,
+    plan,
   }: CompiledBundle,
   measurements: Measurements,
 ): Promise<Bundled> {
@@ -73,24 +86,23 @@ export async function bundleRecipe(
   });
   for (const file of params.storiesFiles.length ? previewCandidates : []) {
     const absolute = path.resolve(params.sourceRoot, file);
-    metadataInputs[file] = physicalInputs[absolute] =
-      await fileDigest(absolute);
+    metadataInputs[file] = physicalInputs[absolute] = await metadataDigest(
+      absolute,
+      physicalInputs,
+    );
   }
   for (const root of paths.dependencyRoots) {
     const file = path.join(root, "react/package.json");
     metadataInputs[paths.name(file)] = physicalInputs[file] =
-      await fileDigest(file);
+      await metadataDigest(file, physicalInputs);
   }
   let reactVersion: string | null = null;
   try {
     const file = require.resolve("react/package.json");
     const bytes = await fs.readFile(file);
     reactVersion = JSON.parse(bytes.toString()).version;
-    metadataInputs[paths.name(file)] = physicalInputs[file] = createHash(
-      "sha256",
-    )
-      .update(bytes)
-      .digest("hex");
+    metadataInputs[paths.name(file)] = physicalInputs[file] =
+      await metadataDigest(file, physicalInputs, bytes);
   } catch (error) {
     if (!(
       error &&
@@ -102,6 +114,34 @@ export async function bundleRecipe(
   }
   const directories = await measurements.run("sidecar.bundle.resolution", () =>
     resolutionInputs(paths, physical.values(), physicalInputs, metadataInputs),
+  );
+  const peers = require.snapshot();
+  evidence?.peers(peers);
+  const reuseEvidence: ReuseEvidence = evidence
+    ? await evidence.finish(compiled.metafile!)
+    : {
+        complete: false,
+        durable: false,
+        inputs: {},
+        ...(capture === "serveEdit"
+          ? { uncaptured: "serveEdit" as const }
+          : {}),
+      };
+  const toolchain = await toolchainIdentity();
+  if (!toolchain) {
+    reuseEvidence.complete = false;
+    delete reuseEvidence.uncaptured;
+  }
+  const reusable = reuseEvidence.complete;
+  if (!reusable) hash.update(JSON.stringify(runtimeKey));
+  hash.update(
+    JSON.stringify([
+      toolchain,
+      [...(evidence?.physical.identityInputs ?? [])].sort(([a], [b]) =>
+        a < b ? -1 : a > b ? 1 : 0,
+      ),
+      Object.entries(peers).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
+    ]),
   );
   hash.update(JSON.stringify(metadataInputs));
   hash.update(
@@ -119,6 +159,8 @@ export async function bundleRecipe(
     ]),
   );
   const compilation: CompiledGeneration = {
+    toolchain: toolchain ?? "",
+    reuseEvidence,
     identity: hash.digest("hex"),
     code: compiled.outputFiles![0]!.text,
     runtimeKey,
@@ -130,12 +172,21 @@ export async function bundleRecipe(
         Buffer.from(inputs.files.get(physical) ?? []).toString("utf8"),
       ]),
     ),
-    peers: require.snapshot(),
+    peers,
     unmappedDependencyDirectories: [...paths.dependencyUsage.unmapped].sort(),
     ...directories,
     inputs: physicalInputs,
     metadataInputs,
   };
   const generation = restore(params, compilation, graph);
-  return { generation, result: bundleResult(generation) };
+  const result = bundleResult(generation, capturedPlan(plan, reuseEvidence));
+  if (reusable && !compilation.reuseEvidence.complete) {
+    compilation.identity = createHash("sha256")
+      .update(compilation.identity)
+      .update(runtimeKey)
+      .digest("hex");
+    generation.id = generationId(compilation.identity, params.evaluation);
+    result.generation = generation.id;
+  }
+  return { generation, result };
 }

@@ -2,11 +2,9 @@
 
 import assert from "node:assert/strict";
 
+import type { CatalogueNode, CatalogueReadModel } from "@mokly/model";
+
 import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
-import type {
-  CatalogueNode,
-  CatalogueReadModel,
-} from "../src/catalogue/types.js";
 import type { Catalogue } from "../src/shell/catalogue.js";
 import {
   initialSnapshot,

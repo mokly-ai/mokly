@@ -6,6 +6,7 @@ use std::sync::Arc;
 use axum::body::Bytes;
 use mokly_model::catalogue::CatalogueModel;
 use mokly_model::projection::ViewKey;
+use mokly_model::validation::PropValidator;
 
 use crate::assets::File;
 use crate::backend::Documents;
@@ -15,6 +16,8 @@ use crate::evidence::RenderRoute;
 /// Routes, assets, and render services never change during evidence publication.
 #[derive(Clone)]
 pub struct Generation {
+    /// Admitted schemas retained from the matching prepared graph generation.
+    pub prop_validators: BTreeMap<String, Arc<PropValidator>>,
     /// Immutable inputs for the shared model projection on every status transition.
     pub model: Arc<CatalogueModel>,
     /// Declared document identities for that model.

@@ -1,9 +1,7 @@
-import type {
-  CatalogueReadModel,
-  EntryDetailV4,
-} from "../src/catalogue/types.js";
+import type { CatalogueReadModel, EntryDetailV4 } from "@mokly/model";
 
 /** Keep a test-owned index edit coherent with the fixture's separate details. */
+
 export function browserDetails(
   index: CatalogueReadModel,
   held: Record<string, EntryDetailV4>,

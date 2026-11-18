@@ -98,59 +98,10 @@ test("hidden folders stay in the wire tree and Changes but disappear from All an
   }
 });
 
-test("public reader accepts hidden folder metadata and rejects invalid hidden values", () => {
+test("the public reader keeps hidden folder metadata", () => {
   const model = rawIndexFixture();
   model.tree[0]!.hidden = true;
   assert.equal(readCatalogueIndex(model).tree[0]?.hidden, true);
-  Object.assign(model.tree[0]!, { hidden: "true" });
-  assert.throws(() => readCatalogueIndex(model), /hidden/);
-});
-
-test("public reader requires the immediate parent of every tree node", () => {
-  const model = rawIndexFixture();
-  const product = model.tree.find((node) => node.path === "product");
-  const browse = product?.children?.find(
-    (node) => node.path === "product/browse",
-  );
-  assert.ok(browse);
-  model.tree = model.tree.filter((node) => node.path !== "product");
-  model.tree.push(browse);
-  assert.throws(() => readCatalogueIndex(model), /parent/);
-});
-
-test("removed entries cannot declare previousPath", () => {
-  const model = rawIndexFixture();
-  model.removedEntries[0]!.entry.previousPath = "old/path";
-  assert.throws(() => readCatalogueIndex(model), /previousPath/);
-});
-
-test("authored movedFrom metadata cannot cross the public boundary", () => {
-  const model = rawIndexFixture();
-  Object.assign(model.pages[0]!, { movedFrom: "old/path" });
-  assert.throws(
-    () => readCatalogueIndex(model),
-    /movedFrom is not public catalogue data/,
-  );
-});
-
-test("current and removed records cannot overlap after case folding", () => {
-  const model = rawIndexFixture();
-  const { previousPath: _previousPath, ...current } = model.screens[0]!;
-  model.removedEntries = [
-    {
-      entry: {
-        ...current,
-        path: current.path.toUpperCase(),
-        changes: { status: "ready", kind: "removed", included: true },
-      },
-      folderTitles: [],
-      snapshotId: "d".repeat(64),
-    },
-  ];
-  assert.throws(
-    () => readCatalogueIndex(model),
-    /current and removed entries cannot share a path/,
-  );
 });
 
 test("All folder counts exclude hidden children without hiding their Changes ancestry", () => {

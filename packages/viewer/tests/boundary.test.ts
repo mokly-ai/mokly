@@ -61,27 +61,27 @@ test("the shell renders on the client and nothing hydrates server markup", async
     );
 });
 
-test("the browser bundles are the standalone shell and the frame inspector", async () => {
+test("the browser bundles are the standalone shell and the frame probe", async () => {
   const directory = path.join(root, "dist/browser");
   assert.deepEqual((await fs.readdir(directory)).sort(), [
-    "inspector.js",
+    "frame-probe.js",
     "shell.js",
   ]);
   assert.deepEqual(
     JSON.parse(
       await fs.readFile(path.join(root, "dist/browser.manifest.json"), "utf8"),
     ),
-    { schemaVersion: 1, modules: ["inspector.js", "shell.js"] },
+    { schemaVersion: 1, modules: ["frame-probe.js", "shell.js"] },
   );
   const shell = await fs.readFile(path.join(directory, "shell.js"), "utf8");
   assert.match(shell, /createRoot/);
   assert.doesNotMatch(shell, /from\s*["'](?:node:|react|react-dom)/);
-  const inspector = await fs.readFile(
-    path.join(directory, "inspector.js"),
+  const probe = await fs.readFile(
+    path.join(directory, "frame-probe.js"),
     "utf8",
   );
   assert.doesNotMatch(
-    inspector,
+    probe,
     /from\s*["']node:|react-dom|createRoot|react\.production/,
   );
 });

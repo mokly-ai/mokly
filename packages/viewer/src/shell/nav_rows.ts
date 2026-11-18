@@ -8,7 +8,7 @@ import type {
 
 import { folderDisclosureKey } from "./disclosure_keys.js";
 import { filterOpen, navLeaf, type NavRowsSource } from "./nav_leaf_rows.js";
-import { navNodeVisible, UNFILTERED_SELECTION } from "./nav_model.js";
+import { navNodeVisible } from "./nav_model.js";
 import type { NavGroupNode, NavNode, NavSectionNode } from "./nav_tree.js";
 
 /**
@@ -24,20 +24,19 @@ function navFolder(
 ): NavigationFolder {
   const { store } = source;
   const key = folderDisclosureKey(sectionId, node.key);
-  const selection = store?.state.selection ?? UNFILTERED_SELECTION;
-  const context = store?.context ?? source.context;
+  const { selection } = store.state;
   return {
     count: node.children.filter((child) =>
-      navNodeVisible(child, selection, context),
+      navNodeVisible(child, selection, store.context),
     ).length,
     depth,
     disclosure: key,
     filterOpen: filterOpen(store, key),
-    hidden: !navNodeVisible(node, selection, context),
+    hidden: !navNodeVisible(node, selection, store.context),
     key: node.key,
     kind: "folder",
     label: node.label,
-    open: store?.state.disclosures[key] ?? depth === 0,
+    open: Boolean(store.state.disclosures[key]),
     rows: navRows(node.children, depth + 1, sectionId, source),
   };
 }
@@ -77,15 +76,11 @@ export function navSection(
     disclosure: section.key,
     filterOpen: filterOpen(store, section.key),
     hidden: !section.children.some((node) =>
-      navNodeVisible(
-        node,
-        store?.state.selection ?? UNFILTERED_SELECTION,
-        store?.context ?? source.context,
-      ),
+      navNodeVisible(node, store.state.selection, store.context),
     ),
     id: section.id,
     label: section.label,
-    open: store?.state.disclosures[section.key] ?? true,
+    open: Boolean(store.state.disclosures[section.key]),
     rows: navRows(section.children, 0, section.id, source),
   };
 }

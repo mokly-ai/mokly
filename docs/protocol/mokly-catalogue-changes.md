@@ -15,7 +15,7 @@ from the working tree, the base from the base commit. Serve, watch, the
 static build, and publication consume the same snapshot for a generation.
 They therefore agree on removed metadata, `previousPath`, collision
 rejection, and counts. The generated
-[`CatalogueChangeSnapshotV4`](../../packages/viewer/src/generated/catalogue/CatalogueChangeSnapshotV4.ts)
+[`CatalogueChangeSnapshotV4`](../../packages/model/src/generated/catalogue/CatalogueChangeSnapshotV4.ts)
 type and the types that it imports define the shape.
 
 The snapshot, the review result, and the index of one generation share
@@ -72,9 +72,9 @@ every kind: select a base screen, page, document, component, or variant only
 when no current entry of any kind has its path and the move contract paired
 it with nothing. A kind change therefore yields one added current entry,
 never a simultaneous removed record, and a paired base entry yields one
-current entry carrying `previousPath`. The index reader rejects any model
-whose current entries and `removedEntries` share a case-folded path, and a
-current entry cannot carry a `removed` comparison state. Only records inside
+current entry carrying `previousPath`. No current entry shares a case-folded
+path with a record of `removedEntries`, and a current entry cannot carry a
+`removed` comparison state. Only records inside
 `removedEntries` are historical.
 
 Ordinary removed entries sort by kind then path. Snapshot decoding rejects

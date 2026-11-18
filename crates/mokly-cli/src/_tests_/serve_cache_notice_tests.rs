@@ -1,6 +1,7 @@
 //! Cache notes print once in plain output without completing a warning attempt.
 
 use std::path::Path;
+use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 
 use mokly_cli::cancellation::ServeCancellation;
@@ -10,6 +11,7 @@ use mokly_compare::cache_types::Reporter;
 use mokly_server::changes::ChangeToken;
 use unimock::{MockFn, Unimock, matching};
 
+use crate::cache_directory::ServeDirectory;
 use crate::changes_runtime::cache_line;
 use crate::serve_changes_base::CacheNotice;
 use crate::serve_warnings::{ServeWarnings, WarningScopes};
@@ -43,14 +45,22 @@ fn plain_cache_notice_is_once_per_command_and_preserves_pending_warnings() {
     );
     let attempt = scopes.begin();
     attempt.report(&[warning("first")], false);
+    let announced = Arc::new(AtomicBool::new(false));
+    let bundle = ServeDirectory {
+        announced: announced.clone(),
+        terminal: terminal.clone(),
+        style: style.clone(),
+        redactor: redactor.clone(),
+    };
     let reporter: &dyn Reporter = &CacheNotice {
-        announced: Arc::new(false.into()),
+        announced,
         warnings: attempt.clone(),
         terminal,
         style: style.clone(),
         redactor: redactor.clone(),
         cancel: Arc::new(ChangeToken::default()),
     };
+    bundle.opened(Path::new("/cache/project"));
     reporter.opened(Path::new("/cache/project"));
     reporter.opened(Path::new("/cache/project"));
     attempt.report(&[warning("second")], false);

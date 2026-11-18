@@ -1,14 +1,15 @@
 /** Index and detail sources and the fetch rules of the shell delivery contract. */
 
-import { DEPLOYMENT_PATH } from "./delivery_paths.js";
-import { readDeploymentFile } from "./deployment_reader.js";
-import { readEntryDetail } from "./detail_reader.js";
-import { readCatalogueIndex } from "./index_reader.js";
 import type {
   CatalogueReadModel,
   DeploymentFileV1,
   EntryDetailV4,
-} from "./types.js";
+} from "@mokly/model";
+
+import { DEPLOYMENT_PATH } from "./delivery_paths.js";
+import { readDeploymentFile } from "./deployment_reader.js";
+import { readEntryDetail } from "./detail_reader.js";
+import { readCatalogueIndex } from "./index_reader.js";
 
 /** The catalogue index v9 as an object, or its absolute HTTP(S) URL. */
 export type IndexSource = CatalogueReadModel | string | URL;

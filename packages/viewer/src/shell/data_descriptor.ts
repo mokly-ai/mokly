@@ -1,6 +1,7 @@
 /** The live descriptor of Serve: the render capability of one generation. */
 
-import type { LiveDescriptorV3 } from "../catalogue/types.js";
+import type { LiveDescriptorV3 } from "@mokly/model";
+
 import { MoklyVersionError } from "../catalogue/version_error.js";
 
 import type { ShellLiveSource } from "./data_source.js";

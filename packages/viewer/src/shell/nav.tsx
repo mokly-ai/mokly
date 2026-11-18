@@ -8,56 +8,45 @@
 
 import { CatalogueNavigation } from "@mokly/ui/catalogue-navigation";
 
-import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import {
   useShellIdentifier,
   useShellIdentifierScope,
 } from "./identifier_context.js";
 import { navFilter, navStatus } from "./nav_filter.js";
-import { catalogueNavSections } from "./nav_model.js";
 import { useNavigationResize } from "./nav_resize.js";
 import { navSection } from "./nav_rows.js";
 import { useNavigationScroll } from "./nav_scroll.js";
-import { useOptionalShellStore } from "./store_context.js";
+import { useShellStore } from "./store_context.js";
 
 /** The served catalogue navigation column. */
-export function CatalogueNav({
-  catalogue,
-  context,
-}: {
-  catalogue: Catalogue;
-  context: ShellContext;
-}) {
-  const store = useOptionalShellStore();
+export function CatalogueNav({ context }: { context: ShellContext }) {
+  const store = useShellStore();
   const navigationId = useShellIdentifier("mb-nav");
   const identifier = useShellIdentifierScope();
-  const sections = store?.sections ?? catalogueNavSections(catalogue);
 
   const resize = useNavigationResize(store);
   const changesStatus = context.changedEntries
     ? "ready"
     : context.changesStatus;
   const source = { context, identifier, store };
-  const rows = sections.map((section) => navSection(section, source));
-  const scroll = useNavigationScroll(store, store?.state.route, rows);
+  const rows = store.sections.map((section) => navSection(section, source));
+  const scroll = useNavigationScroll(store, rows);
   return (
     <CatalogueNavigation
       busy={
-        store?.state.selection.view === "changes" &&
+        store.state.selection.view === "changes" &&
         (changesStatus === "pending" || changesStatus === "preparing")
       }
       filter={navFilter(context, store)}
       id={navigationId}
-      interactive={store?.interactive ?? false}
+      interactive={store.interactive}
       maximumWidth={resize.maximumWidth}
-      onCollapseAll={() => store?.collapseAll()}
-      onDisclosure={
-        store ? (key, open) => store.setDisclosure(key, open) : undefined
-      }
+      onCollapseAll={() => store.collapseAll()}
+      onDisclosure={(key, open) => store.setDisclosure(key, open)}
       onResizing={resize.onResizing}
-      onScroll={(top) => store?.setNavScroll(top)}
-      onView={(view) => store?.setView(view)}
+      onScroll={(top) => store.setNavScroll(top)}
+      onView={(view) => store.setView(view)}
       onWidth={resize.onWidth}
       onWidthCommit={resize.onWidthCommit}
       ref={resize.ref}

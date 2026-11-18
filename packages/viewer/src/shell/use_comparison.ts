@@ -20,7 +20,7 @@ import {
   type ComparisonScope,
   type LoadedComparison,
 } from "./comparison_request.js";
-import { useOptionalShellStore } from "./store_context.js";
+import { useShellStore } from "./store_context.js";
 
 export type { ComparisonPresentation } from "./comparison_presentation.js";
 
@@ -72,13 +72,13 @@ export function useComparison({
   entryId: string;
   owner?: string;
 }): ComparisonController {
-  const store = useOptionalShellStore();
+  const store = useShellStore();
   const environment = useComparisonEnvironment();
-  const selection = store?.state.selection;
+  const selection = store.state.selection;
   // A publication returns an active comparison to Current.
-  const evidenceKey = String(store?.catalogue.publicModel.revision ?? 0);
+  const evidenceKey = String(store.catalogue.publicModel.revision);
   const comparisonUrl = historical
-    ? (store?.catalogue.publicModel.comparisonUrl ?? null)
+    ? store.catalogue.publicModel.comparisonUrl
     : undefined;
   const scope = useMemo<ComparisonScope>(
     () => ({
@@ -126,9 +126,9 @@ export function useComparison({
           scope,
           scopeKey,
           mode,
-          selection?.viewport ?? "both",
-          effectiveColorScheme ?? selection?.colorScheme ?? "light",
-          selection?.colorScheme ?? "light",
+          selection.viewport,
+          effectiveColorScheme ?? selection.colorScheme,
+          selection.colorScheme,
         )
       : undefined;
   latestDemand.current = demand;

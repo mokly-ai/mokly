@@ -6,7 +6,7 @@ use mokly_model::material::{instance_key, slot_key};
 use mokly_model::usage::{ComponentInputOwner, ComponentInstanceRecord, ComponentSlotRecord};
 
 use crate::diagnostic_code::Code;
-use crate::error::{HtmlError, Result, invalid};
+use crate::error::{Result, invalid};
 
 enum Resolution<T> {
     Ready(T),
@@ -137,10 +137,7 @@ impl<'a> Keys<'a> {
             .slot_key
             .as_ref()
             .and_then(|slot| self.mapped_slots.get(slot));
-        let key = match instance_key(&owner, slot.map(String::as_str), &record.id) {
-            Ok(key) => key,
-            Err(source) => return Err(HtmlError::Props { source }),
-        };
+        let key = instance_key(&owner, slot.map(String::as_str), &record.id);
         self.visiting.remove(old);
         if key != old && (self.surviving.contains(&key) || self.claimed.contains(&key)) {
             self.surviving.remove(old);
@@ -199,10 +196,7 @@ impl<'a> Keys<'a> {
                 Resolution::Ready(None)
             });
         };
-        let key = match slot_key(instance, &slot.name) {
-            Ok(key) => key,
-            Err(source) => return Err(HtmlError::Props { source }),
-        };
+        let key = slot_key(instance, &slot.name);
         self.mapped_slots.insert(old.into(), key.clone());
         Ok(Resolution::Ready(Some(key)))
     }

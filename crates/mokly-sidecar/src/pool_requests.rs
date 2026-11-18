@@ -5,7 +5,9 @@ use std::sync::Arc;
 use crate::error::{Error, Result};
 use crate::methods::Call;
 use crate::pool::Pool;
+use crate::pool_bundle_cache::BundleAttempt;
 use crate::pool_cleanup;
+use crate::pool_preparation::Prerequisites;
 use crate::pool_state::Slot;
 use crate::wire::{MethodResult, Request};
 
@@ -15,25 +17,20 @@ impl Pool {
         slot: &mut Slot,
         call: &Call,
         deadline: u64,
+        attempt: &mut BundleAttempt,
     ) -> Result<MethodResult> {
         self.cleanup(slot)?;
         if let Call::Bundle(params) = call {
-            self.seed_compilation(slot, params)?;
+            self.seed_bundle(slot, params, attempt)?;
         }
         if let Some(generation) = generation(call) {
+            let prerequisites = Prerequisites::for_call(call);
             self.prepare(
                 slot,
                 generation,
-                !matches!(call, Call::CssModules(_)),
-                matches!(
-                    call,
-                    Call::Bindings(_)
-                        | Call::RenderScreen(_)
-                        | Call::RenderComponent(_)
-                        | Call::RenderStory(_)
-                        | Call::RenderPage(_)
-                ),
-                !matches!(call, Call::Bindings(_)),
+                prerequisites.maps,
+                prerequisites.description,
+                prerequisites.bindings,
             )?;
         }
         if matches!(
@@ -45,11 +42,11 @@ impl Pool {
         ) {
             slot.renders += 1;
         }
-        if self.lock()?.stopped {
+        if self.lock().stopped {
             return Err(Error::Cancelled);
         }
         if let Call::ProcessCss(params) = call {
-            self.lock()?.contexts.insert(params.context.clone());
+            self.lock().contexts.insert(params.context.clone());
             slot.contexts.insert(params.context.clone());
         }
         let mut result = slot.worker.request(
@@ -60,7 +57,7 @@ impl Pool {
             deadline,
         )?;
         {
-            let mut state = self.lock()?;
+            let mut state = self.lock();
             if state.stopped {
                 return Err(Error::Cancelled);
             }
@@ -78,20 +75,19 @@ impl Pool {
                         .entry(result.generation.clone())
                         .or_default()
                         .insert(epoch);
-                    if let Some(compiled) = &result.compiled {
-                        let restored = state.recipes.take_reused(bundle, compiled);
-                        let shared = state
-                            .compiled
-                            .values()
-                            .find(|value| value.same_recipe(compiled))
-                            .cloned()
-                            .or(restored)
-                            .unwrap_or_else(|| Arc::new(compiled.clone()));
-                        state.compiled.insert(result.generation.clone(), shared);
-                    }
+                    let compiled = &result.compiled;
+                    let restored = state.recipes.take_reused(&bundle.params, compiled);
+                    let shared = state
+                        .compiled
+                        .values()
+                        .find(|value| value.same_recipe(compiled))
+                        .cloned()
+                        .or(restored)
+                        .unwrap_or_else(|| compiled.clone());
+                    state.compiled.insert(result.generation.clone(), shared);
                     state
                         .bundles
-                        .insert(result.generation.clone(), bundle.clone());
+                        .insert(result.generation.clone(), bundle.params.clone());
                     slot.generations.insert(result.generation.clone(), epoch);
                     slot.maps.remove(&result.generation);
                     slot.described.remove(&result.generation);
@@ -139,6 +135,9 @@ impl Pool {
                 }
                 _ => {}
             }
+        }
+        if let (Call::Bundle(params), MethodResult::Bundle(bundle)) = (call, &mut result) {
+            self.complete_bundle(params, bundle, attempt);
         }
         Ok(result)
     }

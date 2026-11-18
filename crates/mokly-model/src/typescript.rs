@@ -14,7 +14,7 @@ use crate::type_modules::TypeModules;
 use crate::prop_schema::{Constant, JsonType, Primitive, PropSchema, Types};
 use crate::versions;
 
-/// Generate the viewer's shared model module in a fixed declaration order.
+/// Generate the shared model module in a fixed declaration order.
 /// Later catalogue, detail, live, and snapshot shapes each own a module.
 pub fn generate() -> String {
     let config = Config::default().with_large_int("number");

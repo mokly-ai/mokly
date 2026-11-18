@@ -57,7 +57,7 @@ test("neither package imports another package by a relative path", async () => {
     ],
     [
       "packages/ui/tests/probe.test.tsx",
-      'import "../../viewer/tests/marker_dom.js";',
+      'import "../../frame/tests/marker_dom.js";',
     ],
     ["packages/viewer/src/probe.tsx", 'import "../../ui/tests/dom.js";'],
     [

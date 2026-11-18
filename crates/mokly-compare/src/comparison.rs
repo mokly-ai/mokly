@@ -3,7 +3,7 @@
 use std::mem;
 use std::sync::Arc;
 
-use mokly_css::attribution::{self, PageObservation};
+use mokly_css::attribution;
 use mokly_css::parsed_cache::ParsedCssCache;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::catalogue::EntryContent;
@@ -20,11 +20,10 @@ use crate::move_context::RenderedMoves;
 use crate::move_inventory;
 use crate::move_types::MoveDetector;
 use crate::resource_memo::{Memo, ResourceMemo};
-use crate::source_validation::SourceValidation;
+use crate::reuse_collection::Collection;
+use crate::reuse_digest;
 use crate::use_case_impact;
-use crate::{
-    affected, entry_classification, review_projection, root_impact, snapshots, source_validation,
-};
+use crate::{affected, entry_classification, review_projection, root_impact, snapshots};
 
 /// Injected move policy and byte-bounded parse cache. It retains no parsed view set.
 pub struct Engine {
@@ -55,6 +54,16 @@ impl Engine {
         before: Arc<dyn RenderGeneration>,
         after: Arc<dyn RenderGeneration>,
     ) -> Result<ComparisonResult> {
+        self.compare_reusing(request, before, after, None)
+    }
+
+    pub(crate) fn compare_reusing(
+        &self,
+        request: &ComparisonRequest,
+        before: Arc<dyn RenderGeneration>,
+        after: Arc<dyn RenderGeneration>,
+        mut reuse: Option<&mut Collection>,
+    ) -> Result<ComparisonResult> {
         after.render_all().compare()?;
         let before_model = &before.catalogue().model;
         let after_model = &after.catalogue().model;
@@ -78,7 +87,18 @@ impl Engine {
             ),
         )?;
         let paths = pairing.paths(before_model, after_model);
-        let mut pairs = Vec::new();
+        if let Some(reuse) = &mut reuse {
+            reuse.paths = reuse_digest::digest(&paths);
+        }
+        let pairs = comparison_views::collect(
+            &pairing.entries,
+            before.clone(),
+            after.clone(),
+            &paths,
+            memo.as_ref(),
+            [&before_plans, &after_plans],
+            reuse,
+        )?;
         let mut warnings: Vec<_> = before
             .catalogue()
             .warnings
@@ -86,27 +106,14 @@ impl Engine {
             .filter(|warning| matches!(warning.code, "base-dependencies" | "base-conversion"))
             .cloned()
             .collect();
-        let mut observations: Vec<PageObservation> = Vec::new();
-        for pair in &pairing.entries {
-            let mut views = comparison_views::collect(
-                pair,
-                before.clone(),
-                after.clone(),
-                &paths,
-                memo.as_ref(),
-                &before_plans,
-                &after_plans,
-            )?;
+        for views in &pairs {
             warnings.extend(views.warnings.iter().cloned());
-            observations.extend(
-                views
-                    .views
-                    .iter_mut()
-                    .map(|view| mem::take(&mut view.observation)),
-            );
-            pairs.push(views);
         }
-        let mut attributed = attribution::attribute(observations);
+        let mut attributed = attribution::attribute(
+            pairs
+                .iter()
+                .flat_map(|views| views.views.iter().map(|view| &view.input.observation)),
+        );
         let mut impact = mem::take(&mut attributed.changed_components);
         let mut instance_proofs = Vec::new();
         let mut own_impact = OwnImpact::default();
@@ -133,7 +140,7 @@ impl Engine {
                 before.catalogue(),
                 after.catalogue(),
                 &paths,
-            )?;
+            );
             for view in &mut views.views {
                 comparison_attribution::apply(
                     view,
@@ -156,7 +163,7 @@ impl Engine {
                 before_model,
                 after_model,
                 &paths,
-            )?);
+            ));
         }
         impact.extend(instance_proofs.iter().map(|proof| proof.component.clone()));
         implementation::include(&mut entries, &instance_proofs, &own_impact);
@@ -182,19 +189,7 @@ impl Engine {
                 })
                 .collect(),
         };
-        review_order::normalize(&mut review).compare()?;
-        let validation_lookups = source_validation::validate(
-            &review,
-            SourceValidation {
-                before: before_model,
-                after: after_model,
-                pairing: &pairing,
-                classifications: &entries,
-                usage: &usages,
-                impact: &impact,
-                instance_proofs: &instance_proofs,
-            },
-        )?;
+        review_order::normalize(&mut review);
         let snapshot = snapshots::create(
             &request.catalogue_identity,
             &request.base_ref,
@@ -203,7 +198,7 @@ impl Engine {
             after_model,
             &pairing,
             &entries,
-        )?;
+        );
         let counts = ComparisonCounts {
             changes: snapshot.changed_entries.len(),
             moved: pairing.moves.len(),
@@ -237,7 +232,6 @@ impl Engine {
         Ok(ComparisonResult {
             resource_work: memo.work(),
             affected_lookups,
-            validation_lookups,
             warnings,
             review,
             snapshot,

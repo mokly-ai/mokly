@@ -72,7 +72,7 @@ from its entry's path under the [artifact path contract](./mokly-artifact-paths.
 | `static/mokly-generated/<route>`                   | every rendered view and document, with the instance and slot markers of the comparison contract |
 | `static/<closure path>`                            | the authored resources the documents reference                                                  |
 | `mokly-viewer/diffs/generations/<generation>/**`   | one comparison generation: removed entries' details, snapshots, resources, and previews         |
-| `mokly-viewer/client/**`, `shell.css`, `fonts/**`  | the standalone shell bundle, the inspector, styles, and fonts under `mokly-viewer/`             |
+| `mokly-viewer/client/**`, `shell.css`, `fonts/**`  | the standalone shell bundle, the frame probe, styles, and fonts under `mokly-viewer/`           |
 | `.mokly-export-artifact`                           | the [ownership marker](./mokly-export-ownership.md), written last                               |
 
 The [format inventory](./mokly-format-versions.md) gives the version of each

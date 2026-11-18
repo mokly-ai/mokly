@@ -5,7 +5,7 @@ use std::sync::Arc;
 use crate::asset_delivery::AssetRead;
 use crate::cache::Artifact;
 use crate::closure::{ClosureBuilder, GeneratedResources};
-use crate::error::{GraphError, Result, invalid};
+use crate::error::{GraphError, Result};
 use crate::session::Session;
 use crate::session_collection;
 use crate::types::ComparisonDocument;
@@ -53,7 +53,10 @@ impl GeneratedResources for Session {
 
 impl DocumentWorker for Session {
     fn validate(&self, route: &str) -> Result<ValidatedView> {
-        session_collection::view(route, &self.validation_input(route, false)?)
+        Ok(session_collection::view(
+            route,
+            &self.validation_input(route, false)?,
+        ))
     }
 }
 
@@ -76,7 +79,7 @@ impl Session {
         let document = artifact
             .document
             .as_ref()
-            .ok_or_else(|| invalid(route, "document has no composed tree"))?;
+            .expect("rendered document artifacts carry their composed tree");
         let closure = {
             let span =
                 capture.then(|| tracing::info_span!("review.capture-closure", status = "error"));

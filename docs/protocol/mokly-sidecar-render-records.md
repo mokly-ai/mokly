@@ -7,10 +7,9 @@ exact wire shapes.
 
 ## Results
 
-A fragment result is `{ html, styles, markers, resources, instances, slots, warnings }`.
+A fragment result is `{ html, styles, markers, resources, instances, slots }`.
 Styles keep first-appearance order. Resources are the non-CSS public seeds the
 consumer renderer declares. Instance and slot drafts describe actual usage.
-Warnings belong only to that render.
 
 A collected style keeps its original `css` bytes and delivery owner grouping.
 Its optional `attribution` list holds rendered CSS with registered component
@@ -52,7 +51,7 @@ Generated placement ids avoid collisions with authored ignore ids. Root output
 must satisfy the [root-range rules](./mokly-component-usage-records.md#root-output-boundary).
 
 `renderPage` runs a synchronous `definePage` callback. It returns
-`{ html, resources, warnings }`, with a complete document and no styles.
+`{ html, resources }`, with a complete document and no styles.
 The sidecar permits authored ignore wrappers in `renderPage` HTML for the
 core page rules. The core converts them into ignore regions. Other reserved
 `<mokly-…>` elements remain rejected, and component or screen output must use
@@ -65,7 +64,6 @@ After `describe`, the core resolves the catalogue paths and titles. It sends
 `bindings` with the generation and `entries`, a complete map from each
 described definition handle to `{ path, title }`. This includes the parent
 of each stories file. A variant has no handle and is not in this table.
-A render without the table fails closed with `bundle-failed`.
 
 The table supplies component paths and default instance ids, definition link
 targets, and parent identity. The core can replace the complete table when
@@ -80,8 +78,7 @@ metadata.
 ## Instance Drafts
 
 A fragment result includes `instances` and `slots` beside its HTML, styles,
-resources, and render warnings. The core validates drafts, reconciles them
-with the markers, and builds the
+and resources. The core reconciles the drafts with the markers and builds the
 [usage records](./mokly-component-usage-records.md). Drafts do not authorize
 registration of a definition or bypass core schema validation.
 
@@ -122,8 +119,8 @@ composes the document. Physical placement never changes a logical key.
 
 - `{ kind: "placeholder", token }` supplies HTML content owned by the core.
   The sidecar returns the placeholder and its effective ignore scope.
-- `{ kind: "saved", handle }` selects a React value saved during `describe`.
-  The handle must exist in this generation, even when the saved value is null.
+- `{ kind: "saved", handle }` selects a React value that `describe` saved for
+  this generation. The saved value can be null.
 
 A placeholder token never selects a saved React value. Slots remain separate
 from data props, their encoding, and their material digest.

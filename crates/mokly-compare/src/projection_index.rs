@@ -11,9 +11,7 @@ use mokly_model::public_metadata::{
 };
 use mokly_model::public_records::{CatalogueRecord, CatalogueVisual};
 
-use crate::comparison_error::CompareResult;
 use crate::comparison_types::{ComparisonResult, EntryClassification};
-use crate::error::Result;
 use crate::projection_context::Context;
 
 /// Apply retained entry and view classifications to a current or historical index.
@@ -102,15 +100,14 @@ fn visual(visual: &mut CatalogueVisual, change: &EntryClassification) {
 }
 
 /// Project the pinned base catalogue, including its selected removed records.
-pub fn base_index(result: &ComparisonResult, state: &Publication) -> Result<CatalogueReadModel> {
+pub fn base_index(result: &ComparisonResult, state: &Publication) -> CatalogueReadModel {
     let mut index = projection::index(
         &result.before.catalogue().model,
         &keys(result.before.as_ref()),
         state,
-    )
-    .compare()?;
+    );
     apply(&mut index, result);
-    Ok(index)
+    index
 }
 
 /// Read document keys without rendering or retaining any document bytes.
@@ -118,20 +115,14 @@ pub fn keys(generation: &dyn RenderGeneration) -> Vec<ViewKey> {
     generation
         .plans()
         .values()
-        .filter_map(|plan| {
-            Some(ViewKey {
-                path: generation
-                    .catalogue()
-                    .model
-                    .entries
-                    .get(plan.entry)?
-                    .metadata
-                    .path
-                    .clone(),
-                viewport: plan.viewport,
-                color_scheme: plan.color_scheme,
-                key: plan.key.0.clone(),
-            })
+        .map(|plan| ViewKey {
+            path: generation.catalogue().model.entries[plan.entry]
+                .metadata
+                .path
+                .clone(),
+            viewport: plan.viewport,
+            color_scheme: plan.color_scheme,
+            key: plan.key.0.clone(),
         })
         .collect()
 }

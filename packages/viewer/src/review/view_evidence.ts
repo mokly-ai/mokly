@@ -6,7 +6,7 @@
  * excluded file.
  */
 
-import type { RuleEvidence, ViewEvidence } from "../catalogue/types.js";
+import type { RuleEvidence, ViewEvidence } from "@mokly/model";
 
 import { cssAnalysis } from "./css/evidence.js";
 import type {

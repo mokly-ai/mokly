@@ -1,7 +1,6 @@
 import { copyData } from "../authoring/data.js";
 import type { DefinitionData } from "../authoring/runtime.js";
 import type { DefinitionDiagnostic } from "../generated/sidecar/DefinitionDiagnostic.js";
-import type { Warning } from "../generated/sidecar/Warning.js";
 
 import { definitionShapes } from "./definition-shapes.js";
 import { SidecarError, detail } from "./errors.js";
@@ -169,8 +168,6 @@ export function validateFields(
 export function dataProps(
   input: unknown,
   declared: boolean,
-  location: string,
-  warnings: Warning[],
   excluded?: string[],
 ): Record<string, unknown> {
   if (input === undefined) return {};
@@ -196,10 +193,6 @@ export function dataProps(
       output[key] = copyData(descriptor.value);
     } catch {
       excluded?.push(key);
-      warnings.push({
-        code: "props-not-data",
-        message: `${location}: prop ${key} is not plain data`,
-      });
     }
   }
   return output;

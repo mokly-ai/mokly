@@ -10,15 +10,16 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { detailKey } from "../src/catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
   EntryDetailV4,
-} from "../src/catalogue/types.js";
-import type { Viewport } from "../src/data/axes.js";
+  UsageLink,
+  Viewport,
+} from "@mokly/model";
+
+import { detailKey } from "../src/catalogue/detail_fences.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { publicWorkspace } from "../src/shell/public_workspace.js";
-import type { UsageLink } from "../src/shell/workspace_data.js";
 import { selectedVariant } from "../src/shell/workspace_selection.js";
 import { usageHref } from "../src/shell/workspace_usage.js";
 import { resolveWorkspaceView } from "../src/shell/workspace_views.js";

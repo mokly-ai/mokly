@@ -219,10 +219,8 @@ pub(crate) fn visual(visual: &CatalogueVisual) -> Result<(), ReadError> {
         variant: None,
         kind: AuthoringKind::JavaScript,
     };
-    let schema = match serde_json::to_value(&visual.prop_schema) {
-        Ok(value) => value,
-        Err(_) => return Err(invalid(ContractViolation::SchemaEncoding)),
-    };
+    let schema = serde_json::to_value(&visual.prop_schema)
+        .expect("PropSchema contains only JSON data and string property keys");
     let validator = match PropValidator::compile(&schema, &context) {
         Ok(validator) => validator,
         Err(_) => return Err(invalid(ContractViolation::Schema)),
@@ -231,10 +229,8 @@ pub(crate) fn visual(visual: &CatalogueVisual) -> Result<(), ReadError> {
         Ok(props) => props,
         Err(_) => return Err(invalid(ContractViolation::WireProps)),
     };
-    let props = match serde_json::to_value(props) {
-        Ok(value) => value,
-        Err(_) => return Err(invalid(ContractViolation::PropsEncoding)),
-    };
+    let props =
+        serde_json::to_value(props).expect("Props contains only JSON data and string object keys");
     if validator.validate(&props, &context).is_err() {
         return Err(invalid(ContractViolation::PropsSchema));
     }

@@ -188,31 +188,19 @@ fn removed_variant_keeps_its_parent_title_when_a_document_reuses_the_parent_path
     assert_eq!(removed.entry.metadata().path, "card/compact");
     assert_eq!(removed.parent_title.as_deref(), Some("Historical Card"));
     let lookup = mokly_compare::lookup::Lookup::new(
-        "one",
         &result.after.catalogue().model,
         Some(&result.before.catalogue().model),
         &result.snapshot.removed_entries,
         &result.pairing.moves,
-    )
-    .unwrap();
+    );
     assert!(matches!(
-        lookup
-            .parent("one", mokly_compare::lookup::Destination::Removed(removed))
-            .unwrap(),
+        lookup.parent(mokly_compare::lookup::Destination::Removed(removed)),
         Some(mokly_compare::lookup::Parent::Title("Historical Card"))
     ));
-    assert!(
-        lookup
-            .parent(
-                "other",
-                mokly_compare::lookup::Destination::Removed(removed)
-            )
-            .is_err()
-    );
 }
 
 #[test]
-fn snapshot_source_validation_rejects_reversed_base_authored_variant_order() {
+fn removed_variants_keep_base_authored_order() {
     let source = "---\ntitle: Card\nelement: ui-card\npropSchema: {type: object, additionalProperties: false, properties: {}}\nVARIANTS---\n<p>Card</p>";
     let fixture = Fixture::new(&[(
         "specs/card.component.html",
@@ -231,15 +219,5 @@ fn snapshot_source_validation_rejects_reversed_base_authored_variant_order() {
             .map(|record| record.entry.metadata().path.as_str())
             .collect::<Vec<_>>(),
         ["card/z", "card/a"]
-    );
-    let mut snapshot = result.snapshot.clone();
-    snapshot.removed_entries.reverse();
-    assert!(
-        snapshot
-            .validate_sources(
-                &result.before.catalogue().model,
-                &result.after.catalogue().model
-            )
-            .is_err()
     );
 }

@@ -10,7 +10,7 @@ use flate2::write::ZlibEncoder;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::{material, namespace};
 
-use crate::capture_error::{self, CaptureDecode, CaptureResult, Result};
+use crate::capture_error::{self, CaptureResult, Result};
 use crate::capture_weight::Budget;
 
 /// Generated-route digest and optional compressed CSS bytes.
@@ -57,15 +57,15 @@ impl EncodedResource {
             + self.encoded_bytes()
     }
     /// Restore captured CSS bytes without a source-side compiler.
-    pub(crate) fn read(&self) -> Result<Option<Vec<u8>>> {
+    pub(crate) fn read(&self) -> Option<Vec<u8>> {
         let Content::Style(Some(encoded)) = &self.content else {
-            return Ok(None);
+            return None;
         };
         let mut bytes = Vec::new();
         ZlibDecoder::new(encoded.as_ref())
             .read_to_end(&mut bytes)
-            .decode()?;
-        Ok(Some(bytes))
+            .expect("the private capture decompresses CSS encoded in memory");
+        Some(bytes)
     }
 }
 

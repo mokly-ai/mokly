@@ -1,5 +1,7 @@
 # Shared Browse shell
 
+Status: Some host content cleanup errors reach `CatalogueBoundary` as catalogue failures. The [host content cleanup item](../../../../plans/follow-ups/host-content-cleanup-errors.md) owns that fix. Some asynchronous document failures never reach the catalogue failure state. The [asynchronous catalogue failures item](../../../../plans/follow-ups/asynchronous-catalogue-failures.md) owns that fix.
+
 Serve, the static build, and React hosts render this same tree in the
 browser.
 
@@ -228,7 +230,12 @@ embedded root and its host slots with `@mokly/ui/embedded-layout`, which
 places each slot's content and never reads it. The standalone shell's root
 and the loading, failure, and version states of both roots render
 `@mokly/ui/shell-layout`, and the highlight labels of the workspace and of a
-host's inspection render `@mokly/ui/highlight-label`. Both inspection layers
+host's inspection render `@mokly/ui/highlight-label`.
+`catalogue_boundary.tsx` wraps the ready shell of both roots. A document of the
+supported version that the shell cannot render, an entry detail included,
+moves the root to its failure state with Try again. A value that host code
+throws passes on to the host. Both
+inspection layers
 draw one `@mokly/ui/highlight-mask` over each highlighted frame from the same
 boundary snapshot as their labels, for same-origin and cross-origin frames.
 The mask clips to the visible frame and stays above an expanded frame.
@@ -272,7 +279,9 @@ An inspector tag then returns focus to the toggle in its own shell. Picker
 chips keep the focus return of `@mokly/ui/tag-picker`.
 
 `store.tsx` and the focused `store_*` modules own the shared route,
-selection, disclosure, drawer, details and scroll state. `store_browser.ts`
+selection, disclosure, drawer, details and scroll state. Every container
+renders under `ShellStoreProvider` and reads that state through
+`useShellStore`, also in tests. `store_browser.ts`
 owns standalone history, and `store_host.ts` owns host selection commits.
 `store_routes.ts` installs each route's display for both roots.
 `store_interactions.ts` binds both roots to clicks and Escape. It dismisses
@@ -367,11 +376,10 @@ routed screen, component parent, or component variant; component routes retain
 their parent schema separately for controls. A screen or component parent reads
 its lists from its own detail. A current component variant reads Used by and
 Affected from its parent's detail, while its own detail supplies its other
-workspace facts. Every value is projected only from validated index and detail
-records: every catalogue of a delivery carries its published records.
+workspace facts. Every value is projected only from the installed index and
+detail records: every catalogue of a delivery carries its published records.
 `comparison_views.tsx` renders
-React-owned frame chrome around the snapshots from validated comparison
-metadata.
+React-owned frame chrome around the snapshots from the comparison metadata.
 
 `workspace_evidence_data.ts` merges an entry's own reasons, which
 `publicWorkspace` reads from the routed entry detail's `reasons`, the selected
@@ -446,11 +454,11 @@ route of Serve. A publication commit rebuilds the navigation sections and
 reconciles the current disclosures and pre-filter baseline to exactly their
 new keys; initial restore uses the same `disclosure_storage.ts`
 reconciliation with an explicit fallback. A publication keeps surviving
-collapsed choices; route navigation owns active-route reveal. The
-`nav_rows.ts` and `nav_leaf_rows.ts` missing-key defaults remain defensive
-for rendering without a store; mounted shells supply every current key. A
-removed-entry route whose snapshot record leaves a refreshed index shows the
-missing state.
+collapsed choices; route navigation owns active-route reveal.
+`nav_rows.ts` and `nav_leaf_rows.ts` read each disclosure from the store,
+which holds every current key, because it builds its disclosures from the
+same sections. A removed-entry route whose snapshot record leaves a refreshed
+index shows the missing state.
 
 `workspace.tsx` coordinates the React workspace without owning transport or
 frame internals. `component_controls.tsx` owns cancellable temporary prop edits,

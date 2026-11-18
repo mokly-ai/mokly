@@ -224,7 +224,7 @@ highlighting, scrolling and frame events through the
 [frame adapter](./mokly-frame-adapter.md). `sameOriginAdapter` encapsulates
 same-origin document access without changing authentication, visuals or
 sandbox. An explicit cross-origin host instead uses the nonce- and
-origin-checked inspector in published copies on a separate origin with
+origin-checked frame probe in published copies on a separate origin with
 `allow-same-origin allow-scripts`. That host exception enables document
 scripts; local frames and comparison snapshots keep their restrictions.
 Host-only pick mode reuses Highlight components and adds no local control.

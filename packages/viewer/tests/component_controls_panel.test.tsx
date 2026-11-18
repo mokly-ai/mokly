@@ -4,8 +4,9 @@ import { test } from "node:test";
 import { isValidElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
+import type { PropSchema } from "@mokly/model";
+
 import { encodeProps } from "../src/components/codec.js";
-import type { PropSchema } from "../src/components/prop_types.js";
 import { CONTROLS_COPY } from "../src/shell/component_controls_copy.js";
 import {
   ComponentControlsPanel,

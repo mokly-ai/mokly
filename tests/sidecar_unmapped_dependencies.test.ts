@@ -77,7 +77,6 @@ for (const layout of [
       cached.unmappedDependencyDirectories,
       result.unmappedDependencyDirectories,
     );
-    assert.ok(result.compiled);
     assert.equal(
       sidecar.operations.filter((event) => event.operation === "esbuild")
         .length,

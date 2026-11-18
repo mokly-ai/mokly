@@ -1,8 +1,12 @@
 //! Release retention, fixed seeding, byte eviction, and stop clearing.
 
+use std::panic::{AssertUnwindSafe, catch_unwind};
+use std::sync::Arc;
+
+use crate::methods::BundleCapture;
 use crate::pool::SidecarPool;
 
-use super::recipe_support::{Fixture, envelope_size};
+use super::recipe_support::{Fixture, envelope_size, envelope_size_with_capture};
 
 #[test]
 fn seed_restores_the_highest_live_epoch_on_each_fresh_worker() {
@@ -14,6 +18,23 @@ fn seed_restores_the_highest_live_epoch_on_each_fresh_worker() {
     for slot in 1..4 {
         assert_eq!(fixture.probe("entry.ts", "probe", slot), ["z-new"]);
     }
+}
+
+#[test]
+fn a_live_seed_stays_usable_when_its_final_lease_ends_during_restore() {
+    let fixture = Arc::new(Fixture::new(usize::MAX));
+    fixture.release("entry.ts", "stored");
+    let live = fixture.bundle("entry.ts", "live");
+    let owner = Arc::downgrade(&fixture);
+    *fixture.before_restore.lock().unwrap() = Some(Box::new(move || {
+        owner
+            .upgrade()
+            .unwrap()
+            .pool
+            .release_generation(&live.generation, live.epoch);
+    }));
+    let restored = catch_unwind(AssertUnwindSafe(|| fixture.probe("entry.ts", "probe", 2)));
+    assert_eq!(restored.ok(), Some(vec!["stored".into(), "live".into()]));
 }
 
 #[test]
@@ -75,4 +96,59 @@ fn every_pool_stop_clears_retained_recipes_and_late_releases_keep_it_empty() {
             .release_generation(&live.generation, live.epoch);
         assert_eq!(fixture.retained(), 0);
     }
+}
+
+#[test]
+fn released_serve_edits_seed_only_edit_requests_and_keep_the_existing_byte_bound() {
+    let capture = BundleCapture::ServeEdit;
+    let fixture = Fixture::new(envelope_size_with_capture("a.ts", "a0", capture));
+    let first = fixture.bundle_with_capture("a.ts", "a0", capture);
+    fixture
+        .pool
+        .release_generation(&first.generation, first.epoch);
+    fixture.pool.synchronize_releases();
+    assert_eq!(fixture.retained(), 1);
+    assert_eq!(fixture.probe("a.ts", "full", 1), Vec::<String>::new());
+    assert_eq!(
+        fixture.probe_with_capture("a.ts", "edit", 2, capture),
+        ["a0"]
+    );
+    let second = fixture.bundle_with_capture("b.ts", "b0", capture);
+    fixture
+        .pool
+        .release_generation(&second.generation, second.epoch);
+    fixture.pool.synchronize_releases();
+    assert_eq!(fixture.retained(), 1);
+    assert_eq!(
+        fixture.probe_with_capture("a.ts", "probe-a", 3, capture),
+        Vec::<String>::new()
+    );
+    assert_eq!(
+        fixture.probe_with_capture("b.ts", "probe-b", 0, capture),
+        ["b0"]
+    );
+}
+
+#[test]
+fn captured_live_seeds_take_priority_over_newer_live_and_released_edit_seeds() {
+    let fixture = Fixture::new(usize::MAX);
+    fixture.bundle("entry.ts", "captured");
+    let older = fixture.bundle_with_capture("entry.ts", "older-edit", BundleCapture::ServeEdit);
+    fixture.select(1);
+    let edit = fixture.bundle_with_capture("entry.ts", "edit", BundleCapture::ServeEdit);
+    assert_eq!(
+        fixture.probe_with_capture("entry.ts", "probe", 2, BundleCapture::ServeEdit),
+        ["captured", "edit"]
+    );
+    fixture
+        .pool
+        .release_generation(&older.generation, older.epoch);
+    fixture
+        .pool
+        .release_generation(&edit.generation, edit.epoch);
+    fixture.pool.synchronize_releases();
+    assert_eq!(
+        fixture.probe_with_capture("entry.ts", "next", 3, BundleCapture::ServeEdit),
+        ["captured", "edit"]
+    );
 }

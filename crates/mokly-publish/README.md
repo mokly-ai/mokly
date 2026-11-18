@@ -7,8 +7,8 @@ owns publication orchestration and the static output adapter.
 
 ## Responsibilities
 
-- Validate the upload metadata from the shared output model.
-- Validate the ownership marker, exact bytes, portable paths, and upload limits.
+- Reuse finalized upload metadata, ownership records, and file hashes.
+- Enforce upload file-count and file-size limits.
 - Send Plan, missing content blobs, and Complete through one origin.
 - Apply bounded retries, one re-plan, cancellation, and digest accounting.
 - Check committed HEAD and the complete checkout before and after the build.
@@ -18,12 +18,10 @@ owns publication orchestration and the static output adapter.
 `mokly_model::output` owns the shared upload and ownership shapes and the
 single marker writer. The static builder installs its exact immutable bytes.
 The CLI adapter constructs `Finalized` once and retains both the artifact and
-its prepared upload. Repeated `OutputSnapshot::capture` calls share parsed
-metadata, hashes, and the compressed Plan body. No directory walk occurs.
-Index identity validation streams through the catalogue index and rejects
-nested duplicate keys without constructing its full value tree. It checks the
-index's `baseCommit` against the upload's `baseSha` and its `base` against
-`baseRef`. The Plan archive carries the envelope, the ownership marker, and the
+its prepared upload. Repeated `OutputSnapshot::capture` calls share typed
+metadata, finalized hashes, and the compressed Plan body. No directory walk occurs.
+Preparation trusts the typed metadata and ownership inventory retained by the
+same build. The Plan archive carries the envelope, the ownership marker, and the
 index, so a receiver reads Changes from the index without another request.
 The installed index and every generation file enter the same upload inventory.
 Disabled or unavailable Changes has no generation and null comparison metadata.
@@ -89,11 +87,8 @@ trait mocks to downstream tests.
 - [`src/exchange.rs`](./src/exchange.rs) defines `Exchange` and `Client`,
   which send Plan, the missing Blobs, and Complete with bounded retries.
 - [`src/snapshot.rs`](./src/snapshot.rs) defines `Finalized`, `Prepared`, and
-  `OutputSnapshot`, which validate finished output once and keep the prepared
+  `OutputSnapshot`, which prepare finalized output once and keep the prepared
   upload.
-- [`src/index_identity.rs`](./src/index_identity.rs) defines `IndexIdentity`,
-  which streams the catalogue index and keeps its base and base commit for the
-  check against the upload metadata.
 - [`src/settings.rs`](./src/settings.rs) defines `Settings`, the validated
   endpoint, credential, and concurrency, and `Token`, which wraps a `Secret`
   after the bearer-token grammar check. `Settings::new` takes a `Secret`.

@@ -1,7 +1,9 @@
 //! Request, response and event envelopes.
 
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use serde_json::value::RawValue;
 use ts_rs::TS;
 
 use crate::definitions::Definitions;
@@ -23,7 +25,6 @@ pub struct Request {
 
 /// Structured remote failure.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(deny_unknown_fields)]
 pub struct RemoteError {
     /// Protocol error category.
     pub code: RemoteCode,
@@ -36,15 +37,16 @@ pub struct RemoteError {
 }
 
 /// Exactly one response outcome; raw JSON is decoded using the pending method.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(untagged, deny_unknown_fields)]
+#[derive(Clone, Debug, Serialize, TS)]
+#[serde(untagged)]
 pub enum Response {
     /// A successful method result.
     Success {
         /// Request identity.
         id: u64,
         /// JSON boundary decoded immediately by decode_result.
-        result: Value,
+        #[ts(as = "serde_json::Value")]
+        result: Box<RawValue>,
     },
     /// A failed method result.
     Failure {
@@ -57,12 +59,7 @@ pub enum Response {
 
 /// Asynchronous sidecar diagnostics, without request ids.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(
-    tag = "event",
-    content = "params",
-    rename_all = "camelCase",
-    deny_unknown_fields
-)]
+#[serde(tag = "event", content = "params", rename_all = "camelCase")]
 pub enum Event {
     /// An operation performed by the worker process.
     Operation {
@@ -79,7 +76,7 @@ pub enum Event {
 }
 
 /// One inbound client frame; requests from the peer are invalid.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, Serialize, TS)]
 #[serde(untagged)]
 pub enum Frame {
     /// A response to the outstanding request.
@@ -95,7 +92,7 @@ pub enum MethodResult {
     /// Hello package version.
     Hello(results::Hello),
     /// Bundle generation and module graph.
-    Bundle(results::Bundle),
+    Bundle(Box<results::Bundle>),
     /// Exported definitions.
     Definitions(Definitions),
     /// Fragment render.
@@ -109,17 +106,8 @@ pub enum MethodResult {
 }
 
 impl Response {
-    /// Verify correlation before reading any result or remote error.
+    /// Decode the result selected by the pending request method.
     pub fn decode_result(self, request: &Request) -> Result<MethodResult> {
-        let id = match &self {
-            Self::Success { id, .. } | Self::Failure { id, .. } => *id,
-        };
-        if id != request.id {
-            return Err(Error::Protocol(ProtocolError::ResponseId {
-                expected: request.id,
-                actual: id,
-            }));
-        }
         match self {
             Self::Failure {
                 error:
@@ -134,30 +122,30 @@ impl Response {
                 message: error.message,
             }),
             Self::Success { result, .. } => match &request.call {
-                Call::Hello(_) => Ok(MethodResult::Hello(decode(result)?)),
-                Call::Bundle(_) => Ok(MethodResult::Bundle(decode(result)?)),
-                Call::Describe(_) => Ok(MethodResult::Definitions(decode(result)?)),
+                Call::Hello(_) => Ok(MethodResult::Hello(decode(&result)?)),
+                Call::Bundle(_) => Ok(MethodResult::Bundle(decode(&result)?)),
+                Call::Describe(_) => Ok(MethodResult::Definitions(decode(&result)?)),
                 Call::RenderScreen(_) | Call::RenderComponent(_) | Call::RenderStory(_) => {
-                    Ok(MethodResult::Render(decode(result)?))
+                    Ok(MethodResult::Render(decode(&result)?))
                 }
-                Call::RenderPage(_) => Ok(MethodResult::Page(decode(result)?)),
-                Call::ProcessCss(_) => Ok(MethodResult::Css(decode(result)?)),
+                Call::RenderPage(_) => Ok(MethodResult::Page(decode(&result)?)),
+                Call::ProcessCss(_) => Ok(MethodResult::Css(decode(&result)?)),
                 Call::CssModules(_)
                 | Call::RestoreGeneration(_)
                 | Call::Bindings(_)
                 | Call::DisposeContext(_)
                 | Call::Dispose(_)
-                | Call::Shutdown(_) => {
-                    decode::<()>(result)?;
-                    Ok(MethodResult::Empty)
-                }
+                | Call::Shutdown(_) => Ok(MethodResult::Empty),
             },
         }
     }
 }
 
-fn decode<T: serde::de::DeserializeOwned>(value: Value) -> Result<T> {
-    match serde_json::from_value(value) {
+/// Keep legacy last-key decoding on the exceptional typed-decode path.
+fn decode<T: DeserializeOwned>(value: &RawValue) -> Result<T> {
+    let decoded = serde_json::from_str(value.get())
+        .or_else(|_| serde_json::from_str::<Value>(value.get()).and_then(serde_json::from_value));
+    match decoded {
         Ok(value) => Ok(value),
         Err(source) => Err(Error::Protocol(ProtocolError::Json { source })),
     }

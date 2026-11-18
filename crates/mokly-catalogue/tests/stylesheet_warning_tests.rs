@@ -5,6 +5,8 @@ use mokly_catalogue::error::CatalogueError;
 use serde_json::json;
 use tempfile::TempDir;
 
+#[path = "support/definitions.rs"]
+mod definitions;
 mod support;
 
 fn fixture(pattern: &str) -> TempDir {

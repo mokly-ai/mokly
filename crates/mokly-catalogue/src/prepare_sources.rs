@@ -1,6 +1,7 @@
 //! Source preparation helpers and canonical catalogue order.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::Arc;
 
 use mokly_model::axes::EntryKind;
 use mokly_model::canonical::compare_utf16;
@@ -51,6 +52,14 @@ pub(crate) fn append(
     ) {
         Ok(result) => {
             let path = result.entries[0].metadata.path.clone();
+            if let Some(validator) = result.validator {
+                let validator = Arc::new(validator);
+                for entry in &result.entries {
+                    prepared
+                        .prop_validators
+                        .insert(entry.metadata.path.clone(), validator.clone());
+                }
+            }
             if result.failed {
                 failed.extend(
                     result

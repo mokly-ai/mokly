@@ -5,6 +5,8 @@ import path from "node:path";
 import { runCommand } from "./command.mjs";
 import {
   validateCliReport,
+  validateFrameReport,
+  validateModelReport,
   validateNativeReport,
   validateUiReport,
 } from "./package_reports.mjs";
@@ -55,6 +57,8 @@ export function validatePackageReport(report, name = "@mokly/viewer") {
   assert.match(report.shasum, /^[a-f0-9]{40}$/);
   if (name === "@mokly/viewer") validateViewerReport(report);
   else if (name === "@mokly/ui") validateUiReport(report);
+  else if (name === "@mokly/model") validateModelReport(report);
+  else if (name === "@mokly/frame") validateFrameReport(report);
   else if (name === "@mokly/mokly") validateCliReport(report);
   else validateNativeReport(report, name);
 }
@@ -97,7 +101,7 @@ function validateViewerReport(report) {
     "dist/data.d.ts",
     "dist/styles.css",
     "dist/shell.css",
-    "dist/browser/inspector.js",
+    "dist/browser/frame-probe.js",
     "dist/browser/shell.js",
     "dist/assets/fonts/Inter-OFL.txt",
     "LICENSE",

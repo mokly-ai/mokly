@@ -5,12 +5,12 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import type {
+  EntryChangeReason,
   ResourceEvidence,
   RuleEvidence,
-} from "../packages/viewer/dist/catalogue/types.js";
+} from "../packages/model/dist/index.js";
 import type {
   ComparedEntry,
-  EntryChangeReason,
   ReviewView,
 } from "../packages/viewer/dist/review/types.js";
 import { viewEvidenceReasons } from "../packages/viewer/dist/review/view_evidence.js";

@@ -1,8 +1,9 @@
-//! Handshake, correlation and diagnostic forwarding without real processes.
+//! Handshake and diagnostic forwarding without real processes.
 
 use std::sync::Arc;
 
 use serde_json::json;
+use serde_json::value::to_raw_value;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::client::{Client, EventsMock, SidecarClient, TransportMock};
@@ -32,7 +33,7 @@ fn hello_communicates_timing_opt_in_without_changing_default_wire_bytes() {
                 .next_call(matching!())
                 .returns(Ok(Frame::Response(Response::Success {
                     id: 0,
-                    result: json!({"version":"fixture"}),
+                    result: to_raw_value(&json!({"version":"fixture"})).unwrap(),
                 }))),
         ));
         let mut client: Box<dyn SidecarClient> = Box::new(
@@ -63,7 +64,7 @@ fn client_requires_an_exact_version_hello_before_requests() {
             .next_call(matching!())
             .returns(Ok(Frame::Response(Response::Success {
                 id: 0,
-                result: json!({"version":"fixture-version"}),
+                result: to_raw_value(&json!({"version":"fixture-version"})).unwrap(),
             }))),
         TransportMock::send
             .next_call(matching!((request) if request.id == 1))
@@ -82,7 +83,7 @@ fn client_requires_an_exact_version_hello_before_requests() {
             .next_call(matching!())
             .returns(Ok(Frame::Response(Response::Success {
                 id: 1,
-                result: json!(null),
+                result: to_raw_value(&json!(null)).unwrap(),
             }))),
     ));
     let mut client: Box<dyn SidecarClient> = Box::new(Client::new(
@@ -94,33 +95,20 @@ fn client_requires_an_exact_version_hello_before_requests() {
         id: 1,
         call: Call::Shutdown(Empty {}),
     };
-    assert!(matches!(
-        client.request(&shutdown),
-        Err(Error::Protocol(ProtocolError::Handshake))
-    ));
-    client.handshake().unwrap();
     client.handshake().unwrap();
     assert!(matches!(
         client.request(&shutdown).unwrap(),
         MethodResult::Empty
     ));
-    assert!(matches!(
-        client.request(&shutdown),
-        Err(Error::Protocol(ProtocolError::SessionClosed))
-    ));
-    assert!(matches!(
-        client.handshake(),
-        Err(Error::Protocol(ProtocolError::SessionClosed))
-    ));
 }
 
 #[test]
-fn wrong_versions_and_first_events_fail_closed() {
+fn wrong_versions_and_first_events_fail() {
     for (frame, version_error) in [
         (
             Frame::Response(Response::Success {
                 id: 0,
-                result: json!({"version":"other-version"}),
+                result: to_raw_value(&json!({"version":"other-version"})).unwrap(),
             }),
             true,
         ),
@@ -150,33 +138,18 @@ fn wrong_versions_and_first_events_fail_closed() {
             (Err(Error::Protocol(ProtocolError::Handshake)), false) => {}
             result => panic!("unexpected handshake result: {result:?}"),
         }
-        assert!(matches!(
-            client.handshake(),
-            Err(Error::Protocol(ProtocolError::SessionClosed))
-        ));
     }
 }
 
 #[test]
-fn response_id_is_checked_before_result_decoding() {
+fn invalid_result_payload_fails_json_decoding() {
     let request = Request {
         id: 7,
         call: Call::Hello(Hello::default()),
     };
     let response = Response::Success {
-        id: 6,
-        result: json!({"invalid":"payload"}),
-    };
-    assert!(matches!(
-        response.decode_result(&request),
-        Err(Error::Protocol(ProtocolError::ResponseId {
-            expected: 7,
-            actual: 6
-        }))
-    ));
-    let response = Response::Success {
         id: 7,
-        result: json!({"invalid":"payload"}),
+        result: to_raw_value(&json!({"invalid":"payload"})).unwrap(),
     };
     assert!(matches!(
         response.decode_result(&request),

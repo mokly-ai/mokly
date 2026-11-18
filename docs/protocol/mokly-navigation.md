@@ -80,8 +80,8 @@ fallback resolves through the first screen in that use case.
 
 ### Fragments
 
-A logical fragment contains one or more Unicode letters, numbers or combining
-marks, `_`, `:`, `.`, or `-`. It names an HTML `id`, not a CSS selector. The
+A logical fragment contains one or more Unicode `Alphabetic`, number, or mark
+characters, `_`, `:`, `.`, or `-`. It names an HTML `id`, not a CSS selector. The
 core validates that it exists in every composed view that Browse may show for
 the destination: the mobile, desktop, light and applicable dark views of a
 screen, or every document of a destination page or document. For a use case,

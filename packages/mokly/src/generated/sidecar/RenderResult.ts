@@ -4,7 +4,6 @@ import type { CollectedStyle } from "./CollectedStyle.js";
 import type { InstanceDraft } from "./InstanceDraft.js";
 import type { MarkerDraft } from "./MarkerDraft.js";
 import type { SlotDraft } from "./SlotDraft.js";
-import type { Warning } from "./Warning.js";
 
 // prettier-ignore
 export type RenderResult = {
@@ -31,8 +30,4 @@ instances: Array<InstanceDraft>,
 /**
  * Supplied slots and their physical placements.
  */
-slots: Array<SlotDraft>,
-/**
- * Nonfatal render diagnostics.
- */
-warnings: Array<Warning>, };
+slots: Array<SlotDraft>, };

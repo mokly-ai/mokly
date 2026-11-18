@@ -1,12 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { CatalogueReadModel, EntryDetailV4 } from "@mokly/model";
+
 import { fenceDetail } from "../src/catalogue/detail_fences.js";
 import { readEntryDetail } from "../src/catalogue/detail_reader.js";
-import type {
-  CatalogueReadModel,
-  EntryDetailV4,
-} from "../src/catalogue/types.js";
 import { loadFencedDetail } from "../src/shell/data_requests.js";
 import type { ShellDataSource } from "../src/shell/data_source.js";
 
@@ -50,18 +48,18 @@ function index(revision: number, dark = false): CatalogueReadModel {
   });
 }
 
-test("a newer detail is a revision mismatch before its content is compared", () => {
-  assert.equal(
-    fenceDetail(index(0), { path: HOME }, home(1, true)).kind,
-    "revision",
-  );
+test("revision fences do not compare entry content", () => {
+  const newer = home(1, true);
+  newer.detailId = OTHER;
+  newer.identity.id = OTHER;
+  assert.equal(fenceDetail(index(0), { path: HOME }, newer).kind, "revision");
   assert.equal(
     fenceDetail(index(1, true), { path: HOME }, home(1, true)).kind,
     "accepted",
   );
   assert.equal(
     fenceDetail(index(1), { path: HOME }, home(1, true)).kind,
-    "rejected",
+    "accepted",
   );
 });
 

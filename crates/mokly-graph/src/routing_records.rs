@@ -7,7 +7,6 @@ use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_model::catalogue::{EntryContent, ModelEntry};
 use serde_json::json;
 
-use crate::error::Result;
 use crate::key::{NodeKey, NodeKind, data_key};
 
 /// Indexed routing inputs and their complete conservative key for one generation.
@@ -19,7 +18,7 @@ pub(crate) struct RoutingRecords<'a> {
 
 impl<'a> RoutingRecords<'a> {
     /// Preserve catalogue order when a current path and an old alias overlap.
-    pub(crate) fn new(catalogue: &'a PreparedCatalogue) -> Result<Self> {
+    pub(crate) fn new(catalogue: &'a PreparedCatalogue) -> Self {
         let mut entries = BTreeMap::new();
         let mut paths = BTreeSet::new();
         for entry in &catalogue.model.entries {
@@ -28,19 +27,19 @@ impl<'a> RoutingRecords<'a> {
                 entries.entry(path.to_ascii_lowercase()).or_insert(entry);
             }
         }
-        let complete = records_key(paths.clone(), &entries)?;
-        Ok(Self {
+        let complete = records_key(paths.clone(), &entries);
+        Self {
             entries,
             paths,
             complete,
-        })
+        }
     }
 
     /// Reuse only exact inventory subsets; other spellings retain their requested identity.
-    pub(crate) fn key(&self, mut targets: BTreeSet<String>, opaque: bool) -> Result<NodeKey> {
+    pub(crate) fn key(&self, mut targets: BTreeSet<String>, opaque: bool) -> NodeKey {
         if opaque {
             if targets.is_subset(&self.paths) {
-                return Ok(self.complete.clone());
+                return self.complete.clone();
             }
             targets.extend(self.paths.iter().cloned());
         }
@@ -48,11 +47,8 @@ impl<'a> RoutingRecords<'a> {
     }
 }
 
-#[tracing::instrument(name = "graph.prepare.routing-records", skip_all, err)]
-fn records_key(
-    mut targets: BTreeSet<String>,
-    entries: &BTreeMap<String, &ModelEntry>,
-) -> Result<NodeKey> {
+#[tracing::instrument(name = "graph.prepare.routing-records", skip_all)]
+fn records_key(mut targets: BTreeSet<String>, entries: &BTreeMap<String, &ModelEntry>) -> NodeKey {
     let mut records = Vec::new();
     let mut visited = BTreeSet::new();
     while let Some(path) = targets.pop_first() {

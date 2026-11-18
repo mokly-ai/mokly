@@ -53,7 +53,7 @@ pub enum ReviewKind {
 
 /// One side's original address and inputs.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct ReviewEntryAddress {
     /// Original side path and case.
     pub path: String,
@@ -92,8 +92,8 @@ pub struct ReviewView {
 }
 
 /// Direct reasons. A pure move is included with no reason.
-#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize, TS)]
-#[serde(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, TS)]
+#[serde(tag = "kind", rename_all = "kebab-case")]
 pub enum EntryChangeReason {
     /// A new entry.
     Added,
@@ -170,7 +170,7 @@ pub struct ReviewDiagnostic {
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ReviewResultV8 {
-    /// Exactly 8, checked before other payload fields.
+    /// Exactly 8.
     #[ts(type = "8")]
     pub schema_version: u32,
     /// Pinned merge base.
@@ -182,3 +182,7 @@ pub struct ReviewResultV8 {
     /// Comparison diagnostics, including moves.
     pub diagnostics: Vec<ReviewDiagnostic>,
 }
+
+#[cfg(test)]
+#[path = "_tests_/review_encoding_tests.rs"]
+mod review_encoding_tests;

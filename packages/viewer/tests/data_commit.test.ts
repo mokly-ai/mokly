@@ -42,21 +42,6 @@ function state(snapshot: ReturnType<typeof dataSnapshot>, path: string) {
   );
 }
 
-test("the first snapshot holds only the details its fences accept", () => {
-  const index = indexFixture();
-  const snapshot = initialSnapshot(index, [
-    [{ path: HOME }, detailFixture({ path: HOME })],
-    [{ path: "guide" }, { ...detailFixture({ path: "guide" }), revision: 9 }],
-    [{ path: "product" }, detailFixture({ path: "guide" })],
-  ]);
-  assert.deepEqual([...snapshot.details.keys()], [detailKey({ path: HOME })]);
-  assert.equal(screen(snapshot, HOME).views[0]!.usage.status, "ready");
-  assert.equal(
-    screen(snapshot, "product/browse/details").views[0]!.usage.status,
-    "omitted",
-  );
-});
-
 test("an accepted detail adds its usage without replacing the index", () => {
   const empty = dataSnapshot(indexFixture(), new Map());
   assert.equal(screen(empty, HOME).views[0]!.usage.status, "omitted");

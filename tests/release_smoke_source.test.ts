@@ -20,13 +20,14 @@ function namedImports(source: string): Map<string, string[]> {
   return imports;
 }
 
-test("the release smoke names only exports the built viewer has", async () => {
-  const imports = [...namedImports(SMOKE_SOURCE)].filter(([specifier]) =>
-    specifier.startsWith("@mokly/viewer"),
+test("the release smoke names only exports the built viewer and model have", async () => {
+  const imports = [...namedImports(SMOKE_SOURCE)].filter(
+    ([specifier]) =>
+      specifier.startsWith("@mokly/viewer") || specifier === "@mokly/model",
   );
   assert.deepEqual(
     imports.map(([specifier]) => specifier),
-    ["@mokly/viewer", "@mokly/viewer/data"],
+    ["@mokly/model", "@mokly/viewer", "@mokly/viewer/data"],
   );
   for (const [specifier, names] of imports) {
     const module = (await import(specifier)) as Record<string, unknown>;
@@ -40,6 +41,8 @@ test("the release smoke resolves every entry it reads as a file", () => {
     ...SMOKE_SOURCE.matchAll(/import\.meta\.resolve\("([^"]+)"\)/g),
   ].map((match) => match[1]!);
   assert.deepEqual(resolved, [
+    "@mokly/frame",
+    "@mokly/frame/internal",
     "@mokly/viewer/browser",
     "@mokly/viewer/styles.css",
     "@mokly/ui/styles.css",

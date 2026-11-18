@@ -84,19 +84,7 @@ test("CSS-only contexts reuse their own workers and dispose independently", asyn
   await sidecar.call("disposeContext", { context: "base" });
   assert.match((await process("head")).text, /order: 2/);
   assert.match((await process("base")).text, /order: 1/);
-  await assert.rejects(
-    sidecar.call(
-      "processCss",
-      cssParams({
-        context: "head",
-        moduleResolution: {
-          ...bundleParams().moduleResolution,
-          aliases: { missing: "other" },
-        },
-      }),
-    ),
-    /changed its sources or resolution/,
-  );
+  await sidecar.call("shutdown");
 });
 
 test("throwing PostCSS plugins keep the module and bundle failure code", async (context) => {

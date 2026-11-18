@@ -28,8 +28,6 @@ pub struct ProvidedDefinition {
 /// One describe inventory, with private imported sources kept separate from entries.
 #[derive(Clone, Debug, Default)]
 pub struct Definitions {
-    /// True only when the provider cannot evaluate JavaScript definitions.
-    pub deferred: bool,
     /// Exported definitions, in source and export order.
     pub entries: Vec<ProvidedDefinition>,
     /// Code-carried folder records.
@@ -51,16 +49,4 @@ pub struct Definitions {
 pub trait DefinitionProvider: Send + Sync {
     /// Describe only the files in the resolved source set. HTML never reaches this call.
     fn describe(&self, config: &ResolvedConfig, files: &[SourceFile]) -> Result<Definitions>;
-}
-
-/// Milestone 4 inventories JavaScript files. Milestone 8 supplies the sidecar adapter.
-pub struct DeferredDefinitions;
-
-impl DefinitionProvider for DeferredDefinitions {
-    fn describe(&self, _config: &ResolvedConfig, _files: &[SourceFile]) -> Result<Definitions> {
-        Ok(Definitions {
-            deferred: true,
-            ..Default::default()
-        })
-    }
 }

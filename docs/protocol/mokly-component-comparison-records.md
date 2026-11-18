@@ -9,7 +9,7 @@ and the diagnostics inside that envelope. The model crate's `ReviewEntry`,
 `AffectedConsumer`, and `ReviewDiagnostic` types define their shapes. The
 [entry detail](./mokly-shell-delivery.md#entry-detail) publishes a screen or
 component entry's `before` address, whose shape is the generated
-[`ReviewEntryAddress`](../../packages/viewer/src/generated/catalogue/ReviewEntryAddress.ts)
+[`ReviewEntryAddress`](../../packages/model/src/generated/catalogue/ReviewEntryAddress.ts)
 type, and each view's `state`, `ignoredIds`, and evidence. The side address of
 a screen or a component carries its merged props in the props codec of the
 [catalogue read model](./mokly-catalogue.md).

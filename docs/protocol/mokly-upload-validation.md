@@ -1,5 +1,7 @@
 # Catalogue Upload Validation v3
 
+Status: No receiver runs the catalogue content check yet. The [receiver read-model validation item](../../plans/follow-ups/receiver-read-model-validation.md) adds it to Mokly Cloud.
+
 This document supplements the
 [Catalogue Upload Exchange](./mokly-upload-exchange.md) with rejection
 categories, upload limits, and receiver validation.
@@ -15,20 +17,20 @@ Blobs, Complete or downgrade. It reports:
 The catalogue service does not support this Mokly version. Update the service and try again.
 ```
 
-| Rejection                                                                       | HTTP status            | CLI category                      |
-| ------------------------------------------------------------------------------- | ---------------------- | --------------------------------- |
-| Unsupported envelope or present non-3 ownership `schemaVersion`                 | 426                    | `upload-unsupported-version`      |
-| Invalid archive, missing marker version, malformed value/path, or byte mismatch | 400 or 422             | `upload-invalid-bundle`           |
-| Oversized or invalid gzip Blob, decoded mismatch, or other `Content-Encoding`   | 400                    | `upload-invalid-bundle`           |
-| Any exceeded limit, including declared file size or path byte length            | 413                    | `upload-too-large`                |
-| Missing/invalid token or forbidden repository                                   | 401 or 403             | `upload-unauthorized`             |
-| Blob digest outside the Plan, or unknown upload id                              | 404                    | `upload-failed`                   |
-| Complete while a listed digest is missing                                       | 409                    | one re-plan, then `upload-failed` |
-| Expired upload, or locally reached `expiresAt`                                  | 410                    | one re-plan, then `upload-failed` |
-| Retryable status after five attempts                                            | 408, 429, 500, 502–504 | `upload-failed`                   |
-| Other non-2xx or 2xx, redirect, or invalid response                             | any other              | `upload-failed`                   |
-| Command cancellation classified under Accounting And Output                     | local                  | cancellation `upload-failed`      |
-| Any non-cancellation local error, including a build recovery failure            | local                  | its own category and message      |
+| Rejection                                                                                                               | HTTP status            | CLI category                      |
+| ----------------------------------------------------------------------------------------------------------------------- | ---------------------- | --------------------------------- |
+| Unsupported envelope or present non-3 ownership `schemaVersion`                                                         | 426                    | `upload-unsupported-version`      |
+| Invalid archive, missing marker version, malformed value/path, catalogue content that fails its check, or byte mismatch | 400 or 422             | `upload-invalid-bundle`           |
+| Oversized or invalid gzip Blob, decoded mismatch, or other `Content-Encoding`                                           | 400                    | `upload-invalid-bundle`           |
+| Any exceeded limit, including declared file size or path byte length                                                    | 413                    | `upload-too-large`                |
+| Missing/invalid token or forbidden repository                                                                           | 401 or 403             | `upload-unauthorized`             |
+| Blob digest outside the Plan, or unknown upload id                                                                      | 404                    | `upload-failed`                   |
+| Complete while a listed digest is missing                                                                               | 409                    | one re-plan, then `upload-failed` |
+| Expired upload, or locally reached `expiresAt`                                                                          | 410                    | one re-plan, then `upload-failed` |
+| Retryable status after five attempts                                                                                    | 408, 429, 500, 502–504 | `upload-failed`                   |
+| Other non-2xx or 2xx, redirect, or invalid response                                                                     | any other              | `upload-failed`                   |
+| Command cancellation classified under Accounting And Output                                                             | local                  | cancellation `upload-failed`      |
+| Any non-cancellation local error, including a build recovery failure                                                    | local                  | its own category and message      |
 
 Local validation uses the same categories. Other local typed failures keep
 their categories, and no request follows a build failure. Unexpected
@@ -97,3 +99,14 @@ Complete only when every marker digest is stored; otherwise answer 409.
 Authorize the repository and hosting policy before exposing a catalogue. Built
 HTML and assets are consumer-authored content; the envelope is not a
 sanitization or sandboxing boundary.
+
+## Catalogue Content
+
+Before it completes an upload, a receiver checks the catalogue index and every
+entry detail of the upload, current and removed, with the core's index and
+detail readers under the lenient rule of the
+[serialization contract](./mokly-catalogue-serialization.md#versions). An
+index or a detail that fails the check rejects the upload with 400 or 422,
+which the CLI reports as `upload-invalid-bundle`. Decision: the receiver runs
+these readers, not a second copy of their rules, because two copies drift,
+and a viewer then cannot read a catalogue that the receiver accepted.

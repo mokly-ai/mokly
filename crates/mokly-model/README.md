@@ -14,9 +14,9 @@ depends on it. It has no internal crate dependency and performs no file IO.
   explicit empty values, omitted absent optionals, and a final LF.
 - Validate the JSON Schema 2020-12 prop profile and complete JSON props with
   one validator on `jsonschema`.
-- Own the review result and change snapshot, the in-memory comparison
-  records, the removed-preview shape, and their strict readers.
-- Generate TypeScript declarations for the viewer.
+- Own the review result, change snapshot, in-memory comparison records, and
+  removed-preview shape.
+- Generate the TypeScript declarations of the `@mokly/model` package.
 
 ## What This Crate Does
 
@@ -29,10 +29,12 @@ JavaScript and stories use `component-schema` or `component-props`.
 
 `output` defines the ownership marker, upload metadata, repository identity,
 and immutable file inventory. `Artifact::finalize` accepts optional upload
-metadata and writes the marker last. Plain builds pass no metadata. Both
+metadata and writes the marker last. It retains the typed ownership inventory
+and upload metadata beside the finalized bytes. Plain builds pass no metadata. Both
 `mokly-static` and `mokly-publish` use these shapes without a dependency on
-each other. The marker parser checks format shape. The publication client
-separately checks complete artifact bytes and upload-only file-count limits.
+each other. The marker parser checks persisted ownership before an existing
+output directory can be replaced. The publication client reuses the finalized
+inventory and checks upload file-count and file-size limits.
 
 Canonical encoding preserves array order. Each shape owner supplies the entry
 kind/path order, authored variant order, instance/slot key order, and region
@@ -45,9 +47,10 @@ guarantee does not extend the JSON reader or prop-schema nesting contracts.
 large integer types to TypeScript `number`, because JSON readers use numbers. It supports recursive
 schemas and Serde field names without a second hand-written type model.
 `typescript::generate` returns deterministic source. `cargo xtask generate-types`
-writes the schema module to `packages/viewer/src/generated/model.ts` and the
-catalogue types to `packages/viewer/src/generated/catalogue/`, one declaration
-per file. `catalogue::CatalogueModel` is private in-memory state. `SourceLocation`
+writes the schema module to `packages/model/src/generated/model.ts` and the
+catalogue types to `packages/model/src/generated/catalogue/`, one declaration
+per file. The [`@mokly/model`](../../packages/model/README.md) package ships
+them. `catalogue::CatalogueModel` is private in-memory state. `SourceLocation`
 coordinates are one-based; a zero line or column means the coordinate is
 unavailable. JavaScript diagnostics can use the module and export instead. The public
 roots are `CatalogueReadModel`, `DeploymentFileV1`, `EntryDetailV4`, and
@@ -69,6 +72,16 @@ and `before` names the base side of a ready current screen or component.
 Ready included entries carry it even when their usage workspace is unavailable.
 `ReadError::Contract` carries a typed `ContractViolation`. Version failures
 print the supplied integer or explain its absence.
+
+Receivers use `readers::index_lenient` and `readers::detail_lenient` before
+accepting an upload. These readers check versions, known field types,
+relationships, and union field placement. They ignore additive unknown
+fields in public records. Prop schemas still reject unknown keywords.
+The readers inspect the original JSON for private evidence and unsafe public
+paths before they discard unknown fields. The privacy walk permits authored
+props and schema property names. It limits depth to 128 and visits to
+5,000,000. The existing `index` and `detail` readers stay strict and reject
+unknown fields through their re-encode comparison.
 
 `detail_context::read` validates a current detail against its installed index.
 It checks identity, deployment, revision, kind, exact views, and reason presence
@@ -93,16 +106,10 @@ Serve and the static writer.
 `review` and `review_affected` define direct reasons, view states, and complete
 usage chains. A comparison keeps the review result in memory and publishes its
 facts through the index and the entry details. `review_order` supplies
-canonical order for producers and readers. `readers::review` gates the review
-version before validating sides, membership, order, and evidence.
-The reader requires current variants before base-only variants, exact
-`previousPath` on moved pairs, and UTF-16 order for reason targets.
-The classifier also validates source coverage and actual ownership proof.
-`readers::change_snapshot` gates the snapshot version before reading
-historical records. It rejects unknown flattened fields, invalid IDs, and
-snapshot-local order errors.
-`CatalogueChangeSnapshotV4::validate_sources` checks the full removed order
-against both catalogues, including base-authored variant order.
+canonical order for producers. Comparison producers retain current variants
+before base-only variants, exact `previousPath` on moved pairs, and UTF-16
+order for reason targets. Snapshot producers retain base-authored variant
+order. The comparison trusts these records from the same Mokly version.
 Component identity impact can come from an included parent or variant. An
 actual-instance `implementation` reason does not alter own view states.
 
@@ -126,6 +133,29 @@ as the same value.
 `runtime_diagnostic` carries expected runtime categories across adapters.
 
 ## Quick Start
+
+The crate stays unpublished. An external receiver uses a Git dependency
+pinned to a reviewed, merged commit. Replace `{commit}` with that commit id:
+
+```toml
+[dependencies]
+mokly-model = { git = "https://github.com/mokly-ai/mokly", rev = "{commit}" }
+```
+
+Read a current detail with the receiver API, then check its index context:
+
+```rust
+use mokly_model::{detail_context, readers};
+use mokly_model::readers::ReadError;
+
+fn receive(index_json: &str, detail_json: &str) -> Result<(), ReadError> {
+    let index = readers::index_lenient(index_json)?;
+    let detail = readers::detail_lenient(detail_json)?;
+    detail_context::validate(&detail, &index)
+}
+```
+
+Encode canonical JSON:
 
 ```rust
 use mokly_model::canonical;
@@ -152,7 +182,8 @@ cargo xtask generate-types
 - [`src/versions.rs`](./src/versions.rs) holds every independent format
   number, such as `CATALOGUE_INDEX` and `ENTRY_DETAIL`.
 - [`src/canonical.rs`](./src/canonical.rs) provides `to_string`, the
-  canonical JSON encoder.
+  canonical JSON encoder, and `detail_preimage`, the zeroed canonical bytes
+  shared by detail hashing and Serve publication.
 - [`src/validation.rs`](./src/validation.rs) defines `PropValidator`, the one
   validator for the `PropSchema` profile of
   [`src/prop_schema.rs`](./src/prop_schema.rs) and for complete props.
@@ -166,8 +197,18 @@ cargo xtask generate-types
 - [`src/projection.rs`](./src/projection.rs) provides `index` and
   `pending_details`, which project a validated model into public records.
 - [`src/readers.rs`](./src/readers.rs) provides the strict readers `index`,
-  `deployment`, `detail`, `live`, `review`, and `change_snapshot`, which gate the format
-  number before they decode a payload.
+  `deployment`, `detail`, and `live`, which gate the format number before
+  they decode a payload. `index_lenient` and `detail_lenient` provide the
+  receiver's additive-field readers with privacy checks.
+- [`src/nullable.rs`](./src/nullable.rs) defines `Nullable`, a required public
+  field whose value can be null, such as `comparisonUrl`. Every decoder
+  rejects its absence, and TypeScript declares it as `T | null`.
+- [`src/public_privacy.rs`](./src/public_privacy.rs) inspects the original
+  JSON of a lenient read for private evidence and unsafe public paths, before
+  decoding drops the unknown fields.
+- [`src/public_decode/`](./src/public_decode/) decodes each tagged union of the
+  public records through a raw record, so both reader modes reject the fields
+  of another variant.
 - [`src/review.rs`](./src/review.rs) and [`src/snapshot.rs`](./src/snapshot.rs)
   define `ReviewResultV8` and `CatalogueChangeSnapshotV4`.
 - [`src/output/mod.rs`](./src/output/mod.rs) holds the shared output shapes,
@@ -186,5 +227,6 @@ cargo xtask generate-types
 - [Entry props](../../docs/protocol/mokly-entry-props.md).
 - [Component props](../../docs/protocol/mokly-component-props.md).
 - [Format inventory](../../docs/protocol/mokly-format-versions.md).
+- [Model package](../../docs/protocol/mokly-model-package.md).
 - [Static ownership](../../docs/protocol/mokly-export-ownership.md).
 - [Rust core architecture](../../docs/architecture/rust-core.md).

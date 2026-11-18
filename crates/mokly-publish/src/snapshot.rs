@@ -1,4 +1,4 @@
-//! Validate finished output once and retain the prepared exchange snapshot.
+//! Prepare finalized output and retain the immutable exchange snapshot.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
@@ -13,8 +13,7 @@ use mokly_model::output::validation::{
 };
 
 use crate::archive::plan_archive;
-use crate::error::{Error, OutputResult, Result};
-use crate::index_identity::IndexIdentity;
+use crate::error::{Error, Result};
 
 /// Immutable output with its prepared upload, retained together by the CLI adapter.
 #[derive(Clone)]
@@ -37,7 +36,7 @@ impl Finalized {
     pub fn artifact(&self) -> &Artifact {
         &self.artifact
     }
-    /// Cached hashes, parsed metadata and compressed Plan body.
+    /// Finalized hashes, typed metadata and compressed Plan body.
     pub fn prepared(&self) -> &Prepared {
         &self.prepared
     }
@@ -73,7 +72,7 @@ pub struct Prepared {
 }
 
 impl Prepared {
-    /// Validate completeness, addresses, metadata and comparison, then compress once.
+    /// Enforce upload limits, reuse finalized identities, and compress once.
     pub fn new(artifact: &Artifact) -> Result<Self> {
         if artifact.files.len() > FILE_COUNT_LIMIT
             || artifact
@@ -83,45 +82,25 @@ impl Prepared {
         {
             return Err(Error::TooLarge);
         }
-        let mut by_path = BTreeMap::new();
-        for file in &artifact.files {
-            if by_path.insert(file.path.as_str(), file).is_some() {
-                return Err(Error::InvalidBundle);
-            }
-        }
-        let marker = by_path.get(MARKER).ok_or(Error::InvalidBundle)?;
-        let ownership = Ownership::parse(&marker.bytes).upload()?;
-        let manifest = by_path.get(MANIFEST).ok_or(Error::InvalidBundle)?;
-        let metadata = UploadMetadata::parse(&manifest.bytes).upload()?;
-        if !by_path.contains_key("index.html")
-            || !by_path.contains_key("404.html")
-            || by_path.len() != ownership.files.len() + 1
-        {
-            return Err(Error::InvalidBundle);
-        }
+        let by_path: BTreeMap<_, _> = artifact
+            .files
+            .iter()
+            .map(|file| (file.path.as_str(), file))
+            .collect();
+        let marker = by_path[MARKER];
+        let ownership = artifact.ownership.clone();
+        let manifest = by_path[MANIFEST];
+        let metadata = artifact
+            .metadata
+            .clone()
+            .expect("The publication build finalizes its artifact with upload metadata");
         let mut blobs = BTreeMap::from([(digest(&marker.bytes), marker.bytes.clone())]);
         for entry in &ownership.files {
-            let file = by_path
-                .get(entry.path.as_str())
-                .ok_or(Error::InvalidBundle)?;
-            if file.bytes.len() as u64 != entry.size || digest(&file.bytes) != entry.sha256 {
-                return Err(Error::InvalidBundle);
-            }
+            let file = by_path[entry.path.as_str()];
             blobs.insert(entry.sha256.clone(), file.bytes.clone());
         }
-        let index = by_path.get(INDEX).ok_or(Error::InvalidBundle)?;
-        let identity = IndexIdentity::parse(&index.bytes)?;
-        let compared = metadata.base_sha.is_some();
-        if identity.base_commit != metadata.base_sha
-            || (compared && identity.base != metadata.base_ref)
-            || (!compared
-                && by_path
-                    .keys()
-                    .any(|path| path.starts_with("mokly-viewer/diffs/")))
-        {
-            return Err(Error::InvalidBundle);
-        }
-        let plan_files = vec![(*manifest).clone(), (*marker).clone(), (*index).clone()];
+        let index = by_path[INDEX];
+        let plan_files = vec![manifest.clone(), marker.clone(), index.clone()];
         let archive = plan_archive(&plan_files)?.into();
         Ok(Self {
             directory: artifact.directory.clone(),

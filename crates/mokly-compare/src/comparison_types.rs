@@ -73,17 +73,15 @@ pub struct ComparisonCounts {
     pub ignored_only: usize,
 }
 
-/// Complete validated comparison, retained for later snapshot and static delivery.
+/// Complete comparison, retained for later snapshot and static delivery.
 pub struct ComparisonResult {
     /// Observed route reads, comparisons, diffs, and bounded resource retention.
     pub resource_work: ResourceWork,
     /// Actual indexed consumer identity lookups.
     pub affected_lookups: usize,
-    /// Actual indexed classification-to-review lookups.
-    pub validation_lookups: usize,
     /// Base-side preparation and composition warnings remain outside public JSON.
     pub warnings: Vec<Warning>,
-    /// Strict review v8.
+    /// Review v8.
     pub review: ReviewResultV8,
     /// Membership and selected historical metadata v4.
     pub snapshot: CatalogueChangeSnapshotV4,

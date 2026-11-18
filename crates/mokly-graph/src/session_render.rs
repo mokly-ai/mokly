@@ -61,7 +61,7 @@ impl ArtifactWorker for Session {
         let document = artifact
             .document
             .as_ref()
-            .ok_or_else(|| invalid(route, "document has no composed tree"))?;
+            .expect("rendered document artifacts carry their composed tree");
         self.walker()
             .collect(route, &document.tree, &document.resources)
     }
@@ -70,7 +70,7 @@ impl ArtifactWorker for Session {
         let document = composed
             .document
             .as_ref()
-            .ok_or_else(|| invalid(route, "document has no composed tree"))?;
+            .expect("rendered document artifacts carry their composed tree");
         let closure = match self
             .walker()
             .collect(route, &document.tree, &document.resources)
@@ -87,7 +87,7 @@ impl ArtifactWorker for Session {
         let document = artifact
             .document
             .as_ref()
-            .ok_or_else(|| invalid(route, "document has no composed tree"))?;
+            .expect("rendered document artifacts carry their composed tree");
         if let Err(source) = validation::links(self, &document.links) {
             return Err(GraphError::Attempt {
                 failures: vec![source],
@@ -113,9 +113,10 @@ impl ArtifactWorker for Session {
 /// stylesheet-owner warning for a renderer seed. Serve and the props preview report
 /// only the document's warnings, so the view's report needs both lists.
 pub(crate) fn with_closure_warnings(artifact: Arc<Artifact>, closure: &Closure) -> Arc<Artifact> {
-    let Some(document) = &artifact.document else {
-        return artifact;
-    };
+    let document = artifact
+        .document
+        .as_ref()
+        .expect("closure warnings are added only to rendered document artifacts");
     let added: Vec<_> = closure
         .warnings
         .iter()

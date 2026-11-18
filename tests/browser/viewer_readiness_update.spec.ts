@@ -3,7 +3,7 @@ import path from "node:path";
 import { expect } from "@playwright/test";
 import { build } from "esbuild";
 
-import type { CatalogueReadModel } from "../../packages/viewer/src/catalogue/types.js";
+import type { CatalogueReadModel } from "../../packages/model/dist/index.js";
 
 import type {} from "../../packages/viewer/tests/readiness_entry.js";
 

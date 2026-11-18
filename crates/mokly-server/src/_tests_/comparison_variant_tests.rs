@@ -9,7 +9,6 @@ use mokly_graph::closure::Closure;
 use mokly_graph::types::{RenderGeneration, RenderGenerationMock};
 use mokly_model::axes::EntryKind;
 use mokly_model::evidence::{EvidenceOwner, RuleEvidence, RuleStatus};
-use mokly_model::readers;
 use mokly_model::review::{EntryChangeReason, ReviewEntry, ReviewKind};
 use unimock::{MockFn, Unimock, matching};
 
@@ -88,7 +87,6 @@ fn family(before: Arc<dyn RenderGeneration>, after: Arc<dyn RenderGeneration>) -
             entry
         })
         .to_vec();
-    readers::review(&serde_json::to_string(&result.review).unwrap()).unwrap();
     input
 }
 

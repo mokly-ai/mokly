@@ -18,6 +18,8 @@ import { dependency, sidecarSources } from "./helpers/sidecar_sources.js";
 function compiled(): CompiledGeneration {
   return {
     identity: "compiled",
+    toolchain: "fixture",
+    reuseEvidence: { complete: true, durable: false, inputs: {} },
     code: "module.exports={}",
     runtimeKey: "private",
     dependencyRoots: [],
@@ -37,7 +39,7 @@ test("bundle recipes carry one module graph and fail with a typed size diagnosti
   const modules = [{ path: "entry.ts", imports: [] }];
   const result = bundleResult(restore(params, recipe, modules));
   assert.deepEqual(result.modules, modules);
-  assert.ok(!Object.hasOwn(result.compiled!, "modules"));
+  assert.ok(!Object.hasOwn(result.compiled, "modules"));
   assert.throws(
     () => checkRecipeSize(params, result, 64),
     (error: unknown) => {
@@ -56,6 +58,28 @@ test("bundle recipes carry one module graph and fail with a typed size diagnosti
     },
   );
   checkRecipeSize(params, result);
+  result.compiled.reuseEvidence.inputs["/candidate"] = {
+    kind: "directory",
+    entries: [{ name: "a".repeat(4096), kind: "file", target: null }],
+  };
+  const oversized = result.compiled.reuseEvidence;
+  assert.doesNotThrow(() => checkRecipeSize(params, result, 2048));
+  assert.deepEqual(result.compiled.reuseEvidence, {
+    complete: false,
+    durable: false,
+    inputs: {},
+  });
+  result.compiled.reuseEvidence = {
+    ...oversized,
+    complete: false,
+    uncaptured: "serveEdit",
+  };
+  assert.doesNotThrow(() => checkRecipeSize(params, result, 2048));
+  assert.deepEqual(result.compiled.reuseEvidence, {
+    complete: false,
+    durable: false,
+    inputs: {},
+  });
 });
 
 test("failed peer resolution cannot fall through to a native parent installation", () => {
@@ -86,10 +110,10 @@ test("a failed peer lookup remains explicit in a real bundle recipe", async (con
   const native = createRequire(path.join(params.sourceRoot, "package.json"));
   assert.ok(native.resolve("react/package.json"));
   const result = await sidecar.call<BundleResult>("bundle", params);
-  assert.equal(result.compiled?.peers["react/package.json"], null);
+  assert.equal(result.compiled.peers["react/package.json"], null);
   assert.throws(
     () =>
-      restore(params, result.compiled!, result.modules).require.resolve(
+      restore(params, result.compiled, result.modules).require.resolve(
         "react/package.json",
       ),
     { code: "MODULE_NOT_FOUND" },

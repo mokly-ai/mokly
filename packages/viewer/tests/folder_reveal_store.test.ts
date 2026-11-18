@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { CatalogueReadModel } from "../src/catalogue/types.js";
+import type { CatalogueReadModel } from "@mokly/model";
+
 import { catalogueNavSections } from "../src/shell/nav_model.js";
 import { shellContext } from "../src/shell/projection.js";
 import { shellStore } from "../src/shell/store_actions.js";

@@ -1,7 +1,7 @@
 //! Stream validation inputs to an ordered consumer without a second composition.
 
 use crate::collection::ComparisonCollector;
-use crate::error::{Result, invalid};
+use crate::error::Result;
 use crate::references;
 use crate::session::Session;
 use crate::types::{ComparisonDocument, RenderGeneration, RenderSummary};
@@ -47,7 +47,7 @@ impl Session {
             for (route, input) in batch.iter().zip(inputs) {
                 match input {
                     Ok(input) => {
-                        summary.record(view(route, &input));
+                        summary.record(Ok(view(route, &input)));
                         ready.push((route, input));
                     }
                     Err(error) => summary.record(Err(error)),
@@ -78,13 +78,13 @@ impl Session {
     }
 }
 
-pub(crate) fn view(route: &str, input: &ComparisonDocument) -> Result<ValidatedView> {
+pub(crate) fn view(route: &str, input: &ComparisonDocument) -> ValidatedView {
     let document = input
         .artifact
         .document
         .as_ref()
-        .ok_or_else(|| invalid(route, "document has no composed tree"))?;
-    Ok(ValidatedView {
+        .expect("comparison document artifacts carry their composed tree");
+    ValidatedView {
         route: route.into(),
         anchors: references::anchors(&document.tree),
         links: document.links.clone(),
@@ -95,5 +95,5 @@ pub(crate) fn view(route: &str, input: &ComparisonDocument) -> Result<ValidatedV
             .chain(&input.closure.warnings)
             .cloned()
             .collect(),
-    })
+    }
 }

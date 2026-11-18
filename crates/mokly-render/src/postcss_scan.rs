@@ -4,11 +4,11 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use globset::GlobBuilder;
+use globset::{GlobBuilder, GlobMatcher};
 
 use mokly_source_interface::tree::{Child, FileKind, Node, SourceTree};
 
-use crate::error::{InternalError, RenderError, Result};
+use crate::error::{InternalError, Result};
 
 #[derive(Default)]
 pub(crate) struct Scan {
@@ -28,7 +28,7 @@ impl Scan {
             };
             self.nodes.insert(path.into(), node);
         }
-        Ok(self.nodes.get(path).cloned().flatten())
+        Ok(self.nodes[path].clone())
     }
 
     pub(crate) fn children(&mut self, tree: &dyn SourceTree, path: &Path) -> Result<Vec<Child>> {
@@ -39,7 +39,7 @@ impl Scan {
             };
             self.directories.insert(path.into(), children);
         }
-        Ok(self.directories.get(path).cloned().unwrap_or_default())
+        Ok(self.directories[path].clone())
     }
 
     pub(crate) fn digest(&mut self, tree: &dyn SourceTree, path: &Path) -> Result<String> {
@@ -62,20 +62,13 @@ impl Scan {
         tree: &dyn SourceTree,
         root: &Path,
         pattern: &str,
-        invalid: &dyn Fn() -> RenderError,
+        compile: &dyn Fn() -> Result<GlobMatcher>,
     ) -> Result<Arc<[PathBuf]>> {
         let key = (root.to_owned(), pattern.to_owned());
         if let Some(files) = self.matches.get(&key) {
             return Ok(files.clone());
         }
-        let matcher = match GlobBuilder::new(pattern)
-            .literal_separator(true)
-            .backslash_escape(false)
-            .build()
-        {
-            Ok(glob) => glob.compile_matcher(),
-            Err(_) => return Err(invalid()),
-        };
+        let matcher = compile()?;
         let mut files = Vec::new();
         let mut pending = vec![(root.to_owned(), PathBuf::new())];
         while let Some((directory, suffix)) = pending.pop() {
@@ -137,6 +130,15 @@ impl Scan {
             .sum::<usize>();
         size_of::<Self>() + nodes + directories + digests + matches
     }
+}
+
+/// Compile the portable glob syntax used by PostCSS directory dependencies.
+pub(crate) fn glob(pattern: &str) -> std::result::Result<GlobMatcher, globset::Error> {
+    Ok(GlobBuilder::new(pattern)
+        .literal_separator(true)
+        .backslash_escape(false)
+        .build()?
+        .compile_matcher())
 }
 
 fn denied(name: &str) -> bool {

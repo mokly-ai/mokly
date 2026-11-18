@@ -10,7 +10,7 @@
 | Review result                           | 8                         | In memory only: tree materiality, owner-attributed rule and resource evidence, moves; never written or read from a file.                                                                                                                            |
 | Catalogue change snapshot               | 4                         | In memory only: current private path/move/removal evidence paired with review v8 and the base commit.                                                                                                                                               |
 | Live descriptor                         | 3                         | A Serve JSON route with the render capability only; the index carries the one revision and the render generation.                                                                                                                                   |
-| Inspector wire envelope                 | 2                         | Navigation carries `screenPath`; both peers require 2 before message fields.                                                                                                                                                                        |
+| Frame probe wire envelope               | 3                         | The [frame probe wire](./mokly-frame-probe-wire.md#wire-protocol-v3) on channel `mokly-frame-probe`; navigation carries `screenPath`; both peers require 3 before message fields.                                                                   |
 | Removed page/document preview metadata  | 3                         | `{schemaVersion,baseRef,baseCommit,path}` shape.                                                                                                                                                                                                    |
 | Export ownership                        | 3                         | Exact `{path,sha256,size}` inventory, bounds and namespace; written by `build`.                                                                                                                                                                     |
 | Upload metadata                         | 3                         | Strict envelope without a comparison path; the Plan archive carries the index; Mokly Cloud implements it.                                                                                                                                           |
@@ -20,6 +20,7 @@
 | Verification process-owner records      | 1                         | PID/token/process-lifetime shape.                                                                                                                                                                                                                   |
 | Browser module inventory                | 1                         | Exact module-path inventory shape.                                                                                                                                                                                                                  |
 | Timing records and verification reports | 1                         | Timing/runner evidence shape.                                                                                                                                                                                                                       |
+| Bundle cache entry                      | 1                         | One [bundle cache](./mokly-base-cache.md#bundle-entries) entry. Its first line names this number, the writing Mokly version, and the payload SHA-256. The reader requires 1 and the running Mokly version before it reads the payload.              |
 
 A format number changes only when the shape or the interpretation of its
 format changes. Package 1.0.0 is the first release with a stable format
@@ -54,7 +55,7 @@ components and variants, including the HTML and YAML file kinds of the
 derive their instance, slot and root regions from the composed trees under the
 [comparison contract](./mokly-comparison.md) and carry no text offsets.
 Resource owners exclude CSS. The read model v9 is the model's public form. The
-[generated TypeScript types](../../packages/viewer/src/generated/catalogue/)
+[generated TypeScript types](../../packages/model/src/generated/catalogue/)
 are the normative shapes.
 
 ## Rejection Before Interpretation
@@ -65,7 +66,7 @@ review file is read. Unknown newer versions are invalid.
 
 Index, detail, and live descriptor readers use `MoklyVersionError` at their
 version gates. An unreadable deployment file, including one with another
-version, changes nothing. Inspector peers reject a mismatched wire version
+version, changes nothing. Frame probe peers reject a mismatched wire version
 before processing navigation. No field renaming or path conversion rescues an
 unsupported payload.
 
@@ -78,5 +79,5 @@ A receiver that does not support these versions answers HTTP 426, and the CLI
 sends no Blob or Complete request and does not downgrade. The ownership and upload readers check their own
 fields and namespace; catalogue readers independently enforce their payload
 versions. Mokly Cloud reads upload metadata v3 and catalogue v9, and reads
-Changes from the index. Its receiver parses no entry detail and no static
-deployment file, and its embedded viewer reads entry detail v4.
+Changes from the index. Its receiver parses no static deployment file, and
+its embedded viewer reads entry detail v4.

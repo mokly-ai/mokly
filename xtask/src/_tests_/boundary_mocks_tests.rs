@@ -3,7 +3,6 @@
 use std::path::Path;
 use std::process::Command;
 
-use mokly_git::batches::{Batches, BatchesMock};
 use mokly_git::command::{self, Output, Runner, RunnerMock};
 use mokly_platform::locks::{FileLock, Locks, LocksMock};
 use mokly_platform::processes::{ProcessGroup, ProcessGroupMock, ProcessGroups, ProcessGroupsMock};
@@ -59,6 +58,7 @@ fn git_and_sidecar_mocks_are_usable_from_a_downstream_crate() {
         })));
     runner
         .run(&command::Request {
+            process_mode: Default::default(),
             directory: "/fixture".into(),
             args: vec![],
             stdin: vec![],
@@ -66,12 +66,6 @@ fn git_and_sidecar_mocks_are_usable_from_a_downstream_crate() {
             stderr_limit: 1024 * 1024,
         })
         .unwrap();
-    let batches: &dyn Batches = &Unimock::new(
-        BatchesMock::run
-            .next_call(matching!(_, _, _))
-            .returns(Ok(vec![])),
-    );
-    batches.run(Path::new("/fixture"), &[], &[]).unwrap();
     let request = wire::Request {
         id: 0,
         call: Call::Hello(Hello::default()),
@@ -82,7 +76,7 @@ fn git_and_sidecar_mocks_are_usable_from_a_downstream_crate() {
             .next_call(matching!())
             .returns(Ok(Frame::Response(Response::Success {
                 id: 0,
-                result: serde_json::Value::Null,
+                result: serde_json::value::to_raw_value(&()).unwrap(),
             }))),
     ));
     let transport: &mut dyn Transport = &mut transport;

@@ -10,7 +10,7 @@ use mokly_model::review_affected::{
 
 use crate::projection_workspace;
 
-use super::support::{classified, details, entry, result, with_lookup};
+use super::support::{classified, details, entry, result};
 
 pub(super) fn effect(path: &str, kind: ConsumerKind) -> AffectedConsumer {
     AffectedConsumer {
@@ -62,7 +62,7 @@ fn removed_components_can_compare_but_removed_screens_cannot() {
                 classified(path, kind, ReviewState::Removed),
             ],
         );
-        with_lookup(&mut result);
+
         result.review.affected.push(effect(
             path,
             if kind == EntryKind::Screen {
@@ -149,7 +149,7 @@ fn affected_only_consumers_are_eligible_and_duplicate_links_keep_first_seen_orde
     first.evidence.push(after.clone());
     first.evidence.push(after);
     result.review.affected = vec![first.clone(), first];
-    with_lookup(&mut result);
+
     let mut current = details(&result.after.catalogue().model);
     projection_workspace::apply(&mut current, &result).unwrap();
     assert!(
@@ -239,7 +239,7 @@ fn affected_only_consumers_are_eligible_and_duplicate_links_keep_first_seen_orde
 #[test]
 fn comparison_evidence_does_not_invent_a_workspace_before_usage_is_ready() {
     let button = entry("button", EntryKind::Component, None);
-    let mut result = result(
+    let result = result(
         vec![button.clone()],
         vec![button],
         vec![classified(
@@ -248,7 +248,7 @@ fn comparison_evidence_does_not_invent_a_workspace_before_usage_is_ready() {
             ReviewState::Changed,
         )],
     );
-    with_lookup(&mut result);
+
     let mut current = details(&result.after.catalogue().model);
     current.get_mut("button").unwrap().workspace = None;
     projection_workspace::apply(&mut current, &result).unwrap();
@@ -271,8 +271,7 @@ fn a_current_variant_keeps_no_workspace_lists() {
             ),
         ],
     );
-    let mut result = result;
-    with_lookup(&mut result);
+
     let mut current = details(&result.after.catalogue().model);
     projection_workspace::apply(&mut current, &result).unwrap();
     let workspace = current["button/default"].workspace.as_ref().unwrap();

@@ -1,7 +1,8 @@
 /** Pure route projection and input handling for application-owned shell roots. */
 
+import type { FrameNavigation } from "@mokly/frame";
+
 import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
-import type { FrameNavigation } from "../client/frame_adapter.js";
 import type { ViewerSelection } from "../host/types.js";
 import { eligibleAnchor } from "../navigation/activation.js";
 

@@ -6,10 +6,9 @@ use mokly_css::types::{Bundle, StylesheetRoot};
 use mokly_model::material::digest;
 use serde_json::json;
 
-use crate::error::Result;
 use crate::key::{NodeKey, NodeKind, data_key, key};
 
-pub(crate) fn input(config: &NodeKey, root: &StylesheetRoot, bundle: &Bundle) -> Result<NodeKey> {
+pub(crate) fn input(config: &NodeKey, root: &StylesheetRoot, bundle: &Bundle) -> NodeKey {
     let mut inputs: BTreeMap<_, _> = bundle
         .inputs
         .iter()
@@ -46,10 +45,10 @@ pub(crate) fn input(config: &NodeKey, root: &StylesheetRoot, bundle: &Bundle) ->
         json!({
             "path":root.path, "stylesheets":root.stylesheets, "excluded":root.excluded, "localCss":root.local_css
         }),
-    )?;
+    );
     let mut inputs = vec![config.0.as_bytes(), recipe.0.as_bytes()];
     inputs.extend(paths.iter().map(|key| key.as_bytes()));
-    Ok(key(NodeKind::Stylesheet, &inputs))
+    key(NodeKind::Stylesheet, &inputs)
 }
 
 pub(crate) fn output(bundle: &Bundle) -> NodeKey {

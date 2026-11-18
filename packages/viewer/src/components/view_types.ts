@@ -1,16 +1,20 @@
-import type { ColorScheme } from "../data/axes.js";
-import type { ComponentInstanceRecord } from "../generated/catalogue/ComponentInstanceRecord.js";
-import type { ComponentRangeRecord } from "../generated/catalogue/ComponentRangeRecord.js";
-import type { ComponentSlotRecord } from "../generated/catalogue/ComponentSlotRecord.js";
+import type {
+  ColorScheme,
+  ComponentInstanceRecord,
+  ComponentRangeRecord,
+  ComponentSlotRecord,
+  PropSchema,
+} from "@mokly/model";
 
-import type { PropSchema } from "./prop_types.js";
+export type {
+  ComponentInputOwner,
+  ComponentInstanceRecord,
+  ComponentRangeRecord,
+  ComponentRangeTarget,
+  ComponentSlotRecord,
+  ComponentSourceLocation,
+} from "@mokly/model";
 
-export type { ComponentInputOwner } from "../generated/catalogue/ComponentInputOwner.js";
-export type { ComponentInstanceRecord } from "../generated/catalogue/ComponentInstanceRecord.js";
-export type { ComponentRangeRecord } from "../generated/catalogue/ComponentRangeRecord.js";
-export type { ComponentRangeTarget } from "../generated/catalogue/ComponentRangeTarget.js";
-export type { ComponentSlotRecord } from "../generated/catalogue/ComponentSlotRecord.js";
-export type { ComponentSourceLocation } from "../generated/catalogue/ComponentSourceLocation.js";
 export interface ComponentStyleOwnership {
   startOffset: number;
   endOffset: number;

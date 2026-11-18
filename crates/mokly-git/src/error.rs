@@ -143,9 +143,6 @@ pub enum Error {
         /// Maximum argument budget.
         limit: usize,
     },
-    /// A batch budget cannot hold any arguments.
-    #[error("[mokly-git/batches] argument count and byte budgets must be positive")]
-    InvalidBudget,
     /// An injected platform boundary failed.
     #[error("[mokly-git/platform] {source}")]
     Platform {

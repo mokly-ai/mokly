@@ -10,7 +10,7 @@ use mokly_model::usage::ComponentSlotRecord;
 use crate::composition::Engine;
 use crate::context::{Context, Slot};
 use crate::diagnostic_code::Code;
-use crate::error::{HtmlError, Result, invalid};
+use crate::error::{Result, invalid};
 use crate::expansion::{After, Expansion};
 use crate::tree::{Element, Node, Region, RegionKind};
 use crate::{forwarded_slots, ignore_checks, source_locations};
@@ -47,10 +47,7 @@ impl Engine<'_> {
         let mut slots = BTreeMap::new();
         let caller = Arc::new(context.clone());
         for (name, nodes) in supplied {
-            let key = match slot_key(instance, &name) {
-                Ok(key) => key,
-                Err(source) => return Err(HtmlError::Props { source }),
-            };
+            let key = slot_key(instance, &name);
             let (supplier, nodes, source_slot_key, origin_key) =
                 match forwarded_slots::forwarded(&nodes, context) {
                     Some(original) => (

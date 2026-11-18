@@ -12,8 +12,6 @@ pub mod exchange;
 pub mod hints;
 pub mod http;
 pub mod identity;
-mod index_identity;
-mod json_skip;
 pub mod plan;
 pub mod redaction;
 mod retry;

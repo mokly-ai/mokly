@@ -5,9 +5,6 @@ use thiserror::Error;
 /// A specific semantic rule violated by a decoded public payload.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Error)]
 pub enum ContractViolation {
-    /// Invalid review identities, sides, reasons, evidence, or canonical order.
-    #[error("invalid review identities, sides, reasons, evidence, or canonical order")]
-    Review,
     /// Invalid catalogue or deployment identity.
     #[error("invalid catalogue or deployment identity")]
     Identity,
@@ -56,18 +53,12 @@ pub enum ContractViolation {
     /// View comparison eligibility differs from its ready kind and entry type.
     #[error("invalid comparison eligibility")]
     ComparisonEligibility,
-    /// Invalid schema encoding.
-    #[error("invalid schema encoding")]
-    SchemaEncoding,
     /// Invalid public prop schema.
     #[error("invalid public prop schema")]
     Schema,
     /// Invalid tagged props.
     #[error("invalid tagged props")]
     WireProps,
-    /// Invalid prop encoding.
-    #[error("invalid prop encoding")]
-    PropsEncoding,
     /// Recorded props fail the schema.
     #[error("recorded props fail the schema")]
     PropsSchema,
@@ -104,6 +95,15 @@ pub enum ContractViolation {
     /// Unknown or misplaced payload field.
     #[error("unknown or misplaced payload field")]
     UnknownField,
+    /// Private evidence is present outside authored data.
+    #[error("private payload field")]
+    PrivateField,
+    /// A public path escapes the repository-relative path grammar.
+    #[error("invalid public repository-relative path")]
+    PublicPath,
+    /// Public JSON exceeds the privacy walk's depth or visit budget.
+    #[error("public data limit exceeded")]
+    PublicDataLimit,
     /// Current entry cannot have removed aggregate changes.
     #[error("current entry cannot have removed aggregate changes")]
     CurrentRemoved,

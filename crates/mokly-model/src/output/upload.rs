@@ -1,10 +1,8 @@
 //! Upload metadata v3, constructed before static ownership finalization.
 
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::Serialize;
 
 use crate::output::error::{FormatError, Result};
-use crate::output::json::unique;
-use crate::output::numbers;
 use crate::output::repository::Repository;
 use crate::output::semver;
 use crate::output::validation::{MANIFEST_LIMIT, hexadecimal, portable_path, text, timestamp};
@@ -46,11 +44,10 @@ pub struct Publication {
 }
 
 /// The exact metadata envelope stored at mokly-upload.json.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UploadMetadata {
     /// Independent envelope version, always 3.
-    #[serde(deserialize_with = "numbers::version")]
     pub schema_version: u32,
     /// Installed Mokly package SemVer.
     pub mokly_version: String,
@@ -61,24 +58,15 @@ pub struct UploadMetadata {
     /// Full lowercase Git object id.
     pub head_sha: String,
     /// Effective base ref or explicit null.
-    #[serde(deserialize_with = "nullable")]
     pub base_ref: Option<String>,
     /// Pinned merge base or explicit null.
-    #[serde(deserialize_with = "nullable")]
     pub base_sha: Option<String>,
     /// Positive JavaScript-safe number or explicit null.
-    #[serde(deserialize_with = "numbers::pull_request")]
     pub pull_request: Option<u64>,
     /// Root-relative configuration path.
     pub config_path: String,
     /// UTC timestamp with exactly millisecond precision.
     pub exported_at: String,
-}
-
-fn nullable<'de, T: Deserialize<'de>, D: Deserializer<'de>>(
-    deserializer: D,
-) -> std::result::Result<Option<T>, D::Error> {
-    Option::<T>::deserialize(deserializer)
 }
 
 impl Publication {
@@ -108,28 +96,6 @@ impl Publication {
 }
 
 impl UploadMetadata {
-    /// Parse the envelope with exact fields, unique keys, and bounded bytes.
-    pub fn parse(bytes: &[u8]) -> Result<Self> {
-        if bytes.len() > MANIFEST_LIMIT {
-            return Err(FormatError::TooLarge);
-        }
-        let value = unique(bytes)?;
-        let Some(version) = value
-            .as_object()
-            .and_then(|object| object.get("schemaVersion"))
-        else {
-            return Err(FormatError::InvalidBundle);
-        };
-        if version.as_f64() != Some(f64::from(UPLOAD_METADATA)) {
-            return Err(FormatError::UnsupportedVersion);
-        }
-        let Ok(metadata) = serde_json::from_value::<Self>(value) else {
-            return Err(FormatError::InvalidBundle);
-        };
-        metadata.validate()?;
-        Ok(metadata)
-    }
-
     /// Validate a constructed document before it enters the output inventory.
     pub fn validate(&self) -> Result<()> {
         if self.schema_version != UPLOAD_METADATA {
@@ -159,10 +125,8 @@ impl UploadMetadata {
 
     /// Serialize only documented fields, with a final newline.
     pub fn bytes(&self) -> Result<Vec<u8>> {
-        self.validate()?;
-        let Ok(mut bytes) = serde_json::to_vec_pretty(self) else {
-            return Err(FormatError::InvalidBundle);
-        };
+        let mut bytes = serde_json::to_vec_pretty(self)
+            .expect("UploadMetadata contains only strings, integer fields, and optional values");
         bytes.push(b'\n');
         if bytes.len() > MANIFEST_LIMIT {
             return Err(FormatError::TooLarge);

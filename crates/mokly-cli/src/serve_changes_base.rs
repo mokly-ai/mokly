@@ -17,12 +17,12 @@ use mokly_compare::cache_types::{Lease, Reporter};
 use mokly_compare::comparison_steps::{Step, Steps};
 use mokly_compare::error::{Error, Result};
 use mokly_model::public_metadata::ChangesStatus;
-use mokly_render::side::BaseSide;
 use mokly_server::changes::{ChangeCancellation, ChangeProgress};
 use mokly_server::changes_signal::ChangeSignal;
 use mokly_server::comparison_graph::FrozenResources;
 
 use crate::base_dependencies::BaseDependencies;
+use crate::changes_freshness::{PreparedDependencies, SelectionRequest};
 use crate::changes_runtime::cache_line;
 use crate::serve_progress::{Progress, TerminalEvent};
 use crate::serve_warnings::AttemptWarnings;
@@ -84,14 +84,13 @@ impl BaseDependencies for PreparingDependencies {
         &self,
         request: &BaseRequest<'_>,
         config: &ResolvedConfig,
-        used: &[String],
-        unmapped: &[String],
+        selection: &SelectionRequest<'_>,
         sources: Option<Arc<Lease>>,
-    ) -> Result<Arc<BaseSide>> {
+    ) -> Result<PreparedDependencies> {
         if !matches!(self.progress.status(ChangesStatus::Preparing), Ok(true)) {
             return Err(Error::Cancelled);
         }
-        self.inner.prepare(request, config, used, unmapped, sources)
+        self.inner.prepare(request, config, selection, sources)
     }
 }
 
@@ -134,6 +133,7 @@ impl BaseProvider for AttemptBase {
         Ok(PreparedBase {
             generation: Arc::new(FrozenResources::new(prepared.generation)),
             scripts_off: prepared.scripts_off,
+            freshness: prepared.freshness,
         })
     }
 }

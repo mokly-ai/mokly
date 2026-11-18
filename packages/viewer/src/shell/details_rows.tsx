@@ -6,6 +6,8 @@
  * `@mokly/ui/metadata-row` renders the rows and their chips.
  */
 
+import { parseLogicalTarget } from "@mokly/model";
+import type { CatalogueUseCase } from "@mokly/model";
 import {
   EntryChip,
   MetadataChips,
@@ -15,8 +17,6 @@ import {
 } from "@mokly/ui/metadata-row";
 
 import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
-import type { CatalogueUseCase } from "../catalogue/types.js";
-import { parseLogicalTarget } from "../navigation/logical.js";
 import { viewHref } from "../navigation/routes.js";
 
 import type { Catalogue } from "./catalogue.js";

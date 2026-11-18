@@ -1,9 +1,8 @@
 /** Read the optional static deployment file without affecting browsing. */
 
-import { record } from "../components/data.js";
+import type { DeploymentFileV1 } from "@mokly/model";
 
-import type { DeploymentFileV1 } from "./types.js";
-import { hash } from "./values.js";
+import { record } from "../components/data.js";
 
 /** The only deployment file number this viewer reads. */
 const DEPLOYMENT_FILE_VERSION = 1;
@@ -15,10 +14,7 @@ export function readDeploymentFile(
   if (!record(value) || value.schemaVersion !== DEPLOYMENT_FILE_VERSION)
     return undefined;
   try {
-    return {
-      schemaVersion: DEPLOYMENT_FILE_VERSION,
-      deploymentId: hash(value.deploymentId),
-    };
+    return structuredClone(value) as DeploymentFileV1;
   } catch {
     return undefined;
   }

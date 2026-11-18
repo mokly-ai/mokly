@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import type {
   EntryDetailV4,
   MoklyViewerHandle,
@@ -21,6 +23,8 @@ interface Harness {
   start(id: string, options?: Record<string, unknown>): ViewerHost;
   get(id: string): ViewerHost;
   remove(id: string): void;
+  /** Host content that throws `error` while it renders. */
+  thrower(error: unknown): ReactNode;
 }
 interface FrameHookHarness {
   highlight(id: string): Promise<void>;

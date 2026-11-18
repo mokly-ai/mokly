@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import type * as ReactDOMServer from "react-dom/server";
 
-import { copyData } from "../authoring/data.js";
 import { definitionData } from "../authoring/runtime.js";
 import type { Renderer } from "../authoring/types.js";
 import type { RenderComponentParams } from "../generated/sidecar/RenderComponentParams.js";
@@ -11,7 +10,6 @@ import type { RenderStoryParams } from "../generated/sidecar/RenderStoryParams.j
 
 import type { Generation } from "./bundle.js";
 import { componentOutput } from "./component-output.js";
-import { describe } from "./describe.js";
 import { SidecarError, detail, handleLocation } from "./errors.js";
 import { finishMarkup } from "./markup.js";
 import { renderSession } from "./render-session.js";
@@ -25,17 +23,6 @@ export async function render(
 ): Promise<RenderResult> {
   const name = "handle" in params ? params.handle : params.storyId;
   try {
-    const definitions = await describe(generation);
-    if (definitions.diagnostics.length)
-      throw new SidecarError(
-        definitions.diagnostics[0]!.code,
-        definitions.diagnostics[0]!.message,
-      );
-    if (!generation.bindings)
-      throw new SidecarError(
-        "bundle-failed",
-        "bindings must install the resolved handle table before rendering",
-      );
     const React = generation.runtime.react;
     const context = {
       viewport: params.viewport as "mobile" | "desktop",
@@ -43,16 +30,16 @@ export async function render(
     };
     const session = renderSession(generation, context, handleLocation(name));
     return generation.runtime.withSession(session, () => {
-      const props = copyData(params.props) as Record<string, unknown>;
+      const props: Record<string, unknown> = structuredClone(params.props);
       let node: ReactNode;
       let resources: readonly string[] = [];
       if (
         kind === "story" ||
         (kind === "component" && generation.stories.has(name))
       ) {
-        const stored = generation.stories.get(name) as
-          { compose: () => PortableStory } | undefined;
-        if (!stored) throw new Error(`unknown story ${name}`);
+        const stored = generation.stories.get(name) as {
+          compose: () => PortableStory;
+        };
         const story = stored.compose();
         story.globals.moklyViewport = params.viewport;
         story.globals.moklyColorScheme = params.colorScheme;
@@ -62,9 +49,7 @@ export async function render(
         );
       } else {
         const definition = generation.handles.get(name);
-        const data = definitionData(definition);
-        if (!data || data.kind !== kind)
-          throw new Error(`unknown ${kind} ${name}`);
+        const data = definitionData(definition)!;
         const adapter = data.input.render as (
           props: object,
           context: object,
@@ -72,8 +57,6 @@ export async function render(
         if ("slots" in params) {
           for (const [slot, value] of Object.entries(params.slots)) {
             const token = value.kind === "placeholder" ? value.token : "";
-            if (!((data.input.slots ?? []) as string[]).includes(slot))
-              throw new Error(`undeclared slot ${slot}`);
             function Placeholder() {
               session.placeholders.add(JSON.stringify([slot, token]));
               const enabled = React.useContext(
@@ -86,8 +69,6 @@ export async function render(
               });
             }
             if (value.kind === "saved") {
-              if (!generation.savedSlots.has(value.handle))
-                throw new Error(`unknown saved slot ${value.handle}`);
               props[slot] = generation.savedSlots.get(value.handle);
             } else props[slot] = React.createElement(Placeholder);
           }
@@ -102,17 +83,12 @@ export async function render(
         if (generation.params.renderer) {
           if (typeof renderer !== "function")
             throw new Error("renderer default export must be a function");
-          const entry = "entry" in params ? params.entry : undefined;
-          const path = entry?.path;
-          if (!path)
-            throw new Error(
-              `renderer for ${name} requires its resolved catalogue path`,
-            );
+          const entry = ("entry" in params ? params.entry : undefined)!;
           const output = (renderer as Renderer)({
             ...context,
             node,
             props: params.props,
-            entry: { kind, path, title: entry!.title },
+            entry: { kind, path: entry.path, title: entry.title },
           });
           if (
             output &&
@@ -153,7 +129,7 @@ export async function render(
         generation,
         server.renderToStaticMarkup,
         node,
-        kind === "component" ? generation.bindings?.[name]?.path : undefined,
+        kind === "component" ? generation.bindings![name]!.path : undefined,
       );
       if (
         kind === "component" &&
@@ -171,9 +147,7 @@ export async function render(
         collected.inlineAttribution,
       );
       const owners =
-        kind === "component" && "entry" in params
-          ? [generation.bindings![name]!.path]
-          : [];
+        kind === "component" ? [generation.bindings![name]!.path] : [];
       return {
         html: result.html,
         styles: [
@@ -195,7 +169,6 @@ export async function render(
         ),
         markers: result.markers,
         resources: [...resources],
-        warnings: [],
         instances: session.instances,
         slots: session.slots,
       };

@@ -85,7 +85,7 @@ fn before_contexts(result: &ComparisonResult, consumer: &str) -> Vec<String> {
 fn usage_links(result: &ComparisonResult) -> Vec<UsageLink> {
     let model = &result.after.catalogue().model;
     let state = projection_index::publication("mokly.config.json".into(), "fixture-base");
-    let index = projection::index(model, &[], &state).unwrap();
+    let index = projection::index(model, &[], &state);
     let mut details = projection::pending_details(model, &index, &[]);
     let workspace_details: BTreeMap<_, _> = details
         .iter()

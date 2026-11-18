@@ -1,17 +1,17 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { renderToStaticMarkup } from "react-dom/server";
-
 import type { Catalogue } from "../src/shell/catalogue.js";
 import type { ShellContext } from "../src/shell/context.js";
 import type { RouteTarget } from "../src/shell/target.js";
 import type { WorkspaceData } from "../src/shell/workspace_data.js";
 import { WorkspaceStage } from "../src/shell/workspace_stage.js";
 
+import { storeMarkup } from "./shell_markup.js";
+
 /** The stage heading of one removed entry. */
 function removedHeading(entry: Record<string, unknown>): string | undefined {
-  const markup = renderToStaticMarkup(
+  const markup = storeMarkup(
     <WorkspaceStage
       catalogue={{} as Catalogue}
       context={{} as ShellContext}

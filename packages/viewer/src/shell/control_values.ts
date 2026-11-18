@@ -1,12 +1,12 @@
 /** Pure draft and validation rules of the Props controls. */
 
+import type { ComponentControl, EntryDetailV4, PropSchema } from "@mokly/model";
+
 import type {
   ShellCatalogueComponent,
   ShellCatalogueRoutedEntry,
 } from "../catalogue/scoped_types.js";
-import type { EntryDetailV4 } from "../catalogue/types.js";
 import { decodeProps } from "../components/codec.js";
-import type { ComponentControl } from "../components/control_types.js";
 import { validateControlledValues } from "../components/controls.js";
 import {
   isMultipleOf,
@@ -15,9 +15,8 @@ import {
 import type {
   ComponentWireProps,
   PropPrimitive,
-  PropSchema,
 } from "../components/prop_types.js";
-import { propertySchema, validateProps } from "../components/props.js";
+import { propertySchema, validatePropValues } from "../components/props.js";
 import type { ComponentOverride } from "../components/render_types.js";
 
 import { CONTROLS_COPY } from "./component_controls_copy.js";
@@ -134,7 +133,7 @@ export function validateControlDraft(
   }
   if (!Object.keys(errors).length)
     try {
-      validateProps(target.propSchema, merged, target.path);
+      validatePropValues(target.propSchema, merged, target.path);
     } catch {
       return { errors: { [WHOLE_PROPS_ERROR]: CONTROLS_COPY.invalidTogether } };
     }
@@ -215,14 +214,14 @@ export function controlTarget(
           removed: row.removed,
         }
       : undefined;
-  if (entry.kind !== "screen" || !entry.propSchema) return undefined;
+  if (entry.kind !== "screen") return undefined;
   return {
     path: entry.path,
     title: entry.title,
     kind: "screen",
     propSchema: entry.propSchema,
-    props: entry.props ?? {},
-    controls: entry.controls ?? {},
+    props: entry.props,
+    controls: entry.controls,
     ...(controlOrder ? { controlOrder } : {}),
     suppliedSlots: [],
     removed,

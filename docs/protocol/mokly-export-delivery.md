@@ -23,7 +23,7 @@ on a generic static server interpreting it. Generic deployments document the
 header requirements below.
 
 The default iframe sandbox stays `allow-same-origin`. Cross-origin hosts must
-explicitly use the [postMessage adapter](./mokly-inspector-wire.md#cross-origin-mount-and-handshake), a distinct
+explicitly use the [postMessage adapter](./mokly-frame-probe-wire.md#cross-origin-mount-and-handshake), a distinct
 real `frameOrigin`, and `sandbox="allow-same-origin allow-scripts"`. Opaque
 `null` origins are rejected. Query-insensitive hosting preserves the adapter's
 `mokly-host` parameter. This exception enables document scripts on the isolated
@@ -40,19 +40,19 @@ needs no rewrite rules. Every rendered file name derives from its entry's path
 under the [artifact path contract](./mokly-artifact-paths.md) and keeps the
 authored case of each segment when written into URLs.
 
-| Path                                                                        | Content                                             |
-| --------------------------------------------------------------------------- | --------------------------------------------------- |
-| `index.html`                                                                | the shell stub                                      |
-| `view/<path>/index.html`                                                    | the same stub, one per current and removed entry    |
-| `404.html`                                                                  | the same stub                                       |
-| `mokly-viewer/index.json`                                                   | the catalogue index                                 |
-| `mokly-viewer/deployment.json`                                              | the deployment file v1                              |
-| `mokly-viewer/entries/<entry path>.json`                                    | one entry detail per current entry                  |
-| `mokly-viewer/diffs/generations/<generation>/**`                            | the comparison generation                           |
-| `static/mokly-generated/<route>`                                            | rendered views and documents                        |
-| `static/<closure path>`                                                     | referenced authored resources                       |
-| `mokly-viewer/client/**`, `mokly-viewer/shell.css`, `mokly-viewer/fonts/**` | the shell bundle, the inspector, styles, and fonts  |
-| `.mokly-export-artifact`                                                    | the [ownership marker](./mokly-export-ownership.md) |
+| Path                                                                        | Content                                              |
+| --------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `index.html`                                                                | the shell stub                                       |
+| `view/<path>/index.html`                                                    | the same stub, one per current and removed entry     |
+| `404.html`                                                                  | the same stub                                        |
+| `mokly-viewer/index.json`                                                   | the catalogue index                                  |
+| `mokly-viewer/deployment.json`                                              | the deployment file v1                               |
+| `mokly-viewer/entries/<entry path>.json`                                    | one entry detail per current entry                   |
+| `mokly-viewer/diffs/generations/<generation>/**`                            | the comparison generation                            |
+| `static/mokly-generated/<route>`                                            | rendered views and documents                         |
+| `static/<closure path>`                                                     | referenced authored resources                        |
+| `mokly-viewer/client/**`, `mokly-viewer/shell.css`, `mokly-viewer/fonts/**` | the shell bundle, the frame probe, styles, and fonts |
+| `.mokly-export-artifact`                                                    | the [ownership marker](./mokly-export-ownership.md)  |
 
 The [format inventory](./mokly-format-versions.md) gives the version of each
 JSON file.
@@ -94,7 +94,8 @@ equivalent validator policy, so the next navigation sees the new deployment.
 The deployment file, index, and details of one deployment never change, so a
 validator answers `304` until the next deployment. The shell keeps the index
 and details for the page's lifetime and requests the deployment file at each
-check, with `credentials: "omit"`. A comparison generation
+check, with the credentials of the
+[shell fetch rules](./mokly-shell-fences.md#fetch-and-fences). A comparison generation
 is immutable at its content-addressed path: a host may cache its files for the
 deployment's lifetime or serve them with `Cache-Control: no-store`, and it
 must not rewrite one generation's URL to another generation.

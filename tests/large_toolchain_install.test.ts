@@ -7,11 +7,11 @@ import { promisify } from "node:util";
 
 import { platformPackage } from "../packages/mokly/src/platform.mjs";
 import { systemRuntime } from "../packages/mokly/src/runtime.mjs";
-import { object } from "../packages/viewer/src/catalogue/values.js";
 import { prepareToolchain } from "../scripts/large/toolchain.js";
 import { NATIVE_TARGETS } from "../scripts/release/targets.mjs";
 
 import { repositoryRoot } from "./helpers/fixture.js";
+import { object } from "./helpers/json_record.js";
 
 const run = promisify(execFile);
 

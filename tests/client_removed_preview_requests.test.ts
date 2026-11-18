@@ -56,7 +56,7 @@ test("a screen preview renders only its captured previous views", async () => {
   });
 });
 
-test("a detail without a removed view or for another entry is unavailable", async () => {
+test("a detail without a removed view, or no held detail, is unavailable", async () => {
   const changed = respond(
     removedDetail([{ ...removed("mobile"), state: "changed" }]),
     endpoint.href,
@@ -71,20 +71,6 @@ test("a detail without a removed view or for another entry is unavailable", asyn
     ),
     /previous version is unavailable/,
   );
-  const other = respond(
-    removedDetail([removed("mobile")], undefined, "other"),
-    endpoint.href,
-  );
-  await assert.rejects(
-    requestPreview(
-      removedScreen,
-      { endpoint, generation },
-      other.win,
-      AbortSignal.timeout(15_000),
-      removedDetail([removed("mobile")], undefined, "other"),
-    ),
-    /previous version is unavailable/,
-  );
   const missing = respond(undefined, endpoint.href, false);
   await assert.rejects(
     requestPreview(
@@ -92,71 +78,6 @@ test("a detail without a removed view or for another entry is unavailable", asyn
       { endpoint, generation },
       missing.win,
       AbortSignal.timeout(15_000),
-    ),
-    /previous version is unavailable/,
-  );
-});
-
-test("a removed screen's detail must name the selected snapshot", async () => {
-  const selected = {
-    ...removedScreen,
-    catalogueIdentity: "c".repeat(64),
-    snapshotId: snapshotId("a".repeat(40), removedScreen),
-  };
-  const views = [removed("mobile")];
-
-  const exact = respond(
-    removedDetail(views, selected.snapshotId),
-    endpoint.href,
-  );
-  await requestPreview(
-    selected,
-    { endpoint, generation },
-    exact.win,
-    AbortSignal.timeout(15_000),
-    removedDetail(views, selected.snapshotId),
-  );
-
-  const laterBaseline = respond(
-    removedDetail(views, snapshotId("d".repeat(40), removedScreen)),
-    endpoint.href,
-  );
-  await assert.rejects(
-    requestPreview(
-      selected,
-      { endpoint, generation },
-      laterBaseline.win,
-      AbortSignal.timeout(15_000),
-      removedDetail(views, snapshotId("d".repeat(40), removedScreen)),
-    ),
-    /previous version is unavailable/,
-  );
-});
-
-test("a snapshot id that names a generation instead of its base is unavailable", async () => {
-  const selected = {
-    ...removedScreen,
-    catalogueIdentity: "c".repeat(64),
-    snapshotId: snapshotId(GENERATION, removedScreen, "generation"),
-  };
-  const response = respond(
-    removedDetail(
-      [removed("mobile")],
-      snapshotId("a".repeat(40), removedScreen),
-    ),
-    endpoint.href,
-  );
-
-  await assert.rejects(
-    requestPreview(
-      selected,
-      { endpoint, generation },
-      response.win,
-      AbortSignal.timeout(15_000),
-      removedDetail(
-        [removed("mobile")],
-        snapshotId("a".repeat(40), removedScreen),
-      ),
     ),
     /previous version is unavailable/,
   );

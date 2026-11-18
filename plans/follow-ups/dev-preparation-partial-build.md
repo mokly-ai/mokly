@@ -33,14 +33,15 @@
   than `package-lock.json`. It runs `npm run build` when a file of the
   output list is missing, or when the install record is newer than
   `packages/mokly/dist/sidecar.js`. `npm run build` builds the native
-  binary, then `@mokly/ui`, `@mokly/viewer`, and `@mokly/mokly`. Each
+  binary, then `@mokly/ui`, `@mokly/model`, `@mokly/frame`,
+  `@mokly/viewer`, and `@mokly/mokly`. Each
   package build deletes its `dist` directory first. The paragraph about
   `npm run dev` in `docs/protocol/mokly-watch.md` states the requirement.
 - **Problem:** The output list does not hold every file that Serve reads.
   Serve also reads `browser.manifest.json`, `shell.css`,
   `assets/brand.svg`, and `assets/fonts/InterVariable.woff2` in
   `packages/viewer/dist`. A viewer build that stops after
-  `browser/inspector.js` but before `shell.css` leaves every listed file in
+  `browser/frame-probe.js` but before `shell.css` leaves every listed file in
   place. Dev preparation then runs no build. Serve stops with "Build or
   reinstall the matching @mokly/viewer package and retry." Two cases of
   the same class exist. A mokly build that stops after the `shim.mjs` copy

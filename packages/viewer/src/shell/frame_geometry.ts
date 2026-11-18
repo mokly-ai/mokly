@@ -1,6 +1,6 @@
 /** Coalesced authenticated geometry for React-owned frame sessions. */
 
-import type { InstanceBoundary } from "../client/frame_adapter.js";
+import type { InstanceBoundary } from "@mokly/frame";
 
 import { validFrameUsage } from "./frame_instances.js";
 import type { ShellFrameSession } from "./frame_registry.js";

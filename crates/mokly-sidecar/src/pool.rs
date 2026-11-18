@@ -3,17 +3,25 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::sync::mpsc::{self, Sender};
-use std::sync::{Arc, Condvar, Mutex, MutexGuard};
+use std::sync::{Arc, Condvar, Mutex, MutexGuard, Weak};
 
-use crate::error::{Error, InternalError, Result};
+use crate::bundle_store::BundleStore;
+use crate::error::{Error, Result};
 use crate::methods::Call;
+use crate::pool_cleanup;
 use crate::pool_options::{Launch, PoolOptions};
 use crate::pool_releases::Notice;
 use crate::pool_state::{Slot, State};
 use crate::pool_timing::Reason;
 use crate::wire::MethodResult;
 use crate::workers::{Clock, WorkerFactory};
-use crate::{pool_affinity, pool_cleanup};
+
+/// Wake the Serve owner when a pending head return can make progress.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ReturnWakeMock))]
+pub trait ReturnWake: Send + Sync {
+    /// Record ready maintenance without waiting for a process.
+    fn notify(&self);
+}
 
 /// Pool boundary consumed by catalogue and rendering services.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = PoolMock))]
@@ -22,8 +30,18 @@ pub trait SidecarPool: Send + Sync {
     fn request(&self, call: Call) -> Result<MethodResult>;
     /// Record an epoch-specific final lease release without waiting for a worker.
     fn release_generation(&self, generation: &str, epoch: u64);
+    /// Apply the served-recipe write rule after the core directly reuses a live state.
+    fn served_generation(&self, generation: &str, epoch: u64);
     /// Record a final PostCSS context release without waiting for a worker.
     fn release_context(&self, context: &str);
+    /// Record one return pass without waiting for a process.
+    fn schedule_head_return(&self) {}
+    /// Replace at most one idle base process, returning whether work was taken.
+    fn maintain_head_return(&self) -> Result<bool> {
+        Ok(false)
+    }
+    /// Observe slot changes through a weak handle owned by Serve.
+    fn observe_head_return(&self, _wake: Weak<dyn ReturnWake>) {}
     /// Cancel queued calls, kill and reap busy workers, and retain idle workers for shutdown.
     fn cancel_requests(&self) -> Result<()>;
     /// Cancel work, allow a two-second exit grace, then kill and reap survivors.
@@ -35,12 +53,14 @@ pub trait SidecarPool: Send + Sync {
 /// Process pool composed from explicit process and clock boundaries.
 pub struct Pool {
     pub(super) factory: Arc<dyn WorkerFactory>,
+    pub(super) starting: Mutex<()>,
     pub(super) clock: Arc<dyn Clock>,
     pub(super) launch: Launch,
     pub(super) options: PoolOptions,
     pub(super) state: Arc<Mutex<State>>,
     pub(super) releases: Option<Sender<Notice>>,
     pub(super) ready: Arc<Condvar>,
+    pub(super) bundle_store: Option<Arc<dyn BundleStore>>,
 }
 
 impl Pool {
@@ -54,108 +74,71 @@ impl Pool {
         let (sender, receiver) = mpsc::channel();
         let pool = Self {
             factory,
+            starting: Mutex::new(()),
             clock,
             launch,
             options,
             state: Arc::new(Mutex::new(State::default())),
             ready: Arc::new(Condvar::new()),
             releases: Some(sender),
+            bundle_store: None,
         };
         pool.start_releases(receiver);
         pool
     }
 
-    pub(super) fn lock(&self) -> Result<MutexGuard<'_, State>> {
-        match self.state.lock() {
-            Ok(state) => Ok(state),
-            Err(_) => Err(InternalError::Synchronization.into()),
-        }
+    /// Add optional persistent recipes without starting a process or accessing disk.
+    pub fn with_bundle_store(mut self, store: Arc<dyn BundleStore>) -> Self {
+        self.bundle_store = Some(store);
+        self
     }
 
-    pub(super) fn acquire(
-        &self,
-        call: &Call,
-        root: Option<&Path>,
-    ) -> Result<(usize, Option<Slot>)> {
-        let root = root.unwrap_or(&self.launch.repository);
-        let mut state = self.lock()?;
-        let ticket = state.ticket;
-        state.ticket += 1;
-        let context = match call {
-            Call::ProcessCss(params) => Some(params.context.clone()),
-            _ => None,
-        };
-        state.waiting.insert(ticket, context);
-        self.ready.notify_all();
-        loop {
-            if state.stopped {
-                state.waiting.remove(&ticket);
-                return Err(Error::Cancelled);
-            }
-            let first = state
-                .waiting
-                .iter()
-                .find(|(_, context)| {
-                    pool_affinity::runnable(&state, context.as_deref(), self.options.size.get())
-                })
-                .map(|(ticket, _)| *ticket);
-            if first == Some(ticket) {
-                let index = pool_affinity::acquire(&mut state, call, root, self.options.size.get());
-                if let Some(index) = index {
-                    state.waiting.remove(&ticket);
-                    state.serving += 1;
-                    let slot = state.slots[index].take();
-                    self.ready.notify_all();
-                    return Ok((index, slot));
-                }
-            }
-            state = match self.ready.wait(state) {
-                Ok(state) => state,
-                Err(_) => return Err(InternalError::Synchronization.into()),
-            };
-        }
+    pub(super) fn lock(&self) -> MutexGuard<'_, State> {
+        pool_cleanup::lock(&self.state)
     }
 
     pub(super) fn spawn(&self, index: usize, source_root: &Path) -> Result<Slot> {
-        let reason = self.lock()?.replacement_reasons.get(&index).copied();
+        let reason = self.lock().replacement_reasons.get(&index).copied();
         let recycle = reason.map(Reason::replacement);
         let _recycle_scope = recycle.as_ref().map(tracing::Span::enter);
         let span = tracing::info_span!("sidecar.spawn", status = "error");
         let _scope = span.enter();
-        if self.lock()?.stopped {
+        if self.lock().stopped {
             return Err(Error::Cancelled);
         }
-        self.forget_other_roots(index, source_root)?;
+        self.forget_other_roots(index, source_root);
         {
-            let mut state = self.lock()?;
+            let mut state = self.lock();
             state.memory.entry(index).or_default().started();
             state.replacement_reasons.insert(index, Reason::Retry);
         }
         let launch = Launch {
+            capture_durability: self.bundle_store.is_some(),
             repository: source_root.into(),
             ..self.launch.clone()
         };
         let mut spawned = self.factory.spawn(&launch)?;
         {
-            let mut state = self.lock()?;
+            let mut state = self.lock();
             if state.stopped {
                 spawned.control.kill()?;
                 return Err(Error::Cancelled);
             }
             state.controls.insert(index, Arc::clone(&spawned.control));
+            state.source_roots.insert(index, source_root.into());
         }
         if let Err(error) = spawned
             .worker
             .handshake(self.options.timeout_ms.unwrap_or(30_000))
         {
-            if self.lock()?.stopped {
+            if self.lock().stopped {
                 spawned.control.kill()?;
             } else {
                 Reason::Retry.kill(spawned.control.as_ref())?;
             }
             return Err(error);
         }
-        self.lock()?.replacement_reasons.remove(&index);
+        self.lock().replacement_reasons.remove(&index);
         span.record("status", "ok");
         if let Some(recycle) = &recycle {
             recycle.record("status", "ok");
@@ -174,13 +157,13 @@ impl Pool {
         })
     }
 
-    pub(super) fn release(&self, index: usize, mut slot: Option<Slot>) -> Result<()> {
+    pub(super) fn release(&self, index: usize, mut slot: Option<Slot>) {
         if let Some(current) = &mut slot
             && let Err(error) = self.cleanup(current)
         {
             tracing::warn!(%error, "sidecar cleanup failed");
             let stopped = {
-                let mut state = self.lock()?;
+                let mut state = self.lock();
                 state.replacement_reasons.insert(index, Reason::Replacement);
                 state.stopped
             };
@@ -191,10 +174,11 @@ impl Pool {
             };
             slot = None;
         }
-        let mut state = self.lock()?;
+        let mut state = self.lock();
         state.slots[index] = if state.stopped { None } else { slot };
         if state.slots[index].is_none() {
             state.controls.remove(&index);
+            state.source_roots.remove(&index);
         }
         state.available.push_back(index);
         if state.slots[index]
@@ -204,8 +188,8 @@ impl Pool {
         {
             let _ = sender.send(Notice::Work);
         }
+        state.head.notify();
         self.ready.notify_all();
-        Ok(())
     }
 }
 

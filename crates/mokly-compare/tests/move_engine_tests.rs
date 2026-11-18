@@ -34,29 +34,16 @@ fn declared_edited_moves_and_case_only_names_keep_the_correct_sides() {
             .contains(&EntryChangeReason::Metadata)
     );
     let lookup = Lookup::new(
-        "generation",
         &result.after.catalogue().model,
         Some(&result.before.catalogue().model),
         &result.snapshot.removed_entries,
         &result.pairing.moves,
-    )
-    .unwrap();
-    assert_eq!(
-        lookup
-            .counterpart("generation", EntryKind::Screen, "old")
-            .unwrap(),
-        Some("Old")
     );
-    assert_eq!(
-        lookup
-            .previous("generation", EntryKind::Screen, "old")
-            .unwrap(),
-        None
-    );
+    assert_eq!(lookup.counterpart(EntryKind::Screen, "old"), Some("Old"));
+    assert_eq!(lookup.previous(EntryKind::Screen, "old"), None);
     assert!(
         lookup
-            .reference("generation", ReviewSide::Before, EntryKind::Document, "Old")
-            .unwrap()
+            .reference(ReviewSide::Before, EntryKind::Document, "Old")
             .is_none()
     );
 }
@@ -80,25 +67,17 @@ fn parent_moves_claim_same_slug_variants_and_preserve_removed_parent_titles() {
         Some("Card")
     );
     let lookup = Lookup::new(
-        "generation",
         &result.after.catalogue().model,
         Some(&result.before.catalogue().model),
         &result.snapshot.removed_entries,
         &result.pairing.moves,
-    )
-    .unwrap();
+    );
     assert!(
-        matches!(lookup.reference("generation", ReviewSide::Before, EntryKind::Component, "card").unwrap(), Some(Destination::Current(entry)) if entry.metadata.path == "new-card")
+        matches!(lookup.reference(ReviewSide::Before, EntryKind::Component, "card"), Some(Destination::Current(entry)) if entry.metadata.path == "new-card")
     );
     assert!(
         lookup
-            .reference(
-                "generation",
-                ReviewSide::After,
-                EntryKind::Component,
-                "card"
-            )
-            .unwrap()
+            .reference(ReviewSide::After, EntryKind::Component, "card")
             .is_none()
     );
 }

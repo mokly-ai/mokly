@@ -2,7 +2,8 @@
 
 import type { ReactNode, RefObject } from "react";
 
-import type { FrameEvent } from "../client/frame_adapter.js";
+import type { FrameEvent } from "@mokly/frame";
+
 import type { GeneratedComponentView } from "../components/views.js";
 
 import type { ShellFrameGeometryController } from "./frame_geometry_controller.js";

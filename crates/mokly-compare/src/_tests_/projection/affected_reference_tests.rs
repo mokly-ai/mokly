@@ -15,9 +15,7 @@ use crate::move_types::{EntryPair, MovePair, Pairing};
 use crate::projection_affected;
 use crate::projection_context::Context;
 
-use super::support::{
-    classified, entry, paired_result, result, transferred_variant_result, with_lookup,
-};
+use super::support::{classified, entry, paired_result, result, transferred_variant_result};
 
 /// One recorded component use in the selected viewport.
 pub(super) fn evidence_at(
@@ -56,7 +54,6 @@ pub(super) fn links(
     consumer: &str,
     evidence: Vec<AffectedUsageEvidence>,
 ) -> Vec<UsageLink> {
-    with_lookup(result);
     result.review.affected = vec![AffectedConsumer {
         changed_component_id: "badge".into(),
         consumer: AffectedConsumerAddress {
@@ -65,7 +62,7 @@ pub(super) fn links(
         },
         evidence,
     }];
-    let projected = projection_affected::index(result, &Context::new(result)).unwrap();
+    let projected = projection_affected::index(result, &Context::new(result));
     let links = projected.links.get("badge").cloned().unwrap_or_default();
     // Each link names a consumer whose own detail names the changed
     // component, and no other entry is a consumer.

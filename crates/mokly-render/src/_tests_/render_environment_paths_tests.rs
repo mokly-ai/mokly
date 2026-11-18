@@ -2,6 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
+use std::sync::Arc;
 
 use super::render_environment_support::{
     cache_params, derive_at, maps, params, params_at, physical, result,
@@ -18,10 +19,7 @@ fn environment_settings_map_every_physical_path_and_keep_null_peers() {
         "/work/repo/node_modules",
         "/work/repo/node_modules/react/index.js",
     );
-    compiled
-        .compiled
-        .as_mut()
-        .unwrap()
+    Arc::make_mut(&mut compiled.compiled)
         .peers
         .insert("optional".into(), None);
     let working_root = physical("/work/repo");
@@ -43,15 +41,15 @@ fn environment_settings_map_every_physical_path_and_keep_null_peers() {
     );
     assert_eq!(
         mapped.peers,
-        Some(BTreeMap::from([
+        BTreeMap::from([
             ("react".into(), Some("node_modules/react/index.js".into())),
             ("optional".into(), None),
-        ]))
+        ])
     );
     assert!(paths.external.is_empty());
     assert_eq!(bundle.repository_roots[0], physical("/work/repo"));
     assert_eq!(
-        compiled.compiled.unwrap().peers["react"],
+        compiled.compiled.peers["react"],
         Some(physical("/work/repo/node_modules/react/index.js"))
     );
 }
@@ -91,8 +89,7 @@ fn equal_settings_under_two_working_repository_roots_share_one_environment() {
         &maps("x"),
         "/folders/first/repo",
         None,
-    )
-    .unwrap();
+    );
     let second = derive_at(
         &params_at("/folders/second/repo"),
         &result(
@@ -102,8 +99,7 @@ fn equal_settings_under_two_working_repository_roots_share_one_environment() {
         &maps("x"),
         "/folders/second/repo",
         None,
-    )
-    .unwrap();
+    );
     assert_eq!(first.environment, second.environment);
 }
 
@@ -118,8 +114,7 @@ fn a_cache_installation_keeps_a_distinct_environment() {
         &maps("x"),
         "/folders/repo",
         Some("/cache/namespace"),
-    )
-    .unwrap();
+    );
     let base = derive_at(
         &cache_params("/folders/repo", "/cache/namespace"),
         &result(
@@ -129,8 +124,7 @@ fn a_cache_installation_keeps_a_distinct_environment() {
         &maps("x"),
         "/folders/repo",
         Some("/cache/namespace"),
-    )
-    .unwrap();
+    );
     assert_ne!(head.environment, base.environment);
 }
 
@@ -145,8 +139,7 @@ fn equivalent_cache_installations_share_one_environment() {
         &maps("x"),
         "/working/first/repo",
         Some("/cache/first"),
-    )
-    .unwrap();
+    );
     let second = derive_at(
         &cache_params("/working/second/repo", "/cache/second"),
         &result(
@@ -156,8 +149,7 @@ fn equivalent_cache_installations_share_one_environment() {
         &maps("x"),
         "/working/second/repo",
         Some("/cache/second"),
-    )
-    .unwrap();
+    );
     assert_eq!(first.environment, second.environment);
 }
 
@@ -172,8 +164,7 @@ fn working_and_fallback_installations_share_one_environment() {
         &maps("x"),
         "/work/repo",
         Some("/cache/namespace"),
-    )
-    .unwrap();
+    );
     let fallback = derive_at(
         &params("/cache/base"),
         &result(
@@ -183,7 +174,6 @@ fn working_and_fallback_installations_share_one_environment() {
         &maps("x"),
         "/work/repo",
         Some("/cache/namespace"),
-    )
-    .unwrap();
+    );
     assert_eq!(head.environment, fallback.environment);
 }

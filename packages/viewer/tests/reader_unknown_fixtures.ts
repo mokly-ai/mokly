@@ -3,10 +3,7 @@
  * field a newer writer might add to each of them.
  */
 
-import type {
-  CatalogueReadModel,
-  EntryDetailV4,
-} from "../src/catalogue/types.js";
+import type { CatalogueReadModel, EntryDetailV4 } from "@mokly/model";
 
 import { rawDetailFixtures, rawIndexFixture } from "./catalogue_v9_fixture.js";
 

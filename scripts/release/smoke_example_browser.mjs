@@ -13,12 +13,16 @@ import { chromium } from "@playwright/test";
 import { expectedConsoleNotice } from "../../tests/browser/console_notices.js";
 
 /**
- * One screen per authoring kind, with text its desktop view shows, and a
- * Markdown document, whose single view must also load its image.
+ * One screen per authoring kind, with visible text or a placeholder in its
+ * desktop view, and a Markdown document, whose view must also load its image.
  */
 export const SCREENS = [
   { path: "example/screens/welcome", text: "View details" },
-  { path: "design/browse/views/screen", text: "Search catalogue…" },
+  {
+    path: "design/browse/views/screen",
+    text: "Search catalogue…",
+    match: "placeholder",
+  },
   {
     path: "example/workspace-guide",
     text: "Your first visit",
@@ -95,10 +99,11 @@ export async function browse(url, label) {
       const frame = page.frameLocator(
         `iframe[src*="/${screen.path}/${screen.view ?? "index.desktop.html"}"]`,
       );
-      await frame
-        .getByText(screen.text, { exact: true })
-        .first()
-        .waitFor({ timeout: 60_000 });
+      const locator =
+        screen.match === "placeholder"
+          ? frame.getByPlaceholder(screen.text, { exact: true })
+          : frame.getByText(screen.text, { exact: true });
+      await locator.first().waitFor({ timeout: 60_000 });
       if (resource) assert.equal(await resource, 200, screen.resource);
       process.stdout.write(`${label} ${screen.path} in the Browse shell.\n`);
     }

@@ -1,5 +1,7 @@
 # Component Prop Schema
 
+Status: No receiver checks the recorded props of an upload yet. The [receiver read-model validation item](../../plans/follow-ups/receiver-read-model-validation.md) adds that check to Mokly Cloud. The [select option builder](../../plans/follow-ups/select-option-builder.md) repairs duplicate or unusable select choices.
+
 ## Schema
 
 `defineComponent` requires a `propSchema` that describes every data prop,
@@ -45,7 +47,10 @@ missing. Any member of an `anyOf` that matches accepts the value unchanged,
 so overlap never selects a transform.
 
 Validation of a schema or of a complete props value is bounded to 64 nesting
-levels and 10,000 visited nodes. A failure reports the component, the variant
+levels and 10,000 visited nodes. In a props value, the root is at nesting
+level 0, and each array element or object member is one level below its
+container. Each value counts as one visited node, however many `anyOf`
+members the check tries against it. A failure reports the component, the variant
 slug when known, and an exact property or index path; it does not truncate or
 skip data. The limits apply equally to typed callers, JavaScript callers, and
 decoded read-model data.
@@ -88,13 +93,20 @@ props, saved variants, the schema, or a later render. Adapters map
 schema-defined `enum`, `const`, or `string` preset values to consumer
 callbacks or icons inside their own code.
 
-Validation runs when Mokly accepts a definition, on every saved variant
-before any render starts, on every wrapper invocation before its adapter
-runs, and on the fully merged props of a live control edit. Index and detail
-readers decode and validate recorded props against the serialized schema
-before trusting a props key or a usage record. The wrapper, the viewer, and
-the core apply the same profile. The core validates every instance that a
-render returns against the registered schema of its component.
+Mokly validates the schema when it accepts a definition. It validates the
+props on every saved variant before any render starts, on every wrapper
+invocation before its adapter
+runs, and on the fully merged props of a live control edit. An invocation and
+a live control edit check only the props value against the accepted schema.
+Decision: no check after the acceptance of a definition validates its schema
+again, because a repeated schema check can reject a schema that Mokly
+accepted, and the component then fails at every render. A receiver's
+[upload check](./mokly-upload-validation.md#catalogue-content) decodes and
+validates recorded props against the serialized schema before it accepts a
+props key or a usage record. The viewer trusts the recorded props of a
+document of its version. The wrapper, the viewer, and the core apply the same
+profile. The core validates every instance that a render returns against the
+registered schema of its component.
 
 ## Canonical Wire Props
 
@@ -102,7 +114,7 @@ Plain JSON numbers cannot preserve negative zero. The read model, the entry
 detail, the comparison records, and the instance markers therefore carry
 data values in a tagged representation, compatible with the
 `reviewMaterialKey` value encoding. The generated
-[`ComponentWireValue`](../../packages/viewer/src/generated/catalogue/ComponentWireValue.ts)
+[`ComponentWireValue`](../../packages/model/src/generated/catalogue/ComponentWireValue.ts)
 type defines the tagged form of one value. `ComponentWireProps` maps each prop
 name to one tagged value. The inspector decodes these values for display
 rather than exposing tuple tags to users.

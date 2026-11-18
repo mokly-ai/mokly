@@ -47,11 +47,11 @@ async fn start(extra: &[&str]) -> Running {
     write(
         root.path(),
         "viewer/browser.manifest.json",
-        r#"{"schemaVersion":1,"modules":["shell.js","inspector.js"]}"#,
+        r#"{"schemaVersion":1,"modules":["shell.js","frame-probe.js"]}"#,
     );
     for path in [
         "viewer/browser/shell.js",
-        "viewer/browser/inspector.js",
+        "viewer/browser/frame-probe.js",
         "viewer/shell.css",
         "viewer/assets/fonts/InterVariable.woff2",
         "viewer/assets/brand.svg",
@@ -230,6 +230,8 @@ async fn debug_timings_keep_plain_stdout_and_emit_safe_json() {
     assert_eq!(cache["parentId"], background["id"]);
     assert!(cache["misses"].as_u64().unwrap() > 0);
     assert!(cache["chargedBytes"].as_u64().unwrap() > 0);
+    assert_eq!(cache["restores"], 0);
+    assert_eq!(cache["restoreFailures"], 0);
     for record in &records {
         assert_eq!(record["schemaVersion"], 1);
         assert_eq!(record["role"], "core");

@@ -10,8 +10,6 @@ use mokly_model::data::Props;
 use mokly_model::prop_schema::PropSchema;
 use serde::Serialize;
 
-use crate::comparison_error::CompareResult;
-use crate::error::Result;
 use crate::material::mapped;
 
 #[derive(Serialize)]
@@ -59,7 +57,7 @@ pub(crate) fn projection(
     entry: &ModelEntry,
     catalogue: &CatalogueModel,
     paths: &BTreeMap<String, String>,
-) -> Result<String> {
+) -> String {
     let shared_fields = entry.metadata.variant_of.is_none();
     let content = match &entry.content {
         EntryContent::Screen {
@@ -136,7 +134,7 @@ pub(crate) fn projection(
         parent_title: parent.map(|entry| entry.metadata.title.as_str()),
         content,
     })
-    .compare()
+    .expect("entry metadata contains only JSON data and string map keys")
 }
 
 fn visual(visual: &VisualEntry, shared_fields: bool) -> Visual<'_> {

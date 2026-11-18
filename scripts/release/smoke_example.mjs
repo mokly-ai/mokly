@@ -1,5 +1,5 @@
 /**
- * Pack the UI package, the viewer, the CLI, and the host's native package;
+ * Pack the UI, model, and frame packages, the viewer, CLI, and host native;
  * install the archives into a scratch copy of the example outside the
  * repository; serve it through the installed shim from a nested directory
  * and open a React, a design, and an HTML screen and a Markdown document in
@@ -57,6 +57,8 @@ async function pack(destination) {
   const packages = [];
   for (const [directory, name] of [
     ["packages/ui", "@mokly/ui"],
+    ["packages/model", "@mokly/model"],
+    ["packages/frame", "@mokly/frame"],
     ["packages/viewer", "@mokly/viewer"],
     ["packages/mokly", "@mokly/mokly"],
     [host.directory, host.name],

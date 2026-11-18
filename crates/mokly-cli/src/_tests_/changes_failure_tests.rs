@@ -9,8 +9,6 @@ use mokly_catalogue::error::CatalogueError;
 use mokly_catalogue::preparation::CatalogueBuilderMock;
 use mokly_compare::base_render::{BasePreparationError, ChangesServiceMock};
 use mokly_compare::error::Error;
-use mokly_model::read_contract::ContractViolation;
-use mokly_model::readers::ReadError;
 use mokly_server::error::ServerError;
 use unimock::{MockFn, Unimock, matching};
 
@@ -195,50 +193,6 @@ fn scripts_off_base_validation_adds_a_separate_opt_in_diagnostic() {
             );
         }
     }
-}
-
-#[test]
-fn an_invalid_internal_review_is_a_fatal_build_error() {
-    let (graphs, _guards) = graphs(Vec::new());
-    let service: &dyn BuildService = &CatalogueBuild {
-        inputs: None,
-        cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
-        config: Arc::new(Unimock::new(
-            ConfigLoaderMock::load
-                .next_call(matching!(_, _))
-                .returns(Ok(config())),
-        )),
-        catalogue: Arc::new(Unimock::new(
-            CatalogueBuilderMock::prepare
-                .next_call(matching!(_, _))
-                .returns(Ok(prepared(Vec::new()))),
-        )),
-        graphs,
-        changes: Arc::new(Unimock::new((
-            capture_head(),
-            ChangesServiceMock::classify
-                .next_call(matching!(_, _, _, _))
-                .returns(Err(Error::Review {
-                    source: ReadError::Contract {
-                        boundary: "review",
-                        message: ContractViolation::Review,
-                    },
-                })),
-        ))),
-    };
-    let mut options = options();
-    options.no_changes = false;
-    let BuildError::Comparison {
-        base_ref, source, ..
-    } = service.run(Path::new("/repo"), &options).unwrap_err()
-    else {
-        panic!()
-    };
-    assert_eq!(base_ref, "origin/main");
-    assert!(matches!(
-        changes_diagnostics::failure_code(&source),
-        Code::ReviewInvalid
-    ));
 }
 
 #[test]

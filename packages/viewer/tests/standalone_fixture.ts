@@ -1,17 +1,16 @@
 /** Build isolated browser inputs through the shim, then serve exact files. */
+
 import fs from "node:fs/promises";
 import path from "node:path";
 
 import { build } from "esbuild";
 
+import type { CatalogueReadModel, EntryDetailV4 } from "@mokly/model";
+
 import { buildStaticCatalogue } from "../../../tests/helpers/build_site.js";
 import { repositoryRoot } from "../../../tests/helpers/fixture.js";
 import { timeFixturePhase } from "../../../tests/helpers/fixture_timing.js";
 import { serveStaticFiles } from "../../../tests/helpers/static_server.js";
-import type {
-  CatalogueReadModel,
-  EntryDetailV4,
-} from "../src/catalogue/types.js";
 import { viewRoute } from "../src/data.js";
 
 import { ownBrowserCleanup } from "./browser_cleanup.js";
@@ -79,7 +78,7 @@ async function createCrossOriginFixture(options: BrowserSourceOptions) {
     await writeBrowserFile(
       workspace,
       "silent.html",
-      "<!doctype html><p>No inspector</p>",
+      "<!doctype html><p>No probe</p>",
     );
     await fs.symlink(
       path.join(repositoryRoot, "node_modules"),
@@ -90,7 +89,7 @@ async function createCrossOriginFixture(options: BrowserSourceOptions) {
     await build({
       stdin: {
         contents:
-          'export * from "./packages/viewer/dist/client/post_message_adapter.js"; export * from "./packages/viewer/dist/client/same_origin_adapter.js"; export { authenticateRanges, rangeBounds } from "./packages/viewer/dist/client/component_geometry.js";',
+          'export * from "./packages/frame/dist/adapters/post_message_adapter.js"; export * from "./packages/frame/dist/adapters/same_origin_adapter.js"; export { frameUsage } from "./packages/frame/dist/adapters/frame_usage.js"; export { inspection } from "./packages/frame/dist/probe/inspection.js";',
         resolveDir: repositoryRoot,
         sourcefile: "browser-adapters.ts",
       },
@@ -130,7 +129,7 @@ async function createCrossOriginFixture(options: BrowserSourceOptions) {
       "static/silent.html",
       "static/mokly-generated/silent/index.html",
     ])
-      await writeBrowserFile(root, name, "<!doctype html><p>No inspector</p>");
+      await writeBrowserFile(root, name, "<!doctype html><p>No probe</p>");
     const host = await serveStaticFiles(root);
     cleanups.push(host.close);
     const frames = await serveStaticFiles(root, { allowedOrigin: host.url });

@@ -4,12 +4,11 @@ use std::collections::BTreeSet;
 
 use jsonschema::error::ValidationErrorKind;
 use mokly_model::axes::ColorScheme;
-use mokly_model::paths::{is_entry_path, is_path_segment};
 use serde_json::Value;
 
 use crate::config_types::Config;
 use crate::diagnostic::{Code, Issue};
-use crate::error::{CatalogueError, InternalError, Result};
+use crate::error::{CatalogueError, Result};
 use crate::locations::{at, json_positions};
 use crate::{config_postcss, globs};
 
@@ -34,16 +33,11 @@ pub fn parse(text: &str, path: &str) -> Result<Config> {
         }
     };
     config_postcss::shape(&value)?;
-    let schema: Value = match serde_json::from_str(CONFIG_SCHEMA) {
-        Ok(schema) => schema,
-        Err(source) => {
-            return Err(CatalogueError::Internal(InternalError::Json { source }));
-        }
-    };
-    let validator = match jsonschema::draft202012::options().build(&schema) {
-        Ok(validator) => validator,
-        Err(error) => return Err(invalid(format!("configuration schema: {error}"))),
-    };
+    let schema: Value = serde_json::from_str(CONFIG_SCHEMA)
+        .expect("the embedded configuration schema is valid JSON");
+    let validator = jsonschema::draft202012::options()
+        .build(&schema)
+        .expect("the embedded configuration schema is valid JSON Schema");
     if let Err(error) = validator.validate(&value) {
         let pointer = error.instance_path().as_str();
         let positions = json_positions(text);
@@ -76,23 +70,6 @@ pub fn parse(text: &str, path: &str) -> Result<Config> {
                 return Err(invalid(format!(
                     "roots[{index}].dir: duplicate directory {}",
                     root.dir
-                )));
-            }
-            if root
-                .path
-                .as_deref()
-                .is_some_and(|path| !is_entry_path(path))
-            {
-                return Err(invalid(format!("roots[{index}].path is not a valid path")));
-            }
-            if root
-                .transparent
-                .iter()
-                .flatten()
-                .any(|name| !is_path_segment(name))
-            {
-                return Err(invalid(format!(
-                    "roots[{index}].transparent is not an array of valid segments"
                 )));
             }
             if let Some(files) = &root.files

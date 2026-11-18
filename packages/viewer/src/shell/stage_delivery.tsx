@@ -3,9 +3,8 @@
  * `@mokly/ui/preview-state` draws both states.
  */
 
+import type { CatalogueRecord } from "@mokly/model";
 import { StageFailure, StageLoading } from "@mokly/ui/preview-state";
-
-import type { CatalogueRecord } from "../catalogue/types.js";
 
 import type { DetailDelivery } from "./data_requests.js";
 

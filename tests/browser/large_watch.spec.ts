@@ -2,22 +2,24 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { object } from "../../packages/viewer/src/catalogue/values.js";
 import { benchmark } from "../../scripts/large/benchmark.js";
 import { prepareFixture } from "../../scripts/large/setup.js";
 import { fixtureEdits } from "../../scripts/large/watch_edits.js";
 import { repositoryRoot } from "../helpers/fixture.js";
+import { object } from "../helpers/json_record.js";
 
 import { test } from "./browser_test.js";
+import { cleanupLargeFixture } from "./large_fixture_evidence.js";
 
 for (const variant of ["html", "react"] as const) {
   test(`large watch delivers browser evidence for ${variant}`, async ({
     browser,
-  }) => {
+  }, testInfo) => {
     test.setTimeout(300_000);
     const root = await fs.mkdtemp(
       path.join(repositoryRoot, ".context/large-watch-"),
     );
+    let completed = false;
     try {
       const fixture = await prepareFixture(
         repositoryRoot,
@@ -62,8 +64,9 @@ for (const variant of ["html", "react"] as const) {
       }
       for (const edit of originals)
         assert.equal(await fs.readFile(edit.file, "utf8"), edit.original);
+      completed = true;
     } finally {
-      await fs.rm(root, { recursive: true, force: true });
+      await cleanupLargeFixture(root, testInfo, completed);
     }
   });
 }

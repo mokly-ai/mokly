@@ -8,7 +8,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use mokly_git::command::{self, DEFAULT_OUTPUT_LIMIT, Request};
+use mokly_git::command::{self, DEFAULT_OUTPUT_LIMIT, ProcessMode, Request};
 use mokly_git::control::Token;
 use mokly_git::error::Error;
 
@@ -24,6 +24,7 @@ mod support;
 fn stdin_is_written_and_closed_without_losing_binary_data() {
     let fixture = Fixture::new();
     let request = Request {
+        process_mode: Default::default(),
         directory: fixture.root().to_owned(),
         args: vec!["hash-object".into(), "--stdin".into()],
         stdin: vec![0, 255, 10],
@@ -55,6 +56,7 @@ fn cancellation_terminates_stubborn_descendants_and_settles_after_pipe_closure()
     let token = Arc::new(Token::default());
     let runner = runner(token.clone());
     let request = Request {
+        process_mode: Default::default(),
         directory: fixture.root().to_owned(),
         args: vec!["-c".into(), alias.into(), "block".into()],
         stdin: vec![],
@@ -85,6 +87,7 @@ fn completion_stops_a_helper_that_outlives_git_with_closed_pipes() {
         ready.display()
     );
     let request = Request {
+        process_mode: Default::default(),
         directory: fixture.root().to_owned(),
         args: vec!["-c".into(), alias.into(), "helper".into()],
         stdin: vec![],
@@ -123,25 +126,28 @@ impl command::Cancellation for AfterStart {
 
 #[test]
 fn an_active_git_process_is_cancelled_through_its_process_group() {
-    let fixture = Fixture::new();
-    let runner = runner(Arc::new(Token::default()));
-    let request = Request {
-        directory: fixture.root().to_owned(),
-        args: vec![
-            "-c".into(),
-            "alias.mokly-wait=!sleep 60".into(),
-            "mokly-wait".into(),
-        ],
-        stdin: vec![],
-        output_limit: DEFAULT_OUTPUT_LIMIT,
-        stderr_limit: command::DEFAULT_STDERR_LIMIT,
-    };
-    let cancellation = AfterStart {
-        calls: AtomicUsize::new(0),
-    };
-    assert!(matches!(
-        runner.run_cancellable(&request, &cancellation),
-        Err(Error::Cancelled)
-    ));
-    assert!(cancellation.calls.load(Ordering::SeqCst) >= 2);
+    for process_mode in [ProcessMode::FullTree, ProcessMode::PlainGroup] {
+        let fixture = Fixture::new();
+        let runner = runner(Arc::new(Token::default()));
+        let request = Request {
+            process_mode,
+            directory: fixture.root().to_owned(),
+            args: vec![
+                "-c".into(),
+                "alias.mokly-wait=!sleep 60".into(),
+                "mokly-wait".into(),
+            ],
+            stdin: vec![],
+            output_limit: DEFAULT_OUTPUT_LIMIT,
+            stderr_limit: command::DEFAULT_STDERR_LIMIT,
+        };
+        let cancellation = AfterStart {
+            calls: AtomicUsize::new(0),
+        };
+        assert!(matches!(
+            runner.run_cancellable(&request, &cancellation),
+            Err(Error::Cancelled)
+        ));
+        assert!(cancellation.calls.load(Ordering::SeqCst) >= 2);
+    }
 }

@@ -1,5 +1,7 @@
 //! Component registry and exact folder-record diagnostics.
 
+#[path = "support/definitions.rs"]
+mod definitions;
 #[path = "support/fixtures.rs"]
 mod fixtures;
 

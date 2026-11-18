@@ -44,15 +44,13 @@ export function workspaceKey(
   return parentEntry(catalogue, entry)?.path ?? entry.path;
 }
 
-/** Parent component evidence or the routed screen's own evidence identity. */
+/**
+ * Parent component evidence, or the routed entry's own evidence identity: a
+ * screen, or a variant without an eligible parent. A component parent always
+ * has `data.component`.
+ */
 export function workspaceEvidenceEntry(
   data: WorkspaceData,
 ): WorkspaceEvidenceEntry {
-  if (data.component) return data.component;
-  if (
-    data.entry.kind === "screen" ||
-    (data.entry.kind === "component" && isComponentVariant(data.entry))
-  )
-    return data.entry;
-  throw new Error("The workspace evidence entry is unavailable.");
+  return data.component ?? data.entry;
 }

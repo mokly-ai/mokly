@@ -1,6 +1,6 @@
 /** The bounds and step that a number control offers, and its HTML bounds. */
 
-import type { ComponentControl } from "../components/control_types.js";
+import type { ComponentControl } from "@mokly/model";
 
 export type NumberControl = Extract<ComponentControl, { kind: "number" }>;
 

@@ -45,43 +45,6 @@ test("CSS module maps expose Unicode and namespace-shaped names without CJS inte
     result.html,
     '<main class="scoped-module scoped-module scoped-constructor scoped-cafe">Maps</main>',
   );
-  await assert.rejects(
-    sidecar.call("cssModules", {
-      generation: bundle.generation,
-      classMaps: {},
-    }),
-    {
-      code: "sidecar-protocol",
-      message: "CSS Modules maps cannot change after evaluation",
-    },
-  );
-});
-
-test("failed class-map installation leaves the generation unevaluated", async (context) => {
-  const sidecar = startSidecar(context);
-  await sidecar.call("hello");
-  const bundled = await sidecar.call<BundleResult>(
-    "bundle",
-    bundleParams({
-      entryFiles: ["module-exports.mockup.tsx"],
-      renderer: null,
-      storiesFiles: [],
-    }),
-  );
-  await assert.rejects(
-    sidecar.call("cssModules", {
-      generation: bundled.generation,
-      classMaps: {},
-    }),
-    {
-      code: "bundle-failed",
-      message: "missing CSS Modules map: exports.module.css",
-    },
-  );
-  await assert.rejects(
-    sidecar.call("describe", { generation: bundled.generation }),
-    /cssModules/,
-  );
   await sidecar.call("shutdown");
 });
 

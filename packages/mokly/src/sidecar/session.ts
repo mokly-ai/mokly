@@ -1,13 +1,13 @@
 import { build } from "esbuild";
 
-import { isEntryPath } from "@mokly/viewer/data";
-
 import { definitionData } from "../authoring/runtime.js";
+import type { CaptureHint } from "../generated/sidecar/CaptureHint.js";
 import type { Operation } from "../generated/sidecar/Operation.js";
 import type { Request } from "../generated/sidecar/Request.js";
 
 import { bundle } from "./bundle.js";
 import type { Generation } from "./bundle.js";
+import { CaptureDurability } from "./capture-durability.js";
 import { bundleResult, restore, reuse } from "./compiled.js";
 import { describe } from "./describe.js";
 import { SidecarError, detail, handleLocation, protocol } from "./errors.js";
@@ -20,7 +20,7 @@ import { render } from "./render.js";
 
 export class Session {
   private hello = false;
-  private closed = false;
+  private capture: CaptureHint | undefined;
   private generations = new Map<string, Generation>();
   private workers: PostcssWorkers;
 
@@ -55,26 +55,36 @@ export class Session {
   }
 
   private async dispatch(request: Request): Promise<unknown> {
-    if (this.closed) protocol("session is closed");
     if (!this.hello) {
       if (request.method !== "hello")
         protocol("hello must be the first request");
       this.hello = true;
+      this.capture = request.params.capture;
       return { version: this.version };
     }
     if (request.method === "hello") protocol("hello already completed");
     switch (request.method) {
       case "bundle": {
-        const previous = await reuse(this.generations.values(), request.params);
+        const { capture = "full", plan, ...params } = request.params;
+        const previous = await reuse(
+          this.generations.values(),
+          params,
+          capture,
+        );
         const { generation, result } = previous
           ? { generation: previous, result: bundleResult(previous) }
           : await bundle(
-              request.params,
+              params,
               (options) => {
                 this.operation("esbuild");
                 return this.compile(options);
               },
               this.measurements,
+              capture === "full" && this.capture
+                ? new CaptureDurability(this.capture)
+                : undefined,
+              capture,
+              plan,
             );
         this.generations.set(generation.id, generation);
         return result;
@@ -92,55 +102,16 @@ export class Session {
         return describe(this.generation(request.params.generation));
       case "cssModules": {
         const generation = this.generation(request.params.generation);
-        if (generation.exports)
-          protocol("CSS Modules maps cannot change after evaluation");
-        const maps = Object.fromEntries(
+        generation.maps = Object.fromEntries(
           Object.entries(request.params.classMaps).map(([file, map]) => [
             file,
             Object.fromEntries(Object.entries(map)),
           ]),
         );
-        for (const file of generation.cssModules)
-          if (!Object.hasOwn(maps, file))
-            throw new SidecarError(
-              "bundle-failed",
-              `missing CSS Modules map: ${file}`,
-            );
-        generation.maps = maps;
         return null;
       }
       case "bindings": {
         const generation = this.generation(request.params.generation);
-        if (!generation.definitions)
-          protocol("describe must complete before bindings");
-        const definitions = generation.definitions;
-        const handles = new Set(
-          [
-            ...definitions.screens,
-            ...definitions.components,
-            ...definitions.pages,
-            ...definitions.useCases,
-            ...definitions.folders,
-          ].map((definition) => definition.handle),
-        );
-        if (
-          [...handles].some(
-            (handle) => !Object.hasOwn(request.params.entries, handle),
-          ) ||
-          Object.keys(request.params.entries).some(
-            (handle) => !handles.has(handle),
-          )
-        )
-          protocol("bindings must contain every described handle exactly once");
-        const folders = new Set(
-          definitions.folders.map((folder) => folder.handle),
-        );
-        for (const [handle, entry] of Object.entries(request.params.entries))
-          if (
-            !isEntryPath(entry.path) &&
-            !(entry.path === "" && folders.has(handle))
-          )
-            protocol("bindings require complete catalogue paths");
         generation.bindings = request.params.entries;
         for (const registration of generation.registrations.values())
           Object.assign(
@@ -169,23 +140,10 @@ export class Session {
         );
       case "renderPage": {
         const generation = this.generation(request.params.generation);
-        const definitions = await describe(generation);
-        if (definitions.diagnostics.length)
-          throw new SidecarError(
-            definitions.diagnostics[0]!.code,
-            definitions.diagnostics[0]!.message,
-          );
-        if (!generation.bindings)
-          throw new SidecarError(
-            "bundle-failed",
-            "bindings must install the resolved handle table before rendering",
-          );
         const data = definitionData(
           generation.handles.get(request.params.handle),
-        );
+        )!;
         try {
-          if (!data || data.kind !== "page")
-            throw new Error("unknown page handle");
           const session = renderSession(
             generation,
             {
@@ -205,7 +163,6 @@ export class Session {
           return {
             html: finishMarkup(html, session, false).html,
             resources: [],
-            warnings: [],
           };
         } catch (error) {
           throw new SidecarError(
@@ -223,7 +180,6 @@ export class Session {
         await this.workers.dispose(request.params.context);
         return null;
       case "shutdown":
-        this.closed = true;
         await this.workers.dispose();
         this.generations.clear();
         return null;
@@ -231,15 +187,11 @@ export class Session {
   }
 
   async dispose(): Promise<void> {
-    this.closed = true;
     this.generations.clear();
     await this.workers.dispose();
   }
 
   private generation(id: string): Generation {
-    const generation = this.generations.get(id);
-    if (!generation)
-      throw new SidecarError("bundle-failed", `unknown generation ${id}`);
-    return generation;
+    return this.generations.get(id)!;
   }
 }

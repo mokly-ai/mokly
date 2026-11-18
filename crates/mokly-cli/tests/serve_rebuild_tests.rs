@@ -58,10 +58,10 @@ async fn manual_rebuild_publishes_a_fenced_state_and_failed_candidates_keep_it()
     for (path, bytes) in [
         (
             "viewer/browser.manifest.json",
-            r#"{"schemaVersion":1,"modules":["shell.js","inspector.js"]}"#,
+            r#"{"schemaVersion":1,"modules":["shell.js","frame-probe.js"]}"#,
         ),
         ("viewer/browser/shell.js", ""),
-        ("viewer/browser/inspector.js", ""),
+        ("viewer/browser/frame-probe.js", ""),
         ("viewer/shell.css", ""),
         ("viewer/assets/fonts/InterVariable.woff2", ""),
         ("viewer/assets/brand.svg", "<svg/>"),
@@ -208,10 +208,10 @@ async fn shortcuts_write_carriage_returns_on_a_real_raw_terminal() {
         ),
         (
             "viewer/browser.manifest.json",
-            r#"{"schemaVersion":1,"modules":["shell.js","inspector.js"]}"#,
+            r#"{"schemaVersion":1,"modules":["shell.js","frame-probe.js"]}"#,
         ),
         ("viewer/browser/shell.js", ""),
-        ("viewer/browser/inspector.js", ""),
+        ("viewer/browser/frame-probe.js", ""),
         ("viewer/shell.css", ""),
         ("viewer/assets/fonts/InterVariable.woff2", ""),
         ("viewer/assets/brand.svg", "<svg/>"),

@@ -3,8 +3,9 @@
  * routed details, adopted together. One refresh loads at a time.
  */
 
+import type { CatalogueReadModel, EntryDetailV4 } from "@mokly/model";
+
 import type { DetailRequest } from "../catalogue/detail_fences.js";
-import type { CatalogueReadModel, EntryDetailV4 } from "../catalogue/types.js";
 import type { MoklyVersionError } from "../catalogue/version_error.js";
 
 import { loadRefresh, routeKey } from "./data_requests.js";

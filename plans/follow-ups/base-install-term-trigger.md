@@ -25,15 +25,16 @@
     in its **Terms**. The words are: "the private install of the base
     commit's dependencies that Changes runs when the base lockfile differs
     from the working tree."
-  - `crates/mokly-cli/src/changes_base.rs:87` to line 91 sets the flag
+  - `crates/mokly-cli/src/changes_base.rs:98` to line 102 sets the flag
     `needs_sidecar`, which says whether the base needs JavaScript rendering.
     The flag reads the base configuration and the base catalogue. It is true
     when the configuration names PostCSS or a renderer. It is also true when
     the catalogue has an entry module or a stories file that is not
     excluded.
-  - Lines 92 to 102 prepare the base dependencies only when `needs_sidecar`
+  - Lines 103 to 114 prepare the base dependencies only when `needs_sidecar`
     is true. Only that path can start a package manager.
-  - Otherwise, lines 109 to 123 call `html_dependencies`. It compares only
+  - Otherwise, lines 115 to 129 call `html_dependencies` of
+    `crates/mokly-cli/src/changes_freshness.rs`. It compares only
     the manifests and the lockfiles that govern the `node_modules`
     directories of the head. When they differ, it gives the warning "Base
     dependencies differ. HTML comparison uses working-tree dependencies."

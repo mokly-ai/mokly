@@ -11,9 +11,7 @@ use mokly_model::snapshot::{CatalogueChangeSnapshotV4, MovedEntrySnapshot, Remov
 use mokly_model::snapshot_records::{EntryRecord, RecordMetadata, RecordVisual};
 use mokly_model::wire_props;
 
-use crate::comparison_error::CompareResult;
 use crate::comparison_types::EntryClassification;
-use crate::error::Result;
 use crate::move_types::Pairing;
 
 pub(crate) fn create(
@@ -24,7 +22,7 @@ pub(crate) fn create(
     after: &CatalogueModel,
     pairing: &Pairing,
     entries: &[EntryClassification],
-) -> Result<CatalogueChangeSnapshotV4> {
+) -> CatalogueChangeSnapshotV4 {
     let changed = {
         let mut changed: Vec<_> = entries
             .iter()
@@ -71,8 +69,7 @@ pub(crate) fn create(
             base_commit,
             entry.content.kind().as_str(),
             &entry.metadata.path,
-        )
-        .compare()?;
+        );
         removed.push(RemovedEntrySnapshot {
             entry: record,
             folder_titles,
@@ -81,7 +78,7 @@ pub(crate) fn create(
         });
     }
     let removed = crate::removal_order::sort(removed, before, after, pairing, &selected);
-    let snapshot = CatalogueChangeSnapshotV4 {
+    CatalogueChangeSnapshotV4 {
         schema_version: 4,
         base_ref: base_ref.into(),
         base_commit: base_commit.into(),
@@ -95,9 +92,7 @@ pub(crate) fn create(
             })
             .collect(),
         removed_entries: removed,
-    };
-    snapshot.validate_sources(before, after).compare()?;
-    Ok(snapshot)
+    }
 }
 
 fn folders(entry: &ModelEntry, catalogue: &CatalogueModel) -> Vec<String> {

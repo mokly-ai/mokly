@@ -3,7 +3,8 @@
 import { useCallback, useLayoutEffect, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
-import type { FrameNavigation } from "../client/frame_adapter.js";
+import type { FrameNavigation } from "@mokly/frame";
+
 import type { ViewerEvents, ViewerSelection } from "../host/types.js";
 import { folderTitleLookup } from "../registry/folder_titles.js";
 
@@ -67,6 +68,8 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
   environmentRef.current = input.environment;
   const catalogueRef = useRef(input.catalogue);
   catalogueRef.current = input.catalogue;
+  const sectionsRef = useRef(input.sections);
+  sectionsRef.current = input.sections;
 
   const commit = useCallback(
     (
@@ -134,6 +137,7 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       const next = mergeSelection(
         catalogue.publicModel,
         folderTitleLookup(catalogue.hierarchy),
+        sectionsRef.current,
         current,
         partial,
       );
@@ -183,6 +187,7 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       const next = mergeSelection(
         catalogue.publicModel,
         folderTitleLookup(catalogue.hierarchy),
+        sectionsRef.current,
         stateRef.current.selection,
         {
           screenPath,

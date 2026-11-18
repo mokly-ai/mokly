@@ -82,7 +82,7 @@ pub struct VisualEntry {
 
 /// One ordered screen reference.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct UseCaseStep {
     /// Resolved current screen path.
     pub screen_path: String,

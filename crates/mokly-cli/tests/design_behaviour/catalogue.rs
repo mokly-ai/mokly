@@ -17,6 +17,7 @@ use mokly_graph::cache::{Artifact, MemoryCache};
 use mokly_graph::types::{GraphFactory, RenderGeneration};
 use mokly_graph::workers::ThreadWorkers;
 use mokly_platform::processes::SystemProcessGroups;
+use mokly_render::physical_inputs::SystemPhysicalInputs;
 use mokly_render::runtime::Runtime;
 use mokly_sidecar::pool::{Pool, SidecarPool};
 use mokly_sidecar::pool_options::{Launch, PoolOptions};
@@ -72,6 +73,7 @@ fn prepare() -> Catalogue {
         )),
         clock.clone(),
         Launch {
+            capture_durability: false,
             node: env::var_os("MOKLY_NODE_EXECUTABLE").map_or_else(|| "node".into(), PathBuf::from),
             entry: fixture::workspace().join("packages/mokly/dist/sidecar.js"),
             repository: config.repo_root.clone(),
@@ -86,8 +88,9 @@ fn prepare() -> Catalogue {
     let runtime = Arc::new(Runtime::new(
         tree.clone(),
         tree.clone(),
+        Arc::new(SystemPhysicalInputs),
         pool,
-        Arc::new(MemoryCache::new(256 * 1024 * 1024)),
+        Arc::new(MemoryCache::new(256 * 1024 * 1024, 0)),
         Arc::new(CancellableWorkers {
             inner: Arc::new(ThreadWorkers::new(4).unwrap()),
             cancellation: Arc::new(BuildCancellation::new(clock)),
@@ -102,7 +105,7 @@ fn prepare() -> Catalogue {
     });
     let prepared = catalogue.prepare(&config, None).unwrap();
     assert!(prepared.warnings.is_empty(), "{:?}", prepared.warnings);
-    assert!(prepared.deferred_modules.is_empty());
+
     let generation = runtime
         .create(&config)
         .unwrap()

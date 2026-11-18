@@ -36,13 +36,13 @@ pub(crate) fn append(
         else {
             continue;
         };
-        let previous = result.before.comparison_document(route).compare()?;
-        let Some(document) = &previous.document else {
-            continue;
-        };
+        let previous = result.before.comparison_usage(route).compare()?;
+        let usage = previous
+            .as_ref()
+            .expect("the graph composes a document for every comparison view plan");
         let CatalogueUsage::Ready {
             instances: before, ..
-        } = &document.usage
+        } = usage
         else {
             continue;
         };

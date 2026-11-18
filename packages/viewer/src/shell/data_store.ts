@@ -11,8 +11,9 @@ import {
   type SetStateAction,
 } from "react";
 
+import type { LiveDescriptorV3 } from "@mokly/model";
+
 import type { DetailRequest } from "../catalogue/detail_fences.js";
-import type { LiveDescriptorV3 } from "../catalogue/types.js";
 import type { MoklyVersionError } from "../catalogue/version_error.js";
 
 import {

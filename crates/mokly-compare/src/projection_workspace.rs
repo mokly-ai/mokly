@@ -21,7 +21,7 @@ pub fn apply(
     result: &ComparisonResult,
 ) -> Result<()> {
     let context = Context::new(result);
-    let affected = projection_affected::index(result, &context)?;
+    let affected = projection_affected::index(result, &context);
     for (path, detail) in details {
         if !matches!(detail.entry.kind, EntryKind::Screen | EntryKind::Component) {
             continue;

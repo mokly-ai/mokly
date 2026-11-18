@@ -3,17 +3,25 @@
 use std::io::{self, IsTerminal};
 use std::process::{Command, Stdio};
 use std::sync::Arc;
+use std::thread;
 use std::time::Duration;
 
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
+#[cfg(not(unix))]
+use crossterm::event::{self, Event};
+use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use crossterm::terminal;
 use mokly_cli::output::{Mode, Style, bounded};
 use mokly_cli::redaction::Redactor;
 use mokly_cli::serve_output;
-use tokio::sync::{mpsc, watch};
+use tokio::sync::{mpsc, oneshot, watch};
 use tokio::task::JoinHandle;
 
+#[cfg(unix)]
+use crate::serve_keyboard_unix::UnixKeyboard;
 use crate::terminal::Terminal;
+
+/// Poll interval used by the keyboard reader and its shutdown supervisor.
+pub(super) const INPUT_INTERVAL: Duration = Duration::from_millis(100);
 
 pub(super) fn open(url: &str, style: &Style, redactor: &Redactor, terminal: &dyn Terminal) {
     #[cfg(target_os = "macos")]
@@ -58,47 +66,116 @@ pub(super) struct Controls {
     pub(super) terminal: Arc<dyn Terminal>,
 }
 
+#[cfg_attr(test, unimock::unimock(api = KeyboardInputMock))]
+/// Terminal input boundary used by the complete shortcut loop.
+pub(super) trait KeyboardInput: Send + Sync {
+    /// Return one key, an idle result, or permanent input closure.
+    fn read(&self) -> io::Result<Input>;
+}
+
+/// One keyboard read, including idle input and permanent input closure.
+pub enum Input {
+    /// No complete key is ready.
+    Pending,
+    /// One decoded terminal key.
+    Key(KeyEvent),
+    /// The terminal no longer accepts input.
+    Closed,
+}
+
+#[cfg(not(unix))]
+struct SystemKeyboard;
+
+#[cfg(not(unix))]
+impl KeyboardInput for SystemKeyboard {
+    fn read(&self) -> io::Result<Input> {
+        if !event::poll(INPUT_INTERVAL)? {
+            return Ok(Input::Pending);
+        }
+        let event = match event::read() {
+            Ok(event) => event,
+            Err(error) if error.kind() == io::ErrorKind::UnexpectedEof => return Ok(Input::Closed),
+            Err(error) => return Err(error),
+        };
+        Ok(match event {
+            Event::Key(key) => Input::Key(key),
+            _ => Input::Pending,
+        })
+    }
+}
+
+impl Controls {
+    fn read(&self, input: &dyn KeyboardInput) {
+        while !*self.stop.borrow() {
+            let key = match input.read() {
+                Ok(Input::Key(key)) => key,
+                Ok(Input::Pending) => continue,
+                Ok(Input::Closed) | Err(_) => break,
+            };
+            if *self.stop.borrow() {
+                break;
+            }
+            match shortcut(key) {
+                Some(Shortcut::Close) => {
+                    self.stop.send_replace(true);
+                }
+                Some(Shortcut::Clear) => self
+                    .terminal
+                    .stdout(&format!("\x1b[2J\x1b[H{}", self.layout)),
+                Some(Shortcut::Open) => open(
+                    &self.url,
+                    &self.style,
+                    &self.redactor,
+                    self.terminal.as_ref(),
+                ),
+                Some(Shortcut::Help) => self.terminal.stdout(&serve_output::shortcuts(&self.style)),
+                Some(Shortcut::Rebuild) => {
+                    let _ = self.rebuild.try_send(());
+                }
+                None => {}
+            }
+        }
+    }
+}
+
 pub(super) fn start(enabled: bool, controls: Controls) -> Option<JoinHandle<()>> {
-    let Controls {
-        stop,
-        rebuild,
-        url,
-        layout,
-        style,
-        redactor,
-        terminal,
-    } = controls;
     if !enabled || !io::stdin().is_terminal() {
         return None;
     }
-    Some(tokio::task::spawn_blocking(move || {
-        let previous = terminal::is_raw_mode_enabled().unwrap_or(false);
-        if !previous && terminal::enable_raw_mode().is_err() {
-            return;
-        }
-        terminal.raw_mode(true);
-        let _raw = RawMode {
-            restore: !previous,
-            terminal: terminal.clone(),
-        };
-        while !*stop.borrow() {
-            if !event::poll(Duration::from_millis(100)).unwrap_or(false) {
-                continue;
-            }
-            let Ok(Event::Key(key)) = event::read() else {
-                continue;
-            };
-            match shortcut(key) {
-                Some(Shortcut::Close) => {
-                    stop.send_replace(true);
+    #[cfg(unix)]
+    let input: Arc<dyn KeyboardInput> = Arc::new(UnixKeyboard::default());
+    #[cfg(not(unix))]
+    let input: Arc<dyn KeyboardInput> = Arc::new(SystemKeyboard);
+    let previous = terminal::is_raw_mode_enabled().unwrap_or(false);
+    if !previous && terminal::enable_raw_mode().is_err() {
+        return None;
+    }
+    controls.terminal.raw_mode(true);
+    let raw = RawMode {
+        restore: !previous,
+        terminal: controls.terminal.clone(),
+    };
+    let mut stopped = controls.stop.subscribe();
+    let (finished, mut completed) = oneshot::channel();
+    thread::Builder::new()
+        .name("mokly-keyboard".into())
+        .spawn(move || {
+            controls.read(input.as_ref());
+            let _ = finished.send(());
+        })
+        .ok()?;
+    Some(tokio::spawn(async move {
+        let _raw = raw;
+        tokio::select! {
+            _ = &mut completed => {},
+            () = async {
+                while !*stopped.borrow() {
+                    if stopped.changed().await.is_err() {
+                        break;
+                    }
                 }
-                Some(Shortcut::Clear) => terminal.stdout(&format!("\x1b[2J\x1b[H{layout}")),
-                Some(Shortcut::Open) => open(&url, &style, &redactor, terminal.as_ref()),
-                Some(Shortcut::Help) => terminal.stdout(&serve_output::shortcuts(&style)),
-                Some(Shortcut::Rebuild) => {
-                    let _ = rebuild.try_send(());
-                }
-                None => {}
+            } => {
+                let _ = tokio::time::timeout(INPUT_INTERVAL * 2, &mut completed).await;
             }
         }
     }))
@@ -111,7 +188,7 @@ struct RawMode {
 impl Drop for RawMode {
     fn drop(&mut self) {
         self.terminal.raw_mode(!self.restore);
-        if self.restore {
+        if self.restore && io::stdin().is_terminal() {
             let _ = terminal::disable_raw_mode();
         }
     }

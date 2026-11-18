@@ -35,13 +35,13 @@ pub(crate) fn resolve(
                 if !visiting.insert(path.clone()) {
                     return Err(invalid(&path, "component dependency cycle"));
                 }
-                let source = catalogue
+                let entry = catalogue
                     .model
                     .entries
                     .iter()
                     .find(|entry| entry.metadata.path == path)
-                    .and_then(|entry| sources.get(&entry.metadata.source.path))
-                    .ok_or_else(|| invalid(&path, "component source key is missing"))?;
+                    .expect("registered components have a prepared catalogue entry");
+                let source = &sources[&entry.metadata.source.path];
                 let mut inputs = vec![source.0.clone(), path.clone()];
                 inputs.extend(
                     catalogue
@@ -74,9 +74,7 @@ pub(crate) fn resolve(
                 children,
             } => {
                 for child in children.into_iter().filter(|child| child != &path) {
-                    let child_key = keys
-                        .get(&child)
-                        .ok_or_else(|| invalid(&child, "component source key is missing"))?;
+                    let child_key = &keys[&child];
                     inputs.push(child_key.0.clone());
                 }
                 let result = key(
@@ -91,9 +89,7 @@ pub(crate) fn resolve(
             }
         }
     }
-    keys.get(path)
-        .cloned()
-        .ok_or_else(|| invalid(path, "component source key is missing"))
+    Ok(keys[path].clone())
 }
 
 pub(crate) fn direct(html: AuthoredHtml<'_>, catalogue: &PreparedCatalogue) -> BTreeSet<String> {

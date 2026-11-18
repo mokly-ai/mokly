@@ -27,7 +27,11 @@ export function record(value: unknown): value is Record<string, unknown> {
 }
 
 /** Inspect descriptors before reading values; never execute author getters. */
-export function plainKeys(value: unknown, at: string): string[] {
+export function plainKeys(
+  value: unknown,
+  at: string,
+  allowReservedKeys = false,
+): string[] {
   if (
     !record(value) ||
     (Object.getPrototypeOf(value) !== Object.prototype &&
@@ -37,7 +41,10 @@ export function plainKeys(value: unknown, at: string): string[] {
   const keys: string[] = [];
   for (const key of Reflect.ownKeys(value)) {
     if (typeof key !== "string") invalidData(at, "symbol keys are unsupported");
-    if (["__proto__", "constructor", "prototype"].includes(key))
+    if (
+      !allowReservedKeys &&
+      ["__proto__", "constructor", "prototype"].includes(key)
+    )
       invalidData(`${at}.${key}`, "reserved property name");
     const descriptor = Object.getOwnPropertyDescriptor(value, key)!;
     if (!descriptor.enumerable || !("value" in descriptor))
@@ -106,40 +113,4 @@ export function assertPlainData(
     ancestors.delete(item);
   }
   visit(value, at, 0, false);
-}
-
-export function exactKeys(
-  value: unknown,
-  allowed: readonly string[],
-  at: string,
-): asserts value is Record<string, unknown> {
-  for (const key of plainKeys(value, at))
-    if (!allowed.includes(key)) invalidData(`${at}.${key}`, "unknown field");
-}
-
-/** JSON with lexical object ordering, including integer-looking keys. */
-export function canonicalJson(value: unknown, indent = 0): string {
-  function encode(item: unknown, depth: number): string {
-    if (typeof item !== "object" || item === null) {
-      const encoded = JSON.stringify(item);
-      if (encoded === undefined) invalidData("$", "cannot serialize undefined");
-      return encoded;
-    }
-    const array = Array.isArray(item);
-    const entries = array
-      ? item.map((child) => encode(child, depth + 1))
-      : Object.keys(item)
-          .filter((key) => (item as Record<string, unknown>)[key] !== undefined)
-          .sort()
-          .map(
-            (key) =>
-              `${JSON.stringify(key)}:${indent ? " " : ""}${encode((item as Record<string, unknown>)[key], depth + 1)}`,
-          );
-    const [open, close] = array ? ["[", "]"] : ["{", "}"];
-    if (!entries.length) return `${open}${close}`;
-    if (!indent) return `${open}${entries.join(",")}${close}`;
-    const padding = " ".repeat(indent * (depth + 1));
-    return `${open}\n${padding}${entries.join(`,\n${padding}`)}\n${" ".repeat(indent * depth)}${close}`;
-  }
-  return encode(value, 0);
 }

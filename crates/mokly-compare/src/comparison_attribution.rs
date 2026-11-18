@@ -1,11 +1,10 @@
 //! Apply shared CSS reduction and unchanged-input implementation proof to each view.
 
 use std::collections::BTreeSet;
-use std::mem;
 
 use mokly_css::attribution::Attribution;
 use mokly_model::evidence::{EvidenceOwner, RuleStatus};
-use mokly_model::review::ReviewState;
+use mokly_model::review::{EntryChangeReason, ReviewState};
 
 use crate::comparison_views::PendingView;
 use crate::implementation::OwnImpact;
@@ -32,12 +31,21 @@ pub(crate) fn apply(
         .get(&input.index)
         .cloned()
         .unwrap_or_default();
-    instance_proofs.append(&mut view.proofs);
-    instance_proofs.extend(mem::take(&mut view.owned).proofs(&input.attributed.own_pages));
+    instance_proofs.extend(view.input.proofs.iter().cloned());
+    instance_proofs.extend(
+        view.input
+            .owned
+            .instances(&input.attributed.own_pages)
+            .into_iter()
+            .map(|(component, _)| InstanceProof {
+                component,
+                reason: EntryChangeReason::Implementation,
+            }),
+    );
     if let Some(component) = input.component
         && input.same_inputs
     {
-        if view.root_changed {
+        if view.input.root_changed {
             impact.insert(component.into());
             own_impact.render.insert(component.into());
         }

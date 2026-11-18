@@ -51,7 +51,8 @@ export default tseslint.config(
       },
     },
     settings: {
-      "import-x/internal-regex": "^@mokly/(?:mokly|ui|viewer)(?:/|$)",
+      "import-x/internal-regex":
+        "^@mokly/(?:mokly|model|frame|ui|viewer)(?:/|$)",
     },
     rules: {
       "import/first": "error",
@@ -92,6 +93,8 @@ export default tseslint.config(
       "tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}",
       "packages/viewer/tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}",
       "packages/ui/tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}",
+      "packages/model/tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}",
+      "packages/frame/tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}",
     ],
     ignores: ["tests/helpers/durations.ts"],
     rules: {
@@ -199,10 +202,14 @@ export default tseslint.config(
     rules: { "mokly/no-viewer-intrinsic-elements": "error" },
   },
   {
-    files: ["packages/viewer/src/**/*.{ts,tsx}"],
+    files: [
+      "packages/viewer/src/**/*.{ts,tsx}",
+      "packages/model/src/**/*.{ts,tsx}",
+      "packages/frame/src/**/*.{ts,tsx}",
+    ],
     ignores: [
-      "packages/viewer/src/catalogue/delivery_paths.ts",
-      "packages/viewer/src/generated/catalogue/Namespace.ts",
+      "packages/model/src/catalogue/delivery_paths.ts",
+      "packages/model/src/generated/catalogue/Namespace.ts",
     ],
     rules: {
       "mokly/no-directory-literals": "error",

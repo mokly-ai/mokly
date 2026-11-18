@@ -5,7 +5,6 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::axes::EntryKind;
 use crate::detail_context::invalid;
 use crate::material;
-use crate::paths::is_path_segment;
 use crate::public_records::CatalogueComponent;
 use crate::public_validation::hash;
 use crate::read_contract::ContractViolation;
@@ -51,21 +50,18 @@ pub fn validate_with(
             .component(&instance.component_id)
             .ok_or_else(|| invalid(ContractViolation::UsageReference))?;
         let default_id = component.entry.path.rsplit('/').next().unwrap_or("");
-        if !is_path_segment(&instance.id)
-            || instance.id != default_id
-                && !instance.id.split('-').all(|part| {
-                    !part.is_empty()
-                        && part
-                            .bytes()
-                            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit())
-                })
+        if instance.id != default_id
+            && !instance.id.split('-').all(|part| {
+                !part.is_empty()
+                    && part
+                        .bytes()
+                        .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit())
+            })
         {
             return Err(invalid(ContractViolation::UsageKey));
         }
         if material::instance_key(&instance.owner, instance.slot_key.as_deref(), &instance.id)
-            .ok()
-            .as_deref()
-            != Some(&instance.key)
+            != instance.key
         {
             return Err(invalid(ContractViolation::UsageKey));
         }
@@ -73,7 +69,7 @@ pub fn validate_with(
             Ok(props) => props,
             Err(_) => return Err(invalid(ContractViolation::UsageProps)),
         };
-        if material::props_key(&props).ok().as_deref() != Some(&instance.props_key) {
+        if material::props_key(&props) != instance.props_key {
             return Err(invalid(ContractViolation::UsageKey));
         }
         schemas.validate(&instance.component_id, &props)?;
@@ -107,10 +103,7 @@ pub fn validate_with(
     for slot in slots {
         if !hash(&slot.key)
             || previous.is_some_and(|previous: &str| previous >= slot.key.as_str())
-            || material::slot_key(&slot.instance_key, &slot.name)
-                .ok()
-                .as_deref()
-                != Some(&slot.key)
+            || material::slot_key(&slot.instance_key, &slot.name) != slot.key
         {
             return Err(invalid(ContractViolation::UsageKey));
         }

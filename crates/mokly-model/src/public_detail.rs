@@ -12,7 +12,7 @@ use crate::wire_props::ComponentWireProps;
 
 /// Entry identity repeated by its detail.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct DetailEntry {
     /// Complete entry path.
     pub path: String,
@@ -26,7 +26,7 @@ pub struct DetailEntry {
 
 /// One view's usage and public comparison evidence.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct DetailView {
     /// Viewport axis.
     pub viewport: Viewport,
@@ -50,7 +50,7 @@ pub struct DetailView {
 
 /// One current or affected component use.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct UsageLink {
     /// Consuming screen or component entry path.
     pub entry_path: String,
@@ -84,7 +84,7 @@ pub enum VisualKind {
 
 /// One instance whose complete props differ.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct InputChange {
     /// Effective instance id.
     pub instance_id: String,
@@ -106,7 +106,7 @@ pub struct InputChange {
 
 /// Comparison and component workspace lists.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Workspace {
     /// Whether this entry has an eligible comparison.
     pub comparison_eligible: bool,
@@ -126,7 +126,7 @@ pub struct Workspace {
 
 /// Changed component reference.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct RelatedComponent {
     /// Current component path.
     pub path: String,
@@ -136,7 +136,7 @@ pub struct RelatedComponent {
 
 /// One public entry detail, current or historical.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct EntryDetailV4 {
     /// Must equal 4; readers gate it first.
     #[ts(type = "4")]

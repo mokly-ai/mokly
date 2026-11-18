@@ -5,8 +5,9 @@ use std::path::Path;
 use std::process::Command;
 use std::sync::Arc;
 
+use unimock::Unimock;
+
 use mokly_catalogue::config::{ConfigLoader, Loader};
-use mokly_catalogue::definition_provider::DeferredDefinitions;
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::preparation::{Builder, CatalogueBuilder};
 use mokly_catalogue::working_tree::WorkingTree;
@@ -32,7 +33,7 @@ use mokly_graph::cache::{MemoryCache, RenderCache};
 use mokly_graph::graph::Graph;
 use mokly_graph::source_snapshot::SourceSnapshot;
 use mokly_graph::types::{RenderGeneration, RenderGraph};
-use mokly_graph::workers::ThreadWorkers;
+use mokly_graph::workers::{RenderWorkers, ThreadWorkers};
 use mokly_html::composition::HtmlComposer;
 use mokly_html::fragment::DeferredFragments;
 use mokly_model::review::ReviewEntry;
@@ -44,10 +45,15 @@ pub struct Fixture {
     pub directory: TempDir,
     pub commit: ObjectId,
     cache: Arc<dyn RenderCache>,
+    workers: Arc<dyn RenderWorkers>,
 }
 
 impl Fixture {
     pub fn new(files: &[(&str, &str)]) -> Self {
+        Self::with_workers(files, 1)
+    }
+
+    pub fn with_workers(files: &[(&str, &str)], count: usize) -> Self {
         let directory = TempDir::new().unwrap();
         write(directory.path(), "mokly.config.json", "{}");
         for (path, text) in files {
@@ -76,7 +82,8 @@ impl Fixture {
         Self {
             directory,
             commit,
-            cache: Arc::new(MemoryCache::new(4 * 1024 * 1024)),
+            cache: Arc::new(MemoryCache::new(4 * 1024 * 1024, 0)),
+            workers: Arc::new(ThreadWorkers::new(count).unwrap()),
         }
     }
 
@@ -90,6 +97,23 @@ impl Fixture {
         let destination = self.directory.path().join(after);
         fs::create_dir_all(destination.parent().unwrap()).unwrap();
         fs::rename(self.directory.path().join(before), destination).unwrap();
+    }
+
+    pub fn base_tree(&self, runner: Arc<dyn Runner>, source_bytes: usize) -> Arc<dyn SourceTree> {
+        let repositories: &dyn Repositories = &GitRepositories {
+            runner,
+            disk: Arc::new(SystemDisk),
+        };
+        let repository = repositories.open(self.directory.path()).unwrap();
+        Arc::new(GitTree::new(
+            self.directory.path().into(),
+            Arc::new(GitSources::new(
+                repository,
+                self.commit.clone(),
+                Limits::default(),
+            )),
+            source_bytes,
+        ))
     }
 
     pub fn compare(&self) -> Result<ComparisonResult> {
@@ -114,25 +138,18 @@ impl Fixture {
         runner: Arc<dyn Runner>,
         source_bytes: usize,
     ) -> Result<ComparisonResult> {
-        let repositories: &dyn Repositories = &GitRepositories {
-            runner,
-            disk: Arc::new(SystemDisk),
-        };
-        let repository = repositories.open(self.directory.path()).unwrap();
-        let base_tree: Arc<dyn SourceTree> = Arc::new(GitTree::new(
-            self.directory.path().into(),
-            Arc::new(GitSources::new(
-                repository,
-                self.commit.clone(),
-                Limits::default(),
-            )),
-            source_bytes,
-        ));
-        let before = prepare(self.directory.path(), base_tree, self.cache.clone())?;
+        let base_tree = self.base_tree(runner, source_bytes);
+        let before = prepare(
+            self.directory.path(),
+            base_tree,
+            self.cache.clone(),
+            self.workers.clone(),
+        )?;
         let after = prepare(
             self.directory.path(),
             Arc::new(WorkingTree),
             self.cache.clone(),
+            self.workers.clone(),
         )?;
         let engine: &dyn Comparison = &Engine { moves, css };
         let before = engine.capture_base(before)?;
@@ -148,10 +165,11 @@ impl Fixture {
     }
 }
 
-fn prepare(
+pub fn prepare(
     root: &Path,
     tree: Arc<dyn SourceTree>,
     cache: Arc<dyn RenderCache>,
+    workers: Arc<dyn RenderWorkers>,
 ) -> Result<Arc<dyn RenderGeneration>> {
     let tree: Arc<dyn SourceTree> = Arc::new(SourceSnapshot::new(tree));
     let config = Loader { tree: tree.clone() }
@@ -160,7 +178,7 @@ fn prepare(
     let catalogue = Builder {
         tree: tree.clone(),
         discovery: Arc::new(Discoverer { tree: tree.clone() }),
-        definitions: Arc::new(DeferredDefinitions),
+        definitions: Arc::new(Unimock::new(())),
     }
     .prepare(&config, None)
     .map_err(|source| Error::Catalogue { source })?;
@@ -181,7 +199,7 @@ fn prepare(
             processor: Arc::new(IdentityProcessor),
         }),
         cache,
-        workers: Arc::new(ThreadWorkers::new(1).unwrap()),
+        workers,
         version: "fixture".into(),
     };
     graph

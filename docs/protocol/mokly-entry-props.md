@@ -170,7 +170,7 @@ composing caller fill slots. `variantOf` is present exactly on the variants of
 either kind. `propSchema` is the declared or inferred schema, unchanged, as a
 JSON Schema object under the profile; the viewer exports its type as
 `PropSchema`. The generated
-[`PropSchema`](../../packages/viewer/src/generated/catalogue/PropSchema.ts)
+[`PropSchema`](../../packages/model/src/generated/catalogue/PropSchema.ts)
 type defines its shape.
 
 ## Related Docs

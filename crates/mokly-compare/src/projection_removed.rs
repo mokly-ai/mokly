@@ -11,15 +11,12 @@ use mokly_model::versions;
 
 use crate::comparison_error::CompareResult;
 use crate::comparison_types::ComparisonResult;
-use crate::error::{Error, Result};
+use crate::error::Result;
 use crate::{projection_detail, projection_index};
 
 /// Select removed records from the matching projected base index in snapshot order.
 /// Folder and parent titles and snapshot IDs come from the retained base snapshot.
-pub fn records(
-    result: &ComparisonResult,
-    historical: CatalogueReadModel,
-) -> Result<Vec<RemovedEntry>> {
+pub fn records(result: &ComparisonResult, historical: CatalogueReadModel) -> Vec<RemovedEntry> {
     let mut records = projection_index::records(historical);
     result
         .snapshot
@@ -29,8 +26,8 @@ pub fn records(
             let path = &removed.entry.metadata().path;
             let entry = records
                 .remove(path)
-                .ok_or_else(|| Error::RemovedRecord { path: path.clone() })?;
-            Ok(RemovedEntry {
+                .expect("the base projection contains every selected removed entry");
+            RemovedEntry {
                 entry,
                 folder_titles: removed.folder_titles.clone(),
                 parent_title: removed.parent_title.clone(),
@@ -41,7 +38,7 @@ pub fn records(
                     EntryKind::Document => Some(RemovedPreview::Document),
                     _ => None,
                 },
-            })
+            }
         })
         .collect()
 }
@@ -49,7 +46,6 @@ pub fn records(
 /// Build removed details from base plans and render usage, even without classified views.
 /// The caller assigns the content id after the detail content is complete.
 /// Workspaces stay absent; the caller supplies them only after proving their inputs.
-/// A missing planned document or historical entry fails instead of inventing usage.
 pub fn details(
     result: &ComparisonResult,
     historical: &CatalogueReadModel,
@@ -68,16 +64,7 @@ pub fn details(
     details.retain(|path, _| selected.contains(path.as_str()));
     let mut plans = BTreeMap::<_, Vec<_>>::new();
     for plan in result.before.plans().values() {
-        let entry = result
-            .before
-            .catalogue()
-            .model
-            .entries
-            .get(plan.entry)
-            .ok_or_else(|| Error::HistoricalPlanEntry {
-                route: plan.route.clone(),
-                entry: plan.entry,
-            })?;
+        let entry = &result.before.catalogue().model.entries[plan.entry];
         plans
             .entry(entry.metadata.path.as_str())
             .or_default()
@@ -87,7 +74,7 @@ pub fn details(
         let path = removed.entry.metadata().path.as_str();
         let detail = details
             .get_mut(path)
-            .ok_or_else(|| Error::RemovedRecord { path: path.into() })?;
+            .expect("pending base details include every selected removed entry");
         detail.detail_id.clear();
         detail.revision = None;
         detail.entry.snapshot_id = Some(removed.snapshot_id.clone());
@@ -96,9 +83,7 @@ pub fn details(
             let document = artifact
                 .document
                 .as_ref()
-                .ok_or_else(|| Error::HistoricalDocument {
-                    route: plan.route.clone(),
-                })?;
+                .expect("the graph composes a document for every historical render plan");
             if let Some(view) = detail.views.iter_mut().find(|view| {
                 Some(view.viewport) == plan.viewport && view.color_scheme == plan.color_scheme
             }) {

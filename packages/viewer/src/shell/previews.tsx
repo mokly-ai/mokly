@@ -24,7 +24,7 @@ import { SnapshotFrame } from "./preview_frame.js";
 import { PreviewUnavailable } from "./preview_unavailable.js";
 import { useShellRoot } from "./root_context.js";
 import { schemeValue, documentLightOnly } from "./scheme_fallback.js";
-import { useOptionalShellStore } from "./store_context.js";
+import { useShellStore } from "./store_context.js";
 import { useRemovedPreview } from "./use_removed_preview.js";
 
 /** Everything the browser client needs to request one entry's previous version. */
@@ -204,11 +204,11 @@ function PreviewState(props: {
   data: RemovedPreviewData;
   viewport: "both" | "desktop" | "mobile";
 }) {
-  const store = useOptionalShellStore();
+  const store = useShellStore();
   const preview = useRemovedPreview({
     colorScheme: props.colorScheme,
     data: props.data,
-    interactive: store?.interactive ?? false,
+    interactive: store.interactive,
     viewport: props.viewport,
   });
   if (preview.state.status === "ready")
@@ -236,9 +236,8 @@ function PreviewState(props: {
  * cannot request it shows that the previous version is unavailable.
  */
 export function RemovedPreviewStage(props: { data: RemovedPreviewData }) {
-  const store = useOptionalShellStore();
-  const colorScheme = store?.state.selection.colorScheme ?? "light";
-  const viewport = store?.state.selection.viewport ?? "both";
+  const store = useShellStore();
+  const { colorScheme, viewport } = store.state.selection;
   return (
     <PreviousVersion
       descriptor=""

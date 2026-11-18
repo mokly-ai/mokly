@@ -4,6 +4,8 @@ use mokly_catalogue::diagnostic::Issue;
 use mokly_catalogue::error::CatalogueError;
 use tempfile::TempDir;
 
+#[path = "support/definitions.rs"]
+mod definitions;
 #[path = "support/fixtures.rs"]
 mod fixtures;
 mod support;

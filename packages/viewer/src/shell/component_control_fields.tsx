@@ -5,13 +5,13 @@
  * the fields.
  */
 
+import type { ComponentControl } from "@mokly/model";
 import {
   PropField,
   PropFields,
   type PropFieldControl,
 } from "@mokly/ui/prop-field";
 
-import type { ComponentControl } from "../components/control_types.js";
 import { optionalProperty } from "../components/props.js";
 
 import { CONTROLS_COPY } from "./component_controls_copy.js";

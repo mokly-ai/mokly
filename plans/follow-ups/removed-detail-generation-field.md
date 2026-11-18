@@ -16,7 +16,7 @@
 - **Background:** A removed entry's detail lives in a comparison generation.
   The generated `EntryDetailV4` type has no `generation` field, in
   `crates/mokly-model/src/public_detail.rs:140` and
-  `packages/viewer/src/generated/catalogue/EntryDetailV4.ts`.
+  `packages/model/src/generated/catalogue/EntryDetailV4.ts`.
 - **Problem:** `mokly-removed-previews.md:68` says that the removed detail
   "carries `generation` and `snapshotId`". Lines 146-147 say that the
   detail's `generation` confirms the generation. `mokly-shell-delivery.md:92-95`

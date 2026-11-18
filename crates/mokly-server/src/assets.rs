@@ -52,7 +52,7 @@ impl ViewerAssets for PackageAssets {
         };
         if manifest.schema_version != 1
             || !manifest.modules.iter().any(|name| name == "shell.js")
-            || !manifest.modules.iter().any(|name| name == "inspector.js")
+            || !manifest.modules.iter().any(|name| name == "frame-probe.js")
         {
             return Err(ServerError::InvalidAssets);
         }

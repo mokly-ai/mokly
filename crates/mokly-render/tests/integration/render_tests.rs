@@ -11,7 +11,6 @@ use super::support::Consumer;
 fn mixed_catalogue_renders_react_html_stories_pages_and_saved_slots() {
     let consumer = Consumer::new();
     let prepared = consumer.prepare().unwrap();
-    assert!(prepared.deferred_modules.is_empty());
     assert_eq!(prepared.model.entries.len(), 8);
     assert_eq!(
         prepared.javascript.entries["components/chip"].handle,

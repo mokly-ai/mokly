@@ -9,8 +9,8 @@ use std::collections::BTreeMap;
 
 use crate::axes::{ColorScheme, Viewport};
 use crate::catalogue::{CatalogueModel, EntryContent};
-use crate::error::{InternalError, Result};
-use crate::material::digest;
+use crate::material::catalogue_key;
+use crate::nullable::Nullable;
 use crate::public_detail::{DetailEntry, DetailView, EntryDetailV4};
 use crate::public_index::{CatalogueReadModel, LiveGeneration};
 use crate::public_metadata::{CatalogueIdentity, ChangesStatus};
@@ -48,21 +48,12 @@ pub struct Publication {
 }
 
 /// Project a validated model without private source or render evidence.
-pub fn index(
-    model: &CatalogueModel,
-    keys: &[ViewKey],
-    state: &Publication,
-) -> Result<CatalogueReadModel> {
-    let preimage = serde_json::to_vec(&("mokly-catalogue-v1", &state.config_path));
-    let bytes = match preimage {
-        Ok(bytes) => bytes,
-        Err(source) => return Err(InternalError::Json { source }.into()),
-    };
+pub fn index(model: &CatalogueModel, keys: &[ViewKey], state: &Publication) -> CatalogueReadModel {
     let by_path = key_index(keys);
     let mut result = CatalogueReadModel {
         schema_version: versions::CATALOGUE_INDEX,
         identity: CatalogueIdentity {
-            id: digest(&bytes),
+            id: catalogue_key(&state.config_path),
             title: "Mokly".into(),
         },
         deployment_id: state.deployment_id.clone(),
@@ -76,7 +67,7 @@ pub fn index(
                 generation: generation.clone(),
             }),
         changes_status: state.changes_status,
-        comparison_url: None,
+        comparison_url: Nullable(None),
         tree: projection_tree::build(model),
         tree_order: model
             .folders
@@ -152,7 +143,7 @@ pub fn index(
             }),
         }
     }
-    Ok(result)
+    result
 }
 
 /// Build every current detail under the same identity and revision fence.

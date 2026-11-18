@@ -121,7 +121,7 @@ test("an unanswered request expires after five seconds and disposes pending work
 }) => {
   await page.addInitScript(() => {
     window.addEventListener("message", (event) => {
-      if (window.name !== "drop-inspector-requests") return;
+      if (window.name !== "drop-probe-requests") return;
       const message = JSON.parse(event.data) as { type: string };
       if (message.type === "list") event.stopImmediatePropagation();
     });
@@ -131,7 +131,7 @@ test("an unanswered request expires after five seconds and disposes pending work
     .frames()
     .find((frame) => frame.url().startsWith(fixture.frames.url))!;
   await child.evaluate(() => {
-    window.name = "drop-inspector-requests";
+    window.name = "drop-probe-requests";
   });
   await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
   await page.clock.pauseAt(new Date("2026-01-01T00:01:00Z"));

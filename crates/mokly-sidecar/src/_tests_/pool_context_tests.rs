@@ -20,6 +20,7 @@ fn release_disposes_all_serving_slots_and_never_starts_a_worker_after_shutdown()
         Arc::new(Unimock::new(())),
         Arc::new(clock.clone()),
         Launch {
+            capture_durability: false,
             node: "node".into(),
             entry: "sidecar.js".into(),
             repository: "/repo".into(),
@@ -31,7 +32,7 @@ fn release_disposes_all_serving_slots_and_never_starts_a_worker_after_shutdown()
         },
     );
     {
-        let mut state = pool.lock().unwrap();
+        let mut state = pool.lock();
         state.slots = workers
             .iter()
             .map(|worker| {
@@ -63,7 +64,6 @@ fn release_disposes_all_serving_slots_and_never_starts_a_worker_after_shutdown()
     pool.synchronize_releases();
     assert!(
         pool.lock()
-            .unwrap()
             .slots
             .iter()
             .all(|slot| slot.as_ref().unwrap().contexts.is_empty())
@@ -71,5 +71,5 @@ fn release_disposes_all_serving_slots_and_never_starts_a_worker_after_shutdown()
     pool.shutdown().unwrap();
     pool.release_context("used");
     pool.synchronize_releases();
-    assert!(pool.lock().unwrap().contexts.is_empty());
+    assert!(pool.lock().contexts.is_empty());
 }

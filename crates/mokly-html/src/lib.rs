@@ -7,6 +7,10 @@ pub mod diagnostic_code;
 pub mod error;
 pub mod fragment;
 pub mod links;
+
+#[cfg(test)]
+#[path = "_tests_/author_navigation_tests.rs"]
+mod author_navigation_tests;
 pub mod markdown;
 pub mod normalization;
 pub mod parse;

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { CatalogueReadModel } from "../src/catalogue/types.js";
+import type { CatalogueReadModel } from "@mokly/model";
+
 import { homeSummary } from "../src/shell/home_summary.js";
 
 import { indexFixture, shellModelFixture } from "./catalogue_v9_fixture.js";

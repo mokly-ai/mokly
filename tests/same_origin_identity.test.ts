@@ -1,15 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { registerFrameSession } from "../packages/viewer/dist/client/frame_session.js";
-import { recordedFrameResource } from "../packages/viewer/dist/client/same_origin_access.js";
+import { registerFrameSession } from "../packages/frame/dist/adapters/frame_session.js";
+import { recordedFrameResource } from "../packages/frame/dist/adapters/same_origin_access.js";
 import {
   assignedFrameResource,
   createMountAuthentication,
   normalizedHtmlPath,
   sameFrameResource,
-} from "../packages/viewer/dist/client/same_origin_identity.js";
-import { initialFrameLoad } from "../packages/viewer/dist/client/same_origin_load.js";
+} from "../packages/frame/dist/adapters/same_origin_identity.js";
+import { initialFrameLoad } from "../packages/frame/dist/adapters/same_origin_load.js";
 
 test("resource identity retains origin, path and query while excluding hash", () => {
   const expected = new URL(
@@ -57,7 +57,6 @@ for (const suffix of ["/index.html", "/", ""]) {
     const fixture = fakeFrame();
     fixture.attributes.set("src", pathname);
     registerFrameSession(fixture.frame, {
-      identity: {},
       sources: [expected.href],
     });
     const current = fakeDocument(fixture.frame, `https://app.test${pathname}`);

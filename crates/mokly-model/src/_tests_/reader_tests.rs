@@ -1,24 +1,36 @@
 //! Version gates must run before any current-format payload decoding.
 
-use crate::readers::{ReadError, deployment, detail, index, live};
+use crate::readers::{ReadError, deployment, detail, detail_lenient, index, index_lenient, live};
 use crate::versions;
 
 #[test]
 fn all_versioned_boundaries_reject_versions_before_payloads() {
     enum Reader {
         Index,
+        IndexLenient,
         Deployment,
         Detail,
+        DetailLenient,
         Live,
     }
     let readers = [
         ("catalogue index", versions::CATALOGUE_INDEX, Reader::Index),
+        (
+            "catalogue index",
+            versions::CATALOGUE_INDEX,
+            Reader::IndexLenient,
+        ),
         (
             "deployment file",
             versions::DEPLOYMENT_FILE,
             Reader::Deployment,
         ),
         ("entry detail", versions::ENTRY_DETAIL, Reader::Detail),
+        (
+            "entry detail",
+            versions::ENTRY_DETAIL,
+            Reader::DetailLenient,
+        ),
         ("live descriptor", versions::LIVE_DESCRIPTOR, Reader::Live),
     ];
     for (boundary, expected, reader) in readers {
@@ -28,8 +40,10 @@ fn all_versioned_boundaries_reject_versions_before_payloads() {
             );
             let error = match reader {
                 Reader::Index => index(&text).map(|_| ()),
+                Reader::IndexLenient => index_lenient(&text).map(|_| ()),
                 Reader::Deployment => deployment(&text).map(|_| ()),
                 Reader::Detail => detail(&text).map(|_| ()),
+                Reader::DetailLenient => detail_lenient(&text).map(|_| ()),
                 Reader::Live => live(&text).map(|_| ()),
             };
             assert!(matches!(
@@ -45,8 +59,10 @@ fn all_versioned_boundaries_reject_versions_before_payloads() {
         ] {
             let error = match reader {
                 Reader::Index => index(&text).map(|_| ()),
+                Reader::IndexLenient => index_lenient(&text).map(|_| ()),
                 Reader::Deployment => deployment(&text).map(|_| ()),
                 Reader::Detail => detail(&text).map(|_| ()),
+                Reader::DetailLenient => detail_lenient(&text).map(|_| ()),
                 Reader::Live => live(&text).map(|_| ()),
             };
             assert!(matches!(error, Err(ReadError::Version { .. })));

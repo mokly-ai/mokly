@@ -168,8 +168,7 @@ lines, so consumer output cannot corrupt a spinner.
 
 ## Cache Directory
 
-The [cache directory line](./mokly-terminal-cache.md#cache-directory) names the
-first cache opened by the process in both output modes.
+The [cache output contract](./mokly-terminal-cache.md) owns the directory line and the cache warnings.
 
 ## One-Shot Commands
 

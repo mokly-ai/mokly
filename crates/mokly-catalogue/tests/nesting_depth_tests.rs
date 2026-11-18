@@ -13,6 +13,8 @@ use mokly_model::limits;
 use tempfile::TempDir;
 use yaml_rust2::parser::{Event, Parser};
 
+#[path = "support/definitions.rs"]
+mod definitions;
 #[path = "../../mokly-css/tests/depth_search/mod.rs"]
 mod depth_search;
 mod support;

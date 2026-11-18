@@ -1,38 +1,28 @@
 //! Trusted sidecar rules enter the shared catalogue-wide evidence reducer.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::mem;
 
 use mokly_css::attribution::{self, OwnPageMatches, RuleObservation};
 use mokly_css::match_tree::MatchTree;
 use mokly_css::rule_matching::{DocumentMatching, match_document};
 use mokly_css::rules::{ParsedCss, RuleDiff};
 use mokly_html::tree::{Node, RegionKind};
-use mokly_model::catalogue::ModelEntry;
-use mokly_model::review::{EntryChangeReason, ReviewEntryAddress};
 
-use crate::comparison_address::address;
-use crate::comparison_types::ViewKey;
 use crate::error::Result;
 use crate::instance_impact::PairedInstance;
-use crate::instance_proof::InstanceProof;
 use crate::material::mapped;
 use crate::owned_style_chain_source::DocumentIndex;
 use crate::owned_style_instances;
 use crate::resource_memo::ResourceMemo;
+use crate::rule_weight;
 use crate::view_material::MaterialComparison;
 
 #[derive(Default)]
 pub(crate) struct Changes {
     pub(crate) rules: Vec<RuleObservation>,
     chains: Vec<(String, owned_style_instances::Compact)>,
-    proof: Option<ProofContext>,
-}
-
-struct ProofContext {
     candidates: Vec<(String, String)>,
-    before: ReviewEntryAddress,
-    after: ReviewEntryAddress,
-    view: ViewKey,
 }
 
 /// Compare owned rules and retain ancestry only for eligible paired instances.
@@ -96,6 +86,21 @@ pub(crate) fn compare(
 }
 
 impl Changes {
+    pub(crate) fn retained_bytes(&self) -> usize {
+        rule_weight::rules(&self.rules)
+            + self.chains.capacity() * mem::size_of::<(String, owned_style_instances::Compact)>()
+            + self
+                .chains
+                .iter()
+                .map(|(owner, chains)| owner.capacity() + chains.retained_bytes())
+                .sum::<usize>()
+            + self.candidates.capacity() * mem::size_of::<(String, String)>()
+            + self
+                .candidates
+                .iter()
+                .map(|(owner, key)| owner.capacity() + key.capacity())
+                .sum::<usize>()
+    }
     /// Move admission follows physical claims for declared owned rules.
     pub(crate) fn changes_owner(&self, owner: Option<&str>) -> bool {
         let Some(owner) = owner else {
@@ -116,13 +121,7 @@ impl Changes {
     }
 
     /// Retain only paired instances whose caller inputs stayed equal.
-    pub(crate) fn prepare(
-        &mut self,
-        comparison: &MaterialComparison,
-        before: &ModelEntry,
-        after: &ModelEntry,
-        view: ViewKey,
-    ) {
+    pub(crate) fn prepare(&mut self, comparison: &MaterialComparison) {
         if self.chains.is_empty() {
             return;
         }
@@ -131,43 +130,27 @@ impl Changes {
             .iter()
             .flat_map(|(owner, chains)| owned_style_instances::candidates(chains, owner))
             .collect();
-        let candidates: Vec<_> = comparison
+        self.candidates = comparison
             .instances
             .iter()
             .filter(|instance| candidate_keys.contains(&instance.key))
             .map(|instance| (instance.component.clone(), instance.key.clone()))
             .collect();
-        self.proof = (!candidates.is_empty()).then(|| ProofContext {
-            candidates,
-            before: address(before),
-            after: address(after),
-            view,
-        });
     }
 
-    /// Resolve exact instance proof with the same unfiltered own-page sets as records.
-    pub(crate) fn proofs(&mut self, own_pages: &OwnPageMatches) -> Vec<InstanceProof> {
-        let Some(proof) = self.proof.take() else {
+    /// Select exact paired component instances with the unfiltered own-page sets.
+    pub(crate) fn instances(&self, own_pages: &OwnPageMatches) -> Vec<(String, String)> {
+        if self.candidates.is_empty() {
             return Vec::new();
-        };
+        }
         let mut instances = BTreeSet::new();
         for (owner, chains) in &self.chains {
             instances.extend(owned_style_instances::matched(chains, owner, own_pages));
         }
-        proof
-            .candidates
-            .into_iter()
-            .filter_map(|(component, instance)| {
-                instances.contains(&instance).then(|| InstanceProof {
-                    component,
-                    instance,
-                    before: proof.before.clone(),
-                    after: proof.after.clone(),
-                    view: proof.view,
-                    reason: EntryChangeReason::Implementation,
-                    reference: None,
-                })
-            })
+        self.candidates
+            .iter()
+            .filter(|(_, instance)| instances.contains(instance))
+            .cloned()
             .collect()
     }
 
@@ -180,13 +163,7 @@ impl Changes {
                 (chains + next_chains, starts + next_starts)
             },
         );
-        (
-            chains,
-            starts,
-            self.proof
-                .as_ref()
-                .map_or(0, |proof| proof.candidates.len()),
-        )
+        (chains, starts, self.candidates.len())
     }
 }
 

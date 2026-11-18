@@ -34,8 +34,10 @@ crossterm = "0.29.0"
 tracing = "0.1.44"
 tracing-subscriber = "0.3.23"
 chrono = { version = "0.4.45", features = ["clock"] }
+mimalloc = "0.1.52"
 
 [dev-dependencies]
+mokly-render = { workspace = true, features = ["mock"] }
 mokly-git = { workspace = true, features = ["mock"] }
 mokly-platform = { workspace = true, features = ["mock"] }
 mokly-compare = { workspace = true, features = ["mock"] }
@@ -66,6 +68,7 @@ mock = ["dep:unimock", "mokly-publish/mock"]
 
 [target."cfg(unix)".dependencies]
 signal-hook = "0.3.18"
+libc = "0.2.190"
 
 [target."cfg(not(unix))".dependencies]
 ctrlc = { version = "3.5.2", features = ["termination"] }

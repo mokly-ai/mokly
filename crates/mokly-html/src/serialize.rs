@@ -1,4 +1,4 @@
-//! Deterministic document bytes and inspector markers with an explicit traversal stack.
+//! Deterministic document bytes and frame probe markers with an explicit traversal stack.
 
 use crate::normalization::ATTRIBUTE;
 use crate::text_mode::{TextMode, Token};

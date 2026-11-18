@@ -44,6 +44,8 @@ fn selected_native_builds_once_then_runs_workspace_tests() {
             "cargo fmt --all -- --check",
             "cargo clippy --workspace --all-targets -- -D warnings",
             "npm run build --workspace \"@mokly/ui\"",
+            "npm run build --workspace \"@mokly/model\"",
+            "npm run build --workspace \"@mokly/frame\"",
             "npm run build --workspace \"@mokly/viewer\"",
             "npm run build --workspace \"@mokly/mokly\"",
             "cargo test --workspace --no-fail-fast",
@@ -61,6 +63,8 @@ fn selected_native_builds_once_then_runs_workspace_tests() {
                 .next_call(matching!((command) if command.display() == "cargo clippy --workspace --all-targets -- -D warnings"))
                 .returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/ui\"")).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/model\"")).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/frame\"")).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/viewer\"")).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/mokly\"")).returns(Ok(())),
             CommandRunnerRunMock

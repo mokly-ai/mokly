@@ -1,8 +1,7 @@
 /**
  * An entry detail's `reasons` under the shell delivery contract: the review
- * v8 reason shapes in sorted unique order, with additive fields ignored as
- * the detail's other records ignore them. A pair whose reasons disagree with
- * the index stays accepted, so a detail written before them still loads.
+ * v8 reason shapes, copied without content checks. A pair whose reasons
+ * disagree with the index stays accepted.
  */
 
 import assert from "node:assert/strict";
@@ -10,7 +9,6 @@ import { test } from "node:test";
 
 import { fenceDetail } from "../src/catalogue/detail_fences.js";
 import { readEntryDetail } from "../src/catalogue/detail_reader.js";
-import { MoklyVersionError } from "../src/catalogue/version_error.js";
 
 import { indexFixture, rawDetailFixtures } from "./catalogue_v9_fixture.js";
 
@@ -49,17 +47,7 @@ function pendingIndex() {
   });
 }
 
-function rejects(detail: Raw, reason: RegExp): void {
-  assert.throws(
-    () => readEntryDetail(detail),
-    (error) =>
-      !(error instanceof MoklyVersionError) &&
-      error instanceof Error &&
-      reason.test(error.message),
-  );
-}
-
-test("a detail reads every review v8 reason shape in canonical order", () => {
+test("a detail copy keeps every reason shape and its order", () => {
   for (const [path, reasons] of [
     ["components/action", []],
     ["components/action", [{ kind: "implementation" }]],
@@ -90,51 +78,6 @@ test("a detail reads every review v8 reason shape in canonical order", () => {
     Object.hasOwn(readEntryDetail(current("guide")), "reasons"),
     false,
   );
-});
-
-test("reasons keep the review shapes and reject other values", () => {
-  const cases: [unknown, RegExp][] = [
-    [null, /expected an array/],
-    [{ kind: "material" }, /expected an array/],
-    [["material"], /expected an object/],
-    [[{ kind: "unknown" }], /unsupported discriminant/],
-    [[{}], /unsupported discriminant/],
-    [[{ kind: "dependency" }], /expected a string/],
-    [[{ kind: "dependency", path: "" }], /expected nonempty text/],
-    [[{ kind: "dependency", path: 1 }], /expected a string/],
-    [[{ kind: "dependency", path: "../theme.css" }], /repository-relative/],
-    [[{ kind: "screen", screenPath: "Not a path" }], /invalid entry path/],
-    [[{ kind: "screen", screen_path: "home" }], /invalid entry path/],
-    [[{ kind: "material", path: "static/a.css" }], /names a path/],
-    [
-      [{ kind: "dependency", path: "static/a.css", screenPath: "home" }],
-      /names a screen/,
-    ],
-  ];
-  for (const [reasons, reason] of cases)
-    rejects(current("product/browse/home", reasons), reason);
-});
-
-test("reasons are sorted by kind, then target, with no duplicate", () => {
-  for (const reasons of [
-    [{ kind: "material" }, { kind: "added" }],
-    [{ kind: "material" }, { kind: "material" }],
-    [{ kind: "material" }, { kind: "dependency", path: "static/a.css" }],
-    [
-      { kind: "dependency", path: "static/b.css" },
-      { kind: "dependency", path: "static/a.css" },
-    ],
-    [
-      { kind: "dependency", path: "static/a.css" },
-      { kind: "dependency", path: "static/a.css" },
-    ],
-    // UTF-16 order puts the supplementary character before U+E000.
-    [
-      { kind: "dependency", path: "static/\u{e000}.css" },
-      { kind: "dependency", path: "static/\u{10000}.css" },
-    ],
-  ])
-    rejects(current("product/browse/home", reasons), /sorted and unique/);
   assert.equal(
     readEntryDetail(
       current("product/browse/home", [
@@ -146,14 +89,14 @@ test("reasons are sorted by kind, then target, with no duplicate", () => {
   );
 });
 
-test("a reason ignores additive fields but keeps its own", () => {
+test("a reason copy keeps additive fields", () => {
   const detail = current("product/browse/home", [
     { kind: "dependency", path: "static/a.css", later: 1 },
     { kind: "material", later: { nested: true } },
   ]);
   assert.deepEqual(readEntryDetail(detail).reasons, [
-    { kind: "dependency", path: "static/a.css" },
-    { kind: "material" },
+    { kind: "dependency", path: "static/a.css", later: 1 },
+    { kind: "material", later: { nested: true } },
   ]);
 });
 

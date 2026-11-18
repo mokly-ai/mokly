@@ -141,7 +141,5 @@ fn short_secrets_never_change_codes_or_fixed_error_copy() {
         };
         let output = style.failure(&failure, &redactor);
         assert!(output.starts_with("[mokly/cli-invalid] unknown option: "));
-        let output = style.failure(&Failure::Unavailable { command: "publish" }, &redactor);
-        assert!(output.starts_with("[mokly/build-invalid] "));
     }
 }

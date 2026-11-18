@@ -6,8 +6,6 @@ use mokly_model::canonical;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
-use crate::comparison_error::CompareResult;
-use crate::error::Result;
 use crate::instance_inputs::SlotSignal;
 use crate::material::Material;
 
@@ -80,17 +78,20 @@ impl Drop for Material {
 }
 
 /// Private move prefilter; the paired comparison still proves equality.
-pub(crate) fn fingerprint(nodes: &[Material]) -> Result<String> {
+pub(crate) fn fingerprint(nodes: &[Material]) -> String {
     let mut hash = Sha256::new();
     hash.update((nodes.len() as u64).to_le_bytes());
     let mut pending: Vec<_> = nodes.iter().rev().collect();
     while let Some(node) = pending.pop() {
-        hash.update(canonical::to_string(&node.header()).compare()?.as_bytes());
+        hash.update(
+            canonical::to_string(&node.header())
+                .expect("material headers contain only strings, counts, and typed slot signals")
+                .as_bytes(),
+        );
         pending.extend(node.children().iter().rev());
     }
-    Ok(hash
-        .finalize()
+    hash.finalize()
         .iter()
         .map(|byte| format!("{byte:02x}"))
-        .collect())
+        .collect()
 }

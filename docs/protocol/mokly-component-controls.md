@@ -1,5 +1,7 @@
 # Component Controls
 
+Status: The [select option builder](../../plans/follow-ups/select-option-builder.md) repairs duplicate or unusable select choices from Storybook and schema choices.
+
 ## Scope And User Behaviour
 
 Saved variants work in every catalogue. Serve renders temporary edits of
@@ -23,7 +25,7 @@ derived ones; a declared control must name a declared prop, and optionality
 and types come only from the schema. A prop whose shape has no control is
 shown but not editable. The read model carries the result as `controls`.
 
-The [generated control type](../../packages/viewer/src/generated/catalogue/ComponentControl.ts)
+The [generated control type](../../packages/model/src/generated/catalogue/ComponentControl.ts)
 defines its data shape.
 
 Controls keep their explicit declaration order. Derived controls follow schema

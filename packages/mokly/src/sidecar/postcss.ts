@@ -10,7 +10,6 @@ import type { ProcessCssParams } from "../generated/sidecar/ProcessCssParams.js"
 
 import { SidecarError, detail } from "./errors.js";
 import { dependencyDirectory } from "./importer-resolution.js";
-import { jsonText } from "./json.js";
 import { ModulePaths } from "./module-paths.js";
 import { PostcssProcess } from "./postcss-process.js";
 import { sourceDependency } from "./source-dependencies.js";
@@ -18,7 +17,6 @@ import { sourceDependency } from "./source-dependencies.js";
 /** Children retain one module instance until their explicit context is disposed. */
 export class PostcssWorkers {
   private workers = new Map<string, PostcssProcess>();
-  private contexts = new Map<string, string>();
   private id = 0;
 
   constructor(
@@ -45,18 +43,6 @@ export class PostcssWorkers {
   private async transform(params: ProcessCssParams): Promise<CssResult> {
     const paths = await ModulePaths.create(params);
     const root = paths.sourceRoot;
-    const identity = jsonText([
-      root,
-      paths.repositoryRoots,
-      paths.dependencyRoots,
-      params.moduleResolution,
-    ]);
-    const previous = this.contexts.get(params.context);
-    if (previous !== undefined && previous !== identity)
-      throw new Error(
-        `PostCSS context ${params.context} changed its sources or resolution settings`,
-      );
-    this.contexts.set(params.context, identity);
     const file = await paths.resolve(path.resolve(root, params.postcss));
     if (!/\.(ts|mts|js|mjs|cjs)$/.test(file))
       throw new SidecarError(
@@ -74,9 +60,6 @@ export class PostcssWorkers {
           env: {
             ...process.env,
             PWD: root,
-            INIT_CWD: undefined,
-            npm_package_json: undefined,
-            npm_config_local_prefix: undefined,
             NODE_OPTIONS: [
               `--require=${JSON.stringify(fileURLToPath(new URL("./postcss-preload.cjs", import.meta.url)))}`,
               process.env.NODE_OPTIONS,
@@ -118,8 +101,6 @@ export class PostcssWorkers {
       ([key]) => context === undefined || JSON.parse(key)[0] === context,
     );
     for (const [key] of selected) this.workers.delete(key);
-    if (context === undefined) this.contexts.clear();
-    else this.contexts.delete(context);
     await Promise.all(
       selected.map(async ([, { child: worker }]) => {
         if (worker.exitCode !== null || worker.signalCode !== null) return;

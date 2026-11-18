@@ -12,7 +12,6 @@ use mokly_model::material::digest;
 use mokly_sidecar::methods::{Call, ProcessCss};
 use mokly_sidecar::pool::SidecarPool;
 use mokly_sidecar::results::{Css, DependencyKind};
-use mokly_sidecar::wire::MethodResult;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::dependency_usage::DependencyUsage;
@@ -177,12 +176,7 @@ impl PostCss {
             text: source.into(),
         });
         let result = match self.pool.request(call) {
-            Ok(MethodResult::Css(result)) => result,
-            Ok(_) => {
-                return Err(RenderError::ResultKind {
-                    method: "processCss",
-                });
-            }
+            Ok(result) => result.into_css(),
             Err(source) => return Err(RenderError::Sidecar { source }),
         };
         for directory in result.unmapped_dependency_directories.iter().flatten() {

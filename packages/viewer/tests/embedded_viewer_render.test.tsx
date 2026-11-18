@@ -229,15 +229,6 @@ test("an index of another version shows the version headline without an action",
   assert.doesNotMatch(html, /<button|Try again|Reload/);
 });
 
-test("an index that cannot be read offers Try again under its headline", () => {
-  const index = { ...fixture, tree: "not a tree" } as unknown as typeof fixture;
-  const html = embeddedMarkup({ index });
-  assert.match(
-    html,
-    /<h2 class="mbk-reset">The catalogue could not be loaded<\/h2><button class="mbk-empty-link mbk-reset" type="button">Try again<\/button>/,
-  );
-});
-
 test("the embedded viewer is one busy status line while its index loads", () => {
   const html = renderToStaticMarkup(
     <MoklyViewer

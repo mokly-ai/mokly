@@ -27,6 +27,7 @@ fn snapshot(paths: Vec<String>, documents: Arc<dyn Documents>) -> Arc<Snapshot> 
         ))
         .unwrap(),
         generation: Arc::new(Generation {
+            prop_validators: Default::default(),
             model: Arc::new(publication_support::empty_model()),
             view_keys: Vec::new(),
             config_path: "mokly.config.json".into(),
@@ -48,6 +49,7 @@ fn snapshot(paths: Vec<String>, documents: Arc<dyn Documents>) -> Arc<Snapshot> 
             render_token: "secret".into(),
         }),
         details: Default::default(),
+        recent_details: Default::default(),
         completed: Default::default(),
         files: Default::default(),
         lease: Arc::new(RevisionLease::default()),

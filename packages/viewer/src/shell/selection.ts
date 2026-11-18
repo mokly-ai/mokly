@@ -7,6 +7,9 @@ import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { ViewerSelection } from "../host/types.js";
 import type { FolderTitleLookup } from "../registry/folder_titles.js";
 
+import { navEntryRow, navNodeVisible } from "./nav_model.js";
+import type { NavSectionNode } from "./nav_tree.js";
+import { shellContext } from "./projection.js";
 import {
   parseSearchQuery,
   rowMatchesQuery,
@@ -21,6 +24,13 @@ export const defaultSelection: ViewerSelection = {
   search: "",
   tags: [],
 };
+/** A host selection that names no valid view of the catalogue. */
+export class UnavailableSelectionError extends Error {
+  constructor() {
+    super("The requested catalogue selection is unavailable.");
+    this.name = "UnavailableSelectionError";
+  }
+}
 const selectionKeys = new Set([
   "screenPath",
   "snapshotId",
@@ -59,7 +69,7 @@ export function normalizeSelection(
         typeof tag === "string" && tag.trim() && !/\s/.test(tag.trim()),
     )
   )
-    throw new Error("The requested catalogue selection is unavailable.");
+    throw new UnavailableSelectionError();
   const query = parseSearchQuery(value.search);
   return {
     screenPath: value.screenPath,
@@ -90,6 +100,7 @@ export function sameSelection(a: ViewerSelection, b: ViewerSelection): boolean {
 export function mergeSelection(
   model: ShellCatalogueReadModel,
   folderTitles: FolderTitleLookup,
+  sections: readonly NavSectionNode[],
   current: ViewerSelection,
   partial: Partial<ViewerSelection>,
 ): ViewerSelection {
@@ -103,7 +114,7 @@ export function mergeSelection(
     delete candidate.snapshotId;
   const next = normalizeSelection(model, candidate);
   return screenSupplied || snapshotSupplied
-    ? revealSelection(model, folderTitles, next)
+    ? revealSelection(model, folderTitles, sections, next)
     : next;
 }
 export function selectionQuery(value: ViewerSelection): string {
@@ -121,10 +132,13 @@ export function routedEntries(model: ShellCatalogueReadModel) {
  * Route activation clears only constraints hiding its actual destination.
  * `folderTitles` names the folders at or above an entry, as the navigation
  * rows do, so a query that matches the destination's folder title is kept.
+ * The destination's row in `sections` also stays visible while a variant or
+ * a folder member that it lists matches, so that query is kept too.
  */
 export function revealSelection(
   model: ShellCatalogueReadModel,
   folderTitles: FolderTitleLookup,
+  sections: readonly NavSectionNode[],
   value: ViewerSelection,
 ): ViewerSelection {
   const entry =
@@ -133,17 +147,27 @@ export function revealSelection(
           ?.entry
       : undefined;
   if (!entry) return value;
-  const matches = rowMatchesQuery(
-    { freeText: value.search, tags: value.tags },
-    searchRow(entry, folderTitles(entry.path)),
-  );
+  const view =
+    value.view === "changes" &&
+    !(entry.changes.status === "ready" && entry.changes.included)
+      ? "all"
+      : value.view;
+  const row = value.snapshotId ? undefined : navEntryRow(sections, entry.path);
+  const shown =
+    rowMatchesQuery(
+      { freeText: value.search, tags: value.tags },
+      searchRow(entry, folderTitles(entry.path)),
+    ) ||
+    (row !== undefined &&
+      navNodeVisible(
+        row,
+        { view, search: value.search, tags: value.tags },
+        shellContext(model, value),
+      ));
   return {
     ...value,
-    ...(matches ? {} : { search: "", tags: [] }),
-    ...(value.view === "changes" &&
-    !(entry.changes.status === "ready" && entry.changes.included)
-      ? { view: "all" as const }
-      : {}),
+    ...(shown ? {} : { search: "", tags: [] }),
+    view,
   };
 }
 

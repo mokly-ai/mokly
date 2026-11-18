@@ -1,5 +1,7 @@
 /** The same-origin routes of the standalone shell that Serve and `build` deliver. */
 
+import type { CatalogueReadModel } from "@mokly/model";
+
 import {
   entryDetailPath,
   INDEX_PATH,
@@ -13,7 +15,6 @@ import {
   loadDetailResult,
   type JsonFetch,
 } from "../catalogue/sources.js";
-import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { ShellDataSource } from "../shell/data_source.js";
 
 import { standaloneLiveSource } from "./live_source.js";
@@ -25,6 +26,16 @@ export interface StandaloneWindow {
   EventSource?: typeof EventSource | undefined;
 }
 
+/**
+ * The fetch of every standalone read. The shell reads only the stub's own
+ * origin, and that origin can need its cookie, for example behind a private
+ * preview proxy, so each read sends same-origin credentials.
+ */
+export function ownOriginFetch(win: StandaloneWindow): JsonFetch {
+  return (input, init) =>
+    win.fetch(input, { ...init, credentials: "same-origin" });
+}
+
 /** Fetch the index the stub's origin serves. */
 export async function fetchStandaloneIndex(
   win: StandaloneWindow,
@@ -34,7 +45,7 @@ export async function fetchStandaloneIndex(
   const { value } = await fetchJson(
     new URL(INDEX_PATH, root),
     signal,
-    win.fetch,
+    ownOriginFetch(win),
   );
   return readCatalogueIndex(value);
 }
@@ -45,6 +56,7 @@ export function standaloneDataSource(
   staticCatalogue = true,
 ): ShellDataSource {
   const root = new URL("/", win.location.href);
+  const fetch = ownOriginFetch(win);
   return {
     loadIndex: (signal) => fetchStandaloneIndex(win, signal),
     loadDetail(request, index, signal) {
@@ -54,7 +66,7 @@ export function standaloneDataSource(
         request.snapshotId === undefined
           ? entryDetailPath(request.path)
           : removedEntryDetailPath(index.comparisonUrl!, request.path);
-      return loadDetailResult(new URL(path, root), root, signal, win.fetch);
+      return loadDetailResult(new URL(path, root), root, signal, fetch);
     },
     deploymentChanged() {
       win.location.reload();
@@ -62,7 +74,7 @@ export function standaloneDataSource(
     ...(staticCatalogue
       ? {
           loadDeployment: (signal: AbortSignal) =>
-            loadDeploymentFile(root, signal, win.fetch),
+            loadDeploymentFile(root, signal, fetch),
         }
       : {}),
     live: standaloneLiveSource(win),

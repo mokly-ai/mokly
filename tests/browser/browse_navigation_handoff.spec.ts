@@ -11,6 +11,7 @@ import { test } from "./browser_test.js";
 import { expectDestination } from "./navigation_destination.js";
 import { nestedScriptNotice } from "./navigation_error_allowances.js";
 import {
+  routeNavigationNestedFrame,
   startNavigationFixture,
   type NavigationFixture,
 } from "./navigation_fixture.js";
@@ -27,9 +28,7 @@ test.afterAll(async () => {
 
 test.beforeEach(async ({ page, allowBrowserError }) => {
   allowBrowserError(nestedScriptNotice);
-  await page.route("https://cross-origin.example.test/nested.html", (route) =>
-    route.fulfill({ body: "<p>Cross-origin</p>", contentType: "text/html" }),
-  );
+  await routeNavigationNestedFrame(page);
 });
 
 test("a logical link right after the first mount is host-owned while the frame still loads", async ({

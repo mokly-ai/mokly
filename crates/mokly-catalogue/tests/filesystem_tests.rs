@@ -10,6 +10,8 @@ use mokly_catalogue::working_tree::WorkingTree;
 use mokly_source_interface::tree::SourceTree;
 use tempfile::TempDir;
 
+#[path = "support/definitions.rs"]
+mod definitions;
 mod support;
 
 #[test]

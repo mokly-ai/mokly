@@ -1,7 +1,7 @@
 /** Exact instance matching over React-owned frame sessions. */
 
-import { FrameError } from "../client/frame_error.js";
-import { frameUsage } from "../client/frame_usage.js";
+import { FrameError, frameUsage } from "@mokly/frame/internal";
+
 import type { GeneratedComponentView } from "../components/views.js";
 import type { InstanceRef } from "../host/types.js";
 
@@ -130,14 +130,9 @@ export function workspaceFrameSessions(
   });
 }
 
-/** Validate the bounded usage contract before any inspection operation. */
+/** Whether ready usage stays inside the inspector's bounds. */
 export function validFrameUsage(session: ShellFrameSession): boolean {
-  if (session.usage.status !== "ready") return false;
-  try {
-    return !frameUsage(session.usage).error;
-  } catch {
-    return false;
-  }
+  return session.usage.status === "ready" && !frameUsage(session.usage).error;
 }
 
 /** Capture the session revision that an asynchronous operation is allowed to use. */

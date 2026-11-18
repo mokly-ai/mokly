@@ -33,7 +33,7 @@ export function catalogueNavSections(
         entryKind: entry.kind,
         label: `${entry.title} · Removed`,
         title: entry.title,
-        tags: entry.tags ?? [],
+        tags: entry.tags,
         ...(folderTitles.length > 0 ? { folderTitles } : {}),
         removedPage: entry.kind === "page" || entry.kind === "document",
         ...(snapshotId ? { snapshotId } : {}),
@@ -71,11 +71,16 @@ export function disclosurePath(
   return [];
 }
 
-/** The selection a render without a shell store shows: All, unsearched. */
-export const UNFILTERED_SELECTION: Pick<
-  ViewerSelection,
-  "view" | "search" | "tags"
-> = { view: "all", search: "", tags: [] };
+/** The row of one current entry, wherever a folder or member list holds it. */
+export function navEntryRow(
+  sections: readonly NavSectionNode[],
+  path: string,
+): NavLeafNode | undefined {
+  return sectionEntryRow(
+    sections.flatMap(({ children }) => children),
+    `entry:${path}`,
+  );
+}
 
 /** Whether one leaf survives the current search and Changes constraints. */
 export function navLeafVisible(
@@ -135,6 +140,21 @@ export function navigationFiltering(selection: ViewerSelection): boolean {
   );
 }
 
+function sectionEntryRow(
+  nodes: readonly NavNode[],
+  key: string,
+): NavLeafNode | undefined {
+  for (const node of nodes) {
+    if (node.kind === "leaf" && node.key === key) return node;
+    const found = sectionEntryRow(
+      node.kind === "group" ? node.children : (node.members ?? []),
+      key,
+    );
+    if (found) return found;
+  }
+  return undefined;
+}
+
 function collectDefaults(
   nodes: readonly NavNode[],
   section: NavSectionNode["id"],
@@ -179,10 +199,7 @@ function nodePath(
 }
 
 /** Whether a row, its variants, its members, or its children hold `id`. */
-export function navNodeContains(
-  node: NavNode,
-  id: string | undefined,
-): boolean {
+function navNodeContains(node: NavNode, id: string | undefined): boolean {
   return (
     id !== undefined &&
     (node.kind === "leaf"

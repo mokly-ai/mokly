@@ -14,14 +14,14 @@
 - **Category:** Test.
 - **Terms:**
   - **Frame adapter:** the viewer client that mounts a preview frame and
-    turns its posted messages into frame events, in
-    `packages/viewer/src/client/frame_adapter.ts`.
+    turns its posted messages into frame events, with the interface that
+    `packages/frame/src/frame_adapter.ts` defines.
 - **Background:**
   - The test "cross-origin native activations report bounded targets and
     modifiers without navigation" clicks links inside a cross-origin preview
     frame.
   - The frame runtime emits a `navigation` frame event in its click
-    handler, at `packages/viewer/src/inspector/runtime.ts:110-128`.
+    handler, at `packages/frame/src/probe/runtime.ts:109-127`.
   - The fixture at `tests/browser/frame_adapter_fixture.ts:46-48` pushes
     each frame event into `window.frameEvents`. The test clears that list
     before each click.
@@ -74,14 +74,14 @@
     Its confirmed source: the preparation poll accepted the committed URL
     while the document still loaded. The fix of 2026-11-01 also waits for a
     complete document and its action link.
-  - [flaky-viewer-selection-navigation.md](flaky-viewer-selection-navigation.md)
+  - [flaky-viewer-selection-navigation.md](https://github.com/mokly-ai/mokly/blob/49f28d83747f3008dc55958124a195b3a0f5df54/plans/follow-ups/flaky-viewer-selection-navigation.md)
 - **Related:**
-  - [flaky-viewer-selection-navigation.md](flaky-viewer-selection-navigation.md)
+  - [flaky-viewer-selection-navigation.md](https://github.com/mokly-ai/mokly/blob/49f28d83747f3008dc55958124a195b3a0f5df54/plans/follow-ups/flaky-viewer-selection-navigation.md)
     is a separate case of the same recorded class: a browser test that failed
     once and passed on its rerun. Its test is in
     `tests/browser/viewer.spec.ts`. That test reads no frame events, and its
     suspected source is a page navigation. The two items share no test code.
-  - [flaky-viewer-events-active-picks.md](flaky-viewer-events-active-picks.md)
+  - [flaky-viewer-events-active-picks.md](https://github.com/mokly-ai/mokly/blob/49f28d83747f3008dc55958124a195b3a0f5df54/plans/follow-ups/flaky-viewer-events-active-picks.md)
     is a separate case of the same recorded class: a browser test that failed
     once and passed on its rerun. Its test is in
     `tests/browser/viewer_events.spec.ts`. Both tests serve their
@@ -111,8 +111,6 @@
     option D says.
   - When the repeats do not reproduce the failure, record the run count in
     this item. Still add the helper, because the user chose it.
-  - Delete this item in the branch that adds the helper. Remove the links to
-    it from `flaky-viewer-selection-navigation.md` and
-    `flaky-viewer-events-active-picks.md`.
+  - Delete this item in the branch that adds the helper.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L4696).

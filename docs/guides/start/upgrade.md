@@ -140,6 +140,35 @@ Rebuild and republish every hosted catalogue with the matching viewer and
 receiver. A hosted service that stores catalogues from an earlier release
 must reset them. The upload exchange is unchanged.
 
+## Upgrade to the frame probe
+
+The script that `build` and `publish` add to their pages for
+`postMessageAdapter` is now the frame probe. Its published names change, and
+Mokly has no converter for the earlier names:
+
+- The script moves from `/mokly-viewer/client/inspector.js` to
+  `/mokly-viewer/client/frame-probe.js`.
+- The message channel changes from `mokly-inspector` to `mokly-frame-probe`,
+  and the wire version changes from 2 to 3.
+- The page markers change from `template[data-mokly-inspector]` and
+  `data-mokly-inspector-link` to `template[data-mokly-frame-probe]` and
+  `data-mokly-frame-probe-link`.
+
+Pages that an earlier release built and the viewer of this release reject one
+another. In such a page, `postMessageAdapter` cannot inspect instances or
+report catalogue links.
+
+- Rebuild and republish every hosted catalogue with this release. Upgrade
+  `@mokly/viewer` in each embedding application to the same release at the
+  same time.
+- Replace the earlier script path in each host rule that names it, such as a
+  file allowlist or a content security policy.
+- Update each custom frame adapter that sends wire messages to the script. Use
+  the channel `mokly-frame-probe` and version 3.
+- Remove `data-mokly-frame-probe` and `data-mokly-frame-probe-link` attributes
+  from your markup. The build reserves both and fails when your markup uses
+  one.
+
 ## Upgrade to comparisons without `review.json`
 
 A comparison generation no longer contains `review.json`. The catalogue index

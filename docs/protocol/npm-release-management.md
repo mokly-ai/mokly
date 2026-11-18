@@ -6,13 +6,14 @@ Continuation of [CI And npm Release Contract](./npm-release.md).
 
 Conventional Commits feed one root release-please Node component through
 `release-please-config.json` and `.release-please-manifest.json`. A push to
-`main` creates or updates one release PR for the CLI, the UI package, and the
-viewer. An ordinary push with no release does not publish. The CLI is the root
-`.` component. Rust-only changes under `crates/` select a release for all three
-packages. Its package name remains `@mokly/mokly`, so the export audit checks
-the public CLI directory. The single release PR owns the CLI version, which the
-private root and five platform packages share, the shared UI package and viewer
-versions, the root changelog, the root lockfile and the release manifest. The
+`main` creates or updates one release PR for the CLI, the UI package, the
+model package, the frame package, and the viewer. An ordinary push with no
+release does not publish. The CLI is the root `.` component. Rust-only changes
+under `crates/` select a release for all five packages. Its package name
+remains `@mokly/mokly`, so the export audit checks the public CLI directory.
+The single release PR owns the CLI version, which the private root and five
+platform packages share, the shared UI, model, frame, and viewer versions, the
+root changelog, the root lockfile and the release manifest. The
 CLI keeps `vX.Y.Z` tags
 (`include-component-in-tag: false`, `include-v-in-tag: true`). The viewer uses
 `viewer-vX.Y.Z` with the same version as the CLI. A newly released viewer tag identifies the CLI release commit. The CLI's
@@ -41,18 +42,22 @@ gates derive versions from package metadata. `bump-minor-pre-major`
 keeps breaking pre-1.0 changes on the minor stream. Published tags are immutable;
 versions advance only through the release PR.
 
-The CLI, the UI package, and the viewer share one version. The root component
-owns the three package versions and releases them together. Core-only commits
-release the CLI, five native packages, the UI package, and the viewer. UI
-package and viewer commits also reach the root component. The root Node updater
-owns the root version. JSON `extra-files` update the public CLI, UI package, and
-viewer versions, all native versions, the exact viewer dependency and its exact
-UI package dependency, and their lockfile edges. They preserve the private root
-native `file:` links. Release PR checks must pass `npm ci` and the version
-agreement gate. The CLI keeps the root changelog and its full release history.
+The CLI, the UI package, the model package, the frame package, and the viewer
+share one version. The root component owns the five package versions and
+releases them together. Core-only commits release the CLI, five native
+packages, the UI, model, and frame packages, and the viewer. Commits to the
+UI, model, or frame package or to the viewer also reach the root component.
+The root Node updater owns the root version. JSON `extra-files` update the
+public CLI, UI, model, frame, and viewer versions, all native versions, the
+exact viewer dependency, the exact UI, model, and frame dependencies of the
+viewer, the exact model dependency of the frame package, and their lockfile
+edges. They preserve the private root native `file:` links. Release PR checks
+must pass `npm ci` and the version agreement gate. The CLI keeps the root
+changelog and its full release history.
 
 Before merge and tag creation, the release PR updates one shared version for
-the CLI, native packages, UI package, and viewer. The release workflow then:
+the CLI, the native packages, the UI, model, and frame packages, and the
+viewer. The release workflow then:
 
 1. Selects the root CLI action output and creates the matching viewer tag at
    the same commit. An existing tag must already identify that commit.
@@ -72,20 +77,20 @@ the CLI, native packages, UI package, and viewer. The release workflow then:
    selection and failure semantics. No preparation step receives publication
    credentials or access to the protected npm environment.
 6. On the first run, preparation downloads the five native archives and packs
-   the UI package, the viewer, and the CLI from the same release commit. Every
-   report identifies the shared release commit. A retry reuses the original
-   checked eight-package set
-   without rebuilding it. Preparation checks packed
-   manifests, inventories, runtime licenses, and clean-consumer smokes. It then
-   rechecks source and tags and preserves the archives and evidence.
+   the UI, model, and frame packages, the viewer, and the CLI from the same
+   release commit. Every report identifies the shared release commit. A retry
+   reuses the original checked ten-package set without rebuilding it.
+   Preparation checks packed manifests, inventories, runtime licenses, and
+   clean-consumer smokes. It then rechecks source and tags and preserves the
+   archives and evidence.
    Publication waits for preparation, downloads that exact saved set, installs
    dependencies with lifecycle scripts disabled, and rechecks archives and tags.
    It runs no Rust build, package build, or consumer smoke. Missing or invalid
    archives stop publication instead of causing a privileged rebuild.
 7. Queries npm, publishes, and verifies each registry artifact in the
    [publication order](./npm-release.md#release-build-matrix-and-publication-order):
-   the platform packages, then the shared-version UI package and viewer, then
-   the CLI.
+   the platform packages, then the shared-version UI, model, and frame
+   packages and viewer, then the CLI.
 
 Publishing occurs in the workflow invocation that creates the CLI release.
 A manual dispatch from workflow ref `main` retries an existing `publish_ref`
@@ -160,7 +165,7 @@ checked set or prepare a new reviewed release version.
 If the first run failed before it saved the complete set, rerun its failed
 jobs. Before a new build, a registry lookup must prove all newly released
 versions absent. An existing new-release version requires the saved set.
-Every release checks all eight newly published packages. Native registrations use
+Every release checks all ten newly published packages. Native registrations use
 the reserved `0.0.0` version, which no coordinated release publishes, under the
 [bootstrap contract](./npm-bootstrap.md#native-package-registration).
 

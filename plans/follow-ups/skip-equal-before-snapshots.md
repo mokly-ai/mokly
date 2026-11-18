@@ -6,10 +6,10 @@
   unmerged plan at commit `181e44f2` on branch
   `conductor/dedup-4-skip-equal-before-snapshots`.
 - **Location:** `crates/mokly-static/src/comparison_files.rs:31`,
-  `crates/mokly-compare/src/comparison_views.rs:58`,
+  `crates/mokly-compare/src/comparison_consumer.rs:50`,
   `crates/mokly-compare/src/projection_detail.rs:13`,
   `crates/mokly-server/src/comparison_capture.rs:33`,
-  `packages/viewer/src/catalogue/detail_comparison.ts:31`, and
+  `crates/mokly-model/src/detail_validation.rs:17`, and
   `docs/protocol/mokly-changes-serving.md:46`.
 - **Reason:** The user has not answered the open decisions of the plan,
   and the plan starts no milestone before the answers.
@@ -97,7 +97,7 @@
      version 10 today, because 0.18.0 shipped version 9. Keep the marker an
      additive optional detail field. Small. **B.** Raise the entry detail
      number. Large. **C.** Add no number. Small.
-  4. **Reader checks** (Low). **A.** Both detail readers reject the marker
+  4. **Reader checks** (Low). **A.** The Rust detail readers reject the marker
      on an added, removed, moved, or comparison-less view. **B.** Readers
      accept it anywhere. Both Small. Option A is new validation.
   5. **Embedded documents** (Medium). A shared document that a before

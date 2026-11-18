@@ -4,11 +4,12 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
+
 use std::time::Duration;
+use unimock::Unimock;
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
 use mokly_catalogue::config_types::ResolvedConfig;
-use mokly_catalogue::definition_provider::DeferredDefinitions;
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::preparation::{Builder, CatalogueBuilder, PreparedCatalogue};
 use mokly_catalogue::working_tree::WorkingTree;
@@ -94,7 +95,7 @@ impl Harness {
         let prepared = Builder {
             tree: tree.clone(),
             discovery: Arc::new(Discoverer { tree: tree.clone() }),
-            definitions: Arc::new(DeferredDefinitions),
+            definitions: Arc::new(Unimock::new(())),
         }
         .prepare(&config, None)
         .unwrap();
@@ -115,7 +116,7 @@ impl Harness {
                 }),
                 processor: Arc::new(IdentityProcessor),
             }),
-            cache: Arc::new(MemoryCache::new(16 * 1024 * 1024)),
+            cache: Arc::new(MemoryCache::new(16 * 1024 * 1024, 0)),
             workers: Arc::new(ThreadWorkers::new(2).unwrap()),
             version: "fixture".into(),
         });
@@ -125,7 +126,7 @@ impl Harness {
         let mut assets = BTreeMap::new();
         for (path, content_type) in [
             ("client/shell.js", "text/javascript; charset=utf-8"),
-            ("client/inspector.js", "text/javascript; charset=utf-8"),
+            ("client/frame-probe.js", "text/javascript; charset=utf-8"),
             ("shell.css", "text/css; charset=utf-8"),
             ("fonts/InterVariable.woff2", "font/woff2"),
             ("client/brand.svg", "image/svg+xml"),

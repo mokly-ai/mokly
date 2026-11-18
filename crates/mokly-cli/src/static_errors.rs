@@ -3,7 +3,7 @@
 use std::path::Path;
 
 use mokly_static::error::{Error, InternalError};
-use mokly_static::inspector_error::InspectorFailure;
+use mokly_static::frame_probe_error::FrameProbeFailure;
 
 use crate::codes::Code;
 
@@ -15,8 +15,8 @@ pub fn code(error: &Error) -> Code {
         | Error::ModuleEncoding { .. } => Code::ViewerUnavailable,
         Error::Empty
         | Error::Cancelled
-        | Error::Inspector {
-            reason: InspectorFailure::Reserved { .. },
+        | Error::FrameProbe {
+            reason: FrameProbeFailure::Reserved { .. },
             ..
         } => Code::BuildInvalid,
         _ => Code::ExportInvalid,
@@ -74,7 +74,7 @@ pub fn detail(error: &Error) -> String {
             display_path(path),
             listed(entries)
         ),
-        Error::Inspector { route, reason } => {
+        Error::FrameProbe { route, reason } => {
             format!("{route}: {}", without_prefixes(&reason.to_string()))
         }
         Error::Internal(InternalError::Rename { source }) => format!(

@@ -16,7 +16,7 @@ use crate::key::{NodeKey, NodeKind, key};
 use crate::routing_records::RoutingRecords;
 use crate::types::{DocumentPlan, ResourcePlan};
 use crate::workers::check_cancelled;
-use crate::{component_keys, error, planning_resources, resource_digests, routing_inputs, styles};
+use crate::{component_keys, planning_resources, resource_digests, routing_inputs, styles};
 
 #[tracing::instrument(name = "graph.prepare.documents", skip_all, err)]
 pub(crate) fn documents(
@@ -59,7 +59,7 @@ pub(crate) fn documents(
             &mut BTreeSet::new(),
         )?;
     }
-    let routing_records = RoutingRecords::new(catalogue)?;
+    let routing_records = RoutingRecords::new(catalogue);
     let mut output = BTreeMap::new();
     for (index, entry) in catalogue.model.entries.iter().enumerate() {
         check_cancelled(graph.workers.as_ref())?;
@@ -100,7 +100,7 @@ pub(crate) fn documents(
         if matches!(entry.content, EntryContent::Component { .. }) {
             components.insert(parent.clone());
         }
-        let routing = routing_inputs::key(entry, &components, catalogue, &routing_records)?;
+        let routing = routing_inputs::key(entry, &components, catalogue, &routing_records);
         for (viewport, scheme) in views {
             let route = viewport.map_or_else(
                 || routes::document(&entry.metadata.path, scheme),
@@ -153,10 +153,8 @@ pub(crate) fn documents(
                     .iter()
                     .filter_map(|path| component_keys.get(path).map(|key| key.0.clone())),
             );
-            let encoded = match serde_json::to_vec(entry) {
-                Ok(bytes) => bytes,
-                Err(source) => return Err(error::InternalError::Json { source }.into()),
-            };
+            let encoded = serde_json::to_vec(entry)
+                .expect("catalogue entries contain only JSON values and string keys");
             let mut recipe: Vec<_> = inputs.iter().map(|input| input.as_bytes()).collect();
             recipe.push(&encoded);
             let resource_key = key(NodeKind::Document, &recipe).0;

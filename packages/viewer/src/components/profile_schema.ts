@@ -1,6 +1,6 @@
 /** The prop schema profile of JSON Schema 2020-12, checked without code generation. */
 
-import type { PropSchema } from "../generated/catalogue/PropSchema.js";
+import type { PropSchema } from "@mokly/model";
 
 import { DataBudget, invalidData, plainKeys, record } from "./data.js";
 
@@ -63,7 +63,7 @@ export function schemaTypes(schema: PropSchema): ReadonlySet<string> {
 }
 
 /** Whether a JSON value is a primitive: a string, number, boolean or null. */
-export function isPrimitive(value: unknown): boolean {
+function isPrimitive(value: unknown): boolean {
   return (
     value === null ||
     typeof value === "string" ||
@@ -117,7 +117,7 @@ function check(
     if (Object.hasOwn(schema, key) && typeof schema[key] !== "string")
       invalidData(`${at}.${key}`, "expected a string");
   const properties = Object.hasOwn(schema, "properties")
-    ? plainKeys(schema.properties, `${at}.properties`)
+    ? plainKeys(schema.properties, `${at}.properties`, true)
     : [];
   for (const name of properties)
     check(

@@ -24,7 +24,7 @@ export async function createHarness(): Promise<string> {
   );
   const files = new Map([
     ["packages/viewer/dist/index.js", ""],
-    ["packages/viewer/dist/browser/inspector.js", ""],
+    ["packages/frame/dist/browser/frame-probe.js", ""],
     [
       "tests/failing.test.ts",
       'import test from "node:test";\ntest("retained unit diagnostic", () => {\n  throw new Error("retained unit diagnostic sentinel");\n});\n',
@@ -34,6 +34,8 @@ export async function createHarness(): Promise<string> {
     await writeHarnessFile(root, name, contents);
   await fs.mkdir(path.join(root, "packages/viewer/tests"), { recursive: true });
   await fs.mkdir(path.join(root, "packages/ui/tests"), { recursive: true });
+  await fs.mkdir(path.join(root, "packages/model/tests"), { recursive: true });
+  await fs.mkdir(path.join(root, "packages/frame/tests"), { recursive: true });
   return root;
 }
 

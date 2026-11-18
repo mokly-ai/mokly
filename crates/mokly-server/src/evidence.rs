@@ -7,12 +7,12 @@ use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::namespace::viewer;
 use mokly_model::projection_usage;
 use mokly_model::usage::CatalogueUsage;
-use mokly_model::usage_schemas::UsageSchemas;
 
-use crate::detail_encoding::{DetailEncoder, detail_id};
+use crate::detail_encoding::DetailEncoder;
+use crate::detail_publication::PublicationKind;
 use crate::error::Result;
 use crate::revision::RevisionLease;
-use crate::snapshot::{Snapshot, checked_index};
+use crate::snapshot::{Snapshot, encode_index};
 
 /// A document's position and detail context in one immutable graph generation.
 #[derive(Clone)]
@@ -113,26 +113,20 @@ pub(crate) fn complete(
     next.index.revision = revision;
     for path in &dirty {
         if let Some(detail) = next.details.get_mut(path) {
-            let detail = Arc::make_mut(detail);
-            detail.detail_id = detail_id(detail)?;
+            Arc::make_mut(detail).revision = Some(revision);
+            let route = viewer(&format!("entries/{path}.json"));
+            let adjacent = current.details.get(path).zip(current.files.get(&route));
+            let file =
+                next.recent_details
+                    .publish(PublicationKind::Usage, detail, adjacent, encoder)?;
             mokly_model::projection::set_detail_id(&mut next.index, path, &detail.detail_id);
-            detail.revision = Some(revision);
+            next.files.insert(route, file);
         }
     }
-    let mut schemas = UsageSchemas::new(&next.index.components);
-    for path in dirty {
-        if let Some(detail) = next.details.get_mut(&path) {
-            let detail = Arc::make_mut(detail);
-            next.files.insert(
-                viewer(&format!("entries/{path}.json")),
-                encoder.encode(detail, &next.index, &mut schemas)?,
-            );
-        }
-    }
-    let index_file = checked_index(&next.index)?;
+    let index_file = encode_index(&next.index);
     next.files.insert(
         viewer("index.json"),
-        crate::revision_file::RevisionFile::new(index_file)?,
+        crate::revision_file::RevisionFile::new(index_file),
     );
     Ok(Some(Arc::new(next)))
 }

@@ -25,11 +25,7 @@ pub(crate) fn validate(
         if entry.metadata.variant_of.is_some() {
             continue;
         }
-        let parent = entry
-            .metadata
-            .variant_of
-            .as_ref()
-            .unwrap_or(&entry.metadata.path);
+        let parent = &entry.metadata.path;
         if let Some(template) = prepared.templates.get(parent) {
             let empty = PropSchema::default();
             let (schema, slots) = match &entry.content {

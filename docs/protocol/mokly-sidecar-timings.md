@@ -33,12 +33,17 @@ operation keeps error status even if a later fallback kill succeeds.
 
 `sidecar.stop` and `sidecar.recycle` carry a `reason` string on start and end:
 
-| Reason        | Cause                                                              |
-| ------------- | ------------------------------------------------------------------ |
-| `recycle`     | The render-count or memory-pressure policy retires the worker.     |
-| `replacement` | A request or cleanup failure makes the worker unusable.            |
-| `retry`       | Process startup or hello fails before a usable worker is returned. |
-| `root-switch` | A request needs a different source root from a live worker.        |
+| Reason        | Cause                                                                                                      |
+| ------------- | ---------------------------------------------------------------------------------------------------------- |
+| `recycle`     | The render-count or memory-pressure policy retires the worker.                                             |
+| `replacement` | A request or cleanup failure makes the worker unusable.                                                    |
+| `retry`       | Process startup or hello fails before a usable worker is returned.                                         |
+| `root-switch` | A request needs a different source root from a live worker, or a return pass replaces an idle base worker. |
+
+A [return pass](./mokly-sidecar-root-scheduling.md#background-return) uses the
+`root-switch` reason for each stop and replacement that it performs. These
+spans follow the Changes publication that starts the pass. Each such stop
+includes the kill and the reaping of the old process.
 
 The stop belongs to the span that performs retirement. A failed hello's stop
 is a child of `sidecar.spawn`. Other stops use the active caller; without one,

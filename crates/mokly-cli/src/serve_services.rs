@@ -2,6 +2,7 @@
 
 use std::path::Path;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
 use mokly_catalogue::discovery::Discoverer;
@@ -11,17 +12,23 @@ use mokly_cli::build::BuildError;
 use mokly_cli::cancellation::Cancellation;
 use mokly_cli::cancelled_work::CancellableTree;
 use mokly_cli::grammar::Common;
+use mokly_cli::output::Style;
+use mokly_cli::redaction::Redactor;
 use mokly_cli::serve::{CatalogueServe, PreparedServe, ServePreparation};
 use mokly_cli::serve_settings::ServeSettings;
 use mokly_graph::cache::RenderCache;
 use mokly_graph::source_snapshot::SourceSnapshot;
 use mokly_render::runtime::Runtime;
+use mokly_sidecar::methods::BundleCapture;
 use mokly_sidecar::pool::SidecarPool;
 use mokly_sidecar::workers::Diagnostics;
 use mokly_source_interface::tree::SourceTree;
 
+use crate::bundle_runtime::Reporting;
+use crate::cache_directory::ServeDirectory;
 use crate::render_runtime::Services;
 use crate::serve_pool::{PoolScheduling, ServePool};
+use crate::terminal::Terminal;
 use mokly_cli::options;
 
 pub(super) struct ServeServices {
@@ -31,16 +38,41 @@ pub(super) struct ServeServices {
     pub(super) tree: Arc<dyn SourceTree>,
     pub(super) preparation: Arc<dyn ServePreparation>,
     pub(super) pool: Arc<dyn SidecarPool>,
+    pub(super) cache_announced: Arc<AtomicBool>,
+    head_published: Arc<AtomicBool>,
+}
+
+/// Command output needed to share a directory notice with later base attempts.
+pub(super) struct ServeOutput {
+    pub(super) terminal: Arc<dyn Terminal>,
+    pub(super) style: Style,
+    pub(super) redactor: Arc<Redactor>,
 }
 
 impl ServeServices {
+    /// Only an installed initial head and successful Serve readiness end startup capture.
+    pub(super) fn head_published(&self) {
+        self.head_published.store(true, Ordering::Release);
+    }
+
     pub(super) fn new(
         cwd: &Path,
         common: &Common,
         diagnostics: Arc<dyn Diagnostics>,
         cancellation: Arc<dyn Cancellation>,
         cache: Arc<dyn RenderCache>,
+        output: ServeOutput,
     ) -> Result<Self, BuildError> {
+        let cache_announced = Arc::new(AtomicBool::new(false));
+        let reporting = Reporting {
+            directory: Arc::new(ServeDirectory {
+                announced: cache_announced.clone(),
+                terminal: output.terminal,
+                style: output.style.clone(),
+                redactor: output.redactor,
+            }),
+            mode: output.style.mode,
+        };
         let tree: Arc<dyn SourceTree> = Arc::new(CancellableTree {
             inner: Arc::new(WorkingTree),
             cancellation: cancellation.clone(),
@@ -56,9 +88,10 @@ impl ServeServices {
             cwd,
             &config.repo_root,
             common,
-            diagnostics,
+            diagnostics.clone(),
             cancellation,
             cache,
+            reporting,
         ) {
             Ok(services) => services,
             Err(source) => {
@@ -68,16 +101,25 @@ impl ServeServices {
                 });
             }
         };
-        let sidecars: Arc<dyn PoolScheduling> =
-            Arc::new(ServePool::new(services.pool, common.sidecars.unwrap_or(1)));
+        let sidecars: Arc<dyn PoolScheduling> = Arc::new(
+            ServePool::new(
+                services.pool,
+                common
+                    .sidecars
+                    .expect("CLI option normalization sets the sidecar count before Serve starts"),
+            )
+            .with_diagnostics(diagnostics),
+        );
         let pool = sidecars.pool(None);
-        let mut runtime = (*services.runtime).clone();
+        let mut runtime = (*services.runtime).clone().with_serve_edit_plans();
         runtime.pool = pool.clone();
         let runtime = Arc::new(runtime);
+        let head_published = Arc::new(AtomicBool::new(false));
         let preparation = Arc::new(AttemptPreparation {
             tree: tree.clone(),
             runtime: runtime.clone(),
             settings: ServeSettings::new(&config),
+            head_published: head_published.clone(),
         });
         Ok(Self {
             sidecars,
@@ -86,6 +128,8 @@ impl ServeServices {
             tree,
             preparation,
             pool,
+            cache_announced,
+            head_published,
         })
     }
 }
@@ -94,6 +138,7 @@ struct AttemptPreparation {
     settings: ServeSettings,
     tree: Arc<dyn SourceTree>,
     runtime: Arc<Runtime>,
+    head_published: Arc<AtomicBool>,
 }
 impl ServePreparation for AttemptPreparation {
     fn prepare(&self, cwd: &Path, options: &Common) -> Result<PreparedServe, BuildError> {
@@ -105,7 +150,13 @@ impl ServePreparation for AttemptPreparation {
         };
         options::apply_base_install_scripts(&mut config, options.base_install_scripts_override());
         self.settings.validate(&config)?;
-        let runtime = Arc::new(self.runtime.with_tree(tree.clone()));
+        let mut runtime = self.runtime.with_tree(tree.clone());
+        runtime.bundle_capture = if self.head_published.load(Ordering::Acquire) {
+            BundleCapture::ServeEdit
+        } else {
+            BundleCapture::Full
+        };
+        let runtime = Arc::new(runtime);
         let preparation: &dyn ServePreparation = &CatalogueServe {
             config: Arc::new(PreparedConfig(config)),
             catalogue: Arc::new(Builder {

@@ -6,8 +6,8 @@ use std::sync::{Arc, Mutex};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::codec;
-use crate::compiled::{CompiledGeneration, RestoreGeneration};
-use crate::methods::{Bundle, Call};
+use crate::compiled::{CompiledGeneration, RestoreGeneration, ReuseEvidence, UncapturedEvidence};
+use crate::methods::{Bundle, BundleCapture, BundleRequest, Call, Generation};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
 use crate::pool_state::Slot;
@@ -16,6 +16,8 @@ use crate::wire::{MethodResult, Request};
 use crate::workers::{ClockMock, WorkerMock};
 
 use super::{Recipes, seed_id};
+
+type RestoreAction = Box<dyn FnOnce() + Send>;
 
 pub(super) fn settings(entry: &str, evaluation: &str) -> Bundle {
     Bundle {
@@ -30,8 +32,16 @@ pub(super) fn settings(entry: &str, evaluation: &str) -> Bundle {
     }
 }
 
-fn compiled(id: &str) -> CompiledGeneration {
+fn compiled(id: &str, capture: BundleCapture) -> CompiledGeneration {
+    let captured = capture == BundleCapture::Full;
     CompiledGeneration {
+        toolchain: "fixture".into(),
+        reuse_evidence: Arc::new(ReuseEvidence {
+            uncaptured: (!captured).then_some(UncapturedEvidence::ServeEdit),
+            durable: captured,
+            complete: captured,
+            inputs: Default::default(),
+        }),
         identity: id.into(),
         code: "quoted \"code\" with a newline\n and Unicode \u{e9}".repeat(4),
         runtime_key: "runtime".into(),
@@ -48,13 +58,17 @@ fn compiled(id: &str) -> CompiledGeneration {
 }
 
 pub(super) fn envelope_size(entry: &str, id: &str) -> usize {
+    envelope_size_with_capture(entry, id, BundleCapture::Full)
+}
+
+pub(super) fn envelope_size_with_capture(entry: &str, id: &str, capture: BundleCapture) -> usize {
     codec::encode(&Request {
         id: 1,
         call: Call::RestoreGeneration(Box::new(RestoreGeneration {
             generation: seed_id(id),
             params: settings(entry, id),
             modules: Vec::new(),
-            compiled: compiled(id),
+            compiled: Arc::new(compiled(id, capture)),
         })),
     })
     .unwrap()
@@ -65,6 +79,7 @@ pub(super) fn envelope_size(entry: &str, id: &str) -> usize {
 pub(super) struct Fixture {
     pub(super) pool: Pool,
     pub(super) calls: Arc<Mutex<Vec<Call>>>,
+    pub(super) before_restore: Arc<Mutex<Option<RestoreAction>>>,
     _worker: Unimock,
 }
 
@@ -72,22 +87,34 @@ impl Fixture {
     pub(super) fn new(bound: usize) -> Self {
         let calls = Arc::new(Mutex::new(Vec::new()));
         let recorded = calls.clone();
+        let before_restore = Arc::new(Mutex::new(None::<RestoreAction>));
+        let restoring = before_restore.clone();
         let worker = Unimock::new((
             WorkerMock::request
                 .each_call(matching!(_, _))
                 .answers_arc(Arc::new(move |_, request, _| {
                     recorded.lock().unwrap().push(request.call.clone());
+                    if matches!(request.call, Call::RestoreGeneration(_)) {
+                        let action = restoring.lock().unwrap().take();
+                        if let Some(action) = action {
+                            action();
+                        }
+                    }
                     Ok(match &request.call {
                         Call::Bundle(params) => {
-                            let id = params.evaluation.as_deref().unwrap();
-                            MethodResult::Bundle(results::Bundle {
+                            let id = params.params.evaluation.as_deref().unwrap();
+                            MethodResult::Bundle(Box::new(results::Bundle {
+                                plan: None,
                                 generation: id.into(),
-                                compiled: (!id.starts_with("probe")).then(|| compiled(id)),
+                                compiled: Arc::new(compiled(
+                                    id,
+                                    params.capture.unwrap_or_default(),
+                                )),
                                 epoch: 0,
+                                cache: None,
                                 modules: Vec::new(),
-                                warnings: Vec::new(),
                                 unmapped_dependency_directories: None,
-                            })
+                            }))
                         }
                         _ => MethodResult::Empty,
                     })
@@ -102,6 +129,7 @@ impl Fixture {
                 ClockMock::now_ms.each_call(matching!()).returns(0_u64),
             )),
             Launch {
+                capture_durability: false,
                 node: "node".into(),
                 entry: "sidecar.js".into(),
                 repository: "/repo".into(),
@@ -113,7 +141,7 @@ impl Fixture {
             },
         );
         {
-            let mut state = pool.lock().unwrap();
+            let mut state = pool.lock();
             state.recipes = Recipes::new(bound);
             for index in 0..4 {
                 state.slots.push(Some(Slot {
@@ -134,29 +162,43 @@ impl Fixture {
         Self {
             pool,
             calls,
+            before_restore,
             _worker: worker,
         }
     }
 
     pub(super) fn retained(&self) -> usize {
-        self.pool.lock().unwrap().recipes.len()
+        self.pool.lock().recipes.len()
     }
 
     pub(super) fn select(&self, slot: usize) {
-        let mut state = self.pool.lock().unwrap();
+        let mut state = self.pool.lock();
         state.available.retain(|index| *index != slot);
         state.available.push_front(slot);
     }
 
     pub(super) fn bundle(&self, entry: &str, id: &str) -> results::Bundle {
+        self.bundle_with_capture(entry, id, BundleCapture::Full)
+    }
+
+    pub(super) fn bundle_with_capture(
+        &self,
+        entry: &str,
+        id: &str,
+        capture: BundleCapture,
+    ) -> results::Bundle {
         let MethodResult::Bundle(result) = self
             .pool
-            .request(Call::Bundle(settings(entry, id)))
+            .request(Call::Bundle(BundleRequest {
+                plan: None,
+                params: settings(entry, id),
+                capture: Some(capture),
+            }))
             .unwrap()
         else {
             panic!("expected bundle")
         };
-        result
+        *result
     }
 
     pub(super) fn release(&self, entry: &str, id: &str) {
@@ -167,10 +209,21 @@ impl Fixture {
     }
 
     pub(super) fn probe(&self, entry: &str, id: &str, slot: usize) -> Vec<String> {
+        self.probe_with_capture(entry, id, slot, BundleCapture::Full)
+    }
+
+    pub(super) fn probe_with_capture(
+        &self,
+        entry: &str,
+        id: &str,
+        slot: usize,
+        capture: BundleCapture,
+    ) -> Vec<String> {
         self.select(slot);
         self.calls.lock().unwrap().clear();
-        self.bundle(entry, id);
-        self.calls
+        let probe = self.bundle_with_capture(entry, id, capture);
+        let restored = self
+            .calls
             .lock()
             .unwrap()
             .iter()
@@ -178,7 +231,13 @@ impl Fixture {
                 Call::RestoreGeneration(recipe) => Some(recipe.compiled.identity.clone()),
                 _ => None,
             })
-            .collect()
+            .collect();
+        self.pool
+            .request(Call::Dispose(Generation {
+                generation: probe.generation,
+            }))
+            .unwrap();
+        restored
     }
 }
 

@@ -3,8 +3,9 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
+import type { PropSchema } from "@mokly/model";
+
 import { encodeProps } from "../src/components/codec.js";
-import type { PropSchema } from "../src/components/prop_types.js";
 import type { ComponentViewRecord } from "../src/components/view_types.js";
 import { ComponentControlsPanel } from "../src/shell/component_controls_panel.js";
 import {

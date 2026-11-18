@@ -38,13 +38,13 @@ starts.
 
 ## Gate Ownership
 
-| Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                                                                    |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Repository       | Every check of the [repository gate list](./ci-verification-repository.md#repository-boundary), in the listed order.                                                                                                                                                                                                                                           |
-| Viewer           | The [required type check](./developer-type-checks.md#required-type-check) of every project, then every discovered Node test file, including the inspector size test of the [published inspector contract](./mokly-published-inspector.md), with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. The suite has no shard. |
-| Browser          | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with `fullyParallel: false`, the [shared worker count](./ci-suite-evidence.md#test-concurrency), the configured Playwright timeouts, and zero retries. A shard runs its whole-file partition.                                                                             |
-| Native platforms | On macOS and Windows, build the `mokly` binary once, check Rust formatting and workspace Clippy with warnings denied, and run the Rust tests of every crate.                                                                                                                                                                                                   |
-| Required CI      | Evaluate the results of the runtime profile job, the repository job, the viewer job, every browser shard, and the static-delivery job on each runtime selected for the event, and of both native platforms. Validate the viewer and browser report evidence.                                                                                                   |
+| Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Repository       | Every check of the [repository gate list](./ci-verification-repository.md#repository-boundary), in the listed order.                                                                                                                                                                                                                             |
+| Viewer           | The [required type check](./developer-type-checks.md#required-type-check) of every project, then every discovered Node test file, including the frame probe size test of the [frame probe contract](./mokly-frame-probe.md), with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. The suite has no shard. |
+| Browser          | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with `fullyParallel: false`, the [shared worker count](./ci-suite-evidence.md#test-concurrency), the configured Playwright timeouts, and zero retries. A shard runs its whole-file partition.                                                               |
+| Native platforms | On macOS and Windows, build the `mokly` binary once, check Rust formatting and workspace Clippy with warnings denied, and run the Rust tests of every crate.                                                                                                                                                                                     |
+| Required CI      | Evaluate the results of the runtime profile job, the repository job, the viewer job, every browser shard, and the static-delivery job on each runtime selected for the event, and of both native platforms. Validate the viewer and browser report evidence.                                                                                     |
 
 Complete and selected local suites share gate definitions. Every Native
 command has local coverage; `npm run build` covers `cargo xtask build-native`.
@@ -78,9 +78,10 @@ make a later complete gate fail.
 The [developer test commands](./developer-test-commands.md) define the public
 Node test and browser entry points, selection, and the developer skip policy.
 Strict Node test discovery recursively includes `.test.ts` and `.test.tsx` files
-under `tests/`, `packages/viewer/tests/`, and `packages/ui/tests/`: the tooling
-tests, the viewer tests, and the UI package tests. The strict runners and
-every `cargo xtask check` suite reject skips and todos. Node test files stay outside Playwright's `tests/browser/` directory.
+under `tests/`, `packages/viewer/tests/`, `packages/ui/tests/`,
+`packages/model/tests/`, and `packages/frame/tests/`: the tooling tests, the
+viewer tests, and the tests of the UI, model, and frame packages. The strict
+runners and every `cargo xtask check` suite reject skips and todos. Node test files stay outside Playwright's `tests/browser/` directory.
 Playwright matches only `**/*.spec.ts` in its one `chromium` project.
 
 The strict runners skip the build, reject arguments other than the optional

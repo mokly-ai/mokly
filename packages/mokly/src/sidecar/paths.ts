@@ -41,8 +41,7 @@ export async function consumerRequire(
     "@emotion/server/create-instance",
   ];
   const load = async (names: string[]) => {
-    const builder = resolver;
-    if (!builder) throw new Error("peer resolution requires the active bundle");
+    const builder = resolver!;
     await Promise.all(
       names.map(async (name) => {
         const resolved = await resolveImport(paths, builder, name, {

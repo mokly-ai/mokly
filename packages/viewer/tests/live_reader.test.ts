@@ -1,10 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import {
-  readLiveDescriptor,
-  RENDER_ROUTE,
-} from "../src/catalogue/live_reader.js";
+import { readLiveDescriptor } from "../src/catalogue/live_reader.js";
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
 
 const GENERATION = "c".repeat(64);
@@ -17,24 +14,12 @@ function descriptor(): Record<string, unknown> {
   };
 }
 
-function rejects(
-  edit: (value: Record<string, unknown>) => void,
-  reason: RegExp,
-) {
-  const value = descriptor();
-  edit(value);
-  assert.throws(
-    () => readLiveDescriptor(value),
-    (error) =>
-      !(error instanceof MoklyVersionError) &&
-      error instanceof Error &&
-      reason.test(error.message),
-  );
-}
-
 test("the live descriptor names the render generation and one render route", () => {
-  assert.deepEqual(readLiveDescriptor(descriptor()), descriptor());
-  assert.equal(RENDER_ROUTE, "/mokly-viewer/components/render");
+  const value = descriptor();
+  const copy = readLiveDescriptor(value);
+  assert.deepEqual(copy, value);
+  assert.notStrictEqual(copy, value);
+  assert.notStrictEqual(copy.render, value.render);
 });
 
 test("the live version gate runs before any other field is read", () => {
@@ -51,17 +36,4 @@ test("the live version gate runs before any other field is read", () => {
         error.boundary === "live" &&
         error.supported === 3,
     );
-});
-
-test("the render capability is exact", () => {
-  rejects((value) => {
-    (value.render as Record<string, unknown>).url =
-      "https://elsewhere.test/mokly-viewer/components/render";
-  }, /invalid render capability/);
-  rejects((value) => {
-    (value.render as Record<string, unknown>).token = "";
-  }, /invalid render capability/);
-  rejects((value) => {
-    value.generation = "short";
-  }, /invalid identity/);
 });

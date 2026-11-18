@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 
-import type * as PostAdapter from "../../packages/viewer/dist/client/post_message_adapter.js";
+import type * as PostAdapter from "../../packages/frame/dist/adapters/post_message_adapter.js";
 import type { BrowserUsage } from "../../packages/viewer/tests/browser_documents.js";
 
 import { test } from "./browser_test.js";
@@ -161,7 +161,7 @@ test("logical navigation is host-owned and restores native activation after unsu
   ).toBeVisible();
 });
 
-test("view swaps, disposal, and absent inspector timeouts discard old work", async ({
+test("view swaps, disposal, and absent probe timeouts discard old work", async ({
   page,
 }) => {
   await mountCrossFrame(page, fixture);

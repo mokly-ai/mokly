@@ -11,14 +11,18 @@ use mokly_css::dependencies::DirectoryDependency;
 use mokly_css::types::{OpaqueAsset, StylesheetRoot};
 use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::data::Props;
+use mokly_model::usage::CatalogueUsage;
 
 use crate::cache::Artifact;
 use crate::closure::{Closure, GeneratedResources};
 use crate::collection::ComparisonCollector;
+use crate::comparison_input::RetainedComparisonInput;
+use crate::comparison_proof::{ComparisonRead, ContentIdentity, DocumentProof, ProofMode};
+use crate::comparison_stream::{self, ComparisonConsumer};
 use crate::error::Result;
 use crate::key::NodeKey;
 use crate::resource_inputs::ResourceObserver;
-use crate::workers::ComparisonWorker;
+use crate::workers::{ComparisonTask, ComparisonWorker};
 
 /// A document's input key and render recipe, available before rendering.
 #[derive(Clone, Debug)]
@@ -103,9 +107,65 @@ pub trait RenderGeneration: GeneratedResources {
     fn render(&self, route: &str) -> Result<Arc<Artifact>>;
     /// Compose comparison material before closure checks, without changing document bytes.
     fn comparison_document(&self, route: &str) -> Result<Arc<Artifact>>;
+    /// Decode only retained inputs. No source IO, fallback, or failure log is allowed.
+    /// Checking wrappers keep this default when forwarding would bypass their checks.
+    fn retained_comparison_input(&self, _route: &str) -> Option<RetainedComparisonInput> {
+        None
+    }
+    /// Prove every observable input of one comparison read, or decline reuse.
+    /// Checking wrappers must preserve their checks or keep this default.
+    fn comparison_identity(
+        &self,
+        _read: ComparisonRead,
+        _route: &str,
+        _mode: ProofMode,
+    ) -> Option<ContentIdentity> {
+        None
+    }
+    /// Obtain current proof and usage after this generation's document checks.
+    /// A failed check or unknown proof declines reuse without reporting an error.
+    fn comparison_document_proof(&self, route: &str) -> Option<DocumentProof> {
+        let artifact = self.comparison_document(route).ok()?;
+        let identity =
+            self.comparison_identity(ComparisonRead::Document, route, ProofMode::Current)?;
+        Some(DocumentProof {
+            identity,
+            usage: artifact
+                .document
+                .as_ref()
+                .map(|document| document.usage.clone()),
+        })
+    }
+    /// Read comparison usage, or None when the artifact has no composed document.
+    /// The default preserves the document read's checks and errors.
+    /// Transparent wrappers forward this read. Checking wrappers may forward when
+    /// they preserve their own checks. Failed or missing usage must use their checked document read.
+    fn comparison_usage(&self, route: &str) -> Result<Option<CatalogueUsage>> {
+        Ok(self
+            .comparison_document(route)?
+            .document
+            .as_ref()
+            .map(|document| document.usage.clone()))
+    }
     /// Maximum number of transient comparison inputs in one scheduled batch.
     fn comparison_parallelism(&self) -> usize {
         1
+    }
+    /// Run every indexed task once and finish before returning. Tasks own their
+    /// bounded result slots, errors, and generation cancellation checks.
+    fn schedule_comparison_tasks(&self, count: usize, task: &dyn ComparisonTask) {
+        for index in 0..count {
+            task.run(index);
+        }
+    }
+    /// Prepare and consume in order. Stop on false and join all admitted work.
+    /// The default prepares one view at a time on the calling thread.
+    fn schedule_comparison_stream(
+        &self,
+        task: &dyn ComparisonTask,
+        consumer: &mut dyn ComparisonConsumer,
+    ) {
+        comparison_stream::sequential(task, consumer);
     }
     /// Schedule a wrapper's own input checks on this generation's workers.
     fn schedule_comparison(
@@ -188,3 +248,7 @@ pub struct TemporaryDocument {
     /// Resources checked through the generation's public-file policy.
     pub closure: Closure,
 }
+
+#[cfg(test)]
+#[path = "_tests_/comparison_usage_tests.rs"]
+mod comparison_usage_tests;

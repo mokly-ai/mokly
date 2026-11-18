@@ -2,7 +2,8 @@
 
 import { useEffect, useRef } from "react";
 
-import type { FrameNavigation } from "../client/frame_adapter.js";
+import type { FrameNavigation } from "@mokly/frame";
+
 import { viewHref } from "../navigation/routes.js";
 
 import type { Catalogue } from "./catalogue.js";

@@ -128,6 +128,9 @@ fn current_and_removed_detail_fences_are_exclusive() {
     private_usage["usage"] = json!({"status":"ready"});
     assert!(matches!(
         detail(&private_usage.to_string()),
-        Err(ReadError::Invalid { .. })
+        Err(ReadError::Contract {
+            message: ContractViolation::UnknownField,
+            ..
+        })
     ));
 }

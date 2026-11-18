@@ -5,6 +5,7 @@ use mokly_model::catalogue::{
     EntryContent, EntryMetadata, ModelEntry, SourceLocation, VisualEntry,
 };
 use mokly_model::data::merge_props;
+use mokly_model::validation::PropValidator;
 use serde_json::Value;
 
 use crate::config_types::ResolvedRoot;
@@ -16,6 +17,7 @@ use crate::parsing::issue;
 use crate::{declared_controls, numeric_warnings, prepare_parent, props, variants};
 
 pub(crate) struct PreparedEntries {
+    pub(crate) validator: Option<PropValidator>,
     pub(crate) entries: Vec<ModelEntry>,
     pub(crate) issues: Vec<Issue>,
     pub(crate) warnings: Vec<Warning>,
@@ -59,6 +61,7 @@ pub(crate) fn prepare(
             _ => EntryContent::Page,
         };
         return Ok(PreparedEntries {
+            validator: None,
             entries: vec![ModelEntry { metadata, content }],
             issues: parsed.issues.clone(),
             warnings: Vec::new(),
@@ -206,6 +209,7 @@ pub(crate) fn prepare(
         entries.push(entry);
     }
     Ok(PreparedEntries {
+        validator,
         entries,
         issues,
         warnings,

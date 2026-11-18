@@ -16,7 +16,7 @@ export function registerDesignLinks(
 ) {
   const unexpectedDesignScripts = () =>
     mode === "static"
-      ? 'script:not([src="/mokly-viewer/client/inspector.js"])'
+      ? 'script:not([src="/mokly-viewer/client/frame-probe.js"])'
       : servedScripts();
   async function tabTo(page: Page, link: Locator): Promise<void> {
     for (let step = 0; step < 50; step += 1) {

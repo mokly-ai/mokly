@@ -47,12 +47,7 @@ pub(crate) fn source_node(
         Some(prefix) => aliases
             .iter()
             .filter(|(_, logical)| *logical == prefix)
-            .map(|(source, _)| {
-                format!(
-                    "{source}{}",
-                    path.strip_prefix(prefix.as_str()).unwrap_or_default()
-                )
-            })
+            .map(|(source, _)| format!("{source}{}", &path[prefix.len()..]))
             .collect::<Vec<_>>(),
         None => vec![path.into()],
     };

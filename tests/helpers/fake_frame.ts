@@ -1,10 +1,10 @@
 import { webcrypto } from "node:crypto";
 
-import type { FrameMount } from "../../packages/viewer/dist/client/frame_adapter.js";
+import type { FrameMount } from "../../packages/frame/dist/frame_adapter.js";
 import {
   encodeMessage,
   type MessageBody,
-} from "../../packages/viewer/dist/inspector/schema.js";
+} from "../../packages/frame/dist/probe/schema.js";
 
 export const instanceKey = "a".repeat(64);
 export const frameView: FrameMount = {

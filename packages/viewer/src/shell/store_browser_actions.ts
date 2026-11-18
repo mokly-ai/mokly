@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 
-import type { FrameNavigation } from "../client/frame_adapter.js";
+import type { FrameNavigation } from "@mokly/frame";
 
 import type { Catalogue } from "./catalogue.js";
 import { changesActivation } from "./changes_activation.js";

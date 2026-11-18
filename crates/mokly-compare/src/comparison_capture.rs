@@ -1,25 +1,17 @@
 //! Bounded side inputs replay exact documents while uncaptured inputs use their source.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::mem;
-use std::sync::{Arc, Weak};
+use std::sync::Arc;
 
-use mokly_catalogue::preparation::PreparedCatalogue;
-use mokly_css::dependencies::DirectoryDependency;
-use mokly_graph::asset_delivery::AssetRead;
-use mokly_graph::cache::Artifact;
-use mokly_graph::closure::{Closure, GeneratedResources};
-use mokly_graph::collection::ComparisonCollector;
+use mokly_graph::closure::Closure;
+use mokly_graph::document_codec::EncodedView;
 use mokly_graph::error::Result;
-use mokly_graph::resource_inputs::ResourceObserver;
-use mokly_graph::types::{
-    ComparisonCapture, DocumentPlan, RenderGeneration, RenderSummary, TemporaryDocument,
-};
-use mokly_model::data::Props;
+use mokly_graph::types::RenderGeneration;
 
-use crate::capture_codec::EncodedView;
 use crate::capture_collection::Collector;
-use crate::capture_error;
+use crate::capture_generation::CapturedGeneration;
+use crate::capture_restore::LosslessRestorer;
 use crate::capture_styles::{self, EncodedResource};
 use crate::capture_weight::{self, Budget, DEFAULT_BASE_CAPTURE_BYTES, DEFAULT_HEAD_CAPTURE_BYTES};
 
@@ -57,15 +49,6 @@ impl CapturedView {
     pub(crate) fn charge(&self, route: &str) -> usize {
         256 + route.len() + self.document.retained_bytes() + capture_weight::closure(&self.closure)
     }
-}
-
-pub(crate) struct CapturedGeneration {
-    source: Arc<dyn RenderGeneration>,
-    views: BTreeMap<String, CapturedView>,
-    summary: RenderSummary,
-    styles: BTreeMap<String, EncodedResource>,
-    retained_bytes: usize,
-    encoded_bytes: usize,
 }
 
 /// The result owns bounded side inputs; the original source handles every cache miss.
@@ -136,6 +119,7 @@ pub(crate) fn capture_with_bound(
         styles,
         retained_bytes: budget.retained,
         encoded_bytes,
+        restorer: Box::new(LosslessRestorer),
     }))
 }
 
@@ -146,123 +130,6 @@ fn complete(views: usize, total: usize, retained: usize, encoded: usize) {
     span.record("retained_bytes", retained as u64);
     span.record("encoded_bytes", encoded as u64);
     span.record("status", "ok");
-}
-
-impl GeneratedResources for CapturedGeneration {
-    fn open_asset(&self, route: &str) -> Result<Option<Box<dyn AssetRead>>> {
-        self.source.open_asset(route)
-    }
-    fn contains_resource(&self, route: &str) -> Result<bool> {
-        self.source.contains_resource(route)
-    }
-    fn resource(&self, route: &str) -> Result<Option<Vec<u8>>> {
-        if let Some(style) = self
-            .styles
-            .get(route)
-            .filter(|resource| resource.retains_bytes())
-        {
-            return capture_error::graph(style.read());
-        }
-        self.source.resource(route)
-    }
-    fn is_document(&self, route: &str) -> bool {
-        self.source.is_document(route)
-    }
-}
-
-impl RenderGeneration for CapturedGeneration {
-    fn check_cancelled(&self) -> Result<()> {
-        self.source.check_cancelled()
-    }
-
-    fn comparison_capture(&self) -> Option<ComparisonCapture> {
-        Some(ComparisonCapture {
-            source: self.source.clone(),
-            views: self.views.len(),
-            retained_bytes: self.retained_bytes,
-            encoded_bytes: self.encoded_bytes,
-        })
-    }
-
-    fn generation_key(&self) -> &str {
-        self.source.generation_key()
-    }
-    fn plans(&self) -> &BTreeMap<String, DocumentPlan> {
-        self.source.plans()
-    }
-    fn catalogue(&self) -> &PreparedCatalogue {
-        self.source.catalogue()
-    }
-    fn render(&self, route: &str) -> Result<Arc<Artifact>> {
-        self.comparison_document(route)
-    }
-    fn comparison_document(&self, route: &str) -> Result<Arc<Artifact>> {
-        if let Some(view) = self.views.get(route) {
-            return Ok(Arc::new(capture_error::graph(view.document.restore())?));
-        }
-        self.source.comparison_document(route)
-    }
-    fn closure(&self, route: &str) -> Result<Closure> {
-        if let Some(view) = self.views.get(route) {
-            return Ok(view.closure.clone());
-        }
-        self.source.closure(route)
-    }
-    /// Replays every captured view, checking cancellation before each one, also on
-    /// cache hits, so a cancelled generation stops with its own cancellation error.
-    fn collect_comparison(&self, collector: &mut dyn ComparisonCollector) -> Result<RenderSummary> {
-        let summary = self.summary.clone();
-        collector.summary(&summary);
-        for route in self.source.plans().keys() {
-            let input = self.comparison_input(route)?;
-            self.check_cancelled()?;
-            collector.collect(route, input)?;
-        }
-        Ok(summary)
-    }
-    fn render_all(&self) -> Result<RenderSummary> {
-        Ok(self.summary.clone())
-    }
-    fn render_props(&self, route: &str, props: &Props) -> Result<TemporaryDocument> {
-        self.source.render_props(route, props)
-    }
-    fn resource_bytes(&self, route: &str) -> Result<Option<Vec<u8>>> {
-        if let Some(style) = route
-            .strip_prefix("static/mokly-generated/")
-            .and_then(|route| self.styles.get(route))
-            .filter(|resource| resource.retains_bytes())
-        {
-            return capture_error::graph(style.read());
-        }
-        self.source.resource_bytes(route)
-    }
-    fn resource_digest(&self, route: &str) -> Result<Option<String>> {
-        if let Some(style) = route
-            .strip_prefix("static/mokly-generated/")
-            .and_then(|route| self.styles.get(route))
-        {
-            return Ok(style.digest.clone());
-        }
-        self.source.resource_digest(route)
-    }
-    fn resource_routes(&self) -> Vec<String> {
-        self.source.resource_routes()
-    }
-    fn stylesheet_directories(&self) -> &[DirectoryDependency] {
-        self.source.stylesheet_directories()
-    }
-    fn public_files(&self) -> BTreeSet<String> {
-        self.source.public_files()
-    }
-    fn watch_files(&self) -> BTreeSet<String> {
-        self.source.watch_files()
-    }
-    fn observe_resources(&self, observer: Weak<dyn ResourceObserver>) {
-        self.source.observe_resources(observer);
-    }
-    fn contains_public_file(&self, path: &str) -> bool {
-        self.source.contains_public_file(path)
-    }
 }
 
 #[cfg(test)]
@@ -276,3 +143,15 @@ mod capture_batch_tests;
 #[cfg(test)]
 #[path = "_tests_/capture_cancellation_tests.rs"]
 mod capture_cancellation_tests;
+
+#[cfg(test)]
+#[path = "_tests_/capture_restore_tests.rs"]
+mod capture_restore_tests;
+
+#[cfg(test)]
+#[path = "_tests_/capture_usage/mod.rs"]
+mod capture_usage;
+
+#[cfg(test)]
+#[path = "_tests_/capture_usage_tests.rs"]
+mod capture_usage_tests;

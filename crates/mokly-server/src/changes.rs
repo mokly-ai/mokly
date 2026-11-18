@@ -8,21 +8,21 @@ use std::time::Duration;
 use mokly_compare::comparison_types::ComparisonResult;
 use mokly_compare::{projection_index, projection_removed};
 use mokly_model::namespace::viewer;
+use mokly_model::nullable::Nullable;
 use mokly_model::projection::{self, Publication};
 use mokly_model::public_metadata::ChangesStatus;
 use mokly_model::routes;
-use mokly_model::usage_schemas::UsageSchemas;
 
 use crate::assets::File;
 use crate::changes_detail;
 use crate::changes_signal::{ChangeSignal, Signals};
 use crate::comparison_metadata;
-use crate::comparison_metadata::compared;
-use crate::detail_encoding::{DetailEncoder, ValidatedDetails, detail_id};
-use crate::error::{InternalError, Result, ServerError};
+use crate::detail_encoding::DetailEncoder;
+use crate::detail_publication::PublicationKind;
+use crate::error::{Result, ServerError};
 use crate::revision::RevisionLease;
 use crate::revision_file::RevisionFile;
-use crate::snapshot::{Snapshot, checked_index};
+use crate::snapshot::{Snapshot, encode_index};
 
 /// Cancellation belongs to one classification, not to the shared render pool.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ChangeCancellationMock))]
@@ -121,6 +121,8 @@ pub trait ChangeSource: Send + Sync {
         cancel: Arc<dyn ChangeCancellation>,
         progress: Arc<dyn ChangeProgress>,
     ) -> Result<ComparisonResult>;
+    /// Release unaccepted staging when an execution ends, without terminal output.
+    fn discarded(&self) {}
     /// Report only the accepted result, with preparation warnings before readiness.
     fn finished(
         &self,
@@ -146,12 +148,13 @@ pub(crate) fn project(
     current: &Snapshot,
     status: ChangesStatus,
     accepted: Option<Arc<Accepted>>,
+    encoder: &dyn DetailEncoder,
 ) -> Result<Arc<Snapshot>> {
     let mut next = current.clone();
     next.index.revision += 1;
     next.lease = Arc::new(RevisionLease::default());
     next.changes = accepted;
-    next.index = match projection::index(
+    next.index = projection::index(
         &current.model,
         &current.view_keys,
         &Publication {
@@ -166,42 +169,39 @@ pub(crate) fn project(
                 .as_ref()
                 .map(|live| live.generation.clone()),
         },
-    ) {
-        Ok(index) => index,
-        Err(source) => return Err(InternalError::Model { source }.into()),
-    };
+    );
     next.index.identity = current.index.identity.clone();
     if let Some(accepted) = &next.changes {
         projection_index::apply(&mut next.index, &accepted.result);
-        let historical = comparison_metadata::base(accepted, current)?;
-        next.index.removed_entries =
-            compared(projection_removed::records(&accepted.result, historical))?;
+        let historical = comparison_metadata::base(accepted, current);
+        next.index.removed_entries = projection_removed::records(&accepted.result, historical);
         let ids = comparison_metadata::detail_ids(accepted, current)?;
         for record in &mut next.index.removed_entries {
             if let Some(id) = ids.get(record.entry.path()) {
                 record.entry.set_detail_id(id);
             }
         }
-        next.index.comparison_url = Some(routes::comparison_generation(&accepted.id));
+        next.index.comparison_url = Nullable(Some(routes::comparison_generation(&accepted.id)));
     }
     changes_detail::apply(&mut next)?;
+    let kind = if next.changes.is_some() {
+        PublicationKind::ChangesEvidence
+    } else {
+        PublicationKind::ChangesStatus
+    };
     for (path, detail) in &mut next.details {
-        let detail = Arc::make_mut(detail);
-        detail.detail_id = detail_id(detail)?;
+        Arc::make_mut(detail).revision = Some(next.index.revision);
+        let route = viewer(&format!("entries/{path}.json"));
+        let adjacent = current.details.get(path).zip(current.files.get(&route));
+        let file = next
+            .recent_details
+            .publish(kind, detail, adjacent, encoder)?;
         projection::set_detail_id(&mut next.index, path, &detail.detail_id);
-        detail.revision = Some(next.index.revision);
-    }
-    let mut schemas = UsageSchemas::new(&next.index.components);
-    for (path, detail) in &mut next.details {
-        let detail = Arc::make_mut(detail);
-        next.files.insert(
-            viewer(&format!("entries/{path}.json")),
-            ValidatedDetails.encode(detail, &next.index, &mut schemas)?,
-        );
+        next.files.insert(route, file);
     }
     next.files.insert(
         viewer("index.json"),
-        RevisionFile::new(checked_index(&next.index)?)?,
+        RevisionFile::new(encode_index(&next.index)),
     );
     Ok(Arc::new(next))
 }
@@ -235,3 +235,7 @@ pub trait ChangeRun: Send {
     /// Clear only this attempt's progress line.
     fn finish(&self);
 }
+
+#[cfg(test)]
+#[path = "_tests_/reuse_oracle/mod.rs"]
+mod reuse_oracle;

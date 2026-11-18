@@ -18,6 +18,8 @@ import type { ComparisonPresentation } from "../src/shell/use_comparison.js";
 import type { WorkspaceData } from "../src/shell/workspace_data.js";
 import { WorkspaceEvidence } from "../src/shell/workspace_evidence.js";
 
+import { storeMarkup } from "./shell_markup.js";
+
 const SENTENCE = "Rendered content changed where this component is used.";
 const URL_ = `https://example.test/mokly-viewer/diffs/generations/${"b".repeat(64)}/`;
 const MOBILE: ComparisonPresentation = {
@@ -85,7 +87,7 @@ test("the reason leaves the component's own views unchanged", () => {
   assert.equal(views?.length, 1);
   assert.equal(views[0]!.view.state, "unchanged");
   assert.equal(views[0]!.styleOnly, false);
-  const markup = renderToStaticMarkup(
+  const markup = storeMarkup(
     <ComparisonViews
       entryId="card"
       entryKind="component"
