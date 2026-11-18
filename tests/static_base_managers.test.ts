@@ -1,11 +1,16 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
 import { readCatalogueIndex } from "../packages/viewer/src/catalogue/index_reader.js";
 
 import { baseManagerFixture } from "./helpers/base_manager_fixture.js";
+import {
+  findGitProgram,
+  linkProgram,
+} from "./helpers/base_manager_programs.js";
 import { managers } from "./helpers/base_manager_tools.js";
 import { coldBaseFixture } from "./helpers/cold_base_fixture.js";
 import { write } from "./helpers/static_changes.js";
@@ -47,6 +52,43 @@ async function build(
       .join("\n"),
   };
 }
+
+test(
+  "a cold pnpm base keeps Git from a directory with system package managers",
+  { timeout: 120_000 },
+  async (context) => {
+    const shared = await fs.mkdtemp(
+      path.join(os.tmpdir(), "mokly-shared-bin-"),
+    );
+    context.after(() => fs.rm(shared, { recursive: true, force: true }));
+    const suffix = process.platform === "win32" ? ".exe" : "";
+    const source = await findGitProgram(
+      "git",
+      (process.env.PATH ?? "").split(path.delimiter),
+    );
+    assert.ok(source, "Git must be installed for this manager fixture");
+    await linkProgram(source, path.join(shared, `git${suffix}`));
+    for (const manager of ["pnpm", "yarn", "corepack"]) {
+      await write(
+        shared,
+        `${manager}${suffix}`,
+        "system manager must stay hidden",
+      );
+    }
+    const fixture = await baseManagerFixture(
+      managers[0],
+      context,
+      "installed",
+      shared,
+    );
+    const result = await build(fixture, context.signal);
+    assert.equal(result.tier, 2, result.diagnostics);
+    assert.equal(result.diagnostics, "");
+    const calls = await fs.readFile(fixture.calls, "utf8");
+    assert.notEqual(calls, "");
+    assert.equal(calls.trim().split("\n").length, 1, calls);
+  },
+);
 
 for (const manager of managers) {
   test(
