@@ -143,7 +143,9 @@ test("uncaptured Storybook selection survives a failed native compile", async (c
   let attempts = 0;
   const compile: typeof build = async (options) => {
     attempts++;
-    entries.push(options.stdin?.contents);
+    const contents = options.stdin?.contents;
+    assert.ok(typeof contents === "string");
+    entries.push(contents);
     if (attempts === 1) {
       await fs.rename(preview, retained);
       throw new Error("native compile fixture");

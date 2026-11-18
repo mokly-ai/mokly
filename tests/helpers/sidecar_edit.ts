@@ -3,9 +3,15 @@ import os from "node:os";
 import path from "node:path";
 import type { TestContext } from "node:test";
 
+import type { BundleParams } from "../../packages/mokly/src/generated/sidecar/BundleParams.js";
+
 import { bundleParams } from "./sidecar.js";
 
-export async function editSource(context: TestContext) {
+export async function editSource(context: TestContext): Promise<{
+  root: string;
+  write: (name: string, text: string) => Promise<void>;
+  params: BundleParams;
+}> {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-edit-"));
   context.after(() => fs.rm(directory, { recursive: true, force: true }));
   const root = await fs.realpath(directory);
