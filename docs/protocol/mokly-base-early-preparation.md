@@ -15,13 +15,21 @@ generation, so early preparation never starts before readiness. Serve starts
 none while it keeps a base with the key of that head. The classification after
 usage then follows the kept base rules, with every freshness check.
 
-Early preparation runs every base step before capture: the base lookup, base
-reads, extraction, dependency selection and installation, configuration,
-discovery, validation with the base bundle, and graph preparation. A base that
-needs a sidecar then waits at the pause point, before capture, until current
-usage settles. An HTML-only base needs no sidecar, so it can also capture
-during usage. The comparison starts only after current usage settles, so it
-reads completed head usage.
+Early preparation first runs the steps that identify the kind of the base: the
+base lookup, the base reads, configuration, and discovery. The base reads can
+use an existing extraction of the base commit. These steps run early for every
+base, because only the configuration and the sources of the base show whether
+it needs a sidecar. The kind of the head never decides it.
+
+A base that needs a sidecar continues with extraction, dependency selection and
+installation, validation with the base bundle, and graph preparation. It then
+waits at the pause point, before capture, until current usage settles. An
+HTML-only base waits as soon as its kind is known. After current usage
+settles, the same preparation continues with its dependency selection,
+validation, graph preparation, and capture. It repeats no earlier step.
+
+No base captures while current usage renders. The comparison starts only after
+current usage settles, so it reads completed head usage.
 
 While current usage renders, the sidecar calls of early preparation before
 capture use the
@@ -39,12 +47,22 @@ steps while usage renders. Status moves follow the
 `preparing` can publish while usage renders. Serve publishes `ready` or
 `unavailable` only after current usage settles.
 
-Decision: overlap every base step before capture, and capture an HTML-only
-base early. Rejected: early capture of a base that needs a sidecar, because its
-capture jobs would hold the render workers that usage and HTTP renders need
-while the jobs wait for sidecar admission. Rejected: only the steps before the
-first sidecar call, because the base bundle and graph preparation would then
-not overlap usage.
+Decision: a base that needs a sidecar overlaps every step before capture, and
+no base captures during usage. Rejected: early capture of a base that needs a
+sidecar, because its capture jobs would hold the render workers that usage and
+HTTP renders need while the jobs wait for sidecar admission. Rejected: only the
+steps before the first sidecar call, because the base bundle and graph
+preparation would then not overlap usage.
+
+Decision: an HTML-only base waits as soon as its kind is known, and the same
+preparation continues after usage. Rejected: early capture of an HTML-only
+base, because its capture renders would share the render workers with usage.
+An HTML-only capture render does not wait for HTTP renders, as a usage render
+does. Rejected: early dependency selection, validation, and graph preparation
+of an HTML-only base, because without a base bundle they would save little
+time. Rejected: the kind of the head as the kind of the base, because the two
+can differ. Rejected: a new preparation after usage, because it would repeat
+the steps that identified the kind.
 
 ## Early Base Lease
 
@@ -90,16 +108,16 @@ a pool of one slot.
 ## Handover
 
 When current usage settles, the classification takes the early outcome once.
-A base that Serve keeps follows the kept base rules. Each other outcome is a
-base that waits at the pause point, a captured base that Serve does not keep,
-or an error. Such an outcome is stale when its dependency selection used other
-dependency directories than the head uses after current usage. Serve checks
-this before the capture of a base that waits at the pause point.
+The outcome is an HTML-only base that waits after its kind is known, a base
+that waits at the pause point, or an error. Such an outcome is stale when its
+dependency selection used other dependency directories than the head uses
+after current usage. Serve checks this before the capture of a base that waits
+at the pause point. An HTML-only base selects its dependencies only after
+usage, so its outcome is never stale.
 
 An outcome that is not stale passes to the classification once, with its
-warnings. A base that waits at the pause point continues with its capture. The
-classification compares with a captured base that Serve does not keep, and it
-captures that base no second time. An error stands. Its outcome follows the
+warnings. A base that waits continues with its remaining steps and its
+capture. An error stands. Its outcome follows the
 [historical runtime outcomes](./mokly-base-preparation.md#shared-render-runtime).
 So a timeout of an early sidecar call makes Changes unavailable.
 

@@ -3,8 +3,10 @@
 Status: Active. On branch `calummoore/mokly-startup-base-overlap-rae7`, no pull request yet. The completing pull request deletes this plan.
 
 Serve renders current usage before it prepares the base for Changes. Prepare
-the next base during current usage. A sidecar base waits before capture until
-current usage settles. An HTML-only base also captures early. Compare only
+the next base during current usage. The configuration and discovery of the
+base identify its kind. A sidecar base waits before capture until current
+usage settles. An HTML-only base waits as soon as its kind is known, and the
+same preparation continues after usage. No base captures early. Compare only
 after current usage settles.
 Keep the same published content, base freshness checks, capture bounds, and
 sidecar pool bound. Keep the warm head process and background return rules.
@@ -62,6 +64,16 @@ The Serve peak RSS must rise by at most 5%. No extra sidecar may exceed the
 pool size. Two edit cycles must show no slowdown. Published Changes must have
 the same bytes. Local release measurements cover `examples/basic` and the
 large HTML and React fixtures from `scripts/large/`.
+
+On 2026-11-18, the after batch on the pushed `4ce1d83cf` stopped during the
+second React edit at the 3,000,000 KiB RSS guard. A complete first-edit capture
+also failed the deployment-only byte proof. The performance orchestrator then
+withdrew acceptance. Call 9 closes the identity cause of the byte failure.
+Calls 10 and 11 set the new memory and speed evidence. No pull request opens
+before that evidence passes. The cloud acceptance keeps the 1.5-second target
+and the RSS rule above. The performance orchestrator owns the cloud sampling.
+The PSS rule of call 10 applies only to the local diagnosis. The analysis is
+`.context/startup-base-overlap/control-stage-analysis-and-options.md`.
 
 ## Design calls
 
@@ -365,6 +377,170 @@ error publication assertions. Change no production code for this correction.
 The three failures came from test ownership and teardown. The correction
 uses the existing mock ownership rules. Run the focused check and ten repeats.
 
+The after batch on `4ce1d83cf` stopped on 2026-11-18. Calls 9, 10, and 11
+record the later calls of the performance orchestrator on 2026-11-18, under
+the user's delegation of 2026-11-16. Calls 10 and 11 keep the text and the
+letters of their items in
+`.context/startup-base-overlap/control-stage-analysis-and-options.md`.
+Call 11 supersedes the early HTML-only capture of call 2 option E and of
+Milestone 2. Those records stay unchanged as history.
+
+### 9. Close the edit identity difference
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Implementation. Item 1 of the control-stage analysis.
+- **Category:** process.
+- **Location:** `docs/protocol/mokly-sidecar-recipes.md:91` and `tests/sidecar_edit_policy.test.ts:138`.
+- **Background:** The one-time byte proof compares published Changes with the non-overlap baseline. Its only exception was the per-start root `deploymentId`. An incomplete Serve edit compilation gets a fresh identity at each compile.
+- **Problem:** A complete React first-edit capture of `4ce1d83cf` differed at root `comparisonUrl` and `live.generation` of `index.json`. The fresh compilation identity enters these published identity fields.
+- **Impact if no action:** The byte proof fails on identity values that main also changes. The candidate then cannot pass the byte requirement.
+- **Root question:** How can the byte proof show unchanged Changes when two main binaries publish different identities for the same edit?
+- **Options:**
+  - **A.** Keep the deployment-only proof. Edit captures then fail on fresh identity values. Effort: Small.
+  - **B.** Exclude exactly root `comparisonUrl` and `live.generation` in edit `index.json` captures. Apply this only when contained main `2e6bde9c2` shows the same two differences. Replace only their encoded JSON value tokens. Effort: Medium.
+  - **C.** B, plus compare both masked values with their own run's head generation, where that record exists. This adds an internal consistency check to the one-time proof. It is optional evidence beyond the closed call. Effort: Small.
+- **Left out:** A wider mask or a reserialized JSON comparison weakens the exact proof. A deterministic identity breaks the fresh-identity requirement for incomplete compilations. A diagnostic seed needs rebuilt binaries. Another edit breaks the fixed workload.
+- **Wider fix:** None. The fresh identity is a requirement in force.
+- **Previous examples:** The workspace orchestrator's byte proof call above reports `deploymentId` separately.
+- **Recommendation:** B. Contained-main edit captures differ from the e60 main captures at the same two fields.
+- **Action:** fix now, apply B. Performance orchestrator's conditional call of 2026-11-18. The contained-main control met its condition, so this item is closed.
+
+Startup captures exclude only root `deploymentId`. Edit `index.json` captures
+also exclude exactly root `comparisonUrl` and `live.generation`. Every other
+byte stays exact, `revision` included. The React second-edit capture of
+`4ce1d83cf` is absent, so the complete expected proof stays incomplete.
+Records: `.context/startup-base-overlap/identity-proof-conditional-decision.md`
+and `.context/startup-base-overlap/authorized-edit-identity-exact-token-proof.json`.
+The options check added C. It retained B and the closed identity call.
+
+### 10. Diagnose the React memory stop
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Implementation. Item 2 of the control-stage analysis.
+- **Category:** performance.
+- **Location:** `.context/startup-base-overlap/after-e60c16532-run1/large-react/run.json` and the saved stop sample in `.context/startup-base-overlap/after-report.md`.
+- **Background:** The candidate stopped during its second edit at the original 3,000,000 KiB sum-of-RSS guard. The contained-main control completed the same workload with that guard unchanged. The allowed peak rise remains 5%.
+- **Problem:** The candidate recorded 3,295,800 KiB against contained main's 2,295,368 KiB, a 43.6% increase. The stop sample includes a new child with the parent's exact RSS and a blank command. Its later high-water read is 8 KiB.
+- **Impact if no action:** The candidate cannot claim the memory requirement or complete its planned after evidence. The PR remains blocked.
+- **Root question:** How should this change establish the memory bound before it can ship?
+- **Options:**
+  - **A.** Limit overlap to sidecar bundle, describe, and graph preparation. Give HTML bases the serial path and permit no early capture. This can reduce HTML startup overlap. React already follows this capture rule, so it does not address the failed second-edit sample. Effort: Medium.
+  - **B.** Permit overlap only after measured CPU and memory headroom establishes a safe reserve. Use serial preparation when that evidence is absent. This needs a resource admission policy and validated thresholds. It cannot by itself explain an ordinary second-edit process transition. Effort: Large.
+  - **C.** Close the scheduling change and retain the evidence. Consider any independent diagnostic span in a separate change. This drops the potential startup gain and introduces no overlap policy. Effort: Small.
+  - **D.** Keep the candidate frozen. Run separate diagnostic React workloads on both binaries with exact fork, exec, and exit tracing. Add shared/private-memory evidence while retaining the original RSS guard as the controlling stop. This can identify the child and its memory accounting. It does not convert the current failed sample into a pass. Effort: Medium.
+  - **E.** D, plus count each proved shared address space once beside the raw RSS and PSS sums. Establish shared address spaces from clone flags or `kcmp` with `KCMP_VM`. Keep the raw guard and the closing rule. This needs additional observation support. Effort: Small.
+  - **F.** Count a proved shared address space once in the guard, at the same 3,000,000 KiB limit. This changes the controlling guard and needs the performance orchestrator's call. Effort: Small.
+  - **G.** Use one cgroup for each diagnostic Serve tree. Record its anonymous and file memory at the same ticks. This avoids a per-process duplicate charge. It needs cgroup delegation and changes the selected metric. Effort: Medium.
+- **Left out:** Raising the guard, dropping the sample, or weakening the 5% limit breaks the recorded requirement. Summing individual lifetime high-water values does not measure a concurrent tree peak.
+- **Wider fix:** None established. The accounting and ownership cause must be identified before a structural memory change can be justified.
+- **Previous examples:** None proved. Ordinary process starts also exist on main, but the contained-main control did not capture the same duplicate-parent observation.
+- **Related:** Call 11 shares options A, B, and C. Its option D supplies controlled timing evidence after this diagnosis.
+- **Recommendation:** D. Identify the process transition before changing scheduling or resource limits. C is the bounded alternative if further investigation is not wanted.
+- **Action:** fix now, apply D with PSS. Performance orchestrator's call of 2026-11-18, under the user's delegation of 2026-11-16.
+
+The performance orchestrator's PSS rules for D:
+
+- Keep `4ce1d83cf` frozen. Run separate diagnostic React workloads on it and on contained main `2e6bde9c2`, with exact fork, exec, and exit tracing.
+- Sum `Pss` from `smaps_rollup` over the Serve process tree beside RSS. Record PSS, RSS, and `MemAvailable` at the same sample times.
+- The 3,000,000 KiB RSS guard stays the controlling stop.
+- Close the memory item on PSS only when the trace proves the fork transition and the candidate PSS tree peak is at most 105% of main. Then report the RSS peak as an artifact.
+- When the candidate PSS tree peak is more than 105% of main, stop the dependent runs. Report the process and phase that own the PSS rise to the performance orchestrator. When the causal ownership is unproved, name the limits of the evidence.
+
+The workspace orchestrator gave this meaning of the last rule on 2026-11-18.
+
+Its reason: the stopped new child duplicated the parent's 1,202,276 KiB RSS,
+with a blank command and a later high-water mark of 8 KiB. `MemAvailable` fell
+only 12,392 KiB. A fork before exec shares pages copy-on-write, so the RSS sum
+can count them twice. Both full-tree Git spawns and sidecar spawns fork the
+core.
+
+The options check added E to G. It kept D and recommended E as added
+evidence. A plain Git spawn can use a shared address space before exec.
+That can duplicate PSS as well as RSS. This is a source inference, not a
+proved cause of the old sample. The frozen diagnostic records that limit.
+E to G add no exception to the authorized PSS rule or raw RSS guard.
+Without the required transition evidence, the memory item stays open.
+A guard stop remains a stop, including a suspected accounting artifact.
+
+### 11. Give HTML-only bases the serial path
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Implementation. Item 3 of the control-stage analysis.
+- **Category:** performance.
+- **Location:** The React and HTML stage tables of the control-stage analysis, derived from `.context/startup-base-overlap/after-report.md` and `.context/startup-base-overlap/contained-main-2e6bde9c2-control-stage-peak-job-analysis.json`.
+- **Background:** The brief requires edits to stay as fast as main. The first candidate pair showed slower large-fixture startup, HTTP, and edits. The unchanged contained-main control also ran slower than the original e60 baseline.
+- **Problem:** HTML startup capture overlaps usage, but both slower HTML edits reuse a base and perform no capture. React first-edit usage dominates its increase despite similar work counts. The available single sequential runs do not isolate the overlap's speed cost.
+- **Impact if no action:** Neither an unchanged-edit claim nor an accepted startup gain is proved. A scheduling change could target the wrong stage.
+- **Root question:** Which next step can show faster first Changes, with edits and HTTP no slower than main?
+- **Options:**
+  - **A.** Keep only sidecar early bundle, describe, and graph preparation. Use the serial HTML path and permit no early capture for any base. This removes HTML capture contention but leaves the measured React schedule unchanged. It does not promise faster retained-base edits. Effort: Medium.
+  - **B.** Enable overlap only with measured CPU and memory headroom, with a serial fallback. Calibrate the admission evidence and thresholds on both large fixtures. This can avoid constrained machines but adds a new resource policy and still needs edit proof. Effort: Large.
+  - **C.** Close the scheduling change. Keep the measurement record and isolate any useful diagnostics for a separate branch. This preserves main's serial scheduling and loses the possible cold-start gain. Effort: Small.
+  - **D.** After the memory investigation, run three interleaved main/candidate pairs for large HTML and React. Use the same source pair, frozen assets, original two edits, HTTP request, fresh cache, and unchanged guards. Stop on the first guard failure. This is a new controlled evidence set, not a resumed failed schedule. It may still reject the candidate. Effort: Medium.
+  - **E.** Narrow HTML early work to source extraction only. Defer dependency work, validation, graph preparation, and capture until usage settles. Keep the bounded sidecar preparation path. This reduces possible HTML contention and limits its gain to extraction time. It leaves the React and retained-base edit questions open. Effort: Medium.
+  - **F.** Keep early HTML capture, but yield to HTTP renders at each batch boundary. Then run D. This keeps capture overlap and its contention with usage. It cannot resolve the retained-base edit cost. Effort: Small, plus D.
+  - **G.** If D shows a repeatable edit cost, profile one edit on each binary with a CPU sampler and stage spans. This adds diagnostic runs before a policy decision. Effort: Medium.
+  - **H.** Remove only early HTML capture. Keep HTML preparation through graph work early, then pause before capture. Run D. This can keep part of the 2,334 ms pre-capture stage, but graph work can still use shared render workers. Effort: Small, plus D.
+- **Left out:** A larger render pool exceeds the selected scope and does not explain retained-base edit cost. F returns the HTTP-only HTML batch check to the alternatives. A new retry or a byte exception beyond the conditional call breaks decisions in force. A kept capture across starts does not fit fresh caches.
+- **Wider fix:** None demonstrated. B controls the early admission class, but the measured edit increase occurs with no early base lease.
+- **Previous examples:** The historical cloud A/B accepted a usage cost for a startup gain. Its acceptance is withdrawn, and its catalogue differs from these large fixtures.
+- **Related:** Call 10 blocks further acceptance. A, B, and C are shared policy choices. D depends on the memory diagnostic choice.
+- **Recommendation:** The HTML part of A, then D. The first recommendation was D. The options check retained the selected HTML change and controlled pairs. H is a possible narrower alternative after evidence. C remains the bounded alternative to further investigation.
+- **Action:** fix now, apply the HTML part of A, then D. Performance orchestrator's call of 2026-11-18, under the user's delegation of 2026-11-16.
+
+The HTML part of A gives HTML-only bases the serial path and permits no early
+capture for any base. Sidecar bases keep their early bundle, describe, and
+graph preparation, and they pause before capture. The performance
+orchestrator's reason: early HTML capture shared the render workers with
+usage, without the HTTP boundary check of usage. An HTML-only base also has no
+base bundle, so its early preparation gains little. This is a product change.
+Push its SHA for a cloud remeasurement. No pull request opens yet.
+
+The evidence of D, after the memory diagnosis of call 10:
+
+- Run three interleaved pairs of contained main `2e6bde9c2` and the new candidate on each large HTML and React fixture.
+- Use the same source pair, assets, two edits, HTTP request, and fresh caches.
+- Keep the guards unchanged and add PSS. Stop at the first guard failure.
+- Accept when first Changes is no later than main, edits and HTTP are no worse beyond the spread of main, and the PSS peak is at most 105% of main.
+- When a repeatable cost remains, stop. Report it for a choice between closing the change and a narrower option.
+- Report every pair and the spread of each arm. Keep the acceptance wording literal, and add no statistical pass rule. Only an ambiguous final result may need a later call.
+
+The options check added F to H. The old HTML pre-capture stage took 2,334 ms.
+Its identifying reads and later work were not split, so no saving for H is
+proved. The cause of the slower kept-base edits also stays unproved.
+The unchanged guard still stops D at its first failure. There is no
+permission to discard an artifact, retry, or continue an incomplete pair.
+
+Workspace orchestrator's boundary call of 2026-11-18 for the serial HTML path:
+
+- The loaded configuration and discovery of the base itself decide its kind. The kind of the head does not, because the head and the base can differ.
+- The base lookup, base reads, configuration, and discovery identify that kind. So they run before the wait, and they are the only early work of an HTML-only base.
+- The base reads can reuse a complete cached extraction of the base commit. They never build an extraction. A fresh extraction stays in the dependency step of a sidecar base, after its kind is known.
+- The HTML part of A needs these identifying reads. They do not add the fresh HTML extraction of option E.
+- An HTML-only base waits as soon as Serve knows that it needs no sidecar. Its dependency-directory selection, HTML dependency check, catalogue validation and preparation, graph preparation, and capture follow usage.
+- After usage, the same preparation continues with the same tree, configuration, and inventory. It does not restart.
+- Remove the early capture bypass of HTML-only bases, so that no base captures before usage settles.
+- Sidecar bases keep their existing early preparation and capture pause.
+- The change adds no scheduling policy and no setting.
+
+The options check retained this boundary. Identifying reads use no render
+worker or sidecar. The wait holds no base-slot or warnings lock. It keeps
+the same tree, configuration, inventory, extraction lease, and preparation
+thread. HTML dependency selection reads the fixed head catalogue, so this
+deferral follows the serial policy and adds no freshness claim.
+
+Options check record:
+`.context/startup-base-overlap/post-measurement-options-check.md`.
+
+Review round 1 of `4ce1d83cf` found one test gap: no test cancels a request
+that waits for early admission. Its option C adds that cancellation test. It
+also gives the unavailable-slot test an expected-state wait and an independent
+cleanup. Both changes are in
+`crates/mokly-cli/src/_tests_/serve_early_pool_tests.rs` and change no product
+code. The user accepted this test-only fix on 2026-11-18. It commits with the
+HTML change of call 11. Record:
+`.context/reviews/calummoore/mokly-startup-base-overlap-rae7/findings.md`.
+
 ## Milestone 1: Documentation and protocol
 
 Depends on: none
@@ -410,14 +586,42 @@ once, rather than silently preparing them again.
 
 Evidence: `.context/startup-base-overlap/implementation-report.md` records the red tests, repeated runs, and test costs.
 
-## Milestone 3: Release evidence
+## Milestone 3: Serial HTML-only base path
 
 Depends on: 2
+
+Apply call 11 with its boundary call. Delegate the non-UI implementation and
+tests to one non-ui implementor. Delegate the internal docs to the docs
+implementor. Change no preparation, lease, or pause rule of sidecar bases.
+Commit the accepted test-only review fix with this change.
+
+- [x] Identify the kind of the base from its own loaded configuration and discovery, never from the head.
+- [x] Hold an HTML-only base as soon as its kind is known. Run its dependency selection, validation, graph preparation, and capture after usage.
+- [x] Continue the same preparation after usage with the same tree, configuration, and inventory. Do not restart it.
+- [x] Remove the early capture bypass of HTML-only bases, so that no base captures during usage.
+- [x] Add deterministic tests for the HTML-only wait, capture after usage, a head and a base of different kinds, and cancellation during the wait.
+- [x] Observe assertion failures for the new behaviour, then pass every new asynchronous test in ten runs. Keep synchronous `NativeBase` tests synchronous. They need no repeated runs.
+- [x] Update the early preparation protocol page and the CLI README entry points with the implementation's names.
+- [x] Run the focused tests and `cargo xtask check --suite repository`.
+- [ ] Commit the HTML change and the accepted test-only review fix together. Push the branch, then send the new SHA to the performance orchestrator for the cloud remeasurement.
+
+Evidence: `.context/startup-base-overlap/html-serial-docs-report.md` records the docs change.
+Evidence: `.context/startup-base-overlap/html-serial-validation-report.md` and `.context/startup-base-overlap/html-serial-repository-summary.json` record the Rust checks and the combined repository suite.
+
+## Milestone 4: Release evidence
+
+Depends on: 2, 3
 
 Delegate the after measurements to the non-ui implementor. Use the same
 fixtures, edits, sampling, and output readers as the baseline. Build the
 branch in its own checkout and target directory. Run Cargo builds one at a
 time with `CARGO_INCREMENTAL=0`. Check disk and free memory before large builds.
+The memory diagnosis of call 10 runs on the frozen `4ce1d83cf` and contained
+main `2e6bde9c2`. The timing pairs of call 11 run on the Milestone 3 candidate
+after that diagnosis. They are a new evidence set, not a resumed after batch.
+Each byte proof uses only the exceptions of call 9. The earlier TODOs of this
+milestone stay open. The remaining required evidence is reconciled after the
+result of the new set.
 
 - [ ] Measure first Changes, `serve.background`, CPU, two edits, and process-tree peak RSS on every baseline fixture.
 - [ ] Measure HTTP view latency during usage, early gate wait, root switches, and capture's extra process start and generation restore.
@@ -428,6 +632,11 @@ time with `CARGO_INCREMENTAL=0`. Check disk and free memory before large builds.
 - [ ] Compare the published Changes bytes with the non-overlap baseline as a one-time proof.
 - [ ] Stop and ask the performance orchestrator if RSS rises by more than 5%.
 - [ ] Report a gain below one second on the large fixtures before widening the change.
+- [ ] Run the React memory diagnosis of call 10 on both binaries, with exact fork, exec, and exit tracing.
+- [ ] Sum the tree PSS beside RSS, and record `MemAvailable` at the same sample times. Keep the 3,000,000 KiB RSS guard as the controlling stop.
+- [ ] Close the memory item on PSS only when the trace proves the fork transition and the candidate PSS tree peak is at most 105% of main. Otherwise stop and report.
+- [ ] Run the three interleaved pairs of call 11 on each large HTML and React fixture. Stop at the first guard failure.
+- [ ] Check first Changes, edits, HTTP, and PSS against the acceptance of call 11. Report every pair and the spread of each arm. Stop and report a repeatable cost.
 
 Evidence: `.context/startup-base-overlap/after-report.md` records the before and after table and byte comparison.
 The native-main refresh and integration are recorded in
@@ -437,9 +646,9 @@ The generation-affinity integration is recorded in
 The document placement and preservation check is recorded in
 `.context/startup-base-overlap/docs-affinity-integration-report.md`.
 
-## Milestone 4: Verification, commit, review, and pull request
+## Milestone 5: Verification, commit, review, and pull request
 
-Depends on: 1, 2, 3
+Depends on: 1, 2, 3, 4
 
 The orchestrator owns the combined gate, review rounds, plan deletion, and
 pull request. Use Git 2.45 or later, Git LFS, and pinned Bun. Put a separate

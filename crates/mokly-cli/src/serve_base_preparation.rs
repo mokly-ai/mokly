@@ -64,18 +64,9 @@ impl PreparationControl for Preparation {
     fn checkpoint(
         &self,
         request: &BaseRetentionRequest<'_>,
-        checkpoint: PreparationCheckpoint,
+        _checkpoint: PreparationCheckpoint,
     ) -> Result<bool> {
         self.pool.finish();
-        let sidecar = self
-            .selection
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .as_ref()
-            .is_some_and(|selection| selection.sidecar);
-        if checkpoint == PreparationCheckpoint::Capture && !sidecar {
-            return Ok(true);
-        }
         self.wait()?;
         let selected = self
             .selection

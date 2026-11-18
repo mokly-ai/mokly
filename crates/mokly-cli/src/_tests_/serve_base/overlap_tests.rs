@@ -1,4 +1,4 @@
-//! Production checkpoints pause sidecar capture and recheck exact dependency sets.
+//! Production checkpoints pause capture and recheck exact dependency sets.
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -16,7 +16,7 @@ use crate::warning_support::config;
 use super::support::{Fixture, head, runtime, selected};
 
 #[test]
-fn only_sidecar_capture_waits_early_and_every_complete_outcome_waits() {
+fn every_base_capture_and_complete_outcome_waits() {
     for sidecar in [false, true] {
         let runtime = runtime();
         let mut fixture = Fixture::new(
@@ -63,8 +63,8 @@ fn only_sidecar_capture_waits_early_and_every_complete_outcome_waits() {
             .checkpoint(&request, PreparationCheckpoint::Complete)
             .unwrap();
         assert_eq!((capture, complete), (true, true));
-        assert_eq!(before_complete, usize::from(sidecar));
-        assert_eq!(waits.load(Ordering::SeqCst), usize::from(sidecar) + 1);
+        assert_eq!(before_complete, 1, "sidecar: {sidecar}");
+        assert_eq!(waits.load(Ordering::SeqCst), 2, "sidecar: {sidecar}");
     }
 }
 

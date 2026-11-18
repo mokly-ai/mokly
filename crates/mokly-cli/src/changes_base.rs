@@ -101,6 +101,9 @@ impl NativeBase {
             || inventory.files.iter().any(|file| {
                 !file.excluded && matches!(file.kind, SourceKind::Module | SourceKind::Stories)
             });
+        if !needs_sidecar && let Some(preparation) = &self.preparation {
+            preparation.wait()?;
+        }
         let (directories, unmapped) = if needs_sidecar {
             (
                 self.runtime.dependency_usage.directories(),
@@ -253,3 +256,7 @@ mod changes_freshness_tests;
 #[cfg(test)]
 #[path = "_tests_/changes_evidence_tests.rs"]
 mod changes_evidence_tests;
+
+#[cfg(test)]
+#[path = "_tests_/changes_overlap_tests.rs"]
+mod changes_overlap_tests;

@@ -306,7 +306,8 @@ reserves an 8 MiB main-thread stack through its linker settings in
 - [`src/changes_base.rs`](./src/changes_base.rs) defines `NativeBase`, the
   base provider of every command. With a `Freshness`, it samples the checkout
   identity before its first base read and records the evidence of the
-  preparation.
+  preparation. In Serve, it waits for completed usage as soon as the base
+  configuration and discovery show an HTML-only base.
 - [`src/changes_freshness.rs`](./src/changes_freshness.rs) compares the HTML
   dependency inputs, gives their `base-dependencies` warning, and builds the
   `DependencySelection` of an HTML-only base. Its `SelectionRequest` and
@@ -328,8 +329,9 @@ reserves an 8 MiB main-thread stack through its linker settings in
 - [`src/serve_base.rs`](./src/serve_base.rs) defines `ServeBase`, which finds,
   keeps, and releases the kept base, `BaseSlot`, the slot, and `ReleaseBase`,
   the release-only capability that each reader keeps.
-- [`src/serve_base_preparation.rs`](./src/serve_base_preparation.rs) pauses
-  capture and checks the selected dependency sets against completed usage.
+- [`src/serve_base_preparation.rs`](./src/serve_base_preparation.rs) holds
+  each base before capture until usage settles and checks the selected
+  dependency sets against completed usage.
 - [`src/serve_base_cancel.rs`](./src/serve_base_cancel.rs) defines
   `BaseLifetime` and `PreparingBase`, the cancellation of fresh base work that
   detaches at the keep.

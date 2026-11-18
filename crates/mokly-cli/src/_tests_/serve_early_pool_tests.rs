@@ -3,12 +3,14 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Condvar, Mutex, Weak, mpsc};
 use std::thread;
+use std::time::Duration;
 
 use mokly_server::changes::{ChangeCancellation, ChangeToken};
 use mokly_server::changes_signal::ChangeSignal;
 use mokly_server::foreground::Foreground;
 use mokly_server::usage_completion::{UsageCompletion, UsageCompletionMock};
 use mokly_sidecar::early_lease::{EarlyCall, EarlyLease, EarlyLeaseMock};
+use mokly_sidecar::error::Error;
 use mokly_sidecar::pool::{PoolMock, ReturnWake};
 use mokly_sidecar::wire::MethodResult;
 use unimock::{MockFn, Unimock, matching};
@@ -162,6 +164,58 @@ fn every_call_of_a_retained_early_lease_waits_for_the_whole_http_lease() {
 }
 
 #[test]
+fn cancellation_ends_early_admission_before_usage_settles() {
+    let ready = Arc::new(AtomicBool::new(false));
+    let observer = Arc::new(Mutex::new(None));
+    let (missed, missing) = mpsc::channel();
+    let (completed, completion) = mpsc::channel();
+    let requests = Arc::new(Mutex::new(0));
+    let calls = requests.clone();
+    let inner = Unimock::new((
+        PoolMock::try_early
+            .some_call(matching!(_))
+            .answers_arc(Arc::new(move |_, _| {
+                missed.send(()).unwrap();
+                Ok(None)
+            })),
+        PoolMock::request
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, _| {
+                *calls.lock().unwrap() += 1;
+                Ok(MethodResult::Empty)
+            })),
+    ))
+    .no_verify_in_drop();
+    let scheduler = ServePool::new(Arc::new(inner), 1);
+    let cancel = Arc::new(ChangeToken::default());
+    let base = scheduler.preparing(cancel.clone(), usage(ready.clone(), observer.clone()));
+    let worker = base.clone();
+    let call = thread::spawn(move || {
+        completed.send(worker.request(css("/base", 0))).unwrap();
+    });
+    missing.recv().unwrap();
+    cancel.cancel();
+    let observed = completion.recv_timeout(Duration::from_secs(10));
+    let admission = {
+        let state = scheduler.gate.state.lock().unwrap();
+        (state.active, state.waiting, state.waiting_base, state.http)
+    };
+    ready.store(true, Ordering::Release);
+    if let Some(wake) = observer.lock().unwrap().as_ref().and_then(Weak::upgrade) {
+        wake.notify();
+    }
+    call.join().unwrap();
+    base.finish();
+    assert!(
+        matches!(observed, Ok(Err(Error::Cancelled))),
+        "{observed:?}"
+    );
+    assert_eq!(admission, (0, 0, 0, 0));
+    assert_eq!(*requests.lock().unwrap(), 0);
+    assert_eq!(scheduler.gate.state.lock().unwrap().active, 0);
+}
+
+#[test]
 fn an_unavailable_early_slot_waits_outside_admission_then_uses_ordinary_calls() {
     for already_settled in [false, true] {
         let ready = Arc::new(AtomicBool::new(already_settled));
@@ -191,7 +245,7 @@ fn an_unavailable_early_slot_waits_outside_admission_then_uses_ordinary_calls() 
         .no_verify_in_drop();
         let scheduler = ServePool::new(Arc::new(inner), 1);
         let cancel: Arc<dyn ChangeCancellation> = Arc::new(ChangeToken::default());
-        let base = scheduler.preparing(cancel, usage(ready.clone(), observer.clone()));
+        let base = scheduler.preparing(cancel.clone(), usage(ready.clone(), observer.clone()));
         let worker = base.clone();
         let call = thread::spawn(move || worker.request(css("/base", 0)));
         let waiting = if !already_settled {
@@ -205,8 +259,12 @@ fn an_unavailable_early_slot_waits_outside_admission_then_uses_ordinary_calls() 
         if let Some(wake) = observer.lock().unwrap().as_ref().and_then(Weak::upgrade) {
             wake.notify();
         }
-        call.join().unwrap().unwrap();
+        let observed = missing.recv_timeout(Duration::from_secs(10));
+        cancel.cancel();
+        let result = call.join().unwrap();
         base.finish();
+        assert_eq!(observed, Ok("ordinary"));
+        result.unwrap();
         assert_eq!(waiting, (!already_settled).then_some(("miss", 0, 0, 0)));
         assert_eq!(*tries.lock().unwrap(), usize::from(!already_settled));
         assert_eq!(*ordinary.lock().unwrap(), 1);

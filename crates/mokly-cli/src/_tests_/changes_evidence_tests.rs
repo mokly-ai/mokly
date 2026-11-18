@@ -165,10 +165,12 @@ fn prepare(evidence: Evidence) -> (BasePreparationResult, Arc<Calls>) {
         Unimock::new(())
     };
     let preparation = if reads_base {
-        Unimock::new(PreparationControlMock::selected.some_call(matching!((false, directories, unmapped) if directories.is_empty() && unmapped.is_empty())).answers_arc({
+        Unimock::new((
+            PreparationControlMock::wait.some_call(matching!()).returns(Ok(())),
+            PreparationControlMock::selected.some_call(matching!((false, directories, unmapped) if directories.is_empty() && unmapped.is_empty())).answers_arc({
             let calls = calls.clone();
             Arc::new(move |_, _, _, _| { calls.selection.fetch_add(1, Ordering::Relaxed); })
-        }))
+        })))
     } else {
         Unimock::new(())
     }.no_verify_in_drop();
