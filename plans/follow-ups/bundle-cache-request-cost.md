@@ -110,6 +110,26 @@
     encode with its frame count, the locks, the staging, the flushes, and the
     publication. The receipt-check times hold only the store call, not the
     offer copy.
+  - Final measurements of 2026-11-18, on the same machine, against `main` at
+    `bc4f4cc40`, with the change at `3d55fdbd1`:
+    - A third one-time probe used the same probe source, method, and recipe
+      size. Each sample again saved into a new, empty store root.
+    - The saves took 31.528317, 23.400493, and 24.850042 ms, with a median of
+      24.850042 ms. Each save wrote the entry.
+    - The receipt checks took 0.071, 0.142, and 0.065 ms, and each found the
+      same compilation. The loads took 26.841, 30.885, and 26.139 ms. The Rust
+      check of the 14,928 recorded physical inputs took 16.591, 13.839, and
+      13.264 ms, and each found every input unchanged.
+    - No save exceeded 100 ms, so the raw review-trigger flag of this set is
+      false. The set at `1c3545ddf` keeps its 122.441157 ms sample and its
+      true flag. The review of 2026-11-18 stays closed, and the write stays
+      synchronous.
+    - Since `1c3545ddf`, `crates/mokly-sidecar/src`, `crates/mokly-platform`,
+      and the bundle store, codec, cache, storage, and durability files of
+      `crates/mokly-compare` did not change. `Cargo.lock` gained one
+      dependency line of `mokly-graph`.
+    - These samples split no stage. They include no replacement write and no
+      macOS or Windows sample.
   - The product timing records of 2026-11-18 give estimates. The time from
     the end of `sidecar.bundle` to the end of its `catalogue.bundle` span
     holds the result transfer, the parse, the offer copy, and the store call:
@@ -164,7 +184,7 @@
   serializes it again, and each disk hit copies it for the restore. On Linux,
   each write also flushes the whole filesystem.
 - **Impact if no action:** Each compiling request keeps its synchronous save.
-  The probes measured 25.674 to 122.441 ms for a first write, and the product
+  The probes measured 23.400 to 122.441 ms for a first write, and the product
   spans estimate about 1 to 7 percent of a compiling request. Each disk hit
   and memory reuse keeps the untimed copies. On Linux, a write can also
   wait for unrelated changed data, and no sample

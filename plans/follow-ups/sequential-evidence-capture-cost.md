@@ -170,6 +170,63 @@
       median. The after run again reused disk compilations at startup, so its
       first compile came at the edit. These numbers prove no cause and no
       overall speed change.
+  - Final measurements of 2026-11-18, on the same machine, against `main` at
+    `bc4f4cc40`, with the change at `3d55fdbd1`:
+    - All 28 release cases passed. All nine warm cases of the change had zero
+      compiles and zero esbuild operations. All eight strict outputs matched
+      byte for byte.
+    - Warm medians of three runs went from before to after as follows. Basic
+      `serve.ready` went from 2.815 s to 2.354 s, and React `serve.ready` from
+      1.242 s to 0.795 s. The basic build wall time went from 12.388 s to
+      10.773 s, and its `build` span from 12.348 s to 10.732 s.
+      `changes.classify` went from 4.366 s to 3.905 s in basic Serve, and from
+      3.949 s to 3.429 s in the basic build. In React it went from 1.407 s to
+      1.000 s. `serve.background` went from 4.063 s to 4.152 s in basic Serve,
+      and from 0.264 s to 0.331 s in React.
+    - Single cold runs went from before to after as follows. Basic
+      `serve.ready` went from 3.887 s to 4.797 s, and React `serve.ready` from
+      1.117 s to 2.668 s. `changes.classify` went from 7.092 s to 8.326 s in
+      basic Serve, and from 5.936 s to 8.031 s in the basic build. In React
+      it went from 1.513 s to 2.679 s. `serve.background` went from 5.590 s to
+      4.186 s in basic Serve, and from 0.277 s to 0.334 s in React. The basic
+      build wall time went from 13.552 s to 17.902 s, and its `build` span from
+      13.509 s to 17.869 s.
+    - One uninstrumented pair of the JavaScript edit ran before and after the
+      change. `watch.action` went from 2.585 s to 4.282 s, which is 1.697 s
+      more. The time from the edit to the end of the next classification went
+      from 3.398 s to 5.110 s, which is 1.712 s more. That next
+      `changes.classify` went from 0.296 s to 0.343 s. The `sidecar.bundle`
+      span of the edit went from 1,624.0 ms to 3,257.4 ms, and its native
+      compile span from 610.5 ms to 1,704.8 ms. Both runs compiled twice after
+      the edit.
+    - One uninstrumented pair of the CSS edit ran before and after the
+      change. The edit changes the background of a standalone stylesheet.
+      `watch.action` went from 0.821 s to 0.804 s. The time from the edit to
+      the end of the next classification went from 1.255 s to 1.250 s, and
+      that next `changes.classify` went from 0.301 s to 0.320 s. Neither run
+      compiled or ran an esbuild operation after the CSS edit.
+    - The copied sidecar measured 1,470.307 ms of capture for the edited head.
+      Of that, 1,258.384 ms was observation, 205.056 ms the physical finish
+      check, and 6.867 ms the witness finish check. The witness preflight
+      took 2.229 ms outside that total. The capture ran 3,135 unique requests
+      with 1,255.354 ms of request work, and 1,231.207 ms of that work ran
+      during a compile.
+    - The first head capture took 1,674.533 ms. Of that, 1,419.945 ms was
+      observation, 247.560 ms the physical finish check, and 7.028 ms the
+      witness finish check. Its witness preflight took 3.894 ms. It ran 3,135
+      unique requests with 1,414.636 ms of request work, and 1,383.496 ms of
+      that work ran during a compile.
+    - The first base capture took 1,714.232 ms. Of that, 1,498.871 ms was
+      observation, 206.782 ms the physical finish check, and 8.578 ms the
+      witness finish check. Its witness preflight took 3.719 ms. It ran 3,148
+      unique requests with 1,495.961 ms of request work, and 1,463.703 ms of
+      that work ran during a compile.
+    - No capture of the set called the barrier wait, so each actual wait was
+      0 ms. All three captures had complete and durable evidence.
+    - Each edit and each cold value is one sample for each release, not a
+      median. The after run of the JavaScript edit again reused disk
+      compilations at startup, so its first compile came at the edit. These
+      numbers prove no cause and no overall speed change.
   - Since 2026-11-17, each Windows directory witness also adds one open, one
     stat, and one close at the first touch and again after the compile. That
     cost is not measured.
@@ -193,9 +250,9 @@
 - **Impact if no action:** Each JavaScript edit in Serve, each cold start,
   and each start after a change keep the measured capture work on the path
   of their real compile: 1.4 s to 2.0 s for each capture on
-  `examples/basic`. In the three pairs recorded here, `watch.action` went
-  from 4.543 s to 7.211 s, from 2.823 s to 5.418 s, and from 4.517 s to
-  5.054 s.
+  `examples/basic`. In the four JavaScript edit pairs recorded here,
+  `watch.action` went from 4.543 s to 7.211 s, from 2.823 s to 5.418 s, from
+  4.517 s to 5.054 s, and from 2.585 s to 4.282 s.
   No stable causal slowdown is proven. Warm restarts keep their gain,
   because they do not compile.
 - **Root question:** How does a real compile record complete, coherent, and

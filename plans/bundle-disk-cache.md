@@ -1999,7 +1999,7 @@ Depends on: 1, 2, 3, 4, 5
   - [x] Prove each new regression fails on its behavior assertion before
         the fix. Run each asynchronous regression ten times. Record its cost.
   - [x] Verify the combined source and re-review the pushed fix.
-- [ ] Fetch and merge `origin/main` if it advanced before the final pull
+- [x] Fetch and merge `origin/main` if it advanced before the final pull
       request. Audit preservation with the `git-merge` skill.
   - [x] Merge main `03bedb6ec` with its comparison-usage, render-worker, and
         browser-error isolation changes. Preserve every incoming path.
@@ -2032,17 +2032,17 @@ Depends on: 1, 2, 3, 4, 5
         private checkouts for `f13a5d979`.
   - [x] Audit the merged timing fields after the comparison-proof merge.
         Keep all cache values and comparison reuse fields.
-  - [ ] Preserve the unfinished `f13a5d979` setup after main advances.
+  - [x] Preserve the unfinished `f13a5d979` setup after main advances.
         It contains one successful main npm stage and no optimized f13
         release or product measurement. Keep its mixed program sources
         explicit. Do not report it as an accepted comparison.
   - [x] Merge main `bc4f4cc40`, with the source-read, POSIX-path, and
         style-adapter filter changes of PR #311. Preserve all seven incoming
         paths byte for byte, including tests and the new follow-up.
-  - [ ] Repeat the release comparison against exact main `bc4f4cc40`.
+  - [x] Repeat the release comparison against exact main `bc4f4cc40`.
         Keep separate checkouts and target directories. Preserve all earlier
         archives and accepted measurements.
-  - [ ] Verify the new combined sidecar paths and release proofs. Let
+  - [x] Verify the new combined sidecar paths and release proofs. Let
         final CI verify every combined suite.
 - [x] Reopen the synchronous-save call after its review trigger. Run a
       fresh options check and record checked call 32 A. Keep all original
@@ -2121,6 +2121,19 @@ Latest sidecar optimization integration evidence:
 `.context/bundle-disk-cache/merge-bc4f4cc4/decisions.md`.
 The unfinished setup is recorded in
 `.context/bundle-disk-cache/m5-final-f13a5d97/metadata/stage-hold-bc4f4cc4.json`.
+
+Latest exact-main comparison evidence:
+`.context/bundle-disk-cache/m5-final-bc4f4cc4/metadata/final-assessment.json`,
+`.context/bundle-disk-cache/m5-final-bc4f4cc4/metadata/report-validation.json`,
+`.context/bundle-disk-cache/m5-final-bc4f4cc4/metadata/report-promotion-result.json`,
+and `.context/bundle-disk-cache/m5-final-bc4f4cc4/metadata/execution-release.json`.
+The focused combined sidecar run passed 46 tests in twelve files. All 28
+release cases, nine warm zero-compile cases, eight strict comparisons, and
+three complete stable capture owners passed. Current real save samples
+support checked call 32 A. All prior samples and their flags stay unchanged.
+The exact combined local gate did not run under the fixed disk floor.
+Final combined CI must verify every suite on the pull request commit.
+The last fetch found no new main commit beyond `bc4f4cc40`.
 
 ## Post-merge follow-up (non-blocking)
 
