@@ -45,7 +45,18 @@ export async function startExampleHosts(
     .filter((result) => result.status === "rejected")
     .map((result) => result.reason);
   if (errors.length) {
-    const cleanup = await Promise.allSettled(hosts.map((host) => host.close()));
+    const cleanup = await Promise.allSettled(
+      hosts.map(async (host, index) => {
+        try {
+          await host.close();
+        } catch (error) {
+          throw new Error(
+            `Example Serve worker ${index + 1} (${host.url}) cleanup failed`,
+            { cause: error },
+          );
+        }
+      }),
+    );
     errors.push(
       ...cleanup
         .filter((result) => result.status === "rejected")

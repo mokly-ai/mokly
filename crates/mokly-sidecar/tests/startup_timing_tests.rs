@@ -10,6 +10,7 @@ use mokly_sidecar::process_clock::SystemClock;
 use mokly_sidecar::process_factory::NodeFactory;
 use mokly_sidecar::process_memory::SystemMemory;
 use mokly_sidecar::workers::{Diagnostics, WorkerFactory};
+use mokly_test_support::capture::Trace;
 use unimock::{MockFn, Unimock, matching};
 
 #[path = "../src/_tests_/trace_capture.rs"]
@@ -34,8 +35,8 @@ fn failed_group_attachment_retires_the_created_child_under_spawn() {
                 })
             }),
     ));
-    let trace = trace_capture::Trace::default();
-    tracing::subscriber::with_default(trace.clone(), || {
+    let trace = Trace::default();
+    trace.in_scope(|| {
         let span = tracing::info_span!("sidecar.spawn", status = "error");
         let _scope = span.enter();
         let factory = NodeFactory::new(
@@ -57,7 +58,7 @@ fn failed_group_attachment_retires_the_created_child_under_spawn() {
                 .is_err()
         );
     });
-    let stops = trace.stopped();
+    let stops = trace.closed("sidecar.stop");
     assert_eq!(stops.len(), 1);
     assert_eq!(stops[0].parent.as_ref().unwrap().into_u64(), 1);
     assert_eq!(stops[0].fields["reason"], "retry");

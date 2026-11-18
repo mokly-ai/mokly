@@ -2141,6 +2141,7 @@ dependencies = [
  "mokly-sidecar",
  "mokly-source-interface",
  "mokly-static",
+ "mokly-test-support",
  "mokly-watch",
  "serde_json",
  "signal-hook",
@@ -2172,6 +2173,7 @@ dependencies = [
  "mokly-platform",
  "mokly-sidecar",
  "mokly-source-interface",
+ "mokly-test-support",
  "percent-encoding",
  "serde",
  "serde_json",
@@ -2229,6 +2231,7 @@ dependencies = [
  "mokly-html",
  "mokly-model",
  "mokly-source-interface",
+ "mokly-test-support",
  "percent-encoding",
  "postcard",
  "pulldown-cmark",
@@ -2337,6 +2340,7 @@ dependencies = [
  "mokly-platform",
  "mokly-sidecar",
  "mokly-source-interface",
+ "mokly-test-support",
  "serde",
  "serde_json",
  "tempfile",
@@ -2366,6 +2370,7 @@ dependencies = [
  "mokly-html",
  "mokly-model",
  "mokly-source-interface",
+ "mokly-test-support",
  "percent-encoding",
  "rand 0.10.3",
  "reqwest",
@@ -2377,7 +2382,6 @@ dependencies = [
  "tokio",
  "tower",
  "tracing",
- "tracing-subscriber",
  "unimock",
 ]
 
@@ -2390,6 +2394,7 @@ dependencies = [
  "libc",
  "mokly-model",
  "mokly-platform",
+ "mokly-test-support",
  "serde",
  "serde_json",
  "sysinfo",
@@ -2439,6 +2444,14 @@ dependencies = [
  "tracing",
  "unimock",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "mokly-test-support"
+version = "0.14.0"
+dependencies = [
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
