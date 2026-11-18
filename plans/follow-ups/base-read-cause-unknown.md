@@ -6,7 +6,7 @@
   `conductor/rust-rebuild-150-process-tree-stops`. The root-cause trace of
   finding 8 found it.
 - **Location:** `crates/mokly-source-interface/src/error.rs:96` to line 114,
-  `crates/mokly-catalogue/src/config.rs:46` to line 62,
+  `crates/mokly-catalogue/src/config.rs:47` to line 63, in `Loader::load`,
   `crates/mokly-compare/src/git_failures.rs:15` to line 55,
   `crates/mokly-cli/src/changes_diagnostics.rs:28` to line 33, and
   `crates/mokly-compare/tests/engine_support/mod.rs:157` to line 159.
@@ -34,29 +34,29 @@
     typed Git error. It also keeps that failure as the stored failure.
   - `SourceError::code`, at `crates/mokly-source-interface/src/error.rs:96` to
     line 114, returns "unknown" for each error that is not `Io`.
-  - The config loader formats the path and that code as a `config-invalid`
-    issue, at `crates/mokly-catalogue/src/config.rs:46` to line 52 and line
-    56 to line 62. So a failed base read gives "mokly.config.json: unknown".
+  - The config loader, `Loader::load`, formats the path and that code as a `config-invalid`
+    issue, at `crates/mokly-catalogue/src/config.rs:47` to line 53 and line
+    57 to line 63. So a failed base read gives "mokly.config.json: unknown".
   - The issue holds only that text, so its cause is lost.
   - More catalogue callers build the same text from `code()`:
-    - `config.rs:218` runs in each base load. It receives base Git failures.
-    - `config_paths.rs:178` and `:212` receive base Git failures only when
+    - `project` at `config.rs:222` runs in each base load. It receives base Git failures.
+    - `validate_inputs` at `config_inputs.rs:132` and `confined` at `:166` receive base Git failures only when
       the base configuration has a setting that they check.
-    - Line 178 checks `watch.rules[].paths`. Line 212 checks `renderer`,
+    - Line 132 checks `watch.rules[].paths`. Line 166 checks `renderer`,
       `moduleResolution.packageRoots`, and each local path of a `stylesheets`
       rule. A local path is not a URL and does not start with `$`.
-    - `config_paths.rs:85` receives no base read. `GitTree::project` returns
+    - `config_paths.rs:78` receives no base read. `GitTree::project` returns
       its input path unchanged, so `configuration_alias` returns at
-      `config_paths.rs:70` to line 71 before any read.
-    - `config.rs:194` runs only without an explicit file. The base load in
-      `crates/mokly-cli/src/changes_base.rs:88` passes one, so only the test
+      `config_paths.rs:63` to line 64 before any read.
+    - `find` at `config.rs:198` runs only without an explicit file. The base `loader.load` call in
+      `crates/mokly-cli/src/changes_base.rs:89` passes one, so only the test
       fixture below reaches it.
     - `discovery_walk.rs:96`, `:132`, and `:191` run in the base discovery
       walk. They receive base Git failures.
     - `preparation.rs:91` and `:136` run in the base preparation. They
       receive base Git failures.
-    - `discovery.rs:114` reads only an output path. The base discovery at
-      `changes_base.rs:94` passes none, so it receives no Git failure.
+    - `discovery.rs:114` reads only an output path. The base `discovery.discover` call at
+      `changes_base.rs:95` passes none, so it receives no Git failure.
   - In a build, `crates/mokly-compare/src/base_classification.rs:123` to line
     129 reports the stored failure before the catalogue error. A genuine Git
     failure then fails the command as `git-failed`, with its cause.

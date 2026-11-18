@@ -213,6 +213,7 @@ impl Source {
             .collect();
         ReuseFence::new(&(
             &self.config.input,
+            &self.config.modules,
             &self.config.file,
             &self.config.repo_root,
             &self.config.authored_inputs,

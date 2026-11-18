@@ -6,6 +6,7 @@ use crate::protection::{ProtectedBy, SourcePolicy};
 #[test]
 fn source_cause_precedence_applies_to_lexical_and_physical_names() {
     let config = ResolvedConfig {
+        modules: Default::default(),
         authored_inputs: Vec::new(),
         input: Config::default(),
         file: "/repo/mokly.config.json".into(),

@@ -73,6 +73,14 @@ the spelling and never follows a link first. Following the link was
 rejected, because one field must have one meaning in the core, in the
 sidecar, and on both sides of a comparison.
 
+After that lexical step, the `renderer` and `postcss` modules each have one
+resolved path: the repository-relative path of the file that the path
+reaches, with symbolic links resolved. After configuration validation, each
+use of the module and each message that names it gives the resolved path.
+Keeping the link path was rejected, because the sidecar's module graph names
+each module by its resolved path, so a link path would miss the module and
+its stylesheets.
+
 `roots[].files` globs are relative to their root; `watch.rules[].paths` are
 repository-relative POSIX globs; a stylesheet `match` matches catalogue
 entry routes of the form `path/index.html`. Globs are case-sensitive POSIX globs:

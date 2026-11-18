@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use mokly_catalogue::config_types::{Config, ResolvedConfig};
+use mokly_catalogue::config_types::{Config, ResolvedConfig, ResolvedModules};
 use mokly_catalogue::definition_provider::DefinitionProvider;
 use mokly_model::material::digest;
 use mokly_sidecar::compiled::{
@@ -210,6 +210,10 @@ fn edit_reuse_keeps_stamps_and_capture_priority_while_full_reuse_rejects_omissio
             },
             file: "/repo/mokly.config.json".into(),
             repo_root: "/repo".into(),
+            modules: ResolvedModules {
+                renderer: Some("renderer.tsx".into()),
+                ..Default::default()
+            },
             authored_inputs: vec![],
             roots: vec![],
         };

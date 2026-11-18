@@ -44,6 +44,7 @@ fn a_case_alias_of_the_output_directory_stays_private() {
         input: Config::default(),
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
         roots: Vec::new(),
     };
@@ -97,6 +98,7 @@ fn case_aliases_of_private_source_files_keep_their_classification() {
             input: Config::default(),
             file: "/repo/mokly.config.json".into(),
             repo_root: "/repo".into(),
+            modules: Default::default(),
             authored_inputs: Vec::new(),
             roots: vec![ResolvedRoot {
                 input: RootConfig {
@@ -143,6 +145,7 @@ fn a_parent_segment_package_root_is_private_without_canonical_projection() {
         },
         file: "/repo/tools/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
         roots: Vec::new(),
     };
@@ -190,6 +193,7 @@ fn a_parent_segment_spelling_keeps_only_its_normalized_root_private() {
         },
         file: "/repo/tools/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
         roots: Vec::new(),
     };
