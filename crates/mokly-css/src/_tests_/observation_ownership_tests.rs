@@ -56,7 +56,7 @@ fn attribution_consumes_observations_without_cloning_their_ancestry() {
         "both sides retain one path handle"
     );
     CLONES.with(|count| count.set(0));
-    let result = attribution::attribute(vec![page]);
+    let result = attribution::attribute(&[page]);
     assert_eq!(result.pages[0].len(), 1);
     assert_eq!(result.pages[0][0].status, RuleStatus::Matched);
     assert_eq!(
@@ -68,6 +68,6 @@ fn attribution_consumes_observations_without_cloning_their_ancestry() {
     assert_eq!(
         CLONES.with(Cell::get),
         0,
-        "the reducer must move the retained paths"
+        "the reducer must borrow the retained paths"
     );
 }

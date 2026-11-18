@@ -1,6 +1,7 @@
 //! Selector matches retain only the instance chains needed for owned proof.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::mem;
 
 use mokly_css::attribution::{OwnPageMatches, RuleIdentity};
 use mokly_css::rule_matching::DocumentMatching;
@@ -114,6 +115,40 @@ pub(crate) fn matched(
 }
 
 impl Compact {
+    pub(crate) fn retained_bytes(&self) -> usize {
+        self.instances
+            .iter()
+            .map(|instances| {
+                instances.capacity() * mem::size_of::<Instance>()
+                    + instances
+                        .iter()
+                        .map(|instance| instance.path.capacity() + instance.key.capacity())
+                        .sum::<usize>()
+            })
+            .sum::<usize>()
+            + self.rules.capacity() * mem::size_of::<RuleChains>()
+            + self
+                .rules
+                .iter()
+                .map(|rule| {
+                    let identity = [&rule.identity.0, &rule.identity.1]
+                        .into_iter()
+                        .flatten()
+                        .map(|(selectors, declarations)| {
+                            declarations.capacity()
+                                + selectors.capacity() * mem::size_of::<String>()
+                                + selectors.iter().map(String::capacity).sum::<usize>()
+                        })
+                        .sum::<usize>();
+                    identity
+                        + rule
+                            .starts
+                            .iter()
+                            .map(|starts| starts.capacity() * mem::size_of::<Start>())
+                            .sum::<usize>()
+                })
+                .sum::<usize>()
+    }
     /// Whether no eligible match needs retained ancestry.
     pub(crate) fn is_empty(&self) -> bool {
         self.rules.is_empty()

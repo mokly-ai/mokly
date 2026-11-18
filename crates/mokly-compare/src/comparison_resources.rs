@@ -5,7 +5,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use mokly_css::attribution::{PageObservation, observe};
 use mokly_css::match_tree::MatchTree;
 use mokly_css::rule_matching::match_document;
-use mokly_css::{observation, rules};
+use mokly_css::rules;
 use mokly_graph::closure::Closure;
 use mokly_graph::comparison_input::RetainedComparisonInput;
 use mokly_graph::types::RenderGeneration;
@@ -232,7 +232,6 @@ pub(crate) fn evidence(
             .cmp(&mokly_model::review_order::resource_key(right))
     });
     output.dedup();
-    observation.rules = observation::merge(std::mem::take(&mut observation.rules));
     Ok(output)
 }
 

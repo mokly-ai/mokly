@@ -13,6 +13,7 @@ use mokly_cli::redaction::Redactor;
 use mokly_cli::serve::PreparedServe;
 use mokly_cli::{build_output, serve_errors, serve_output};
 use mokly_compare::base_render::selected_base;
+use mokly_compare::comparison_reuse::{ComparisonReuse, ReuseAttempt};
 use mokly_compare::comparison_types::ComparisonResult;
 use mokly_compare::extraction_snapshots::Snapshots;
 use mokly_graph::types::RenderGeneration;
@@ -42,6 +43,7 @@ pub(super) trait ChangeSources: Send + Sync {
 
 #[derive(Clone)]
 pub(super) struct ServeChanges {
+    pub(super) reuse: Arc<dyn ComparisonReuse>,
     /// All source generations share one optional captured base.
     pub(super) kept_base: Arc<BaseSlot>,
     pub(super) sidecars: Arc<dyn PoolScheduling>,
@@ -73,10 +75,12 @@ impl ChangeSources for ServeChanges {
             pending: Arc::new(Mutex::new(Vec::new())),
             operation: Arc::new(CaptureCancellation::default()),
             references: Mutex::new(None),
+            staging: Mutex::new(None),
         })
     }
 }
 pub(super) struct Source {
+    pub(super) staging: Mutex<Option<Arc<dyn ReuseAttempt>>>,
     pub(super) references: Mutex<Option<(Vec<String>, String)>>,
     pub(super) operation: Arc<dyn CaptureScopes>,
     pub(super) pending: Arc<Mutex<Vec<Warning>>>,
@@ -119,6 +123,7 @@ impl ChangeSource for Source {
             pending: Arc::new(Mutex::new(Vec::new())),
             operation: Arc::new(CaptureCancellation::default()),
             references: Mutex::new(None),
+            staging: Mutex::new(None),
         }))
     }
     fn references(&self, cancel: Arc<dyn ChangeCancellation>) -> Result<String> {
@@ -136,6 +141,18 @@ impl ChangeSource for Source {
         result: std::result::Result<&ComparisonResult, &ServerError>,
         elapsed: Duration,
     ) {
+        if let Some(staging) = self
+            .staging
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .take()
+        {
+            if result.is_ok() {
+                staging.accept();
+            } else {
+                staging.discard();
+            }
+        }
         let mut warnings = self
             .pending
             .lock()
@@ -183,8 +200,22 @@ impl ChangeSource for Source {
             }
         });
     }
+    fn discarded(&self) {
+        if let Some(staging) = self
+            .staging
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .take()
+        {
+            staging.discard();
+        }
+    }
 }
 
 #[cfg(test)]
 #[path = "_tests_/serve_changes_tests.rs"]
 mod serve_changes_tests;
+
+#[cfg(test)]
+#[path = "_tests_/serve_reuse_support.rs"]
+mod serve_reuse_support;

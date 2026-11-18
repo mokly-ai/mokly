@@ -11,6 +11,7 @@ use crate::material::mapped;
 use crate::view_material::MaterialComparison;
 
 /// Component impact from an exact paired instance or its reached resource.
+#[derive(Clone)]
 pub(crate) struct InstanceProof {
     pub(crate) component: String,
     pub(crate) reason: EntryChangeReason,

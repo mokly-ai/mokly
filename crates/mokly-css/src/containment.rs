@@ -1,6 +1,7 @@
 //! Immutable physical component ancestry shared by elements and detached match proof.
 
 use std::fmt;
+use std::mem;
 use std::sync::Arc;
 
 use crate::match_tree::Containment;
@@ -24,6 +25,20 @@ impl Clone for ContainmentPath {
 }
 
 impl ContainmentPath {
+    /// Visit shared links and instance strings, with opaque accounting identities.
+    pub fn allocations(&self, visitor: &mut dyn FnMut(usize, usize)) {
+        let mut next = self.0.as_ref();
+        while let Some(link) = next {
+            visitor(
+                Arc::as_ptr(link) as usize,
+                mem::size_of::<Link>() + 32 + link.region.path.capacity(),
+            );
+            if let Some(instance) = &link.region.instance {
+                visitor(instance.as_ptr() as usize, instance.len() + 32);
+            }
+            next = link.parent.0.as_ref();
+        }
+    }
     /// Extend an ancestry path with one innermost component region.
     pub fn with_region(&self, region: Containment) -> Self {
         Self(Some(Arc::new(Link {

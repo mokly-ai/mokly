@@ -20,6 +20,8 @@ use crate::serve_warnings::{ServeWarnings, WarningScopes, WarningScopesMock};
 use crate::terminal::TerminalMock;
 use crate::warning_support::{config, warning};
 
+use super::serve_reuse_support;
+
 #[test]
 fn refresh_uses_current_and_cancelled_attempts_print_no_warnings_or_result() {
     let lines = Arc::new(Mutex::new(Vec::new()));
@@ -59,12 +61,16 @@ fn refresh_uses_current_and_cancelled_attempts_print_no_warnings_or_result() {
     let current = scopes.begin();
     let service = Source {
         references: Mutex::new(None),
+        staging: Mutex::new(None),
         operation: Arc::new(CaptureCancellation::default()),
         pending: Arc::new(Mutex::new(Vec::new())),
         config: config(),
         head: Arc::new(Unimock::new(())),
         warnings: old,
         services: ServeChanges {
+            reuse: Arc::new(mokly_compare::comparison_reuse::MemoryComparisons::new(
+                32 * 1024 * 1024,
+            )),
             kept_base: Arc::default(),
             sidecars: Arc::new(Unimock::new(())),
             progress: Arc::new(Unimock::new(())),
@@ -131,6 +137,7 @@ fn refresh_uses_current_and_cancelled_attempts_print_no_warnings_or_result() {
         before: Arc::new(Unimock::new(())),
         after: Arc::new(Unimock::new(())),
     };
+    serve_reuse_support::checks_ready_admission_and_failed_or_cancelled_staging(&service);
     let source: &dyn ChangeSource = &service;
     source.finished(Ok(&result), Duration::ZERO);
     assert!(lines.lock().unwrap().is_empty());

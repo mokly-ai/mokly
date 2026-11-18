@@ -30,9 +30,11 @@ reachable only from the base ref do not enter the comparison. No command
 checks the base commit out over the working tree, and nothing is written into
 the repository.
 
-The engine compares every view of every entry, regardless of source edits,
-because a changed component, stylesheet, or resource reaches views
-whose own sources did not change. Git blob and tree reads are bounded in count
+The engine classifies every view of every entry, regardless of source edits,
+because a changed component, stylesheet, or resource reaches views whose own
+sources did not change. Serve can reuse a view comparison under
+[proven view reuse](#proven-view-reuse), and its classification stays
+exhaustive. Git blob and tree reads are bounded in count
 and bytes, and a file's mode is checked before its blob is accepted, so a
 symlink or a non-regular file is rejected. A read that cannot complete makes
 Changes unavailable with its diagnostic.
@@ -64,6 +66,41 @@ each side, byte for byte, even when ignore normalization changes a
 classification. No timestamp and no absolute path enters the JSON. The
 [review validation contract](./mokly-component-review-validation.md) owns
 every array order of the result and the details' evidence.
+
+### Proven view reuse
+
+A view comparison compares the two sides of one view: their canonical forms,
+their resources, and their style rules. Its result is the view's evidence and
+its warnings before the steps that combine views. Serve can reuse a view
+comparison from its last accepted classification instead of comparing that
+view again. The
+[reuse rules](./mokly-comparison-serving.md#view-comparison-reuse) of the
+comparison serving contract say which comparisons Serve keeps. Reuse keeps
+each classification exhaustive: every view takes part, as if Serve had
+compared it again.
+
+Only a complete content proof allows reuse. The proof covers every input that
+the view comparison reads on either side. These inputs include the composed
+documents of both sides, both entry records, the view's route and move status,
+the accepted move pairs of the whole catalogue, and each resource and
+stylesheet import that either side reaches. The absence of a resource on one
+side is an input too. An input is unchanged only when its content digest or
+its exact value is equal. Serve compares a view in full when it has no kept
+comparison, or when an input is unknown, unavailable, or changed. A failed
+read during the proof only causes that full comparison. It never fails the
+classification by itself.
+Decision: reuse needs a complete content proof. Watcher events, edited-file
+lists, and object identity were rejected as proofs, because they cannot prove
+that the output stays equal.
+
+Each step that combines views or entries runs again over every view in each
+classification, with the current usage of both sides. These steps include
+entry pairing, move detection, CSS attribution, component attribution,
+affected consumers, use-case membership, and the review result with its
+projection onto the index and the details.
+Decision: Serve reuses single view comparisons only. Reuse of an entry's or
+the catalogue's final result was rejected, because attribution and impact must
+read the current evidence of every view.
 
 ## Resource URL Classification
 
