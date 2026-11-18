@@ -1605,6 +1605,90 @@ These are my calls, made on 2026-10-30 under the decision test.
     [postcss-windows-resolved-name.md](./follow-ups/postcss-windows-resolved-name.md)
     holds that work.
 
+32. Keep synchronous saves after the cost review, my call, 2026-11-18.
+    The measured store cost exceeded the review trigger of call 2. A fresh
+    options check keeps A. This call closes that review and changes no
+    requirement, source, test, setting, or boundary behaviour.
+
+    Root question: how much delay may the optional bundle-cache write add
+    to a compiling request, and what bounds that delay?
+
+    Shared assumptions, with their sources:
+
+    - Every eligible served compilation is offered, with no publication
+      table. Source: `mokly-base-cache.md` and checked call 26 G. Kept.
+    - The bundle kind keeps its 512 MiB bound, its frame bound, and one
+      nonblocking lock attempt. Source: decision 6 D and calls 17, 18 and 24. Kept.
+    - A write stays in the bundle response and its `catalogue.bundle`
+      span. Source: decision 8 A and `mokly-timings.md`. This is a
+      requirement in force. B and F drop it and need the user.
+    - Synchronous ownership keeps the final write available to the next
+      start and keeps tests independent of shutdown scheduling. This is
+      the reason of call 2, rather than a separate protocol requirement.
+      Kept. A detached writer drops it and stays left out.
+    - The 100 ms rule reopens a design review. It is not a product gate or
+      an acceptance assertion. Source: call 2. Kept.
+    - The Linux basic-recipe probe supplies evidence for that review.
+      Source: the measurement method and calls 12 and 19. Its limits are
+      an empty namespace, one recipe size, and no native save samples.
+      E drops this scope assumption.
+    - Linux currently flushes the whole filesystem for bundle data.
+      Source: the shared flush implementation on `origin/main`. The
+      protocol requires durable data before a durable receipt, but it
+      does not require that flush scope. D drops this mechanism.
+
+    Options, with the checked letters:
+
+    - A. Keep synchronous saves, the receipt fast path, and every current
+      bound and lifecycle rule. A real compile pays for publication.
+      Repeat offers still pay the offer clone before the store checks
+      its receipt. The store-only receipt cost excludes that clone. Small.
+    - B. Add one bounded per-pool writer queue. Coalesce equal settings,
+      bound retained bytes, recheck receipts, and define warnings,
+      cancellation and shutdown ownership. This is the structural wider
+      fix, but it changes decision 8 A and the response timing rule.
+      It needs a user decision. Large, corrected from Medium.
+    - C. Profile the real CPU and I/O stages before reducing repeated
+      clones or serialization. Keep all digests, limits, receipts, flushes
+      and atomic publication. Keep a later change only after repeated
+      measurements and correctness proof. Medium.
+    - D. Flush only the bundle data file and its stage directories on
+      Linux. Keep both durable receipts, the rename and every directory
+      flush. It avoids unrelated dirty filesystem data, but has no
+      measured gain yet. The other cache kinds stay unchanged. Medium.
+    - E. Keep every sample and add native save evidence plus a recipe
+      near the frame limit. The native runner work needs separate
+      authorization. No extra proof runs in this call. Medium.
+    - F. Defer pending saves to named command boundaries. Bound and
+      coalesce pending recipes, and define shutdown cancellation. It
+      changes the response, warning and timing contracts, so it needs
+      a user decision. Large.
+
+    Left out: a detached writer can lose the final write at exit and
+    make warm tests depend on scheduling. An unbounded queue breaks the
+    memory goal. Dropping durability, digests, receipts or limits breaks
+    requirements. A time gate or a new public span does not reduce the
+    save cost. Repeating a probe while retaining every sample hides
+    nothing, but repeating until it passes a threshold is not evidence.
+    A writer daemon adds an unrelated owner.
+
+    Recommendation: A, as proposed. No measured gain justifies a new
+    owner or a boundary change. The save code and probe were unchanged
+    across the two saved sets, so their variance does not prove a source
+    regression. The product-span estimate and its limits stay in the
+    checked report. B is the blocked structural wider fix. D changes
+    one flush cause, while C investigates repeated CPU work first.
+
+    The Rust request-cost follow-up records the broad flush, the offer
+    copies, the encoder frame-check copies, and the owned restore copy.
+    It keeps the blocked queue alternative and requires measurements
+    before implementation. No copy cost or native save cost is proven.
+
+    Reopen this call when new measured evidence changes the comparison
+    of these options. Keep the original threshold observation and every
+    sample. The review trigger is not a recurring product time gate.
+    No user decision is open.
+
 The options check for the restored decisions and these calls is recorded
 under `.context/bundle-disk-cache/options-check-current.md` and
 `.context/bundle-disk-cache/options-check-calls-14-19.md`. Call 20 uses
@@ -1626,6 +1710,8 @@ Call 28 uses `.context/bundle-disk-cache/options-check-call-28.md`.
 Call 29 uses `.context/bundle-disk-cache/options-check-call-29.md`.
 Call 30 uses `.context/bundle-disk-cache/options-check-call-30.md`.
 Call 31 uses `.context/bundle-disk-cache/options-check-windows-device.md`.
+Call 32 uses `.context/bundle-disk-cache/options-check-call-32.md` and
+`.context/bundle-disk-cache/call-32-resolution.md`.
 
 ## Milestone 1: Documentation and protocol
 
@@ -1894,7 +1980,7 @@ Depends on: 1, 2, 3, 4, 5
 - [x] Run `cargo xtask check --suite repository` early, then the complete
       gate `cargo xtask check`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -1912,7 +1998,7 @@ Depends on: 1, 2, 3, 4, 5
         visited-path bound. Keep memory reuse and Windows handle rules.
   - [x] Prove each new regression fails on its behavior assertion before
         the fix. Run each asynchronous regression ten times. Record its cost.
-  - [ ] Verify the combined source and re-review the pushed fix.
+  - [x] Verify the combined source and re-review the pushed fix.
 - [ ] Fetch and merge `origin/main` if it advanced before the final pull
       request. Audit preservation with the `git-merge` skill.
   - [x] Merge main `03bedb6ec` with its comparison-usage, render-worker, and
@@ -1932,12 +2018,25 @@ Depends on: 1, 2, 3, 4, 5
   - [x] Merge main `e8c964cb1`, with the settled large browser fixtures and
         failure evidence. Keep every incoming path exactly as main, including
         the completed follow-up deletion.
-  - [ ] Repeat the release comparison against exact main `e8c964cb1`.
+  - [x] Repeat the release comparison against exact main `e8c964cb1`.
         Preserve the complete `0accb6818` and `f032dd04c` programs, sources,
         reports, and raw evidence before updating the private checkouts. Keep
         the archived `51f356574` and `423e23930` build-only programs as well.
   - [x] Run repository verification on the latest combined source before
         its review. Let final CI verify all suites of the combined branch.
+  - [x] Merge main `f13a5d979`, with retained comparison proofs from PR #310.
+        Preserve the incoming comparison, capture, trace, and documentation
+        changes alongside the bundle cache.
+  - [ ] Repeat the release comparison against exact main `f13a5d979`.
+        Preserve the complete `e8c964cb1` and `1c3545ddf` programs, sources,
+        reports, and raw evidence before updating the private checkouts.
+  - [ ] Verify the merged timing fields and release proofs after the
+        comparison-proof merge. Let final CI verify every combined suite.
+- [x] Reopen the synchronous-save call after its review trigger. Run a
+      fresh options check and record checked call 32 A. Keep all original
+      samples and the true threshold observation.
+- [x] Record the checked Rust request-cost targets as an independent
+      after-merge follow-up. Keep every bound and response contract.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request with `gh pr create --base main`. Its description
@@ -1992,6 +2091,18 @@ Combined source and pointer checks:
 `.context/bundle-disk-cache/logs/repository-e8c-fix-r1.json` and
 `.context/bundle-disk-cache/logs/markdown-links-e8c-fix-r1.json`.
 
+Final comparison and review evidence:
+`.context/bundle-disk-cache/m5-final-e8c964cb/metadata/final-assessment.json`,
+`.context/bundle-disk-cache/m5-final-e8c964cb/metadata/report-validation.json`,
+`.context/reviews/calummoore/lisbon-h906/round-3-review.md`,
+`.context/reviews/calummoore/lisbon-h906/round-3-checks.md`, and
+`.context/bundle-disk-cache/reports/final-records-e8c.md`.
+
+Comparison-proof integration evidence:
+`.context/bundle-disk-cache/merge-f13a5d97/decisions.md`,
+`.context/bundle-disk-cache/merge-f13a5d97/one-sided-preservation.json`, and
+`.context/bundle-disk-cache/merge-f13a5d97/follow-up-pointers.md`.
+
 ## Post-merge follow-up (non-blocking)
 
 - [ ] Keep the stylesheet cache across restarts, for the CSS Modules class
@@ -1999,3 +2110,6 @@ Combined source and pointer checks:
       this plan leaves. It carries the 1.5 s target of the item, with an
       estimate of about 1.2 s on the baseline machine. This task follows
       decision 2 A.
+
+The existing owner of the stylesheet task is
+[stylesheet-cache-across-restarts.md](./follow-ups/stylesheet-cache-across-restarts.md).

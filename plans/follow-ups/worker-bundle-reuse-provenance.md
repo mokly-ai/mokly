@@ -4,14 +4,16 @@
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-17, from round 1 of the implementation review of the
   bundle disk cache branch `calummoore/lisbon-h906`, finding 1, and its
-  finding check.
+  finding check. On 2026-11-18, finding 4 of round 3 repeated this defect.
+  Its finding check added the one-worker trigger and option F.
 - **Location:** `crates/mokly-sidecar/src/pool_preparation.rs:24` to line 29,
-  `crates/mokly-sidecar/src/pool_requests.rs:85` to line 92,
+  `crates/mokly-sidecar/src/pool_requests.rs:84` to line 92,
   `crates/mokly-sidecar/src/pool_bundle_cache.rs:103` to line 110, and
   `crates/mokly-sidecar/src/compiled.rs:124`.
 - **Reason:** The defect is Rare and affects only the optional timing output.
-  No current command flow was found to trigger it. Its fix does not get harder
-  after the merge.
+  No current command flow was found to send two equal bundles at the same
+  time. The one-worker trigger needs unusual timing, and only a trace through
+  the source shows it. Its fix does not get harder after the merge.
 
 - **Source:** Review.
 - **Category:** Product bug.
@@ -52,15 +54,15 @@
   - `complete_bundle` at `pool_bundle_cache.rs:97` classifies the result at
     lines 103 to 110. A result key in that list gives `memory`. A key equal
     to the disk seed key gives `hit`. Any other key keeps the cause.
-  - The timing rule is in `docs/protocol/mokly-timings.md`. Line 123 says:
+  - The timing rule is in `docs/protocol/mokly-timings.md`. Line 99 says:
     "The sidecar compiled for every value except `memory` and `hit`." Lines
-    129 to 130 say: "Replay and evaluation-only reuse add no `esbuild`
+    105 to 106 say: "Replay and evaluation-only reuse add no `esbuild`
     count." The span is `catalogue.bundle`, at
     `crates/mokly-render/src/bundle_attempt.rs:22`.
   - `crates/mokly-sidecar/README.md:115` says that the pool compares the
     result with the keys of the generations that the worker holds. The code
     compares it with the keys of their pool records.
-  - Both forms of the trigger make a split:
+  - Two workers make a split in two forms:
     - Equal evaluation digests: two bundles with equal parameters get one
       generation id. The worker with the newest epoch holds its own key, and
       the pool record holds the key of the other compile.
@@ -74,26 +76,50 @@
       `crates/mokly-cli/src/entry_serve.rs:265`. That loop waits for a
       cancelled Changes attempt before it starts the next one, at
       `crates/mokly-server/src/changes_background.rs:103`.
+    - One core runtime runs its describes one at a time under a lock, at
+      `crates/mokly-render/src/runtime.rs:175`.
+    - The Changes base has its own runtime, at
+      `crates/mokly-cli/src/changes_base.rs:140`. Its source root differs
+      from the head, so its recipes never equal head recipes.
     - Captures read retained inputs.
     - `build` prepares the head side and the base side one after the other.
   - The pool contract still lets callers send concurrent requests. The
     default pool size is the core count, at
     `crates/mokly-cli/src/options.rs:45`.
+  - One worker can also make a split:
+    - A short-lived input change makes the reuse check of the sidecar fail,
+      at `packages/mokly/src/sidecar/compiled.ts:124`.
+    - The worker compiles after the change ends. So it makes an equal recipe
+      with a new runtime key.
+    - The pool record keeps the retained compilation. It is the live record,
+      or the released recipe through `take_reused`, at
+      `crates/mokly-sidecar/src/pool_requests.rs:84`.
+    - With an equal generation id, the split starts at once. With a new id,
+      it starts when the worker disposes of the older generation.
+    - A CSS Modules edit in Serve makes a later reuse on that worker.
+    - This trigger needs unusual timing. Only a trace through the source
+      shows it.
   - The test
     `complete_memory_is_selected_before_newest_epoch_and_installed_keys_count_as_memory`,
     at `crates/mokly-sidecar/src/_tests_/bundle_pool/order_tests.rs:42`, gives
     the worker the retained key. No test gives two workers different keys for
-    one equal recipe, with equal or with different evaluation digests.
-  - Both review passes followed the scenario through the source. Nobody ran
-    it.
+    one equal recipe, with equal or with different evaluation digests. No test
+    gives one worker a key that differs from its pool record.
+  - The two review passes of round 1 followed the two-worker scenario through
+    the source. The finding check of round 3 traced the one-worker and the
+    two-worker triggers through the source. Nobody ran them.
   - A second effect of the same cause was considered and not raised. After a
     split on the head side, `served()` at `pool_bundle_cache.rs:131` offers
     the compilation of the pool record. It can have another runtime key than
     the compilation that `complete_bundle` offered, so the bundle store writes
-    an equal recipe again. No current command makes a split on the head side.
+    an equal recipe again. In a current command, only the one-worker trigger
+    was found to make a split on the head side.
   - Every option must keep these goals:
-    - Existing recipe sharing and the deterministic identity of each
-      complete compilation stay.
+    - Recipe sharing after reuse and the deterministic identity of each
+      complete compilation stay. Reuse returns the key of the reused
+      compilation, so sharing across different keys occurs only after
+      independent compiles. No protocol page, user decision, or test requires
+      that sharing.
     - The pool owns the `cache` value and returns it in a field that never
       crosses the wire, as the `epoch` field does.
     - `hit` means that the result key equals the key of the disk seed of the
@@ -112,19 +138,21 @@
 - **Root question:** How should each request report whether its worker
   reused compiled code?
 - **Options:**
-  - **A.** Require equal runtime keys before sharing compiled recipes. Add the
-    two-worker regression for equal and for different evaluation digests. It
-    removes sharing only between independent compiles of an equal recipe.
-    Reuse that returns the retained key still shares its recipe. With equal
-    generation ids, `stale_generation` at
+  - **A.** Require equal runtime keys before sharing compiled recipes. Check
+    the keys at the live record search and at `take_reused`. Add the
+    two-worker regression for equal and for different evaluation digests, and
+    the one-worker regression. It removes sharing only between independent
+    compiles of an equal recipe. Reuse that returns the retained key still
+    shares its recipe. With equal generation ids, `stale_generation` at
     `crates/mokly-sidecar/src/pool_cleanup.rs:22` marks the copy with the older
     epoch, so the next request on that worker disposes it before a later
     restore. Effort: Small.
   - **B.** Keep the actual installed runtime key with each worker's record of
     a loaded generation. Update this record on bundle, restore, and disposal.
     Add a controlled two-worker regression with equal compilation identities
-    and different runtime keys. It preserves recipe sharing, but it must keep
-    the record right at six install and disposal paths. Effort: Medium.
+    and different runtime keys, and the one-worker regression. It preserves
+    recipe sharing, but it must keep the record right at six install and
+    disposal paths. Effort: Medium.
   - **C.** Make the sidecar report whether its bundle request reused code. Use
     that fact for memory classification, and keep the comparison with the
     disk seed key for disk provenance. Update the wire types and add the
@@ -149,6 +177,8 @@
       the pool paragraph of `crates/mokly-sidecar/README.md`. Add the
       two-worker regression for equal and for different evaluation digests,
       and a worker test that counts the events of each request.
+    - Add one scripted result with an unknown key and no `esbuild` event.
+      That test fails on the current code for every trigger.
     - Effort: Medium.
   - **E.** Make the worker hold the compilation of the pool record:
     - When a bundle result shares a compilation that has another runtime key,
@@ -161,15 +191,36 @@
       several megabytes. It also needs failure handling for a restore that
       comes after a successful bundle.
     - It also removes the repeated equal store write above. A removes that
-      write only within one generation. B and D do not change it.
+      write only within one generation. B, D, and F do not change it.
+    - Add the two-worker regressions and the one-worker regression.
     - Effort: Medium.
+  - **F.** Keep with each pool record every runtime key that a worker result
+    returned for that generation:
+    - At each bundle result, add the actual result key, also when the record
+      shares another compilation, at
+      `crates/mokly-sidecar/src/pool_requests.rs:92`.
+    - Drop these keys with the record at the final release and at `dispose`,
+      at `crates/mokly-sidecar/src/pool_releases.rs:84` and
+      `crates/mokly-sidecar/src/pool_requests.rs:127`.
+    - `seed_compilation` collects every key of each record that the worker
+      holds.
+    - Each compile makes a fresh random key. So a known key proves reuse, and
+      extra keys cannot hide a compile.
+    - It keeps recipe sharing and changes only the pool. It gets the result of
+      B with one insert path in place of six update paths.
+    - It still infers reuse from keys. A later install path that skips the
+      record can bring the defect back.
+    - Add the one-worker and the two-worker regressions to the tests under
+      `crates/mokly-sidecar/src/_tests_/bundle_pool/`.
+    - Effort: Small.
 - **Left out:**
   - Change nothing. It leaves timing output that contradicts the compiler
     operation counts.
-  - A single-flight wait for equal settings in the pool scheduler. It removes
-    only the concurrent trigger, so a split from another path still gives a
-    wrong report. It also changes FIFO leasing and cancellation while a
-    request waits.
+  - A single-flight wait for equal settings in the pool scheduler, or another
+    request deduplication. It removes only the concurrent trigger, so a split
+    from another path, such as the one-worker trigger, still gives a wrong
+    report. One core runtime already runs its describes one at a time. It also
+    changes FIFO leasing and cancellation while a request waits.
   - A generation id that contains the runtime key. It breaks the
     deterministic identity rule, which stays.
   - A classification by recipe equality. It reports `memory` after the
@@ -189,7 +240,13 @@
 - **Recommendation:** D. It uses the actual compiler events that define
   memory reuse and disk hits, and it adds no wire field or requirement. It
   replaces the first recommendation, B. A is the direct fix, B must keep
-  worker records right at six paths, and C needs the user.
+  worker records right at six paths, and C needs the user. A later change to
+  recipe sharing, seeding, release, or install paths cannot make D wrong. If
+  a change in the pool only is wanted, F is the smallest fix that keeps all
+  recipe sharing. Prefer F to B, because F gets the same result with one
+  insert path.
 - **Action:** fix after merge, apply D, because the defect is Rare and affects
-  only the optional timing output. No current command flow was found to trigger
-  it. The fix does not get harder after the merge.
+  only the optional timing output. No current command flow was found to send
+  two equal bundles at the same time. The one-worker trigger needs unusual
+  timing, and only a trace through the source shows it. The fix does not get
+  harder after the merge.
