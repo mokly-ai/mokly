@@ -37,7 +37,7 @@ async function fixture() {
   await write("apps/site/package.json", '{"type":"module"}');
   await write(
     "package.json",
-    '{"type":"module","private":true,"workspaces":["mockups"]}',
+    '{"type":"module","private":true,"workspaces":["apps/mockups"]}',
   );
   await write(
     "apps/mockups/package.json",

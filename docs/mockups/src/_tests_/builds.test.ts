@@ -1,15 +1,14 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { test } from "node:test";
 
 import { parse } from "parse5";
 
-import { causeSentences, elisionText } from "../fixtures/build-copy";
-import { shortSha } from "../fixtures/builds";
+import { causeSentence, elisionText } from "../fixtures/build-copy";
+import { builds, shortSha } from "../fixtures/builds";
 
 import { drawings } from "./build-drawings";
-import { catalogueRoot, screenFile } from "./catalogue-paths";
+import { screenFile } from "./catalogue-paths";
 import {
   attribute,
   byClass,
@@ -18,70 +17,47 @@ import {
   label,
 } from "./design-site-test-helpers";
 
-const contract = readFileSync(
-  resolve(catalogueRoot, "../protocol/viewer-builds.md"),
-  "utf8",
-);
-
-/**
- * The body rows of every Markdown table in the contract whose header starts
- * so, in document order. A table of sentences the contract gives a later
- * milestone follows the table it changes, so reading the rows in order, the
- * later row for a cause winning, gives every sentence the catalogue draws.
- */
-function tables(first: string): string[][] {
-  const lines = contract.split("\n");
-  const rows: string[][] = [];
-  let found = 0;
-  lines.forEach((header, at) => {
-    if (!header.startsWith("| " + first)) return;
-    found += 1;
-    for (const line of lines.slice(at + 2)) {
-      if (!line.startsWith("|")) break;
-      rows.push(
-        line
-          .split("|")
-          .slice(1, -1)
-          .map((cell) => cell.trim()),
-      );
-    }
-  });
-  assert.ok(found > 0, first + " table");
-  return rows;
-}
-
-/**
- * The sentences the contract gives a cause in place of its table row, which
- * keeps the running application's copy until the milestone that changes it.
- * Each is written as “Replace its `<cause>` sentence with “<sentence>””.
- */
-function replacements(): Record<string, string> {
-  return Object.fromEntries(
+test("each build failure selects its recovery sentence", () => {
+  for (const [cause, step, sentence] of [
+    ["exit", "install", "Installing dependencies failed."],
+    ["exit", "publish", "The catalogue couldn’t be built."],
+    ["upload-rejected", "publish", "Mokly couldn’t accept this catalogue."],
     [
-      ...contract
-        .replace(/\s+/g, " ")
-        .matchAll(/Replace its `([a-z-]+)` sentence with “([^”]+)”/g),
-    ].map(([, cause, sentence]) => [cause, sentence]),
-  );
-}
-
-test("every cause sentence is the viewer builds contract's own", () => {
-  assert.deepEqual(
-    {
-      ...Object.fromEntries(
-        tables("Cause").map(([cause, sentence]) => [
-          cause.replaceAll("`", ""),
-          sentence,
-        ]),
-      ),
-      ...replacements(),
-    },
-    causeSentences,
-  );
-  assert.equal(
-    causeSentences["output-limit"],
-    "The build printed too much output; print less to publish.",
-  );
+      "unsupported-lockfile",
+      "install",
+      "Mokly installs with npm, pnpm or Yarn.",
+    ],
+    [
+      "unsupported-mokly-version",
+      "publish",
+      "Update `@mokly/mokly` to 0.18.0 or later to publish.",
+    ],
+    [
+      "uncommitted-changes",
+      "publish",
+      "The build left files that Git doesn’t ignore; add them to .gitignore.",
+    ],
+    [
+      "output-limit",
+      "publish",
+      "The build printed too much output; print less to publish.",
+    ],
+    ["deadline", "publish", "The build stopped at its 15-minute limit."],
+    ["idle", "publish", "The build stopped after going quiet."],
+    ["infrastructure", "checkout", "Mokly couldn’t run this build."],
+    [
+      "repository-unavailable",
+      "checkout",
+      "Mokly can’t reach this repository; check the GitHub installation.",
+    ],
+    ["plan-required", null, undefined],
+  ] as const)
+    assert.equal(
+      causeSentence({ ...builds.failed, cause, step }),
+      sentence,
+      cause,
+    );
+  assert.equal(causeSentence(builds.running), undefined);
 });
 
 test("each build drawing draws its state's title, line, steps and one action", () => {

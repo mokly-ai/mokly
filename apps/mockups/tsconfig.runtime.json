@@ -46,18 +46,9 @@
       "@mokly/ui/workspace-layout": [
         "../../node_modules/@mokly/ui/dist/workspace-layout/workspace-layout.js"
       ],
-      "react": [
-        "../../node_modules/react/index.js",
-        "../../node_modules/@types/react/index.d.ts"
-      ],
-      "react/*": [
-        "../../node_modules/react/*.js",
-        "../../node_modules/@types/react/*.d.ts"
-      ],
-      "react-dom/*": [
-        "../../node_modules/react-dom/*.js",
-        "../../node_modules/@types/react-dom/*.d.ts"
-      ],
+      "react": ["../../node_modules/react/index.js"],
+      "react/*": ["../../node_modules/react/*.js"],
+      "react-dom/*": ["../../node_modules/react-dom/*.js"],
       "@playwright/test": ["../../node_modules/@playwright/test/index.mjs"],
       "parse5": ["../../node_modules/parse5/dist/index.js"],
       "typescript": ["../../node_modules/typescript/lib/typescript.js"],

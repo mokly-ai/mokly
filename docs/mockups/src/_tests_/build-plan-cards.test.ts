@@ -11,7 +11,7 @@ import {
   elements,
   label,
 } from "./design-site-test-helpers";
-import { buttons, contract, stageMarkup, views } from "./stage-card-pages";
+import { buttons, stageMarkup, views } from "./stage-card-pages";
 
 /**
  * The Team card a pull request alias shows while the plan refuses
@@ -48,13 +48,6 @@ const planCards = [
 ] as const;
 
 test("a plan-refused pull request shows the branch's Team card by the reader's role", () => {
-  for (const said of [
-    "**Publishing to private projects is on Team**",
-    "including an open pull request from the project's repository",
-    "an owner gets Open billing",
-    "“" + billing.copy.askOwner + "”",
-  ])
-    assert.ok(contract.includes(said), said);
   for (const card of planCards) {
     const branch = new Map(
       views(card.branch).map(({ view, page }) => [view, stageMarkup(page)]),

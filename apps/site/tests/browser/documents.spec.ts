@@ -3,8 +3,6 @@ import { expect, test } from "@playwright/test";
 import { readReleases } from "../../src/changelog/releases.js";
 import { SITE_PATHS } from "../../src/navigation.js";
 
-import { BREAKPOINT } from "./routes.js";
-
 const RELEASES = readReleases();
 
 test("the changelog publishes every release, newest first", async ({
@@ -135,52 +133,50 @@ for (const [
   });
 }
 
-test("desktop release lists start 12px below their heading lines", async ({
-  page,
-}) => {
-  test.skip(
-    (page.viewportSize()?.width ?? 0) < BREAKPOINT,
-    "the mobile release rows have one column",
-  );
-  await page.goto(SITE_PATHS.changelog);
-  for (const release of RELEASES) {
-    const row = page.getByRole("article").filter({
-      has: page.getByRole("heading", {
-        level: 2,
-        name: `Mokly CLI ${release.version}`,
-        exact: true,
-      }),
-    });
-    for (const section of release.sections) {
-      const heading = row.getByText(section.heading, { exact: true });
-      // Geometry needs browser evaluation. The text lines expose empty height
-      // in a stretched heading box that a box-to-box gap would miss.
-      const measured = await heading.evaluate(async (element) => {
-        await document.fonts.ready;
-        const list = element.nextElementSibling;
-        if (!(list instanceof HTMLUListElement)) {
-          throw new Error("the release group is missing its notes list");
-        }
-        const box = element.getBoundingClientRect();
-        const text = document.createRange();
-        text.selectNodeContents(element);
-        const lines = new Set(
-          Array.from(text.getClientRects(), (line) => line.top),
-        ).size;
-        const intrinsicHeight =
-          Number.parseFloat(getComputedStyle(element).lineHeight) * lines;
-        return {
-          headingHeight: box.height,
-          intrinsicHeight,
-          gap: list.getBoundingClientRect().top - box.top - intrinsicHeight,
-        };
+test(
+  "desktop release lists start 12px below their heading lines",
+  { tag: "@desktop" },
+  async ({ page }) => {
+    await page.goto(SITE_PATHS.changelog);
+    for (const release of RELEASES) {
+      const row = page.getByRole("article").filter({
+        has: page.getByRole("heading", {
+          level: 2,
+          name: `Mokly CLI ${release.version}`,
+          exact: true,
+        }),
       });
-      expect
-        .soft(
-          measured.gap,
-          `Mokly CLI ${release.version} / ${section.heading}: ${JSON.stringify(measured)}`,
-        )
-        .toBe(12);
+      for (const section of release.sections) {
+        const heading = row.getByText(section.heading, { exact: true });
+        // Geometry needs browser evaluation. The text lines expose empty height
+        // in a stretched heading box that a box-to-box gap would miss.
+        const measured = await heading.evaluate(async (element) => {
+          await document.fonts.ready;
+          const list = element.nextElementSibling;
+          if (!(list instanceof HTMLUListElement)) {
+            throw new Error("the release group is missing its notes list");
+          }
+          const box = element.getBoundingClientRect();
+          const text = document.createRange();
+          text.selectNodeContents(element);
+          const lines = new Set(
+            Array.from(text.getClientRects(), (line) => line.top),
+          ).size;
+          const intrinsicHeight =
+            Number.parseFloat(getComputedStyle(element).lineHeight) * lines;
+          return {
+            headingHeight: box.height,
+            intrinsicHeight,
+            gap: list.getBoundingClientRect().top - box.top - intrinsicHeight,
+          };
+        });
+        expect
+          .soft(
+            measured.gap,
+            `Mokly CLI ${release.version} / ${section.heading}: ${JSON.stringify(measured)}`,
+          )
+          .toBe(12);
+      }
     }
-  }
-});
+  },
+);

@@ -21,6 +21,7 @@ export default defineConfig({
     ...[390, 1440].flatMap((width) =>
       (["light", "dark"] as const).map((colorScheme) => ({
         name: `${width}-${colorScheme}`,
+        grepInvert: width === 390 ? /@desktop/ : /@mobile/,
         use: { colorScheme, viewport: { width, height: 900 } },
       })),
     ),

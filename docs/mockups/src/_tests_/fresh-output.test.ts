@@ -28,7 +28,7 @@ test("mockups:test requires a build before policy or browser modules load", asyn
     "node -e \"throw Error('browser loaded')\"";
   await fixture.write(
     "package.json",
-    '{"private":true,"workspaces":["mockups"]}',
+    '{"private":true,"workspaces":["apps/mockups"]}',
   );
   await fixture.write("apps/mockups/package.json", JSON.stringify(original));
   await symlink(
@@ -48,14 +48,7 @@ test("mockups:test requires a build before policy or browser modules load", asyn
   await assert.rejects(
     promisify(execFile)(
       "npm",
-      [
-        "--prefix",
-        "ts",
-        "run",
-        "mockups:test",
-        "--workspace",
-        "@mokly-cloud/mockups",
-      ],
+      ["run", "mockups:test", "--workspace", "@mokly-cloud/mockups"],
       { cwd: fixture.root, env: fixtureGitEnvironment() },
     ),
     (error: Error & { stdout?: string; stderr?: string }) => {

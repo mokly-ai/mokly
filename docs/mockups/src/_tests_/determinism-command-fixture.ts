@@ -40,7 +40,7 @@ export async function determinismCommandFixture(drift = false) {
     "node -e \"throw Error('browser loaded')\"";
   await fixture.write(
     "package.json",
-    '{"type":"module","private":true,"workspaces":["mockups"]}',
+    '{"type":"module","private":true,"workspaces":["apps/mockups"]}',
   );
   await fixture.write("apps/mockups/package.json", JSON.stringify(original));
   for (const file of ["check-determinism.mjs", "determinism.mjs"])
@@ -67,7 +67,7 @@ await appendFile(path.join(root,'build-calls'),'build\\n');
   const run = (script: string) =>
     promisify(execFile)(
       "npm",
-      ["--prefix", "ts", "run", script, "--workspace", "@mokly-cloud/mockups"],
+      ["run", script, "--workspace", "@mokly-cloud/mockups"],
       { cwd: fixture.root, env: fixtureGitEnvironment() },
     );
   return { ...fixture, index, run };

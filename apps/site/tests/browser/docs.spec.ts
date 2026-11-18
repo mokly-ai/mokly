@@ -50,50 +50,51 @@ test("the section tree marks the page and opens another one", async ({
   ).toHaveText("Install");
 });
 
-test("the selected tree row keeps its position across docs pages", async ({
-  page,
-}) => {
-  test.skip(narrow(page), "the mobile tree is a disclosure");
-  await page.goto("/docs/start/install/");
-  const scroll = page.locator(".site-docs-side .site-doc-tree-scroll");
-  const link = scroll.locator('a[href="/docs/cli/check/"]');
-  await scroll.evaluate((element) => {
-    const row = element.querySelector('a[href="/docs/cli/check/"]');
-    if (!row) throw new Error("check is missing from the docs tree");
-    element.scrollTop +=
-      row.getBoundingClientRect().top -
-      element.getBoundingClientRect().top -
-      element.clientHeight / 2;
-  });
-  const before = await scroll.evaluate((element) => {
-    const row = element.querySelector('a[href="/docs/cli/check/"]');
-    if (!row) throw new Error("check is missing from the docs tree");
-    return {
-      rowTop:
-        row.getBoundingClientRect().top - element.getBoundingClientRect().top,
-      scrollTop: element.scrollTop,
-    };
-  });
-  expect(before.scrollTop).toBeGreaterThan(100);
+test(
+  "the selected tree row keeps its position across docs pages",
+  { tag: "@desktop" },
+  async ({ page }) => {
+    await page.goto("/docs/start/install/");
+    const scroll = page.locator(".site-docs-side .site-doc-tree-scroll");
+    const link = scroll.locator('a[href="/docs/cli/check/"]');
+    await scroll.evaluate((element) => {
+      const row = element.querySelector('a[href="/docs/cli/check/"]');
+      if (!row) throw new Error("check is missing from the docs tree");
+      element.scrollTop +=
+        row.getBoundingClientRect().top -
+        element.getBoundingClientRect().top -
+        element.clientHeight / 2;
+    });
+    const before = await scroll.evaluate((element) => {
+      const row = element.querySelector('a[href="/docs/cli/check/"]');
+      if (!row) throw new Error("check is missing from the docs tree");
+      return {
+        rowTop:
+          row.getBoundingClientRect().top - element.getBoundingClientRect().top,
+        scrollTop: element.scrollTop,
+      };
+    });
+    expect(before.scrollTop).toBeGreaterThan(100);
 
-  await link.click();
-  await expect(page).toHaveURL(/\/docs\/cli\/check\/$/);
-  const after = await scroll.evaluate((element) => {
-    const row = element.querySelector('a[href="/docs/cli/check/"]');
-    if (!row) throw new Error("check is missing from the docs tree");
-    return {
-      rowTop:
-        row.getBoundingClientRect().top - element.getBoundingClientRect().top,
-      scrollTop: element.scrollTop,
-    };
-  });
-  expect(Math.abs(after.scrollTop - before.scrollTop)).toBeLessThan(2);
-  expect(Math.abs(after.rowTop - before.rowTop)).toBeLessThan(2);
-  await expect(scroll.locator('[aria-current="page"]')).toHaveAttribute(
-    "href",
-    "/docs/cli/check/",
-  );
-});
+    await link.click();
+    await expect(page).toHaveURL(/\/docs\/cli\/check\/$/);
+    const after = await scroll.evaluate((element) => {
+      const row = element.querySelector('a[href="/docs/cli/check/"]');
+      if (!row) throw new Error("check is missing from the docs tree");
+      return {
+        rowTop:
+          row.getBoundingClientRect().top - element.getBoundingClientRect().top,
+        scrollTop: element.scrollTop,
+      };
+    });
+    expect(Math.abs(after.scrollTop - before.scrollTop)).toBeLessThan(2);
+    expect(Math.abs(after.rowTop - before.rowTop)).toBeLessThan(2);
+    await expect(scroll.locator('[aria-current="page"]')).toHaveAttribute(
+      "href",
+      "/docs/cli/check/",
+    );
+  },
+);
 
 test("the tree carries the published version and links the changelog", async ({
   page,

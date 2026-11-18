@@ -90,21 +90,14 @@ test("mockups:check validates without reading or replacing local output", async 
   );
   await fixture.write(
     "package.json",
-    '{"private":true,"workspaces":["mockups"]}',
+    '{"private":true,"workspaces":["apps/mockups"]}',
   );
   await fixture.write("apps/mockups/package.json", manifest);
   const environment = fixtureGitEnvironment();
   const check = () =>
     promisify(execFile)(
       "npm",
-      [
-        "--prefix",
-        "ts",
-        "run",
-        "mockups:check",
-        "--workspace",
-        "@mokly-cloud/mockups",
-      ],
+      ["run", "mockups:check", "--workspace", "@mokly-cloud/mockups"],
       { cwd: fixture.root, env: environment },
     );
   const checkout = checkoutStamp(fixture.root, environment);

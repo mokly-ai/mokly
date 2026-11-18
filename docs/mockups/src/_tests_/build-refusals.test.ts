@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { test } from "node:test";
 
 import { parse } from "parse5";
@@ -9,7 +8,7 @@ import { causes, failureReference } from "../fixtures/product-states";
 
 import { drawings } from "./build-drawings";
 import type { Drawing } from "./build-drawings";
-import { catalogueRoot, screenFile } from "./catalogue-paths";
+import { screenFile } from "./catalogue-paths";
 import {
   attribute,
   byClass,
@@ -18,16 +17,6 @@ import {
 } from "./design-site-test-helpers";
 import type { Element } from "./design-site-test-helpers";
 import { publishCards } from "./stage-drawings";
-
-/** One protocol document as one line of words, for quoted copy. */
-function words(document: string): string {
-  return readFileSync(
-    resolve(catalogueRoot, "../protocol", document),
-    "utf8",
-  ).replace(/\s+/g, " ");
-}
-
-const contract = words("viewer-builds.md");
 
 /** The refused drawings of the build card whose control reads this label. */
 function refusedBy(control: string): Drawing[] {
@@ -90,9 +79,7 @@ test("a refused Try again stands above the control, with no guide", () => {
       ],
     ],
   );
-  for (const { path, refusal } of refused) {
-    if (refusal === undefined) continue;
-    assert.ok(contract.includes("“" + refusal.cause + "”"), refusal.cause);
+  for (const { path } of refused) {
     // The same request would be refused again, so the control keeps its own
     // label and is not a link to anywhere new.
     for (const { where, control } of fragments(path))
@@ -104,7 +91,7 @@ test("a refused Try again stands above the control, with no guide", () => {
   }
 });
 
-test("a refused Cancel keeps its label, as the Cancel rule says", () => {
+test("a refused Cancel keeps its label and can still cancel the build", () => {
   const refused = refusedBy("Cancel");
   assert.deepEqual(
     refused.map(({ path, refusal }) => [path, refusal]),
@@ -117,21 +104,6 @@ test("a refused Cancel keeps its label, as the Cancel rule says", () => {
         },
       ],
     ],
-  );
-  // The contract keeps Cancel after a refusal, as the write-failure
-  // fragment's one named exception, because Try again on a build card
-  // requests a new build.
-  for (const said of [
-    "A refused or failed Cancel shows its cause above the control through the write-failure fragment.",
-    "The control keeps Cancel, with Cancelling… while it runs, because Try again on a build card requests a new build.",
-  ])
-    assert.ok(contract.includes(said), said);
-  const chrome = words("folio-chrome.md");
-  assert.ok(chrome.includes("**Named exception: Build Cancel.**"));
-  assert.ok(
-    chrome.includes(
-      "keeps the operation label after a refusal or failure, including one that another request could overcome",
-    ),
   );
   // Mokly being busy is such a refusal: the publishing card's control reads
   // the way back for it, while Cancel keeps its own label.

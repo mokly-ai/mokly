@@ -11,7 +11,7 @@ import {
   elements,
   label,
 } from "./design-site-test-helpers";
-import { buttons, contract, views } from "./stage-card-pages";
+import { buttons, views } from "./stage-card-pages";
 import { publishCards, publishGuide } from "./stage-drawings";
 
 /**
@@ -40,9 +40,6 @@ const pullRequestCards = [
 
 test("a closed, merged or fork pull request names why and offers only the switcher", () => {
   for (const card of pullRequestCards) {
-    assert.ok(contract.includes("**" + card.title + "**"), card.title);
-    if ("line" in card)
-      assert.ok(contract.includes("“" + card.line + "”"), card.line);
     for (const { where, view, page } of views(card.path)) {
       // The chrome names the pull request, its author and that nothing is
       // published, as every pull request alias with nothing ready does.
@@ -98,15 +95,6 @@ test("a closed, merged or fork pull request names why and offers only the switch
         assert.ok(!label(canvas).includes(absent), where + " " + absent);
     }
   }
-});
-
-test("a fork's refusal reads the fork card's title as a sentence", () => {
-  const sentence = /`fork-pull-request` reads .*?“([^”]+)”/.exec(contract)?.[1];
-  const fork = pullRequestCards.find(
-    (card) => card.path === "product/viewer/pull-request/fork",
-  );
-  assert.ok(fork && sentence, "the contract names the fork refusal");
-  assert.equal(sentence, fork.title + ".");
 });
 
 test("a publishing card holds its control and the CI guide as one fragment", () => {

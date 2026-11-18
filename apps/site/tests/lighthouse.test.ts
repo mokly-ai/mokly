@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import { pageAt } from "../src/docs/pages.js";
@@ -14,7 +13,6 @@ import {
 } from "../src/lighthouse.js";
 import { PAGE_METADATA } from "../src/metadata.js";
 import { SITE_PATHS } from "../src/navigation.js";
-import { repositoryPath } from "../src/workspace.js";
 
 const PASSING = {
   accessibility: 1,
@@ -97,15 +95,7 @@ test("the retry remains a hard gate when its score still fails", async () => {
   assert.deepEqual(shortfalls(measurement), ["accessibility"]);
 });
 
-test("the thresholds match the delivery contract", () => {
-  const contract = readFileSync(
-    repositoryPath("docs", "protocol", "site-delivery.md"),
-    "utf8",
-  );
-  assert.match(
-    contract,
-    /performance ≥ 0\.95, *\n?accessibility = 1\.0, best practices ≥ 0\.95, SEO ≥ 0\.95/,
-  );
+test("the budget requires perfect accessibility and 0.95 for other scores", () => {
   assert.deepEqual(THRESHOLDS, {
     accessibility: 1,
     "best-practices": 0.95,

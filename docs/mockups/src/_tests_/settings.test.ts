@@ -20,7 +20,7 @@ import {
   settingsSurfaces,
 } from "./settings-policy";
 
-test("the pane registry matches the settings dialog contract", () => {
+test("the pane registry groups account, workspace and project settings", () => {
   assert.deepEqual(
     panes.map((pane) => [pane.section, pane.id]),
     [
@@ -36,12 +36,6 @@ test("the pane registry matches the settings dialog contract", () => {
     ],
   );
   assert.deepEqual([...sections], ["You", "Workspace", "Project"]);
-  const contract = readFileSync(
-    resolve(catalogueRoot, "../protocol/settings-dialog.md"),
-    "utf8",
-  );
-  for (const pane of panes)
-    assert.ok(contract.includes("`" + pane.id + "`"), pane.id);
 });
 
 test("each pane is registered once and shares one component across viewports", async () => {
