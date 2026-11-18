@@ -194,6 +194,8 @@ Evidence: `.context/sidecar-bundle-hot-path/implementation-report.md` and the ev
 
 ## Milestone 3: Measurements and verification
 
+Status: Complete.
+
 Depends on: 2
 
 The workspace orchestrator owns the combined checks. Use built sidecars from the last merged main and this branch. Use the same inputs and dependency installation. Run measured processes one at a time.
@@ -201,7 +203,7 @@ The workspace orchestrator owns the combined checks. Use built sidecars from the
 - [x] Measure `sidecar.bundle` and `sidecar.bundle.compile` with `--debug-timings` on `examples/basic` and the generated large React fixture from `scripts/large/`. Save interleaved before/after samples and their means.
 - [x] Run the required example build and Serve smoke check.
 - [x] Put Git 2.45 or later first on PATH. Install Git LFS. Check disk and memory before every large Cargo build. Set `CARGO_INCREMENTAL=0`, limit build concurrency, and use one Cargo target directory per checkout.
-- [ ] Run targeted tests, `cargo xtask check --suite repository`, and `cargo xtask check`. Record each failure and any machine blocker. Rerun an unrelated failure once without weakening the check.
+- [x] Run targeted tests, `cargo xtask check --suite repository`, and `cargo xtask check`. Record each failure and any machine blocker. Rerun an unrelated failure once without weakening the check.
 
 Evidence: `.context/sidecar-bundle-hot-path/measurements.md`, `verification.md`, and command logs.
 
