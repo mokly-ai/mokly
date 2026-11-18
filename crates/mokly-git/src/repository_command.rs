@@ -2,7 +2,7 @@
 
 use std::ffi::OsString;
 
-use crate::command::{DEFAULT_STDERR_LIMIT, ProcessMode, Request};
+use crate::command::{DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, ProcessMode, Request};
 use crate::error::Result;
 use crate::repository::GitRepository;
 
@@ -18,21 +18,41 @@ impl GitRepository {
         stdin: Vec<u8>,
         limit: usize,
     ) -> Result<Vec<u8>> {
+        Ok(self
+            .runner
+            .run(&self.request(process_mode, args, stdin, limit))?
+            .stdout)
+    }
+
+    /// Own lazy-fetch helpers whenever this repository has a promisor remote.
+    pub(crate) fn tree_request(&self, args: &[&str]) -> Request {
+        let mode = if self.promisor_remotes.is_empty() {
+            ProcessMode::PlainGroup
+        } else {
+            ProcessMode::FullTree
+        };
+        self.request(mode, args, Vec::new(), DEFAULT_OUTPUT_LIMIT)
+    }
+
+    fn request(
+        &self,
+        process_mode: ProcessMode,
+        args: &[&str],
+        stdin: Vec<u8>,
+        limit: usize,
+    ) -> Request {
         let mut arguments = vec![
             OsString::from("--no-optional-locks"),
             OsString::from("--literal-pathspecs"),
         ];
         arguments.extend(args.iter().map(OsString::from));
-        Ok(self
-            .runner
-            .run(&Request {
-                process_mode,
-                directory: self.directory.clone(),
-                args: arguments,
-                stdin,
-                output_limit: limit,
-                stderr_limit: DEFAULT_STDERR_LIMIT,
-            })?
-            .stdout)
+        Request {
+            process_mode,
+            directory: self.directory.clone(),
+            args: arguments,
+            stdin,
+            output_limit: limit,
+            stderr_limit: DEFAULT_STDERR_LIMIT,
+        }
     }
 }
