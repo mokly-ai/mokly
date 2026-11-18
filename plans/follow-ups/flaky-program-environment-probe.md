@@ -99,13 +99,32 @@
   - At `a91720bca`, `program_tests.rs`, `programs.rs`, and `process.rs` match
     `origin/main` at `0accb6818`. None of them changed since `0b82cf6c0`, so
     every line pointer of this item still holds.
+  - The third failure:
+    - On 2026-11-18, `cargo xtask check --suite repository` ran at
+      `58335472e` with staged UI export-ratchet changes on
+      `calummoore/fu-ui-export-ratchet-baseline-psdh`. The branch changes none
+      of the test or product paths that this item names.
+    - `cargo test --locked --workspace` exited 101. The parent test panicked
+      at `program_tests.rs:170:5`. Its child panicked at line 143 with
+      this error:
+
+      ```text
+      called `Result::unwrap()` on an `Err` value: CommandUnavailable
+      ```
+
+    - The failed binary reported
+      `6 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out`.
+    - One unchanged rerun passed:
+      `cargo test --locked -p mokly-compare --test program_tests environment_probe_runs_with_a_token_and_absolute_manager_path -- --exact --nocapture`.
+      It reported `1 passed; 0 failed; 0 ignored; 6 filtered out` and exited 0.
+      No process trace was taken. The source stays unknown.
   - Suspected source: unknown. One candidate is a start failure of the
     short-lived shebang script that the parent test had just written, while
     other tests of the same binary started processes. Nobody reproduced or
     traced the failure, so this candidate is not a confirmed cause. Nobody
     took a trace of the second failure either, so the source stays unknown.
-- **Problem:** The parent test failed twice on 2026-11-17: first in the
-  complete gate, and then in a repository suite run of another branch. Each
+- **Problem:** The parent test failed twice on 2026-11-17 and once on
+  2026-11-18, in a complete gate and repository suite runs. Each
   time, the child test's spawn of the fixture `npm` returned
   `CommandUnavailable`, and an unchanged single rerun passed. The error keeps
   no OS error, so the source is unknown.
