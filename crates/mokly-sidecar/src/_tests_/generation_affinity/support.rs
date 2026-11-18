@@ -68,6 +68,7 @@ pub(super) fn pool(slots: &[(&str, Loaded)]) -> Pool {
         Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(())),
         Launch {
+            capture_durability: false,
             repository: "/head".into(),
             node: "node".into(),
             entry: "sidecar.js".into(),

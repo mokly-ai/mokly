@@ -8,7 +8,7 @@
   unmerged branch adds `crates/mkc-mokly-contract/src/catalogue_index.rs`
   as a version 8 reader. In this repository,
   `docs/protocol/fixtures/catalogue-v9.json` and
-  `docs/protocol/mokly-format-versions.md:80`.
+  `docs/protocol/mokly-format-versions.md:81`.
 - **Reason:** Mokly Cloud pins a released Mokly, so it can move only after the
   release that holds PR #224.
 
@@ -31,7 +31,7 @@
     unmerged adoption branch `conductor/adopt-mokly-without-reviewjson`. On
     2026-10-30 the receiver on `main`, at `860b163f`, still reads review
     version 6 and pins Mokly 0.14.0.
-  - `docs/protocol/mokly-format-versions.md:80` says that Mokly Cloud reads
+  - `docs/protocol/mokly-format-versions.md:81` says that Mokly Cloud reads
     catalogue version 9.
 - **Task:**
   1. In `mokly-ai/mokly-cloud`, pin the release that holds PR #224.

@@ -18,6 +18,7 @@ use mokly_graph::resource_inputs::{MemoryResourceInputs, ResourceInputs};
 use mokly_graph::source_snapshot::SourceSnapshot;
 use mokly_graph::types::{GraphFactory, RenderGraph};
 use mokly_graph::workers::RenderWorkers;
+use mokly_sidecar::methods::BundleCapture;
 use mokly_sidecar::pool::SidecarPool;
 use mokly_source_interface::tree::SourceTree;
 
@@ -25,6 +26,7 @@ use crate::bundle::BundleState;
 use crate::dependency_usage::{DependencyUsage, UsedDependencies};
 use crate::graph::JavaScriptGraph;
 use crate::leases::PreparedLease;
+use crate::physical_inputs::PhysicalInputs;
 use crate::postcss_cache::CssCache;
 use crate::side::{BaseSide, SideInputs};
 use crate::stylesheet_store::StylesheetCache;
@@ -40,8 +42,12 @@ pub struct Runtime {
     pub(crate) inventory_tree: Arc<dyn SourceTree>,
     /// Physical reader for the selected installed third-party dependencies.
     pub dependency_tree: Arc<dyn SourceTree>,
+    /// Filesystem reader for physical compilation evidence outside the side tree.
+    pub physical_inputs: Arc<dyn PhysicalInputs>,
     /// Lazily started Node processes.
     pub pool: Arc<dyn SidecarPool>,
+    /// Per-request evidence policy; Serve selects edit mode after its first publication.
+    pub bundle_capture: BundleCapture,
     /// Shared byte-bounded render cache.
     pub cache: Arc<dyn RenderCache>,
     /// Worker scheduler supplied by the composition root.
@@ -83,9 +89,14 @@ impl Runtime {
             })
     }
     /// Assemble runtime services without starting a sidecar or reading sources.
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "source trees and physical reuse evidence have separate injectable read boundaries"
+    )]
     pub fn new(
         tree: Arc<dyn SourceTree>,
         dependency_tree: Arc<dyn SourceTree>,
+        physical_inputs: Arc<dyn PhysicalInputs>,
         pool: Arc<dyn SidecarPool>,
         cache: Arc<dyn RenderCache>,
         workers: Arc<dyn RenderWorkers>,
@@ -96,7 +107,9 @@ impl Runtime {
             inventory_tree: tree.clone(),
             tree,
             dependency_tree,
+            physical_inputs,
             pool,
+            bundle_capture: BundleCapture::Full,
             cache,
             workers,
             version,
@@ -194,3 +207,7 @@ impl GraphFactory for Runtime {
 #[cfg(test)]
 #[path = "_tests_/runtime_tests.rs"]
 mod runtime_tests;
+
+#[cfg(test)]
+#[path = "_tests_/bundle_reuse_tests.rs"]
+mod bundle_reuse_tests;

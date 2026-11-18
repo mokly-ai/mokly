@@ -5,6 +5,7 @@ use std::sync::Arc;
 use crate::error::{Error, Result};
 use crate::methods::Call;
 use crate::pool::Pool;
+use crate::pool_bundle_cache::BundleAttempt;
 use crate::pool_cleanup;
 use crate::pool_preparation::Prerequisites;
 use crate::pool_state::Slot;
@@ -16,10 +17,11 @@ impl Pool {
         slot: &mut Slot,
         call: &Call,
         deadline: u64,
+        attempt: &mut BundleAttempt,
     ) -> Result<MethodResult> {
         self.cleanup(slot)?;
         if let Call::Bundle(params) = call {
-            self.seed_compilation(slot, params)?;
+            self.seed_bundle(slot, params, attempt)?;
         }
         if let Some(generation) = generation(call) {
             let prerequisites = Prerequisites::for_call(call);
@@ -74,18 +76,18 @@ impl Pool {
                         .or_default()
                         .insert(epoch);
                     let compiled = &result.compiled;
-                    let restored = state.recipes.take_reused(bundle, compiled);
+                    let restored = state.recipes.take_reused(&bundle.params, compiled);
                     let shared = state
                         .compiled
                         .values()
                         .find(|value| value.same_recipe(compiled))
                         .cloned()
                         .or(restored)
-                        .unwrap_or_else(|| Arc::new(compiled.clone()));
+                        .unwrap_or_else(|| compiled.clone());
                     state.compiled.insert(result.generation.clone(), shared);
                     state
                         .bundles
-                        .insert(result.generation.clone(), bundle.clone());
+                        .insert(result.generation.clone(), bundle.params.clone());
                     slot.generations.insert(result.generation.clone(), epoch);
                     slot.maps.remove(&result.generation);
                     slot.described.remove(&result.generation);
@@ -133,6 +135,9 @@ impl Pool {
                 }
                 _ => {}
             }
+        }
+        if let (Call::Bundle(params), MethodResult::Bundle(bundle)) = (call, &mut result) {
+            self.complete_bundle(params, bundle, attempt);
         }
         Ok(result)
     }

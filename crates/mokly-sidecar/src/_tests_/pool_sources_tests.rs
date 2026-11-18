@@ -16,6 +16,7 @@ fn pool(factory: Unimock, size: usize) -> Pool {
         Arc::new(factory),
         Arc::new(Unimock::new(())),
         Launch {
+            capture_durability: false,
             repository: "/head".into(),
             node: "node".into(),
             entry: "/package/sidecar.js".into(),

@@ -174,14 +174,89 @@ the packed contents of the package.
 - [`src/sidecar.ts`](./src/sidecar.ts) is the sidecar process entry, which
   reads framed requests from the binary and writes one response for each.
 - [`src/sidecar/session.ts`](./src/sidecar/session.ts) holds `Session`, which
-  dispatches each sidecar request to its method.
+  dispatches each sidecar request to its method. It removes the request-only
+  `capture` value of a `bundle` request before the reuse check, the compile,
+  the identity, and the restore see the settings. It gives a
+  `CaptureDurability` only to a `full` request.
 - [`src/sidecar/transport.ts`](./src/sidecar/transport.ts) splits and decodes
   the binary's typed requests and limits the size of each response.
 - [`src/sidecar/bundle.ts`](./src/sidecar/bundle.ts) holds `bundle`, which
   compiles the catalogue modules. esbuild resolves most imports itself, and
   [`src/sidecar/native-plan.ts`](./src/sidecar/native-plan.ts) classifies the
   result. It plans a second compile when esbuild's own resolution would change
-  the bundle.
+  the bundle. In a `full` call, one evidence owner and one preparation serve
+  every attempt. A `serveEdit` call creates no evidence owner, no evidence
+  plugin, and no durability check. It still records the consumed sources, the
+  module graph, the metadata digests, and the directory lists.
+  [`src/sidecar/bundle-entry.ts`](./src/sidecar/bundle-entry.ts) builds the
+  virtual entry module. Without a captured preview selection, a `serveEdit`
+  call selects only a regular preview file.
+- [`src/sidecar/bundle-recipe.ts`](./src/sidecar/bundle-recipe.ts) holds
+  `bundleRecipe`, which turns one compile into its compiled recipe: the module
+  graph, the input digests, the reuse evidence, the toolchain identity, and
+  the compilation identity. An incomplete recipe gets a fresh identity, also
+  when `checkRecipeSize` in
+  [`src/sidecar/recipe-size.ts`](./src/sidecar/recipe-size.ts) drops its
+  evidence to fit a frame. A `serveEdit` compile gets empty, incomplete
+  evidence with the `uncaptured: "serveEdit"` marker. A compile without a
+  toolchain identity gets no marker.
+- [`src/sidecar/compiled.ts`](./src/sidecar/compiled.ts) holds `reuse`, which
+  accepts an earlier compilation only while its settings, dependency roots,
+  toolchain, input digests, and directory lists still match. It tries the
+  captured compilations first, and also checks their reuse evidence. Then a
+  `serveEdit` request tries the marked compilations with these live checks
+  alone. A `full` request never takes a marked compilation. Its `restore`
+  installs a recipe without a compile.
+- [`src/sidecar/toolchain.ts`](./src/sidecar/toolchain.ts) holds
+  `toolchainIdentity`, which each sidecar process computes once from the
+  package root, the Mokly, esbuild, and Node versions, and every `dist/` file.
+- [`src/sidecar/resolution-evidence.ts`](./src/sidecar/resolution-evidence.ts)
+  holds `ResolutionEvidence`, the esbuild plugin that records the candidate
+  directories, manifests, and configurations of each import before esbuild
+  resolves it. A form that it cannot map makes the evidence incomplete.
+  [`src/sidecar/resolution-request.ts`](./src/sidecar/resolution-request.ts)
+  applies written plugin names and aliases before built-in filtering.
+  [`src/sidecar/config-inputs.ts`](./src/sidecar/config-inputs.ts) records
+  each `tsconfig.json` or `jsconfig.json` and its `extends` chain, and
+  [`src/sidecar/config-json.ts`](./src/sidecar/config-json.ts) parses JSON
+  with comments and trailing commas.
+- [`src/sidecar/physical-inputs.ts`](./src/sidecar/physical-inputs.ts) holds
+  `PhysicalInputs`, the one owner of the evidence reads. It reads each
+  metadata file within 1 MiB, parses the configurations, and queues each
+  unique resolution request once. Each queued capture uses synchronous
+  filesystem reads before esbuild resolves the import. Its retained
+  observations, metadata read bytes, visited paths, and request keys each stay
+  within 8 MiB. Each charged visited path keeps its first-touch kind. Later
+  presence and kind probes of the same capture use that kind, but metadata
+  content and link targets are still read. `currentEvidence` reads the
+  evidence again for a reuse check, with no saved kind. The protected
+  filesystem operations of the same owner are in
+  [`src/sidecar/physical-input-reader.ts`](./src/sidecar/physical-input-reader.ts),
+  which uses bounded reads and `realpathSync.native` for canonical paths. Its
+  `pathKinds` map holds the first-touch kinds, of the `CaptureKind` type in
+  [`src/sidecar/capture-kind.ts`](./src/sidecar/capture-kind.ts).
+  [`src/sidecar/file-digests.ts`](./src/sidecar/file-digests.ts) streams each
+  file digest through one 64 KiB buffer and checks inputs with four workers.
+- [`src/sidecar/capture-durability.ts`](./src/sidecar/capture-durability.ts)
+  holds `CaptureDurability`, which decides the `durable` flag of the reuse
+  evidence when `hello` carries a `capture` hint. Before the first observation
+  of a compile, it can wait once, until at most 50 ms after the compile starts.
+  It records the stamps and the identity of each directory and metadata file
+  at the first touch, and it reads them again after the last attempt. It never
+  changes `complete`.
+  [`src/sidecar/capture-paths.ts`](./src/sidecar/capture-paths.ts) follows raw
+  link targets and observes their parent directories within the same path bound.
+  Through `CaptureDurability.sharePaths`, `CapturePaths.share` borrows the kinds
+  that the physical owner already charged and witnessed. A repeat of a
+  successful whole walk checks its recorded expansion charge again.
+  `CaptureDurability.finish` still reads each witness afresh.
+  [`src/sidecar/capture-runtime.ts`](./src/sidecar/capture-runtime.ts) holds
+  the stat and clock boundary and the age guard. On Windows, its
+  `captureSnapshot` reads a witness through `handleStat`, a read-only handle
+  stat, because some libuv versions report a wrong device for a path stat.
+  `sameCaptureStat` compares a witness with its recheck.
+  [`src/sidecar/capture-volumes.ts`](./src/sidecar/capture-volumes.ts)
+  classifies each volume by its Linux file system type or by the hint.
 - [`src/sidecar/postcss.ts`](./src/sidecar/postcss.ts) holds `PostcssWorkers`,
   which owns the PostCSS child processes.
 - [`src/generated/sidecar`](./src/generated/sidecar) holds the request and

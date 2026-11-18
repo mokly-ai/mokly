@@ -20,6 +20,8 @@ mod changes_static;
 mod changes_support;
 mod design_support;
 
+#[path = "../src/bundle_runtime.rs"]
+mod bundle_runtime;
 #[path = "../src/render_runtime.rs"]
 mod render_runtime;
 #[path = "../src/terminal.rs"]

@@ -6,8 +6,8 @@ use std::process::Command;
 
 use mokly_sidecar::bindings::{Bindings, EntryBinding};
 use mokly_sidecar::methods::{
-    Bundle, Call, ColorScheme, CssModules, IgnoreScope, ModuleResolution, ProcessCss, Render,
-    RenderComponent,
+    Bundle, BundleRequest, Call, ColorScheme, CssModules, IgnoreScope, ModuleResolution,
+    ProcessCss, Render, RenderComponent,
 };
 use mokly_sidecar::pool::SidecarPool;
 use mokly_sidecar::wire::MethodResult;
@@ -56,18 +56,21 @@ fn child_checks_environment() {
     let repository = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
     let sidecars: Box<dyn SidecarPool> = Box::new(pool(&super::super::package_version::read()));
     let MethodResult::Bundle(bundle) = sidecars
-        .request(Call::Bundle(Bundle {
-            evaluation: None,
-            entry_files: vec!["component.mockup.tsx".into()],
-            renderer: Some("renderer.tsx".into()),
-            stories_files: Vec::new(),
-            module_resolution: ModuleResolution {
-                package_roots: vec![repository.display().to_string()],
-                ..ModuleResolution::default()
+        .request(Call::Bundle(BundleRequest {
+            params: Bundle {
+                evaluation: None,
+                entry_files: vec!["component.mockup.tsx".into()],
+                renderer: Some("renderer.tsx".into()),
+                stories_files: Vec::new(),
+                module_resolution: ModuleResolution {
+                    package_roots: vec![repository.display().to_string()],
+                    ..ModuleResolution::default()
+                },
+                source_root: fixture_root.display().to_string(),
+                configuration_directory: ".".into(),
+                repository_roots: Vec::new(),
             },
-            source_root: fixture_root.display().to_string(),
-            configuration_directory: ".".into(),
-            repository_roots: Vec::new(),
+            capture: None,
         }))
         .unwrap()
     else {

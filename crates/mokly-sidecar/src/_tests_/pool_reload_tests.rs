@@ -8,7 +8,9 @@ use unimock::{MockFn, Unimock, matching};
 use crate::bindings::{Bindings, EntryBinding};
 use crate::compiled_fixture::compiled;
 use crate::definitions::Definitions;
-use crate::methods::{Bundle, Call, CssModules, Generation, ModuleResolution, RenderPage};
+use crate::methods::{
+    Bundle, BundleRequest, Call, CssModules, Generation, ModuleResolution, RenderPage,
+};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
 use crate::pool_state::Slot;
@@ -46,13 +48,14 @@ fn worker(expected: &[&str], calls: usize) -> Unimock {
                     label(&request.call)
                 );
                 Ok(match &request.call {
-                    Call::Bundle(_) => MethodResult::Bundle(results::Bundle {
+                    Call::Bundle(_) => MethodResult::Bundle(Box::new(results::Bundle {
                         unmapped_dependency_directories: None,
                         epoch: 0,
-                        compiled: compiled("g"),
+                        cache: None,
+                        compiled: Arc::new(compiled("g")),
                         generation: "g".into(),
                         modules: Vec::new(),
-                    }),
+                    })),
                     Call::Describe(_) => MethodResult::Definitions(Definitions {
                         screens: Vec::new(),
                         pages: Vec::new(),
@@ -118,6 +121,7 @@ fn pair(first: Unimock, second: Unimock) -> Pool {
         Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(())),
         Launch {
+            capture_durability: false,
             node: "node".into(),
             entry: "sidecar.js".into(),
             repository: "/repo".into(),
@@ -196,17 +200,25 @@ fn a_busy_second_process_reloads_maps_after_release_and_rebundle() {
     );
     pool.release_generation("g", 0);
     pool.synchronize_releases();
-    pool.request(Call::Bundle(bundle())).unwrap();
+    pool.request(Call::Bundle(BundleRequest {
+        params: bundle(),
+        capture: None,
+    }))
+    .unwrap();
     pool.request(Call::CssModules(maps("new-control"))).unwrap();
     pool.request(Call::Describe(Generation {
         generation: "g".into(),
     }))
     .unwrap();
     pool.request(Call::Bindings(bindings("new/card"))).unwrap();
-    let (first_index, first_slot) = pool.acquire(&Call::Bundle(bundle()), None).unwrap();
+    let lease_call = Call::Bundle(BundleRequest {
+        params: bundle(),
+        capture: None,
+    });
+    let (first_index, first_slot) = pool.acquire(&lease_call, None).unwrap();
     pool.lock().available.push_front(1);
     render(&pool);
-    let (second_index, second_slot) = pool.acquire(&Call::Bundle(bundle()), None).unwrap();
+    let (second_index, second_slot) = pool.acquire(&lease_call, None).unwrap();
     pool.release(first_index, first_slot);
     render(&pool);
     pool.release(second_index, second_slot);
@@ -219,10 +231,14 @@ fn an_updated_binding_table_is_replayed_on_the_second_process() {
         worker(&["bindings:new/card", "render"], 1),
     );
     pool.request(Call::Bindings(bindings("new/card"))).unwrap();
-    let (first_index, first_slot) = pool.acquire(&Call::Bundle(bundle()), None).unwrap();
+    let lease_call = Call::Bundle(BundleRequest {
+        params: bundle(),
+        capture: None,
+    });
+    let (first_index, first_slot) = pool.acquire(&lease_call, None).unwrap();
     pool.lock().available.push_front(1);
     render(&pool);
-    let (second_index, second_slot) = pool.acquire(&Call::Bundle(bundle()), None).unwrap();
+    let (second_index, second_slot) = pool.acquire(&lease_call, None).unwrap();
     pool.release(first_index, first_slot);
     pool.release(second_index, second_slot);
 }

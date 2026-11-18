@@ -66,6 +66,7 @@ fn moved_and_restored_tips_keep_the_resolved_merge_base_identity() {
                 Arc::new(Unimock::new(())),
                 Arc::new(Unimock::new(())),
                 Arc::new(Unimock::new(())),
+                Arc::new(Unimock::new(())),
                 "test".into(),
                 None,
             )),

@@ -6,8 +6,8 @@ use std::sync::{Arc, Mutex};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::codec;
-use crate::compiled::{CompiledGeneration, RestoreGeneration};
-use crate::methods::{Bundle, Call, Generation};
+use crate::compiled::{CompiledGeneration, RestoreGeneration, ReuseEvidence, UncapturedEvidence};
+use crate::methods::{Bundle, BundleCapture, BundleRequest, Call, Generation};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
 use crate::pool_state::Slot;
@@ -32,8 +32,16 @@ pub(super) fn settings(entry: &str, evaluation: &str) -> Bundle {
     }
 }
 
-fn compiled(id: &str) -> CompiledGeneration {
+fn compiled(id: &str, capture: BundleCapture) -> CompiledGeneration {
+    let captured = capture == BundleCapture::Full;
     CompiledGeneration {
+        toolchain: "fixture".into(),
+        reuse_evidence: Arc::new(ReuseEvidence {
+            uncaptured: (!captured).then_some(UncapturedEvidence::ServeEdit),
+            durable: captured,
+            complete: captured,
+            inputs: Default::default(),
+        }),
         identity: id.into(),
         code: "quoted \"code\" with a newline\n and Unicode \u{e9}".repeat(4),
         runtime_key: "runtime".into(),
@@ -50,13 +58,17 @@ fn compiled(id: &str) -> CompiledGeneration {
 }
 
 pub(super) fn envelope_size(entry: &str, id: &str) -> usize {
+    envelope_size_with_capture(entry, id, BundleCapture::Full)
+}
+
+pub(super) fn envelope_size_with_capture(entry: &str, id: &str, capture: BundleCapture) -> usize {
     codec::encode(&Request {
         id: 1,
         call: Call::RestoreGeneration(Box::new(RestoreGeneration {
             generation: seed_id(id),
             params: settings(entry, id),
             modules: Vec::new(),
-            compiled: compiled(id),
+            compiled: Arc::new(compiled(id, capture)),
         })),
     })
     .unwrap()
@@ -90,14 +102,18 @@ impl Fixture {
                     }
                     Ok(match &request.call {
                         Call::Bundle(params) => {
-                            let id = params.evaluation.as_deref().unwrap();
-                            MethodResult::Bundle(results::Bundle {
+                            let id = params.params.evaluation.as_deref().unwrap();
+                            MethodResult::Bundle(Box::new(results::Bundle {
                                 generation: id.into(),
-                                compiled: compiled(id),
+                                compiled: Arc::new(compiled(
+                                    id,
+                                    params.capture.unwrap_or_default(),
+                                )),
                                 epoch: 0,
+                                cache: None,
                                 modules: Vec::new(),
                                 unmapped_dependency_directories: None,
-                            })
+                            }))
                         }
                         _ => MethodResult::Empty,
                     })
@@ -112,6 +128,7 @@ impl Fixture {
                 ClockMock::now_ms.each_call(matching!()).returns(0_u64),
             )),
             Launch {
+                capture_durability: false,
                 node: "node".into(),
                 entry: "sidecar.js".into(),
                 repository: "/repo".into(),
@@ -160,14 +177,26 @@ impl Fixture {
     }
 
     pub(super) fn bundle(&self, entry: &str, id: &str) -> results::Bundle {
+        self.bundle_with_capture(entry, id, BundleCapture::Full)
+    }
+
+    pub(super) fn bundle_with_capture(
+        &self,
+        entry: &str,
+        id: &str,
+        capture: BundleCapture,
+    ) -> results::Bundle {
         let MethodResult::Bundle(result) = self
             .pool
-            .request(Call::Bundle(settings(entry, id)))
+            .request(Call::Bundle(BundleRequest {
+                params: settings(entry, id),
+                capture: Some(capture),
+            }))
             .unwrap()
         else {
             panic!("expected bundle")
         };
-        result
+        *result
     }
 
     pub(super) fn release(&self, entry: &str, id: &str) {
@@ -178,9 +207,19 @@ impl Fixture {
     }
 
     pub(super) fn probe(&self, entry: &str, id: &str, slot: usize) -> Vec<String> {
+        self.probe_with_capture(entry, id, slot, BundleCapture::Full)
+    }
+
+    pub(super) fn probe_with_capture(
+        &self,
+        entry: &str,
+        id: &str,
+        slot: usize,
+        capture: BundleCapture,
+    ) -> Vec<String> {
         self.select(slot);
         self.calls.lock().unwrap().clear();
-        let probe = self.bundle(entry, id);
+        let probe = self.bundle_with_capture(entry, id, capture);
         let restored = self
             .calls
             .lock()

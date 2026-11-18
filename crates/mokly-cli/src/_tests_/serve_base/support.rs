@@ -81,6 +81,7 @@ pub(super) fn runtime() -> Arc<Runtime> {
         Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(())),
+        Arc::new(Unimock::new(())),
         "test".into(),
         None,
     ))

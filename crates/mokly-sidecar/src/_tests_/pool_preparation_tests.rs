@@ -6,7 +6,7 @@ use std::sync::Arc;
 use unimock::Unimock;
 
 use crate::bindings::{Bindings, EntryBinding};
-use crate::compiled::CompiledGeneration;
+use crate::compiled::{CompiledGeneration, ReuseEvidence};
 use crate::methods::{Bundle, CssModules, ModuleResolution};
 use crate::pool_state::{Slot, State};
 use crate::results::Module;
@@ -40,6 +40,13 @@ fn fixture() -> (State, Slot) {
     state.compiled.insert(
         "g".into(),
         Arc::new(CompiledGeneration {
+            toolchain: "fixture".into(),
+            reuse_evidence: Arc::new(ReuseEvidence {
+                uncaptured: None,
+                durable: true,
+                complete: true,
+                inputs: Default::default(),
+            }),
             unmapped_dependency_directories: None,
             identity: "compiled".into(),
             code: "code".into(),

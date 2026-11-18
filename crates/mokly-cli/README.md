@@ -19,7 +19,8 @@ other crate depends on it.
   classifications.
 - Keep one captured base in Serve between classifications, and reuse it while
   its key and its freshness checks hold.
-- Compose one rendering runtime, sidecar pool, and render cache per command.
+- Compose one rendering runtime, sidecar pool, bundle store, and render cache
+  per command.
 
 ## What This Crate Does
 
@@ -52,6 +53,29 @@ passes the working repository root and the repository's cache namespace, the
 the checkout folder. The
 [terminal errors contract](../../docs/protocol/mokly-terminal-errors.md) owns
 the scripts hint of base failures.
+
+Each command also adds the bundle cache to its sidecar pool. `bundle_runtime`
+composes `CachedBundles` over a `DiskCache` that the command's cancellation
+stops. When `SystemLocations` gives no cache location, the pool gets a store
+whose first call reports a store fault, and the store then stays off. The
+store prints the entry warning and the directory warning of the
+[cache warnings contract](../../docs/protocol/mokly-terminal-cache.md#cache-warnings)
+through the command's diagnostics. The bundle cache and the base caches share
+one announcement of the cache directory in each command. In `build` and
+`publish`, they share one `OnceReporter`, which `render_runtime` returns for
+the Changes of the command. Their terminal owner holds that line while the
+head renders, under the
+[cache directory rule](../../docs/protocol/mokly-terminal-cache.md#cache-directory).
+In Serve, the `ServeDirectory` of the bundle cache
+and the base cache notice of each comparison attempt share one flag.
+`ServeDirectory` does not depend on a comparison attempt.
+Serve prepares its head in the `full` mode of the
+[capture modes](../../docs/protocol/mokly-sidecar-recipes.md#capture-modes)
+until it publishes its first state. After that publication, and before Serve
+reports readiness, `ServeServices::head_published` switches each later head
+preparation to `serveEdit`. Those preparations capture no reuse evidence and
+offer nothing to the bundle cache. The base side of Serve, `build`, and
+`publish` keep the `full` mode.
 
 Serve validates an HTML, JavaScript, or mixed catalogue before it reserves a
 loopback port, then serves it through `mokly-server` under the
@@ -203,12 +227,30 @@ reserves an 8 MiB main-thread stack through its linker settings in
   token.
 - [`src/render_runtime.rs`](./src/render_runtime.rs) creates the render cache
   and composes the shared JavaScript and HTML rendering services of one
-  command.
+  command. It adds the bundle store to the pool and returns the command's
+  cache reporter for the Changes of `build` and `publish`.
+- [`src/bundle_runtime.rs`](./src/bundle_runtime.rs) composes the bundle store
+  of one command over a `DiskCache` that the command's cancellation stops,
+  and maps each store outcome to its warning lines.
+- [`src/changes_runtime.rs`](./src/changes_runtime.rs) composes the Changes
+  service of `build` and `publish`. Its `reporter` gives the one-shot
+  `OnceReporter` that the bundle store shares.
+- [`src/cache_directory.rs`](./src/cache_directory.rs) defines
+  `ServeDirectory`, the cache directory announcement of the bundle cache in
+  Serve.
 - [`src/entry_serve.rs`](./src/entry_serve.rs) and
   [`src/serve.rs`](./src/serve.rs) compose, prepare, and close Serve.
+  `entry_serve.rs` passes the terminal output of Serve to
+  `ServeServices::new`.
 - [`src/serve_services.rs`](./src/serve_services.rs) shares one pool and
   cache across Serve preparation and live views. It gives the sidecar gate
-  the command's `Diagnostics` reporter.
+  the command's `Diagnostics` reporter. `ServeServices::new` takes that
+  `ServeOutput` and creates the one announcement flag of the Serve process.
+  `ServeServices::head_published` sets the flag that gives each later head
+  preparation the `ServeEdit` capture mode. `entry_serve.rs` calls it after
+  the first successful publication, before readiness.
+  [`src/serve_delivery.rs`](./src/serve_delivery.rs) passes that flag to the
+  base caches of Serve Changes.
 - [`src/serve_pool.rs`](./src/serve_pool.rs) defines `ServePool`, the
   admission gate around the shared pool. Its narrow `BaseCompletion`
   capability schedules the return pass. Its gate answers the
@@ -216,6 +258,15 @@ reserves an 8 MiB main-thread stack through its linker settings in
 - [`src/serve_return.rs`](./src/serve_return.rs) starts the
   `mokly-head-return` worker. The worker holds only weak handles and runs one
   `maintain_head_return` step at a time while admission is ready.
+- [`src/serve_lifecycle.rs`](./src/serve_lifecycle.rs) holds the startup
+  helpers of Serve, such as the Tokio runtime and the progress animation, and
+  `ServeLifecycle`, which orders observer shutdown, busy-worker cancellation,
+  and idle-worker shutdown.
+- [`src/serve_trace.rs`](./src/serve_trace.rs) installs the
+  `--debug-timings` layer of every command and writes its records.
+  [`src/serve_trace_fields.rs`](./src/serve_trace_fields.rs) holds the
+  bounded allow-lists of the record fields, such as the `cache` values and
+  the view comparison reuse fields.
 - [`src/serve_controls.rs`](./src/serve_controls.rs) maps the keys of rich
   watched Serve to its shortcuts and owns raw mode. Closed or failed terminal
   input ends the key reader but does not stop Serve. Serve shutdown waits for
@@ -229,6 +280,14 @@ reserves an 8 MiB main-thread stack through its linker settings in
 - [`src/static_build.rs`](./src/static_build.rs) defines `StaticBuild`, the
   shared pipeline between rendered catalogues, static assembly, and
   transactions.
+- [`src/one_shot/mod.rs`](./src/one_shot/mod.rs) defines `Lines`, the one
+  terminal owner of `build` and `publish`.
+  [`src/one_shot/phases.rs`](./src/one_shot/phases.rs) reports the phases,
+  the warnings, and the Changes result, and holds the cache directory line
+  while the head renders. [`src/one_shot/progress.rs`](./src/one_shot/progress.rs)
+  owns the animation and the upload progress, and
+  [`src/one_shot/output.rs`](./src/one_shot/output.rs) writes the durable
+  results and the recovery paths.
 - [`src/publication/mod.rs`](./src/publication/mod.rs) holds the
   `StaticOutput` adapter and the publish orchestration.
 - [`src/output.rs`](./src/output.rs), [`src/codes.rs`](./src/codes.rs), and
@@ -273,10 +332,6 @@ reserves an 8 MiB main-thread stack through its linker settings in
   merge-base commit, a digest of the adopted configuration with its file,
   repository root, roots, and authored inputs, and the effective
   install-scripts setting.
-- [`src/serve_trace.rs`](./src/serve_trace.rs) installs the
-  `--debug-timings` layer of every command and writes its records.
-  [`src/serve_trace_fields.rs`](./src/serve_trace_fields.rs) allowlists the
-  fields that the records carry.
 
 ### Related Docs
 
@@ -285,8 +340,10 @@ reserves an 8 MiB main-thread stack through its linker settings in
   and [publish](../../docs/guides/cli/publish.md) guides.
 - [Package contract](../../docs/protocol/mokly-package.md).
 - [Terminal help](../../docs/protocol/mokly-terminal-help.md).
-- [Terminal output](../../docs/protocol/mokly-terminal-output.md) and
+- [Terminal output](../../docs/protocol/mokly-terminal-output.md),
+  [cache output](../../docs/protocol/mokly-terminal-cache.md), and
   [comparison steps](../../docs/protocol/mokly-terminal-steps.md).
+- [Bundle cache entries](../../docs/protocol/mokly-base-cache.md#bundle-entries).
 - [Terminal errors](../../docs/protocol/mokly-terminal-errors.md).
 - [On-demand Serve](../../docs/protocol/mokly-on-demand.md) and
   [watch runtime](../../docs/protocol/mokly-watch-runtime.md).

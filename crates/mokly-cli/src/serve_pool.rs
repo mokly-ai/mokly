@@ -232,6 +232,9 @@ struct ScheduledPool {
 }
 
 impl SidecarPool for ScheduledPool {
+    fn served_generation(&self, generation: &str, epoch: u64) {
+        self.inner.served_generation(generation, epoch);
+    }
     fn schedule_head_return(&self) {
         self.inner.schedule_head_return();
     }

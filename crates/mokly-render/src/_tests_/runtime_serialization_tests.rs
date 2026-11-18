@@ -26,6 +26,7 @@ fn description_and_runtime_clones_hold_the_same_lock_at_the_io_boundary() {
                 }))
                 .n_times(2),
         )),
+        Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(
             PoolMock::request
                 .each_call(matching!(_))

@@ -79,8 +79,12 @@
   [install-pipe-wait-after-stop.md](./install-pipe-wait-after-stop.md): a
   stopped base install also waits without a bound, for output pipes that its
   descendants hold.
-- **Related:** [root-switch-reap-wait.md](./root-switch-reap-wait.md): its
-  shared end-and-reap step would inherit this wait.
+- **Related:**
+  - [root-switch-reap-wait.md](./root-switch-reap-wait.md): its shared
+    end-and-reap step would inherit this wait.
+  - [serve-pause-warm-head.md](./serve-pause-warm-head.md), the same code:
+    the worker-only request cancellation of its option B kills and reaps one
+    worker, so a fix here changes how that cancellation ends.
 - **Recommendation:** B. One bounded wait keeps every caller live and reports
   the stuck process, and the pending kill still ends it when the kernel lets
   it.

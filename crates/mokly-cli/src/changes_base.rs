@@ -140,6 +140,7 @@ impl NativeBase {
         let runtime = Arc::new(Runtime::new(
             tree.clone(),
             self.runtime.dependency_tree.clone(),
+            self.runtime.physical_inputs.clone(),
             self.runtime.pool.clone(),
             self.runtime.cache.clone(),
             self.runtime.workers.clone(),

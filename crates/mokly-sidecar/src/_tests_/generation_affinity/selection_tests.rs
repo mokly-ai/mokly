@@ -2,7 +2,7 @@
 
 use std::collections::VecDeque;
 
-use crate::methods::{Call, ProcessCss};
+use crate::methods::{BundleRequest, Call, ProcessCss};
 use crate::pool_state::Affinity;
 
 use super::support::{Loaded, acquire, bundle, pool, render};
@@ -72,7 +72,14 @@ fn calls_without_generations_keep_fifo_and_live_context_affinity() {
         text: String::new(),
     });
     for (call, affine, expected) in [
-        (Call::Bundle(bundle("/head")), false, 0),
+        (
+            Call::Bundle(BundleRequest {
+                params: bundle("/head"),
+                capture: None,
+            }),
+            false,
+            0,
+        ),
         (css.clone(), false, 0),
         (css, true, 1),
         (render(), false, 1),
