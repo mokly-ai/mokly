@@ -176,8 +176,13 @@ The default large HTML fixture compiles no bundle, so its Serve edits cannot sho
 
 - [x] Run the targeted checks and the early repository suite with the required tool versions.
 - [x] Commit with Conventional Commits and push. Send the implementation SHA to the performance orchestrator immediately.
-- [ ] Measure `main` and branch Serve edit cycles on `examples/basic`, and `bundle()` on the default large React fixture.
-- [ ] Record `sidecar.bundle`, edit-to-Changes readiness, and peak memory. Measure one cold-cache start if the machine allows it.
+- [x] Measure `main` and branch Serve edit cycles on `examples/basic`, and `bundle()` on the default large React fixture.
+- [x] Record `sidecar.bundle`, edit-to-Changes readiness, and peak memory. Measure one cold-cache start if the machine allows it.
+
+The cold page cache made the large React bundle slower, which `plans/follow-ups/cold-cache-consumer-reads.md` records.
+
+Evidence: `.context/sidecar-bundle-javascript-work/measurements/` and `.context/sidecar-bundle-javascript-work/bench/`.
+
 - [ ] Run the complete gate with the required tool versions.
 - [ ] Review the complete diff against `origin/main` with the `implementation-review` skill after the push. Fix confirmed fix-now findings, record follow-ups, and re-review once.
 - [ ] Delete this plan under the `plans` skill after all preceding work completes.

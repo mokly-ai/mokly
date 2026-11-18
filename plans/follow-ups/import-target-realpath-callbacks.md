@@ -28,5 +28,6 @@
 - **Left out:** A cache across bundle calls. A later call must see renamed links and moved files.
 - **Wider fix:** None. Each caller keeps its own boundary.
 - **Previous examples:** The consumer file loads of `plugins.ts`, which moved from callback reads to one synchronous read on 2026-11-18.
+- **Related:** `plans/follow-ups/cold-cache-consumer-reads.md` records the cold page cache cost of those synchronous reads. Option B here should measure the same cold case.
 - **Recommendation:** B. The measurement decides whether the change pays, and the synchronous variant already exists.
 - **Action:** fix after merge, apply B, because the bundle change kept its scope to the three measured cuts.
