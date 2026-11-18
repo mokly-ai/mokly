@@ -26,13 +26,32 @@ export function auditPublicPackageExports(repositoryRoot, git) {
     components["."]?.["package-name"] === "@mokly/mokly" &&
     !components["packages/viewer"]
   ) {
-    // The root release owns two JavaScript packages with separate tag histories.
+    // The viewer retains its separate tag history under the root release.
     components["packages/viewer"] = {
       component: "viewer",
       "include-component-in-tag": true,
       "include-v-in-tag": true,
     };
     releaseManifest["packages/viewer"] ??= releaseManifest["."];
+  }
+  if (components["."]?.["package-name"] === "@mokly/mokly") {
+    const workspaceManifests = [
+      readRevisionJson(git, "HEAD", "package.json"),
+      readCurrentJson(repositoryRoot, "package.json"),
+    ];
+    if (
+      workspaceManifests.some(
+        ({ workspaces }) =>
+          Array.isArray(workspaces) && workspaces.includes("packages/ui"),
+      ) &&
+      !components["packages/ui"]
+    ) {
+      components["packages/ui"] = {
+        ...components["."],
+        "package-name": "@mokly/ui",
+      };
+      releaseManifest["packages/ui"] ??= releaseManifest["."];
+    }
   }
   for (const [componentRoot, packageConfig] of Object.entries(components)) {
     const releasedVersion = releaseManifest[componentRoot];
