@@ -377,16 +377,16 @@ continue independent work. Branch verification still waits for that answer.
 
 - [x] Delegate release-build measurements to the non-ui implementor. Use
       separate checkouts and target directories for last merged main and branch.
-- [ ] Check disk and memory before each large Cargo build. Set
+- [x] Check disk and memory before each large Cargo build. Set
       `CARGO_INCREMENTAL=0`. Run Cargo builds one at a time.
-- [ ] Measure Serve startup Changes and two edits on `examples/basic` and
+- [x] Measure Serve startup Changes and two edits on `examples/basic` and
       large HTML and React fixtures from `scripts/large/`. Use four sidecars.
-- [ ] Record validation-to-input gap, render inputs, edit-to-Changes-ready,
+- [x] Record validation-to-input gap, render inputs, edit-to-Changes-ready,
       first Changes, sidecar count, and peak aggregate Serve RSS. Record root
       switches during each edit to check PR #313 preservation. Retain raw logs.
-- [ ] Resolve decision 4 after its fresh options check. Keep every default
+- [x] Resolve decision 4 after its fresh options check. Keep every default
       profile failure and clearly label any additional bounded profile.
-- [ ] Commit and push the implementation. Send its SHA to the performance
+- [x] Commit and push the implementation. Send its SHA to the performance
       orchestrator immediately for the `mokly-cloud` measurement.
 
 Targets on `mokly-cloud`: reduce the gap from about 250 ms below 60 ms and
@@ -395,6 +395,12 @@ edit-to-Changes-ready by at least 0.15 s. First Changes must not rise beyond
 noise. Local fixtures provide before/after evidence rather than a substitute
 for that catalogue. Record limitations and await the orchestrator's result.
 
+The performance orchestrator accepted implementation `6113cecf2` on
+2026-11-18 after its cloud A/B. It requires the PR to state that the measured
+gap remains above 60 ms because it includes `render.inputs`. The redundant
+describe cost is gone. Its supplied table and acceptance are retained in
+`.context/sidecar-generation-affinity/reports/cloud-acceptance.md`.
+
 Evidence files: `.context/sidecar-generation-affinity/` holds the options
 check, delegation reports, measurements, and verification logs.
 
@@ -402,14 +408,32 @@ check, delegation reports, measurements, and verification logs.
 
 Depends on: 1, 2
 
-The gate can run while the additional measurement profile waits. Review and
-the pull request still require Milestone 3's evidence and decision outcome.
+The pre-integration gate and smoke checks are complete. The combined gate
+runs after mechanical main integration. On 2026-11-18, the performance
+orchestrator directed a fresh review beside that gate. It also directed
+plan deletion and PR opening once the review is clean, before that gate ends.
+CI checks the combined code. Report the local gate result when it ends.
 
-- [ ] Run targeted tests, the early repository suite, and the complete gate.
+The local measurement attempts and their limits are recorded. The original
+memory stop censored JavaScript baseline pairs. The extra bounded profile
+was prepared and safety-probed, but no benchmark attempt ran. The accepted
+cloud comparison supplies the performance decision. The performance
+orchestrator confirmed that acceptance also covers the mechanical merge.
+
+- [x] Run the strict basic catalogue build and a Serve smoke check.
+      Reuse the gate package build when it is current.
+- [x] Run targeted tests, the early repository suite, and the complete gate.
       Put Git 2.45 or later in its own first PATH directory. Install git-lfs
       and the pinned Bun. Name every failure, skip, or blocked suite.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` after the push,
+- [x] Merge main `e60c16532` before the fresh review. Preserve both the
+      generation rank and main's seeding and recipe changes. Adapt only
+      fixture construction and resolve docs conflicts without lost content.
+- [ ] Rerun targeted pool and sidecar tests, the repository suite, and the
+      complete gate on the combined code. Targeted checks are complete.
+      The performance orchestrator permits PR opening while the gate runs.
+      Send any branch defect at once, and report the final local result.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` after the push,
       with the implementation-review skill. Run fresh finding checks, apply
       the fix rule, allow two fix rounds, and re-review once. Record remaining
       work in follow-up items and report it to the performance orchestrator.
@@ -418,3 +442,16 @@ the pull request still require Milestone 3's evidence and decision outcome.
 - [ ] Open the pull request into `main`. Run `scripts/ci-wait.sh` after each
       CI trigger. Fix branch failures. Report each unrelated failure and rerun
       it once. Send the final report to the performance orchestrator. Do not merge.
+
+Integration and verification evidence: `.context/sidecar-generation-affinity/`
+`reports/merge-rust-integration.md`, `reports/merge-docs.md`,
+`logs/merge-audit-after.log`, `logs/merge-repository-suite.log`,
+`logs/complete-gate-summary.json`, `strict-basic-result.json`, and
+`serve-basic-result.json`. The merge at `6f055c52a` changes no selection logic.
+
+The fresh read-only review of `6f055c52a` against `e60c16532` is clean.
+No finding check or fix round was required. The report and findings file are
+under `.context/reviews/calummoore/mokly-sidecar-generation-affinity-jmbb/`.
+The performance orchestrator's 2026-11-18 instruction authorises deletion
+before combined local verification ends. The PR and final report will retain
+that pending check and its result. CI must pass before the orchestrator merges.
