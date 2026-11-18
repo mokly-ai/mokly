@@ -14,8 +14,6 @@ use tokio::sync::oneshot;
 use tokio::time::Instant;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::usage_completion::CompletedUsage;
-
 use crate::assets::File;
 use crate::changes::{ChangeCancellation, ChangeSourceMock, ChangeToken};
 use crate::changes_background::ChangesPass;
@@ -108,14 +106,8 @@ async fn selected_capacity_retries_at_one_second_and_cancellation_ends_the_wait(
         let token = cancel.clone();
         let task_source = Arc::new(source.clone());
         let run = tokio::spawn(async move {
-            pass.execute(
-                origin,
-                task_source,
-                token,
-                Ok("base".into()),
-                Arc::new(CompletedUsage),
-            )
-            .await;
+            pass.execute(origin, task_source, token, Ok("base".into()))
+                .await;
         });
         rejecting.await.unwrap();
         tokio::time::advance(Duration::from_millis(999)).await;
@@ -217,7 +209,6 @@ async fn oversized_metadata_publishes_unavailable_without_admission_or_installat
         source.clone(),
         Arc::new(ChangeToken::default()),
         Ok("base".into()),
-        Arc::new(CompletedUsage),
     )
     .await;
     assert_eq!(

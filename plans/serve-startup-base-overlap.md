@@ -2,16 +2,21 @@
 
 Status: Active. On branch `calummoore/mokly-startup-base-overlap-rae7`, no pull request yet. The completing pull request deletes this plan.
 
-Serve renders current usage before it prepares the base for Changes. Prepare
-the next base during current usage. The configuration and discovery of the
-base identify its kind. A sidecar base waits before capture until current
-usage settles. An HTML-only base waits as soon as its kind is known, and the
-same preparation continues after usage. No base captures early. Compare only
-after current usage settles.
+Serve renders current usage before it prepares the base for Changes. Call 12
+narrows this change to cold start, as a last attempt. Every Changes request,
+reference check, classification, and reference poll keeps main's inline path
+after current usage. Only when the first head needs a sidecar, one separate
+startup owner prepares its base beside the first usage. The configuration and
+discovery of the base identify its kind. An HTML-only base pauses after
+discovery, and the same preparation resumes after usage. No base captures
+early. After usage, the task leaves one keyed outcome: a kept base, an unkept
+capture, or an error. The ordinary classification takes it once, only with the
+same key.
 Keep the same published content, base freshness checks, capture bounds, and
 sidecar pool bound. Keep the warm head process and background return rules.
 
-The performance orchestrator chose the six calls below on 2026-11-18. On
+The performance orchestrator chose the twelve calls below on 2026-11-18. Some
+calls also record design and evidence calls of the workspace orchestrator. On
 2026-11-16, the user authorised more Changes speed and reliability work. The
 user delegated these design choices to that orchestrator and prohibited work
 that can exhaust memory. This task authorises the plan and its implementation.
@@ -31,10 +36,13 @@ Contract owners:
 
 Replaced ways:
 
-- Serial Serve base preparation becomes generation-owned preparation during
-  current usage. Consumers: `UsagePass`, `ChangesPass`, and the CLI `Source`.
-  Milestone 2 moves these consumers and removes their serial preparation trigger.
-  Static commands keep their ordinary single classification path.
+- At cold start with a sidecar head, the serial base preparation after the
+  first usage becomes one separate startup task beside that usage. Consumers:
+  `UsagePass` starts its owner once for the first head, and the CLI `Source`
+  takes its one keyed outcome through `StartupProvider`. The generation-owned
+  early preparation of Milestone 2 and its early Changes request are gone.
+  `ChangesPass` keeps main's inline path after usage. Static commands keep
+  their ordinary single classification path.
 
 ## Evidence and acceptance
 
@@ -70,10 +78,21 @@ second React edit at the 3,000,000 KiB RSS guard. A complete first-edit capture
 also failed the deployment-only byte proof. The performance orchestrator then
 withdrew acceptance. Call 9 closes the identity cause of the byte failure.
 Calls 10 and 11 set the new memory and speed evidence. No pull request opens
-before that evidence passes. The cloud acceptance keeps the 1.5-second target
+before the acceptance evidence passes. The cloud acceptance keeps the 1.5-second target
 and the RSS rule above. The performance orchestrator owns the cloud sampling.
 The PSS rule of call 10 applies only to the local diagnosis. The analysis is
 `.context/startup-base-overlap/control-stage-analysis-and-options.md`.
+
+The call 11 pairs completed on 2026-11-18, and their result blocks acceptance
+of that candidate. Call 12 makes a narrowed last attempt. Its clean pairs
+replace the call 11 pairs as the local acceptance evidence. They build one
+sidecar and viewer asset set from contained main `d4df04aa5` or later. They do
+not use the `e60c16532` assets. Their local memory metric is the cgroup demand
+of anon plus swap on the same tick, against the paired main. The cloud
+remeasurement stays required, and its acceptance belongs to the performance
+orchestrator. Under option L of call 12, the same failed acceptance check in
+all three pairs of one fixture closes the change under option C. Other results
+without acceptance go to the performance orchestrator.
 
 ## Design calls
 
@@ -482,6 +501,34 @@ every guard and the sampler unchanged. These are extra diagnostics, not
 retries of a failed acceptance run. Report raw and corrected sums. The
 current main recording cannot supply a shared-address-space correction.
 
+The performance orchestrator clarified the reference on 2026-11-18. The
+5% comparison uses the matched v2 main run, never v1. Compare raw candidate
+PSS with raw v2 main PSS, and corrected candidate PSS with corrected v2
+main PSS. Use the same tick rules. Run the v2 candidate and main diagnostics
+back to back, with no other work on this machine between them. V1 stays
+the raw baseline because the recorders and their observer costs differ.
+
+The performance orchestrator closed the memory item under D on 2026-11-18.
+The matched v2 diagnostics satisfy the PSS and raw guard conditions.
+The original RSS stop remains unexplained in retrospect.
+Shared-address-space Git spawning is its likely mechanism.
+No proved shared interval was sampled or deduplicated in the new diagnostics.
+The evidence proves sampled sums, not continuous physical peaks.
+
+The performance orchestrator also authorized the unused main workload after
+its preflight port probe failed before starting a workload.
+The probe repair kept the recorder, sampler, guards, and candidate evidence
+unchanged. The failed preflight and its repair stay in the evidence record.
+
+The performance orchestrator accepted the Git-spawn explanation on 2026-11-18.
+Earlier Changes requests start the existing reference poll earlier.
+The extra processes do not show repeated base preparation.
+Make no product change for this cost in this branch.
+The performance orchestrator claims
+`plans/follow-ups/serve-reference-poll-git-spawns.md` for the performance queue.
+Its two directions check reference files cheaply or watch those files.
+Both must preserve the exact reference result.
+
 ### 11. Give HTML-only bases the serial path
 
 - **Severity:** High. **Effort:** Medium.
@@ -560,6 +607,151 @@ cleanup. Both changes are in
 code. The user accepted this test-only fix on 2026-11-18. It commits with the
 HTML change of call 11. Record:
 `.context/reviews/calummoore/mokly-startup-base-overlap-rae7/findings.md`.
+
+The call 11 pairs completed on 2026-11-18 with a blocking result. Call 12
+records the performance orchestrator's last-attempt call of 2026-11-18, under
+the user's delegation of 2026-11-16. It keeps the letters of item 3 of
+`.context/startup-base-overlap/interleaved-large-blocking-report.md`, and the
+text of options B, C, G, and I. Call 12 narrows the early preparation of call 2
+option E and of Milestone 2 to cold start. It returns every Changes request to
+main's order after usage. Ordinary Changes also regains main's cancel-and-drain
+before the next usage. The independent drain of call 5 option C and the
+newest-request rule of call 7 now cover only the startup task. Those records
+stay unchanged as history.
+
+### 12. Narrow early preparation to cold start
+
+- **Severity:** High. **Effort:** Small for the recommended C.
+- **Source:** Implementation. Item 3 of the interleaved large-fixture blocking report, after the controlled pairs of call 11.
+- **Category:** performance.
+- **Location:** `crates/mokly-server/src/background.rs:105` to line 110, and the paired stage tables and the React pair-3 peak evidence in `.context/startup-base-overlap/interleaved-large-45efa06e6-runs/audit/final-report-v2.md`.
+- **Background:** The change seeks faster first Changes while keeping edits and HTTP as fast as main. HTML capture is already serial. Sidecar preparation still overlaps usage.
+- **Problem:** HTML startup is later in every pair. React startup is later in two pairs. React pair 3 exceeds the PSS limit. Causal ownership remains incomplete.
+- **Impact if no action:** The branch cannot support the required acceptance claim. Opening its pull request would bypass the decision boundary of the performance orchestrator.
+- **Root question:** Which remaining scope can justify further work toward faster startup without slower edits or higher memory?
+- **Options:**
+  - **B.** Keep overlap only with measured CPU and memory headroom, with a serial fallback. It could avoid constrained hosts. No threshold or benefit is proved. It adds a resource policy and requires new validation. Effort: Large.
+  - **C.** Close the scheduling change. Retain the measurement records and performance follow-ups. Review any independent diagnostic span separately. This restores main's serial path and loses the cloud cold-start gain. Effort: Small.
+  - **E.** Early HTML source extraction only remains an older alternative. It adds fresh work absent from the present HTML path and leaves React unresolved. Effort: Medium.
+  - **F.** Restore early HTML capture with HTTP yields. It reintroduces usage contention and leaves retained-base edits and React memory unresolved. Effort: Small, plus measurements.
+  - **G.** Authorize matched CPU/scheduler and allocation diagnostics before choosing a product variant. These could separate request-order cost, observer pressure, and retained data. They do not themselves improve the product. Effort: Medium.
+  - **H.** Early HTML graph work, with capture deferred, remains an older alternative. It adds work during usage and leaves React unresolved. Effort: Small, plus measurements.
+  - **I.** Restore main's request order for proven historical HTML bases and retained-base edits. Keep early cold sidecar preparation. Use conservative serial fallback when historical type is unknown. This removes early Changes work in those serial cases. It preserves possible overlap only where identified. Its gain is unmeasured, and it does not establish a fix for React cold startup or pair-3 PSS. Effort: Medium, plus measurements.
+  - **J.** The narrowed I of the Action, as recorded below the item. Every ordinary Changes request, reference check, classification, and poll runs after usage in main's order. One server-owned task starts at Serve start, only when the first head needs a sidecar. A sidecar base prepares bundle, describe, and graph under the early lease. An HTML-only base pauses after discovery. Capture follows usage. Handover uses the ordinary kept-base key and freshness checks. J is a letter for the chosen shape, not a new variant. Cost: a new task owner, a command-owned record, a base-only compare seam, rewritten tests, a cgroup launch adapter, 12 clean runs, and the cloud run. Under the literal rule, its HTML arm passes first Changes in all three pairs only by chance (see K). Effort: Large.
+  - **K.** Before Milestone 5 code, record that every clean result without acceptance applies C. This includes a failed check in any pair, a guard stop in either arm, and an incomplete set. Cost: noise alone can close the change. If each HTML pair falls either way with equal chance, and the pairs are independent, all three HTML pairs pass first Changes with a chance of one in eight. A main-arm stop or a raw RSS double count also closes it. Effort: Small.
+  - **L.** Before Milestone 5 code, record that the same failed check in all three pairs of one fixture applies C. Every other result without acceptance goes to the performance orchestrator, with every pair and any stop sample, as call 11 D allowed for an ambiguous result. Cost: a likely further decision round in a last attempt. "All three pairs" is a reading of "repeatable" that only the performance orchestrator can confirm. Effort: Small.
+  - **M.** Name the byte proof of the clean set in Milestone 6. Compare the clean captures with only the exceptions of call 9. Apply the two edit exceptions only after the `d4df04aa5` main arms show the same two differences among themselves. Otherwise, report before any acceptance claim. Cost: one derivation over captures that the frozen driver already writes. It can show an identity change from PR #316, but `d4df04aa5:docs/protocol/mokly-sidecar-plans.md:93-97` keeps the fresh identity of each edit compile. Effort: Small.
+- **Left out:** A, the HTML capture deferral of call 11, is applied and did not satisfy acceptance. D, the interleaved set of call 11, is complete, and an unchanged rerun is no remedy. An HTML-order-only change cannot cover all blockers. A blanket memory correction has no transition proof. Discarding main pair 3 or averaging away its limit changes the acceptance rule. More pairs, an aggregate, or a statistical test for the HTML arm add a statistical pass rule, which the user excluded. An HTML-specific pass, such as a trace proof in place of timing, adds an acceptance exception. Another fixture breaks the fixed workloads of the user's call. A clean rerun of the unchanged `45efa06e6` as acceptance evidence retries a failed acceptance candidate, which calls 10 and 11 forbid. G covers its diagnostic use. A cheaper reference poll stays with `plans/follow-ups/serve-reference-poll-git-spawns.md`, because J moves every poll after usage. A persistent base cache across starts is a separate feature with a new stored format. HTTP priority during an active early lease is no real choice, because the fixed HTTP request ends before the first possible lease. The raw RSS rule of call 6 stays with the reconciliation of Milestone 4.
+- **Wider fix:** None proved. B could control constrained-machine admission, but its policy and thresholds remain unvalidated.
+- **Previous examples:** The cloud catalogue gains 2.4 seconds cold and 0.45 seconds warm on `45efa06e6`. Its evidence remains valid for that catalogue.
+- **Related:** The diagnostic memory closure of call 10 stays closed. The React pair-3 memory result blocked the call 11 candidate. It is now a superseded record and does not block the clean set.
+- **Recommendation:** C. No tested narrower variant meets all requirements. If more investigation is wanted, G can support a later choice between B and I.
+- **Action:** fix now, apply a narrowed I as the last attempt. When the clean evidence shows a repeatable cost on either fixture, apply C without another variant. Performance orchestrator's call of 2026-11-18, under the user's delegation of 2026-11-16.
+
+The narrowed I has this preferred shape. The options check labels it J. J
+names the chosen shape and is not another variant:
+
+- Every Changes request, classification, and one-second reference poll runs after current usage, in main's order, for the whole session.
+- Only at cold start, and only when the head catalogue needs a sidecar, Serve starts a separate early base preparation beside startup usage.
+- That task runs the base bundle, describe, and graph preparation under the early lease. It captures after usage and fills the kept base slot.
+- The later classification, in main's order, reuses that kept base only through the unchanged freshness checks.
+- A historical HTML-only base stops its early work after discovery. The kind of the head is only a scheduling guess.
+- The early lease, reaped starts and ends, the shared failed-reap latch, HTTP yields, the capture pause, and the pool bound stay.
+- Tests show that each edit keeps main's order.
+
+Before any code, the code delegate reports whether this shape is practical.
+When it is not, the code delegate first tells the performance orchestrator.
+Only then does the fallback apply: the prior I, plus the condition on the kind
+of the head. The read-only report of 2026-11-18 found the shape practical. It
+reads "stops after discovery" as a pause through usage, so the same HTML
+preparation resumes after usage. Report:
+`.context/startup-base-overlap/last-attempt-shape-feasibility.md`.
+After the merge of main `d4df04aa5`, a refreshed read-only check of the merged
+source passed on 2026-11-18. It confirms the same shape and design. Report:
+`.context/startup-base-overlap/last-attempt-shape-feasibility-refreshed.md`.
+
+Workspace orchestrator's design call of 2026-11-18 accepts that source
+design. The refreshed check of the merged source confirms it:
+
+- Ordinary Changes keeps main's inline order. Usage ends first. Then the Changes request, the reference check, classification, status, terminal progress, and the one-second poll run.
+- Ordinary Changes also keeps main's cancel-and-drain. A replacement cancels the ordinary classification, and the next usage starts after it ends. The independent drain below covers only the startup task.
+- One cold-start task starts with the usage of the first installed head. The kind of the first head decides only whether it starts. The opportunity is used once.
+- One server owner holds the task. It observes replacement and stop apart from usage. A command-owned record carries one keyed outcome: retained, unkept, failed, cancelled, or consumed.
+- The task pins the base by itself and prepares through the existing native base path. It holds its warnings and cache notices until the accepted handover.
+- A sidecar base prepares through graph preparation under the early lease, which ends and is reaped before capture. An HTML-only base pauses after discovery.
+- After usage, the task checks the selected dependency directories, captures, and attempts the normal keep. A stale selection follows the existing one-restart rule.
+- After its own usage, the ordinary classifier waits for or takes the matching record before any second preparation. That wait is cancellable.
+- A retained outcome passes only through the ordinary kept-base key and freshness checks. An unkept outcome or a keyed error passes once to its originating attempt.
+- The post-usage pin stays authoritative. It rejects a moved base, so no reference poll runs before usage.
+- A replacement cancels the task at once. The next usage does not wait for its drain. Stop cancels the task and joins it.
+- A base-only seam in the comparison crate gives preparation and capture without comparison. No early call reaches classification.
+- The early lease and the pool policy stay unchanged.
+
+The clean evidence replaces the old instrumented acceptance pairs:
+
+- Run three interleaved pairs on each large HTML and React fixture, in the rotation of call 11. Use the original two edits, the HTTP request, and fresh caches.
+- Compare the new candidate with the main commit that it contains, at `d4df04aa5` or later.
+- Build the sidecar and viewer assets once from that contained main. Use that one asset set in both arms. Record its source commit and digests in the evidence.
+- Timing runs use no PSS reader and no clone recorder. Read `/proc/PID/status` each second.
+- Each timing run has an exclusive CPU grant. No other work runs on the machine during the clean set.
+- The 3,000,000 KiB raw RSS guard and the 1,000,000 KiB `MemAvailable` floor stay. Stop at the first guard failure.
+- Run the Serve tree of each arm in its own cgroup, through `systemd-run --user --scope`. Each second, sample `memory.current`, the `anon` and `file` values of `memory.stat`, and `memory.swap.current`.
+- The memory demand of an arm is its peak of anon plus swap, both read on the same tick. It must be at most 105% of the peak of the paired main.
+- The cgroup preflight passed, so the PSS plus `SwapPss` fallback is not adopted. Record: `.context/startup-base-overlap/clean-last-attempt/feasibility-v2.md`.
+- Accept only when first Changes is equal to the paired main or faster on both fixtures. Edits and HTTP must be no worse beyond the spread of main. The memory demand must be at most 105% of the paired main.
+- The cloud remeasurement of the new candidate is also required. Its acceptance belongs to the performance orchestrator.
+- A repeatable cost applies C, as option L below defines it. Keep the records and the follow-ups. Start no further variant.
+- The clean set needs no comparability with the old pairs. The old instrumented pairs stay as superseded records. Old pair 3 is one of them and does not block the clean set.
+
+The first wording of call 12 kept the frozen `e60c16532` assets for the clean
+pairs. The performance orchestrator corrected it on 2026-11-18, before any
+clean run. Its reason: a core with PR #316 and PR #319 beside the old sidecar
+assets is an unsupported and unproved mix. The shipped edit plans of PR #316
+and bundle cuts of PR #319 must be active in both arms.
+
+Measurement findings behind call 12. They do not change an earlier result:
+
+- In each React pair, the arm with the slower first Changes and slower edits also spent more CPU in the PSS reader. This held also in the pair where main was slower. HTTP did not follow this pattern in pairs 1 and 3.
+- A PSS walk of a shared-address-space child can traverse the whole memory of the core. The earlier reference poll adds such children during usage.
+- So observer cost can explain part of the slower timing. This stays a hypothesis.
+- At the PSS-peak sample of each arm of old pair 3, main's core had swapped memory, and the candidate's core had none. PSS plus swap at those two samples is within the 5% limit. No record derives a peak of PSS plus swap over all samples.
+- This explains the demand metric of anon plus swap. The failed PSS result of pair 3 stays recorded as failed. It is a superseded result and does not block the clean set.
+- The cloud run of `45efa06e6` gained more cold-start time than the 1.5-second target, with equal edits.
+
+Record: `.context/startup-base-overlap/call-12-docs-report.md`.
+
+Options check: `.context/startup-base-overlap/call-12-options-check.md`. It
+kept the Recommendation C and the Action. It labelled the chosen shape J,
+brought back E, F, and H as options, and added K, L, and M. It found seven
+text problems in this record, which the text above now corrects. It also notes
+an inference: under the literal per-pair rule, the HTML arm of J passes first
+Changes in all three pairs only by chance, because J leaves HTML on main's
+schedule.
+
+Performance orchestrator's call of 2026-11-18, under the user's delegation of
+2026-11-16: L, with a memory addition.
+
+- Close under C when the same acceptance check fails in all three pairs of one fixture.
+- Report every other result without acceptance: a single later pair, an incomplete set, or a guard stop of a main arm. Include every pair, the stage split, and any stop sample.
+- Keep the branch stopped while the performance orchestrator decides. Run no retry and no new variant.
+- The memory addition: a guard stop of a candidate arm closes under C at once, unless the main arm of the same pair also stopped. Then report. An immediate stop does not authorize another arm run to get that comparison.
+- Cloud acceptance belongs to the performance orchestrator.
+- For HTML, traces must prove no early task and a Changes order equal to main. Its timing uses the same L rule.
+
+Its reason: the earlier main React arms spread 81 seconds in first Changes, so
+one later pair can be noise. K would close the change on noise. L keeps the
+repeatable-cost trigger and an explicit decision for an ambiguous result.
+
+The performance orchestrator also approved M on 2026-11-18:
+
+- Apply only the exceptions of call 9.
+- Before using the two edit identity fields, revalidate them among the new contained-main captures.
+- Startup excludes only `deploymentId`. Every other edit field stays exact.
+- Use the captures that the frozen workload already writes. Run no extra workload.
+
+The performance orchestrator approved the safe text corrections of the options
+check. It releases the clean measurements when the implementation and its
+checks are ready. Send the new SHA and the asset commit for the cloud run.
 
 ## Milestone 1: Documentation and protocol
 
@@ -641,7 +833,7 @@ main `2e6bde9c2`. The timing pairs of call 11 run on the Milestone 3 candidate
 after that diagnosis. They are a new evidence set, not a resumed after batch.
 Each byte proof uses only the exceptions of call 9. The earlier TODOs of this
 milestone stay open. The remaining required evidence is reconciled after the
-result of the new set.
+clean result of Milestone 6.
 
 - [ ] Measure first Changes, `serve.background`, CPU, two edits, and process-tree peak RSS on every baseline fixture.
 - [ ] Measure HTTP view latency during usage, early gate wait, root switches, and capture's extra process start and generation restore.
@@ -652,13 +844,30 @@ result of the new set.
 - [ ] Compare the published Changes bytes with the non-overlap baseline as a one-time proof.
 - [ ] Stop and ask the performance orchestrator if RSS rises by more than 5%.
 - [ ] Report a gain below one second on the large fixtures before widening the change.
-- [ ] Run the React memory diagnosis of call 10 on both binaries, with exact fork, exec, and exit tracing.
-- [ ] Sum the tree PSS beside RSS, and record `MemAvailable` at the same sample times. Keep the 3,000,000 KiB RSS guard as the controlling stop.
-- [ ] Close the memory item on PSS only when the trace proves the fork transition and the candidate PSS tree peak is at most 105% of main. Otherwise stop and report.
-- [ ] Run the three interleaved pairs of call 11 on each large HTML and React fixture. Stop at the first guard failure.
-- [ ] Check first Changes, edits, HTTP, and PSS against the acceptance of call 11. Report every pair and the spread of each arm. Stop and report a repeatable cost.
+- [x] Run the React memory diagnosis of call 10 on both binaries, with exact fork, exec, and exit tracing.
+- [x] Sum the tree PSS beside RSS, and record `MemAvailable` at the same sample times. Keep the 3,000,000 KiB RSS guard as the controlling stop.
+- [x] Close the memory item on PSS only when the trace proves the fork transition and the candidate PSS tree peak is at most 105% of main. Otherwise stop and report.
+- [x] Count the excess Git spawns by phase on both arms. Identify their call sites and repeated work before choosing a product change.
+- [x] Run the three interleaved pairs of call 11 on each large HTML and React fixture. Stop at the first guard failure.
+- [x] Check first Changes, edits, HTTP, and PSS against the acceptance of call 11. Report every pair and the spread of each arm. Stop and report a repeatable cost.
+
+The call 11 schedule and audit completed. The startup and PSS evidence blocks
+acceptance. The full report answers the HTML request-order and React peak-owner
+questions. No product change follows from that analysis. Call 12 then chose a
+narrowed last attempt. The clean set of Milestone 6 replaces the call 11 pairs
+as acceptance evidence. The call 11 pairs stay as superseded records. The
+earlier diagnostic memory closure of call 10 stays closed.
+
+The checked TODOs above stay as history. Every unchecked TODO above stays
+open. They include the basic fixture, the stress edit, the two-slot starts,
+and the exact exec and exit runs of call 7 option G. Milestone 6 reconciles
+them with the clean result. Call 12 waives none of them.
 
 Evidence: `.context/startup-base-overlap/after-report.md` records the before and after table and byte comparison.
+Evidence: `.context/startup-base-overlap/memory-diag-v2-pair-report/final-report.md` records the closed memory item, transition proof, limits, and preserved preflight repair.
+Evidence: `.context/startup-base-overlap/git-spawn-investigation/report.md` records the phase counts, source-supported attribution, and its limits.
+Evidence: `.context/startup-base-overlap/interleaved-large-blocking-report.md` records the complete pair report and the remaining policy choice.
+Evidence: `.context/startup-base-overlap/interleaved-large-45efa06e6-runs/audit/final-report-v2.md` records the paired values, both arms' spreads, coverage, observer cost, byte proof, and peak owners.
 The native-main refresh and integration are recorded in
 `.context/startup-base-overlap/cache-merge-audit.txt` and the matched baseline report.
 The generation-affinity integration is recorded in
@@ -666,9 +875,67 @@ The generation-affinity integration is recorded in
 The document placement and preservation check is recorded in
 `.context/startup-base-overlap/docs-affinity-integration-report.md`.
 
-## Milestone 5: Verification, commit, review, and pull request
+## Milestone 5: Narrowed cold-start preparation
 
-Depends on: 1, 2, 3, 4
+Depends on: 3
+
+Apply call 12 and its design call. Delegate the refreshed feasibility check,
+then the non-UI implementation and tests, to one non-ui implementor. Delegate
+the internal docs to the docs implementor after the refreshed check. Keep
+every rule that call 12 keeps.
+
+- [x] Report whether the preferred shape of call 12 is practical, before any code change. When it is not, tell the performance orchestrator before the fallback.
+- [x] After the main merge at `d4df04aa5` or later, refresh the feasibility check on the merged source before any code change.
+- [x] Write each new test first. Observe its assertion failure before the implementation.
+- [x] Restore main's inline order for every ordinary Changes request, reference check, classification, status, terminal progress, and one-second poll. Restore main's cancel-and-drain of the ordinary classification before the next usage.
+- [x] Start one cold-start task with the usage of the first installed head, only when that head needs a sidecar. Use the opportunity once.
+- [x] Give the task one server owner and one command-owned record with a single keyed outcome. Hold its warnings and cache notices until the accepted handover.
+- [x] Prepare a sidecar base through graph preparation under the early lease. Pause an HTML-only base after discovery. Capture only after usage.
+- [x] Hand over through the ordinary classifier after usage, with a cancellable wait. Keep the kept-base key and freshness checks, and pass an unkept outcome or an error once.
+- [x] Cancel the task at once on a replacement, without a wait in the next usage. Join it at stop.
+- [x] Keep the early lease, reaped starts and ends, the shared failed-reap latch, HTTP yields, the capture pause, and the pool bound.
+- [x] Add a base-only preparation seam in the comparison crate. Make no early call to classification.
+- [x] Add deterministic tests for the main-order edit, the replaced startup drain, the cold-start handover, an HTML base under a sidecar head, failed and unkept outcomes, and a stale or moved outcome.
+- [x] Change the existing tests that expect Changes before usage to main's order. Keep their warning and error guarantees at the new handover.
+- [x] Pass every new asynchronous test in ten runs. Keep synchronous tests synchronous.
+- [x] Update the protocol pages and the READMEs after the refreshed check. In the timing page, separate the review spans of the startup task, which have no `changes.classify` parent.
+- [x] Update the summary and the replaced ways of this plan with the confirmed flow.
+- [x] Hold retained startup warnings and the cache notice until ordinary freshness accepts the base. Drop them on a miss or error. Add a regression test through the startup provider.
+- [x] Run the focused tests and `cargo xtask check --suite repository`.
+- [ ] Commit and push the change. Send the new SHA and the asset commit to the performance orchestrator for the required cloud remeasurement.
+
+Evidence: `.context/startup-base-overlap/last-attempt-implementation-report.md` records the implementation, assertion failures, ownership fixes, focused checks, and repeats.
+Evidence: `.context/startup-base-overlap/call-12-final-docs-report.md` records the final protocol and entry-point alignment.
+Evidence: `.context/startup-base-overlap/retained-diagnostics-implementation-report.md`, `call-12-repository-after-diagnostics-summary.json`, and `call-12-smoke/root-command-result-v3.json` record the final handover correction, combined checks, and feature smoke.
+
+## Milestone 6: Clean release evidence
+
+Depends on: 5
+
+Delegate the clean measurements to the non-ui implementor. Call 12 replaces
+the old instrumented acceptance pairs of call 11 with this set. Each pair
+compares the Milestone 5 candidate with the main commit that it contains, at
+`d4df04aa5` or later. Follow the build rules of Milestone 4. The clean set
+needs no comparability with the old pairs. Options L and M of call 12 decide
+the outcome rules and the byte proof.
+
+- [x] Build the sidecar and viewer assets once from the contained main. Use that one asset set in both arms. Record its source commit and digests.
+- [ ] Run three interleaved pairs on each large HTML and React fixture, in the rotation of call 11. Use the original two edits, the HTTP request, and fresh caches.
+- [ ] Run with no PSS reader and no clone recorder. Read `/proc/PID/status` each second.
+- [ ] Give each timing run an exclusive CPU grant. Run no other work on the machine during the clean set.
+- [ ] Keep the 3,000,000 KiB raw RSS guard and the 1,000,000 KiB `MemAvailable` floor. Stop at the first guard failure.
+- [ ] Run the Serve tree of each arm in its own cgroup through `systemd-run --user --scope`. Sample `memory.current`, the `anon` and `file` values of `memory.stat`, and `memory.swap.current` each second. Read anon and swap on the same tick.
+- [ ] Use only the cgroup demand metric. The preflight passed, so adopt no PSS plus `SwapPss` fallback.
+- [ ] Check first Changes and the memory demand against the paired main, and edits and HTTP against the spread of main, under the acceptance of call 12. Report every pair and the spread of each arm.
+- [ ] For the HTML fixture, prove from the traces that no early task ran and that the Changes order equals main. Judge its timing under the same L rule.
+- [ ] Derive the byte proof from the captures that the frozen workload already writes. First revalidate the two edit identity fields of call 9 among the new contained-main captures. Exclude only `deploymentId` at startup, and keep every other edit field exact.
+- [ ] Apply C when the same acceptance check fails in all three pairs of one fixture. Apply C at once after a guard stop of a candidate arm, unless the main arm of the same pair also stopped. Keep the records and the follow-ups. Start no further variant.
+- [ ] Report every other result without acceptance, with every pair, the stage split, and any stop sample. Keep the branch stopped until the performance orchestrator decides.
+- [ ] Reconcile each open TODO of Milestone 4 with the clean result. Waive none without an explicit call.
+
+## Milestone 7: Verification, commit, review, and pull request
+
+Depends on: 1, 2, 3, 4, 5, 6
 
 The orchestrator owns the combined gate, review rounds, plan deletion, and
 pull request. Use Git 2.45 or later, Git LFS, and pinned Bun. Put a separate

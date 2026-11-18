@@ -104,6 +104,9 @@
   request goes through, so a new plain call site cannot start the monitor. C
   is the launcher-wide fix of the class.
 - **Related:**
+  - `plans/follow-ups/serve-reference-poll-git-spawns.md`: the same
+    `rev-parse` calls run once per second. Reducing unchanged-reference
+    polls does not remove the filesystem-monitor risk. Either fix can land first.
   - `plans/follow-ups/plain-git-promisor-tree-reads.md`: the same cause, a
     plain command that a configuration or a Git build makes start a process.
     Both fixes live in the request construction of `mokly-git` and do not

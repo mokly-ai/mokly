@@ -6,8 +6,6 @@ use mokly_model::public_metadata::ChangesStatus;
 use tokio::sync::watch;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::usage_completion::CompletedUsage;
-
 use crate::changes::{ChangeSource, ChangeSourceMock};
 use crate::changes_background::{AfterUsage, ChangesPass};
 use crate::changes_support::fixture;
@@ -94,8 +92,7 @@ async fn completion_follows_committed_ready_or_unavailable_and_excludes_replacem
                 diagnostics: Arc::new(Unimock::new(())),
                 watching: false,
             });
-            pass.run(Arc::new(origin), stopping, Arc::new(CompletedUsage))
-                .await;
+            pass.run(Arc::new(origin), stopping).await;
             let expected = match outcome {
                 Outcome::Ready => vec![ChangesStatus::Ready],
                 Outcome::Unavailable => vec![ChangesStatus::Unavailable],

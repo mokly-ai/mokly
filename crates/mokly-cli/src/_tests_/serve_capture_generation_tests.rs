@@ -30,6 +30,7 @@ use crate::serve_capture_cancel::CaptureCancellation;
 use crate::serve_changes::{ServeChanges, Source};
 use crate::serve_changes_base::CombinedCancel;
 use crate::serve_pool::PoolSchedulingMock;
+use crate::serve_startup_base::StartupState;
 use crate::warning_support::{catalogue, config, scopes};
 
 fn source(
@@ -48,6 +49,7 @@ fn source(
         head: Arc::new(Unimock::new(())),
         warnings: scopes(terminal).begin(),
         services: ServeChanges {
+            startup: Arc::new(StartupState::default()),
             reuse: Arc::new(mokly_compare::comparison_reuse::MemoryComparisons::new(
                 32 * 1024 * 1024,
             )),

@@ -393,8 +393,8 @@ development dependencies, and no test uses the internet.
   `Changes`, `BaseProvider`, `PreparedBase`, and `BasePreparationError`, which
   pin the base, prepare its sources, report whether its tier-two install ran
   with lifecycle scripts off, carry its freshness evidence, and compare it with
-  the head. The default `BaseProvider::find_kept`, `keep`, and `release`
-  methods keep nothing.
+  the head. The default `BaseProvider::take_prepared`, `find_kept`, `keep`,
+  and `release` methods take and keep nothing.
 - [`src/base_retention.rs`](./src/base_retention.rs) defines
   `BaseRetentionRequest`, `KeptBase`, `BaseReuse`, and `BaseRelease`: the
   inputs of the kept base's key and freshness checks, the kept capture with
@@ -410,10 +410,15 @@ development dependencies, and no test uses the internet.
   the package entries of one working `node_modules` root, without package
   file contents.
 - [`src/base_classification.rs`](./src/base_classification.rs) holds the
-  classification path of `Changes`: one kept base or one fresh capture, the
-  `review.base-tree` action, and the single fresh preparation after failed reuse.
+  classification path of `Changes`: one taken startup outcome, one kept base,
+  or one fresh capture, the `review.base-tree` action, and the single fresh
+  preparation after failed reuse.
   [`src/base_preparation.rs`](./src/base_preparation.rs) shares preparation,
   capture checkpoints, stale-result handover, and retention.
+  [`src/base_startup.rs`](./src/base_startup.rs) defines `BasePreparation` and
+  `PreparedOutcome`, the base-only seam that prepares and captures a pinned
+  base without classification. A retained outcome still passes the ordinary
+  freshness checks, and a captured one continues one classification.
 - [`src/base_reader.rs`](./src/base_reader.rs) defines `BaseReader`, the
   per-classification reader of a kept base. It keeps only its `BaseReuse`,
   checks its cancellation before each call, and forwards retained inputs and

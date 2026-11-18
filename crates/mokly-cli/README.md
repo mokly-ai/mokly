@@ -87,8 +87,9 @@ serialized queue handles watch events and the rich-mode `r` shortcut under the
 [watch runtime contract](../../docs/protocol/mokly-watch-runtime.md). A valid
 candidate replaces the public state and backend with the next revision. A
 failed candidate keeps the last good state. After `Catalogue ready`, Serve
-renders current usage with the [early base preparation](../../docs/protocol/mokly-base-early-preparation.md)
-of Changes beside it, then classifies Changes against one pinned merge base.
+completes current usage, then classifies Changes against one pinned merge base.
+At cold start, it can run the [early base preparation](../../docs/protocol/mokly-base-early-preparation.md)
+of Changes beside the first usage.
 The usage pass renders as many views at once as the smaller of the worker
 count and the sidecar pool bound, which both source roots share. A shared
 admission gate applies the [sidecar admission rule](../../docs/protocol/mokly-on-demand.md#background-work-and-replacement).
@@ -321,11 +322,26 @@ reserves an 8 MiB main-thread stack through its linker settings in
   `finished` never took. After it reports the result, `Source::finished` also
   schedules the sidecar return pass.
   [`src/serve_changes_native.rs`](./src/serve_changes_native.rs) resolves the
-  base references and composes each classification with its `ServeBase`
-  provider and its cancellations. Its `Source::comparison_attempt` begins one
-  fenced reuse attempt.
+  base references and composes each classification through
+  `Source::base_changes`, with a `StartupProvider` in front of its `ServeBase`
+  provider. Its `Source::comparison_attempt` begins one fenced reuse attempt.
   [`src/serve_delivery.rs`](./src/serve_delivery.rs) composes the one
   `comparison_reuse::MemoryComparisons` service.
+- [`src/serve_changes_provider.rs`](./src/serve_changes_provider.rs) defines
+  `Source::base_changes`, which composes the base services that ordinary
+  Changes and the cold-start task share. Without Changes progress, as for the
+  task, these services publish no status and name no comparison step.
+- [`src/serve_startup_native.rs`](./src/serve_startup_native.rs) defines
+  `Source::startup_native`, which registers the one cold-start task when the
+  first head needs a sidecar, and `StartupTask`, which pins and prepares its
+  base and holds its warnings and cache line.
+- [`src/serve_startup_base.rs`](./src/serve_startup_base.rs) defines
+  `StartupHandoff` and `StartupState`, the command-owned record of the one
+  startup outcome. It rejects another head or key, waits for the drain, and
+  transfers the outcome once.
+- [`src/serve_startup_provider.rs`](./src/serve_startup_provider.rs) defines
+  `StartupProvider`, through which the ordinary classifier takes that outcome,
+  its warnings, and its cache line once.
 - [`src/serve_base.rs`](./src/serve_base.rs) defines `ServeBase`, which finds,
   keeps, and releases the kept base, `BaseSlot`, the slot, and `ReleaseBase`,
   the release-only capability that each reader keeps.

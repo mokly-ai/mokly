@@ -23,6 +23,8 @@ use mokly_server::changes::{
 };
 use mokly_server::comparison_graph::FrozenResources;
 use mokly_server::error::{Result, ServerError};
+use mokly_server::startup_preparation::StartupPreparation;
+use mokly_server::usage_completion::UsageCompletion;
 
 use crate::serve_base::BaseSlot;
 use crate::serve_capture_cancel::{CaptureCancellation, CaptureScopes};
@@ -30,6 +32,7 @@ use crate::serve_git::GitWork;
 use crate::serve_pool::PoolScheduling;
 use crate::serve_progress::{Progress, TerminalEvent};
 use crate::serve_reporter::GitRefresh;
+use crate::serve_startup_base::StartupHandoff;
 use crate::serve_warnings::{AttemptWarnings, WarningScopes};
 use crate::terminal::Terminal;
 
@@ -43,6 +46,7 @@ pub(super) trait ChangeSources: Send + Sync {
 
 #[derive(Clone)]
 pub(super) struct ServeChanges {
+    pub(super) startup: Arc<dyn StartupHandoff>,
     pub(super) reuse: Arc<dyn ComparisonReuse>,
     /// All source generations share one optional captured base.
     pub(super) kept_base: Arc<BaseSlot>,
@@ -90,6 +94,14 @@ pub(super) struct Source {
     pub(super) warnings: Arc<dyn AttemptWarnings>,
 }
 impl ChangeSource for Source {
+    fn startup(
+        &self,
+        cancel: Arc<dyn ChangeCancellation>,
+        usage: Arc<dyn UsageCompletion>,
+    ) -> Option<Arc<dyn StartupPreparation>> {
+        self.startup_native(cancel, usage)
+    }
+
     fn started(&self, cancel: Arc<dyn ChangeCancellation>) -> Option<Box<dyn ChangeRun>> {
         let phase = RefCell::new(None);
         cancel.commit(&TerminalEvent(&|| {

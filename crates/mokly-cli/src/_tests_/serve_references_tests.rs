@@ -13,6 +13,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::serve_capture_cancel::CaptureCancellation;
 use crate::serve_changes::{ServeChanges, Source};
 use crate::serve_git::GitWorkMock;
+use crate::serve_startup_base::StartupState;
 use crate::warning_support::{config, scopes};
 
 #[test]
@@ -48,6 +49,7 @@ fn moved_and_restored_tips_keep_the_resolved_merge_base_identity() {
         head: Arc::new(Unimock::new(())),
         warnings: scopes(&terminal).begin(),
         services: ServeChanges {
+            startup: Arc::new(StartupState::default()),
             reuse: Arc::new(mokly_compare::comparison_reuse::MemoryComparisons::new(
                 32 * 1024 * 1024,
             )),

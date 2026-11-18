@@ -13,6 +13,7 @@ use mokly_source_interface::tree::SourceTree;
 use crate::base_freshness::PreparationInputs;
 use crate::base_retention::{BaseRetentionRequest, BaseReuse, KeptBase};
 use crate::base_selection::{BaseLookup, PinnedBase};
+use crate::base_startup::PreparedOutcome;
 use crate::comparison_steps::Steps;
 use crate::comparison_types::{Comparison, ComparisonResult};
 use crate::error::{Error, Result};
@@ -139,6 +140,14 @@ pub struct BaseRequest<'a> {
 /// Rendering service seam. HTML and future JavaScript base entries use the same graph.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = BaseProviderMock))]
 pub trait BaseProvider: Send + Sync {
+    /// Consume one keyed startup outcome before ordinary freshness or preparation.
+    fn take_prepared(
+        &self,
+        _request: &BaseRetentionRequest<'_>,
+    ) -> Result<Option<PreparedOutcome>> {
+        Ok(None)
+    }
+
     /// Wait when required and reject an outcome whose early dependency selection changed.
     fn checkpoint(
         &self,

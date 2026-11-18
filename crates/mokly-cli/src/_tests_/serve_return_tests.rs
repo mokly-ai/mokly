@@ -16,6 +16,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::serve_capture_cancel::CaptureCancellation;
 use crate::serve_changes::{ServeChanges, Source};
 use crate::serve_pool::BaseCompletionMock;
+use crate::serve_startup_base::StartupState;
 use crate::terminal::TerminalMock;
 use crate::warning_support::{config, scopes};
 
@@ -53,6 +54,7 @@ fn unavailable_completion_signals_the_return_after_reporting() {
         head: Arc::new(Unimock::new(())),
         warnings: scopes(&terminal).begin(),
         services: ServeChanges {
+            startup: Arc::new(StartupState::default()),
             reuse: Arc::new(MemoryComparisons::new(32 * 1024 * 1024)),
             kept_base: Arc::default(),
             sidecars: Arc::new(scheduling.clone()),

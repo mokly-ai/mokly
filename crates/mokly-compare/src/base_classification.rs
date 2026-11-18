@@ -10,6 +10,7 @@ use mokly_model::material::catalogue_key;
 use crate::base_reader::BaseReader;
 use crate::base_render::{Changes, selected_base};
 use crate::base_retention::{BaseRetentionRequest, BaseReuse, KeptBase};
+use crate::base_startup::PreparedOutcome;
 use crate::comparison_steps::Step;
 use crate::comparison_types::{ComparisonRequest, ComparisonResult};
 use crate::error::{Error, Result};
@@ -66,19 +67,29 @@ impl Changes {
                 status = "error"
             );
             let _scope = span.enter();
-            let attempt = match self.provider.find_kept(&request)? {
-                Some(reuse) => {
-                    span.record("action", "reuse");
+            let attempt = match self.provider.take_prepared(&request)? {
+                Some(PreparedOutcome::Captured(base)) => {
+                    span.record("action", "prepare");
                     Attempt {
-                        base: reuse.base.clone(),
-                        reuse: Some(reuse),
-                        fallback: true,
+                        base,
+                        reuse: None,
+                        fallback: false,
                     }
                 }
-                None => {
-                    span.record("action", "prepare");
-                    self.prepare_attempt(&request)?
-                }
+                _ => match self.provider.find_kept(&request)? {
+                    Some(reuse) => {
+                        span.record("action", "reuse");
+                        Attempt {
+                            base: reuse.base.clone(),
+                            reuse: Some(reuse),
+                            fallback: true,
+                        }
+                    }
+                    None => {
+                        span.record("action", "prepare");
+                        self.prepare_attempt(&request)?
+                    }
+                },
             };
             span.record("status", "ok");
             attempt

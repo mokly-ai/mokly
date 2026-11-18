@@ -3,4 +3,7 @@
 mod owner_tests;
 mod publication_tests;
 mod start_tests;
+mod startup_tests;
 mod stop_tests;
+
+mod trace_tests;

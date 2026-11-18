@@ -8,8 +8,6 @@ use mokly_test_support::capture::Trace;
 use tracing::Instrument;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::usage_completion::CompletedUsage;
-
 use crate::changes::{ChangeSourceMock, ChangeToken};
 use crate::changes_background::ChangesPass;
 use crate::changes_support::fixture;
@@ -96,7 +94,6 @@ async fn classify(case: &str) {
         Arc::new(source.clone()),
         Arc::new(ChangeToken::default()),
         Ok("base".into()),
-        Arc::new(CompletedUsage),
     )
     .await;
 }

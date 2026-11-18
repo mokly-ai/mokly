@@ -36,6 +36,7 @@ pub(super) fn stage(name: &str) -> bool {
             | "output.rollback"
             | "output.cleanup"
             | "changes.classify"
+            | "review.startup-base"
             | "review.base-commit"
             | "review.base-gate-wait"
             | "review.base-tree"

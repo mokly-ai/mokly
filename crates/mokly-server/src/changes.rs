@@ -23,6 +23,7 @@ use crate::error::{Result, ServerError};
 use crate::revision::RevisionLease;
 use crate::revision_file::RevisionFile;
 use crate::snapshot::{Snapshot, encode_index};
+use crate::startup_preparation::StartupPreparation;
 use crate::usage_completion::UsageCompletion;
 
 /// Cancellation belongs to one classification, not to the shared render pool.
@@ -95,10 +96,6 @@ impl ChangeCancellation for ChangeToken {
 /// Status callbacks run outside the HTTP loop and reject superseded producers.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ChangeProgressMock))]
 pub trait ChangeProgress: Send + Sync {
-    /// Current usage may still render while base preparation runs.
-    fn usage(&self) -> Option<Arc<dyn UsageCompletion>> {
-        None
-    }
     /// Publish one status transition, or return false when superseded.
     fn status(&self, status: ChangesStatus) -> Result<bool>;
 }
@@ -106,6 +103,15 @@ pub trait ChangeProgress: Send + Sync {
 /// Command-owned base preparation and terminal reporting for an immutable head.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ChangeSourceMock))]
 pub trait ChangeSource: Send + Sync {
+    /// Schedule one independent base-only task for the first installed head.
+    fn startup(
+        &self,
+        _cancel: Arc<dyn ChangeCancellation>,
+        _usage: Arc<dyn UsageCompletion>,
+    ) -> Option<Arc<dyn StartupPreparation>> {
+        None
+    }
+
     /// Start command progress for one accepted background attempt.
     fn started(&self, _cancel: Arc<dyn ChangeCancellation>) -> Option<Box<dyn ChangeRun>> {
         None

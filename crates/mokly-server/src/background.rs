@@ -1,6 +1,6 @@
 //! One cancellable usage pass for each installed generation, in bounded batches.
 
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 use async_trait::async_trait;
 use mokly_catalogue::diagnostic::Warning;
@@ -13,7 +13,8 @@ use crate::diagnostics::Diagnostics;
 use crate::error::{InternalError, Result, ServerError};
 use crate::publication::{PublicationEvent, Publications};
 use crate::snapshot::Snapshot;
-use crate::usage_completion::{UsageCompletion, UsageLatch};
+use crate::startup_preparation;
+use crate::usage_completion::UsageLatch;
 use crate::work::Work;
 
 /// Background lifecycle owned by the Serve composition root.
@@ -27,7 +28,7 @@ pub trait Background: Send + Sync {
 pub struct UsagePass {
     /// At most this many background renders run at once; zero runs one.
     pub batch: usize,
-    /// Optional Changes preparation beside current usage, with one draining owner.
+    /// Optional Changes continuation after every current document settles.
     pub changes: Option<Arc<dyn AfterUsage>>,
     /// Atomic states and completion publisher.
     pub publications: Arc<dyn Publications>,
@@ -43,17 +44,22 @@ impl Background for UsagePass {
         if stopped(&stop) {
             return;
         }
-        let (requests, pending) = watch::channel(None);
-        let (stop_changes, stopping) = watch::channel(false);
-        let changes = self.changes.clone().map(|changes| {
-            tokio::spawn(async move {
-                Self::run_changes(changes, pending, stopping).await;
-            })
-        });
-        self.run_usage(&mut stop, &requests).await;
-        stop_changes.send_replace(true);
-        if let Some(changes) = changes
-            && let Err(source) = changes.await
+        let usage = Arc::new(UsageLatch::default());
+        let (first, startup) = {
+            let origin = self.publications.current();
+            let first = Arc::downgrade(&origin.documents);
+            let startup = startup_preparation::start(
+                origin,
+                self.publications.clone(),
+                self.diagnostics.clone(),
+                stop.clone(),
+                usage.clone(),
+            );
+            (first, startup)
+        };
+        self.run_usage(&mut stop, &first, usage).await;
+        if let Some(startup) = startup
+            && let Err(source) = startup.await
         {
             self.diagnostics
                 .failed(&ServerError::Internal(InternalError::Task { source }));
@@ -61,39 +67,12 @@ impl Background for UsagePass {
     }
 }
 
-#[derive(Clone)]
-struct Preparation {
-    origin: Arc<Snapshot>,
-    usage: Arc<dyn UsageCompletion>,
-}
-
 impl UsagePass {
-    async fn run_changes(
-        changes: Arc<dyn AfterUsage>,
-        mut pending: watch::Receiver<Option<Preparation>>,
-        mut stop: watch::Receiver<bool>,
-    ) {
-        loop {
-            if stopped(&stop) {
-                return;
-            }
-            let request = pending.borrow_and_update().clone();
-            if let Some(request) = request {
-                changes
-                    .run(request.origin, stop.clone(), request.usage)
-                    .await;
-            }
-            tokio::select! {
-                _ = stop.changed() => return,
-                changed = pending.changed() => if changed.is_err() { return; },
-            }
-        }
-    }
-
     async fn run_usage(
         &self,
         stop: &mut watch::Receiver<bool>,
-        requests: &watch::Sender<Option<Preparation>>,
+        first: &Weak<dyn Documents>,
+        usage: Arc<UsageLatch>,
     ) {
         let mut updates = self.publications.subscribe().updates;
         loop {
@@ -101,16 +80,15 @@ impl UsagePass {
                 return;
             }
             let origin = self.publications.current();
-            let usage = Arc::new(UsageLatch::default());
-            requests.send_replace(Some(Preparation {
-                origin: origin.clone(),
-                usage: usage.clone(),
-            }));
-            tokio::task::yield_now().await;
             if !self.fill(&origin, stop, &mut updates).await {
                 continue;
             }
-            usage.complete();
+            if first.ptr_eq(&Arc::downgrade(&origin.documents)) {
+                usage.complete();
+            }
+            if let Some(changes) = &self.changes {
+                changes.run(origin.clone(), stop.clone()).await;
+            }
             while Arc::ptr_eq(&self.publications.current().documents, &origin.documents) {
                 if stopped(stop) {
                     return;

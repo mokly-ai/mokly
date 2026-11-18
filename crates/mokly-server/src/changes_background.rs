@@ -1,4 +1,4 @@
-//! Changes prepares beside current usage and restarts only for new heads or Git refs.
+//! Changes follows current usage and restarts only for new heads or Git refs.
 //! There is no separate classification cache: a restart reuses unchanged documents
 //! through the content-addressed render cache.
 
@@ -17,19 +17,13 @@ use crate::diagnostics::Diagnostics;
 use crate::error::{InternalError, Result, ServerError};
 use crate::publication::Publications;
 use crate::snapshot::Snapshot;
-use crate::usage_completion::UsageCompletion;
 
-/// Historical preparation starts beside the foreground-priority current usage pass.
+/// Historical classification follows the foreground-priority current usage pass.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = AfterUsageMock))]
 #[async_trait]
 pub trait AfterUsage: Send + Sync {
     /// Classify and observe Git until this head is replaced or Serve stops.
-    async fn run(
-        &self,
-        origin: Arc<Snapshot>,
-        stop: watch::Receiver<bool>,
-        usage: Arc<dyn UsageCompletion>,
-    );
+    async fn run(&self, origin: Arc<Snapshot>, stop: watch::Receiver<bool>);
 }
 
 /// The HTTP loop never runs Git, prepares a base, or waits for classification.
@@ -47,12 +41,7 @@ pub struct ChangesPass {
 
 #[async_trait]
 impl AfterUsage for ChangesPass {
-    async fn run(
-        &self,
-        origin: Arc<Snapshot>,
-        mut stop: watch::Receiver<bool>,
-        usage: Arc<dyn UsageCompletion>,
-    ) {
+    async fn run(&self, origin: Arc<Snapshot>, mut stop: watch::Receiver<bool>) {
         if stopped(&stop) {
             return;
         }
@@ -80,11 +69,10 @@ impl AfterUsage for ChangesPass {
             let head = origin.clone();
             let task_source = source.clone();
             let task_cancel = cancel.clone();
-            let task_usage = usage.clone();
             let mut work = tokio::spawn(
                 async move {
                     owner
-                        .execute(head, task_source, task_cancel, references, task_usage)
+                        .execute(head, task_source, task_cancel, references)
                         .await;
                 }
                 .instrument(tracing::Span::current()),

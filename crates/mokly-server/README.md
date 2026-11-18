@@ -67,8 +67,9 @@ them, so a rejected candidate leaves the live records unchanged.
 
 `UsagePass` and `ChangesPass` run the background work of the
 [on-demand Serve contract](../../docs/protocol/mokly-on-demand.md): current
-usage with the [early base preparation](../../docs/protocol/mokly-base-early-preparation.md)
-of Changes beside it, then Changes classification against one pinned merge base.
+usage first, then Changes classification against one pinned merge base. At
+cold start, Serve can also run the [early base preparation](../../docs/protocol/mokly-base-early-preparation.md)
+of Changes beside the first usage, under its own owner.
 They yield to foreground requests, publish changed evidence in one revision, and
 cannot publish into a replacement. `UsagePass` keeps a sliding window of at
 most `batch` renders. It starts them in catalogue order and reports each
@@ -240,9 +241,14 @@ generations.
 - [`src/background.rs`](./src/background.rs) and
   [`src/changes_background.rs`](./src/changes_background.rs) define
   `UsagePass` and `ChangesPass`, the background usage and Changes work.
+- [`src/startup_preparation.rs`](./src/startup_preparation.rs) defines
+  `StartupPreparation` and `start`, which `UsagePass` calls once for the first
+  head. Its owner runs the blocking preparation under the
+  `review.startup-base` span, cancels it on a new head or stop, and waits for
+  its drain.
 - [`src/usage_completion.rs`](./src/usage_completion.rs) defines
-  `UsageCompletion`, the cancellable fence between early preparation and
-  comparison publication.
+  `UsageCompletion`, the cancellable fence that tells startup preparation when
+  the usage of the first head has settled.
 - [`src/background_batch.rs`](./src/background_batch.rs) defines `Window`, the
   usage pass's bounded batch, which keeps catalogue order for starts, warnings,
   and failure reports.

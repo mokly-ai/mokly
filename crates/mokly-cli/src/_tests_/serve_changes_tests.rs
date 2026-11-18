@@ -16,6 +16,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::serve_capture_cancel::CaptureCancellation;
 use crate::serve_changes::{ServeChanges, Source};
 use crate::serve_reporter::GitRefreshMock;
+use crate::serve_startup_base::StartupState;
 use crate::serve_warnings::{ServeWarnings, WarningScopes, WarningScopesMock};
 use crate::terminal::TerminalMock;
 use crate::warning_support::{config, warning};
@@ -68,6 +69,7 @@ fn refresh_uses_current_and_cancelled_attempts_print_no_warnings_or_result() {
         head: Arc::new(Unimock::new(())),
         warnings: old,
         services: ServeChanges {
+            startup: Arc::new(StartupState::default()),
             reuse: Arc::new(mokly_compare::comparison_reuse::MemoryComparisons::new(
                 32 * 1024 * 1024,
             )),

@@ -5,8 +5,6 @@ use std::sync::{Arc, Mutex, mpsc};
 use tokio::sync::{oneshot, watch};
 use unimock::{MockFn, Unimock, matching};
 
-use crate::usage_completion::CompletedUsage;
-
 use crate::changes::{ChangeSource, ChangeSourceMock};
 use crate::changes_background::{AfterUsage, ChangesPass};
 use crate::comparison_support::snapshot;
@@ -54,7 +52,7 @@ async fn source_replacement_cancels_and_drains_the_old_classifier_without_a_resu
     });
     let (_stop, stopping) = watch::channel(false);
     let run = tokio::spawn(async move {
-        pass.run(origin, stopping, Arc::new(CompletedUsage)).await;
+        pass.run(origin, stopping).await;
     });
     let cancel = entering.await.unwrap();
     let revision = publications.current().index.revision + 1;
@@ -102,7 +100,7 @@ async fn shutdown_cancels_and_drains_reference_lookup_without_starting_classific
     });
     let (stop, stopping) = watch::channel(false);
     let run = tokio::spawn(async move {
-        pass.run(origin, stopping, Arc::new(CompletedUsage)).await;
+        pass.run(origin, stopping).await;
     });
     let cancel = entering.await.unwrap();
     stop.send_replace(true);
@@ -128,5 +126,5 @@ async fn a_closed_owner_channel_starts_no_reference_or_render_work() {
         let (_stop, stopping) = watch::channel(false);
         stopping
     };
-    pass.run(origin, stopping, Arc::new(CompletedUsage)).await;
+    pass.run(origin, stopping).await;
 }

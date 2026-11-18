@@ -2,8 +2,8 @@
 
 use std::collections::BTreeMap;
 use std::path::Path;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::config_types::{Config, ResolvedConfig};
 use mokly_cli::cancellation::BuildCancellation;
@@ -22,7 +22,7 @@ use mokly_render::runtime::Runtime;
 use mokly_render::side::BaseSide;
 use mokly_sidecar::compiled::{CompiledGeneration, ReuseEvidence};
 use mokly_sidecar::definitions::Definitions;
-use mokly_sidecar::methods::{Call, ModuleResolution};
+use mokly_sidecar::methods::{BundleCapture, Call, ModuleResolution};
 use mokly_sidecar::pool::PoolMock;
 use mokly_sidecar::results::{Bundle, Module};
 use mokly_sidecar::wire::MethodResult;
@@ -90,12 +90,18 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
         cache_namespace: None,
         identity: "commit".into(),
     });
+    let captures = Arc::new(Mutex::new(Vec::new()));
+    let captured = captures.clone();
     let pool = Unimock::new((
         PoolMock::request
             .next_call(matching!((call) if matches!(call, Call::Bundle(bundle)
                 if Path::new(&bundle.params.source_root) == Path::new("/base")
                     && bundle.params.entry_files == ["specs/card.mockup.ts"])))
-            .returns(Ok(MethodResult::Bundle(Box::new(Bundle {
+            .answers_arc(Arc::new(move |_, call| {
+                if let Call::Bundle(bundle) = call {
+                    captured.lock().unwrap().push((bundle.capture, bundle.plan.is_none()));
+                }
+                Ok(MethodResult::Bundle(Box::new(Bundle {
                 plan: None,
                 cache: None,
                 unmapped_dependency_directories: None,
@@ -122,7 +128,8 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
                     imports: Vec::new(),
                     digest: Some("source".into()),
                 }],
-            })))),
+            })))
+            })),
         PoolMock::request
             .next_call(matching!((call) if matches!(call, Call::CssModules(params) if params.generation == "base-bundle")))
             .returns(Ok(MethodResult::Empty)),
@@ -158,7 +165,8 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
                     Err(Error::Cancelled)
                 })),
         )).no_verify_in_drop())),
-        runtime: Arc::new(Runtime::new(
+        runtime: Arc::new({
+            let mut runtime = Runtime::new(
             Arc::new(Unimock::new(())),
             Arc::new(Unimock::new(())),
             Arc::new(Unimock::new(())),
@@ -171,7 +179,10 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
             )),
             "test".into(),
             None,
-        )),
+            );
+            runtime.bundle_capture = BundleCapture::ServeEdit;
+            runtime.with_serve_edit_plans()
+        }),
         cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         freshness: Some(Arc::new(Unimock::new(FreshnessMock::record
             .some_call(matching!((checkout, _, roots, _) if checkout.digest == "checkout" && roots.is_none()))
@@ -220,6 +231,10 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
             )),
         })
         .unwrap();
+    assert_eq!(
+        *captures.lock().unwrap(),
+        [(Some(BundleCapture::Full), true)]
+    );
     assert_eq!(waits.load(Ordering::Relaxed), 0);
     assert!(prepared.scripts_off);
     assert_eq!(

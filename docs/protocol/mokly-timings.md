@@ -55,6 +55,7 @@ its files are installed. Its Serve duration includes queue time.
 | `review.base-extraction`                         | the base source key, the cache lookup, and the extraction when no complete entry exists; carries `action`, `reuse` or `extract`      |
 | `review.base-dependencies`                       | the dependency tier decision and, in the second tier, the bounded install; the end carries `tier`                                    |
 | `review.base-gate-wait`                          | in Serve, the admission wait of one sidecar call of an early base lease                                                              |
+| `review.startup-base`                            | in Serve, the early base preparation of a cold start, the parent of its review spans                                                 |
 | `review.compare-views`                           | the comparison loop; its `counts` record carries `views`, `unchanged`, `changed`, and `ignoredOnly`                                  |
 | `review.capture-side`                            | base validation and bounded capture or reuse; completed counts carry `views`, `uncapturedViews`, `retainedBytes`, and `encodedBytes` |
 | `review.resource-graph`                          | reference discovery and transitive traversal for one view or document side                                                           |

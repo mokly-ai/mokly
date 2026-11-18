@@ -50,6 +50,7 @@ pub mod runtime;
 mod security;
 pub mod shutdown;
 pub mod snapshot;
+pub mod startup_preparation;
 pub mod usage_completion;
 pub mod warnings;
 pub mod work;

@@ -1,4 +1,4 @@
-//! New head usage proceeds while one old classification drains; only the newest waits.
+//! Replacement usage does not wait for the independent startup task to drain.
 
 use std::sync::{Arc, Mutex, mpsc};
 
@@ -14,6 +14,7 @@ use crate::error::ServerError;
 use crate::publication::{PublicationWriter, Publications, SharedPublication};
 use crate::publication_support::{ready, snapshot};
 use crate::snapshot::Snapshot;
+use crate::startup_preparation::StartupPreparationMock;
 use crate::work::WorkMock;
 
 fn origin(documents: Arc<dyn Documents>, source: Arc<dyn ChangeSource>) -> Arc<Snapshot> {
@@ -30,7 +31,7 @@ async fn completed(publications: &dyn Publications) {
 }
 
 #[tokio::test]
-async fn rapid_head_replacements_run_usage_while_only_the_newest_preparation_waits() {
+async fn rapid_head_replacements_run_usage_while_only_startup_drains() {
     let documents: Vec<Arc<dyn Documents>> = (0..3)
         .map(|_| {
             let documents: Arc<dyn Documents> = Arc::new(
@@ -44,54 +45,60 @@ async fn rapid_head_replacements_run_usage_while_only_the_newest_preparation_wai
             documents
         })
         .collect();
-    let events = Arc::new(Mutex::new(Vec::new()));
-    let first_events = events.clone();
+    let calls = Arc::new(Mutex::new(Vec::new()));
     let (entered, entering) = oneshot::channel();
     let entered = Mutex::new(Some(entered));
     let (release, released) = mpsc::channel();
     let released = Mutex::new(released);
-    let first = Unimock::new((
-        ChangeSourceMock::references
-            .some_call(matching!(_))
-            .returns(Ok("base".into())),
-        ChangeSourceMock::classify
-            .some_call(matching!(_, _))
-            .answers_arc(Arc::new(move |_, cancel, _| {
-                first_events.lock().unwrap().push("first");
-                entered
-                    .lock()
-                    .unwrap()
-                    .take()
-                    .unwrap()
-                    .send(cancel)
-                    .unwrap();
+    let preparation = Unimock::new((
+        StartupPreparationMock::prepare
+            .some_call(matching!())
+            .answers_arc(Arc::new(move |_| {
+                entered.lock().unwrap().take().unwrap().send(()).unwrap();
                 released.lock().unwrap().recv().unwrap();
-                Err(ServerError::ChangesUnavailable)
+                false
             })),
+        StartupPreparationMock::finished
+            .some_call(matching!())
+            .returns(()),
     ));
-    let (stop, stopping) = watch::channel(false);
-    let last_events = events.clone();
-    let last = Unimock::new((
+    let token = Arc::new(Mutex::new(None));
+    let first_token = token.clone();
+    let first_calls = calls.clone();
+    let preparing = preparation.clone();
+    let first = Unimock::new((
+        ChangeSourceMock::startup
+            .each_call(matching!(_, _))
+            .answers_arc(Arc::new(move |_, cancel, _| {
+                first_calls.lock().unwrap().push("first");
+                *first_token.lock().unwrap() = Some(cancel);
+                Some(Arc::new(preparing.clone()))
+            })),
         ChangeSourceMock::references
-            .some_call(matching!(_))
-            .returns(Ok("base".into())),
-        ChangeSourceMock::classify
-            .some_call(matching!(_, _))
-            .answers_arc(Arc::new(move |_, _, _| {
-                last_events.lock().unwrap().push("last");
-                Err(ServerError::ChangesUnavailable)
-            })),
-        ChangeSourceMock::finished
-            .some_call(matching!(Err(ServerError::ChangesUnavailable), _))
-            .answers_arc(Arc::new(move |_, _, _| {
-                stop.send_replace(true);
-            })),
-    ));
-    let first_source = first.clone();
-    let last_source = last.clone();
-    let first = origin(documents[0].clone(), Arc::new(first_source));
-    let middle = origin(documents[1].clone(), Arc::new(Unimock::new(())));
-    let last = origin(documents[2].clone(), Arc::new(last_source));
+            .each_call(matching!(_))
+            .answers(&|_, _| Err(ServerError::ChangesReplaced)),
+    ))
+    .no_verify_in_drop();
+    let later = |name| {
+        let calls = calls.clone();
+        Arc::new(
+            Unimock::new((
+                ChangeSourceMock::startup
+                    .each_call(matching!(_, _))
+                    .answers_arc(Arc::new(move |_, _, _| {
+                        calls.lock().unwrap().push(name);
+                        None
+                    })),
+                ChangeSourceMock::references
+                    .each_call(matching!(_))
+                    .answers(&|_, _| Err(ServerError::ChangesReplaced)),
+            ))
+            .no_verify_in_drop(),
+        )
+    };
+    let first = origin(documents[0].clone(), Arc::new(first));
+    let middle = origin(documents[1].clone(), later("middle"));
+    let last = origin(documents[2].clone(), later("last"));
     let publications = Arc::new(SharedPublication::new(first));
     let (usage, mut rendered) = unbounded_channel();
     let work = Unimock::new(
@@ -119,8 +126,9 @@ async fn rapid_head_replacements_run_usage_while_only_the_newest_preparation_wai
         work: Arc::new(work),
         diagnostics: Arc::new(Unimock::new(())),
     };
+    let (stop, stopping) = watch::channel(false);
     let task = tokio::spawn(async move { pass.run(stopping).await });
-    let cancelled = entering.await.unwrap();
+    entering.await.unwrap();
     let first_usage = rendered.recv().await.unwrap();
     completed(publications.as_ref()).await;
     assert!(publications.replace(middle.at_revision(publications.current().index.revision + 1)));
@@ -128,11 +136,11 @@ async fn rapid_head_replacements_run_usage_while_only_the_newest_preparation_wai
     completed(publications.as_ref()).await;
     assert!(publications.replace(last.at_revision(publications.current().index.revision + 1)));
     let last_usage = rendered.recv().await.unwrap();
-    let before_drain = events.lock().unwrap().clone();
+    stop.send_replace(true);
     release.send(()).unwrap();
     task.await.unwrap();
     assert_eq!([first_usage, middle_usage, last_usage], [0, 1, 2]);
-    assert_eq!(before_drain, ["first"]);
-    assert_eq!(*events.lock().unwrap(), ["first", "last"]);
-    assert!(cancelled.cancelled());
+    assert_eq!(*calls.lock().unwrap(), ["first"]);
+    assert!(token.lock().unwrap().as_ref().unwrap().cancelled());
+    drop(preparation);
 }

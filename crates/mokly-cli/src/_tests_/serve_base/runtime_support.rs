@@ -13,6 +13,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::serve_changes::{ServeChanges, Source};
 use crate::serve_git::{GitRunnersMock, GitWork, ServeGit};
 use crate::serve_pool::PoolScheduling;
+use crate::serve_startup_base::StartupState;
 use crate::serve_warnings::{ServeWarnings, WarningScopes};
 use crate::warning_support::config;
 
@@ -44,6 +45,7 @@ pub(super) fn source(fixture: &Fixture, sidecars: Arc<dyn PoolScheduling>) -> So
         head: Arc::new(Unimock::new(())),
         warnings,
         services: ServeChanges {
+            startup: Arc::new(StartupState::default()),
             reuse: Arc::new(MemoryComparisons::new(32 * 1024 * 1024)),
             kept_base: fixture.slot.clone(),
             sidecars,

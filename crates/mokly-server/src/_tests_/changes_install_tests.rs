@@ -10,8 +10,6 @@ use mokly_model::public_metadata::ChangesStatus;
 use tokio::sync::{oneshot, watch};
 use unimock::{MockFn, Unimock, matching};
 
-use crate::usage_completion::CompletedUsage;
-
 use crate::changes::{ChangeSourceMock, ChangeToken};
 use crate::changes_background::{AfterUsage, ChangesPass};
 use crate::changes_install::ChangeInstallationMock;
@@ -102,8 +100,7 @@ async fn ready_metadata_starts_retention_after_projection_finishes() {
         watching: false,
     });
     let (stop, stopping) = watch::channel(false);
-    let run =
-        tokio::spawn(async move { pass.run(origin, stopping, Arc::new(CompletedUsage)).await });
+    let run = tokio::spawn(async move { pass.run(origin, stopping).await });
     let failure = finishing.await.unwrap();
     stop.send_replace(true);
     run.await.unwrap();

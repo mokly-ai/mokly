@@ -8,8 +8,6 @@ use mokly_model::public_metadata::ChangesStatus;
 use tokio::sync::{oneshot, watch};
 use unimock::{MockFn, Unimock, matching};
 
-use crate::usage_completion::CompletedUsage;
-
 use crate::changes::ChangeSourceMock;
 use crate::changes_background::{AfterUsage, ChangesPass};
 use crate::changes_support::fixture;
@@ -61,8 +59,7 @@ async fn two_equal_merge_base_polls_preserve_ready_and_classify_once() {
         watching: true,
     };
     let (stop, stopping) = watch::channel(false);
-    let run =
-        tokio::spawn(async move { pass.run(origin, stopping, Arc::new(CompletedUsage)).await });
+    let run = tokio::spawn(async move { pass.run(origin, stopping).await });
     finishing.await.unwrap();
     let ready = publications.current();
     assert_eq!(ready.index.changes_status, ChangesStatus::Ready);

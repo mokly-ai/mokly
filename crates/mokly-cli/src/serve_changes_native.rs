@@ -1,37 +1,23 @@
 //! Blocking Git lookup and comparison use the command's shared runtime.
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use mokly_cli::cancelled_work::CancellableWorkers;
 use mokly_cli::serial_stylesheets::SerialStylesheets;
-use mokly_compare::base_freshness::{Freshness, FreshnessChecks};
-use mokly_compare::base_render::{Changes, ChangesService, GitSourceFactory, selected_base};
-use mokly_compare::base_selection::GitBaseLookup;
+use mokly_compare::base_render::{ChangesService, selected_base};
 use mokly_compare::comparison::Engine;
 use mokly_compare::comparison_reuse::{ReuseAttempt, ReuseFence};
 use mokly_compare::comparison_types::ComparisonResult;
-use mokly_compare::install_inputs::SystemInstallInputs;
 use mokly_compare::moves::Detector;
-use mokly_compare::working_inputs::SystemWorkingInputs;
 use mokly_css::parsed_cache::MemoryParsedCss;
 use mokly_git::command::{ProcessMode, Request};
-use mokly_git::disk::SystemDisk;
-use mokly_git::repository::GitRepositories;
-use mokly_git::tree::Limits;
 use mokly_render::runtime::Runtime;
 use mokly_server::changes::{ChangeCancellation, ChangeProgress};
 use mokly_server::error::{Result, ServerError};
 
-use crate::base_dependencies::NativeDependencies;
-use crate::changes_base::NativeBase;
-use crate::serve_base::ServeBase;
-use crate::serve_base_cancel::{BaseLifetime, PreparingBase};
-use crate::serve_base_preparation::Preparation;
+use crate::serve_base_cancel::BaseLifetime;
 use crate::serve_changes::Source;
-use crate::serve_changes_base::{
-    AttemptBase, CacheNotice, CombinedCancel, PreparingDependencies, RunSteps,
-};
-use crate::serve_preparation_control::PreparationControl;
+use crate::serve_startup_provider::StartupProvider;
 
 impl Source {
     /// Resolve HEAD and the selected base to commits and return their merge base.
@@ -114,96 +100,25 @@ impl Source {
             .lock()
             .unwrap_or_else(|error| error.into_inner())
             .clear();
-        let cancellation = Arc::new(CombinedCancel {
-            operation: self.operation.clone(),
-            command: self.services.cancellation.clone(),
-            generation: cancel.clone(),
-        });
-        let lifetime: Arc<dyn BaseLifetime> = Arc::new(PreparingBase::new(cancellation.clone()));
-        let usage = progress.usage();
-        let early = usage.as_ref().map(|usage| {
-            self.services
-                .sidecars
-                .preparing(lifetime.clone(), usage.clone())
-        });
-        let runtime = self.classification_runtime(lifetime.clone());
-        let runtime = match &early {
-            Some(early) => {
-                let mut runtime = (*runtime).clone();
-                runtime.pool = early.clone();
-                Arc::new(runtime)
-            }
-            None => runtime,
-        };
-        let preparation: Option<Arc<dyn PreparationControl>> =
-            usage.zip(early).map(|(usage, pool)| {
-                let preparation: Arc<dyn PreparationControl> = Arc::new(Preparation::new(
-                    usage,
-                    cancel.clone(),
-                    pool,
-                    self.services.runtime.dependency_usage.clone(),
-                ));
-                preparation
-            });
-        let freshness: Arc<dyn Freshness> = Arc::new(FreshnessChecks {
-            working: Arc::new(SystemWorkingInputs),
-            installs: Arc::new(SystemInstallInputs {
-                cancellation: cancellation.clone(),
-            }),
-        });
-        let changes: &dyn ChangesService = &Changes {
-            lookup: Arc::new(GitBaseLookup {
-                repositories: Arc::new(GitRepositories {
-                    runner: self.services.git.runner(lifetime.clone()),
-                    disk: Arc::new(SystemDisk),
-                }),
-            }),
-            pinned: None,
-            sources: Arc::new(GitSourceFactory {
-                limits: Limits::default(),
-                batch_bytes: 48 * 1024 * 1024,
-                snapshots: self.services.extraction_snapshots.clone(),
-            }),
-            provider: Arc::new(ServeBase {
-                preparation: preparation.clone(),
-                slot: Arc::downgrade(&self.services.kept_base),
-                runtime: runtime.clone(),
-                freshness: freshness.clone(),
-                reader: cancellation,
-                origin: cancel.clone(),
-                lifetime: lifetime.clone(),
-                inner: Arc::new(AttemptBase {
-                    warnings: self.pending.clone(),
-                    inner: Arc::new(NativeBase {
-                        preparation,
-                        runtime,
-                        cancellation: lifetime.clone(),
-                        freshness: Some(freshness),
-                        dependencies: Arc::new(PreparingDependencies {
-                            progress: progress.clone(),
-                            inner: Arc::new(NativeDependencies {
-                                cancellation: lifetime,
-                                reporter: Arc::new(CacheNotice {
-                                    announced: self.services.cache_announced.clone(),
-                                    warnings: self.warnings.clone(),
-                                    terminal: self.services.terminal.clone(),
-                                    style: self.services.style.clone(),
-                                    redactor: self.services.redactor.clone(),
-                                    cancel: cancel.clone(),
-                                }),
-                            }),
-                        }),
-                    }),
-                    progress,
-                }),
-            }),
+        let mut attempt = self.base_changes(
+            cancel.clone(),
+            Some(progress),
+            None,
+            self.pending.clone(),
+            self.cache_notice(cancel.clone()),
             comparison,
-            steps: Arc::new(RunSteps {
-                progress: self.services.progress.clone(),
-                cancel: cancel.clone(),
-            }),
-        };
-        match changes.classify(
+        );
+        attempt.changes.provider = Arc::new(StartupProvider {
+            inner: attempt.changes.provider.clone(),
+            handoff: self.services.startup.clone(),
+            head: self.head.clone(),
+            cancel: cancel.clone(),
+            cancellation: attempt.cancellation.clone(),
+            warnings: self.pending.clone(),
+            reporter: self.cache_notice(cancel.clone()),
+            pending: Mutex::default(),
+        });
+        match attempt.changes.classify(
             &self.config,
             self.services.base.as_deref(),
             self.head.clone(),

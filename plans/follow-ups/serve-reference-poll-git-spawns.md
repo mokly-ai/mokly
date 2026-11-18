@@ -1,0 +1,55 @@
+# Serve reference poll starts Git every second
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Post-merge task.
+- **Added:** 2026-11-18, from branch `calummoore/mokly-startup-base-overlap-rae7`, after an offline count of the Git processes in its memory diagnosis. On 2026-11-18, the performance orchestrator claimed this item for the performance queue.
+- **Location:** `crates/mokly-server/src/changes_background.rs:64`, `crates/mokly-server/src/changes_background.rs:107`, `crates/mokly-server/src/changes_background.rs:137`, `crates/mokly-server/src/changes_background.rs:172`, `crates/mokly-cli/src/serve_changes_native.rs:40`, `crates/mokly-cli/src/serve_changes.rs:77`, `crates/mokly-server/src/changes_execution.rs:150`, and `docs/protocol/mokly-watch-runtime.md:65`.
+- **Reason:** The poll is older than the branch that counted it, that branch changes no polling, and the owner must first measure its cost.
+
+- **Terms:**
+  - **Watched Serve:** `mokly serve` without `--no-watch`. It rebuilds after source changes and polls Git references.
+  - **Core:** The native Rust process of Serve. It starts every Git process.
+  - **Reference check:** `Source::references_native` at `crates/mokly-cli/src/serve_changes_native.rs:40`. It resolves `HEAD` and the base to commits and returns their merge base.
+  - **Base:** The revision that Changes compares with: `--base`, else `review.base` of the configuration, else `origin/main`, as `selected_base` in `crates/mokly-compare/src/base_render.rs:230` selects.
+  - **Shared-address-space spawn:** A child that shares the memory of the core until it starts its program, as `posix_spawn` does on Linux. A Linux trace shows the `CLONE_VM` flag for it.
+- **Background:**
+  - The Git observation rule at `docs/protocol/mokly-watch-runtime.md:65` says that watched Serve polls the resolved `HEAD` and base commits once per second. Git resolves symbolic refs, worktrees, and packed refs.
+  - When either tip moves, Serve resolves the merge base again. An equal merge base keeps the published Changes state.
+  - `changes_background.rs:64` creates a one-second interval. Its first tick comes one second after the start, and it skips missed ticks.
+  - In watched Serve, two loops poll at each tick. Line 107 polls while a classification runs. Line 137 polls after it ends, while the head stays current. So an idle watched Serve also polls. `--no-watch` never polls.
+  - Each poll runs the reference check on a blocking worker at line 172, through `Source::references` at `crates/mokly-cli/src/serve_changes.rs:129`.
+  - The reference check runs `git --no-optional-locks rev-parse --verify --end-of-options` for `HEAD^{commit}`, then for the base. Both commands use `ProcessMode::PlainGroup`.
+  - Only then does the check compare the two commits with its cache. An unchanged pair skips only `merge-base`. So each tick starts two Git processes, also when nothing changed.
+  - With `--base HEAD`, both commands resolve `HEAD`, and each tick still starts two processes.
+  - A new source starts with an empty cache at `serve_changes.rs:77`, so its first check starts three Git processes.
+  - In watched Serve, `changes_execution.rs:150` runs the reference check again before publication. It rejects the result when a reference moved. This final validation adds two processes to each classification.
+  - Without a skipped tick, the poll starts about 7,200 Git processes per hour.
+  - The poll code is the same on `origin/main` and on the branch that counted it. That branch starts Changes while startup usage renders, so its poll starts earlier and runs longer.
+  - A Linux kernel trace counted the Git processes that the core started in one large React fixture run per side. The sides were the branch commit `4ce1d83cf` and main `2e6bde9c2`. Each run had a startup and two edits.
+  - Shared-address-space Git processes, branch then main: startup 286 and 128, first edit 163 and 39, second edit 157 and 37, between the edits 2 and 0. The totals are 608 and 204.
+  - Each side also had six Git processes with a separate address space. All Git processes total 614 and 210.
+  - The 404 extra processes form 202 pairs. Each pair has two processes of the same native thread, less than 100 milliseconds apart. The pairs follow a one-second cadence, within 150 milliseconds.
+  - Both sides have the same 96 other Git processes. They are the first reference checks, the final validations, the base pinning, the one base preparation, and the kept-base freshness checks.
+  - Both sides prepare the base once and reuse it twice. So the extra processes are not repeated base preparation.
+  - The trace records no Git arguments and no call stack for any pair. The assignment of each pair to the poll is an inference from the source and the cadence. Its count matches exactly.
+  - Every process of the 202 pairs was a shared-address-space spawn with clone flags `0x100004100`. Such a spawn copies no page tables of the core.
+  - Until such a child starts Git, its RSS reads equal the RSS of the core. A sampler that sums RSS over the process tree can then count the core twice. The memory diagnosis of that branch found no sample of this kind that needed a peak correction.
+  - An earlier Linux probe in `plans/follow-ups/managed-child-spawn-trampoline.md` touched 800 MB in the core, then ran 40 `git rev-parse` commands. `posix_spawn` with a separate process group cost 1.2 ms per command. Full setup cost 29.7 ms.
+  - The performance orchestrator gives two reasons for this item: the spawn cost of a large core, and a concern about process starts on macOS. No saved run measures a CPU, latency, or memory cost of the poll. No macOS trace exists. So the CPU and latency savings of either direction are unknown.
+- **Task:** Measure the cost of the poll. Then choose between two directions.
+  - Measure Git processes per second, the CPU of the core and of Git, and the latency of an HTTP render. Use an idle and a busy watched Serve with a large catalogue, on Linux and on macOS.
+  - **A.** Check the reference files before the commands. Read the identity of `HEAD`, `packed-refs`, the reference of the current branch, and the base reference. When none changed since the last check, reuse the last result and start no Git process.
+  - **B.** Let the Serve file watcher observe the same paths. Run the two commands only after a change of one of them.
+  - Each direction must give exactly the result of the two commands. It must detect every reference change that the commands detect.
+  - Each direction must keep the final validation before publication, so that Serve never publishes a result for a moved reference.
+  - Each direction must fall back to the two commands when it cannot map the base to reference files, as for `HEAD~1` or `main@{upstream}`.
+  - `rev-parse` tries a short name as `NAME`, `refs/NAME`, `refs/tags/NAME`, `refs/heads/NAME`, `refs/remotes/NAME`, and `refs/remotes/NAME/HEAD` below the Git directory, in that order. A new reference earlier in that order changes the result.
+  - In a linked worktree, `.git` is a file. `HEAD` is in the Git directory of the worktree, and the other references are in the common directory.
+  - A repository in the reftable format keeps its references under `reftable/`, with no loose reference files and no `packed-refs`.
+  - When a loose reference moves to another object ID, its file keeps the same length. Git replaces the file through a lock file and a rename. So a check of the size alone misses such an update.
+  - The watcher prunes `.git` and ignores a path that is created beneath it, under `docs/protocol/mokly-watch.md`. B must observe the reference paths outside those catalogue rules. A reference change must not start a catalogue rebuild.
+  - Each direction keeps the Git observation rule of `docs/protocol/mokly-watch-runtime.md`, or proposes its change as a decision for the user.
+- **Impact if no action:** Every watched Serve keeps starting two Git processes each second, also when idle. Their cost on a large core and on macOS stays unknown. On the branch that counted them, the earlier poll added 158 Git processes to one large React startup.
+- **Needs:** A Linux machine and a macOS machine, each with a large catalogue, such as the fixtures of `npm run fixture:large`. No credentials.
+- **Done when:** The owner records the measured cost and the choice of A or B, with its date and reason. Or the owner records, with its date, that the measured cost keeps the current poll. After a chosen direction ships, an idle watched Serve with unchanged references starts no Git process at a tick. Tests then show the exact result, each reference change of the Git observation rule, and the final validation.
+- **Related:** `plans/follow-ups/plain-git-fsmonitor-override.md` covers the same `rev-parse` commands of the reference check. A base name that starts with `:` makes them read the index, which can start a filesystem monitor. Either item can land first.

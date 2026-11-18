@@ -15,6 +15,8 @@ pub(super) trait BaseLifetime:
 {
     /// Called under the original classification's publication guard at keep.
     fn detach(&self);
+    /// Move an unkept base from startup cancellation to its ordinary reader.
+    fn transfer(&self, preparing: Arc<CombinedCancel>);
 }
 
 /// The base's initial reader lifetime, until its successful keep.
@@ -41,6 +43,16 @@ impl PreparingBase {
 }
 
 impl BaseLifetime for PreparingBase {
+    fn transfer(&self, preparing: Arc<CombinedCancel>) {
+        let mut current = self
+            .preparing
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        if current.is_some() {
+            *current = Some(preparing);
+        }
+    }
+
     fn detach(&self) {
         self.preparing
             .lock()
@@ -86,3 +98,7 @@ impl control::Cancellation for PreparingBase {
         self.requested()
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/serve_base_transfer_tests.rs"]
+mod serve_base_transfer_tests;

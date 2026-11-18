@@ -100,8 +100,9 @@ failures use error blocks and fail the command.
 Serve keeps the last prepared base in memory between classifications. The
 kept base is the captured base with its render graph, its sources, its
 leases, and its sidecar bundle. Serve keeps at most one base. `build` and
-`publish` keep no base. Serve can prepare a new base while current usage
-renders, under the [early base preparation contract](./mokly-base-early-preparation.md).
+`publish` keep no base. At cold start, Serve can prepare its first base while
+current usage renders, under the
+[early base preparation contract](./mokly-base-early-preparation.md).
 
 A classification reuses the kept base while its key and its
 [freshness checks](#freshness-checks) hold. The key is the merge-base commit,
@@ -171,7 +172,7 @@ settings.
 ### Cancellation
 
 While Serve prepares a base, the cancellation of its owner stops all of its
-base work. The owner is the classification, or the head generation of an
+base work. The owner is the classification, or the startup owner of an
 [early preparation](./mokly-base-early-preparation.md#lifetime). When Serve
 keeps the base, the base detaches from that owner, and only the stop of Serve
 stops it. Each reader of the kept base, a classification or a selected
@@ -196,9 +197,9 @@ Serve releases the kept base on each of these events:
 - a failure of the kept base during a reuse,
 - the stop of Serve.
 
-A classification or an early preparation with another key releases the kept
-base before it prepares a new one. In-flight work, such as a selected capture,
-can still hold an older base until it ends. The kept capture stays within the
+A classification with another key releases the kept base before it prepares a
+new one. In-flight work, such as a selected capture, can still hold an older
+base until it ends. The kept capture stays within the
 [base capture bound](./mokly-comparison-serving.md#base-and-head-capture).
 
 When the kept base fails during a reuse, for example because a resource

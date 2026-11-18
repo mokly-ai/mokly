@@ -109,27 +109,10 @@ impl BaseProvider for AttemptBase {
     }
     fn prepare(&self, request: &BaseRequest<'_>) -> BasePreparationResult {
         let prepared = self.inner.prepare(request);
-        let records = match &prepared {
-            Ok(base) => base.generation.catalogue().warnings.clone(),
-            Err(error) => match &*error.source {
-                Error::Catalogue {
-                    source: CatalogueError::Invalid { warnings, .. },
-                } => warnings.clone(),
-                Error::Graph { source } => source.warnings(),
-                _ => Vec::new(),
-            },
-        };
         self.warnings
             .lock()
             .unwrap_or_else(|error| error.into_inner())
-            .extend(
-                records
-                    .iter()
-                    .filter(|warning| {
-                        matches!(warning.code, "base-dependencies" | "base-conversion")
-                    })
-                    .cloned(),
-            );
+            .extend(records(&prepared));
         let prepared = prepared?;
         if !matches!(self.progress.status(ChangesStatus::Pending), Ok(true)) {
             return Err(BasePreparationError::new(
@@ -137,11 +120,64 @@ impl BaseProvider for AttemptBase {
                 Error::Cancelled,
             ));
         }
-        Ok(PreparedBase {
-            generation: Arc::new(FrozenResources::new(prepared.generation)),
-            scripts_off: prepared.scripts_off,
-            freshness: prepared.freshness,
-        })
+        Ok(frozen(prepared))
+    }
+}
+
+/// A held startup notice can discard an obsolete preparation's directory.
+#[cfg_attr(test, unimock::unimock(api = PreparationNoticeMock))]
+pub(super) trait PreparationNotice: Reporter {
+    /// Clear only buffered output before the existing fresh restart.
+    fn restarting(&self);
+}
+
+/// Startup retains diagnostics and frozen resources without Changes status callbacks.
+pub(super) struct EarlyBase {
+    pub(super) notice: Arc<dyn PreparationNotice>,
+    pub(super) warnings: Arc<Mutex<Vec<Warning>>>,
+    pub(super) inner: Arc<dyn BaseProvider>,
+}
+impl BaseProvider for EarlyBase {
+    fn restarting(&self) {
+        self.notice.restarting();
+        self.warnings
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .clear();
+        self.inner.restarting();
+    }
+    fn prepare(&self, request: &BaseRequest<'_>) -> BasePreparationResult {
+        let prepared = self.inner.prepare(request);
+        self.warnings
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .extend(records(&prepared));
+        Ok(frozen(prepared?))
+    }
+}
+
+fn records(prepared: &BasePreparationResult) -> Vec<Warning> {
+    let records = match prepared {
+        Ok(base) => base.generation.catalogue().warnings.clone(),
+        Err(error) => match &*error.source {
+            Error::Catalogue {
+                source: CatalogueError::Invalid { warnings, .. },
+            } => warnings.clone(),
+            Error::Graph { source } => source.warnings(),
+            _ => Vec::new(),
+        },
+    };
+    records
+        .into_iter()
+        .filter(|warning| matches!(warning.code, "base-dependencies" | "base-conversion"))
+        .collect()
+}
+
+fn frozen(prepared: PreparedBase) -> PreparedBase {
+    PreparedBase {
+        generation: Arc::new(FrozenResources::new(prepared.generation)),
+        scripts_off: prepared.scripts_off,
+        freshness: prepared.freshness,
     }
 }
 
@@ -152,6 +188,9 @@ pub(super) struct CacheNotice {
     pub(super) style: Style,
     pub(super) redactor: Arc<Redactor>,
     pub(super) cancel: Arc<dyn ChangeCancellation>,
+}
+impl PreparationNotice for CacheNotice {
+    fn restarting(&self) {}
 }
 impl Reporter for CacheNotice {
     fn opened(&self, directory: &Path) {

@@ -61,11 +61,11 @@ model.
 ## Background Work And Replacement
 
 After readiness, Serve renders every view in the background, which fills the
-render cache and the usage of every detail. Serve can prepare the base side of
-Changes during this pass, under the
-[early base preparation contract](./mokly-base-early-preparation.md). After
-the pass, it classifies Changes, which compares the two
-[sides](./mokly-comparison.md#sides). This background pass
+render cache and the usage of every detail, then classifies Changes, which
+renders the base side under the
+[comparison contract](./mokly-comparison.md#sides). At cold start, Serve can
+prepare that base side during the first pass, under the
+[early base preparation contract](./mokly-base-early-preparation.md). This background pass
 renders a bounded batch of views at a time: at most the smaller of the worker
 count and the [sidecar pool size](./mokly-sidecar.md#lifecycle), and at least
 one. The worker count is the machine's core count, up to eight. The next view

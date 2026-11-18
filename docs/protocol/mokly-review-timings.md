@@ -6,13 +6,20 @@ These records use the schema and privacy rules in
 and what it measures.
 
 Review spans use the same session, role, and parent context as their caller:
-under `changes.classify` in Serve and under `output.write` in `build`. The
+under `changes.classify` in Serve and under `output.write` in `build`. In
+Serve, the review spans of
+[early base preparation](./mokly-base-early-preparation.md) are under
+`review.startup-base`, not under `changes.classify`, because that preparation
+runs apart from the classification. The
 `review.capture-side` span carries `side`, with `base` for the base generation
 and `head` for the head generation. Build and publish emit the head capture
 under `output.write` before `changes.classify`. The base capture appears under
-`review.base-tree`. `review.base-tree` carries `action`: `prepare` for a new
+`review.base-tree`, or under `review.startup-base` for early base preparation.
+`review.base-tree` carries `action`: `prepare` for a new
 base, and `reuse` when Serve reuses the kept base of the
-[base lifetime rule](./mokly-base-preparation.md#serve-base-lifetime). A
+[base lifetime rule](./mokly-base-preparation.md#serve-base-lifetime). When
+Changes takes the outcome of early base preparation, its `review.base-tree`
+covers that take. A
 reuse emits no `review.base-extraction`, `review.base-dependencies`, or
 `review.capture-side` span. A repeated discovery for the same side, route, content
 digest, and exclusion identity is a defect. A contained parse or selector failure in

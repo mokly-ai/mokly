@@ -1,5 +1,6 @@
 //! Historical preparation retains only dependency warnings and respects cancellation.
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::diagnostic::WarningSubject;
@@ -15,7 +16,7 @@ use mokly_model::public_metadata::ChangesStatus;
 use mokly_server::changes::ChangeProgressMock;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::serve_changes_base::AttemptBase;
+use crate::serve_changes_base::{AttemptBase, EarlyBase, PreparationNoticeMock};
 use crate::warning_support::{catalogue, config, warning};
 
 #[test]
@@ -116,4 +117,60 @@ fn failed_graph_preparation_retains_only_its_dependency_warning() {
     });
     assert!(matches!(result, Err(error) if matches!(*error.source, Error::Graph { .. })));
     assert_eq!(*warnings.lock().unwrap(), [dependency]);
+}
+
+#[test]
+fn startup_preparation_keeps_warnings_and_scripts_mode_without_changes_progress() {
+    let mut dependency = warning("Uses current dependencies.");
+    dependency.code = "base-dependencies";
+    let warnings = Arc::new(Mutex::new(Vec::new()));
+    let restarted = Arc::new(AtomicBool::new(false));
+    let restart = restarted.clone();
+    let provider: &dyn BaseProvider = &EarlyBase {
+        notice: Arc::new(
+            Unimock::new(
+                PreparationNoticeMock::restarting
+                    .each_call(matching!())
+                    .answers_arc(Arc::new(move |_| {
+                        restart.store(true, Ordering::SeqCst);
+                    })),
+            )
+            .no_verify_in_drop(),
+        ),
+        warnings: warnings.clone(),
+        inner: Arc::new(
+            Unimock::new(
+                BaseProviderMock::prepare
+                    .some_call(matching!(_))
+                    .returns(Ok(PreparedBase {
+                        generation: Arc::new(Unimock::new(
+                            RenderGenerationMock::catalogue
+                                .each_call(matching!())
+                                .returns(catalogue(vec![dependency.clone()])),
+                        )),
+                        scripts_off: true,
+                        freshness: None,
+                    })),
+            )
+            .no_verify_in_drop(),
+        ),
+    };
+    let result = provider.prepare(&BaseRequest {
+        head: &Unimock::new(()),
+        working_config: &config(),
+        repository: Arc::new(Unimock::new(())),
+        commit: ObjectId::parse(&"a".repeat(40)).unwrap(),
+        install_scripts: false,
+        sources: HistoricalSources {
+            failures: Arc::new(Unimock::new(())),
+            tree: Arc::new(Unimock::new(())),
+            sources: Arc::new(Unimock::new(())),
+        },
+        steps: Arc::new(Unimock::new(())),
+    });
+    assert!(matches!(result, Ok(base) if base.scripts_off));
+    assert_eq!(*warnings.lock().unwrap(), [dependency]);
+    provider.restarting();
+    assert!(warnings.lock().unwrap().is_empty());
+    assert!(restarted.load(Ordering::SeqCst));
 }
