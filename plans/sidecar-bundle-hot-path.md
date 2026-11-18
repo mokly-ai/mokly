@@ -172,6 +172,8 @@ Evidence: `.context/sidecar-bundle-hot-path/docs-audit/contract-audit.md` and `.
 
 ## Milestone 2: Exact compile optimizations
 
+Status: Complete.
+
 Depends on: 1
 
 Delegate these changes and their focused tests to the non-ui implementor. Keep the implementation and shared build output under one owner.
@@ -186,7 +188,7 @@ Delegate these changes and their focused tests to the non-ui implementor. Keep t
 - [x] Run a one-time before/after byte comparison for direct and aliased imports of all three libraries. Compare code, metafiles, inputs, module digests, and dependency usage. Compare `compiled.peers` with sorted keys. Save the proof under `.context/`.
 - [x] Run unchanged sidecar tests. Repeat each new asynchronous test 10 times. Record the cost and failure proof of each new test.
 
-- [ ] Commit with Conventional Commits and push the implementation. Send its SHA to the performance orchestrator at once for the `mokly-cloud` measurement.
+- [x] Commit with Conventional Commits and push the implementation. Send its SHA to the performance orchestrator at once for the `mokly-cloud` measurement.
 
 Evidence: `.context/sidecar-bundle-hot-path/implementation-report.md` and the evidence files that it names.
 
@@ -196,9 +198,9 @@ Depends on: 2
 
 The workspace orchestrator owns the combined checks. Use built sidecars from the last merged main and this branch. Use the same inputs and dependency installation. Run measured processes one at a time.
 
-- [ ] Measure `sidecar.bundle` and `sidecar.bundle.compile` with `--debug-timings` on `examples/basic` and the generated large React fixture from `scripts/large/`. Save interleaved before/after samples and their means.
-- [ ] Run the required example build and Serve smoke check.
-- [ ] Put Git 2.45 or later first on PATH. Install Git LFS. Check disk and memory before every large Cargo build. Set `CARGO_INCREMENTAL=0`, limit build concurrency, and use one Cargo target directory per checkout.
+- [x] Measure `sidecar.bundle` and `sidecar.bundle.compile` with `--debug-timings` on `examples/basic` and the generated large React fixture from `scripts/large/`. Save interleaved before/after samples and their means.
+- [x] Run the required example build and Serve smoke check.
+- [x] Put Git 2.45 or later first on PATH. Install Git LFS. Check disk and memory before every large Cargo build. Set `CARGO_INCREMENTAL=0`, limit build concurrency, and use one Cargo target directory per checkout.
 - [ ] Run targeted tests, `cargo xtask check --suite repository`, and `cargo xtask check`. Record each failure and any machine blocker. Rerun an unrelated failure once without weakening the check.
 
 Evidence: `.context/sidecar-bundle-hot-path/measurements.md`, `verification.md`, and command logs.
@@ -210,7 +212,7 @@ Depends on: 1, 2, 3
 The workspace orchestrator owns this milestone. Merge new main changes with the git-merge skill when needed. Preserve the nearby bundle disk cache change if it merges first. Do not merge this pull request.
 
 - [ ] Review the complete local diff against `origin/main` after the push with the implementation-review skill. Run the finding checks. Apply its two-fix-round limit, record follow-up items for remaining findings, and re-review.
-- [ ] Confirm the performance orchestrator's `mokly-cloud` result and the 200 ms target before the final report. Report uncertainty if measurements do not establish it.
+- [x] Confirm the performance orchestrator's `mokly-cloud` result and the 200 ms target before the final report. Report uncertainty if measurements do not establish it.
 - [ ] Finish CI with the finish-work skill's `scripts/ci-wait.sh`. Fix each branch-caused failure. Send the final report to the performance orchestrator.
 - [ ] Delete this plan under the plans skill after every other required task is complete, except CI and the report that need the pull request.
 - [ ] Open the pull request into `main`. Keep its dated decisions, design calls, plan permalink, evidence summary, and follow-up items in the description. Leave it unmerged.
