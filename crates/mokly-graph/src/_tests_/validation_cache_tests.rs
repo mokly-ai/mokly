@@ -109,6 +109,7 @@ pub(super) fn configured_probe(retain: bool, missing_dark_mobile: bool, bound: u
         input: Config::default(),
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: vec![],
         roots: vec![],
     };

@@ -203,7 +203,11 @@ test("a failed worker drains successful siblings before setup rejects", async ()
     (error) => {
       assert.ok(error instanceof AggregateError);
       assert.equal(error.message, "Example worker setup failed");
-      assert.deepEqual(error.errors, [failure]);
+      assert.equal(error.errors.length, 1);
+      const startup = error.errors[0];
+      assert.ok(startup instanceof Error);
+      assert.equal(startup.message, "Example Serve worker 2 setup failed");
+      assert.equal(startup.cause, failure);
       assert.equal(closed, true);
       return true;
     },
@@ -251,7 +255,12 @@ test("a copied-output setup failure drains Serve hosts and restores both URL cha
         throw expected;
       },
     }),
-    (error) => error === expected,
+    (error) => {
+      assert.ok(error instanceof Error);
+      assert.match(error.message, /^Copied static host setup failed/u);
+      assert.equal(error.cause, expected);
+      return true;
+    },
   );
   assert.equal(closed, true);
   assert.deepEqual(

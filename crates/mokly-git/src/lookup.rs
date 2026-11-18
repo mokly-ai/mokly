@@ -3,7 +3,6 @@
 use std::ffi::OsString;
 
 use crate::batches::{self, MAX_ARGUMENT_BYTES, MAX_ARGUMENTS};
-use crate::command::{DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, ProcessMode, Request};
 use crate::error::Result;
 use crate::identity::{ObjectId, RepoPath};
 use crate::repository::GitRepository;
@@ -29,33 +28,16 @@ impl GitRepository {
         paths: &[RepoPath],
         limits: Limits,
     ) -> Result<Vec<Entry>> {
-        let prefix: Vec<_> = [
-            "--no-optional-locks",
-            "--literal-pathspecs",
-            "ls-tree",
-            "-l",
-            "-z",
-            "--full-tree",
-            commit.as_str(),
-            "--",
-        ]
-        .into_iter()
-        .map(OsString::from)
-        .collect();
+        let mut request =
+            self.tree_request(&["ls-tree", "-l", "-z", "--full-tree", commit.as_str(), "--"]);
         let paths: Vec<_> = paths
             .iter()
             .map(|path| OsString::from(path.as_str()))
             .collect();
         let mut entries = Vec::new();
-        for args in batches::split(&prefix, &paths, MAX_ARGUMENTS, MAX_ARGUMENT_BYTES)? {
-            let output = self.runner.run(&Request {
-                process_mode: ProcessMode::PlainGroup,
-                directory: self.directory.clone(),
-                args,
-                stdin: Vec::new(),
-                output_limit: DEFAULT_OUTPUT_LIMIT,
-                stderr_limit: DEFAULT_STDERR_LIMIT,
-            })?;
+        for args in batches::split(&request.args, &paths, MAX_ARGUMENTS, MAX_ARGUMENT_BYTES)? {
+            request.args = args;
+            let output = self.runner.run(&request)?;
             entries.extend(tree::parse(&output.stdout, limits)?);
         }
         Ok(entries)

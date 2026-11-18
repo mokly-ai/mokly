@@ -68,7 +68,15 @@ for (const fails of [false, true]) {
     // Attach rejection handling before releasing the deliberately failing task.
     const failure = new Error("fixture copy failed");
     const observed = fails
-      ? assert.rejects(result, (error) => error === failure)
+      ? assert.rejects(result, (error) => {
+          assert.ok(error instanceof Error);
+          assert.equal(
+            error.message.split("\n")[0],
+            "Copied static host setup failed",
+          );
+          assert.equal(error.cause, failure);
+          return true;
+        })
       : result;
     assert.deepEqual(started, ["serve", "copy", "comparison"]);
     assert.equal(new Set(signals).size, 1);

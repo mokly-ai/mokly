@@ -3,9 +3,9 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-16, from the branch `calummoore/plain-git-spawns`, review round 1, the check of finding 2. On 2026-11-17 it took in the facts of a second item, `git-missing-blob-root-check.md`, from the branch `calummoore/lisbon-h906`, where the repository gate stopped on Git 2.43.0.
-- **Location:** `crates/mokly-git/src/repository_access.rs:42` to line 61,
-  `crates/mokly-git/src/lookup.rs:51`, `crates/mokly-git/src/fetch.rs:45` to
-  line 70, `crates/mokly-git/src/checkout_index.rs:44` to line 58,
+- **Location:** `crates/mokly-git/src/repository_access.rs:41` to line 44,
+  `crates/mokly-git/src/lookup.rs:40`, `crates/mokly-git/src/fetch.rs:45` to
+  line 69, `crates/mokly-git/src/checkout_index.rs:44` to line 58,
   `crates/mokly-cli/tests/changes_failures_tests.rs:154` to line 184, and
   `docs/protocol/mokly-git.md:41` to line 44.
 - **Reason:** `origin/main` behaves the same, so the branch that found it does not change it.
@@ -15,8 +15,9 @@
 - **Terms:**
   - **Partial clone:** a repository with a promisor remote that omits some
     objects until a command needs them. A promisor remote has the setting
-    `remote.{name}.promisor` set to true. A blobless clone omits blobs, for
-    example after `git clone --filter=blob:none`.
+    `remote.{name}.promisor` set to true, or `extensions.partialClone` names
+    it. A blobless clone omits blobs, for example after
+    `git clone --filter=blob:none`.
   - **Lazy fetch:** Git's automatic fetch of a missing object from the
     promisor remote while an ordinary command reads it.
   - **Lazy-fetch control:** the environment variable `GIT_NO_LAZY_FETCH=1`,
@@ -40,8 +41,17 @@
     58 say: "A failed fetch of missing objects names the recovery command."
   - Base reads run `ls-tree -l` first
     (`crates/mokly-git/src/repository_access.rs:42` and
-    `crates/mokly-git/src/lookup.rs:51`). It reads each blob's size. The
+    `crates/mokly-git/src/lookup.rs:40`). It reads each blob's size. The
     missing-object check and the one bounded fetch run after it.
+  - `GitRepositories::open`, in `crates/mokly-git/src/repository.rs`, reads
+    the promisor remotes once, after its root check and before any base read.
+    One plain `config` command reads `remote.{name}.promisor` and
+    `extensions.partialClone`. With a promisor remote, `tree_request` in
+    `crates/mokly-git/src/repository_command.rs` gives both `ls-tree` calls
+    the mode `ProcessMode::FullTree`, the full tree. That mode starts Git in
+    a new session and, on Linux, makes Git adopt orphan helpers. Without a
+    promisor remote, both calls keep the faster `ProcessMode::PlainGroup`, a
+    plain process group in the core's session.
   - The source key and the checkout identity hash the checkout settings of the
     whole base commit. They list it through the same `Repository::list`
     method, at `crates/mokly-git/src/source_key.rs:33`. A base computes the
@@ -56,11 +66,11 @@
   - After the listing, `ensure_checkout_objects`
     (`crates/mokly-git/src/checkout_index.rs:44` to line 58) passes the
     checkout entries and their `.gitattributes` files to `ensure_objects`
-    (`crates/mokly-git/src/fetch.rs:27` to line 120). Its check marks each
+    (`crates/mokly-git/src/fetch.rs:27` to line 119). Its check marks each
     missing blob with an output line `?{hash}`.
     - With a promisor remote, one `git fetch --stdin` fetches all of them, at
-      `fetch.rs:71` to line 119.
-    - Without a promisor remote, `fetch.rs:70` returns `MissingObject`. Its
+      `fetch.rs:71` to line 118.
+    - Without a promisor remote, `fetch.rs:69` returns `MissingObject`. Its
       text, at `crates/mokly-git/src/error.rs:132`, is "[mokly-git/fetch] base
       object {object} is missing; run `git fetch origin {object}`".
   - `crates/mokly-git/src/system_command.rs:32` sets `GIT_NO_LAZY_FETCH=1` for
@@ -95,7 +105,9 @@
 
   - On a build without any control (before 2.45 and without the backport),
     `ls-tree -l` lazy-fetches each missing blob in its own fetch process, with
-    no time bound.
+    no time bound. In a partial clone, the full tree owns each such fetch and
+    its helpers, so a stop reaches them. A credential prompt fails at once,
+    because the new session has no terminal. The full tree adds no time bound.
   - The local test runs put a task-local Git 2.50.1 first on `PATH`, so they
     do not cover older builds.
   - The integration test
@@ -114,10 +126,10 @@
     - So the repository gate fails on a machine with this packaged Git. No
       document of the repository names a minimum Git version.
   - When the check fails, its command error returns from `ensure_objects` at
-    once. So the promisor lookup, the fetch, and `MissingObject` never run.
-    `build` and `publish` then fail with `git-failed`, and Serve shows Changes
-    as unavailable. In a partial clone, nothing fetches the missing base
-    blobs.
+    once. So the fetch and `MissingObject` never run. The promisor lookup
+    already ran when the repository opened. `build` and `publish` then fail
+    with `git-failed`, and Serve shows Changes as unavailable. In a partial
+    clone, nothing fetches the missing base blobs.
   - Evidence of 2026-11-17, from a normal repository with one missing blob.
     This is not a partial clone:
     - The fixture had no promisor remote. Its commit held `home.screen.html`.
@@ -227,9 +239,12 @@
   missing start point, so a later change of that rule cannot break the fetch.
 - **Previous examples:** None found.
 - **Related:**
-  - `plans/follow-ups/plain-git-promisor-tree-reads.md`: the same `ls-tree -l`
-    calls in partial clones, about process ownership on builds without the
-    control. Option E of that item is option B of this item.
+  - No open item. With a promisor remote, `tree_request` in
+    `crates/mokly-git/src/repository_command.rs` gives `ls-tree -l` the full
+    tree. The callers are `crates/mokly-git/src/repository_access.rs` and
+    `crates/mokly-git/src/lookup.rs`. The fix keeps the order of
+    the listing and the check, and it adds no time bound. Option B of this
+    item is the reorder that the fix did not choose.
 - **Recommendation:** B, after a reproduction with a blobless clone on a
   backported build confirms the failure.
 - **Action:** ask the user, because no option is clearly best until a

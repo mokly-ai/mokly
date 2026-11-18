@@ -24,6 +24,7 @@ impl BaseKey {
             .collect::<Vec<_>>();
         let bytes = match serde_json::to_vec(&(
             &config.input,
+            &config.modules,
             &config.file,
             &config.repo_root,
             roots,

@@ -1,11 +1,12 @@
 //! Validate the configured PostCSS module before a sidecar can start.
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use mokly_source_interface::tree::{FileKind, SourceTree};
 use serde_json::Value;
 
 use crate::config::invalid_path_text;
+use crate::config_inputs::ProjectedInput;
 use crate::config_types::ResolvedConfig;
 use crate::config_validation::invalid;
 use crate::error::{CatalogueError, Result};
@@ -21,9 +22,12 @@ pub(crate) fn shape(value: &Value) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn validate(tree: &dyn SourceTree, config: &ResolvedConfig) -> Result<Vec<PathBuf>> {
+pub(crate) fn validate(
+    tree: &dyn SourceTree,
+    config: &ResolvedConfig,
+) -> Result<Option<ProjectedInput>> {
     let Some(value) = &config.input.postcss else {
-        return Ok(Vec::new());
+        return Ok(None);
     };
     if value.is_empty()
         || invalid_path_text(value)
@@ -52,7 +56,10 @@ pub(crate) fn validate(tree: &dyn SourceTree, config: &ResolvedConfig) -> Result
     if node.kind != FileKind::File {
         return Err(file_error(value));
     }
-    Ok(vec![path, node.identity])
+    Ok(Some(ProjectedInput {
+        path,
+        identity: node.identity,
+    }))
 }
 
 fn path_error(value: &str) -> CatalogueError {

@@ -84,6 +84,7 @@ fn checkout_change_after_first_base_read_preserves_the_sample_and_invalidates_re
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
         roots: Vec::new(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
     };
     let commit = ObjectId::parse(&"a".repeat(40)).unwrap();

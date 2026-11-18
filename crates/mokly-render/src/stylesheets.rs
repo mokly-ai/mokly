@@ -71,8 +71,8 @@ pub(crate) fn compiler(
         None => Arc::new(IdentityProcessor),
     };
     let settings = format!(
-        "{:?}:{:?}:{:?}",
-        config.input, side.source_root, side.module_resolution
+        "{:?}:{:?}:{:?}:{:?}",
+        config.input, config.modules, side.source_root, side.module_resolution
     );
     Arc::new(CachedStylesheets::new(
         Arc::new(Compiler {
