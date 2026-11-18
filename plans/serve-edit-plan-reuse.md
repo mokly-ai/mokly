@@ -467,10 +467,14 @@ The complete gate result is in `complete-gate-result.json` there.
 
 Depends on: 4
 
+Review evidence:
+`.context/reviews/calummoore/mokly-sidecar-plan-reuse-srh7/round-1-review.md`.
+The review found no findings. No finding check or fix round was needed.
+
 - [x] Rebuild after the clean main palette merge. Check its styles,
       snapshots, and affected browser cases. Preserve both merge parents.
       Evidence: `.context/serve-edit-plan-reuse/palette-merge-audit.log`.
-- [ ] Review the whole diff against origin/main through implementation-review
+- [x] Review the whole diff against origin/main through implementation-review
       after the push. Run finding checks and its two fix rounds. Record
       deferred and outside-scope findings as follow-up items.
 - [ ] Delete this plan when the plans skill says. Keep its dated calls and
