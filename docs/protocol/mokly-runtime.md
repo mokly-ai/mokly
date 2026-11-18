@@ -67,9 +67,9 @@ head capture read by the base, because it only serves Changes and adds a copy.
 Both sides share equal keys with no side warning. Serve reads the head from the
 cache. A missing head document renders again on the head root. Each
 [capture](./mokly-comparison-serving.md#base-and-head-capture) has its own
-bound. The base-side extraction cache and the dependency install cache live in
-the operating system's cache directory under a key derived from the repository
-path, each with its own byte bound, and the terminal names that directory.
+bound. The base-side extraction cache, the dependency install cache, and the bundle
+cache live in the operating system's cache directory under a key derived from the
+repository path, each with its own byte bound, and the terminal names that directory.
 
 ## Serve
 
@@ -237,10 +237,10 @@ commit point and never leave a partial output directory in place.
 
 ## No Writes
 
-No command writes into the repository except `build` into its output
-directory. Serve, Changes, live prop editing, and comparison generations keep
-every result in process memory. The caches outside the repository are the
-only other files Mokly writes, and deleting them changes time only.
+No command writes into the repository except `build` into its output directory. Serve,
+Changes, live prop editing, and comparison generations keep every result in process
+memory. The [caches](./mokly-base-cache.md) outside the repository, compiled bundles
+included, are the only other files Mokly writes, and deleting them changes time only.
 
 ## Related Docs
 

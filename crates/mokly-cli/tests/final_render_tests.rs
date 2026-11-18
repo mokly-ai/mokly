@@ -1,46 +1,15 @@
 //! Review regressions assert complete public diagnostics through the native CLI.
 
-use std::fs;
-use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
-use tempfile::TempDir;
+mod diagnostic_support;
 
-fn workspace() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
-        .canonicalize()
-        .unwrap()
-}
-fn write(root: &Path, path: &str, text: &str) {
-    let file = root.join(path);
-    fs::create_dir_all(file.parent().unwrap()).unwrap();
-    fs::write(file, text).unwrap();
-}
-fn fixture() -> TempDir {
-    let directory = tempfile::tempdir().unwrap();
-    write(directory.path(), "mokly.config.json", "{}");
-    #[cfg(unix)]
-    std::os::unix::fs::symlink(
-        workspace().join("node_modules"),
-        directory.path().join("node_modules"),
-    )
-    .unwrap();
-    #[cfg(windows)]
-    std::os::windows::fs::symlink_dir(
-        workspace().join("node_modules"),
-        directory.path().join("node_modules"),
-    )
-    .unwrap();
-    directory
-}
-fn command(root: &Path) -> Command {
-    let mut command = Command::new(env!("CARGO_BIN_EXE_mokly"));
+use diagnostic_support::fixture::{Fixture, fixture, write};
+
+fn command(root: &Fixture) -> Command {
+    let mut command = root.command();
     command
         .args(["build", "--strict", "--no-changes", "--sidecars", "1"])
-        .current_dir(root)
-        .env("MOKLY_OUTPUT", "plain")
-        .env("MOKLY_PACKAGE_ROOT", workspace().join("packages/mokly"))
         .env_remove("MOKLY_NODE_EXECUTABLE")
         .env_remove("MOKLY_SIDECAR_TIMEOUT_MS");
     command
@@ -85,7 +54,7 @@ fn invalid_postcss_configuration_never_starts_node() {
         ),
     ] {
         write(root.path(), "mokly.config.json", &serde_json::json!({"postcss":value,"stylesheets":[{"match":"**","stylesheets":["style.css"]}]}).to_string());
-        let output = command(root.path()).env("PATH", "").output().unwrap();
+        let output = command(&root).env("PATH", "").output().unwrap();
         failure(output, &format!("[mokly/config-invalid] {expected}\n"));
     }
 }
@@ -110,7 +79,7 @@ fn a_configured_renderer_requires_a_function_default_export() {
     ] {
         write(root.path(), "renderer.mjs", module);
         failure(
-            command(root.path()).output().unwrap(),
+            command(&root).output().unwrap(),
             "[mokly/build-invalid] specs/item.mockup.ts export default (desktop, light): renderer default export must be a function\n[mokly/build-invalid] specs/item.mockup.ts export default (mobile, light): renderer default export must be a function\n",
         );
     }
@@ -133,7 +102,7 @@ fn native_and_sidecar_component_props_errors_put_location_before_code() {
             ),
         );
         failure(
-            command(root.path()).output().unwrap(),
+            command(&root).output().unwrap(),
             &format!(
                 "[mokly/build-invalid] specs/item.mockup.ts export default: [mokly/component-props] {expected}\n"
             ),
@@ -150,7 +119,7 @@ fn hashes_in_module_names_stay_intact_in_screen_and_page_failures() {
         "import {defineScreen} from '@mokly/mokly'; export default defineScreen({path:'item',title:'A',description:'',relatedDocs:[],props:{},render(){throw new Error('render exploded')}});",
     );
     failure(
-        command(root.path()).output().unwrap(),
+        command(&root).output().unwrap(),
         "[mokly/build-invalid] specs/item#tag.mockup.ts export default (desktop, light): render exploded\n[mokly/build-invalid] specs/item#tag.mockup.ts export default (mobile, light): render exploded\n",
     );
     write(
@@ -159,7 +128,7 @@ fn hashes_in_module_names_stay_intact_in_screen_and_page_failures() {
         "import {definePage} from '@mokly/mokly'; export default definePage({path:'item',title:'A',description:'',relatedDocs:[],render(){throw new Error('page exploded')}});",
     );
     failure(
-        command(root.path()).output().unwrap(),
+        command(&root).output().unwrap(),
         "[mokly/build-invalid] specs/item#tag.mockup.ts export default: page exploded\n",
     );
 }
@@ -173,7 +142,7 @@ fn bundle_syntax_errors_keep_the_source_and_reason_without_tool_framing() {
         "export const broken = ;\n",
     );
     failure(
-        command(root.path()).output().unwrap(),
+        command(&root).output().unwrap(),
         "[mokly/build-invalid] specs/item.mockup.ts:1:23: Unexpected \";\"\n",
     );
 }

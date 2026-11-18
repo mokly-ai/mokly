@@ -3,6 +3,8 @@
 use mimalloc::MiMalloc;
 
 mod base_dependencies;
+mod bundle_runtime;
+mod cache_directory;
 mod changes_base;
 mod changes_freshness;
 mod changes_runtime;

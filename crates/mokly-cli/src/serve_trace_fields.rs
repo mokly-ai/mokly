@@ -23,7 +23,15 @@ impl Visit for Fields {
             "cache"
                 if matches!(
                     value,
-                    "no-record" | "evicted" | "stamp-mismatch" | "inconsistent-evidence"
+                    "no-record"
+                        | "evicted"
+                        | "stamp-mismatch"
+                        | "inconsistent-evidence"
+                        | "hit"
+                        | "memory"
+                        | "version-mismatch"
+                        | "damaged"
+                        | "unavailable"
                 ) =>
             {
                 self.values.insert(field.name().into(), json!(value));

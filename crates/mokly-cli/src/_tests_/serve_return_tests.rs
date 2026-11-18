@@ -67,6 +67,7 @@ fn unavailable_completion_signals_the_return_after_reporting() {
                 Arc::new(Unimock::new(())),
                 Arc::new(Unimock::new(())),
                 Arc::new(Unimock::new(())),
+                Arc::new(Unimock::new(())),
                 "test".into(),
                 None,
             )),

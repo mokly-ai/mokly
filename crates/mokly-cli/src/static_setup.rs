@@ -14,6 +14,7 @@ use mokly_server::assets::{PackageAssets, ViewerAssets};
 use mokly_source_interface::tree::SourceTree;
 use mokly_static::modules;
 
+use crate::bundle_runtime::Reporting;
 use crate::render_runtime::Services;
 use crate::static_runtime::Context;
 use crate::{changes_runtime, viewer_assets};
@@ -57,6 +58,14 @@ pub(super) fn setup(
         Arc::new(RenderDiagnostics(context.phases.clone())),
         context.cancellation.clone(),
         context.cache.clone(),
+        Reporting {
+            directory: changes_runtime::reporter(
+                context.phases.clone(),
+                context.style.clone(),
+                context.redactor.clone(),
+            ),
+            mode: context.style.mode,
+        },
     ) {
         Ok(services) => services,
         Err(source) => {

@@ -3,6 +3,9 @@
 #![warn(unreachable_pub)]
 
 pub mod bindings;
+pub mod bundle_outcomes;
+pub mod bundle_store;
+pub mod capture_hint;
 pub mod client;
 pub mod codec;
 pub mod compiled;
@@ -10,12 +13,14 @@ pub mod controls;
 pub mod definition_metadata;
 pub mod definitions;
 pub mod diagnostics;
+pub mod durable_recipe;
 pub mod error;
 mod method_results;
 pub mod methods;
 pub mod operations;
 pub mod pool;
 mod pool_affinity;
+mod pool_bundle_cache;
 mod pool_cleanup;
 mod pool_exchange;
 mod pool_head;
@@ -50,9 +55,11 @@ mod process_worker;
 pub mod render_records;
 mod request_display;
 pub mod results;
+pub mod reusable_recipe;
 pub mod typescript;
 pub mod usage;
 pub mod wire;
+mod wire_decode;
 pub mod workers;
 
 mod memory_schedule;

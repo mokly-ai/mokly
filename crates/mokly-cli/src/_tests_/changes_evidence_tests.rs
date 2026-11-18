@@ -168,6 +168,7 @@ fn prepare(evidence: Evidence) -> (BasePreparationResult, Arc<Calls>) {
             Arc::new(dependency_tree),
             Arc::new(Unimock::new(())),
             Arc::new(Unimock::new(())),
+            Arc::new(Unimock::new(())),
             Arc::new(workers),
             "test".into(),
             None,

@@ -7,8 +7,8 @@ use std::sync::{Arc, Mutex};
 use mokly_platform::processes::SystemProcessGroups;
 use mokly_sidecar::bindings::{Bindings, EntryBinding, SlotInput};
 use mokly_sidecar::methods::{
-    Bundle, Call, ColorScheme, CssModules, Generation, IgnoreScope, ModuleResolution, Render,
-    RenderComponent, RenderPage, RenderStory,
+    Bundle, BundleRequest, Call, ColorScheme, CssModules, Generation, IgnoreScope,
+    ModuleResolution, Render, RenderComponent, RenderPage, RenderStory,
 };
 use mokly_sidecar::pool::{Pool, SidecarPool};
 use mokly_sidecar::pool_options::{Launch, PoolOptions};
@@ -46,6 +46,7 @@ fn pool_with_entry(version: &str, entry: &str) -> Pool {
         Arc::new(factory),
         clock,
         Launch {
+            capture_durability: false,
             node: "node".into(),
             entry: root.join(entry),
             repository: root,
@@ -70,27 +71,30 @@ fn bundles_describes_and_renders_component_screen_story_and_page() {
         .canonicalize()
         .unwrap();
     let bundled = pool
-        .request(Call::Bundle(Bundle {
-            evaluation: None,
-            entry_files: vec![
-                "component.mockup.tsx".into(),
-                "screen.mockup.tsx".into(),
-                "page.mockup.ts".into(),
-            ],
-            renderer: Some("renderer.tsx".into()),
-            stories_files: vec!["button.stories.tsx".into()],
-            module_resolution: ModuleResolution {
-                package_roots: vec![
-                    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                        .join("../..")
-                        .display()
-                        .to_string(),
+        .request(Call::Bundle(BundleRequest {
+            params: Bundle {
+                evaluation: None,
+                entry_files: vec![
+                    "component.mockup.tsx".into(),
+                    "screen.mockup.tsx".into(),
+                    "page.mockup.ts".into(),
                 ],
-                ..ModuleResolution::default()
+                renderer: Some("renderer.tsx".into()),
+                stories_files: vec!["button.stories.tsx".into()],
+                module_resolution: ModuleResolution {
+                    package_roots: vec![
+                        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                            .join("../..")
+                            .display()
+                            .to_string(),
+                    ],
+                    ..ModuleResolution::default()
+                },
+                source_root: root.display().to_string(),
+                configuration_directory: ".".into(),
+                repository_roots: Vec::new(),
             },
-            source_root: root.display().to_string(),
-            configuration_directory: ".".into(),
-            repository_roots: Vec::new(),
+            capture: None,
         }))
         .unwrap();
     let MethodResult::Bundle(bundled) = bundled else {

@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 use mokly_sidecar::bindings::{Bindings, EntryBinding};
 use mokly_sidecar::methods::{
-    Bundle, Call, ColorScheme, CssModules, Generation, ModuleResolution, Render,
+    Bundle, BundleRequest, Call, ColorScheme, CssModules, Generation, ModuleResolution, Render,
 };
 use mokly_sidecar::pool::SidecarPool;
 use mokly_sidecar::wire::MethodResult;
@@ -21,23 +21,26 @@ fn negative_zero_survives_definitions_and_render_requests() {
         .canonicalize()
         .unwrap();
     let MethodResult::Bundle(bundled) = pool
-        .request(Call::Bundle(Bundle {
-            evaluation: None,
-            entry_files: vec!["negative-zero.mockup.tsx".into()],
-            renderer: None,
-            stories_files: Vec::new(),
-            module_resolution: ModuleResolution {
-                package_roots: vec![
-                    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                        .join("../..")
-                        .display()
-                        .to_string(),
-                ],
-                ..ModuleResolution::default()
+        .request(Call::Bundle(BundleRequest {
+            params: Bundle {
+                evaluation: None,
+                entry_files: vec!["negative-zero.mockup.tsx".into()],
+                renderer: None,
+                stories_files: Vec::new(),
+                module_resolution: ModuleResolution {
+                    package_roots: vec![
+                        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                            .join("../..")
+                            .display()
+                            .to_string(),
+                    ],
+                    ..ModuleResolution::default()
+                },
+                source_root: root.display().to_string(),
+                configuration_directory: ".".into(),
+                repository_roots: Vec::new(),
             },
-            source_root: root.display().to_string(),
-            configuration_directory: ".".into(),
-            repository_roots: Vec::new(),
+            capture: None,
         }))
         .unwrap()
     else {

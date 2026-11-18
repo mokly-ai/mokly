@@ -55,8 +55,9 @@
 - **Related:**
   - [serve-sidecar-prestart.md](./serve-sidecar-prestart.md): it removes
     the sidecar start wait of the first background renders.
-  - [bundle-disk-cache.md](./bundle-disk-cache.md): the larger part of the
-    startup time.
+  - The [bundle cache](../../docs/protocol/mokly-base-cache.md#bundle-entries)
+    of compiled JavaScript: it removes the bundle compile, the larger part of
+    the startup time, from a warm restart.
 - **Recommendation:** B (estimate). It moves Babel off the startup path
   with no change to output. Measure `hello` and `serve.ready` first, because
   the later performance work changed both.

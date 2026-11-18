@@ -128,6 +128,7 @@ fn base_alias_and_bare_imports_use_the_base_ancestor_copy_for_javascript_and_css
     let runtime = Arc::new(Runtime::new(
         Arc::new(WorkingTree),
         Arc::new(WorkingTree),
+        head.runtime.physical_inputs.clone(),
         head.runtime.pool.clone(),
         head.runtime.cache.clone(),
         head.runtime.workers.clone(),

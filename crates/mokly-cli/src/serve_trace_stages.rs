@@ -10,7 +10,7 @@ pub(super) fn stage(name: &str) -> bool {
             | "config.load"
             | "catalogue.discover"
             | "catalogue.validate"
-            | "catalogue.describe"
+            | "catalogue.bundle"
             | "graph.prepare"
             | "graph.prepare.documents"
             | "graph.prepare.resources"

@@ -25,6 +25,8 @@ use unimock::{MockFn, Unimock, matching};
 
 #[path = "../src/base_dependencies.rs"]
 mod base_dependencies;
+#[path = "../src/bundle_runtime.rs"]
+mod bundle_runtime;
 #[path = "../src/changes_base.rs"]
 mod changes_base;
 #[path = "../src/changes_freshness.rs"]
@@ -138,6 +140,19 @@ fn inspect(root: &Path) {
         Arc::new(ProbeDiagnostics),
         cancellation.clone(),
         render_runtime::cache(),
+        crate::bundle_runtime::Reporting {
+            directory: changes_runtime::reporter(
+                Arc::new(ProbeDiagnostics),
+                Style {
+                    mode: Mode::Plain,
+                    color: false,
+                    ascii: true,
+                    columns: 120,
+                },
+                redactor.clone(),
+            ),
+            mode: Mode::Plain,
+        },
     )
     .unwrap();
     let service: &dyn BuildService = &CatalogueBuild {
@@ -161,13 +176,7 @@ fn inspect(root: &Path) {
                 cancellation.clone(),
             )
             .unwrap(),
-            Style {
-                mode: Mode::Plain,
-                color: false,
-                ascii: true,
-                columns: 120,
-            },
-            redactor,
+            services.reporter.clone(),
             Arc::new(ProbeDiagnostics),
             None,
         ),
