@@ -1,3 +1,4 @@
+import nodeFs from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -53,8 +54,21 @@ export function consumerPlugins(
             attributeLoaders[args.with.type ?? ""] ??
             (extension === ".txt" ? "text" : undefined);
           if (!loader) return undefined;
-          const contents =
-            inputs.files.get(args.path) ?? (await fs.readFile(args.path));
+          let contents = inputs.files.get(args.path);
+          if (contents === undefined) {
+            try {
+              contents = await new Promise<Buffer>((resolve, reject) => {
+                nodeFs.readFile(args.path, (error, bytes) => {
+                  if (error) reject(error);
+                  else resolve(bytes);
+                });
+              });
+            } catch (error) {
+              if (error && typeof error === "object")
+                Error.captureStackTrace(error);
+              throw error;
+            }
+          }
           inputs.files.set(args.path, contents);
           return { contents, loader: loader as Loader };
         });
