@@ -6,6 +6,7 @@ use std::sync::mpsc::{self, Sender};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard, Weak};
 
 use crate::bundle_store::BundleStore;
+use crate::early_lease::{EarlyLease, EarlyRetry};
 use crate::error::{Error, Result};
 use crate::methods::Call;
 use crate::pool_cleanup;
@@ -26,8 +27,18 @@ pub trait ReturnWake: Send + Sync {
 /// Pool boundary consumed by catalogue and rendering services.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = PoolMock))]
 pub trait SidecarPool: Send + Sync {
+    /// Atomically claim an idle non-warm or empty slot without entering the request FIFO.
+    fn try_early(&self, _call: &Call) -> Result<Option<Box<dyn EarlyLease>>> {
+        Ok(None)
+    }
+
+    /// Wake Serve when a slot change can admit an early preparation.
+    fn observe_available(&self, _wake: Weak<dyn ReturnWake>) {}
+
     /// Enqueue one request and return its complete result, or fail closed.
     fn request(&self, call: Call) -> Result<MethodResult>;
+    /// Resume only the one remaining retry after an early process was retired.
+    fn retry(&self, call: Call, failure: EarlyRetry) -> Result<MethodResult>;
     /// Record an epoch-specific final lease release without waiting for a worker.
     fn release_generation(&self, generation: &str, epoch: u64);
     /// Apply the served-recipe write rule after the core directly reuses a live state.
@@ -51,9 +62,10 @@ pub trait SidecarPool: Send + Sync {
 }
 
 /// Process pool composed from explicit process and clock boundaries.
+#[derive(Clone)]
 pub struct Pool {
     pub(super) factory: Arc<dyn WorkerFactory>,
-    pub(super) starting: Mutex<()>,
+    pub(super) starting: Arc<Mutex<()>>,
     pub(super) clock: Arc<dyn Clock>,
     pub(super) launch: Launch,
     pub(super) options: PoolOptions,
@@ -74,7 +86,7 @@ impl Pool {
         let (sender, receiver) = mpsc::channel();
         let pool = Self {
             factory,
-            starting: Mutex::new(()),
+            starting: Arc::new(Mutex::new(())),
             clock,
             launch,
             options,
@@ -98,7 +110,16 @@ impl Pool {
     }
 
     pub(super) fn spawn(&self, index: usize, source_root: &Path) -> Result<Slot> {
-        let reason = self.lock().replacement_reasons.get(&index).copied();
+        let reason = {
+            let state = self.lock();
+            state.replacement_reasons.get(&index).map(|reason| {
+                if state.early == Some(index) {
+                    Reason::EarlyPreparation
+                } else {
+                    *reason
+                }
+            })
+        };
         let recycle = reason.map(Reason::replacement);
         let _recycle_scope = recycle.as_ref().map(tracing::Span::enter);
         let span = tracing::info_span!("sidecar.spawn", status = "error");
@@ -118,20 +139,27 @@ impl Pool {
             ..self.launch.clone()
         };
         let mut spawned = self.factory.spawn(&launch)?;
-        {
+        let (stopped, early) = {
             let mut state = self.lock();
-            if state.stopped {
-                spawned.control.kill()?;
-                return Err(Error::Cancelled);
-            }
             state.controls.insert(index, Arc::clone(&spawned.control));
             state.source_roots.insert(index, source_root.into());
+            (state.stopped, state.early == Some(index))
+        };
+        if stopped {
+            if early {
+                self.reap_early_control(index, spawned.control.as_ref());
+            } else {
+                spawned.control.kill()?;
+            }
+            return Err(Error::Cancelled);
         }
         if let Err(error) = spawned
             .worker
             .handshake(self.options.timeout_ms.unwrap_or(30_000))
         {
-            if self.lock().stopped {
+            if early {
+                self.reap_early_control(index, spawned.control.as_ref());
+            } else if self.lock().stopped {
                 spawned.control.kill()?;
             } else {
                 Reason::Retry.kill(spawned.control.as_ref())?;

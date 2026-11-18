@@ -5,12 +5,17 @@ use std::sync::{Arc, Condvar, Mutex, Weak};
 use mokly_server::changes::ChangeCancellation;
 use mokly_server::changes_signal::ChangeSignal;
 use mokly_server::foreground::{Foreground, ForegroundLease};
-use mokly_sidecar::error::{Error, Result};
+use mokly_server::usage_completion::UsageCompletion;
+use mokly_sidecar::early_lease::EarlyRetry;
+use mokly_sidecar::error::Result;
 use mokly_sidecar::methods::Call;
 use mokly_sidecar::pool::{ReturnWake, SidecarPool};
 use mokly_sidecar::wire::MethodResult;
 use mokly_sidecar::workers::Diagnostics;
 
+use crate::serve_early_pool::{EarlyPool, PreparingPool};
+use crate::serve_early_wake::Wake;
+use crate::serve_pool_gate::{Gate, State};
 use crate::serve_return::{self, ReturnAdmission};
 
 /// Committed classification completion records background work only.
@@ -27,18 +32,25 @@ pub(super) trait PoolScheduling: Foreground + BaseCompletion {
     fn pool(&self, base: Option<Arc<dyn ChangeCancellation>>) -> Arc<dyn SidecarPool>;
     /// The number of sidecar calls that admission runs at once, at least one.
     fn limit(&self) -> usize;
+    /// Keep early sidecar preparation on one exclusive non-warm slot.
+    fn preparing(
+        &self,
+        cancel: Arc<dyn ChangeCancellation>,
+        usage: Arc<dyn UsageCompletion>,
+    ) -> Arc<dyn PreparingPool>;
 }
 
 /// One foreground counter and request bound surround the shared process pool.
 pub(super) struct ServePool {
     inner: Arc<dyn SidecarPool>,
-    gate: Arc<Gate>,
+    pub(super) gate: Arc<Gate>,
 }
 
 impl ServePool {
     /// Create admission without starting a worker or changing a sidecar deadline.
     pub(super) fn new(inner: Arc<dyn SidecarPool>, limit: usize) -> Self {
         let gate = Arc::new(Gate {
+            early_wake: Arc::new(Wake::default()),
             state: Mutex::new(State::default()),
             changed: Condvar::new(),
             limit,
@@ -51,6 +63,8 @@ impl ServePool {
             .return_wake
             .lock()
             .unwrap_or_else(|error| error.into_inner()) = Some(wake);
+        let available: Arc<dyn ReturnWake> = gate.early_wake.clone();
+        inner.observe_available(Arc::downgrade(&available));
         Self { inner, gate }
     }
 
@@ -67,7 +81,7 @@ impl ServePool {
 
 impl Foreground for ServePool {
     fn enter(&self) -> Box<dyn ForegroundLease> {
-        Box::new(self.gate.foreground())
+        Box::new(self.gate.foreground(true))
     }
 }
 
@@ -89,139 +103,24 @@ impl PoolScheduling for ServePool {
             base,
         })
     }
+    fn preparing(
+        &self,
+        cancel: Arc<dyn ChangeCancellation>,
+        usage: Arc<dyn UsageCompletion>,
+    ) -> Arc<dyn PreparingPool> {
+        let signal: Arc<dyn ChangeSignal> = self.gate.early_wake.clone();
+        cancel.observe(Arc::downgrade(&signal));
+        usage.observe(Arc::downgrade(&signal));
+        Arc::new(EarlyPool::new(
+            self.inner.clone(),
+            self.pool(Some(cancel.clone())),
+            self.gate.clone(),
+            cancel,
+            usage,
+        ))
+    }
     fn limit(&self) -> usize {
         self.gate.limit
-    }
-}
-
-#[derive(Default)]
-struct State {
-    active: usize,
-    foreground: usize,
-    waiting: usize,
-    waiting_base: usize,
-    closed: bool,
-}
-
-struct Gate {
-    state: Mutex<State>,
-    changed: Condvar,
-    limit: usize,
-    return_wake: Mutex<Option<Arc<serve_return::Wake>>>,
-    diagnostics: Mutex<Option<Arc<dyn Diagnostics>>>,
-}
-
-impl ReturnAdmission for Gate {
-    fn ready(&self) -> bool {
-        let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
-        !state.closed && state.waiting_base == 0
-    }
-    fn failed(&self, error: &Error) {
-        let diagnostics = self
-            .diagnostics
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .clone();
-        if let Some(diagnostics) = diagnostics {
-            if let Error::HeadReturnDisabled { source } = error {
-                diagnostics.emit(&source.to_string());
-                diagnostics.emit(
-                    "[mokly/warning] Background sidecar preparation is disabled. Restart Serve.",
-                );
-            } else {
-                diagnostics.emit(&error.to_string());
-            }
-        }
-    }
-}
-
-impl Gate {
-    fn wake_return(&self) {
-        if let Some(wake) = &*self
-            .return_wake
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-        {
-            wake.admission_changed();
-        }
-    }
-    fn foreground(self: &Arc<Self>) -> Lease {
-        self.state
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .foreground += 1;
-        self.changed.notify_all();
-        Lease {
-            gate: self.clone(),
-            foreground: true,
-            active: false,
-        }
-    }
-
-    fn acquire(self: &Arc<Self>, base: Option<&dyn ChangeCancellation>) -> Result<Lease> {
-        let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
-        state.waiting += 1;
-        state.waiting_base += usize::from(base.is_some());
-        self.changed.notify_all();
-        loop {
-            if state.closed || base.is_some_and(ChangeCancellation::cancelled) {
-                state.waiting -= 1;
-                state.waiting_base -= usize::from(base.is_some());
-                self.changed.notify_all();
-                self.wake_return();
-                return Err(Error::Cancelled);
-            }
-            if state.active < self.limit && (base.is_none() || state.foreground == 0) {
-                state.active += 1;
-                state.waiting -= 1;
-                state.waiting_base -= usize::from(base.is_some());
-                self.wake_return();
-                return Ok(Lease {
-                    gate: self.clone(),
-                    foreground: false,
-                    active: true,
-                });
-            }
-            state = self
-                .changed
-                .wait(state)
-                .unwrap_or_else(|error| error.into_inner());
-        }
-    }
-
-    fn close(&self) {
-        self.state
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .closed = true;
-        self.changed.notify_all();
-    }
-}
-
-impl ChangeSignal for Gate {
-    fn notify(&self) {
-        let _state = self.state.lock().unwrap_or_else(|error| error.into_inner());
-        self.changed.notify_all();
-    }
-}
-
-struct Lease {
-    gate: Arc<Gate>,
-    foreground: bool,
-    active: bool,
-}
-impl ForegroundLease for Lease {}
-impl Drop for Lease {
-    fn drop(&mut self) {
-        let mut state = self
-            .gate
-            .state
-            .lock()
-            .unwrap_or_else(|error| error.into_inner());
-        state.active -= usize::from(self.active);
-        state.foreground -= usize::from(self.foreground);
-        self.gate.changed.notify_all();
-        self.gate.wake_return();
     }
 }
 
@@ -245,9 +144,14 @@ impl SidecarPool for ScheduledPool {
         self.inner.observe_head_return(wake);
     }
     fn request(&self, call: Call) -> Result<MethodResult> {
-        let _foreground = self.base.is_none().then(|| self.gate.foreground());
+        let _foreground = self.base.is_none().then(|| self.gate.foreground(false));
         let _admission = self.gate.acquire(self.base.as_deref())?;
         self.inner.request(call)
+    }
+    fn retry(&self, call: Call, failure: EarlyRetry) -> Result<MethodResult> {
+        let _foreground = self.base.is_none().then(|| self.gate.foreground(false));
+        let _admission = self.gate.acquire(self.base.as_deref())?;
+        self.inner.retry(call, failure)
     }
     fn release_generation(&self, generation: &str, epoch: u64) {
         self.inner.release_generation(generation, epoch);
@@ -280,3 +184,11 @@ mod serve_pool_tests;
 #[cfg(test)]
 #[path = "_tests_/serve_return_admission_tests.rs"]
 mod serve_return_admission_tests;
+
+#[cfg(test)]
+#[path = "_tests_/serve_early_pool_tests.rs"]
+mod serve_early_pool_tests;
+
+#[cfg(test)]
+#[path = "_tests_/serve_early_failure_tests.rs"]
+mod serve_early_failure_tests;

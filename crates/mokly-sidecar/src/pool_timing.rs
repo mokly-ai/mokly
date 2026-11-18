@@ -11,6 +11,7 @@ pub(super) enum Reason {
     Replacement,
     Retry,
     RootSwitch,
+    EarlyPreparation,
 }
 
 impl Reason {
@@ -20,6 +21,7 @@ impl Reason {
             Self::Replacement => "replacement",
             Self::Retry => "retry",
             Self::RootSwitch => "root-switch",
+            Self::EarlyPreparation => "early-preparation",
         }
     }
 

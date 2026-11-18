@@ -1,6 +1,7 @@
 //! Key changes and freshness outcomes govern the single production slot.
 
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use mokly_catalogue::config_types::{ResolvedRoot, RootConfig};
 use mokly_compare::base_freshness::{Freshness, FreshnessMock};
@@ -12,6 +13,7 @@ use mokly_server::changes::ChangeCancellation;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::serve_base::ServeBase;
+use crate::serve_preparation_control::PreparationControlMock;
 use crate::warning_support::{catalogue, config};
 
 use super::support::{Fixture, base, head, inputs, runtime, selected};
@@ -28,21 +30,34 @@ fn equal_keys_reuse_and_each_adopted_key_change_releases_the_old_base() {
         "authored",
         "scripts",
     ] {
-        let freshness: Arc<dyn Freshness> = Arc::new(if change == "equal" {
-            Unimock::new(
-                FreshnessMock::current
-                    .some_call(matching!(_))
-                    .returns(Ok(true)),
-            )
-        } else {
-            Unimock::new(())
-        });
-        let fixture = Fixture::new(
+        let waits = Arc::new(AtomicUsize::new(0));
+        let scans = Arc::new(AtomicUsize::new(0));
+        let gate_waits = waits.clone();
+        let freshness_waits = waits.clone();
+        let freshness_scans = scans.clone();
+        let gates = Unimock::new((
+            PreparationControlMock::wait
+                .each_call(matching!())
+                .answers_arc(Arc::new(move |_| {
+                    gate_waits.fetch_add(1, Ordering::SeqCst);
+                    Ok(())
+                })),
+            FreshnessMock::current
+                .each_call(matching!(_))
+                .answers_arc(Arc::new(move |_, _, _| {
+                    freshness_scans.fetch_add(1, Ordering::SeqCst);
+                    Ok(freshness_waits.load(Ordering::SeqCst) == 1)
+                })),
+        ))
+        .no_verify_in_drop();
+        let freshness: Arc<dyn Freshness> = Arc::new(gates.clone());
+        let mut fixture = Fixture::new(
             Arc::default(),
             freshness,
             Arc::new(Unimock::new(())),
             runtime(),
         );
+        Arc::get_mut(&mut fixture.provider).unwrap().preparation = Some(Arc::new(gates));
         let mut config = config();
         let mut pinned = selected("a");
         let head = head(false);
@@ -91,6 +106,16 @@ fn equal_keys_reuse_and_each_adopted_key_change_releases_the_old_base() {
             })
             .unwrap();
         assert_eq!(found.is_some(), change == "equal", "{change}");
+        assert_eq!(
+            waits.load(Ordering::SeqCst),
+            usize::from(change == "equal"),
+            "{change}"
+        );
+        assert_eq!(
+            scans.load(Ordering::SeqCst),
+            usize::from(change == "equal"),
+            "{change}"
+        );
         assert_eq!(old.upgrade().is_some(), change == "equal", "{change}");
     }
 }
@@ -142,6 +167,7 @@ fn freshness_misses_and_errors_release_but_classification_cancellation_preserves
             }),
         ));
         let provider = ServeBase {
+            preparation: None,
             freshness,
             slot: fixture.provider.slot.clone(),
             inner: fixture.provider.inner.clone(),

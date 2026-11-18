@@ -150,6 +150,7 @@ fn prepare(
         "node_modules/x.js",
     );
     let base = NativeBase {
+        preparation: None,
         runtime: head,
         cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         dependencies: Arc::new(dependencies),

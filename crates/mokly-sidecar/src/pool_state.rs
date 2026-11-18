@@ -6,6 +6,7 @@ use std::sync::Arc;
 
 use crate::bindings::Bindings;
 use crate::compiled::CompiledGeneration;
+use crate::error::Error;
 use crate::memory_schedule::MemorySchedule;
 use crate::methods::{Bundle, CssModules};
 use crate::pool_head::Head;
@@ -43,6 +44,8 @@ pub(super) struct Waiting {
 #[derive(Default)]
 pub(super) struct State {
     pub(super) head: Head,
+    pub(super) early: Option<usize>,
+    pub(super) early_failure: Option<Error>,
     pub(super) source_roots: BTreeMap<usize, PathBuf>,
     pub(super) replacement_reasons: BTreeMap<usize, Reason>,
     pub(super) memory: BTreeMap<usize, MemorySchedule>,

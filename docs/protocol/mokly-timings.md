@@ -54,6 +54,7 @@ its files are installed. Its Serve duration includes queue time.
 | `review.base-tree`                               | bounded base reads, extraction, dependencies, and rendering, or a reuse of the kept base; carries `action`, `prepare` or `reuse`     |
 | `review.base-extraction`                         | the base source key, the cache lookup, and the extraction when no complete entry exists; carries `action`, `reuse` or `extract`      |
 | `review.base-dependencies`                       | the dependency tier decision and, in the second tier, the bounded install; the end carries `tier`                                    |
+| `review.base-gate-wait`                          | in Serve, the admission wait of one sidecar call of an early base lease                                                              |
 | `review.compare-views`                           | the comparison loop; its `counts` record carries `views`, `unchanged`, `changed`, and `ignoredOnly`                                  |
 | `review.capture-side`                            | base validation and bounded capture or reuse; completed counts carry `views`, `uncapturedViews`, `retainedBytes`, and `encodedBytes` |
 | `review.resource-graph`                          | reference discovery and transitive traversal for one view or document side                                                           |
@@ -135,7 +136,8 @@ the counts, the fields, and the status of each `review.*` span.
 ## Sidecar Spans
 
 [Sidecar timing records](./mokly-sidecar-timings.md) define request spans,
-process startup and retirement, replacement reasons, and parent ownership.
+`review.base-gate-wait`, `sidecar.restore-generation`, process startup and
+retirement, replacement reasons, and parent ownership.
 
 For aggregate stage time, take the union of each stage's
 `[elapsedMs - durationMs, elapsedMs]` end-record intervals within one session.

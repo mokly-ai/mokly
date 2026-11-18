@@ -8,16 +8,16 @@ use mokly_graph::types::RenderGeneration;
 use mokly_model::material::catalogue_key;
 
 use crate::base_reader::BaseReader;
-use crate::base_render::{BaseRequest, Changes, selected_base};
+use crate::base_render::{Changes, selected_base};
 use crate::base_retention::{BaseRetentionRequest, BaseReuse, KeptBase};
 use crate::comparison_steps::Step;
 use crate::comparison_types::{ComparisonRequest, ComparisonResult};
 use crate::error::{Error, Result};
 
-struct Attempt {
-    base: Arc<KeptBase>,
-    reuse: Option<BaseReuse>,
-    fallback: bool,
+pub(super) struct Attempt {
+    pub(super) base: Arc<KeptBase>,
+    pub(super) reuse: Option<BaseReuse>,
+    pub(super) fallback: bool,
 }
 
 struct Compared {
@@ -100,71 +100,6 @@ impl Changes {
         self.compare_attempt(&comparison, attempt, head).result
     }
 
-    fn prepare_attempt(&self, request: &BaseRetentionRequest<'_>) -> Result<Attempt> {
-        let commit = &request.selected.commit;
-        let sources = self.sources.create(
-            request.selected.repository.clone(),
-            commit.clone(),
-            &request.working_config.repo_root,
-        )?;
-        let failures = sources.failures.clone();
-        let prepared = self.provider.prepare(&BaseRequest {
-            head: request.head,
-            working_config: request.working_config,
-            repository: request.selected.repository.clone(),
-            commit: commit.clone(),
-            sources,
-            install_scripts: request.install_scripts,
-            steps: self.steps.clone(),
-        });
-        let scripts_off = prepared
-            .as_ref()
-            .map_or_else(|error| error.scripts_off, |base| base.scripts_off);
-        if let Some(source) = failures.failure() {
-            return Err(base_error(
-                &commit.to_string(),
-                scripts_off,
-                Error::SourceFailure { source },
-            ));
-        }
-        let prepared = match prepared {
-            Ok(prepared) => prepared,
-            Err(error) => {
-                return Err(base_error(&commit.to_string(), scripts_off, *error.source));
-            }
-        };
-        let captured = self.comparison.capture_base(prepared.generation);
-        if let Some(source) = failures.failure() {
-            return Err(base_error(
-                &commit.to_string(),
-                scripts_off,
-                Error::SourceFailure { source },
-            ));
-        }
-        let generation = match captured {
-            Ok(generation) => generation,
-            Err(source) => return Err(base_error(&commit.to_string(), scripts_off, source)),
-        };
-        let base = Arc::new(KeptBase {
-            generation,
-            failures,
-            scripts_off,
-            freshness: prepared.freshness,
-        });
-        let reuse = match self.provider.keep(request, base.clone()) {
-            Ok(reuse) => reuse,
-            Err(source) => {
-                self.provider.release(&base);
-                return Err(base_error(&commit.to_string(), scripts_off, source));
-            }
-        };
-        Ok(Attempt {
-            base,
-            reuse,
-            fallback: false,
-        })
-    }
-
     fn compare_attempt(
         &self,
         request: &ComparisonRequest,
@@ -224,7 +159,7 @@ impl Changes {
     }
 }
 
-fn base_error(commit: &str, scripts_off: bool, source: Error) -> Error {
+pub(super) fn base_error(commit: &str, scripts_off: bool, source: Error) -> Error {
     Error::Base {
         commit: commit.into(),
         scripts_off,

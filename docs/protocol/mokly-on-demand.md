@@ -61,9 +61,11 @@ model.
 ## Background Work And Replacement
 
 After readiness, Serve renders every view in the background, which fills the
-render cache and the usage of every detail, then classifies Changes, which
-renders the base side under the
-[comparison contract](./mokly-comparison.md#sides). This background pass
+render cache and the usage of every detail. Serve can prepare the base side of
+Changes during this pass, under the
+[early base preparation contract](./mokly-base-early-preparation.md). After
+the pass, it classifies Changes, which compares the two
+[sides](./mokly-comparison.md#sides). This background pass
 renders a bounded batch of views at a time: at most the smaller of the worker
 count and the [sidecar pool size](./mokly-sidecar.md#lifecycle), and at least
 one. The worker count is the machine's core count, up to eight. The next view
@@ -92,10 +94,18 @@ requests was rejected, because it slows every pass. Decision: warnings and
 failures report in catalogue order. Reporting each view when its render ends
 was rejected, because the order of the lines would change between runs.
 
-Sidecar admission preserves foreground priority for each whole HTTP render.
-Queued base calls wait until those requests finish their sidecar work. Active
-calls finish under their deadlines. Both sides share the configured sidecar
-pool size, including when the pool has one sidecar.
+Sidecar admission keeps strict priority for each whole HTTP render. No base
+sidecar call starts while an HTTP render holds its lease. A base call outside
+an [early base lease](./mokly-base-early-preparation.md#early-base-lease) also
+waits while a head sidecar call runs or waits, background usage calls
+included. Active calls finish under their deadlines. Both sides share the
+configured sidecar pool size, including when the pool has one sidecar.
+
+Decision: the calls of an early base lease wait only for HTTP renders.
+Rejected: the wait of other base calls, because usage keeps head calls in
+flight, so early work would wait until usage ends. Rejected: the same
+exception for capture, because capture would then compete with usage and
+switch roots more often.
 
 The event stream sends a comment after 15 seconds without a publication to
 keep idle connections active during background work. These comments carry no

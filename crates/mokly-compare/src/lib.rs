@@ -106,6 +106,7 @@ mod snapshots;
 pub mod ancestor_roots;
 mod base_classification;
 pub mod base_freshness;
+mod base_preparation;
 mod base_reader;
 pub mod base_render;
 pub mod base_retention;

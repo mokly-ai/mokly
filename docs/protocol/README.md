@@ -77,6 +77,7 @@ How the Rust core and the sidecar turn sources into documents: the sidecar proto
 How two commits are compared: tree comparison, CSS attribution, component evidence, moves, removed entries, and the comparison routes.
 
 - [Base Source And Dependency Preparation](./mokly-base-preparation.md)
+- [Early Base Preparation](./mokly-base-early-preparation.md)
 - [Base Dependency Installation](./mokly-base-dependencies.md)
 - [Base Install Processes](./mokly-base-install-processes.md)
 - [Branch-Point Entry Lookup](./mokly-branch-point-lookup.md)

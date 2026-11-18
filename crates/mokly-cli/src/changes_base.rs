@@ -14,7 +14,6 @@ use mokly_compare::base_freshness::Freshness;
 use mokly_compare::base_render::{
     BasePreparationError, BasePreparationResult, BaseProvider, BaseRequest, PreparedBase,
 };
-use mokly_compare::cache_types::Lease;
 use mokly_compare::comparison_steps::Step;
 use mokly_compare::dependency_types::Tier;
 use mokly_compare::error::{Error, Result};
@@ -26,11 +25,13 @@ use mokly_source_interface::tree::SourceTree;
 
 use crate::base_dependencies::BaseDependencies;
 use crate::changes_freshness::{SelectionRequest, html_dependencies, reusable, working_roots};
+use crate::serve_preparation_control::PreparationControl;
 
 /// Prepare the base generation through a second `Runtime` over the base tree. It reuses
 /// the head runtime's pool, render cache, and workers. A base that needs a sidecar gets a
 /// `BaseSide`, which keeps its source and dependency leases while the base graph lives.
 pub(super) struct NativeBase {
+    pub(super) preparation: Option<Arc<dyn PreparationControl>>,
     pub(super) runtime: Arc<Runtime>,
     pub(super) cancellation: Arc<dyn Cancellation>,
     pub(super) dependencies: Arc<dyn BaseDependencies>,
@@ -100,31 +101,41 @@ impl NativeBase {
             || inventory.files.iter().any(|file| {
                 !file.excluded && matches!(file.kind, SourceKind::Module | SourceKind::Stories)
             });
+        let (directories, unmapped) = if needs_sidecar {
+            (
+                self.runtime.dependency_usage.directories(),
+                self.runtime.dependency_usage.unmapped_directories(),
+            )
+        } else {
+            (
+                request
+                    .head
+                    .catalogue()
+                    .dependency_directories
+                    .iter()
+                    .cloned()
+                    .collect(),
+                Vec::new(),
+            )
+        };
+        if let Some(preparation) = &self.preparation {
+            preparation.selected(needs_sidecar, directories.clone(), unmapped.clone());
+        }
         let (base, selection, warning) = if needs_sidecar {
             let prepared = self.dependencies.prepare(
                 request,
                 &config,
                 &SelectionRequest {
-                    directories: &self.runtime.dependency_usage.directories(),
-                    unmapped: &self.runtime.dependency_usage.unmapped_directories(),
+                    directories: &directories,
+                    unmapped: &unmapped,
                     record: checkout.is_some(),
                 },
                 early,
             )?;
             (Some(prepared.side), prepared.selection, None)
         } else {
-            let (warning, selection) = html_dependencies(
-                request,
-                &config,
-                &request
-                    .head
-                    .catalogue()
-                    .dependency_directories
-                    .iter()
-                    .cloned()
-                    .collect::<Vec<_>>(),
-                checkout.is_some(),
-            )?;
+            let (warning, selection) =
+                html_dependencies(request, &config, &directories, checkout.is_some())?;
             (None, selection, warning)
         };
         *scripts_off = base.as_ref().is_some_and(|base| {
@@ -213,35 +224,6 @@ impl NativeBase {
             scripts_off: *scripts_off,
             freshness,
         })
-    }
-
-    /// Before the base configuration loads, leases an existing complete extraction
-    /// and attaches it to the base sources, when the working configuration names a
-    /// renderer or PostCSS. This optional step never builds an extraction, and a
-    /// failure other than cancellation leaves the base reads on Git.
-    fn early_sources(&self, request: &BaseRequest<'_>) -> Result<Option<Arc<Lease>>> {
-        let input = &request.working_config.input;
-        if input.renderer.is_none() && input.postcss.is_none() {
-            return Ok(None);
-        }
-        let attached = self
-            .dependencies
-            .existing_sources(request)
-            .and_then(|lease| match lease {
-                Some(lease) => {
-                    request.sources.sources.attach(lease.clone())?;
-                    Ok(Some(lease))
-                }
-                None => Ok(None),
-            });
-        match attached {
-            Err(Error::Cancelled) => Err(Error::Cancelled),
-            Err(error) => {
-                tracing::debug!(%error, "base reads stay on Git before the dependency step");
-                Ok(None)
-            }
-            result => result,
-        }
     }
 }
 

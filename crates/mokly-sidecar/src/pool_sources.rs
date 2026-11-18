@@ -10,6 +10,28 @@ use crate::pool_state::Slot;
 use crate::pool_timing::Reason;
 
 impl Pool {
+    pub(super) fn isolate_early(
+        &self,
+        index: usize,
+        slot: &mut Option<Slot>,
+        root: Option<&Path>,
+    ) -> bool {
+        if let (Some(current), Some(root)) = (slot.as_ref(), root)
+            && root != current.source_root
+        {
+            let reaped = self.reap_early(index, current);
+            *slot = None;
+            if !reaped {
+                return false;
+            }
+            self.lock()
+                .replacement_reasons
+                .insert(index, Reason::EarlyPreparation);
+            self.forget_other_roots(index, root);
+        }
+        true
+    }
+
     pub(super) fn source_root(&self, call: &Call) -> Option<PathBuf> {
         let state = self.lock();
         let source = match call {

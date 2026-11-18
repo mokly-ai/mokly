@@ -17,7 +17,12 @@ impl Visit for Fields {
             "viewport" | "scheme" | "action" | "operation" | "side" => {
                 self.values.insert(field.name().into(), json!(value));
             }
-            "reason" if matches!(value, "recycle" | "replacement" | "retry" | "root-switch") => {
+            "reason"
+                if matches!(
+                    value,
+                    "recycle" | "replacement" | "retry" | "root-switch" | "early-preparation"
+                ) =>
+            {
                 self.values.insert(field.name().into(), json!(value));
             }
             "cache"

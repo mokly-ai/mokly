@@ -141,6 +141,7 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
             .returns(()),
     ));
     let provider: &dyn BaseProvider = &NativeBase {
+            preparation: None,
         runtime: Arc::new(Runtime::new(
             Arc::new(Unimock::new(())),
             Arc::new(Unimock::new(())),

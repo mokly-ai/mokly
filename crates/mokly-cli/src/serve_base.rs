@@ -3,7 +3,9 @@
 use std::sync::{Arc, Mutex, Weak};
 
 use mokly_compare::base_freshness::{Freshness, FreshnessRequest};
-use mokly_compare::base_render::{BasePreparationResult, BaseProvider, BaseRequest};
+use mokly_compare::base_render::{
+    BasePreparationResult, BaseProvider, BaseRequest, PreparationCheckpoint,
+};
 use mokly_compare::base_retention::{BaseRelease, BaseRetentionRequest, BaseReuse, KeptBase};
 use mokly_compare::error::{Error, Result};
 use mokly_git::control::Cancellation;
@@ -12,6 +14,7 @@ use mokly_server::changes::{ChangeCancellation, ChangeCommit};
 
 use crate::serve_base_cancel::BaseLifetime;
 use crate::serve_base_key::BaseKey;
+use crate::serve_preparation_control::PreparationControl;
 
 /// One adopted key and its complete captured base.
 pub(super) struct KeptEntry {
@@ -24,6 +27,7 @@ pub(super) type BaseSlot = Mutex<Option<KeptEntry>>;
 
 /// Classification-local retention policy with a weak link to Serve state.
 pub(super) struct ServeBase {
+    pub(super) preparation: Option<Arc<dyn PreparationControl>>,
     /// Only Serve state owns the slot across calls.
     pub(super) slot: Weak<BaseSlot>,
     /// Normal source preparation with its existing warning and progress boundaries.
@@ -41,6 +45,22 @@ pub(super) struct ServeBase {
 }
 
 impl BaseProvider for ServeBase {
+    fn checkpoint(
+        &self,
+        request: &BaseRetentionRequest<'_>,
+        checkpoint: PreparationCheckpoint,
+    ) -> Result<bool> {
+        match &self.preparation {
+            Some(preparation) => preparation.checkpoint(request, checkpoint),
+            None => Ok(true),
+        }
+    }
+    fn restarting(&self) {
+        self.inner.restarting();
+        if let Some(preparation) = &self.preparation {
+            preparation.restarting();
+        }
+    }
     fn find_kept(&self, request: &BaseRetentionRequest<'_>) -> Result<Option<BaseReuse>> {
         if self.reader.cancelled() {
             return Err(Error::Cancelled);
@@ -62,6 +82,9 @@ impl BaseProvider for ServeBase {
         let Some(base) = base else {
             return Ok(None);
         };
+        if let Some(preparation) = &self.preparation {
+            preparation.wait()?;
+        }
         let Some(inputs) = &base.freshness else {
             self.release(&base);
             return Ok(None);

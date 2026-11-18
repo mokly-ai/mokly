@@ -56,6 +56,7 @@ impl Fixture {
         let lifetime = Arc::new(PreparingBase::new(reader.clone()));
         Self {
             provider: Arc::new(ServeBase {
+                preparation: None,
                 slot: Arc::downgrade(&slot),
                 freshness,
                 inner,

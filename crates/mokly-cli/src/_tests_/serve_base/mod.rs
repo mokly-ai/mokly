@@ -5,6 +5,7 @@ mod checkout_tests;
 mod flow_support;
 mod flow_tests;
 mod frozen_tests;
+mod overlap_tests;
 mod ownership_tests;
 mod policy_tests;
 mod retention_tests;

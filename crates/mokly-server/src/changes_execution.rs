@@ -17,6 +17,7 @@ use crate::comparison_capture::MAX_BYTES;
 use crate::error::{InternalError, Result, ServerError};
 use crate::publication::Publications;
 use crate::snapshot::{Snapshot, encode};
+use crate::usage_completion::UsageCompletion;
 
 impl ChangesPass {
     #[tracing::instrument(name = "changes.classify", skip_all, fields(status = "error"))]
@@ -26,6 +27,7 @@ impl ChangesPass {
         source: Arc<dyn ChangeSource>,
         cancel: Arc<dyn ChangeCancellation>,
         references: Result<String>,
+        usage: Arc<dyn UsageCompletion>,
     ) {
         let _staging = Staging(source.clone());
         let started = Instant::now();
@@ -34,6 +36,7 @@ impl ChangesPass {
             publications: self.publications.clone(),
             origin: origin.clone(),
             cancel: cancel.clone(),
+            usage: usage.clone(),
         });
         let owner = self.clone();
         let head = origin.clone();
@@ -41,7 +44,14 @@ impl ChangesPass {
         let token = cancel.clone();
         let parent = tracing::Span::current();
         let work = tokio::task::spawn_blocking(move || {
-            parent.in_scope(|| owner.prepare(head, input, token, progress, references))
+            parent.in_scope(|| {
+                let result = owner.prepare(head, input, token.clone(), progress, references);
+                if usage.wait(token.as_ref()) {
+                    result
+                } else {
+                    Err(ServerError::ChangesReplaced)
+                }
+            })
         })
         .await;
         let result = match work {
@@ -221,8 +231,12 @@ struct Progress {
     publications: Arc<dyn Publications>,
     origin: Arc<Snapshot>,
     cancel: Arc<dyn ChangeCancellation>,
+    usage: Arc<dyn UsageCompletion>,
 }
 impl ChangeProgress for Progress {
+    fn usage(&self) -> Option<Arc<dyn UsageCompletion>> {
+        Some(self.usage.clone())
+    }
     fn status(&self, status: ChangesStatus) -> Result<bool> {
         if self.cancel.cancelled() {
             return Ok(false);

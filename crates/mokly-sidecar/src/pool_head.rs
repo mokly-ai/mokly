@@ -24,11 +24,15 @@ pub(super) struct Head {
     pub(super) active: Option<usize>,
     pub(super) return_disabled: bool,
     pub(super) wake: Option<Weak<dyn ReturnWake>>,
+    pub(super) available_wake: Option<Weak<dyn ReturnWake>>,
 }
 
 impl Head {
     /// The wake records work only; it never runs maintenance under the state lock.
     pub(super) fn notify(&self) {
+        if let Some(wake) = self.available_wake.as_ref().and_then(Weak::upgrade) {
+            wake.notify();
+        }
         if !self.candidates.is_empty()
             && let Some(wake) = self.wake.as_ref().and_then(Weak::upgrade)
         {

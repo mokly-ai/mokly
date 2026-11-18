@@ -67,8 +67,9 @@ them, so a rejected candidate leaves the live records unchanged.
 
 `UsagePass` and `ChangesPass` run the background work of the
 [on-demand Serve contract](../../docs/protocol/mokly-on-demand.md): current
-usage first, then Changes classification against one pinned merge base. They
-yield to foreground requests, publish changed evidence in one revision, and
+usage with the [early base preparation](../../docs/protocol/mokly-base-early-preparation.md)
+of Changes beside it, then Changes classification against one pinned merge base.
+They yield to foreground requests, publish changed evidence in one revision, and
 cannot publish into a replacement. `UsagePass` keeps a sliding window of at
 most `batch` renders. It starts them in catalogue order and reports each
 view's warnings and failure once, in catalogue order, after every earlier
@@ -239,6 +240,9 @@ generations.
 - [`src/background.rs`](./src/background.rs) and
   [`src/changes_background.rs`](./src/changes_background.rs) define
   `UsagePass` and `ChangesPass`, the background usage and Changes work.
+- [`src/usage_completion.rs`](./src/usage_completion.rs) defines
+  `UsageCompletion`, the cancellable fence between early preparation and
+  comparison publication.
 - [`src/background_batch.rs`](./src/background_batch.rs) defines `Window`, the
   usage pass's bounded batch, which keeps catalogue order for starts, warnings,
   and failure reports.
@@ -257,6 +261,7 @@ generations.
 
 - [Shell delivery](../../docs/protocol/mokly-shell-delivery.md).
 - [On-demand Serve](../../docs/protocol/mokly-on-demand.md).
+- [Early base preparation](../../docs/protocol/mokly-base-early-preparation.md).
 - [Selected comparisons](../../docs/protocol/mokly-selected-comparisons.md).
 - [Runtime](../../docs/protocol/mokly-runtime.md).
 - [Live controls](../../docs/protocol/mokly-component-controls.md).

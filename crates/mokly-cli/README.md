@@ -87,19 +87,19 @@ serialized queue handles watch events and the rich-mode `r` shortcut under the
 [watch runtime contract](../../docs/protocol/mokly-watch-runtime.md). A valid
 candidate replaces the public state and backend with the next revision. A
 failed candidate keeps the last good state. After `Catalogue ready`, Serve
-completes current usage and classifies Changes against one pinned merge base.
+renders current usage with the [early base preparation](../../docs/protocol/mokly-base-early-preparation.md)
+of Changes beside it, then classifies Changes against one pinned merge base.
 The usage pass renders as many views at once as the smaller of the worker
-count and the sidecar pool bound.
-Both source roots share the configured sidecar pool bound. A shared admission
-gate lets foreground requests finish their sidecar calls before more base
-requests start. After `Source::finished` reports a committed classification,
+count and the sidecar pool bound, which both source roots share. A shared
+admission gate applies the [sidecar admission rule](../../docs/protocol/mokly-on-demand.md#background-work-and-replacement).
+After `Source::finished` reports a committed classification,
 `BaseCompletion::base_finished` schedules one sidecar return pass. The
 `mokly-head-return` worker runs one step of the pass at a time while the gate
 is open and no base call waits at it. It holds the pool and the gate only
 weakly, so an idle worker keeps neither alive. Each failed step reaches
 stderr once through the sidecar `Diagnostics` reporter, and a failed reap
 adds the warning that background preparation is disabled. The base preparation
-bundles its stylesheet roots on the classification thread, not on the shared
+bundles its stylesheet roots on its own preparation thread, not on the shared
 render workers. A base root that waits at the gate then never holds a worker
 that a foreground render needs.
 Changes classification also prepares views on the shared render workers. Those
@@ -253,8 +253,11 @@ reserves an 8 MiB main-thread stack through its linker settings in
   base caches of Serve Changes.
 - [`src/serve_pool.rs`](./src/serve_pool.rs) defines `ServePool`, the
   admission gate around the shared pool. Its narrow `BaseCompletion`
-  capability schedules the return pass. Its gate answers the
+  capability schedules the return pass.
+  [`src/serve_pool_gate.rs`](./src/serve_pool_gate.rs) answers the
   `ReturnAdmission` check and reports each failed step and the disable warning.
+- [`src/serve_early_pool.rs`](./src/serve_early_pool.rs) holds early preparation
+  on one non-warm sidecar slot and yields each call to whole HTTP leases.
 - [`src/serve_return.rs`](./src/serve_return.rs) starts the
   `mokly-head-return` worker. The worker holds only weak handles and runs one
   `maintain_head_return` step at a time while admission is ready.
@@ -325,6 +328,8 @@ reserves an 8 MiB main-thread stack through its linker settings in
 - [`src/serve_base.rs`](./src/serve_base.rs) defines `ServeBase`, which finds,
   keeps, and releases the kept base, `BaseSlot`, the slot, and `ReleaseBase`,
   the release-only capability that each reader keeps.
+- [`src/serve_base_preparation.rs`](./src/serve_base_preparation.rs) pauses
+  capture and checks the selected dependency sets against completed usage.
 - [`src/serve_base_cancel.rs`](./src/serve_base_cancel.rs) defines
   `BaseLifetime` and `PreparingBase`, the cancellation of fresh base work that
   detaches at the keep.

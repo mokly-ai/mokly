@@ -219,7 +219,13 @@ impl Pool {
             return Err(Error::Cancelled);
         }
         let deadline = self.options.timeout_ms.unwrap_or_else(|| call.timeout_ms());
+        let span = matches!(call, Call::RestoreGeneration(_))
+            .then(|| tracing::info_span!("sidecar.restore-generation", status = "error"));
+        let _scope = span.as_ref().map(tracing::Span::enter);
         slot.worker.request(&Request { id: 1, call }, deadline)?;
+        if let Some(span) = &span {
+            span.record("status", "ok");
+        }
         Ok(())
     }
 }

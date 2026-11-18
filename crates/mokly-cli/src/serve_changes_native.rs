@@ -26,10 +26,12 @@ use crate::base_dependencies::NativeDependencies;
 use crate::changes_base::NativeBase;
 use crate::serve_base::ServeBase;
 use crate::serve_base_cancel::{BaseLifetime, PreparingBase};
+use crate::serve_base_preparation::Preparation;
 use crate::serve_changes::Source;
 use crate::serve_changes_base::{
     AttemptBase, CacheNotice, CombinedCancel, PreparingDependencies, RunSteps,
 };
+use crate::serve_preparation_control::PreparationControl;
 
 impl Source {
     /// Resolve HEAD and the selected base to commits and return their merge base.
@@ -118,7 +120,31 @@ impl Source {
             generation: cancel.clone(),
         });
         let lifetime: Arc<dyn BaseLifetime> = Arc::new(PreparingBase::new(cancellation.clone()));
+        let usage = progress.usage();
+        let early = usage.as_ref().map(|usage| {
+            self.services
+                .sidecars
+                .preparing(lifetime.clone(), usage.clone())
+        });
         let runtime = self.classification_runtime(lifetime.clone());
+        let runtime = match &early {
+            Some(early) => {
+                let mut runtime = (*runtime).clone();
+                runtime.pool = early.clone();
+                Arc::new(runtime)
+            }
+            None => runtime,
+        };
+        let preparation: Option<Arc<dyn PreparationControl>> =
+            usage.zip(early).map(|(usage, pool)| {
+                let preparation: Arc<dyn PreparationControl> = Arc::new(Preparation::new(
+                    usage,
+                    cancel.clone(),
+                    pool,
+                    self.services.runtime.dependency_usage.clone(),
+                ));
+                preparation
+            });
         let freshness: Arc<dyn Freshness> = Arc::new(FreshnessChecks {
             working: Arc::new(SystemWorkingInputs),
             installs: Arc::new(SystemInstallInputs {
@@ -139,6 +165,7 @@ impl Source {
                 snapshots: self.services.extraction_snapshots.clone(),
             }),
             provider: Arc::new(ServeBase {
+                preparation: preparation.clone(),
                 slot: Arc::downgrade(&self.services.kept_base),
                 runtime: runtime.clone(),
                 freshness: freshness.clone(),
@@ -148,6 +175,7 @@ impl Source {
                 inner: Arc::new(AttemptBase {
                     warnings: self.pending.clone(),
                     inner: Arc::new(NativeBase {
+                        preparation,
                         runtime,
                         cancellation: lifetime.clone(),
                         freshness: Some(freshness),

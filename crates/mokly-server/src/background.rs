@@ -13,6 +13,7 @@ use crate::diagnostics::Diagnostics;
 use crate::error::{InternalError, Result, ServerError};
 use crate::publication::{PublicationEvent, Publications};
 use crate::snapshot::Snapshot;
+use crate::usage_completion::{UsageCompletion, UsageLatch};
 use crate::work::Work;
 
 /// Background lifecycle owned by the Serve composition root.
@@ -26,7 +27,7 @@ pub trait Background: Send + Sync {
 pub struct UsagePass {
     /// At most this many background renders run at once; zero runs one.
     pub batch: usize,
-    /// Optional Changes continuation after every current document settles.
+    /// Optional Changes preparation beside current usage, with one draining owner.
     pub changes: Option<Arc<dyn AfterUsage>>,
     /// Atomic states and completion publisher.
     pub publications: Arc<dyn Publications>,
@@ -42,20 +43,76 @@ impl Background for UsagePass {
         if stopped(&stop) {
             return;
         }
-        let mut updates = self.publications.subscribe().updates;
+        let (requests, pending) = watch::channel(None);
+        let (stop_changes, stopping) = watch::channel(false);
+        let changes = self.changes.clone().map(|changes| {
+            tokio::spawn(async move {
+                Self::run_changes(changes, pending, stopping).await;
+            })
+        });
+        self.run_usage(&mut stop, &requests).await;
+        stop_changes.send_replace(true);
+        if let Some(changes) = changes
+            && let Err(source) = changes.await
+        {
+            self.diagnostics
+                .failed(&ServerError::Internal(InternalError::Task { source }));
+        }
+    }
+}
+
+#[derive(Clone)]
+struct Preparation {
+    origin: Arc<Snapshot>,
+    usage: Arc<dyn UsageCompletion>,
+}
+
+impl UsagePass {
+    async fn run_changes(
+        changes: Arc<dyn AfterUsage>,
+        mut pending: watch::Receiver<Option<Preparation>>,
+        mut stop: watch::Receiver<bool>,
+    ) {
         loop {
             if stopped(&stop) {
                 return;
             }
+            let request = pending.borrow_and_update().clone();
+            if let Some(request) = request {
+                changes
+                    .run(request.origin, stop.clone(), request.usage)
+                    .await;
+            }
+            tokio::select! {
+                _ = stop.changed() => return,
+                changed = pending.changed() => if changed.is_err() { return; },
+            }
+        }
+    }
+
+    async fn run_usage(
+        &self,
+        stop: &mut watch::Receiver<bool>,
+        requests: &watch::Sender<Option<Preparation>>,
+    ) {
+        let mut updates = self.publications.subscribe().updates;
+        loop {
+            if stopped(stop) {
+                return;
+            }
             let origin = self.publications.current();
-            if !self.fill(&origin, &mut stop, &mut updates).await {
+            let usage = Arc::new(UsageLatch::default());
+            requests.send_replace(Some(Preparation {
+                origin: origin.clone(),
+                usage: usage.clone(),
+            }));
+            tokio::task::yield_now().await;
+            if !self.fill(&origin, stop, &mut updates).await {
                 continue;
             }
-            if let Some(changes) = &self.changes {
-                changes.run(origin.clone(), stop.clone()).await;
-            }
+            usage.complete();
             while Arc::ptr_eq(&self.publications.current().documents, &origin.documents) {
-                if stopped(&stop) {
+                if stopped(stop) {
                     return;
                 }
                 tokio::select! {
@@ -168,3 +225,7 @@ mod quiet_background_tests;
 #[cfg(test)]
 #[path = "_tests_/background_batch/mod.rs"]
 mod background_batch_tests;
+
+#[cfg(test)]
+#[path = "_tests_/background_overlap/mod.rs"]
+mod background_overlap_tests;

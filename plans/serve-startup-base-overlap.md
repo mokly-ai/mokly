@@ -18,6 +18,7 @@ It authorises an open pull request into `main`. It does not authorise a merge.
 Contract owners:
 
 - [Base preparation and lifetime](../docs/protocol/mokly-base-preparation.md).
+- [Early base preparation](../docs/protocol/mokly-base-early-preparation.md).
 - [Changes in Serve](../docs/protocol/mokly-changes.md#changes-in-serve).
 - [On-demand background work](../docs/protocol/mokly-on-demand.md#background-work-and-replacement).
 - [Sidecar root scheduling](../docs/protocol/mokly-sidecar-root-scheduling.md).
@@ -44,6 +45,12 @@ permit the chosen start point. Raw CPU samples and startup timelines stay in
 the evidence folder.
 
 Evidence: `.context/startup-base-overlap/baseline-report.md` records call 1.
+The branch integrates `origin/main` at `2e6bde9c2`, including the compiled
+bundle cache and generation affinity. The performance orchestrator's call
+of 2026-11-18 keeps `e60c16532` valid as the local before baseline. Both local
+releases use the same `e60c16532` sidecar assets. Preserve the call 1 evidence
+and original fixture roots. Cloud acceptance compares the pushed branch with
+the main commit that the branch contains.
 The repeated starts show substantial timing spread. The matched repeats
 also record an HTTP render, process high-water marks, and a cancellation
 stress edit. Gate-gap bounds come from existing call spans. Exact gate
@@ -297,6 +304,67 @@ the early lease frees its slot. Report them beside the net startup gain.
 Compare HTTP latency with the matched baseline and its spread. Report an
 increase before changing the chosen scheduling policy.
 
+### 8. Bound loss after a failed background reap
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** docs or spec.
+- **Location:** `docs/protocol/mokly-sidecar-root-scheduling.md` and `crates/mokly-sidecar/src/pool_return.rs`.
+- **Background:** The early lease adds reaps before its base starts and when it ends. A failed reap retires that slot. The return pass also disables later background return.
+- **Problem:** The early trigger needs a disable scope. A lasting termination failure can otherwise retire more slots.
+- **Impact if no action:** Later preparations can exhaust usable slots and stop JavaScript rendering.
+- **Root question:** How much capacity may one termination failure remove through background slot work, and how does Serve report it?
+- **Options:**
+  - **A.** Use one shared end-and-reap step and one disable latch. The first failed reap of either background path disables early leases and return passes for the pool lifetime. Retire only the affected slot. Report the step diagnostic and the existing disabled warning once. Further base calls wait for usage and use ordinary admission. Effort: Small.
+  - **B.** Disable each kind of background work separately. Report diagnostics or choose a separate warning. A lasting cause can cost two slots and stop a two-slot pool. Effort: Small.
+  - **C.** Continue later early leases after each failed reap. Keep the return rule and report diagnostics. A lasting cause can retire every slot. Effort: Small.
+- **Left out:** Starting in an unreaped slot breaks the process bound. Stopping healthy slots breaks the healthy-slot rule. Reporting maintenance failure in Changes breaks the same-content rule.
+- **Wider fix:** A. One shared step owns retirement and the disable latch.
+- **Previous examples:** The performance orchestrator's failed-reap B and refinement E in PR #313, dated 2026-11-18.
+- **Recommendation:** A. It keeps the rule that one background termination failure costs at most one slot.
+- **Action:** fix now, apply A. Performance orchestrator's call of 2026-11-18, under the user's delegation of 2026-11-16.
+
+The performance orchestrator's reason: B can take two slots and C can take
+every slot. Either can stop JavaScript rendering. The existing warning needs
+no new user text. Keep the completed preparation work. Start no second
+preparation and no second early lease. Remaining base work waits for usage
+and uses ordinary admission. Runtime call errors keep their existing outcomes.
+
+Options check: `.context/startup-base-overlap/reap-options-check.md`.
+It confirms that the shared step also keeps the current preparation's work.
+The shared-latch test must show one retired slot and no later return pass or
+early lease after a failed early reap.
+
+Workspace orchestrator's documentation placement call of 2026-11-18:
+document `review.base-gate-wait` with the core sidecar spans, and link from
+the existing timing pointer. The main timing page is at its 250-line cap.
+The sidecar page already owns core spans and has room. The options check in
+`.context/startup-base-overlap/timing-placement-options-check.md` confirms A.
+Renaming the span offers no required benefit. Splitting the timing page
+moves unrelated fixture and budget content. Both the stage and reason must
+enter the existing diagnostic allowlists.
+
+After the generation-affinity merge on 2026-11-18, the workspace
+orchestrator keeps main's ranking section unchanged. The early lease section
+moves to the early preparation page, which has room under the protocol cap.
+All lease rules and links remain. This is a placement change with no policy
+change. The shared failed-reap rule stays on the root scheduling page.
+
+Capture's generation restore uses the diagnostic span
+`sidecar.restore-generation` around its actual request. Existing render and
+capture spans do not isolate that cost. The timing page owns this span too.
+After integrating the compiled bundle cache, the workspace orchestrator
+keeps this span on restores of generations and recipes held by the pool.
+Disk-cache restore stays inside `catalogue.bundle`. This preserves the
+capture-restore measurement without extending the diagnostic scope.
+
+The performance orchestrator's shutdown harness call of 2026-11-18 is A.
+Keep the original Unimocks on the test thread until joined workers and
+resource owners release their clones. Keep cancellation, join, and no early
+error publication assertions. Change no production code for this correction.
+The three failures came from test ownership and teardown. The correction
+uses the existing mock ownership rules. Run the focused check and ten repeats.
+
 ## Milestone 1: Documentation and protocol
 
 Depends on: none
@@ -305,9 +373,11 @@ Delegate internal documentation to the docs implementor. Audit the existing
 contracts. Correct descriptions of serial background work in the crate READMEs.
 Change protocol text only where the authorised timing change requires it.
 
-- [ ] Audit Changes status, on-demand background work, base lifetime, and sidecar scheduling requirements against the selected design.
-- [ ] Update the CLI, server, and comparison README entry points and background descriptions as needed.
-- [ ] Keep the same published content, current usage, retained-base eligibility, freshness, and bounds in the requirements.
+- [x] Audit Changes status, on-demand background work, base lifetime, and sidecar scheduling requirements against the selected design.
+- [x] Update the CLI, server, and comparison README entry points and background descriptions as needed.
+- [x] Keep the same published content, current usage, retained-base eligibility, freshness, and bounds in the requirements.
+
+Evidence: `.context/startup-base-overlap/docs-report.md` records the contract audit and Markdown checks.
 
 ## Milestone 2: Generation-owned preparation and handover
 
@@ -322,18 +392,21 @@ A sidecar base pauses before capture. An invalid early base follows the
 existing fresh-preparation rule. Transfer early errors and unretained results
 once, rather than silently preparing them again.
 
-- [ ] Add a preparation boundary that uses the existing preparation, capture, and retention services.
-- [ ] Start it when the head generation is installed and the base is selected, alongside current usage.
-- [ ] Pause a sidecar base before capture until usage settles. Let an HTML-only base capture early.
-- [ ] Acquire one early non-warm or empty slot atomically. Hold it through graph preparation. Yield to HTTP before each call. Exclude capture.
-- [ ] Reap before the early base starts. Stop and reap it at the pause point, then leave its slot empty. Preserve ordinary replacement paths.
-- [ ] Preserve the usual path when a kept base is current, and when early preparation fails or cannot be retained.
-- [ ] Keep base-ref polling, cancellation, progress, warnings, and accepted-result publication under the generation owner.
-- [ ] Cancel and join early preparation on a new head, base change, cancellation, and stop.
-- [ ] Keep cleanup off the next usage pass, with one running or draining preparation and only the newest pending request.
-- [ ] Add deterministic event-order tests for overlap, capture pause, freshness, reuse, HTTP priority, one early call, one-slot progress, and cancellation by head, base, and stop.
-- [ ] Preserve the existing pool bound, warm head process, background return, and generation affinity rules.
-- [ ] Observe assertion failures for new behaviour, then pass every new asynchronous test in ten runs.
+- [x] Add a preparation boundary that uses the existing preparation, capture, and retention services.
+- [x] Start it when the head generation is installed and the base is selected, alongside current usage.
+- [x] Pause a sidecar base before capture until usage settles. Let an HTML-only base capture early.
+- [x] Acquire one early non-warm or empty slot atomically. Hold it through graph preparation. Yield to HTTP before each call. Exclude capture.
+- [x] Reap before the early base starts. Stop and reap it at the pause point, then leave its slot empty. Preserve ordinary replacement paths.
+- [x] Share the failed-reap disable latch between early leases and return passes. Preserve prepared work, report once, and test that only one slot is retired.
+- [x] Preserve the usual path when a kept base is current, and when early preparation fails or cannot be retained.
+- [x] Keep base-ref polling, cancellation, progress, warnings, and accepted-result publication under the generation owner.
+- [x] Cancel and join early preparation on a new head, base change, cancellation, and stop.
+- [x] Keep cleanup off the next usage pass, with one running or draining preparation and only the newest pending request.
+- [x] Add deterministic event-order tests for overlap, capture pause, freshness, reuse, HTTP priority, one early call, one-slot progress, and cancellation by head, base, and stop.
+- [x] Preserve the existing pool bound, warm head process, background return, and generation affinity rules.
+- [x] Document the early admission wait, generation restore, and early process stop diagnostics with the implementation's names.
+- [x] Update the sidecar README entry points and its shared background failure rule.
+- [x] Observe assertion failures for new behaviour, then pass every new asynchronous test in ten runs.
 
 Evidence: `.context/startup-base-overlap/implementation-report.md` records the red tests, repeated runs, and test costs.
 
@@ -355,9 +428,14 @@ time with `CARGO_INCREMENTAL=0`. Check disk and free memory before large builds.
 - [ ] Compare the published Changes bytes with the non-overlap baseline as a one-time proof.
 - [ ] Stop and ask the performance orchestrator if RSS rises by more than 5%.
 - [ ] Report a gain below one second on the large fixtures before widening the change.
-- [ ] Send the implementation SHA immediately after push for the cloud catalogue acceptance measurement.
 
 Evidence: `.context/startup-base-overlap/after-report.md` records the before and after table and byte comparison.
+The native-main refresh and integration are recorded in
+`.context/startup-base-overlap/cache-merge-audit.txt` and the matched baseline report.
+The generation-affinity integration is recorded in
+`.context/startup-base-overlap/affinity-merge-audit.txt`.
+The document placement and preservation check is recorded in
+`.context/startup-base-overlap/docs-affinity-integration-report.md`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
@@ -369,7 +447,7 @@ Git tool directory first on PATH so manager fixtures cannot filter Git out.
 
 - [ ] Run targeted Serve, comparison, and pool tests without weakening existing assertions.
 - [ ] Run `cargo xtask check --suite repository` and the complete `cargo xtask check` gate.
-- [ ] Commit with Conventional Commits and push the branch. Send the implementation SHA to the performance orchestrator.
+- [ ] Commit with Conventional Commits and push the branch. Immediately send the implementation SHA to the performance orchestrator for cloud catalogue acceptance.
 - [ ] Review the complete diff against `origin/main` after push with the implementation-review skill. Check each finding, apply its fix rule, and complete the two allowed fix rounds as needed.
 - [ ] Record follow-up items for every deferred or open finding and every problem outside the review scope.
 - [ ] Wait for cloud catalogue acceptance.

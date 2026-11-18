@@ -24,6 +24,7 @@ use mokly_source_interface::tree::SourceTreeMock;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::changes_base::NativeBase;
+use crate::serve_preparation_control::PreparationControlMock;
 
 #[derive(Clone, Copy, Debug)]
 enum Evidence {
@@ -38,6 +39,7 @@ enum Evidence {
 struct Calls {
     sample: AtomicUsize,
     record: AtomicUsize,
+    selection: AtomicUsize,
 }
 
 fn config() -> ResolvedConfig {
@@ -162,7 +164,16 @@ fn prepare(evidence: Evidence) -> (BasePreparationResult, Arc<Calls>) {
     } else {
         Unimock::new(())
     };
+    let preparation = if reads_base {
+        Unimock::new(PreparationControlMock::selected.some_call(matching!((false, directories, unmapped) if directories.is_empty() && unmapped.is_empty())).answers_arc({
+            let calls = calls.clone();
+            Arc::new(move |_, _, _, _| { calls.selection.fetch_add(1, Ordering::Relaxed); })
+        }))
+    } else {
+        Unimock::new(())
+    }.no_verify_in_drop();
     let provider: &dyn BaseProvider = &NativeBase {
+        preparation: Some(Arc::new(preparation)),
         runtime: Arc::new(Runtime::new(
             Arc::new(Unimock::new(())),
             Arc::new(dependency_tree),
@@ -198,6 +209,7 @@ fn non_retaining_preparation_skips_optional_evidence() {
     let (result, calls) = prepare(Evidence::Disabled);
     let prepared = result.unwrap();
     assert_eq!(calls.sample.load(Ordering::Relaxed), 0);
+    assert_eq!(calls.selection.load(Ordering::Relaxed), 1);
     assert_eq!(calls.record.load(Ordering::Relaxed), 0);
     assert_eq!(
         prepared.freshness.map(|inputs| inputs.checkout.digest),
@@ -216,6 +228,11 @@ fn unavailable_sample_or_record_preserves_normal_preparation() {
             result.as_ref().err()
         );
         assert_eq!(calls.sample.load(Ordering::Relaxed), 1, "{evidence:?}");
+        assert_eq!(
+            calls.selection.load(Ordering::Relaxed),
+            usize::from(!matches!(evidence, Evidence::SampleCancelled)),
+            "{evidence:?}"
+        );
         assert_eq!(
             calls.record.load(Ordering::Relaxed),
             records,
@@ -236,6 +253,11 @@ fn cancelled_sample_or_record_preserves_typed_cancellation() {
             "{evidence:?}"
         );
         assert_eq!(calls.sample.load(Ordering::Relaxed), 1, "{evidence:?}");
+        assert_eq!(
+            calls.selection.load(Ordering::Relaxed),
+            usize::from(!matches!(evidence, Evidence::SampleCancelled)),
+            "{evidence:?}"
+        );
         assert_eq!(
             calls.record.load(Ordering::Relaxed),
             records,

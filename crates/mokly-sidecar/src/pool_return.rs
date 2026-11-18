@@ -56,6 +56,7 @@ impl Pool {
         if state.stopped
             || state.head.return_disabled
             || state.head.active.is_some()
+            || state.early.is_some()
             || state
                 .waiting
                 .values()
@@ -107,7 +108,16 @@ impl Pool {
 
     /// A slot stays leased and registered until finish confirms reaping.
     pub(super) fn retire_return(&self, index: usize, control: &dyn WorkerControl) -> Result<()> {
-        let span = Reason::RootSwitch.stop();
+        self.retire_background(index, control, Reason::RootSwitch)
+    }
+
+    pub(super) fn retire_background(
+        &self,
+        index: usize,
+        control: &dyn WorkerControl,
+        reason: Reason,
+    ) -> Result<()> {
+        let span = reason.stop();
         let _scope = span.enter();
         let killed = control.kill();
         let now = self.clock.now_ms();

@@ -24,6 +24,9 @@ pub(super) enum Mode {
     ShutdownHello,
     IdleShutdown,
     Retired,
+    Timeout,
+    RetiredTimeout,
+    RetiredPressure,
 }
 
 pub(super) struct Fault {
@@ -67,7 +70,11 @@ pub(super) fn processes(
     let spawn = FactoryMock::spawn
         .each_call(matching!(_))
         .answers_arc(Arc::new(move |_, launch| {
-            let id = processes.lock().unwrap().front().unwrap().0;
+            let Some(id) = processes.lock().unwrap().front().map(|process| process.0) else {
+                return Err(Error::Unavailable {
+                    part: "unexpected process start".into(),
+                });
+            };
             let event = Event::Spawn(id, launch.repository.to_string_lossy().into_owned());
             observed.emit(event.clone());
             hook(event.clone());
@@ -110,7 +117,7 @@ fn worker(
     let exchange = (
         WorkerMock::request
             .each_call(matching!(_, _))
-            .answers_arc(Arc::new(move |_, request, _| {
+            .answers_arc(Arc::new(move |_, request, deadline| {
                 let label = match &request.call {
                     Call::ProcessCss(params) => params.context.clone(),
                     Call::Bundle(params) => params.params.entry_files[0].clone(),
@@ -119,6 +126,12 @@ fn worker(
                 let event = Event::Request(id, label);
                 request_events.emit(event.clone());
                 request_hook(event);
+                if matches!(mode, Mode::Timeout | Mode::RetiredTimeout) {
+                    return Err(Error::Timeout {
+                        deadline_ms: deadline,
+                        phase: None,
+                    });
+                }
                 Ok(match &request.call {
                     Call::Bundle(params) => MethodResult::Bundle(Box::new(results::Bundle {
                         generation: params.params.entry_files[0].clone(),
@@ -133,7 +146,13 @@ fn worker(
             })),
         WorkerMock::resident_bytes
             .each_call(matching!())
-            .answers(&|_| Ok(0)),
+            .answers_arc(Arc::new(move |_| {
+                Ok(if matches!(mode, Mode::RetiredPressure) {
+                    1_073_741_825
+                } else {
+                    0
+                })
+            })),
     );
     let kill_events = events.clone();
     let kill_hook = hook.clone();
@@ -162,11 +181,15 @@ fn worker(
         }));
     match mode {
         Mode::Foreground => Unimock::new((hello, exchange, kill)),
+        Mode::Timeout => Unimock::new((hello, exchange.0, kill)),
         Mode::Base => Unimock::new((hello, exchange, kill, finish)),
         Mode::Ready => Unimock::new((hello, kill)),
         Mode::Hello => Unimock::new((hello, kill, finish)),
         Mode::ShutdownHello => Unimock::new((hello, kill, finish, shutdown)),
         Mode::IdleShutdown => Unimock::new((hello, exchange, finish, shutdown)),
-        Mode::Retired => Unimock::new((hello, exchange, kill, finish, shutdown)),
+        Mode::Retired | Mode::RetiredPressure => {
+            Unimock::new((hello, exchange, kill, finish, shutdown))
+        }
+        Mode::RetiredTimeout => Unimock::new((hello, exchange.0, kill, finish, shutdown)),
     }
 }

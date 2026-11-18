@@ -2,6 +2,9 @@
 
 mod affinity_tests;
 mod disable_tests;
+mod early_failure_tests;
+mod early_lease_tests;
+mod early_retry_tests;
 mod failure_tests;
 mod handover_tests;
 mod pass_tests;

@@ -132,6 +132,7 @@ fn replaced_run_cancels_a_prepared_base_generation_without_cancelling_the_comman
             .answers(&|_, _| Ok(())),
     )));
     let provider = NativeBase {
+        preparation: None,
         runtime: source.classification_runtime(cancellation.clone()),
         cancellation,
         dependencies: Arc::new(Unimock::new(())),

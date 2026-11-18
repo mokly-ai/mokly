@@ -73,6 +73,11 @@
       `crates/mokly-sidecar/src/_tests_/pool_root_selection_tests.rs`.
     - `live_root_switch_stops_under_the_selecting_caller` in
       `crates/mokly-cli/src/_tests_/sidecar_stop/retirement_tests.rs`.
+  - The performance orchestrator's call of 2026-11-18 extends the shared
+    background reap rule to early base leases. The first failed reap of
+    either path disables both early leases and return passes for the pool
+    lifetime. It retires only the affected slot and reports the existing
+    disabled warning once. This call covers background failures only.
 - **Problem:** Two replacement paths can start a new process before the old
   process is confirmed ended. A root switch never waits for the exit. Recycle
   empties the slot after a failed `finish`, and its warning stays hidden.
@@ -95,8 +100,10 @@
   - **C.** Send the root switch and recycle through `Pool::retire_return`, the
     end-and-reap step of the return pass, so that one transition owns every
     replacement in a slot. Both paths then retire their slot and report on
-    stderr when they cannot confirm the reap. Update the same tests. Effort:
-    Medium.
+    stderr when they cannot confirm the reap. Choose whether a failed
+    foreground reap also sets the shared background disable latch; the
+    recorded background call does not settle that trigger. Update the same
+    tests. Effort: Medium.
 - **Left out:** A pool that counts exiting processes against its size,
   because it gives the same bound as B with more state. A reuse of the slot
   after a failed `finish`, as recycle does now, because the old process can

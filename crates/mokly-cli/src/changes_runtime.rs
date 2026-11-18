@@ -61,6 +61,7 @@ pub(super) fn service(
         provider: Arc::new(StaticBase {
             inputs,
             inner: Arc::new(NativeBase {
+                preparation: None,
                 runtime,
                 cancellation,
                 freshness: None,

@@ -67,12 +67,19 @@ pass has candidates, a base request prefers an idle worker of its root that
 already left the pass. The generation rank orders workers only inside that
 group and the candidates. When a step cannot confirm a reap, only that slot
 retires: its control stays registered, and the pool never reuses the slot. The
-first failed reap also ends background return for the life of the pool. The
+first failed reap also ends background return and early leases for the life of
+the pool. The
 other slots keep serving requests and switch roots on demand. A call affine to
 a retired PostCSS slot fails as unavailable at once. When no usable slot
 remains, as in a one-slot pool, the pool stops. The
 [source root scheduling contract](../../docs/protocol/mokly-sidecar-root-scheduling.md)
 owns these rules.
+
+Serve can call `try_early` to claim an idle non-warm or empty slot without a
+FIFO ticket. Its `EarlyLease` holds the slot across preparation calls. The
+lease reaps each replaced process and leaves an empty slot when it finishes.
+Generation recipes stay available for later capture. A one-slot pool gives no
+early lease. Serve owns the usage wait and whole-HTTP-render priority.
 
 After the final release of a generation with captured reuse evidence, the
 pool keeps its bundle settings, module graph, compiled code, input digests,
@@ -312,7 +319,10 @@ spawn the built sidecar and render a component, screen, story, and page. The
   reuse, and `Pool`, its lazy bounded implementation, with
   `with_bundle_store`. Its `schedule_head_return` and `maintain_head_return`
   methods are the return pass boundary, and `ReturnWake` is the weak wake that
-  Serve registers through `observe_head_return`.
+  Serve registers through `observe_head_return` and `observe_available`.
+- [`src/early_lease.rs`](./src/early_lease.rs) defines `EarlyLease` and its
+  call handover. [`src/pool_early.rs`](./src/pool_early.rs) implements the
+  atomic `try_early` claim, retained slot, and final reap.
 - [`src/pool_leases.rs`](./src/pool_leases.rs) defines `Pool::acquire`, the
   root-aware FIFO queue of waiting requests. It protects the warm head worker
   from base requests, removes each taken slot from the return pass, and fails
@@ -322,14 +332,13 @@ spawn the built sidecar and render a component, screen, story, and page. The
   generation state that a call needs.
 - [`src/pool_head.rs`](./src/pool_head.rs) defines `Head`, which holds the
   warm head worker, the candidates of the return pass, and the
-  `return_disabled` flag, and `Pool::record_head`, which records each
+  shared background disable flag, and `Pool::record_head`, which records each
   successful head bundle and render.
 - [`src/pool_return.rs`](./src/pool_return.rs) schedules a return pass and
-  runs one step in `Pool::maintain_return`. `Pool::retire_return` kills and
-  reaps a worker while its slot stays leased. When it cannot confirm the reap,
-  it adds the slot to the retired set, sets `return_disabled`, and returns
-  `Error::HeadReturnDisabled` with the original failure. Only the return pass
-  caller receives that error.
+  runs one step in `Pool::maintain_return`. `Pool::retire_background` is the
+  shared end-and-reap step for return and early work. An unconfirmed reap
+  retires its slot and disables both paths. `Error::HeadReturnDisabled`
+  carries the original failure to the owning Serve reporter once.
   [`src/pool_return_spawn.rs`](./src/pool_return_spawn.rs) starts the head
   worker of a step through hello.
 - [`src/pool_options.rs`](./src/pool_options.rs) defines `Launch` and

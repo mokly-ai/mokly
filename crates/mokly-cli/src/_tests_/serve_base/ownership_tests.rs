@@ -45,6 +45,7 @@ fn last_slot_owner_drops_newer_entry_while_old_reader_keeps_only_its_base() {
                     warnings: Arc::default(),
                     progress: progress.clone(),
                     inner: Arc::new(NativeBase {
+                        preparation: None,
                         runtime,
                         cancellation: first.lifetime.clone(),
                         freshness: None,

@@ -8,6 +8,8 @@ use mokly_model::public_metadata::ChangesStatus;
 use tokio::sync::{oneshot, watch};
 use unimock::{MockFn, Unimock, matching};
 
+use crate::usage_completion::CompletedUsage;
+
 use crate::changes::{ChangeSource, ChangeSourceMock};
 use crate::changes_background::{AfterUsage, ChangesPass};
 use crate::comparison_store::ComparisonsMock;
@@ -68,7 +70,8 @@ async fn snapshot_mode_classifies_once_and_never_polls_refs() {
     ));
     let (pass, origin, publications, collecting) = setup(Arc::new(source.clone()), false);
     let (stop, stopping) = watch::channel(false);
-    let run = tokio::spawn(async move { pass.run(origin, stopping).await });
+    let run =
+        tokio::spawn(async move { pass.run(origin, stopping, Arc::new(CompletedUsage)).await });
     finishing.await.unwrap();
     tokio::time::advance(Duration::from_secs(10)).await;
     collecting.await.unwrap();
@@ -127,7 +130,8 @@ async fn a_ref_change_drains_the_replaced_attempt_and_reuses_the_polled_refs() {
             })),
     ));
     let (pass, origin, publications, _collecting) = setup(Arc::new(source.clone()), true);
-    let run = tokio::spawn(async move { pass.run(origin, stopping).await });
+    let run =
+        tokio::spawn(async move { pass.run(origin, stopping, Arc::new(CompletedUsage)).await });
     let cancel = entering.await.unwrap();
     tokio::time::advance(Duration::from_secs(1)).await;
     while !cancel.cancelled() {

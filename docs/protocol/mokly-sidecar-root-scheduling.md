@@ -6,6 +6,8 @@ process serves one source root, and all roots share the configured pool
 bound. These rules choose the process that changes root. They also let Serve
 return idle base processes to the head root after base work. Last, they rank
 the idle processes of one root by the generation that a request names.
+An [early base lease](./mokly-base-early-preparation.md#early-base-lease) gives
+early base preparation in Serve one slot while current usage renders.
 
 ## Roots And The Warm Head Process
 
@@ -19,12 +21,14 @@ generation, the warm head process is the process that rendered it last.
 A base request takes the warm head process only when no other idle process
 and no empty slot is available to it. So base work still uses every slot
 while the other slots are busy. A pool of one slot has no other slot, so a
-base request replaces its only process.
+base request replaces its only process. An
+[early base lease](./mokly-base-early-preparation.md#early-base-lease) never
+takes the warm head process.
 
-Decision: the warm head process never makes a base request wait. Rejected: a
-wait for another process, because base work would then run on one process
-fewer. With two sidecars, the sidecar calls of base capture could take twice
-as long.
+Decision: the warm head process never makes a base request outside an early
+base lease wait. Rejected: a wait for another process, because base work would
+then run on one process fewer. With two sidecars, the sidecar calls of base
+capture could take twice as long.
 
 ## Background Return
 
@@ -57,22 +61,24 @@ beyond the pool size. Decision: the new process loads no head generation in
 advance. Rejected: a replay of the newest head generation, because it adds CPU
 work and keeps more evaluated code in memory.
 
-When the pass cannot confirm that a process that it ended has exited, it takes
-only that slot out of use. The pool keeps owning that process, so the stop
-rules still end it. It starts no process in that slot while that process may
-still run. A request whose live PostCSS context belongs to that slot fails at
-once with `sidecar-unavailable`, which names the PostCSS context worker. The
-other slots continue to serve requests. When no usable slot remains, as in a
-pool of one slot, the pool stops, and later sidecar requests fail as after a
-cancellation.
+When the pass or an early base lease cannot confirm that a process that it
+ended has exited, it takes only that slot out of use. The pool keeps owning
+that process, so the stop rules still end it. It starts no process in that
+slot while that process may still run. A request whose live PostCSS context
+belongs to that slot fails at once with `sidecar-unavailable`, which names the
+PostCSS context worker. The other slots continue to serve requests. When no
+usable slot remains, as in a pool of one slot, the pool stops, and later
+sidecar requests fail as after a cancellation.
 
-The first such failure also ends background return for the life of the pool.
-The pass drops its other candidates, and later publications start no pass.
-Requests still switch roots on demand, and the warm head rule still applies.
+The first such failure also ends background return and early base leases for
+the life of the pool. The pass drops its other candidates, and later
+publications start no pass. Later early preparation gets no lease. A sidecar
+call that fails ends neither of them. Requests still switch roots on demand,
+and the warm head rule still applies.
 
-Serve reports each failed step of the pass once on stderr, as a sidecar
-diagnostic with the error text. When the step ends background return, Serve
-then adds this diagnostic line:
+Serve reports each failed step of the pass or of a lease once on stderr, as a
+sidecar diagnostic with the error text. When the step ends background return
+and early base leases, Serve then adds this diagnostic line once:
 
 ```text
 [mokly/warning] Background sidecar preparation is disabled. Restart Serve.
@@ -85,11 +91,14 @@ the whole pool, because one unconfirmed process would then end every
 JavaScript render of the session. Rejected: a new process in that slot,
 because it could run beside the old process beyond the pool size.
 
-Decision: the first failed reap ends background return for the life of the
-pool, so background work can cost at most one slot. Rejected: a pass that
-goes on after it, because one cause that fails every reap could then retire
-every idle base slot in one pass. Rejected: an end of the current pass only,
-because the same cause could then retire one more slot at each publication.
+Decision: the first failed reap of the return pass or of an early base lease
+ends both for the life of the pool, so background work can cost at most one
+slot. Rejected: a pass that goes on after it, because one cause that fails
+every reap could then retire every idle base slot in one pass. Rejected: an
+end of the current pass only, because the same cause could then retire one
+more slot at each publication. Rejected: an end of only the path that failed,
+because the other path could then retire a second slot. Rejected: leases after
+a failed reap, because each new head could then retire one more slot.
 
 ## Handover And Stop
 

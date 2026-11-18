@@ -77,6 +77,15 @@ impl BasePreparationError {
 /// Result returned by a base provider after it prepares or fails to prepare.
 pub type BasePreparationResult = std::result::Result<PreparedBase, BasePreparationError>;
 
+/// Boundaries where Serve can hand preparation to completed current usage.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum PreparationCheckpoint {
+    /// Graph preparation has ended, before any base capture job starts.
+    Capture,
+    /// A captured base or a preparation failure is ready for classification.
+    Complete,
+}
+
 /// Native batched Git source factory with explicit metadata and memory bounds.
 pub struct GitSourceFactory {
     /// Independent tree and blob bounds.
@@ -130,6 +139,18 @@ pub struct BaseRequest<'a> {
 /// Rendering service seam. HTML and future JavaScript base entries use the same graph.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = BaseProviderMock))]
 pub trait BaseProvider: Send + Sync {
+    /// Wait when required and reject an outcome whose early dependency selection changed.
+    fn checkpoint(
+        &self,
+        _request: &BaseRetentionRequest<'_>,
+        _checkpoint: PreparationCheckpoint,
+    ) -> Result<bool> {
+        Ok(true)
+    }
+
+    /// Clear only the discarded early attempt before one ordinary fresh preparation.
+    fn restarting(&self) {}
+
     /// Find an equal, current base and create this classification's reader.
     /// A miss releases a different or stale base before any fresh preparation.
     /// Fresh preparation samples checkout identity before its first base read,
@@ -229,3 +250,7 @@ mod base_render_steps_tests;
 #[cfg(test)]
 #[path = "_tests_/base_reuse/mod.rs"]
 mod base_reuse_tests;
+
+#[cfg(test)]
+#[path = "_tests_/base_handover/mod.rs"]
+mod base_handover_tests;

@@ -15,6 +15,7 @@ use mokly_graph::workers::ThreadWorkers;
 use mokly_platform::processes::SystemProcessGroups;
 use mokly_render::physical_inputs::SystemPhysicalInputs;
 use mokly_render::runtime::Runtime;
+use mokly_sidecar::early_lease::EarlyRetry;
 use mokly_sidecar::methods::Call;
 use mokly_sidecar::operations::Operation;
 use mokly_sidecar::pool::{Pool, SidecarPool};
@@ -79,6 +80,10 @@ impl SidecarPool for CapturedPool {
     fn request(&self, call: Call) -> mokly_sidecar::error::Result<MethodResult> {
         self.calls.lock().unwrap().push(call.clone());
         self.inner.request(call)
+    }
+    fn retry(&self, call: Call, failure: EarlyRetry) -> mokly_sidecar::error::Result<MethodResult> {
+        self.calls.lock().unwrap().push(call.clone());
+        self.inner.retry(call, failure)
     }
     fn abort(&self) -> mokly_sidecar::error::Result<()> {
         self.inner.abort()

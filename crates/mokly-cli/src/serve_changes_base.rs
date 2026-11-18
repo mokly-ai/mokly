@@ -100,6 +100,13 @@ pub(super) struct AttemptBase {
     pub(super) progress: Arc<dyn ChangeProgress>,
 }
 impl BaseProvider for AttemptBase {
+    fn restarting(&self) {
+        self.warnings
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .clear();
+        self.inner.restarting();
+    }
     fn prepare(&self, request: &BaseRequest<'_>) -> BasePreparationResult {
         let prepared = self.inner.prepare(request);
         let records = match &prepared {

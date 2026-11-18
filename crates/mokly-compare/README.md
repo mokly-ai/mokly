@@ -407,8 +407,9 @@ development dependencies, and no test uses the internet.
   file contents.
 - [`src/base_classification.rs`](./src/base_classification.rs) holds the
   classification path of `Changes`: one kept base or one fresh capture, the
-  `review.base-tree` action, and the single fresh preparation after a failed
-  reuse.
+  `review.base-tree` action, and the single fresh preparation after failed reuse.
+  [`src/base_preparation.rs`](./src/base_preparation.rs) shares preparation,
+  capture checkpoints, stale-result handover, and retention.
 - [`src/base_reader.rs`](./src/base_reader.rs) defines `BaseReader`, the
   per-classification reader of a kept base. It keeps only its `BaseReuse`,
   checks its cancellation before each call, and forwards retained inputs and

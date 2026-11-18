@@ -23,6 +23,7 @@ use crate::error::{Result, ServerError};
 use crate::revision::RevisionLease;
 use crate::revision_file::RevisionFile;
 use crate::snapshot::{Snapshot, encode_index};
+use crate::usage_completion::UsageCompletion;
 
 /// Cancellation belongs to one classification, not to the shared render pool.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ChangeCancellationMock))]
@@ -94,6 +95,10 @@ impl ChangeCancellation for ChangeToken {
 /// Status callbacks run outside the HTTP loop and reject superseded producers.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ChangeProgressMock))]
 pub trait ChangeProgress: Send + Sync {
+    /// Current usage may still render while base preparation runs.
+    fn usage(&self) -> Option<Arc<dyn UsageCompletion>> {
+        None
+    }
     /// Publish one status transition, or return false when superseded.
     fn status(&self, status: ChangesStatus) -> Result<bool>;
 }

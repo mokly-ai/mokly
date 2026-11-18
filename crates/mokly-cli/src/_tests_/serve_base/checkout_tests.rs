@@ -28,6 +28,7 @@ fn native(slot: Arc<BaseSlot>, freshness: Arc<dyn Freshness>, runtime: Arc<Runti
         runtime.clone(),
     );
     Arc::get_mut(&mut fixture.provider).unwrap().inner = Arc::new(NativeBase {
+        preparation: None,
         runtime,
         freshness: Some(freshness),
         cancellation: fixture.lifetime.clone(),
