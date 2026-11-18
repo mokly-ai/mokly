@@ -266,6 +266,8 @@ Completed. Evidence: `.context/first-edit-warm-sidecars/implementation-report.md
 
 Depends on: 1, 3
 
+Completed. Implementation commit: `5c682a8bf247f6d6fd14df40bc9e511630718902`.
+
 The performance orchestrator requested this order on 2026-11-18. Push after the targeted 10-run checks and repository gate. Cloud acceptance then runs in parallel with local release measurements and the complete gate. Send each later pool or Serve fix SHA too.
 
 Evidence: `.context/first-edit-warm-sidecars/repository-gate-standard.log`. The extra test-thread environment setting and its correction are in `.context/first-edit-warm-sidecars/gate-environment-note.md`.
@@ -273,7 +275,7 @@ Evidence: `.context/first-edit-warm-sidecars/repository-gate-standard.log`. The 
 - [x] Use Git 2.45 or later first on PATH, installed git-lfs, and the pinned Bun. Check disk and memory before each large Cargo build. Use `CARGO_INCREMENTAL=0` and one Cargo build at a time.
 - [x] Run the early repository suite. Record each failed, skipped, or blocked check and its reason.
 - [x] Fetch and merge current `origin/main` with the git-merge skill before each delegation batch. Preserve nearby changes.
-- [ ] Commit with Conventional Commits and push the branch. Send the implementation SHA to the performance orchestrator at once for its `mokly-cloud` measurement.
+- [x] Commit with Conventional Commits and push the branch. Send the implementation SHA to the performance orchestrator at once for its `mokly-cloud` measurement.
 
 ## Milestone 5: Measure the first edit
 
@@ -281,17 +283,21 @@ Depends on: 2, 3, 4
 
 Main advanced to `bc4f4cc40` with the sidecar JavaScript bundle optimization. The task requires last-merged-main measurements, so refresh the comparable baseline at that revision. Keep the completed `f13a5d979` baseline as historical evidence. The fixture scope and three-run count do not change.
 
-- [ ] Delegate release-build measurements to the non-ui implementor. Use separate main and branch checkouts and target directories.
-- [ ] Refresh the last-main baseline at `bc4f4cc40` so both arms include the merged JavaScript bundle optimization.
-- [ ] Run Serve with two watched edits on `examples/basic` and the default large HTML fixture from `scripts/large/`.
-- [ ] Record startup Changes, both edit-to-ready times, root-switch spans, peak RSS, and maximum process count. Keep raw evidence under `.context/first-edit-warm-sidecars/`.
+Completed. Evidence: `.context/first-edit-warm-sidecars/measurements/comparison-bc4.md`. The performance orchestrator accepted the cloud results on 2026-11-18. Its evidence is `.context/first-edit-warm-sidecars/cloud-acceptance.md` and will appear in the pull request.
+
+- [x] Delegate release-build measurements to the non-ui implementor. Use separate main and branch checkouts and target directories.
+- [x] Refresh the last-main baseline at `bc4f4cc40` so both arms include the merged JavaScript bundle optimization.
+- [x] Run Serve with two watched edits on `examples/basic` and the default large HTML fixture from `scripts/large/`.
+- [x] Record startup Changes, both edit-to-ready times, root-switch spans, peak RSS, and maximum process count. Keep raw evidence under `.context/first-edit-warm-sidecars/`.
 
 ## Milestone 6: Complete gate, review, and pull request
 
 Depends on: 1, 2, 3, 4, 5
 
-- [ ] Run the complete gate. Record each failed, skipped, or blocked check and its reason.
-- [ ] Fetch and merge current `origin/main` with the git-merge skill before the final pull request. Preserve nearby changes.
+Gate evidence: `.context/first-edit-warm-sidecars/full-gate-result.json`. Invocation corrections and prior failed attempts are in `.context/first-edit-warm-sidecars/gate-environment-note.md`. Current `origin/main` remains `bc4f4cc40` and is already merged.
+
+- [x] Run the complete gate. Record each failed, skipped, or blocked check and its reason.
+- [x] Fetch and merge current `origin/main` with the git-merge skill before the final pull request. Preserve nearby changes.
 - [ ] Commit and push each required follow-up fix. Send a new pool or Serve implementation SHA to the performance orchestrator at once.
 - [ ] Review the complete local diff against `origin/main` with the implementation-review skill. Check each finding, apply its fix rule for at most two fix rounds, and record follow-up items for the rest.
 - [ ] Delete this plan when every earlier TODO is complete and the review rounds are done.
