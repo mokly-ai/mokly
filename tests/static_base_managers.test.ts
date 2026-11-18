@@ -58,7 +58,7 @@ test(
   { timeout: 120_000 },
   async (context) => {
     const shared = await fs.mkdtemp(
-      path.join(os.tmpdir(), "mokly-shared-bin-"),
+      path.join(os.tmpdir(), "mokly-[shared]-bin-"),
     );
     context.after(() => fs.rm(shared, { recursive: true, force: true }));
     const suffix = process.platform === "win32" ? ".exe" : "";

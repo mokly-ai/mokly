@@ -56,19 +56,13 @@ public static class Program {
 }
 `,
   );
-  const quote = (value: string) => `'${value.replaceAll("'", "''")}'`;
   try {
     await execute(
       path.join(
         process.env.SystemRoot ?? "C:\\Windows",
-        "System32/WindowsPowerShell/v1.0/powershell.exe",
+        "Microsoft.NET/Framework64/v4.0.30319/csc.exe",
       ),
-      [
-        "-NoProfile",
-        "-NonInteractive",
-        "-Command",
-        `$ErrorActionPreference = 'Stop'; Add-Type -Path ${quote(code)} -OutputAssembly ${quote(target)} -OutputType ConsoleApplication`,
-      ],
+      ["/nologo", "/target:exe", `/out:${target}`, code],
     );
   } finally {
     await fs.rm(code, { force: true });
