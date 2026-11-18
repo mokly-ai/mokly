@@ -177,6 +177,9 @@ impl RenderCache for MemoryCache {
             if state.compact.contains(&key) || state.transit.contains(&key) {
                 return;
             }
+            if state.full.refresh_same(&key, &value) {
+                return;
+            }
         }
         let cost = entry_cost(&key, &value);
         let evicted = {
@@ -238,3 +241,7 @@ mod cache_transit_tests;
 #[cfg(test)]
 #[path = "_tests_/cache_encoding_tests.rs"]
 mod cache_encoding_tests;
+
+#[cfg(test)]
+#[path = "_tests_/cache_reinsert_tests.rs"]
+mod cache_reinsert_tests;
