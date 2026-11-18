@@ -8,6 +8,7 @@ license = "MIT"
 rust-version = "1.95"
 
 [workspace.dependencies]
+mokly-test-support = { path = "crates/mokly-test-support" }
 mokly-model = { path = "crates/mokly-model" }
 mokly-platform = { path = "crates/mokly-platform" }
 

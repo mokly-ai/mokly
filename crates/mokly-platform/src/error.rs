@@ -1,6 +1,7 @@
 //! Typed platform failures.
 
 use std::io;
+use std::panic::Location;
 use std::path::PathBuf;
 
 use thiserror::Error;
@@ -42,10 +43,23 @@ pub enum InternalError {
     Io {
         /// Original OS error.
         source: io::Error,
+        /// Conversion call site, shown only by debug formatting.
+        defined_at: &'static Location<'static>,
     },
 }
 
-/// Preserve I/O source errors at adapter boundaries.
+impl Error {
+    /// Preserve the I/O source and capture its conversion call site.
+    #[track_caller]
+    pub fn io(source: io::Error) -> Self {
+        Self::Internal(InternalError::Io {
+            source,
+            defined_at: Location::caller(),
+        })
+    }
+}
+
+/// Preserve I/O source errors and conversion call sites at adapter boundaries.
 pub(crate) trait IoResult<T> {
     /// Promote an OS result to the platform error contract.
     fn platform(self) -> Result<T>;
@@ -56,7 +70,11 @@ impl<T> IoResult<T> for io::Result<T> {
     fn platform(self) -> Result<T> {
         match self {
             Ok(value) => Ok(value),
-            Err(source) => Err(Error::Internal(InternalError::Io { source })),
+            Err(source) => Err(Error::io(source)),
         }
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/error_tests.rs"]
+mod error_tests;

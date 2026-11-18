@@ -27,6 +27,7 @@ unimock = { version = "0.6.8", optional = true }
 mock = ["dep:unimock"]
 
 [dev-dependencies]
+mokly-test-support = { workspace = true }
 mokly-compare = { workspace = true, features = ["mock"] }
 mokly-git = { workspace = true, features = ["mock"] }
 mokly-css = { workspace = true, features = ["mock"] }

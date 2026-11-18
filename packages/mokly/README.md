@@ -183,7 +183,9 @@ the packed contents of the package.
 - [`src/sidecar/transport.ts`](./src/sidecar/transport.ts) splits and decodes
   the binary's typed requests and limits the size of each response.
 - [`src/sidecar/bundle.ts`](./src/sidecar/bundle.ts) holds `bundle`, which
-  compiles the catalogue modules. esbuild resolves most imports itself, and
+  compiles the catalogue modules. Each call shares its read bytes across
+  attempts, while each attempt keeps its own consumed-file and CSS-module
+  records. esbuild resolves most imports itself, and
   [`src/sidecar/native-plan.ts`](./src/sidecar/native-plan.ts) classifies the
   result. It plans a second compile when esbuild's own resolution would change
   the bundle. Its `planNative` keys each planned import by importer,

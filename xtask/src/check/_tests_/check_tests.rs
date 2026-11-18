@@ -28,8 +28,8 @@ fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "node scripts/verification/repository-ratchets.mjs" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo fmt --all -- --check" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         (
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo clippy --workspace --all-targets -- -D warnings" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo clippy -p mokly-cli --features design-matrix --all-targets -- -D warnings" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo clippy --locked --workspace --all-targets -- -D warnings" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo clippy --locked -p mokly-cli --features design-matrix --all-targets -- -D warnings" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         ),
         (
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/ui\"" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
@@ -38,7 +38,7 @@ fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/viewer\"" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         ),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/mokly\"" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo test --workspace" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo test --locked --workspace" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run typecheck:ci" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run test:viewer:prepared" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
@@ -103,10 +103,10 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
             .next_call(matching!((command) if command.display() == "cargo fmt --all -- --check"))
             .returns(Ok(())),
         CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "cargo clippy --workspace --all-targets -- -D warnings"))
+            .next_call(matching!((command) if command.display() == "cargo clippy --locked --workspace --all-targets -- -D warnings"))
             .returns(Ok(())),
         CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "cargo clippy -p mokly-cli --features design-matrix --all-targets -- -D warnings"))
+            .next_call(matching!((command) if command.display() == "cargo clippy --locked -p mokly-cli --features design-matrix --all-targets -- -D warnings"))
             .returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/ui\"")).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/model\"")).returns(Ok(())),
@@ -114,7 +114,7 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/viewer\"")).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/mokly\"")).returns(Ok(())),
         CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "cargo test --workspace"))
+            .next_call(matching!((command) if command.display() == "cargo test --locked --workspace"))
             .returns(Ok(())),
     )));
     let auditor = Arc::new(Unimock::new(
