@@ -182,34 +182,9 @@ render fails the screen with `html-slot`.
 
 ## Storybook
 
-A story file is a `*.stories.{ts,tsx,js,jsx}` file matched by a root. The
-sidecar applies the consumer's `.storybook/preview` annotations once to each
-story, composes the story with `@storybook/react`, and renders it to static
-markup. The story id
-is the file path, `#`, and the export name, and `describe` lists every story
-of the generation. A stories file becomes one component entry at the path derived
-from the file: the meta's `args` are its props, the schema is inferred from
-the args, and each story is a
-variant at the parent's path plus the export name as slug, with its `args` as
-props, under the [entry props contract](./mokly-entry-props.md); the read
-model needs no new kind. A `renderStory` request carries the merged data
-props, applied over the composed story's own args, so non-data args stay as
-the file defines them. Viewport and colour scheme reach the story as the globals
-`moklyViewport` and `moklyColorScheme`. A consumer without `@storybook/react`
-fails `bundle` with `bundle-failed` naming the missing package.
-
-`argTypes` never change the prop schema. Their control bounds apply to complete
-merged props during live validation. Saved args outside those bounds produce
-`props-control-bounds` build warnings. An entry's `options` become
-the choices of the derived select, its `control.min`, `control.max`, and
-`control.step` the bounds and step of the derived number control, and its
-`name` and `description` the control's label and help text. An arg whose
-`argTypes` entry has `control: false`, `table.disable: true`, an `action`, or
-a `type` of `function` is not a prop: it is excluded from the props, the
-schema, and the fragment key without a warning, and the story renders with the
-file's own value for it. A function-valued arg with no `argTypes` entry is
-excluded with the `props-not-data` warning of the
-[entry props contract](./mokly-entry-props.md#schema-inference).
+The [Storybook stories contract](./mokly-storybook.md) defines how the
+sidecar reads stories files, which stories `describe` lists, and how
+`renderStory` prepares and renders a story.
 
 ## Consumer PostCSS
 
