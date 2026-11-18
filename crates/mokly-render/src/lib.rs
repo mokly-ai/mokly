@@ -6,6 +6,7 @@ mod bundle;
 mod bundle_attempt;
 mod bundle_inputs;
 mod declarations;
+mod definition_handle;
 mod definition_input;
 mod definitions;
 pub mod dependency_usage;
@@ -64,3 +65,7 @@ mod source_forwarding_tests;
 #[cfg(test)]
 #[path = "_tests_/source_precedence_tests.rs"]
 mod source_precedence_tests;
+
+#[cfg(test)]
+#[path = "_tests_/graph_tests.rs"]
+mod graph_tests;
