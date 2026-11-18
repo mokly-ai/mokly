@@ -2,9 +2,14 @@
 
 import type { CompiledGeneration } from "./CompiledGeneration.js";
 import type { Module } from "./Module.js";
+import type { ResolutionPlan } from "./ResolutionPlan.js";
 
 // prettier-ignore
 export type BundleResult = {
+/**
+ * Optional native plan paired with this compilation's reuse evidence.
+ */
+plan?: ResolutionPlan,
 /**
  * Used repository dependency directories whose importer lookup is not mapped.
  */

@@ -10,6 +10,7 @@ mod definition_input;
 mod definitions;
 pub mod dependency_usage;
 mod diagnostics;
+mod edit_plans;
 pub mod error;
 mod failures;
 mod fragments;

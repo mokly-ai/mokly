@@ -1,10 +1,12 @@
 //! Versioned, typed bundle files with independent file and seed-frame bounds.
 
 use std::io::{self, Write};
+use std::sync::Arc;
 
 use mokly_sidecar::codec::MAX_FRAME_BYTES;
 use mokly_sidecar::compiled::{CompiledGeneration, RestoreGeneration};
 use mokly_sidecar::methods::Bundle;
+use mokly_sidecar::resolution_plan::ResolutionPlan;
 use mokly_sidecar::results::Module;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -42,6 +44,16 @@ pub(crate) struct StoredRecipe<'a> {
     pub(crate) params: &'a Bundle,
     pub(crate) modules: &'a [Module],
     pub(crate) compiled: &'a CompiledGeneration,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) plan: Option<&'a ResolutionPlan>,
+}
+
+#[derive(Deserialize)]
+pub(crate) struct StoredGeneration {
+    #[serde(flatten)]
+    pub(crate) restore: RestoreGeneration,
+    #[serde(default)]
+    pub(crate) plan: Option<Arc<ResolutionPlan>>,
 }
 
 /// Internal bounds are explicit so each independent byte rule has a small test.
@@ -59,7 +71,7 @@ impl Default for Codec {
     }
 }
 
-pub(crate) type Payload = StoredBundle<RestoreGeneration>;
+pub(crate) type Payload = StoredBundle<StoredGeneration>;
 
 pub(crate) fn same_settings(left: &Bundle, right: &Bundle) -> bool {
     let mut params = left.clone();
@@ -100,3 +112,7 @@ impl Write for DigestWriter {
 #[cfg(test)]
 #[path = "_tests_/bundle_codec_tests.rs"]
 mod bundle_codec_tests;
+
+#[cfg(test)]
+#[path = "_tests_/bundle_plan_codec_tests.rs"]
+mod bundle_plan_codec_tests;

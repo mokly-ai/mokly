@@ -76,10 +76,16 @@ the paths in compiled code.
 The data of a bundle entry is one file. Its first line names the entry format
 version 1, the Mokly version that wrote it, and the SHA-256 digest of the
 payload. The payload is the compiled bundle with its settings and module
-graph. A reader rejects another format or Mokly version before it reads the
-payload. A file above the [frame limit](./mokly-sidecar.md#transport) is
-rejected before its payload is read. A bundle hit hashes the payload and
-compares the digest with the first line.
+graph. It can also keep the [resolution plan](./mokly-sidecar-plans.md) of
+that compilation, beside the compiled bundle. A reader rejects another format
+or Mokly version before it reads the payload. A file above the
+[frame limit](./mokly-sidecar.md#transport) is rejected before its payload is
+read. A bundle hit hashes the payload and compares the digest with the first
+line. A write stores the plan that it receives with the compilation. When the
+plan would take the file above the frame limit, the write stores the entry
+without the plan. A reader drops a stored plan above the
+[record bound](./mokly-sidecar-plans.md#plan-records). A missing or dropped
+plan never makes an entry damaged.
 
 Each bundle cache event other than a hit or a stored write falls into one
 class:
@@ -195,23 +201,26 @@ first observation, inside one timestamp tick of the file system. When every
 checked identity and stamp then returns to its first value, and the recorded
 evidence matches the files at the final read, the evidence counts as stable.
 The bundle cache can then store a compilation whose module selection came
-from the intermediate state. The likelihood is Rare: both changes of the
-path must fall inside one tick after its first observation, and every
-checked identity and stamp must return to its first value. No production
-case is known. The rule for recent changes applies only at each first
-observation, where it rejects a stamp too recent for the time resolution. It
-does not exclude a replace and restore after that observation.
+from the intermediate state. A Serve edit can then also reuse its plan. The
+likelihood is Rare: both changes of the path must fall inside one tick after
+its first observation, and every checked identity and stamp must return to
+its first value. No production case is known. The rule for recent changes
+applies only at each first observation, where it rejects a stamp too recent
+for the time resolution. It does not exclude a replace and restore after that
+observation.
 
 A compilation with unstable evidence keeps every in-process reuse rule of the
 [compiled recipe rules](./mokly-sidecar-recipes.md).
-A later process cannot reuse it, and Mokly prints nothing for it.
-Decision: stability decides only whether the bundle cache stores a
-compilation. A rule that also limits reuse inside a process was rejected,
-because a process would lose reuse that it has without the bundle cache. A
-Linux-only proof was rejected, because it turns the bundle cache off on macOS
-and Windows. A compile from an immutable copy of the inputs, and a second
-resolve in a mirror directory, were rejected, because the sidecar performs no
-file writes.
+A later process cannot reuse it, no Serve edit reuses its plan, and Mokly
+prints nothing for it.
+Decision: stability decides whether the bundle cache stores a compilation and
+whether a Serve edit can reuse its plan. It never limits the reuse of a
+compiled result inside a process. A rule that also limits that reuse was
+rejected, because a process would lose reuse that it has without the bundle
+cache. A Linux-only proof was rejected, because it turns the bundle cache off
+on macOS and Windows. A compile from an immutable copy of the inputs, and a
+second resolve in a mirror directory, were rejected, because the sidecar
+performs no file writes.
 
 ## Converted Source Identity
 

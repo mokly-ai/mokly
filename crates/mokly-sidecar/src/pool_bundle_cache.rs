@@ -1,5 +1,7 @@
 //! Optional bundle seeding and served-recipe offers outside pool IO locks.
 
+use std::sync::Arc;
+
 use crate::bundle_outcomes::CacheOutcome;
 use crate::bundle_store::ReadOutcome;
 use crate::durable_recipe::DurableRecipe;
@@ -7,15 +9,21 @@ use crate::error::{Error, Result};
 use crate::methods::{BundleCapture, BundleRequest, Call};
 use crate::pool::Pool;
 use crate::pool_state::Slot;
+use crate::resolution_plan::ResolutionPlan;
 use crate::results;
 use crate::reusable_recipe::{ReusableRecipe, disk_seed_request};
 
 /// Request-local provenance survives only the existing exchange recovery.
 pub(super) struct BundleAttempt {
     memory: Vec<String>,
-    disk: Option<String>,
+    disk: Option<DiskCompilation>,
     cause: CacheOutcome,
     disk_checked: bool,
+}
+
+struct DiskCompilation {
+    runtime: String,
+    plan: Option<Arc<ResolutionPlan>>,
 }
 
 impl Default for BundleAttempt {
@@ -73,7 +81,10 @@ impl Pool {
         match restored {
             Ok(_) => {
                 slot.generations.insert(generation, 0);
-                attempt.disk = Some(recipe.compiled().runtime_key.clone());
+                attempt.disk = Some(DiskCompilation {
+                    runtime: recipe.compiled().runtime_key.clone(),
+                    plan: recipe.plan().cloned(),
+                });
                 attempt.cause = CacheOutcome::StampMismatch;
                 Ok(())
             }
@@ -102,11 +113,20 @@ impl Pool {
         let runtime = &result.compiled.runtime_key;
         let reused = if attempt.memory.contains(runtime) {
             Some(CacheOutcome::Memory)
-        } else if attempt.disk.as_ref() == Some(runtime) {
+        } else if attempt
+            .disk
+            .as_ref()
+            .is_some_and(|disk| &disk.runtime == runtime)
+        {
             Some(CacheOutcome::Hit)
         } else {
             None
         };
+        if let Some(disk) = &attempt.disk
+            && &disk.runtime == runtime
+        {
+            result.plan = disk.plan.clone();
+        }
         let mut cause = attempt.cause;
         if request.capture.unwrap_or_default() == BundleCapture::Full
             && let Some(recipe) = ReusableRecipe::new(
@@ -116,6 +136,7 @@ impl Pool {
                 result.compiled.clone(),
             )
             .and_then(DurableRecipe::new)
+            .map(|recipe| recipe.with_plan(result.plan.clone()))
             && let Some(cache) = self.save_served(&recipe)
         {
             cause = cache;

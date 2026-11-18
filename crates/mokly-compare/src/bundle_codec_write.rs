@@ -3,6 +3,7 @@
 use std::io::{self, Write};
 
 use mokly_sidecar::durable_recipe::DurableRecipe;
+use mokly_sidecar::resolution_plan::ResolutionPlan;
 use mokly_sidecar::reusable_recipe::disk_seed_request;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -15,6 +16,19 @@ use crate::error::{InternalError, Result};
 
 impl Codec {
     pub(crate) fn encode(&self, recipe: &DurableRecipe, version: &str) -> Result<Option<Vec<u8>>> {
+        let encoded = self.encode_plan(recipe, version, recipe.plan().map(|plan| plan.as_ref()))?;
+        if encoded.is_none() && recipe.plan().is_some() {
+            return self.encode_plan(recipe, version, None);
+        }
+        Ok(encoded)
+    }
+
+    fn encode_plan(
+        &self,
+        recipe: &DurableRecipe,
+        version: &str,
+        plan: Option<&ResolutionPlan>,
+    ) -> Result<Option<Vec<u8>>> {
         let mut header = Header {
             format_version: 1,
             mokly_version: version.into(),
@@ -39,6 +53,7 @@ impl Codec {
                 params: recipe.params(),
                 modules: recipe.modules(),
                 compiled: recipe.compiled(),
+                plan,
             },
         };
         if let Err(source) = serde_json::to_writer(&mut writer, &stored) {

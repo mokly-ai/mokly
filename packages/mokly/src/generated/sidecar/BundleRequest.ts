@@ -2,6 +2,7 @@
 
 import type { BundleCapture } from "./BundleCapture.js";
 import type { ModuleResolution } from "./ModuleResolution.js";
+import type { ResolutionPlan } from "./ResolutionPlan.js";
 
 // prettier-ignore
 export type BundleRequest = {
@@ -9,6 +10,10 @@ export type BundleRequest = {
  * Omission selects full capture.
  */
 capture?: BundleCapture,
+/**
+ * Current captured targets for this Serve edit only, never persisted settings.
+ */
+plan?: ResolutionPlan,
 /**
  * Core input digest that isolates resolved bindings and CSS Modules lifetimes.
  */

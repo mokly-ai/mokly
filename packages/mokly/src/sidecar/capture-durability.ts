@@ -34,7 +34,7 @@ function* initialPaths(params: BundleParams): Generator<string> {
   if (params.renderer) yield path.resolve(params.sourceRoot, params.renderer);
 }
 
-/** Ephemeral first-touch witnesses decide disk saves, never live reuse. */
+/** Ephemeral witnesses gate disk saves and plan reuse. Compiled-result reuse stays unchanged. */
 export class CaptureDurability {
   private durable = true;
   private readonly witnesses = new Map<string, Witness>();
@@ -134,7 +134,7 @@ export class CaptureDurability {
     this.paths.share(kinds);
   }
 
-  /** Topology failures affect disk storage only; physical readers keep their checks. */
+  /** Topology failures prevent disk storage and plan reuse. Compiled-result checks stay unchanged. */
   path(file: string): void {
     if (this.durable && !this.paths.walk(file)) this.reject();
   }

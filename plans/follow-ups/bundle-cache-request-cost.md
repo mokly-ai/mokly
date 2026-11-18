@@ -312,6 +312,9 @@
   with that option C. The decision of 2026-11-16 that blocks E also applies
   to that save. This item keeps the profile, the copies, and the flush of
   the save path.
+  `plans/follow-ups/serve-plan-record-start-cost.md` profiles the added plan
+  counts, encoding, and restore in these same cache stages. One stage profile
+  can serve both items.
 - **Recommendation:** D. It keeps every requirement, and it changes a copy, a
   serialization, or a flush only after repeated measurements show a gain. E
   best protects the codebase from this class, but it stays blocked until a
