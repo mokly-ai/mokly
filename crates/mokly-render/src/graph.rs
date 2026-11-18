@@ -24,7 +24,7 @@ use crate::error::{RenderError, Result};
 use crate::fragments::Fragments;
 use crate::runtime::Runtime;
 use crate::source_lease::LeasedTree;
-use crate::{sources, stylesheets};
+use crate::{definition_handle, sources, stylesheets};
 
 pub(crate) struct JavaScriptGraph {
     pub(crate) runtime: Runtime,
@@ -165,12 +165,7 @@ impl JavaScriptGraph {
                 .map(|(path, source)| {
                     (
                         path.clone(),
-                        source
-                            .handle
-                            .split('#')
-                            .next()
-                            .expect("splitting a handle always yields its module segment")
-                            .to_owned(),
+                        definition_handle::split(&source.handle).0.to_owned(),
                     )
                 })
                 .collect();

@@ -99,6 +99,9 @@ fn manager_installs_allow_registry_access_and_keep_scripts_and_storage_private()
             continue;
         }
         assert_eq!(captured["GIT_ALLOW_PROTOCOL"], "");
+        for name in ["npm_config_ignore_pnpmfile", "pnpm_config_ignore_pnpmfile"] {
+            assert_eq!(captured[name], "true", "{manager:?} {name}");
+        }
         for name in [
             "COREPACK_ENABLE_NETWORK",
             "COREPACK_ENABLE_AUTO_PIN",
@@ -114,6 +117,7 @@ fn manager_installs_allow_registry_access_and_keep_scripts_and_storage_private()
             );
         };
         if manager == Manager::YarnBerry {
+            assert_eq!(captured["YARN_IGNORE_PATH"], "1", "{manager:?}");
             for name in [
                 "YARN_ENABLE_CONSTRAINTS_CHECKS",
                 "YARN_ENABLE_SCRIPTS",
@@ -132,6 +136,7 @@ fn manager_installs_allow_registry_access_and_keep_scripts_and_storage_private()
             }
         }
         if manager == Manager::YarnClassic {
+            assert_eq!(captured["YARN_IGNORE_PATH"], "1", "{manager:?}");
             for name in [
                 "YARN_YARN_OFFLINE_MIRROR",
                 "npm_config_yarn_offline_mirror",
