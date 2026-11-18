@@ -41,12 +41,16 @@ fn moved_and_restored_tips_keep_the_resolved_merge_base_identity() {
     let terminal = Unimock::new(());
     let source = Source {
         references: Mutex::new(None),
+        staging: Mutex::new(None),
         operation: Arc::new(CaptureCancellation::default()),
         pending: Arc::new(Mutex::new(Vec::new())),
         config: config(),
         head: Arc::new(Unimock::new(())),
         warnings: scopes(&terminal).begin(),
         services: ServeChanges {
+            reuse: Arc::new(mokly_compare::comparison_reuse::MemoryComparisons::new(
+                32 * 1024 * 1024,
+            )),
             kept_base: Arc::default(),
             sidecars: Arc::new(Unimock::new(())),
             progress: Arc::new(Unimock::new(())),

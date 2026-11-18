@@ -1,8 +1,12 @@
 //! Ordered memo, CSS, proof, state, and usage work consumes one prepared view.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
+use std::mem;
+use std::sync::Arc;
+use std::time::Instant;
 
 use mokly_css::attribution::PageObservation;
+use mokly_css::observation;
 use mokly_model::catalogue::{EntryContent, ModelEntry};
 use mokly_model::evidence::ViewEvidence;
 use mokly_model::review::ReviewState;
@@ -12,7 +16,7 @@ use crate::comparison_address::address;
 use crate::comparison_preparation::{self, PreparedView};
 use crate::comparison_resources::{self, ResourceInput};
 use crate::comparison_types::{DocumentComparison, ViewKey};
-use crate::comparison_views::{PairViews, PendingView, UsageView};
+use crate::comparison_views::{ImmutableView, PairViews, PendingView, UsageView};
 use crate::error::Result;
 use crate::instance_proof::ProofInput;
 use crate::resource_memo::ResourceMemo;
@@ -48,6 +52,7 @@ impl ViewConsumer for Consumer<'_> {
         prepared: PreparedView,
     ) -> Result<()> {
         let PreparedView {
+            recorder,
             artifacts,
             mut resources,
             trees: [before_tree, after_tree],
@@ -124,7 +129,7 @@ impl ViewConsumer for Consumer<'_> {
         if let Some(comparison) = &comparison {
             owned.prepare(comparison);
         }
-        observation.rules.append(&mut owned.rules);
+        observation.rules.extend(mem::take(&mut owned.rules));
         let inline = inline_styles::compare(
             before_document.map(|document| document.tree.as_slice()),
             after_document.map(|document| document.tree.as_slice()),
@@ -140,6 +145,7 @@ impl ViewConsumer for Consumer<'_> {
             self.memo,
         )?;
         observation.rules.extend(inline);
+        observation.rules = observation::merge(mem::take(&mut observation.rules));
         let proofs = match (&comparison, self.previous, self.current) {
             (Some(comparison), Some(_), Some(_)) => instance_proof::collect(ProofInput {
                 comparison,
@@ -159,7 +165,7 @@ impl ViewConsumer for Consumer<'_> {
         let ignored_ids = comparison
             .as_ref()
             .map_or_else(Vec::new, |comparison| comparison.ignored_ids.clone());
-        result.views.push(PendingView {
+        result.views.push(PendingView::new(Arc::new(ImmutableView {
             document: DocumentComparison {
                 key,
                 before_route,
@@ -183,7 +189,6 @@ impl ViewConsumer for Consumer<'_> {
                 .is_some_and(|comparison| comparison.structure),
             proofs,
             owned,
-            rule_sources: BTreeSet::new(),
             // A view on one side proves a root change only for a one-sided
             // entry; an entry with both sides that gains or loses a view has
             // no paired canonical form for that view.
@@ -191,7 +196,8 @@ impl ViewConsumer for Consumer<'_> {
                 self.previous.is_none() || self.current.is_none(),
                 |comparison| comparison.root_changed,
             ),
-        });
+        })));
+        let usage_started = Instant::now();
         {
             for (side, entry, document) in [
                 (ReviewSide::Before, self.previous, before_document),
@@ -207,6 +213,9 @@ impl ViewConsumer for Consumer<'_> {
                     });
                 }
             }
+        }
+        if let Some(recorder) = recorder {
+            recorder.usage(usage_started.elapsed().as_nanos() as u64);
         }
         Ok(())
     }

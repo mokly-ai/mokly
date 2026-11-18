@@ -80,7 +80,7 @@ fn repeated_component_paths_do_not_confuse_supplier_and_receiving_instances() {
             owner,
         ),
     };
-    let result = attribution::attribute(vec![
+    let result = attribution::attribute(&[
         page(&own, Some("parent"), Some("parent")),
         page(&nested, None, Some("child")),
     ]);

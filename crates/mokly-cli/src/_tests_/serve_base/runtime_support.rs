@@ -4,6 +4,7 @@ use std::sync::{Arc, Mutex};
 
 use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
+use mokly_compare::comparison_reuse::MemoryComparisons;
 use mokly_git::command::{Runner, RunnerMock};
 use mokly_git::error::Error;
 use mokly_sidecar::methods::{Call, ProcessCss};
@@ -36,12 +37,14 @@ pub(super) fn source(fixture: &Fixture, sidecars: Arc<dyn PoolScheduling>) -> So
     .begin();
     Source {
         references: Mutex::new(None),
+        staging: Mutex::new(None),
         operation: fixture.operation.clone(),
         pending: Arc::default(),
         config: config(),
         head: Arc::new(Unimock::new(())),
         warnings,
         services: ServeChanges {
+            reuse: Arc::new(MemoryComparisons::new(32 * 1024 * 1024)),
             kept_base: fixture.slot.clone(),
             sidecars,
             progress: Arc::new(Unimock::new(())),

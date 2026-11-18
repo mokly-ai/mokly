@@ -33,11 +33,19 @@ async fn selected_capacity_retries_at_one_second_and_cancellation_ends_the_wait(
         let classify = ChangeSourceMock::classify
             .next_call(matching!(_, _))
             .returns(Ok(result));
+        let discarded = Arc::new(AtomicUsize::new(0));
+        let cleanup_count = discarded.clone();
+        let cleanup = ChangeSourceMock::discarded
+            .some_call(matching!())
+            .answers_arc(Arc::new(move |_| {
+                cleanup_count.fetch_add(1, Ordering::SeqCst);
+            }));
         let source = if cancelled {
-            Unimock::new(classify)
+            Unimock::new((classify, cleanup))
         } else {
             Unimock::new((
                 classify,
+                cleanup,
                 ChangeSourceMock::finished
                     .next_call(matching!(_, _))
                     .answers(&|_, result, _| assert!(result.is_ok())),
@@ -116,6 +124,7 @@ async fn selected_capacity_retries_at_one_second_and_cancellation_ends_the_wait(
             tokio::time::advance(Duration::from_millis(1)).await;
         }
         run.await.unwrap();
+        assert_eq!(discarded.load(Ordering::SeqCst), 1);
         if cancelled {
             assert_eq!(
                 Instant::now(),

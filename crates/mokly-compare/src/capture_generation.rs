@@ -10,6 +10,7 @@ use mokly_graph::cache::Artifact;
 use mokly_graph::closure::{Closure, GeneratedResources};
 use mokly_graph::collection::ComparisonCollector;
 use mokly_graph::comparison_input::RetainedComparisonInput;
+use mokly_graph::comparison_proof::{ComparisonRead, ContentIdentity, ProofMode, content_identity};
 use mokly_graph::comparison_stream::ComparisonConsumer;
 use mokly_graph::error::Result;
 use mokly_graph::resource_inputs::ResourceObserver;
@@ -59,6 +60,27 @@ impl GeneratedResources for CapturedGeneration {
 }
 
 impl RenderGeneration for CapturedGeneration {
+    fn comparison_identity(
+        &self,
+        read: ComparisonRead,
+        route: &str,
+        mode: ProofMode,
+    ) -> Option<ContentIdentity> {
+        if matches!(read, ComparisonRead::Document | ComparisonRead::Closure)
+            && self.views.contains_key(route)
+            && !self.restorer.proves_restore()
+        {
+            return None;
+        }
+        if read == ComparisonRead::Resource
+            && let Some(style) = route
+                .strip_prefix("static/mokly-generated/")
+                .and_then(|route| self.styles.get(route))
+        {
+            return Some(content_identity(&serde_json::to_vec(&style.digest).ok()?));
+        }
+        self.source.comparison_identity(read, route, mode)
+    }
     fn comparison_usage(&self, route: &str) -> Result<Option<CatalogueUsage>> {
         if let Some(view) = self.views.get(route) {
             return Ok(view.document.usage().cloned());
