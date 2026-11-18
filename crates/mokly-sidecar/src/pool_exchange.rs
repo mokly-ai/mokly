@@ -1,13 +1,24 @@
 //! Request execution, retries, recycling, and release publication.
 
+use std::sync::Weak;
+
 use crate::error::{Error, FailureKind, Result};
 use crate::methods::Call;
-use crate::pool::{Pool, SidecarPool};
+use crate::pool::{Pool, ReturnWake, SidecarPool};
 use crate::pool_releases::Release;
 use crate::pool_timing::Reason;
 use crate::wire::MethodResult;
 
 impl SidecarPool for Pool {
+    fn schedule_head_return(&self) {
+        self.schedule_return();
+    }
+    fn maintain_head_return(&self) -> Result<bool> {
+        self.maintain_return()
+    }
+    fn observe_head_return(&self, wake: Weak<dyn ReturnWake>) {
+        self.observe_return(wake);
+    }
     fn release_generation(&self, generation: &str, epoch: u64) {
         self.enqueue_release(Release::Generation {
             id: generation.into(),
@@ -57,6 +68,9 @@ impl SidecarPool for Pool {
                 },
             };
             outcome = self.execute(&mut current, &call, deadline);
+            if let Ok(result) = &outcome {
+                self.record_head(index, &call, result);
+            }
             let retryable = matches!(&outcome, Err(Error::Crashed | Error::Timeout { .. }));
             let reusable = outcome.is_ok()
                 || matches!(&outcome, Err(Error::Remote { code, .. }) if code.reusable())

@@ -68,9 +68,16 @@ The usage pass renders as many views at once as the smaller of the worker
 count and the sidecar pool bound.
 Both source roots share the configured sidecar pool bound. A shared admission
 gate lets foreground requests finish their sidecar calls before more base
-requests start. The base preparation bundles its stylesheet roots on the
-classification thread, not on the shared render workers. A base root that
-waits at the gate then never holds a worker that a foreground render needs.
+requests start. After `Source::finished` reports a committed classification,
+`BaseCompletion::base_finished` schedules one sidecar return pass. The
+`mokly-head-return` worker runs one step of the pass at a time while the gate
+is open and no base call waits at it. It holds the pool and the gate only
+weakly, so an idle worker keeps neither alive. Each failed step reaches
+stderr once through the sidecar `Diagnostics` reporter, and a failed reap
+adds the warning that background preparation is disabled. The base preparation
+bundles its stylesheet roots on the classification thread, not on the shared
+render workers. A base root that waits at the gate then never holds a worker
+that a foreground render needs.
 Changes classification also prepares views on the shared render workers. Those
 tasks read only retained base inputs and the head, so they schedule no base
 source read and no base sidecar call. A view that needs the base source is
@@ -200,7 +207,15 @@ reserves an 8 MiB main-thread stack through its linker settings in
 - [`src/entry_serve.rs`](./src/entry_serve.rs) and
   [`src/serve.rs`](./src/serve.rs) compose, prepare, and close Serve.
 - [`src/serve_services.rs`](./src/serve_services.rs) shares one pool and
-  cache across Serve preparation and live views.
+  cache across Serve preparation and live views. It gives the sidecar gate
+  the command's `Diagnostics` reporter.
+- [`src/serve_pool.rs`](./src/serve_pool.rs) defines `ServePool`, the
+  admission gate around the shared pool. Its narrow `BaseCompletion`
+  capability schedules the return pass. Its gate answers the
+  `ReturnAdmission` check and reports each failed step and the disable warning.
+- [`src/serve_return.rs`](./src/serve_return.rs) starts the
+  `mokly-head-return` worker. The worker holds only weak handles and runs one
+  `maintain_head_return` step at a time while admission is ready.
 - [`src/serve_controls.rs`](./src/serve_controls.rs) maps the keys of rich
   watched Serve to its shortcuts and owns raw mode. Closed or failed terminal
   input ends the key reader but does not stop Serve. Serve shutdown waits for
@@ -240,7 +255,8 @@ reserves an 8 MiB main-thread stack through its linker settings in
   which owns the kept-base slot and the view comparison reuse service, and
   `Source`, one Serve comparison source. `Source::finished` accepts or
   discards the reuse attempt, and `Source::discarded` drops staging that
-  `finished` never took.
+  `finished` never took. After it reports the result, `Source::finished` also
+  schedules the sidecar return pass.
   [`src/serve_changes_native.rs`](./src/serve_changes_native.rs) resolves the
   base references and composes each classification with its `ServeBase`
   provider and its cancellations. Its `Source::comparison_attempt` begins one
@@ -276,6 +292,7 @@ reserves an 8 MiB main-thread stack through its linker settings in
   [watch runtime](../../docs/protocol/mokly-watch-runtime.md).
 - [Base preparation](../../docs/protocol/mokly-base-preparation.md) and
   [comparison serving](../../docs/protocol/mokly-comparison-serving.md).
+- [Sidecar source root scheduling](../../docs/protocol/mokly-sidecar-root-scheduling.md).
 - [Static build](../../docs/protocol/mokly-export.md) and
   [upload](../../docs/protocol/mokly-upload.md).
 - [Rust core architecture](../../docs/architecture/rust-core.md).

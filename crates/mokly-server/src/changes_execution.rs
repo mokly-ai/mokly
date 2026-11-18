@@ -239,3 +239,7 @@ mod changes_retry_tests;
 #[cfg(test)]
 #[path = "_tests_/changes_trace_tests.rs"]
 mod changes_trace_tests;
+
+#[cfg(test)]
+#[path = "_tests_/changes_completion_tests.rs"]
+mod changes_completion_tests;

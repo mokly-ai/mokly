@@ -38,7 +38,10 @@ disposal to each affected slot. Busy slots apply it before their next request.
 Each worker keeps the request source root as its working directory for its
 whole lifetime. A change of source root replaces the worker before replay.
 Independent requests prefer an idle worker in the same source root, then an
-unspawned slot, then the oldest idle slot. The pool bound covers all roots.
+unspawned slot, then the oldest idle slot. The launch root is the head root.
+A base request takes the warm head worker only when no other slot is
+available. That worker bundled the newest head generation, or rendered it last
+after a successful render. The pool bound covers all roots.
 Replacement drops the old root's affinities for that slot and emits one debug
 event. PostCSS context affinity prevents duplicate workers. A busy affine
 request does not block independent work on another available slot. Returning
@@ -47,6 +50,21 @@ and reaps busy sidecars before `shutdown` drains idle sidecars. Scheduling and
 cleanup use one staleness rule: a missing bundle or a missing or different
 epoch makes a loaded generation stale. Cleanup stops when a pass changes no
 state.
+
+Serve, in `mokly-cli`, schedules one return pass after each Changes
+publication and drives the pass from its own background worker. The pool owns
+each step and the stop state. Each step takes one idle base worker while no
+base request waits. It kills and reaps that worker, then starts a head worker
+through hello. A waiting request takes the slot at a safe point. While the
+pass has candidates, a base request prefers an idle worker of its root that
+already left the pass. When a step cannot confirm a reap, only that slot
+retires: its control stays registered, and the pool never reuses the slot. The
+first failed reap also ends background return for the life of the pool. The
+other slots keep serving requests and switch roots on demand. A call affine to
+a retired PostCSS slot fails as unavailable at once. When no usable slot
+remains, as in a one-slot pool, the pool stops. The
+[source root scheduling contract](../../docs/protocol/mokly-sidecar-root-scheduling.md)
+owns these rules.
 
 After the final release of a generation, the pool keeps its bundle settings,
 module graph, compiled code, input digests, and directory lists in a bounded
@@ -208,7 +226,27 @@ spawn the built sidecar and render a component, screen, story, and page. The
 
 - [`src/pool.rs`](./src/pool.rs) defines `SidecarPool`, the boundary that
   catalogue and render services call, and `Pool`, its lazy bounded
-  implementation.
+  implementation. Its `schedule_head_return` and `maintain_head_return`
+  methods are the return pass boundary, and `ReturnWake` is the weak wake that
+  Serve registers through `observe_head_return`.
+- [`src/pool_leases.rs`](./src/pool_leases.rs) defines `Pool::acquire`, the
+  root-aware FIFO queue of waiting requests. It protects the warm head worker
+  from base requests, removes each taken slot from the return pass, and fails
+  a call affine to a retired slot.
+  [`src/pool_affinity.rs`](./src/pool_affinity.rs) chooses the slot that a
+  request takes.
+- [`src/pool_head.rs`](./src/pool_head.rs) defines `Head`, which holds the
+  warm head worker, the candidates of the return pass, and the
+  `return_disabled` flag, and `Pool::record_head`, which records each
+  successful head bundle and render.
+- [`src/pool_return.rs`](./src/pool_return.rs) schedules a return pass and
+  runs one step in `Pool::maintain_return`. `Pool::retire_return` kills and
+  reaps a worker while its slot stays leased. When it cannot confirm the reap,
+  it adds the slot to the retired set, sets `return_disabled`, and returns
+  `Error::HeadReturnDisabled` with the original failure. Only the return pass
+  caller receives that error.
+  [`src/pool_return_spawn.rs`](./src/pool_return_spawn.rs) starts the head
+  worker of a step through hello.
 - [`src/pool_options.rs`](./src/pool_options.rs) defines `Launch` and
   `PoolOptions`, the launch settings and the pool size and deadline override.
 - [`src/pool_recipes.rs`](./src/pool_recipes.rs) defines `Recipes`, the
@@ -250,4 +288,5 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [Definition transport](../../docs/protocol/mokly-sidecar-definitions.md).
 - [Render records](../../docs/protocol/mokly-sidecar-render-records.md) and
   [module sources](../../docs/protocol/mokly-sidecar-modules.md).
+- [Source root scheduling](../../docs/protocol/mokly-sidecar-root-scheduling.md).
 - [Rust core architecture](../../docs/architecture/rust-core.md).

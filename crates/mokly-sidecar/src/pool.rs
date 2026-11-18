@@ -3,17 +3,24 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::sync::mpsc::{self, Sender};
-use std::sync::{Arc, Condvar, Mutex, MutexGuard, PoisonError};
+use std::sync::{Arc, Condvar, Mutex, MutexGuard, Weak};
 
 use crate::error::{Error, Result};
 use crate::methods::Call;
+use crate::pool_cleanup;
 use crate::pool_options::{Launch, PoolOptions};
 use crate::pool_releases::Notice;
 use crate::pool_state::{Slot, State};
 use crate::pool_timing::Reason;
 use crate::wire::MethodResult;
 use crate::workers::{Clock, WorkerFactory};
-use crate::{pool_affinity, pool_cleanup};
+
+/// Wake the Serve owner when a pending head return can make progress.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ReturnWakeMock))]
+pub trait ReturnWake: Send + Sync {
+    /// Record ready maintenance without waiting for a process.
+    fn notify(&self);
+}
 
 /// Pool boundary consumed by catalogue and rendering services.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = PoolMock))]
@@ -24,6 +31,14 @@ pub trait SidecarPool: Send + Sync {
     fn release_generation(&self, generation: &str, epoch: u64);
     /// Record a final PostCSS context release without waiting for a worker.
     fn release_context(&self, context: &str);
+    /// Record one return pass without waiting for a process.
+    fn schedule_head_return(&self) {}
+    /// Replace at most one idle base process, returning whether work was taken.
+    fn maintain_head_return(&self) -> Result<bool> {
+        Ok(false)
+    }
+    /// Observe slot changes through a weak handle owned by Serve.
+    fn observe_head_return(&self, _wake: Weak<dyn ReturnWake>) {}
     /// Cancel queued calls, kill and reap busy workers, and retain idle workers for shutdown.
     fn cancel_requests(&self) -> Result<()>;
     /// Cancel work, allow a two-second exit grace, then kill and reap survivors.
@@ -35,6 +50,7 @@ pub trait SidecarPool: Send + Sync {
 /// Process pool composed from explicit process and clock boundaries.
 pub struct Pool {
     pub(super) factory: Arc<dyn WorkerFactory>,
+    pub(super) starting: Mutex<()>,
     pub(super) clock: Arc<dyn Clock>,
     pub(super) launch: Launch,
     pub(super) options: PoolOptions,
@@ -54,6 +70,7 @@ impl Pool {
         let (sender, receiver) = mpsc::channel();
         let pool = Self {
             factory,
+            starting: Mutex::new(()),
             clock,
             launch,
             options,
@@ -67,50 +84,6 @@ impl Pool {
 
     pub(super) fn lock(&self) -> MutexGuard<'_, State> {
         pool_cleanup::lock(&self.state)
-    }
-
-    pub(super) fn acquire(
-        &self,
-        call: &Call,
-        root: Option<&Path>,
-    ) -> Result<(usize, Option<Slot>)> {
-        let root = root.unwrap_or(&self.launch.repository);
-        let mut state = self.lock();
-        let ticket = state.ticket;
-        state.ticket += 1;
-        let context = match call {
-            Call::ProcessCss(params) => Some(params.context.clone()),
-            _ => None,
-        };
-        state.waiting.insert(ticket, context);
-        self.ready.notify_all();
-        loop {
-            if state.stopped {
-                state.waiting.remove(&ticket);
-                return Err(Error::Cancelled);
-            }
-            let first = state
-                .waiting
-                .iter()
-                .find(|(_, context)| {
-                    pool_affinity::runnable(&state, context.as_deref(), self.options.size.get())
-                })
-                .map(|(ticket, _)| *ticket);
-            if first == Some(ticket) {
-                let index = pool_affinity::acquire(&mut state, call, root, self.options.size.get());
-                if let Some(index) = index {
-                    state.waiting.remove(&ticket);
-                    state.serving += 1;
-                    let slot = state.slots[index].take();
-                    self.ready.notify_all();
-                    return Ok((index, slot));
-                }
-            }
-            state = self
-                .ready
-                .wait(state)
-                .unwrap_or_else(PoisonError::into_inner);
-        }
     }
 
     pub(super) fn spawn(&self, index: usize, source_root: &Path) -> Result<Slot> {
@@ -140,6 +113,7 @@ impl Pool {
                 return Err(Error::Cancelled);
             }
             state.controls.insert(index, Arc::clone(&spawned.control));
+            state.source_roots.insert(index, source_root.into());
         }
         if let Err(error) = spawned
             .worker
@@ -192,6 +166,7 @@ impl Pool {
         state.slots[index] = if state.stopped { None } else { slot };
         if state.slots[index].is_none() {
             state.controls.remove(&index);
+            state.source_roots.remove(&index);
         }
         state.available.push_back(index);
         if state.slots[index]
@@ -201,6 +176,7 @@ impl Pool {
         {
             let _ = sender.send(Notice::Work);
         }
+        state.head.notify();
         self.ready.notify_all();
     }
 }
