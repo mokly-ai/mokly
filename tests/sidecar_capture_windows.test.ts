@@ -47,6 +47,9 @@ function fixture(metadata = false, dev = 0n) {
       reads.push("stat");
       return pathStat;
     },
+    readlink: async () => {
+      throw new Error("unexpected link read");
+    },
     handleStat: async () => {
       reads.push("handle");
       return openedStat;

@@ -119,6 +119,34 @@ const cases: InputCase[] = [
     },
   },
   {
+    name: "a preferred file beneath a built-in alias",
+    module: "node_modules/consumer-fs/promises.js",
+    async prepare({ params, write }) {
+      params.moduleResolution.aliases = { fs: "consumer-fs" };
+      await write("entry.ts", "export {value} from 'fs/promises';");
+      await write(
+        "node_modules/consumer-fs/promises/index.js",
+        "exports.value='index';",
+      );
+      return () =>
+        write("node_modules/consumer-fs/promises.js", "exports.value='file';");
+    },
+  },
+  {
+    name: "a paths candidate after a single-slash alias tail",
+    module: "files/chosen.ts",
+    async prepare({ params, write }) {
+      params.moduleResolution.aliases = { fs: "consumer-fs" };
+      await write("entry.ts", "export {value} from 'fs/';");
+      await write(
+        "tsconfig.json",
+        '{"compilerOptions":{"paths":{"consumer-fs":["./files/chosen"]}}}',
+      );
+      await write("files/chosen/index.ts", "export const value='index';");
+      return () => write("files/chosen.ts", "export const value='file';");
+    },
+  },
+  {
     name: "a nearer package directory",
     module: "src/node_modules/chosen/index.js",
     async prepare({ params, write }) {

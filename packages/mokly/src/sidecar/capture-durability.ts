@@ -3,6 +3,7 @@ import path from "node:path";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { CaptureHint } from "../generated/sidecar/CaptureHint.js";
 
+import { CapturePaths } from "./capture-paths.js";
 import {
   captureRuntime,
   captureSnapshot,
@@ -36,10 +37,15 @@ function* initialPaths(params: BundleParams): Generator<string> {
 export class CaptureDurability {
   private durable = true;
   private readonly witnesses = new Map<string, Witness>();
+  private readonly paths: CapturePaths;
   private readonly volumes: CaptureVolumes;
   private readonly started: bigint;
   private visitedBytes = 0;
-  bytes = 0;
+  private witnessBytes = 0;
+
+  get bytes(): number {
+    return this.witnessBytes + this.paths.bytes;
+  }
 
   constructor(
     private readonly hint: CaptureHint,
@@ -47,6 +53,15 @@ export class CaptureDurability {
   ) {
     this.started = runtime.now();
     this.volumes = new CaptureVolumes(hint, runtime);
+    this.paths = new CapturePaths(
+      runtime,
+      async (file, stat) => {
+        await this.observe(file, stat, false);
+        return this.durable;
+      },
+      (bytes) =>
+        this.durable && this.visitedBytes + this.bytes + bytes <= VISITED_LIMIT,
+    );
     if (
       hint.volumes.length > 64 ||
       Buffer.byteLength(JSON.stringify(hint)) > 64 * 1024
@@ -109,7 +124,13 @@ export class CaptureDurability {
   private reject(): void {
     this.durable = false;
     this.witnesses.clear();
-    this.bytes = 0;
+    this.witnessBytes = 0;
+    this.paths.clear();
+  }
+
+  /** Topology failures affect disk storage only; physical readers keep their checks. */
+  async path(file: string): Promise<void> {
+    if (this.durable && !(await this.paths.walk(file))) this.reject();
   }
 
   /** Following a directory link adds a witness but cannot change completeness. */
@@ -148,7 +169,7 @@ export class CaptureDurability {
         this.reject();
         return;
       }
-      this.bytes += bytes;
+      this.witnessBytes += bytes;
       this.witnesses.set(key, { file, follow, stat, metadata });
     } catch {
       this.reject();

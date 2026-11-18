@@ -1,4 +1,3 @@
-import { isBuiltin } from "node:module";
 import path from "node:path";
 
 import type { Metafile, Plugin } from "esbuild";
@@ -12,6 +11,7 @@ import { jsonObject } from "./config-json.js";
 import { importerDirectory } from "./importer-resolution.js";
 import type { ModulePaths } from "./module-paths.js";
 import { PhysicalInputs } from "./physical-inputs.js";
+import { resolutionRequest } from "./resolution-request.js";
 import { resolutionOptions } from "./resolution.js";
 import { bareSpecifier, packageName } from "./specifier.js";
 
@@ -33,6 +33,7 @@ export class ResolutionEvidence {
   private readonly configs: ConfigInputs;
   private readonly packages = new Set<string>();
   private readonly aliases: Array<[string, string]>;
+  private readonly aliasDirectory: string;
 
   constructor(
     private readonly params: BundleParams,
@@ -43,6 +44,10 @@ export class ResolutionEvidence {
     this.configs = new ConfigInputs(this.physical, paths);
     this.aliases = Object.entries(paths.settings.aliases).sort(
       ([a], [b]) => b.length - a.length,
+    );
+    this.aliasDirectory = path.resolve(
+      params.sourceRoot,
+      params.configurationDirectory,
     );
   }
 
@@ -109,13 +114,15 @@ export class ResolutionEvidence {
   }
 
   record(name: string, directory: string): Promise<void> {
-    if (
-      !this.physical.complete ||
-      isBuiltin(name) ||
-      name === "@mokly/mokly" ||
-      name.startsWith("mokly:")
-    )
+    const request = resolutionRequest(
+      name,
+      directory,
+      this.aliases,
+      this.aliasDirectory,
+    );
+    if (!this.physical.complete || request.kind !== "lookup")
       return Promise.resolve();
+    ({ name, directory } = request);
     if (!path.isAbsolute(directory)) {
       this.physical.complete = false;
       return Promise.resolve();
@@ -141,16 +148,6 @@ export class ResolutionEvidence {
   }
 
   private async capture(name: string, directory: string): Promise<void> {
-    const alias = this.aliases.find(
-      ([key]) => name === key || name.startsWith(key + "/"),
-    );
-    if (alias) {
-      name = alias[1] + name.slice(alias[0].length);
-      directory = path.resolve(
-        this.params.sourceRoot,
-        this.params.configurationDirectory,
-      );
-    }
     const config = await this.configs.scope(directory);
     await this.configs.manifest(directory);
     if (
@@ -285,7 +282,16 @@ export class ResolutionEvidence {
     for (const [file, input] of Object.entries(metafile.inputs)) {
       if (!path.isAbsolute(file)) continue;
       for (const edge of input.imports) {
-        if (!edge.external && edge.original === undefined)
+        if (
+          !edge.external &&
+          (edge.original === undefined ||
+            resolutionRequest(
+              edge.original,
+              path.dirname(file),
+              this.aliases,
+              this.aliasDirectory,
+            ).kind === "builtin")
+        )
           this.physical.complete = false;
       }
     }

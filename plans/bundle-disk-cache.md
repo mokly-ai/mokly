@@ -1902,7 +1902,17 @@ Depends on: 1, 2, 3, 4, 5
   - [x] Review the pushed source at `2d15cae28` against `0accb6818`.
         Check finding 1 in a fresh second pass. Record the Rare timing
         defect after merge with option D. No source fix is required now.
-  - [ ] Review the combined source after the latest main integration.
+  - [x] Review the combined source after the latest main integration.
+  - [x] Fix confirmed finding 2 with checked option D. Normalize aliases
+        before built-in filtering. Apply the current incomplete-evidence
+        rule to bundled edges that the built-in rule skipped. Preserve
+        written plugin-name rules and the exact single-slash alias tail.
+  - [x] Fix confirmed finding 3 with checked option B. Observe each link
+        expansion and every target-parent directory within the current
+        visited-path bound. Keep memory reuse and Windows handle rules.
+  - [x] Prove each new regression fails on its behavior assertion before
+        the fix. Run each asynchronous regression ten times. Record its cost.
+  - [ ] Verify the combined source and re-review the pushed fix.
 - [ ] Fetch and merge `origin/main` if it advanced before the final pull
       request. Audit preservation with the `git-merge` skill.
   - [x] Merge main `03bedb6ec` with its comparison-usage, render-worker, and
@@ -1965,6 +1975,10 @@ The resolved integration is recorded in
 `.context/bundle-disk-cache/merge-51f35657/decisions.md`,
 `.context/bundle-disk-cache/reports/merge-51f-review-docs.md`, and
 `.context/bundle-disk-cache/logs/repository-51f-combined.log`.
+
+First source fix evidence:
+`.context/bundle-disk-cache/reports/review-fix-round-1.md` and
+`.context/bundle-disk-cache/reports/review-fix-round-1.json`.
 
 ## Post-merge follow-up (non-blocking)
 

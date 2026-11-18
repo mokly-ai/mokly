@@ -21,6 +21,7 @@ export interface CaptureRuntime {
   wait(milliseconds: number): Promise<void>;
   lstat(file: string): Promise<CaptureStat>;
   stat(file: string): Promise<CaptureStat>;
+  readlink(file: string): Promise<string>;
   handleStat(file: string): Promise<CaptureStat>;
   filesystem(file: string): Promise<bigint>;
 }
@@ -32,6 +33,7 @@ export const captureRuntime: CaptureRuntime = {
     new Promise((resolve) => setTimeout(resolve, milliseconds)),
   lstat: (file) => fs.lstat(file, { bigint: true }),
   stat: (file) => fs.stat(file, { bigint: true }),
+  readlink: (file) => fs.readlink(file),
   // Affected libuv path-stat layouts read the wrong Windows device bytes.
   // Handle stats query the volume directly and preserve its real serial.
   handleStat: async (file) => {

@@ -47,6 +47,9 @@ function fixture(
       return current;
     },
     stat: async () => current,
+    readlink: async () => {
+      throw new Error("unexpected link read");
+    },
     handleStat: async () => current,
     filesystem: async () => type,
   };

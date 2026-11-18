@@ -70,7 +70,8 @@ export abstract class PhysicalInputReader {
     }
   }
 
-  protected realPath(file: string): Promise<string> {
+  protected async realPath(file: string): Promise<string> {
+    await this.durability?.path(file);
     return fs.realpath(file);
   }
 

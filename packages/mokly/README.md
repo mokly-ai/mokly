@@ -201,6 +201,8 @@ the packed contents of the package.
   holds `ResolutionEvidence`, the esbuild plugin that records the candidate
   directories, manifests, and configurations of each import before esbuild
   resolves it. A form that it cannot map makes the evidence incomplete.
+  [`src/sidecar/resolution-request.ts`](./src/sidecar/resolution-request.ts)
+  applies written plugin names and aliases before built-in filtering.
   [`src/sidecar/config-inputs.ts`](./src/sidecar/config-inputs.ts) records
   each `tsconfig.json` or `jsconfig.json` and its `extends` chain, and
   [`src/sidecar/config-json.ts`](./src/sidecar/config-json.ts) parses JSON
@@ -222,6 +224,8 @@ the packed contents of the package.
   It records the stamps and the identity of each directory and metadata file
   at the first touch, and it reads them again after the last attempt. It never
   changes `complete`.
+  [`src/sidecar/capture-paths.ts`](./src/sidecar/capture-paths.ts) follows raw
+  link targets and observes their parent directories within the same path bound.
   [`src/sidecar/capture-runtime.ts`](./src/sidecar/capture-runtime.ts) holds
   the stat and clock boundary and the age guard. On Windows, its
   `captureSnapshot` reads a witness through `handleStat`, a read-only handle
