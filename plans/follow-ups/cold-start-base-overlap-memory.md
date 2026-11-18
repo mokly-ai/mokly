@@ -11,7 +11,7 @@
 - **Terms:**
   - **Current usage:** The background pass that renders every view of the head after Serve is ready.
   - **Base:** The historical catalogue at the merge base that Changes compares with the current catalogue.
-  - **Cold start:** A Serve start whose base caches are empty. The cloud runs cleared the bundle cache, and the local runs used fresh caches.
+  - **Cold start:** A Serve start with an empty bundle cache in the cloud measurements, or fresh caches in the local measurements.
   - **Demand:** The peak of cgroup `anon` plus swap for the whole Serve tree, both read on the same sample tick.
   - **Startup task:** The closed attempt's one base preparation beside the first usage of a Serve session.
 - **Background:**
@@ -28,7 +28,7 @@
     - Each sidecar slot reservation has a 1 GiB budget.
     - A further reservation needs host headroom for its budget, the unused budgets of the other reservations, the budgets that live claims hold, and 1 GiB of spare memory for the binary and native helpers.
     - It reads live memory at each growth, so it sees core memory that is already in use. It reserves none ahead for base work.
-    - An explicit `--sidecars` or `MOKLY_SIDECARS` pool has no memory check.
+    - An explicit `--sidecars` or `MOKLY_SIDECARS` pool skips this growth admission.
   - That admission bounds sidecar slots. Apart from its fixed spare, it reserves no memory for base work in the core, such as the base graph and its captures, or for other descendants.
   - The closed attempt ran one startup task beside the first usage, only when the first head needed a sidecar. It prepared the base through graph preparation on one sidecar slot and captured after usage. Every ordinary Changes request kept main's order.
   - Its measured product was `2c28d9677`, with contained main `d4df04aa5`. That code is not on main. Its measurements predate main's pool admission, so they did not measure it.
@@ -77,7 +77,7 @@
 - **Options:**
   - **A.** Keep the experiment closed. Keep main's serial base preparation. No new overlap work or added overlap memory, but no cold gain. Effort: Small.
   - **B.** Measure the added memory first. Under a new approval, run a corrected sampler on the closed candidate and on main, and split the added demand by owner: the core, esbuild, and Node. This is a new diagnostic, not an acceptance retry. It informs the other options but improves nothing alone. Effort: Medium.
-  - **C.** Cold caches only. Restore the startup task, but start it only when the base caches are cold, because warm starts showed no first-Changes gain beyond noise. This removes early work where it gains no time. The measured memory rise is in the same cold case, so this option alone does not meet the bound. Effort: Large.
+  - **C.** Cold caches only. Restore the startup task, but start it only when the bundle cache is cold, because warm starts showed no first-Changes gain beyond noise. This removes early work where it gains no time. The measured memory rise is in the same cold case, so this option alone does not meet the bound. Effort: Large.
   - **D.** Smaller footprint. Find and remove the memory that early base work adds, so that demand stays within 5% without a new rule. No record locates memory that early base work adds. An older candidate, which also changed edits, peaked during an edit, after its early base process had exited. With `SwapPss` counted, its core share fell from 247,873 KiB to about 23,429 KiB. A head esbuild process held 90,788 KiB more, and Node held 82,084 KiB less. The saving is unknown and can differ by machine. Effort: Large.
   - **E.** Memory admission beyond the pool. Before early base work starts, take a separate bounded memory reservation beside the live pool admission. Size it for the core's base work and its descendants, which the sidecar budgets do not cover. When the reservation fails, keep main's serial path. The reservation is an absolute admission of host memory. It does not demonstrate or enforce the paired 5% bound, so demand must still be proven within 5% of the paired main. Cost: a new resource rule, a size that needs calibration on several machines, new clean local evidence, and a cloud run. No safe threshold is established. Effort: Large.
   - **F.** B, widened. Under a new approval, find the source of the demand spread that both arms show, warm and cold. Also record when any added demand peaks: in startup usage, in the base capture, or in an edit. Apply the three sampler lessons above. Cost: diagnostic runs, a harness correction, and a cause that can stay unknown. It improves nothing alone, and it adds no acceptance rule. Its result can size C, D, E, G, and H. Effort: Large.
@@ -94,7 +94,7 @@
 - **Wider fix:** E, for the class of early work that can exhaust memory. A reservation makes that bound part of admission. It does not prove the paired 5% bound, which still needs paired evidence.
 - **Previous examples:** On the closed branch, a headroom rule with a serial fallback was proposed three times and not chosen, because no threshold was proved. An earlier cloud run had already shown a 2.4 s cold gain and a 0.45 s warm gain for an earlier candidate. The new runs repeat a cold gain for the narrowed design.
 - **Related:**
-  - [background-base-render-pool.md](./background-base-render-pool.md): a separate base render pool is the other way to let base work overlap usage. The closed attempt avoided that stall by capturing only after usage.
+  - [background-base-render-pool.md](./background-base-render-pool.md): it covers the shared-worker stall. Like main, the closed attempt captured only after usage, so its capture did not compete with usage for render workers. A browser request during that capture can still wait, because waiting base jobs can hold every shared render worker.
   - [default-sidecar-count.md](./default-sidecar-count.md): the pool size sets the sidecar memory that any early base work must fit beside.
   - [esbuild-memory-after-bundle.md](./esbuild-memory-after-bundle.md): it would return bundler memory after each bundle, which option D can test. An older sampled peak showed more memory in a head esbuild process during an edit, with no causal proof.
 - **Recommendation:** E, as the future structural direction, with the diagnostic of F as its first prerequisite. E admits extra base memory beyond the live sidecar budgets, but it does not demonstrate or enforce the paired 5% bound by itself. If F cannot establish a usable sizing rule and paired evidence, keep main's serial path. Every option other than A needs a fresh user decision before any work, and F adds no acceptance rule. The fresh options check of 2026-11-18 recommended F before any design. The workspace orchestrator kept E, because it accounts for extra base allocations that the sidecar slot budgets do not reserve.
