@@ -68,19 +68,25 @@ export default async function setup(
       AbortSignal.timeout(FULL_CATALOGUE_SETUP_TIMEOUT_MS),
       abort.signal,
     ]);
-    const own = async <T>(start: () => Promise<T>): Promise<T> => {
+    const own = async <T>(
+      name: string,
+      start: () => Promise<T>,
+    ): Promise<T> => {
       try {
         return await start();
       } catch (error) {
         abort.abort(error);
-        throw error;
+        throw new Error(`${name} setup failed`, { cause: error });
       }
     };
-    const serve = own(() =>
+    const directory =
+      process.env["MOKLY_PLAYWRIGHT_STATIC_DIR"] ??
+      process.env["MOKLY_PLAYWRIGHT_FILE_DIR"];
+    const serveName = directory
+      ? "Static catalogue host"
+      : "Example Serve hosts";
+    const serve = own(serveName, () =>
       timeFixturePhase("browser-suite", "serve-readiness", false, async () => {
-        const directory =
-          process.env["MOKLY_PLAYWRIGHT_STATIC_DIR"] ??
-          process.env["MOKLY_PLAYWRIGHT_FILE_DIR"];
         const ready = directory
           ? [
               await dependencies.host({
@@ -102,12 +108,12 @@ export default async function setup(
           : ready.map((host) => host.url);
       }),
     );
-    const copy = own(async () => {
+    const copy = own("Copied static host", async () => {
       const host = await dependencies.staticHost(signal);
       hosts.push({ name: "Copied static host", host });
       return host;
     });
-    const comparison = own(async () => {
+    const comparison = own("Comparison static host", async () => {
       const host = await dependencies.comparisonHost(signal);
       hosts.push({ name: "Comparison static host", host });
       return host;
@@ -134,14 +140,14 @@ export default async function setup(
       try {
         await close();
       } catch (error) {
-        throw retainAggregateErrors(error);
+        throw retainHostErrors(error);
       }
     };
   } catch (error) {
     try {
       await close();
     } catch (cleanup) {
-      throw retainAggregateErrors(
+      throw retainHostErrors(
         new AggregateError(
           [error, cleanup],
           "Browser setup and cleanup failed",
@@ -149,22 +155,21 @@ export default async function setup(
         ),
       );
     }
-    throw retainAggregateErrors(error);
+    throw retainHostErrors(error);
   }
 }
 
-function retainAggregateErrors(error: unknown): unknown {
-  if (!(error instanceof AggregateError)) return error;
-  // Playwright preserves the message but removes AggregateError.errors.
-  return new AggregateError(
-    error.errors,
-    `${error.message}\n${inspect(error, {
-      colors: false,
-      customInspect: false,
-      depth: null,
-      maxArrayLength: null,
-      maxStringLength: null,
-    })}`,
-    { cause: error.cause },
-  );
+function retainHostErrors(error: unknown): unknown {
+  if (!(error instanceof Error)) return error;
+  // Playwright drops AggregateError.errors. The reporter prints only message/stack.
+  const message = `${error.message}\n${inspect(error, {
+    colors: false,
+    customInspect: false,
+    depth: null,
+    maxArrayLength: null,
+    maxStringLength: null,
+  })}`;
+  return error instanceof AggregateError
+    ? new AggregateError(error.errors, message, { cause: error.cause })
+    : new Error(message, { cause: error.cause });
 }
