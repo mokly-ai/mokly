@@ -20,7 +20,7 @@ const REMOTE_GATE_SUITES: Readonly<Record<string, RegExp>> = {
   browser: /\bcargo xtask check --suite browser\b/u,
   "static-delivery": /\bnpm run test:delivery:prepared\b/u,
 };
-/** Suites whose CI jobs share the Rust build cache that Testboxes restore. */
+/** Suites whose CI jobs set the Rust build cache options that Testboxes use. */
 const SHARED_CACHE_SUITES = ["viewer", "browser", "static-delivery"];
 /** Variables that change Rust builds; the cache key hashes these prefixes. */
 const RUST_BUILD_VARIABLE = /^(?:CARGO|CC|CFLAGS|CXX|CMAKE|RUST)/u;
@@ -72,7 +72,7 @@ test("CI suite jobs and Testboxes set Rust build variables only in the workflow 
         );
 });
 
-test("Testboxes restore the CI suite cache after the toolchain and never save it", async () => {
+test("Testboxes use the CI suite cache options after the toolchain and never save", async () => {
   const ci = await readWorkflow(CI_WORKFLOW);
   const [expected, ...others] = SHARED_CACHE_SUITES.map((suite) =>
     rustCache(suiteJob(ci, suite).steps ?? [], `the CI ${suite} job`),

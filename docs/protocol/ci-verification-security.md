@@ -50,9 +50,11 @@ the audit tool lockfile and installer. Jobs that build the same artifacts
 share one cache.
 
 Only CI runs on `main` save a Rust build cache. Pull requests, including fork
-pull requests, restore the `main` copy and never save. Testboxes restore the
-cache of the CI viewer, browser, and static-delivery jobs and never save. They
-run unreviewed local trees, even when their workflow runs on `main`. The cache
+pull requests, restore the `main` copy and never save. Testboxes restore with
+the cache options of the CI viewer, browser, and static-delivery jobs and never
+save, because they run unreviewed local trees, even when their workflow runs on
+`main`. CI saves on GitHub-hosted runners, so no job refreshes the cache that
+Testboxes read. The cache
 scopes each entry to its branch, so no pull request can change what `main` or
 another pull request restores. A restored cache is the job's private copy.
 Cargo rebuilds every artifact whose inputs differ, so cache state never changes

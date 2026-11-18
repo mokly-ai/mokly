@@ -28,9 +28,9 @@
     execution coverage.
   - Every row of each build matrix checks out with the same
     `actions/checkout` step.
-  - Tests pin the runner: `tests/release_matrix.test.ts` and
-    `tests/workflow_runner_sizes.test.ts`. The release-check target list in
-    `tests/release_check_workflow.test.ts` holds `darwin-x64`.
+  - `tests/workflow_runner_sizes.test.ts` pins the runner. It allows
+    `macos-26-intel` only for the `darwin-x64` row. The release-check target
+    list in `tests/release_check_workflow.test.ts` holds `darwin-x64`.
   - The plan gives no retirement date.
 - **Task:**
   1. Read GitHub's runner image announcements, and record the retirement

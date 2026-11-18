@@ -48,13 +48,6 @@ test("native release jobs build locked targets and gate publication on the matri
     rows.map(({ target }) => target).sort(),
     NATIVE_TARGETS.map(({ target }) => target).sort(),
   );
-  const runners: Readonly<Record<string, string>> = {
-    "linux-x64-gnu": "ubuntu-24.04",
-    "linux-arm64-gnu": "ubuntu-24.04-arm",
-    "darwin-arm64": "macos-26",
-    "win32-x64-msvc": "windows-2025",
-    "darwin-x64": "macos-26-intel",
-  };
   assert.ok(native.steps.some(({ run }) => run === "npm ci --ignore-scripts"));
   assert.ok(
     native.steps.some(({ run }) =>
@@ -65,7 +58,6 @@ test("native release jobs build locked targets and gate publication on the matri
     const target = NATIVE_TARGETS.find(({ target }) => target === row.target);
     assert.ok(target);
     assert.equal(row.triple, target.triple);
-    assert.equal(row.runner, runners[row.target], `${row.target} runner`);
   }
   assert.ok(
     native.steps.some((step) =>

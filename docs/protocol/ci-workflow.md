@@ -201,8 +201,9 @@ Blacksmith runner, because Testboxes exist only on Blacksmith. The job checks
 out with Blacksmith's checkout action, which keeps a Git mirror between runs.
 Its Node.js version equals the version of the CI native jobs. Its npm and Rust
 setup equals the setup of the CI repository job. Its workflow `env` equals the
-workflow `env` of the CI workflow. It restores the Rust build cache of the CI
-viewer, browser, and static-delivery jobs and never saves it.
+workflow `env` of the CI workflow. It restores the Rust build cache with the
+options of the CI viewer, browser, and static-delivery jobs and never saves it.
+CI saves its cache on GitHub-hosted runners, so no job refreshes that cache.
 `Required CI` does not depend on this workflow. The
 hosted CI graph and its release profile keep their required jobs.
 

@@ -16,10 +16,10 @@ Set the workflow `env` of the CI workflow, which holds the CI Cargo settings.
 Set `timeout-minutes: 30`.
 `Required CI` does not depend on this workflow.
 
-The job matches the CI suite jobs in Cargo settings and Rust build cache, but
-not in runner. One job serves all seven commands. The repository command
-therefore restores the cache of the other suites, not the cache of the CI
-repository job.
+The job matches the CI suite jobs in Cargo settings and Rust cache options, but
+not in runner. CI saves its cache on GitHub-hosted runners, so no job refreshes
+the cache that a box restores. One job serves all seven commands. The repository
+command uses the cache options of the other suites, not those of its CI job.
 
 Run the steps in this order:
 
@@ -34,9 +34,9 @@ Run the steps in this order:
 4. Run `rustup toolchain install` in the checkout. It installs Rust 1.95.0 with
    rustfmt and Clippy from `rust-toolchain.toml`. That file also selects the
    toolchain for every command in the checkout.
-5. Restore the Rust build cache that the CI viewer, browser, and
-   static-delivery jobs share, with the same action and options. Set
-   `save-if: false`. Boxes run unreviewed local trees, so they never save.
+5. Restore the Rust build cache with the action and options that the CI viewer,
+   browser, and static-delivery jobs share. Set `save-if: false`. Boxes run
+   unreviewed local trees, so they never save.
 6. Run `npm ci`.
 7. Run `cargo xtask build-native` to build the host native artifact.
 8. Write the lowercase SHA-256 digest of `package-lock.json`
