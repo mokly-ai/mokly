@@ -56,8 +56,9 @@ its requests and results. The paths below are relative to the package root.
   result before it drops the evidence. A `serveEdit` compile gets empty,
   incomplete evidence with the `uncaptured: "serveEdit"` marker. A compile
   without a toolchain identity gets no marker. A `serveEdit` compile also gets
-  no marker when `ServeEditImports.record`, which `bundleRecipe` calls before
-  `resolutionInputs`, returns false.
+  no marker when `ServeEditImports.record` returns false. `bundleRecipe` calls
+  it in the `sidecar.bundle.mapped-lookups` timing phase, before
+  `resolutionInputs`.
 - [`src/sidecar/serve-edit-imports.ts`](./serve-edit-imports.ts) holds
   `ServeEditImports`, which only a `serveEdit` compile creates. Its plugin
   clears `reusable` for an authored absolute specifier whose configuration it
@@ -66,11 +67,16 @@ its requests and results. The paths below are relative to the package root.
   absolute paths, so a bare alias with an absolute target goes to the next
   pass. Its `record` then calls `ServeEditPaths.record` in
   [`src/sidecar/serve-edit-paths.ts`](./serve-edit-paths.ts), which reads the
-  metafile after the compile. For each authored bare import with a readable
-  configuration chain, that pass adds the folders and the `package.json`
-  candidates of the targets that esbuild tried before its selection to
-  `lookupDirectories` and `lookupFiles`, which `resolutionInputs` turns into
-  live inputs. Its `candidates` gives the mapped targets, then the `baseUrl`
+  metafile after the compile. It reads each edge through `MetafileEdges` in
+  [`src/sidecar/metafile-edges.ts`](./metafile-edges.ts), which `moduleGraph`
+  in [`src/sidecar/bundle-graph.ts`](./bundle-graph.ts) also uses. That reader
+  maps a `mokly-css:` edge to its physical stylesheet, and it follows a style
+  wrapper to its first import, the wrapped module. Mokly's own authoring,
+  JSX, and entry modules need no lookup. For each authored bare import
+  with a readable configuration chain, that pass adds the folders and the
+  `package.json` candidates of the targets that esbuild tried before its
+  selection to `lookupDirectories` and `lookupFiles`, which `resolutionInputs`
+  turns into live inputs. Its `candidates` gives the mapped targets, then the `baseUrl`
   candidate of a bare request. For an alias with an absolute target, it gives
   the written path after a matched target instead, with no `baseUrl` step.
   `mappedPaths` in
@@ -80,9 +86,9 @@ its requests and results. The paths below are relative to the package root.
   selected module. `ServeEditPaths.scope` gives no settings for a
   configuration chain that it cannot read, such as one with a package
   `extends`, where `readConfig` stops before the local `compilerOptions`. Such
-  an import adds nothing, also for a local `paths` map. A
-  selection that the pass cannot place, or staged paths above the 8 MiB
-  `EVIDENCE_LIMIT`, make `record` return false.
+  an import adds nothing, also for a local `paths` map. A configured selection
+  without a physical file, a selection that the pass cannot place, or staged
+  paths above the 8 MiB `EVIDENCE_LIMIT` make `record` return false.
 - [`src/sidecar/captured-plan.ts`](./captured-plan.ts) holds
   `capturedPlan`, which gives the result of a `full` compile its native plan
   only with complete, durable, and unmarked evidence. The plan and the

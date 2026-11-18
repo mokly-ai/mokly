@@ -7,7 +7,7 @@
 - **Location:** `tests/sidecar_saved_plan.test.ts:29` to line 71,
   `tests/helpers/plan_capture.ts:8` to line 26,
   `packages/mokly/src/sidecar/captured-plan.ts:8` to line 45,
-  `packages/mokly/src/sidecar/bundle-recipe.ts:120` to line 134 and line 182,
+  `packages/mokly/src/sidecar/bundle-recipe.ts:128` to line 142 and line 190,
   and `packages/mokly/src/sidecar/capture-durability.ts:153` to line 211.
 - **Reason:** The test, its helpers, and the sidecar code are unchanged from
   `origin/main`, so one fix in a separate branch reaches every open branch.
@@ -51,10 +51,10 @@
     - `durable` is false
     - an `uncaptured` marker is set
     - the plan and its evidence pass `EVIDENCE_LIMIT`, which is 8 MiB
-  - `bundleRecipe`, at `packages/mokly/src/sidecar/bundle-recipe.ts:120` to
-    line 134, takes the evidence from `evidence.finish`. It uses incomplete
+  - `bundleRecipe`, at `packages/mokly/src/sidecar/bundle-recipe.ts:128` to
+    line 142, takes the evidence from `evidence.finish`. It uses incomplete
     evidence when the call recorded none. It sets `complete` to false when
-    `toolchainIdentity` returns no value. Line 182 calls `capturedPlan`.
+    `toolchainIdentity` returns no value. Line 190 calls `capturedPlan`.
   - `packages/mokly/src/sidecar/physical-inputs.ts:225` sets `durable` from
     `CaptureDurability.finish`. `physical-inputs.ts` and
     `resolution-evidence.ts` also set `complete` to false in several cases.

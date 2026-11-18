@@ -258,6 +258,11 @@ The reproduced test failure concerned the unchanged reuse count, with correct HT
 Keep every assertion and the conservative durability rule. Add no retry, sleep, or timeout change.
 Evidence belongs in `.context/absolute-paths-reuse-evidence/durability-probe.log` and `durability-repeat-02.trace.log`.
 
+Performance orchestrator call of 2026-11-18: accept the additional per-edit configuration and candidate reads in this PR.
+Reason: they keep marked reuse correct, use one metadata-edge scan and per-compile caches within the 1 MiB and 8 MiB reader bounds, and add about 1.5% per edit in the `mokly-cloud` comparison.
+Do not add a cross-edit cache here. Record that work as a performance follow-up, with exact configuration and candidate invalidation.
+Add the small `sidecar.bundle.mapped-lookups` diagnostic sub-span under the existing timing rules. Measure fixture bundle spans before and after the plugin-edge fix.
+
 ## Milestone 1: Contracts and follow-up record
 
 Depends on: none
@@ -295,7 +300,9 @@ Depends on: 2
 - [x] Run the repository suite and complete gate. Use Git 2.45 or later, git-lfs, and pinned Bun.
 - [x] Check disk and memory before large Cargo builds. Use one build at a time, `CARGO_INCREMENTAL=0`, and a checkout-specific target directory.
 - [x] Measure `examples/basic` before and after if the change touches a hot path.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Apply checked review finding 1 option D through a shared metafile edge reader. Cover CSS and style-wrapper selection, and keep JSX markers.
+- [x] Add the approved mapping-scan timing span and performance follow-up. Report fixture bundle-span measurements before and after the plugin-edge fix.
 - [ ] Review the complete local diff against `origin/main` after the push with the implementation-review skill. Apply its finding checks, fixes, and review rounds.
 - [ ] Delete this plan under the plans skill. Keep dated calls and a plan permalink in the pull request description.
 - [ ] Open the pull request into `main`. Wait for final CI with `scripts/ci-wait.sh`. Report to the performance orchestrator and do not merge.

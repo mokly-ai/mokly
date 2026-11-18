@@ -7,7 +7,7 @@
   finding: that branch applied option D, and this item holds option A.
 - **Location:** `crates/mokly-graph/src/render_inputs.rs:155`,
   `crates/mokly-render/src/graph.rs:126`,
-  `packages/mokly/src/sidecar/bundle-recipe.ts:109`,
+  `packages/mokly/src/sidecar/bundle-recipe.ts:157`,
   `crates/mokly-graph/src/graph.rs:268`,
   `crates/mokly-render/src/side.rs:87`, `docs/protocol/mokly-sidecar.md:89`,
   and `docs/protocol/mokly-shell-delivery.md:78`.
@@ -71,8 +71,8 @@
     Line 145 passes it to `RenderKeys::build`.
   - `generationId`, at `packages/mokly/src/sidecar/compiled.ts:24`, hashes
     the compilation identity and the evaluation digest. The compilation
-    identity, at `packages/mokly/src/sidecar/bundle-recipe.ts:107` to line
-    120, hashes `params.sourceRoot`, the dependency roots, and the
+    identity, at `packages/mokly/src/sidecar/bundle-recipe.ts:155` to line
+    168, hashes `params.sourceRoot`, the dependency roots, and the
     repository roots. These are physical paths.
   - The live generation key, at `crates/mokly-graph/src/graph.rs:267` to
     line 269, also hashes `RenderKeys::fallback`. Decision 5 A of PR #227,

@@ -9,6 +9,7 @@ import { ConfigInputs } from "./config-inputs.js";
 import type { PathSettings } from "./config-inputs.js";
 import { mappedPaths } from "./mapped-paths.js";
 import { mappedSelection } from "./mapped-selection.js";
+import { MetafileEdges } from "./metafile-edges.js";
 import type { ModulePaths } from "./module-paths.js";
 import { EVIDENCE_LIMIT } from "./physical-input-reader.js";
 import { PhysicalInputs } from "./physical-inputs.js";
@@ -35,6 +36,7 @@ export class ServeEditPaths {
   constructor(private readonly params: BundleParams) {}
 
   record(metafile: Metafile, paths: ModulePaths): boolean {
+    const edges = new MetafileEdges(metafile, paths.sourceRoot);
     const aliases = Object.entries(paths.settings.aliases).sort(
       ([a], [b]) => b.length - a.length,
     );
@@ -59,7 +61,7 @@ export class ServeEditPaths {
       for (const [file, input] of Object.entries(metafile.inputs)) {
         if (
           !path.isAbsolute(file) ||
-          file === path.resolve(this.params.sourceRoot, "mokly-entry") ||
+          edges.own(file) ||
           file.split(path.sep).includes("node_modules")
         )
           continue;
@@ -67,10 +69,11 @@ export class ServeEditPaths {
           if (
             edge.external ||
             edge.original === undefined ||
-            !bareSpecifier(edge.original) ||
-            !path.isAbsolute(edge.path)
+            !bareSpecifier(edge.original)
           )
             continue;
+          const selection = edges.selection(edge.path);
+          if (selection.kind === "own") continue;
           const request = resolutionRequest(
             edge.original,
             path.dirname(file),
@@ -88,9 +91,10 @@ export class ServeEditPaths {
           let selected = false;
           for (const base of candidates(config, request.name)) {
             configured = true;
+            if (selection.kind === "unknown") return false;
             const kind = mappedSelection(
               base,
-              edge.path,
+              selection.file,
               paths.settings.resolveExtensions,
             );
             if (kind === "file") {
@@ -111,8 +115,9 @@ export class ServeEditPaths {
           if (
             configured &&
             !selected &&
-            !edge.path.split(path.sep).includes("node_modules") &&
-            !paths.dependencyDirectory(edge.path)
+            (selection.kind === "unknown" ||
+              (!selection.file.split(path.sep).includes("node_modules") &&
+                !paths.dependencyDirectory(selection.file)))
           )
             return false;
         }

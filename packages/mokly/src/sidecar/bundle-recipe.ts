@@ -58,7 +58,11 @@ export async function bundleRecipe(
   }: CompiledBundle,
   measurements: Measurements,
 ): Promise<Bundled> {
-  const editReusable = editImports?.record(compiled.metafile!, paths) ?? false;
+  const editReusable = editImports
+    ? measurements.runSync("sidecar.bundle.mapped-lookups", () =>
+        editImports.record(compiled.metafile!, paths),
+      )
+    : false;
   const resolution = params.moduleResolution;
   const { modules: graph, physical } = measurements.runSync(
     "sidecar.bundle.graph",

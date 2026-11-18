@@ -56,7 +56,7 @@
       when that evidence changed.
     - The content of each present `jsconfig.json` and extends target also
       enters the compilation identity, at
-      `packages/mokly/src/sidecar/bundle-recipe.ts:144`. So the next bundle
+      `packages/mokly/src/sidecar/bundle-recipe.ts:148`. So the next bundle
       after an edit gives a new generation id.
     - `docs/protocol/mokly-sidecar-recipes.md` states these rules.
   - The reuse evidence never enters the metadata inputs. So it reaches no

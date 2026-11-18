@@ -19,6 +19,12 @@ for `sidecar.bundle`, `sidecar.describe`, `sidecar.render` (with `kind`:
 from request receipt to response write. The difference from the matching core
 `render.fragment` span includes transport and queue time.
 
+Within `sidecar.bundle`, a Serve edit compile emits the child span
+`sidecar.bundle.mapped-lookups` after its compile. It covers the configuration
+reads of the authored imports and the selection and staging of their mapped
+candidates. The live folder and metadata reads that follow stay in the child
+span `sidecar.bundle.resolution`.
+
 The core emits `sidecar.spawn` for process start through hello. Every later
 spawn in a pool slot is enclosed by `sidecar.recycle`. These spans measure the
 new process through hello, excluding the old stop and time between requests.
