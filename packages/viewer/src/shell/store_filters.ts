@@ -37,6 +37,7 @@ export function withRoute(
   selection = revealSelection(
     catalogue.publicModel,
     folderTitleLookup(catalogue.hierarchy),
+    sections,
     selection,
   );
   return installShellRoute(
