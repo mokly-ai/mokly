@@ -1,13 +1,13 @@
 # Stabilize the PostCSS context release test
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Outside the scope.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #225 and its completed plan, which put the
   failure outside the scope of its review.
 - **Location:** `crates/mokly-render/tests/integration/watch_lifetimes_tests.rs:13`,
   with the wait in `crates/mokly-render/tests/integration/process_counts.rs:59`.
-- **Reason:** The test failed once in the CI of PR #225, which did not change
-  it, and the next CI runs passed it.
+- **Reason:** On 2026-11-03 the user chose option A, a reproduction on
+  Windows before the fix, and asked for it in a later branch.
 
 - **Source:** Review.
 - **Category:** Test.
@@ -26,6 +26,7 @@
     process records hold the expected count of each operation. The wait in
     `crates/mokly-render/tests/integration/process_counts.rs:59` gives up
     after 30 seconds.
+  - On 2026-11-03 the user chose option A.
 - **Problem:**
   - Failure: the test failed once on Windows in CI run 40674917367, during
     PR #225 on 2026-10-28.
@@ -57,10 +58,18 @@
 - **Previous examples:** PR #222 fixed another Windows-only failure of a
   timing-layer test on 2026-10-28. Its cache mock was released on another
   thread. That failure had a different cause.
-- **Recommendation:** A. It removes the race and keeps every
-  assertion.
-- **Action:** ask the user, because the failure has not been reproduced with a
-  confirmed cause. No fix is clearly best until reproduction identifies the
-  source, as the flaky-test rule requires.
+- **Recommendation:** A. The user chose it on 2026-11-03. It removes the
+  race and keeps every assertion.
+- **Action:** fix after merge, apply A, because the user chose A on
+  2026-11-03 and asked for it in a later branch.
+- **Work:**
+  - Repeat the test on Windows until it fails, and record the pass counts
+    under `.context/`, as the flaky-test rule of the `testing` skill says.
+  - Name the source. When it is in the render runtime, the flaky-test rule
+    makes it a product bug: add a failing test first, then fix the release,
+    as option C says.
+  - When the repeats do not reproduce the failure, record the run count and
+    the runner in this item, and ask the user again. Change no code.
+  - Delete this item in the branch that fixes the test.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/parallel-background-pass.md?plain=1#L399).
