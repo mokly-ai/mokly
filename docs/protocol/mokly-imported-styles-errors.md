@@ -1,5 +1,7 @@
 # Imported Stylesheet Diagnostics
 
+Status: The Build row "Non-portable JavaScript asset route" is not implemented yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+
 Every failure in this catalogue names the authored file, delivery root, or
 module. A message never shows a virtual module, a sidecar path, or a working
 directory. `{stylesheet}`, `{root}`, `{module}`, `{file}`, and `{directory}`
@@ -58,6 +60,7 @@ stylesheet path, without PostCSS's physical-path or plugin framing.
 | Relative CSS URL missing, non-file, or escaping         | `CSS asset is not a regular file inside repoRoot in {stylesheet}: {url}; move it inside the repository or fix the relative path`                                                                                          |
 | Relative CSS URL with an unsupported extension          | `unsupported CSS asset extension in {stylesheet}: {url}; use .avif, .bmp, .gif, .ico, .jpeg, .jpg, .png, .svg, .webp, .eot, .otf, .ttf, .woff or .woff2`                                                                  |
 | Non-portable asset route                                | `CSS asset route is not portable: {file}; rename every path segment to be URL-safe (letters, digits, dot, underscore, tilde or hyphen; @scope only after node_modules; no spaces or device names)`                        |
+| Non-portable JavaScript asset route                     | `asset route is not portable: {file}, imported by {module}; rename every path segment to be URL-safe (letters, digits, dot, underscore, tilde or hyphen; @scope only after node_modules; no spaces or device names)`      |
 | Missing or invalid local CSS `@import`                  | `could not resolve CSS @import in {stylesheet}: {specifier}; use an existing stylesheet inside repoRoot`                                                                                                                  |
 | `lightningcss` bundle failure                           | `could not bundle CSS {root}: {detail}; fix the stylesheet and rebuild`                                                                                                                                                   |
 | PostCSS plugin throws                                   | `PostCSS plugin {plugin} failed for {stylesheet}: {detail}; fix the plugin configuration or stylesheet`                                                                                                                   |

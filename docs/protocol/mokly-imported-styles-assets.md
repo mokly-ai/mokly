@@ -46,6 +46,10 @@ extension fails. Serve and the static output use the same content types:
 | `.woff`         | `font/woff`                     |
 | `.woff2`        | `font/woff2`                    |
 
+Assets that JavaScript imports share this delivery and its routes, and they
+can have more types. [JavaScript Asset Imports](./mokly-imported-assets.md)
+gives their rules.
+
 Binary assets are never decoded. `assets/<path>` satisfies the portable
 URL-path rule segment by segment: `/^[A-Za-z0-9][A-Za-z0-9._~-]*$/`, no
 trailing dot, and no Windows device-name stem (`aux`, `con`, `nul`, `prn`,
