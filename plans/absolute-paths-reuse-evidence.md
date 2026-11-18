@@ -268,6 +268,17 @@ Distinguish direct file and index proof from containment. A contained selection 
 After all candidates are observed, containment can keep the marker. This preserves useful package-folder reuse and the unreadable-chain exception.
 Reason: a descendant does not prove which target selected it. The separate generic package-entry live-input limit stays outside this branch.
 
+Verification correction of 2026-11-18: isolate both new restarted disk-recipe fixtures under ignored repository-local scratch state.
+Reason: controlled sibling changes in the shared Cargo temporary parent made capture complete but non-durable, so the unchanged restart had no saved record.
+The same controlled changes reject both old fixtures and preserve durable capture in both isolated fixtures.
+Keep every cache, output, and compile-count assertion. Keep the product durability rule.
+The historical gate has no durability trace, so its exact filesystem event is unknown.
+Evidence: `.context/absolute-paths-reuse-evidence/disk-fixture-isolation-report.md`.
+
+Main integration of 2026-11-18: merged `7e81903a8` as `7e0028185`.
+The conflict-free merge keeps all 13 incoming paths byte-identical, including the input-stamp early-exit change.
+Evidence: `.context/absolute-paths-reuse-evidence/final-main-preservation.json`.
+
 ## Milestone 1: Contracts and follow-up record
 
 Depends on: none
@@ -310,5 +321,6 @@ Depends on: 2
 - [x] Add the approved mapping-scan timing span and performance follow-up. Report fixture bundle-span measurements before and after the plugin-edge fix.
 - [x] Apply checked review finding 2 option D. Cover a contained later target and preserve mapped package-folder reuse.
 - [x] Review the complete local diff against `origin/main` after the push with the implementation-review skill. Apply its finding checks, fixes, and review rounds.
+- [x] Trace the restarted absolute disk regression's missing unchanged cache hit after the final main merge. Isolate confirmed fixture nondeterminism, preserve every assertion, and rerun verification.
 - [ ] Delete this plan under the plans skill. Keep dated calls and a plan permalink in the pull request description.
 - [ ] Open the pull request into `main`. Wait for final CI with `scripts/ci-wait.sh`. Report to the performance orchestrator and do not merge.

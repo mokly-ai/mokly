@@ -1,7 +1,7 @@
 //! Disk recipes must observe earlier interpolated paths targets after restart.
 
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 
@@ -27,7 +27,9 @@ fn cached_pool(source: &Path, cache: &Path, counts: Arc<config_dir::Counts>) -> 
 
 #[test]
 fn restarted_disk_recipes_reject_an_added_earlier_config_dir_paths_target() {
-    let temporary = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
+    let scratch = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.context");
+    fs::create_dir_all(&scratch).unwrap();
+    let temporary = tempfile::tempdir_in(scratch).unwrap();
     let root = dunce::canonicalize(temporary.path()).unwrap();
     let source = root.join("source");
     let cache = root.join("cache");

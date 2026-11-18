@@ -226,7 +226,9 @@ fn fresh_sidecars_skip_esbuild_and_changed_inputs_replace_the_disk_recipe() {
 
 #[test]
 fn restarted_disk_recipes_reject_an_added_earlier_absolute_paths_target() {
-    let temporary = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
+    let scratch = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.context");
+    fs::create_dir_all(&scratch).unwrap();
+    let temporary = tempfile::tempdir_in(scratch).unwrap();
     let root = dunce::canonicalize(temporary.path()).unwrap();
     let source = root.join("source");
     let cache = root.join("cache");
