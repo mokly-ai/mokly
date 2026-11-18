@@ -69,12 +69,16 @@ them, so a rejected candidate leaves the live records unchanged.
 [on-demand Serve contract](../../docs/protocol/mokly-on-demand.md): current
 usage first, then Changes classification against one pinned merge base. They
 yield to foreground requests, publish changed evidence in one revision, and
-cannot publish into a replacement. `UsagePass` keeps a sliding window of at
-most `batch` renders. It starts them in catalogue order and reports each
+cannot publish into a replacement. `UsagePass` keeps a sliding window bounded
+by its injected `dyn BackgroundCapacity`. It reads the bound before each
+view starts, so the same pass can grow when capacity recovers.
+It starts views in catalogue order and reports each
 view's warnings and failure once, in catalogue order, after every earlier
 render ends. The
-composition root sizes the window. `Workers` admits queued background renders
+composition root supplies its current capacity. `Workers` admits queued background renders
 one at a time, in request order, whenever no foreground request is active.
+It runs each background document render in `RenderClass::Background`, so the
+sidecar calls of that render go after the other waiting head calls.
 Ready state installs the generation root, the base commit, Changes
 membership, moved paths, removed records, and per-view states, ignore ids, and
 evidence in one revision. Included details carry
@@ -242,6 +246,12 @@ generations.
 - [`src/background_batch.rs`](./src/background_batch.rs) defines `Window`, the
   usage pass's bounded batch, which keeps catalogue order for starts, warnings,
   and failure reports.
+- [`src/background_capacity.rs`](./src/background_capacity.rs) defines
+  `BackgroundCapacity`, the window's changing bound, and `FixedCapacity`.
+- [`src/work.rs`](./src/work.rs) defines `Work` and `Workers`, the bounded
+  render scheduler that HTTP and background renders share.
+  [`src/work_background.rs`](./src/work_background.rs) admits one background
+  render at a time and runs it in `RenderClass::Background`.
 - [`src/comparison_store.rs`](./src/comparison_store.rs) defines `Comparisons`
   and `MemoryComparisons`, the bounded selected comparison generations.
 - [`src/render_request.rs`](./src/render_request.rs) and

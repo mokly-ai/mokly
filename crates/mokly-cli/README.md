@@ -31,8 +31,10 @@ version bytes. `--help` and `--version` write plain stdout in every output
 mode.
 
 Build and Serve share the same runtime composition. Each command owns one
-lazy sidecar pool, sized from `--sidecars`, `MOKLY_SIDECARS`, or the core
-count. It also creates one render cache at its entry point and uses it
+lazy sidecar pool. `--sidecars` and `MOKLY_SIDECARS` set an exact size.
+The default uses the core count as its upper bound and applies the
+[memory admission rules](../../docs/protocol/mokly-sidecar-memory.md#default-admission).
+Each command also creates one render cache at its entry point and uses it
 across catalogue preparation, document rendering, and live prop previews.
 The timing layer of `--debug-timings` reads the same cache for its cache
 counts. Head and base renders use `mokly_render::runtime::Runtime` with that
@@ -88,11 +90,14 @@ serialized queue handles watch events and the rich-mode `r` shortcut under the
 candidate replaces the public state and backend with the next revision. A
 failed candidate keeps the last good state. After `Catalogue ready`, Serve
 completes current usage and classifies Changes against one pinned merge base.
-The usage pass renders as many views at once as the smaller of the worker
-count and the sidecar pool bound.
-Both source roots share the configured sidecar pool bound. A shared admission
+The usage pass reads the current sidecar capacity before each view starts.
+Its sliding window uses the smaller of that capacity and the worker count.
+Both source roots share that capacity. A shared admission
 gate lets foreground requests finish their sidecar calls before more base
-requests start. After `Source::finished` reports a committed classification,
+requests start. The gate admits each call with a pool claim, which keeps the
+call's place in the capacity until the call ends. Waiting calls of background
+views go after the other waiting head calls, and they never wait for a whole
+foreground request. After `Source::finished` reports a committed classification,
 `BaseCompletion::base_finished` schedules one sidecar return pass. The
 `mokly-head-return` worker runs one step of the pass at a time while the gate
 is open and no base call waits at it. It holds the pool and the gate only
@@ -228,7 +233,8 @@ reserves an 8 MiB main-thread stack through its linker settings in
 - [`src/render_runtime.rs`](./src/render_runtime.rs) creates the render cache
   and composes the shared JavaScript and HTML rendering services of one
   command. It adds the bundle store to the pool and returns the command's
-  cache reporter for the Changes of `build` and `publish`.
+  cache reporter for the Changes of `build` and `publish`. It also composes
+  the host and process-limit estimate for default sidecar admission.
 - [`src/bundle_runtime.rs`](./src/bundle_runtime.rs) composes the bundle store
   of one command over a `DiskCache` that the command's cancellation stops,
   and maps each store outcome to its warning lines.
@@ -251,9 +257,15 @@ reserves an 8 MiB main-thread stack through its linker settings in
   the first successful publication, before readiness.
   [`src/serve_delivery.rs`](./src/serve_delivery.rs) passes that flag to the
   base caches of Serve Changes.
-- [`src/serve_pool.rs`](./src/serve_pool.rs) defines `ServePool`, the
-  admission gate around the shared pool. Its narrow `BaseCompletion`
-  capability schedules the return pass. Its gate answers the
+- [`src/serve_pool.rs`](./src/serve_pool.rs) defines `ServePool`, which puts
+  the admission gate around the shared pool. Its narrow `BaseCompletion`
+  capability schedules the return pass. Each head or base handle passes the
+  caller's `RenderClass` to the gate and runs the admitted call through
+  `SidecarPool::request_claimed`.
+- [`src/serve_gate.rs`](./src/serve_gate.rs) defines `Gate`, which admits each
+  call with a `CallClaim` from `PoolCapacity::try_claim`. Waiting
+  `RenderClass::Background` calls go after the other waiting head calls, and
+  base calls also wait for every foreground request. The gate answers the
   `ReturnAdmission` check and reports each failed step and the disable warning.
 - [`src/serve_return.rs`](./src/serve_return.rs) starts the
   `mokly-head-return` worker. The worker holds only weak handles and runs one

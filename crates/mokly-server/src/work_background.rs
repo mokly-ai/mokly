@@ -4,6 +4,7 @@ use std::sync::Arc;
 use std::sync::atomic::Ordering;
 
 use mokly_catalogue::diagnostic::Warning;
+use mokly_graph::render_class::RenderClass;
 
 use crate::backend::Documents;
 use crate::error::{InternalError, Result};
@@ -39,10 +40,12 @@ impl Workers {
         let guard = self.priority.enter(false);
         let parent = tracing::Span::current();
         match tokio::task::spawn_blocking(move || {
-            parent.in_scope(|| {
-                let _guard = guard;
-                let _permit = permit;
-                documents.background(&route)
+            RenderClass::Background.in_scope(|| {
+                parent.in_scope(|| {
+                    let _guard = guard;
+                    let _permit = permit;
+                    documents.background(&route)
+                })
             })
         })
         .await

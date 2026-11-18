@@ -205,8 +205,10 @@ then reaches the caller. A stream that starts on a worker of the same pool
 prepares and consumes one index at a time.
 
 In both operations, the caller keeps the results, the errors, and the
-cancellation checks. `ThreadWorkers` carries the caller's tracing span and
-subscriber through one shared context for all worker methods. The trait
+cancellation checks. `ThreadWorkers` carries the caller's tracing span,
+subscriber, and `RenderClass` through one shared context for all worker
+methods. So a background render keeps its class in every worker job, and
+Serve can order the sidecar calls of that render. The trait
 defaults have a capacity of one. They run the indexes in order on the caller,
 and the stream default prepares and consumes one index at a time.
 
@@ -333,6 +335,11 @@ retention disabled.
   `ComparisonTask` once and returns when all of them have run. Its
   `comparison_stream` method runs a `ComparisonTask` as an ordered stream, with
   at most twice the pool size started and not yet consumed.
+- [`src/render_class.rs`](./src/render_class.rs) defines `RenderClass`, the
+  scheduling class of a blocking render, `Foreground` by default.
+  `RenderClass::in_scope` sets a class for one operation and restores the
+  earlier class. `RenderClass::current` reads it. The private `WorkerContext`
+  captures it with the tracing span for each worker job.
 - [`src/fragments.rs`](./src/fragments.rs) defines `MemoFragments`, which
   memoizes JavaScript fragments in the same bounded cache.
 - [`src/render_inputs.rs`](./src/render_inputs.rs) defines `RenderInputs` and

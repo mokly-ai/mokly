@@ -1,6 +1,8 @@
+import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { processTree } from "../../scripts/verification/process-tree.mjs";
 import { startServe } from "../../scripts/verification/serve-process.mjs";
 import { repositoryRoot } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
@@ -11,6 +13,10 @@ export interface BrowserHost {
   url: string;
   close(): Promise<void>;
   diagnostics?(): string;
+}
+
+export interface ServeBrowserHost extends BrowserHost {
+  readonly binaryPid: number;
 }
 
 /** Use the same browser tests with Serve or a plain, already-built site. */
@@ -34,7 +40,7 @@ export async function serveHost(
   args: readonly string[],
   cwd: string,
   cancellation?: AbortSignal,
-): Promise<BrowserHost> {
+): Promise<ServeBrowserHost> {
   const server = await startServe(args, { cwd });
   const close = async () => {
     const outcome = await server.stop();
@@ -52,6 +58,18 @@ export async function serveHost(
       url: await server.listening(signal),
       close,
       diagnostics: server.diagnostics,
+      get binaryPid() {
+        const tree = processTree(server.child.pid!);
+        const shim = tree.find(({ ppid }) => ppid === server.child.pid);
+        assert.ok(shim, "the host must own its shim");
+        // The shim owns the native binary. Its pre-exec children can share its command.
+        const binaries = tree.filter(
+          ({ ppid, command }) =>
+            ppid === shim.pid && /[/\\]mokly serve(?: |$)/u.test(command),
+        );
+        assert.equal(binaries.length, 1);
+        return binaries[0]!.pid;
+      },
     };
   } catch (error) {
     try {

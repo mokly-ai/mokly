@@ -17,6 +17,7 @@ use mokly_source_interface::tree::{SourceTree, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::serve_pool::ServePool;
+use crate::serve_pool::serve_pool_support::capacity;
 use crate::warning_support::config;
 
 use super::runtime_support::{call, git, source};
@@ -45,7 +46,7 @@ fn keep_detaches_git_source_pool_and_workers_until_command_stop() {
                 .each_call(matching!(_))
                 .answers(&|_, _| Ok(MethodResult::Empty)),
         )),
-        1,
+        capacity(1),
     ));
     let source = source(&fixture, pool);
     let runtime = source.classification_runtime(fixture.lifetime.clone());

@@ -31,7 +31,10 @@ impl Pool {
                 repository: self.launch.repository.clone(),
                 ..self.launch.clone()
             };
-            let spawned = self.factory.spawn(&launch)?;
+            let spawned = match self.factory.spawn(&launch) {
+                Ok(spawned) => spawned,
+                Err(failure) => return Err(failure.into_error()),
+            };
             let mut state = self.lock();
             state.controls.insert(index, Arc::clone(&spawned.control));
             state.source_roots.insert(index, launch.repository);

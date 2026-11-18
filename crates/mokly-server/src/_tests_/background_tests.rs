@@ -10,6 +10,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::backend::Documents;
 use crate::background::{Background, UsagePass};
+use crate::background_capacity::FixedCapacity;
 use crate::evidence::RenderRoute;
 use crate::generation::Generation;
 use crate::publication::{PublicationEvent, PublicationsMock, Subscription};
@@ -132,7 +133,7 @@ async fn each_catalogue_route_runs_once_in_order_and_a_replacement_restarts_the_
         ));
         let diagnostics = Unimock::new(());
         let pass = UsagePass {
-            batch: 3,
+            capacity: Arc::new(FixedCapacity(3)),
             changes: None,
             publications: Arc::new(mock.clone()),
             work: Arc::new(mock.clone()),

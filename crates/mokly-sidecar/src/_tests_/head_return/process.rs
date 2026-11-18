@@ -11,7 +11,7 @@ use crate::error::{Error, Result};
 use crate::methods::Call;
 use crate::results;
 use crate::wire::MethodResult;
-use crate::workers::{ClockMock, ControlMock, FactoryMock, Spawned, WorkerMock};
+use crate::workers::{ClockMock, ControlMock, FactoryMock, SpawnFailure, Spawned, WorkerMock};
 
 use super::support::{Event, Journal};
 
@@ -71,7 +71,9 @@ pub(super) fn processes(
             let event = Event::Spawn(id, launch.repository.to_string_lossy().into_owned());
             observed.emit(event.clone());
             hook(event.clone());
-            fail(&fault, &event)?;
+            if let Err(error) = fail(&fault, &event) {
+                return Err(SpawnFailure::NotStarted(error));
+            }
             Ok(processes.lock().unwrap().pop_front().unwrap().1)
         }));
     let needs_clock = modes

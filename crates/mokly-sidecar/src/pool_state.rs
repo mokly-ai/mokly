@@ -38,6 +38,7 @@ pub(super) struct Affinity {
 pub(super) struct Waiting {
     pub(super) context: Option<String>,
     pub(super) root: PathBuf,
+    pub(super) claim: Option<u64>,
 }
 
 #[derive(Default)]
@@ -47,7 +48,11 @@ pub(super) struct State {
     pub(super) replacement_reasons: BTreeMap<usize, Reason>,
     pub(super) memory: BTreeMap<usize, MemorySchedule>,
     pub(super) slots: Vec<Option<Slot>>,
+    pub(super) claims: BTreeMap<u64, usize>,
+    pub(super) next_claim: u64,
     pub(super) available: VecDeque<usize>,
+    /// Unused indexes have no reservation and never enter ordinary available selection.
+    pub(super) free: BTreeSet<usize>,
     pub(super) controls: BTreeMap<usize, Arc<dyn WorkerControl>>,
     pub(super) retired: BTreeSet<usize>,
     pub(super) next_epoch: u64,
@@ -65,4 +70,11 @@ pub(super) struct State {
     pub(super) ticket: u64,
     pub(super) serving: u64,
     pub(super) stopped: bool,
+}
+
+impl State {
+    /// Count retained and pending reservations, including permanently retired indexes.
+    pub(super) fn allocated(&self) -> usize {
+        self.slots.len() - self.free.len()
+    }
 }

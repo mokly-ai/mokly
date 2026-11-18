@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::operations::Operation;
 use crate::pool_options::Launch;
 use crate::wire::{MethodResult, Request};
@@ -42,6 +42,8 @@ pub trait Worker: Send {
 /// Concurrent shutdown access retained while a worker has an in-flight request.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ControlMock))]
 pub trait WorkerControl: Send + Sync {
+    /// Read current resident memory without borrowing the request session.
+    fn resident_bytes(&self) -> Result<u64>;
     /// Enqueue shutdown behind any in-flight request without blocking on its pipe.
     fn shutdown(&self) -> Result<()>;
     /// Stop the whole process tree and arrange for the child to be reaped.
@@ -58,11 +60,31 @@ pub struct Spawned {
     pub control: Arc<dyn WorkerControl>,
 }
 
+/// A factory failure preserves whether process creation succeeded before setup failed.
+#[derive(Debug, thiserror::Error)]
+pub enum SpawnFailure {
+    /// No child was created, so its startup admission can be released.
+    #[error("[mokly-sidecar/start] no child started: {0}")]
+    NotStarted(#[source] Error),
+    /// A child was created, so its replacement reservation must remain.
+    #[error("[mokly-sidecar/start] child started before failure: {0}")]
+    Started(#[source] Error),
+}
+
+impl SpawnFailure {
+    /// Return the original failure without changing the caller's error contract.
+    pub fn into_error(self) -> Error {
+        match self {
+            Self::NotStarted(error) | Self::Started(error) => error,
+        }
+    }
+}
+
 /// Process creation boundary. Construct it in the binary, not in the pool.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = FactoryMock))]
 pub trait WorkerFactory: Send + Sync {
-    /// Start one sidecar with inherited environment and piped transport.
-    fn spawn(&self, launch: &Launch) -> Result<Spawned>;
+    /// Start one sidecar, preserving successful child creation in every failure.
+    fn spawn(&self, launch: &Launch) -> std::result::Result<Spawned, SpawnFailure>;
 }
 
 /// Millisecond monotonic clock used for shared absolute deadlines.
