@@ -94,18 +94,32 @@ Record any lost exact reuse in a follow-up item rather than extending the shared
 - **Left out:** Trusting unchanged consumed files misses earlier unconsumed mapped targets. Ignoring generated imports misses mappings of entry files themselves.
 - **Wider fix:** F covers mapped live reuse more broadly. Workspace 63 owns separate coherence work.
 - **Previous examples:** The pre-fix probe reused stale marked code after an earlier target appeared. A native probe also redirected a generated entry import through `*`.
-- **Recommendation:** A. It closes the required absolute defect with the smallest change. The check recommended D, which fails the current task goal.
-- **Action:** ask the user, because A changes the task's requirement to keep every other reuse unchanged.
+- **Recommendation:** E. The performance orchestrator selected E on 2026-11-18. The first recommendation was A, and the check recommended D.
+- **Action:** fix now, apply E under the performance orchestrator's decision.
 
 Shared assumptions:
 
-- Generated absolute entry imports need the same protection. Source: native probe and the task's correctness goal. Kept.
+- Generated absolute imports can follow mappings. Source: existing implementation. E drops this assumption under the recorded decision.
 - The fix must preserve native-first selection. Source: this task. Kept.
 - Reuse for unrelated configurations stays unchanged unless the performance orchestrator approves an exception. Source: this task. Kept.
 
 The second-pass check also reproduced the marked gap for bare mappings.
 That pre-existing gap does not remove this task's requirement to fix the absolute form.
-The parent decision was sent on 2026-11-18. It blocks only marker policy changes.
+The performance orchestrator chose E on 2026-11-18 under the user's delegation of 2026-11-16.
+Generated imports load configured files exactly as configured, by absolute path, in native, planned, and full attempts.
+Then only authored absolute imports with a matching or unclassifiable configuration withhold the marker.
+Reason: A removes the last reuse path from common package-extends catalogues, such as `expo/tsconfig.base`.
+Their CSS-only and YAML-only rebuilds would compile the full bundle again after a JavaScript edit.
+E keeps common reuse fast and restricts the safety decline to very rare authored absolute imports.
+Redirecting configured files through `paths` is an intended behavior change.
+
+Decision conditions:
+
+- Prove identical output, recorded inputs, and errors without matching mappings through the oracle and existing snapshots.
+- Preserve aliases, symlinked entries, and generated renderer and preview behavior.
+- State the configured-file resolution rule in the entry-resolution protocol.
+- Add red-first regressions for generated `*` redirection, authored matching and unclassifiable absolute imports, and package extends without authored absolute imports.
+- Stop and ask the performance orchestrator if E exceeds Medium or changes resolution outside the mapped-absolute case.
 
 ## Milestone 1: Contracts and follow-up record
 
@@ -121,6 +135,7 @@ Depends on: 1
 
 - [ ] Delegate to the non-ui implementor. Add red-first regressions for in-process reuse, released seeding, restarted disk reuse, strict build, and Serve plan reuse.
 - [ ] Probe marked uncaptured Serve edit reuse. Add a red-first regression and the smallest correct fix if needed.
+- [ ] Implement E and its decision conditions. The parent approved this generated-import boundary change.
 - [ ] Preserve reuse for ordinary relative mappings and unmatched absolute imports.
 - [ ] Apply B if its conditions pass. Otherwise apply A and record B in a follow-up item.
 - [ ] Protect absolute mapped interpolation and exact targets that the current reader cannot represent. Record deferred exact reuse.
