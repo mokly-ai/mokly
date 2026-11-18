@@ -44,6 +44,6 @@
   - The Repository and Viewer guards were raised to three times their medians on 2026-10-21.
   - `plans/follow-ups/remote-testbox-timeout.md` records a healthy Testbox run that its guard stopped.
   - The `darwin-x64` release rows on `macos-26-intel` take about 22.7 minutes against a 60-minute guard.
-- **Related:** `plans/follow-ups/ci-timeout-duration-report.md` holds wider fix H for the whole class. `plans/follow-ups/ci-timing-policy-literal-test.md` deletes the timing test when no option here does.
+- **Related:** `plans/follow-ups/native-jobs-runner-choice.md` decides which native jobs run on free runners. Its option A closes this item, and its option B keeps this item for macOS only. `plans/follow-ups/ci-timeout-duration-report.md` holds wider fix H for the whole class. `plans/follow-ups/ci-timing-policy-literal-test.md` deletes the timing test when no option here does.
 - **Recommendation:** A. It is the only Small option that gives three times the duration now, for cold and warm runs on both runners.
 - **Action:** ask the user, because A raises a time limit, and a higher limit needs the user's approval.
