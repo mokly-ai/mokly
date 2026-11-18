@@ -53,7 +53,7 @@ fn exact_counts_bypass_memory_and_healthy_defaults_retain_four_reservations() {
         let mut harness = Harness::new(4, Some(5 * GIB), guarded);
         let jobs: Vec<_> = (0..4)
             .map(|index| {
-                let claim = harness.pool.try_claim().unwrap();
+                let claim = harness.pool.try_claim().unwrap().unwrap();
                 harness.start_claimed(index, Some(claim))
             })
             .collect();

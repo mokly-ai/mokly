@@ -80,7 +80,7 @@ async fn priority_after_a_busy_call(base_overlap: bool) {
             })),
         CapacityMock::try_claim
             .each_call(matching!())
-            .answers(&|_| Some(CallClaim::fixed())),
+            .answers(&|_| Ok(Some(CallClaim::fixed()))),
     ))
     .no_verify_in_drop();
     let (entered, events) = mpsc::channel();

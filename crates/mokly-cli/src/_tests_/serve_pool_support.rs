@@ -16,7 +16,7 @@ pub(crate) fn capacity(count: usize) -> Arc<dyn PoolCapacity> {
             CapacityMock::capacity.each_call(matching!()).returns(count),
             CapacityMock::try_claim
                 .each_call(matching!())
-                .answers(&|_| Some(CallClaim::fixed())),
+                .answers(&|_| Ok(Some(CallClaim::fixed()))),
         ))
         .no_verify_in_drop(),
     )

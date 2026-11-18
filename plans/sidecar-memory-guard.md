@@ -289,8 +289,20 @@ Integration evidence: `.context/sidecar-memory-guard/pre-main-merge/merge-audit.
 Generation-affinity integration evidence: `.context/sidecar-memory-guard/pre-affinity-merge/merge-audit.log`. Merge `285460e8f` preserves PR #315. Memory admission sets the growth bound. Generation ranking selects an available slot within it.
 
 - [x] Commit with Conventional Commits and push the branch. Start `ci-wait.sh` after every push.
-- [ ] Review the complete diff against `origin/main` with the implementation-review skill. Check each finding in a fresh second pass.
+- [x] Review the complete diff against `origin/main` with the implementation-review skill. Check each finding in a fresh second pass.
 - [ ] Apply the fix rule and its two fix rounds. Record each deferred finding as a follow-up item. Re-run affected checks.
+  - [x] Fix confirmed finding 1 with a typed terminal claim error, gate wake, and normal waiting-counter cleanup. Preserve the healthy admission calculation and slot selection.
+  - [x] Prove red-first that a caller already waiting at the gate gets `Cancelled` when the pool stops, and that temporary shortage still waits and then admits. Cover later calls and larger pools with usable slots. Run new concurrent tests ten times.
+  - [ ] Run affected tests, formatting, and Clippy. Rebuild release. Push the fix and send its SHA and healthy-path comparison to the performance orchestrator immediately.
+  - [ ] Re-review the full diff after the fix push. Check each new finding before the second fix round.
 - [ ] Wait for CI and the performance orchestrator's `mokly-cloud` evidence. Fix branch-caused failures. Record unrelated failures and rerun them once.
 - [ ] Delete this plan under the plans skill when the other required work is complete.
 - [ ] Open the pull request into `main`. Keep the dated decisions, the plan permalink, and follow-up items in its description. Wait for final CI. Send the full report to the performance orchestrator. Do not merge.
+
+The first review found one High/Rare cancellation regression in the new claim boundary. The performance orchestrator approved option B on 2026-11-18: distinguish a terminal pool failure from a temporary shortage, wake every queued caller, and return the existing `Cancelled` error. Reason: this reliability change must not add a wait that never ends. The owner required red-first cases for an already-waiting caller and temporary shortage. It will read the pushed diff. Its healthy-speed acceptance stands if the fix changes only terminal failure handling and leaves healthy admission unchanged; otherwise it will measure again. This correction preserves the existing root-scheduling requirement.
+
+Review evidence: `.context/reviews/calummoore/mokly-sidecar-memory-guard-cf9n/round-1-review.md`, `round-1-checks.md`, and `findings.md`. The check kept B, added D and E, and found no new problem. The browser-cleanup and maintenance-admission problems outside the diff retain their existing follow-up items.
+
+Repair evidence: `.context/sidecar-memory-guard/review-fix-1/report.md`, `red-evidence.json`, `isolated-10x-and-cost.json`, and `source-comparison.json`. The orchestrator checked all four red assertions, the final claim and gate bodies, the waiting-counter cleanup, and the failure-hook wake. Healthy admission arithmetic, claim growth, priority predicates, and slot selection remain unchanged.
+
+Before the correction push, `main` advanced to `e6119e24e`, including PR #316 captured resolution plans. Merge `5a7e0e01f` preserves its code, generated types, documentation, tests, and follow-up updates. Serve uses live pool capacity and enables captured edit plans together. The completed performance comparisons keep their recorded baseline. The combined gate runs on the corrected merged tree. Evidence: `.context/sidecar-memory-guard/pre-review-fix-main-merge/merge-audit.log` and `preservation-proof.json`.

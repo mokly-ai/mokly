@@ -86,7 +86,7 @@ fn cancelled_calls_release_claims_that_never_started_a_worker() {
     assert_eq!(after_cancellation, 1);
     assert_eq!(pool.capacity(), 1);
     memory.store(3 * 1024 * 1024 * 1024, Ordering::SeqCst);
-    let _one = pool.try_claim().unwrap();
-    let _two = pool.try_claim().unwrap();
-    assert!(pool.try_claim().is_none());
+    let _one = pool.try_claim().unwrap().unwrap();
+    let _two = pool.try_claim().unwrap().unwrap();
+    assert!(pool.try_claim().unwrap().is_none());
 }

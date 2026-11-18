@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 
+use crate::error::{Error, Result};
 use crate::host_memory::HostMemory;
 use crate::memory_schedule::MEMORY_LIMIT;
 use crate::pool::Pool;
@@ -21,7 +22,8 @@ pub trait PoolCapacity: Send + Sync {
     /// Read the current memory-permitted capacity without reserving a slot.
     fn capacity(&self) -> usize;
     /// Atomically hold capacity for one call without creating a worker slot.
-    fn try_claim(&self) -> Option<CallClaim>;
+    /// A temporary shortage returns `Ok(None)`; a stopped pool returns `Cancelled`.
+    fn try_claim(&self) -> Result<Option<CallClaim>>;
 }
 
 impl Pool {
@@ -82,10 +84,13 @@ impl PoolCapacity for Pool {
     fn capacity(&self) -> usize {
         self.admission(&self.lock()).capacity
     }
-    fn try_claim(&self) -> Option<CallClaim> {
+    fn try_claim(&self) -> Result<Option<CallClaim>> {
         let mut state = self.lock();
-        if state.stopped || state.claims.len() >= self.admission(&state).capacity {
-            return None;
+        if state.stopped {
+            return Err(Error::Cancelled);
+        }
+        if state.claims.len() >= self.admission(&state).capacity {
+            return Ok(None);
         }
         let reserved = state.slots.len() - state.retired.len();
         let growth = if self.admission.is_some() {
@@ -96,7 +101,7 @@ impl PoolCapacity for Pool {
         let id = state.next_claim;
         state.next_claim += 1;
         state.claims.insert(id, growth);
-        Some(CallClaim::new(&self.state, &self.ready, id))
+        Ok(Some(CallClaim::new(&self.state, &self.ready, id)))
     }
 }
 

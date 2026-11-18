@@ -35,7 +35,7 @@ fn serve_grows_after_memory_recovers_when_a_request_wakes_admission() {
             })),
         CapacityMock::try_claim
             .each_call(matching!())
-            .answers(&|_| Some(CallClaim::fixed())),
+            .answers(&|_| Ok(Some(CallClaim::fixed()))),
     ));
     let (entered, events) = mpsc::channel();
     let mut releases = Vec::new();

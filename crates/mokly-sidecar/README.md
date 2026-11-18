@@ -41,9 +41,12 @@ capacity, and a claim that starts no new slot ends with its call. The
 `Pool::new` keeps the supplied size exact. For a default size, the composition
 root calls `Pool::with_memory_admission` with `dyn HostMemory`.
 `PoolCapacity::capacity` reads the same prospective capacity that reserves new
-slots, and it holds nothing. `PoolCapacity::try_claim` atomically holds a place
-for one call in a `CallClaim`, or returns `None` when the live claims fill the
-capacity. `SidecarPool::request_claimed` runs a call with its claim. When that
+slots, and it holds nothing. `PoolCapacity::try_claim` returns
+`Err(Error::Cancelled)` when the pool has stopped, as a request to a stopped
+pool does. It returns `Ok(None)` for a temporary shortage, when the live claims
+fill the capacity. Otherwise it atomically holds a place for one call in a
+`CallClaim` and returns `Ok(Some(claim))`.
+`SidecarPool::request_claimed` runs a call with its claim. When that
 call starts a new slot, it takes a held budget without a new memory check, and
 the slot keeps that reservation. Dropping the `CallClaim` ends the claim.
 `MemoryEstimate` combines `dyn HostProbe` and `dyn MemoryLimits`.

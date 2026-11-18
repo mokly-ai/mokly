@@ -9,10 +9,10 @@ use super::support::{GIB, Harness};
 #[test]
 fn a_call_claim_guarantees_growth_after_the_live_memory_reading_falls() {
     let mut harness = Harness::new(3, Some(3 * GIB), true);
-    let first_claim = harness.pool.try_claim().unwrap();
+    let first_claim = harness.pool.try_claim().unwrap().unwrap();
     let first = harness.start_claimed(0, Some(first_claim));
     assert_eq!(harness.events.recv().unwrap(), 0);
-    let second_claim = harness.pool.try_claim().unwrap();
+    let second_claim = harness.pool.try_claim().unwrap().unwrap();
     harness.host.store(0, Ordering::SeqCst);
     let held_capacity = harness.pool.capacity();
     let second = harness.start_claimed(1, Some(second_claim));
@@ -32,9 +32,9 @@ fn a_call_claim_guarantees_growth_after_the_live_memory_reading_falls() {
 fn unused_claims_share_the_budget_and_end_without_permanent_reservations() {
     let mut harness = Harness::new(4, Some(3 * GIB), true);
     let (denied, held_capacity) = {
-        let _first = harness.pool.try_claim().unwrap();
-        let _second = harness.pool.try_claim().unwrap();
-        let denied = harness.pool.try_claim().is_none();
+        let _first = harness.pool.try_claim().unwrap().unwrap();
+        let _second = harness.pool.try_claim().unwrap().unwrap();
+        let denied = harness.pool.try_claim().unwrap().is_none();
         harness.host.store(u64::MAX, Ordering::SeqCst);
         (denied, harness.pool.capacity())
     };
@@ -62,8 +62,8 @@ fn reusing_an_idle_worker_releases_a_claim_without_retaining_unused_growth() {
     harness.release(0);
     first.join().unwrap();
     let (held_capacity, slots_after_reuse) = {
-        let _occupied = harness.pool.try_claim().unwrap();
-        let extra = harness.pool.try_claim().unwrap();
+        let _occupied = harness.pool.try_claim().unwrap().unwrap();
+        let extra = harness.pool.try_claim().unwrap().unwrap();
         harness.host.store(u64::MAX, Ordering::SeqCst);
         let held_capacity = harness.pool.capacity();
         let reused = harness.start_claimed(1, Some(extra));

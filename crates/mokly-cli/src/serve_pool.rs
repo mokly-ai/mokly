@@ -169,3 +169,15 @@ mod serve_claim_order_tests;
 #[cfg(test)]
 #[path = "_tests_/serve_return_admission_tests.rs"]
 mod serve_return_admission_tests;
+
+#[cfg(test)]
+#[path = "_tests_/serve_claim_failure_support.rs"]
+mod serve_claim_failure_support;
+
+#[cfg(test)]
+#[path = "_tests_/serve_claim_failure_tests.rs"]
+mod serve_claim_failure_tests;
+
+#[cfg(test)]
+#[path = "_tests_/serve_claim_retirement_tests.rs"]
+mod serve_claim_retirement_tests;

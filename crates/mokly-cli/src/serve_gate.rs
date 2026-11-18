@@ -72,6 +72,7 @@ impl Gate {
         state.waiting_base += usize::from(base.is_some());
         state.waiting_http += usize::from(http);
         self.changed.notify_all();
+        let mut failure = Error::Cancelled;
         loop {
             if state.closed || base.is_some_and(ChangeCancellation::cancelled) {
                 state.waiting -= 1;
@@ -79,12 +80,19 @@ impl Gate {
                 state.waiting_http -= usize::from(http);
                 self.changed.notify_all();
                 self.wake_return();
-                return Err(Error::Cancelled);
+                return Err(failure);
             }
             if state.active < self.capacity.capacity()
                 && (base.is_none() || state.foreground == 0)
                 && (base.is_some() || class != RenderClass::Background || state.waiting_http == 0)
-                && let Some(claim) = self.capacity.try_claim()
+                && let Some(claim) = (match self.capacity.try_claim() {
+                    Ok(claim) => claim,
+                    Err(error) => {
+                        failure = error;
+                        state.closed = true;
+                        continue;
+                    }
+                })
             {
                 state.active += 1;
                 state.waiting -= 1;
@@ -119,6 +127,10 @@ impl ReturnAdmission for Gate {
     }
 
     fn failed(&self, error: &Error) {
+        {
+            let _state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+            self.changed.notify_all();
+        }
         let diagnostics = self
             .diagnostics
             .lock()
