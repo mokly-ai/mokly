@@ -101,7 +101,10 @@ retained evaluated state without a `bundle` request in the `full` mode, it
 sends the pool the served-generation notice with the id and the epoch of that
 state. The pool can then store that compilation in the bundle cache. Only that
 direct return of a retained state sends the notice. The `serveEdit` mode sends
-no notice.
+no notice. The head runtime of Serve also keeps the plan records of the
+[Serve edit plan rules](../../docs/protocol/mokly-sidecar-plans.md). It keeps
+a record from a `full` result, and it sends the plan of a current record with
+each `serveEdit` request.
 The pool restores compatible code before evaluation-only bundles across slots
 and recycling. It gives each loaded lifetime an epoch. A stale process replays
 maps, describe, and bindings before rendering. Metadata invalidation still recomputes class maps before reusing
@@ -247,11 +250,21 @@ view after the edit and counts real process starts and hello calls.
   physical input reader, sidecar pool, workers, and render cache. Its
   `bundle_capture` field holds the `BundleCapture` of each core `bundle`
   request: `Full` by default, and `ServeEdit` when Serve prepares its head
-  after the first published state.
+  after the first published state. `Runtime::with_serve_edit_plans` gives
+  the head runtime of Serve its plan record owner. A base runtime never gets
+  one.
+- [`src/edit_plans.rs`](./src/edit_plans.rs) defines `Records`, the plan
+  record owner of a Serve head, and `Record`, which pairs a `ResolutionPlan`
+  with the `ReuseEvidence` of its compilation. `Records::insert` keeps only
+  captured and durable evidence, replaces the record of equal settings, and
+  removes the oldest records to keep the serialized total within
+  `RECORD_BYTES`. A record that it cannot keep leaves the older record in
+  place.
 - [`src/physical_inputs.rs`](./src/physical_inputs.rs) defines
   `PhysicalInputs`, the reader that checks the captured reuse evidence of a
   compiled recipe outside the side tree, and `SystemPhysicalInputs`, its
-  filesystem implementation. Its `current` check rejects marked evidence.
+  filesystem implementation. Its `current` check rejects marked evidence. It
+  does not read the `durable` flag of the evidence.
 - [`src/side.rs`](./src/side.rs) defines `BaseSide`, the leased base
   extraction and dependency selection of a historical render.
 - [`src/dependency_usage.rs`](./src/dependency_usage.rs) defines
@@ -271,6 +284,9 @@ view after the edit and counts real process starts and hello calls.
   request with the `capture` mode of the runtime in its `catalogue.bundle`
   span, gives each result's lifetime epoch to a `BundleLease`, and sends the
   served-generation notice after a core reuse, only in the `Full` mode.
+  Before a `ServeEdit` request of a head runtime, it sends the plan of a
+  record whose evidence `physical_inputs::current` accepts. It offers each
+  `Full` result with a plan and a toolchain identity to `Records`.
 - [`src/render_environment.rs`](./src/render_environment.rs) derives the inputs
   that every render input key of one side shares, and names their paths
   without the checkout folder.
@@ -290,6 +306,7 @@ view after the edit and counts real process starts and hello calls.
 
 - [Sidecar protocol](../../docs/protocol/mokly-sidecar.md).
 - [Compiled recipes and reuse](../../docs/protocol/mokly-sidecar-recipes.md).
+- [Serve edit plans](../../docs/protocol/mokly-sidecar-plans.md).
 - [Render records](../../docs/protocol/mokly-sidecar-render-records.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).
 - [PostCSS contexts and evidence](../../docs/protocol/mokly-sidecar-postcss.md).

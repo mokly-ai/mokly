@@ -65,7 +65,7 @@ export class Session {
     if (request.method === "hello") protocol("hello already completed");
     switch (request.method) {
       case "bundle": {
-        const { capture = "full", ...params } = request.params;
+        const { capture = "full", plan, ...params } = request.params;
         const previous = await reuse(
           this.generations.values(),
           params,
@@ -84,6 +84,7 @@ export class Session {
                 ? new CaptureDurability(this.capture)
                 : undefined,
               capture,
+              plan,
             );
         this.generations.set(generation.id, generation);
         return result;
