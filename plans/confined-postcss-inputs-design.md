@@ -171,10 +171,14 @@ Landlock as a candidate. Another answer changes the parts that it names.
     before launch. A library that loads later must be in this predeclared
     runtime domain, or its access fails. The domain never widens to a live
     library folder after launch.
-  - Scratch folder, writable: the run's own output, never an input.
+  - Scratch folder, writable: generated run data, outside frozen-file provenance.
+- **Export exclusions.** Capture and the final check use the input
+  fingerprint's shared export policy. It excludes this output and its aliases
+  by logical and resolved path, and every reservation folder by name, under
+  `docs/protocol/mokly-export.md:113-116,138`. This also excludes staging.
 - **Outside file provenance.** These channels stay outside the guarantee,
   each with a stated bound: kernel endpoints such as device and process
-  files, network and sockets, environment variables, clocks, randomness,
+  files, generated scratch data, network and sockets, environment variables, clocks, randomness,
   bytes that the sidecar or another process supplies at run time, and
   descriptors received after launch. A run cannot bring a host file
   descriptor into the frozen-file claim. The launcher blocks that import, or
@@ -274,7 +278,7 @@ protocol. Each item names the decisions that settle it.
   `docs/protocol/mokly-export.md:155-158`. Decision 1.
 - The domain proves no global atomic source snapshot. An inventoried input
   whose versions conflict is an input change before publication. Decision 1.
-- Kernel endpoints, network and sockets, environment variables, clocks,
+- Kernel endpoints, generated scratch data, network and sockets, environment variables, clocks,
   randomness, bytes supplied at run time, and descriptors received after
   launch stay outside file provenance. Decisions 2 and 4.
 - A requested command fails where the boundary is unavailable or the capture
@@ -296,6 +300,9 @@ failed proof. Each of those needs a user decision.
 - The domain uses clones or plain copies. A hard link is a mutable alias.
 - The base side copies its leased extraction, because unconfined runs can
   write the shared extraction (`docs/protocol/mokly-base-preparation.md:28-40`).
+- The output transaction supplies one exclusion policy to the fingerprint
+  walk, domain capture, and final comparison, so their rules cannot drift.
+  Domain and scratch storage stay outside the repository, before capture.
 - The launcher sets up the boundary before Node starts. A rule that applies
   later misses threads that already run.
 - The launcher closes inherited descriptors except the standard streams and
@@ -462,10 +469,11 @@ recommended.
     hides no host path by itself, so it needs a separate process isolation
     boundary. D needs provisioning, such as a container runtime, a virtual
     machine, user namespaces, or a file system driver. Host paths in a
-    configuration fail unless the setup maps them. On macOS and Windows, a
-    container or a virtual machine runs another operating system. It cannot
-    load the host's native addons, so native plugins need builds for that
-    system. This is a compatibility trade-off, not a better option
+    configuration fail unless the setup maps them. Same-system guests exist:
+    Linux namespaces, macOS guests on Apple silicon, and Windows containers.
+    They can reuse compatible addons. A Linux guest on macOS or Windows
+    needs addons built for its guest system. Every form needs runtime and
+    parity proofs. This is a compatibility trade-off, not a better option
     everywhere. An absent path can change a result without an error. Effort:
     Large.
   - **E.** C, and before publication the core checks the whole approved
@@ -524,7 +532,8 @@ recommended.
   candidate.
 - **Recommendation:** E. It is the only option that checks every approved
   file version before publication, also for files that no plugin reported.
-  It avoids the residual risk of B's stamps and the cross-system cost of D.
+  It avoids the residual risk of B's stamps. D can use a compatible
+  same-system guest, and its provisioning cost depends on the chosen form.
   Its cost is a walk of the whole domain and an input change for unrelated
   edits, and that change of the fingerprint requirement needs the user's
   answer. This plan first recommended C, and the first options check kept C.
@@ -583,9 +592,9 @@ recommended.
     must be in that predeclared runtime domain, or its access fails. The
     domain never widens to a live library folder after launch. The copy keeps
     the link topology and an explicit metadata view, and host metadata
-    outside the domain is hidden. Apart from the named kernel endpoints,
-    every file that the run can read is frozen. Network and sockets,
-    environment variables, clocks, randomness, bytes supplied at run time,
+    outside the domain is hidden. Apart from named kernel endpoints and
+    generated scratch data, every file input that the run can read is frozen.
+    Network and sockets, environment variables, clocks, randomness, bytes supplied at run time,
     and descriptors received after launch stay outside file provenance as
     named channels. A machine that cannot enforce this content and metadata
     boundary counts as unavailable. On Linux, that needs a mechanism such as
@@ -608,6 +617,8 @@ recommended.
     still need their own proofs. Effort: Large.
 - **Shared assumptions:**
   - The domain is known at launch. Source: the Landlock probe.
+  - Every domain option keeps the shared export exclusions at capture and
+    at the final check. Source: `docs/protocol/mokly-export.md:113-116,138`.
   - Node needs readable runtime files and existing ancestor manifests, but
     not live ones. Source: the Tailwind probe. A, B, C, D, F, and G read them
     live. E and H freeze them.
@@ -639,9 +650,10 @@ recommended.
   Landlock as a candidate, with host metadata as a stated limit. Decision 4
   B needs a live part, which E and H do not have.
 - **Recommendation:** E. It is the strict choice. Apart from the named kernel
-  endpoints, every file that the run can read is frozen, and host metadata
-  outside the domain is hidden. This plan first recommended B. The first
-  options check recommended F, and the second options check recommended H.
+  endpoints and generated scratch data, every file input that the run can
+  read is frozen, and host metadata outside the domain is hidden. This plan
+  first recommended B. The first options check recommended F, and the
+  second options check recommended H.
   F, like B, leaves ignored files, dependencies, ancestor manifests, runtime
   files, and host metadata opaque and mutable. H freezes all content and
   works with Landlock, but host metadata outside the domain can still change
@@ -860,6 +872,8 @@ Depends on: 1
 - [ ] List the approved sources with nested repositories and submodules, and
       the approved generated inputs. Copy the base extraction into the
       build-private domain.
+- [ ] Reuse the output transaction's shared exclusion policy in the
+      fingerprint walk and domain capture. Keep existing assertions.
 - [ ] Copy the packages, the ancestor configuration, and the runtime with its
       exact required libraries. Keep the link topology, the metadata view,
       and the stable-capture stamps of each copied entry.
@@ -899,7 +913,8 @@ Depends on: 4
       inventoried input an input change before publication.
 - [ ] Add the whole-domain check of 1E before publication: membership,
       recorded absence, the metadata view, and content, with exact
-      comparisons or the stable-capture contract. Keep it out of catalogue
+      comparisons or the stable-capture contract and the same export
+      exclusion policy as capture. Keep it out of catalogue
       membership, protection, public files, and watching.
 - [ ] Separate confined results by generation, domain id, runtime identity,
       and policy. Keep cache byte charges apart from domain leases.
@@ -908,6 +923,8 @@ Depends on: 4
       added file, and a new ancestor configuration file during a confined
       run. Test that the manifest and the check add no catalogue member,
       protected input, watch path, or public file.
+- [ ] Test membership without output and reservation folders. Test that
+      the build's own staging causes no input change, including without Git.
 - [ ] Show that each new asynchronous test fails without its behaviour. Then
       run it ten times in a row, and save the logs.
 
