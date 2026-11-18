@@ -1,15 +1,15 @@
 # Run Cargo checks with the locked dependency graph
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Outside the scope.
+- **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   a problem outside the scope of the F18 re-review of 2026-10-20.
 - **Location:** the `cargo xtask` alias at `.cargo/config.toml:2`, the gate
   commands at `xtask/src/check/commands.rs:22-28`, `:61`, and `:65-89`, the
   shared `cargo` helper at `:99-101`, and the CI gate steps, for example
   `.github/workflows/ci.yml:106` and `:260`.
-- **Reason:** The problem is in gate code outside the reviewed change, and
-  options B and C make the gate stricter, which needs the user.
+- **Reason:** On 2026-11-03 the user chose option B, `--locked` on the
+  launcher and on the gate commands, and asked for it in a later branch.
 
 - **Source:** Review.
 - **Category:** Process.
@@ -38,6 +38,8 @@
     launcher, so it can read a lock file that the launcher already updated.
   - CI starts each suite through the same launcher, for example at
     `.github/workflows/ci.yml:106` and `:260`.
+  - On 2026-11-03 the user chose option B. That choice approves the stricter
+    gate.
 - **Problem:** No Cargo command fails on a stale lock file before the
   launcher can update it. `cargo clippy` and `cargo test` in the suites also
   run without `--locked`. So a stale lock file can pass the gate, and the
@@ -75,9 +77,22 @@
 - **Related:** [rust-audit-tool-yanked-lock.md](rust-audit-tool-yanked-lock.md)
   is about the separate lock file of the `cargo-audit` tool. It shares the
   `--locked` mechanism but not this cause, so each item needs its own fix.
-- **Recommendation:** B. The launcher then fails first on every
-  platform, for local and CI runs, at no runtime cost.
-- **Action:** ask the user, because B and C add stricter validation to the gate,
-  which the always-on rules reserve for the user.
+- **Recommendation:** B. The user chose it on 2026-11-03. The launcher then
+  fails first on every platform, for local and CI runs, at no runtime cost.
+- **Action:** fix after merge, apply B, because the user chose B on
+  2026-11-03 and asked for it in a later branch.
+- **Work:**
+  - Add `--locked` to the alias at `.cargo/config.toml:2`.
+  - Add `--locked` to each Cargo command of the gate that resolves
+    dependencies, in `xtask/src/check/commands.rs`. The shared `cargo`
+    helper at `:99-101` is one place for it.
+  - Say in `docs/protocol/developer-test-commands.md` that the gate uses the
+    locked dependency graph. Say how to refresh a stale `Cargo.lock`: run
+    one Cargo command without `--locked`, such as `cargo check --workspace`,
+    and commit the result.
+  - Make the lock file stale once on purpose. Check that
+    `cargo xtask check --suite repository` then fails first, with Cargo's
+    message. Save the output under `.context/`.
+  - Delete this item in the same branch.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L4853).
