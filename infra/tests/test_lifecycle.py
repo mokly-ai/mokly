@@ -108,7 +108,7 @@ class LifecycleTests(unittest.TestCase):
             GITHUB_ACTIONS="true",
             GITHUB_EVENT_NAME="push",
             GITHUB_REF="refs/heads/main",
-            GITHUB_WORKFLOW_REF="mokly-ai/mokly-cloud/.github/workflows/deploy.yml@refs/heads/main",
+            GITHUB_WORKFLOW_REF="mokly-ai/mokly/.github/workflows/deploy.yml@refs/heads/main",
             MKC_REGION="us-central1",
             MKC_DOMAIN="example.com",
             MKC_CLOUDFLARE_ZONE_ID="a" * 32,
@@ -120,7 +120,7 @@ class LifecycleTests(unittest.TestCase):
         cases = [
             ("main-preview", "pull_request", "refs/heads/main", inputs["GITHUB_WORKFLOW_REF"], "trusted deploy workflow"),
             ("production", "push", "refs/heads/feature", inputs["GITHUB_WORKFLOW_REF"], "trusted deploy workflow"),
-            ("production", "push", "refs/heads/main", "mokly-ai/mokly-cloud/.github/workflows/ci.yml@refs/heads/main", "trusted deploy workflow"),
+            ("production", "push", "refs/heads/main", "mokly-ai/mokly/.github/workflows/ci.yml@refs/heads/main", "trusted deploy workflow"),
             ("preview-pr-42", "push", "refs/heads/main", inputs["GITHUB_WORKFLOW_REF"], "only production or main-preview"),
         ]
         for environment, event, ref, workflow, message in cases:

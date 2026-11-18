@@ -37,6 +37,8 @@ class PreviewScriptDiagnosticTests(unittest.TestCase):
                     str(ROOT),
                     "--branch",
                     "feature/catalogue",
+                    "--repository",
+                    "mokly-ai/mokly",
                 ],
                 "Catalogue capture failed: environment must match preview-pr-N\n",
             ),

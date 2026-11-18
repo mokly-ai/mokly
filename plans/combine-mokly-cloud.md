@@ -324,22 +324,22 @@ Depends on: 3, 4, and 5
 
 Depends on: 6
 
-- [ ] Port the cloud workflow contract tests of the old cloud `xtask`
+- [x] Port the cloud workflow contract tests of the old cloud `xtask`
       (`tests/cli/` at `6d5163d6`: `ci_capacity`, `deployment_*`,
       `desktop_*`, `origin_router_workflow`, `preview_*`, and `workflow`
       tests) with the workflows they read. Keep every assertion.
-- [ ] Merge the cloud `ci.yml` jobs and `preview.yml` into the Mokly
+- [x] Merge the cloud `ci.yml` jobs and `preview.yml` into the Mokly
       workflows. Add `deploy.yml`, `foundation.yml`, `site.yml`, and
       `desktop-release.yml`. Make `Required CI` require the cloud jobs.
-- [ ] Apply the public CI rule of the design calls to every job that reads
+- [x] Apply the public CI rule of the design calls to every job that reads
       a secret or requests an OIDC token. Test the guard with a fork
       pull request event fixture.
-- [ ] Set `ELECTRON_SKIP_BINARY_DOWNLOAD=1` in every CI job that does not
+- [x] Set `ELECTRON_SKIP_BINARY_DOWNLOAD=1` in every CI job that does not
       run Electron, and move that rule to the CI workflow pages.
-- [ ] Leave `docs/protocol/cloud/` out of the `@mokly/mokly` package.
+- [x] Leave `docs/protocol/cloud/` out of the `@mokly/mokly` package.
 - [ ] Scope Release Please to the published packages. Keep the cloud
       projects out of the changelog and the version bump.
-- [ ] Change the repository and the workflow paths in the Workload Identity
+- [x] Change the repository and the workflow paths in the Workload Identity
       Federation condition of `infra/terraform/modules/github`, and in its
       contract tests.
 

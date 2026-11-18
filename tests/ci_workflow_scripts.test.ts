@@ -122,12 +122,13 @@ test("Testbox sessions receive only the job PATH, Chromium, and the workflow env
     PATH: process.env.PATH,
     UNEXPORTED_SECRET: "must-not-leak",
     MOKLY_TESTBOX_ENVIRONMENT: file,
+    MOKLY_CLOUD_NODE_BIN: "/fixture/cloud-node/bin",
   });
   assert.equal(output.stdout, "");
   assert.equal(output.stderr, "");
   assert.equal(
     await fs.readFile(file, "utf8"),
-    `LANG=en_US.UTF-8\nKEEP=value\nPATH=${process.env.PATH}\nPLAYWRIGHT_CHANNEL=chromium\n` +
+    `LANG=en_US.UTF-8\nKEEP=value\nPATH=${process.env.PATH}\nPLAYWRIGHT_CHANNEL=chromium\nMOKLY_CLOUD_NODE_BIN=/fixture/cloud-node/bin\n` +
       workflowEnv.map(([name, value]) => `${name}=${value}\n`).join(""),
   );
 });

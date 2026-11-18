@@ -124,8 +124,9 @@ completed after all cleanup attempts does not fail the check. The
 defines its warning. A stop that succeeds on a retry does not fail the check.
 Preparation, discovery, missing reports and invalid reports cannot produce
 success. Never substitute local suite results after remote execution starts.
-Remote runs cover the Linux Node 22.15.0 profile only. Native macOS and Windows
-tests and the Node 24 release profile run in hosted CI.
+Remote Mokly runs cover the Linux Node 22.15.0 profile. Cloud workers use the
+separate Node 24.21.0 installation of the [cloud CI contract](./ci-workflow-cloud.md#cloud-jobs).
+Native macOS and Windows tests and the Node 24 release profile run in hosted CI.
 The viewer command installs the synced Bun pin on its box under the
 [suite wrapper contract](./remote-verification-testbox.md#suite-wrapper).
 A remote run needs no Bun on the local machine.

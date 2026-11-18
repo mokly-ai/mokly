@@ -131,7 +131,7 @@ def main():
         "--strict" not in arguments
         or option(arguments, "--config") != "mokly.config.json"
         or option(arguments, "--repository")
-        != "github.com/mokly-ai/mokly-cloud"
+        != os.environ["MKC_CAPTURE_TEST_REPOSITORY"]
     ):
         return 92
     endpoint = option(arguments, "--endpoint")

@@ -184,7 +184,7 @@ terminal; leave the three server commands running:
 
 ```sh
 # Run once
-python3 infra/scripts/capture-catalogue.py --local --checkout .
+python3 infra/scripts/capture-catalogue.py --local --checkout . --repository mokly-ai/mokly-cloud
 # Terminal 1
 scripts/cloud/dev-api.sh
 # Terminal 2

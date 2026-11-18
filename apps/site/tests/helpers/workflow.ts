@@ -70,6 +70,7 @@ export function allowsPullRequest(
     "github.event.pull_request.labels.map(label => label.name)",
   );
   return runInNewContext(expression, {
+    vars: { MKC_CLOUD_CUTOVER_ENABLED: "true" },
     contains: (value: string, part: string) => value.includes(part),
     github: {
       event: {
@@ -78,16 +79,14 @@ export function allowsPullRequest(
           head: {
             ref: options.branch ?? "feature/site",
             repo: {
-              full_name: options.fork
-                ? "contributor/mokly-cloud"
-                : "mokly-ai/mokly-cloud",
+              full_name: options.fork ? "contributor/mokly" : "mokly-ai/mokly",
             },
           },
           labels: (options.labels ?? []).map((name) => ({ name })),
         },
       },
       event_name: "pull_request",
-      repository: "mokly-ai/mokly-cloud",
+      repository: "mokly-ai/mokly",
     },
     join: (values: string[], separator: string) => values.join(separator),
     startsWith: (value: string, prefix: string) => value.startsWith(prefix),

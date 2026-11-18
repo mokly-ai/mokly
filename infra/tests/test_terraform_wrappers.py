@@ -12,8 +12,8 @@ from support import ROOT
 
 
 FIXTURES = ROOT / "infra/tests/fixtures/terraform-wrapper"
-FOUNDATION_REF = "mokly-ai/mokly-cloud/.github/workflows/foundation.yml@refs/heads/main"
-DEPLOY_REF = "mokly-ai/mokly-cloud/.github/workflows/deploy.yml@refs/heads/main"
+FOUNDATION_REF = "mokly-ai/mokly/.github/workflows/foundation.yml@refs/heads/main"
+DEPLOY_REF = "mokly-ai/mokly/.github/workflows/deploy.yml@refs/heads/main"
 # Records each call; plan and show replay the recorded Terraform outputs.
 TERRAFORM = r'''#!/usr/bin/env python3
 import os, sys
@@ -142,6 +142,7 @@ class TerraformWrapperTests(unittest.TestCase):
             ("terraform-foundation.sh", ["apply"], ci(FOUNDATION_REF, "pull_request"), "trusted foundation workflow"),
             ("terraform-foundation.sh", ["apply"], ci(FOUNDATION_REF, ref="refs/heads/feature"), "trusted foundation workflow"),
             ("terraform-foundation.sh", ["apply"], ci(FOUNDATION_REF.replace("mokly-ai", "fork")), "trusted foundation workflow"),
+            ("terraform-foundation.sh", ["apply"], ci(FOUNDATION_REF.replace("mokly-ai/mokly/", "mokly-ai/mokly-cloud/")), "trusted foundation workflow"),
             ("terraform-environment.sh", ["main-preview", "apply"], ci(FOUNDATION_REF), "trusted deploy workflow"),
         ]
         for script, arguments, environment, message in cases:
@@ -190,6 +191,7 @@ class TerraformWrapperTests(unittest.TestCase):
             (["main-preview"], {}, "Unknown plan action"),
             (["plan"], {"MKC_REPOSITORY_ID": "mokly-ai/mokly-cloud"}, "must be numeric GitHub IDs"),
             (["plan"], {"MKC_REPOSITORY_OWNER_ID": "0"}, "must be numeric GitHub IDs"),
+            (["plan"], {"MKC_LEGACY_REPOSITORY_ID": "fork/repository"}, "must be empty or a numeric GitHub ID"),
             (["plan"], {"MKC_DOMAIN": "Example.com"}, "Invalid domain"),
             (["plan"], {"MKC_REGION": "central"}, "Invalid region"),
         ]

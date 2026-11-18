@@ -1,7 +1,5 @@
 # CI Verification
 
-Status: The cloud CI jobs are not wired yet. The [combine plan](../../plans/combine-mokly-cloud.md) completes them.
-
 ## Verification Boundary
 
 `cargo xtask check` is the complete repository and release gate. The local

@@ -220,7 +220,9 @@ which installs the PR's locked packages, runs the PR's workspace Mokly
 `mokly publish --strict` on the clean committed checkout, receives its upload
 exchange on a loopback receiver, keeps the plan archive and every requested
 blob in `.context/seed/catalogue`, and validates its branch, revision, pull
-request and comparison envelope before artifact transfer. Local startup runs
+request and comparison envelope before artifact transfer. The workflow passes
+`github.repository` through `--repository`. Capture uses that identity for
+both publish and envelope validation. Local startup runs
 `scripts/cloud/dev-publication-env.sh`, which ensures `.context` exists with mode
 0700 before it checks for an exported `MKC_CATALOGUE_SIGNING_KEY`; a fresh
 checkout therefore works with either an existing or a generated signing key.

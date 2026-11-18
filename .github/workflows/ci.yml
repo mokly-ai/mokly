@@ -11,6 +11,7 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 env:
+  ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
   CARGO_INCREMENTAL: 0
   CARGO_PROFILE_DEV_DEBUG: 0
   CARGO_PROFILE_TEST_DEBUG: 0
@@ -149,7 +150,7 @@ jobs:
       - name: Run viewer verification
         run: cargo xtask check --suite viewer
       - name: Retain viewer inventory and timings
-        if: always()
+        if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: verification-viewer-node-${{ matrix.node }}
@@ -199,9 +200,11 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Run browser shard
-        run: cargo xtask check --suite browser --shard ${{ matrix.shard }}/4
+        env:
+          BROWSER_SHARD: ${{ matrix.shard }}/4
+        run: cargo xtask check --suite browser --shard "$BROWSER_SHARD"
       - name: Retain browser inventory and timings
-        if: always()
+        if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: verification-browser-node-${{ matrix.node }}-shard-${{ matrix.shard }}
@@ -310,7 +313,7 @@ jobs:
       - name: Check example static HTTP and file delivery
         run: npm run test:delivery:prepared
       - name: Retain static delivery evidence
-        if: always()
+        if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: static-delivery-node-${{ matrix.node }}
@@ -327,9 +330,374 @@ jobs:
           path: .context/playwright-results/
           include-hidden-files: true
           retention-days: 14
+  check:
+    name: ${{ matrix.name }}
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    needs: [profile]
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Workspace checks
+            command: cloud-rust
+            additional_suites: cloud-migrations cloud-typecheck cloud-openapi cloud-fixtures cloud-emails cloud-openapi-lint cloud-terraform cloud-origin-router cloud-helm cloud-toolchain-pins
+            install_dependencies: true
+            browser_workspace: ""
+            postgres: true
+            infrastructure: true
+            rust_cache: true
+          - name: Desktop checks
+            command: cloud-desktop
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/desktop"
+            postgres: true
+            infrastructure: false
+            rust_cache: true
+          - name: App checks 1/4
+            command: cloud-app
+            app_shard: "1/4"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/app"
+            postgres: true
+            infrastructure: false
+            rust_cache: true
+          - name: App checks 2/4
+            command: cloud-app
+            app_shard: "2/4"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/app"
+            postgres: true
+            infrastructure: false
+            rust_cache: true
+          - name: App checks 3/4
+            command: cloud-app
+            app_shard: "3/4"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/app"
+            postgres: true
+            infrastructure: false
+            rust_cache: true
+          - name: App checks 4/4
+            command: cloud-app
+            app_shard: "4/4"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/app"
+            postgres: true
+            infrastructure: false
+            rust_cache: true
+          - name: Mockup checks
+            command: cloud-mockups
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/mockups"
+            postgres: false
+            infrastructure: false
+            rust_cache: true
+          - name: Site checks
+            command: cloud-site
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/site"
+            postgres: false
+            infrastructure: false
+            rust_cache: true
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: ${{ matrix.command != 'cloud-desktop' && '1' || '' }}
+      # Database-backed partitions provision Postgres below. GitHub HTTP fixtures
+      # run locally; no registered App credentials are used.
+      MKC_TEST_DATABASE_URL: postgres://postgres:postgres@localhost/mkc_test
+    steps:
+      - name: Check out the complete history
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        with:
+          fetch-depth: 0
+      - name: Install Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache-dependency-path: package-lock.json
+      - name: Install npm
+        run: npm install --global npm@11.21.0
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        with:
+          toolchain: 1.98.1
+          components: rustfmt, clippy
+      - name: Set up Rust
+        run: rustup toolchain install
+      - name: Restore Rust dependencies
+        if: matrix.rust_cache
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          # One cache per partition, so caches produced at the same time by
+          # different partitions cannot replace one another.
+          key: ${{ matrix.command }}
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Cache Electron download
+        if: matrix.command == 'cloud-desktop'
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cache/electron
+          key: electron-${{ runner.os }}-${{ runner.arch }}-44.7.2
+      - name: Install dependencies
+        if: matrix.install_dependencies
+        run: npm ci
+      - name: Prepare the Playwright package cache
+        if: matrix.browser_workspace != ''
+        id: playwright_packages
+        continue-on-error: true
+        run: bash scripts/cloud/playwright-package-cache.sh prepare
+      - name: Cache Playwright package downloads
+        if: matrix.browser_workspace != '' && steps.playwright_packages.outputs.state != ''
+        continue-on-error: true
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ runner.temp }}/playwright-apt-archives
+          key: playwright-apt-v1-${{ runner.os }}-${{ runner.arch }}-ubuntu-${{ steps.playwright_packages.outputs.ubuntu }}-playwright-${{ steps.playwright_packages.outputs.playwright }}-${{ steps.playwright_packages.outputs.state }}
+      - name: Restore Playwright package downloads
+        if: matrix.browser_workspace != '' && steps.playwright_packages.outputs.state != ''
+        continue-on-error: true
+        run: bash scripts/cloud/playwright-package-cache.sh restore
+      - name: Install Chromium
+        if: matrix.browser_workspace != ''
+        env:
+          BROWSER_WORKSPACE: ${{ matrix.browser_workspace }}
+        run: npm exec --workspace "$BROWSER_WORKSPACE" -- playwright install --with-deps chromium
+      - name: Retain Playwright package downloads
+        if: matrix.browser_workspace != '' && steps.playwright_packages.outputs.state != ''
+        continue-on-error: true
+        run: bash scripts/cloud/playwright-package-cache.sh stage
+      - name: Install virtual display
+        if: matrix.command == 'cloud-desktop'
+        run: sudo apt-get install -y xvfb
+      - name: Start Postgres 16 for integration tests
+        if: matrix.postgres
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-16 libpq-dev e2fsprogs
+          sudo systemctl start postgresql
+          sudo -u postgres psql -c "ALTER ROLE postgres WITH PASSWORD 'postgres'"
+          sudo -u postgres createdb mkc_test
+          pg_isready -h localhost -p 5432
+          echo /usr/lib/postgresql/16/bin >> "$GITHUB_PATH"
+      - name: Install Terraform and Helm
+        if: matrix.infrastructure
+        run: bash infra/scripts/install-tools.sh
+      - name: Verify the partition
+        env:
+          XTASK_COMMAND: ${{ matrix.command }}
+          APP_SHARD: ${{ matrix.app_shard }}
+          ADDITIONAL_SUITES: ${{ matrix.additional_suites }}
+        run: |
+          shard=()
+          [[ -z "$APP_SHARD" ]] || shard=(--shard "$APP_SHARD")
+          cargo xtask check --suite "$XTASK_COMMAND" "${shard[@]}"
+          for suite in $ADDITIONAL_SUITES; do
+            cargo xtask check --suite "$suite"
+          done
+
+  images:
+    name: Workload image checks
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    needs: [profile]
+    timeout-minutes: 60
+    steps:
+      - name: Check out the source
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Install Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install npm and dependencies
+        run: |
+          npm install --global npm@11.21.0
+          npm ci
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        with:
+          toolchain: 1.98.1
+      - name: Set up Rust
+        run: rustup toolchain install
+      - name: Restore Rust build cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Install bounded-storage host tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y e2fsprogs postgresql-16 libpq-dev
+          echo /usr/lib/postgresql/16/bin >> "$GITHUB_PATH"
+      - name: Install pinned standalone image tools
+        run: bash infra/scripts/install-build-tools.sh
+      - name: Start layered BuildKit
+        env:
+          MKC_BUILDKIT_REQUIRE_LAYERED: "true"
+        run: bash infra/scripts/start-buildkit.sh
+      - name: Verify storage behavior and workload images
+        run: cargo xtask check --suite cloud-infrastructure
+      - name: Retain image BuildKit diagnostics
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: buildkit-images
+          path: /tmp/mkc-buildkit.log
+          if-no-files-found: warn
+          retention-days: 14
+
+  cloud-provider-plan:
+    name: Credential-gated infrastructure plan
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_PLAN_SERVICE_ACCOUNT }}
+      MKC_REGION: ${{ vars.MKC_REGION }}
+      MKC_DOMAIN: ${{ vars.MKC_DOMAIN }}
+      MKC_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CLOUDFLARE_ZONE_ID }}
+      MKC_CATALOGUE_BASE_DOMAIN: ${{ vars.MKC_CATALOGUE_BASE_DOMAIN }}
+      MKC_CATALOGUE_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CATALOGUE_CLOUDFLARE_ZONE_ID }}
+      MKC_NOTIFICATION_CHANNELS: ${{ vars.MKC_NOTIFICATION_CHANNELS }}
+      MKC_STATE_BUCKET: ${{ vars.MKC_STATE_BUCKET }}
+    steps:
+      - name: Check out the trusted main revision
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        with:
+          persist-credentials: false
+      - name: Gate the real provider plan
+        id: credentials
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == push && "$GITHUB_REF" == refs/heads/main ]]; then
+            bash infra/scripts/credential-gate.sh
+          else
+            echo 'SKIP terraform-plan: provider credentials are reserved for trusted main pushes'
+            echo 'enabled=false' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Authenticate the plan identity
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_PLAN_SERVICE_ACCOUNT }}
+      - name: Install Google Cloud CLI
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          version: 585.0.0
+      - name: Plan main-preview with real providers
+        if: steps.credentials.outputs.enabled == 'true'
+        run: |
+          bash infra/scripts/install-tools.sh
+          bash infra/scripts/terraform-environment.sh main-preview plan
+
+  plan:
+    name: Cloud provider plan result
+    if: ${{ always() }}
+    needs: [cloud-provider-plan]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require the plan only on a permitted main push
+        env:
+          PLAN_RESULT: ${{ needs.cloud-provider-plan.result }}
+          PLAN_EXPECTED: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' }}
+        run: |
+          if [[ "$PLAN_EXPECTED" == true ]]; then
+            test "$PLAN_RESULT" = success
+          else
+            test "$PLAN_RESULT" = skipped
+            echo 'SKIP terraform-plan: requires main push after cloud cutover'
+          fi
+
+  site-lighthouse:
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+    name: Site Lighthouse
+    continue-on-error: false
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 60
+    steps:
+      - name: Check out the complete history
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache-dependency-path: package-lock.json
+      - name: Set up npm
+        run: npm install --global npm@11.21.0
+      - name: Install dependencies
+        run: npm ci
+      - name: Prepare the Playwright package cache
+        id: playwright_packages
+        continue-on-error: true
+        run: bash scripts/cloud/playwright-package-cache.sh prepare
+      - name: Cache Playwright package downloads
+        if: steps.playwright_packages.outputs.state != ''
+        continue-on-error: true
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ runner.temp }}/playwright-apt-archives
+          key: playwright-apt-v1-${{ runner.os }}-${{ runner.arch }}-ubuntu-${{ steps.playwright_packages.outputs.ubuntu }}-playwright-${{ steps.playwright_packages.outputs.playwright }}-${{ steps.playwright_packages.outputs.state }}
+      - name: Restore Playwright package downloads
+        if: steps.playwright_packages.outputs.state != ''
+        continue-on-error: true
+        run: bash scripts/cloud/playwright-package-cache.sh restore
+      - name: Install Chromium
+        run: npm exec --workspace @mokly-cloud/site -- playwright install --with-deps chromium
+      - name: Retain Playwright package downloads
+        if: steps.playwright_packages.outputs.state != ''
+        continue-on-error: true
+        run: bash scripts/cloud/playwright-package-cache.sh stage
+      - name: Select Chromium for Lighthouse
+        working-directory: apps/site
+        run: |
+          chrome_path=$(node scripts/chromium-path.mjs)
+          printf 'CHROME_PATH=%s\n' "$chrome_path" >> "$GITHUB_ENV"
+      - name: Set up Rust
+        run: rustup toolchain install
+      - name: Restore Rust build cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          shared-key: native-binary
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Build workspace packages
+        run: npm run build
+      - name: Build mockups and site
+        run: |
+          npm run mockups:build --workspace @mokly-cloud/mockups
+          npm run site:build
+      - name: Run Lighthouse budget
+        shell: bash
+        run: |
+          mkdir -p test-results/site-lighthouse
+          npm run site:lighthouse 2>&1 | tee test-results/site-lighthouse/report.txt
+      - name: Retain Lighthouse failure evidence
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: site-lighthouse
+          path: test-results/site-lighthouse/
+          if-no-files-found: warn
+          retention-days: 14
+
   required:
     name: Required CI
-    if: always()
+    if: ${{ always() }}
     needs:
       - profile
       - repository
@@ -337,6 +705,9 @@ jobs:
       - browser
       - native
       - static-delivery
+      - check
+      - images
+      - plan
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -362,6 +733,9 @@ jobs:
           BROWSER_RESULT: ${{ needs.browser.result }}
           NATIVE_RESULT: ${{ needs.native.result }}
           STATIC_DELIVERY_RESULT: ${{ needs.static-delivery.result }}
+          CHECK_RESULT: ${{ needs.check.result }}
+          IMAGE_RESULT: ${{ needs.images.result }}
+          PLAN_RESULT: ${{ needs.plan.result }}
         run: |
           test "$PROFILE_RESULT" = success
           test "$REPOSITORY_RESULT" = success
@@ -369,6 +743,9 @@ jobs:
           test "$BROWSER_RESULT" = success
           test "$NATIVE_RESULT" = success
           test "$STATIC_DELIVERY_RESULT" = success
+          test "$CHECK_RESULT" = success
+          test "$IMAGE_RESULT" = success
+          test "$PLAN_RESULT" = success
       - name: Require complete suite evidence
         env:
           EXPECTED_RUNTIMES: ${{ needs.profile.outputs.verification-runtimes }}

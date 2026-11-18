@@ -1,7 +1,5 @@
 # Repository Verification
 
-Status: The cloud CI jobs, the desktop release workflow tests, and the link check of the cloud Markdown outside `docs/` and `plans/` are not in this repository yet. The [combine plan](../../../plans/combine-mokly-cloud.md) adds them.
-
 This is the verification sub-contract of
 [Repository layout](./repository-layout.md).
 [CI verification](../ci-verification.md#cloud-suites) defines the cloud suites
@@ -99,10 +97,11 @@ because a wrong shard would skip tests in silence.
 
 ## CI Jobs
 
-Every CI job that does not run Electron sets `ELECTRON_SKIP_BINARY_DOWNLOAD=1`.
-The locked install then never downloads Electron where nothing runs it.
+The [CI workflow contract](../ci-workflow.md#job-execution) owns Electron
+download isolation. The [cloud workflow contract](../ci-workflow-cloud.md)
+owns the fork and cutover guards.
 
-On a trusted push to `main` with both workload identity names configured, CI
+On a trusted push to `main` after cutover with both workload identity names configured, CI
 also runs a real read-only Terraform plan. Without that configuration, the job
 prints an explicit skip reason. After a merge, the deploy workflow plans and
 applies each exact saved plan of a stable environment. An unauthenticated mock

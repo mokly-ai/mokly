@@ -7,9 +7,12 @@ use super::support::{Fixture, FixtureFactory, TemporaryFixtures, failure, succes
 fn prepare(fixture: &dyn Fixture) {
     fixture.tools();
     fixture.copy("tests/markdown_links.test.ts");
+    fixture.copy("tests/helpers/site_routes.ts");
     fixture.write("package.json", r#"{"type":"module"}"#);
     fixture.write("tests/helpers/fixture.ts", "import { fileURLToPath } from 'node:url';\nexport const repositoryRoot = fileURLToPath(new URL('../../', import.meta.url));\n");
     fixture.write("docs/protocol/target.md", "# Target\n");
+    fixture.write("apps/site/src/pages/index.astro", "");
+    fixture.write("apps/site/src/content/docs/start/fixture.md", "[site](/)\n");
     for number in 0..101 {
         fixture.write(
             &format!("docs/coverage-{number}.md"),

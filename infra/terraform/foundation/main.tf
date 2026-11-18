@@ -19,7 +19,11 @@ variable "owner_id" {
 }
 variable "repository" {
   type    = string
-  default = "mokly-ai/mokly-cloud"
+  default = "mokly-ai/mokly"
+}
+variable "legacy_repository_id" {
+  type    = string
+  default = ""
 }
 resource "google_project_service" "apis" {
   for_each           = toset(["cloudresourcemanager.googleapis.com", "compute.googleapis.com", "container.googleapis.com", "sqladmin.googleapis.com", "servicenetworking.googleapis.com", "secretmanager.googleapis.com", "artifactregistry.googleapis.com", "iam.googleapis.com", "iamcredentials.googleapis.com", "sts.googleapis.com", "logging.googleapis.com", "monitoring.googleapis.com"])
@@ -41,12 +45,13 @@ module "gke" {
   subnet_id  = module.network.subnet_id
 }
 module "github" {
-  source        = "../modules/github"
-  project       = var.project
-  repository_id = var.repository_id
-  owner_id      = var.owner_id
-  repository    = var.repository
-  depends_on    = [google_project_service.apis]
+  source               = "../modules/github"
+  project              = var.project
+  repository_id        = var.repository_id
+  owner_id             = var.owner_id
+  repository           = var.repository
+  legacy_repository_id = var.legacy_repository_id
+  depends_on           = [google_project_service.apis]
 }
 resource "google_artifact_registry_repository" "images" {
   project       = var.project

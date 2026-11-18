@@ -1,6 +1,6 @@
 # CI Workflow: Cloud Jobs
 
-Status: The cloud jobs and workflows are not in this repository yet. The [combine plan](../../plans/combine-mokly-cloud.md) moves them in.
+Status: Cloud delivery stays disabled until the operator cutover in the [combine plan](../../plans/combine-mokly-cloud.md).
 
 This continues the [CI workflow graph](./ci-workflow.md) for the jobs and the
 workflows of Mokly Cloud.
@@ -9,11 +9,49 @@ workflows of Mokly Cloud.
 
 The CI workflow runs the [cloud suites](./ci-verification.md#cloud-suites) in
 cloud jobs on Linux. [Required CI](./ci-workflow.md#required-ci) requires
-every cloud job. The Linux jobs build and test every crate. Each job that
+each partition, the image check and the provider-plan result. Linux builds
+and tests every crate. Each job that
 builds the `mkc-` crates provides `libpq`, and each job that runs their
 database tests provides Postgres. The native jobs on macOS and Windows leave
 out the `mkc-` crates, under the
 [native rule](./ci-verification.md#gate-ownership).
+
+The workspace partition runs cloud Rust, migrations, type checks, OpenAPI,
+fixtures, email templates, Terraform contracts, origin-router checks, Helm,
+and toolchain pins. Desktop, mockups, and site each have a partition. Four
+app partitions pass their shard to `cloud-app`. The image job runs
+`cloud-infrastructure`. Each partition uses the shared `cargo xtask check
+--suite` entry point. No workflow runs the removed cloud stage runner.
+
+Cloud workers use Node 24.21.0 and npm 11.21.0. Testboxes also retain Node
+22.15.0 for Mokly commands and report aggregation. The cloud worker selects
+its Node installation through `MOKLY_CLOUD_NODE_BIN` before it installs or
+runs a suite. It clears the Electron skip setting only for a desktop worker.
+
+Foundation can retain the old repository during cutover with
+`MKC_LEGACY_REPOSITORY_ID`. Its trust pairs each repository name with its own
+numeric ID and main workflow refs. An empty value trusts only this repository.
+
+## Cloud Testbox Tools
+
+The shared Testbox snapshot installs Chromium, Postgres 16 and `libpq`,
+e2fsprogs, and Xvfb. It starts Postgres with the local test role and database,
+and puts its server tools on `PATH`. It installs the pinned Terraform, Helm,
+BuildKit and crane tools, then starts layered BuildKit. These services and
+tools let cloud workers run the same strict suites as CI without provider
+credentials. Each cloud database suite creates its own disposable database.
+
+Lighthouse runs as a separate report job. It retains failures and does not
+block `Required CI`.
+
+## Provider Plan
+
+Only a push to `main` after cutover can start the credentialed CI plan.
+The job guard runs before secrets or an OIDC permission enter the job.
+An unconditional result job requires that plan to succeed when permitted.
+On other events it requires a skipped plan and prints the reason.
+`Required CI` requires this result job to succeed. Missing, failed, or
+cancelled plan evidence cannot pass as a permitted skip.
 
 ## Cloud Workflows
 
@@ -23,6 +61,8 @@ out the `mkc-` crates, under the
 - `.github/workflows/site.yml` deploys the site.
 - `.github/workflows/desktop-release.yml` packages and releases the desktop
   shell.
+- `.github/workflows/preview.yml` keeps the Mokly Pages previews and the cloud
+  preview lifecycle in one workflow.
 
 The cloud protocol docs under `docs/protocol/cloud/` define each workflow.
 
@@ -37,10 +77,25 @@ from branches of this repository. Production deploys keep their protection:
 only a push to the protected `main` branch or a manual dispatch from `main`
 runs them.
 
+Every cloud delivery job also requires repository variable
+`MKC_CLOUD_CUTOVER_ENABLED` to equal `true`. Until the operator sets it, no
+cloud plan, deploy, foundation apply, site deploy, desktop package or release,
+or preview lifecycle can start. This switch adds no approval environment.
+The preview release uses the existing `preview` environment. Production
+promotion still requires `MKC_PRODUCTION_ENABLED=true`.
+
+The cloud preview accepts `pull_request_target` events only from this
+repository. Its image and catalogue jobs run without secrets, credentials,
+or an environment. The credentialed release checks out trusted `main`
+scripts and consumes their artifacts. It cannot run on a fork event even
+when a preceding output claims that a deploy is requested.
+
 ## Release Please
 
 Release Please covers only the published packages. It keeps the cloud
 projects out of the changelog and out of the version bump.
+Dependency pins in cloud manifests follow the coordinated Mokly version;
+the cloud projects' own versions do not change.
 
 ## Related Docs
 

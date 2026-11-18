@@ -30,7 +30,7 @@ class CaptureTimingsTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(self.capture.npm_calls.exists())
         observed = self.capture.observed()
-        self.assertEqual(observed["arguments"], ["publish", "--strict", "--config", "mokly.config.json", "--repository", "github.com/mokly-ai/mokly-cloud", "--endpoint", observed["arguments"][7]])
+        self.assertEqual(observed["arguments"], ["publish", "--strict", "--config", "mokly.config.json", "--repository", "github.com/mokly-ai/mokly", "--endpoint", observed["arguments"][7]])
         self.assertRegex(observed["arguments"][7], r"^http://127[.]0[.]0[.]1:[1-9][0-9]*/$")
         self.assertNotIn("Capture timings: ", result.stdout)
         self.assertNotIn("[mokly:timing] ", result.stderr)
@@ -57,15 +57,16 @@ class CaptureTimingsTests(unittest.TestCase):
 
     def test_debug_flag_is_explicit_and_off_by_default(self):
         capture = load("capture-catalogue")
-        self.assertFalse(capture.parse_arguments(["--local", "--checkout", "."]).debug_timings)
-        self.assertTrue(capture.parse_arguments(["--local", "--checkout", ".", "--debug-timings"]).debug_timings)
+        arguments = ["--local", "--checkout", ".", "--repository", "mokly-ai/mokly"]
+        self.assertFalse(capture.parse_arguments(arguments).debug_timings)
+        self.assertTrue(capture.parse_arguments(arguments + ["--debug-timings"]).debug_timings)
 
     def test_pr_timing_capture_records_the_head_install_and_exact_flag_arguments(self):
         export = self.capture.export(self.capture.envelope())
         result = self.capture.run(export, debug_timings=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         observed = self.capture.observed()
-        self.assertEqual(observed["arguments"], ["publish", "--strict", "--config", "mokly.config.json", "--repository", "github.com/mokly-ai/mokly-cloud", "--endpoint", observed["arguments"][7], "--debug-timings"])
+        self.assertEqual(observed["arguments"], ["publish", "--strict", "--config", "mokly.config.json", "--repository", "github.com/mokly-ai/mokly", "--endpoint", observed["arguments"][7], "--debug-timings"])
         self.assertEqual(result.stderr, (FIXTURES / "mokly-publish-timings.stderr.txt").read_text())
         line = next(line for line in result.stdout.splitlines() if line.startswith("Capture timings: "))
         values = json.loads(line.removeprefix("Capture timings: "))
@@ -92,7 +93,7 @@ class CaptureTimingsTests(unittest.TestCase):
     def test_summary_reports_exact_phase_and_total_values_from_a_fake_clock(self):
         capture = load("capture-catalogue")
         configuration = capture.CaptureSettings(self.capture.checkout, self.capture.revision,
-            "feature/catalogue", 42, self.capture.revision)
+            "feature/catalogue", 42, self.capture.revision, "mokly-ai/mokly")
         envelope = self.capture.envelope()
 
         def exchange(_configuration, _local, directory, _debug):
@@ -106,6 +107,7 @@ class CaptureTimingsTests(unittest.TestCase):
             capture, "read_plan", return_value=SimpleNamespace(envelope=envelope, files=3, missing={})
         ), patch.object(capture.time, "monotonic", side_effect=[100.0, 110.0]), contextlib.redirect_stdout(output):
             result = capture.main(["preview-pr-42", "--checkout", str(self.capture.checkout),
+                                   "--repository", "mokly-ai/mokly",
                                    "--branch", "feature/catalogue", "--debug-timings"])
         self.assertEqual(result, 0)
         line = next(line for line in output.getvalue().splitlines() if line.startswith("Capture timings: "))

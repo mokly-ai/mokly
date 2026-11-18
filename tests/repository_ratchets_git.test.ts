@@ -52,6 +52,15 @@ test("unused-export ratchet rejects every JavaScript module extension", async (c
   const fixture = await createDivergedRepository();
   context.after(() => fs.rm(fixture.root, { force: true, recursive: true }));
 
+  const catalogue = path.join(
+    fixture.root,
+    "scripts/cloud/fixtures/catalogue/src/entries/smoke.mockup.tsx",
+  );
+  await fs.mkdir(path.dirname(catalogue), { recursive: true });
+  await fs.writeFile(catalogue, "export const discoveredScreen = {};\n");
+  const fixtureOnly = captureRatchets(fixture.root);
+  assert.equal(fixtureOnly.passed, true, fixtureOnly.output);
+
   for (const extension of ["js", "mjs", "cjs"]) {
     await context.test(extension, async () => {
       const relative = `scripts/new-unused.${extension}`;
@@ -71,6 +80,7 @@ test("unused-export ratchet rejects every JavaScript module extension", async (c
           "u",
         ),
       );
+      assert.doesNotMatch(result.output, /discoveredScreen/u);
       await fs.rm(absolute);
     });
   }

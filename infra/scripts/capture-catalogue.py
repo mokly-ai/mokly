@@ -23,11 +23,6 @@ from preview_lifecycle_core import PreviewInputError, preview_parts
 
 CATALOGUE = Path(".context/seed/catalogue")
 PUBLISH_TIMEOUT_SECONDS = 15 * 60
-REPOSITORY = {
-    "host": "github.com",
-    "owner": "mokly-ai",
-    "name": "mokly-cloud",
-}
 
 
 class CaptureError(ValueError):
@@ -43,6 +38,7 @@ class CaptureSettings:
     branch: str
     pull_request: Optional[int]
     base_sha: str
+    repository: str
 
 
 def run_git(checkout, *arguments):
@@ -75,6 +71,16 @@ def validate_branch(value):
     return value
 
 
+def validate_repository(value):
+    parts = value.split("/")
+    if len(parts) != 2 or any(
+        part in (".", "..") or not re.fullmatch(r"[A-Za-z0-9_.-]{1,255}", part)
+        for part in parts
+    ):
+        raise CaptureError("--repository must be a GitHub owner/name")
+    return value
+
+
 def settings(arguments, variables):
     checkout = Path(arguments.checkout).resolve()
     if not checkout.is_dir():
@@ -102,7 +108,8 @@ def settings(arguments, variables):
     base_sha = run_git(checkout, "merge-base", revision, "origin/main")
     if not valid_revision(base_sha):
         raise CaptureError("origin/main did not resolve to a merge base")
-    return CaptureSettings(checkout, revision, branch, pull_request, base_sha)
+    return CaptureSettings(checkout, revision, branch, pull_request, base_sha,
+                           validate_repository(arguments.repository))
 
 
 def run_command(command, checkout, label, variables=None):
@@ -165,7 +172,7 @@ def capture_exchange(configuration, local, directory, debug_timings=False):
                     "--config",
                     "mokly.config.json",
                     "--repository",
-                    "github.com/mokly-ai/mokly-cloud",
+                    "github.com/" + configuration.repository,
                     "--endpoint",
                     url,
                 ] + (["--debug-timings"] if debug_timings else []),
@@ -184,8 +191,9 @@ def require_envelope(envelope, expected):
     version = envelope.get("schemaVersion")
     if type(version) is not int or version != 3:
         raise CaptureError("mokly-upload.json schemaVersion must be 3")
+    owner, name = expected.repository.split("/")
     checks = {
-        "repository": REPOSITORY,
+        "repository": {"host": "github.com", "owner": owner, "name": name},
         "branch": expected.branch,
         "headSha": expected.revision,
         "configPath": "mokly.config.json",
@@ -218,6 +226,7 @@ def parse_arguments(values=None):
     parser.add_argument("environment", nargs="?")
     parser.add_argument("--local", action="store_true")
     parser.add_argument("--checkout", required=True)
+    parser.add_argument("--repository", required=True)
     parser.add_argument("--branch")
     parser.add_argument("--debug-timings", action="store_true")
     return parser.parse_args(values)

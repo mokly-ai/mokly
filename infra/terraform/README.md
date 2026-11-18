@@ -203,8 +203,9 @@ operator credentials, not a saved service-account JSON key.
 ```sh
 export MKC_REGION="${MKC_REGION:?}" MKC_STATE_BUCKET="${MKC_STATE_BUCKET:?}"
 export MKC_DOMAIN="${MKC_DOMAIN:?}" MKC_CLOUDFLARE_ZONE_ID="${MKC_CLOUDFLARE_ZONE_ID:?}"
-export MKC_REPOSITORY_ID="$(gh api repos/mokly-ai/mokly-cloud --jq '.id')"
-export MKC_REPOSITORY_OWNER_ID="$(gh api repos/mokly-ai/mokly-cloud --jq '.owner.id')"
+export MKC_REPOSITORY_ID="$(gh api repos/mokly-ai/mokly --jq '.id')"
+export MKC_REPOSITORY_OWNER_ID="$(gh api repos/mokly-ai/mokly --jq '.owner.id')"
+export MKC_LEGACY_REPOSITORY_ID="$(gh api repos/mokly-ai/mokly-cloud --jq '.id')"
 bash infra/scripts/terraform-foundation.sh plan
 # Review .context/plans/foundation/plan.txt.
 bash infra/scripts/terraform-foundation.sh apply
@@ -220,6 +221,13 @@ history: `plan` and `check` read `mkc-cloudflare-plan-token`, an operator
 from the Foundation workflow on `main`. `check` exits 2 when the plan has
 changes. CI passes only the region, state bucket, domain, zone ID and numeric
 repository and owner IDs, so commit any other variable value as its default.
+During repository cutover, `MKC_LEGACY_REPOSITORY_ID` retains the old cloud
+repository's numeric identity and its trusted main workflow refs. Set the same
+repository variable for Foundation CI. Remove it after the old repository stops
+deploying. An empty value trusts only `mokly-ai/mokly`. The provider pairs each
+repository name, numeric ID and workflow ref, under the shared owner ID. Repository-qualified
+binding keys and Terraform moves retain the existing cloud bindings when the
+public repository bindings are added.
 The foundation output supplies the GitHub provider resource name and the
 plan, apply, deploy, Postmark sync and foundation account emails. Configure
 those names as the GitHub secrets listed in

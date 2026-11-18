@@ -1,0 +1,1058 @@
+name: Deploy
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      reset:
+        description: Delete all br-main and production database data before release
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: deploy-main-promotion
+  cancel-in-progress: false
+env:
+  ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+
+jobs:
+  foundation-gate:
+    name: Wait for foundation
+    if: github.ref == 'refs/heads/main' && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 130
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Check out the trusted wait script
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Wait for the Foundation run of this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 infra/scripts/foundation-gate.py
+
+  build:
+    name: Build workload images
+    if: github.ref == 'refs/heads/main' && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Validate production promotion setting
+        env:
+          PRODUCTION_ENABLED: ${{ vars.MKC_PRODUCTION_ENABLED }}
+        run: |
+          case "$PRODUCTION_ENABLED" in
+            ''|false|true) ;;
+            *) echo 'MKC_PRODUCTION_ENABLED must be true, false or unset' >&2; exit 1 ;;
+          esac
+      - name: Check out trusted build tools
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Install BuildKit and crane
+        run: bash infra/scripts/install-build-tools.sh
+      - name: Start standalone BuildKit
+        run: bash infra/scripts/start-buildkit.sh
+      - name: Check out the requested revision
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: ${{ github.sha }}
+          path: source
+          persist-credentials: false
+      - name: Build workload images without cloud credentials
+        working-directory: source
+        env:
+          MKC_REVISION: ${{ github.sha }}
+          MKC_DOMAIN: ${{ vars.MKC_DOMAIN }}
+          MKC_CATALOGUE_BASE_DOMAIN: ${{ vars.MKC_CATALOGUE_BASE_DOMAIN }}
+        run: bash infra/scripts/build-release.sh main-preview production
+      - name: Transfer the built images
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: workload-images
+          path: source/.context/images/*.tar
+          retention-days: 1
+          if-no-files-found: error
+
+  publish:
+    name: Publish immutable workload images
+    if: github.ref == 'refs/heads/main' && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true'
+    needs: [build, foundation-gate]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      enabled: ${{ steps.credentials.outputs.enabled }}
+      image: ${{ steps.image.outputs.image }}
+      catalogue: ${{ steps.image.outputs.catalogue }}
+      app_main_preview: ${{ steps.image.outputs.app_main_preview }}
+      app_production: ${{ steps.image.outputs.app_production }}
+    env:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      MKC_REGION: ${{ vars.MKC_REGION }}
+      MKC_DOMAIN: ${{ vars.MKC_DOMAIN }}
+      MKC_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CLOUDFLARE_ZONE_ID }}
+      MKC_CATALOGUE_BASE_DOMAIN: ${{ vars.MKC_CATALOGUE_BASE_DOMAIN }}
+      MKC_CATALOGUE_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CATALOGUE_CLOUDFLARE_ZONE_ID }}
+      MKC_PREVIEW_INGRESS_IP: ${{ vars.MKC_PREVIEW_INGRESS_IP }}
+      MKC_PREVIEW_BLOBS_BUCKET: ${{ vars.MKC_PREVIEW_BLOBS_BUCKET }}
+      MKC_INGRESS_IPS: ${{ vars.MKC_INGRESS_IPS }}
+      MKC_NOTIFICATION_CHANNELS: ${{ vars.MKC_NOTIFICATION_CHANNELS }}
+      MKC_STATE_BUCKET: ${{ vars.MKC_STATE_BUCKET }}
+      MKC_POSTMARK_FROM: ${{ vars.MKC_POSTMARK_FROM }}
+      MKC_APP_CONFIG: ${{ vars.MKC_APP_CONFIG }}
+      MKC_CATALOGUE_CONFIG: ${{ vars.MKC_CATALOGUE_CONFIG }}
+      MKC_REVISION: ${{ github.sha }}
+    steps:
+      - name: Check out trusted release scripts
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Check cloud identity configuration
+        id: credentials
+        run: bash infra/scripts/credential-gate.sh
+      - name: Authenticate with workload identity
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - name: Install Google Cloud tools
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          version: 585.0.0
+      - name: Install pinned tools
+        if: steps.credentials.outputs.enabled == 'true'
+        run: bash infra/scripts/install-tools.sh
+      - name: Install pinned image tools
+        if: steps.credentials.outputs.enabled == 'true'
+        run: bash infra/scripts/install-build-tools.sh
+      - name: Download built image
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: workload-images
+          path: .context/images
+      - name: Push immutable digest
+        if: steps.credentials.outputs.enabled == 'true'
+        id: image
+        run: |
+          bash infra/scripts/push-images.sh main-preview production
+          echo "image=$(cat .context/api-image-ref.txt)" >> "$GITHUB_OUTPUT"
+          echo "catalogue=$(cat .context/catalogue-image-ref.txt)" >> "$GITHUB_OUTPUT"
+          echo "app_main_preview=$(cat .context/app-main-preview-image-ref.txt)" >> "$GITHUB_OUTPUT"
+          echo "app_production=$(cat .context/app-production-image-ref.txt)" >> "$GITHUB_OUTPUT"
+
+  origin-router:
+    name: Deploy origin router
+    if: github.ref == 'refs/heads/main' && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true'
+    needs: [build, foundation-gate]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      enabled: ${{ steps.credentials.outputs.enabled }}
+    env:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      MKC_DOMAIN: ${{ vars.MKC_DOMAIN }}
+      MKC_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CLOUDFLARE_ZONE_ID }}
+    steps:
+      - name: Check origin-router identity
+        id: credentials
+        run: |
+          if [[ -n ${GCP_WORKLOAD_IDENTITY_PROVIDER:-} && -n ${GCP_SERVICE_ACCOUNT:-} ]]; then
+            echo 'enabled=true' >> "$GITHUB_OUTPUT"
+          elif [[ -z ${GCP_WORKLOAD_IDENTITY_PROVIDER:-} && -z ${GCP_SERVICE_ACCOUNT:-} ]]; then
+            echo 'SKIP origin router: cloud identity is not configured'
+            echo 'enabled=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'Origin-router cloud identity is partially configured' >&2
+            exit 1
+          fi
+      - name: Check out the trusted Worker source
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Validate origin-router settings
+        if: steps.credentials.outputs.enabled == 'true'
+        run: |
+          [[ -n ${CLOUDFLARE_ACCOUNT_ID:-} && -n ${MKC_DOMAIN:-} && -n ${MKC_CLOUDFLARE_ZONE_ID:-} ]] || {
+            echo 'Origin-router account, domain and zone must be configured' >&2
+            exit 1
+          }
+      - name: Authenticate with workload identity
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - name: Install Google Cloud tools
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          version: 585.0.0
+      - name: Install Node
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache-dependency-path: package-lock.json
+      - name: Install npm
+        if: steps.credentials.outputs.enabled == 'true'
+        run: npm install --global npm@11.21.0
+      - name: Install locked dependencies
+        if: steps.credentials.outputs.enabled == 'true'
+        run: npm ci
+      - name: Render the zone-specific Wrangler configuration
+        if: steps.credentials.outputs.enabled == 'true'
+        run: npm run configure --workspace @mokly-cloud/worker
+      - name: Deploy the Worker script and routes
+        if: steps.credentials.outputs.enabled == 'true'
+        run: bash infra/scripts/deploy-origin-router.sh
+
+  preview-platform:
+    name: Install shared preview platform
+    needs: [publish, origin-router]
+    if: github.ref == 'refs/heads/main' && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && (needs.publish.outputs.enabled == 'true' && needs.origin-router.outputs.enabled == 'true')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      enabled: ${{ steps.credentials.outputs.enabled }}
+    env:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      MKC_REGION: ${{ vars.MKC_REGION }}
+      MKC_DOMAIN: ${{ vars.MKC_DOMAIN }}
+      MKC_CATALOGUE_BASE_DOMAIN: ${{ vars.MKC_CATALOGUE_BASE_DOMAIN }}
+      MKC_CATALOGUE_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CATALOGUE_CLOUDFLARE_ZONE_ID }}
+      MKC_PREVIEW_INGRESS_IP: ${{ vars.MKC_PREVIEW_INGRESS_IP }}
+      MKC_PREVIEW_BLOBS_BUCKET: ${{ vars.MKC_PREVIEW_BLOBS_BUCKET }}
+    steps:
+      - name: Check out trusted platform scripts
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Check cloud identity and preview configuration
+        id: credentials
+        run: bash infra/scripts/credential-gate.sh
+      - name: Authenticate with workload identity
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - name: Install Google Cloud and Kubernetes tools
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          version: 585.0.0
+          install_components: gke-gcloud-auth-plugin,kubectl
+      - name: Install pinned tools
+        if: steps.credentials.outputs.enabled == 'true'
+        run: bash infra/scripts/install-tools.sh
+      - name: Install and verify the shared platform
+        if: steps.credentials.outputs.enabled == 'true'
+        run: |
+          bash infra/scripts/preview-platform.sh
+          bash infra/scripts/preview-platform-ready.sh
+
+  plan-main-preview:
+    name: Plan main-preview infrastructure
+    needs: [publish, origin-router, preview-platform]
+    if: github.ref == 'refs/heads/main' && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && (needs.publish.outputs.enabled == 'true' && needs.origin-router.outputs.enabled == 'true' && needs.preview-platform.outputs.enabled == 'true')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      enabled: ${{ steps.credentials.outputs.enabled }}
+    env:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_PLAN_SERVICE_ACCOUNT }}
+      MKC_REGION: ${{ vars.MKC_REGION }}
+      MKC_DOMAIN: ${{ vars.MKC_DOMAIN }}
+      MKC_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CLOUDFLARE_ZONE_ID }}
+      MKC_CATALOGUE_BASE_DOMAIN: ${{ vars.MKC_CATALOGUE_BASE_DOMAIN }}
+      MKC_CATALOGUE_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CATALOGUE_CLOUDFLARE_ZONE_ID }}
+      MKC_INGRESS_IPS: ${{ vars.MKC_INGRESS_IPS }}
+      MKC_NOTIFICATION_CHANNELS: ${{ vars.MKC_NOTIFICATION_CHANNELS }}
+      MKC_STATE_BUCKET: ${{ vars.MKC_STATE_BUCKET }}
+      MKC_POSTMARK_FROM: ${{ vars.MKC_POSTMARK_FROM }}
+      MKC_APP_IMAGE: ${{ needs.publish.outputs.app_main_preview }}
+      MKC_CATALOGUE_IMAGE: ${{ needs.publish.outputs.catalogue }}
+      MKC_APP_CONFIG: ${{ vars.MKC_MAIN_PREVIEW_APP_CONFIG }}
+      MKC_CATALOGUE_CONFIG: ${{ vars.MKC_MAIN_PREVIEW_CATALOGUE_CONFIG }}
+      MKC_REVISION: ${{ github.sha }}
+      ENVIRONMENT: main-preview
+      MKC_API_IMAGE: ${{ needs.publish.outputs.image }}
+    steps:
+      - name: Check out trusted release scripts
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Check cloud identity configuration
+        id: credentials
+        run: bash infra/scripts/credential-gate.sh
+      - name: Authenticate with workload identity
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_PLAN_SERVICE_ACCOUNT }}
+      - name: Install Google Cloud tools
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          version: 585.0.0
+      - name: Install pinned tools
+        if: steps.credentials.outputs.enabled == 'true'
+        run: bash infra/scripts/install-tools.sh
+      - name: Save infrastructure plan and exact release values
+        if: steps.credentials.outputs.enabled == 'true'
+        run: |
+          mkdir -p ".context/plans/$ENVIRONMENT"
+          python3 infra/scripts/render-values.py "$ENVIRONMENT" > ".context/plans/$ENVIRONMENT/values.json"
+          bash infra/scripts/terraform-environment.sh "$ENVIRONMENT" plan
+      - name: Publish approved plan and release inputs
+        if: ${{ always() && steps.credentials.outputs.enabled == 'true' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: plan-main-preview
+          path: .context/plans/main-preview
+          if-no-files-found: error
+          retention-days: 7
+
+  apply-main-preview:
+    name: Apply main-preview infrastructure
+    needs: [plan-main-preview]
+    if: github.ref == 'refs/heads/main' && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && (needs.plan-main-preview.outputs.enabled == 'true')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      applied: ${{ steps.apply.outputs.applied }}
+    env:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_APPLY_SERVICE_ACCOUNT }}
+      MKC_REGION: ${{ vars.MKC_REGION }}
+      MKC_DOMAIN: ${{ vars.MKC_DOMAIN }}
+      MKC_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CLOUDFLARE_ZONE_ID }}
+      MKC_CATALOGUE_BASE_DOMAIN: ${{ vars.MKC_CATALOGUE_BASE_DOMAIN }}
+      MKC_CATALOGUE_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CATALOGUE_CLOUDFLARE_ZONE_ID }}
+      MKC_NOTIFICATION_CHANNELS: ${{ vars.MKC_NOTIFICATION_CHANNELS }}
+      MKC_STATE_BUCKET: ${{ vars.MKC_STATE_BUCKET }}
+      ENVIRONMENT: main-preview
+    steps:
+      - name: Check out trusted release scripts
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Check apply identity configuration
+        id: credentials
+        run: bash infra/scripts/credential-gate.sh
+      - name: Require the dedicated apply identity
+        if: steps.credentials.outputs.enabled != 'true'
+        run: echo 'GCP_APPLY_SERVICE_ACCOUNT must be configured before infrastructure can apply' >&2; exit 1
+      - name: Authenticate the apply identity
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_APPLY_SERVICE_ACCOUNT }}
+      - name: Install Google Cloud tools
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          version: 585.0.0
+      - name: Install pinned tools
+        if: steps.credentials.outputs.enabled == 'true'
+        run: bash infra/scripts/install-tools.sh
+      - name: Download the approved plan
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: plan-main-preview
+          path: .context/plans/main-preview
+      - name: Apply the exact saved plan
+        if: steps.credentials.outputs.enabled == 'true'
+        id: apply
+        run: |
+          bash infra/scripts/terraform-environment.sh "$ENVIRONMENT" apply
+          echo 'applied=true' >> "$GITHUB_OUTPUT"
+
+  sync-main-preview-email:
+    name: Sync main-preview Postmark templates
+    needs: [apply-main-preview]
+    if: github.ref == 'refs/heads/main' && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && (needs.apply-main-preview.outputs.applied == 'true')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_POSTMARK_SYNC_SERVICE_ACCOUNT }}
+    steps:
+      - name: Check out trusted email source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Install Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache-dependency-path: package-lock.json
+      - name: Install npm and locked dependencies
+        run: |
+          npm install --global npm@11.21.0
+          npm ci
+      - name: Check committed templates against the mockups
+        run: npm run emails:check
+      - name: Check dedicated sync identity
+        id: credentials
+        run: |
+          bash infra/scripts/credential-gate.sh
+          if [[ -z "$GCP_WORKLOAD_IDENTITY_PROVIDER" || -z "$GCP_SERVICE_ACCOUNT" ]]; then
+            echo 'GCP_POSTMARK_SYNC_SERVICE_ACCOUNT must be configured before Postmark sync' >&2
+            exit 1
+          fi
+      - name: Authenticate dedicated Postmark sync identity
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_POSTMARK_SYNC_SERVICE_ACCOUNT }}
+      - name: Install Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          version: 585.0.0
+      - name: Compare and sync main-preview templates
+        run: bash infra/scripts/sync-postmark-environment.sh main-preview
+
+  catalogue-main-preview:
+    name: Reconcile main-preview Stripe catalogue
+    needs: [plan-main-preview, apply-main-preview]
+    if: github.ref == 'refs/heads/main' && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && (needs.apply-main-preview.outputs.applied == 'true')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      completed: ${{ steps.billing.outputs.completed || steps.sync.outputs.completed }}
+    env:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      ENVIRONMENT: main-preview
+      MKC_RELEASE_VALUES: .context/plans/main-preview/values.json
+    steps:
+      - name: Check out trusted release scripts
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        with:
+          toolchain: 1.98.1
+      - name: Set up Rust
+        run: rustup toolchain install
+      - name: Restore Rust dependencies
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          key: catalogue-main-preview
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Validate the Stripe catalogue offline
+        run: cargo xtask stripe-catalogue check
+      - name: Check cloud identity configuration
+        id: credentials
+        run: bash infra/scripts/credential-gate.sh
+      - name: Download the reviewed release inputs
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: plan-main-preview
+          path: .context/plans/main-preview
+      - name: Read billing enablement
+        id: billing
+        run: |
+          billing_enabled="$(
+            python3 -c 'import json, sys; value = json.load(open(sys.argv[1], encoding="utf-8")).get("billing", {}).get("enabled"); isinstance(value, bool) or sys.exit("::error::Reviewed release values require boolean billing.enabled"); print(str(value).lower())' "$MKC_RELEASE_VALUES"
+          )"
+          echo "enabled=$billing_enabled" >> "$GITHUB_OUTPUT"
+          if [[ "$billing_enabled" == false ]]; then
+            echo "::notice::Stripe catalogue sync skipped for $ENVIRONMENT because billing is disabled"
+            echo 'completed=true' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Authenticate with workload identity
+        if: steps.credentials.outputs.enabled == 'true' && steps.billing.outputs.enabled == 'true'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - name: Install Google Cloud tools
+        if: steps.credentials.outputs.enabled == 'true' && steps.billing.outputs.enabled == 'true'
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          version: 585.0.0
+      - name: Reconcile the Stripe catalogue
+        if: steps.credentials.outputs.enabled == 'true' && steps.billing.outputs.enabled == 'true'
+        id: sync
+        env:
+          STRIPE_CATALOGUE_SECRET: mkc-main-preview-stripe-catalogue-key
+        run: |
+          if ! stripe_catalogue_key="$(gcloud secrets versions access latest --project=mokly-508518 --secret="$STRIPE_CATALOGUE_SECRET")"; then
+            echo "::error::Unable to read $STRIPE_CATALOGUE_SECRET for $ENVIRONMENT" >&2
+            exit 1
+          fi
+          echo "::add-mask::$stripe_catalogue_key"
+          if [[ -z "$stripe_catalogue_key" ]]; then
+            echo "::error::$STRIPE_CATALOGUE_SECRET has no readable value for $ENVIRONMENT" >&2
+            exit 1
+          fi
+          MKC_STRIPE_CATALOGUE_KEY="$stripe_catalogue_key" cargo xtask stripe-catalogue sync --environment "$ENVIRONMENT" --apply
+          echo 'completed=true' >> "$GITHUB_OUTPUT"
+
+  release-main-preview:
+    name: Deploy main-preview workloads
+    needs: [apply-main-preview, catalogue-main-preview, sync-main-preview-email]
+    if: github.ref == 'refs/heads/main' && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && (needs.apply-main-preview.outputs.applied == 'true' && needs.catalogue-main-preview.outputs.completed == 'true')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    concurrency:
+      group: deploy-main-preview
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      deployed: ${{ steps.rollout.outputs.deployed }}
+    env:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      MKC_REGION: ${{ vars.MKC_REGION }}
+      MKC_DOMAIN: ${{ vars.MKC_DOMAIN }}
+      MKC_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CLOUDFLARE_ZONE_ID }}
+      MKC_CATALOGUE_BASE_DOMAIN: ${{ vars.MKC_CATALOGUE_BASE_DOMAIN }}
+      MKC_CATALOGUE_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CATALOGUE_CLOUDFLARE_ZONE_ID }}
+      MKC_INGRESS_IPS: ${{ vars.MKC_INGRESS_IPS }}
+      MKC_NOTIFICATION_CHANNELS: ${{ vars.MKC_NOTIFICATION_CHANNELS }}
+      MKC_STATE_BUCKET: ${{ vars.MKC_STATE_BUCKET }}
+      MKC_POSTMARK_FROM: ${{ vars.MKC_POSTMARK_FROM }}
+      MKC_APP_CONFIG: ${{ vars.MKC_APP_CONFIG }}
+      MKC_CATALOGUE_CONFIG: ${{ vars.MKC_CATALOGUE_CONFIG }}
+      MKC_REVISION: ${{ github.sha }}
+      ENVIRONMENT: main-preview
+      MKC_RELEASE_VALUES: .context/plans/main-preview/values.json
+      RESET_RELEASE: ${{ inputs.reset }}
+    steps:
+      - name: Check out trusted release scripts
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Check cloud identity configuration
+        id: credentials
+        run: bash infra/scripts/credential-gate.sh
+      - name: Authenticate with workload identity
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - name: Install Google Cloud tools
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          version: 585.0.0
+          install_components: gke-gcloud-auth-plugin,kubectl
+      - name: Install pinned tools
+        if: steps.credentials.outputs.enabled == 'true'
+        run: bash infra/scripts/install-tools.sh
+      - name: Download the reviewed release inputs
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: plan-main-preview
+          path: .context/plans/main-preview
+      - name: Deploy workloads and require smoke success
+        if: steps.credentials.outputs.enabled == 'true'
+        id: rollout
+        run: |
+          bash infra/scripts/rollout.sh "$ENVIRONMENT"
+          echo 'deployed=true' >> "$GITHUB_OUTPUT"
+      - name: Retain smoke evidence
+        if: ${{ always() && steps.credentials.outputs.enabled == 'true' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: smoke-main-preview
+          path: .context/deployment-smoke.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  plan-production:
+    name: Plan production infrastructure
+    needs: [publish, release-main-preview]
+    if: github.ref == 'refs/heads/main' && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && (needs.release-main-preview.outputs.deployed == 'true' && vars.MKC_PRODUCTION_ENABLED == 'true')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      enabled: ${{ steps.credentials.outputs.enabled }}
+    env:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_PLAN_SERVICE_ACCOUNT }}
+      MKC_REGION: ${{ vars.MKC_REGION }}
+      MKC_DOMAIN: ${{ vars.MKC_DOMAIN }}
+      MKC_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CLOUDFLARE_ZONE_ID }}
+      MKC_CATALOGUE_BASE_DOMAIN: ${{ vars.MKC_CATALOGUE_BASE_DOMAIN }}
+      MKC_CATALOGUE_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CATALOGUE_CLOUDFLARE_ZONE_ID }}
+      MKC_INGRESS_IPS: ${{ vars.MKC_INGRESS_IPS }}
+      MKC_NOTIFICATION_CHANNELS: ${{ vars.MKC_NOTIFICATION_CHANNELS }}
+      MKC_STATE_BUCKET: ${{ vars.MKC_STATE_BUCKET }}
+      MKC_POSTMARK_FROM: ${{ vars.MKC_POSTMARK_FROM }}
+      MKC_APP_IMAGE: ${{ needs.publish.outputs.app_production }}
+      MKC_CATALOGUE_IMAGE: ${{ needs.publish.outputs.catalogue }}
+      MKC_APP_CONFIG: ${{ vars.MKC_PRODUCTION_APP_CONFIG }}
+      MKC_CATALOGUE_CONFIG: ${{ vars.MKC_PRODUCTION_CATALOGUE_CONFIG }}
+      MKC_REVISION: ${{ github.sha }}
+      ENVIRONMENT: production
+      MKC_API_IMAGE: ${{ needs.publish.outputs.image }}
+    steps:
+      - name: Check out trusted release scripts
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Check cloud identity configuration
+        id: credentials
+        run: bash infra/scripts/credential-gate.sh
+      - name: Authenticate with workload identity
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_PLAN_SERVICE_ACCOUNT }}
+      - name: Install Google Cloud tools
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          version: 585.0.0
+      - name: Install pinned tools
+        if: steps.credentials.outputs.enabled == 'true'
+        run: bash infra/scripts/install-tools.sh
+      - name: Save infrastructure plan and exact release values
+        if: steps.credentials.outputs.enabled == 'true'
+        run: |
+          mkdir -p ".context/plans/$ENVIRONMENT"
+          python3 infra/scripts/render-values.py "$ENVIRONMENT" > ".context/plans/$ENVIRONMENT/values.json"
+          bash infra/scripts/terraform-environment.sh "$ENVIRONMENT" plan
+      - name: Publish production release inputs
+        if: ${{ always() && steps.credentials.outputs.enabled == 'true' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: plan-production
+          path: .context/plans/production
+          if-no-files-found: error
+          retention-days: 7
+
+  apply-production:
+    name: Apply production infrastructure
+    needs: [plan-production]
+    if: github.ref == 'refs/heads/main' && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && (needs.plan-production.outputs.enabled == 'true')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      applied: ${{ steps.apply.outputs.applied }}
+    env:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_APPLY_SERVICE_ACCOUNT }}
+      MKC_REGION: ${{ vars.MKC_REGION }}
+      MKC_DOMAIN: ${{ vars.MKC_DOMAIN }}
+      MKC_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CLOUDFLARE_ZONE_ID }}
+      MKC_CATALOGUE_BASE_DOMAIN: ${{ vars.MKC_CATALOGUE_BASE_DOMAIN }}
+      MKC_CATALOGUE_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CATALOGUE_CLOUDFLARE_ZONE_ID }}
+      MKC_NOTIFICATION_CHANNELS: ${{ vars.MKC_NOTIFICATION_CHANNELS }}
+      MKC_STATE_BUCKET: ${{ vars.MKC_STATE_BUCKET }}
+      ENVIRONMENT: production
+    steps:
+      - name: Check out trusted release scripts
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Check apply identity configuration
+        id: credentials
+        run: bash infra/scripts/credential-gate.sh
+      - name: Require the dedicated apply identity
+        if: steps.credentials.outputs.enabled != 'true'
+        run: echo 'GCP_APPLY_SERVICE_ACCOUNT must be configured before infrastructure can apply' >&2; exit 1
+      - name: Authenticate the apply identity
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_APPLY_SERVICE_ACCOUNT }}
+      - name: Install Google Cloud tools
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          version: 585.0.0
+      - name: Install pinned tools
+        if: steps.credentials.outputs.enabled == 'true'
+        run: bash infra/scripts/install-tools.sh
+      - name: Download the approved plan
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: plan-production
+          path: .context/plans/production
+      - name: Apply the exact saved plan
+        if: steps.credentials.outputs.enabled == 'true'
+        id: apply
+        run: |
+          bash infra/scripts/terraform-environment.sh "$ENVIRONMENT" apply
+          echo 'applied=true' >> "$GITHUB_OUTPUT"
+
+  sync-production-email:
+    name: Sync production Postmark templates
+    needs: [apply-production]
+    if: github.ref == 'refs/heads/main' && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && (needs.apply-production.outputs.applied == 'true')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_POSTMARK_SYNC_SERVICE_ACCOUNT }}
+    steps:
+      - name: Check out trusted email source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Install Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache-dependency-path: package-lock.json
+      - name: Install npm and locked dependencies
+        run: |
+          npm install --global npm@11.21.0
+          npm ci
+      - name: Check committed templates against the mockups
+        run: npm run emails:check
+      - name: Check dedicated sync identity
+        id: credentials
+        run: |
+          bash infra/scripts/credential-gate.sh
+          if [[ -z "$GCP_WORKLOAD_IDENTITY_PROVIDER" || -z "$GCP_SERVICE_ACCOUNT" ]]; then
+            echo 'GCP_POSTMARK_SYNC_SERVICE_ACCOUNT must be configured before Postmark sync' >&2
+            exit 1
+          fi
+      - name: Authenticate dedicated Postmark sync identity
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_POSTMARK_SYNC_SERVICE_ACCOUNT }}
+      - name: Install Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          version: 585.0.0
+      - name: Compare and sync production templates
+        run: bash infra/scripts/sync-postmark-environment.sh production
+
+  catalogue-production:
+    name: Reconcile production Stripe catalogue
+    needs: [plan-production, apply-production]
+    if: github.ref == 'refs/heads/main' && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && (needs.apply-production.outputs.applied == 'true')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      completed: ${{ steps.billing.outputs.completed || steps.sync.outputs.completed }}
+    env:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      ENVIRONMENT: production
+      MKC_RELEASE_VALUES: .context/plans/production/values.json
+    steps:
+      - name: Check out trusted release scripts
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        with:
+          toolchain: 1.98.1
+      - name: Set up Rust
+        run: rustup toolchain install
+      - name: Restore Rust dependencies
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          key: catalogue-production
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Validate the Stripe catalogue offline
+        run: cargo xtask stripe-catalogue check
+      - name: Check cloud identity configuration
+        id: credentials
+        run: bash infra/scripts/credential-gate.sh
+      - name: Download the reviewed release inputs
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: plan-production
+          path: .context/plans/production
+      - name: Read billing enablement
+        id: billing
+        run: |
+          billing_enabled="$(
+            python3 -c 'import json, sys; value = json.load(open(sys.argv[1], encoding="utf-8")).get("billing", {}).get("enabled"); isinstance(value, bool) or sys.exit("::error::Reviewed release values require boolean billing.enabled"); print(str(value).lower())' "$MKC_RELEASE_VALUES"
+          )"
+          echo "enabled=$billing_enabled" >> "$GITHUB_OUTPUT"
+          if [[ "$billing_enabled" == false ]]; then
+            echo "::notice::Stripe catalogue sync skipped for $ENVIRONMENT because billing is disabled"
+            echo 'completed=true' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Authenticate with workload identity
+        if: steps.credentials.outputs.enabled == 'true' && steps.billing.outputs.enabled == 'true'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - name: Install Google Cloud tools
+        if: steps.credentials.outputs.enabled == 'true' && steps.billing.outputs.enabled == 'true'
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          version: 585.0.0
+      - name: Reconcile the Stripe catalogue
+        if: steps.credentials.outputs.enabled == 'true' && steps.billing.outputs.enabled == 'true'
+        id: sync
+        env:
+          STRIPE_CATALOGUE_SECRET: mkc-production-stripe-catalogue-key
+        run: |
+          if ! stripe_catalogue_key="$(gcloud secrets versions access latest --project=mokly-508518 --secret="$STRIPE_CATALOGUE_SECRET")"; then
+            echo "::error::Unable to read $STRIPE_CATALOGUE_SECRET for $ENVIRONMENT" >&2
+            exit 1
+          fi
+          echo "::add-mask::$stripe_catalogue_key"
+          if [[ -z "$stripe_catalogue_key" ]]; then
+            echo "::error::$STRIPE_CATALOGUE_SECRET has no readable value for $ENVIRONMENT" >&2
+            exit 1
+          fi
+          MKC_STRIPE_CATALOGUE_KEY="$stripe_catalogue_key" cargo xtask stripe-catalogue sync --environment "$ENVIRONMENT" --apply
+          echo 'completed=true' >> "$GITHUB_OUTPUT"
+
+  release-production:
+    name: Deploy production workloads
+    needs:
+      [
+        release-main-preview,
+        apply-production,
+        catalogue-production,
+        sync-production-email,
+      ]
+    if: github.ref == 'refs/heads/main' && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && (needs.apply-production.outputs.applied == 'true' && needs.catalogue-production.outputs.completed == 'true')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      deployed: ${{ steps.rollout.outputs.deployed }}
+    env:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      MKC_REGION: ${{ vars.MKC_REGION }}
+      MKC_DOMAIN: ${{ vars.MKC_DOMAIN }}
+      MKC_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CLOUDFLARE_ZONE_ID }}
+      MKC_CATALOGUE_BASE_DOMAIN: ${{ vars.MKC_CATALOGUE_BASE_DOMAIN }}
+      MKC_CATALOGUE_CLOUDFLARE_ZONE_ID: ${{ vars.MKC_CATALOGUE_CLOUDFLARE_ZONE_ID }}
+      MKC_INGRESS_IPS: ${{ vars.MKC_INGRESS_IPS }}
+      MKC_NOTIFICATION_CHANNELS: ${{ vars.MKC_NOTIFICATION_CHANNELS }}
+      MKC_STATE_BUCKET: ${{ vars.MKC_STATE_BUCKET }}
+      MKC_POSTMARK_FROM: ${{ vars.MKC_POSTMARK_FROM }}
+      MKC_APP_CONFIG: ${{ vars.MKC_APP_CONFIG }}
+      MKC_CATALOGUE_CONFIG: ${{ vars.MKC_CATALOGUE_CONFIG }}
+      MKC_REVISION: ${{ github.sha }}
+      ENVIRONMENT: production
+      MKC_RELEASE_VALUES: .context/plans/production/values.json
+      RESET_RELEASE: ${{ inputs.reset }}
+    steps:
+      - name: Check out trusted release scripts
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Check cloud identity configuration
+        id: credentials
+        run: bash infra/scripts/credential-gate.sh
+      - name: Authenticate with workload identity
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - name: Install Google Cloud tools
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          version: 585.0.0
+          install_components: gke-gcloud-auth-plugin,kubectl
+      - name: Install pinned tools
+        if: steps.credentials.outputs.enabled == 'true'
+        run: bash infra/scripts/install-tools.sh
+      - name: Download production release inputs
+        if: steps.credentials.outputs.enabled == 'true'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: plan-production
+          path: .context/plans/production
+      - name: Deploy workloads and require smoke success
+        if: steps.credentials.outputs.enabled == 'true'
+        id: rollout
+        run: |
+          bash infra/scripts/rollout.sh "$ENVIRONMENT"
+          echo 'deployed=true' >> "$GITHUB_OUTPUT"
+      - name: Retain smoke evidence
+        if: ${{ always() && steps.credentials.outputs.enabled == 'true' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: smoke-production
+          path: .context/deployment-smoke.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  required:
+    name: Deployment required
+    if: ${{ always() }}
+    needs:
+      [
+        foundation-gate,
+        build,
+        publish,
+        origin-router,
+        preview-platform,
+        plan-main-preview,
+        apply-main-preview,
+        sync-main-preview-email,
+        catalogue-main-preview,
+        release-main-preview,
+        plan-production,
+        apply-production,
+        sync-production-email,
+        catalogue-production,
+        release-production,
+      ]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require the complete promotion chain
+        env:
+          FOUNDATION_GATE_RESULT: ${{ needs.foundation-gate.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          PUBLISH_RESULT: ${{ needs.publish.result }}
+          ORIGIN_ROUTER_RESULT: ${{ needs.origin-router.result }}
+          ORIGIN_ROUTER_ENABLED: ${{ needs.origin-router.outputs.enabled }}
+          PLATFORM_RESULT: ${{ needs.preview-platform.result }}
+          PLATFORM_ENABLED: ${{ needs.preview-platform.outputs.enabled }}
+          ENABLED: ${{ needs.publish.outputs.enabled }}
+          PREVIEW_PLAN: ${{ needs.plan-main-preview.result }}
+          PREVIEW_APPLY: ${{ needs.apply-main-preview.result }}
+          PREVIEW_APPLIED: ${{ needs.apply-main-preview.outputs.applied }}
+          PREVIEW_EMAIL: ${{ needs.sync-main-preview-email.result }}
+          PREVIEW_CATALOGUE: ${{ needs.catalogue-main-preview.result }}
+          PREVIEW_CATALOGUE_COMPLETED: ${{ needs.catalogue-main-preview.outputs.completed }}
+          PREVIEW_RELEASE: ${{ needs.release-main-preview.result }}
+          PREVIEW_DEPLOYED: ${{ needs.release-main-preview.outputs.deployed }}
+          PRODUCTION_ENABLED: ${{ vars.MKC_PRODUCTION_ENABLED }}
+          PRODUCTION_PLAN: ${{ needs.plan-production.result }}
+          PRODUCTION_APPLY: ${{ needs.apply-production.result }}
+          PRODUCTION_APPLIED: ${{ needs.apply-production.outputs.applied }}
+          PRODUCTION_EMAIL: ${{ needs.sync-production-email.result }}
+          PRODUCTION_CATALOGUE: ${{ needs.catalogue-production.result }}
+          PRODUCTION_CATALOGUE_COMPLETED: ${{ needs.catalogue-production.outputs.completed }}
+          PRODUCTION_RELEASE: ${{ needs.release-production.result }}
+          DEPLOYED: ${{ needs.release-production.outputs.deployed }}
+        run: |
+          case "$PRODUCTION_ENABLED" in
+            ''|false|true) ;;
+            *) echo 'MKC_PRODUCTION_ENABLED must be true, false or unset' >&2; exit 1 ;;
+          esac
+          test "$FOUNDATION_GATE_RESULT" = success
+          test "$BUILD_RESULT" = success
+          test "$PUBLISH_RESULT" = success
+          test "$ORIGIN_ROUTER_RESULT" = success
+          if [[ "$ENABLED" == true ]]; then
+            test "$ORIGIN_ROUTER_ENABLED" = true
+            test "$PLATFORM_RESULT" = success
+            test "$PLATFORM_ENABLED" = true
+            test "$PREVIEW_PLAN" = success
+            test "$PREVIEW_APPLY" = success
+            test "$PREVIEW_APPLIED" = true
+            test "$PREVIEW_EMAIL" = success
+            test "$PREVIEW_CATALOGUE" = success
+            test "$PREVIEW_CATALOGUE_COMPLETED" = true
+            test "$PREVIEW_RELEASE" = success
+            test "$PREVIEW_DEPLOYED" = true
+            if [[ "$PRODUCTION_ENABLED" == true ]]; then
+              test "$PRODUCTION_PLAN" = success
+              test "$PRODUCTION_APPLY" = success
+              test "$PRODUCTION_APPLIED" = true
+              test "$PRODUCTION_EMAIL" = success
+              test "$PRODUCTION_CATALOGUE" = success
+              test "$PRODUCTION_CATALOGUE_COMPLETED" = true
+              test "$PRODUCTION_RELEASE" = success
+              test "$DEPLOYED" = true
+            else
+              test "$PRODUCTION_PLAN" = skipped
+              test "$PRODUCTION_APPLY" = skipped
+              test "$PRODUCTION_EMAIL" = skipped
+              test "$PRODUCTION_CATALOGUE" = skipped
+              test "$PRODUCTION_RELEASE" = skipped
+              echo 'Main-preview deployed; production promotion is disabled (MKC_PRODUCTION_ENABLED)'
+            fi
+          else
+            if [[ "$ORIGIN_ROUTER_ENABLED" == false ]]; then
+              echo 'SKIP origin router: Cloudflare Worker deployment is not configured'
+            fi
+            test "$PLATFORM_RESULT" = skipped
+            test "$PREVIEW_PLAN" = skipped
+            test "$PREVIEW_APPLY" = skipped
+            test "$PREVIEW_EMAIL" = skipped
+            test "$PREVIEW_CATALOGUE" = skipped
+            test "$PREVIEW_RELEASE" = skipped
+            test "$PRODUCTION_PLAN" = skipped
+            test "$PRODUCTION_APPLY" = skipped
+            test "$PRODUCTION_EMAIL" = skipped
+            test "$PRODUCTION_CATALOGUE" = skipped
+            test "$PRODUCTION_RELEASE" = skipped
+            echo 'SKIP rollout: cloud identity is not configured; no environment deployed'
+          fi

@@ -129,7 +129,7 @@ class CaptureHarness:
             "repository": {
                 "host": "github.com",
                 "owner": "mokly-ai",
-                "name": "mokly-cloud",
+                "name": "mokly",
             },
             "branch": "feature/catalogue",
             "headSha": self.revision,
@@ -190,12 +190,14 @@ class CaptureHarness:
         environment="preview-pr-42",
         branch="feature/catalogue",
         revision=None,
+        repository="mokly-ai/mokly",
         timeout=30,
     ):
         self.observation.unlink(missing_ok=True)
         self.bearer.unlink(missing_ok=True)
         self.npm_calls.unlink(missing_ok=True)
         command = [sys.executable, str(SCRIPT)]
+        command.extend(["--repository", repository])
         if local:
             command.extend(["--local", "--checkout", str(self.checkout)])
         else:
@@ -215,6 +217,7 @@ class CaptureHarness:
             MKC_CAPTURE_TEST_OBSERVATION=str(self.observation),
             MKC_CAPTURE_TEST_BEARER=str(self.bearer),
             MKC_CAPTURE_TEST_NPM=str(self.npm_calls),
+            MKC_CAPTURE_TEST_REPOSITORY="github.com/" + repository,
             GITHUB_ACTIONS="untrusted-parent-value",
             GITHUB_HEAD_REF="untrusted-parent-value",
             GITHUB_REF="untrusted-parent-value",

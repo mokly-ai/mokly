@@ -17,7 +17,7 @@ terraform_root() {
   mkdir -p "$plan_directory"
   chmod 700 "$plan_directory"
   if [[ "${GITHUB_ACTIONS:-false}" == true && "$action" == apply ]]; then
-    [[ "${GITHUB_EVENT_NAME:-}" =~ ^(push|workflow_dispatch)$ && "${GITHUB_REF:-}" == refs/heads/main && "${GITHUB_WORKFLOW_REF:-}" == "mokly-ai/mokly-cloud/.github/workflows/$trusted_workflow@refs/heads/main" ]] || {
+    [[ "${GITHUB_EVENT_NAME:-}" =~ ^(push|workflow_dispatch)$ && "${GITHUB_REF:-}" == refs/heads/main && "${GITHUB_WORKFLOW_REF:-}" == "mokly-ai/mokly/.github/workflows/$trusted_workflow@refs/heads/main" ]] || {
       echo "CI apply requires the trusted ${trusted_workflow%.yml} workflow on main" >&2
       exit 1
     }

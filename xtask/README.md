@@ -127,6 +127,8 @@ The Native suite selects only Mokly crates and xtask on every host.
 Seven remote cloud workers cover Rust and desktop, four app shards, web,
 and infrastructure. Each worker attempts every assigned suite and reports
 each failure. The [remote guide](remote/README.md#remote-runs) lists the groups.
+Cloud workers select the Node installation in `MOKLY_CLOUD_NODE_BIN`.
+The Testbox keeps the separate Mokly Node installation for report commands.
 
 `toolchain-pins` reads the cloud toolchain protocol and compares installed
 versions. It checks that the root Node range includes the cloud Node pin.
@@ -320,6 +322,9 @@ code.
 - [`scripts/strict-command.mjs`](./scripts/strict-command.mjs) streams cloud
   commands and rejects reported test skips. [`scripts/testbox-cloud.mjs`](./scripts/testbox-cloud.mjs)
   validates the remote source fingerprint and attempts every cloud suite.
+- [`tests/cli/mod.rs`](./tests/cli/mod.rs) registers cloud CLI and workflow
+  integration tests. The two preview-comment tests that use the cloud domain
+  constant live in [`mkc-domain`](../crates/mkc-domain/tests/preview_workflow_comments.rs).
 - [`src/rust_file_length.rs`](./src/rust_file_length.rs) is the Rust
   file-length auditor. [`src/command/mod.rs`](./src/command/mod.rs) defines the
   injected command-runner boundary, and

@@ -14,14 +14,14 @@ test("Lighthouse uses the workspace tools and retains a failing report", async (
   const job = ci.jobs["site-lighthouse"];
   assert.ok(job);
   assert.equal(job["continue-on-error"], false);
-  assert.equal(job["runs-on"], "blacksmith-2vcpu-ubuntu-2404");
+  assert.equal(job["runs-on"], "blacksmith-4vcpu-ubuntu-2404");
   assert.equal(
     workflowStep(job, "Set up Node.js").with?.["node-version-file"],
     ".nvmrc",
   );
   assert.equal(
     workflowStep(job, "Set up npm").run,
-    "npm install --global npm@11.11.0",
+    "npm install --global npm@11.21.0",
   );
   assert.equal(workflowStep(job, "Install dependencies").run, "npm ci");
   assert.equal(
@@ -61,11 +61,27 @@ test("Lighthouse uses the workspace tools and retains a failing report", async (
 
 test("required CI remains independent of report-only Lighthouse", async (t) => {
   const required = ci.jobs.required!;
-  assert.equal(required.name, "required");
+  assert.equal(required.name, "Required CI");
   assert.equal(required.if, "${{ always() }}");
-  assert.deepEqual(required.needs, ["check", "images", "plan"]);
-  const step = workflowStep(required, "Require every check to pass");
+  assert.deepEqual(required.needs, [
+    "profile",
+    "repository",
+    "viewer",
+    "browser",
+    "native",
+    "static-delivery",
+    "check",
+    "images",
+    "plan",
+  ]);
+  const step = workflowStep(required, "Require every verification job");
   assert.deepEqual(step.env, {
+    PROFILE_RESULT: "${{ needs.profile.result }}",
+    REPOSITORY_RESULT: "${{ needs.repository.result }}",
+    VIEWER_RESULT: "${{ needs.viewer.result }}",
+    BROWSER_RESULT: "${{ needs.browser.result }}",
+    NATIVE_RESULT: "${{ needs.native.result }}",
+    STATIC_DELIVERY_RESULT: "${{ needs.static-delivery.result }}",
     CHECK_RESULT: "${{ needs.check.result }}",
     IMAGE_RESULT: "${{ needs.images.result }}",
     PLAN_RESULT: "${{ needs.plan.result }}",

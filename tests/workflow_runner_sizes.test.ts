@@ -34,6 +34,9 @@ const LARGER_LINUX_RUNNERS: Readonly<Record<string, string>> = {
   "ci.yml:repository": "blacksmith-4vcpu-ubuntu-2404",
   "ci.yml:viewer": "blacksmith-4vcpu-ubuntu-2404",
   "ci.yml:browser": "blacksmith-4vcpu-ubuntu-2404",
+  "ci.yml:check": "blacksmith-4vcpu-ubuntu-2404",
+  "ci.yml:images": "blacksmith-4vcpu-ubuntu-2404",
+  "ci.yml:site-lighthouse": "blacksmith-4vcpu-ubuntu-2404",
   "ci.yml:static-delivery": "blacksmith-4vcpu-ubuntu-2404",
   "blacksmith-testbox.yml:testbox": "blacksmith-4vcpu-ubuntu-2404",
 };

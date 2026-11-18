@@ -1,7 +1,5 @@
 # CI Workflow Graph
 
-Status: The cloud jobs and the narrower native jobs are not in place yet. The [combine plan](../../plans/combine-mokly-cloud.md) adds them.
-
 ## Workflow Boundary
 
 `.github/workflows/ci.yml` runs on pull requests, pushes to `main`, and manual
@@ -117,6 +115,10 @@ cache key. The
 and [cache and security semantics](./ci-verification-security.md#dependency-cache-and-security)
 own these boundaries.
 
+Every CI job that does not run Electron sets
+`ELECTRON_SKIP_BINARY_DOWNLOAD=1`. Its install does not download Electron.
+The cloud desktop partition clears that setting and caches the binary.
+
 Make every lockfile change with the pinned npm. The pin must stay at npm 11.11.0
 or newer: older versions drop the lockfile's `libc` fields, which select the
 glibc or musl build of a native package
@@ -171,7 +173,9 @@ The stable `Required CI` branch-rule status uses `if: always()` and fails closed
 unless every prerequisite result is exactly `success`. It validates the report
 aggregate against the runtime profile job's selection: five
 viewer and browser reports for ordinary events and ten for a Release Please
-pull request. Every cloud job is also a prerequisite.
+pull request. Every cloud verification partition is also required. The
+[cloud plan result](./ci-workflow-cloud.md#provider-plan) requires the real
+provider plan only when its trusted main-push guard permits it.
 
 Static delivery is also required. It builds the example with Changes disabled
 and checks portable design journeys through static HTTP and `file://`.
@@ -218,8 +222,9 @@ artifact. This workflow is optional. `Required CI` does not depend on it.
 `.github/workflows/blacksmith-testbox.yml` prepares the Testboxes of the
 [remote verification contract](./remote-verification.md). The
 [Testbox workflow contract](./remote-verification-testbox.md#workflow) defines
-its triggers, job, step order, and action revisions. Its Node.js version equals
-the version of the CI native jobs. Its npm and Rust setup equals the setup of
+its triggers, job, step order, and action revisions. Its default Node.js version
+equals the CI native version. Cloud commands use their separate pinned Node
+installation. Its npm and Rust setup equals the setup of
 the CI repository job. Its runner and workflow `env` equal those of the CI
 suite jobs. It restores the Rust build cache of the CI viewer, browser, and
 static-delivery jobs and never saves it.

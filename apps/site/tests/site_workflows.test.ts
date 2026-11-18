@@ -25,6 +25,12 @@ test("close cleanup checks out the default ref after the PR head is deleted", ()
 test("site and CI actions use immutable reviewed pins and isolate secrets", () => {
   const approved = new Set([
     "useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a",
+    "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+    "actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+    "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+    "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+    "Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0",
+    "oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6",
     "actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd",
     "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
     "actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830",
@@ -68,13 +74,15 @@ test("site events and guards exclude forks and release pull requests", () => {
   });
   assert.deepEqual(site.permissions, {
     contents: "read",
-    "pull-requests": "write",
   });
   assert.deepEqual(site.concurrency, {
     group: "site-${{ github.event.pull_request.number || github.ref }}",
     "cancel-in-progress": true,
   });
-  assert.equal(site.jobs["deploy-main"]?.if, "github.event_name == 'push'");
+  assert.equal(
+    site.jobs["deploy-main"]?.if,
+    "github.ref == 'refs/heads/main' && vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && (github.event_name == 'push')",
+  );
   for (const name of ["deploy-pr", "close-pr"]) {
     const job = site.jobs[name]!;
     const action = name === "close-pr" ? "closed" : "opened";
@@ -116,7 +124,7 @@ test("deployments derive origins and build mockups before the site", () => {
   );
   for (const name of ["deploy-main", "deploy-pr"]) {
     const job = site.jobs[name]!;
-    assert.equal(job["runs-on"], "blacksmith-2vcpu-ubuntu-2404");
+    assert.equal(job["runs-on"], "ubuntu-24.04");
     assert.equal(
       workflowStep(job, "Set up Node.js").with?.["node-version-file"],
       ".nvmrc",
@@ -127,7 +135,7 @@ test("deployments derive origins and build mockups before the site", () => {
     );
     assert.equal(
       workflowStep(job, "Set up npm").run,
-      "npm install --global npm@11.11.0",
+      "npm install --global npm@11.21.0",
     );
     const install = workflowStep(job, "Install dependencies");
     assert.equal(install.run, "npm ci");
@@ -148,9 +156,7 @@ test("deployments derive origins and build mockups before the site", () => {
     assert.match(deploy.run!, /--project-name "\$\{CLOUDFLARE_PROJECT_NAME\}"/);
     assert.match(
       deploy.run!,
-      name === "deploy-main"
-        ? /--branch main/
-        : /branch="pr-\$\{\{ github.event.pull_request.number \}\}"/,
+      name === "deploy-main" ? /--branch main/ : /branch="\$PREVIEW_BRANCH"/,
     );
   }
 });

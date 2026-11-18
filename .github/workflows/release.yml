@@ -26,6 +26,8 @@ permissions:
 concurrency:
   group: npm-release
   cancel-in-progress: false
+env:
+  ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
 jobs:
   release-please:
     if: github.event_name == 'push'

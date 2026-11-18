@@ -28,9 +28,9 @@ Run the steps in this order:
    The public repository lets boxes fetch pushed commits without a token.
 2. Run `useblacksmith/begin-testbox` with `testbox_id: ${{ inputs.testbox_id }}`.
    An empty input uses validation mode, including on push runs.
-3. Install Node 22.15.0 with `actions/setup-node` and npm's download cache.
-   Use `cache: npm` and `cache-dependency-path: package-lock.json`.
-   Set `package-manager-cache: false`. Then install npm 11.21.0.
+3. Install cloud Node from `.nvmrc` and npm 11.21.0. Record its binary
+   directory in `MOKLY_CLOUD_NODE_BIN`. Then install Node 22.15.0 and npm
+   11.21.0 with the root lockfile cache and `package-manager-cache: false`.
 4. Run `rustup toolchain install` in the checkout. It installs Rust 1.98.1 with
    rustfmt and Clippy from `rust-toolchain.toml`. That file also selects the
    toolchain for every command in the checkout.
@@ -43,9 +43,9 @@ Run the steps in this order:
    plus a newline to `$HOME/.mokly-testbox/package-lock.sha256`.
    Create the stamp directory if needed. Write the stamp only after both
    installation and the native build succeed.
-9. Run `npx playwright install --with-deps chromium`.
-10. Write the job `PATH`, `PLAYWRIGHT_CHANNEL=chromium`, and each workflow
-    `env` entry to `/etc/environment`. Replace previous entries for those
+9. Install Chromium and the [cloud tools](./ci-workflow-cloud.md#cloud-testbox-tools).
+10. Write the job `PATH`, `PLAYWRIGHT_CHANNEL=chromium`, `MOKLY_CLOUD_NODE_BIN`,
+    and each workflow `env` entry to `/etc/environment`. Replace those
     names. Preserve other entries. New Testbox SSH sessions must use
     Node 22.15.0, Chromium, and the CI Cargo settings.
 11. Run `useblacksmith/run-testbox`. It keeps the job alive until the idle timeout.

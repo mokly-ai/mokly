@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import path from "node:path";
 
 import { parseShardArgument } from "../../scripts/verification/browser-shard.mjs";
 import { childEnvironment } from "../../scripts/verification/child-environment.mjs";
@@ -32,6 +33,13 @@ if (shard) {
   assert.deepEqual(suites, ["cloud-app"], "Only cloud-app accepts a shard");
 }
 const env = childEnvironment(process.env);
+assert(
+  env.MOKLY_CLOUD_NODE_BIN,
+  "Testbox must supply the cloud Node installation in MOKLY_CLOUD_NODE_BIN",
+);
+env.PATH = `${env.MOKLY_CLOUD_NODE_BIN}${path.delimiter}${env.PATH}`;
+if (suites.includes("cloud-desktop")) delete env.ELECTRON_SKIP_BINARY_DOWNLOAD;
+else env.ELECTRON_SKIP_BINARY_DOWNLOAD = "1";
 for (const name of [
   "BLACKSMITH_ORG_TOKEN",
   "GITHUB_SHA",

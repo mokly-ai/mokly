@@ -18,6 +18,34 @@ const json = async (file: string) =>
 /** Fixed release inputs: after the 0.15.0 release, a breaking release is 0.16.0. */
 const FIXED_MANIFEST = { ".": "0.15.0", "packages/viewer": "0.6.0" };
 
+test("cloud changes do not create a published package release", async () => {
+  const cloudCrates = (await fs.readdir(path.join(repositoryRoot, "crates")))
+    .filter((name) => name.startsWith("mkc-"))
+    .map((name) => `crates/${name}/src/lib.rs`);
+  for (const file of [
+    "apps/app/src/index.ts",
+    ...cloudCrates,
+    "packages/tokens/src/tokens.ts",
+    "infra/terraform/modules/github/main.tf",
+    "scripts/cloud/site/cleanup.sh",
+    "docs/protocol/cloud/rest-api.md",
+    "docs/mockups/src/index.ts",
+    "docs/architecture/cloud.md",
+    "docs/development/cloud.md",
+    "fixtures/desktop-origin.json",
+    "diesel.toml",
+    "docker-compose.yml",
+    "mokly.config.json",
+  ]) {
+    const updates = await releaseUpdates(
+      repositoryRoot,
+      [file],
+      FIXED_MANIFEST,
+    );
+    assert.deepEqual([...updates], [], file);
+  }
+});
+
 test("the private workspace releases the CLI, UI, model, frame, and viewer packages with one root version", async () => {
   await verifyPackageVersions(repositoryRoot);
   const [manifest, config, versions] = await Promise.all([
@@ -83,6 +111,22 @@ test("pinned Release Please updates all manifest and lockfile edges and retains 
       /Shared release version: 0\.16\.0/,
     );
     const updates = await releaseUpdates(repositoryRoot, changed);
+    for (const file of [
+      ...["app", "desktop", "mockups", "site", "worker"].map(
+        (project) => `apps/${project}/package.json`,
+      ),
+      "packages/tokens/package.json",
+    ]) {
+      const content = updates.get(file);
+      if (content)
+        assert.equal(JSON.parse(content).version, (await json(file)).version);
+    }
+    assert.equal(
+      [...updates.keys()].some((file) =>
+        /^(?:apps|crates\/mkc-|packages\/tokens).*CHANGELOG/.test(file),
+      ),
+      false,
+    );
     assert.ok(updates.has("packages/mokly/package.json"));
     assert.ok(updates.has("packages/viewer/package.json"));
     assert.ok(updates.has("packages/ui/package.json"));

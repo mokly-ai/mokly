@@ -12,9 +12,10 @@ On every run, `scripts/cloud/dev-api.sh` creates `.context/preview-sign-in`
 This is not an opt-in. The script passes its arguments to the API binary and
 runs `serve` when it gets none.
 
-- `capture-catalogue.py --local --checkout .` accepts `--local` in place of
+- `capture-catalogue.py --local --checkout . --repository OWNER/NAME` accepts `--local` in place of
   `preview-pr-N`. It uses the installed packages instead of `npm ci` and
   captures the checkout's `HEAD` without Actions context.
+  Supply the repository stored by the sample project.
   [Step 6](./preview-capture.md#catalogue-capture) requires the current branch
   and a null pull request together with the same repository, head, config path
   and comparison checks.

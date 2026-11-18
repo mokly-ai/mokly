@@ -23,11 +23,14 @@ saves an Actions cache. No checkout persists credentials, and the PR checkout
 holds the history that resolves `origin/main` and the merge base. Capture
 runs the PR's own capture tools in that checkout, with `MKC_REVISION` set
 to the PR head. Install and render already execute PR code in this job.
+The workflow supplies its own `github.repository` as the required
+`--repository OWNER/NAME` input. Capture validates that input before install
+and requires the same repository in the upload envelope.
 Run from the PR checkout:
 
 ```sh
 python3 infra/scripts/capture-catalogue.py preview-pr-N \
-  --checkout . --branch HEAD_REF
+  --checkout . --branch HEAD_REF --repository OWNER/NAME
 ```
 
 Add `--debug-timings` to forward Mokly's flag. Mokly writes one
@@ -53,9 +56,9 @@ Diagnostics contain no bearer value.
 3. Listen on `127.0.0.1` with an ephemeral port as the receiver of exactly one
    [upload exchange](./publication-upload-exchange.md), described below. Every
    request must carry the random placeholder bearer.
-4. Run the checkout's exact-pinned 0.19.0 `node_modules/.bin/mokly publish`
+4. Run the checkout's workspace `node_modules/.bin/mokly publish`
    with `--strict` and `--config mokly.config.json`,
-   `--repository github.com/mokly-ai/mokly-cloud`
+   `--repository github.com/OWNER/NAME` from the repository input
    and `--endpoint` naming the loopback URL, a random placeholder
    `MOKLY_TOKEN`, `GITHUB_ACTIONS=true`, `GITHUB_HEAD_REF=<branch>` and
    `GITHUB_REF=refs/pull/N/head` for that process only. The workflow's own
@@ -71,7 +74,7 @@ Diagnostics contain no bearer value.
    second gzip member and any trailing bytes fail with exactly
    `Catalogue capture failed: catalogue upload is not a valid gzip archive`.
 6. Read its `mokly-upload.json`
-   and require repository `github.com/mokly-ai/mokly-cloud`, the input branch,
+   and require the input repository and branch,
    `headSha` equal to `MKC_REVISION`, `pullRequest` `N`, `configPath`
    `mokly.config.json`, `baseRef` `origin/main`, `baseSha` equal to the merge
    base of the revision and `origin/main`, and `schemaVersion: 3`.

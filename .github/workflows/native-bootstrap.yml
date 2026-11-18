@@ -11,6 +11,8 @@ permissions:
 concurrency:
   group: native-bootstrap
   cancel-in-progress: false
+env:
+  ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
 jobs:
   validate-commit:
     runs-on: ubuntu-24.04

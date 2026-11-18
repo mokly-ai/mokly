@@ -1,6 +1,18 @@
 //! Imported cloud contracts run against the merged runner and workspace scripts.
 
 mod ast_grep_tests;
+mod ci_capacity_tests;
+mod deployment_apply_workflow_tests;
+mod deployment_catalogue_workflow_tests;
+mod deployment_promotion_tests;
+mod deployment_release_workflow_tests;
+mod deployment_required_contract;
+mod deployment_routing_contract;
+mod deployment_trust_contract;
+mod deployment_workflow_tests;
+mod desktop_release_input_tests;
+mod desktop_release_workflow_tests;
+mod desktop_workflow_tests;
 mod email_template_tests;
 mod fixture_tests;
 mod github_fixture_tests;
@@ -11,7 +23,12 @@ mod openapi_build_tests;
 mod openapi_generation_tests;
 mod openapi_schema_tests;
 mod openapi_tests;
+mod origin_router_workflow_tests;
+mod preview_capture_workflow_tests;
+mod preview_workflow;
 mod repository_tests;
 mod rust_tests;
 mod site_tests;
 mod support;
+mod workflow_contract;
+mod workflow_tests;

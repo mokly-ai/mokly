@@ -70,7 +70,7 @@ class CatalogueCaptureTests(unittest.TestCase):
                 "--config",
                 "mokly.config.json",
                 "--repository",
-                "github.com/mokly-ai/mokly-cloud",
+                "github.com/mokly-ai/mokly",
                 "--endpoint",
                 observed["arguments"][7],
             ],
@@ -84,6 +84,18 @@ class CatalogueCaptureTests(unittest.TestCase):
         self.assertEqual(observed["headRef"], "feature/catalogue")
         self.assertEqual(observed["ref"], "refs/pull/42/head")
         self.assertEqual(observed["statuses"], [200, 204, 204, 201])
+
+    def test_capture_uses_the_input_repository_and_rejects_another_envelope(self):
+        repository = {"host": "github.com", "owner": "other", "name": "catalogue"}
+        export = self.capture.export(self.capture.envelope(repository=repository))
+        result = self.capture.run(export, repository="other/catalogue")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.capture.observed()["arguments"][5], "github.com/other/catalogue")
+        export = self.capture.export(self.capture.envelope())
+        result = self.capture.run(export, repository="other/catalogue")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("mokly-upload.json repository does not match the capture", result.stderr)
+        self.assertFalse(self.capture.output.exists())
 
     def test_cli_failure_is_propagated_without_a_stale_capture(self):
         export = self.capture.export(self.capture.envelope())
@@ -117,7 +129,8 @@ class CatalogueCaptureTests(unittest.TestCase):
     def test_capture_checks_the_envelope_version_explicitly(self):
         capture = load("capture-catalogue")
         expected = capture.CaptureSettings(self.capture.checkout, self.capture.revision,
-                                          "feature/catalogue", 42, self.capture.revision)
+                                          "feature/catalogue", 42, self.capture.revision,
+                                          "mokly-ai/mokly")
         for version in [1, 2, "3", 3.0, True, None]:
             with self.subTest(version=version), self.assertRaisesRegex(capture.CaptureError, "schemaVersion"):
                 capture.require_envelope(self.capture.envelope(schemaVersion=version), expected)
@@ -277,6 +290,12 @@ class CatalogueCaptureTests(unittest.TestCase):
             {"branch": "é" * 128},
             {"revision": "A" * 40},
             {"revision": "b" * 40},
+            {"repository": ""},
+            {"repository": "mokly-ai"},
+            {"repository": "github.com/mokly-ai/mokly"},
+            {"repository": "mokly-ai/.."},
+            {"repository": "mokly-ai/mokly\n"},
+            {"repository": "mokly-ai/" + "a" * 256},
         )
         for changes in cases:
             with self.subTest(changes=changes):
