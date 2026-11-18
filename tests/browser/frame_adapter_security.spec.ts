@@ -5,6 +5,7 @@ import { documentFavicon } from "./document_error_allowance.js";
 import {
   crossOriginFixture,
   mountCrossFrame,
+  waitForFrameEvent,
   type FrameTestWindow,
 } from "./frame_adapter_fixture.js";
 
@@ -116,10 +117,12 @@ test("frame probe ignores wrong-origin/source/nonce, unknown fields and oversize
   await expect(
     page.frameLocator("#frame").locator("[data-mokly-overlay]"),
   ).toHaveCount(0);
-  await page
-    .frameLocator("#frame")
-    .getByRole("button", { name: "Visible", exact: true })
-    .click();
+  await waitForFrameEvent(page, "click", () =>
+    page
+      .frameLocator("#frame")
+      .getByRole("button", { name: "Visible", exact: true })
+      .click(),
+  );
   await expect
     .poll(() =>
       page.evaluate(
@@ -150,50 +153,54 @@ test("host rejects forged frame events and accepts only its active subscribed se
   page,
 }) => {
   await mountCrossFrame(page, fixture);
-  const events = await page.evaluate((origin) => {
-    const state = window as unknown as FrameTestWindow;
-    state.frameEvents = [];
-    const source =
-      document.querySelector<HTMLIFrameElement>("#frame")!.contentWindow!;
-    const nonce = state.wire.find((message) => message.type === "ready")!.nonce;
-    const event = {
-      channel: "mokly-frame-probe",
-      version: 3,
-      nonce,
-      type: "geometry",
-    };
-    for (const [data, sender, from] of [
-      [JSON.stringify(event), "https://wrong.test", source],
-      [JSON.stringify(event), origin, window],
-      [JSON.stringify({ ...event, nonce: "f".repeat(32) }), origin, source],
-      [JSON.stringify({ ...event, extra: true }), origin, source],
-      [" ".repeat(262145), origin, source],
-    ] as const)
+  const events = await waitForFrameEvent(page, "geometry", () =>
+    page.evaluate((origin) => {
+      const state = window as unknown as FrameTestWindow;
+      state.frameEvents = [];
+      const source =
+        document.querySelector<HTMLIFrameElement>("#frame")!.contentWindow!;
+      const nonce = state.wire.find(
+        (message) => message.type === "ready",
+      )!.nonce;
+      const event = {
+        channel: "mokly-frame-probe",
+        version: 3,
+        nonce,
+        type: "geometry",
+      };
+      for (const [data, sender, from] of [
+        [JSON.stringify(event), "https://wrong.test", source],
+        [JSON.stringify(event), origin, window],
+        [JSON.stringify({ ...event, nonce: "f".repeat(32) }), origin, source],
+        [JSON.stringify({ ...event, extra: true }), origin, source],
+        [" ".repeat(262145), origin, source],
+      ] as const)
+        window.dispatchEvent(
+          new MessageEvent("message", { data, origin: sender, source: from }),
+        );
+      const ignored = state.frameEvents.length;
       window.dispatchEvent(
-        new MessageEvent("message", { data, origin: sender, source: from }),
-      );
-    const ignored = state.frameEvents.length;
-    window.dispatchEvent(
-      new MessageEvent("message", {
-        data: JSON.stringify({
-          ...event,
-          type: "click",
-          key: "f".repeat(64),
-          boxes: [],
+        new MessageEvent("message", {
+          data: JSON.stringify({
+            ...event,
+            type: "click",
+            key: "f".repeat(64),
+            boxes: [],
+          }),
+          origin,
+          source,
         }),
-        origin,
-        source,
-      }),
-    );
-    window.dispatchEvent(
-      new MessageEvent("message", {
-        data: JSON.stringify(event),
-        origin,
-        source,
-      }),
-    );
-    return { ignored, accepted: state.frameEvents };
-  }, fixture.frames.url);
+      );
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: JSON.stringify(event),
+          origin,
+          source,
+        }),
+      );
+      return { ignored, accepted: state.frameEvents };
+    }, fixture.frames.url),
+  );
   expect(events).toEqual({
     ignored: 0,
     accepted: [
