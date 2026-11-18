@@ -9,7 +9,8 @@ depends on it. It has no internal crate dependency and performs no file IO.
 
 - Own the independent format numbers in `versions`. The
   [format inventory](../../docs/protocol/mokly-format-versions.md) lists them.
-- Own shared output shapes and one pure marker writer for build and publish.
+- Own shared output shapes, output file admission, and one pure marker writer
+  for build and publish.
 - Encode canonical JSON with recursive UTF-16 key order, two-space indentation,
   explicit empty values, omitted absent optionals, and a final LF.
 - Validate the JSON Schema 2020-12 prop profile and complete JSON props with
@@ -28,13 +29,23 @@ exact JSON Pointer. HTML uses `html-front-matter` or `html-attribute`.
 JavaScript and stories use `component-schema` or `component-props`.
 
 `output` defines the ownership marker, upload metadata, repository identity,
-and immutable file inventory. `Artifact::finalize` accepts optional upload
-metadata and writes the marker last. It retains the typed ownership inventory
-and upload metadata beside the finalized bytes. Plain builds pass no metadata. Both
+and immutable file inventory. `Artifact::finalize` takes an admitted
+`Inventory` and optional upload metadata, and writes the marker last. It
+retains the typed ownership inventory and upload metadata beside the finalized
+bytes. Plain builds pass no metadata. Both
 `mokly-static` and `mokly-publish` use these shapes without a dependency on
 each other. The marker parser checks persisted ownership before an existing
 output directory can be replaced. The publication client reuses the finalized
 inventory and checks upload file-count and file-size limits.
+
+`Inventory` holds admitted ordinary output files. Ordinary files are all
+regular output files except the marker and the upload metadata. Only
+`Inventory::insert` adds a file to an `Inventory`. It checks the portable path
+and the 64 MiB regular-file limit. It also rejects exact, case, and
+directory-prefix collisions with admitted paths and the marker path. An
+`AdmissionError` names the rejected path. `Paths` applies the same path checks
+to final filesystem write paths without file bytes. The upload metadata and
+the marker keep their own byte limits at their writers.
 
 Canonical encoding preserves array order. Each shape owner supplies the entry
 kind/path order, authored variant order, instance/slot key order, and region
@@ -213,7 +224,13 @@ cargo xtask generate-types
   define `ReviewResultV8` and `CatalogueChangeSnapshotV4`.
 - [`src/output/mod.rs`](./src/output/mod.rs) holds the shared output shapes,
   and `Artifact::finalize` in [`src/output/artifact.rs`](./src/output/artifact.rs)
-  writes the ownership marker last.
+  takes an admitted `Inventory` and writes the ownership marker last.
+- [`src/output/inventory.rs`](./src/output/inventory.rs) defines `Inventory`,
+  whose `insert` admits one ordinary output file or returns an
+  `AdmissionError` with the rejected path.
+- [`src/output/paths.rs`](./src/output/paths.rs) defines `Paths`, the
+  portable-path and collision check that `Inventory` and the final filesystem
+  write check share.
 - [`src/typescript.rs`](./src/typescript.rs) provides `generate` and
   `catalogue_modules`, which return the declarations that
   `cargo xtask generate-types` writes.

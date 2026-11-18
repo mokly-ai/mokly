@@ -10,6 +10,7 @@ use bytes::Bytes;
 use flate2::read::GzDecoder;
 use futures_util::future::BoxFuture;
 use mokly_model::output::artifact::Artifact;
+use mokly_model::output::inventory::Inventory;
 use mokly_model::output::validation::{MANIFEST, MARKER};
 use mokly_publish::completion::Outcome;
 use mokly_publish::exchange::{Client, Exchange};
@@ -62,7 +63,8 @@ fn prepared() -> (Prepared, BTreeMap<String, Bytes>, Artifact) {
     random.truncate(8192);
     let incompressible: Bytes = random.into();
     let tiny = Bytes::from_static(b"x");
-    let files = base
+    let mut files = Inventory::default();
+    for file in base
         .files
         .into_iter()
         .filter(|file| file.path != MANIFEST && file.path != MARKER)
@@ -71,7 +73,9 @@ fn prepared() -> (Prepared, BTreeMap<String, Bytes>, Artifact) {
             file("static/incompressible.bin", &incompressible),
             file("static/tiny.bin", &tiny),
         ])
-        .collect();
+    {
+        files.insert(file.path, file.bytes).unwrap();
+    }
     let artifact = Artifact::finalize(base.directory, files, Some(metadata)).unwrap();
     let prepared = Prepared::new(&artifact).unwrap();
     let expected = [

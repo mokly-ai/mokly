@@ -4,6 +4,7 @@ use std::io::Read;
 
 use flate2::read::GzDecoder;
 use mokly_model::output::artifact::Artifact;
+use mokly_model::output::inventory::Inventory;
 use mokly_model::output::validation::{INDEX, MANIFEST, MARKER, digest};
 
 use crate::error::{Error, OutputResult};
@@ -58,8 +59,12 @@ fn plan_archive_has_only_exact_finalized_files_in_fixed_order() {
 #[test]
 fn finalization_timestamp_changes_the_marker_and_keeps_content_digests() {
     let mut first = inventory(false);
-    let mut files = artifact(false).files;
-    files.retain(|file| file.path != MANIFEST && file.path != MARKER);
+    let mut files = Inventory::default();
+    for file in artifact(false).files {
+        if file.path != MANIFEST && file.path != MARKER {
+            files.insert(file.path, file.bytes).unwrap();
+        }
+    }
     let before = Artifact::finalize(
         "/private/build".into(),
         files.clone(),

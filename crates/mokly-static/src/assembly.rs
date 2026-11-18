@@ -11,15 +11,16 @@ use mokly_graph::types::RenderGeneration;
 use mokly_model::deployment::DeploymentFileV1;
 use mokly_model::namespace;
 use mokly_model::output::artifact::{Artifact, File};
+use mokly_model::output::inventory::Inventory;
 use mokly_model::projection::{self, Publication, ViewKey};
 use mokly_model::{projection_usage, shell, versions};
 use mokly_source_interface::tree::SourceTree;
 
+use crate::admission::AdmissionResult;
 use crate::changes::{ChangeState, PublicationInput};
 use crate::error::{Error, InternalError, Result};
 use crate::frame_probe;
 use crate::identity;
-use crate::inventory::Inventory;
 use crate::transaction::Cancellation;
 use crate::{comparison_details, comparison_output, resource_bytes};
 
@@ -84,16 +85,18 @@ impl Assembler for CatalogueAssembler {
         let mut inventory = Inventory::default();
         let stub = shell::html(&index.identity.title);
         for path in ["index.html", "404.html"] {
-            inventory.insert(path.into(), stub.clone().into())?;
+            inventory.insert(path.into(), stub.clone().into()).admit()?;
         }
         for entry in &model.entries {
-            inventory.insert(
-                format!("view/{}/index.html", entry.metadata.path),
-                stub.clone().into(),
-            )?;
+            inventory
+                .insert(
+                    format!("view/{}/index.html", entry.metadata.path),
+                    stub.clone().into(),
+                )
+                .admit()?;
         }
         for file in input.viewer {
-            inventory.insert(file.path, file.bytes)?;
+            inventory.insert(file.path, file.bytes).admit()?;
         }
         for plan in input.generation.plans().values() {
             checkpoint(cancellation)?;
@@ -117,10 +120,12 @@ impl Assembler for CatalogueAssembler {
             {
                 view.usage = document.usage.clone();
             }
-            inventory.insert(
-                namespace::generated(&plan.route),
-                frame_probe::inject(document, &plan.route)?.into(),
-            )?;
+            inventory
+                .insert(
+                    namespace::generated(&plan.route),
+                    frame_probe::inject(document, &plan.route)?.into(),
+                )
+                .admit()?;
         }
         for route in input.generation.resource_routes() {
             checkpoint(cancellation)?;
@@ -131,7 +136,7 @@ impl Assembler for CatalogueAssembler {
                         path: route.clone(),
                     }
                 })?;
-            inventory.insert(path, bytes.into())?;
+            inventory.insert(path, bytes.into()).admit()?;
         }
         let policy: &dyn PublicPolicy = &match FilePolicy::new(
             self.tree.clone(),
@@ -157,7 +162,9 @@ impl Assembler for CatalogueAssembler {
                 Ok(bytes) => bytes,
                 Err(source) => return Err(InternalError::Source { source }.into()),
             };
-            inventory.insert(format!("static/{path}"), bytes.into())?;
+            inventory
+                .insert(format!("static/{path}"), bytes.into())
+                .admit()?;
         }
         let references = details
             .iter()
@@ -185,18 +192,18 @@ impl Assembler for CatalogueAssembler {
             .as_ref()
             .map(|publication| publication.metadata(input.changes))
             .transpose()?;
-        for file in identity::finalize(&mut index, &mut details, inventory.files()) {
-            inventory.insert(file.path, file.bytes)?;
-        }
-        inventory.insert(
-            namespace::viewer("deployment.json"),
-            identity::json(&DeploymentFileV1 {
-                schema_version: versions::DEPLOYMENT_FILE,
-                deployment_id: index.deployment_id.clone(),
-            })
-            .into(),
-        )?;
-        match Artifact::finalize(input.directory, inventory.into_files(), metadata) {
+        identity::finalize(&mut index, &mut details, &mut inventory)?;
+        inventory
+            .insert(
+                namespace::viewer("deployment.json"),
+                identity::json(&DeploymentFileV1 {
+                    schema_version: versions::DEPLOYMENT_FILE,
+                    deployment_id: index.deployment_id.clone(),
+                })
+                .into(),
+            )
+            .admit()?;
+        match Artifact::finalize(input.directory, inventory, metadata) {
             Ok(artifact) => Ok(artifact),
             Err(source) => Err(InternalError::Format { source }.into()),
         }
