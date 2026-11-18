@@ -73,6 +73,8 @@
   global Rayon pool that base stylesheet bundles start on the classification
   thread. Both items come from the same admission gate. The base pool of this
   item is one candidate direction there, because it would also hold the base
-  bundle loads.
+  bundle loads. `plans/follow-ups/cold-start-base-overlap-memory.md` records a
+  closed cold-start overlap of base work. It avoided this stall by capturing
+  only after usage.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/ee7d8ea739bd103aacd001f8e75e5aa144929348/plans/stylesheet-bundle-performance.md?plain=1#L639).

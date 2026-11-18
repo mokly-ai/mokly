@@ -58,6 +58,9 @@
     other large part of sidecar memory.
   - [serve-sidecar-prestart.md](./serve-sidecar-prestart.md): it changes
     when sidecars start.
+  - [cold-start-base-overlap-memory.md](./cold-start-base-overlap-memory.md):
+    the pool size sets the sidecar memory that any early base work must fit
+    beside.
 - **Recommendation:** B. It removes most of the idle memory with a small
   change, and C can follow when large catalogues need it.
 - **Action:** ask the user, because option B changes the default pool size
