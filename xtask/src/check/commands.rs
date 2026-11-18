@@ -27,7 +27,7 @@ pub(super) fn commands_for(
             npm(&["run", "build", "--workspace", "@mokly/frame"]),
             npm(&["run", "build", "--workspace", "@mokly/viewer"]),
             npm(&["run", "build", "--workspace", "@mokly/mokly"]),
-            cargo(&["test", "--workspace", "--no-fail-fast"]),
+            cargo(&["test", "--locked", "--workspace", "--no-fail-fast"]),
         ],
     }
 }
@@ -62,13 +62,14 @@ fn repository_commands(dependency_audit: DependencyAudit) -> Vec<CommandSpec> {
         npm(&["run", "build", "--workspace", "@mokly/frame"]),
         npm(&["run", "build", "--workspace", "@mokly/viewer"]),
         npm(&["run", "build", "--workspace", "@mokly/mokly"]),
-        cargo(&["test", "--workspace"]),
+        cargo(&["test", "--locked", "--workspace"]),
     ]
 }
 
 fn rust_clippy() -> CommandSpec {
     cargo(&[
         "clippy",
+        "--locked",
         "--workspace",
         "--all-targets",
         "--",
@@ -81,6 +82,7 @@ fn rust_clippy() -> CommandSpec {
 fn design_matrix_clippy() -> CommandSpec {
     cargo(&[
         "clippy",
+        "--locked",
         "-p",
         "mokly-cli",
         "--features",
