@@ -101,10 +101,11 @@ impl InputStamp {
         }
     }
 
-    /// Whether `current(tree)` equals this stamp. `current` reads each entry under its own
-    /// key, so the check compares entry by entry and stops at the first entry that differs.
-    /// It reads repository files first, then files below `node_modules`, memberships,
-    /// assets, identities, and directory scans. The order changes only the number of reads.
+    /// Whether `tree` still gives the recorded value of every entry. A failed read gives
+    /// `None`, so an entry that stays unreadable still matches. The check reads repository
+    /// files first, then the files below `node_modules`, the memberships, the assets, the
+    /// identities, and the directory scans. It stops at the first entry that differs, so the
+    /// order changes only the number of reads.
     pub(crate) fn matches(&self, tree: &dyn SourceTree) -> bool {
         let Self {
             memberships,
@@ -130,37 +131,10 @@ impl InputStamp {
                 directory_files(&mut scan, tree, path, pattern) == *found
             })
     }
-
-    /// The stamp that `tree` gives for the keys of this stamp. Tests compare `matches` with it.
-    #[cfg(test)]
-    pub(crate) fn current(&self, tree: &dyn SourceTree) -> Self {
-        let mut result = Self::default();
-        for path in self.memberships.keys() {
-            result
-                .memberships
-                .insert(path.clone(), membership(tree, path));
-        }
-        for path in self.files.keys() {
-            result.file(tree, path.clone());
-        }
-        for path in self.assets.keys() {
-            result.asset(tree, path.clone());
-        }
-        for path in self.identities.keys() {
-            result.identity(tree, path.clone());
-        }
-        let mut scan = Scan::default();
-        for (path, pattern) in self.directories.keys() {
-            let files = directory_files(&mut scan, tree, path, pattern);
-            result
-                .directories
-                .insert((path.clone(), pattern.clone()), files);
-        }
-        result
-    }
 }
 
-/// Whether a path has a `node_modules` component. `InputStamp::matches` reads these last.
+/// Whether a path has a `node_modules` component. `InputStamp::matches` reads these files
+/// after the other files.
 fn dependency(path: &Path) -> bool {
     path.components()
         .any(|component| component.as_os_str() == "node_modules")
@@ -219,3 +193,7 @@ mod asset_stamp_tests;
 #[cfg(test)]
 #[path = "_tests_/stamp_match_tests.rs"]
 mod stamp_match_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stamp_reference.rs"]
+mod stamp_reference;

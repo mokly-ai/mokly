@@ -1,4 +1,4 @@
-//! A stamp check gives the result of a full comparison and stops at the first changed input.
+//! A stamp check holds exactly when no input changed, and it stops at the first changed input.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::io::{self, ErrorKind};
@@ -19,8 +19,9 @@ const FILES: [&str; 4] = [
     "/repo/src/app.ts",
     "/repo/src/view.ts",
 ];
-/// The files, then one membership, one asset, one identity, and one directory scan.
-const ENTRIES: usize = FILES.len() + 4;
+/// The files, then one membership, two assets, one identity, and one directory scan. The new
+/// state of the first asset changes its target, and that of the second asset its bytes.
+const ENTRIES: usize = FILES.len() + 5;
 
 /// The state of one stamp entry in a tree. Each state gives the entry a different value.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -110,7 +111,7 @@ fn child(name: &str, kind: FileKind) -> Child {
 /// A tree with each stamp entry in its state. Entries share no path, so each state changes
 /// only its own entry.
 fn tree(states: [State; ENTRIES]) -> MemoryTree {
-    let [.., membership, asset, identity, scan] = states;
+    let [.., membership, logo, icon, identity, scan] = states;
     let mut tree = MemoryTree::default();
     for (path, state) in FILES.into_iter().zip(states) {
         if let Some(digest) = value(state, "old", "new") {
@@ -126,9 +127,15 @@ fn tree(states: [State; ENTRIES]) -> MemoryTree {
         children.extend(added.map(|name| child(name, FileKind::File)));
         tree.children.insert("/repo/src".into(), children);
     }
-    if let Some(target) = value(asset, "/repo/assets/first.svg", "/repo/assets/second.svg") {
+    if let Some(target) = value(logo, "/repo/assets/first.svg", "/repo/assets/second.svg") {
         tree.nodes.insert("/repo/logo.svg".into(), node(target));
         tree.digests.insert(target.into(), "same bytes".into());
+    }
+    if let Some(bytes) = value(icon, "first bytes", "second bytes") {
+        tree.nodes
+            .insert("/repo/icon.svg".into(), node("/repo/assets/icon.svg"));
+        tree.digests
+            .insert("/repo/assets/icon.svg".into(), bytes.into());
     }
     if let Some(object) = value(identity, "device:first", "device:second") {
         tree.nodes
@@ -154,7 +161,10 @@ fn stamp_of(tree: &MemoryTree) -> InputStamp {
     InputStamp {
         memberships: BTreeMap::from([("/repo/src".into(), None)]),
         files: FILES.into_iter().map(|path| (path.into(), None)).collect(),
-        assets: BTreeMap::from([("/repo/logo.svg".into(), None)]),
+        assets: BTreeMap::from([
+            ("/repo/logo.svg".into(), None),
+            ("/repo/icon.svg".into(), None),
+        ]),
         identities: BTreeMap::from([("/repo/input.txt".into(), None)]),
         directories: BTreeMap::from([(("/repo/styles".into(), "**/*.css".into()), None)]),
     }
@@ -180,7 +190,7 @@ fn assignments() -> BTreeSet<[usize; ENTRIES]> {
 }
 
 #[test]
-fn matches_equals_the_full_comparison_when_up_to_two_entries_change() {
+fn matches_and_the_full_comparison_hold_exactly_when_no_entry_changed() {
     let assignments = assignments();
     let mut stamps = BTreeMap::new();
     let mut matching = 0;
@@ -190,12 +200,16 @@ fn matches_equals_the_full_comparison_when_up_to_two_entries_change() {
             .entry(before)
             .or_insert_with(|| stamp_of(&tree(before)));
         let checked = tree(assignment.map(|pair| PAIRS[pair].1));
-        let expected = stamp.current(&checked) == *stamp;
         let pairs = assignment.map(|pair| PAIRS[pair]);
-        assert_eq!(stamp.matches(&checked), expected, "{pairs:?}");
+        let expected = pairs.iter().all(|(stamped, checked)| stamped == checked);
+        assert_eq!(
+            (stamp.matches(&checked), stamp.current(&checked) == *stamp),
+            (expected, expected),
+            "{pairs:?}"
+        );
         matching += usize::from(expected);
     }
-    assert_eq!((assignments.len(), matching), (1857, 129));
+    assert_eq!((assignments.len(), matching), (2377, 163));
 }
 
 #[test]
