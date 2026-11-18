@@ -4,7 +4,8 @@ This page expands the
 [source root workers](./mokly-sidecar-modules.md#source-root-workers). A
 process serves one source root, and all roots share the configured pool
 bound. These rules choose the process that changes root. They also let Serve
-return idle base processes to the head root after base work.
+return idle base processes to the head root after base work. Last, they rank
+the idle processes of one root by the generation that a request names.
 
 ## Roots And The Warm Head Process
 
@@ -142,3 +143,63 @@ then take a new candidate on each call and keep it on the base root.
 Decision: the pass covers every idle base process. Rejected: one base process
 kept in advance for the views that the kept capture does not hold, because it
 needs a record of capture completeness and leaves less head capacity.
+
+## Generation Affinity
+
+These rules rank the idle processes of the root of a request. They apply to
+each request that names a generation: `cssModules`, `describe`, `bindings`,
+and the four render methods. A request that names no generation, such as
+`bundle` or `processCss`, keeps the queue order. The queue order puts the
+process that has been idle longest first. The PostCSS context rule of the
+[source root workers](./mokly-sidecar-modules.md#source-root-workers) still
+applies before every other rule.
+
+A process holds a generation only while it has loaded the current lifetime of
+that generation. The current lifetime is the one that the last `bundle` call of
+the generation started, until its final release. An older or a released
+lifetime of the same generation does not count.
+
+The inputs of a generation are its class maps, its description, and its latest
+bindings table. A process holds an input only when it received that input for
+the current lifetime. A request needs the inputs that must come before it on a
+process. A `cssModules` request needs no input. A `describe` request needs the
+class maps. A `bindings` request needs the class maps and the description. A
+render request needs all three inputs.
+
+The request takes the first idle process of the best rank. The ranks are, best
+first:
+
+1. A process that holds the generation and each input that the request needs.
+2. Another process that holds the generation.
+3. A process that does not hold the generation.
+
+Processes of one rank keep the queue order. When no idle process of the root
+holds the generation, for example because the pool holds no lifetime of it,
+the request keeps the queue order.
+
+The rank orders the processes inside each group that the rules above prefer.
+So while the pass has candidates, a base request still prefers an idle process
+of its root outside the pass to every candidate. An idle process of the root
+still comes before an empty slot, and an empty slot before a process of
+another root. The warm head rule still applies.
+
+The rank considers idle processes only. A request never waits for a busy
+process that holds its generation while another slot can run the request. So
+concurrent independent requests still
+[spread across sidecars](./mokly-sidecar.md#transport), and sequential
+requests of one generation can reuse one process. The rank starts no process
+and keeps no state of its own.
+
+Decision: a request prefers an idle process that holds its generation and
+inputs. Rejected: the queue order alone, because a request then often reaches
+a process that must restore and describe a generation that another idle
+process holds. Rejected: the most recently used process first, because recency
+only approximates the loaded state.
+
+Decision: a request never waits for a busy process that holds its generation.
+Rejected: a wait for that process, because idle slots would then stay unused
+while requests wait.
+
+Decision: the pass preference comes before the rank. Rejected: the rank first,
+because base requests could then take more candidates, and fewer processes
+would return to the head root before the next edit.
