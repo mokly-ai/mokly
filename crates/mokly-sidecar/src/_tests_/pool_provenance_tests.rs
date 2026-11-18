@@ -28,6 +28,7 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
                     next.to_string()
                 };
                 Ok(MethodResult::Bundle(Box::new(results::Bundle {
+                    plan: None,
                     unmapped_dependency_directories: Some(vec![id.clone()]),
                     epoch: 0,
                     cache: None,
@@ -90,6 +91,7 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
     );
     for evaluation in ["first", "second"] {
         pool.request(Call::Bundle(BundleRequest {
+            plan: None,
             params: Bundle {
                 evaluation: Some(evaluation.into()),
                 entry_files: vec![],

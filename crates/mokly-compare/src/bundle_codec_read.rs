@@ -86,16 +86,18 @@ impl Codec {
             Err(source) if source.is_io() => return Err(EntryFault::Unreadable),
             Err(_) => return Err(EntryFault::Damaged),
         };
-        if stored.kind != StoredKind::Bundles || !same_settings(&stored.recipe.params, params) {
+        let restore = stored.recipe.restore;
+        if stored.kind != StoredKind::Bundles || !same_settings(&restore.params, params) {
             return Err(EntryFault::WrongSettings);
         }
         ReusableRecipe::new(
-            stored.recipe.generation,
-            stored.recipe.params,
-            stored.recipe.modules,
-            stored.recipe.compiled,
+            restore.generation,
+            restore.params,
+            restore.modules,
+            restore.compiled,
         )
         .and_then(DurableRecipe::new)
+        .map(|recipe| recipe.with_plan(stored.recipe.plan))
         .ok_or(EntryFault::Damaged)
     }
 }

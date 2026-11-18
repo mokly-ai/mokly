@@ -12,6 +12,7 @@ import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration
 import type { Definitions } from "../generated/sidecar/Definitions.js";
 import type { EntryBinding } from "../generated/sidecar/EntryBinding.js";
 import type { Module } from "../generated/sidecar/Module.js";
+import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
 
 import { entryModule } from "./bundle-entry.js";
 import { bundleDetail } from "./bundle-errors.js";
@@ -24,7 +25,7 @@ import type { Measurements } from "./measurements.js";
 import { ModulePaths } from "./module-paths.js";
 import { planNative } from "./native-plan.js";
 import { nativeLogOverride } from "./native-resolution.js";
-import type { PlannedImport, Resolution } from "./native-resolution.js";
+import type { Resolution } from "./native-resolution.js";
 import { consumerRequire } from "./paths.js";
 import { consumerPlugins } from "./plugins.js";
 import { ResolutionEvidence } from "./resolution-evidence.js";
@@ -74,6 +75,7 @@ interface BundleCaptureState {
   durability?: CaptureDurability | undefined;
   evidence?: ResolutionEvidence;
   preview?: string | null | undefined;
+  plan?: ReadonlyMap<string, PlannedImport>;
 }
 
 /**
@@ -87,11 +89,23 @@ export async function bundle(
   measurements: Measurements = unmeasured,
   durability?: CaptureDurability,
   captureMode: BundleCapture = "full",
+  requestedPlan?: BundleResult["plan"],
 ): Promise<Bundled> {
   const capture: BundleCaptureState = {
     mode: captureMode,
     ...(captureMode === "full" ? { durability } : {}),
   };
+  if (captureMode === "serveEdit" && requestedPlan)
+    return bundleAttempt(
+      params,
+      compile,
+      measurements,
+      {
+        mode: "planned",
+        plan: new Map(Object.entries(requestedPlan.imports)),
+      },
+      capture,
+    );
   const native = await bundleAttempt(
     params,
     compile,
@@ -246,6 +260,7 @@ async function bundleAttempt(
         .run("sidecar.bundle.classify", () => planNative(metafile, paths))
         .catch(() => undefined);
       if (!plan) return {};
+      if (capture.mode === "full") capture.plan = plan.imports;
       if (!plan.exact) return { plan: plan.imports };
     }
     return await bundleRecipe(
@@ -260,6 +275,7 @@ async function bundleAttempt(
         runtimeKey,
         evidence,
         capture: capture.mode,
+        plan: capture.plan,
       },
       measurements,
     );

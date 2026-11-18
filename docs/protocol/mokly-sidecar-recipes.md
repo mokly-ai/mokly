@@ -172,6 +172,12 @@ the binary was rejected, because it needs new pool methods and the toolchain
 identity in the binary. A sidecar that reads and writes the cache was rejected,
 because the sidecar performs no file writes.
 
+## Serve Edit Plans
+
+The [Serve edit plan rules](./mokly-sidecar-plans.md) define the resolution
+plan of a captured compile, its bounds, its use by a `serveEdit` request, and
+its use after a warm start.
+
 ## Operation Events
 
 A worker emits an `operation` event for each catalogue `esbuild` call and each

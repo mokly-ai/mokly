@@ -8,6 +8,7 @@ import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { BundleResult } from "../generated/sidecar/BundleResult.js";
 import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration.js";
 import type { Module } from "../generated/sidecar/Module.js";
+import type { ResolutionPlan } from "../generated/sidecar/ResolutionPlan.js";
 
 import type { Generation } from "./bundle.js";
 import { everyInput, fileDigest } from "./file-digests.js";
@@ -90,8 +91,12 @@ export function restore(
   };
 }
 
-export function bundleResult(generation: Generation): BundleResult {
-  const result = {
+export function bundleResult(
+  generation: Generation,
+  plan?: ResolutionPlan,
+): BundleResult {
+  const result: BundleResult = {
+    ...(plan ? { plan } : {}),
     generation: generation.id,
     unmappedDependencyDirectories:
       generation.compiled.unmappedDependencyDirectories ?? [],

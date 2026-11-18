@@ -7,14 +7,16 @@
   The orchestrator chose C1 for PR #312 and recorded C4 as this item for the
   plan reuse work.
 - **Location:** `crates/mokly-cli/src/serve_rebuild.rs:91`,
-  `crates/mokly-sidecar/src/pool_bundle_cache.rs:54`,
+  `crates/mokly-sidecar/src/pool_bundle_cache.rs:62`,
   `crates/mokly-sidecar/src/pool_exchange.rs:35`,
   `crates/mokly-sidecar/src/pool_shutdown.rs:7`,
   `packages/mokly/src/sidecar.ts:59` to line 67, and
   `docs/protocol/mokly-base-cache.md:67` to line 68.
 - **Reason:** The orchestrator kept C4 out of PR #312, because it adds
-  cancellation, scheduling, and storage rules. It belongs with the plan reuse
-  work, which needs the same refreshed record of the last captured compile.
+  cancellation, scheduling, and storage rules. On 2026-11-18 it also kept C4
+  outside the plan reuse change of branch
+  `calummoore/mokly-sidecar-plan-reuse-srh7`, which adds no idle compile, no
+  stop capture, and no promotion of an edit recipe.
 
 - **Source:** Design.
 - **Category:** Performance.
@@ -26,9 +28,11 @@
     fixed quiet period, when nothing else runs.
   - **Warming entry:** a stored compilation that no preparation served yet,
     such as a finished pause compile.
-  - **Plan reuse:** the item after PR #312. It reuses the native plan of the
-    last captured compile while a Rust check proves its resolution evidence
-    current. New imports fall back to full resolution.
+  - **Plan reuse:** the change after PR #312, with its rules in
+    `docs/protocol/mokly-sidecar-plans.md`. A Serve edit reuses the native
+    plan of the last captured compile while a Rust check proves its evidence
+    complete, durable, and current. Imports outside the plan use full
+    resolution.
 - **Background:**
   - On 2026-11-18 the performance orchestrator chose C1 for Serve edits,
     under the user's delegation of 2026-11-16. An edit compile in Serve
@@ -38,7 +42,7 @@
   - A fresh options check of the orchestrator's capture decisions read the
     source on 2026-11-18. On a restart after unreverted edits, the core loads
     the stale head entry in `seed_bundle` at
-    `crates/mokly-sidecar/src/pool_bundle_cache.rs:54`. The sidecar restores
+    `crates/mokly-sidecar/src/pool_bundle_cache.rs:62`. The sidecar restores
     the entry and rejects it, and then the head compiles with capture. Main
     compiles that head once, with no capture, so this start can be slower
     than main. C1 accepts this head compile. The local measurement for PR
@@ -85,15 +89,26 @@
     `crates/mokly-cli/src/serve_rebuild.rs:91`. Only that loop sees watch
     batches, actions, and the stop.
   - Plan reuse on C4:
-    - Each finished pause compile replaces the plan reference.
-    - A cancelled pause compile keeps the old reference.
+    - Each finished pause compile that gives a record replaces the plan
+      record of its bundle settings. A pause compile is a captured compile,
+      so the plan reuse rules already keep its record. A pause compile
+      without a record keeps the older record.
+      If that compile replaces the disk entry without a plan, the older
+      record stays only in the process. The next warm start has no plan.
+    - A cancelled pause compile keeps the old record.
     - After a topology change, the next pause restores plan reuse.
-    - Today the native plan is a local value of `bundle()` in
-      `packages/mokly/src/sidecar/bundle.ts`. Plan reuse must keep it with
-      the evidence of the same captured compile, and a warm start needs it in
-      the stored recipe.
+    - The plan reuse rules keep the native plan of `bundle()` in
+      `packages/mokly/src/sidecar/bundle.ts` with the evidence of the same
+      captured compile. They store the plan beside the compiled recipe in
+      the bundle cache entry. `restoreGeneration` carries no plan. A warm
+      start gets the stored plan only after a sidecar accepts that stored
+      compilation.
     - The Rust check is `physical_inputs::current`, at
-      `crates/mokly-render/src/physical_inputs.rs:113`.
+      `crates/mokly-render/src/physical_inputs.rs:113`. Plan reuse also
+      needs the `durable` flag, which that check does not read.
+    - The plan record gives the import targets of a captured compile. Option
+      D below also needs such a record. Plan reuse stores no edit compile, so
+      D still needs the targets of each edit compile.
   - Every option keeps these goals: no setting, gate, or retry; no extra
     process; the existing pool bound; only complete and durable evidence on
     disk; and the first-touch order, the barrier, one capture owner, and
@@ -172,11 +187,11 @@
     unreverted edits compiles the head with capture. Its option C moves the
     physical finish check and the recipe save off the critical path of the
     bundle result, which shortens both.
-- **Recommendation:** B, with the plan reuse work. It makes restarts after a
-  pause warm and keeps each edit on the C1 path. C and D stay alternatives
-  for that work. C is smaller, but the restart stays cold. D shares the
-  request-to-target record of plan reuse, but it needs a new stability
-  proof.
+- **Recommendation:** B, in its own change after the plan reuse work. It
+  makes restarts after a pause warm and keeps each edit on the C1 path. C
+  and D stay alternatives for that change. C is smaller, but the restart
+  stays cold. D shares the request-to-target record of plan reuse, but it
+  needs a new stability proof.
 - **Action:** ask the user, because B and D change the rules of a bundle
   entry, C changes a seeding decision of the compiled recipe rules, and no
   measurement yet decides the quiet period, the cost of an edit that arrives

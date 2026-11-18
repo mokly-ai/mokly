@@ -17,6 +17,7 @@ errors, live reuse, and disk safety keep their existing meaning.
 Contract owners:
 
 - [Compiled recipes and capture modes](../docs/protocol/mokly-sidecar-recipes.md).
+- [Serve edit plans](../docs/protocol/mokly-sidecar-plans.md).
 - [Sidecar module sources](../docs/protocol/mokly-sidecar-modules.md).
 - [Bundle entries and stable capture](../docs/protocol/mokly-base-cache.md#bundle-entries).
 - [Sidecar crate](../crates/mokly-sidecar/README.md).
@@ -189,11 +190,21 @@ Shared terms:
     typed core record pairs it with the same evidence Arc. Restore requests
     carry no plan. Warm seeding attaches a loaded plan only after the sidecar
     accepts its matching runtime key. Effort: Medium.
+  - **F.** Keep only the existing SHA-256 settings key, instead of the full
+    settings value. This saves a small settings copy but hashes every edit
+    lookup and makes the match depend on the digest. Effort: Small.
+  - **G.** Count settings at sidecar admission too. Both bounds then count
+    settings, plan, and evidence. This changes the pair rule for little
+    headroom on the measured fixtures. Effort: Small.
+  - **H.** Count estimated heap bytes in the core. This needs an unmeasured
+    size model and changes the unit of the fixed bound. Effort: Medium.
 - **Left out:**
   - Memory-only retention violates P4.
   - An unbounded plan violates P1 and the user's memory constraint.
   - A separate cache adds ownership and atomicity rules that the existing
     publication already supplies.
+  - A total that does not charge retained settings fails the total bound.
+    A separate settings allowance enlarges it.
 - **Assumptions:** Only captured durable results reach disk, from P6 and the
   bundle-cache contract. The existing frame and disk bounds remain in force.
 - **Wider fix:** E. Cache-only plan data stays outside restored programs and
@@ -208,6 +219,52 @@ Shared terms:
   one combined 8 MiB record bound and 8 MiB total core retention. Measure
   actual plan and evidence together. Use D within those bounds if needed.
   Ask the performance orchestrator before using C.
+
+### 4. Keep an older eligible record
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** `crates/mokly-render/src/edit_plans.rs`,
+  `docs/protocol/mokly-sidecar-plans.md`.
+- **Background:** A successful captured compile can supply no eligible plan.
+  The owner can still hold an older record of equal settings.
+- **Problem:** The first calls did not state whether that older record stays.
+- **Impact if no action:** The replacement transition has no stated rule.
+- **Root question:** May a later full result without a record end the older
+  record, or does only the older record's own evidence decide its use?
+- **Options:**
+  - **A.** Keep the older eligible record. Check its own complete, durable
+    evidence before every edit. Keep both bounds. Effort: Small.
+  - **B.** Remove the older equal-settings record after each successful full
+    capture, then retain the replacement only when eligible. This follows
+    released-recipe replacement but loses valid reuse. A full reuse hit also
+    supplies no plan, so class-map requests and memory seeds can remove a
+    valid record. Effort: Small.
+  - **C.** Remove the older record only when a later capture has incomplete
+    or unstable evidence. This adds cause-specific rules without a safety
+    gain over checking the older record. Effort: Small.
+  - **D.** Check the older evidence once when a later capture supplies no
+    record, and remove it when stale. This loses reuse when a changed input
+    returns to its captured state. Effort: Small.
+- **Left out:** A new refresh compile belongs to C4. An ineligible
+  replacement violates the admission rule. Several records per settings,
+  a cut-down plan, and per-entry checks add work outside this decision.
+  Keeping the older plan on disk would change the latest-compilation rule.
+- **Assumptions:** The Rust evidence check still proves the saved targets,
+  from P2 and the durability ruling. P5 still requires equal output. P6
+  still forbids capture on edits. Both bounds stay fixed, from the ruling.
+- **Wider fix:** A keeps the plan paired with the evidence that authorizes it.
+- **Previous examples:** Released recipes replace equal settings under a
+  different lifetime in `crates/mokly-sidecar/src/pool_recipes.rs`.
+- **Recommendation:** A. Current evidence preserves safe and useful reuse.
+- **Action:** The performance orchestrator chose A on 2026-11-18, as its
+  item 6, under the user's design delegation of 2026-11-16. Each use checks
+  the older record against current files. A later capture does not weaken
+  that proof. Released-recipe replacement serves a different owner and
+  lifetime. The options check kept A and added C and D. A later stored
+  compilation without a plan can still replace the disk entry, so the
+  predecessor then survives only in the running process.
 
 ## Confirmed invariants and measurement calls
 
@@ -249,26 +306,30 @@ Implementation invariants:
   entry that cannot fit its plan can still store the unchanged recipe.
 - Missing, oversized, incomplete, unstable, stale, or incompatible records
   keep the native-first path. A missing plan never weakens live reuse.
+- My accounting call of 2026-11-18 charges retained bundle settings too.
+  The separate plan-and-evidence admission bound remains 8 MiB. The total
+  core-retention bound counts every retained serialized setting, plan, and
+  evidence value, because the owner must not keep settings outside its bound.
 
 ## Milestone 1: Documentation and protocol
 
 Depends on: none
 
-- [ ] State plan reuse, evidence validation, unknown imports, bounds, and
+- [x] State plan reuse, evidence validation, unknown imports, bounds, and
       warm restore in the compiled recipe contract.
-- [ ] Update useful code entry points in the area READMEs.
-- [ ] Keep the warm-head follow-up current and explicitly outside this work.
+- [x] Update useful code entry points in the area READMEs.
+- [x] Keep the warm-head follow-up current and explicitly outside this work.
 
 ## Milestone 2: Captured plans and direct compilation
 
 Depends on: 1
 
-- [ ] Define typed Rust wire records and regenerate the TypeScript types.
-- [ ] Keep each native plan with its captured evidence. Charge both to the
+- [x] Define typed Rust wire records and regenerate the TypeScript types.
+- [x] Keep each native plan with its captured evidence. Charge both to the
       record bound. Preserve existing capture, identity, and frame rules.
-- [ ] Accept a request-only plan for edit compilation. Run its planned
+- [x] Accept a request-only plan for edit compilation. Run its planned
       attempt directly. Preserve full resolution of uncovered imports.
-- [ ] Add the oracle test and attempt-count assertions. Cover content edits,
+- [x] Add the oracle test and attempt-count assertions. Cover content edits,
       new imports, new modules, changed index priority, manifest changes,
       tsconfig paths, links, errors, and an oversized record. Prove new
       behaviour red first. Existing sidecar tests stay unchanged.
@@ -277,13 +338,17 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Retain the last captured record by equal settings in a byte-bounded
+- [x] Retain the last captured record by equal settings in a byte-bounded
       Serve-head core owner. Keep it after the compilation lease ends.
-- [ ] Before edits, validate through the Rust physical evidence reader.
+- [x] Before edits, validate through the Rust physical evidence reader.
       Send only a complete, durable, and current plan. Keep stale records until a captured compile.
-- [ ] Restore the plan from the existing durable recipe on warm startup.
-- [ ] Test invalidation, record eviction, the edit marker, and the first
+- [x] Restore the plan from the existing durable recipe on warm startup.
+- [x] Test invalidation, record eviction, the edit marker, and the first
       warm edit. Preserve bundle-cache and Serve tests.
+- [x] Test that an ineligible later full capture keeps the older record,
+      and that only current evidence permits an edit to use it.
+- [x] State total settings accounting and the older-record rule in Kept
+      Records. Remove temporary status lines and add final README entry points.
 
 ## Milestone 4: Measurement and verification
 
@@ -291,8 +356,8 @@ Depends on: 3
 
 - [ ] Build last merged main and this branch in separate checkouts with
       separate Cargo targets. Use release binaries and matching sidecar dists.
-- [ ] Measure actual plan and evidence together before fixing their wire
-      encoding. Keep both record bounds at 8 MiB.
+- [ ] Measure actual plan and evidence together, plus retained settings and
+      the kept total, before fixing their wire encoding. Keep both bounds at 8 MiB.
 - [ ] Measure first Changes, edit-to-Changes-ready, sidecar.bundle spans,
       attempt counts, and peak RSS on examples/basic and scripts/large
       fixtures. Keep before and after records under `.context/`.

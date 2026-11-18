@@ -18,6 +18,10 @@ export function checkRecipeSize(
     Buffer.byteLength(response),
     Buffer.byteLength(restore),
   );
+  if (bytes > limit && result.plan) {
+    delete result.plan;
+    return checkRecipeSize(params, result, limit);
+  }
   if (
     bytes > limit &&
     Object.keys(result.compiled.reuseEvidence.inputs).length

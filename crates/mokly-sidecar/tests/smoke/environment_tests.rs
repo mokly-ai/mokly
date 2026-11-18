@@ -57,6 +57,7 @@ fn child_checks_environment() {
     let sidecars: Box<dyn SidecarPool> = Box::new(pool(&super::super::package_version::read()));
     let MethodResult::Bundle(bundle) = sidecars
         .request(Call::Bundle(BundleRequest {
+            plan: None,
             params: Bundle {
                 evaluation: None,
                 entry_files: vec!["component.mockup.tsx".into()],

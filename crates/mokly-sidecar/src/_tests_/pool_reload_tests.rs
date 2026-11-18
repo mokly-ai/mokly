@@ -49,6 +49,7 @@ fn worker(expected: &[&str], calls: usize) -> Unimock {
                 );
                 Ok(match &request.call {
                     Call::Bundle(_) => MethodResult::Bundle(Box::new(results::Bundle {
+                        plan: None,
                         unmapped_dependency_directories: None,
                         epoch: 0,
                         cache: None,
@@ -201,6 +202,7 @@ fn a_busy_second_process_reloads_maps_after_release_and_rebundle() {
     pool.release_generation("g", 0);
     pool.synchronize_releases();
     pool.request(Call::Bundle(BundleRequest {
+        plan: None,
         params: bundle(),
         capture: None,
     }))
@@ -212,6 +214,7 @@ fn a_busy_second_process_reloads_maps_after_release_and_rebundle() {
     .unwrap();
     pool.request(Call::Bindings(bindings("new/card"))).unwrap();
     let lease_call = Call::Bundle(BundleRequest {
+        plan: None,
         params: bundle(),
         capture: None,
     });
@@ -232,6 +235,7 @@ fn an_updated_binding_table_is_replayed_on_the_second_process() {
     );
     pool.request(Call::Bindings(bindings("new/card"))).unwrap();
     let lease_call = Call::Bundle(BundleRequest {
+        plan: None,
         params: bundle(),
         capture: None,
     });

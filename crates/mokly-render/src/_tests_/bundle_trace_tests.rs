@@ -34,6 +34,7 @@ fn params() -> Bundle {
 
 fn result(cache: CacheOutcome) -> MethodResult {
     MethodResult::Bundle(Box::new(results::Bundle {
+        plan: None,
         generation: "generation".into(),
         epoch: 7,
         cache: Some(cache),
