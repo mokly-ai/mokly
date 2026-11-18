@@ -3,7 +3,7 @@
 use std::fs::{File, OpenOptions, TryLockError};
 use std::path::Path;
 
-use crate::error::{Error, InternalError, IoResult, Result};
+use crate::error::{Error, IoResult, Result};
 
 /// A held shared or exclusive lock; closing this object releases the OS lock.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock())]
@@ -54,6 +54,6 @@ fn acquire(path: &Path, shared: bool) -> Result<Box<dyn FileLock>> {
         Err(TryLockError::WouldBlock) => Err(Error::Locked {
             path: path.to_owned(),
         }),
-        Err(TryLockError::Error(source)) => Err(Error::Internal(InternalError::Io { source })),
+        Err(TryLockError::Error(source)) => Err(Error::io(source)),
     }
 }

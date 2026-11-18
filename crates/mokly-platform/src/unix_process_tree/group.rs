@@ -4,7 +4,7 @@ use std::io;
 use std::process::Child;
 use std::sync::{Arc, Mutex};
 
-use crate::error::{Error, InternalError, IoResult, Result};
+use crate::error::{Error, IoResult, Result};
 use crate::processes::ProcessGroup;
 use crate::unix_process_table::{ProcessIdentity, ProcessTable, SystemTable};
 
@@ -85,9 +85,7 @@ impl UnixGroup {
                 );
             }
         }
-        first_error.map_or(Ok(()), |source| {
-            Err(Error::Internal(InternalError::Io { source }))
-        })
+        first_error.map_or(Ok(()), |source| Err(Error::io(source)))
     }
 
     /// A dead leader's group can still contain owned children. The OS reserves
@@ -134,10 +132,9 @@ fn remember(slot: &mut Option<io::Error>, source: io::Error) {
     }
 }
 
+#[track_caller]
 fn mutex_error() -> Error {
-    Error::Internal(InternalError::Io {
-        source: io::Error::other("Unix process-tree state was poisoned"),
-    })
+    Error::io(io::Error::other("Unix process-tree state was poisoned"))
 }
 
 impl ProcessGroup for UnixGroup {
@@ -155,16 +152,15 @@ pub(crate) fn attach(child: &Child, group: Arc<dyn GroupSignal>) -> Result<Box<d
     let pid = match i32::try_from(child.id()) {
         Ok(pid) => pid,
         Err(_) => {
-            return Err(Error::Internal(InternalError::Io {
-                source: io::Error::other("process id exceeds pid_t"),
-            }));
+            return Err(Error::io(io::Error::other("process id exceeds pid_t")));
         }
     };
     let table: Arc<dyn ProcessTable> = Arc::new(SystemTable);
     let root = table.identity(pid).platform()?.ok_or_else(|| {
-        Error::Internal(InternalError::Io {
-            source: io::Error::new(io::ErrorKind::NotFound, "child exited before attachment"),
-        })
+        Error::io(io::Error::new(
+            io::ErrorKind::NotFound,
+            "child exited before attachment",
+        ))
     })?;
     Ok(Box::new(UnixGroup::new(root, table, group)))
 }
