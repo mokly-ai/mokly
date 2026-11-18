@@ -10,6 +10,7 @@ import {
   bundleResult,
   restore,
 } from "../packages/mokly/src/sidecar/compiled.js";
+import { jsonText } from "../packages/mokly/src/sidecar/json.js";
 import { checkRecipeSize } from "../packages/mokly/src/sidecar/recipe-size.js";
 
 import { bundleParams, startSidecar } from "./helpers/sidecar.js";
@@ -80,6 +81,72 @@ test("bundle recipes carry one module graph and fail with a typed size diagnosti
     durable: false,
     inputs: {},
   });
+});
+
+test("recipe size counts shared members once at exact transport limits", () => {
+  const edge = '"\\\b\t\n\f\r\u0000\u001f é中😀\ud800x\udfff';
+  for (const larger of ["restore", "response"]) {
+    const params = bundleParams();
+    const reads = { code: 0, path: 0 };
+    const recipe = {
+      ...compiled(),
+      get code() {
+        reads.code += 1;
+        return edge;
+      },
+      sources: { [edge]: edge },
+      reuseEvidence: {
+        complete: true,
+        durable: false,
+        inputs: { [edge]: { kind: "file" as const, digest: edge } },
+      },
+    };
+    const result: BundleResult = {
+      generation: edge,
+      compiled: recipe,
+      modules: [
+        {
+          get path() {
+            reads.path += 1;
+            return edge;
+          },
+          imports: [edge],
+        },
+      ],
+      ...(larger === "response"
+        ? { unmappedDependencyDirectories: [edge.repeat(256)] }
+        : {}),
+    };
+    const envelopeBytes = () => {
+      const id = "18446744073709551615";
+      const response = Buffer.byteLength(
+        `{"id":${id},"result":${jsonText(result)}}`,
+      );
+      const restored = Buffer.byteLength(
+        `{"id":${id},"method":"restoreGeneration","params":${jsonText({ generation: result.generation, params, compiled: result.compiled, modules: result.modules })}}`,
+      );
+      assert.equal(response > restored, larger === "response");
+      return Math.max(response, restored);
+    };
+    const bytes = envelopeBytes();
+    const evidence = recipe.reuseEvidence;
+    reads.code = reads.path = 0;
+    assert.doesNotThrow(() => checkRecipeSize(params, result, bytes));
+    assert.deepEqual(reads, { code: 1, path: 1 });
+    assert.equal(result.compiled.reuseEvidence, evidence);
+    assert.doesNotThrow(() => checkRecipeSize(params, result, bytes - 1));
+    assert.deepEqual(result.compiled.reuseEvidence, {
+      complete: false,
+      durable: false,
+      inputs: {},
+    });
+    const reducedBytes = envelopeBytes();
+    assert.doesNotThrow(() => checkRecipeSize(params, result, reducedBytes));
+    assert.throws(() => checkRecipeSize(params, result, reducedBytes - 1), {
+      code: "bundle-failed",
+      message: `Compiled bundle data needs ${reducedBytes} bytes. The sidecar limit is ${reducedBytes - 1} bytes. Reduce the bundle and retry.`,
+    });
+  }
 });
 
 test("failed peer resolution cannot fall through to a native parent installation", () => {

@@ -132,7 +132,7 @@ Neither the returned generation nor a module-global object retains the map.
 Replaced ways:
 
 - Consumer callback reads become synchronous reads. Consumers: the `file` namespace loader, `tests/sidecar_source_reads.test.ts`, and the read interception of `tests/sidecar_bundle_snapshot.test.ts`. Move all three in Milestone 2.
-- Envelope texts for sizing become member counts. Consumer: `checkRecipeSize`. Replace it in Milestone 2.
+- Envelope texts for sizing become member counts. Consumers: `checkRecipeSize`, and the frame-bound fallback test of `tests/sidecar_reuse_capture.test.ts`, whose `Buffer.byteLength` double recognized only complete envelope texts. Move both in Milestone 2. The test keeps every assertion, and its double recognizes the compiled member text.
 - Independent attempt reads become per-call byte reuse. Consumers: the native, planned, and full attempts. Replace them in Milestone 2.
 
 ## Milestone 1: Contract and options check
@@ -151,15 +151,15 @@ Evidence: `.context/sidecar-bundle-javascript-work/options-check.md`.
 
 Depends on: 1
 
-- [ ] Delegate implementation and tests to the `non-ui implementor`.
-- [ ] Prove new read-reuse and size-count behaviour red first.
-- [ ] Keep every existing assertion when moving the read interceptions.
+- [x] Delegate implementation and tests to the `non-ui implementor`.
+- [x] Prove new read-reuse and size-count behaviour red first.
+- [x] Keep every existing assertion when moving the read interceptions.
 - [ ] Prove missing and unreadable files keep their whole diagnostic text against the saved `main` package, also at stack limits 2 and 3 with several failing loads.
-- [ ] Prove final records exclude a CSS module that only the native attempt loaded, and use compiled bytes.
+- [x] Prove final records exclude a CSS module that only the native attempt loaded, and use compiled bytes.
 - [ ] Compare `main` and branch compiled output and input bytes for native, planned, and full paths.
-- [ ] Update the `bundle.ts` entry of the package README for the per-call reads.
-- [ ] Run existing sidecar tests and repeat each new asynchronous test ten times.
-- [ ] Check the combined change against the design and repository rules.
+- [x] Update the `bundle.ts` entry of the package README for the per-call reads.
+- [x] Run existing sidecar tests and repeat each new asynchronous test ten times.
+- [x] Check the combined change against the design and repository rules.
 
 Evidence belongs under `.context/sidecar-bundle-javascript-work/`.
 

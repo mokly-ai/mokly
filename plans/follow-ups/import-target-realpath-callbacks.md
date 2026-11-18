@@ -1,0 +1,32 @@
+# Import target checks wait on realpath callbacks
+
+- **Severity:** Low. **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-18, from the options check of the sidecar bundle JavaScript cuts on `calummoore/mokly-bundle-hot-path-2-1bc5`.
+- **Location:** `packages/mokly/src/sidecar/module-paths.ts:230`, `packages/mokly/src/sidecar/plugins.ts:162`, `packages/mokly/src/sidecar/plugins.ts:205`, and `packages/mokly/src/sidecar/native-plan.ts:128`.
+- **Reason:** The bundle change moved only the measured consumer file loads to synchronous reads, and nobody has measured this second class of callbacks.
+
+- **Source:** Review.
+- **Category:** Performance.
+- **Terms:**
+  - **Sidecar:** Mokly's Node process under `packages/mokly/src/sidecar` that bundles catalogue modules with esbuild.
+  - **`ModulePaths`:** the class in `module-paths.ts` that maps each resolved file to its logical source name and checks that the file belongs to the side.
+- **Background:**
+  - Each bundle call compiles the catalogue with esbuild. Mokly's plugins in `plugins.ts` resolve imports and load files on the main JavaScript thread.
+  - `ModulePaths.resolve` awaits `fs.promises.realpath` for each absolute target. A mapped candidate awaits a second `realpath` and a `stat`. Each call is a thread-pool round trip with a callback on the main thread.
+  - The CSS resolver at `plugins.ts:162` and the full resolver at `plugins.ts:205` call it for each resolved import. The native plan classification at `native-plan.ts:128` calls it once for each distinct native target.
+  - `ModulePaths.resolveSync`, below `resolve` in the same file, already does the same work with synchronous calls.
+  - On 2026-11-18, the `mokly-cloud` head bundle of 167 entries had 4,638 inputs, 15,251 import edges, and 13,227 consumer `onResolve` calls. The main thread was busy for about 63% of each bundle.
+  - On the same date, one synchronous read in place of the callback read of each consumer file load saved 252 ms of 2,048 ms per bundle in a standalone probe.
+- **Problem:** Import target checks use the same per-file callback pattern on the main thread. Their cost is not measured.
+- **Impact if no action:** Each bundle may keep a measurable part of its main-thread time in these callbacks.
+- **Root question:** How can each bundle check its import targets with less main-thread work, with the same names, errors, and dependency records?
+- **Options:**
+  - **A.** Change nothing. Effort: Small.
+  - **B.** Measure the callbacks on a large catalogue. When the saving is real, call `resolveSync` from the hot callers. Keep the errors and the dependency-usage records. A cold metadata cache then makes the main thread wait on the disk, so measure one cold start too. Effort: Small (estimate).
+  - **C.** Keep one map of real paths within each bundle call, shared by its attempts, so that each path is checked once for each call. This adds per-call state beside the read map of the consumer loads. Effort: Medium (estimate).
+- **Left out:** A cache across bundle calls. A later call must see renamed links and moved files.
+- **Wider fix:** None. Each caller keeps its own boundary.
+- **Previous examples:** The consumer file loads of `plugins.ts`, which moved from callback reads to one synchronous read on 2026-11-18.
+- **Recommendation:** B. The measurement decides whether the change pays, and the synchronous variant already exists.
+- **Action:** fix after merge, apply B, because the bundle change kept its scope to the three measured cuts.

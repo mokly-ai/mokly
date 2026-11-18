@@ -71,6 +71,7 @@ interface NativeOutcome {
 
 interface BundleCaptureState {
   mode: BundleCapture;
+  reads: Map<string, Uint8Array>;
   durability?: CaptureDurability | undefined;
   evidence?: ResolutionEvidence;
   preview?: string | null | undefined;
@@ -90,6 +91,7 @@ export async function bundle(
 ): Promise<Bundled> {
   const capture: BundleCaptureState = {
     mode: captureMode,
+    reads: new Map(),
     ...(captureMode === "full" ? { durability } : {}),
   };
   const native = await bundleAttempt(
@@ -130,6 +132,7 @@ export async function bundleWith(
 ): Promise<Bundled | NativeOutcome> {
   return bundleAttempt(params, compile, measurements, resolution, {
     mode: "full",
+    reads: new Map(),
   });
 }
 
@@ -226,6 +229,7 @@ async function bundleAttempt(
           paths,
           runtimeKey,
           resolution,
+          capture.reads,
         ),
       ],
       ...resolutionOptions(params.sourceRoot, settings),
