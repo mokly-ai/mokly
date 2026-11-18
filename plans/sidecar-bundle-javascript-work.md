@@ -183,7 +183,7 @@ The cold page cache made the large React bundle slower, which `plans/follow-ups/
 
 Evidence: `.context/sidecar-bundle-javascript-work/measurements/` and `.context/sidecar-bundle-javascript-work/bench/`.
 
-- [ ] Run the complete gate with the required tool versions.
-- [ ] Review the complete diff against `origin/main` with the `implementation-review` skill after the push. Fix confirmed fix-now findings, record follow-ups, and re-review once.
+- [x] Run the complete gate with the required tool versions.
+- [x] Review the complete diff against `origin/main` with the `implementation-review` skill after the push. Fix confirmed fix-now findings, record follow-ups, and re-review once.
 - [ ] Delete this plan under the `plans` skill after all preceding work completes.
 - [ ] Open the pull request into `main`. Keep the dated decisions and plan permalink in its description. Wait for final CI and send the report. Do not merge.
