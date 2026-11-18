@@ -222,15 +222,15 @@ define deadlines, process replacement, and shutdown grace.
 
 ## Fail-Closed Rules
 
-| Code                  | Condition                                        | Presentation                                                                   |
-| --------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------ |
-| `sidecar-unavailable` | Node or the sidecar entry cannot be started      | `build-invalid` naming the missing part                                        |
-| `sidecar-version`     | the sidecar version differs from the CLI version | `build-invalid` with both versions                                             |
-| `sidecar-protocol`    | a malformed frame or a frame over the size limit | `build-invalid`; the sidecar is replaced                                       |
-| `sidecar-crashed`     | the process exits during a request               | the request's own code after one retry                                         |
-| `bundle-failed`       | bundling or evaluation fails                     | `build-invalid` with the module and diagnostic                                 |
-| `render-failed`       | a render throws or returns a non-string          | `build-invalid` with the entry and, for a view render, the viewport and scheme |
-| `render-timeout`      | a deadline passed twice                          | `build-invalid` with the entry and the deadline                                |
+| Code                  | Condition                                                                                       | Presentation                                                                   |
+| --------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `sidecar-unavailable` | Node or the sidecar entry cannot be started, or a required PostCSS context worker is out of use | `build-invalid` naming the missing part                                        |
+| `sidecar-version`     | the sidecar version differs from the CLI version                                                | `build-invalid` with both versions                                             |
+| `sidecar-protocol`    | a malformed frame or a frame over the size limit                                                | `build-invalid`; the sidecar is replaced                                       |
+| `sidecar-crashed`     | the process exits during a request                                                              | the request's own code after one retry                                         |
+| `bundle-failed`       | bundling or evaluation fails                                                                    | `build-invalid` with the module and diagnostic                                 |
+| `render-failed`       | a render throws or returns a non-string                                                         | `build-invalid` with the entry and, for a view render, the viewport and scheme |
+| `render-timeout`      | a deadline passed twice                                                                         | `build-invalid` with the entry and the deadline                                |
 
 There is no fallback render and no partial output. Commands that need neither
 JavaScript nor PostCSS never start a sidecar or fail for these reasons.

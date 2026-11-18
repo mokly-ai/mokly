@@ -150,12 +150,14 @@ fn clean_idle(state: &Mutex<State>, ready: &Condvar, timeout: Option<u64>) -> bo
         state.slots[index] = if state.stopped { None } else { slot };
         if state.slots[index].is_none() {
             state.controls.remove(&index);
+            state.source_roots.remove(&index);
         }
         state.available.push_back(index);
         pending |= changed
             && state.slots[index]
                 .as_ref()
                 .is_some_and(|slot| pool_cleanup::pending(&state, slot));
+        state.head.notify();
         ready.notify_all();
     }
     pending

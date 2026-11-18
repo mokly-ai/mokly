@@ -81,7 +81,7 @@ impl ServeServices {
             cwd,
             &config.repo_root,
             common,
-            diagnostics,
+            diagnostics.clone(),
             cancellation,
             cache,
             reporting,
@@ -94,12 +94,15 @@ impl ServeServices {
                 });
             }
         };
-        let sidecars: Arc<dyn PoolScheduling> = Arc::new(ServePool::new(
-            services.pool,
-            common
-                .sidecars
-                .expect("CLI option normalization sets the sidecar count before Serve starts"),
-        ));
+        let sidecars: Arc<dyn PoolScheduling> = Arc::new(
+            ServePool::new(
+                services.pool,
+                common
+                    .sidecars
+                    .expect("CLI option normalization sets the sidecar count before Serve starts"),
+            )
+            .with_diagnostics(diagnostics),
+        );
         let pool = sidecars.pool(None);
         let mut runtime = (*services.runtime).clone();
         runtime.pool = pool.clone();

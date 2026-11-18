@@ -42,6 +42,7 @@ mod serve_progress;
 mod serve_rebuild;
 mod serve_rebuild_action;
 mod serve_reporter;
+mod serve_return;
 mod serve_services;
 mod serve_shutdown;
 mod serve_signals;

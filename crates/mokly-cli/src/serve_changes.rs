@@ -199,6 +199,7 @@ impl ChangeSource for Source {
                 }
             }
         });
+        self.services.sidecars.base_finished();
     }
     fn discarded(&self) {
         if let Some(staging) = self
@@ -219,3 +220,7 @@ mod serve_changes_tests;
 #[cfg(test)]
 #[path = "_tests_/serve_reuse_support.rs"]
 mod serve_reuse_support;
+
+#[cfg(test)]
+#[path = "_tests_/serve_return_tests.rs"]
+mod serve_return_tests;
