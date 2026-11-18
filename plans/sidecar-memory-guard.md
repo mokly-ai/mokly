@@ -142,6 +142,46 @@ The non-ui implementor traced the gap with a busy base call, a second base call,
 
 Options-check evidence: `.context/sidecar-memory-guard/decision-4-options-check.md`. The out-of-gate return and cleanup waits also exist on main. They do not depend on memory admission and are outside this correction.
 
+### 5. Close the retained-cache proof
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Process.
+- **Location:** The one-time finite-limit measurement under `.context/sidecar-memory-guard/`.
+- **Terms:**
+  - **Retained-cache witness:** Four workers observed while at least 1,228 MiB of the charged file cache remains.
+- **Background:** The larger finite-limit case charges 1,536 MiB of file cache. Its prepared witness requires 80% retention. This threshold is measurement design, not the product contract.
+- **Problem:** The kernel reduced charged cache below the threshold while one worker existed. Four workers later appeared with less retained cache. Exact admission readings and claims were not logged.
+- **Impact if no action:** The original stronger proof stays unproven. Its failed assertion must not become a pass.
+- **Root question:** What evidence shows that reclaimable file cache does not deny default growth that the memory can hold?
+- **Options:**
+  - **A.** Keep the failed verdict and close with the existing healthy, bounded-memory, unit-test, and weaker joint evidence. State the stronger proof as a limitation. Effort: Small.
+  - **B.** Run one new diagnostic experiment with temporary admission tracing in a separate build. Preserve the original failed result and every bound. Remove the tracing before the PR. Effort: Small.
+  - **C.** Run that diagnostic experiment on a fresh isolated runner. This reduces host variation but needs another machine and setup. Effort: Medium.
+  - **D.** Run a temporary probe of the product estimate and idle pool capacity immediately after cache charging. This checks real-kernel readings without Serve admissions. Effort: Small.
+  - **E.** Observe the unchanged release binary with external probes. This avoids a traced build but needs register and inlined-read decoding. A probe error spends the single experiment. Effort: Medium.
+  - **F.** Protect the charged cache with a top-level cgroup and `memory.low`. Keep every original bound. This moves reclaim pressure to other sessions on the shared host. Effort: Medium.
+  - **G.** Apply A now and record the diagnostic as post-merge work. The PR then merges without the stronger proof. Effort: Small.
+- **Left out:** Lowering the original retention threshold or repeating the case unchanged would hide or repeat its failed witness. Permanent tracing breaks the temporary-diagnostic requirement. A warm disk cache cannot establish the original retained-cache proof. Offline replay cannot recover admission inputs that were never recorded.
+- **Wider fix:** None. This is a one-time evidence gap. The injected cache calculation already has behavior tests.
+- **Previous examples:** None found.
+- **Recommendation:** B. Exact admission readings can show whether cache credit permits the full worker count.
+- **Action:** fix now, apply B, as the performance orchestrator decided on 2026-11-18 under the user's delegation of 2026-11-16. Run this one experiment only. If it does not show cache credit at admission, apply A and state the limitation in the PR.
+
+The performance orchestrator's reason: cache credit decides whether a container with much file cache gets its full worker count. Exact readings justify one small experiment. The successful three-GiB case proves the safety bound. The accepted `mokly-cloud` result proves healthy speed. The stronger proof must not hold the PR for long.
+
+The diagnostic records the host value, each finite cgroup value, cache credit, and budgets held by earlier admissions. It uses a separate checkout and target directory. It preserves every original bound and the failed retained-cache assertion. Remove its temporary tracing before the PR. No diagnostic code enters the product branch.
+
+Before the run, define decisive evidence as a non-first growth claim that cache credit permits and the uncredited values deny. Link that exact held budget to its later slot conversion. A direct non-first slot admission can also establish the result with its own complete inputs. Keep host readings, worker readings, CPU bounds, and earlier held budgets identical in both calculations. Unknown readings or unmatched records cannot establish the proof. The complete arithmetic and joins are in `.context/sidecar-memory-guard/diagnostic-admission/analysis-procedure.md`.
+
+The options check kept B and added D through G. B covers the real Serve admissions as well as the early capacity readings. Keep its Small estimate for this time-boxed build, run, and report. Stop after the single attempt even if it fails. Evidence: `.context/sidecar-memory-guard/decision-5-options-check.md`.
+
+Shared assumptions: preserve the failed result, keep the original bounds, and leave product behavior unchanged. The task and the performance orchestrator's call require them. The performance orchestrator explicitly set the one-experiment limit and fallback to A. Exact inputs need not come from internal tracing, as E shows. A full Serve session is not essential to a signal-only check, as D shows. Host reclaim could be controlled with F or avoided with C. G drops the assumption that the PR must wait for stronger proof. The chosen B keeps the existing shared-host setup.
+
+Outcome, 2026-11-18: the separate instrumented build passed. The single finite attempt failed its unchanged initial cache-retention check before Serve. It produced no admission trace. The workspace orchestrator applied the performance orchestrator's approved A fallback. The original retained-cache verdict stays failed, and the PR states the stronger proof limitation. No second attempt ran. Temporary tracing, checkout, and target were removed. Evidence: `.context/sidecar-memory-guard/diagnostic-admission/report.md` and `post-retirement-proof.json`.
+
+### Shared implementation design
+
 Preserve whether the count came from the command, the environment, or the default before option normalization loses that fact. Inject the system memory boundary only for a default pool. Keep the integer count as the scheduler's upper bound.
 
 Check admission only for additional live or reserved processes. A matching idle worker needs no new reservation. A root change replaces an owned worker in its existing reservation. The first usable reservation always succeeds. Unknown worker memory reserves its whole remaining budget. Unknown host memory allows no extra reservation.
@@ -152,7 +192,7 @@ Serve uses the same memory-permitted ceiling for its gate and sliding background
 
 The options check recommended an observed-peak budget after replaying all React samples. The replay tests a fourth admission after the pool already reserved four slots. It does not require those reservations again. The initial four-worker admission fits the baseline. Keep the fixed budget to protect later worker growth. A smaller observed peak is not an upper bound on the next render. The alternate recycling rule waits for a separate user decision if ever proposed.
 
-Use trace-level admission data for measurement if needed. A new user-facing diagnostic is not required by this change.
+Keep any temporary admission tracing in the separate diagnostic checkout. Remove it before the PR. No new user-facing diagnostic enters this change.
 
 Options-check report: `.context/sidecar-memory-guard/plan-options-check.md`. The workspace orchestrator accepted the scheduler and cgroup corrections. The workspace orchestrator rejected the observed-peak recommendation because its report acknowledges that concurrent later growth can overcommit memory. The user explicitly forbids that risk. The check's suggested new recycle threshold is an alternative, not required work or a deferred finding.
 
@@ -218,14 +258,25 @@ The orchestrator runs the combined checks and compares separate release builds.
 
 PR #315 advanced `main` to `2e6bde9c2`. The final comparison rebuilds that baseline in its separate checkout and target directory. Each run uses its own empty external cache directory, so the bundle disk cache starts in the same state. The initial measurements above remain the evidence for the budget choice. The partial `e60c16532` comparison is superseded. Its interrupted HTML run and full cleanup proof remain under `.context/sidecar-memory-guard/`.
 
-- [ ] Measure branch Serve start and two edits on basic and default large HTML and React fixtures with the baseline harness.
-- [ ] Compare count, process tree peak, first Changes, and edit times against the baseline. Confirm the healthy four-worker count.
-- [ ] Complete a bounded memory-limit run that shows reduced default growth and successful Changes. Include charged file cache, cgroup events, and owned process cleanup.
-- [ ] Check cache-aware capacity under a larger finite limit where four workers fit after reclaiming file cache.
-- [ ] Send the implementation SHA to the performance orchestrator immediately after push for its `mokly-cloud` measurement.
-- [ ] Run targeted tests, formatting, `cargo xtask check --suite repository`, and `cargo xtask check` with the required tools.
+- [x] Measure branch Serve start and two edits on basic and default large HTML and React fixtures with the baseline harness.
+- [x] Compare count, process tree peak, first Changes, and edit times against the baseline. Confirm the healthy four-worker count.
+- [x] Complete a bounded memory-limit run that shows reduced default growth and successful Changes. Include charged file cache, cgroup events, and owned process cleanup.
+- [x] Close the cache-aware capacity evidence with the single diagnostic experiment. Keep the original retained-cache verdict failed. If the diagnostic is inconclusive, apply the approved A fallback and state the stronger proof limitation in the PR.
+- [x] Explain the lower whole-process-tree peak, as the performance orchestrator requested on 2026-11-18.
+- [x] Send the implementation SHA to the performance orchestrator immediately after push for its `mokly-cloud` measurement.
+- [x] Run targeted tests, formatting, `cargo xtask check --suite repository`, and `cargo xtask check` with the required tools.
 
-Evidence: `.context/sidecar-memory-guard/`. Use Git 2.47.3 in its own first PATH directory, git-lfs, and Bun 1.4.4. Use `CARGO_INCREMENTAL=0`, separate target directories, and one Cargo build at a time. Check disk and memory before each large build.
+The performance orchestrator accepted the peak explanation on 2026-11-18. The lower peak is an observed retained-subtree difference, not a product rule. It requested the idle-child-retention follow-up for a separate branch.
+
+Evidence: `.context/sidecar-memory-guard/final-branch-report.md`, `latest-main-comparison.md`, `healthy-stage-analysis.md`, `final-limits-cleanup-proof.json`, and `mokly-cloud-parent-report.md`. The performance orchestrator accepted the healthy-speed requirement on 2026-11-18. The larger finite-limit run failed its prepared cache-retention witness. Its successful Serve result does not make that witness pass.
+
+The performance orchestrator requested an early push on 2026-11-18 so its independent measurement could run during the local checks. Implementation `7c90446a9` was pushed before the complete gate. Its initial CI watch found no run before the PR.
+
+The first complete gate passed its Rust, Node, and browser cases, then failed in browser global cleanup. The reporter kept no inner error. The existing browser-host-cleanup follow-up holds this recurrence. The direct setup and cleanup probe passed. The single complete-gate rerun passed on merged `684b4335f`, including browser cleanup and both static delivery modes. No test or assertion changed for the rerun. Evidence: `.context/sidecar-memory-guard/complete-gate-result.json`, `complete-gate-browser-failed.json`, and `browser-cleanup-probe-result.json`, and `complete-gate-rerun-result.json`.
+
+Before the rerun, `main` advanced to `760a2c294` with the Graphite palette and route reveal changes. Merge `684b4335f` preserves all added and changed main paths exactly. Memory and scheduling code remains byte-identical to `7c90446a9`. The completed release comparisons keep their recorded `2e6bde9c2` baseline. The next gate checks the combined tree. Integration evidence: `.context/sidecar-memory-guard/pre-gate-merge/merge-audit.log` and `preservation-proof.json`.
+
+Use Git 2.47.3 in its own first PATH directory, git-lfs, and Bun 1.4.4. Use `CARGO_INCREMENTAL=0`, separate target directories, and one Cargo build at a time. Check disk and memory before each large build.
 
 ## Milestone 4: Commit, review, and open the pull request
 
@@ -237,7 +288,7 @@ Integration evidence: `.context/sidecar-memory-guard/pre-main-merge/merge-audit.
 
 Generation-affinity integration evidence: `.context/sidecar-memory-guard/pre-affinity-merge/merge-audit.log`. Merge `285460e8f` preserves PR #315. Memory admission sets the growth bound. Generation ranking selects an available slot within it.
 
-- [ ] Commit with Conventional Commits and push the branch. Start `ci-wait.sh` after every push.
+- [x] Commit with Conventional Commits and push the branch. Start `ci-wait.sh` after every push.
 - [ ] Review the complete diff against `origin/main` with the implementation-review skill. Check each finding in a fresh second pass.
 - [ ] Apply the fix rule and its two fix rounds. Record each deferred finding as a follow-up item. Re-run affected checks.
 - [ ] Wait for CI and the performance orchestrator's `mokly-cloud` evidence. Fix branch-caused failures. Record unrelated failures and rerun them once.

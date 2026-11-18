@@ -11,9 +11,8 @@
   `tests/helpers/static_server.ts:90-93`,
   `scripts/verification/playwright-reporter.mjs:34-38`, and
   `scripts/verification/run-browser.mjs:66-72`.
-- **Reason:** The failure happened once, outside the diff of the branch that
-  saw it, and no kept error names its cause, so a later branch investigates
-  it.
+- **Reason:** The same outer cleanup failure occurred on two branches. The
+  reporter kept no inner error, so a later branch must expose its cause.
 
 - **Source:** Implementation.
 - **Category:** Test.
@@ -99,6 +98,31 @@
       their cleanup passed.
     - These modes do not run the global cleanup of the full browser suite
       again, and they do not identify the cause of its failure.
+  - On 2026-11-18, the memory-admission branch at
+    `7c90446a970b6d19f188b965c1c599b67374e0ed` recorded the same outer failure.
+    - Its complete gate exited 1 after 2,962.443 s.
+    - All 2,650 Rust tests and 3,075 Node tests passed.
+    - All 2,287 browser cases passed, with zero skips and cancellations.
+    - Global cleanup then threw `AggregateError: Browser host cleanup failed`
+      at `tests/browser/setup.ts:54:15`.
+    - The reporter again kept no inner error. The delivery suite did not run.
+    - The branch had fetched `main` at
+      `2e6bde9c296e8bd12c16edeb2c23fbd2309b010b` and was not behind it.
+    - None of the JavaScript cleanup or reporter paths above changed in that
+      branch. The same outer error does not prove the same underlying cause.
+    - One direct probe called the production setup and cleanup with no
+      browser cases between them. It passed in 47.488 s. It did not reproduce
+      the long suite's load.
+    - The single unchanged complete-gate rerun ran on
+      `684b4335f3ad3a391581f3f492393bd683710477`, after merging the Graphite
+      palette and route reveal changes from `main` at `760a2c294`.
+      The memory and scheduling code remained identical to `7c90446a9`.
+    - That rerun exited 0 after 4,505.388 s. All 2,650 Rust, 3,081 Node,
+      and 2,287 browser cases passed. Browser global cleanup passed.
+      HTTP and file delivery each passed 653 cases. No assertion, timeout,
+      sleep, retry, or test skip changed for that rerun.
+    - This passing rerun does not identify the original inner error. The
+      suspected source remains one of the cleanup paths above.
 - **Problem:** The browser suite failed in its global cleanup after every
   case passed. The cleanup error kept no inner error, so nobody can tell
   which host failed or why.
