@@ -202,6 +202,8 @@ Use `unimock` at the memory boundary. Use channel handshakes for concurrent test
 
 The fixed Serve gate bound and `UsagePass::batch` become live capacity boundaries. The consumers are CLI delivery composition and the background constructors in the server unit and HTTP tests. Move every consumer in this branch. Keep fixed-capacity test inputs behind the same boundary, with every existing assertion. No external converter remains.
 
+The factory's plain `Result<Spawned>` becomes `Result<Spawned, SpawnFailure>`. Each failure states whether the factory created a process. Its consumers are `NodeFactory`, `Pool::spawn`, `spawn_return`, the render test's `CountedFactory`, the CLI stop-test factory, and the startup timing tests. Each moves in the second repair. The caller still receives the original crate error. No old factory-result API or converter remains.
+
 ## Milestone 1: State the memory contract
 
 Depends on: none
@@ -288,17 +290,26 @@ Integration evidence: `.context/sidecar-memory-guard/pre-main-merge/merge-audit.
 
 Generation-affinity integration evidence: `.context/sidecar-memory-guard/pre-affinity-merge/merge-audit.log`. Merge `285460e8f` preserves PR #315. Memory admission sets the growth bound. Generation ranking selects an available slot within it.
 
+- [x] Move `NodeFactory` to typed start evidence at the process-creation boundary. Keep cleanup and timing unchanged.
+- [x] Move `Pool::spawn` to commit admission on success or `Started`. Roll back only a proven no-process start.
+- [x] Move `spawn_return` to unwrap the typed failure. Keep its existing reservation and original caller error.
+- [x] Move the render test's `CountedFactory` wrapper to the typed result. Keep every assertion.
+- [x] Move the CLI stop-test factory to `NotStarted`. Preserve its no-stop scenario.
+- [x] Move startup timing assertions to exact start evidence. Keep every existing assertion.
+- [x] Remove the plain factory-result API after all consumers move. Keep no converter.
+
 - [x] Commit with Conventional Commits and push the branch. Start `ci-wait.sh` after every push.
 - [x] Review the complete diff against `origin/main` with the implementation-review skill. Check each finding in a fresh second pass.
-- [ ] Apply the fix rule and its two fix rounds. Record each deferred finding as a follow-up item. Re-run affected checks.
+- [x] Apply the fix rule and its two fix rounds. Record each deferred finding as a follow-up item. Re-run affected checks.
   - [x] Fix confirmed finding 1 with a typed terminal claim error, gate wake, and normal waiting-counter cleanup. Preserve the healthy admission calculation and slot selection.
   - [x] Prove red-first that a caller already waiting at the gate gets `Cancelled` when the pool stops, and that temporary shortage still waits and then admits. Cover later calls and larger pools with usable slots. Run new concurrent tests ten times.
   - [x] Run affected tests, formatting, and Clippy. Rebuild release. Push the fix and send its SHA and healthy-path comparison to the performance orchestrator immediately.
   - [x] Re-review the full diff after the fix push. Check each new finding before the second fix round.
   - [x] Fix confirmed finding 2 with the checked option D. Give new starts an owned admission lease. Commit it on factory success or typed evidence that a process started. On a proven no-process start, free the index, remove its context bindings, and restore any borrowed live-claim budget.
   - [x] Prove red-first that a failed first start cannot bypass later low-memory admission. Cover context retry and a borrowed live-claim budget. Keep in-flight starts counted and preserve replacement reservations. Run new concurrent cases ten times.
-  - [ ] Run affected checks, rebuild release, push the second repair, and send its SHA immediately. Reconfirm healthy speed with the performance orchestrator. Run the final combined gate.
-- [ ] Wait for CI and the performance orchestrator's `mokly-cloud` evidence. Fix branch-caused failures. Record unrelated failures and rerun them once.
+  - [x] Run affected checks, rebuild release, push the second repair, and send its SHA immediately. Reconfirm healthy speed with the performance orchestrator. Run the final combined gate.
+- [x] Wait for CI and the performance orchestrator's `mokly-cloud` evidence. Fix branch-caused failures. Record unrelated failures and rerun them once.
+- [x] Preserve final main changes through `d4df04aa5`. Run the affected verification tests and the repository check on the combined tree.
 - [ ] Delete this plan under the plans skill when the other required work is complete.
 - [ ] Open the pull request into `main`. Keep the dated decisions, the plan permalink, and follow-up items in its description. Wait for final CI. Send the full report to the performance orchestrator. Do not merge.
 
@@ -321,3 +332,11 @@ Before the second repair, `main` advanced to `159231c31`. Merge `f87f5602e` pres
 The workspace orchestrator refined the second repair to checked option D on 2026-11-18. It is C with an exact commit point. A factory can create a process and then fail setup. Its typed `NotStarted` and `Started` outcomes preserve that evidence and the original caller error. Only a no-process failure rolls back the start lease at call release. Every real start retains its reservation, also after failed setup or hello. This follows the existing memory and timing requirements and changes no cleanup policy. A fresh options check confirmed D and required no user decision. Evidence: `.context/reviews/calummoore/mokly-sidecar-memory-guard-cf9n/round-2-factory-check.md`.
 
 Second-repair evidence: `.context/sidecar-memory-guard/review-fix-2/report.md`, `source-comparison.json`, `red-evidence.json`, and `isolated-10x-and-cost.json`. The orchestrator checked startup ownership, factory phase labels, free-index growth, context rollback, borrowed-budget restoration, and retained replacement admission. The combined gate follows the next main merge.
+
+Merge `313728e94` preserves main through `58335472e`, including the shared tracing capture and the browser setup and cleanup reporter. The performance orchestrator accepted the new interleaved `mokly-cloud` A/B on 2026-11-18. The healthy case keeps four workers. First Changes, edit times, and memory stay within noise. Both review findings are fixed, with no deferred finding or required decision. Evidence: `.context/sidecar-memory-guard/post-second-fix-main-merge/` and `mokly-cloud-final-parent-report.md`.
+
+The final release rebuild, strict example build, Serve smoke, repository check, and complete gate passed on `313728e94`. Pre-PR CI watches found no run. The last TODO owns CI after the PR opens. Evidence: `.context/sidecar-memory-guard/final-integration/checks.json`, `completion-checks.json`, `smoke-result.json`, and `complete-gate-counts.json`.
+
+Before the PR, main advanced to `d4df04aa5` with package-manager fixture checks, standalone Git discovery, and UI export audits. Merge `dc6706a3e` preserves all 20 incoming paths exactly. It changes no product code from accepted `313728e94`. The final PR CI checks the combined verification tree. Evidence: `.context/sidecar-memory-guard/pre-pr-main-merge/merge-audit.log` and `preservation-proof.json`.
+
+The combined-tree repository check and all affected Node verification tests passed. No product correction followed the performance acceptance. Evidence: `.context/sidecar-memory-guard/pre-pr-main-merge/checks.json`, `repository-counts.json`, and `changed-node-tests.log`.
