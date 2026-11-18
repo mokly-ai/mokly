@@ -46,11 +46,11 @@ fn css() -> Call {
 fn a_render_uses_an_idle_slot_while_an_earlier_affine_call_waits() {
     let factory = Unimock::new(());
     let pool = pool(&factory);
-    let (busy, _) = pool.acquire(&css(), None, None).unwrap();
+    let (busy, _, busy_start) = pool.acquire(&css(), None, None).unwrap();
     let queued = pool.clone();
     let waiting = thread::spawn(move || {
-        let (index, slot) = queued.acquire(&css(), None, None).unwrap();
-        queued.release(index, slot);
+        let (index, slot, start) = queued.acquire(&css(), None, None).unwrap();
+        queued.release(index, slot, start);
         index
     });
     {
@@ -62,7 +62,7 @@ fn a_render_uses_an_idle_slot_while_an_earlier_affine_call_waits() {
     let render = pool.clone();
     let (send, receive) = mpsc::channel();
     let rendering = thread::spawn(move || {
-        let (index, slot) = render
+        let (index, slot, start) = render
             .acquire(
                 &Call::RenderPage(RenderPage {
                     generation: "g".into(),
@@ -73,10 +73,10 @@ fn a_render_uses_an_idle_slot_while_an_earlier_affine_call_waits() {
             )
             .unwrap();
         send.send(index).unwrap();
-        render.release(index, slot);
+        render.release(index, slot, start);
     });
     let independent = receive.recv_timeout(Duration::from_secs(10));
-    pool.release(busy, None);
+    pool.release(busy, None, busy_start);
     assert_eq!(waiting.join().unwrap(), busy);
     rendering.join().unwrap();
     assert_eq!(independent.unwrap(), 1);
@@ -126,6 +126,7 @@ fn a_release_during_last_cleanup_is_delivered_when_the_slot_returns_idle() {
                 renders: 0,
                 requests: 0,
             }),
+            None,
         );
         pool.synchronize_releases();
         assert_eq!(*recorded.lock().unwrap(), ["first", "last"]);

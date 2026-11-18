@@ -13,10 +13,11 @@ use crate::pool_claim::CallClaim;
 use crate::pool_cleanup;
 use crate::pool_options::{Launch, PoolOptions};
 use crate::pool_releases::Notice;
+use crate::pool_start::StartLease;
 use crate::pool_state::{Slot, State};
 use crate::pool_timing::Reason;
 use crate::wire::MethodResult;
-use crate::workers::{Clock, WorkerFactory};
+use crate::workers::{Clock, SpawnFailure, WorkerFactory};
 
 /// Wake the Serve owner when a pending head return can make progress.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ReturnWakeMock))]
@@ -105,7 +106,12 @@ impl Pool {
         pool_cleanup::lock(&self.state)
     }
 
-    pub(super) fn spawn(&self, index: usize, source_root: &Path) -> Result<Slot> {
+    pub(super) fn spawn(
+        &self,
+        index: usize,
+        source_root: &Path,
+        start: &mut Option<StartLease>,
+    ) -> Result<Slot> {
         let reason = self.lock().replacement_reasons.get(&index).copied();
         let recycle = reason.map(Reason::replacement);
         let _recycle_scope = recycle.as_ref().map(tracing::Span::enter);
@@ -125,7 +131,19 @@ impl Pool {
             repository: source_root.into(),
             ..self.launch.clone()
         };
-        let mut spawned = self.factory.spawn(&launch)?;
+        let mut spawned = match self.factory.spawn(&launch) {
+            Ok(spawned) => spawned,
+            Err(SpawnFailure::NotStarted(error)) => return Err(error),
+            Err(SpawnFailure::Started(error)) => {
+                if let Some(start) = start {
+                    start.commit();
+                }
+                return Err(error);
+            }
+        };
+        if let Some(start) = start {
+            start.commit();
+        }
         {
             let mut state = self.lock();
             if state.stopped {
@@ -165,7 +183,10 @@ impl Pool {
         })
     }
 
-    pub(super) fn release(&self, index: usize, mut slot: Option<Slot>) {
+    pub(super) fn release(&self, index: usize, mut slot: Option<Slot>, start: Option<StartLease>) {
+        if start.is_some_and(StartLease::rollback) {
+            return;
+        }
         if let Some(current) = &mut slot
             && let Err(error) = self.cleanup(current)
         {

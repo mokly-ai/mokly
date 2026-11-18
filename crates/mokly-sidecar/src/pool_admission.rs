@@ -42,17 +42,18 @@ impl Pool {
                 slot_limit: maximum,
             };
         };
-        let reserved = state.slots.len() - state.retired.len();
+        let allocated = state.allocated();
+        let reserved = allocated - state.retired.len();
         let claimed = pool_claim::growth(state);
-        let remaining = maximum.saturating_sub(state.slots.len() + claimed);
+        let remaining = maximum.saturating_sub(allocated + claimed);
         if remaining == 0 || state.stopped {
             return Admission {
                 capacity: (reserved + claimed).max(1),
-                slot_limit: state.slots.len(),
+                slot_limit: allocated,
             };
         }
         let unused = (0..state.slots.len())
-            .filter(|index| !state.retired.contains(index))
+            .filter(|index| !state.retired.contains(index) && !state.free.contains(index))
             .map(|index| {
                 let resident = state
                     .controls
@@ -75,7 +76,7 @@ impl Pool {
             .max(usize::from(reserved + claimed == 0));
         Admission {
             capacity: reserved + claimed + growth,
-            slot_limit: state.slots.len() + growth,
+            slot_limit: allocated + growth,
         }
     }
 }
@@ -92,7 +93,7 @@ impl PoolCapacity for Pool {
         if state.claims.len() >= self.admission(&state).capacity {
             return Ok(None);
         }
-        let reserved = state.slots.len() - state.retired.len();
+        let reserved = state.allocated() - state.retired.len();
         let growth = if self.admission.is_some() {
             (state.claims.len() + 1).saturating_sub(reserved + pool_claim::growth(&state))
         } else {

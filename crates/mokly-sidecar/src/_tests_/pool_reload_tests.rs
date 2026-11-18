@@ -218,13 +218,13 @@ fn a_busy_second_process_reloads_maps_after_release_and_rebundle() {
         params: bundle(),
         capture: None,
     });
-    let (first_index, first_slot) = pool.acquire(&lease_call, None, None).unwrap();
+    let (first_index, first_slot, first_start) = pool.acquire(&lease_call, None, None).unwrap();
     pool.lock().available.push_front(1);
     render(&pool);
-    let (second_index, second_slot) = pool.acquire(&lease_call, None, None).unwrap();
-    pool.release(first_index, first_slot);
+    let (second_index, second_slot, second_start) = pool.acquire(&lease_call, None, None).unwrap();
+    pool.release(first_index, first_slot, first_start);
     render(&pool);
-    pool.release(second_index, second_slot);
+    pool.release(second_index, second_slot, second_start);
 }
 
 #[test]
@@ -239,12 +239,12 @@ fn an_updated_binding_table_is_replayed_on_the_second_process() {
         params: bundle(),
         capture: None,
     });
-    let (first_index, first_slot) = pool.acquire(&lease_call, None, None).unwrap();
+    let (first_index, first_slot, first_start) = pool.acquire(&lease_call, None, None).unwrap();
     pool.lock().available.push_front(1);
     render(&pool);
-    let (second_index, second_slot) = pool.acquire(&lease_call, None, None).unwrap();
-    pool.release(first_index, first_slot);
-    pool.release(second_index, second_slot);
+    let (second_index, second_slot, second_start) = pool.acquire(&lease_call, None, None).unwrap();
+    pool.release(first_index, first_slot, first_start);
+    pool.release(second_index, second_slot, second_start);
 }
 
 #[test]

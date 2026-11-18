@@ -2,4 +2,5 @@
 
 mod capacity_tests;
 mod claim_tests;
+mod startup;
 mod support;

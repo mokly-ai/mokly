@@ -9,6 +9,7 @@ use crate::methods::Call;
 use crate::pool::Pool;
 use crate::pool_affinity;
 use crate::pool_claim;
+use crate::pool_start::StartLease;
 use crate::pool_state::{Slot, Waiting};
 
 impl Pool {
@@ -17,7 +18,7 @@ impl Pool {
         call: &Call,
         root: Option<&Path>,
         claim: Option<u64>,
-    ) -> Result<(usize, Option<Slot>)> {
+    ) -> Result<(usize, Option<Slot>, Option<StartLease>)> {
         let root = root.unwrap_or(&self.launch.repository);
         let mut state = self.lock();
         let ticket = state.ticket;
@@ -87,19 +88,20 @@ impl Pool {
                     })
                     .map(|warm| warm.index);
                 let limit = limit(claim);
-                let previous = state.slots.len();
+                let previous = state.allocated();
                 let index = pool_affinity::acquire(&mut state, call, root, limit, protected);
                 if let Some(index) = index {
-                    if state.slots.len() > previous {
-                        pool_claim::consume(&mut state, claim);
-                    }
+                    let start = (state.allocated() > previous).then(|| {
+                        let source_claim = pool_claim::consume(&mut state, claim);
+                        StartLease::new(self, index, source_claim)
+                    });
                     state.head.candidates.remove(&index);
                     state.waiting.remove(&ticket);
                     state.serving += 1;
                     let slot = state.slots[index].take();
                     state.head.notify();
                     self.ready.notify_all();
-                    return Ok((index, slot));
+                    return Ok((index, slot, start));
                 }
             }
             state = self

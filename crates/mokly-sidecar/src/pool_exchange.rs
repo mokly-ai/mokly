@@ -61,9 +61,9 @@ impl Pool {
         }
         let source_root = self.source_root(&call);
         let claim = claim.and_then(|claim| claim.id(&self.state));
-        let (index, mut slot) = self.acquire(&call, source_root.as_deref(), claim)?;
+        let (index, mut slot, mut start) = self.acquire(&call, source_root.as_deref(), claim)?;
         if let Err(error) = self.isolate(index, &mut slot, source_root.as_deref()) {
-            self.release(index, slot);
+            self.release(index, slot, start);
             return Err(error);
         }
         let deadline = self.options.timeout_ms.unwrap_or_else(|| call.timeout_ms());
@@ -79,6 +79,7 @@ impl Pool {
                 None => match self.spawn(
                     index,
                     source_root.as_deref().unwrap_or(&self.launch.repository),
+                    &mut start,
                 ) {
                     Ok(slot) => slot,
                     Err(error) => {
@@ -124,7 +125,7 @@ impl Pool {
         }
         self.recycle(index, &mut slot);
         let cancelled = self.lock().stopped;
-        self.release(index, slot);
+        self.release(index, slot, start);
         if matches!(outcome, Err(Error::Crashed)) {
             let kind = FailureKind::for_call(&call);
             outcome = Err(Error::RequestCrashed {

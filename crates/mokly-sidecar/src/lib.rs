@@ -43,6 +43,7 @@ mod pool_return;
 mod pool_return_spawn;
 mod pool_shutdown;
 mod pool_sources;
+mod pool_start;
 mod pool_state;
 mod pool_timing;
 pub mod postcss_evidence;

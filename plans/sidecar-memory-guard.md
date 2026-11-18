@@ -293,8 +293,11 @@ Generation-affinity integration evidence: `.context/sidecar-memory-guard/pre-aff
 - [ ] Apply the fix rule and its two fix rounds. Record each deferred finding as a follow-up item. Re-run affected checks.
   - [x] Fix confirmed finding 1 with a typed terminal claim error, gate wake, and normal waiting-counter cleanup. Preserve the healthy admission calculation and slot selection.
   - [x] Prove red-first that a caller already waiting at the gate gets `Cancelled` when the pool stops, and that temporary shortage still waits and then admits. Cover later calls and larger pools with usable slots. Run new concurrent tests ten times.
-  - [ ] Run affected tests, formatting, and Clippy. Rebuild release. Push the fix and send its SHA and healthy-path comparison to the performance orchestrator immediately.
-  - [ ] Re-review the full diff after the fix push. Check each new finding before the second fix round.
+  - [x] Run affected tests, formatting, and Clippy. Rebuild release. Push the fix and send its SHA and healthy-path comparison to the performance orchestrator immediately.
+  - [x] Re-review the full diff after the fix push. Check each new finding before the second fix round.
+  - [x] Fix confirmed finding 2 with the checked option D. Give new starts an owned admission lease. Commit it on factory success or typed evidence that a process started. On a proven no-process start, free the index, remove its context bindings, and restore any borrowed live-claim budget.
+  - [x] Prove red-first that a failed first start cannot bypass later low-memory admission. Cover context retry and a borrowed live-claim budget. Keep in-flight starts counted and preserve replacement reservations. Run new concurrent cases ten times.
+  - [ ] Run affected checks, rebuild release, push the second repair, and send its SHA immediately. Reconfirm healthy speed with the performance orchestrator. Run the final combined gate.
 - [ ] Wait for CI and the performance orchestrator's `mokly-cloud` evidence. Fix branch-caused failures. Record unrelated failures and rerun them once.
 - [ ] Delete this plan under the plans skill when the other required work is complete.
 - [ ] Open the pull request into `main`. Keep the dated decisions, the plan permalink, and follow-up items in its description. Wait for final CI. Send the full report to the performance orchestrator. Do not merge.
@@ -306,3 +309,15 @@ Review evidence: `.context/reviews/calummoore/mokly-sidecar-memory-guard-cf9n/ro
 Repair evidence: `.context/sidecar-memory-guard/review-fix-1/report.md`, `red-evidence.json`, `isolated-10x-and-cost.json`, and `source-comparison.json`. The orchestrator checked all four red assertions, the final claim and gate bodies, the waiting-counter cleanup, and the failure-hook wake. Healthy admission arithmetic, claim growth, priority predicates, and slot selection remain unchanged.
 
 Before the correction push, `main` advanced to `e6119e24e`, including PR #316 captured resolution plans. Merge `5a7e0e01f` preserves its code, generated types, documentation, tests, and follow-up updates. Serve uses live pool capacity and enables captured edit plans together. The completed performance comparisons keep their recorded baseline. The combined gate runs on the corrected merged tree. Evidence: `.context/sidecar-memory-guard/pre-review-fix-main-merge/merge-audit.log` and `preservation-proof.json`.
+
+The performance orchestrator read `ba30219a1` and retained its healthy-speed acceptance on 2026-11-18. Its comparison confirmed that finding 1 changes only terminal handling.
+
+The second review confirmed High/Rare finding 2: a failed first start retained an unused reservation. The workspace orchestrator's call of 2026-11-18 is checked option C. The existing contract requires rollback of an unused start, its context bindings, and any budget borrowed from a live claim. A free-index store keeps every slot-selection path behind admission. Preserve committed replacement reservations and the terminal cancellation repair. No new requirement or setting is added. Review evidence: `.context/reviews/calummoore/mokly-sidecar-memory-guard-cf9n/round-2-review.md`, `round-2-checks.md`, and `findings.md`.
+
+The root interrupted the gate at `ba30219a1` after this confirmation. It had passed repository, Rust, and Node checks and was still in browser tests. It proves only that partial tree. The second repair needs a final combined gate. Evidence: `.context/sidecar-memory-guard/complete-gate-corrected-interrupted.json`.
+
+Before the second repair, `main` advanced to `159231c31`. Merge `f87f5602e` preserves all 31 main paths exactly. These include bundle call optimization, the locked gate, credential cleanup, and typed platform errors. Evidence: `.context/sidecar-memory-guard/pre-second-fix-main-merge/merge-audit.log` and `preservation-proof.json`.
+
+The workspace orchestrator refined the second repair to checked option D on 2026-11-18. It is C with an exact commit point. A factory can create a process and then fail setup. Its typed `NotStarted` and `Started` outcomes preserve that evidence and the original caller error. Only a no-process failure rolls back the start lease at call release. Every real start retains its reservation, also after failed setup or hello. This follows the existing memory and timing requirements and changes no cleanup policy. A fresh options check confirmed D and required no user decision. Evidence: `.context/reviews/calummoore/mokly-sidecar-memory-guard-cf9n/round-2-factory-check.md`.
+
+Second-repair evidence: `.context/sidecar-memory-guard/review-fix-2/report.md`, `source-comparison.json`, `red-evidence.json`, and `isolated-10x-and-cost.json`. The orchestrator checked startup ownership, factory phase labels, free-index growth, context rollback, borrowed-budget restoration, and retained replacement admission. The combined gate follows the next main merge.

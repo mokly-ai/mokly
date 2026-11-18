@@ -58,11 +58,9 @@ pub(super) fn growth(state: &State) -> usize {
     state.claims.values().sum()
 }
 
-/// Any admitted call can use the shared growth budget; consumption starts a real slot.
-pub(super) fn consume(state: &mut State, claim: Option<u64>) {
-    let Some(claim) = claim.filter(|id| state.claims.contains_key(id)) else {
-        return;
-    };
+/// Return the source claim so an unused start can restore its borrowed growth budget.
+pub(super) fn consume(state: &mut State, claim: Option<u64>) -> Option<u64> {
+    let claim = claim.filter(|id| state.claims.contains_key(id))?;
     let selected = state
         .claims
         .get(&claim)
@@ -78,4 +76,5 @@ pub(super) fn consume(state: &mut State, claim: Option<u64>) {
     if let Some(growth) = selected.and_then(|id| state.claims.get_mut(&id)) {
         *growth -= 1;
     }
+    selected
 }
