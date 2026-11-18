@@ -166,19 +166,22 @@ fn edit_reuse_keeps_stamps_and_capture_priority_while_full_reuse_rejects_omissio
             "fresh",
         ),
     ] {
-        let tree = Arc::new(Unimock::new((
-            SourceTreeMock::digest
-                .each_call(matching!(_))
-                .answers_arc(Arc::new(move |_, _| Ok(hash.into()))),
-            SourceTreeMock::children
-                .each_call(matching!(_))
-                .answers_arc(Arc::new(move |_, _| {
-                    Ok(vec![Child {
-                        name: member.into(),
-                        kind: FileKind::File,
-                    }])
-                })),
-        )));
+        let digests = SourceTreeMock::digest
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, _| Ok(hash.into())));
+        let listings = SourceTreeMock::children
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, _| {
+                Ok(vec![Child {
+                    name: member.into(),
+                    kind: FileKind::File,
+                }])
+            }));
+        let tree = Arc::new(if hash == "source" {
+            Unimock::new((digests, listings))
+        } else {
+            Unimock::new(digests)
+        });
         let reader = if hash == "source" && member == "entry.ts" {
             Unimock::new(
                 PhysicalInputsMock::matches
