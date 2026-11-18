@@ -213,7 +213,9 @@ Depends on: 1, 2, 3
 
 The workspace orchestrator owns this milestone. Merge new main changes with the git-merge skill when needed. Preserve the nearby bundle disk cache change if it merges first. Do not merge this pull request.
 
-- [ ] Review the complete local diff against `origin/main` after the push with the implementation-review skill. Run the finding checks. Apply its two-fix-round limit, record follow-up items for remaining findings, and re-review.
+- [x] Review the complete local diff against `origin/main` after the push with the implementation-review skill. Run the finding checks. Apply its two-fix-round limit, record follow-up items for remaining findings, and re-review.
+      Evidence: `.context/reviews/calummoore/mokly-sidecar-bundle-hot-path-8efp/findings.md`. Both fresh reviews found no in-scope defects. No finding checks or fix rounds were required.
+
 - [x] Confirm the performance orchestrator's `mokly-cloud` result and the 200 ms target before the final report. Report uncertainty if measurements do not establish it.
 - [ ] Finish CI with the finish-work skill's `scripts/ci-wait.sh`. Fix each branch-caused failure. Send the final report to the performance orchestrator.
 - [ ] Delete this plan under the plans skill after every other required task is complete, except CI and the report that need the pull request.
