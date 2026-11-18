@@ -25,10 +25,10 @@ composition and outbound links,
 
 ## Packages And Pins
 
-Expo SDK 56 is the release whose peer set is exactly the one
-[Shared controls](./shared-controls.md#published-dependencies) pins. Every
-package is pinned to an exact version; the pin table is in
-[Repository TypeScript layout](./repository-typescript.md#application). The app uses
+Expo SDK 56 is the release whose peer set is the one
+[Shared controls](./shared-controls.md#dependencies) installs. Every
+package is pinned to an exact version in `apps/app/package.json`, as
+[Repository TypeScript layout](./repository-typescript.md#application) says. The app uses
 the single hoisted runtime of the root npm workspace, never a second copy.
 
 ## Document And Styling

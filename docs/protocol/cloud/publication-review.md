@@ -1,9 +1,10 @@
 # Publication Index And Changes
 
 This is the catalogue index sub-contract of
-[upload validation](./publication-upload-validation.md). The published 0.19.0
-`mokly-catalogue.md`, `mokly-catalogue-changes.md`,
-`mokly-catalogue-serialization.md`, `mokly-moves.md` and `mokly-shell-delivery.md`
+[upload validation](./publication-upload-validation.md). Mokly's
+[catalogue](../mokly-catalogue.md), [catalogue changes](../mokly-catalogue-changes.md),
+[catalogue serialization](../mokly-catalogue-serialization.md),
+[moves](../mokly-moves.md) and [shell delivery](../mokly-shell-delivery.md) docs
 own the index format, together with the generated declarations of
 `@mokly/viewer`. The receiver reads the catalogue index
 `mokly-viewer/index.json` that the Plan archive carries. It
@@ -65,7 +66,7 @@ Each read field follows these rules:
 A read field that is missing, has the wrong type or breaks these rules returns
 400 `upload-invalid-bundle`. The receiver does not validate the
 other index fields. The app reads the index under the
-[released reader contract](./mokly-artifact-compatibility.md#release-019-frame-boundary).
+[reader contract](./mokly-artifact-compatibility.md#frame-boundary).
 An index read that fails shows the failed-index card of
 [Viewer host](./viewer-host.md#sources).
 
@@ -123,7 +124,7 @@ the corpus. Each case that the cloud accepts must also pass
 added, removed and moved counts that the case records. A case
 that the cloud refuses names its rejection kind. The public
 reader receives parsed objects and cannot detect duplicate keys, so
-duplicate-key rejection is always a cloud-only verdict. In 0.19.0 the
+duplicate-key rejection is always a cloud-only verdict. The
 public reader checks the index version and copies content without validation.
 The corpus records its version-only verdict separately from each cloud
 content rejection.

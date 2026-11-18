@@ -5,7 +5,7 @@ screens, which are authored in Folio per [Design tokens](./design-tokens.md).
 The viewer is the application: the product has no project or workspace
 page, the Workspace settings are panes of the
 [settings dialog](./settings-dialog.md), and the Viewer family draws its ready
-canvas from exact-pinned `@mokly/ui@0.19.0` parts as static depictions while
+canvas from workspace `@mokly/ui` parts as static depictions while
 keeping cloud-owned non-ready states and overlays. The public
 site sits under Design rather than Product. Read [Navigation](./product-navigation.md),
 [Viewer](./viewer.md) and [Catalogue rules](./mockups.md). The inventory

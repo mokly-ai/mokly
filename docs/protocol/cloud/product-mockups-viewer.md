@@ -35,7 +35,7 @@ which `product/viewer/standalone/reader` draws as a screen beside
 because the same branch is read by both and only the card inside the stage
 differs.
 
-The ready drawing is a static depiction composed of exact-pinned `@mokly/ui`
+The ready drawing is a static depiction composed of workspace `@mokly/ui`
 parts. Its embedded layout holds the cloud chrome in the
 `topBarStart` and `topBarEnd` host slots around the package top bar.
 The layout also holds the catalogue navigation and the
@@ -49,7 +49,7 @@ The parts draw their controls through the package's static props, so the
 drawing runs no script, and the layout states the drawing's color scheme as
 its appearance, never Auto. Decision: compose the package parts,
 not a server render of the viewer or a stage slot on `MoklyViewer`, because
-the pinned release has neither. The parts are the elements that
+the packages have neither. The parts are the elements that
 the viewer itself draws, so the drawing follows the package.
 
 A project Mokly has not observed a repository for has no branches and no pull

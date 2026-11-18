@@ -1,29 +1,33 @@
 # Mokly Release Cutover
 
-This runbook covers the current 0.19.0 upgrade and the earlier format cutover.
-[Deployment](./deploy.md) holds the release and publish proof commands.
+This runbook covers a Mokly change that changes a format that the receiver or
+the viewer reads. The cloud uses the workspace Mokly packages, so the Deploy
+run of the merge commit deploys such a change; no package release or pin bump
+is involved. The runbook holds the frame upgrade of Mokly 0.19.0 and the
+earlier 0.18 format cutover from 0.14.
+[Deployment](./deploy.md) holds the publish proof commands.
 
-## Upgrade To 0.19.0
+## Frame Upgrade
 
-1. Deploy the app and API with the exact-pinned 0.19.0 packages.
-2. Republish each hosted catalogue with `@mokly/mokly@0.19.0` from a clean
-   committed checkout. Use the publish command below. Pages from 0.18 use
-   frame wire version 2, while the new viewer requires version 3.
-3. Run the [publish proof](./deploy.md#publish-proof) with 0.19.0.
+1. Deploy the app and API from `main`. The workspace viewer requires frame
+   wire version 3, and pages from 0.18 use frame wire version 2.
+2. Republish each hosted catalogue with the workspace CLI from a clean
+   committed checkout of the deployed commit. Use the publish command below.
+3. Run the [publish proof](./deploy.md#publish-proof).
 
 The upload envelope remains 3, the index remains 9, and entry details remain 4.
 The upgrade needs no database reset. Existing publications keep their bytes.
-Their frame interaction needs a new publication from the matching CLI.
+Their frame interaction needs a new publication from a matching CLI.
 
 The steps below apply only to environments that still need the earlier
-0.18 format cutover from 0.14. Use the currently installed 0.19.0 CLI when
-republishing after that cutover.
+0.18 format cutover from 0.14. Republish with the workspace CLI after that
+cutover.
 
 ## Order
 
 Run these steps in order after the change merges.
 
-1. Deploy the API and the app before any job publishes with 0.18.0. The
+1. Deploy the API and the app before any job publishes with 0.18.0 or later. The
    normal Deploy run of the merge commit does this. A receiver from before the
    cutover answers HTTP 426 `upload-unsupported-version` to envelope 3, and
    the new receiver answers 426 to every envelope other than 3 and every index
@@ -43,7 +47,8 @@ Run these steps in order after the change merges.
    Do not use SQL fixtures or seed migrations. Set `PROJECT_ID`
    and `MKC_API_ORIGIN` as the [publish proof](./deploy.md#publish-proof)
    does. Keep the token in a mode-0600 file outside the checkout. After
-   `npm ci` in a clean checkout of the merge commit, run:
+   `npm ci` and `npm run build` in a clean checkout of the merge commit, which
+   build the workspace CLI and its host native package, run:
 
    ```sh
    export MOKLY_ENDPOINT="${MKC_API_ORIGIN:?}/v1/projects/${PROJECT_ID:?}/publications"
@@ -65,10 +70,9 @@ Run these steps in order after the change merges.
    it merges, because `pull_request_target` runs the workflow from `main`.
    Later format-changing PRs preview themselves with their own tools, as
    [format changes](../protocol/cloud/preview-capture.md#format-changes) defines.
-6. Run the [publish proof](./deploy.md#publish-proof) with 0.19.0 and record
-   it.
+6. Run the [publish proof](./deploy.md#publish-proof) and record it.
 7. Follow the [gzip Blob rollout](./publish-smoke.md#gzip-blob-rollout),
-   because the pinned CLI sends gzip Blob bodies when the Plan lists gzip.
+   because the CLI sends gzip Blob bodies when the Plan lists gzip.
 
 ## Clean Checkout
 

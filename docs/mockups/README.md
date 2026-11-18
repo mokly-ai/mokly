@@ -1,15 +1,14 @@
 # Mockup Catalogue
 
-This is Mokly Cloud's design specification, authored with the published
+This is Mokly Cloud's design specification, authored with the workspace
 `@mokly/mokly` package. Review these screens before implementing product UI.
 
 ## Responsibilities
 
 - Hold every product, site and email screen as TSX source, with the fixtures,
   styles and registered base components they draw.
-- Generate the catalogue through the exact-pinned `@mokly/mokly@0.19.0`, and
-  draw the viewer family's ready canvas from the parts of the exact-pinned
-  `@mokly/ui@0.19.0`.
+- Generate the catalogue through the workspace `@mokly/mokly`, and draw the
+  viewer family's ready canvas from the parts of the workspace `@mokly/ui`.
 - Verify the catalogue with the policy, determinism and browser tests under
   `src/_tests_/`, which read the protocol docs and the application source.
 - Keep the product app, the public site and the emails aligned with these
@@ -54,7 +53,7 @@ The authoring and generated output paths are:
 | `packages/tokens/src/`                     | Shared token values, palettes, token CSS and the control theme     |
 | `docs/mockups/styles/`                     | Public CSS using shared token variables; app/site parity checks    |
 | `docs/mockups/src/_tests_/`                | Catalogue policy and browser smoke tests                           |
-| `apps/mockups/`                            | Exact package pins, React peers, scripts, and test configuration   |
+| `apps/mockups/`                            | Package dependencies, React peers, scripts, and test configuration |
 | `mokly-static/` at the repository root     | Ignored build output: documents, catalogue index and entry details |
 
 The root is `{ dir: "docs/mockups/src/entries", files: ["**/*.mockup.{ts,tsx}"] }`.
@@ -103,10 +102,10 @@ that script from the site root.
 
 ## Development
 
-Author against the installed `@mokly/mokly` README and its public
+Author against the workspace `@mokly/mokly` README and its public
 declarations; the catalogue uses only the package's exports and its
-documented output artifacts. Version changes follow the
-[artifact compatibility procedure](../protocol/cloud/mokly-artifact-compatibility.md).
+documented output artifacts. Mokly changes follow the
+[artifact compatibility procedure](../protocol/cloud/mokly-artifact-compatibility.md#mokly-changes).
 
 Stylesheet rules in `mokly.config.json` match entry routes `<path>/index.html`
 and name repository-relative paths:
@@ -150,7 +149,7 @@ steps, the entry shape and how a variant inherits from its screen.
 | `npm run mockups:check`     | Validate with the same strict build into `.context/mockups-check`           |
 | `npm run mockups:test`      | Check build determinism, policy and all Chromium smoke tests                |
 | `npm run mockups:typecheck` | Typecheck the renderer, components, entries, scripts and tests              |
-| `npm run mockups:serve`     | Run the installed package's `mokly serve` and open its printed URL          |
+| `npm run mockups:serve`     | Run the workspace package's `mokly serve` and open its printed URL          |
 
 The root forwards each command into the `@mokly-cloud/mockups` npm workspace,
 whose [README](../../apps/mockups/README.md) explains the test harness. Build
@@ -220,7 +219,7 @@ directory, never in the repository, and deleting that cache is safe.
 - `src/screens/product/setup-destinations.ts` — where each setup control leads: the setup step, the CLI form and the finished project, each chosen from the workspace's installation or the new project's builds, which every caller names.
 - `src/screens/product/settings/github-pane.tsx`, `github-accounts.tsx` and `github-remove.tsx` — the GitHub accounts pane: its account rows with their row menu and the section's Add GitHub account, which the pane, its wait and that control's write all draw, the reader's role and the remove modal.
 - `src/screens/product/settings/members-sections.tsx` — the members pane's parts: the people, the invitations, the invite form and the person the reader manages, each with its waiting form; `members-pane.tsx` also draws the pane asked for by its address while the settings scope loads, its headings keeping their known words beside a bar for the workspace's name. The Account, Workspace, Project and Delete project panes read nothing of their own, so each draws that scope wait from its own layout: `account-pane.tsx`, `workspace-form.tsx` with `workspace-pane.tsx` and `workspace-projects.tsx`, `project-form.tsx` with `project-pane.tsx`, and `danger-pane.tsx`, with each text the scope supplies as a bar and each control in its waiting form. `account-pane.tsx`, with its GitHub section in `account-github.tsx`, also draws the Account pane while the session loads, with the session's texts in their placeholder forms, and `billing-waits.tsx` the Billing pane asked for by its address while the session and the scope load, and its durable route on a wide surface until it hands over to the dialog, with the Project panes disabled in the rail. `row-placeholders.tsx` holds a settings row's three-dot trigger and status badge in placeholder form. Each pane draws its read's wait from its own layout, inside `Pending`, and each write holds its control busy through `Action`; `billing-writes.tsx` draws the Billing pane's three writes.
-- `src/screens/product/viewer/published-viewer.tsx` — `PublishedViewer`, a ready publication as a static depiction of `@mokly/ui` parts: the embedded layout with the cloud controls of `published-slots.tsx` in its top-bar slots, the catalogue navigation of `published-navigation.ts`, and the workspace of `published-workspace.tsx`. `published-bar.ts` serves the published and the fallback drawings: it says which compositions a slot draws and gives the compact name of a reference, and it gives each published slot its classes. A phone draws the compact bar, and a desktop drawing draws both bars for the switch in `viewer.css` to show one. `published-view.ts` finds the view of the current screen that each viewport shows from its view records, as the pinned viewer does: under Dark, the dark view, or the light view that the package labels Light only. It also gives the workspace that view's status, its comparison band and the change marks of the view controls, under the screen controls rule of the pinned `@mokly/mokly`. `published-frame.tsx` draws the phone and browser frames in the shown views, and each frame holds the sample screen of `sample-screen.tsx`, which paints the palette of that view's scheme from the shared tokens. A private comparison's message fills the `stageOverlay` slot, as in the app, and the workspace draws the same message over the preview pane, because the package reveals that slot only by a browser measurement.
+- `src/screens/product/viewer/published-viewer.tsx` — `PublishedViewer`, a ready publication as a static depiction of `@mokly/ui` parts: the embedded layout with the cloud controls of `published-slots.tsx` in its top-bar slots, the catalogue navigation of `published-navigation.ts`, and the workspace of `published-workspace.tsx`. `published-bar.ts` serves the published and the fallback drawings: it says which compositions a slot draws and gives the compact name of a reference, and it gives each published slot its classes. A phone draws the compact bar, and a desktop drawing draws both bars for the switch in `viewer.css` to show one. `published-view.ts` finds the view of the current screen that each viewport shows from its view records, as the viewer does: under Dark, the dark view, or the light view that the package labels Light only. It also gives the workspace that view's status, its comparison band and the change marks of the view controls, under the screen controls rule of `@mokly/mokly`. `published-frame.tsx` draws the phone and browser frames in the shown views, and each frame holds the sample screen of `sample-screen.tsx`, which paints the palette of that view's scheme from the shared tokens. A private comparison's message fills the `stageOverlay` slot, as in the app, and the workspace draws the same message over the preview pane, because the package reveals that slot only by a browser measurement.
 - `src/screens/product/viewer/standalone-page.tsx`, `pull-request-page.tsx` and `slots.tsx` — `StandalonePage` and `PullRequestPage`, the two viewer entries whose chrome names the branch or pull request and whose stage holds its publication or one card, and the trigger slots both fill. `BranchSlot` and `PullRequestSlot` draw a reference trigger for each composition of the drawing's bar, then the publication's state once. The version screen draws `BranchSlot` too. While nothing names the reference, `BranchSlot` draws one placeholder in the reference's own frame, which both compositions share, and `StandalonePage` names the project alone in its heading. The project read's `SlotPlaceholder` draws the same placeholder beside its state's dot and bar.
 - `src/screens/product/viewer/reference-trigger.tsx` — `ReferenceTrigger`, the branch or pull request trigger of one bar composition, which the fallback slots and the published slots share. It draws the registered Button through `Action` in the cloud-owned `fo-top-reference` wrapper: the whole reference in the full bar and its compact name in the compact bar, each on one line that truncates. The whole reference stays its accessible name and tooltip, and each composition keeps its own instance key.
 - `src/screens/product/viewer/unpublished-stage.tsx` — the Set up publishing and Team cards of a branch with nothing published, and their reader forms.

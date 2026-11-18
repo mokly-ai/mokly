@@ -1,7 +1,7 @@
 # Publication Upload Exchange
 
 This is the plan, blob and completion exchange of
-[Publication upload](./publication-upload.md). The 0.19.0 release's
+[Publication upload](./publication-upload.md). Mokly's
 [upload exchange v1](../mokly-upload-exchange.md),
 [upload validation v3](../mokly-upload-validation.md)
 and

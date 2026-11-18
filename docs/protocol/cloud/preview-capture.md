@@ -9,7 +9,7 @@ styles and assets clean. `publish` builds in its own private directory outside
 the checkout, so a local build output, such as the ignored `mokly-static/`,
 never supplies publication bytes.
 Never change uncommitted source during capture to conceal a revision
-mismatch. The pinned CLI checks HEAD and status before its build and again
+mismatch. The CLI checks HEAD and status before its build and again
 before Plan. It stops before any receiver request on `git-uncommitted`.
 
 | Failure category                     | Recovery                                                                                                                                               |
@@ -115,7 +115,7 @@ gzip pass proves framing only; the API remains the authoritative
 ## Comparison Base
 
 The base is the merge base of the revision and `origin/main`.
-[Mockup comparison base](./mockup-baselines.md) defines how the pinned CLI
+[Mockup comparison base](./mockup-baselines.md) defines how the CLI
 renders it from that commit's sources and installs its locked dependencies.
 Capture adds these rules. A base install needs npm registry
 access, also with `--local`; that option skips only the head install. Run only

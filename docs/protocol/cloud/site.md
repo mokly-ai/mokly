@@ -191,9 +191,9 @@ surfaces, catalogue isolation and access-grant mechanics, request-level
 concurrency and audit records, and this repository's internal mockup
 fixtures.
 
-The installed packages are authoritative for CLI and viewer behavior. This
-repository is authoritative for cloud behavior. The site may claim the
-released `@mokly/viewer@0.19.0` adoption. For a private
+The Mokly packages are authoritative for CLI and viewer behavior, and the
+cloud docs are authoritative for cloud behavior. The site may claim that the
+cloud hosts the workspace `@mokly/viewer`. For a private
 catalogue, it must not claim comparisons, the previous versions of removed
-entries or the catalogue in its own tab until a published transport closes the
-limitation in [Viewer](./viewer.md#private-artifact-limit).
+entries or the catalogue in its own tab until a credentialed transport closes
+the limitation in [Viewer](./viewer.md#private-artifact-limit).

@@ -6,8 +6,9 @@ needed. The process smoke creates a unique Postgres schema, uses temporary
 storage and API-created projects/tokens, then drops the schema after its child
 processes exit.
 
-The published-CLI path runs the cloud's exact `@mokly/mokly@0.19.0` pin
-against the frozen v0.19 fixture on a clean committed checkout.
+The published-CLI path runs the published release of the workspace
+`@mokly/mokly` version against the frozen v0.19 fixture on a clean committed
+checkout.
 Neither path turns a current-only upload into an
 available `listScreens` or screen-specific Share API response; those paths
 remain `operation-unavailable` under the comparison-only API projection
@@ -122,7 +123,7 @@ and before publication.
 Keep the real CLI dirty-source refusal in the temporary repository; it still
 proves that no API upload attempt occurred. The smoke compares that refusal
 with its recording under `infra/tests/fixtures/catalogue-capture/`.
-The pinned CLI has no stale-output refusal, because no
+The CLI has no stale-output refusal, because no
 generated output is committed.
 Contract archives and JSON under `crates/mkc-mokly-contract/fixtures/` remain
 committed golden files checked byte for byte by the `cloud-fixtures` suite;
@@ -155,8 +156,8 @@ The repository has no local Cloudflare, GCE, or ingress-nginx edge. Do not add
 a simulated edge test. Keep the API and loopback receiver tests automated and
 keep this provider check as a preview operation.
 
-The pinned 0.19.0 CLI sends a gzip Blob body when the Plan lists gzip and
-gzip is smaller. After phase 1 passes with that pin, set the
+The Mokly CLI, from 0.19.0, sends a gzip Blob body when the Plan lists gzip
+and gzip is smaller. After phase 1 passes with that CLI, set the
 switch to true in one preview environment. Run the published CLI smoke and
 check that the Plan lists `["gzip"]`, a smaller Blob carries
 `Content-Encoding: gzip`, an unhelpful compression stays raw, and completion
@@ -193,7 +194,7 @@ project and publishing token through the API as documented in OpenAPI.
 If local publication state needs resetting, clear `.context/blobs` and the
 selected development database together. Resetting only one leaves database
 durability markers and stored bytes with different histories. A `build`
-output directory that the pinned CLI's ownership marker does not authorize
+output directory that the CLI's ownership marker does not authorize
 cannot be replaced; move any files to keep, remove that directory and build
 again.
 
@@ -213,7 +214,7 @@ must preserve the canonical Host header when connecting to loopback.
 
 ## Clean-Checkout Failures
 
-0.19.0 checks HEAD and Git status before its build and again before Plan.
+The CLI checks HEAD and Git status before its build and again before Plan.
 `git-uncommitted`
 means modified, staged, deleted, renamed, type-changed, unmerged or untracked
 non-ignored files, including submodule changes, anywhere in the repository.

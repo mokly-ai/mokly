@@ -55,9 +55,8 @@ the substrate phase 3's live sessions build on. The contract is
   with cloud panels by the app. Released `@mokly/ui@0.19.0` holds the shell's
   parts as presentational components, so mockups can draw the viewer without
   running it.
-  The cloud's supported adoption and upstream private-artifact transport gap
-  are defined in [Viewer](./protocol/cloud/viewer.md). The Rust core upgrade adopts
-  both releases.
+  The cloud hosts the workspace packages, and their private-artifact transport
+  gap is defined in [Viewer](./protocol/cloud/viewer.md).
 - Component-instance identity: stable per-screen instance keys in rendered
   markup and catalogue metadata, with source locations, so comments and agent
   references survive re-renders and edits.

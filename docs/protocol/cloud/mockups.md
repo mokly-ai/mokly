@@ -1,6 +1,6 @@
 # Mockup Catalogue Contract
 
-The catalogue adopts exact-pinned `@mokly/mokly@0.19.0` and `@mokly/ui@0.19.0`.
+The catalogue uses the workspace `@mokly/mokly` and `@mokly/ui` packages.
 Product UI follows its reviewed mockups. The
 [authoring guide](../../mockups/README.md), [tokens](./design-tokens.md),
 [site design](./site-design.md), and [copy rules](./product-copy.md) are part
@@ -8,11 +8,12 @@ of this specification.
 
 ## Package And Ownership
 
-- Pin the published `@mokly/mokly` `0.19.0` release exactly in every consuming
-  package, and pin `@mokly/ui` at the same version in each package that
-  imports it. React and React DOM peers share one exact version
-  that satisfies the packages' React 19 requirement. All consumers resolve one
-  hoisted registry copy from the one npm workspace lockfile.
+- Use the `@mokly/mokly` and `@mokly/ui` packages of this repository, not
+  published releases. The one npm workspace lockfile links every consumer to
+  the package under `packages/`, so a Mokly change and the catalogue change
+  that it needs land together. React and React DOM install once, at one exact
+  version that satisfies the packages' React 19 requirement. The decision is in
+  [Repository layout](../repository-layout.md#boundary).
 - Use public `@mokly/mokly` exports for authoring and public `@mokly/ui`
   subpaths for the viewer drawings. Source protection, component
   usage capture, navigation rewriting and the Browse shell belong to the Mokly
@@ -26,8 +27,8 @@ of this specification.
   [Product mockups: viewer](./product-mockups-viewer.md#viewer)
   defines the drawing, its overlay and its access cards.
 - The cloud owns its renderer, tokens, styles, components, screen definitions,
-  policy tests, and screenshot evidence. A version bump is its own change and
-  regenerates the `mkc-mokly-contract` fixtures.
+  policy tests, and screenshot evidence. A Mokly change that changes an upload
+  artifact regenerates the `mkc-mokly-contract` fixtures in the same change.
 - Use the repository's exact toolchain pins.
 
 ## Configuration And Scripts
@@ -94,7 +95,7 @@ renders as an entry row in its own section; its record cannot set `title`.
 The callback index has the title `Sign-in link · Pending`.
 
 Folder records, the packaged `defineFolder` carrier and `movedFrom` hints
-follow the installed package's `mokly-folders.md` and `mokly-moves.md`. This
+follow [Mokly folders](../mokly-folders.md) and [Mokly moves](../mokly-moves.md). This
 catalogue authors no folder record and no `movedFrom` hint: folder metadata
 changes presentation, never identity, and directory owners use the single
 filename convention `index.mockup.tsx`.
@@ -140,7 +141,7 @@ the entry's kind and path. Screens under `product/`,
 control theme. A component page keeps paper, and every other screen, such as
 the token inventory, keeps the base palette. A registered component inside a
 screen takes that screen's palette. Decision: the palette follows the entry's
-kind and path, not a tag, because the pinned renderer input carries no tags.
+kind and path, not a tag, because the renderer input carries no tags.
 
 Screen components own a `main` landmark and one primary heading. The renderer
 does not add product copy or duplicate landmarks. Each product screen carries
@@ -172,7 +173,7 @@ The Components view of the generated catalogue lists every registered
 component with its props, slots and saved variants; the
 [authoring guide](../../mockups/README.md#key-code) names the registry source.
 Each component declares a closed `propSchema` in the JSON Schema 2020-12
-profile of the pinned release, with `additionalProperties: false` on every
+profile of Mokly, with `additionalProperties: false` on every
 object, and its own `props`, which its page renders first. Props
 are plain JSON data. React content belongs in declared `slots`, and a saved
 variant supplies its slot content through its `slots` map.

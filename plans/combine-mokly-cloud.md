@@ -145,8 +145,10 @@ Each call below is my call, made on 2026-11-17.
   already resolved for the shared React Native, Lucide, Playwright, `tsx`,
   `yaml`, `sharp`, and Node type packages, so that each has one copy. Each
   step is a patch or minor step inside the React Native 0.85 range.
-  `@firna/ui` keeps two majors: 0.14 for the Mokly example and 4.0.0 for
-  the cloud, nested in each cloud workspace. `packages/tokens` declares the
+  Under user decision 3A the repository installs one `@firna/ui`, 4.0.0,
+  at the root. The root also declares `lucide-react`, which Firna's web
+  controls import, so the Mokly example does not rely on a cloud manifest
+  for it. `packages/tokens` declares the
   React Native peers of `@firna/ui` as dev dependencies, so that npm does
   not resolve a newer `react-native` for it.
 - Root scripts. The cloud root scripts `mockups:*`, `emails:*`, and `site:*`
@@ -265,7 +267,7 @@ Depends on: 2
       app. Check that the app bundle holds one React copy.
 - [x] Merge `.prettierrc.json` and `eslint.config.js`. Keep the Astro plugin
       and the Mokly intrinsic-element rule for `packages/viewer/src`.
-- [ ] Move the Mokly example to `@firna/ui` 4.0.0, so the cloud mockups
+- [x] Move the Mokly example to `@firna/ui` 4.0.0, so the cloud mockups
       resolve the one installed version.
 - [x] Let reviewed audit exceptions cover production paths that only the
       private `apps/*` projects reach. Add the follow-up item for Expo SDK 58.
@@ -287,7 +289,7 @@ Depends on: 2
       except generated files, which the length audit excludes by path. Split
       each protocol page over 250 lines, or add its exact cap to
       `xtask/protocol-document-caps.json`.
-- [ ] After the `@firna/ui` move, rewrite the cloud pages, READMEs, and
+- [x] After the `@firna/ui` move, rewrite the cloud pages, READMEs, and
       runbooks that still require published Mokly releases and pin bumps,
       such as `docs/protocol/cloud/mockups.md`,
       `mokly-artifact-compatibility.md`, `repository-typescript.md`,

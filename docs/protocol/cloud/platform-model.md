@@ -189,7 +189,7 @@ installation bound to the requested workspace. Creation checks that access
 atomically and retains a link with the stable provider identity. Installation
 removal preserves project history.
 
-`repository` accepts the pinned Mokly CLI's repository identity grammar:
+`repository` accepts the Mokly CLI's repository identity grammar:
 
 - The full form is `<host>/<owner>/<name>`.
 - A two-segment `<owner>/<name>` uses `github.com` as its host.

@@ -4,7 +4,7 @@
     "skipLibCheck": true,
     "types": [],
     "paths": {
-      "@firna/ui/theme": ["./node_modules/@firna/ui/dist/node/theme.d.ts"]
+      "@firna/ui/theme": ["../../node_modules/@firna/ui/dist/node/theme.d.ts"]
     }
   },
   "include": ["src/**/*.ts"]

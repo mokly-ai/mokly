@@ -1,6 +1,6 @@
 # Viewer Address State
 
-The cloud route owns the controlled selection supplied to the pinned
+The cloud route owns the controlled selection supplied to the workspace
 `@mokly/viewer` of [Viewer host](./viewer-host.md). This contract defines
 immutable publication addresses, reference alias resolution, URL round trips,
 panels and browser history. See
@@ -102,7 +102,7 @@ corrected away, keeping the rest of the address:
 
 A well-formed snapshot is the package's to resolve, as an entry path is.
 
-The pinned package distinguishes a user route activation from an incompatible
+The package distinguishes a user route activation from an incompatible
 controlled value supplied by the host. A package route activation proposes its
 destination in one complete selection, with any filter clearing the
 destination needs and All when the destination is not in Changes. A shell link
@@ -137,7 +137,7 @@ The Share panel alone consumes `listScreens` and reports its read failure.
 Cloud never derives entry or snapshot metadata from paths or filenames. An
 unknown entry is the package's not-found view, with its navigation. An unknown
 or stale snapshot is the package's unavailable state and one `selection` error;
-the pinned package draws that state in place of the whole viewer, cloud slots
+the package draws that state in place of the whole viewer, cloud slots
 included. Neither is a value the host silently resets.
 
 ## Panels, Settings And History
@@ -182,7 +182,7 @@ canonical app URL, the host adds `viewport=both` to that URL. The recipient
 therefore receives the same supported package viewport without broadening what
 the API claims to validate.
 
-Under the dark scheme, the pinned package shows the light view of a screen that
+Under the dark scheme, the package shows the light view of a screen that
 has no dark view. This doc calls that the light fallback. When the selected
 viewport has no dark view of a screen, or neither viewport has one under Both,
 Share still offers that screen. Its link names the light view with

@@ -1,9 +1,10 @@
 # Mockup Comparison Base
 
 This is the comparison sub-contract of [Mockup tooling](./mockup-tooling.md).
-The installed release's `mokly-comparison.md`, `mokly-base-preparation.md`,
-`mokly-base-dependencies.md` and `mokly-base-cache.md` are the producer
-contract.
+Mokly's [comparison](../mokly-comparison.md),
+[base preparation](../mokly-base-preparation.md),
+[base dependencies](../mokly-base-dependencies.md) and
+[base cache](../mokly-base-cache.md) docs are the producer contract.
 
 ## Base Selection
 
@@ -59,7 +60,7 @@ comparisons render the base from those sources.
 
 Mokly keeps the extracted base sources and the base dependency installs in a
 bounded cache under the operating system's cache directory, never in the
-repository. The installed release's `mokly-base-cache.md`
+repository. Mokly's [base cache](../mokly-base-cache.md)
 defines its bounds, leases, reuse and cleanup. Deleting that cache is safe. A
 comparison that passes a tree, file or command bound makes Changes unavailable
 with a diagnostic that names the limit, and the current build stays valid.

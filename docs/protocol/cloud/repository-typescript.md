@@ -2,7 +2,7 @@
 
 This is the TypeScript npm workspace sub-contract of
 [Repository layout](./repository-layout.md): the npm workspace, its packages
-and their exact pins, the generated API client, the app layout, and the
+and their pins, the generated API client, the app layout, and the
 formatting, lint and import rules.
 
 ## Packages
@@ -25,34 +25,34 @@ formatting, lint and import rules.
   `/shared-ui-theme`); none keeps a copy. It is private to the npm workspace,
   so consuming it adds no separately published dependency. Its contract is
   [Design tokens](./design-tokens.md).
-- `package.json`, `apps/mockups/package.json` and `apps/site/package.json` pin
-  the published `@mokly/mokly` `0.19.0` release, so the two consumers,
-  `apps/mockups` and `apps/site`, use one hoisted registry copy. A
-  cloud build uses this same pin when a repository installs no Mokly package.
-  The fallback version must meet the runner's minimum supported version.
-  The fallback is 0.19.0 and the minimum is 0.18.0. A version bump reviews
-  that minimum. The receiver
-  accepts only upload envelope 3, ownership marker 3 and catalogue index 9.
-  The [verification guide](../../../xtask/README.md) documents the
-  constants and their toolchain check.
-- `@mokly/viewer` `0.19.0` is the app's only direct Mokly dependency;
-  `apps/mockups` and `apps/site` pin the same release. The app uses
+- `apps/mockups` and `apps/site` use the workspace `@mokly/mokly` package.
+  `apps/app`, `apps/mockups` and `apps/site` use the workspace
+  `@mokly/viewer`, and `apps/mockups` uses the workspace `@mokly/ui`, because
+  the viewer drawings in `docs/mockups` compose its public parts. The root
+  lockfile links each of them to its path under `packages/`, so no cloud
+  project installs a registry copy, and a Mokly change reaches the cloud
+  without a release. The decision is in
+  [Repository layout](../repository-layout.md#boundary).
+- `@mokly/viewer` is the app's only direct Mokly dependency. The app uses
   only the package's public root entry and stylesheet, and it passes the viewer
   the catalogue index and the entry details that it reads itself.
   No consumer imports internals. The
-  [viewer contract](./viewer.md#private-artifact-limit) records the release's
+  [viewer contract](./viewer.md#private-artifact-limit) records the viewer's
   private-artifact limit.
-- `apps/mockups/package.json` pins the published `@mokly/ui` `0.19.0` release
-  exactly, because the viewer drawings in `docs/mockups` compose its public
-  parts. The three Mokly packages publish at one version, the CLI pins the
-  viewer exactly, and the viewer pins `@mokly/ui` exactly, so a version bump
-  moves all three.
-- The shared controls use `@firna/ui` 4.0.0 and the exact peer set in
-  [Shared controls](./shared-controls.md#published-dependencies), including
-  React/React DOM 19.2.3, RN 0.85.3, and RNW 0.21.2. React pins also live
-  at the npm workspace root to keep every peer on one hoisted runtime. The
-  lockfile records them; there is no separate install root, and the Electron
-  shell under `apps/desktop` adds no React or React Native dependency of its own.
+- A cloud build of a repository that installs no Mokly package runs the
+  published release of the workspace `@mokly/mokly` version.
+  [Cloud build runner](./cloud-build-runner.md) defines that fallback and the
+  runner's minimum supported version. The receiver accepts only upload
+  envelope 3, ownership marker 3 and catalogue index 9. The
+  [verification guide](../../../xtask/README.md) documents the constants and
+  their toolchain check.
+- The shared controls use `@firna/ui` 4.0.0, the one `@firna/ui` version of
+  the repository. Its peers and the React runtime install once, as
+  [Shared controls](./shared-controls.md#dependencies) requires. React pins
+  also live at the npm workspace root to keep every peer on one hoisted
+  runtime. The lockfile records them; there is no separate install root, and
+  the Electron shell under `apps/desktop` adds no React or React Native
+  dependency of its own.
 - `apps/desktop` is `@mokly-cloud/desktop`, the Electron shell that ships the
   application's web export and serves it from `mokly-app://desktop` on macOS
   and Linux, so the product opens offline. Its exact pins are in
@@ -66,33 +66,18 @@ formatting, lint and import rules.
 ## Application
 
 - `apps/app` is an Expo application (SDK 56, the release whose peer set matches
-  the pins in [Shared controls](./shared-controls.md#published-dependencies))
+  the runtime in [Shared controls](./shared-controls.md#dependencies))
   with Expo Router and a typed API client generated from
   `docs/api/openapi.json`. It targets the web: its screens are DOM
   compositions over `@firna/ui` controls, and iOS and Android host the web
   build in a web view rather than reusing them. It serves no marketing or docs
   routes; those belong to `apps/site`, as the
-  [marketing boundary](./marketing-site.md) defines. Its exact pins are:
+  [marketing boundary](./marketing-site.md) defines. Its exact pins are in
+  [`apps/app/package.json`](../../../apps/app/package.json), and its viewer is
+  the workspace `@mokly/viewer`.
 
-  | Package                               | Version |
-  | ------------------------------------- | ------- |
-  | `expo`, `@expo/metro-runtime`         | 56.0.21 |
-  | `expo-router`                         | 56.2.20 |
-  | `expo-constants`                      | 56.0.25 |
-  | `expo-linking`                        | 56.0.17 |
-  | `expo-status-bar`                     | 56.0.4  |
-  | `react-native-screens`                | 4.26.2  |
-  | `@firna/ui`                           | 4.0.0   |
-  | `@gorhom/bottom-sheet`                | 5.2.8   |
-  | `lucide-react`, `lucide-react-native` | 0.561.0 |
-  | `openapi-fetch`                       | 0.17.0  |
-  | `@mokly/viewer`                       | 0.19.0  |
-  | `openapi-typescript` (dev)            | 7.13.0  |
-  | `@playwright/test` (dev)              | 1.63.0  |
-  | `tsx` (dev)                           | 4.23.13 |
-
-  The shared React, React Native and React Native Web runtime set is pinned
-  as [Shared controls](./shared-controls.md#published-dependencies) lists it.
+  The shared React, React Native and React Native Web runtime installs once,
+  as [Shared controls](./shared-controls.md#dependencies) requires.
   The application contract is [Web application](./web-app.md). Design tokens
   come from `@mokly-cloud/tokens`, and the Folio stylesheets have one
   authored source, `docs/mockups/styles`; the app's generated copy stays

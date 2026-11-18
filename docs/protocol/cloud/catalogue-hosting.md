@@ -174,7 +174,7 @@ fallback.
 
 Only the app's `POST /_access` sets the catalogue cookie. The app sends it on
 its own index and detail reads, and the browser sends it on current screen
-frames. The 0.19.0 embedded viewer's comparison and removed-preview reads
+frames. The embedded viewer's comparison and removed-preview reads
 send no credentials, so they return 401 for a private catalogue.
 The standalone shell sends same-origin cookies and needs an existing
 catalogue cookie in its own browser store. A private-comparison error shows an

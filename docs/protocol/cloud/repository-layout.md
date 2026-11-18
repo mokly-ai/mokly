@@ -47,7 +47,7 @@ dependencies and the migration lock are in
 
 ## TypeScript npm Workspace
 
-The npm workspace, its packages and their exact pins, the generated API
+The npm workspace, its packages and their pins, the generated API
 client, the app layout, and the formatting, lint and import rules are in
 [Repository TypeScript layout](./repository-typescript.md).
 

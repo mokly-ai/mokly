@@ -22,8 +22,7 @@ async function packagedIndex(): Promise<CatalogueReadModel> {
   return readCatalogueIndex(
     JSON.parse(
       readFileSync(
-        repositoryRoot +
-          "/docs/protocol/fixtures/catalogue-v9.json",
+        repositoryRoot + "/docs/protocol/fixtures/catalogue-v9.json",
         "utf8",
       ),
     ),

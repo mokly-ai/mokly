@@ -1,7 +1,7 @@
 # Viewer Chrome
 
 This is the slot and publication-chrome sub-contract of [Viewer](./viewer.md).
-The slots are those of the pinned `@mokly/viewer` of
+The slots are those of the workspace `@mokly/viewer` of
 [Viewer host](./viewer-host.md).
 
 ## Slot Inventory
@@ -170,7 +170,7 @@ compositions in [Folio viewer compositions](./folio-viewer.md).
 
 ## Mockup Representation
 
-The ready canvas is a static depiction composed of the exact-pinned
+The ready canvas is a static depiction composed of the workspace
 `@mokly/ui` parts that the viewer renders its shell from, drawn with
 `interactive={false}`: the cloud controls sit in the embedded layout's host
 slots, and a sample screen fills the phone and browser frames.

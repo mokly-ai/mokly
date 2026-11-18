@@ -1,7 +1,8 @@
 # Development And Publication Scripts
 
 These scripts run local services and test the API with real processes,
-Postgres and local file storage. They use the installed Mokly 0.19.0 package.
+Postgres and local file storage. They use the workspace Mokly package, and the
+published-CLI smoke installs the published release of its version.
 The publication boundary uses envelope 3, ownership marker 3 and index 9.
 
 Run the publication integration and its Python tests from the repository root:
@@ -24,7 +25,8 @@ format dependency.
   It also converts test uploads to current-only indexes and envelopes.
 - `publication_smoke_fixture.py` strictly validates two source-only revisions
   of the [frozen fixture](./fixtures/publication-smoke-v0.19/README.md).
-- `publication_smoke_cli.py` publishes with the installed release version,
+- `publication_smoke_cli.py` publishes with the published release of the
+  workspace version,
   compares every served file with a strict build of the same checkout and
   base, checks replay, and compares the real dirty refusal with its recording.
 - `build_upload_fixture.py` adapts the released contract export for build

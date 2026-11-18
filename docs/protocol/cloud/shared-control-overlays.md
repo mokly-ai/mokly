@@ -82,10 +82,10 @@ scrolling body without ever owning a heading of its own. See
 
 ## The Published Viewer Stage
 
-The pinned `@mokly/viewer` owns the ready stage, Browse rail and package
+The workspace `@mokly/viewer` owns the ready stage, Browse rail and package
 controls. `apps/app` uses its root React entry and stylesheet behind the
 [package host contract](./viewer-host.md#package-host). The mockups depict the
-ready stage statically with the parts of the exact-pinned `@mokly/ui`, which
+ready stage statically with the parts of the workspace `@mokly/ui`, which
 the viewer renders its shell from, drawn with `interactive={false}`.
 Cloud controls are Firna controls themed through the shared
 token mapping and composed into `topBarStart` and `topBarEnd`. A mockup places

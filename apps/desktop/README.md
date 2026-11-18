@@ -28,11 +28,11 @@ Only the main frame on `mokly-app://desktop` can use
 `clipboard-sanitized-write`. Requests and checks deny every other permission,
 including clipboard reads and all subframe permissions.
 
-Viewer 0.19.0 loads its catalogue index and cloud chrome in the shell, but
-rejects its non-HTTP host when it mounts a screen frame. Screen previews need a
-later Mokly release and a separate pin bump. The smoke test waits for the
-catalogue index, records this limit and separately proves that catalogue CORS
-and framing admission work.
+The workspace viewer loads its catalogue index and cloud chrome in the shell,
+but rejects its non-HTTP host when it mounts a screen frame. Screen previews
+need a change to the workspace viewer and frame probe. The smoke test waits for
+the catalogue index, records this limit and separately proves that catalogue
+CORS and framing admission work.
 
 ## Quick Start
 

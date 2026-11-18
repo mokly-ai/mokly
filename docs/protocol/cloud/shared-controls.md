@@ -1,32 +1,39 @@
 # Shared Controls
 
-Common controls come from the public `@firna/ui` release. The catalogue
+Common controls come from the public `@firna/ui` package. The catalogue
 registers them as thin wrappers, and the product uses the same controls through
 the same theme mapping. See [Design tokens](./design-tokens.md) and
 [Mockups](./mockups.md).
 
-## Published Dependencies
+## Dependencies
 
-Install the peer set exactly, in `apps/mockups/package.json`, through the single
-npm workspace lockfile. Repeat the React and React DOM pins in `package.json`,
-so every npm workspace and peer shares one hoisted runtime. Do not use
-peer-resolution bypasses.
+The repository installs one `@firna/ui` release, `4.0.0`, through the one npm
+workspace lockfile. Every npm workspace that declares it, the Mokly example
+catalogue included, pins that exact version. Decision: one `@firna/ui` version
+for the repository, so that the catalogue resolves the one installed copy. A
+second npm name for another major and a separate catalogue install were
+rejected.
 
-| Package                          | Version   | Boundary                                |
-| -------------------------------- | --------- | --------------------------------------- |
-| `@firna/ui`                      | `4.0.0`   | Shared controls and theme               |
-| `react`, `react-dom`             | `19.2.3`  | Matching React 19 runtimes              |
-| `react-native`                   | `0.85.3`  | Peer types; web runtime resolves to RNW |
-| `react-native-web`               | `0.21.2`  | DOM rendering and atomic styles         |
-| `react-native-reanimated`        | `4.3.1`   | Library peer                            |
-| `react-native-gesture-handler`   | `2.31.1`  | Library peer                            |
-| `react-native-svg`               | `15.15.4` | Icons and SVG primitives                |
-| `lucide-react`                   | `0.561.0` | Library web icon peer                   |
-| `lucide-react-native`            | `0.561.0` | Library icon peer                       |
-| `@gorhom/bottom-sheet`           | `5.2.8`   | Library sheet peer                      |
-| `@types/react-native-web`        | `0.19.3`  | Published web declarations              |
-| `react-native-worklets`          | `0.8.3`   | Reanimated's `0.8.x` peer               |
-| `react-native-safe-area-context` | `5.7.0`   | Overlay/sheet support                   |
+`apps/mockups/package.json` pins each package below exactly. `package.json`
+repeats the React and React DOM pins `19.2.3`, so every npm workspace and peer
+shares one hoisted runtime. Each package installs once, at the version that
+the lockfile records. Do not use peer-resolution bypasses.
+
+| Package                          | Boundary                                |
+| -------------------------------- | --------------------------------------- |
+| `@firna/ui`                      | Shared controls and theme               |
+| `react`, `react-dom`             | Matching React 19 runtimes              |
+| `react-native`                   | Peer types; web runtime resolves to RNW |
+| `react-native-web`               | DOM rendering and atomic styles         |
+| `react-native-reanimated`        | Library peer                            |
+| `react-native-gesture-handler`   | Library peer                            |
+| `react-native-svg`               | Icons and SVG primitives                |
+| `lucide-react`                   | Library web icon peer                   |
+| `lucide-react-native`            | Library icon peer                       |
+| `@gorhom/bottom-sheet`           | Library sheet peer                      |
+| `@types/react-native-web`        | Published web declarations              |
+| `react-native-worklets`          | Reanimated's peer                       |
+| `react-native-safe-area-context` | Overlay/sheet support                   |
 
 Firna's web backend renders DOM primitives directly; react-native-web serves
 the catalogue's own native primitives and atomic stylesheet, not Firna.

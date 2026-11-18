@@ -2,7 +2,7 @@
 
 The viewer is the application: once signed in with a project, the user is
 always inside it, and one viewer serves standalone browsing and pull request
-links. The app hosts the exact-pinned `@mokly/viewer` and fills its slots with
+links. The app hosts the workspace `@mokly/viewer` and fills its slots with
 workspace and project switching, branch and pull request selection,
 publication history, share, settings and the account menu; the package owns
 Browse, Changes, search, screen rendering, comparisons, viewport and theme.
@@ -29,7 +29,7 @@ mapping, the consumed `onError` codes and the version failure.
 The app reads the catalogue index and every entry detail itself, with the
 catalogue cookie for a private catalogue, and passes them to the package as
 objects, as [Viewer host](./viewer-host.md#sources) defines.
-The pinned viewer sends its own reads with `credentials: "omit"`, and its root
+The viewer sends its own reads with `credentials: "omit"`, and its root
 React API has no transport for them. These reads are the documents of a pinned
 comparison, which its Side by side, Overlay and Difference modes present,
 and documents of a removed entry's previous version. For a private catalogue
@@ -116,7 +116,7 @@ wildcard `*.<catalogue domain>` of
 [Catalogue hosting](./catalogue-hosting.md#origins-and-routes): `frame-src` for
 the screen frames the package mounts and `connect-src` for the grant exchange,
 the confirmation read, the read-model requests and the comparison and
-removed-preview documents the package fetches. The pinned viewer renders those
+removed-preview documents the package fetches. The viewer renders those
 documents in script-disabled `srcdoc` frames at the app origin, where they
 inherit the app's policy, so `img-src`, `font-src` and `style-src` name the
 catalogue domain too, for the images, fonts and stylesheets the documents load
@@ -184,14 +184,14 @@ The viewer is DOM code: a non-web build never mounts the package in a React
 Native tree. The desktop shell of [Desktop application](./desktop-app.md)
 serves the export from its own origin, which the catalogue hosts admit for
 CORS and framing. The cloud chrome, read model, grant exchange and catalogue
-cookie work in the shell. The pinned viewer's `postMessageAdapter` accepts
+cookie work in the shell. The viewer's `postMessageAdapter` accepts
 only an HTTP or HTTPS host, and the inspector that the CLI embeds in published
 screens also rejects any other host. Screen frames therefore do not mount in
 the shell. Initial script-disabled HTML can be visible while the package
 reports its frame error; the adapter and inspector stay unavailable. The shell
-adds no viewer code or package workaround. An upstream release and separate
-pin bump will enable frames. Publish screens again with the new CLI so their
-embedded inspector accepts the desktop host.
+adds no viewer code or package workaround. A change to the workspace viewer
+and frame probe will enable frames. Publish screens again with a CLI that
+carries the change, so their embedded inspector accepts the desktop host.
 Future iOS and Android surfaces open the web viewer route in a WebView with
 native chrome. The WebView receives the same access-grant cookie exchange as
 the browser and never the app session. No mobile host, bundle or native

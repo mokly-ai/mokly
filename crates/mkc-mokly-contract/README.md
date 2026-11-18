@@ -1,9 +1,9 @@
 # mkc-mokly-contract
 
-`mkc-mokly-contract` validates the published Mokly upload artifacts for a
-receiver: the plan archive, the upload envelope, the ownership marker and the
-catalogue index. Depend on it when accepting `mokly publish` plan requests or
-checking compatibility with the pinned package. It never touches HTTP, the
+`mkc-mokly-contract` validates the Mokly upload artifacts for a receiver: the
+plan archive, the upload envelope, the ownership marker and the catalogue
+index. Depend on it when accepting `mokly publish` plan requests or checking
+compatibility with the workspace Mokly packages. It never touches HTTP, the
 database or the filesystem and does not depend on Mokly internals;
 `mkc-publications` owns idempotency and storage, and `mkc-api` owns
 authentication, repository authorization and request deadlines.
@@ -124,29 +124,32 @@ Unit tests use unimock at the injected reader boundary; byte-level tests
 exercise in-memory compressed streams. The integration tests validate the real
 frozen plan archives and refuse a complete export as a plan. The allocation
 test bounds memory for maximum-size archives and JSON artifacts. The fixture
-generator captures envelope 3 and index 9 from the real 0.19.0 CLI. The Rust
+generator captures envelope 3 and index 9 from the real workspace CLI. The Rust
 and Node checks run the shared index Changes-count corpus, both captured
 indexes and the published catalogue. Each corpus case checks its exact input
 hash before decoding. Both readers derive the same Changes counts. The
 corpus and fixture layout are in the [fixture guide](./fixtures/README.md).
-A pin bump regenerates the fixtures and updates the corpus deliberately.
+A Mokly change that changes these artifacts regenerates the fixtures and
+updates the corpus deliberately, in the same change.
 
 The CLI failure fixture captures uncommitted-file and refused-upload codes from
-real failed 0.19.0 publish commands in a separate temporary checkout. Its checksum
+real failed workspace CLI publish commands in a separate temporary checkout. Its checksum
 is in `checksums.json`. The publications worker tests its typed mappings
 against these observed codes; the `cloud-fixtures` suite regenerates and
 rejects byte drift.
 
-Bump `@mokly/mokly` or `@mokly/viewer` in its own change: read the released
-protocol changes, change the exact pin in every npm workspace `package.json` that
-consumes it and in the lockfile, run `cargo xtask mokly-fixtures`, review the
-fixture metadata and content changes as compatibility input, update this
-crate and the docs where the released contract requires it, and run
-`cargo xtask check` before committing. A bump of the fixture packer `tar`
-also updates the toolchain-pins table and reviews the archive header
-differences. A viewer-only bump does not regenerate producer fixtures unless
-its released contract also requires a producer change. Never regenerate
-merely to suppress a failing decoder.
+The cloud uses the workspace `@mokly/mokly` and `@mokly/viewer` packages, so
+a Mokly change reaches this crate in the same commit. When a change touches
+the upload artifacts or the viewer readers: update the Mokly protocol docs,
+run `npm run build` and `cargo xtask mokly-fixtures`, review the fixture
+metadata and content changes as compatibility input, update this crate and
+the docs where the contract requires it, and run `cargo xtask check` before
+committing. The `cloud-fixtures` suite fails while the committed fixtures
+differ from the workspace build. A bump of the fixture packer `tar` also
+updates the toolchain-pins table and reviews the archive header differences.
+A viewer-only change does not regenerate producer fixtures unless its
+contract also requires a producer change. Never regenerate merely to suppress
+a failing decoder.
 
 ### Key Code
 

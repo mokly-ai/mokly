@@ -36,7 +36,7 @@ runs `serve` when it gets none.
 
 The [workspace README](../../development/cloud.md#local-preview-stack) gives the commands.
 Sign in by opening `<app origin>/auth/preview/callback#secret=<secret>` with
-the local secret. The project remains private. The pinned viewer reads
+the local secret. The project remains private. The viewer reads
 comparison documents without credentials, so its private comparison stops at
 the documented
 [private artifact limit](./viewer.md#private-artifact-limit).

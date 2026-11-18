@@ -19,12 +19,12 @@ The root npm workspace supplies one shared React runtime. The configuration is t
 | `roots`                         | `[{ "dir": "docs/mockups/src/entries", "files": ["**/*.mockup.{ts,tsx}"] }]` |
 | `renderer`                      | `docs/mockups/src/render.tsx`                                                |
 | `colorSchemes`                  | `["light", "dark"]`                                                          |
-| `moduleResolution.packageRoots` | `["ts"]`                                                                     |
+| `moduleResolution.packageRoots` | `["."]`                                                                      |
 | `stylesheets`                   | The four entry-route rules below                                             |
 | `review.base`                   | `origin/main`                                                                |
 
 The configuration names no output directory, rebuild recipe or shared-impact
-list, because the pinned release has none of these fields.
+list, because Mokly has none of these fields.
 
 Stylesheet rules match the entry route `<path>/index.html`, not the generated
 view route. Use `design/site/**/index.html`, then

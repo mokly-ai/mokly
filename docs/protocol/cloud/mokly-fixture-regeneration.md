@@ -1,13 +1,14 @@
 # Mokly Fixture Regeneration
 
 This is the fixture sub-contract of [Artifact compatibility](./mokly-artifact-compatibility.md).
-The procedure uses the exact-pinned 0.19.0 CLI and viewer.
+The procedure uses the workspace CLI and viewer that `npm run build` builds.
 
 ## Ownership
 
 Fixtures live under `crates/mkc-mokly-contract/fixtures`, beside the consumer
-and its integration tests, so a package bump and its parser evidence share
-one review diff. `cargo xtask mokly-fixtures` regenerates them;
+and its integration tests, so a Mokly change and its parser evidence share
+one review diff. `cargo xtask mokly-fixtures` regenerates them from the
+workspace build;
 `cargo xtask mokly-fixtures --check` regenerates in isolated temporary storage,
 compares every byte and filename, and fails on missing, extra or changed files.
 The `cloud-fixtures` suite runs check mode unconditionally. Neither mode
@@ -19,17 +20,17 @@ generated OpenAPI client are committed golden files. The frozen source trees
 are source only. They use the 0.19 authoring API and a data-only
 `mokly.config.json`. Build output exists only in the generator's
 private temporary checkout. Changes to `docs/mockups`, its config or unrelated
-docs must not change these fixtures. Regenerate only for deliberate package or
+docs must not change these fixtures. Regenerate only for deliberate Mokly or
 contract changes, including intentional improvements to the frozen coverage.
 The complete export archive stays under 640 KiB, so the committed golden file
 stays small while it holds the viewer shell bundle and its font.
 
 The live smoke uses a separate producer-owned 0.19 fixture under
 `scripts/cloud/fixtures/`, whose checked-in catalogue is source only.
-It must not consume the product catalogue or the contract fixture, and the
-deployed proof uses the same exact 0.19.0 pin. Changing the
-published live smoke version requires a deliberate fixture and runbook
-update. See [Publish smoke](../../ops/publish-smoke.md).
+It must not consume the product catalogue or the contract fixture. The live
+smoke and the deployed proof run the published release of the workspace
+`@mokly/mokly` version. A change of that version requires a deliberate fixture
+and runbook update. See [Publish smoke](../../ops/publish-smoke.md).
 
 ## Reproducible Output
 
@@ -58,7 +59,7 @@ branch `fixture`, config `mokly.config.json`, the same base and a null pull
 request. The Plan's marker declares the files of the complete
 export with the same digests and sizes, plus the envelope.
 
-0.19.0 has no option that fixes the envelope's client time. The generator
+The CLI has no option that fixes the envelope's client time. The generator
 therefore sets `exportedAt` to `2000-01-01T00:00:00.000Z` and updates the
 digest of the envelope's marker entry to match. The envelope and
 the marker differ from the producer's bytes only in `exportedAt` and in that
@@ -102,8 +103,8 @@ corpus, both real producer indexes and the published
 `readCatalogueIndex` of `@mokly/viewer`. The rule for the two
 readers is in
 [Publication index](./publication-review.md#reader-conformance-and-cloud-checks).
-Both package versions must equal the corpus versions, so a pin bump requires
-a deliberate corpus update, and the moves checksum record includes the corpus
+Both package versions must equal the corpus versions, so a version change
+requires a deliberate corpus update, and the moves checksum record includes the corpus
 SHA-256, so a corpus edit requires regeneration. Regeneration and drift cover
 every generated file; the corpus, its Node check, the README and the frozen
 source trees are the only authored inputs, and any other file under the
@@ -132,7 +133,7 @@ baseline:
    loopback project URL with the test bearer. The first scenario must
    make no upload request.
 
-0.19.0 has no `build-stale` code, so no stale-output scenario exists.
+The CLI has no `build-stale` code, so no stale-output scenario exists.
 
 Require a nonzero exit and parse the actual plain stderr prefix for each
 scenario. Save observed values, never constants supplied by the generator.

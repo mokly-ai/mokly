@@ -128,7 +128,7 @@ a second dialog.
 ## Viewer
 
 The package host of [Viewer host](./viewer-host.md#package-host) mounts the
-pinned `@mokly/viewer` only for a ready, unexpired publication the reader has
+workspace `@mokly/viewer` only for a ready, unexpired publication the reader has
 already been let into, with the app chrome's scheme as its interface `theme`.
 Non-ready states retain one cloud-owned card. The viewer route owns the
 complete controlled selection, its cloud `main` landmark and visually hidden
@@ -172,7 +172,7 @@ a route reconstruction or a change between the full and compact bar can
 replace its controls. Opening a panel pushes one history entry; closing
 undoes it.
 
-The pinned viewer also draws its own `main` and skip link. Its public React
+The viewer also draws its own `main` and skip link. Its public React
 API provides no host control for those elements. The ready state therefore has
 two nested main landmarks and two skip links. Under an overlay the cloud body
 gives up its role, but the hidden package `main` stays beside the overlay's

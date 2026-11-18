@@ -2,7 +2,7 @@
 
 - [Publication smoke](./publish-smoke.md) — real CLI, isolated hosting and retention verification.
 - [Deployment](./deploy.md) — automated stable apply, three-image release and publish proof.
-- [Mokly release cutover](./mokly-release-cutover.md) — the 0.19.0 upgrade and the earlier format cutover for stable and preview environments.
+- [Mokly release cutover](./mokly-release-cutover.md) — the ordered cutover after a Mokly format change, with the 0.19.0 frame upgrade and the earlier format cutover, for stable and preview environments.
 - [Foundation apply](./foundation.md) — the Foundation workflow, the Deploy wait, trust-set changes and the one-time bootstrap.
 - [Production](./production.md) — provisioned resources, GitHub App and release evidence.
 - [Environments](./environment.md) — domains, runtime settings and retention boundaries.

@@ -61,9 +61,9 @@
       "@playwright/test": ["../../node_modules/@playwright/test/index.mjs"],
       "parse5": ["../../node_modules/parse5/dist/index.js"],
       "typescript": ["../../node_modules/typescript/lib/typescript.js"],
-      "@firna/ui": ["./node_modules/@firna/ui/dist/node/index.js"],
-      "@firna/ui/theme": ["./node_modules/@firna/ui/dist/node/theme.js"],
-      "@firna/ui/*": ["./node_modules/@firna/ui/dist/node/*/index.js"],
+      "@firna/ui": ["../../node_modules/@firna/ui/dist/node/index.js"],
+      "@firna/ui/theme": ["../../node_modules/@firna/ui/dist/node/theme.js"],
+      "@firna/ui/*": ["../../node_modules/@firna/ui/dist/node/*/index.js"],
       "lucide-react-native": [
         "../../node_modules/lucide-react-native/dist/esm/lucide-react-native.js"
       ],

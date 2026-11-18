@@ -43,10 +43,10 @@ The home stage is generated after the dogfood catalogue. It publishes the
 four mobile/desktop and light/dark documents of
 `product/account/project-created`, read from
 `mokly-static/static/mokly-generated/`, plus their local resources into
-`public/stage/`. The exact-pinned `@mokly/viewer` public `readCatalogueIndex`
+`public/stage/`. The workspace `@mokly/viewer` public `readCatalogueIndex`
 reader checks the version of `mokly-static/mokly-viewer/index.json` and copies
 its content under the
-[released reader contract](../../docs/protocol/cloud/mokly-artifact-compatibility.md#release-019-frame-boundary).
+[reader contract](../../docs/protocol/cloud/mokly-artifact-compatibility.md#frame-boundary).
 The stage projects
 Specs and Components from that tree, with section-specific row ordering,
 authored variants and hidden-folder pruning. Breadcrumbs use the index's
@@ -86,6 +86,7 @@ From the repository root with the pinned Node and npm versions:
 
 ```sh
 npm ci
+npm run build
 npm run mockups:build
 npm run site:build
 npm run site:check
@@ -175,14 +176,14 @@ package-owned. Mokly Cloud and Review and edit are repository-owned Markdown
 under `src/content/docs/`. A section cannot mix owners. Prefer one page per
 concept, and keep each authored page under about 200 lines of Markdown.
 
-The package guides must satisfy their own published guide contract. The site
-expects the 34 guides in the pinned 0.19.0 release, validates strict
+The package guides must satisfy their own guide contract. The site expects
+the 34 guides of the workspace `@mokly/mokly` package, validates strict
 frontmatter and CommonMark, rejects MDX/JSX and broken destinations, and
-requires install-version literals to equal the installed package version.
-Reference links to package source use the installed `v<version>` tag.
-A Mokly pin bump reads the release notes against the repository-owned docs
-pages, the docs landing, the home copy and the Terms, and fixes each
-statement that the release makes stale.
+requires install-version literals to equal the workspace package version.
+Reference links to package source use the `v<version>` tag of that version.
+A Mokly change that makes a statement of the repository-owned docs pages, the
+docs landing, the home copy or the Terms stale fixes that statement in the
+same change.
 Reference publishes seven documents, including Catalogue upload exchange
 between Catalogue upload and Catalogue navigation. Site and mockup membership
 tests read the package's Published Protocol Documents table through one shared
@@ -244,7 +245,7 @@ Pages project and attach the domain are in the
 - `scripts/check-links.mjs` and `scripts/links/` — the built-output link, anchor, asset, frame and search-index check.
 - `scripts/preview.mjs`, `scripts/chromium-path.mjs`, `scripts/lighthouse.mjs` and `src/lighthouse.ts` — the foreground preview server for Playwright, the Chromium path CI reads, and the report-only Lighthouse runner with its audited pages, viewports, thresholds and one retry.
 - `src/styles/token-styles.ts` and `src/styles/` — `SITE_TOKEN_CSS`, the `responsiveTokenCss` output scoped per color scheme, and the Folio stylesheets (`base.css`, `chrome.css`, `menu.css`, `layout.css`, `footer.css` and the page sheets), each loaded once by a layout.
-- `tests/docs_package.test.ts`, `tests/docs_guides.test.ts` and `tests/docs.test.ts` — the expected guide inventory of the pinned release, the fence languages and guide labels that must render, and the `status: ahead` pages with their source citations.
+- `tests/docs_package.test.ts`, `tests/docs_guides.test.ts` and `tests/docs.test.ts` — the expected guide inventory of the workspace package, the fence languages and guide labels that must render, and the `status: ahead` pages with their source citations.
 - `tests/stage_tree.test.ts` — builds a temporary Git catalogue and checks the depicted rows against the index's titles, section order, hidden folders and variants.
 - `tests/stage_source.test.ts` — the stage's fallback mockups build and its catalogue-index error message.
 - `tests/helpers/published-protocols.ts`, `tests/docs_reference.test.ts`, `tests/docs_mockup_reference.test.ts` and `tests/published_protocols.test.ts` — the shared package-table parser, Reference membership and order in the site and mockup, and malformed-row coverage.

@@ -1,77 +1,91 @@
 # Mokly Artifact Compatibility
 
-The cloud uses the public artifacts and documented exports of
-**`@mokly/mokly@0.19.0`**, **`@mokly/viewer@0.19.0`** and
-**`@mokly/ui@0.19.0`** together. The receiver, the app, the
-mockups, the site and the tooling implement these formats.
+The cloud uses the public artifacts and documented exports of the workspace
+packages `@mokly/mokly`, `@mokly/viewer` and `@mokly/ui` together. The
+receiver, the app, the mockups, the site and the tooling implement these
+formats.
 
-Use published file artifacts and documented exports only. Never import Mokly
-internals, vendor source or patch its runtime. Shipped protocols take
-precedence over later upstream main and intermediate changelog numbers. A
-changelog's `Unreleased` section is not a release promise. The format
-inventory, the generated declarations and the public readers decide each
-version. Where a released prose page names another number, such as
-`schemaVersion: 8` for the index in `mokly-shell-delivery.md`, the cloud still
-requires index 9.
+Use file artifacts and documented exports only. Never import Mokly internals,
+vendor source or patch its runtime. The Mokly protocol docs of the same commit
+are the contract, and the format inventory, the generated declarations and the
+public readers decide each version. Where a Mokly prose page names another
+number, such as `schemaVersion: 8` for the index in
+[Mokly shell delivery](../mokly-shell-delivery.md), the cloud still requires
+index 9.
 
-## Released Contract Sources
+## Contract Sources
 
-Read these documents from the exact published 0.19.0 package, not upstream
-main:
+Read these Mokly protocol docs and fixtures from this repository:
 
-- Wire and receiver validation: `mokly-upload.md`, `mokly-upload-exchange.md`,
-  `mokly-upload-validation.md`, `mokly-export-ownership.md`,
-  `fixtures/export-ownership-v3.json` and `fixtures/upload-plan-v1.json`.
-- Versions and namespace: Supported Formats in `docs/protocol/cloud/README.md`,
-  `mokly-format-versions.md` and `mokly-viewer-namespace.md`.
-- Index and Changes: `mokly-catalogue.md`, `mokly-catalogue-delivery.md`,
-  `mokly-catalogue-serialization.md`, `mokly-catalogue-changes.md` with its
-  Changes count, `mokly-moves.md`, `mokly-shell-delivery.md` and
-  `fixtures/catalogue-v9.json`.
-- Static output and delivery: `mokly-export.md`, `mokly-publication.md`,
-  `mokly-export-delivery.md`, `mokly-artifact-paths.md`,
-  `mokly-comparison-serving.md` and `mokly-removed-previews.md`.
-- Viewer: `mokly-viewer.md`, `mokly-viewer-api.md`, `mokly-shell-fences.md`,
-  `mokly-comparison-panes.md`, `mokly-frame-adapter.md` and
-  `fixtures/entry-details-v4.json`, with the viewer README, public
-  declarations and documented exports.
-- Shared UI: `mokly-ui-package.md`, with the `@mokly/ui` README and public
-  declarations.
-- Comparison, configuration and CLI errors: `mokly-comparison.md`,
-  `mokly-base-dependencies.md`, `mokly-configuration.md` and
-  `mokly-terminal-errors.md`.
-- Imported styles: `mokly-configuration-imported-styles.md`,
-  `mokly-imported-styles.md`, `mokly-imported-styles-assets.md` and
-  `mokly-export-public-files.md`.
+- Wire and receiver validation: [upload](../mokly-upload.md),
+  [upload exchange](../mokly-upload-exchange.md),
+  [upload validation](../mokly-upload-validation.md),
+  [export ownership](../mokly-export-ownership.md),
+  [`fixtures/export-ownership-v3.json`](../fixtures/export-ownership-v3.json)
+  and [`fixtures/upload-plan-v1.json`](../fixtures/upload-plan-v1.json).
+- Versions and namespace: [Supported Formats](../README.md#supported-formats),
+  [format versions](../mokly-format-versions.md) and
+  [viewer namespace](../mokly-viewer-namespace.md).
+- Index and Changes: [catalogue](../mokly-catalogue.md),
+  [catalogue delivery](../mokly-catalogue-delivery.md),
+  [catalogue serialization](../mokly-catalogue-serialization.md),
+  [catalogue changes](../mokly-catalogue-changes.md) with its Changes count,
+  [moves](../mokly-moves.md), [shell delivery](../mokly-shell-delivery.md) and
+  [`fixtures/catalogue-v9.json`](../fixtures/catalogue-v9.json).
+- Static output and delivery: [export](../mokly-export.md),
+  [publication](../mokly-publication.md),
+  [export delivery](../mokly-export-delivery.md),
+  [artifact paths](../mokly-artifact-paths.md),
+  [comparison serving](../mokly-comparison-serving.md) and
+  [removed previews](../mokly-removed-previews.md).
+- Viewer: [viewer](../mokly-viewer.md), [viewer API](../mokly-viewer-api.md),
+  [shell fences](../mokly-shell-fences.md),
+  [comparison panes](../mokly-comparison-panes.md),
+  [frame adapter](../mokly-frame-adapter.md) and
+  [`fixtures/entry-details-v4.json`](../fixtures/entry-details-v4.json), with
+  the viewer README, public declarations and documented exports.
+- Shared UI: [UI package](../mokly-ui-package.md), with the `@mokly/ui` README
+  and public declarations.
+- Comparison, configuration and CLI errors: [comparison](../mokly-comparison.md),
+  [base dependencies](../mokly-base-dependencies.md),
+  [configuration](../mokly-configuration.md) and
+  [terminal errors](../mokly-terminal-errors.md).
+- Imported styles:
+  [configuration imported styles](../mokly-configuration-imported-styles.md),
+  [imported styles](../mokly-imported-styles.md),
+  [imported style assets](../mokly-imported-styles-assets.md) and
+  [export public files](../mokly-export-public-files.md).
 
 Cloud's additional receiver choices live in [Publication upload](./publication-upload.md),
 [exchange](./publication-upload-exchange.md),
 [validation](./publication-upload-validation.md) and
-[index](./publication-review.md). They never redefine the published wire
-format. The receiver, app and tooling use this release family.
+[index](./publication-review.md). They never redefine the Mokly wire format.
 
-## Published Package Inventory
+## Workspace Package Inventory
 
-| Package         | Pin    | Cloud use                                                            |
-| --------------- | ------ | -------------------------------------------------------------------- |
-| `@mokly/mokly`  | 0.19.0 | The CLI that serves, builds and publishes catalogues, and its guides |
-| `@mokly/viewer` | 0.19.0 | The embedded viewer and its public readers                           |
-| `@mokly/ui`     | 0.19.0 | The presentational parts that the viewer mockups compose             |
+| Package         | Workspace path    | Cloud use                                                            |
+| --------------- | ----------------- | -------------------------------------------------------------------- |
+| `@mokly/mokly`  | `packages/mokly`  | The CLI that serves, builds and publishes catalogues, and its guides |
+| `@mokly/viewer` | `packages/viewer` | The embedded viewer and its public readers                           |
+| `@mokly/ui`     | `packages/ui`     | The presentational parts that the viewer mockups compose             |
 
 The three packages share one version. The CLI depends on the exact viewer
-version, and the viewer depends on the exact `@mokly/ui` version. The exact pins apply to every npm workspace
-package that consumes a package, and the single lockfile records each
-release's registry URL and integrity. Local archives and source copies cannot
-replace these pins. The `mokly` command runs an exact native package for Linux
-x64 or ARM64 with glibc 2.28 or newer, macOS 11 or newer, or Windows x64,
-with no JavaScript fallback and no musl build.
+version, and the viewer depends on the exact `@mokly/ui` version. The one
+lockfile links every cloud project that consumes a package to its workspace
+path, and no project installs a registry copy. Decision: workspace use, not
+exact pins on published releases, as
+[Repository layout](../repository-layout.md#boundary) records. The `mokly`
+command runs an exact native package for Linux x64 or ARM64 with glibc 2.28 or
+newer, macOS 11 or newer, or Windows x64, with no JavaScript fallback and no
+musl build.
 
 ## Version Boundary
 
-Released `mokly-format-versions.md` and `mokly-viewer-namespace.md` define
-these independent versions. The cloud uses them together.
+[Format versions](../mokly-format-versions.md) and
+[viewer namespace](../mokly-viewer-namespace.md) define these independent
+versions. The cloud uses them together.
 
-| Boundary                               | Released version               | Cloud use                                                             |
+| Boundary                               | Version                        | Cloud use                                                             |
 | -------------------------------------- | ------------------------------ | --------------------------------------------------------------------- |
 | Upload envelope                        | 3                              | Strict ten-field `mokly-upload.json` parser                           |
 | Export ownership marker                | 3                              | `.mokly-export-artifact` parser                                       |
@@ -83,8 +97,8 @@ these independent versions. The cloud uses them together.
 | Removed page/document preview metadata | 3                              | Packaged removed-preview reader                                       |
 | Historical snapshot identity domain    | `mokly-historical-snapshot-v3` | Package-generated 64 lowercase hex identity                           |
 
-0.19.0 has no private generated manifest, no review file, no static delivery
-descriptor and no shell bootstrap envelope. The review result
+Mokly writes no private generated manifest, no review file, no static
+delivery descriptor and no shell bootstrap envelope. The review result
 and the catalogue change snapshot exist only in memory, so no upload or served
 file carries them. Never infer Changes from rendered views or
 file names; the index records carry them. Envelope unknown fields fail; marker
@@ -105,8 +119,8 @@ receiver has no `moklyVersion` floor. These gates already answer
 426 to every earlier producer: releases up to 0.16 write envelope 2, and 0.17
 writes index 8. Rejected: a floor at 0.18.0, because it refuses no extra
 producer; version checks of each detail and preview file on arrival, because
-the receiver parses none of them; and accepting only the pinned release,
-because it refuses compatible patch releases.
+the receiver parses none of them; and accepting only the workspace version,
+because it refuses compatible published releases.
 
 ### Ownership Schema 3 Boundary
 
@@ -133,7 +147,7 @@ Exports use these paths; the cloud stores and serves them unchanged.
 | `mokly-viewer/diffs/generations/<64 lowercase hex>/**`                      | Removed details, snapshots, their resources and removed previews, with `no-store` |
 | `mokly-upload.json`, `.mokly-export-artifact`                               | Private ingest metadata                                                           |
 
-A comparison generation holds no review file. 0.19.0 writes no
+A comparison generation holds no review file. Mokly writes no
 private manifest and no comparison summary, and the
 [hosting policy](./publication-upload-validation.md#hosting-policy) still
 refuses both names. The server serves or rewrites no `__mokly/` path and
@@ -145,14 +159,14 @@ Entries have file-derived paths: the configuration declares `roots`, a
 variant has a slug, and links use paths. No Mokly command writes catalogue
 output into the repository except `build`, into an ignored output directory,
 so no catalogue output is committed. A comparison renders both
-sides from sources with the installed release. A base whose
+sides from sources with the CLI that runs it. A base whose
 sources fail current validation makes Changes unavailable, and the upload then
 has no comparison. See [Mockups](./mockups.md) and
 [Mockup tooling](./mockup-tooling.md).
 
 ## Private Artifact Limit
 
-Viewer 0.19.0 sends `credentials: "omit"` on URL sources, the static
+The viewer sends `credentials: "omit"` on URL sources, the static
 deployment file, comparison pane documents and removed-preview documents.
 The standalone shell sends `credentials: "same-origin"` on its
 index, detail, deployment, comparison and removed-preview reads.
@@ -169,20 +183,21 @@ blocks third-party cookies refuses that cookie or keeps it in the app's own
 store, so a new tab or the system browser never holds it. Decision: the app
 offers no **Open catalogue in a new tab** recovery,
 because a browser that refused the app cookie has none for that tab either.
-Holding the upgrade until a
-Mokly release adds a credentialed transport was rejected. The cloud never
-patches the package, replaces global `fetch`, deep-imports internals or
-exposes private files to restore these reads, because no package pin permits
-weaker authorization or a runtime patch. See
+The cloud never patches the package at run time, replaces global `fetch`,
+deep-imports internals or exposes private files to restore these reads,
+because it uses only the viewer's documented exports. A credentialed
+transport is a change to the viewer package and its protocol. See
 [Viewer](./viewer.md#private-artifact-limit) and
 [Catalogue hosting](./catalogue-hosting.md#private-access).
 
-## Release 0.19 Frame Boundary
+## Frame Boundary
 
 Published pages use `mokly-viewer/client/frame-probe.js`, channel
-`mokly-frame-probe` and frame wire version 3. The viewer and pages from
-0.18 reject each other's frame protocol. Republish existing catalogues with
-0.19.0 after deploying the matching app. Stored publications are not converted.
+`mokly-frame-probe` and frame wire version 3. A viewer and a page with
+different frame wire versions reject each other's frame protocol, so pages
+that Mokly 0.18 or earlier published do not work in the viewer. Republish
+such catalogues after the matching app deploys. Stored publications are not
+converted.
 
 The public index and detail readers gate versions and return copies.
 They do not validate content. The cloud receiver keeps its documented
@@ -191,8 +206,9 @@ index validation and rejection cases.
 ## Fixture Ownership
 
 The contract fixtures are committed golden files beside their consumer, not
-disposable generated output. `cargo xtask mokly-fixtures` regenerates them,
-`--check` fails on any byte or filename drift, and the `cloud-fixtures` suite
+disposable generated output. `cargo xtask mokly-fixtures` regenerates them
+from the workspace build, `--check` fails on any byte or filename drift, and
+the `cloud-fixtures` suite
 runs check mode unconditionally. Neither mode publishes a catalogue or edits the product
 catalogue. Check mode also runs one authored index Changes-count corpus
 through the Rust reader and the public `readCatalogueIndex` of the viewer.
@@ -205,22 +221,22 @@ mismatch.
 
 The [CLI-code fixture](./mokly-fixture-regeneration.md#cli-failure-codes) adds
 public CLI failure evidence to the fixture inventory and its checksums. The worker's
-mapped codes are tested against it; regeneration and check mode run the pinned
-CLI's failure scenarios in temporary repositories.
+mapped codes are tested against it; regeneration and check mode run the
+workspace CLI's failure scenarios in temporary repositories.
 
-## Deliberate Package Bumps
+## Mokly Changes
 
-A pin change is its own change. A protocol addition that the cloud relies on
-must already exist in a published release. Never update a golden file merely
-to suppress a failing decoder: a fixture drift error names the affected file
-and requires a deliberate regeneration. The three packages move together,
-because the CLI pins the viewer exactly and the viewer pins `@mokly/ui`
-exactly. Every
-bump therefore regenerates the producer fixtures and the index corpus, and
-inspects the viewer's and the UI package's public types, protocols and
-transport behaviour before adoption.
+A Mokly change reaches the cloud in the same commit, without a release. A
+change to an upload artifact, a format or a public export updates the Mokly
+protocol docs, regenerates the producer fixtures and the index corpus, and
+updates the cloud readers in the same change. Never update a golden file
+merely to suppress a failing decoder: a fixture drift error names the affected
+file and requires a deliberate regeneration. Customers publish with released
+CLIs, so the receiver keeps the version gates above, and a protocol addition
+that the cloud requires in an upload must already exist in a published
+release.
 
-Decision: a bump that changes a format replaces every reader of the old format
+Decision: a change that changes a format replaces every reader of the old format
 in the same change, so no code reads two format families. A staged change
 whose receiver and app read both families was rejected, because that code is
 thrown away at the next step. Decision: the cloud converts no stored

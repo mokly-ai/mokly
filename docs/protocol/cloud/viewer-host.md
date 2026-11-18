@@ -1,16 +1,16 @@
 # Viewer Host
 
 This is the package-host sub-contract of [Viewer](./viewer.md). It defines
-what the cloud guarantees to the exactly pinned `@mokly/viewer@0.19.0`
+what the cloud guarantees to the workspace `@mokly/viewer`
 and what the reader sees when the package reports a version
-failure. The reads the pinned package cannot authenticate are in the
+failure. The reads the package cannot authenticate are in the
 [private artifact limit](./viewer.md#private-artifact-limit), and the origin,
 frame and access rules are in
 [Catalogue isolation](./viewer.md#catalogue-isolation).
 
 ## Package Host
 
-The host is the cloud boundary around the exactly pinned package.
+The host is the cloud boundary around the workspace package.
 It is controlled: the route supplies the complete selection and writes every
 `onSelectionChange` proposal back to the address. The package owns Browse,
 Changes, its rail, frames and their loading, empty and unavailable
@@ -42,7 +42,7 @@ the preview documents and stays the reader's address state; a change of
 
 ### Sources
 
-The pinned package takes an `index` source and a `detail` source, and the
+The package takes an `index` source and a `detail` source, and the
 host passes both as objects that it read itself, for public and private
 catalogues alike. The host reads them from the paths that
 [Viewer catalogue](./viewer-catalogue.md#fetch-and-version-gate) gives, and
@@ -92,7 +92,7 @@ codes: `catalogue`, `version`, `selection`, `frame`, `comparison` and
 
 The public readers check the version of the index and every detail.
 They do not validate content. The
-[released reader contract](./mokly-artifact-compatibility.md#release-019-frame-boundary)
+[reader contract](./mokly-artifact-compatibility.md#frame-boundary)
 applies. They accept catalogue index 9 and entry detail 4 only, and reject any other
 version before they use an entry or a path. On a rejected
 version the package draws its own headline, without an action and without

@@ -117,9 +117,10 @@ Install Rust **1.98.1** with rustfmt and clippy, Node **24.21.0**, npm
 linker. The [pin table](../protocol/cloud/repository-layout.md#pinned-toolchains)
 is the source of truth. On Linux amd64, `bash infra/scripts/install-tools.sh`
 installs Terraform and Helm after the clone; on other platforms, install the
-same releases by hand. The pinned Mokly CLI is a native binary for Linux x64 or
-ARM64 with glibc 2.28 or newer, or macOS 11 or newer. It is an
-npm optional dependency, so keep optional dependencies enabled.
+same releases by hand. The workspace Mokly CLI is a native binary for Linux x64
+or ARM64 with glibc 2.28 or newer, or macOS 11 or newer, which `npm run build`
+builds for the host. It is an npm optional dependency, so keep optional
+dependencies enabled.
 
 ### Clone And Check
 
@@ -250,7 +251,7 @@ directories and the [architecture doc](../architecture/cloud.md) the components.
 | [mkc-publications](../../crates/mkc-publications/README.md)                       | Publication ingest, catalogue access, cloud build scheduling, check delivery and retention                 |
 | [mkc-build-interface](../../crates/mkc-build-interface/README.md)                 | The contracts for one cloud build attempt: runner, steps, outcomes, redacted output                        |
 | [mkc-build-sandbox](../../crates/mkc-build-sandbox/README.md)                     | The runner that executes one build in a one-shot sandbox                                                   |
-| [mkc-mokly-contract](../../crates/mkc-mokly-contract/README.md)                   | Validation of the published Mokly upload artifacts within fixed limits                                     |
+| [mkc-mokly-contract](../../crates/mkc-mokly-contract/README.md)                   | Validation of the Mokly upload artifacts within fixed limits                                               |
 | [mkc-billing](../../crates/mkc-billing/README.md)                                 | Billing policy, plan gates, and the Stripe webhook and seat workers                                        |
 | [mkc-billing-interface](../../crates/mkc-billing-interface/README.md)             | The typed billing-provider traits that the services depend on                                              |
 | [mkc-billing-stripe](../../crates/mkc-billing-stripe/README.md)                   | The Stripe HTTP implementation of those traits                                                             |

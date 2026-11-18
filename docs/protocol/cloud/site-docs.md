@@ -30,15 +30,15 @@ list. The section tree, previous and next, the sitemap, the social cards and
 search all follow that list, and a disagreement between any of them fails the
 build.
 
-Package guide authoring and packaging follow the installed
+Package guide authoring and packaging follow the
 [`mokly-guides.md`](../mokly-guides.md)
-contract. This repository validates that boundary and does not restate or
-rewrite package-owned prose. The package decides its guide inventory, titles
-and order; the site renders every guide the installed release supplies. The
-set of package guides the site expects is fixed per pinned release, so a
-release that adds, removes or renames a guide is adopted deliberately with
-the pin bump rather than appearing unreviewed. The pinned 0.19.0 release ships
-34 guides, and the site expects exactly those 34.
+contract. The site validates that boundary and does not restate or rewrite
+package-owned prose. The package decides its guide inventory, titles and
+order; the site renders every guide that the workspace `@mokly/mokly` package
+supplies. The set of package guides that the site expects is fixed in the
+site, so a Mokly change that adds, removes or renames a guide updates that set
+in the same change rather than appearing unreviewed. The workspace package
+ships 34 guides, and the site expects exactly those 34.
 
 ## Information Architecture
 
@@ -145,11 +145,11 @@ path, slug, title and order:
 | `docs/protocol/mokly-pages.md`            | `pages`            | Pages in the catalogue    |
 
 The allowlist is fixed by this contract. No protocol file becomes a site page
-only because the installed release ships it; adding a document is a change to
+only because the package ships it; adding a document is a change to
 this table. The table holds the documents of the **Published Protocol
-Documents** list in the installed package's `mokly-guides.md`, in that order,
+Documents** list in `mokly-guides.md`, in that order,
 and the site and the docs mockup fail their checks when the two lists differ.
-A pin bump that changes the package's list therefore changes
+A Mokly change that changes that list therefore changes
 this table in the same change.
 
 Guides keep their authored links unchanged; the Reference link rewriting below

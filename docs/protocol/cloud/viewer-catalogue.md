@@ -2,8 +2,8 @@
 
 This is the public-catalogue sub-contract of [Viewer](./viewer.md).
 The app reads the catalogue index v9 and the entry details v4 that
-`@mokly/mokly@0.19.0` publishes, and the pinned `@mokly/viewer` reads both
-with its public readers. The shipped protocols and public
+the Mokly CLI publishes, and the workspace `@mokly/viewer` reads both
+with its public readers. The Mokly protocols and public
 declarations own this model; cloud code does not build a parallel Browse tree
 or infer entries from artifact filenames.
 

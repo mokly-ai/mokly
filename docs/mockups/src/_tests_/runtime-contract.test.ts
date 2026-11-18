@@ -1,250 +1,184 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, readdirSync, readFileSync, realpathSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { test } from "node:test";
 
-import config from "../../../../mokly.config.json";
+import ts from "typescript";
 
 const root = resolve(import.meta.dirname, "../../../..");
-
-/**
- * The exact release of `@mokly/mokly`, `@mokly/viewer` and `@mokly/ui`, which
- * share one version and depend on each other's exact release.
- */
-const moklyRelease = "0.19.0";
 const json = (path: string) =>
   JSON.parse(readFileSync(resolve(root, path), "utf8"));
 
-function pinViolations(
-  dependencies: Record<string, string>,
-  required: Record<string, string>,
-): string[] {
-  return Object.entries(required).flatMap(([name, version]) =>
-    dependencies[name] === version && /^\d+\.\d+\.\d+$/.test(version)
-      ? []
-      : [name + " needs the exact documented release"],
+interface Manifest {
+  name?: string;
+  workspaces?: string[];
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+}
+interface Lockfile {
+  packages: Record<
+    string,
+    { name?: string; version?: string; resolved?: string; link?: boolean }
+  >;
+}
+
+const lock: Lockfile = json("package-lock.json");
+
+/** The root manifest and each npm workspace manifest, by directory. */
+function manifests(): [string, Manifest][] {
+  const workspace: Manifest = json("package.json");
+  return [
+    [".", workspace],
+    ...(workspace.workspaces ?? []).map((directory): [string, Manifest] => [
+      directory,
+      json(join(directory, "package.json")),
+    ]),
+  ];
+}
+
+/** Each declared range of `name`, with the directory that declares it. */
+function declarations(name: string): [string, string][] {
+  return manifests().flatMap(([directory, manifest]) =>
+    [manifest.dependencies, manifest.devDependencies].flatMap((section) =>
+      section?.[name] === undefined
+        ? []
+        : [[directory, section[name]] as [string, string]],
+    ),
   );
 }
 
-test("the documented Firna peers are exact, installed and locked", () => {
-  const protocol = readFileSync(
-    resolve(root, "docs/protocol/cloud/shared-controls.md"),
-    "utf8",
+/** Each lockfile install path of `name`, at the root or nested. */
+function installs(name: string): string[] {
+  return Object.keys(lock.packages).filter(
+    (path) =>
+      path === "node_modules/" + name || path.endsWith("/node_modules/" + name),
   );
-  const required: Record<string, string> = { "@mokly/mokly": moklyRelease };
-  for (const [, packages, version] of protocol.matchAll(
-    /\| (`[^`]+`(?:, `[^`]+`)*)\s*\| `(\d+\.\d+\.\d+)`/g,
-  ))
-    for (const [, name] of packages.matchAll(/`([^`]+)`/g))
-      required[name] = version;
-  assert.equal(Object.keys(required).length, 15);
-  const dependencies = json("apps/mockups/package.json").devDependencies;
-  assert.deepEqual(pinViolations(dependencies, required), []);
-  assert.ok(
-    pinViolations({ ...dependencies, "@firna/ui": "^4.0.0" }, required).length,
+}
+
+/** The `paths` target of `specifier`, matched as TypeScript and tsx match it. */
+function mappedPath(paths: Record<string, string[]>, specifier: string) {
+  const exact = paths[specifier]?.[0];
+  if (exact !== undefined) return exact;
+  const [pattern] = Object.keys(paths)
+    .filter((key) => {
+      const [prefix, suffix, ...rest] = key.split("*");
+      return (
+        suffix !== undefined &&
+        rest.length === 0 &&
+        specifier.length >= prefix.length + suffix.length &&
+        specifier.startsWith(prefix) &&
+        specifier.endsWith(suffix)
+      );
+    })
+    .sort((left, right) => right.indexOf("*") - left.indexOf("*"));
+  assert.ok(pattern, specifier + " has no TypeScript path");
+  const [prefix, suffix] = pattern.split("*");
+  const captured = specifier.slice(
+    prefix.length,
+    specifier.length - suffix.length,
   );
-  assert.ok(
-    pinViolations({ ...dependencies, "react-native-web": "0.20.0" }, required)
-      .length,
-  );
-  const lock = json("package-lock.json");
-  for (const [name, version] of Object.entries(required)) {
-    assert.equal(
-      json("node_modules/" + name + "/package.json").version,
-      version,
+  return paths[pattern][0].replace("*", captured);
+}
+
+/** Each `@firna/ui` specifier that a catalogue source or test imports. */
+function firnaImports(): Set<string> {
+  const sources = resolve(root, "docs/mockups/src");
+  const specifiers = readdirSync(sources, { recursive: true, encoding: "utf8" })
+    .filter((file) => /\.(?:ts|tsx|mjs)$/.test(file))
+    .flatMap((file) =>
+      ts
+        .preProcessFile(readFileSync(join(sources, file), "utf8"), true, true)
+        .importedFiles.map(({ fileName }) => fileName),
     );
-    assert.equal(lock.packages["node_modules/" + name].version, version);
-  }
-  for (const name of ["react", "react-dom"]) {
-    assert.equal(json("package.json").devDependencies[name], required[name]);
+  return new Set(
+    specifiers.filter(
+      (specifier) =>
+        specifier === "@firna/ui" || specifier.startsWith("@firna/ui/"),
+    ),
+  );
+}
+
+test("every Mokly package installs once, as its workspace package", () => {
+  // The lockfile's local entries are the repository's own package directories.
+  const sources = new Map(
+    Object.entries(lock.packages)
+      .filter(([path]) => path !== "" && !path.includes("node_modules/"))
+      .map(([path, entry]) => [entry.name, path]),
+  );
+  const cloudUses = new Set(
+    manifests()
+      .filter(([, manifest]) => manifest.name?.startsWith("@mokly-cloud/"))
+      .flatMap(([, manifest]) => [
+        ...Object.keys(manifest.dependencies ?? {}),
+        ...Object.keys(manifest.devDependencies ?? {}),
+      ])
+      .filter((name) => name.startsWith("@mokly/")),
+  );
+  assert.ok(cloudUses.has("@mokly/viewer"));
+  const locked = Object.keys(lock.packages)
+    .filter((path) => /(^|\/)node_modules\/@mokly\//.test(path))
+    .map((path) => path.slice(path.lastIndexOf("node_modules/") + 13));
+  for (const name of new Set([...cloudUses, ...locked])) {
+    assert.deepEqual(installs(name), ["node_modules/" + name], name);
+    const entry = lock.packages["node_modules/" + name];
     assert.deepEqual(
-      Object.keys(lock.packages).filter((path) =>
-        path.endsWith("node_modules/" + name),
-      ),
-      ["node_modules/" + name],
+      { link: entry.link, resolved: entry.resolved },
+      { link: true, resolved: sources.get(name) },
+      name,
     );
   }
-});
-
-test("Firna uses one exact published release across the app, catalogue and tokens", () => {
-  const release = "4.0.0";
-  const lock = json("package-lock.json");
-  for (const [workspace, section] of [
-    ["app", "dependencies"],
-    ["mockups", "devDependencies"],
-    ["tokens", "dependencies"],
-  ]) {
+  for (const name of cloudUses)
     assert.equal(
-      json("ts/" + workspace + "/package.json")[section]["@firna/ui"],
-      release,
+      realpathSync(resolve(root, "node_modules", name)),
+      resolve(root, sources.get(name) ?? "missing"),
+      name,
     );
-    assert.equal(lock.packages[workspace][section]["@firna/ui"], release);
+});
+
+test("every workspace declares one exact @firna/ui release, installed once", () => {
+  const declared = declarations("@firna/ui");
+  const versions = [...new Set(declared.map(([, range]) => range))];
+  assert.equal(versions.length, 1, JSON.stringify(declared));
+  const [version] = versions;
+  assert.match(version, /^\d+\.\d+\.\d+$/);
+  assert.deepEqual(installs("@firna/ui"), ["node_modules/@firna/ui"]);
+  assert.equal(lock.packages["node_modules/@firna/ui"].version, version);
+  assert.equal(json("node_modules/@firna/ui/package.json").version, version);
+});
+
+test("React and React DOM install once, at one version", () => {
+  const version = lock.packages["node_modules/react"].version;
+  for (const name of ["react", "react-dom"]) {
+    assert.deepEqual(installs(name), ["node_modules/" + name], name);
+    assert.equal(lock.packages["node_modules/" + name].version, version, name);
+    assert.equal(json(`node_modules/${name}/package.json`).version, version);
   }
-  assert.equal(lock.packages["node_modules/@firna/ui"].version, release);
-  assert.match(
-    lock.packages["node_modules/@firna/ui"].resolved,
-    /\/ui-4\.0\.0\.tgz$/,
-  );
-  assert.deepEqual(
-    Object.keys(lock.packages).filter((path) =>
-      path.endsWith("node_modules/@firna/ui"),
-    ),
-    ["node_modules/@firna/ui"],
-  );
 });
 
-test("Mokly uses the exact published guide-bearing release", () => {
-  const release = moklyRelease;
-  const lock = json("package-lock.json");
-
-  assert.equal(json("package.json").devDependencies["@mokly/mokly"], release);
-  assert.equal(lock.packages[""].devDependencies["@mokly/mokly"], release);
-  assert.equal(lock.packages["node_modules/@mokly/mokly"].version, release);
-  assert.match(
-    lock.packages["node_modules/@mokly/mokly"].resolved,
-    new RegExp("/mokly-" + release.replaceAll(".", "\\.") + "\\.tgz$"),
-  );
-  assert.equal(json("node_modules/@mokly/mokly/package.json").version, release);
-  assert.ok(
-    existsSync(
-      resolve(root, "node_modules/@mokly/mokly/docs/guides/start/install.md"),
-    ),
-  );
-  assert.ok(
-    existsSync(
-      resolve(root, "node_modules/@mokly/mokly/docs/protocol/mokly-guides.md"),
-    ),
-  );
-  assert.ok(!("generatedOutput" in config));
-  assert.deepEqual(config.roots, [
-    { dir: "docs/mockups/src/entries", files: ["**/*.mockup.{ts,tsx}"] },
-  ]);
-});
-
-test("Viewer uses one exact published release", () => {
-  const release = moklyRelease;
-  const lock = json("package-lock.json");
-
-  assert.equal(
-    json("apps/app/package.json").dependencies["@mokly/viewer"],
-    release,
-  );
-  assert.equal(
-    json("apps/mockups/package.json").devDependencies["@mokly/viewer"],
-    release,
-  );
-  assert.equal(
-    json("node_modules/@mokly/mokly/package.json").dependencies[
-      "@mokly/viewer"
-    ],
-    release,
-  );
-  assert.equal(lock.packages["node_modules/@mokly/viewer"].version, release);
-  assert.match(
-    lock.packages["node_modules/@mokly/viewer"].resolved,
-    new RegExp("/viewer-" + release.replaceAll(".", "\\.") + "\\.tgz$"),
-  );
-  assert.equal(
-    json("node_modules/@mokly/viewer/package.json").version,
-    release,
-  );
-  assert.deepEqual(
-    Object.keys(lock.packages).filter((path) =>
-      path.endsWith("node_modules/@mokly/viewer"),
-    ),
-    ["node_modules/@mokly/viewer"],
-  );
-});
-
-test("Mokly UI uses the shared exact release where the catalogue imports it", () => {
-  const release = moklyRelease;
-  const lock = json("package-lock.json");
-
-  assert.equal(
-    json("apps/mockups/package.json").devDependencies["@mokly/ui"],
-    release,
-  );
-  assert.equal(lock.packages.mockups.devDependencies["@mokly/ui"], release);
-  assert.equal(
-    json("node_modules/@mokly/viewer/package.json").dependencies["@mokly/ui"],
-    release,
-  );
-  assert.equal(lock.packages["node_modules/@mokly/ui"].version, release);
-  assert.match(
-    lock.packages["node_modules/@mokly/ui"].resolved,
-    new RegExp("/ui-" + release.replaceAll(".", "\\.") + "\\.tgz$"),
-  );
-  assert.equal(json("node_modules/@mokly/ui/package.json").version, release);
-  assert.deepEqual(
-    Object.keys(lock.packages).filter((path) =>
-      path.endsWith("node_modules/@mokly/ui"),
-    ),
-    ["node_modules/@mokly/ui"],
-  );
-});
-
-test("Mokly and test loaders preserve the public web resolution boundary", () => {
-  assert.deepEqual(config.moduleResolution, {
-    aliases: { "react-native": "react-native-web" },
-    conditions: ["react-native", "import", "module", "default"],
-    loaders: { ".js": "jsx" },
-    mainFields: ["react-native", "module", "main"],
-    packageRoots: ["."],
-    resolveExtensions: [
-      ".web.tsx",
-      ".web.ts",
-      ".web.js",
-      ".tsx",
-      ".ts",
-      ".jsx",
-      ".js",
-      ".json",
-    ],
-  });
-  const types = json("apps/mockups/tsconfig.json").compilerOptions.paths;
-  const runtime = json("apps/mockups/tsconfig.runtime.json").compilerOptions
-    .paths;
-  const packageExports = json("node_modules/@firna/ui/package.json").exports;
-  for (const name of [
-    ".",
-    "button",
-    "input",
-    "badge",
-    "avatar",
-    "status-dot",
-    "typography",
-    "theme",
+test("the catalogue's Firna paths name the package's public export targets", () => {
+  const specifiers = firnaImports();
+  assert.ok(specifiers.has("@firna/ui/theme"));
+  const exports = json("node_modules/@firna/ui/package.json").exports;
+  for (const [config, condition] of [
+    ["apps/mockups/tsconfig.json", "types"],
+    ["apps/mockups/tsconfig.runtime.json", "import"],
   ]) {
-    const pathKey =
-      name === "."
-        ? "@firna/ui"
-        : name === "theme"
-          ? "@firna/ui/theme"
-          : "@firna/ui/*";
-    for (const [paths, condition] of [
-      [types, "types"],
-      [runtime, "import"],
-    ] as const) {
+    const paths = json(config).compilerOptions.paths;
+    for (const specifier of specifiers) {
+      const subpath = "." + specifier.slice("@firna/ui".length);
       const target = resolve(
         root,
         "apps/mockups",
-        paths[pathKey][0].replace("*", name),
+        mappedPath(paths, specifier),
       );
+      const exported = exports[subpath]?.[condition];
+      assert.ok(exported, `${specifier} exports a ${condition} target`);
       assert.equal(
         target,
-        resolve(
-          root,
-          "node_modules/@firna/ui",
-          packageExports[name === "." ? "." : "./" + name][condition],
-        ),
+        resolve(root, "node_modules/@firna/ui", exported),
+        `${config} ${specifier}`,
       );
-      assert.ok(existsSync(target));
+      assert.ok(existsSync(target), target);
     }
   }
-  assert.deepEqual(runtime["react-native"], runtime["react-native-web"]);
-  assert.ok(
-    json("apps/mockups/package.json").scripts["test:policy"].includes(
-      "--import ./src/_tests_/register-web.mjs",
-    ),
-  );
 });

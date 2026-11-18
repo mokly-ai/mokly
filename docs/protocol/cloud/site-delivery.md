@@ -14,10 +14,10 @@ Routes are in [Site](./site.md); the repository gate is in
 - The site is static output built from CommonMark content, with islands only
   for the docs search and the code-block copy control. There is no MDX
   integration, documentation framework or theme.
-- The site and the mockups consume the same exact-pinned published
-  `@mokly/mokly` registry release, installed once for the npm workspace. The
-  package supplies the CLI guides, published protocols, changelog and runtime
-  surface together.
+- The site and the mockups consume the workspace `@mokly/mokly` package,
+  linked once for the npm workspace and built by `npm run build`. The package
+  supplies the CLI guides, published protocols, changelog and runtime surface
+  together.
 - Site sources are covered by the root Prettier configuration, their
   TypeScript by the root ESLint configuration, and the Astro components are
   type-checked.
@@ -110,7 +110,7 @@ The site builds the Specs and Components rows itself from the
 index's catalogue tree, under the rules of
 [Stage tree parity](#stage-tree-parity). Decision: the stage
 projects the index's tree itself, not through a viewer helper, because the
-pinned `@mokly/viewer` exports no hierarchy function. The parity
+`@mokly/viewer` exports no hierarchy function. The parity
 check against a real build keeps the rows from drifting. The depicted chrome
 uses only those build facts.
 

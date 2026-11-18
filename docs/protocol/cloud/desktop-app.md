@@ -13,8 +13,8 @@ serves, built with the same two baked origins; the shell adds the window, the
 page's origin, the navigation policy, the scheme handoff and the updater, and
 never reads the session cookie or the CSRF token. The product therefore opens
 without the network, which local mode needs. Local mode lands in a later plan
-after the open-source serve contract releases, with the public download page;
-until then the shell publishes pre-releases only.
+after Mokly gains a serve contract for a host program, with the public
+download page; until then the shell publishes pre-releases only.
 
 Read [Web application](./web-app.md) for the export it serves,
 [Authentication and sessions](./auth-sessions.md) and
@@ -57,16 +57,17 @@ lifecycle.
 ## Current Viewer Limit
 
 The viewer route, the cloud chrome and the catalogue reads work in the shell,
-but the pinned viewer's `postMessageAdapter` accepts only an HTTP or HTTPS
+but the viewer's `postMessageAdapter` accepts only an HTTP or HTTPS
 host and rejects the desktop origin with `FrameError("origin")`. The
 inspector that the CLI embeds in published screens also rejects that host.
 Managed screen frames do not mount in the shell today. Initial
 script-disabled HTML can still appear in a frame; the adapter and inspector
 stay unavailable. The smoke test asserts
 that failure, so a package fix requires a deliberate test update. No package
-code is patched or wrapped. A later upstream release and a separate pin bump
-will enable frames; existing screens must be published again with the new
-CLI so their embedded inspector also accepts the desktop host.
+code is patched or wrapped. A change to the workspace viewer and frame probe
+will enable frames, with that test update; existing screens must be published
+again with a CLI that carries the change, so their embedded inspector also
+accepts the desktop host.
 
 ## API And Catalogue Admission
 
@@ -102,7 +103,7 @@ origin literal.
   confirmation read and the read-model requests, so catalogue reads, the access-grant cookie and plain catalogue frames work
   in the window. Only the window's own `POST /_access` sets the catalogue
   cookie, in the shell's cookie store. The system browser never holds it. The
-  pinned viewer rejects the desktop host before mounting its screen frames;
+  viewer rejects the desktop host before mounting its screen frames;
   see the [current viewer limit](#current-viewer-limit).
 
 The local development servers set the flag, so an
@@ -206,9 +207,9 @@ packaging, the public update feed, release secrets and the tests of the
 ## Local Mode
 
 Local mode is the first version's purpose and lands in a later plan, after
-the open-source `mokly` repository releases a serve contract for a host
-program: start and stop, the local address, the serving, ready and error
-states, and change events. The shell starts the pinned CLI for a chosen
+Mokly gains a serve contract for a host program: start and stop, the local
+address, the serving, ready and error states, and change events. The shell
+starts the Mokly CLI for a chosen
 checkout, hands the page the local address through one bridge method and adds
 the loopback origin to the policy its handler sets. The viewer host accepts a
 local source without a session, the branch switcher gains a Local entry and

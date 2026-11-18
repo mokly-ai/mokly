@@ -21,7 +21,7 @@ operator commands below remain available for investigation and recovery.
 3. Open **Open preview** in the bot's comment. It signs you in as
    `preview@mokly.ai`; **Sample project** opens the seeded publication in the
    **Mokly Cloud** project. The publication carries this PR's mockups and its
-   comparison against `main`. The project is private, and the pinned viewer
+   comparison against `main`. The project is private, and the viewer
    cannot load a private comparison, so Changes show an overlay without an
    action. Browse the current catalogue, and do not treat
    unavailable private Changes as a seed failure. Anyone who can read
@@ -144,7 +144,7 @@ unprivileged job runs the PR's own capture tools to capture its mockups exactly 
 `mokly publish` would upload them; after smoke, trusted `main` code copies them
 to the PR's bucket prefix and runs the seed Job, in which the PR's own API
 image publishes them to the **Mokly Cloud** project of `preview@mokly.ai`. See
-[Preview seed](../protocol/cloud/preview-seed.md). Capture uses the exact 0.19.0 pin
+[Preview seed](../protocol/cloud/preview-seed.md). Capture uses the PR's workspace CLI
 and `publish --strict` on the clean committed PR head.
 A `git-uncommitted` failure needs a commit, stash or ignore rule. A build
 output directory that Git does not ignore also causes it, and the error names
@@ -155,10 +155,10 @@ The failure stops before a receiver request. Push that correction and rerun;
 capture must never publish a different revision from the image build.
 Re-recorded CLI test doubles cover the refusal and retain their recorded
 bytes unless the real CLI output changes. A re-record script refreshes them
-from the pinned CLI, and its `--check` mode compares them.
+from the workspace CLI, and its `--check` mode compares them.
 
-Capture renders the `origin/main` merge base from its sources with the pinned
-CLI. When the base's lockfiles differ from the head's, the CLI
+Capture renders the `origin/main` merge base from its sources with the
+workspace CLI. When the base's lockfiles differ from the head's, the CLI
 installs the base's locked dependencies without lifecycle scripts.
 Require npm registry access and run only trusted main history;
 the base render executes the base commit's code.

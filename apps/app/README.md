@@ -14,7 +14,7 @@ under [Related Docs](#related-docs).
 - Account entry, the magic-link, preview and GitHub landings, invitation
   acceptance and onboarding, as the only full pages outside the viewer.
 - The viewer route: resolving a readable address to one publication or build,
-  mounting the published `@mokly/viewer`, composing the cloud chrome into its
+  mounting the workspace `@mokly/viewer`, composing the cloud chrome into its
   slots, and drawing and following cloud builds in its stage.
 - Settings as panes of one dialog over the working page on desktop and as
   full-screen routes below the breakpoint, with unsaved work guarded on every
@@ -26,7 +26,7 @@ under [Related Docs](#related-docs).
 
 It serves no marketing content or documentation (that is `apps/site`), it never
 serves publication files (that is the catalogue server on its own origin), and
-it imports no Mokly internals: only the published `@mokly/viewer` entry, its
+it imports no Mokly internals: only the workspace `@mokly/viewer` entry, its
 public index and detail readers, stylesheet and frame adapter.
 
 ## What This Package Does
@@ -428,7 +428,7 @@ published catalogue. The spec routes no build operation.
 - `src/viewer/latest.ts` — offers a newer publication on this reference without moving the reader. Each poll calls `readLatestPublication`, which reads the reference's row afresh through `readReferenceRow` and offers its `latestPublicationId` when that names another publication.
 - `src/viewer/focus.ts`, `src/viewer/handoff.web.ts` and `src/viewer/slot-source.tsx` — focus return to the control that carries an overlay's opening action now, and the fallback-to-package slot handoff.
 - `src/viewer/source-provider.web.tsx` and `src/viewer/source-store.ts` — `CatalogueSourceProvider` and the document's one catalogue source per origin and credential policy: its index read, its detail source and its latched version failure, which survive a query-only Back. `use-catalogue-source.ts` reads it for the stage once access is open.
-- `src/viewer/catalogue-source.web.ts` — `catalogueReads`: `mokly-viewer/index.json` and each entry detail, read with the credential policy the exchange confirmed and passed through public `readCatalogueIndex` v9 and `readEntryDetail` v4. These readers check versions and copy content under the [released reader contract](../../docs/protocol/cloud/mokly-artifact-compatibility.md#release-019-frame-boundary). A private detail read that answers 401 renews the exchange once and repeats the read once. The index and detail paths are restated here once, because `@mokly/viewer/data` exports no detail path function.
+- `src/viewer/catalogue-source.web.ts` — `catalogueReads`: `mokly-viewer/index.json` and each entry detail, read with the credential policy the exchange confirmed and passed through public `readCatalogueIndex` v9 and `readEntryDetail` v4. These readers check versions and copy content under the [reader contract](../../docs/protocol/cloud/mokly-artifact-compatibility.md#frame-boundary). A private detail read that answers 401 renews the exchange once and repeats the read once. The index and detail paths are restated here once, because `@mokly/viewer/data` exports no detail path function.
 - `src/viewer/package-selection.ts` — `toPackageSelection` and `fromPackageSelection`, the lossless mapping to the package's selection.
 - `src/viewer/share-selection.ts` — the API share selection, preserving the package-only Both viewport on the returned URL.
 - `src/viewer/share-state.ts` — `shareLinkState`, the one Share request and display decision. It requests no link while the address resolves. For a publication with a comparison, it also requests none while the screen list loads and the address names a screen. It never shows a link held for another selection.

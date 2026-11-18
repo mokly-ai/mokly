@@ -1,19 +1,21 @@
 # Mockup Tooling Package
 
-This npm workspace owns the exact-pinned `@mokly/mokly`, `@mokly/viewer` and
-`@mokly/ui` 0.19.0 packages, their React peers, and the scripts that build and
-verify Mokly Cloud's design catalogue. The catalogue source lives under
-`docs/mockups/src`; this package holds the pins, the test configuration and the
-runners. Depend on it through the root `npm run mockups:*` and
+This npm workspace declares the workspace `@mokly/mokly`, `@mokly/viewer` and
+`@mokly/ui` packages, `@firna/ui` and their React peers, and holds the scripts
+that build and verify Mokly Cloud's design catalogue. The catalogue source
+lives under `docs/mockups/src`; this package holds the dependencies, the test
+configuration and the runners. Depend on it through the root `npm run mockups:*` and
 `npm run emails:*` scripts, never by importing it.
 
 ## Responsibilities
 
-- Pin `@mokly/mokly`, `@mokly/viewer`, `@mokly/ui`, `@firna/ui` and their peers
-  at exact versions, resolved once in the npm workspace lockfile with the app
-  and the site.
-- Run the installed `mokly` binary against the root `mokly.config.json` for
-  build, check and serve, always with `--strict` for build and check.
+- Use the workspace `@mokly/mokly`, `@mokly/viewer` and `@mokly/ui`
+  packages, which the npm workspace lockfile links to `packages/`. Pin
+  `@firna/ui` and its peers at exact versions, resolved once with the app, the
+  site and the Mokly example.
+- Run the workspace `mokly` binary, which `npm run build` builds, against the
+  root `mokly.config.json` for build, check and serve, always with `--strict`
+  for build and check.
 - Run the catalogue's determinism, policy and browser tests, and the served
   test server over a comparison base that does not exist.
 - Render the two delivered emails into the committed Postmark templates and
@@ -75,6 +77,7 @@ Run from the repository root:
 
 ```sh
 npm ci
+npm run build
 npm exec --workspace @mokly-cloud/mockups -- playwright install chromium
 npm run mockups:build
 npm run mockups:check
@@ -132,7 +135,7 @@ their leftovers in a checkout stay ignored;
 owns these rules.
 
 Comparisons use `origin/main`. Mokly renders the base from the base commit's
-sources with the installed release, and installs the base's locked
+sources with the workspace CLI, and installs the base's locked
 dependencies into its cache outside the repository only when they differ from
 the working tree's. A base runs that commit's renderer and entry modules, so
 run comparisons only against trusted history with npm registry access; see
@@ -141,7 +144,7 @@ served-test exception, the cache and limits.
 
 ### Key Code
 
-- `package.json` — the exact pins and the scripts that the root `mockups:*` and `emails:*` commands run.
+- `package.json` — the dependencies and the scripts that the root `mockups:*` and `emails:*` commands run.
 - `scripts/check-determinism.mjs` and `scripts/determinism.mjs` — the determinism guard behind `test:determinism`, and its comparison of two independent builds.
 - `scripts/emails.ts` and `scripts/emails.test.ts` — the generator behind `npm run emails:build` and `npm run emails:check`, and its tests.
 - `playwright.config.ts` and `playwright.serve.config.ts` — the disk suite over every generated document and the served suite that starts the test server, with its global teardown.

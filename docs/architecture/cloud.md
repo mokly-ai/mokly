@@ -17,7 +17,7 @@ every boundary live in the [protocol docs](../protocol/cloud/README.md).
 | Producer         | The `@mokly/mokly` CLI in the customer's CI or in a build sandbox                                               | Builds the catalogue, compares it with its base, and publishes the export through the upload exchange                       |
 | Public site      | A static Astro build on Cloudflare Pages                                                                        | Marketing, documentation rendered from the installed Mokly package, changelog, and legal pages                              |
 | Origin router    | A Cloudflare Worker on the public apex and preview hosts                                                        | Gives the site and the product one public origin and selects Pages or the app by path                                       |
-| App              | The Expo web build, served by its own workload                                                                  | Account entry, onboarding, settings, and the viewer: the published `@mokly/viewer` with the cloud chrome in its slots       |
+| App              | The Expo web build, served by its own workload                                                                  | Account entry, onboarding, settings, and the viewer: the workspace `@mokly/viewer` with the cloud chrome in its slots       |
 | Desktop app      | An Electron shell for macOS and Linux, released from a public releases repository                               | Ships the app's web export, serves it from its own origin, and adds the window, the sign-in handoff, and the updater        |
 | API              | The `mkc-api` Rust binary                                                                                       | Accounts, sessions, workspaces, projects, GitHub integration, publication ingest, viewer reads, billing, and the workers    |
 | Catalogue server | The `mkc-catalogue-server` Rust binary                                                                          | Serves the exact bytes of a ready publication on that publication's own host                                                |
@@ -79,7 +79,7 @@ access cookie.
 ### The app
 
 The app is a browser application. The viewer is the application: the
-published `@mokly/viewer` owns Browse, Changes, and the catalogue tree, and
+workspace `@mokly/viewer` owns Browse, Changes, and the catalogue tree, and
 the app composes workspace and project switching, branch switching,
 history, sharing, settings, and the account menu into the viewer's slots.
 Settings are panes of one dialog over the working page on desktop and

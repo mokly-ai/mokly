@@ -142,7 +142,7 @@ publication store: both migration directions reject rows in `blobs` or
 production only when `MKC_PRODUCTION_ENABLED=true`. It deletes database rows;
 emptying the object bucket or prefix remains optional. For older labelled PR
 previews, remove the `preview` label, wait for cleanup, then add it again, as
-the same rollout rules require. After rollout, republish with the pinned
+the same rollout rules require. After rollout, republish with the workspace
 CLI under [Mokly Release Cutover](#mokly-release-cutover).
 
 Record: on 2026-10-23, the bootstrap applied this repair, and Foundation run
@@ -756,9 +756,9 @@ npx --yes --package=@mokly/mokly@0.19.0 mokly publish --strict \
 unset MOKLY_TOKEN
 ```
 
-This deployed proof uses the cloud's exact current producer pin, the same
-version as the automated published-CLI smoke, which does not replace this
-deployed proof. Both use the strict 0.19.0 command.
+This deployed proof uses the published release of the workspace
+`@mokly/mokly` version, the same version as the automated published-CLI smoke,
+which does not replace this deployed proof. Both use the strict 0.19.0 command.
 A current-only publication is viewable from its
 catalogue, while the cloud API
 continues to return `operation-unavailable` for current-screen listing and
@@ -791,14 +791,15 @@ scheduled; see [maintenance](./maintenance.md) and
 
 ## Mokly Release Cutover
 
-A Mokly release that changes the upload or catalogue formats needs an ordered
-cutover: deploy the receiver first, reset the stable environments, republish
-the dogfood catalogue and recreate the labelled PR previews.
-[Mokly release cutover](./mokly-release-cutover.md) covers the 0.19.0 frame upgrade and the earlier format cutover.
-The 0.19.0 upgrade needs republication without a database reset.
+A Mokly change that changes the upload or catalogue formats needs an ordered
+cutover after its merge: deploy the receiver first, reset the stable
+environments, republish the dogfood catalogue and recreate the labelled PR
+previews. [Mokly release cutover](./mokly-release-cutover.md) covers the
+0.19.0 frame upgrade and the earlier format cutover. The frame upgrade needs
+republication without a database reset.
 
-The dated proofs above remain historical evidence. Record a new 0.19.0
-credentialed proof after the cutover; local Markdown checks do not supply it.
+The dated proofs above remain historical evidence. Record a new credentialed
+proof after the cutover; local Markdown checks do not supply it.
 
 ## Cloud Build Rollouts
 

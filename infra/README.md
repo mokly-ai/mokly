@@ -117,7 +117,7 @@ the certificate checks and the system `libpsl` runtime for the ICANN/private
 suffix validation, which finishes before any provider call. Run
 `python3 infra/scripts/run-infrastructure-tests.py contracts` to replay the
 preview lifecycle's recorded Cloudflare, gcloud, Helm, kubectl and API-log
-fixtures and the pinned Mokly CLI's recorded capture output without cloud
+fixtures and the workspace Mokly CLI's recorded capture output without cloud
 credentials.
 
 Build all three images with `bash infra/scripts/check-image.sh` after
@@ -216,7 +216,7 @@ DNS/IAM, installs Helm, waits for TLS and smokes; `preview-destroy.sh` deletes
 the namespace before external state; `preview-link.py` reads exact-address
 links from API logs. The parallel, credential-free capture job checks out the
 PR with full history and runs the PR's own `capture-catalogue.py`,
-which installs the PR's locked packages, runs the exact-pinned Mokly
+which installs the PR's locked packages, runs the PR's workspace Mokly
 `mokly publish --strict` on the clean committed checkout, receives its upload
 exchange on a loopback receiver, keeps the plan archive and every requested
 blob in `.context/seed/catalogue`, and validates its branch, revision, pull
@@ -267,7 +267,7 @@ evidence, costs and cleanup.
 - `scripts/preview-lifecycle.py` — the namespace Secret validation and the cloud lifecycle commands; `preview_lifecycle_core.py` holds `preview_parts()` and `PreviewInputError`, `preview_lifecycle_cloud.py` the Cloudflare record upsert and delete, and `preview_lifecycle_gcp.py` the conditional bucket IAM with etag retries and the batched object removal.
 - `scripts/preview-link.py` and `scripts/preview_link_sources.py` — the sign-in log reader and its kubectl pod-log source.
 - `scripts/capture-catalogue.py` — the unprivileged catalogue capture; `catalogue_capture_endpoint.py` is the loopback receiver, `catalogue_capture_plan.py` the gzip framing check and bounded plan reader, and `catalogue_capture_state.py` the exchange state.
-- `scripts/record-catalogue-capture.py` — rebuilds the isolated smoke fixture and records the real pinned CLI outcomes. Its `--check` mode compares raw streams while reading variable paths and timing values separately. `catalogue_recording_cases.py` owns the real receiver cases, and `catalogue_recording_streams.py` owns the comparison.
+- `scripts/record-catalogue-capture.py` — rebuilds the isolated smoke fixture and records the real workspace CLI outcomes. Its `--check` mode compares raw streams while reading variable paths and timing values separately. `catalogue_recording_cases.py` owns the real receiver cases, and `catalogue_recording_streams.py` owns the comparison.
 - `scripts/preview-seed-job.py` — the trusted PR seed runner and its `--validate-evidence` check, which reuses the evidence validation in `preview_seed_types.py`. `preview_seed_job_run.py` creates the Job from the `preview-seed` CronJob, waits for it, and runs the log, collection and cleanup steps after any outcome. `preview_seed_job_storage.py` stages the request and the unopened catalogue, downloads the status and the proof, and removes earlier runs. `preview_seed_job_cluster.py` validates the common inputs and selects the cluster with the preview shell helpers.
 - `scripts/preview_seed_types.py` — the shared preview settings, JSON reader and atomic writer, private credential reader, and seed evidence validation.
 - `scripts/preview-comment.py` and `scripts/preview-event.py` — the validated PR comment renderer and the pure event policy.
