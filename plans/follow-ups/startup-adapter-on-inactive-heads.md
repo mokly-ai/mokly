@@ -1,0 +1,40 @@
+# Startup adapter runs on inactive heads
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Post-merge task.
+- **Added:** 2026-11-18, from branch `calummoore/mokly-startup-base-overlap-rae7`. The performance orchestrator requested this task after reading frozen product `2c28d9677`.
+- **Location:** `crates/mokly-cli/src/serve_changes_native.rs:111`, `crates/mokly-cli/src/serve_startup_provider.rs:52`, `crates/mokly-cli/src/serve_startup_provider.rs:89`, `crates/mokly-cli/src/serve_startup_base.rs:123`, and `crates/mokly-cli/src/serve_startup_native.rs:58`.
+- **Reason:** The orchestrator accepted the bounded bookkeeping cost and assigned this cleanup after merge. On 2026-11-18, the product change closed under option C, which closes the scheduling change without a merge. This cleanup applies only if a later attempt restores the startup feature.
+
+- **Terms:**
+  - **Head:** The current catalogue generation that the Serve development server has installed.
+  - **Base:** The historical catalogue that Changes compares with the head.
+  - **Startup task:** The one early base preparation that Serve can start for its first head, when that head needs sidecars.
+  - **Startup adapter:** `StartupProvider`, which lets ordinary Changes take the startup task's outcome after current usage completes.
+- **Background:**
+  - Ordinary Changes runs after the background rendering of the current head, called current usage.
+  - The startup task is separate. It can prepare a historical sidecar base while current usage renders, then capture after usage.
+  - The startup task registers its head and cancellation token in one command-owned `StartupState` record.
+  - `Source::classify_native` installs `StartupProvider` for every classification, including HTML heads and later edit heads.
+  - `StartupProvider::take_prepared` constructs a `BaseKey`, then calls the startup record's `take` method.
+  - `BaseKey::new` in `serve_base_key.rs:18` serializes the configuration input, file, repository root, roots, and authored inputs. It then digests the bytes.
+  - `StartupState::take` registers one cancellation observer and locks the command record.
+  - With no startup task, the record is not running and has no outcome. The method returns `None` without a condition-variable wait.
+  - `StartupProvider::find_kept` also takes its pending-diagnostics mutex after the inner kept-base lookup.
+  - Main before this feature has no startup adapter. Thus the HTML schedule matches main, but the provider does extra bookkeeping.
+  - Six large HTML traces showed no startup task and usage before classification at startup and on both edits.
+  - Candidate-minus-main second-edit times were +289 ms, -330 ms, and +289 ms. There was no consistent direction.
+  - The traces do not time the bookkeeping separately. No saved measurement attributes those deltas to this work.
+  - On 2026-11-18, the performance orchestrator accepted the work as bounded and constant, with no I/O, process start, or startup wait.
+  - The orchestrator estimated microseconds to well under one millisecond per edit. This estimate is not a benchmark result.
+- **Task:** Install the startup adapter only for a head whose first preparation started a startup task, so that edits and HTML heads keep main's provider path.
+  - Tie adapter installation to the actual registered startup task, not another guess from the head's type.
+  - Keep the matching first classification's cancellable wait, keyed one-use handover, held diagnostics, and ordinary freshness checks.
+  - Keep unkept outcomes and errors from being prepared or captured again.
+  - Keep cancellation and drain after replacement, reference changes, and shutdown. A later head must not wait for stale startup work.
+  - Add deterministic coverage for an HTML first head, the first eligible head, and a later edit head.
+  - Assert that HTML and edit heads use the ordinary provider directly. Assert that the eligible first head still takes its outcome once.
+  - Keep the existing startup registration and rejection assertions.
+- **Impact if no action:** Every classification keeps one unnecessary startup key calculation and record lookup when no startup outcome can apply. No product correctness defect or measured latency regression is established.
+- **Needs:** A later attempt that restores the startup preparation feature in the repository. The feature closed without a merge on 2026-11-18. No credentials or special hardware.
+- **Done when:** Only the head with an actual startup task receives the adapter. HTML heads and edit heads use the ordinary provider. Existing startup handover, cancellation, freshness, and output tests pass. Delete this item in the same branch.

@@ -1,26 +1,23 @@
 # Prepare the Serve base during current usage
 
-Status: Active. On branch `calummoore/mokly-startup-base-overlap-rae7`, no pull request yet. The completing pull request deletes this plan.
+Status: Closed under option C of call 12 on 2026-11-18. Branch `calummoore/mokly-startup-base-overlap-rae7` keeps the measured code and these records. No product pull request or merge follows.
 
-Serve renders current usage before it prepares the base for Changes. Call 12
-narrows this change to cold start, as a last attempt. Every Changes request,
-reference check, classification, and reference poll keeps main's inline path
-after current usage. Only when the first head needs a sidecar, one separate
-startup owner prepares its base beside the first usage. The configuration and
-discovery of the base identify its kind. An HTML-only base pauses after
-discovery, and the same preparation resumes after usage. No base captures
-early. After usage, the task leaves one keyed outcome: a kept base, an unkept
-capture, or an error. The ordinary classification takes it once, only with the
-same key.
-Keep the same published content, base freshness checks, capture bounds, and
-sidecar pool bound. Keep the warm head process and background return rules.
+Serve renders current usage before it prepares the base for Changes. This
+change tried to prepare the base during usage. Call 12 narrowed it to one
+startup owner at cold start, only when the first head needs a sidecar, as a
+last attempt. Every ordinary Changes request kept main's inline path. The
+clean HTML set was accepted. The React candidate stopped at a guard while its
+main completed, so the performance orchestrator closed the change under option
+C. Main keeps its serial base preparation. The cold-start opportunity moves to
+the Needs decision item `plans/follow-ups/cold-start-base-overlap-memory.md`.
 
-The performance orchestrator chose the twelve calls below on 2026-11-18. Some
-calls also record design and evidence calls of the workspace orchestrator. On
-2026-11-16, the user authorised more Changes speed and reliability work. The
-user delegated these design choices to that orchestrator and prohibited work
-that can exhaust memory. This task authorises the plan and its implementation.
-It authorises an open pull request into `main`. It does not authorise a merge.
+The performance orchestrator chose the twelve calls below and the closure call
+on 2026-11-18. Some calls also record design and evidence calls of the
+workspace orchestrator. On 2026-11-16, the user authorised more Changes speed
+and reliability work. The user delegated these design choices to that
+orchestrator and prohibited work that can exhaust memory. The task authorised
+the plan, its implementation, and an open pull request into `main`, but no
+merge. Option C cancelled that pull request.
 
 Contract owners:
 
@@ -36,13 +33,9 @@ Contract owners:
 
 Replaced ways:
 
-- At cold start with a sidecar head, the serial base preparation after the
-  first usage becomes one separate startup task beside that usage. Consumers:
-  `UsagePass` starts its owner once for the first head, and the CLI `Source`
-  takes its one keyed outcome through `StartupProvider`. The generation-owned
-  early preparation of Milestone 2 and its early Changes request are gone.
-  `ChangesPass` keeps main's inline path after usage. Static commands keep
-  their ordinary single classification path.
+- None. The change closed under option C, so main keeps its serial base
+  preparation and its `UsagePass`, `ChangesPass`, and CLI `Source` paths. The
+  startup owner of call 12 stays on this branch only.
 
 ## Evidence and acceptance
 
@@ -753,6 +746,81 @@ The performance orchestrator approved the safe text corrections of the options
 check. It releases the clean measurements when the implementation and its
 checks are ready. Send the new SHA and the asset commit for the cloud run.
 
+Performance orchestrator's HTML acceptance call of 2026-11-18:
+
+- Accept the completed HTML fixture and release React under L and M after the full stage split.
+- All six HTML traces show no startup task. Native ordering proves usage before classification in all eighteen phases.
+- First Changes and second-edit deltas change sign. The orchestrator attributes this mixed reading to machine noise, not a repeated cost.
+- All three byte proofs pass. Demand ratios stay below one. No guard or integrity failure occurred.
+- Stop before React if the completed split reveals candidate-only edit work. Report that work before any change.
+
+Every value below is main / candidate. Times are seconds except HTTP, which
+is milliseconds. Demand is the sampled cgroup anon plus swap peak in KiB.
+
+| Pair | First Changes         | Edit 1              | Edit 2              | HTTP                  | Demand                | Demand ratio |
+| ---- | --------------------- | ------------------- | ------------------- | --------------------- | --------------------- | ------------ |
+| 1    | 16.561525 / 15.392234 | 3.013662 / 2.685332 | 2.898342 / 3.187619 | 52.185805 / 43.916738 | 1,021,344 / 994,224   | 0.973446753  |
+| 2    | 15.076388 / 15.593861 | 2.776209 / 2.803207 | 3.064410 / 2.734353 | 45.299299 / 50.548827 | 1,043,644 / 1,033,640 | 0.990414356  |
+| 3    | 17.024947 / 16.858053 | 2.625127 / 3.005025 | 2.897846 / 3.186481 | 60.143840 / 46.093195 | 1,033,600 / 1,026,356 | 0.992991486  |
+
+The source check found candidate-only startup handover bookkeeping in every
+HTML classification. The branch stopped before React and reported it. There
+was no extra traced stage or edit capture. The adapter makes a startup key,
+registers a cancellation observer, and locks the empty record. Its kept-base
+lookup also locks its pending diagnostics. No startup task means no
+condition-variable wait. The trace does not measure these operations alone.
+
+Performance orchestrator's bookkeeping call of 2026-11-18: this work does not
+block. Release React under L and M. Keep production frozen at `2c28d9677`.
+Its reason: the work is bounded and constant, with no I/O, process, or wait.
+The orchestrator estimates microseconds to well under one millisecond per
+edit. This estimate is not a measured result. It cannot explain the
+sign-changing second-edit deltas. The requested optional benchmark has no
+existing harness and needs separate compilation, so it is skipped.
+
+The required post-merge task is
+`plans/follow-ups/startup-adapter-on-inactive-heads.md`. Install the adapter
+only for the head whose preparation started a startup task. This preserves
+the ordinary provider path for HTML heads and edits. No new variant or
+retry is authorized. React acceptance still precedes the current-main merge,
+the complete gate, review, and PR. The merged SHA needs a confirming cloud pair.
+
+Evidence: `.context/startup-base-overlap/clean-html-mixed-report.md` records every pair, both spreads, all eighteen phase splits, the bookkeeping source proof, the guards, and independent raw checks.
+
+Performance orchestrator's closure call of 2026-11-18, under the user's
+delegation of 2026-11-16, corrected the same day: apply option C.
+
+- Under L, the guard stop of the React pair 1 candidate, with its main complete, closes the change at once. No retry and no new variant follow.
+- React pair 1 is the only React pair. First Changes was 77.88 s on main and 67.34 s on the candidate, 10.54 s or 13.5% sooner. The candidate stopped during edit 2, so this is no acceptance result.
+- The memory reasons are borderline. Cloud cold demand rose 4.2% on average, with pairs at +1.9%, -3.6%, and +16.1%. The incomplete React candidate demand was 6.57% above main before the stop.
+- The benefit is cold only. Cloud cold first Changes was 1.90 s, or 11%, sooner, and warm starts gained nothing material. That benefit does not outweigh the unresolved memory bound.
+- Correction: the older React ratio 1.1308 was PSS alone. PSS plus `SwapPss` at those PSS-peak samples gave 1.0147. Neither is a demand peak, so neither shows a 13% demand rise. C stands after the correction.
+
+Lifecycle limit: the guard stopped on sidecar PID 1750569 during an ordinary
+recycle after 500 renders. Its status read succeeded with `State: R`, one
+thread, and no `VmRSS`, while the cgroup still listed it. The interrupted stop
+had run about 18 ms. Main's twelve matching recycle stops took 12 to 45 ms. No
+candidate lifecycle defect and no numeric breach is established. The complete
+RSS sum was unavailable, and `MemAvailable` stayed above its floor.
+The clean run had no exact exit trace, so the stop durations include shutdown,
+reaping, and drain. The original guard stays binding, and nothing reruns. A
+later sampler must count a listed member in exit, without `VmRSS` or with
+`State: Z`, as zero resident memory, and keep the raw evidence. It must save
+partial records before its summary, because a summary error lost the exact
+candidate edit 1 time.
+
+Option C cancels the product merge, the complete gate, the final product
+review, the product pull request, the confirming cloud pair, and the remaining
+acceptance arms. The Needs decision item
+`plans/follow-ups/cold-start-base-overlap-memory.md` keeps the opportunity. It
+is retained on this branch and in [docs-only PR #340](https://github.com/mokly-ai/mokly/pull/340)
+from current main. The pull request adds only that item and its reciprocal
+Related lines. `plans/follow-ups/startup-adapter-on-inactive-heads.md` stays on
+this branch only, because its cleanup applies only to a restored feature.
+
+Evidence: `.context/startup-base-overlap/clean-react-stopped-report.md` and
+`.context/startup-base-overlap/clean-react-stopped-proof-v1.json`.
+
 ## Milestone 1: Documentation and protocol
 
 Depends on: none
@@ -863,6 +931,9 @@ open. They include the basic fixture, the stress edit, the two-slot starts,
 and the exact exec and exit runs of call 7 option G. Milestone 6 reconciles
 them with the clean result. Call 12 waives none of them.
 
+On 2026-11-18, option C of call 12 cancelled every unchecked TODO above. They
+are cancelled, not waived, passed, or ticked.
+
 Evidence: `.context/startup-base-overlap/after-report.md` records the before and after table and byte comparison.
 Evidence: `.context/startup-base-overlap/memory-diag-v2-pair-report/final-report.md` records the closed memory item, transition proof, limits, and preserved preflight repair.
 Evidence: `.context/startup-base-overlap/git-spawn-investigation/report.md` records the phase counts, source-supported attribution, and its limits.
@@ -931,11 +1002,14 @@ the outcome rules and the byte proof.
 - [ ] Run the Serve tree of each arm in its own cgroup through `systemd-run --user --scope`. Sample `memory.current`, the `anon` and `file` values of `memory.stat`, and `memory.swap.current` each second. Read anon and swap on the same tick.
 - [ ] Use only the cgroup demand metric. The preflight passed, so adopt no PSS plus `SwapPss` fallback.
 - [ ] Check first Changes and the memory demand against the paired main, and edits and HTTP against the spread of main, under the acceptance of call 12. Report every pair and the spread of each arm.
-- [ ] For the HTML fixture, prove from the traces that no early task ran and that the Changes order equals main. Judge its timing under the same L rule.
+- [x] For the HTML fixture, prove from the traces that no early task ran and that the Changes order equals main. Judge its timing under the same L rule.
 - [ ] Derive the byte proof from the captures that the frozen workload already writes. First revalidate the two edit identity fields of call 9 among the new contained-main captures. Exclude only `deploymentId` at startup, and keep every other edit field exact.
 - [ ] Apply C when the same acceptance check fails in all three pairs of one fixture. Apply C at once after a guard stop of a candidate arm, unless the main arm of the same pair also stopped. Keep the records and the follow-ups. Start no further variant.
 - [ ] Report every other result without acceptance, with every pair, the stage split, and any stop sample. Keep the branch stopped until the performance orchestrator decides.
 - [ ] Reconcile each open TODO of Milestone 4 with the clean result. Waive none without an explicit call.
+
+On 2026-11-18, option C of call 12 cancelled every unchecked TODO above, after
+the React candidate stop. They are cancelled, not waived, passed, or ticked.
 
 ## Milestone 7: Verification, commit, review, and pull request
 
@@ -953,6 +1027,10 @@ Git tool directory first on PATH so manager fixtures cannot filter Git out.
 - [ ] Wait for cloud catalogue acceptance.
 - [ ] Delete this plan when all earlier TODOs and review rounds are complete.
 - [ ] Open the pull request into `main`. Preserve the dated calls, plan permalink, measurements, and follow-up items in its description. Do not merge.
+
+On 2026-11-18, option C of call 12 cancelled every TODO above. No product
+gate, review, plan deletion, or pull request follows. This plan stays on the
+branch as the record. They are cancelled, not waived, passed, or ticked.
 
 After the pull request opens, watch final CI through the finish-work
 `scripts/ci-wait.sh`. Fix branch failures before the final report.
