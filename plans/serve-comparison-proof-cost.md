@@ -15,6 +15,9 @@ Contract owners:
 
 - [Changes serving](../docs/protocol/mokly-changes-serving.md#proven-view-reuse).
 - [Comparison serving](../docs/protocol/mokly-comparison-serving.md#view-comparison-reuse).
+- [Logical link validation](../docs/protocol/mokly-link-validation.md).
+- [On-demand reads](../docs/protocol/mokly-on-demand.md).
+- [Runtime cache](../docs/protocol/mokly-runtime.md#render-graph-and-cache).
 - [Graph crate](../crates/mokly-graph/README.md).
 - [Comparison crate](../crates/mokly-compare/README.md).
 - [Large fixture](../tests/fixtures/large/README.md).
@@ -130,6 +133,18 @@ The index holds positions or references, never copied plans or documents.
 Build it once and retain it only with its generation. Remove the full plan
 scan. Keep the existing target lookup and route order.
 
+The workspace orchestrator's call of 2026-11-18 uses the existing
+route-ordered plan map for each destination's view list. The index keeps
+entry positions and view offsets only. The artifact-path layout puts all
+views under `{path}/index.`. The path grammar excludes a dot in each entry
+segment, so no other entry can match that prefix. Keep the entry-path
+filter on the range. This avoids a public route type change and keeps the
+existing oracle and comparison test files unchanged. The read-only options
+check selected this approach over shared route handles, copied route keys,
+and a Large plan-interface redesign.
+
+Evidence: `.context/serve-comparison-proof-cost/ownership-options-check.md`.
+
 The compact pair-result store has a charged 2 MiB ceiling. Charge retained
 strings, record storage, and collection capacity. Do not allocate an
 oversized record before checking admission. A result miss runs the existing
@@ -148,54 +163,71 @@ The cache fast path applies only to the same immutable artifact handle in
 the full tier. Preserve access order, operation counts, replacement,
 compaction, and all recorded charges. A different artifact still replaces it.
 
-## Milestone 1: Documentation and protocol
+## Milestone 1: Documentation and protocol — completed
 
 Depends on: none
 
-- [ ] Delegate a contract audit to the `docs implementor`. Confirm that this
+- [x] Delegate a contract audit to the `docs implementor`. Confirm that this
       internal change needs no new public requirement or protocol behaviour.
-- [ ] Confirm the graph and comparison README context for implementation.
+- [x] Confirm the graph and comparison README context for implementation.
 
-## Milestone 2: Shared generation checks
+Evidence: `.context/serve-comparison-proof-cost/docs-audit.md`.
+
+## Milestone 1a: Record preparation follow-up — completed
+
+Depends on: none
+
+- [x] Delegate the measured `graph.prepare` follow-up to the `docs implementor`.
+      Keep its measurement and open question outside this implementation.
+
+Follow-up: `plans/follow-ups/head-graph-preparation-cost.md`.
+
+## Milestone 2: Shared generation checks — completed
 
 Depends on: 1
 
-- [ ] Delegate the implementation to the `non-ui implementor`.
-- [ ] Add red-first tests for result sharing and bounded overflow. Cover
+- [x] Delegate the implementation to the `non-ui implementor`.
+- [x] Add red-first tests for result sharing and bounded overflow. Cover
       present anchors, absent anchors, missing targets, and changed generations.
-- [ ] Cover the first error and exact text, including a different caller
+- [x] Cover the first error and exact text, including a different caller
       after a cached negative result. Preserve concurrent request cleanup.
-- [ ] Keep the existing cache-only read-count assertions on a zero-capacity
+- [x] Keep the existing cache-only read-count assertions on a zero-capacity
       pair store. Add separate assertions for the new sharing behaviour.
-- [ ] Implement the complete plan index and charged pair store. Seed it from complete
+- [x] Implement the complete plan index and charged pair store. Seed it from complete
       validation. Keep the checked head proof path and base reads unchanged.
-- [ ] Avoid weight computation for the same full-tier artifact. Preserve
+- [x] Check the indexed route range against real document planning for
+      screen, page, document, and use-case destinations. Cover present and
+      missing fragments without a full-scan fallback.
+- [x] Avoid weight computation for the same full-tier artifact. Preserve
       cache replacement, access order, and charge semantics.
-- [ ] Check the delegate's result against these TODOs and repository rules.
-- [ ] Delegate the graph README update to the `docs implementor`. State the
+- [x] Check the delegate's result against these TODOs and repository rules.
+- [x] Delegate the graph README update to the `docs implementor`. State the
       current generation sharing and its bounded fallback after implementation.
+
+Evidence: `.context/serve-comparison-proof-cost/implementation-report.md`
+and `.context/serve-comparison-proof-cost/readme-report.md`.
 
 ## Milestone 3: Verification and release measurements
 
 Depends on: 2
 
-- [ ] Run targeted graph, comparison, and server tests. Keep the existing
+- [x] Run targeted graph, comparison, and server tests. Keep the existing
       reuse byte oracle and comparison tests unchanged.
 - [ ] Run the early repository suite with Git 2.45 or later, git-lfs, and
       pinned Bun. Run the complete repository gate. Name any blocker.
-- [ ] Build and smoke-test the example catalogue under the repository rules.
-- [ ] Measure three edit and exact-restore samples on `examples/basic` and
+- [x] Build and smoke-test the example catalogue under the repository rules.
+- [x] Measure three edit and exact-restore samples on `examples/basic` and
       the default HTML fixture. Use separate release checkouts and targets.
-- [ ] Require the large-fixture edit `review.compare-views` median to be at
+- [x] Require the large-fixture edit `review.compare-views` median to be at
       most 953.5 ms, half its 1,907 ms baseline. Keep reuse and retention equal.
-- [ ] Measure and report immutable index size and charged pair-store usage
+- [x] Measure and report immutable index size and charged pair-store usage
       on both fixtures. Check the 2 MiB pair ceiling without permanent telemetry.
 
 Evidence: `.context/serve-comparison-proof-cost/` holds checks and measurements.
 
 ## Milestone 4: Commit, review, and pull request
 
-Depends on: 1, 2, 3
+Depends on: 1, 1a, 2, 3
 
 - [ ] Commit and push the implementation with the preservation audit.
 - [ ] Send the implementation SHA immediately after push. Obtain the
@@ -203,8 +235,6 @@ Depends on: 1, 2, 3
 - [ ] Review against `origin/main` with `implementation-review`. Check each
       finding, apply the fix rule, and complete its two allowed fix rounds.
       Record deferred work as follow-up items. Preserve merged nearby changes.
-- [ ] Record the measured `graph.prepare` cost as a follow-up item. Keep
-      its measurement and open question outside this change's implementation.
 - [ ] Delete this plan and the resolved proof-cost follow-up. Delegate live
       reference cleanup to the `docs implementor`. Preserve the dated record
       and plan permalink in the pull request description.

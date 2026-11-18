@@ -26,6 +26,8 @@ pub mod error;
 pub mod fragments;
 pub mod graph;
 pub mod key;
+mod link_index;
+mod link_results;
 pub mod policy;
 pub mod public_denial;
 pub mod public_inputs;
