@@ -11,7 +11,7 @@
 - **Terms:**
   - **Key Code section:** The `### Key Code` list of a README that names the files, types and functions of its area.
   - **Gate:** `cargo xtask check`, the complete set of suites that every change must pass: the Mokly suites and the 16 cloud suites.
-  - **Markdown link test:** `tests/markdown_links.test.ts`, which the Viewer suite runs once. It checks the local links and anchors of `AGENTS.md`, `docs/`, `plans/`, and every `README.md`.
+  - **Markdown link test:** `tests/markdown_links.test.ts`, which the Viewer suite runs once. It checks the local links and anchors of `AGENTS.md`, `docs/`, `plans/`, every `README.md`, and the Markdown files under the AGPL paths (`apps/`, the `mkc-` crates, `packages/tokens/`, `infra/`, and `scripts/cloud/`).
 - **Background:** The `documentation` skill makes the README `### Key Code` section the home of code references. PR #51 of the old cloud repository moved the code names of the protocol docs into those sections. Findings 4 and 6 of its review found checks that lost their input in that move. Finding 6 is `plans/follow-ups/protocol-symbol-test-checks-nothing.md`. The Mokly READMEs use the same sections, so the class covers both parts of the repository.
 - **Problem:** No check proves that a backticked identifier in a Key Code entry exists in the file that the entry links. A rename or a removal leaves the README wrong.
 - **Impact if no action:** The entry points of a README drift from the code. Agents and new readers then open the wrong file or look for a symbol that is gone.

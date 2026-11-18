@@ -143,7 +143,8 @@ README files and in the cloud protocol docs under `docs/protocol/cloud`.
   `crates/` at 300 lines. Every run audits every Rust file there. There is
   no override.
 - `tests/markdown_links.test.ts` checks the local links and anchors in
-  `AGENTS.md`, `docs/`, `plans/`, and every `README.md`.
+  `AGENTS.md`, `docs/`, `plans/`, every `README.md`, and the Markdown files
+  under the AGPL paths.
 - Never commit build output. `mokly-static/` and every `--out` directory
   stay ignored by Git. Commit the authored specs, configuration, components,
   and CSS under `examples/basic/`.

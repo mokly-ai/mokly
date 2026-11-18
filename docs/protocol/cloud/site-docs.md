@@ -127,7 +127,7 @@ overview is the Docs landing at `/docs`.
 
 ## Reference Section
 
-Allowlisted documents from the installed package's `docs/protocol/cloud/` are
+Allowlisted documents from the workspace package's `docs/protocol/` are
 published under `/docs/reference/<slug>` from their Markdown source at build
 time. They are never copied into the site, and they render through the same
 pipeline as the authored pages, so a published document takes the same code

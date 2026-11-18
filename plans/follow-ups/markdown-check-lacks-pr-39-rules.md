@@ -9,7 +9,7 @@
 - **Category:** Process.
 
 - **Terms:**
-  - **Markdown link check:** `tests/markdown_links.test.ts`, which the Viewer suite of `cargo xtask check` runs once. It checks that each local link in `AGENTS.md`, `docs/`, `plans/`, and every `README.md` resolves. Before the move, the old cloud repository ran `cargo xtask markdown-links`, stage 9 of its gate, over every Markdown file that Git listed.
+  - **Markdown link check:** `tests/markdown_links.test.ts`, which the Viewer suite of `cargo xtask check` runs once. It checks that each local link in `AGENTS.md`, `docs/`, `plans/`, every `README.md`, and the Markdown files under the AGPL paths (`apps/`, the `mkc-` crates, `packages/tokens/`, `infra/`, and `scripts/cloud/`) resolves. In a site page under `apps/site/src/content/`, a root-relative link must name a route of the site. Before the move, the old cloud repository ran `cargo xtask markdown-links`, stage 9 of its gate, over every Markdown file that Git listed.
   - **Fragment:** The `#name` part of a link, which must name a heading anchor of the target document.
   - **Explicit anchor:** An HTML `id` or `name` attribute in a Markdown file that a fragment can target.
 - **Background:** The list below gives the facts.
@@ -21,12 +21,13 @@
   - On 2026-11-17 the cloud moved into this repository, and its link stage went with the old runner. The Markdown link test of this repository took over the cloud docs.
   - The changed-file length audit of the Repository suite now fails a changed protocol doc over 250 lines, so the 250-line warning has a stricter replacement.
   - The root lockfile already resolves `github-slugger` 2.0.0, through the Astro packages of `apps/site`.
-- **Problem:** The list below gives what the Markdown link test lacks from the four rules.
+- **Problem:** The list below gives what the Markdown link test lacks from the four rules and from the old cloud stage.
   - Explicit anchors resolve only on `<a>` elements. An `id` on another element is not an anchor for the test.
   - The slug rules differ from GitHub's in edge cases. The test does not skip a duplicate suffix that another heading produced, drops combining marks, and reads only `#` headings, so an underlined heading gets no anchor.
   - A link target that exists locally passes, also when Git ignores it, so it fails only on a fresh clone.
   - The plan citation rule does not exist.
-  - The test reads fewer files than the old cloud stage. On 2026-11-17 no Markdown file outside its scope held a relative link to a repository file, except fixtures, `CHANGELOG.md`, and the example catalogue notes.
+  - The test does not read every Markdown file that Git lists. Since 2026-11-18 it reads every file that the old cloud stage read. On 2026-11-18 the only Markdown files outside its scope with a relative link to a repository file were `CHANGELOG.md`, `examples/basic/notes.md`, `examples/basic/specs/example/workspace-guide.md`, and the catalogue fixture `crates/mokly-graph/tests/fixtures/catalogue/specs/guide.md`.
+  - The old cloud stage had three more rules that the test does not have. An undefined reference link, such as `[text][label]` without a `[label]:` line, failed. A root-relative link outside the site pages resolved from the repository root, as on GitHub. A query string was removed from a local destination. The test skips a root-relative link outside the site pages, and it treats a query string as part of the path. On 2026-11-18 no file in its scope had an undefined reference link or a local link with a query string. The only root-relative links outside the site pages were the 41 site routes of the guides under `docs/guides/`.
 - **Impact if no action:** The scan of 2026-10-30 found nothing that the missing rules would catch. A future link to an ignored target fails only on a fresh clone.
 - **Root question:** Which link rules must the gate enforce so that every Markdown link resolves on a fresh clone and on GitHub?
 - **Options:**

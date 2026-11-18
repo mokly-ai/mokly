@@ -192,6 +192,11 @@ also checks the complete depicted sidebar against the site.
 Cloud-owned pages cite existing local protocol documents with HTML comments.
 Package guides keep their authored links; `src/docs/guides.ts` validates
 Reference destinations against the allowlist without rewriting them.
+A root-relative link in a page under `src/content/` names a site route, such
+as `/privacy/` or `/docs/ci/github-action/`, not a repository path. The
+repository Markdown link test, `tests/markdown_links.test.ts`, fails the link
+when the site has no route there. It checks the fragment against the
+headings of the Markdown that the route renders.
 
 Terms, Privacy, Complaints and Security are Markdown documents under
 `src/content/legal/`. Their effective dates, provider details, retention

@@ -295,7 +295,7 @@ Depends on: 2
       `mokly-artifact-compatibility.md`, `repository-typescript.md`,
       `desktop-app.md`, and `docs/ops/mokly-release-cutover.md`, for
       workspace use.
-- [ ] Extend `tests/markdown_links.test.ts` to every Markdown file that the
+- [x] Extend `tests/markdown_links.test.ts` to every Markdown file that the
       old cloud check read, such as the legal pages of `apps/site`, with
       the root-route rule for site links.
 - [ ] Run `npm test -- tests/markdown_links.test.ts`, `npm run format:check`,
