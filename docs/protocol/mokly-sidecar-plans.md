@@ -1,6 +1,6 @@
 # Serve Edit Plans
 
-Status: Resolution settings as the record key, the path table, and candidate names are not implemented yet. The [plan for exact Serve plans after file additions](../../plans/serve-plan-editor-invalidation.md) adds them.
+Status: Candidate names are not implemented yet. The [plan for exact Serve plans after file additions](../../plans/serve-plan-editor-invalidation.md) adds them.
 
 These rules extend the [compiled recipe rules](./mokly-sidecar-recipes.md) of
 the `bundle` request. They let a Serve edit compile skip resolution work that

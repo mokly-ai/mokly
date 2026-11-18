@@ -177,9 +177,10 @@
   stop or a cancellation ends it, are in
   `docs/protocol/mokly-sidecar-root-scheduling.md`.
 - **Related:**
-  - `plans/follow-ups/serve-plan-editor-invalidation.md`, linked alternatives:
-    editor files and new entries disable saved plans. This item owns the
-    separate captured-head refresh alternative.
+  - `plans/follow-ups/serve-editor-files-disk-cache.md`, linked
+    alternatives: retained editor files make a restart miss the head entry.
+    Its recommended option is the pause compile of this item, so it waits
+    for this decision. This item owns the captured-head refresh.
   - `plans/follow-ups/serve-plan-record-start-cost.md`, the same code: a
     restart restores the stale plan payload before a captured head compile.
     Its profile separates the added plan cost from that restart work.

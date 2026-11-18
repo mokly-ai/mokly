@@ -150,28 +150,36 @@ Evidence: `.context/serve-plan-editor-invalidation/docs-milestone-1-report.md` a
 
 Depends on: 1
 
-- [ ] Add the editor-file restart cache follow-up with E's limits.
-- [ ] Update the start-cost item for table work taken here. Record the verified outside-scope risks with their evidence limits.
+- [x] Add the editor-file restart cache follow-up with E's limits.
+- [x] Update the start-cost item for table work taken here. Record the verified outside-scope risks with their evidence limits.
+
+Evidence: `.context/serve-plan-editor-invalidation/docs-milestone-1a-report.md`.
 
 ## Milestone 2: Resolution-only plan records
 
 Depends on: 1
 
-- [ ] Add red tests for added entries with current evidence. Pair entries, stories, and renderer changes with stale evidence.
-- [ ] Migrate lookup, insertion, replacement, and accounting. Preserve eviction and oversized-key checks with retained fields.
-- [ ] Preserve no edit capture or storage, whole-record stale rejection, warm starts, and single planned attempts.
+- [x] Add red tests for added entries with current evidence. Pair entries, stories, and renderer changes with stale evidence.
+- [x] Migrate lookup, insertion, replacement, and accounting. Preserve eviction and oversized-key checks with retained fields.
+- [x] Preserve no edit capture or storage, whole-record stale rejection, warm starts, and single planned attempts.
+
+Evidence: `.context/serve-plan-editor-invalidation/code-milestones-2-3-report.md`.
 
 ## Milestone 3: Compact typed plan encoding
 
 Depends on: 1
 
-- [ ] Migrate captured plans, generated types, planned lookup, core records, disk payloads, and fixtures to indexed paths.
-- [ ] Remove the replaced map encoding and temporary converters. Keep all existing oracle and cache assertions.
-- [ ] Verify shared paths, side effects, malformed references, bounds, and warm restoration through public boundaries.
+- [x] Migrate captured plans, generated types, planned lookup, core records, disk payloads, and fixtures to indexed paths.
+- [x] Remove the replaced map encoding and temporary converters. Keep all existing oracle and cache assertions.
+- [x] Verify shared paths, side effects, malformed references, bounds, and warm restoration through public boundaries.
+
+Evidence: `.context/serve-plan-editor-invalidation/code-milestones-2-3-report.md`.
 
 ## Milestone 4: Exact plan-only candidate comparisons
 
 Depends on: 1, 3
+
+Source proof: `.context/serve-plan-editor-invalidation/candidate-preflight.md`.
 
 - [ ] Add red swap and backup regressions for additions and removals after capture, selectable-candidate invalidation, and hidden preferred-candidate invalidation.
 - [ ] Capture bounded names with indexed directories. Narrow only Rust plan checks for audited forms and version.

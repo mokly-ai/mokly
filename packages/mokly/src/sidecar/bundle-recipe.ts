@@ -7,7 +7,7 @@ import type { BuildResult } from "esbuild";
 import type { BundleCapture } from "../generated/sidecar/BundleCapture.js";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration.js";
-import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
+import type { ResolutionPlan } from "../generated/sidecar/ResolutionPlan.js";
 import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
 import { previewCandidates } from "./bundle-entry.js";
@@ -35,7 +35,7 @@ export interface CompiledBundle {
   runtimeKey: string;
   evidence: ResolutionEvidence | undefined;
   capture: BundleCapture;
-  plan: ReadonlyMap<string, PlannedImport> | undefined;
+  plan: ResolutionPlan | undefined;
 }
 
 /** The module graph, consumed digests, resolution inputs, and the recipe. */

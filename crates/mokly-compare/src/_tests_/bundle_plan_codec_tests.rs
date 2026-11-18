@@ -1,10 +1,9 @@
 //! Plans persist beside compiled code without changing program restore envelopes.
 
-use std::collections::BTreeMap;
 use std::io::Cursor;
 use std::sync::Arc;
 
-use mokly_sidecar::resolution_plan::{PlannedImport, ResolutionPlan};
+use mokly_sidecar::resolution_plan::{PlannedImport, PlannedImportKind, ResolutionPlan};
 use mokly_sidecar::reusable_recipe::disk_seed_request;
 
 use crate::bundle_codec::Codec;
@@ -15,13 +14,14 @@ fn a_disk_entry_keeps_its_optional_plan_but_an_unchanged_restore_never_carries_i
     let original = recipe();
     let restore = serde_json::to_vec(&disk_seed_request(&original)).unwrap();
     let plan = Arc::new(ResolutionPlan {
-        imports: BTreeMap::from([(
-            "edge".into(),
-            PlannedImport {
-                path: "/repo/target.ts".into(),
-                side_effects: true,
-            },
-        )]),
+        paths: vec!["/repo/entry.ts".into(), "/repo/target.ts".into()],
+        imports: vec![PlannedImport(
+            0,
+            "./target.ts".into(),
+            PlannedImportKind::ImportStatement,
+            1,
+            true,
+        )],
     });
     let saved = original.with_plan(Some(plan.clone()));
     let encoded = Codec::default().encode(&saved, "current").unwrap().unwrap();

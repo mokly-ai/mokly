@@ -12,7 +12,7 @@ import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration
 import type { Definitions } from "../generated/sidecar/Definitions.js";
 import type { EntryBinding } from "../generated/sidecar/EntryBinding.js";
 import type { Module } from "../generated/sidecar/Module.js";
-import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
+import type { ResolutionPlan } from "../generated/sidecar/ResolutionPlan.js";
 
 import { entryModule } from "./bundle-entry.js";
 import { bundleDetail } from "./bundle-errors.js";
@@ -29,6 +29,7 @@ import type { Resolution } from "./native-resolution.js";
 import { consumerRequire } from "./paths.js";
 import { consumerPlugins } from "./plugins.js";
 import { ResolutionEvidence } from "./resolution-evidence.js";
+import { PlanLookup } from "./resolution-plan.js";
 import { resolutionOptions } from "./resolution.js";
 
 export interface Generation {
@@ -67,7 +68,7 @@ export interface Bundled {
 
 /** A native compile that is not final: its plan, or none after a failure. */
 interface NativeOutcome {
-  plan?: ReadonlyMap<string, PlannedImport>;
+  plan?: ResolutionPlan;
 }
 
 interface BundleCaptureState {
@@ -75,7 +76,7 @@ interface BundleCaptureState {
   durability?: CaptureDurability | undefined;
   evidence?: ResolutionEvidence;
   preview?: string | null | undefined;
-  plan?: ReadonlyMap<string, PlannedImport>;
+  plan?: ResolutionPlan;
 }
 
 /**
@@ -102,7 +103,7 @@ export async function bundle(
       measurements,
       {
         mode: "planned",
-        plan: new Map(Object.entries(requestedPlan.imports)),
+        plan: new PlanLookup(requestedPlan),
       },
       capture,
     );
@@ -118,7 +119,9 @@ export async function bundle(
     params,
     compile,
     measurements,
-    native.plan ? { mode: "planned", plan: native.plan } : { mode: "full" },
+    native.plan
+      ? { mode: "planned", plan: new PlanLookup(native.plan) }
+      : { mode: "full" },
     capture,
   );
 }
@@ -260,8 +263,8 @@ async function bundleAttempt(
         .run("sidecar.bundle.classify", () => planNative(metafile, paths))
         .catch(() => undefined);
       if (!plan) return {};
-      if (capture.mode === "full") capture.plan = plan.imports;
-      if (!plan.exact) return { plan: plan.imports };
+      if (capture.mode === "full") capture.plan = plan.plan;
+      if (!plan.exact) return { plan: plan.plan };
     }
     return await bundleRecipe(
       {

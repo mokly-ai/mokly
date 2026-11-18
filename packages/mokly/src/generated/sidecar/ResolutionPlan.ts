@@ -5,6 +5,10 @@ import type { PlannedImport } from "./PlannedImport.js";
 // prettier-ignore
 export type ResolutionPlan = {
 /**
+ * Unique physical paths addressed by each import's indices.
+ */
+paths: Array<string>,
+/**
  * Import targets reusable only with their matching captured evidence.
  */
-imports: { [key in string]: PlannedImport }, };
+imports: Array<PlannedImport>, };

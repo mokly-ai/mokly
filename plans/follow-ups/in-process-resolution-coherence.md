@@ -251,12 +251,17 @@
     Its tests are "a preview edit during compilation cannot replace its
     consumed digest" and "an imported manifest restored during compilation
     keeps its consumed digest", in the same file.
-- **Related:** `plans/follow-ups/serve-plan-editor-invalidation.md` considers
+- **Related:** `plans/follow-ups/serve-editor-files-disk-cache.md` considers
   narrower directory evidence. Its choice must still detect the two
   stale-selection windows in this item.
   `plans/follow-ups/sequential-evidence-capture-cost.md` measures
   this capture boundary and can change its schedule. The ranking work of this
   item must remain possible, and the scheduling measurement must include it.
+  `plans/follow-ups/pnp-ancestor-manifest-evidence.md`,
+  `plans/follow-ups/case-collision-unlisted-directory.md`, and
+  `plans/follow-ups/link-target-kind-evidence.md` change the same capture
+  code. They own changes after a completed capture, and this item owns
+  changes during a compile.
 - **Recommendation:** D. It closes both windows in process and on disk
   without stamps, keeps the reuse of each coherent compilation, and writes
   no file. E copies no rule, but it adds a dependency and an esbuild run to

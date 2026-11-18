@@ -1,21 +1,18 @@
 import type { OnResolveArgs } from "esbuild";
 
-import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
-
 import type { ModulePaths } from "./module-paths.js";
+import type { PlanLookup } from "./resolution-plan.js";
 import { bareSpecifier } from "./specifier.js";
 
 /**
  * How the consumer plugin resolves imports. `native` lets esbuild resolve
  * each import that no base tier remap can change. `planned` returns the
- * classified module of each import that a native compile resolved, keyed by
- * {@link planKey}. `full` resolves every import through the sidecar's own
+ * classified module of each import that a native compile resolved, through
+ * its indexed plan. `full` resolves every import through the sidecar's own
  * rules with a resolver round trip.
  */
 export type Resolution =
-  | { mode: "native" }
-  | { mode: "planned"; plan: ReadonlyMap<string, PlannedImport> }
-  | { mode: "full" };
+  { mode: "native" } | { mode: "planned"; plan: PlanLookup } | { mode: "full" };
 
 /** A handled `require` failure ends the native compile like other errors. */
 export const nativeLogOverride = { "ignored-dynamic-import": "error" } as const;
@@ -43,12 +40,4 @@ export function nativeResolution(
     args.kind !== "require-resolve" &&
     nativeImport(paths, args.path, args.resolveDir)
   );
-}
-
-export function planKey(
-  importer: string,
-  specifier: string,
-  kind: string,
-): string {
-  return JSON.stringify([importer, specifier, kind]);
 }

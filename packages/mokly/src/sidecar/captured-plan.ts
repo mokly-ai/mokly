@@ -1,4 +1,3 @@
-import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
 import type { ResolutionPlan } from "../generated/sidecar/ResolutionPlan.js";
 import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
@@ -6,42 +5,37 @@ import { EVIDENCE_LIMIT } from "./physical-input-reader.js";
 
 /** Retain native targets only with the stable evidence of their bundle call. */
 export function capturedPlan(
-  imports: ReadonlyMap<string, PlannedImport> | undefined,
+  plan: ResolutionPlan | undefined,
   evidence: ReuseEvidence,
 ): ResolutionPlan | undefined {
-  if (
-    !imports ||
-    !evidence.complete ||
-    !evidence.durable ||
-    evidence.uncaptured
-  )
+  if (!plan || !evidence.complete || !evidence.durable || evidence.uncaptured)
     return undefined;
   let bytes =
-    Buffer.byteLength('[{"imports":{}},]') +
+    Buffer.byteLength('[{"paths":[],"imports":[]},]') +
     Buffer.byteLength(JSON.stringify(evidence));
   let first = true;
-  for (const [key, target] of imports) {
+  for (const file of plan.paths) {
     bytes += first ? 0 : 1;
     first = false;
-    const keyBytes = stringBytes(key, EVIDENCE_LIMIT - bytes);
-    if (keyBytes === undefined) return undefined;
-    bytes += keyBytes + 1;
-    const pathBytes = stringBytes(target.path, EVIDENCE_LIMIT - bytes);
+    const pathBytes = stringBytes(file, EVIDENCE_LIMIT - bytes);
     if (pathBytes === undefined) return undefined;
+    bytes += pathBytes;
+  }
+  first = true;
+  for (const [importer, specifier, kind, target, sideEffects] of plan.imports) {
+    bytes += first ? 0 : 1;
+    first = false;
+    const specifierBytes = stringBytes(specifier, EVIDENCE_LIMIT - bytes);
+    if (specifierBytes === undefined) return undefined;
     bytes +=
-      pathBytes +
+      specifierBytes +
       Buffer.byteLength(
-        JSON.stringify({
-          path: "",
-          sideEffects: target.sideEffects,
-        }),
+        JSON.stringify([importer, "", kind, target, sideEffects]),
       ) -
       2;
     if (bytes > EVIDENCE_LIMIT) return undefined;
   }
-  return bytes <= EVIDENCE_LIMIT
-    ? { imports: Object.fromEntries(imports) }
-    : undefined;
+  return bytes <= EVIDENCE_LIMIT ? plan : undefined;
 }
 
 /** Count JSON string escaping without allocating an oversized encoded string. */

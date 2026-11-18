@@ -6,6 +6,7 @@ import { build } from "esbuild";
 
 import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
 import type { CompiledGeneration } from "../packages/mokly/src/generated/sidecar/CompiledGeneration.js";
+import type { ResolutionPlan } from "../packages/mokly/src/generated/sidecar/ResolutionPlan.js";
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
 import { capturedPlan } from "../packages/mokly/src/sidecar/captured-plan.js";
 import { checkRecipeSize } from "../packages/mokly/src/sidecar/recipe-size.js";
@@ -18,16 +19,17 @@ import {
 } from "./helpers/native_resolution.js";
 import { planCapture } from "./helpers/plan_capture.js";
 
-test("the combined plan bound counts escaped keys and paths at the exact byte limit", () => {
-  const target = { path: 'quoted"\\é💾\u0001\ud800', sideEffects: false };
-  const imports = new Map([['key"\\é💾\udc00', target]]);
+test("the combined plan bound counts escaped specifiers and shared paths at the exact byte limit", () => {
+  const plan: ResolutionPlan = {
+    paths: ['quoted"\\é💾\u0001\ud800', 'importer"\\é💾\udc00'],
+    imports: [[1, 'specifier"\\é💾\udc00', "import-statement", 0, false]],
+  };
   const evidence = { complete: true, durable: true, inputs: {} };
-  const plan = { imports: Object.fromEntries(imports) };
   const bytes = Buffer.byteLength(JSON.stringify([plan, evidence]));
-  target.path += "x".repeat(8 * 1024 * 1024 - bytes);
-  assert.deepEqual(capturedPlan(imports, evidence), plan);
-  target.path += "x";
-  assert.equal(capturedPlan(imports, evidence), undefined);
+  plan.paths[0] += "x".repeat(8 * 1024 * 1024 - bytes);
+  assert.deepEqual(capturedPlan(plan, evidence), plan);
+  plan.paths[0] += "x";
+  assert.equal(capturedPlan(plan, evidence), undefined);
 });
 
 test("a response drops its optional plan before its unchanged reuse evidence", () => {
@@ -52,7 +54,10 @@ test("a response drops its optional plan before its unchanged reuse evidence", (
     generation: "generation",
     modules: [],
     compiled,
-    plan: { imports: { edge: { path: "x".repeat(4096), sideEffects: true } } },
+    plan: {
+      paths: ["importer", "x".repeat(4096)],
+      imports: [[0, "edge", "import-statement", 1, true]],
+    },
   };
   assert.doesNotThrow(() => checkRecipeSize(params, result, 2048));
   assert.equal(result.plan, undefined);
