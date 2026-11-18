@@ -902,10 +902,14 @@ every rule that call 12 keeps.
 - [x] Update the summary and the replaced ways of this plan with the confirmed flow.
 - [x] Hold retained startup warnings and the cache notice until ordinary freshness accepts the base. Drop them on a miss or error. Add a regression test through the startup provider.
 - [x] Run the focused tests and `cargo xtask check --suite repository`.
-- [ ] Commit and push the change. Send the new SHA and the asset commit to the performance orchestrator for the required cloud remeasurement.
+- [x] Replace the helper-only startup eligibility test with the real startup hook and an unused-record assertion after rejection. Preserve production code. Prove both guard removal and registration-before-rejection fail on assertions.
+- [x] Commit and push the change. Send the new SHA and the asset commit to the performance orchestrator for the required cloud remeasurement.
 
 Evidence: `.context/startup-base-overlap/last-attempt-implementation-report.md` records the implementation, assertion failures, ownership fixes, focused checks, and repeats.
 Evidence: `.context/startup-base-overlap/call-12-final-docs-report.md` records the final protocol and entry-point alignment.
+Evidence: `.context/startup-base-overlap/call-12-finding-2-check.md` records the confirmed test gap and the chosen test-only option D.
+Evidence: `.context/startup-base-overlap/finding-2-fix/report.md` records the real-hook regression test, both assertion failures, byte-exact production restoration, and focused checks.
+Evidence: `.context/startup-base-overlap/call-12-cloud-acceptance-2c28d9677.md` records cloud acceptance of the narrowed candidate. The final merged SHA still needs the confirming pair.
 Evidence: `.context/startup-base-overlap/retained-diagnostics-implementation-report.md`, `call-12-repository-after-diagnostics-summary.json`, and `call-12-smoke/root-command-result-v3.json` record the final handover correction, combined checks, and feature smoke.
 
 ## Milestone 6: Clean release evidence
