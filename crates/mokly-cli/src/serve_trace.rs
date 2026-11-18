@@ -234,3 +234,7 @@ mod comparison_trace_tests;
 #[cfg(test)]
 #[path = "_tests_/sidecar_stop/mod.rs"]
 mod sidecar_stop_tests;
+
+#[cfg(test)]
+#[path = "_tests_/reuse_trace_tests.rs"]
+mod reuse_trace_tests;

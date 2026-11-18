@@ -1,7 +1,6 @@
 //! Catalogue-wide own-page membership, nested filtering, and wire evidence.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::mem;
 
 use mokly_model::evidence::RuleEvidence;
 use mokly_model::review_affected::ReviewSide;
@@ -10,7 +9,7 @@ use crate::attribution_membership::Boundary;
 use crate::containment::ContainmentPath;
 use crate::match_tree::{Containment, MatchTree};
 use crate::rule_matching::DocumentMatching;
-use crate::{attribution_membership, attribution_records, observation};
+use crate::{attribution_membership, attribution_records};
 
 /// Path-independent before and after tuples of one changed rule.
 pub type RuleIdentity = (Option<(Vec<String>, String)>, Option<(Vec<String>, String)>);
@@ -30,6 +29,13 @@ pub struct MatchProof {
 }
 
 impl MatchProof {
+    /// Visit retained shared allocations for byte accounting only.
+    pub fn allocations(&self, visitor: &mut dyn FnMut(usize, usize)) {
+        self.regions.allocations(visitor);
+        if let Some(inputs) = &self.inputs {
+            inputs.allocations(visitor);
+        }
+    }
     /// Visit physical ancestry innermost first for every CSS delivery source.
     pub fn regions(&self) -> impl Iterator<Item = &Containment> {
         self.regions.iter()
@@ -154,11 +160,9 @@ pub fn observe_owned(
     }
 }
 
-/// Resolve all own-page matches before attributing any entry's records.
-pub fn attribute(mut pages: Vec<PageObservation>) -> Attribution {
-    for page in &mut pages {
-        page.rules = observation::merge(mem::take(&mut page.rules));
-    }
+/// Read normalized shared observations before attributing any entry's records.
+pub fn attribute<'a>(pages: impl IntoIterator<Item = &'a PageObservation>) -> Attribution {
+    let pages: Vec<_> = pages.into_iter().collect();
     let mut unfiltered = OwnPageMatches::new();
     for page in &pages {
         let Some(component) = &page.component else {

@@ -86,6 +86,7 @@ mod comparison_routes;
 mod comparison_slots;
 
 mod comparison_resources;
+pub mod comparison_reuse;
 pub mod comparison_steps;
 pub mod comparison_types;
 mod entry_metadata;
@@ -236,3 +237,14 @@ mod bundle_fixture;
 #[cfg(test)]
 #[path = "_tests_/scheduling/mod.rs"]
 mod scheduling_tests;
+
+mod reuse_budget;
+mod reuse_collection;
+mod reuse_digest;
+mod reuse_generation;
+mod reuse_memo;
+mod reuse_probes;
+mod reuse_reads;
+mod reuse_usage;
+mod reuse_weight;
+mod rule_weight;

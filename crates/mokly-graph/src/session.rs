@@ -14,6 +14,7 @@ use mokly_source_interface::tree::SourceTree;
 use crate::cache::{Artifact, RenderCache};
 use crate::closure::{Closure, Walker};
 use crate::collection::ComparisonCollector;
+use crate::comparison_proof::{ComparisonRead, ContentIdentity, ProofMode};
 use crate::comparison_stream::ComparisonConsumer;
 use crate::delivery_inputs::DeliveryInputs;
 use crate::error::Result;
@@ -28,7 +29,7 @@ use crate::types::{
 };
 use crate::validation_summary::Summary;
 use crate::workers::{ComparisonTask, ComparisonWorker, RenderWorkers, check_cancelled};
-use crate::{styles, temporary, validation};
+use crate::{session_proof, styles, temporary, validation};
 
 #[derive(Clone)]
 pub(crate) struct Session {
@@ -55,6 +56,7 @@ pub(crate) struct State {
     pub(crate) cache: Arc<dyn RenderCache>,
     pub(crate) workers: Arc<dyn RenderWorkers>,
     pub(crate) policy: Arc<dyn PublicPolicy>,
+    pub(crate) comparison_policy: Option<ContentIdentity>,
 }
 
 pub(crate) struct SessionInput {
@@ -70,6 +72,7 @@ pub(crate) struct SessionInput {
 
 impl Session {
     pub(crate) fn new(graph: &Graph, input: SessionInput) -> Self {
+        let comparison_policy = session_proof::policy(&input);
         for plan in input.plans.values() {
             graph.inputs.resources.retain(&plan.resource_key);
             graph.inputs.closures.retain(&plan.key.0);
@@ -108,6 +111,7 @@ impl Session {
                 cache: graph.cache.clone(),
                 workers: graph.workers.clone(),
                 policy: input.policy,
+                comparison_policy,
             }),
         }
     }
@@ -131,6 +135,14 @@ impl Session {
 }
 
 impl RenderGeneration for Session {
+    fn comparison_identity(
+        &self,
+        read: ComparisonRead,
+        route: &str,
+        mode: ProofMode,
+    ) -> Option<ContentIdentity> {
+        self.input_identity(read, route, mode)
+    }
     fn check_cancelled(&self) -> Result<()> {
         check_cancelled(self.state.workers.as_ref())
     }

@@ -12,6 +12,7 @@ use mokly_graph::cache::Artifact;
 use mokly_graph::closure::{Closure, GeneratedResources};
 use mokly_graph::collection::ComparisonCollector;
 use mokly_graph::comparison_input::RetainedComparisonInput;
+use mokly_graph::comparison_proof::{ComparisonRead, ContentIdentity, ProofMode};
 use mokly_graph::comparison_stream::ComparisonConsumer;
 use mokly_graph::error::{GraphError, Result};
 use mokly_graph::resource_inputs::ResourceObserver;
@@ -118,6 +119,24 @@ impl GeneratedResources for BaseReader {
 }
 
 impl RenderGeneration for BaseReader {
+    fn comparison_identity(
+        &self,
+        read: ComparisonRead,
+        route: &str,
+        mode: ProofMode,
+    ) -> Option<ContentIdentity> {
+        if mode != ProofMode::Retained || self.failed() {
+            return None;
+        }
+        self.state.check_cancelled().ok()?;
+        let identity = self.state.reuse.base.generation.comparison_identity(
+            read,
+            route,
+            ProofMode::Retained,
+        )?;
+        self.state.check_cancelled().ok()?;
+        (!self.failed()).then_some(identity)
+    }
     fn check_cancelled(&self) -> Result<()> {
         self.state.check_cancelled()
     }

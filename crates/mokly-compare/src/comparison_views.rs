@@ -24,6 +24,7 @@ use crate::move_inventory::PlanIndex;
 use crate::move_types::EntryPair;
 use crate::owned_styles;
 use crate::resource_memo::ResourceMemo;
+use crate::reuse_collection::Collection;
 
 pub(crate) struct UsageView {
     pub(crate) side: ReviewSide,
@@ -34,16 +35,31 @@ pub(crate) struct UsageView {
 }
 
 pub(crate) struct PendingView {
+    pub(crate) input: Arc<ImmutableView>,
+    pub(crate) document: DocumentComparison,
+    pub(crate) rule_sources: BTreeSet<String>,
+}
+
+/// Reducers read immutable evidence and write separate classification output.
+pub(crate) struct ImmutableView {
     pub(crate) document: DocumentComparison,
     pub(crate) observation: PageObservation,
     pub(crate) material: bool,
     pub(crate) inputs: bool,
     pub(crate) structure: bool,
     pub(crate) root_changed: bool,
-    /// Direct CSS dependency sources proved by own-root matches or entry evidence.
-    pub(crate) rule_sources: BTreeSet<String>,
     pub(crate) proofs: Vec<InstanceProof>,
     pub(crate) owned: owned_styles::Changes,
+}
+
+impl PendingView {
+    pub(crate) fn new(input: Arc<ImmutableView>) -> Self {
+        Self {
+            document: input.document.clone(),
+            input,
+            rule_sources: BTreeSet::new(),
+        }
+    }
 }
 
 #[derive(Default)]
@@ -60,17 +76,21 @@ pub(crate) fn collect(
     after: Arc<dyn RenderGeneration>,
     paths: &BTreeMap<String, String>,
     memo: &dyn ResourceMemo,
-    before_plans: &PlanIndex<'_>,
-    after_plans: &PlanIndex<'_>,
+    plans: [&PlanIndex<'_>; 2],
+    reuse: Option<&mut Collection>,
 ) -> Result<Vec<PairViews>> {
     let mut results: Vec<_> = pairs.iter().map(|_| PairViews::default()).collect();
-    let mut routes = comparison_routes::stream(pairs, before_plans, after_plans).peekable();
+    let mut routes = comparison_routes::stream(pairs, plans[0], plans[1]).peekable();
     if routes.peek().is_none() {
         return Ok(results);
     }
     before.check_cancelled().compare()?;
     after.check_cancelled().compare()?;
+    let probes = reuse.as_ref().map(|reuse| reuse.probes.clone());
+    let recording = reuse.as_ref().map(|reuse| reuse.recording.clone());
     let preparation: &dyn ViewPreparation = &Preparation {
+        probes: probes.as_ref(),
+        recording: recording.as_deref(),
         before: before.as_ref(),
         after: after.as_ref(),
         paths,
@@ -108,9 +128,11 @@ pub(crate) fn collect(
         before.as_ref(),
         after.as_ref(),
         before.comparison_parallelism().max(1).saturating_mul(2),
+        probes.as_deref(),
     );
     let outcome = {
         let mut stream = ViewStream {
+            reuse,
             routes: Box::new(routes),
             slots: &slots,
             preparation,

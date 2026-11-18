@@ -151,3 +151,7 @@ mod capture_restore_tests;
 #[cfg(test)]
 #[path = "_tests_/capture_usage/mod.rs"]
 mod capture_usage;
+
+#[cfg(test)]
+#[path = "_tests_/capture_usage_tests.rs"]
+mod capture_usage_tests;

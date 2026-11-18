@@ -15,6 +15,8 @@ other crate depends on it.
 - Load JSON configuration, validate the catalogue, and render every HTML or
   JavaScript view.
 - Compute Changes from a pinned Git base and keep its validated result in memory.
+- Compose the bounded view comparison reuse of Serve and admit only accepted
+  classifications.
 - Keep one captured base in Serve between classifications, and reuse it while
   its key and its freshness checks hold.
 - Compose one rendering runtime, sidecar pool, bundle store, and render cache
@@ -90,6 +92,15 @@ Changes classification also prepares views on the shared render workers. Those
 tasks read only retained base inputs and the head, so they schedule no base
 source read and no base sidecar call. A view that needs the base source is
 prepared later, in the ordered classification pass.
+Serve composes one `comparison_reuse::MemoryComparisons` service for its
+lifetime, with the fixed bound of the
+[reuse rules](../../docs/protocol/mokly-comparison-serving.md#view-comparison-reuse).
+`Source::comparison_attempt` begins each classification's `ReuseAttempt` with
+a `ReuseFence` over the adopted configuration, its roots, and the
+install-scripts mode. A view whose kept proof still holds is not prepared.
+`Source::finished` accepts the attempt after the Ready publication and
+discards it after a failure. When an execution ends without `finished`,
+`Source::discarded` discards the staging.
 Serve captures one warning sink per preparation attempt and
 reports each warning once under the
 [build warnings contract](../../docs/protocol/mokly-build-warnings.md).
@@ -227,9 +238,10 @@ reserves an 8 MiB main-thread stack through its linker settings in
   `ServeLifecycle`, which orders observer shutdown, busy-worker cancellation,
   and idle-worker shutdown.
 - [`src/serve_trace.rs`](./src/serve_trace.rs) installs the
-  `--debug-timings` output of each command, and
+  `--debug-timings` layer of every command and writes its records.
   [`src/serve_trace_fields.rs`](./src/serve_trace_fields.rs) holds the
-  bounded allow-lists of its record fields, such as the `cache` values.
+  bounded allow-lists of the record fields, such as the `cache` values and
+  the view comparison reuse fields.
 - [`src/serve_controls.rs`](./src/serve_controls.rs) maps the keys of rich
   watched Serve to its shortcuts and owns raw mode. Closed or failed terminal
   input ends the key reader but does not stop Serve. Serve shutdown waits for
@@ -274,10 +286,16 @@ reserves an 8 MiB main-thread stack through its linker settings in
   dependency step. It also checks whether a dependency fallback still allows a
   kept base, and it selects the working `node_modules` roots.
 - [`src/serve_changes.rs`](./src/serve_changes.rs) defines `ServeChanges`,
-  which owns the kept-base slot, and `Source`, one Serve comparison source.
+  which owns the kept-base slot and the view comparison reuse service, and
+  `Source`, one Serve comparison source. `Source::finished` accepts or
+  discards the reuse attempt, and `Source::discarded` drops staging that
+  `finished` never took.
   [`src/serve_changes_native.rs`](./src/serve_changes_native.rs) resolves the
   base references and composes each classification with its `ServeBase`
-  provider and its cancellations.
+  provider and its cancellations. Its `Source::comparison_attempt` begins one
+  fenced reuse attempt.
+  [`src/serve_delivery.rs`](./src/serve_delivery.rs) composes the one
+  `comparison_reuse::MemoryComparisons` service.
 - [`src/serve_base.rs`](./src/serve_base.rs) defines `ServeBase`, which finds,
   keeps, and releases the kept base, `BaseSlot`, the slot, and `ReleaseBase`,
   the release-only capability that each reader keeps.

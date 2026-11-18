@@ -33,13 +33,13 @@ pub(crate) fn classify(
             {
                 reasons.push(EntryChangeReason::Metadata);
             }
-            if views.views.iter().any(|view| view.material) {
+            if views.views.iter().any(|view| view.input.material) {
                 reasons.push(EntryChangeReason::Material);
             }
-            if views.views.iter().any(|view| view.inputs) {
+            if views.views.iter().any(|view| view.input.inputs) {
                 reasons.push(EntryChangeReason::Inputs);
             }
-            if views.views.iter().any(|view| view.structure) {
+            if views.views.iter().any(|view| view.input.structure) {
                 reasons.push(EntryChangeReason::Structure);
             }
             let own_component =

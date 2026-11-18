@@ -1,4 +1,4 @@
-//! Bounded allow-lists for fields in structured timing records.
+//! Allowlisted timing fields exclude source data and error payloads.
 
 use serde_json::{Map, Value, json};
 use tracing::field::{Field, Visit};
@@ -51,13 +51,35 @@ impl Visit for Fields {
                 };
                 self.counts.insert(name.into(), json!(value));
             }
-            "worker" | "tier" | "input_paths" | "read_bytes" | "retained_bytes"
-            | "encoded_bytes" => {
+            "worker"
+            | "tier"
+            | "input_paths"
+            | "read_bytes"
+            | "retained_bytes"
+            | "encoded_bytes"
+            | "reused"
+            | "compared"
+            | "recorded_reads"
+            | "identities_checked"
+            | "identity_reads"
+            | "peak_bytes"
+            | "candidate_views"
+            | "candidate_bytes"
+            | "accepted_bytes"
+            | "recording_identity_reads" => {
                 let name = match field.name() {
                     "input_paths" => "inputPaths",
                     "read_bytes" => "readBytes",
                     "retained_bytes" => "retainedBytes",
                     "encoded_bytes" => "encodedBytes",
+                    "recorded_reads" => "recordedReads",
+                    "identities_checked" => "identitiesChecked",
+                    "identity_reads" => "identityReads",
+                    "peak_bytes" => "peakBytes",
+                    "candidate_views" => "candidateViews",
+                    "candidate_bytes" => "candidateBytes",
+                    "accepted_bytes" => "acceptedBytes",
+                    "recording_identity_reads" => "recordingIdentityReads",
                     name => name,
                 };
                 self.values.insert(name.into(), json!(value));
@@ -66,7 +88,20 @@ impl Visit for Fields {
         }
     }
 
+    fn record_f64(&mut self, field: &Field, value: f64) {
+        let name = match field.name() {
+            "revalidation_ms" => "revalidationMs",
+            "recording_ms" => "recordingMs",
+            "current_usage_ms" => "currentUsageMs",
+            _ => return,
+        };
+        self.values.insert(name.into(), json!(value));
+    }
+
     fn record_bool(&mut self, field: &Field, value: bool) {
+        if field.name() == "overflowed" {
+            self.values.insert("overflowed".into(), json!(value));
+        }
         if field.name() == "cache_hit" {
             self.cache_hit = value;
         }

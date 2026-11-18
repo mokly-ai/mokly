@@ -8,6 +8,7 @@ use mokly_compare::base_freshness::{Freshness, FreshnessChecks};
 use mokly_compare::base_render::{Changes, ChangesService, GitSourceFactory, selected_base};
 use mokly_compare::base_selection::GitBaseLookup;
 use mokly_compare::comparison::Engine;
+use mokly_compare::comparison_reuse::{ReuseAttempt, ReuseFence};
 use mokly_compare::comparison_types::ComparisonResult;
 use mokly_compare::install_inputs::SystemInstallInputs;
 use mokly_compare::moves::Detector;
@@ -106,6 +107,7 @@ impl Source {
         cancel: Arc<dyn ChangeCancellation>,
         progress: Arc<dyn ChangeProgress>,
     ) -> Result<ComparisonResult> {
+        let comparison = self.comparison_attempt();
         self.pending
             .lock()
             .unwrap_or_else(|error| error.into_inner())
@@ -167,10 +169,7 @@ impl Source {
                     progress,
                 }),
             }),
-            comparison: Arc::new(Engine {
-                moves: Arc::new(Detector),
-                css: Arc::new(MemoryParsedCss::new(64 * 1024 * 1024)),
-            }),
+            comparison,
             steps: Arc::new(RunSteps {
                 progress: self.services.progress.clone(),
                 cancel: cancel.clone(),
@@ -188,6 +187,38 @@ impl Source {
                 source: Box::new(source),
             }),
         }
+    }
+
+    pub(super) fn comparison_attempt(&self) -> Arc<dyn ReuseAttempt> {
+        let comparison = self.services.reuse.begin(
+            Engine {
+                moves: Arc::new(Detector),
+                css: Arc::new(MemoryParsedCss::new(64 * 1024 * 1024)),
+            },
+            self.comparison_fence(),
+        );
+        *self
+            .staging
+            .lock()
+            .unwrap_or_else(|error| error.into_inner()) = Some(comparison.clone());
+        comparison
+    }
+
+    pub(super) fn comparison_fence(&self) -> Option<ReuseFence> {
+        let roots: Vec<_> = self
+            .config
+            .roots
+            .iter()
+            .map(|root| (&root.input, &root.directory, &root.identity))
+            .collect();
+        ReuseFence::new(&(
+            &self.config.input,
+            &self.config.file,
+            &self.config.repo_root,
+            &self.config.authored_inputs,
+            roots,
+            self.services.install_scripts,
+        ))
     }
 
     /// Keep base pool admission and workers on the same detachable lifetime.
