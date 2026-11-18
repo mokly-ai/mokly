@@ -13,7 +13,9 @@ The canonical `overview` screen shows a component page, followed by links to the
 owning child pages outside the artboard. The Pages, Inspection, and States child folders are gallery
 indexes, each with at most five direct owning screens; inspection also links a nested
 selection gallery with two owning screens, and Pages links a nested Stacked
-comparisons gallery with three. The Inspector gallery adds two closed
+comparisons gallery with three. States links nested Additions, Stylesheet
+evidence, Loading and recovery, and Storybook stories galleries with one,
+four, five, and three owning screens. The Inspector gallery adds two closed
 states. Controls has one canonical parent screen with one variant, and
 Editing, States, Published, and Read-only and recovery galleries with five,
 five, two, and five screens. The linked inspector and
@@ -53,13 +55,18 @@ mobile component and desktop component; none is a user-flow page.
 | `design/components/states/loading/usage-failed`             | Usage read failure with a Try again action                      |
 | `design/components/states/loading/props-loading`            | Component Props waiting for the entry's declared order          |
 | `design/components/states/loading/props-failed`             | Props read failure with a Try again action                      |
+| `design/components/states/stories/story-failed`             | Failed story's error document in Current, under All             |
+| `design/components/states/stories/story-failed-changes`     | Failed story's last render Before, error document Current       |
+| `design/components/states/stories/storybook-link`           | Stories file entry linking its story in the published Storybook |
 
 The Loading and recovery folder sits below Empty and change states and holds
-exactly the five `states/loading/` entries. Each entry's files derive from its
+exactly the five `states/loading/` entries. The Storybook stories folder also
+sits below Empty and change states and holds exactly the three
+`states/stories/` entries. Each entry's files derive from its
 path under the [artifact path contract](./mokly-artifact-paths.md): its
 standalone views are `<path>/index.mobile.html` and
 `<path>/index.desktop.html`, and gallery
-membership is the entry's folder. All fifty-one component
+membership is the entry's folder. All fifty-four component
 screens and their two variants opt into light documents, as the shell mockups do. Their
 depicted preview captions name the viewport only, as the shell's do. The
 toolbar has no scheme switch: the catalogue's one Appearance control, drawn in

@@ -24,6 +24,10 @@ export const COMPONENT_PAGES = {
   "props-loading": "design/components/states/loading/props-loading",
   "props-failed": "design/components/states/loading/props-failed",
   "shared-impact": "design/components/states/shared-impact/shared-impact",
+  "story-failed": "design/components/states/stories/story-failed",
+  "story-failed-changes":
+    "design/components/states/stories/story-failed-changes",
+  "storybook-link": "design/components/states/stories/storybook-link",
 } as const satisfies Record<ComponentPageState, string>;
 
 /** Screen inspection states remain separate from the existing Browse subjects. */

@@ -128,6 +128,9 @@
     "design/components/states/shared-impact/shared-impact",
     "design/components/states/shared-impact/style-changed",
     "design/components/states/shared-impact/style-outside",
+    "design/components/states/stories/story-failed",
+    "design/components/states/stories/story-failed-changes",
+    "design/components/states/stories/storybook-link",
     "design/components/states/unavailable",
     "design/components/states/unused"
   ],
