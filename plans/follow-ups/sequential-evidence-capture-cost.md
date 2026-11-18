@@ -5,7 +5,7 @@
 - **Added:** 2026-11-17, from the Milestone 5 measurement of the bundle disk
   cache change, on branch `calummoore/lisbon-h906`.
 - **Location:** `packages/mokly/src/sidecar/physical-inputs.ts:45` to line
-  78, and `packages/mokly/src/sidecar/resolution-evidence.ts:52` to line 53.
+  78, and `packages/mokly/src/sidecar/resolution-evidence.ts:57` to line 58.
 - **Reason:** A change of the capture needs an independent repeated
   measurement first, and the accepted warm-restart and strict-output results
   do not depend on it.
@@ -33,7 +33,7 @@
     call, and it finishes once after the last attempt.
   - The esbuild plugin `mokly-reuse-evidence` awaits `record()` in its
     `onResolve` callback, at
-    `packages/mokly/src/sidecar/resolution-evidence.ts:52` to line 53. So the
+    `packages/mokly/src/sidecar/resolution-evidence.ts:57` to line 58. So the
     observations and the witnesses of a path exist before esbuild resolves
     the import that reads that path. This order keeps stored evidence
     coherent with the files that esbuild selected.

@@ -6,8 +6,8 @@
   bundle disk cache plan on branch `calummoore/lisbon-h906`. The check put
   this limitation outside the scope of that change.
 - **Location:** `packages/mokly/src/sidecar/config-inputs.ts:128` to line 129,
-  `packages/mokly/src/sidecar/config-inputs.ts:24` to line 35, and
-  `packages/mokly/src/sidecar/resolution-evidence.ts:187` to line 249.
+  `packages/mokly/src/sidecar/config-inputs.ts:25` to line 36, and
+  `packages/mokly/src/sidecar/resolution-evidence.ts:213` to line 279.
 - **Reason:** The bundle disk cache change records only relative `extends`
   targets and keeps the safe fallback for other forms, so wider support is
   new work after its merge.
@@ -34,7 +34,7 @@
   - `readConfig` in `packages/mokly/src/sidecar/config-inputs.ts:128` to line
     129 accepts only an `extends` value that starts with `.`. A package name
     or an absolute path throws "unsupported configuration extends".
-  - `scope`, at lines 24 to 35 of the same file, catches that error and marks
+  - `scope`, at lines 25 to 36 of the same file, catches that error and marks
     the evidence incomplete. The recorder takes this safe path for every form
     that it cannot map.
   - The same section of `docs/protocol/mokly-sidecar-modules.md` sets the
@@ -51,7 +51,7 @@
   - `ResolutionEvidence` in
     `packages/mokly/src/sidecar/resolution-evidence.ts` already records the
     package lookup of a bare import. `package`, `targets`, and `exports`, at
-    lines 187 to 249, record each `node_modules` level, the package
+    lines 213 to 279, record each `node_modules` level, the package
     manifest, and the export targets, with absent candidates and link
     targets.
   - On 2026-11-16 a warm head compile of `examples/basic` took 1.5 s or more

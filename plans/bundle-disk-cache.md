@@ -1988,6 +1988,10 @@ First source fix evidence:
 `.context/bundle-disk-cache/reports/review-fix-round-1.md` and
 `.context/bundle-disk-cache/reports/review-fix-round-1.json`.
 
+Combined source and pointer checks:
+`.context/bundle-disk-cache/logs/repository-e8c-fix-r1.json` and
+`.context/bundle-disk-cache/logs/markdown-links-e8c-fix-r1.json`.
+
 ## Post-merge follow-up (non-blocking)
 
 - [ ] Keep the stylesheet cache across restarts, for the CSS Modules class
