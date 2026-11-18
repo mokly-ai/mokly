@@ -12,7 +12,7 @@
   `packages/mokly/src/sidecar/config-inputs.ts:32` to line 45,
   `packages/mokly/src/sidecar/resolution-evidence.ts:192` to line 256,
   `packages/mokly/src/sidecar/serve-edit-paths.ts:88` to line 89, and
-  `packages/mokly/src/sidecar/serve-edit-paths.ts:139` to line 151.
+  `packages/mokly/src/sidecar/serve-edit-paths.ts:142` to line 154.
 - **Reason:** The bundle disk cache change records only relative `extends`
   targets and keeps the safe fallback for other forms, so wider support is
   new work after its merge. The absolute paths fix keeps the marker of a
@@ -101,7 +101,7 @@
     whole, also under a package `extends`. The sidecar cannot use this,
     because its reader stops at the package `extends`.
   - For a chain with a package `extends`, `ServeEditPaths.scope`, at lines
-    139 to 151 of that file, gives no settings, and lines 88 to 89 skip the
+    142 to 154 of that file, gives no settings, and lines 88 to 89 skip the
     import. The compile then adds no folders for any `paths` or `baseUrl` of
     the chain, local or inherited, and it keeps its marker and the live
     checks of `main`. The performance orchestrator chose this on 2026-11-18,

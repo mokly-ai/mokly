@@ -81,14 +81,25 @@ its requests and results. The paths below are relative to the package root.
   the written path after a matched target instead, with no `baseUrl` step.
   `mappedPaths` in
   [`src/sidecar/mapped-paths.ts`](./mapped-paths.ts) gives the targets of the
-  selected key in order, and `mappedSelection` in
-  [`src/sidecar/mapped-selection.ts`](./mapped-selection.ts) places the
-  selected module. `ServeEditPaths.scope` gives no settings for a
-  configuration chain that it cannot read, such as one with a package
-  `extends`, where `readConfig` stops before the local `compilerOptions`. Such
-  an import adds nothing, also for a local `paths` map. A configured selection
-  without a physical file, a selection that the pass cannot place, or staged
-  paths above the 8 MiB `EVIDENCE_LIMIT` make `record` return false.
+  selected key in order. `mappedSelection` in
+  [`src/sidecar/mapped-selection.ts`](./mapped-selection.ts) compares each
+  candidate with the selected module. A candidate file, one of its extension
+  or TypeScript rewrite files, or an `index` file with a resolve extension
+  directly inside the canonical candidate folder proves that candidate, and
+  the pass stops at it. Any other module inside that folder is only
+  contained, because an entry field of the folder's `package.json` or a later
+  candidate can select it. The pass then adds that folder and its
+  `package.json`, and it goes on with the remaining candidates, because it
+  cannot tell which candidate selected the module. When no later candidate
+  proves the module, the containing folder places it. So a compilation keeps
+  its marker when a mapped package folder selects its module through an entry
+  field. `ServeEditPaths.scope` gives no settings for a configuration chain
+  that it cannot read, such as one with a package `extends`, where
+  `readConfig` stops before the local `compilerOptions`. Such an import adds
+  nothing, also for a local `paths` map. A configured selection without a
+  physical file, a selection outside the dependencies that no candidate
+  proves or contains, or staged paths above the 8 MiB `EVIDENCE_LIMIT` make
+  `record` return false.
 - [`src/sidecar/captured-plan.ts`](./captured-plan.ts) holds
   `capturedPlan`, which gives the result of a `full` compile its native plan
   only with complete, durable, and unmarked evidence. The plan and the

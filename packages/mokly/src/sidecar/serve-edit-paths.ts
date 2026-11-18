@@ -89,6 +89,7 @@ export class ServeEditPaths {
           if (!config) continue;
           let configured = false;
           let selected = false;
+          let contained = false;
           for (const base of candidates(config, request.name)) {
             configured = true;
             if (selection.kind === "unknown") return false;
@@ -106,6 +107,7 @@ export class ServeEditPaths {
               selected = true;
               break;
             }
+            if (kind === "contained") contained = true;
             if (
               !stage(directories, base) ||
               !stage(files, path.join(base, "package.json"))
@@ -115,6 +117,7 @@ export class ServeEditPaths {
           if (
             configured &&
             !selected &&
+            !contained &&
             (selection.kind === "unknown" ||
               (!selection.file.split(path.sep).includes("node_modules") &&
                 !paths.dependencyDirectory(selection.file)))

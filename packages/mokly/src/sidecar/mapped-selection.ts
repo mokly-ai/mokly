@@ -25,7 +25,7 @@ export function mappedSelection(
   base: string,
   selected: string,
   configuredExtensions: readonly string[],
-): "file" | "directory" | undefined {
+): "file" | "directory" | "contained" | undefined {
   const extensions = configuredExtensions.length
     ? configuredExtensions
     : [".tsx", ".ts", ".jsx", ".js", ".css", ".json"];
@@ -40,7 +40,14 @@ export function mappedSelection(
   if (files.includes(selected)) return "file";
   const real = canonical(base);
   if (real === selected) return "file";
-  if (real && inside(real, selected)) return "directory";
+  if (real && inside(real, selected)) {
+    const directIndex =
+      path.dirname(selected) === real &&
+      extensions.some(
+        (extension) => path.basename(selected) === `index${extension}`,
+      );
+    return directIndex ? "directory" : "contained";
+  }
   return files.slice(1).some((file) => canonical(file) === selected)
     ? "file"
     : undefined;

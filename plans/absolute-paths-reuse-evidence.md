@@ -263,6 +263,11 @@ Reason: they keep marked reuse correct, use one metadata-edge scan and per-compi
 Do not add a cross-edit cache here. Record that work as a performance follow-up, with exact configuration and candidate invalidation.
 Add the small `sidecar.bundle.mapped-lookups` diagnostic sub-span under the existing timing rules. Measure fixture bundle spans before and after the plugin-edge fix.
 
+Review call of 2026-11-18: apply checked finding 2 option D instead of the first-pass B.
+Distinguish direct file and index proof from containment. A contained selection records its folder and manifest, then continues through every remaining candidate.
+After all candidates are observed, containment can keep the marker. This preserves useful package-folder reuse and the unreadable-chain exception.
+Reason: a descendant does not prove which target selected it. The separate generic package-entry live-input limit stays outside this branch.
+
 ## Milestone 1: Contracts and follow-up record
 
 Depends on: none
@@ -303,6 +308,7 @@ Depends on: 2
 - [x] Commit with Conventional Commits and push the branch.
 - [x] Apply checked review finding 1 option D through a shared metafile edge reader. Cover CSS and style-wrapper selection, and keep JSX markers.
 - [x] Add the approved mapping-scan timing span and performance follow-up. Report fixture bundle-span measurements before and after the plugin-edge fix.
-- [ ] Review the complete local diff against `origin/main` after the push with the implementation-review skill. Apply its finding checks, fixes, and review rounds.
+- [x] Apply checked review finding 2 option D. Cover a contained later target and preserve mapped package-folder reuse.
+- [x] Review the complete local diff against `origin/main` after the push with the implementation-review skill. Apply its finding checks, fixes, and review rounds.
 - [ ] Delete this plan under the plans skill. Keep dated calls and a plan permalink in the pull request description.
 - [ ] Open the pull request into `main`. Wait for final CI with `scripts/ci-wait.sh`. Report to the performance orchestrator and do not merge.

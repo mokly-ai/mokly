@@ -36,7 +36,7 @@
   - The pool runs requests in independent Node workers. Each compile creates a
     fresh runtime key. A complete compilation keeps a deterministic identity
     without that key, at `packages/mokly/src/sidecar/bundle-recipe.ts:144`
-    and under `docs/protocol/mokly-sidecar-recipes.md:94`.
+    and under `docs/protocol/mokly-sidecar-recipes.md:106`.
   - `crates/mokly-sidecar/src/pool_requests.rs:85` to line 92 makes the pool
     record of a new bundle result share any retained compilation with an
     equal recipe. `same_recipe` at `crates/mokly-sidecar/src/compiled.rs:157`

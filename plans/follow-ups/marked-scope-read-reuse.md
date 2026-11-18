@@ -9,8 +9,8 @@
   `calummoore/mokly-absolute-paths-evidence-fix-zqzl`.
 - **Location:** `packages/mokly/src/sidecar/bundle-recipe.ts:61` to line 65,
   `packages/mokly/src/sidecar/serve-edit-imports.ts:60`,
-  `packages/mokly/src/sidecar/serve-edit-paths.ts:38` and line 139 to line
-  151, `packages/mokly/src/sidecar/config-inputs.ts:32` to line 45 and line
+  `packages/mokly/src/sidecar/serve-edit-paths.ts:38` and line 142 to line
+  154, `packages/mokly/src/sidecar/config-inputs.ts:32` to line 45 and line
   128, `packages/mokly/src/sidecar/physical-inputs.ts:97`,
   `packages/mokly/src/sidecar/mapped-selection.ts:24`, and
   `packages/mokly/src/sidecar/measurements.ts:5`.
@@ -52,7 +52,7 @@
       `mappedSelection` at `packages/mokly/src/sidecar/mapped-selection.ts:24`;
     - `stat` of each staged `package.json` candidate.
   - Each pass starts empty. `ServeEditPaths` keeps one scope map and one
-    reader for one compile, at lines 139 to 151 of its file. `ConfigInputs`
+    reader for one compile, at lines 142 to 154 of its file. `ConfigInputs`
     caches a scope only inside its reader, at
     `packages/mokly/src/sidecar/config-inputs.ts:32` to line 45. So each edit
     repeats every read. A metadata read stays within 1 MiB for each file, the

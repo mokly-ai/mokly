@@ -8,9 +8,9 @@
   cold exception. This item then changed from the capture work of that pull
   request to the cold cost that remains.
 - **Location:** `packages/mokly/src/sidecar/physical-inputs.ts:41` to line
-  70, `packages/mokly/src/sidecar/physical-inputs.ts:215` to line 227,
+  70, `packages/mokly/src/sidecar/physical-inputs.ts:221` to line 233,
   `packages/mokly/src/sidecar/bundle-recipe.ts:129`,
-  `packages/mokly/src/sidecar/resolution-evidence.ts:57` to line 58,
+  `packages/mokly/src/sidecar/resolution-evidence.ts:47` to line 48,
   `crates/mokly-sidecar/src/pool_bundle_cache.rs:111` to line 123, and
   `crates/mokly-sidecar/src/pool_requests.rs:144` to line 145.
 - **Reason:** The orchestrator accepted the cold cost for PR #312, and work
@@ -51,7 +51,7 @@
     attempts of one call, and it finishes once after the last attempt.
   - The esbuild plugin `mokly-reuse-evidence` awaits `record()` in its
     `onResolve` callback, at
-    `packages/mokly/src/sidecar/resolution-evidence.ts:57` to line 58. So the
+    `packages/mokly/src/sidecar/resolution-evidence.ts:47` to line 48. So the
     observations and the witnesses of a path exist before esbuild resolves
     the import that reads that path. This order keeps stored evidence
     coherent with the files that esbuild selected.
@@ -75,9 +75,9 @@
     exceeded evidence bound clears `complete`. An exceeded witness or
     preflight bound clears only `durable`.
   - After the last attempt, `PhysicalInputs.finish`, at
-    `packages/mokly/src/sidecar/physical-inputs.ts:215` to line 227, waits for
-    the queue. It runs the physical finish check at line 224, and it finishes
-    the witnesses at line 225. The check reads with synchronous calls, in
+    `packages/mokly/src/sidecar/physical-inputs.ts:221` to line 233, waits for
+    the queue. It runs the physical finish check at line 230, and it finishes
+    the witnesses at line 231. The check reads with synchronous calls, in
     `current` at `packages/mokly/src/sidecar/physical-input-reader.ts:192`.
     `bundleRecipe` awaits the finish at
     `packages/mokly/src/sidecar/bundle-recipe.ts:129`. Then it computes the

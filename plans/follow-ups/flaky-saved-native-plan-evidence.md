@@ -55,7 +55,7 @@
     line 142, takes the evidence from `evidence.finish`. It uses incomplete
     evidence when the call recorded none. It sets `complete` to false when
     `toolchainIdentity` returns no value. Line 190 calls `capturedPlan`.
-  - `packages/mokly/src/sidecar/physical-inputs.ts:225` sets `durable` from
+  - `packages/mokly/src/sidecar/physical-inputs.ts:231` sets `durable` from
     `CaptureDurability.finish`. `physical-inputs.ts` and
     `resolution-evidence.ts` also set `complete` to false in several cases.
   - `CaptureDurability`, in `packages/mokly/src/sidecar/capture-durability.ts`,
