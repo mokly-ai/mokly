@@ -122,7 +122,6 @@ test("evidence dropped for the frame bound gives each compilation a fresh genera
       const [value] = args;
       if (
         typeof value === "string" &&
-        value.startsWith('{"id":') &&
         value.includes('"reuseEvidence":{"complete":true,')
       )
         return 64 * 1024 * 1024 + 1;

@@ -38,6 +38,7 @@ fn definitions() -> Definitions {
 
 fn fresh() -> results::Bundle {
     results::Bundle {
+        plan: None,
         generation: "fresh".into(),
         epoch: 9,
         cache: None,

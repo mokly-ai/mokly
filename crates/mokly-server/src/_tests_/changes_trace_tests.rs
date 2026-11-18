@@ -4,8 +4,8 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use mokly_model::public_metadata::ChangesStatus;
+use mokly_test_support::capture::Trace;
 use tracing::Instrument;
-use tracing_subscriber::layer::SubscriberExt;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::usage_completion::CompletedUsage;
@@ -13,7 +13,7 @@ use crate::usage_completion::CompletedUsage;
 use crate::changes::{ChangeSourceMock, ChangeToken};
 use crate::changes_background::ChangesPass;
 use crate::changes_support::fixture;
-use crate::changes_trace_support::Traces;
+use crate::changes_trace_support::in_runtime;
 use crate::clock::ClockMock;
 use crate::comparison_capture::CapturerMock;
 use crate::comparison_requests::receive;
@@ -161,33 +161,41 @@ async fn capture(case: &str) {
     store.stop().await;
 }
 
-#[tokio::test(start_paused = true)]
-async fn spans_keep_blocking_parents_and_report_only_committed_work_as_ok() {
-    let traces = Traces::default();
-    tracing::subscriber::set_global_default(tracing_subscriber::registry().with(traces.clone()))
-        .unwrap();
-    classify("ready")
-        .instrument(tracing::info_span!("ready"))
-        .await;
-    classify("unavailable")
-        .instrument(tracing::info_span!("unavailable"))
-        .await;
-    classify("replaced")
-        .instrument(tracing::info_span!("replaced"))
-        .await;
-    classify("failed-publication")
-        .instrument(tracing::info_span!("failed-publication"))
-        .await;
-    capture("success")
-        .instrument(tracing::info_span!("success"))
-        .await;
-    capture("failed")
-        .instrument(tracing::info_span!("failed"))
-        .await;
-    capture("late")
-        .instrument(tracing::info_span!("late"))
-        .await;
-    let records = traces.records();
+#[test]
+fn spans_keep_blocking_parents_and_report_only_committed_work_as_ok() {
+    let traces = Trace::default();
+    in_runtime(&traces, async {
+        classify("ready")
+            .instrument(tracing::info_span!("ready"))
+            .await;
+        classify("unavailable")
+            .instrument(tracing::info_span!("unavailable"))
+            .await;
+        classify("replaced")
+            .instrument(tracing::info_span!("replaced"))
+            .await;
+        classify("failed-publication")
+            .instrument(tracing::info_span!("failed-publication"))
+            .await;
+        capture("success")
+            .instrument(tracing::info_span!("success"))
+            .await;
+        capture("failed")
+            .instrument(tracing::info_span!("failed"))
+            .await;
+        capture("late")
+            .instrument(tracing::info_span!("late"))
+            .await;
+    });
+    let records: Vec<_> = [
+        "changes.classify",
+        "review.capture",
+        "review.test",
+        "render.test",
+    ]
+    .into_iter()
+    .flat_map(|name| traces.closed(name))
+    .collect();
     for (name, parent, status) in [
         ("changes.classify", "ready", "ok"),
         ("changes.classify", "unavailable", "ok"),
@@ -199,10 +207,13 @@ async fn spans_keep_blocking_parents_and_report_only_committed_work_as_ok() {
     ] {
         let matching: Vec<_> = records
             .iter()
-            .filter(|record| record.name == name && record.parent == Some(parent))
+            .filter(|record| record.name == name && record.parent_name == Some(parent))
             .collect();
         assert_eq!(matching.len(), 1, "{name} under {parent}: {records:?}");
-        assert_eq!(matching[0].status.as_deref(), Some(status));
+        assert_eq!(
+            matching[0].fields.get("status").map(String::as_str),
+            Some(status)
+        );
     }
     for (name, parent) in [
         ("review.test", "changes.classify"),
@@ -211,7 +222,7 @@ async fn spans_keep_blocking_parents_and_report_only_committed_work_as_ok() {
         assert!(
             records
                 .iter()
-                .any(|record| record.name == name && record.parent == Some(parent)),
+                .any(|record| record.name == name && record.parent_name == Some(parent)),
             "{records:?}"
         );
     }

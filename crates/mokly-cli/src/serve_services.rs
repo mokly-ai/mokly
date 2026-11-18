@@ -111,7 +111,7 @@ impl ServeServices {
             .with_diagnostics(diagnostics),
         );
         let pool = sidecars.pool(None);
-        let mut runtime = (*services.runtime).clone();
+        let mut runtime = (*services.runtime).clone().with_serve_edit_plans();
         runtime.pool = pool.clone();
         let runtime = Arc::new(runtime);
         let head_published = Arc::new(AtomicBool::new(false));

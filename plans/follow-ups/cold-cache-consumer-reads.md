@@ -1,0 +1,34 @@
+# Cold page cache slows synchronous consumer reads
+
+- **Severity:** Low. **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-18, from the measurements of the sidecar bundle JavaScript cuts on `calummoore/mokly-bundle-hot-path-2-1bc5`.
+- **Location:** `packages/mokly/src/sidecar/plugins.ts`, the `onLoad` callback of the `file` namespace.
+- **Reason:** The cut was accepted for its warm-cache gain, and the cold-cache cost needs a measurement of a real cold Serve start before any change.
+
+- **Source:** Implementation.
+- **Category:** Performance.
+- **Terms:**
+  - **Sidecar:** Mokly's Node process under `packages/mokly/src/sidecar` that bundles catalogue modules with esbuild.
+  - **Consumer load:** the esbuild `onLoad` callback that reads each source file and loader asset of the catalogue.
+  - **Page cache:** the operating system's memory copy of recently read files. After a reboot or an eviction, the first read of each file waits on the disk.
+- **Background:**
+  - Since 2026-11-18, each consumer load reads its file with one `readFileSync` call on the main thread. Before, it read with the callback `readFile`, so the thread pool ran up to four reads at the same time.
+  - A failed synchronous read falls back to the callback read, so errors keep their text.
+  - On `mokly-cloud` with a warm page cache, each Serve edit bundle took 338 ms less: 2,160 ms in place of 2,498 ms.
+  - On 2026-11-18, a standalone `bundle()` benchmark ran on the head of the default large React fixture of `scripts/large/`, on a 4-vCPU cloud machine. With a warm page cache, the median bundle took 248 ms less for a Serve edit and 495 ms less with full capture.
+  - In the same benchmark, the page cache was dropped before each bundle, with `echo 3 > /proc/sys/vm/drop_caches`. Over 10 runs for each build, the median rose by 222 ms, from 5,880 ms to 6,102 ms, and the mean by 530 ms, from 5,902 ms to 6,432 ms. Single cold runs ranged from 4.5 s to 8.0 s.
+  - A cold compile is rare. A warm restart restores bundles from the bundle cache and runs no compile, so mainly the first compile after a reboot or an eviction meets a cold page cache.
+- **Problem:** On a cold page cache, the synchronous reads wait on the disk one at a time on the main thread, so a cold compile can take longer than before the cut.
+- **Impact if no action:** The first compile after a reboot can take about 0.2 to 0.5 s longer on a large catalogue, while each warm compile keeps its gain.
+- **Root question:** How can a bundle read its consumer files fast on both a warm and a cold page cache?
+- **Options:**
+  - **A.** Change nothing, and keep the warm-cache gain. Effort: Small.
+  - **B.** Measure one cold Serve start on `mokly-cloud` for both builds, with the bundle cache and the page cache cleared. Change the reads only when the cold cost is material. Effort: Small (estimate).
+  - **C.** Read the files on one reader worker thread that keeps several reads in flight and transfers the bytes back. Compilation and the plugins stay on the main thread. Each file then costs two messages, and the worker needs a lifecycle and error copies with the same text. Effort: Medium (estimate).
+- **Left out:** Callback reads for every load, because they lose the measured warm gain. A cache of file bytes across bundle calls, because a later call must read changed files and the sidecar keeps no read state after a call.
+- **Wider fix:** None. The reads have one owner, the consumer load.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/import-target-realpath-callbacks.md` has the same choice between synchronous calls and thread-pool callbacks for import target checks.
+- **Recommendation:** B. A real cold start shows whether the cost matters before the code grows a worker.
+- **Action:** fix after merge, apply B, because the cut was accepted for its warm gain, and only a cold start measurement can show whether C pays.

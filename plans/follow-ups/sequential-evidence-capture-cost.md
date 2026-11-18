@@ -268,6 +268,9 @@
   - `plans/follow-ups/capture-batch-window.md` records a similar scheduling
     cost of fixed batches when Mokly captures rendered views.
 - **Related:**
+  - `plans/follow-ups/serve-plan-record-start-cost.md`, the same code: a
+    captured compile also counts, returns, and stores its plan. One profile
+    can separate that cost from evidence capture.
   - `plans/follow-ups/in-process-resolution-coherence.md`, the same code: its
     recommended option adds ranking work at this capture boundary. A new
     capture schedule must keep that work possible, and the measurement of

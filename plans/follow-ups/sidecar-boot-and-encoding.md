@@ -58,6 +58,10 @@
   - The [bundle cache](../../docs/protocol/mokly-base-cache.md#bundle-entries)
     of compiled JavaScript: it removes the bundle compile, the larger part of
     the startup time, from a warm restart.
+  - [bundle-response-single-encoding.md](./bundle-response-single-encoding.md):
+    each bundle response is serialized for its size check and again by
+    `jsonText`. On 2026-11-18 the `jsonText` pass of one bundle response took
+    20 to 34 ms on a synthetic Serve edit result with the `mokly-cloud` shape.
 - **Recommendation:** B (estimate). It moves Babel off the startup path
   with no change to output. Measure `hello` and `serve.ready` first, because
   the later performance work changed both.

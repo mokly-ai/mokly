@@ -30,7 +30,7 @@ fn maps_exactly_the_five_supported_targets() {
 #[test]
 fn build_runs_cargo_before_copying_to_the_host_package() {
     let mock = Arc::new(Unimock::new((
-        CommandRunnerRunMock.next_call(matching!((spec) if spec.display().contains("--target x86_64-unknown-linux-gnu") && spec.display().contains("--bin mokly") && spec.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((spec) if spec.display().starts_with("cargo build --locked ") && spec.display().contains("--target x86_64-unknown-linux-gnu") && spec.display().contains("--bin mokly") && spec.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CopyMock.next_call(matching!((source, destination) if *source == Path::new("/workspace/target/native/x86_64-unknown-linux-gnu/debug/mokly") && *destination == Path::new("/workspace/packages/native-linux-x64-gnu/bin/mokly"))).returns(Ok(())),
     )));
     let tasks: &dyn Artifacts = &DefaultArtifacts {

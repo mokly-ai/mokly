@@ -137,6 +137,9 @@ whose evidence holds only the `uncaptured` marker, with `complete` and
 `durable` false and no inputs. `DurableRecipe::new` accepts only a recipe
 whose evidence is captured and durable, with no marker, so no store caller
 can write or read a compilation without a stable capture.
+`DurableRecipe::with_plan` keeps the optional `ResolutionPlan` of the
+compilation beside the recipe, only when the plan and the evidence fit
+`RECORD_BYTES` together.
 `disk_seed_request` builds the `restoreGeneration` request of a stored
 `DurableRecipe`. Live generations keep their `CompiledGeneration` for
 explicit restoration. `mokly-compare` implements the store over the OS cache.
@@ -160,8 +163,10 @@ a successful `bundle` call, the pool compares the runtime key of the result
 with the keys of the seeds and of the generations that the worker already
 holds. It sets the `cache` field of the result, which never
 crosses the wire, to `memory` or `hit` for a reused compilation, or else to
-the reason why the sidecar compiled. A `Full` call then offers the served
-recipe to `save` when its reuse evidence is captured and durable. A
+the reason why the sidecar compiled. When the result holds the restored
+stored compilation, the pool also adds the stored plan of that entry to the
+result. A `Full` call then offers the served recipe, with the plan of the
+result, to `save` when its reuse evidence is captured and durable. A
 `ServeEdit` call offers nothing. The store decides whether to write it. The
 pool keeps no record of earlier store calls, and it calls the store outside
 its mutex. Without a store, the pool reads and writes no entry,
@@ -356,7 +361,9 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [`src/pool_bundle_cache.rs`](./src/pool_bundle_cache.rs) seeds a `bundle`
   call from the bundle store, keeps the request-local provenance of its
   seeds, sets the `cache` outcome of its result, and offers the served recipe
-  of each `Full` call to the store.
+  of each `Full` call to the store. The provenance keeps the runtime key and
+  the plan of a restored stored compilation. A result with that runtime key
+  reports `hit` and carries that plan.
 - [`src/bundle_store.rs`](./src/bundle_store.rs) defines `BundleStore` with
   `load`, `save`, and `invalidate`, its `ReadOutcome` and `WriteOutcome`, and
   `RecordToken`, the id of one publication.
@@ -371,7 +378,15 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [`src/durable_recipe.rs`](./src/durable_recipe.rs) defines `DurableRecipe`,
   the only recipe that the bundle store reads and writes. It admits a
   `ReusableRecipe` only when its reuse evidence is captured and durable, with
-  no marker.
+  no marker. Its `with_plan` keeps an optional plan beside it within the
+  record bound.
+- [`src/resolution_plan.rs`](./src/resolution_plan.rs) defines
+  `ResolutionPlan`, the native import targets of one captured compile, keyed
+  by importer, specifier, and import kind, and `PlannedImport`, one target.
+  `RECORD_BYTES` is the 8 MiB bound of a plan record and of the records that
+  the core keeps. `ResolutionPlan::record_bytes` admits a plan only with
+  captured and durable evidence. `bounded_record_bytes` counts a serialized
+  value within that bound without building it.
 - [`src/capture_hint.rs`](./src/capture_hint.rs) defines `CaptureHint`, the
   private `hello` field that asks the sidecar for capture witnesses, and
   `CaptureVolume`. `CaptureHint::from_volumes` keeps at most 64 volumes from
@@ -395,8 +410,10 @@ spawn the built sidecar and render a component, screen, story, and page. The
   and [`src/wire.rs`](./src/wire.rs) define the request payloads, the result
   payloads, and the envelopes of the wire protocol. `BundleRequest` flattens
   the persisted `Bundle` settings and adds the optional request-only
-  `BundleCapture`, `Full` by default or `ServeEdit`. Pool state, store calls,
-  and restore requests take only the `Bundle` settings. A successful `Response`
+  `BundleCapture`, `Full` by default or `ServeEdit`, and the optional
+  request-only `plan` of a Serve edit. `results::Bundle` carries the optional
+  `plan` beside `compiled`. Pool state, store calls, and restore requests take
+  only the `Bundle` settings. A successful `Response`
   keeps its result as owned raw JSON until `decode_result` decodes the type of
   the pending request. The private [`src/wire_decode.rs`](./src/wire_decode.rs)
   decodes each envelope field by field, with no generic JSON tree.
@@ -419,6 +436,7 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [Sidecar contract](../../docs/protocol/mokly-sidecar.md).
 - [Bundle cache entries](../../docs/protocol/mokly-base-cache.md#bundle-entries).
 - [Compiled recipes and capture modes](../../docs/protocol/mokly-sidecar-recipes.md).
+- [Serve edit plans](../../docs/protocol/mokly-sidecar-plans.md).
 - [Cancellation and timeouts](../../docs/protocol/mokly-sidecar-lifecycle.md).
 - [Memory sampling](../../docs/protocol/mokly-sidecar-memory.md).
 - [Timing records](../../docs/protocol/mokly-sidecar-timings.md).

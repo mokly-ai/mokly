@@ -175,19 +175,32 @@ the packed contents of the package.
   reads framed requests from the binary and writes one response for each.
 - [`src/sidecar/session.ts`](./src/sidecar/session.ts) holds `Session`, which
   dispatches each sidecar request to its method. It removes the request-only
-  `capture` value of a `bundle` request before the reuse check, the compile,
-  the identity, and the restore see the settings. It gives a
+  `capture` and `plan` values of a `bundle` request before the reuse check,
+  the compile, the identity, and the restore see the settings. It gives a
   `CaptureDurability` only to a `full` request.
 - [`src/sidecar/transport.ts`](./src/sidecar/transport.ts) splits and decodes
   the binary's typed requests and limits the size of each response.
 - [`src/sidecar/bundle.ts`](./src/sidecar/bundle.ts) holds `bundle`, which
-  compiles the catalogue modules. esbuild resolves most imports itself, and
+  compiles the catalogue modules. Each call shares its read bytes across
+  attempts, while each attempt keeps its own consumed-file and CSS-module
+  records. esbuild resolves most imports itself, and
   [`src/sidecar/native-plan.ts`](./src/sidecar/native-plan.ts) classifies the
   result. It plans a second compile when esbuild's own resolution would change
-  the bundle. In a `full` call, one evidence owner and one preparation serve
-  every attempt. A `serveEdit` call creates no evidence owner, no evidence
-  plugin, and no durability check. It still records the consumed sources, the
-  module graph, the metadata digests, and the directory lists.
+  the bundle. Its `planNative` keys each planned import by importer,
+  specifier, and import kind, and it reports whether the native compile is
+  exact. A failed native compile compiles again with full resolution. The
+  resolve callback of `consumerPlugins` in
+  [`src/sidecar/plugins.ts`](./src/sidecar/plugins.ts) applies the resolution
+  mode of
+  [`src/sidecar/native-resolution.ts`](./src/sidecar/native-resolution.ts). A
+  planned compile resolves each import outside its plan with the full
+  resolver. A `full` call keeps the native plan, also of an exact native
+  compile. A `serveEdit` call with a plan runs one planned compile with that
+  plan and no native compile. In a `full` call, one evidence owner and one
+  preparation serve every attempt. A `serveEdit` call creates no evidence
+  owner, no evidence plugin, and no durability check. It still records the
+  consumed sources, the module graph, the metadata digests, and the directory
+  lists.
   [`src/sidecar/bundle-entry.ts`](./src/sidecar/bundle-entry.ts) builds the
   virtual entry module. Without a captured preview selection, a `serveEdit`
   call selects only a regular preview file.
@@ -197,9 +210,15 @@ the packed contents of the package.
   the compilation identity. An incomplete recipe gets a fresh identity, also
   when `checkRecipeSize` in
   [`src/sidecar/recipe-size.ts`](./src/sidecar/recipe-size.ts) drops its
-  evidence to fit a frame. A `serveEdit` compile gets empty, incomplete
-  evidence with the `uncaptured: "serveEdit"` marker. A compile without a
-  toolchain identity gets no marker.
+  evidence to fit a frame. `checkRecipeSize` drops the optional plan of the
+  result before it drops the evidence. A `serveEdit` compile gets empty,
+  incomplete evidence with the `uncaptured: "serveEdit"` marker. A compile
+  without a toolchain identity gets no marker.
+- [`src/sidecar/captured-plan.ts`](./src/sidecar/captured-plan.ts) holds
+  `capturedPlan`, which gives the result of a `full` compile its native plan
+  only with complete, durable, and unmarked evidence. The plan and the
+  evidence must fit 8 MiB together. It counts their JSON bytes without
+  building an oversized string.
 - [`src/sidecar/compiled.ts`](./src/sidecar/compiled.ts) holds `reuse`, which
   accepts an earlier compilation only while its settings, dependency roots,
   toolchain, input digests, and directory lists still match. It tries the

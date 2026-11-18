@@ -12,6 +12,7 @@ import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration
 import type { Definitions } from "../generated/sidecar/Definitions.js";
 import type { EntryBinding } from "../generated/sidecar/EntryBinding.js";
 import type { Module } from "../generated/sidecar/Module.js";
+import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
 
 import { entryModule } from "./bundle-entry.js";
 import { bundleDetail } from "./bundle-errors.js";
@@ -24,7 +25,7 @@ import type { Measurements } from "./measurements.js";
 import { ModulePaths } from "./module-paths.js";
 import { planNative } from "./native-plan.js";
 import { nativeLogOverride } from "./native-resolution.js";
-import type { PlannedImport, Resolution } from "./native-resolution.js";
+import type { Resolution } from "./native-resolution.js";
 import { consumerRequire } from "./paths.js";
 import { consumerPlugins } from "./plugins.js";
 import { ResolutionEvidence } from "./resolution-evidence.js";
@@ -71,15 +72,17 @@ interface NativeOutcome {
 
 interface BundleCaptureState {
   mode: BundleCapture;
+  reads: Map<string, Uint8Array>;
   durability?: CaptureDurability | undefined;
   evidence?: ResolutionEvidence;
   preview?: string | null | undefined;
+  plan?: ReadonlyMap<string, PlannedImport>;
 }
 
 /**
- * Compile with native resolution first. A native result that a resolve
- * callback result could not reproduce compiles again from its plan, and a
- * failed native compile compiles again on the full path.
+ * Compile directly from a requested edit plan, or start with native resolution.
+ * A native result that a resolve callback could not reproduce compiles again
+ * from its plan. A failed native compile compiles again on the full path.
  */
 export async function bundle(
   params: BundleParams,
@@ -87,11 +90,24 @@ export async function bundle(
   measurements: Measurements = unmeasured,
   durability?: CaptureDurability,
   captureMode: BundleCapture = "full",
+  requestedPlan?: BundleResult["plan"],
 ): Promise<Bundled> {
   const capture: BundleCaptureState = {
     mode: captureMode,
+    reads: new Map(),
     ...(captureMode === "full" ? { durability } : {}),
   };
+  if (captureMode === "serveEdit" && requestedPlan)
+    return bundleAttempt(
+      params,
+      compile,
+      measurements,
+      {
+        mode: "planned",
+        plan: new Map(Object.entries(requestedPlan.imports)),
+      },
+      capture,
+    );
   const native = await bundleAttempt(
     params,
     compile,
@@ -130,6 +146,7 @@ export async function bundleWith(
 ): Promise<Bundled | NativeOutcome> {
   return bundleAttempt(params, compile, measurements, resolution, {
     mode: "full",
+    reads: new Map(),
   });
 }
 
@@ -226,6 +243,7 @@ async function bundleAttempt(
           paths,
           runtimeKey,
           resolution,
+          capture.reads,
         ),
       ],
       ...resolutionOptions(params.sourceRoot, settings),
@@ -246,6 +264,7 @@ async function bundleAttempt(
         .run("sidecar.bundle.classify", () => planNative(metafile, paths))
         .catch(() => undefined);
       if (!plan) return {};
+      if (capture.mode === "full") capture.plan = plan.imports;
       if (!plan.exact) return { plan: plan.imports };
     }
     return await bundleRecipe(
@@ -260,6 +279,7 @@ async function bundleAttempt(
         runtimeKey,
         evidence,
         capture: capture.mode,
+        plan: capture.plan,
       },
       measurements,
     );

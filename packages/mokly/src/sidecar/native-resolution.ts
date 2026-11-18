@@ -1,13 +1,9 @@
 import type { OnResolveArgs } from "esbuild";
 
+import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
+
 import type { ModulePaths } from "./module-paths.js";
 import { bareSpecifier } from "./specifier.js";
-
-/** The module and the esbuild side-effects flag of one planned import. */
-export interface PlannedImport {
-  path: string;
-  sideEffects: boolean;
-}
 
 /**
  * How the consumer plugin resolves imports. `native` lets esbuild resolve

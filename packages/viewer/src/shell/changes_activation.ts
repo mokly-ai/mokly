@@ -6,7 +6,11 @@ import type { ViewerSelection } from "../host/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
-import { catalogueNavSections, navLeafVisible } from "./nav_model.js";
+import {
+  catalogueNavSections,
+  navEntryRow,
+  navLeafVisible,
+} from "./nav_model.js";
 import type { NavLeafNode, NavNode } from "./nav_tree.js";
 import type { ShellRoute } from "./routes.js";
 import { workspaceData } from "./workspace_data.js";
@@ -102,10 +106,7 @@ function firstVisibleChangedEntry(
   selection: ViewerSelection,
   container: ShellCatalogueRoutedEntry,
 ): ChangedDestination | undefined {
-  const row = containerRow(
-    catalogueNavSections(catalogue).flatMap(({ children }) => children),
-    `entry:${container.path}`,
-  );
+  const row = navEntryRow(catalogueNavSections(catalogue), container.path);
   for (const listed of row ? listedRows(row) : []) {
     if (!navLeafVisible(listed, selection, context)) continue;
     const entry = resolveCatalogueSelection(
@@ -118,22 +119,6 @@ function firstVisibleChangedEntry(
         entry,
         ...(listed.snapshotId ? { snapshotId: listed.snapshotId } : {}),
       };
-  }
-  return undefined;
-}
-
-/** The row for one current entry, wherever a folder or member list holds it. */
-function containerRow(
-  nodes: readonly NavNode[],
-  key: string,
-): NavLeafNode | undefined {
-  for (const node of nodes) {
-    if (node.kind === "leaf" && node.key === key) return node;
-    const found = containerRow(
-      node.kind === "group" ? node.children : (node.members ?? []),
-      key,
-    );
-    if (found) return found;
   }
   return undefined;
 }

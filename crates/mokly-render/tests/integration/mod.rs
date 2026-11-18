@@ -17,6 +17,8 @@ mod lazy_tests;
 mod owned_catalogue_tests;
 mod owned_rule_tests;
 mod ownership_tests;
+mod plan_invalidation_tests;
+mod plan_support;
 mod postcss_contract_tests;
 mod process_counts;
 mod rebuild_tests;

@@ -9,15 +9,12 @@ use mokly_sidecar::methods::{Bundle, BundleCapture};
 use mokly_sidecar::pool::PoolMock;
 use mokly_sidecar::results;
 use mokly_sidecar::wire::MethodResult;
+use mokly_test_support::capture::Trace;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::bundle_attempt::{request, served};
 use crate::leases::BundleLease;
 use crate::runtime::Runtime;
-
-#[path = "bundle_trace_capture.rs"]
-mod bundle_trace_capture;
-use bundle_trace_capture::Capture;
 
 fn params() -> Bundle {
     Bundle {
@@ -34,6 +31,7 @@ fn params() -> Bundle {
 
 fn result(cache: CacheOutcome) -> MethodResult {
     MethodResult::Bundle(Box::new(results::Bundle {
+        plan: None,
         generation: "generation".into(),
         epoch: 7,
         cache: Some(cache),
@@ -78,7 +76,7 @@ fn runtime(pool: Unimock) -> Runtime {
 
 #[test]
 fn actual_bundle_requests_record_the_cache_outcome_and_success_status() {
-    let capture = Capture::default();
+    let capture = Trace::default();
     for (cache, expected) in [
         (CacheOutcome::Hit, "hit"),
         (CacheOutcome::Memory, "memory"),
@@ -96,25 +94,29 @@ fn actual_bundle_requests_record_the_cache_outcome_and_success_status() {
                 .some_call(matching!("generation", 7))
                 .returns(()),
         )));
-        tracing::subscriber::with_default(capture.clone(), || {
+        capture.in_scope(|| {
             let (result, lease) = request(&runtime, &params()).unwrap();
             assert_eq!(result.generation, "generation");
             assert_eq!(lease.epoch, 7);
         });
+        let spans = capture.spans();
+        for span in &spans {
+            assert_eq!(span.name, "catalogue.bundle");
+        }
         assert_eq!(
-            capture.fields().last().unwrap(),
+            &spans.last().unwrap().fields,
             &BTreeMap::from([
                 ("cache".into(), expected.into()),
                 ("status".into(), "ok".into()),
             ])
         );
     }
-    assert_eq!(capture.fields().len(), 7);
+    assert_eq!(capture.spans().len(), 7);
 }
 
 #[test]
 fn direct_serves_notify_only_for_full_capture_without_creating_bundle_request_spans() {
-    let capture = Capture::default();
+    let capture = Trace::default();
     let notices = Arc::new(Mutex::new(Vec::new()));
     let recorded = notices.clone();
     let mut runtime = runtime(Unimock::new((
@@ -135,7 +137,7 @@ fn direct_serves_notify_only_for_full_capture_without_creating_bundle_request_sp
         epoch: 7,
         pool: runtime.pool.clone(),
     };
-    tracing::subscriber::with_default(capture.clone(), || {
+    capture.in_scope(|| {
         runtime.bundle_capture = BundleCapture::ServeEdit;
         served(&runtime, &lease);
         assert_eq!(*notices.lock().unwrap(), Vec::<(String, u64)>::new());
@@ -143,5 +145,5 @@ fn direct_serves_notify_only_for_full_capture_without_creating_bundle_request_sp
         served(&runtime, &lease);
         assert_eq!(*notices.lock().unwrap(), [("generation".to_owned(), 7)]);
     });
-    assert_eq!(capture.fields().len(), 0);
+    assert_eq!(capture.spans().len(), 0);
 }

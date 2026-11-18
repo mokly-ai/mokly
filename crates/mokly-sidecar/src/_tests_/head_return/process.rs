@@ -134,6 +134,7 @@ fn worker(
                 }
                 Ok(match &request.call {
                     Call::Bundle(params) => MethodResult::Bundle(Box::new(results::Bundle {
+                        plan: None,
                         generation: params.params.entry_files[0].clone(),
                         epoch: 0,
                         cache: None,

@@ -82,7 +82,11 @@ namespace. Each entry streams as one file through `BundleInput` and
 `RawEntry`, with bounded receipt and inventory values. The codec writes a
 versioned header line and a typed payload, hashes the payload while it
 streams, and checks the size of the whole file and of the exact
-`restoreGeneration` request against their limits. The inventory, storage, and
+`restoreGeneration` request against their limits. The payload can keep the
+optional plan of the compilation beside the recipe. When the file with the
+plan would pass its limit, the codec writes the entry without the plan. A
+`load` hit attaches a stored plan through `DurableRecipe::with_plan`, which
+drops a plan above the record bound. The inventory, storage, and
 receipt code confines every path, bounds each scan, writes durable receipts,
 and draws the publication nonce. Each bundle receipt also holds
 `runtimeDigest`, the 32-byte SHA-256 digest of the runtime key of its
@@ -448,7 +452,9 @@ development dependencies, and no test uses the internet.
 - [`src/bundle_codec.rs`](./src/bundle_codec.rs) and its read and write
   modules encode the versioned header and the typed payload, stream the
   hashes, and check the file and request sizes. They write and decode only a
-  `DurableRecipe`.
+  `DurableRecipe`. The payload's `StoredGeneration` keeps an optional
+  `ResolutionPlan` beside the restore fields. `Codec::encode` writes again
+  without the plan when the file with it would not fit.
 - [`src/bundle_inventory.rs`](./src/bundle_inventory.rs),
   [`src/bundle_storage.rs`](./src/bundle_storage.rs), and
   [`src/bundle_receipts.rs`](./src/bundle_receipts.rs) hold the confined IO,
@@ -486,6 +492,7 @@ development dependencies, and no test uses the internet.
   [Changes serving](../../docs/protocol/mokly-changes-serving.md).
 - [Base preparation](../../docs/protocol/mokly-base-preparation.md),
   [base cache](../../docs/protocol/mokly-base-cache.md),
+  [Serve edit plans](../../docs/protocol/mokly-sidecar-plans.md),
   [dependency installation](../../docs/protocol/mokly-base-dependencies.md),
   and [install processes](../../docs/protocol/mokly-base-install-processes.md).
 - [Package selection](../../docs/protocol/mokly-comparison-packages.md).

@@ -96,6 +96,7 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
                 if Path::new(&bundle.params.source_root) == Path::new("/base")
                     && bundle.params.entry_files == ["specs/card.mockup.ts"])))
             .returns(Ok(MethodResult::Bundle(Box::new(Bundle {
+                plan: None,
                 cache: None,
                 unmapped_dependency_directories: None,
                 epoch: 0,

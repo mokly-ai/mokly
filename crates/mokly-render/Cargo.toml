@@ -15,7 +15,7 @@ mokly-graph = { workspace = true }
 mokly-sidecar = { workspace = true }
 mokly-source-interface = { workspace = true }
 mokly-compare = { workspace = true }
-serde = { version = "1.0.229", features = ["derive"] }
+serde = { version = "1.0.229", features = ["derive", "rc"] }
 serde_json = "1.0.154"
 thiserror = "2.0.21"
 tracing = "0.1.44"
@@ -27,6 +27,7 @@ unimock = { version = "0.6.8", optional = true }
 mock = ["dep:unimock"]
 
 [dev-dependencies]
+mokly-test-support = { workspace = true }
 mokly-compare = { workspace = true, features = ["mock"] }
 mokly-git = { workspace = true, features = ["mock"] }
 mokly-css = { workspace = true, features = ["mock"] }

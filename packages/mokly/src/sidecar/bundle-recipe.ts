@@ -7,11 +7,13 @@ import type { BuildResult } from "esbuild";
 import type { BundleCapture } from "../generated/sidecar/BundleCapture.js";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration.js";
+import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
 import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
 import { previewCandidates } from "./bundle-entry.js";
 import { moduleGraph } from "./bundle-graph.js";
 import type { Bundled } from "./bundle.js";
+import { capturedPlan } from "./captured-plan.js";
 import { bundleResult, generationId, restore } from "./compiled.js";
 import { metadataDigest } from "./file-digests.js";
 import type { Measurements } from "./measurements.js";
@@ -33,6 +35,7 @@ export interface CompiledBundle {
   runtimeKey: string;
   evidence: ResolutionEvidence | undefined;
   capture: BundleCapture;
+  plan: ReadonlyMap<string, PlannedImport> | undefined;
 }
 
 /** The module graph, consumed digests, resolution inputs, and the recipe. */
@@ -48,6 +51,7 @@ export async function bundleRecipe(
     runtimeKey,
     evidence,
     capture,
+    plan,
   }: CompiledBundle,
   measurements: Measurements,
 ): Promise<Bundled> {
@@ -175,7 +179,7 @@ export async function bundleRecipe(
     metadataInputs,
   };
   const generation = restore(params, compilation, graph);
-  const result = bundleResult(generation);
+  const result = bundleResult(generation, capturedPlan(plan, reuseEvidence));
   if (reusable && !compilation.reuseEvidence.complete) {
     compilation.identity = createHash("sha256")
       .update(compilation.identity)
