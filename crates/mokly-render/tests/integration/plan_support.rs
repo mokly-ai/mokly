@@ -129,6 +129,7 @@ impl Fixture {
             input: Config::default(),
             file: self.root.join("mokly.config.json"),
             repo_root: self.root.clone(),
+            modules: Default::default(),
             authored_inputs: vec![],
             roots: vec![],
         };

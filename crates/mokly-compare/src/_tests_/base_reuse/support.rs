@@ -22,6 +22,7 @@ pub(super) fn config() -> ResolvedConfig {
         repo_root: "/repo".into(),
         file: "/repo/mokly.config.json".into(),
         roots: Vec::new(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
     }
 }

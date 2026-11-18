@@ -5,7 +5,7 @@ use std::path::Path;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
-use mokly_catalogue::config_types::{Config, ResolvedConfig};
+use mokly_catalogue::config_types::{Config, ResolvedConfig, ResolvedModules};
 use mokly_catalogue::definition_provider::DefinitionProvider;
 use mokly_css::types::StylesheetRoot;
 use mokly_graph::cache::MemoryCache;
@@ -141,6 +141,10 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
         roots: vec![],
+        modules: ResolvedModules {
+            renderer: Some("renderer.tsx".into()),
+            ..Default::default()
+        },
         authored_inputs: vec![],
     };
     let provider: &dyn DefinitionProvider = &runtime;

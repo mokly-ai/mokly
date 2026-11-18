@@ -32,8 +32,8 @@ The adapter preserves control and prop declaration order for the entry detail.
 Non-data inference warnings use the final entry path. Props diagnostics carry
 their detail separately from the module-and-export location, so Rust prints
 one location before the diagnostic code. Bundle requests name the renderer by
-`ResolvedConfig::renderer`, the repository-relative path without `.`, `..`, or
-empty segments. The render input keys and the stylesheet roots use the same
+`ResolvedConfig::renderer`, the resolved repository-relative path under which
+the module graph names it. Render input keys and stylesheet roots use the same
 renderer path. PostCSS requests carry logical stylesheet paths; the worker
 resolves their physical input on the chosen side. Each PostCSS request names
 the PostCSS module by `ResolvedConfig::postcss`, in the same form as the

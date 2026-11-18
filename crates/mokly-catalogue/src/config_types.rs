@@ -159,10 +159,21 @@ pub struct ResolvedConfig {
     pub file: PathBuf,
     /// Canonical repository identity.
     pub repo_root: PathBuf,
+    /// Configured modules under their resolved repository-relative source identities.
+    pub modules: ResolvedModules,
     /// Confined config, module, and local stylesheet sources, with physical aliases.
     pub authored_inputs: Vec<PathBuf>,
     /// Root definitions with their lexical and physical directories.
     pub roots: Vec<ResolvedRoot>,
+}
+
+/// Configured module identities after lexical normalization and source-tree projection.
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct ResolvedModules {
+    /// Renderer module's repository-relative POSIX identity.
+    pub renderer: Option<String>,
+    /// PostCSS module's repository-relative POSIX identity.
+    pub postcss: Option<String>,
 }
 
 /// One root with its projected physical identity.

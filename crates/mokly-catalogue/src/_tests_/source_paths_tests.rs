@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use unimock::{MockFn, Unimock, matching};
 
-use crate::config_types::{Config, ResolvedConfig};
+use crate::config_types::{Config, ResolvedConfig, ResolvedModules};
 use crate::definition_provider::{DefinitionProviderMock, Definitions};
 use crate::discovery::{DiscoveryMock, Inventory};
 use crate::error::CatalogueError;
@@ -35,6 +35,10 @@ fn rooted_provider_sources_fail_before_projection() {
             },
             file: "/repo/mokly.config.json".into(),
             repo_root: "/repo".into(),
+            modules: ResolvedModules {
+                renderer: Some("renderer.tsx".into()),
+                ..Default::default()
+            },
             authored_inputs: Vec::new(),
             roots: Vec::new(),
         };
