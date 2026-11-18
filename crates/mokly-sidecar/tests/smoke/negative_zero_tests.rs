@@ -22,6 +22,7 @@ fn negative_zero_survives_definitions_and_render_requests() {
         .unwrap();
     let MethodResult::Bundle(bundled) = pool
         .request(Call::Bundle(BundleRequest {
+            plan: None,
             params: Bundle {
                 evaluation: None,
                 entry_files: vec!["negative-zero.mockup.tsx".into()],

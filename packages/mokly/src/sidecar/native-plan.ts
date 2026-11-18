@@ -2,10 +2,11 @@ import path from "node:path";
 
 import type { Metafile, OnResolveArgs, OnResolveResult } from "esbuild";
 
+import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
+
 import { detail } from "./errors.js";
 import type { ModulePaths } from "./module-paths.js";
 import { nativeImport, planKey } from "./native-resolution.js";
-import type { PlannedImport } from "./native-resolution.js";
 import { PackageScope } from "./package-scope.js";
 
 interface Target extends PlannedImport {

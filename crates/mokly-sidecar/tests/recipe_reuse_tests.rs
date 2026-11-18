@@ -37,6 +37,7 @@ impl Diagnostics for Counts {
 fn bundle(pool: &Pool, params: &Bundle) -> results::Bundle {
     let MethodResult::Bundle(result) = pool
         .request(Call::Bundle(BundleRequest {
+            plan: None,
             params: params.clone(),
             capture: None,
         }))

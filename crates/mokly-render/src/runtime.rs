@@ -24,6 +24,7 @@ use mokly_source_interface::tree::SourceTree;
 
 use crate::bundle::BundleState;
 use crate::dependency_usage::{DependencyUsage, UsedDependencies};
+use crate::edit_plans::Records;
 use crate::graph::JavaScriptGraph;
 use crate::leases::PreparedLease;
 use crate::physical_inputs::PhysicalInputs;
@@ -67,9 +68,18 @@ pub struct Runtime {
     pub(crate) describing: Arc<Mutex<()>>,
     pub(crate) css: Arc<Mutex<CssCache>>,
     pub(crate) bundles: Arc<Mutex<BTreeMap<String, Weak<BundleState>>>>,
+    pub(crate) edit_plans: Option<Arc<Mutex<Records>>>,
 }
 
 impl Runtime {
+    /// Keep bounded captured plans for the head preparations of one Serve command.
+    pub fn with_serve_edit_plans(mut self) -> Self {
+        if self.base.is_none() && self.edit_plans.is_none() {
+            self.edit_plans = Some(Arc::new(Mutex::new(Records::default())));
+        }
+        self
+    }
+
     /// Clone the factories over one attempt's source snapshot and shared runtime caches.
     pub fn with_tree(&self, tree: Arc<dyn SourceTree>) -> Self {
         let mut runtime = self.clone();
@@ -122,6 +132,7 @@ impl Runtime {
             describing: Arc::new(Mutex::new(())),
             css: Arc::new(Mutex::new(CssCache::default())),
             bundles: Arc::new(Mutex::new(BTreeMap::new())),
+            edit_plans: None,
         }
     }
 

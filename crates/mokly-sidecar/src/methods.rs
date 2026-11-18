@@ -1,6 +1,7 @@
 //! Request payloads for every sidecar method.
 
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -9,6 +10,7 @@ use ts_rs::TS;
 use crate::bindings::{Bindings, DisposeContext, EntryBinding, SlotInput};
 use crate::capture_hint::CaptureHint;
 use crate::compiled::RestoreGeneration;
+use crate::resolution_plan::ResolutionPlan;
 
 /// A request with no method parameters.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
@@ -97,6 +99,10 @@ pub struct BundleRequest {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub capture: Option<BundleCapture>,
+    /// Current captured targets for this Serve edit only, never persisted settings.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub plan: Option<Arc<ResolutionPlan>>,
 }
 
 /// Preview colour scheme.

@@ -1,6 +1,7 @@
 //! Pool cache tests use real pool entry points with mocked workers and stores.
 
 mod order_tests;
+mod plan_tests;
 mod recovery_tests;
 mod restore_tests;
 mod write_tests;
@@ -47,6 +48,7 @@ fn compilation(id: &str, complete: bool) -> CompiledGeneration {
 
 fn answer(id: &str) -> MethodResult {
     MethodResult::Bundle(Box::new(results::Bundle {
+        plan: None,
         generation: id.into(),
         compiled: Arc::new(compilation(id, true)),
         cache: None,
@@ -159,6 +161,7 @@ fn live(pool: &Pool, id: &str, epoch: u64, complete: bool, installed: bool) {
 fn bundle(pool: &Pool) -> results::Bundle {
     let MethodResult::Bundle(result) = pool
         .request(Call::Bundle(BundleRequest {
+            plan: None,
             params: params(),
             capture: None,
         }))

@@ -15,6 +15,7 @@ use crate::workers::{FactoryMock, Spawned, WorkerMock};
 
 fn bundle() -> Call {
     Call::Bundle(BundleRequest {
+        plan: None,
         params: Bundle {
             evaluation: None,
             entry_files: vec![],
@@ -39,6 +40,7 @@ fn a_late_old_epoch_release_preserves_the_same_ids_new_lifetime() {
             .next_call(matching!((request, _) if matches!(request.call, Call::Bundle(_))))
             .answers(&|_, _, _| {
                 Ok(MethodResult::Bundle(Box::new(results::Bundle {
+                    plan: None,
                     unmapped_dependency_directories: None,
                     epoch: 0,
                     cache: None,

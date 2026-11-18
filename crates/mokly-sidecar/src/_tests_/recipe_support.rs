@@ -104,6 +104,7 @@ impl Fixture {
                         Call::Bundle(params) => {
                             let id = params.params.evaluation.as_deref().unwrap();
                             MethodResult::Bundle(Box::new(results::Bundle {
+                                plan: None,
                                 generation: id.into(),
                                 compiled: Arc::new(compiled(
                                     id,
@@ -189,6 +190,7 @@ impl Fixture {
         let MethodResult::Bundle(result) = self
             .pool
             .request(Call::Bundle(BundleRequest {
+                plan: None,
                 params: settings(entry, id),
                 capture: Some(capture),
             }))

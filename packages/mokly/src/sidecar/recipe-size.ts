@@ -25,6 +25,10 @@ export function checkRecipeSize(
   limit = FRAME_LIMIT,
 ): void {
   const bytes = recipeBytes(params, result);
+  if (bytes > limit && result.plan) {
+    delete result.plan;
+    return checkRecipeSize(params, result, limit);
+  }
   if (
     bytes > limit &&
     Object.keys(result.compiled.reuseEvidence.inputs).length

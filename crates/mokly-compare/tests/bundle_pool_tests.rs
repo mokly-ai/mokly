@@ -8,13 +8,15 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use mokly_compare::bundle_store::CachedBundles;
 use mokly_platform::processes::SystemProcessGroups;
 use mokly_sidecar::bundle_outcomes::CacheOutcome;
-use mokly_sidecar::methods::{Bundle, BundleRequest, Call};
+use mokly_sidecar::compiled::UncapturedEvidence;
+use mokly_sidecar::methods::{Bundle, BundleCapture, BundleRequest, Call};
 use mokly_sidecar::operations::Operation;
 use mokly_sidecar::pool::{Pool, SidecarPool};
 use mokly_sidecar::pool_options::{Launch, PoolOptions};
 use mokly_sidecar::process_clock::SystemClock;
 use mokly_sidecar::process_factory::NodeFactory;
 use mokly_sidecar::process_memory::SystemMemory;
+use mokly_sidecar::resolution_plan::ResolutionPlan;
 use mokly_sidecar::results;
 use mokly_sidecar::workers::Diagnostics;
 
@@ -72,6 +74,7 @@ fn pool(source: &Path, cache: &Path, counts: Arc<Counts>) -> Pool {
 
 fn bundle(pool: &Pool, source: &Path) -> results::Bundle {
     pool.request(Call::Bundle(BundleRequest {
+        plan: None,
         params: Bundle {
             evaluation: None,
             entry_files: vec!["entry.ts".into()],
@@ -86,6 +89,82 @@ fn bundle(pool: &Pool, source: &Path) -> results::Bundle {
     }))
     .unwrap()
     .into_bundle()
+}
+
+fn edit(pool: &Pool, source: &Path, plan: Option<Arc<ResolutionPlan>>) -> results::Bundle {
+    pool.request(Call::Bundle(BundleRequest {
+        plan,
+        capture: Some(BundleCapture::ServeEdit),
+        params: Bundle {
+            evaluation: None,
+            entry_files: vec!["entry.ts".into()],
+            renderer: None,
+            stories_files: vec![],
+            source_root: source.to_string_lossy().into_owned(),
+            configuration_directory: ".".into(),
+            repository_roots: vec![],
+            module_resolution: Default::default(),
+        },
+    }))
+    .unwrap()
+    .into_bundle()
+}
+
+fn edit_fingerprint(mut result: results::Bundle) -> Vec<u8> {
+    result.generation = "fresh edit".into();
+    let compiled = Arc::make_mut(&mut result.compiled);
+    compiled.code = compiled
+        .code
+        .replace(&compiled.runtime_key, "mokly:runtime");
+    compiled.runtime_key = "mokly:runtime".into();
+    compiled.identity = "fresh edit".into();
+    serde_json::to_vec(&result).unwrap()
+}
+
+#[test]
+fn a_warm_inexact_compilation_supplies_the_first_edit_plan_with_one_attempt_and_equal_output() {
+    let temporary = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
+    let root = dunce::canonicalize(temporary.path()).unwrap();
+    let source = root.join("source");
+    let cache = root.join("cache");
+    fs::create_dir(&source).unwrap();
+    fs::create_dir(&cache).unwrap();
+    fs::write(source.join("package.json"), "{}").unwrap();
+    fs::write(
+        source.join("tsconfig.json"),
+        r#"{"compilerOptions":{"strict":true}}"#,
+    )
+    .unwrap();
+    fs::write(source.join("entry.ts"), "export {value} from './value.ts';").unwrap();
+    fs::write(source.join("value.ts"), "export const value='original';").unwrap();
+    let first_counts = Arc::new(Counts::default());
+    let first = pool(&source, &cache, first_counts.clone());
+    let captured = bundle(&first, &source);
+    assert_eq!(first_counts.0.load(Ordering::SeqCst), 2);
+    assert_eq!(captured.plan.as_ref().unwrap().imports.len(), 2);
+    first.shutdown().unwrap();
+    let counts = Arc::new(Counts::default());
+    let warm = pool(&source, &cache, counts.clone());
+    let accepted = bundle(&warm, &source);
+    assert_eq!(accepted.cache, Some(CacheOutcome::Hit));
+    assert_eq!(accepted.compiled.runtime_key, captured.compiled.runtime_key);
+    assert_eq!(accepted.plan, captured.plan);
+    assert_eq!(counts.0.load(Ordering::SeqCst), 0);
+    fs::write(source.join("value.ts"), "export const value='edited';").unwrap();
+    let planned = edit(&warm, &source, accepted.plan);
+    assert_eq!(counts.0.load(Ordering::SeqCst), 1);
+    assert_eq!(
+        planned.compiled.reuse_evidence.uncaptured,
+        Some(UncapturedEvidence::ServeEdit)
+    );
+    assert_eq!(planned.plan, None);
+    let oracle_counts = Arc::new(Counts::default());
+    let oracle = pool(&source, &cache, oracle_counts.clone());
+    let native = edit(&oracle, &source, None);
+    assert_eq!(oracle_counts.0.load(Ordering::SeqCst), 2);
+    assert_eq!(edit_fingerprint(planned), edit_fingerprint(native));
+    oracle.shutdown().unwrap();
+    warm.shutdown().unwrap();
 }
 
 #[test]
