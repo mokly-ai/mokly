@@ -79,9 +79,9 @@ interface BundleCaptureState {
 }
 
 /**
- * Compile with native resolution first. A native result that a resolve
- * callback result could not reproduce compiles again from its plan, and a
- * failed native compile compiles again on the full path.
+ * Compile directly from a requested edit plan, or start with native resolution.
+ * A native result that a resolve callback could not reproduce compiles again
+ * from its plan. A failed native compile compiles again on the full path.
  */
 export async function bundle(
   params: BundleParams,

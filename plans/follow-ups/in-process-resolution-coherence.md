@@ -251,7 +251,10 @@
     Its tests are "a preview edit during compilation cannot replace its
     consumed digest" and "an imported manifest restored during compilation
     keeps its consumed digest", in the same file.
-- **Related:** `plans/follow-ups/sequential-evidence-capture-cost.md` measures
+- **Related:** `plans/follow-ups/serve-plan-editor-invalidation.md` considers
+  narrower directory evidence. Its choice must still detect the two
+  stale-selection windows in this item.
+  `plans/follow-ups/sequential-evidence-capture-cost.md` measures
   this capture boundary and can change its schedule. The ranking work of this
   item must remain possible, and the scheduling measurement must include it.
 - **Recommendation:** D. It closes both windows in process and on disk

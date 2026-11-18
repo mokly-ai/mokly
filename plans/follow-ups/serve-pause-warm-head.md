@@ -177,6 +177,12 @@
   stop or a cancellation ends it, are in
   `docs/protocol/mokly-sidecar-root-scheduling.md`.
 - **Related:**
+  - `plans/follow-ups/serve-plan-editor-invalidation.md`, linked alternatives:
+    editor files and new entries disable saved plans. This item owns the
+    separate captured-head refresh alternative.
+  - `plans/follow-ups/serve-plan-record-start-cost.md`, the same code: a
+    restart restores the stale plan payload before a captured head compile.
+    Its profile separates the added plan cost from that restart work.
   - `plans/follow-ups/forced-kill-reap-wait.md`, the same code: a forced kill
     waits for its reap without a deadline. The worker-only cancellation of B
     kills and reaps a worker.

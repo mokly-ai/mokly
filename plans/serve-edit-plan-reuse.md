@@ -266,6 +266,79 @@ Shared terms:
   compilation without a plan can still replace the disk entry, so the
   predecessor then survives only in the running process.
 
+### 5. Accept the measured start cost
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design.
+- **Category:** Performance.
+- **Location:** `packages/mokly/src/sidecar/captured-plan.ts`,
+  `crates/mokly-sidecar/src/durable_recipe.rs`,
+  `crates/mokly-compare/src/bundle_codec.rs`,
+  `crates/mokly-compare/src/bundle_codec_read.rs`,
+  `crates/mokly-compare/src/bundle_codec_write.rs`,
+  `crates/mokly-sidecar/src/pool_bundle_cache.rs`, and
+  `crates/mokly-render/src/edit_plans.rs`.
+- **Terms:**
+  - **Dirty restart:** a Serve restart after unreverted edits.
+  - **First Changes:** the first browser-visible ready comparison state.
+  - **serve.ready:** the timing event when Serve starts accepting requests.
+- **Background:** The performance orchestrator compared release cores and
+  matching dists of `efb17e824` and main `2e6bde9c2` on mokly-cloud.
+  Three interleaved rounds followed priming, with four CPUs, four sidecars,
+  and `--base HEAD`. Each run made a strict build, three edits, and a dirty
+  restart. The full accepted table belongs in the pull request.
+- **Problem:** Each edit improves from 4.18 to 3.13 seconds, but starts and
+  builds increase. Warm serve.ready rises from 1.69 to 1.86 seconds.
+  Dirty-restart serve.ready rises from 3.70 to 4.14 seconds.
+  Warm and dirty-restart first Changes each rise by 0.4 seconds.
+  Strict build rises from 19.0 to 19.7 seconds. The cause is not isolated.
+- **Impact if no action:** The accepted edit improvement can ship, while
+  starts and builds retain their measured cost.
+- **Root question:** How does the change keep its faster edits without
+  slower starts and builds?
+- **Options:**
+  - **A.** Ship the measured implementation and record a follow-up to measure
+    and reduce the start cost. Effort: Small.
+  - **B.** Reduce the plan encoding before this pull request. This adds a
+    wire and disk representation change and more verification. Effort: Medium.
+  - **C.** Omit plans from base-side compiles, whose extracted source roots
+    cannot match a head entry. This changes the captured-plan contract and
+    needs a new decision and measurement. Effort: Medium.
+  - **D.** Count each plan and evidence pair once. Decode entries through
+    explicit fields instead of serde flatten buffering. The formats stay,
+    but the gain needs measurement. Effort: Medium.
+  - **E.** Decode and count a stored warm plan at the first edit. This changes
+    the entry layout, provenance, and warm-start contract. It needs a new
+    decision and measurement. Effort: Large.
+- **Left out:**
+  - Removing stored head plans violates warm-start reuse.
+  - Increasing the bound violates the fixed memory policy and removes no
+    start or build work.
+  - Shipping without the follow-up violates the orchestrator's acceptance.
+  - Reverting plan reuse loses the required edit improvement.
+  - Raw untyped plan JSON violates shared boundary typing.
+  - Moving the cache write is owned by the bundle-cache cost follow-up.
+- **Assumptions:** A session makes many edits per start, from the acceptance.
+  C drops this reason for base-side entries, which have no edit consumer.
+  B tests the unproved encoding cause. D tests the repeated passes instead.
+  E drops eager decode, which the code uses but no requirement fixes.
+  Output, both bounds, and no edit capture stay in force. B through E change
+  the measured implementation and need a new mokly-cloud measurement.
+- **Wider fix:** C removes unused base work. E moves warm plan work to its
+  consumer. Both remain candidates requiring a later contract decision.
+  B and D reduce individual costs. A schedules the work.
+- **Previous examples:** Item 3 includes compact importer and target tables.
+  The bundle-cache request-cost follow-up owns the synchronous write cost.
+- **Recommendation:** A, unchanged by the options check. Preserve the
+  accepted improvement, then compare all candidates with a stage profile.
+- **Action:** The performance orchestrator chose A on 2026-11-18 under the
+  user's delegation of 2026-11-16. It accepted 4.18 to 3.13 seconds per edit
+  and the small start increases, because a session has many edits per start.
+  Whole-tree peak memory decreased from 3,045 to 2,889 MiB. Add its complete
+  table to the pull request. The required follow-up includes importer and
+  target tables, repeated counting, flatten decode, and first-edit deferral.
+  The check is in `.context/serve-edit-plan-reuse/start-cost-options-check.md`.
+
 ## Confirmed invariants and measurement calls
 
 The options check is saved in
@@ -310,6 +383,16 @@ Implementation invariants:
   The separate plan-and-evidence admission bound remains 8 MiB. The total
   core-retention bound counts every retained serialized setting, plan, and
   evidence value, because the owner must not keep settings outside its bound.
+- My documentation placement call of 2026-11-18 uses a separate Serve edit
+  plans page. The recipe page had insufficient room within its protocol cap.
+- My implementation details for the owner and placement calls, 2026-11-18:
+  compare settings without the evaluation digest, as the pool and disk key do.
+  Evict the oldest retained record first, so the newest useful capture stays
+  within the fixed total. Share evidence through Arc, so the owner copies no
+  evidence. Count the stored Entry once, so each retained field stays charged.
+  Keep the optional disk field in format 1, because existing entries remain
+  valid and no required field changes. These details preserve the approved
+  contracts and the options checks of the owner and placement decisions.
 
 ## Milestone 1: Documentation and protocol
 
@@ -354,28 +437,39 @@ Depends on: 2
 
 Depends on: 3
 
-- [ ] Build last merged main and this branch in separate checkouts with
+Evidence: `.context/serve-edit-plan-reuse/measurement-execution-report.md`,
+`performance.md`, `owner-cost.md`, and `mokly-cloud-accepted.md`.
+The early suite and ten-run records are in `early-repository-result.json`
+and `ten-runs/results.json` in that folder.
+The complete gate result is in `complete-gate-result.json` there.
+
+- [x] Build last merged main and this branch in separate checkouts with
       separate Cargo targets. Use release binaries and matching sidecar dists.
-- [ ] Measure actual plan and evidence together, plus retained settings and
+- [x] Measure actual plan and evidence together, plus retained settings and
       the kept total, before fixing their wire encoding. Keep both bounds at 8 MiB.
-- [ ] Measure first Changes, edit-to-Changes-ready, sidecar.bundle spans,
+- [x] Measure first Changes, edit-to-Changes-ready, sidecar.bundle spans,
       attempt counts, and peak RSS on examples/basic and scripts/large
       fixtures. Keep before and after records under `.context/`.
-- [ ] Measure retained swap or backup files and an added catalogue entry.
+- [x] Measure retained swap or backup files and an added catalogue entry.
       Report native-first counts. Add the required editor follow-up if all
       edits fall back while its file stays present.
-- [ ] Run targeted tests and new asynchronous tests ten times. Run
+- [x] Record the accepted mokly-cloud measurements and add the requested
+      start-cost follow-up, including compact importer and target tables.
+- [x] Run targeted tests and new asynchronous tests ten times. Run
       `cargo xtask check --suite repository`, then `cargo xtask check`.
       Put Git 2.45 or newer first on PATH, install git-lfs, and use pinned Bun.
-- [ ] Check every large Cargo build's disk and RAM first. Disable Cargo
+- [x] Check every large Cargo build's disk and RAM first. Disable Cargo
       incremental builds. Run one Cargo build at a time.
-- [ ] Commit and push. Send the performance orchestrator the implementation
+- [x] Commit and push. Send the performance orchestrator the implementation
       SHA and dist build commit at once for mokly-cloud measurement.
 
 ## Milestone 5: Review and pull request
 
 Depends on: 4
 
+- [x] Rebuild after the clean main palette merge. Check its styles,
+      snapshots, and affected browser cases. Preserve both merge parents.
+      Evidence: `.context/serve-edit-plan-reuse/palette-merge-audit.log`.
 - [ ] Review the whole diff against origin/main through implementation-review
       after the push. Run finding checks and its two fix rounds. Record
       deferred and outside-scope findings as follow-up items.
