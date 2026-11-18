@@ -19,6 +19,8 @@ use crate::comparison_stream::ComparisonConsumer;
 use crate::delivery_inputs::DeliveryInputs;
 use crate::error::Result;
 use crate::graph::Graph;
+use crate::link_index::LinkIndex;
+use crate::link_results::{self, LinkResults, MemoryLinkResults};
 use crate::policy::PublicPolicy;
 use crate::reference_index::{MemoryReferenceIndex, ReferenceIndex};
 use crate::requests::{MemoryRequests, Requests};
@@ -38,6 +40,8 @@ pub(crate) struct Session {
 
 pub(crate) struct State {
     pub(crate) anchor_flights: Arc<dyn Requests>,
+    pub(crate) link_results: Arc<dyn LinkResults>,
+    pub(crate) link_index: LinkIndex,
     pub(crate) observed: Arc<Mutex<BTreeSet<String>>>,
     pub(crate) observer: Arc<Mutex<Option<Weak<dyn ResourceObserver>>>>,
     pub(crate) directories: Vec<DirectoryDependency>,
@@ -73,6 +77,7 @@ pub(crate) struct SessionInput {
 impl Session {
     pub(crate) fn new(graph: &Graph, input: SessionInput) -> Self {
         let comparison_policy = session_proof::policy(&input);
+        let link_index = LinkIndex::new(&input.plans, &input.catalogue.model.entries);
         for plan in input.plans.values() {
             graph.inputs.resources.retain(&plan.resource_key);
             graph.inputs.closures.retain(&plan.key.0);
@@ -85,6 +90,8 @@ impl Session {
         Self {
             state: Arc::new(State {
                 anchor_flights: Arc::new(MemoryRequests::default()),
+                link_results: Arc::new(MemoryLinkResults::new(link_results::LIMIT)),
+                link_index,
                 observed: Arc::new(Mutex::new(
                     input
                         .plans

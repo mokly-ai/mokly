@@ -56,6 +56,20 @@ impl<T> Tier<T> {
         self.values.contains_key(key)
     }
 
+    /// Refresh an identical handle only when replacement would keep its key charge.
+    pub(crate) fn refresh_same(&mut self, key: &NodeKey, value: &Arc<T>) -> bool {
+        let same = self
+            .values
+            .get_key_value(key)
+            .is_some_and(|(stored, entry)| {
+                stored.0.capacity() == key.0.capacity() && Arc::ptr_eq(&entry.value, value)
+            });
+        if same {
+            self.get(key);
+        }
+        same
+    }
+
     /// Read and promote a retained value without changing its recorded charge.
     pub(crate) fn get(&mut self, key: &NodeKey) -> Option<Arc<T>> {
         let (stored, mut entry) = self.values.remove_entry(key)?;

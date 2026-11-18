@@ -81,9 +81,9 @@
 - **Left out:**
   - Dropping the first walk. It makes the closure warnings and the closure
     records of `artifact`, and it sets the order before the link checks.
-  - A separate item for the link checks of page reads. Option E of
-    `serve-comparison-proof-cost.md` shares the link checks that cause that
-    cost.
+  - A separate item for the link checks of page reads. Page reads already
+    share link-check results within one generation, by destination view and
+    fragment, in a store with a fixed bound.
 - **Wider fix:** B. It gives `closure_job` one walk by construction, because
   the job takes the closure that `artifact` already made.
 - **Previous examples:** None found.
@@ -91,8 +91,6 @@
   - `removed-detail-usage-restore.md` notes the second walk in its option
     B, under a different root question: removed-entry usage without a
     document restore.
-  - `serve-comparison-proof-cost.md` holds the link-check cost of the same
-    graph code.
 - **Recommendation:** B, after a later branch shows that each caller still
   catches an input change between the two walks. Otherwise keep A.
 - **Action:** ask the user, because B removes a failure path for inputs that
