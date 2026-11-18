@@ -129,6 +129,7 @@
   same date, which keeps sequential base calls on one process. So is option
   B, the generation rank inside one root, chosen later on the same date.
 - **Related:**
+  - [sidecar-idle-child-retention.md](./sidecar-idle-child-retention.md) measures the memory and restoration cost of rich idle children. Design the policies together.
   - [serve-sidecar-prestart.md](./serve-sidecar-prestart.md) also changes the
     order in which the pool gives slots to requests. Design the two changes
     together.

@@ -79,9 +79,11 @@ pub(super) fn acquire(
             .position(|index| state.slots[*index].is_none());
         if let Some(position) = reused.or(matching).or(unspawned) {
             state.available.remove(position)?
-        } else if state.slots.len() < limit {
-            state.slots.push(None);
-            state.slots.len() - 1
+        } else if state.allocated() < limit {
+            state.free.pop_first().unwrap_or_else(|| {
+                state.slots.push(None);
+                state.slots.len() - 1
+            })
         } else {
             let position = state
                 .available
@@ -108,7 +110,7 @@ pub(super) fn runnable(state: &State, context: Option<&str>, limit: usize) -> bo
     if let Some(affinity) = context.and_then(|id| state.affinity.get(id)) {
         state.available.contains(&affinity.index)
     } else {
-        !state.available.is_empty() || state.slots.len() < limit
+        !state.available.is_empty() || state.allocated() < limit
     }
 }
 

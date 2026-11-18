@@ -30,6 +30,7 @@ mod serve_changes_native;
 mod serve_controls;
 mod serve_debounce;
 mod serve_delivery;
+mod serve_gate;
 mod serve_git;
 #[cfg(unix)]
 mod serve_keyboard_keys;

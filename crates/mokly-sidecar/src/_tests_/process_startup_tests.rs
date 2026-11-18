@@ -1,6 +1,7 @@
 //! Startup ownership drops and explicit kills share one stop without extra lifecycle calls.
 
 use std::io;
+use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex, mpsc};
 
 use mokly_platform::error;
@@ -150,6 +151,8 @@ fn control(group: &Unimock, clock: &Unimock, startup: &Arc<StartupTiming>) -> Pr
     let (_, exited) = mpsc::sync_channel(1);
     let (_, drained) = mpsc::sync_channel(1);
     ProcessControl {
+        memory: Arc::new(Unimock::new(())),
+        discover_memory: Arc::new(AtomicBool::new(false)),
         group: Box::new(group.clone()),
         outgoing,
         exited: Mutex::new(exited),

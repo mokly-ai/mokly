@@ -71,7 +71,7 @@ fn cleanup_retirement_keeps_only_the_cause_after_active_or_idle_failure() {
                     if active {
                         let caller = tracing::info_span!("caller");
                         let _scope = caller.enter();
-                        pool.release(0, Some(slot));
+                        pool.release(0, Some(slot), None);
                     } else {
                         {
                             let mut state = pool.lock();

@@ -14,10 +14,11 @@ catalogue decisions, caching, invalidation, comparison, and output.
   pipes and the [source worker environment](./mokly-sidecar-modules.md#source-root-workers).
   Its directory stays at `sourceRoot`. Another root replaces it before replay.
   A missing source directory is the unavailable part. Standard error goes to the terminal reporter as diagnostics.
-- The default pool size is the machine's core count. `--sidecars <n>` and
-  `MOKLY_SIDECARS` accept any positive integer and override that default;
-  the option takes precedence over the variable. A catalogue that needs no
-  JavaScript starts none.
+- The default pool size is the machine's core count, and a default pool grows
+  under the [memory admission rules](./mokly-sidecar-memory.md#default-admission).
+  `--sidecars <n>` and `MOKLY_SIDECARS` accept any positive integer and set an
+  exact size without memory admission. The option takes precedence over the
+  variable. A catalogue that needs no JavaScript starts none.
 - The first request is `hello`; the sidecar's first frame is its matching hello
   response with the package version. Reject a mismatch with `sidecar-version`
   before other traffic.

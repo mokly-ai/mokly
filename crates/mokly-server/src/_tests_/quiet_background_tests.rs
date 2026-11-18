@@ -7,6 +7,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::backend::DocumentsMock;
 use crate::background::UsagePass;
+use crate::background_capacity::FixedCapacity;
 use crate::publication::{Publications, SharedPublication};
 use crate::publication_support::{ready, unrecorded_ready};
 use crate::work::WorkMock;
@@ -28,7 +29,7 @@ async fn background_equal_usage_is_complete_without_a_revision() {
     let mut events = shared.subscribe();
     let (_stop, mut stop) = watch::channel(false);
     let pass = UsagePass {
-        batch: 2,
+        capacity: Arc::new(FixedCapacity(2)),
         changes: None,
         publications: shared.clone(),
         work: Arc::new(mock.clone()),

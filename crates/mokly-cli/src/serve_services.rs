@@ -102,13 +102,7 @@ impl ServeServices {
             }
         };
         let sidecars: Arc<dyn PoolScheduling> = Arc::new(
-            ServePool::new(
-                services.pool,
-                common
-                    .sidecars
-                    .expect("CLI option normalization sets the sidecar count before Serve starts"),
-            )
-            .with_diagnostics(diagnostics),
+            ServePool::new(services.pool.clone(), services.pool).with_diagnostics(diagnostics),
         );
         let pool = sidecars.pool(None);
         let mut runtime = (*services.runtime).clone().with_serve_edit_plans();

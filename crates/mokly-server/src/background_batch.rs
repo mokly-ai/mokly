@@ -34,6 +34,11 @@ impl<'a> Window<'a> {
         self.renders.len() < self.limit
     }
 
+    /// Refresh admission without cancelling renders that already started.
+    pub(crate) fn set_limit(&mut self, limit: usize) {
+        self.limit = limit.max(1);
+    }
+
     /// Whether every started render has ended.
     pub(crate) fn is_empty(&self) -> bool {
         self.renders.is_empty()

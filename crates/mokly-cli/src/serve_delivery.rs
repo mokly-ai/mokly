@@ -11,6 +11,7 @@ use mokly_compare::extraction_snapshots::ProcessSnapshots;
 use mokly_server::application::Application;
 use mokly_server::assets::{PackageAssets, ViewerAssets};
 use mokly_server::background::{Background, UsagePass};
+use mokly_server::background_capacity::BackgroundCapacity;
 use mokly_server::changes_background::ChangesPass;
 use mokly_server::clock::MonotonicClock;
 use mokly_server::comparison_capture::SnapshotCapture;
@@ -97,7 +98,10 @@ pub(super) fn create(
     sidecars: Arc<dyn PoolScheduling>,
 ) -> Delivery {
     let publications = Arc::new(SharedPublication::new(snapshot));
-    let batch = background_batch(workers, sidecars.limit());
+    let capacity: Arc<dyn BackgroundCapacity> = Arc::new(UsageCapacity {
+        workers,
+        sidecars: sidecars.clone(),
+    });
     let work = Arc::new(Workers::new(workers, diagnostics.clone()).with_foreground(sidecars));
     let comparisons = Arc::new(MemoryComparisons::new(
         Arc::new(MonotonicClock::default()),
@@ -107,7 +111,7 @@ pub(super) fn create(
         diagnostics.clone(),
     ));
     let background: Arc<dyn Background> = Arc::new(UsagePass {
-        batch,
+        capacity,
         changes: Some(Arc::new(ChangesPass {
             publications: publications.clone(),
             comparisons: comparisons.clone(),
@@ -132,6 +136,17 @@ pub(super) fn create(
         publications,
         background,
         app: Arc::new(app),
+    }
+}
+
+struct UsageCapacity {
+    workers: u32,
+    sidecars: Arc<dyn PoolScheduling>,
+}
+
+impl BackgroundCapacity for UsageCapacity {
+    fn capacity(&self) -> usize {
+        background_batch(self.workers, self.sidecars.limit())
     }
 }
 

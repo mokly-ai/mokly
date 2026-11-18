@@ -12,6 +12,7 @@ mod backend_assets;
 mod backend_preview;
 pub mod background;
 mod background_batch;
+pub mod background_capacity;
 pub mod changes;
 pub mod changes_background;
 mod changes_detail;

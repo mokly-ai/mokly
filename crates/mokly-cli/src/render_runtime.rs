@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use mokly_cli::cancellation::Cancellation;
 use mokly_cli::cancelled_work::CancellableWorkers;
-use mokly_cli::grammar::Common;
+use mokly_cli::grammar::{Common, SidecarSource};
 use mokly_cli::version::VERSION;
 use mokly_compare::cache_types::Reporter;
 use mokly_compare::node_executable::{NodeExecutable, SystemNodeExecutable};
@@ -17,7 +17,13 @@ use mokly_graph::workers::{RenderWorkers, ThreadWorkers};
 use mokly_platform::processes::SystemProcessGroups;
 use mokly_render::physical_inputs::SystemPhysicalInputs;
 use mokly_render::runtime::Runtime;
+#[cfg(target_os = "linux")]
+use mokly_sidecar::cgroup_memory::{CgroupMemory, SystemMemoryFiles};
+#[cfg(not(target_os = "linux"))]
+use mokly_sidecar::host_memory::NoMemoryLimits;
+use mokly_sidecar::host_memory::{HostMemory, MemoryEstimate, MemoryLimits, SysinfoMemory};
 use mokly_sidecar::pool::{Pool, SidecarPool};
+use mokly_sidecar::pool_admission::PoolCapacity;
 use mokly_sidecar::pool_options::{Launch, PoolOptions};
 use mokly_sidecar::process_clock::SystemClock;
 use mokly_sidecar::process_factory::NodeFactory;
@@ -41,9 +47,14 @@ pub(super) fn cache() -> Arc<dyn RenderCache> {
     ))
 }
 
+/// One command's request and capacity capabilities share the same process pool.
+pub(super) trait CommandPool: SidecarPool + PoolCapacity {}
+
+impl CommandPool for Pool {}
+
 pub(super) struct Services {
     pub(super) runtime: Arc<Runtime>,
-    pub(super) pool: Arc<dyn SidecarPool>,
+    pub(super) pool: Arc<dyn CommandPool>,
     pub(super) reporter: Arc<dyn Reporter>,
 }
 
@@ -73,35 +84,37 @@ impl Services {
             reporting,
             diagnostics.clone(),
         );
-        let pool: Arc<dyn SidecarPool> = Arc::new(
-            Pool::new(
-                Arc::new(
-                    NodeFactory::new(
-                        Arc::new(SystemProcessGroups),
-                        clock.clone(),
-                        diagnostics.clone(),
-                        Arc::new(SystemMemory),
-                    )
-                    .with_timings(common.debug_timings),
-                ),
-                clock,
-                Launch {
-                    capture_durability: false,
-                    node: SystemNodeExecutable.resolve().unwrap_or_else(|_| {
-                        env::var_os("MOKLY_NODE_EXECUTABLE")
-                            .map_or_else(|| PathBuf::from("node"), PathBuf::from)
-                    }),
-                    entry: sidecar_entry(cwd),
-                    repository: repository.to_owned(),
-                    version: VERSION.into(),
-                },
-                PoolOptions {
-                    size,
-                    timeout_ms: common.sidecar_timeout_ms,
-                },
-            )
-            .with_bundle_store(bundles),
-        );
+        let pool = Pool::new(
+            Arc::new(
+                NodeFactory::new(
+                    Arc::new(SystemProcessGroups),
+                    clock.clone(),
+                    diagnostics.clone(),
+                    Arc::new(SystemMemory),
+                )
+                .with_timings(common.debug_timings),
+            ),
+            clock,
+            Launch {
+                capture_durability: false,
+                node: SystemNodeExecutable.resolve().unwrap_or_else(|_| {
+                    env::var_os("MOKLY_NODE_EXECUTABLE")
+                        .map_or_else(|| PathBuf::from("node"), PathBuf::from)
+                }),
+                entry: sidecar_entry(cwd),
+                repository: repository.to_owned(),
+                version: VERSION.into(),
+            },
+            PoolOptions {
+                size,
+                timeout_ms: common.sidecar_timeout_ms,
+            },
+        )
+        .with_bundle_store(bundles);
+        let pool: Arc<dyn CommandPool> = Arc::new(match common.sidecar_source {
+            SidecarSource::Default => pool.with_memory_admission(memory()),
+            SidecarSource::Explicit => pool,
+        });
         let runtime = runtime(
             tree,
             pool.clone(),
@@ -117,6 +130,17 @@ impl Services {
             reporter,
         })
     }
+}
+
+fn memory() -> Arc<dyn HostMemory> {
+    #[cfg(target_os = "linux")]
+    let limits: Arc<dyn MemoryLimits> = Arc::new(CgroupMemory::new(Arc::new(SystemMemoryFiles)));
+    #[cfg(not(target_os = "linux"))]
+    let limits: Arc<dyn MemoryLimits> = Arc::new(NoMemoryLimits);
+    Arc::new(MemoryEstimate::new(
+        Arc::new(SysinfoMemory::default()),
+        limits,
+    ))
 }
 
 /// Build the head runtime over the command's render cache and cancellable workers. The
