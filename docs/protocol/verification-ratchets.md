@@ -1,5 +1,7 @@
 # Repository Verification Ratchets
 
+Status: The file-length ratchet and the unused internal export audit do not scan `packages/mokly/src/` yet. Follow-up work remains in the [Mokly package internal export audit item](../../plans/follow-ups/mokly-package-internal-export-audit.md).
+
 ## Comparison Commit
 
 The file-length, protocol-cap, and unused-internal-export ratchets compare
@@ -85,18 +87,25 @@ A missing predecessor or ambiguous rename is treated as new.
 Each Release Please component identifies a public package by `package-name`,
 or by the component directory's manifest name when that field is absent.
 A component under the private root resolves its named public workspace package.
-The root `.` component audits the CLI and viewer package surfaces together.
-It maps `packages/mokly` to `@mokly/mokly` and `packages/viewer` to
-`@mokly/viewer` through the shared release version.
+The root `.` component audits the CLI, UI, and viewer package surfaces
+together. It maps `packages/mokly` to `@mokly/mokly`, `packages/ui` to
+`@mokly/ui`, and `packages/viewer` to `@mokly/viewer` through the shared
+release version. It audits `@mokly/ui` when the workspace list of the root
+`package.json` holds `packages/ui` at `HEAD` or in the working tree.
+Decision: both revisions, not the working tree alone, so that a working-tree
+edit cannot drop a committed package from the audit.
 Audit packages whose `exports` map has a JavaScript target. A platform
 package exports no JavaScript and has an empty surface on both sides. Derive
 each tag prefix from that package's release configuration: prepend
 `<component>-` when `include-component-in-tag` is true, then append `v` when
 `include-v-in-tag` is true. The shared root release retains the CLI's `v` and
 the viewer's `viewer-v` histories, including their independent older versions.
+The UI package takes the root release configuration, so it shares the CLI's
+`v` history. The first root release tag that holds it is `v0.17.0`.
 
 Read each component entry in `.release-please-manifest.json` at `HEAD`.
-For the shared viewer, use its historical entry or the root entry when absent. An
+For the shared viewer, use its historical entry or the root entry when absent.
+For the shared UI package, use its own entry or the root entry when absent. An
 absent entry or the exact version `0.0.0` means that package has never been
 released, so skip it. For every released package, the baseline is the newest
 tag matching `<prefix>[0-9]*` that is reachable from `HEAD`, equivalent to:
@@ -169,7 +178,9 @@ that removal; until then, the same reachable baseline still reports it.
 ## Unused Internal Exports
 
 The auditor follows imports and re-exports across `.ts`, `.tsx`, `.mts`, `.cts`,
-`.js`, `.mjs`, and `.cjs` modules beneath the three source roots. A named export
+`.js`, `.mjs`, and `.cjs` modules beneath four source roots:
+`packages/mokly/src/`, `packages/ui/src/`, `packages/viewer/src/`, and
+`scripts/`. A named export
 is internal when no package export-map entry or documented public barrel
 exposes it. It is unused when no distinct workspace module imports or
 re-exports that symbol through a statically resolvable path; same-file
