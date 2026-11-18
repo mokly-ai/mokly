@@ -1,9 +1,52 @@
-//! One PostCSS context uses one slot until release or process recycling.
+//! Context affinity and call-ready generations rank eligible same-root slots.
 
 use std::path::Path;
 
 use crate::methods::Call;
-use crate::pool_state::{Affinity, State};
+use crate::pool_cleanup::stale_generation;
+use crate::pool_preparation::Prerequisites;
+use crate::pool_requests::generation;
+use crate::pool_state::{Affinity, Slot, State};
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum Loaded {
+    Ready,
+    Generation,
+    Missing,
+}
+
+fn loaded(state: &State, slot: &Slot, call: &Call) -> Loaded {
+    let Some(generation) = generation(call) else {
+        return Loaded::Missing;
+    };
+    if slot
+        .generations
+        .get(generation)
+        .is_none_or(|epoch| stale_generation(state, generation, *epoch))
+    {
+        Loaded::Missing
+    } else if Prerequisites::for_call(call).loaded(state, slot, generation) {
+        Loaded::Ready
+    } else {
+        Loaded::Generation
+    }
+}
+
+fn matching(state: &State, call: &Call, root: &Path, outside_pass: bool) -> Option<usize> {
+    state
+        .available
+        .iter()
+        .enumerate()
+        .filter(|(_, index)| !outside_pass || !state.head.candidates.contains_key(*index))
+        .filter_map(|(position, index)| {
+            state.slots[*index]
+                .as_ref()
+                .filter(|slot| slot.source_root == root)
+                .map(|slot| (position, loaded(state, slot, call)))
+        })
+        .min_by_key(|(position, rank)| (*rank, *position))
+        .map(|(position, _)| position)
+}
 
 pub(super) fn acquire(
     state: &mut State,
@@ -27,20 +70,9 @@ pub(super) fn acquire(
         state.available.remove(position)?
     } else {
         let reused = (!state.head.candidates.is_empty())
-            .then(|| {
-                state.available.iter().position(|index| {
-                    !state.head.candidates.contains_key(index)
-                        && state.slots[*index]
-                            .as_ref()
-                            .is_some_and(|slot| slot.source_root == root)
-                })
-            })
+            .then(|| matching(state, call, root, true))
             .flatten();
-        let matching = state.available.iter().position(|index| {
-            state.slots[*index]
-                .as_ref()
-                .is_some_and(|slot| slot.source_root == root)
-        });
+        let matching = matching(state, call, root, false);
         let unspawned = state
             .available
             .iter()
@@ -83,3 +115,7 @@ pub(super) fn runnable(state: &State, context: Option<&str>, limit: usize) -> bo
 #[cfg(test)]
 #[path = "_tests_/pool_root_selection_tests.rs"]
 mod pool_root_selection_tests;
+
+#[cfg(test)]
+#[path = "_tests_/generation_affinity/mod.rs"]
+mod generation_affinity_tests;

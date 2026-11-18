@@ -5,12 +5,13 @@
 - **Added:** 2026-11-18, from the options check of decision 1 in the
   first-edit warm sidecars plan, branch
   `calummoore/mokly-first-edit-warm-sidecars-8npz`.
-- **Location:** `crates/mokly-sidecar/src/pool_affinity.rs:29`, line 39,
-  line 44, and line 54, `crates/mokly-sidecar/src/pool.rs:171`, and
-  `docs/protocol/mokly-sidecar-root-scheduling.md:18`.
-- **Reason:** The wider policy changes the source root scheduling requirement
-  and needs its own measurement, so the warm sidecars change applied only the
-  narrow warm head process rule.
+- **Location:** `crates/mokly-sidecar/src/pool_affinity.rs:72`, line 75,
+  line 76, and line 86, the B rank at line 18 and line 35,
+  `crates/mokly-sidecar/src/pool.rs:171`, and
+  `docs/protocol/mokly-sidecar-root-scheduling.md`, sections Roots And The
+  Warm Head Process and Generation Affinity.
+- **Reason:** C and D change the replacement rule and need their own
+  measurement, so the generation affinity change applied only option B.
 
 - **Source:** Design.
 - **Category:** Performance.
@@ -32,15 +33,17 @@
     replaces an idle process. The new process loads and evaluates its
     generations again.
   - A request without a PostCSS context affinity takes an idle process in its
-    own root first, at `pool_affinity.rs:39`. While a return pass has
+    own root first, at `pool_affinity.rs:75`. While a return pass has
     candidates, a base request prefers such a process that already left the
-    pass, at line 29. Then it takes an empty slot, at line 44. Then it takes the oldest
-    idle process other than the warm head process, at line 54. The warm head
+    pass, at line 72. Then it takes an empty slot, at line 76. Then it takes the oldest
+    idle process other than the warm head process, at line 86. The warm head
     process comes last. A slot goes to the back of the idle queue when its
     request ends, at `pool.rs:171`.
-  - So a head request takes the first idle head process in queue order. It
-    does not prefer a process that already holds its generation or the
-    runtime packages, such as React.
+  - Option B, below, now ranks the idle processes of one root by the
+    generation state that a call needs, at `pool_affinity.rs:18` and line 35.
+    When no idle process holds the generation, a head request still takes the
+    first idle head process in queue order. It does not prefer a process that
+    already loaded the runtime packages, such as React.
   - The user authorised the performance orchestrator to decide the first-edit
     design on 2026-11-16. On 2026-11-18 the orchestrator chose a narrow rule.
     A base request takes the warm head process only when no other idle
@@ -59,19 +62,51 @@
     of the class "a process choice destroys loaded state that a later request
     needs". It graded the policy Large, because it needs its own tests and
     measurement.
-- **Problem:** The pool chooses a process by source root and queue order. It
-  does not weigh the loaded state that the request uses or destroys.
-- **Impact if no action:** After an edit, most head calls reach processes
-  without loaded head state. A later base render can still replace a head
-  process that the next edit needs.
+  - On 2026-11-18 the performance orchestrator chose option B, under the
+    user's delegation of 2026-11-16 to decide Changes speed and reliability
+    work. The user also requires bounded memory. Branch
+    `calummoore/mokly-sidecar-generation-affinity-jmbb` applies B.
+  - The reason for B: Serve validates edited catalogue code before it
+    prepares render inputs. The process that bundled the new generation then
+    goes to the back of the idle queue. So queue order sends the next calls to
+    processes that must restore and describe code that this process already
+    holds. A second-edit trace that the orchestrator supplied showed a 254 ms
+    gap before render inputs. B removes that redundant work without a change
+    to replacement or startup.
+  - The section Generation Affinity of
+    `docs/protocol/mokly-sidecar-root-scheduling.md` holds the B rule. A call
+    that names a generation ranks the idle processes of its root. First comes
+    a process that holds the current lifetime of the generation and each input
+    that the call needs: class maps, description, and the latest bindings
+    table. Next comes another process that holds that lifetime. Queue order
+    breaks ties. The pass preference comes before the rank. A call never
+    waits for a busy process that holds its generation. Calls without a
+    generation keep queue order. The rank starts no process and keeps no state
+    of its own.
+  - The orchestrator kept C and D open. B answers the root question below
+    only inside one root. The choice of the process that changes root still
+    uses queue order and the warm head process rule. C addresses that
+    eviction rather than the immediate restore. D combines B and C after
+    measurements establish the replacement policy. C and D can extend the B
+    rank to the state that a root switch destroys.
+- **Problem:** Under option B, the pool weighs the generation state that a
+  call uses, but only among the idle processes of its root. It still chooses
+  the process that changes root by queue order and the warm head process
+  rule. It does not weigh the loaded state that a root switch destroys.
+- **Impact if no action:** After an edit, a head call still reaches a process
+  without loaded head state when every process that holds the generation is
+  busy. A later base render can still replace a head process that the next
+  edit needs.
 - **Root question:** How does the pool choose the process for each request, so
   that it keeps the loaded state that later requests need?
 - **Options:**
   - **A.** Change nothing. Keep the warm head process rule and the return
-    pass. Effort: Small.
+    pass. Effort: Small. With B applied, A also keeps the B rank as it is.
   - **B.** Generation affinity. A request prefers an idle process in its root
     that already holds its generation. This changes the choice among
-    processes of one root only. Effort: Medium.
+    processes of one root only. Effort: Medium. Applied: the performance
+    orchestrator chose B on 2026-11-18, and branch
+    `calummoore/mokly-sidecar-generation-affinity-jmbb` applies it.
   - **C.** Loaded-state replacement. A request for another root replaces the
     idle process with the least useful loaded state, for both roots. This can
     keep a base process for views outside the kept capture. Effort: Medium.
@@ -91,7 +126,8 @@
   `crates/mokly-sidecar/src/pool_affinity.rs` keeps the requests of one
   context on the process that holds it. The warm head process rule of
   2026-11-18 is a narrow case of this class. So is the pass preference of the
-  same date, which keeps sequential base calls on one process.
+  same date, which keeps sequential base calls on one process. So is option
+  B, the generation rank inside one root, chosen later on the same date.
 - **Related:**
   - [serve-sidecar-prestart.md](./serve-sidecar-prestart.md) also changes the
     order in which the pool gives slots to requests. Design the two changes
@@ -100,7 +136,7 @@
     switch of a request. A branch that does one should check the other.
 - **Recommendation:** D. One ranking keeps the useful state of both roots,
   where the warm head process rule helps only the first head call after an
-  edit.
-- **Action:** ask the user, because D changes the source root scheduling
-  requirement in `docs/protocol/mokly-sidecar-root-scheduling.md`, and no
-  recorded user decision covers that change.
+  edit. B now covers the choice inside one root only.
+- **Action:** ask the user, because C and D change the replacement rule in
+  `docs/protocol/mokly-sidecar-root-scheduling.md`, and the recorded call of
+  2026-11-18 covers only B.

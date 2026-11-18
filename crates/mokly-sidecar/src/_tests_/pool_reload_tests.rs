@@ -211,9 +211,17 @@ fn a_busy_second_process_reloads_maps_after_release_and_rebundle() {
     }))
     .unwrap();
     pool.request(Call::Bindings(bindings("new/card"))).unwrap();
+    let lease_call = Call::Bundle(BundleRequest {
+        params: bundle(),
+        capture: None,
+    });
+    let (first_index, first_slot) = pool.acquire(&lease_call, None).unwrap();
     pool.lock().available.push_front(1);
     render(&pool);
+    let (second_index, second_slot) = pool.acquire(&lease_call, None).unwrap();
+    pool.release(first_index, first_slot);
     render(&pool);
+    pool.release(second_index, second_slot);
 }
 
 #[test]
@@ -223,8 +231,16 @@ fn an_updated_binding_table_is_replayed_on_the_second_process() {
         worker(&["bindings:new/card", "render"], 1),
     );
     pool.request(Call::Bindings(bindings("new/card"))).unwrap();
+    let lease_call = Call::Bundle(BundleRequest {
+        params: bundle(),
+        capture: None,
+    });
+    let (first_index, first_slot) = pool.acquire(&lease_call, None).unwrap();
     pool.lock().available.push_front(1);
     render(&pool);
+    let (second_index, second_slot) = pool.acquire(&lease_call, None).unwrap();
+    pool.release(first_index, first_slot);
+    pool.release(second_index, second_slot);
 }
 
 #[test]
