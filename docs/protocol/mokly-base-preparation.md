@@ -1,5 +1,7 @@
 # Base Source And Dependency Preparation
 
+Status: The Vite adapter is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+
 This page defines how Mokly prepares the sources and the dependencies of the
 base side. The [comparison contract](./mokly-comparison.md#sides) owns
 rendered sides. The [Git runtime](./mokly-git.md) owns history, blobs and
@@ -15,7 +17,9 @@ files. Root ownership, globs, and source diagnostics follow the catalogue
 rules. Every base read returns checkout-converted bytes.
 
 HTML, Markdown, YAML and CSS need no extraction. A base that needs
-JavaScript, a renderer module, or consumer PostCSS extracts its sources. A
+JavaScript, a renderer module, consumer PostCSS, or the
+[Vite adapter](./mokly-vite-adapter-styles.md#catalogues-without-javascript)
+extracts its sources. A
 source archive copies checkout-converted regular files
 with the pinned commit's attributes, including line endings, smudge filters,
 and Git LFS downloads. Network access is allowed within the preparation
@@ -63,7 +67,7 @@ The head and the base render with the current Mokly version. One cancellation
 stops both sides of a classification, including Git reads, extraction,
 installation, comparison, and public resource planning. A base that Serve
 keeps follows the [kept base cancellation rule](#cancellation) instead. HTML
-without a renderer or PostCSS follows the
+without a renderer, PostCSS, or the Vite adapter follows the
 [HTML dependency policy](./mokly-comparison.md#html-package-styles).
 
 Sidecar working directories follow the [fixed source-root rule](./mokly-sidecar.md#lifecycle).

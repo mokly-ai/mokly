@@ -1,8 +1,12 @@
 # Imported Stylesheet PostCSS And Dependency Inventory
 
+Status: The Vite adapter is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+
 This is the PostCSS and inventory companion to the
 [imported stylesheet contract](./mokly-imported-styles.md).
-[Exact diagnostics](./mokly-imported-styles-errors.md) apply throughout.
+[Exact diagnostics](./mokly-imported-styles-errors.md) apply throughout. Under
+the [Vite adapter](./mokly-vite-adapter-styles.md#stylesheet-transforms), the
+project's Vite setup takes the place of the `postcss` module.
 
 ## PostCSS Module
 

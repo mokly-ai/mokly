@@ -1,12 +1,13 @@
 # Mokly Package And Authoring Contract
 
+Status: The Vite adapter is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+
 ## Scope
 
 Mokly is shared developer tooling for repositories that keep visual mockups
 as code. The package owns catalogue definitions, rendering, validation,
 browsing, comparisons, the static build, and publication. A consumer owns all
-product screens, product copy, product components, styling, theme setup, and
-hosting.
+product screens, product copy, product components, styling, theme setup, and hosting.
 
 The package must be usable by structurally different applications without
 importing them or recognizing application-specific route names. Synthetic
@@ -24,16 +25,16 @@ screens may exist only under examples and test fixtures.
 dependencies and depends on the exact coordinated `@mokly/viewer` version. It
 declares `react` and `react-dom` `>=19.0.0` as peer dependencies, needed only
 when screens or components are written in React; an HTML-only catalogue runs
-without them and never starts the sidecar. The shim requires a version in the
+without them and never starts the sidecar, unless the
+[Vite adapter](./mokly-vite-adapter-styles.md#catalogues-without-javascript) transforms its stylesheets. The shim requires a version in the
 [supported Node range](#node-support) and rejects another version with an actionable error before it starts
 the binary. It resolves the platform package for the current platform,
 requires its version to equal the CLI package version, and runs the binary
 with inherited standard streams; it never falls back to a JavaScript
 implementation. The binary owns every command and every file write under the
 [Rust core architecture](../architecture/rust-core.md), and it starts the
-[render sidecar](./mokly-sidecar.md) only when a catalogue needs JavaScript.
-The [package boundary](../architecture/package-boundary.md) names what each
-package may depend on.
+[render sidecar](./mokly-sidecar.md) only when a catalogue needs JavaScript or a Vite stylesheet transform.
+The [package boundary](../architecture/package-boundary.md) names what each package may depend on.
 
 ## Node Support
 

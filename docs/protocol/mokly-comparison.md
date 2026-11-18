@@ -1,5 +1,7 @@
 # Tree Comparison And Changes
 
+Status: The Vite adapter is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+
 ## Purpose And Inputs
 
 Comparison decides, for every entry and view, whether the base and the head
@@ -159,8 +161,9 @@ sidecar bundles the base side from those extracted sources.
 
 ### HTML Package Styles
 
-An HTML-only catalogue without a renderer or PostCSS uses working-tree
-dependencies for package stylesheets on both sides. It needs no extraction,
+An HTML-only catalogue without a renderer, PostCSS, or the
+[Vite adapter](./mokly-vite-adapter-styles.md#catalogues-without-javascript)
+uses working-tree dependencies for package stylesheets on both sides. It needs no extraction,
 Node process, or package installation. Compare Git clean identities only for
 manifests and lockfiles beside each `node_modules` directory used by the head,
 and its repository ancestors.

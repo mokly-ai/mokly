@@ -1,5 +1,7 @@
 # Sidecar Module Sources
 
+Status: The Vite adapter is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+
 This page expands the [sidecar bundling contract](./mokly-sidecar.md#bundling).
 The source root and dependency roots identify one comparison side. All roots
 are resolved to real filesystem paths before identity and confinement checks.
@@ -99,7 +101,11 @@ Bundle parsing ignores each module's package `type` and `tsconfig.json` parse
 settings. A source `@jsxImportSource` pragma can select that module's JSX import
 source; a tsconfig `jsxImportSource` setting does not. Use the source pragma
 when a JSX library requires its own runtime. This parsing policy does not
-disable the source-side tsconfig path resolution described above.
+disable the source-side tsconfig path resolution described above. Under the
+[Vite adapter](./mokly-vite-adapter.md#moklys-plugin), the project's Vite
+setup decides these parse settings instead. That setup alone also
+[resolves imports](./mokly-vite-adapter.md#replaced-settings), so the
+source-side tsconfig path resolution does not apply.
 
 Repository-owned imports of `@mokly/mokly` receive the attributed authoring
 facade. Installed dependencies receive the unattributed API. Their JSX

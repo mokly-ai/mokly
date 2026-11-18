@@ -1,5 +1,7 @@
 # Rust Core Architecture
 
+Status: The Vite adapter is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+
 Mokly is a Rust core, a Node render sidecar, and a browser viewer. This page is
 the map: the processes, the components and their responsibilities, the
 boundaries between them, and the flow of data from the sources to a delivered
@@ -25,10 +27,15 @@ npx mokly ...                  @mokly/mokly shim: Node version gate, binary look
   directory and the `.mokly-export-reservations/` directory beside it. The
   binary starts sidecars only when a catalogue needs JavaScript: a
   `.mockup.tsx` entry, a registered JavaScript component, a Storybook story, a
-  configured renderer, or a consumer PostCSS module.
+  configured renderer, a consumer PostCSS module, or a local stylesheet under the
+  [Vite adapter](../protocol/mokly-vite-adapter-styles.md#catalogues-without-javascript).
 - A sidecar renders what it is asked to render and returns text. It keeps no
   catalogue state beyond the loaded bundle generation. The
   [sidecar contract](../protocol/mokly-sidecar.md) owns the protocol.
+- A sidecar compiles with esbuild by default. When the configuration turns on
+  the [Vite adapter](../protocol/mokly-vite-adapter.md), it compiles with the
+  project's Vite setup. That setup also transforms the stylesheets in place
+  of consumer PostCSS.
 - The Browse shell renders only in the browser, from the data that Serve or
   `build` delivers.
 
@@ -166,8 +173,8 @@ per entry. Serve adds the live descriptor and the update event stream. The
 shell renders itself from the index and the route's details. A current
 component variant also reads its parent's detail. The shell fetches those
 details on navigation and reloads only the frames whose document key changed.
-No process renders shell HTML, so a catalogue without JavaScript starts no
-sidecar. The
+No process renders shell HTML, so a catalogue that needs no JavaScript starts
+no sidecar. The
 [shell delivery contract](../protocol/mokly-shell-delivery.md) owns the
 routes, the shapes, and the fences.
 

@@ -1,5 +1,7 @@
 # Imported Stylesheet Diagnostics
 
+Status: The Vite adapter is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+
 Every failure in this catalogue names the authored file, delivery root, or
 module. A message never shows a virtual module, a sidecar path, or a working
 directory. `{stylesheet}`, `{root}`, `{module}`, `{file}`, and `{directory}`
@@ -61,6 +63,7 @@ stylesheet path, without PostCSS's physical-path or plugin framing.
 | Missing or invalid local CSS `@import`                  | `could not resolve CSS @import in {stylesheet}: {specifier}; use an existing stylesheet inside repoRoot`                                                                                                                  |
 | `lightningcss` bundle failure                           | `could not bundle CSS {root}: {detail}; fix the stylesheet and rebuild`                                                                                                                                                   |
 | PostCSS plugin throws                                   | `PostCSS plugin {plugin} failed for {stylesheet}: {detail}; fix the plugin configuration or stylesheet`                                                                                                                   |
+| The Vite setup cannot transform a stylesheet            | `Vite plugin {plugin} failed for {stylesheet}: {detail}; fix the Vite setup or the stylesheet`                                                                                                                            |
 | Plugin reports a nested renderer-owned import           | `PostCSS plugin {plugin} reached renderer-owned CSS in {stylesheet}: {excluded} via {intermediate}; import it only from the renderer, import it directly so Mokly can prune it, or use Tailwind @reference`               |
 | Malformed plugin dependency message                     | `PostCSS plugin {plugin} reported an invalid dependency for {stylesheet}; report a file or directory path and optional glob`                                                                                              |
 | Missing or non-file explicit plugin dependency          | `PostCSS plugin {plugin} reported a missing dependency for {stylesheet}: {file}; make it a regular file or correct the plugin`                                                                                            |

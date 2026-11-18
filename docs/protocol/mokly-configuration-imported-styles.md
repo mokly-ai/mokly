@@ -1,5 +1,7 @@
 # Imported CSS Configuration
 
+Status: The Vite adapter is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+
 Continuation of [Mokly Configuration](./mokly-configuration.md). The
 [imported stylesheet contract](./mokly-imported-styles.md) owns delivery and
 the [error catalogue](./mokly-imported-styles-errors.md) owns diagnostics.
@@ -20,7 +22,10 @@ bundles every local delivery root:
 
 A local stylesheet, its `@import` chain, and its `url()` assets are transformed by the consumer's PostCSS module when `postcss` is set, then
 bundled under the [bundling rules](./mokly-imported-styles.md#bundling).
-Serve answers the bundle from memory, and `build` writes it into `--out`.
+Under the
+[Vite adapter](./mokly-vite-adapter-styles.md#stylesheet-transforms), the
+project's Vite setup transforms each local stylesheet in place of the PostCSS
+module. Serve answers the bundle from memory, and `build` writes it into `--out`.
 Nothing is written into the repository. The
 [renderer stylesheet contract](./mokly-rendering.md#renderer-stylesheets)
 owns the complete stylesheet list of a document and its order, including
@@ -48,9 +53,13 @@ dependency contract is
 
 ## Loader Boundaries
 
-Mokly owns `.css` and `.module.css` handling. At those keys,
+Mokly owns `.css` and `.module.css` handling. Under the Vite adapter, this
+handling also covers Vite's other stylesheet languages, such as `.scss` and
+`.module.scss`. At the `.css` and `.module.css` keys,
 `moduleResolution.loaders` accepts only `"empty"`: `.css` skips both plain
 and module CSS, while `.module.css` skips only module CSS and its class map.
+Under the [Vite adapter](./mokly-vite-adapter.md#replaced-settings), these
+opt-outs cover every stylesheet language.
 Opted-out CSS stays inventoried as a watched source. A `file` loader on
 another JavaScript-imported asset fails `build`. A consumer `css` loader on any
 extension is rejected at config validation because it would emit an

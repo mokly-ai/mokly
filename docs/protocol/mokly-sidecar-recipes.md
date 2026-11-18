@@ -1,5 +1,7 @@
 # Compiled Recipes And Release
 
+Status: The Vite adapter is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+
 These rules belong to the `bundle` and `restoreGeneration` requests of the
 [render sidecar](./mokly-sidecar.md), under the
 [module source rules](./mokly-sidecar-modules.md).
@@ -63,8 +65,11 @@ JavaScript compilation.
 Reuse of a captured compilation also requires an equal toolchain identity and
 unchanged reuse evidence. The toolchain identity digests the Mokly, esbuild, and
 Node versions, every file in the `dist/` directory of the Mokly package that
-runs the sidecar, and the real root of that package. The reuse evidence records
-each file and directory that can change how a bundled import or a peer resolves:
+runs the sidecar, and the real root of that package. The
+[Vite adapter](./mokly-vite-adapter.md#recipes-and-reuse) adds the Vite
+package to this identity. A Vite compile records no reuse evidence. The reuse
+evidence records each file and directory that can change how a bundled import
+or a peer resolves:
 
 - the `jsconfig.json` candidate beside each `tsconfig.json` candidate, and
   each file that a tsconfig `extends` chain names;

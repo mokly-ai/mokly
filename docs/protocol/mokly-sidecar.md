@@ -1,5 +1,7 @@
 # Render Sidecar
 
+Status: The Vite adapter is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+
 ## Purpose And Boundary
 
 The sidecar runs JavaScript bundles, React, page and Storybook renders, and
@@ -18,7 +20,8 @@ catalogue decisions, caching, invalidation, comparison, and output.
   under the [memory admission rules](./mokly-sidecar-memory.md#default-admission).
   `--sidecars <n>` and `MOKLY_SIDECARS` accept any positive integer and set an
   exact size without memory admission. The option takes precedence over the
-  variable. A catalogue that needs no JavaScript starts none.
+  variable. A catalogue that needs no JavaScript starts none, unless the
+  [Vite adapter](./mokly-vite-adapter-styles.md#catalogues-without-javascript) transforms its stylesheets.
 - The first request is `hello`; the sidecar's first frame is its matching hello
   response with the package version. Reject a mismatch with `sidecar-version`
   before other traffic.
@@ -87,22 +90,19 @@ registers definitions or starts a render.
 
 ## Bundling
 
-`bundle` compiles an unevaluated in-memory generation and returns its id. A
+`bundle` compiles an unevaluated in-memory generation with esbuild or the [Vite adapter](./mokly-vite-adapter.md) and returns its id. A
 change to any input that can change the compiled code or its evaluation gives
 a new id. Equal head and base sources have separate generations, class maps, and
-bindings. Render input keys never contain a generation id. Render cache keys
-use the
+bindings. Render input keys never contain a generation id. Render cache keys use the
 [render input keys](./mokly-watch.md#invalidation-through-the-render-graph),
 so equal head and base inputs share cache entries under the
 [runtime contract](./mokly-runtime.md#render-graph-and-cache), and a cache miss
 renders with its own side's generation. The whole-bundle key of the watch
 contract contains the generation id, so it never matches across sides. A selected dependency installation is
-part of the key, so a base with its own installation shares no JavaScript
-render.
+part of the key, so a base with its own installation shares no JavaScript render.
 Decision: equal inputs share entries across sides. A side marker in every key
 was rejected, because the base would render every unchanged view again.
-[Compiled recipes](./mokly-sidecar-recipes.md)
-define replay and release.
+[Compiled recipes](./mokly-sidecar-recipes.md) define replay and release.
 
 The module graph reports the digest of each module's consumed bytes, sources,
 and dependencies with imports in source order, including re-exports, dynamic imports, and stylesheets. A file inside
@@ -234,7 +234,7 @@ define deadlines, process replacement, and shutdown grace.
 | `render-timeout`      | a deadline passed twice                                                                         | `build-invalid` with the entry and the deadline                                |
 
 There is no fallback render and no partial output. Commands that need neither
-JavaScript nor PostCSS never start a sidecar or fail for these reasons.
+JavaScript, PostCSS, nor a Vite stylesheet transform never start a sidecar or fail for these reasons.
 
 ## Security
 

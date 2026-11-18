@@ -1,5 +1,7 @@
 # Watched Catalogue Development
 
+Status: The Vite adapter is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+
 ## Watch Inputs
 
 `mokly serve` watches by default; `--no-watch` serves one snapshot. Watch
@@ -95,7 +97,9 @@ Every completed action publishes one revision under the
 [Serve update rules](./mokly-shell-delivery.md#updates-in-serve). Nothing is
 written: no output tree
 exists, so no watch event comes from Mokly's own writes, and a watched change
-cannot schedule a feedback loop.
+cannot schedule a feedback loop through those writes. Under the
+[Vite adapter](./mokly-vite-adapter.md#inputs-and-serve), a file that a plugin
+of the setup writes is a watched change like any other edit.
 
 ## Denial Rules
 

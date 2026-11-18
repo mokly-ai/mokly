@@ -1,5 +1,7 @@
 # Imported Stylesheet Delivery
 
+Status: The Vite adapter is not available yet. The [Storybook support plan](../../plans/storybook-support.md) adds it.
+
 ## Delivery
 
 A configured or component-declared local stylesheet, and CSS that an entry module, a stories file,
@@ -27,7 +29,12 @@ of a configured or component-declared local stylesheet, and `assets/<repository-
 path>` for an asset. The module extension is kept before `.css`:
 `src/home.mockup.tsx` delivers `styles/src/home.mockup.tsx.css`, and the
 configured `design/base.css` delivers `styles/design/base.css`; the two
-forms never collide because a module path never ends in `.css`. `styles` and
+forms never collide because a module path never ends in `.css`. Under the
+[Vite adapter](./mokly-vite-adapter-styles.md), a configured or declared
+stylesheet whose path does not end in `.css` delivers at its route plus
+`.css`, as a module root does: `design/base.scss` delivers
+`styles/design/base.scss.css`. Decision: such a route ends in `.css`, because
+a static host chooses the MIME type from the file extension. `styles` and
 `assets` are reserved as the
 first segment of document routes. Nothing is written into the repository:
 Serve answers the routes through
