@@ -1,5 +1,7 @@
 # Markdown Documents
 
+Status: Follow-up work remains in the [related documents viewer item](../../plans/follow-ups/related-docs-viewer-compatibility.md).
+
 ## Discovery
 
 A matched file whose name ends in `.md` is a document; `.markdown` and `.mdx`
