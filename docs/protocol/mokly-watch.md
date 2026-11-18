@@ -152,7 +152,9 @@ manifests, also invalidates compilation reuse. It is not a watch input and
 moves no render input key, so a change to it takes effect at the next bundle.
 A Serve edit compilation records none of this other evidence. Of these
 inputs, only its consumed files, its resolution metadata, and the membership
-of its consumed-module directories invalidate its reuse.
+of its consumed-module directories and of its
+[mapped target folders](./mokly-sidecar-recipes.md#reuse-and-identity)
+invalidate its reuse.
 Linux renews a registration after its directory is replaced. Vanished directories
 are skipped. A new matching file in a watched directory causes one rebuild.
 Notifications coalesce by path. A classifier exception is reported once, that

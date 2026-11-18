@@ -223,3 +223,71 @@ fn fresh_sidecars_skip_esbuild_and_changed_inputs_replace_the_disk_recipe() {
     );
     recreated.shutdown().unwrap();
 }
+
+#[test]
+fn restarted_disk_recipes_reject_an_added_earlier_absolute_paths_target() {
+    let temporary = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
+    let root = dunce::canonicalize(temporary.path()).unwrap();
+    let source = root.join("source");
+    let cache = root.join("cache");
+    fs::create_dir_all(source.join("one")).unwrap();
+    fs::create_dir_all(source.join("two")).unwrap();
+    fs::create_dir(&cache).unwrap();
+    fs::write(source.join("package.json"), "{}").unwrap();
+    fs::write(source.join("one/.keep"), "").unwrap();
+    fs::write(source.join("two/value.js"), "export const value='two';").unwrap();
+    let written = source
+        .join("written.js")
+        .to_string_lossy()
+        .replace('\\', "/");
+    fs::write(
+        source.join("entry.ts"),
+        format!(
+            "export {{value}} from {};",
+            serde_json::to_string(&written).unwrap()
+        ),
+    )
+    .unwrap();
+    fs::write(
+        source.join("tsconfig.json"),
+        serde_json::to_vec(&serde_json::json!({
+            "compilerOptions": { "paths": { written: ["./one/value.js", "./two/value.js"] } }
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    let first_counts = Arc::new(Counts::default());
+    let first = pool(&source, &cache, first_counts.clone());
+    let original = bundle(&first, &source);
+    assert_eq!(
+        original
+            .modules
+            .iter()
+            .map(|module| module.path.as_str())
+            .collect::<Vec<_>>(),
+        ["entry.ts", "two/value.js"]
+    );
+    assert_eq!(first_counts.0.load(Ordering::SeqCst), 1);
+    first.shutdown().unwrap();
+    let warm_counts = Arc::new(Counts::default());
+    let warm = pool(&source, &cache, warm_counts.clone());
+    let unchanged = bundle(&warm, &source);
+    assert_eq!(unchanged.cache, Some(CacheOutcome::Hit));
+    assert_eq!(warm_counts.0.load(Ordering::SeqCst), 0);
+    warm.shutdown().unwrap();
+    fs::write(source.join("one/value.js"), "export const value='one';").unwrap();
+    let counts = Arc::new(Counts::default());
+    let restarted = pool(&source, &cache, counts.clone());
+    let changed = bundle(&restarted, &source);
+    assert_eq!(
+        changed
+            .modules
+            .iter()
+            .map(|module| module.path.as_str())
+            .collect::<Vec<_>>(),
+        ["entry.ts", "one/value.js"]
+    );
+    assert_eq!(changed.cache, Some(CacheOutcome::StampMismatch));
+    assert_eq!(counts.0.load(Ordering::SeqCst), 1);
+    restarted.shutdown().unwrap();
+}

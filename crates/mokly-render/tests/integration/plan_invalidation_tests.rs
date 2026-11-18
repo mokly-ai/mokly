@@ -1,7 +1,9 @@
 //! Real filesystem changes permit direct plans only while resolution facts match.
 
+use std::fs;
+
 use super::plan_support::Fixture;
-use super::support::{link_directory, unlink_directory};
+use super::support::{link_directory, unlink_directory, workspace};
 
 #[test]
 fn serve_edit_plans_follow_content_import_candidate_manifest_configuration_and_link_changes() {
@@ -117,4 +119,46 @@ fn serve_edit_plans_follow_content_import_candidate_manifest_configuration_and_l
             "attempts {name}"
         );
     }
+}
+
+#[test]
+fn serve_plans_reject_an_added_earlier_absolute_paths_target() {
+    let scratch = workspace().join(".context");
+    fs::create_dir_all(&scratch).unwrap();
+    let directory = tempfile::tempdir_in(scratch).unwrap();
+    let mut fixture = Fixture::in_parent(directory.path());
+    let written = fixture
+        .root()
+        .join("written.js")
+        .to_string_lossy()
+        .replace('\\', "/");
+    fixture.write("one/.keep", "");
+    fixture.write("two/value.js", "export const value='two';");
+    fixture.write(
+        "entry.ts",
+        &format!(
+            "export {{value}} from {};",
+            serde_json::to_string(&written).unwrap()
+        ),
+    );
+    fixture.write("tsconfig.json", &serde_json::to_string(&serde_json::json!({
+        "compilerOptions": { "strict": true, "paths": { written: ["./one/value.js", "./two/value.js"] } }
+    })).unwrap());
+    assert_eq!(fixture.prepare(), ["entry.ts", "two/value.js"]);
+    assert_eq!(fixture.attempts(), 2);
+    fixture.edit();
+    assert_eq!(fixture.prepare(), ["entry.ts", "two/value.js"]);
+    assert!(
+        fixture.sent_plan(),
+        "unchanged resolution must use the saved plan"
+    );
+    assert_eq!(fixture.attempts(), 2);
+    fixture.write("one/value.js", "export const value='one';");
+    let changed = fixture.prepare();
+    assert!(
+        !fixture.sent_plan(),
+        "an earlier mapped target must reject the saved plan"
+    );
+    assert_eq!(changed, ["entry.ts", "one/value.js"]);
+    assert_eq!(fixture.attempts(), 4);
 }

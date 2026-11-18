@@ -121,6 +121,143 @@ Decision conditions:
 - Add red-first regressions for generated `*` redirection, authored matching and unclassifiable absolute imports, and package extends without authored absolute imports.
 - Stop and ask the performance orchestrator if E exceeds Medium or changes resolution outside the mapped-absolute case.
 
+### 3. `${configDir}` mappings need correct captured evidence
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Product bug.
+- **Location:** `packages/mokly/src/sidecar/config-inputs.ts`.
+- **Background:** TypeScript shared configurations can use `${configDir}` in mapped targets and `baseUrl`. esbuild 0.28.2 expands its prefix from the top-level configuration that uses the inherited setting.
+- **Problem:** The reader keeps the template literal. Evidence can remain complete and current when an earlier real target appears.
+- **Impact if no action:** Bare mappings can serve stale compilations through the captured owners. The absolute-only fallback does not protect them.
+- **Root question:** How can captured evidence follow native module selection for `${configDir}` mappings?
+- **Options:**
+  - **A.** Make each matched request with unsupported `${configDir}` targets incomplete. This loses captured reuse for that form. Effort: Small.
+  - **B.** Expand the prefix in the shared reader from the top-level configuration. Preserve the defining directory for ordinary relative targets. Effort: Medium.
+  - **C.** Resolve each mapped request again before reuse. This changes the native-first and speed contracts. Effort: Large.
+- **Left out:** Change nothing leaves possible stale strict output. An absolute-only decline leaves bare requests unsafe.
+- **Wider fix:** The existing shared producer and whole-evidence checks protect each captured owner. B directly repairs the reader for bare and absolute requests.
+- **Previous examples:** The options check reproduced stale absolute `${configDir}` reuse. A direct inherited native probe selected the top-level target, then changed selection after an earlier target appeared.
+- **Recommendation:** B. The options check confirmed exact prefix expansion against native esbuild. Its code is Small, and its tests make the job Medium.
+- **Action:** fix now, apply B. The owner probes reproduced stale strict and disk output. Keep the marked policy separate under item 4.
+
+Shared assumptions:
+
+- Fresh native esbuild selection is the oracle. Source: the task and the performance orchestrator's correction of 2026-11-18. Kept.
+- Package inheritance that the reader cannot classify stays incomplete. Source: current capture contract and decision E. Kept.
+- Other forms retain their behavior and speed. Source: this task. Kept.
+
+Performance orchestrator call of 2026-11-18: test bare `${configDir}` mappings through in-process, released, restarted disk, strict, and marked owners. If disk or strict output is stale, fix captured evidence in this branch. Prefer small correct expansion; otherwise decline unsupported matched requests.
+The performance orchestrator corrected its defining-directory description on 2026-11-18 and confirmed the top-level native behavior.
+A marked ordinary bare two-target control must be reported with those five results before any wider marker change.
+
+### 4. Marked mappings must observe earlier selection directories
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium, if the preferred option fits.
+- **Source:** Implementation.
+- **Category:** Product bug.
+- **Location:** `packages/mokly/src/sidecar/resolution-inputs.ts` and `serve-edit-imports.ts`.
+- **Background:** Marked edit compiles rely on live file digests and directory lists. They do not keep full evidence.
+- **Problem:** A mapped request can select a later target, package fallback, or directory index while an earlier candidate's directory is absent from the live lists.
+- **Impact if no action:** A later file addition can change native selection while marked reuse serves the old module.
+- **Root question:** How can marked mappings keep native selection current while normal edit reuse stays fast?
+- **Options:**
+  - **A.** Keep E here and record the broader marked gap for a separate repair. Effort: Small here.
+  - **B.** Omit the marker for mapped bare requests or unknown configurations. This removes common package-extends reuse. Effort: Medium.
+  - **B′.** Omit the marker for multiple-target or unknown mappings. The parent superseded this rule because a single target can fall through to package lookup. Effort: Medium.
+  - **C.** Extend live directory lists for matched bare targets, through the selected target or all targets on fallback. Omit the marker only when effective paths are unknown. Effort: Medium if it fits.
+  - **D.** Omit the marker when selection is not a direct file of the first mapped target, or paths are unknown. This loses reuse for mapped barrels. Effort: Medium if it fits.
+  - **E.** Apply C only for readable chains with a known anchor. Keep main's marker and checks for unreadable package inheritance. Include readable `baseUrl` fall-through. Effort: Medium.
+  - **F.** Apply C with an esbuild-equivalent package-base reader. This adds package lookup, export conditions, and configuration fallback support. Effort: Large.
+  - **G.** Share mapped-candidate selection and substitution between captured evidence and E, while preserving capture's conservative all-matching observations. Effort: Small on top of E.
+- **Left out:** Resolving again on each reuse breaks the speed and native-first contracts. Target count alone misses package fallback and directory-index shadowing.
+- **Wider fix:** G shares the mapping step structurally. The whole live-directory comparison is the direct check mechanism.
+- **Previous examples:** Ordinary and template two-target probes stayed stale. A single target fell through to an installed package. A mapped directory index can be shadowed by a sibling file.
+- **Recommendation:** E through G. The options check names the parent's C-with-exception E. The performance orchestrator granted that exception on 2026-11-18. The first-target fallback shares the unknown-anchor problem.
+- **Action:** fix now, apply E through G for readable chains with known anchors. Keep main's marker and live checks for unreadable inherited settings under the approved exception.
+
+Performance orchestrator calls of 2026-11-18, under the user's delegation of 2026-11-16:
+
+- B′ first limited marker loss to multiple-target or unknown effective mappings. A local paths map replaces the inherited map, even with package extends.
+- A native single-target package-fallback probe disproved target count as the safety test.
+- The updated choice prefers C, then D, then A. The goal is to preserve marked reuse for direct files, barrels, and Expo while checking earlier target directories.
+- Tests cover two-target fall-through, single-target package fallback, template targets, mapped barrel shadowing, direct single targets, Expo local overrides, and inherited package mappings.
+- The exact likelihood condition is a mapped candidate addition during one live session. The parent calls this Uncommon; the skill's scale records Rare.
+
+Shared assumptions:
+
+- E protects generated imports. Source: item 2 and the parent's unchanged decision. Kept.
+- Local paths wholly replaces inherited paths. Source: native override behavior and the parent's decision. Kept.
+- The implementation stays Medium. Source: the parent's explicit fallback order. Kept.
+
+Item 3 options check of 2026-11-18: B matches native esbuild 0.28.2.
+Expand only a case-sensitive prefix in targets and `baseUrl`, after inheritance.
+Keep raw templates in the per-file cache.
+Use the as-found top-level configuration folder for the expansion.
+An exact key keeps literal target stars; a wildcard replaces the first star with literal matched text.
+The inherited target and `baseUrl` regressions prove useful unchanged reuse before the addition.
+Captured owner tests now decline stale recipes and produce the fresh strict output.
+Evidence: `.context/absolute-paths-reuse-evidence/green-config-dir-released.log`, `green-config-dir-disk.log`, and `green-captured-node.log`.
+
+Main integration of 2026-11-18: merged `c2d4148c7` as `d387c613d`.
+The merge was conflict-free. Its remerge audit and all six upstream paths are unchanged.
+
+Item 4 final performance orchestrator call of 2026-11-18, under the delegation of 2026-11-16: apply C where the chain is readable and its anchor is known.
+Unreadable package-inherited `paths` and `baseUrl` keep main's marker and live checks.
+This supersedes the earlier unknown-paths and package-supplied-paths marker declines.
+Reason: those declines remove the last reuse path from common package-extends catalogues, including default Expo.
+The readable subset gets stronger checks; the unreadable subset keeps exactly its current risk.
+Record that risk and the inherited `baseUrl` native probe in the existing [package-extends follow-up](follow-ups/package-tsconfig-extends-reuse.md), owned by the performance orchestrator.
+A full esbuild-equivalent package reader is future option F, Large when combined with this live repair.
+The parent also includes the readable `baseUrl` fall-through case if the repair stays Medium.
+The final options check names this approved C-with-exception E and recommends E through G.
+Root call of 2026-11-18: use G for shared matching and substitution, preserving the captured producer's existing conservative all-matching observations and order.
+Reason: the shared mapping rule prevents capture and live checks from computing different targets without changing ordinary captured evidence.
+The check's class-test option D for item 3 is not selected; the task authorizes concrete regressions, not a new test for the class.
+The final report is `.context/absolute-paths-reuse-evidence/options-check-items-3-4-transcript.md`.
+
+Orchestrator call of 2026-11-18, confirmed by the performance orchestrator: canonicalize the defining configuration file before anchoring ordinary relative targets, `baseUrl`, and `extends`.
+Keep `${configDir}` expansion tied to the as-found top-level configuration folder.
+Reason: the native P8 smoke reproduced stale captured reuse for an absolute key under a symlinked tsconfig, so this is necessary for the original selection guarantee.
+The small reader correction gets a red-first regression and preserves useful unchanged reuse.
+
+Verification call of 2026-11-18: bound staged live candidate paths by the existing 8 MiB evidence budget before insertion.
+Reason: many imports and many mapped targets can multiply retained path strings before the frame check runs.
+Charge each distinct path once, conservatively including string and entry overhead.
+Overflow omits the marker and publishes no partial live lists; it adds no error or setting.
+The bounded one-time probe passes under-cap and over-cap cases with correct emitted values.
+Evidence: `.context/absolute-paths-reuse-evidence/live-c-staging-probe.log`.
+
+Main integration of 2026-11-18: merged `a062f18bd` as `fabaf40bf`.
+The merge was conflict-free and all 92 upstream paths remain byte-identical.
+
+Follow-up options call of 2026-11-18: recommend G, the superset package reader, after merge instead of F.
+Keep F as the exact-reader alternative. Both need base files in the marked live inputs.
+Reason: extra candidate evidence can cost reuse without trusting a different selected configuration.
+The unreadable-chain exception covers local settings too, because the reader stops before local compiler options.
+The protocol and package follow-up state that existing limit without changing C.
+The pre-existing marked gap after a relative base-file edit belongs to the existing jsconfig input follow-up.
+
+Follow-up options call of 2026-11-18: recommend D after merge for export-pattern evidence, instead of B.
+The shared helper must keep exact targets literal and substitute wildcard matches as written.
+Reason: native probes confirm both misreads, but no changed reuse result. This Low, Rare work stays outside this branch.
+The checked options and probes are in `.context/absolute-paths-reuse-evidence/followup-options-check.md` and `followup-options-probes/`.
+
+Verification correction of 2026-11-18: E classifies the written authored specifier, as its approved definition requires.
+A bare alias with an absolute target belongs to C, including C's unreadable-chain exception.
+Readable matching mappings need their earlier candidate checks before the effective written-path fallback.
+Reason: classifying the aliased target as authored absolute removes package-extends reuse when no authored absolute exists.
+This corrects the implementation to the existing E and C decisions. It adds no resolution rule.
+
+Main integration of 2026-11-18: merged `88b014719` as `e2078588b`.
+The merge was conflict-free. The remerge audit passed and all 61 upstream paths remain byte-identical.
+
+Verification correction of 2026-11-18: isolate the strict absolute fixture and cache beneath ignored repository-local scratch state.
+Reason: concurrent temporary fixtures changed the shared `/tmp` ancestor during durability capture, which correctly prevented a disk save.
+The reproduced test failure concerned the unchanged reuse count, with correct HTML.
+Keep every assertion and the conservative durability rule. Add no retry, sleep, or timeout change.
+Evidence belongs in `.context/absolute-paths-reuse-evidence/durability-probe.log` and `durability-repeat-02.trace.log`.
+
 ## Milestone 1: Contracts and follow-up record
 
 Depends on: none
@@ -133,22 +270,31 @@ Depends on: none
 
 Depends on: 1
 
-- [ ] Delegate to the non-ui implementor. Add red-first regressions for in-process reuse, released seeding, restarted disk reuse, strict build, and Serve plan reuse.
-- [ ] Probe marked uncaptured Serve edit reuse. Add a red-first regression and the smallest correct fix if needed.
-- [ ] Implement E and its decision conditions. The parent approved this generated-import boundary change.
-- [ ] Preserve reuse for ordinary relative mappings and unmatched absolute imports.
-- [ ] Apply B if its conditions pass. Otherwise apply A and record B in a follow-up item.
-- [ ] Protect absolute mapped interpolation and exact targets that the current reader cannot represent. Record deferred exact reuse.
-- [ ] Check the delegated result against the design calls and repository rules.
+- [x] Delegate to the non-ui implementor. Add red-first regressions for in-process reuse, released seeding, restarted disk reuse, strict build, and Serve plan reuse.
+- [x] Probe marked uncaptured Serve edit reuse. Add a red-first regression and the smallest correct fix if needed.
+- [x] Implement E and its decision conditions. The parent approved this generated-import boundary change.
+- [x] Preserve reuse for ordinary relative mappings and unmatched absolute imports.
+- [x] Apply B if its conditions pass. Otherwise apply A and record B in a follow-up item.
+- [x] Expand captured `${configDir}` settings from the top-level configuration and preserve exact target text. Item 3 supersedes the incomplete-evidence fallback.
+- [x] Reproduce bare `${configDir}` through the five requested owners and the ordinary marked bare control. Apply the approved captured-owner fix after the options check.
+- [x] Apply item 4 C with the parent's unreadable-package exception and red-first native cases, including readable `baseUrl` fallback. Update the existing package-extends follow-up.
+- [x] Fix the canonical defining-directory anchor under symlinked configurations, with a red-first absolute regression.
+- [x] Check the delegated result against the design calls and repository rules.
+
+Evidence: `.context/absolute-paths-reuse-evidence/red-owner-checks.md`.
 
 ## Milestone 3: Verification, commit, review, and pull request
 
 Depends on: 2
 
-- [ ] Run targeted tests and each new asynchronous test ten times. Record red failures and test cost under `.context/`.
-- [ ] Run the repository suite and complete gate. Use Git 2.45 or later, git-lfs, and pinned Bun.
-- [ ] Check disk and memory before large Cargo builds. Use one build at a time, `CARGO_INCREMENTAL=0`, and a checkout-specific target directory.
-- [ ] Measure `examples/basic` before and after if the change touches a hot path.
+- [x] Correct the E/C boundary for authored bare aliases with absolute targets, with red-first marker-preservation and mapped-fallback regressions.
+- [x] Isolate the strict absolute fixture from concurrent temporary-directory changes, with the existing reuse assertions intact.
+- [x] Isolate the new Serve-plan regression after its store-save flake, with traced cause and unchanged assertions. Evidence: `.context/absolute-paths-reuse-evidence/rust-plan-isolation-results.json`.
+- [x] Prove unchanged reuse before addition in the released, disk, and strict `${configDir}` regressions.
+- [x] Run targeted tests and each new asynchronous test ten times. Record red failures and test cost under `.context/`.
+- [x] Run the repository suite and complete gate. Use Git 2.45 or later, git-lfs, and pinned Bun.
+- [x] Check disk and memory before large Cargo builds. Use one build at a time, `CARGO_INCREMENTAL=0`, and a checkout-specific target directory.
+- [x] Measure `examples/basic` before and after if the change touches a hot path.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` after the push with the implementation-review skill. Apply its finding checks, fixes, and review rounds.
 - [ ] Delete this plan under the plans skill. Keep dated calls and a plan permalink in the pull request description.

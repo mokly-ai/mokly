@@ -1,13 +1,16 @@
 # Watch and key jsconfig and extends target files
 
-- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #226 and its completed plan, which put the
   problem outside the scope of its review. On 2026-11-16 the options check of
   identity call 22 of the bundle disk cache change added the `extends`
-  target case.
-- **Location:** `packages/mokly/src/sidecar/resolution-inputs.ts:70`,
-  `packages/mokly/src/sidecar/config-inputs.ts:112` to line 117,
+  target case. On 2026-11-18 the options check of the follow-up items of the
+  absolute paths reuse evidence plan, on branch
+  `calummoore/mokly-absolute-paths-evidence-fix-zqzl`, added the marked Serve
+  edit case.
+- **Location:** `packages/mokly/src/sidecar/resolution-inputs.ts:64` to line
+  75, `packages/mokly/src/sidecar/config-inputs.ts:145` to line 150,
   `crates/mokly-graph/src/render_closure.rs:10`,
   `crates/mokly-graph/src/render_inputs.rs:140` to line 148, and
   `docs/protocol/mokly-watch.md:70`.
@@ -43,8 +46,8 @@
     - `ConfigInputs` in `packages/mokly/src/sidecar/config-inputs.ts`
       records each `jsconfig.json` candidate beside each `tsconfig.json`
       candidate, also above the source root, in the reuse evidence. See
-      `configuration` at line 61 and `candidateInputs` at line 70.
-    - `readConfig`, at lines 112 to 117 of the same file, records each
+      `configuration` at line 65 and `candidateInputs` at line 100.
+    - `readConfig`, at lines 145 to 150 of the same file, records each
       relative extends target, with or without its `.json` suffix, in the
       reuse evidence.
     - The sidecar's `reuse` in `packages/mokly/src/sidecar/compiled.ts:106`
@@ -53,7 +56,7 @@
       when that evidence changed.
     - The content of each present `jsconfig.json` and extends target also
       enters the compilation identity, at
-      `packages/mokly/src/sidecar/bundle-recipe.ts:136`. So the next bundle
+      `packages/mokly/src/sidecar/bundle-recipe.ts:144`. So the next bundle
       after an edit gives a new generation id.
     - `docs/protocol/mokly-sidecar-recipes.md` states these rules.
   - The reuse evidence never enters the metadata inputs. So it reaches no
@@ -79,6 +82,30 @@
     package extends the root `tsconfig.json`, so its edits already rebuild. A
     target such as `./tsconfig.base.json`, or a `tsconfig.json` in a
     directory on no module chain, is not a metadata input.
+  - Since 2026-11-18, a marked Serve edit compile records no reuse evidence.
+    A later `serveEdit` request of the same process reuses it while its live
+    inputs stay unchanged: the consumed file digests, the metadata inputs,
+    and the directory lists. `resolutionInputs`, at
+    `packages/mokly/src/sidecar/resolution-inputs.ts:64` to line 75, gives
+    those inputs. So they hold no `jsconfig.json` and no extends target that
+    is not a module chain candidate.
+  - A Mokly probe of 2026-11-18 showed the result. `tsconfig.base.json`
+    mapped `@/*` to `./one/*`, and `tsconfig.json` only extended
+    `./tsconfig.base.json`. The entry imported `@/value`, and both
+    `one/value.js` and `two/value.js` existed. The first `serveEdit` compile
+    selected `one` and carried the marker. After the base mapped `@/*` to
+    `./two/*`, a fresh compile selected `two`, but marked reuse kept `one`.
+  - Captured reuse differs. The same probe with `capture: "full"` selected
+    `one` with complete evidence. After the base edit, its reuse check
+    declined, because its evidence records the extends target, so the next
+    bundle compiled again.
+  - The metadata inputs are also live inputs of every compile. But a marked
+    compile reads configuration chains only in `ServeEditPaths` and
+    `ServeEditImports`, for the folders of its authored imports, and it keeps
+    none of the configuration files that it reads there as live inputs. So a
+    fix of this item must also give a marked compile the base files of each
+    chain as live inputs. A `jsconfig.json` candidate that A or B adds to
+    `resolutionInputs` reaches marked compiles without more work.
   - In Rust, `RESOLUTION_FILES` in
     `crates/mokly-graph/src/render_closure.rs:10` lists `package.json` and
     `tsconfig.json`. `chain`, at line 158, lists them in a module's
@@ -108,17 +135,22 @@
   not rebuild for it. It is not a render input either. Its keys move only when
   the next compile changes the module graph or the module bytes, so a
   parse-option edit can leave stale renders. A `tsconfig.json` edit on a
-  module chain rebuilds and moves the keys of the closures on that chain.
+  module chain rebuilds and moves the keys of the closures on that chain. In
+  watched Serve, a marked edit compile also keeps the old module after an
+  edit of such a file, because its live inputs do not hold the file.
 - **Impact if no action:** A JavaScript catalogue that uses `jsconfig.json`
   aliases, or a `tsconfig.base.json`, keeps the old resolution in watched
-  Serve until another watched change, a manual rebuild, or a restart. The
-  next bundle then compiles again, because the reuse evidence changed. A
-  parse-option edit can leave cached renders from the old code until their
-  keys move.
+  Serve until another watched change, a manual rebuild, or a restart. A
+  captured compile then compiles again at the next bundle, because its reuse
+  evidence changed. A marked Serve edit compile keeps the old module until a
+  JavaScript edit changes a consumed file, or until a restart. By code
+  reading, a manual rebuild keeps it too, because it uses the same live
+  checks. A parse-option edit can leave cached renders from the old code
+  until their keys move.
 - **Root question:** How does a watched edit of a configuration file that
   esbuild reads, such as a `jsconfig.json` or an extends target, rebuild the
-  catalogue and move the affected render input keys, as a `tsconfig.json`
-  edit does?
+  catalogue from current code and move the affected render input keys, as a
+  `tsconfig.json` edit does?
 - **Options:**
   - **A.** Record both kinds as metadata inputs. Add `jsconfig.json` to the
     candidate names in `packages/mokly/src/sidecar/resolution-inputs.ts:70`,
@@ -141,8 +173,10 @@
     One list then serves both sides. Effort: Large.
   - **D.** Change nothing. Both kinds stay reuse evidence and identity inputs
     only, and the exhaustive requirement stays. An edit takes effect at the
-    next bundle, and a view whose key did not move can keep its old render.
-    Effort: Small.
+    next bundle of a captured compile. A marked Serve edit compile keeps the
+    old module until a JavaScript edit changes a consumed file, or until a
+    restart. A view whose key did not move can keep its old render. Effort:
+    Small.
 - **Left out:**
   - Put the whole reuse evidence into the metadata inputs. Its directory
     lists, absent candidates, and peer manifests would then move render
@@ -156,8 +190,13 @@
 - **Related:**
   - [package-tsconfig-extends-reuse.md](./package-tsconfig-extends-reuse.md):
     it adds package-name and absolute extends targets to the reuse evidence.
-    Such a target then has the watch and render-key gap of this item. Each
-    item can merge alone.
+    Such a target then has the watch and render-key gap of this item. That
+    item gives the package base files to marked compiles, and this item gives
+    the relative ones. Each item can merge alone.
+  - [in-process-resolution-coherence.md](./in-process-resolution-coherence.md):
+    it keeps the marked Serve edit exception of 2026-11-18, whose live checks
+    prove no fresh selection. The marked gap of this item is a missing live
+    input, not a window of that item. Each item can merge alone.
 - **Recommendation:** B. It watches every configuration file that esbuild
   reads, and it moves at least the affected keys. A `jsconfig.json` edit
   moves only its closures' keys. A rare extends target edit moves every key
