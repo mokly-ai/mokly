@@ -13,7 +13,7 @@ import { consumerPlugins } from "../packages/mokly/src/sidecar/plugins.js";
 
 import { bundleParams } from "./helpers/sidecar.js";
 
-test("source loads use parallel callback reads and reuse the recorded bytes", async (context) => {
+test("source loads use synchronous reads and reuse the recorded bytes", async (context) => {
   const params = bundleParams();
   params.moduleResolution.loaders[".raw"] = "binary";
   const inputs: BundleInputs = {
@@ -50,7 +50,7 @@ test("source loads use parallel callback reads and reuse the recorded bytes", as
     file: string;
     complete(error: NodeJS.ErrnoException | null, bytes?: Buffer): void;
   }> = [];
-  const reads = context.mock.method(
+  const callbacks = context.mock.method(
     fs,
     "readFile",
     (file: fs.PathOrFileDescriptor, ...args: unknown[]) => {
@@ -75,34 +75,59 @@ test("source loads use parallel callback reads and reuse the recorded bytes", as
   });
   const first = args("first.tsx");
   const second = args("second.raw");
-  const loaded = [load(first), load(second)];
-  assert.deepEqual(
-    pending.map(({ file }) => file),
-    [first.path, second.path],
-  );
   const bytes = [
     Buffer.from("export const node = <main />;"),
     Buffer.from([0, 255, 10]),
   ];
-  pending[1]!.complete(null, bytes[1]);
-  pending[0]!.complete(null, bytes[0]);
+  const synchronousFailure = new Error("synchronous read fault");
+  const reads = context.mock.method(
+    fs,
+    "readFileSync",
+    (file: fs.PathOrFileDescriptor) => {
+      if (String(file) === first.path) return bytes[0]!;
+      if (String(file) === second.path) return bytes[1]!;
+      throw synchronousFailure;
+    },
+  );
+  const loaded = [load(first), load(second)];
+  assert.deepEqual(
+    reads.mock.calls.map(({ arguments: [file] }) => String(file)),
+    [first.path, second.path],
+  );
   assert.deepEqual(await Promise.all(loaded), [
     { contents: bytes[0], loader: "tsx" },
     { contents: bytes[1], loader: "binary" },
   ]);
   assert.deepEqual(await load(first), { contents: bytes[0], loader: "tsx" });
   assert.equal(reads.mock.callCount(), 2);
+  assert.equal(callbacks.mock.callCount(), 0);
   assert.equal(promiseReads.mock.callCount(), 0);
   assert.equal(captures.mock.callCount(), 0);
   const failure = Object.assign(new Error("read fault"), { code: "EACCES" });
-  const failed = load(args("failed.js"));
-  pending[2]!.complete(failure);
+  const failedArgs = args("failed.js");
+  const failed = load(failedArgs);
+  assert.equal(pending[0]!.file, failedArgs.path);
+  pending[0]!.complete(failure);
   await assert.rejects(Promise.resolve(failed), (error: unknown) => {
     assert.equal(error, failure);
     return true;
   });
   assert.equal(reads.mock.callCount(), 3);
+  assert.equal(callbacks.mock.callCount(), 1);
   assert.equal(captures.mock.callCount(), 1);
   assert.equal(captures.mock.calls[0]!.arguments[0], failure);
+  assert.equal(promiseReads.mock.callCount(), 0);
+  const recoveredArgs = args("recovered.js");
+  const recovered = load(recoveredArgs);
+  assert.equal(pending[1]!.file, recoveredArgs.path);
+  pending[1]!.complete(null, bytes[0]);
+  assert.deepEqual(await recovered, { contents: bytes[0], loader: "js" });
+  assert.deepEqual(await load(recoveredArgs), {
+    contents: bytes[0],
+    loader: "js",
+  });
+  assert.equal(reads.mock.callCount(), 4);
+  assert.equal(callbacks.mock.callCount(), 2);
+  assert.equal(captures.mock.callCount(), 1);
   assert.equal(promiseReads.mock.callCount(), 0);
 });
