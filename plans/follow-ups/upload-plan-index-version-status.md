@@ -39,6 +39,15 @@
     line 7 of that page lists the public catalogue index, version 9. So
     the 426 answer for an unsupported index version is already a
     requirement. Only the rejection table lacks its row.
+  - Mokly Cloud already answers 426 with `upload-unsupported-version` for
+    an unsupported index version. Checked on 2026-11-18 at the Cloud `main`
+    commit `767be7b2`:
+    [`crates/mkc-mokly-contract/src/index.rs:30-36`](https://github.com/mokly-ai/mokly-cloud/blob/767be7b25b1c2aa3138491f32afcc43f20fb2f4f/crates/mkc-mokly-contract/src/index.rs#L30-L36)
+    turns an index `schemaVersion` other than 9 into an unsupported-version
+    error.
+    [`crates/mkc-mokly-contract/src/error.rs:143`](https://github.com/mokly-ai/mokly-cloud/blob/767be7b25b1c2aa3138491f32afcc43f20fb2f4f/crates/mkc-mokly-contract/src/error.rs#L143)
+    maps that error to 426, and line 154 maps it to
+    `upload-unsupported-version`.
 - **Problem:** The table gives no status for a catalogue index in the Plan
   archive whose version the receiver does not support. Receivers can then
   answer with different statuses, and the CLI shows different messages.
@@ -77,9 +86,6 @@
   Upload envelope version 3 added the catalogue index to the Plan archive
   on 2026-10-26. The index rule was added to the validation page, but the
   426 row did not change.
-- **Related:** [mokly-cloud-index-v9.md](./mokly-cloud-index-v9.md) moves
-  Mokly Cloud to index version 9. Until it does, a publication of the next
-  release meets exactly this case.
 - **Recommendation:** D. It states the existing 426 requirement once for
   every versioned Plan file and keeps the CLI's update message.
 - **Action:** fix after merge, apply D, because the row restates the 426
