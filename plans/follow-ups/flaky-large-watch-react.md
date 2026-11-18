@@ -109,11 +109,13 @@
     started to keep the last released recipe of each set of bundle settings,
     so a later bundle whose inputs equal an earlier compile can skip
     esbuild.
-  - [bundle-disk-cache.md](./bundle-disk-cache.md) and
+  - PR #312 merged on 2026-11-18. It keeps compiled sidecar bundles in a
+    bounded disk cache across command processes, and it deleted the
+    [bundle disk cache item at its last commit](https://github.com/mokly-ai/mokly/blob/bc858df427b0ffe2cb53dbf3fe35a44e032475cc/plans/follow-ups/bundle-disk-cache.md).
     [stylesheet-cache-across-restarts.md](./stylesheet-cache-across-restarts.md)
-    wait for the user's choice. They keep compiled output across restarts.
-    E keeps it across the edits of one process. One cache design can serve
-    all three, so the plan for E reads both items first.
+    still waits for the user's choice. It keeps compiled output across
+    restarts. E keeps it across the edits of one process. So the plan for E
+    reads the cache of PR #312 and that item first.
 - **Recommendation:** E. The user chose it on 2026-11-03. The first
   recommendation was C, which reports the last finished step of each edit.
 - **Action:** fix after merge, apply E, because the user chose E on
