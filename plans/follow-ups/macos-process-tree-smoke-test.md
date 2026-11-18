@@ -44,8 +44,8 @@
     `proc_pidinfo` with `PROC_PIDTBSDINFO`. macOS has no subreaper, so an
     orphan moves to launchd.
   - The CI job "Native" in `.github/workflows/ci.yml` runs
-    `cargo test --workspace` on the hosted macOS runner
-    `blacksmith-6vcpu-macos-26` for each pull request. It runs the
+    `cargo test --workspace` on the GitHub-hosted macOS runner
+    `macos-26` for each pull request. It runs the
     real-process tests in `crates/mokly-platform/tests/process_tree_tests.rs`
     and `crates/mokly-compare/tests/script_session_tests.rs`. These tests
     use helper processes and a fake Node manager that starts a detached
@@ -114,7 +114,7 @@
 - **Task:**
   1. After the change that stops every process of a base install's tree
      reaches `main`, start a hosted macOS runner. For example, use a temporary
-     workflow job on `blacksmith-6vcpu-macos-26`. The runner needs Git.
+     workflow job on GitHub-hosted `macos-26`. The runner needs Git.
   2. Check out `main`. Install a Node version that the `engines` field of
      the root `package.json` allows, such as Node 22.15 or Node 24.21.0.
   3. Run `npm ci` and then `npm run build` in the checkout. `npm ci`

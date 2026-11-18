@@ -11,15 +11,15 @@ workflow file only. A branch push must match both filters. Tag pushes do not
 start the workflow. A push run registers the workflow before merge.
 
 Set `permissions: contents: read`. Use no workflow secrets.
-Run one job on the runner of the CI suite jobs, `blacksmith-4vcpu-ubuntu-2404`.
+Run one job on `blacksmith-4vcpu-ubuntu-2404`, which has the 4 vCPUs of the CI Linux runners.
 Set the workflow `env` of the CI workflow, which holds the CI Cargo settings.
 Set `timeout-minutes: 30`.
 `Required CI` does not depend on this workflow.
 
-The job matches the CI suite jobs in runner, Cargo settings, and Rust build
-cache, so each command takes about the time and runner cost of its CI job.
-One job serves all seven commands. The repository command therefore restores
-the cache of the other suites, not the cache of the CI repository job.
+The job matches the CI suite jobs in Cargo settings and Rust build cache, but
+not in runner. One job serves all seven commands. The repository command
+therefore restores the cache of the other suites, not the cache of the CI
+repository job.
 
 Run the steps in this order:
 

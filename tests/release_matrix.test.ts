@@ -48,10 +48,13 @@ test("native release jobs build locked targets and gate publication on the matri
     rows.map(({ target }) => target).sort(),
     NATIVE_TARGETS.map(({ target }) => target).sort(),
   );
-  assert.equal(
-    rows.find(({ target }) => target === "darwin-x64")?.runner,
-    "macos-26-intel",
-  );
+  const runners: Readonly<Record<string, string>> = {
+    "linux-x64-gnu": "ubuntu-24.04",
+    "linux-arm64-gnu": "ubuntu-24.04-arm",
+    "darwin-arm64": "macos-26",
+    "win32-x64-msvc": "windows-2025",
+    "darwin-x64": "macos-26-intel",
+  };
   assert.ok(native.steps.some(({ run }) => run === "npm ci --ignore-scripts"));
   assert.ok(
     native.steps.some(({ run }) =>
@@ -62,6 +65,7 @@ test("native release jobs build locked targets and gate publication on the matri
     const target = NATIVE_TARGETS.find(({ target }) => target === row.target);
     assert.ok(target);
     assert.equal(row.triple, target.triple);
+    assert.equal(row.runner, runners[row.target], `${row.target} runner`);
   }
   assert.ok(
     native.steps.some((step) =>
@@ -80,29 +84,18 @@ test("native release jobs build locked targets and gate publication on the matri
   const checkouts = native.steps.filter((step) =>
     step.uses?.includes("/checkout@"),
   );
-  assert.equal(checkouts.length, 2);
-  const githubHosted = checkouts.find(
-    (step) => step.if === "!startsWith(matrix.runner, 'blacksmith-')",
-  );
-  const blacksmith = checkouts.find(
-    (step) => step.if === "startsWith(matrix.runner, 'blacksmith-')",
-  );
+  assert.equal(checkouts.length, 1);
+  const checkout = checkouts[0]!;
+  assert.equal(checkout.if, undefined);
   assert.equal(
-    githubHosted?.uses,
+    checkout.uses,
     "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
   );
-  assert.equal(
-    blacksmith?.uses,
-    "useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a",
-  );
-  for (const checkout of checkouts) {
-    assert.equal(checkout.with?.["fetch-depth"], 0);
-    assert.equal(checkout.with?.["persist-credentials"], false);
-    assert.equal(
-      checkout.with?.ref,
-      "${{ needs.select-release.outputs.publish_ref }}",
-    );
-  }
+  assert.deepEqual(checkout.with, {
+    "fetch-depth": 0,
+    ref: "${{ needs.select-release.outputs.publish_ref }}",
+    "persist-credentials": false,
+  });
   const publish = workflow.jobs.publish!;
   const preparation = workflow.jobs["prepare-release"]!;
   assert.ok(preparation.needs?.includes("build-native"));

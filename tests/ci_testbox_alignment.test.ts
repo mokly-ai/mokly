@@ -34,7 +34,6 @@ interface WorkflowStep {
 
 interface WorkflowJob {
   readonly env?: Readonly<Record<string, unknown>>;
-  readonly "runs-on"?: unknown;
   readonly steps?: readonly WorkflowStep[];
 }
 
@@ -42,24 +41,6 @@ interface Workflow {
   readonly env?: Readonly<Record<string, unknown>>;
   readonly jobs?: Readonly<Record<string, WorkflowJob>>;
 }
-
-test("Testboxes run on the runner of the CI suite jobs", async () => {
-  const ci = await readWorkflow(CI_WORKFLOW);
-  const runners = new Set(
-    Object.keys(REMOTE_GATE_SUITES).map(
-      (suite) => suiteJob(ci, suite)["runs-on"],
-    ),
-  );
-  assert.equal(
-    runners.size,
-    1,
-    "the CI suite jobs must share one runner, so that one Testbox job matches all of them",
-  );
-  assert.equal(
-    testboxJob(await readWorkflow(TESTBOX_WORKFLOW))["runs-on"],
-    [...runners][0],
-  );
-});
 
 test("Testboxes build Rust with the CI workflow environment", async () => {
   const ci = await readWorkflow(CI_WORKFLOW);

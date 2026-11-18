@@ -67,8 +67,8 @@ cache is about half the size. Panic messages keep their file and line.
 CI caches dependency builds instead of compiler output through sccache.
 sccache alone saves about the same time, but it needs storage secrets, fork
 pull requests build without it, and every holder of a write key could change
-what CI reads. Its GitHub Actions store also bypasses the runner provider's
-colocated cache and exceeds GitHub's cache upload rate limit on a cold run.
+what CI reads. Its GitHub Actions store also exceeds GitHub's cache upload
+rate limit on a cold run.
 
 ## Testbox Key And Secret Boundary
 
