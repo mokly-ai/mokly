@@ -62,6 +62,15 @@
     request started its own CI run.
   - The confidence is High since 2026-11-01, because this log shows the
     problem.
+  - On 2026-11-18 a second failure matched the same cause. The same test
+    failed in a local Linux run of the complete gate, `cargo xtask check`,
+    with the same text at the same line. The run was on the branch
+    `calummoore/mokly-sidecar-generation-affinity-jmbb`, which changes no file
+    under `crates/mokly-render/`. The `mokly-render` library tests gave 97
+    passes and 1 failure. An earlier `cargo xtask check --suite repository` on
+    that branch passed all 2545 Rust tests, this test included. One isolated
+    rerun passed 1 of 1, with 97 filtered out and exit code 0:
+    `cargo test -p mokly-render --lib stylesheet_cache::stylesheet_trace_tests::finding_4_real_bundles_report_each_miss_reason_and_hits_are_silent -- --exact --nocapture`.
 - **Impact if no action:** Both tests can fail at random without a product
   change, as the sidecar test did.
 - **Root question:** How should every span capture in the test suites see

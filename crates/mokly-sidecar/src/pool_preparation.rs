@@ -12,6 +12,46 @@ use crate::pool_state::{Slot, State};
 use crate::results::Module;
 use crate::wire::Request;
 
+/// Inputs that must already be installed before a generation call runs.
+pub(super) struct Prerequisites {
+    /// The call needs the retained CSS class maps.
+    pub(super) maps: bool,
+    /// The call needs evaluated registrations.
+    pub(super) description: bool,
+    /// The call needs the latest shared binding payload.
+    pub(super) bindings: bool,
+}
+
+impl Prerequisites {
+    /// Match the inputs that replay installs before the requested call.
+    pub(super) fn for_call(call: &Call) -> Self {
+        let bindings = matches!(
+            call,
+            Call::RenderScreen(_)
+                | Call::RenderComponent(_)
+                | Call::RenderStory(_)
+                | Call::RenderPage(_)
+        );
+        Self {
+            maps: !matches!(call, Call::CssModules(_)),
+            description: bindings || matches!(call, Call::Bindings(_)),
+            bindings,
+        }
+    }
+
+    /// Missing retained inputs never count as installed on a slot.
+    pub(super) fn loaded(&self, state: &State, slot: &Slot, generation: &str) -> bool {
+        (!self.maps || (state.maps.contains_key(generation) && slot.maps.contains(generation)))
+            && (!self.description || slot.described.contains(generation))
+            && (!self.bindings
+                || state
+                    .bindings
+                    .get(generation)
+                    .zip(slot.bindings.get(generation))
+                    .is_some_and(|(retained, loaded)| Arc::ptr_eq(retained, loaded)))
+    }
+}
+
 impl Pool {
     pub(super) fn seed_compilation(&self, slot: &mut Slot, params: &Bundle) -> Result<()> {
         let (stored, candidate) = {

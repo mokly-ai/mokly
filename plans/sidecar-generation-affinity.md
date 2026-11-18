@@ -149,9 +149,159 @@ Shared assumptions: pass preference remains mandatory, from the task and the
 source root scheduling contract. Context affinity remains stronger than all
 other selection rules, from the PostCSS contract. Both remain valid.
 
+### 3. Preserve replay tests under affinity
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Test.
+- **Location:** `crates/mokly-sidecar/src/_tests_/pool_reload_tests.rs`.
+- **Terms:**
+  - **Lease:** a request's exclusive use of a pool slot until release.
+- **Background:** Two existing tests prove map and binding replay on a second
+  process. Their fixtures put that process first in the idle queue while a
+  fully prepared process remains idle.
+- **Problem:** Correct generation affinity selects the prepared process.
+  The fixtures then exhaust that process's expected mock calls. The task
+  separately requires every existing pool test to remain unchanged.
+- **Impact if no action:** The sidecar crate run fails, and the complete gate
+  cannot pass with both constraints intact.
+- **Root question:** Which should give way to preserve second-process replay:
+  the unchanged text of two tests, or generation ranking for render calls?
+- **Options:**
+  - **A.** Keep the prepared process leased while the second process replays.
+    Adjust only the two fixtures. Keep every assertion, payload, event count,
+    and timeout. Take each lease while its slot is the only idle slot.
+    Lease the second worker before the first returns. Effort: Small.
+  - **B.** Rebuild the two fixtures around concurrent public requests and
+    explicit worker barriers. This proves busy state with more harness code.
+    Keep the same replay assertions. The binding fixture needs a barrier in
+    the first worker's memory probe after the new payload is recorded.
+    Effort: Medium.
+  - **C.** Rank only calls that do not render. Keep FIFO order for renders.
+    Both fixtures then stay unchanged, but renders can restore a generation
+    that an idle process holds. Change decision 1, its docs, and new render
+    selection tests. Repeat branch measurements. Effort: Medium.
+- **Left out:** Leaving the fixtures unchanged keeps the gate red. Reverting
+  generation affinity fails the approved goal. Special test detection in the
+  selector hides the conflict. Moving assertions to a private helper loses
+  the real request path. Changing worker expectations to follow affinity
+  removes the second-process replay that these tests prove. Disabling rank
+  only for tests covers a policy that production never runs. Preferencing
+  non-holders adds replay that C avoids. A shared helper for passing fixtures
+  changes tests outside this correction.
+- **Wider fix:** A makes each target the only eligible slot, so later ranking
+  changes cannot reroute the call. A shared lease helper for queue-steering
+  fixtures belongs in a follow-up because those other tests still pass.
+- **Previous examples:** `pool_scheduling_tests.rs` already uses explicit
+  leases. `equal_bindings_keep_the_shared_revision_on_both_workers` also
+  steers through the idle queue and currently passes because both slots tie.
+- **Related:** Decision 1 changes the selection that these fixtures assumed.
+- **Recommendation:** A. An explicit lease changes only the fixture's busy
+  state and preserves the replay coverage and operation counts.
+- **Action:** fix now, apply A. The performance orchestrator approved this
+  setup-only correction on 2026-11-18 under the user's delegation of
+  2026-11-16. The unchanged-tests rule prevents weaker coverage. Explicit
+  leases retain second-process replay through the real request path and
+  replace obsolete idle-queue steering. C loses useful render ranking.
+  B adds harness code without extra coverage.
+
+Shared assumptions: replay must reach the real pool request path, from the
+existing tests and the testing skill. All assertions, payloads, counts, and
+deadlines stay, from the task's prohibition on weakened tests. A and B keep
+the render ranking from decision 1. C drops that assumption to preserve the
+literal unchanged-tests requirement.
+
+The fresh second-pass options check retained A on 2026-11-18. It added C,
+corrected the root question, and confirmed the lease ordering. Its report is
+`.context/sidecar-generation-affinity/reports/decision-3-options.md`.
+
+### 4. Obtain a safe matched local measurement
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Performance.
+- **Location:** `scripts/large/memory.ts` and the ignored measurement harness.
+- **Terms:**
+  - **Memory stop:** the aggregate harness RSS ceiling that ends a benchmark
+    before it can exhaust the host.
+- **Background:** This host has 7,941 MiB RAM. Preflight checks show more than
+  6,000 MiB available while other heavy work is idle. The existing benchmark
+  default stops the complete harness above 1,750,000 KiB.
+- **Problem:** That stop censored the basic and React baseline before Changes
+  became ready. A minimal React diagnostic instead failed base validation.
+  The branch completed the smaller React fixture, but no matched JavaScript
+  edit pair exists under the default ceiling.
+- **Impact if no action:** The local report has stopped baseline attempts
+  rather than the requested JavaScript before/after times. Cloud acceptance
+  remains with the performance orchestrator.
+- **Root question:** How can the local evidence obtain matched JavaScript
+  edits without risking exhaustion of the shared host's memory?
+- **Options:**
+  - **A.** Keep the default ceiling. Report the censored local measurements
+    and rely on the separate cloud acceptance run. Effort: Small.
+  - **B.** Apply the same smaller Node heap limit to both versions. It can
+    change garbage collection and the measured workload. Effort: Small.
+  - **C.** Run a separately labelled matched profile with a 3 GiB aggregate
+    harness ceiling. Require at least 5 GiB available before each run. Keep
+    four sidecars and unchanged runtime flags, time limits, and fixtures.
+    Retain every default-profile failure. Observed sampling overshoot leaves
+    about 1.8 GiB of the required preflight headroom. Effort: Small.
+  - **D.** Diagnose and correct the minimal fixture's dependency-root failure
+    before another diagnostic. Its cause is not yet established, and that
+    workload still differs from the requested defaults. Effort: Medium.
+  - **E.** Run a labelled two-sidecar profile under the default ceiling.
+    This uses the benchmark default, but differs from the cloud pool and
+    changes the head and return behaviour being measured. Effort: Small.
+  - **F.** Add a transient systemd scope outside the runner control group,
+    with a hard memory cap and no swap. It needs root on the shared host
+    and can affect I/O near its cap. Effort: Medium.
+  - **G.** Apply C and read host `MemAvailable` at every sample. Stop the
+    complete owned process tree when it falls below 1.5 GiB. Record that
+    failure separately. Keep this addition in the ignored scratch harness.
+    Do not route the stop through the sampling-error path. Effort: Small.
+  - **H.** Run the same four-sidecar fixtures on a larger host. It needs
+    the performance orchestrator's infrastructure and new builds there.
+    Effort: Medium.
+  - **I.** Make the tracked harness derive its default from available memory,
+    retain a reserve, and check a live floor. This changes a documented
+    default and adds a stop, so it requires a separate decision. Effort: Medium.
+- **Left out:** No memory ceiling risks exhaustion. Repeating the stopped
+  profile can select a chance result near the ceiling. Reducing only the
+  harness overhead leaves the process tree near the default stop. Excluding
+  the harness from the sum loses protection that G retains.
+- **Wider fix:** I removes repeated manual choices for later hosts. It stays
+  in a follow-up because it changes tracked tooling outside this pool change.
+- **Previous examples:** `scripts/large/memory.ts` already accepts a stop
+  value separately from its default. The existing large benchmark liveness
+  follow-up records a 6 GiB stop on a 16 GiB host.
+- **Recommendation:** G, replacing the first recommendation C. It preserves
+  the workload and also detects memory used by other sessions during a run.
+- **Action:** fix now, apply G. This is this workspace orchestrator's call
+  of 2026-11-18. The existing README permits a larger configured stop on a
+  host with enough memory. The stop is no acceptance budget or test assertion.
+  The preflight, ceiling, and live floor meet the user's memory requirement.
+
+Shared assumptions: the task requires no memory exhaustion and unchanged time
+allowances. Four local sidecars are this workspace orchestrator's measurement
+choice to match the cloud pool, not a separate user requirement. E drops it.
+The code and fixture README provide a configurable safety ceiling, not a Serve
+RSS acceptance budget. Available memory comes from retained preflight records.
+B drops unchanged runtime flags. F changes the enforcement boundary, G drops
+reliance on preflight alone, and H changes the measuring host.
+
+The fresh second-pass options check retained A to D and added E to I. It
+confirmed G as a design call rather than a user decision. Its report is
+`.context/sidecar-generation-affinity/reports/decision-4-options.md`.
+
+The complete gate is independent of this measurement decision. It can run
+while the additional profile waits. No benchmark runs beside the gate.
+
 ## Implementation shape
 
 The existing generation accessor identifies calls that name generations.
+The implementation shares call prerequisites with replay and reuses cleanup's
+staleness predicate. This workspace orchestrator records that call on
+2026-11-18, because both paths must agree on loaded state.
 A small pure ranking function reads the slot's existing records. A slot
 holds a generation only when its bundle exists and its recorded epoch matches
 the current epoch. Scheduling uses the same staleness rule as cleanup, because
@@ -177,43 +327,55 @@ This ranking changes neither path. Both items stay open. Existing replacement
 behaviour can briefly exceed the live process bound, as that item records.
 This branch must add no replacement and no process beyond today's behaviour.
 
-The options check confirmed all supplied design calls against PR #313. Its
-five clarifications are incorporated above and in the documentation and
-measurement TODOs. No new user decision is required.
+The first options check confirmed all supplied design calls against PR #313.
+Its five clarifications are incorporated above and in the documentation and
+measurement TODOs. The later fixture scope decision is recorded separately.
 
-## Milestone 1: Documentation and protocol
+## Milestone 1: Documentation and protocol — completed
 
 Depends on: none
 
-- [ ] Delegate the source root scheduling B rule to the docs implementor.
+- [x] Delegate the source root scheduling B rule to the docs implementor.
       Use a linked status line until implementation is complete.
-- [ ] Record the performance orchestrator's B call in the loaded-state
+- [x] Record the performance orchestrator's B call in the loaded-state
       follow-up. Keep C and D open with their evidence and related items.
-- [ ] Check related startup and reap items for conflicts. Update the crate
+- [x] Check related startup and reap items for conflicts. Update the crate
       README's changed same-root scheduling rule. Check the general transport
       statement about spreading independent calls against sequential reuse.
 
-## Milestone 2: Generation ranking and regression coverage
+## Milestone 2: Generation ranking and regression coverage — completed
 
 Depends on: 1
 
-- [ ] Delegate the call-aware same-root ranking to the non-ui implementor.
+- [x] Delegate the call-aware same-root ranking to the non-ui implementor.
       Use only existing state and preserve FIFO ties and pass preference.
-- [ ] Prove red first: an available holder beats an earlier FIFO non-holder,
+- [x] Prove red first: an available holder beats an earlier FIFO non-holder,
       and a fully prepared holder beats another holder.
-- [ ] Cover fallback when holders are busy or unavailable. Cover FIFO calls
+- [x] Cover fallback when holders are busy or unavailable. Cover FIFO calls
       without a generation. Cover current binding identity and required maps.
-- [ ] Prove renders can lease every available slot and never create more slots
+- [x] Prove renders can lease every available slot and never create more slots
       than the configured pool size. Keep existing pool tests unchanged.
-- [ ] Run targeted pool and sidecar tests. Run each new asynchronous test ten
-      times. Save red proof, pass counts, and added test cost under `.context/`.
-- [ ] Remove the protocol status line when the implementation meets it.
+- [x] Resolve decision 3 through the performance orchestrator, and apply the
+      selected fixture correction without weakening any assertion.
+- [x] Record the shared lease helper for other queue-steering fixtures as a
+      follow-up. Name both corrected fixtures and their reason in the PR body.
+- [x] Run the new pool tests, each new asynchronous test ten times, and the
+      real-process sidecar tests. Save red proof, pass counts, and added test
+      cost under `.context/`.
+- [x] Pass the complete sidecar crate tests after decision 3 is resolved.
+- [x] Remove the protocol and README status lines when implementation meets
+      them. Refresh changed selection pointers in the loaded-state follow-up.
+      Update the README test summary and Key Code entry for the actual result.
 
 ## Milestone 3: Performance evidence
 
 Depends on: 2
 
-- [ ] Delegate release-build measurements to the non-ui implementor. Use
+Baseline preparation and measurements do not depend on decision 3. They can
+run while that fixture-only decision waits, under the task's instruction to
+continue independent work. Branch verification still waits for that answer.
+
+- [x] Delegate release-build measurements to the non-ui implementor. Use
       separate checkouts and target directories for last merged main and branch.
 - [ ] Check disk and memory before each large Cargo build. Set
       `CARGO_INCREMENTAL=0`. Run Cargo builds one at a time.
@@ -222,6 +384,8 @@ Depends on: 2
 - [ ] Record validation-to-input gap, render inputs, edit-to-Changes-ready,
       first Changes, sidecar count, and peak aggregate Serve RSS. Record root
       switches during each edit to check PR #313 preservation. Retain raw logs.
+- [ ] Resolve decision 4 after its fresh options check. Keep every default
+      profile failure and clearly label any additional bounded profile.
 - [ ] Commit and push the implementation. Send its SHA to the performance
       orchestrator immediately for the `mokly-cloud` measurement.
 
@@ -236,7 +400,10 @@ check, delegation reports, measurements, and verification logs.
 
 ## Milestone 4: Verification, review, and pull request
 
-Depends on: 1, 2, 3
+Depends on: 1, 2
+
+The gate can run while the additional measurement profile waits. Review and
+the pull request still require Milestone 3's evidence and decision outcome.
 
 - [ ] Run targeted tests, the early repository suite, and the complete gate.
       Put Git 2.45 or later in its own first PATH directory. Install git-lfs

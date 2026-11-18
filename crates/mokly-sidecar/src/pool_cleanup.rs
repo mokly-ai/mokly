@@ -19,7 +19,8 @@ pub(super) fn pending(state: &State, slot: &Slot) -> bool {
         || !slot.contexts.is_subset(&state.contexts)
 }
 
-fn stale_generation(state: &State, id: &str, epoch: u64) -> bool {
+/// Cleanup and acquisition share the retained-bundle and current-epoch boundary.
+pub(super) fn stale_generation(state: &State, id: &str, epoch: u64) -> bool {
     !state.bundles.contains_key(id) || state.epochs.get(id) != Some(&epoch)
 }
 
