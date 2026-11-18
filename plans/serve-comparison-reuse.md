@@ -383,10 +383,11 @@ Depends on: 1, 2, 3
 The orchestrator owns these steps.
 
 - [x] Use Git 2.45 or later first on `PATH`, with `git-lfs` installed.
-- [ ] Finish the running gate, then merge main's kept-base change at `b881bfffb` under `git-merge` and preserve both changes.
+- [x] Finish the running gate, then merge main's kept-base change at `b881bfffb` under `git-merge` and preserve both changes.
 - [x] Check retained-only proofs through `BaseReader`, including its cancellation, release, replacement, and fresh-base retry boundaries.
-- [ ] Run merged-tree targeted tests and the byte oracle. Push the combination and send its SHA before the complete gate for cloud measurement.
-- [ ] Run a watched smoke on the combination. Confirm view reuse and kept-base reuse after an edit and exact restoration.
+- [x] Run merged-tree targeted tests and the byte oracle. Push the combination and send its SHA before the complete gate for cloud measurement.
+- [x] Run a watched smoke on the combination. Confirm view reuse and kept-base reuse after an edit and exact restoration.
+- [x] Merge main `e8c964cb1` after the cleanup failure. Preserve its large-fixture setup fix and resolved follow-up deletion.
 - [ ] Run targeted tests, Rust format and clippy, `cargo xtask check --suite repository`, and `cargo xtask check`.
 - [x] Run a watched Serve smoke test. Check disk and RAM before each large Cargo build.
 - [x] Check every delegated TODO against the diff and repository rules.
@@ -423,3 +424,18 @@ Keep that deletion. The recurrence evidence remains in the gate report.
 Static delivery did not run after the browser failure. The complete gate remains required on the kept-base integration.
 
 Orchestrator source check: `.context/serve-comparison-reuse/orchestrator-source-check.md`.
+
+Kept-base combined smoke: `.context/serve-comparison-reuse/smoke-kept-base-main/summary.json`.
+
+Performance orchestrator's final acceptance, 2026-11-17: the kept-base combination
+meets the edit-to-Changes goal and the first Changes and RSS limits.
+Final cloud evidence: `.context/serve-comparison-reuse/mokly-cloud-combined-evidence.md`.
+Preserve this table beside the earlier cloud table in the pull request.
+
+The first kept-base complete gate stopped at browser global cleanup.
+Failure and diagnostic evidence: `complete-gate-kept-base-main-first-result.json`,
+`kept-base-browser-cleanup-failure/`, and `probe-browser-cleanup.log` in the evidence folder.
+The direct production setup-and-cleanup probe passed. The complete gate remains required.
+Main `e8c964cb1` adds only large-fixture setup and evidence changes.
+Its six upstream paths are preserved exactly, including the resolved follow-up deletion.
+This integration changes no comparison or reuse runtime code.
