@@ -256,19 +256,21 @@ Depends on: 2
 Evidence: `.context/serve-comparison-proof-cost/` holds checks and measurements.
 Cloud acceptance: `.context/serve-comparison-proof-cost/cloud-acceptance.md`.
 
-## Milestone 3a: Verify main integration
+## Milestone 3a: Verify main integration — completed
 
 Depends on: 3
 
 - [x] Merge main's nearby sidecar-return change without dropping either
       implementation. Audit both parents and preserve all 44 main paths.
 - [x] Run the repository suite on the merged head.
-- [ ] Delegate the release A/B on the latest main and merged branch. Keep
+- [x] Delegate the release A/B on the latest main and merged branch. Keep
       their checkouts, targets, and editable fixtures separate from review.
 - [x] Record the performance orchestrator's cloud remeasurement waiver.
 
 Evidence: `.context/serve-comparison-proof-cost/merge-audit.log` and
-`.context/serve-comparison-proof-cost/integrated/`.
+`.context/serve-comparison-proof-cost/integrated/report.md`.
+The integrated A/B meets the half-current-main comparison target. Reuse,
+proof-read counts, and retained proof charges stay equal between its sides.
 
 ## Milestone 4: Commit, review, and pull request
 
@@ -279,7 +281,7 @@ Depends on: 1, 1a, 2, 2a, 3, 3a
 - [x] Delegate the requested cloud comparison profiling follow-up to the
       `docs implementor`. Do not start that optimization in this branch.
 
-- [ ] Review against `origin/main` with `implementation-review`. Check each
+- [x] Review against `origin/main` with `implementation-review`. Check each
       finding, apply the fix rule, and complete its two allowed fix rounds.
       Record deferred work as follow-up items. Preserve merged nearby changes.
 - [ ] Delete this plan and the resolved proof-cost follow-up. Delegate live
@@ -291,3 +293,7 @@ Depends on: 1, 1a, 2, 2a, 3, 3a
 
 Follow-ups: `plans/follow-ups/manager-fixture-path-drops-git.md` and
 `plans/follow-ups/mokly-cloud-edit-comparison-cost.md`.
+
+Review summary: Two fresh read-only passes at `4f7f51b57` against
+`24b238ca4` found no findings or new outside-scope problem. No fix was needed.
+Evidence: `.context/reviews/calummoore/mokly-comparison-proof-cost-mcnn/`.
