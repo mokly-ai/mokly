@@ -100,7 +100,7 @@ the injected clock API and fake-clock behavior. Publish completion on unwind.
 - **Wider fix:** B can make every existing file listing helper-free. C remains a wider optimization for commands that must run helpers.
 - **Previous examples:** `configure_plain` already avoids `pre_exec` for helper-free commands.
 - **Recommendation:** B. The fresh options check replaces the provisional C. Git does not use its untracked cache for `ls-files`, so fsmonitor cannot shorten this scan.
-- **Action:** ask the user, because the user requested a call before any process-mode change. Send one options-checked recommendation to the performance orchestrator.
+- **Action:** fix now, apply B. The performance orchestrator approved B on 2026-11-19 under the user's delegation of 2026-11-16.
 
 Shared assumptions come from the task and Git runtime contract. Keep the
 same number of command processes. A trampoline must exec into Git in the
@@ -114,6 +114,18 @@ but it needs a readiness gate before group signals and exact spawn-error
 reporting. macOS can keep the existing full-tree path for C or D.
 Option E adds a process at repository open and does not meet the task's
 process-count constraint. B requires the parent's explicit override call.
+
+The parent's call requires one listing path that binds the override and
+plain-group ownership. Apply it only to both existing file listings. Keep
+all other command modes. Tests must capture both requests and prove that
+a configured monitor hook stays unused while listing output stays equal.
+Record Git 2.49.0 source lines, the 100,000-file proof, and the `git status`
+cache distinction in the Git protocol. This explicit documentation request
+also permits its source citations and result summary.
+The approved mode change updates the listing expectation in
+`changes_preserve_renames_and_add_untracked_paths` from FullTree to PlainGroup.
+Keep its tracked-diff mode and every output assertion. This is the necessary
+test update for the parent's call of 2026-11-19.
 
 ### 3. Preserve exact working-input discovery
 
@@ -146,8 +158,10 @@ or watcher invalidation in this change without a new options check.
   Consumers: capture, digest, exact copy, bounded copy, explicit cancellation,
   deadline execution, and the `FastClock` and `HangClock` integration-test clocks.
   Preserve the injected clock behavior. Remove the old completion loop in Milestone 2.
-- A forkless full-tree spawn remains conditional on decision 2. If approved,
-  list and migrate every affected consumer before implementation starts.
+- Full-tree file listings become the approved listing helper with an fsmonitor
+  override and plain-group eligibility. Consumers: candidate discovery and
+  changed-path untracked discovery. Keep the existing promisor fallback.
+  Move both callers and remove their old direct listing requests in Milestone 3.
 
 ## Milestone 1: Documentation and baseline
 
@@ -159,7 +173,7 @@ new entry points need a link. Observable behavior remains unchanged.
 
 - [x] Obtain a fresh options check for every design call and merge its report.
 - [x] Send the options-checked process-mode decision to the performance orchestrator.
-- [ ] Commit and push this plan before implementation.
+- [x] Commit and push this plan before implementation.
 - [x] Audit the Git, freshness, and dependency docs through the docs implementor.
 - [x] Measure `main` release on `examples/basic` and generated large fixtures first.
 
@@ -169,46 +183,88 @@ Evidence: `.context/git-command-wait/` holds the ledger, prompts, baseline, and 
 
 Depends on: 1
 
+Completed on 2026-11-19. Evidence: `.context/git-command-wait/reports/event-wait.md`.
+
 Delegate the runner and test work to the non-ui implementor. Preserve all
 existing tests. Add focused regression cases only for behavior that the
 existing tests do not protect.
 
-- [ ] Replace fixed completion waits with child and pipe completion events.
-- [ ] Preserve cancellation, timeout precedence, exact errors, output limits, and one-second escalation.
-- [ ] Preserve the existing `FastClock` and `HangClock` tests through the injected clock boundary.
-- [ ] Prove complete output when the child exits first and when the pipes close first.
-- [ ] Show new behavior tests fail before the fix, where applicable.
-- [ ] Run each new asynchronous test ten times and record its cost.
-- [ ] Confirm the working-input read-path report against all Serve edit variants.
+- [x] Replace fixed completion waits with child and pipe completion events.
+- [x] Preserve cancellation, timeout precedence, exact errors, output limits, and one-second escalation.
+- [x] Preserve the existing `FastClock` and `HangClock` tests through the injected clock boundary.
+- [x] Prove complete output when the child exits first and when the pipes close first.
+- [x] Show new behavior tests fail before the fix, where applicable.
+- [x] Run each new asynchronous test ten times and record its cost.
+- [x] Confirm the working-input read-path report against all Serve edit variants.
 
-## Milestone 3: Approved spawn work and measurements
+## Milestone 3: Approved file listings
 
 Depends on: 2
 
-Implement only the process-mode option that the performance orchestrator
-approves. Keep this milestone open until the answer and measurement outcome.
+Completed on 2026-11-19. Implement the approved process-mode option.
+Evidence: `.context/git-command-wait/reports/file-listings.md` and
+`.context/git-command-wait/reports/listing-docs.md`.
 
-- [ ] Record the process-mode answer and its date. Expand migration TODOs if needed.
-- [ ] Delegate the approved spawn work and exact ownership regression coverage, if any.
-- [ ] Run six interleaved release rounds against current `main`, with separate checkouts and target directories.
-- [ ] Compare three edit windows for `review.base-tree` and `changes.classify` on each fixture.
-- [ ] Compare exact output and freshness observations and whole-tree cgroup anonymous memory plus swap.
-- [ ] Send the pushed implementation SHA immediately for the orchestrator's `mokly-cloud` measurements.
-- [ ] Confirm at least 25 ms mean reduction on `mokly-cloud` and no memory rise above 5%.
+- [x] Record the process-mode answer and its date. Expand migration TODOs if needed.
+- [x] Delegate the approved spawn work and exact ownership regression coverage, if any.
+- [x] Move both file listings to one override-bound request path. Preserve the existing promisor ownership fallback.
+- [x] Prove both request modes and override arguments. Prove equal output without invoking a configured marker-writing hook.
+- [x] Update the Git protocol and crate README under the parent's source, scan-proof, and status-cache documentation conditions.
 
-## Milestone 4: Verification, review, and pull request
+## Milestone 4: Verification and implementation push
 
 Depends on: 1, 2, 3
 
-The orchestrator owns the combined gate, commits, review, and pull request.
+The orchestrator owns the combined gate and the implementation push.
 Use Git 2.45 or later first on PATH, git-lfs, and the pinned Bun version.
 Check disk and memory before every large Cargo build. Use separate targets,
 disable incremental compilation and development debug information, and run
 Cargo builds one at a time.
 
-- [ ] Run the Git, compare, graph, and Serve targeted tests unchanged.
-- [ ] Run `cargo xtask check --suite repository` and the complete `cargo xtask check` gate with locked dependencies.
+- [x] Run the Git, compare, graph, and Serve tests with the one approved listing-mode expectation update.
+- [x] Run `cargo xtask check --suite repository` with locked dependencies.
+- [x] Run the complete `cargo xtask check` gate with locked dependencies.
+- [x] Check current `origin/main` and merge it with the git-merge skill when it advances. Preserve the sidecar warm-up change if it merges first.
 - [ ] Commit with Conventional Commits and push the implementation.
+- [ ] Send the pushed implementation SHA immediately for the orchestrator's `mokly-cloud` measurements.
+
+The local complete gate remains blocked by the existing saved-plan flake.
+Evidence: `.context/git-command-wait/check-complete.log` and
+`.context/git-command-wait/check-complete-2.log`. The final CI aggregate must pass.
+
+## Milestone 4a: Interleaved render diagnostics
+
+Depends on: 4
+
+The performance orchestrator requested this check on 2026-11-19. Compare
+the complete render integration binary on otherwise idle runs. Keep the
+gate profile and test-thread settings. Use `main` at `6ae96ed08`.
+
+- [ ] Run ten render integration binaries per arm in interleaved order.
+- [ ] Count the plan-invalidation failures for each arm.
+- [ ] Report a higher branch failure count before the PR. Record equal counts in the existing follow-up.
+
+## Milestone 5: Release measurements
+
+Depends on: 4
+
+Keep the tested implementation fixed while both machines measure it. The
+orchestrator measures local fixtures while the performance orchestrator
+measures `mokly-cloud` on its own machine.
+
+- [ ] Run six interleaved release rounds against current `main`, with separate checkouts and target directories.
+- [ ] Compare three edit windows for `review.base-tree` and `changes.classify` on each fixture.
+- [ ] Compare exact output and freshness observations and whole-tree cgroup anonymous memory plus swap.
+- [ ] Confirm at least 25 ms mean reduction on `mokly-cloud` and no memory rise above 5%.
+
+## Milestone 6: Review and pull request
+
+Depends on: 4a, 5
+
+Keep the review and pull request with the orchestrator. The implementation
+push starts the performance orchestrator's measurement before local rounds.
+
+- [ ] Confirm the implementation push. Commit and push each approved review fix with its checks.
 - [ ] Review the complete diff against `origin/main` after the push with the implementation-review skill. Confirm findings, run up to two fix rounds, and record follow-ups.
 - [ ] Merge current `origin/main` with the git-merge skill when it advances. Preserve the sidecar warm-up change if it merges first.
 - [ ] Delete this plan after the other required TODOs and review rounds complete.

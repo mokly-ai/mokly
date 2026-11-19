@@ -95,7 +95,7 @@ fn changes_preserve_renames_and_add_untracked_paths() {
             .returns(output(b"R100\0old\0new\0M\0edit\0")),
         RunnerMock::run
             .next_call(
-                matching!((request) if request.process_mode == ProcessMode::FullTree && request.args.iter().any(|arg| arg == "--exclude-standard")),
+                matching!((request) if request.process_mode == ProcessMode::PlainGroup && request.args.iter().any(|arg| arg == "--exclude-standard")),
             )
             .returns(output(b"untracked\0edit\0")),
     )));
