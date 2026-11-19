@@ -66,6 +66,7 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
     let groups = Arc::new(SystemProcessGroups);
     let commands: Arc<dyn Commands> = Arc::new(TimedCommands {
         spawner: Arc::new(SystemSpawner {
+            clock: clock.clone(),
             groups: groups.clone(),
         }),
         clock: clock.clone(),
