@@ -8,7 +8,7 @@ use mokly_source_interface::tree::{FileKind, Node, SourceTree};
 
 use crate::config_inputs::validate_inputs;
 use crate::config_links;
-use crate::config_paths::configuration_alias;
+use crate::config_paths::{configuration_alias, confined_to_repository};
 use crate::config_types::{ResolvedConfig, ResolvedRoot, RootConfig};
 use crate::config_validation::{invalid, parse};
 use crate::error::{CatalogueError, Result};
@@ -152,7 +152,7 @@ impl ConfigLoader for Loader {
                     root.dir
                 )));
             };
-            if !node.identity.starts_with(&repo_node.identity) || !path.starts_with(&repository) {
+            if !confined_to_repository(&repo_node.identity, &[&path, &node.identity]) {
                 return Err(invalid(format!(
                     "roots[{index}].dir: {} is outside repoRoot",
                     root.dir
