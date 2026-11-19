@@ -114,12 +114,10 @@ the rule. Rules for one application, package, or feature live in the
   contract for the Node, browser, and Rust tests. Read it with the
   `deterministic-tests` skill.
 - A protocol, architecture, or README page whose behaviour is not
-  implemented yet starts with one status line below its title. Link the line
-  to the active plan or follow-up item that owns the missing behaviour. The
-  page has no other link to that work item. Remove the line when the behaviour
-  is implemented.
-  The guides under `docs/guides` ship with the npm package, describe the
-  released product, and carry no status line.
+  implemented yet starts with a status line. The `documentation` skill says
+  what the line links and when it goes. The guides under `docs/guides` ship
+  with the npm package, describe the released product, and carry no status
+  line.
 - A page names an earlier format number or a removed input only where its
   rule needs the name: a version gate that rejects the number, a
   removed-input warning, or a migration step in a guide.
