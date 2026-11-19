@@ -18,7 +18,7 @@ bar, Browse rail and stage. Cloud composes the lead and middle groups into
 `topBarStart` and the trailing actions into `topBarEnd`, with 16px between
 cloud groups. The package's interface takes the app chrome's scheme, the
 `theme` the [package host contract](./viewer-host.md#package-host) passes it,
-so in Dark its own warm neutrals and the cloud slots it holds read as one
+so in Dark its own neutrals and the cloud slots it holds read as one
 surface; the preview documents keep the reader's `scheme`. Non-ready
 publication and access states replace the package with one centered cloud
 card. An overlay or settings dialog makes the viewer beneath inert and keeps

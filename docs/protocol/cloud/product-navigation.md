@@ -5,7 +5,7 @@ around the hosted viewer. Accounts, onboarding, roles and settings are in
 [Product accounts and roles](./product-accounts-and-roles.md). See
 [Viewer](./viewer.md), [Settings dialog](./settings-dialog.md), and the
 [OpenAPI boundary](../../api/README.md); comments and approvals are the draft
-contracts of the review phase. Product uses Folio's warm neutrals, generous
+contracts of the review phase. Product uses Folio's neutrals, generous
 sans typography and [shared controls](./shared-controls.md). The Mokly mark,
 serif wordmark and green accent remain the brand.
 

@@ -101,19 +101,21 @@ roles; the accent roles above are shared:
 
 | Token             | Light     | Dark      | Use                                       |
 | ----------------- | --------- | --------- | ----------------------------------------- |
-| `folio`           | `#faf9f6` | `#161512` | Warm page canvas                          |
-| `folioMuted`      | `#f1efe9` | `#1c1b17` | Navigation rail, dialog rail, tab bar     |
-| `folioSurface`    | `#ffffff` | `#221f1b` | Cards, panels, dialogs, selected nav pill |
-| `folioInk`        | `#23211e` | `#f0ece4` | Headings and body                         |
-| `folioInkMuted`   | `#6d675e` | `#b2aba0` | Secondary copy                            |
-| `folioLine`       | `#e7e3db` | `#302d28` | Decorative hairlines                      |
-| `folioLineStrong` | `#8a8478` | `#8b8478` | Meaningful control boundaries             |
+| `folio`           | `#faf9f6` | `#18181b` | Page canvas                               |
+| `folioMuted`      | `#f1efe9` | `#1d1d20` | Navigation rail, dialog rail, tab bar     |
+| `folioSurface`    | `#ffffff` | `#232326` | Cards, panels, dialogs, selected nav pill |
+| `folioInk`        | `#23211e` | `#f4f4f5` | Headings and body                         |
+| `folioInkMuted`   | `#6d675e` | `#a1a1aa` | Secondary copy                            |
+| `folioLine`       | `#e7e3db` | `#34343a` | Decorative hairlines                      |
+| `folioLineStrong` | `#8a8478` | `#71717a` | Meaningful control boundaries             |
 
 These three surfaces are one ordered elevation system in both schemes, and dark
 is designed rather than inverted: light steps outward from a warm canvas to a
-tinted chrome to white content, dark steps upward from a near-black warm canvas
-to a lifted chrome and content surface, never reaching pure black or white. A
-surface always announces itself with a hairline as well as a fill.
+tinted chrome to white content, dark steps upward from a near-black neutral
+canvas to a lifted chrome and content surface, never reaching pure black or
+white. A surface always announces itself with a hairline as well as a fill.
+Dark Folio is a neutral graphite, not a warm brown, so that the cloud chrome
+and the dark neutrals of the hosted viewer read as one surface.
 
 In the Folio scope, which every product document carries on its root,
 `background` binds to `folio`, `surface` and `surfaceRaised` to

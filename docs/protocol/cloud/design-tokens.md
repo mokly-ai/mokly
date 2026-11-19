@@ -1,9 +1,10 @@
 # Design Tokens
 
-Folio is the product and marketing system: warm neutral surfaces, Inter as the
-UI face, an application-chrome type ramp, a three-level surface system that is
-designed rather than inverted in dark, and a single restrained accent. The
-public site consumes the same private token npm workspace; see
+Folio is the product and marketing system: warm neutral surfaces in light and
+graphite neutrals in dark, Inter as the UI face, an application-chrome type
+ramp, a three-level surface system that is designed rather than inverted in
+dark, and a single restrained accent. The public site consumes the same
+private token npm workspace; see
 [Marketing site](./marketing-site.md) and [Site design](./site-design.md).
 Folio was chosen over the earlier Fieldnotes marketing selection and the other
 candidate themes for its document-like working surface: generous sans typography,
