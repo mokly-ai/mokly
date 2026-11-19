@@ -80,7 +80,10 @@ impl JavaScriptGraph {
             closures: self.runtime.closures.clone(),
             style_references: self.runtime.style_references.clone(),
             dependency_aliases: side.dependency_aliases.clone(),
-            ..Default::default()
+            render_keys: None,
+            stylesheet_roots: Vec::new(),
+            component_stylesheets: BTreeMap::new(),
+            entry_modules: BTreeMap::new(),
         };
         let mut compiler = None;
         let declarations = declarations::validate(self.runtime.tree.clone(), config, catalogue)?;

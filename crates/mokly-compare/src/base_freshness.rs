@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_git::identity::RepoPath;
-use mokly_git::source_key::{CheckoutIdentity, KeptListing};
+use mokly_git::source_key::CheckoutIdentity;
 use mokly_git::tree::Limits;
 use mokly_graph::types::RenderGeneration;
 
@@ -74,17 +74,6 @@ pub trait Freshness: Send + Sync {
     ) -> Result<Option<PreparationInputs>>;
     /// Check the original preparation evidence without mutating it.
     fn current(&self, inputs: &PreparationInputs, request: &FreshnessRequest<'_>) -> Result<bool>;
-    /// Check like `current`. An earlier check of the same kept base left its base listing
-    /// in `kept`, and an equal listing skips its object check. The default checks like
-    /// `current`.
-    fn current_kept(
-        &self,
-        inputs: &PreparationInputs,
-        request: &FreshnessRequest<'_>,
-        _kept: &dyn KeptListing,
-    ) -> Result<bool> {
-        self.current(inputs, request)
-    }
 }
 
 /// Freshness coordinator. Its only IO passes through injected boundaries.
@@ -141,27 +130,6 @@ impl Freshness for FreshnessChecks {
     }
 
     fn current(&self, inputs: &PreparationInputs, request: &FreshnessRequest<'_>) -> Result<bool> {
-        self.check(inputs, request, None)
-    }
-
-    fn current_kept(
-        &self,
-        inputs: &PreparationInputs,
-        request: &FreshnessRequest<'_>,
-        kept: &dyn KeptListing,
-    ) -> Result<bool> {
-        self.check(inputs, request, Some(kept))
-    }
-}
-
-impl FreshnessChecks {
-    /// The checks of `current`. A kept base listing serves the checkout identity read.
-    fn check(
-        &self,
-        inputs: &PreparationInputs,
-        request: &FreshnessRequest<'_>,
-        kept: Option<&dyn KeptListing>,
-    ) -> Result<bool> {
         if inputs.checkout.filtered
             || inputs.selection.directories != request.directories
             || inputs.selection.unmapped != request.unmapped
@@ -170,7 +138,7 @@ impl FreshnessChecks {
         }
         let repository = request.selected.repository.as_ref();
         let checkout = repository
-            .checkout_identity_with(&request.selected.commit, kept)
+            .checkout_identity(&request.selected.commit)
             .base()?;
         if checkout.filtered || checkout != inputs.checkout {
             return Ok(false);

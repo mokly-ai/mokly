@@ -1,15 +1,11 @@
 //! Cache identities include effective checkout settings and attribute overrides.
 
-use std::fmt;
-use std::sync::Mutex;
-
 use sha2::{Digest, Sha256};
 
 use crate::command::{DEFAULT_OUTPUT_LIMIT, ProcessMode};
 use crate::error::{IoResult, Result};
 use crate::identity::ObjectId;
 use crate::repository::GitRepository;
-use crate::tree::Limits;
 
 /// Effective conversion settings for one pinned commit, without a preparation salt.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -20,65 +16,20 @@ pub struct CheckoutIdentity {
     pub filtered: bool,
 }
 
-/// The tree listing of one commit after its object check passed. An equal later listing
-/// names the same objects, so it needs no second object check. The configuration and the
-/// attributes are read again for each identity.
-#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = KeptListingMock))]
-pub trait KeptListing: Send + Sync {
-    /// Whether `listing` equals the kept listing of `commit`.
-    fn matches(&self, commit: &ObjectId, listing: &[u8]) -> bool;
-    /// Keep the checked `listing` of `commit` in place of any earlier listing.
-    fn keep(&self, commit: &ObjectId, listing: &[u8]);
-}
-
-impl fmt::Debug for dyn KeptListing + '_ {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str("KeptListing")
-    }
-}
-
-/// One kept listing in process memory, as the SHA-256 digest of its bytes, so that its
-/// charge does not grow with the tree.
-#[derive(Default)]
-pub struct MemoryKeptListing {
-    slot: Mutex<Option<(ObjectId, [u8; 32])>>,
-}
-
-impl KeptListing for MemoryKeptListing {
-    fn matches(&self, commit: &ObjectId, listing: &[u8]) -> bool {
-        let digest: [u8; 32] = Sha256::digest(listing).into();
-        self.slot
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .as_ref()
-            .is_some_and(|(kept, kept_digest)| kept == commit && *kept_digest == digest)
-    }
-
-    fn keep(&self, commit: &ObjectId, listing: &[u8]) {
-        let digest: [u8; 32] = Sha256::digest(listing).into();
-        *self.slot.lock().unwrap_or_else(|error| error.into_inner()) =
-            Some((commit.clone(), digest));
-    }
-}
-
 struct CheckoutSettings {
     hash: Sha256,
     filtered: bool,
 }
 
 impl GitRepository {
-    fn checkout_settings(
-        &self,
-        commit: &ObjectId,
-        kept: Option<&dyn KeptListing>,
-    ) -> Result<CheckoutSettings> {
+    fn checkout_settings(&self, commit: &ObjectId) -> Result<CheckoutSettings> {
         let config = self.command_with_mode(
             ProcessMode::PlainGroup,
             &["config", "--null", "--list", "--includes"],
             vec![],
             DEFAULT_OUTPUT_LIMIT,
         )?;
-        let entries = self.listing(commit, None, Limits::default(), kept)?;
+        let entries = self.settings_listing(commit)?;
         let mut input = Vec::new();
         for entry in entries.iter().filter(|entry| entry.mode.regular()) {
             input.extend_from_slice(entry.path.as_str().as_bytes());
@@ -108,12 +59,8 @@ impl GitRepository {
         Ok(CheckoutSettings { hash, filtered })
     }
 
-    pub(crate) fn checkout_settings_identity(
-        &self,
-        commit: &ObjectId,
-        kept: Option<&dyn KeptListing>,
-    ) -> Result<CheckoutIdentity> {
-        let settings = self.checkout_settings(commit, kept)?;
+    pub(crate) fn checkout_settings_identity(&self, commit: &ObjectId) -> Result<CheckoutIdentity> {
+        let settings = self.checkout_settings(commit)?;
         Ok(CheckoutIdentity {
             digest: hex(settings.hash),
             filtered: settings.filtered,
@@ -121,7 +68,7 @@ impl GitRepository {
     }
 
     pub(crate) fn checkout_key(&self, commit: &ObjectId) -> Result<String> {
-        let CheckoutSettings { mut hash, filtered } = self.checkout_settings(commit, None)?;
+        let CheckoutSettings { mut hash, filtered } = self.checkout_settings(commit)?;
         if filtered {
             let salt = tempfile::Builder::new()
                 .prefix("mokly-filter-generation-")
@@ -145,5 +92,5 @@ fn hex(hash: Sha256) -> String {
 mod source_key_tests;
 
 #[cfg(test)]
-#[path = "_tests_/kept_listing_tests.rs"]
-mod kept_listing_tests;
+#[path = "_tests_/settings_listing_tests.rs"]
+mod settings_listing_tests;

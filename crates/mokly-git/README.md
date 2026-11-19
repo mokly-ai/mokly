@@ -118,15 +118,12 @@ upstream, also changes the digest. The
 [base cache contract](../../docs/protocol/mokly-base-cache.md#converted-source-identity)
 owns the source identity and the filter rule.
 
-`Repository::checkout_identity_kept` returns the same identity as
-`checkout_identity`. It reads the tree listing, the configuration, and the
-attributes again in each call. A `KeptListing` keeps the tree listing of the
-last call after its missing-object preflight passed. When the next listing of
-that commit is equal, the call skips the preflight, because the preflight
-would check the same objects. `MemoryKeptListing` keeps the SHA-256 digest of
-one listing in memory. The default `checkout_identity_kept` returns `None`.
-Callers read the identity through `checkout_identity_with` on
-`dyn Repository`, which then reads `checkout_identity`.
+The settings read of `source_key` and `checkout_identity` lists the whole tree
+with blob sizes. Git prints a size only for a blob that the object store
+holds, and `BAD` for a missing blob. So when each blob record has a decimal
+size, the read skips the missing-object preflight, because the preflight
+could find nothing missing. Any other size runs the preflight, as
+`Repository::list` does.
 
 `Repository::fingerprint_extracted` records a `Fingerprint` of each confined
 regular file of an extraction: its size, its times, and on Unix its change
@@ -214,8 +211,7 @@ extraction cleanup after cancellation during a streamed copy.
   `Repository` for the checkout that `GitRepositories::open` returns.
 - [`src/source_key.rs`](./src/source_key.rs) defines `CheckoutIdentity`, and
   derives the source key and the checkout identity from one hash of the
-  checkout settings. It also defines `KeptListing` and `MemoryKeptListing`,
-  the checked tree listing that a later identity read of the commit reuses.
+  checkout settings.
 - [`src/disk.rs`](./src/disk.rs) defines `Disk`, its host type `SystemDisk`,
   and `Archive`, the filesystem boundary for the checkout root, working reads,
   confined digests, and extraction.

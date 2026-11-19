@@ -8,8 +8,8 @@ use crate::error::{Error, Result};
 use crate::extracted::ExtractedFiles;
 use crate::identity::{ObjectId, RepoPath};
 use crate::repository::{GitRepository, Repository};
-use crate::source_key::{CheckoutIdentity, KeptListing};
-use crate::tree::{Entry, Limits};
+use crate::source_key::CheckoutIdentity;
+use crate::tree::{self, Entry, Limits};
 
 impl Repository for GitRepository {
     fn merge_base(&self, base: &str) -> Result<ObjectId> {
@@ -25,7 +25,25 @@ impl Repository for GitRepository {
         root: Option<&RepoPath>,
         limits: Limits,
     ) -> Result<Vec<Entry>> {
-        self.listing(commit, root, limits, None)
+        let mut args = vec![
+            "ls-tree",
+            "-r",
+            "-t",
+            "-l",
+            "-z",
+            "--full-tree",
+            commit.as_str(),
+            "--",
+        ];
+        if let Some(root) = root {
+            args.push(root.as_str());
+        }
+        let request = self.tree_request(&args);
+        let entries = tree::parse(&self.runner.run(&request)?.stdout, limits)?;
+        if self.ensure_checkout_objects(commit, &entries)? {
+            return tree::parse(&self.runner.run(&request)?.stdout, limits);
+        }
+        Ok(entries)
     }
 
     fn lookup(&self, commit: &ObjectId, paths: &[RepoPath], limits: Limits) -> Result<Vec<Entry>> {
@@ -121,14 +139,7 @@ impl Repository for GitRepository {
             .collect()
     }
     fn checkout_identity(&self, commit: &ObjectId) -> Result<CheckoutIdentity> {
-        self.checkout_settings_identity(commit, None)
-    }
-    fn checkout_identity_kept(
-        &self,
-        commit: &ObjectId,
-        kept: &dyn KeptListing,
-    ) -> Result<Option<CheckoutIdentity>> {
-        Ok(Some(self.checkout_settings_identity(commit, Some(kept))?))
+        self.checkout_settings_identity(commit)
     }
     fn source_key(&self, commit: &ObjectId) -> Result<String> {
         self.checkout_key(commit)

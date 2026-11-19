@@ -124,9 +124,6 @@ one stream per path and keeps the original observations through cache hits.
 File-object stamps invalidate same-byte replacements. Base identity checks
 retain the extracted-file identity beside the pinned Git content proof.
 Shared and generation-local stylesheet result caches each have a 64 MiB bound.
-One `MemoryReferenceCache` with a 4 MiB bound keeps the inline style scans of
-every generation of a runtime. A base runtime takes the memo of its head
-runtime.
 Their records share storage. Oversized results return without cache retention.
 Each record keeps the read evidence of its own inputs. The module evidence of
 a PostCSS context is kept once. When a later result of the context carries
@@ -255,7 +252,8 @@ view after the edit and counts real process starts and hello calls.
   request: `Full` by default, and `ServeEdit` when Serve prepares its head
   after the first published state. `Runtime::with_serve_edit_plans` gives
   the head runtime of Serve its plan record owner. A base runtime never gets
-  one.
+  one. `Runtime::for_base` builds the runtime of one base preparation, which
+  shares the services and the style memo of the head runtime.
 - [`src/edit_plans.rs`](./src/edit_plans.rs) defines `Records`, the plan
   record owner of a Serve head, and `Record`, which pairs a `ResolutionPlan`
   with the `ReuseEvidence` of its compilation. `Records::insert` keeps only

@@ -7,19 +7,16 @@ use mokly_compare::base_render::{BasePreparationResult, BaseProvider, BaseReques
 use mokly_compare::base_retention::{BaseRelease, BaseRetentionRequest, BaseReuse, KeptBase};
 use mokly_compare::error::{Error, Result};
 use mokly_git::control::Cancellation;
-use mokly_git::source_key::{KeptListing, MemoryKeptListing};
 use mokly_render::runtime::Runtime;
 use mokly_server::changes::{ChangeCancellation, ChangeCommit};
 
 use crate::serve_base_cancel::BaseLifetime;
 use crate::serve_base_key::BaseKey;
 
-/// One adopted key, its complete captured base, and the base listing of its last
-/// freshness check.
+/// One adopted key and its complete captured base.
 pub(super) struct KeptEntry {
     key: BaseKey,
     base: Arc<KeptBase>,
-    listing: Arc<dyn KeptListing>,
 }
 
 /// The one optional base owned by Serve state.
@@ -49,22 +46,20 @@ impl BaseProvider for ServeBase {
             return Err(Error::Cancelled);
         }
         let key = BaseKey::new(request)?;
-        let kept = {
+        let base = {
             let Some(owner) = self.slot.upgrade() else {
                 return Ok(None);
             };
             let mut slot = owner.lock().unwrap_or_else(|error| error.into_inner());
             match slot.as_ref() {
-                Some(entry) if entry.key == key => {
-                    Some((entry.base.clone(), entry.listing.clone()))
-                }
+                Some(entry) if entry.key == key => Some(entry.base.clone()),
                 _ => {
                     *slot = None;
                     None
                 }
             }
         };
-        let Some((base, listing)) = kept else {
+        let Some(base) = base else {
             return Ok(None);
         };
         let Some(inputs) = &base.freshness else {
@@ -88,7 +83,7 @@ impl BaseProvider for ServeBase {
                 self.runtime.dependency_usage.unmapped_directories(),
             )
         };
-        let current = self.freshness.current_kept(
+        let current = self.freshness.current(
             inputs,
             &FreshnessRequest {
                 selected: request.selected,
@@ -96,7 +91,6 @@ impl BaseProvider for ServeBase {
                 directories: &directories,
                 unmapped: &unmapped,
             },
-            listing.as_ref(),
         );
         if self.reader.cancelled() {
             return Err(Error::Cancelled);
@@ -211,7 +205,6 @@ impl ChangeCommit for Keep<'_> {
         *slot = Some(KeptEntry {
             key: self.key.clone(),
             base: self.base.clone(),
-            listing: Arc::new(MemoryKeptListing::default()),
         });
         true
     }

@@ -135,11 +135,8 @@ the slot. A base reader keeps only its exact kept base, its cancellation, and
 a `ReleaseBase` capability, which also holds only a weak handle of the slot.
 It keeps no provider, so it holds no progress callback of the preparation and
 no strong handle of the slot. An old reader can keep only its own base alive.
-`ServeBase::find_kept` compares the `BaseKey`, then runs
-`Freshness::current_kept` outside the slot lock. The slot entry holds a
-`KeptListing` from the keep to the release, so a check of that base skips the
-missing-object preflight when the tree listing has not changed since the
-previous check. A current base returns a reader with the
+`ServeBase::find_kept` compares the `BaseKey`, then runs `Freshness::current`
+outside the slot lock. A current base returns a reader with the
 classification's own cancellation. Another key, a stale check, or a check
 error other than a cancellation releases the kept base before the fresh
 preparation. A cancelled classification keeps a valid kept base, and the
@@ -149,8 +146,7 @@ exact base, so a late reader cannot clear a newer base.
 
 Only Serve gives `NativeBase` a `Freshness`. With it, `NativeBase` samples the
 checkout identity before its first base read and records the evidence of the
-preparation. The base runtime of a preparation takes the style memo of the head
-runtime. `build` and `publish` take no sample and record no evidence. A
+preparation. `build` and `publish` take no sample and record no evidence. A
 sample or record failure, other than a cancellation, gives no evidence, and
 the fresh preparation continues without a kept base. The Git runner, the
 source tree, the dependency step, the sidecar pool handle, and the render
@@ -159,7 +155,9 @@ the classification, its capture scope, and the command stop can cancel it.
 `ServeBase::keep` installs an eligible base in the slot inside the
 classification's commit callback, and it detaches the lifetime there. After
 that, only the command stop cancels the work of the kept base. A base that
-Serve does not keep stays on the classification lifetime.
+Serve does not keep stays on the classification lifetime. In every command,
+`NativeBase` builds the base runtime with `Runtime::for_base`, so the base
+shares the style memo of the head runtime.
 
 `build` validates the catalogue, renders every view into the bounded process
 cache, and captures the head once during the build check under its separate

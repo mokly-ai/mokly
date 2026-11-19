@@ -78,20 +78,29 @@ fn concurrent_lookups_give_direct_scans() {
 
 #[test]
 fn memo_keeps_its_byte_bound_and_drops_the_least_recent_scan() {
-    let cache = MemoryReferenceCache::new(2048);
-    let texts: Vec<_> = (0..10)
+    let texts: Vec<_> = (0..5)
         .map(|index| format!("x{{background:url(image-{index}.png)}}"))
         .collect();
-    for text in &texts {
+    let probe = MemoryReferenceCache::new(1024 * 1024);
+    probe.references(&texts[0]);
+    let charge = probe.stats().bytes;
+    let cache = MemoryReferenceCache::new(3 * charge);
+    let counts = |cache: &MemoryReferenceCache| (cache.stats().scans, cache.stats().hits);
+    for text in &texts[..3] {
         assert_eq!(cache.references(text).as_ref(), references(text).as_slice());
-        assert!(cache.stats().bytes <= 2048, "{text}");
     }
-    assert!(cache.stats().bytes > 0);
-    cache.references(&texts[9]);
-    assert_eq!((cache.stats().scans, cache.stats().hits), (10, 1));
     cache.references(&texts[0]);
-    assert_eq!((cache.stats().scans, cache.stats().hits), (11, 1));
-    let small = MemoryReferenceCache::new(64);
+    cache.references(&texts[3]);
+    assert_eq!(cache.stats().bytes, 3 * charge);
+    cache.references(&texts[0]);
+    assert_eq!(counts(&cache), (4, 2));
+    cache.references(&texts[1]);
+    assert_eq!(counts(&cache), (5, 2));
+    cache.references(&texts[4]);
+    cache.references(&texts[0]);
+    assert_eq!(counts(&cache), (6, 3));
+    assert_eq!(cache.stats().bytes, 3 * charge);
+    let small = MemoryReferenceCache::new(charge - 1);
     for _ in 0..2 {
         assert_eq!(
             small.references(&texts[0]).as_ref(),
