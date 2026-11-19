@@ -76,6 +76,13 @@ the three open decisions. The check report is under
 - Milestone order, answered on 2026-11-17 (option A). Plans in this
   repository follow the order of the shared `plans` skill. The cloud
   override that put documentation first is gone.
+- Cloud freeze after the late merges, answered on 2026-11-19 (option A).
+  Cloud `main` merged PR #136 and PR #132 after the freeze. Cal kept the
+  freeze: nothing more merges into cloud `main`, and open cloud work moves
+  here after the merge. Rejected: a GitHub ruleset that blocks merges into
+  cloud `main`, and the end of the freeze with a port of each later commit.
+- Verification, instructed on 2026-11-19. Local runs cover the targeted
+  tests only. The CI of the pull request runs the full suite.
 
 ## Design calls
 
@@ -171,6 +178,13 @@ Each call below is my call, made on 2026-11-17.
   #342. The cloud jobs follow that decision: the `check`, `images`, and
   `site-lighthouse` jobs of `ci.yml` run on `ubuntu-24.04`, and the macOS
   rows of `desktop-release.yml` run on `macos-26`.
+- Release Please scope. Decided on 2026-11-19. Release Please 17.6.0, which
+  the release workflow pins, matches excluded directories only. The
+  configuration excludes each cloud directory. Shared root files, such as
+  the cloud workflows, root tool configurations, and the AGPL license text,
+  count for the Mokly release like every other root file. Rejected: moving
+  those files into excluded directories, because the workflows cannot move,
+  and patching Release Please.
 
 ## Contract owners
 
@@ -295,7 +309,7 @@ Depends on: 2
       resolve the one installed version.
 - [x] Let reviewed audit exceptions cover production paths that only the
       private `apps/*` projects reach. Add the follow-up item for Expo SDK 58.
-- [ ] Make the cloud build of the app, the site, the mockups, and the
+- [x] Make the cloud build of the app, the site, the mockups, and the
       desktop bundle use the built workspace packages. Make
       `cargo xtask mokly-fixtures` read the workspace build.
 - [x] Regenerate `package-lock.json`. Run `npm ci`, `npm run build`, and the
@@ -392,7 +406,8 @@ Depends on: every other milestone
 The merge of `main` on 2026-11-19 records its conflict resolutions in
 `.context/combine-cloud/merge-main-2026-11-19.md`.
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [ ] Run the targeted tests. The CI of the pull request runs the
+      complete gate.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
