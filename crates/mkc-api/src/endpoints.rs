@@ -20,6 +20,7 @@ pub(crate) enum Endpoint {
     GetHealth,
     GitHub,
     Billing,
+    DesktopGrant,
     CatalogueGrant(ProjectId, PublicationId),
     SendMagicLink(MagicLink),
     VerifyMagicLink(VerifyLink),
@@ -50,6 +51,9 @@ pub(crate) fn action(
     }
     if operation.billing() {
         return Ok(Endpoint::Billing);
+    }
+    if operation.desktop_grant() {
+        return Ok(Endpoint::DesktopGrant);
     }
     match operation {
         Operation::GetHealth => return Ok(Endpoint::GetHealth),

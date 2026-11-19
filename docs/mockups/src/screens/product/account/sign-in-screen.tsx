@@ -1,5 +1,6 @@
 import type { Viewport } from "@mokly/mokly";
 
+import { DesktopEntryPage } from "./desktop-entry";
 import { EntryPage } from "./entry-page";
 
 export function SignInScreen(_props: { viewport: Viewport }) {
@@ -33,4 +34,14 @@ export function SignInGitHubOpensSoonScreen(_props: { viewport: Viewport }) {
 
 export function SignInAddressRefusedScreen(_props: { viewport: Viewport }) {
   return <EntryPage mode="sign-in" situation="address-refused" />;
+}
+
+/** The desktop app's window: one action that opens the connect page. */
+export function SignInDesktopScreen(_props: { viewport: Viewport }) {
+  return <DesktopEntryPage mode="sign-in" state="default" />;
+}
+
+/** The same window while the connect page is open in the browser. */
+export function SignInDesktopWaitingScreen(_props: { viewport: Viewport }) {
+  return <DesktopEntryPage mode="sign-in" state="waiting" />;
 }

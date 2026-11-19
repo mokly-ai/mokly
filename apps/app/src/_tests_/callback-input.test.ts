@@ -111,6 +111,24 @@ test("a preview secret leaves the fragment and the query stays", () => {
   );
 });
 
+test("a desktop grant leaves the fragment and the query stays", () => {
+  withDocument(
+    "https://app.test/auth/desktop/callback?source=app#grant=" + "a".repeat(64),
+    (browser) => {
+      captureCallbackInput();
+      assert.equal(
+        browser.address(),
+        "https://app.test/auth/desktop/callback?source=app",
+      );
+      assert.equal(browser.writes(), 1);
+      assert.equal(browser.referrer(), undefined);
+      assert.equal(takeCallbackInput("email").toString(), "");
+      assert.equal(takeCallbackInput("desktop").get("grant"), "a".repeat(64));
+      assert.equal(takeCallbackInput("desktop").toString(), "");
+    },
+  );
+});
+
 test("a landing's input is handed to that landing, once", () => {
   withDocument(
     "https://app.test/auth/email/callback#token=one&token=two",

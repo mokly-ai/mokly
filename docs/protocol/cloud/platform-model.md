@@ -22,6 +22,7 @@ clients. Timestamps are UTC RFC 3339. Mutable resources carry an integer
 | Project token  | Project, name, public prefix, hash, creation/last-use time, revocation time                                                                    |
 | Build          | Project, reference, head SHA and lifecycle state of one [cloud build](./cloud-builds.md)                                                       |
 | Magic link     | Email, secret hash, return destination, expiry; consumed atomically once                                                                       |
+| Desktop grant  | User, secret hash, challenge, return destination, expiry, inherited session deadline; consumed atomically once                                 |
 | Session        | User, credential hash, CSRF token, absolute/idle deadlines                                                                                     |
 
 The configured [preview account](./auth-sessions.md#preview-sign-in) is the

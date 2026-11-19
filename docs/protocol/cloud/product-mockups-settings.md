@@ -111,6 +111,11 @@ five drawings:
 | `product/settings/billing/portal-opening`        | `product/settings/billing`            | Screen   | Manage billing busy with Opening… until the page leaves for the Customer Portal                   |
 | `product/settings/danger/scope-loading`          | `product/settings/danger`             | Variant  | The pane asked for by address while the scope loads: bars for the project's name                  |
 
+The Account and GitHub accounts panes each carry a fourth variant, `desktop`,
+which draws their GitHub action in the desktop app's window;
+[Product mockups: desktop app](./product-mockups-account-desktop.md) lists it
+with the other desktop drawings.
+
 The Project folder holds the pane with its three states and
 `product/settings/project/no-builds`, `product/settings/project/builds-saving`
 for the Automatic builds switch while it saves,

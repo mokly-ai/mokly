@@ -7,6 +7,9 @@ import {
 } from "../api/client";
 import type {
   Connection,
+  DesktopGrantCallback,
+  DesktopGrantRequest,
+  DesktopGrantResult,
   MagicLinkResult,
   SessionIssued,
   User,
@@ -44,6 +47,35 @@ export function verifyPreviewSignIn(secret: string): Promise<SessionIssued> {
       params: { header: originHeader() },
       headers: correlationHeader(id),
       body: { secret },
+    }),
+  );
+}
+
+/**
+ * Ask for a one-use grant that signs the desktop app in to this browser's
+ * account, bound to the challenge of the window's verifier.
+ */
+export function issueDesktopGrant(
+  input: DesktopGrantRequest,
+): Promise<DesktopGrantResult> {
+  return expectBody((id) =>
+    api.POST("/v1/auth/desktop/grants", {
+      params: { header: mutationHeaders() },
+      headers: correlationHeader(id),
+      body: input,
+    }),
+  );
+}
+
+/** Exchange a desktop grant and the window's verifier for the window's session. */
+export function exchangeDesktopGrant(
+  input: DesktopGrantCallback,
+): Promise<SessionIssued> {
+  return expectBody((id) =>
+    api.POST("/v1/auth/desktop/callback", {
+      params: { header: originHeader() },
+      headers: correlationHeader(id),
+      body: input,
     }),
   );
 }

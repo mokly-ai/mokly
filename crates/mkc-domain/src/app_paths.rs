@@ -15,9 +15,6 @@ pub const DASHBOARD: &str = "/dashboard";
 /// Email magic-link landing path.
 pub const EMAIL_CALLBACK: &str = "/auth/email/callback";
 
-/// Email landing that offers a handoff to the installed desktop shell.
-pub const EMAIL_DESKTOP_CALLBACK: &str = "/auth/email/callback?client=desktop";
-
 /// Preview sign-in landing path.
 pub const PREVIEW_CALLBACK: &str = "/auth/preview/callback";
 

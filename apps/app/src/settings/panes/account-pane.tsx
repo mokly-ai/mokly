@@ -4,14 +4,18 @@ import type { ReactNode } from "react";
 import { unexpectedError } from "../../api/errors";
 import type { Session } from "../../api/types";
 import { Action } from "../../components/action";
+import type { ActionIcon } from "../../components/action";
 import { StatusBadge } from "../../components/controls";
 import { Field } from "../../components/field";
 import { formFailure } from "../../components/form-failure";
 import { Facts, Section } from "../../components/page-parts";
 import { ControlPlaceholder, TextBar } from "../../components/placeholders";
 import { connectGitHub, updateAccount } from "../../data/auth";
+import { isDesktopShell } from "../../navigation/desktop-shell";
 import { storeGitHubFlow } from "../../navigation/github-flow";
+import { settingsPath } from "../../navigation/paths";
 import { currentReturnTo } from "../../navigation/return-to";
+import { openOnWeb } from "../../navigation/web-setup";
 import { useSession } from "../../session/context";
 import { useSettings } from "../context";
 import { useDraft } from "../dirty";
@@ -25,6 +29,19 @@ const disconnectWidth = 175;
 
 /** The width in px of the Connected badge with its dot. */
 const connectedWidth = 96;
+
+/**
+ * Whether Connect GitHub opens this pane on the web: in the desktop app's
+ * window, for a reader whose account has no GitHub connection yet.
+ */
+function connectsOnWeb(connected: boolean): boolean {
+  return isDesktopShell() && !connected;
+}
+
+/** The glyph the GitHub control carries: the external glyph where it leaves. */
+function connectIcon(connected: boolean): ActionIcon {
+  return connectsOnWeb(connected) ? "external" : "github";
+}
 
 /**
  * The Account pane's layout, which the pane and its wait both draw: the name
@@ -89,12 +106,16 @@ function AccountLayout({
 }
 
 /**
- * Connect GitHub, which leaves for GitHub's authorization and comes back to
- * this pane. The write is done when the page leaves, so the control stays
- * busy until then.
+ * Connect GitHub. In a browser tab it leaves for GitHub's authorization and
+ * comes back to this pane; the write is done when the page leaves, so the
+ * control stays busy until then. In the desktop app's window it opens this
+ * pane on the web instead, where the reader connects the account the browser
+ * is signed in to, so it carries the external glyph there and starts no trip
+ * of its own.
  */
 function GitHubConnect({ connected }: { connected: boolean }) {
   const authorize = useWrite(nothingToDo, alwaysSendable);
+  const onWeb = connectsOnWeb(connected);
   const connect = useCallback(
     () =>
       authorize.run(async () => {
@@ -114,11 +135,13 @@ function GitHubConnect({ connected }: { connected: boolean }) {
         }
         tone={connected ? "quiet" : "secondary"}
         size="md"
-        icon="github"
+        icon={connectIcon(connected)}
         write={authorize}
         operation="Connecting to GitHub"
         disabled={authorize.disabled || connected}
-        onPress={() => void connect()}
+        onPress={() =>
+          onWeb ? openOnWeb(settingsPath({ pane: "account" })) : void connect()
+        }
         testID="settings-connect-github"
       />
     </div>,
@@ -235,7 +258,7 @@ export function AccountWait({ session }: { session: Session | undefined }) {
               label={connected ? "Disconnect GitHub" : "Connect GitHub"}
               tone={connected ? "quiet" : "secondary"}
               size="md"
-              icon="github"
+              icon={connectIcon(connected)}
               disabled
             />
           )}

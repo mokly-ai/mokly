@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { desktopGrantAddress } from "../navigation/desktop-sign-in";
 import { follow, leavesApplication } from "../navigation/follow";
 
 import { tabAt, withWindow } from "./page-window";
@@ -15,14 +16,15 @@ function recorded() {
     router: { push: (href: string) => void pushed.push(href) },
     page: {
       location: {
-        ...tabAt("http://localhost:8081/auth/email/callback"),
+        ...tabAt("http://localhost:8081/connect/desktop"),
         assign: (address: string) => void assigned.push(address),
       },
     },
   };
 }
 
-const handoff = "mokly://auth/email/callback#token=" + "a".repeat(64);
+/** Another program's address: the desktop app's, carrying one grant. */
+const grantAddress = desktopGrantAddress("a".repeat(64));
 
 test("an application route goes through the router", () => {
   const { pushed, assigned, router, page } = recorded();
@@ -48,10 +50,13 @@ test("an application route goes through the router", () => {
 test("an address outside the application leaves this tab for it", () => {
   const { pushed, assigned, router, page } = recorded();
   withWindow(page, () => {
-    follow(handoff, router);
+    follow(grantAddress, router);
     follow("https://mokly.ai/docs/publishing", router);
   });
-  assert.deepEqual(assigned, [handoff, "https://mokly.ai/docs/publishing"]);
+  assert.deepEqual(assigned, [
+    grantAddress,
+    "https://mokly.ai/docs/publishing",
+  ]);
   assert.deepEqual(pushed, []);
 });
 
@@ -75,14 +80,14 @@ test("an address that would run in the page is never followed", () => {
 
 test("without a browser location the router takes every address", () => {
   const { pushed, router } = recorded();
-  withWindow({}, () => follow(handoff, router));
+  withWindow({}, () => follow(grantAddress, router));
   withWindow(undefined, () => follow("/sign-in", router));
-  assert.deepEqual(pushed, [handoff, "/sign-in"]);
+  assert.deepEqual(pushed, [grantAddress, "/sign-in"]);
 });
 
 test("only an address with a scheme or another host leaves the application", () => {
   for (const href of [
-    handoff,
+    grantAddress,
     "mokly-app://desktop/dashboard",
     "https://mokly.ai/",
     "HTTP://mokly.ai/",
@@ -93,7 +98,7 @@ test("only an address with a scheme or another host leaves the application", () 
   }
   for (const href of [
     "/sign-in",
-    "/auth/email/callback?client=desktop",
+    "/auth/desktop/callback",
     "/acme/-/settings?returnTo=mokly://elsewhere",
     "?settings=account",
     "",

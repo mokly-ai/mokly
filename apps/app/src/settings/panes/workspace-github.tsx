@@ -1,12 +1,17 @@
 import { SkeletonBar } from "@firna/ui/skeleton";
+import { useCallback } from "react";
 import type { ReactNode } from "react";
 
 import { githubAccountsLabel } from "../../api/labels";
 import type { Workspace } from "../../api/types";
 import { Action } from "../../components/action";
 import { listInstallations } from "../../data/installations";
-import { workspaceResourceScope } from "../../data/resource-invalidation";
+import {
+  useInvalidateResources,
+  workspaceResourceScope,
+} from "../../data/resource-invalidation";
 import { useResource } from "../../data/use-resource";
+import { useShellFocus } from "../../navigation/shell-focus";
 
 /**
  * What the GitHub accounts fact reads: the names of the accounts the
@@ -19,7 +24,9 @@ import { useResource } from "../../data/use-resource";
  *
  * The names come from the installation list, a read of its own, so the fact
  * holds its place while the list loads and offers that read again if it
- * fails, without taking the rest of the pane with it.
+ * fails, without taking the rest of the pane with it. In the desktop app's
+ * window, accounts are added on the web, so the list is read again when the
+ * window gets focus back.
  */
 export function GitHubAccountsFact({
   workspace,
@@ -28,12 +35,16 @@ export function GitHubAccountsFact({
   workspace: Workspace;
   manage?: ReactNode;
 }) {
+  const scope = workspaceResourceScope(workspace.id);
   const installations = useResource(
     () => listInstallations(workspace.id),
     "installations:" + workspace.id,
     true,
-    [workspaceResourceScope(workspace.id)],
+    [scope],
   );
+  const invalidate = useInvalidateResources();
+  const reread = useCallback(() => invalidate([scope]), [invalidate, scope]);
+  useShellFocus(reread);
   const state = installations.state;
   return (
     <span className="review-inline" data-testid="github-accounts-fact">

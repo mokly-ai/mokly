@@ -12,7 +12,6 @@ const app = "https://mokly.example";
 test("navigation permits only the desktop origin and exact round-trip origins", () => {
   for (const url of [
     "mokly-app://desktop/dashboard",
-    "https://github.com/login",
     "https://checkout.stripe.com/c/pay",
     "https://billing.stripe.com/p/session",
   ]) {
@@ -21,7 +20,7 @@ test("navigation permits only the desktop origin and exact round-trip origins", 
   for (const url of [
     "file:///etc/passwd",
     "smb://share/path",
-    "mokly://auth/email/callback",
+    "mokly://auth/desktop/callback",
     "javascript:alert(1)",
     "data:text/html,test",
     "mokly-app://other/",
@@ -33,6 +32,7 @@ test("navigation permits only the desktop origin and exact round-trip origins", 
     assert.deepEqual(navigationTarget(url, app), { action: "drop" });
   }
   for (const url of [
+    "https://github.com/login",
     "https://github.com.evil.example/",
     "https://github.com:444/",
     "http://github.com/",
@@ -67,7 +67,31 @@ test("public product targets preserve their complete path, query and fragment", 
   assert.equal(navigationTarget(app + "/%ZZ", app).action, "drop");
 });
 
-test("every popup is denied and its target follows the same rewrite or safe opener", () => {
+test("public app popups open externally and desktop popups load in the window", () => {
+  for (const path of [
+    "/acme/project?view=changes#selection",
+    "/connect/desktop?challenge=challenge&returnTo=%2Fdashboard",
+    "/docs/publish",
+  ]) {
+    assert.deepEqual(navigationTarget(app + path, app, true), {
+      action: "external",
+      url: app + path,
+    });
+  }
+  assert.deepEqual(
+    navigationTarget(
+      "mokly-app://desktop/acme/web?view=changes#selection",
+      app,
+      true,
+    ),
+    {
+      action: "load",
+      url: "mokly-app://desktop/acme/web?view=changes#selection",
+    },
+  );
+});
+
+test("every popup is denied and its target uses the browser or existing window", () => {
   const callbacks = new Map<
     string,
     (event: {
@@ -125,11 +149,14 @@ test("every popup is denied and its target follows the same rewrite or safe open
   ]) {
     assert.deepEqual(popup({ url: target }), { action: "deny" });
   }
-  assert.deepEqual(external, [app + "/docs", "https://github.com/login"]);
+  assert.deepEqual(external, [
+    app + "/acme/web",
+    app + "/docs",
+    "https://github.com/login",
+  ]);
   assert.deepEqual(loaded, [
     "mokly-app://desktop/auth/github/callback?code=c&state=s",
     "mokly-app://desktop/auth/github/callback?code=c&state=s",
-    "mokly-app://desktop/acme/web",
     "mokly-app://desktop/sign-in",
   ]);
   const count = loaded.length;

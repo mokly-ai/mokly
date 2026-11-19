@@ -3,7 +3,7 @@
 - **Severity:** Low (estimate). **Effort:** Large (estimate). **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from pending decision 9 and its unchecked TODO in the deleted `plans/documentation-skill-alignment.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `docs/protocol/cloud/persistence-boundaries.md`, with the pages that a split moves out of it, `docs/protocol/cloud/cloud-build-runner.md` with its split-off `docs/protocol/cloud/cloud-build-sandbox.md`, `docs/protocol/cloud/product-mockups-viewer.md`, and `docs/protocol/cloud/desktop-app.md` with its split-off `docs/protocol/cloud/desktop-bundle.md`. The background names the other docs.
+- **Location:** `docs/protocol/cloud/persistence-boundaries.md` with its split-off `docs/protocol/cloud/persistence-publication-storage.md` and `docs/protocol/cloud/persistence-transactions.md`, `docs/protocol/cloud/cloud-build-runner.md` with its split-off `docs/protocol/cloud/cloud-build-sandbox.md`, `docs/protocol/cloud/product-mockups-viewer.md`, and `docs/protocol/cloud/desktop-app.md` with its split-off `docs/protocol/cloud/desktop-bundle.md`. The background names the other docs.
 - **Reason:** The decision was proposed on 2026-10-21 and is still pending. PR #51 merged the same day without its answer.
 - **Checked:** 2026-11-17, in the combined repository. The decision is still open. All six pages in the location still hold code names and mechanics, for example `create_sandbox` and `mkc-build-sandbox::policy::denied_destinations` in `cloud-build-sandbox.md`.
 - **Category:** Docs or spec.

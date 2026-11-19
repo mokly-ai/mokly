@@ -35,7 +35,7 @@ workspace and the inviter, which only the transaction can read, so the
 invite command reads both inside it and records the message as an effect of
 the transaction; the service sends the committed attempt's effects after the
 transaction returns and never inside it, per
-[Persistence boundaries](./persistence-boundaries.md#atomic-work).
+[Atomic work](./persistence-transactions.md#atomic-work).
 
 ## Copy
 

@@ -221,3 +221,9 @@ Additional CI occurrences on 2026-11-02, found from the branch `calummoore/ci-pi
 - Run 41382205841, attempt 1, at commit `0d1e5bb9`, failed App checks 4/4 in job 125075243626. The error was `route.fetch: Test ended.` after a route callback outlived its test. This branch does not change the build route handlers. The rerun in attempt 2 passed. No route-handler source changed.
 
 - Documentation-only head `6216f480`, CI run 41389467855 attempt 1: App checks 4/4, job 125097581754, failed with an out-of-test `route.fetch: Test ended.` callback. The runtime source is identical to the passing `0d1e5bb9` code. Attempt 2 passed without a source change.
+
+Failure on 2026-11-18, found from [PR #132](https://github.com/mokly-ai/mokly-cloud/pull/132), branch `calummoore/desktop-browser-authentication`:
+
+- CI run 44308124659, attempt 1, App checks 4/4, job 134814910432, at commit `0e21b7be`. The branch was not behind `main` and changes neither `build-order-mobile.spec.ts`, `build-answers.ts` nor `build-routes.ts`.
+- The job summary was "1 did not run", "93 passed" and "1 error was not a part of any test". The test that did not run was `build-order-mobile.spec.ts:18`. The error was `Error: "route.fetch: Test ended."` while running a route callback, for `GET /v1/projects/<id>/pull-requests`, at `answerRows` in `build-answers.ts:93` from the handler at `build-routes.ts:85`.
+- The rerun of the failed job, attempt 2, passed without a source change.

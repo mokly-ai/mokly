@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Mokly Cloud product API",
-    "description": "Platform API with explicit 503 responses for deferred publication and review operations. Browser credentials land at /auth/email/callback, /auth/preview/callback, /auth/github/callback or /auth/github/install; the /v1 callback operations below remain on the API origin. See the REST and authentication protocols. Screen selections use entry paths with the Mokly segment grammar.",
+    "description": "Platform API with explicit 503 responses for deferred publication and review operations. Browser credentials land at /auth/email/callback, /auth/preview/callback, /auth/desktop/callback, /auth/github/callback or /auth/github/install; the /v1 callback operations below remain on the API origin. See the REST and authentication protocols. Screen selections use entry paths with the Mokly segment grammar.",
     "license": {
       "name": "Proprietary",
       "identifier": "LicenseRef-Proprietary"
@@ -466,6 +466,189 @@
           "magic-link-invalid",
           "magic-link-used",
           "payload-too-large",
+          "validation-failed"
+        ]
+      }
+    },
+    "/v1/auth/desktop/grants": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Authorize a desktop window from the current browser session.",
+        "operationId": "issueDesktopGrant",
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "description": "Session-bound anti-CSRF token for browser mutations.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "description": "Exact configured public application origin, or mokly-app://desktop when MKC_DESKTOP_CLIENT is true;\nrequired on browser mutations including public authentication. Missing or other origins are refused.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DesktopGrantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "One-use grant, expiring at the earlier of five minutes and the issuing session's absolute deadline.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DesktopGrantResult"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Persistent peer admission limit reached.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "description": "Seconds until another attempt can be admitted."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "x-reasons": [
+          "csrf-rejected",
+          "desktop-grant-invalid",
+          "internal-error",
+          "payload-too-large",
+          "rate-limited",
+          "session-expired",
+          "unauthenticated",
+          "validation-failed"
+        ]
+      }
+    },
+    "/v1/auth/desktop/callback": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Consume a desktop grant and issue a session with the inherited deadline.",
+        "operationId": "exchangeDesktopGrant",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "description": "Exact configured public application origin, or mokly-app://desktop when MKC_DESKTOP_CLIENT is true;\nrequired on browser mutations including public authentication. Missing or other origins are refused.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DesktopGrantCallback"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Session and stored destination. Max-Age is the time remaining until the issuing session's absolute deadline.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              },
+              "Set-Cookie": {
+                "$ref": "#/components/headers/SessionCookie"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionIssued"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Persistent peer admission limit reached.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "description": "Seconds until another attempt can be admitted."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "security": [],
+        "x-reasons": [
+          "csrf-rejected",
+          "desktop-grant-invalid",
+          "internal-error",
+          "payload-too-large",
+          "rate-limited",
           "validation-failed"
         ]
       }
@@ -6001,6 +6184,75 @@
         },
         "additionalProperties": false
       },
+      "DesktopGrantCallback": {
+        "type": "object",
+        "description": "One-use credential paired with the verifier kept by the desktop window.",
+        "required": [
+          "grant",
+          "verifier"
+        ],
+        "properties": {
+          "grant": {
+            "type": "string",
+            "description": "One-use grant delivered through the desktop scheme.",
+            "maxLength": 64,
+            "minLength": 64,
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "verifier": {
+            "type": "string",
+            "description": "Window-held verifier whose text produces the stored S256 challenge.",
+            "maxLength": 64,
+            "minLength": 64,
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DesktopGrantRequest": {
+        "type": "object",
+        "description": "Browser authorization of a desktop verifier and application destination.",
+        "required": [
+          "challenge"
+        ],
+        "properties": {
+          "challenge": {
+            "type": "string",
+            "description": "Base64url S256 challenge of the desktop window's 64-hex verifier.",
+            "maxLength": 43,
+            "minLength": 43,
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          },
+          "returnTo": {
+            "type": "string",
+            "description": "Application destination, normalized to `/dashboard` when rejected or absent."
+          }
+        },
+        "additionalProperties": false
+      },
+      "DesktopGrantResult": {
+        "type": "object",
+        "description": "Browser-only grant response, returned once without a session cookie.",
+        "required": [
+          "grant",
+          "expiresAt"
+        ],
+        "properties": {
+          "grant": {
+            "type": "string",
+            "description": "Plaintext one-use credential whose digest is stored by the service.",
+            "maxLength": 64,
+            "minLength": 64,
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Exclusive deadline, capped by the issuing session's absolute deadline."
+          }
+        },
+        "additionalProperties": false
+      },
       "DuplicateProject": {
         "type": "object",
         "description": "Project already using the requested repository/config identity.",
@@ -6426,6 +6678,7 @@
                       "already-member",
                       "builds-unavailable",
                       "csrf-rejected",
+                      "desktop-grant-invalid",
                       "github-auth-invalid",
                       "github-email-unverified",
                       "github-identity-conflict",
@@ -6490,6 +6743,7 @@
           "build-ineligible",
           "builds-unavailable",
           "csrf-rejected",
+          "desktop-grant-invalid",
           "duplicate-project",
           "github-auth-invalid",
           "github-email-unverified",
@@ -8811,7 +9065,7 @@
         "schema": {
           "type": "string"
         },
-        "description": "Secure HttpOnly mkc_session cookie with Path=/ and no Domain attribute. SameSite follows the current request's Origin on every exchange, rotation and clearing response. The public app origin receives SameSite=Lax; mokly-app://desktop receives SameSite=None when MKC_DESKTOP_CLIENT is true. Issuance uses Max-Age=2592000; sign-out clears the cookie with Max-Age=0 and the same Origin rule. See docs/protocol/cloud/auth-sessions.md#sessions."
+        "description": "Secure HttpOnly mkc_session cookie with Path=/ and no Domain attribute. SameSite follows the current request's Origin on every exchange, rotation and clearing response. The public app origin receives SameSite=Lax; mokly-app://desktop receives SameSite=None when MKC_DESKTOP_CLIENT is true. Ordinary issuance uses Max-Age=2592000; desktop grant exchange and rotation use the time remaining until the inherited absolute deadline. Sign-out clears the cookie with Max-Age=0 and the same Origin rule. See docs/protocol/cloud/auth-sessions.md#sessions."
       }
     },
     "securitySchemes": {

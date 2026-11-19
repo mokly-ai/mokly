@@ -5,7 +5,6 @@ import { test } from "node:test";
 
 import { callbackLandings } from "../navigation/callback-input";
 import type { CallbackLanding } from "../navigation/callback-input";
-import { desktopClient } from "../navigation/desktop-shell";
 import { dashboardPath, signInPath, signUpPath } from "../navigation/paths";
 
 const repository = path.resolve(import.meta.dirname, "../../../..");
@@ -48,7 +47,9 @@ test("the landings the entry captures are the ones the API links to", async () =
     path.join(repository, "crates/mkc-domain/src/app_paths.rs"),
     "utf8",
   );
-  const constants: Record<CallbackLanding, string> = {
+  // The API links to every landing but the desktop app's, whose address the
+  // desktop shell loads; the scheme test of `desktop-sign-in` pins that one.
+  const constants: Record<Exclude<CallbackLanding, "desktop">, string> = {
     email: "EMAIL_CALLBACK",
     preview: "PREVIEW_CALLBACK",
     "github-callback": "GITHUB_CALLBACK",
@@ -64,26 +65,8 @@ test("the landings the entry captures are the ones the API links to", async () =
         `mkc_domain::app_paths::${constant}`,
       ),
     );
+  }
+  for (const { route } of Object.values(callbackLandings)) {
     await access(path.join(repository, "apps/app/app", `${route}.tsx`));
   }
-});
-
-test("the email link the shell requests carries the query the landing reads", async () => {
-  const rustSource = await readFile(
-    path.join(repository, "crates/mkc-domain/src/app_paths.rs"),
-    "utf8",
-  );
-  const link = new URL(
-    quotedValue(
-      rustSource,
-      /EMAIL_DESKTOP_CALLBACK: &str = "([^"]+)"/,
-      "mkc_domain::app_paths::EMAIL_DESKTOP_CALLBACK",
-    ),
-    "https://app.test",
-  );
-  assert.equal(link.pathname, callbackLandings.email.route);
-  assert.deepEqual(
-    [...link.searchParams],
-    [[desktopClient.key, desktopClient.value]],
-  );
 });

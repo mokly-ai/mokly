@@ -18,6 +18,7 @@ export const productFamilies = {
     "sign-up",
     "sign-in",
     "magic-link",
+    "connect-desktop",
     "create-workspace",
     "install-app",
     "choose-repository",

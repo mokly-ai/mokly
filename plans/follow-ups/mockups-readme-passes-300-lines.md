@@ -3,10 +3,11 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, found while the closed [PR #70](https://github.com/mokly-ai/mokly-cloud/pull/70) edited the file, outside its scope.
-- **Location:** `docs/mockups/README.md:195-268`, the Key Code section, and the doc comments of the code files that it names. Option D also covers `docs/mockups/README.md:125-142` and `:155-172`.
+- **Location:** `docs/mockups/README.md:194-268`, the Key Code section, and the doc comments of the code files that it names. Option D also covers `docs/mockups/README.md:124-141` and `:154-171`.
 - **Reason:** The user's approval of 2026-11-03 applied option A and kept B and C for the user, and the later options D and E each include B.
 - **Checked:** 2026-11-04, after option A and the merge of the overlay changes from `main` at `b2b30715`. The README has 290 lines. Its Key Code section at lines 195-262 still holds long entries of mechanics.
 - **Checked:** 2026-11-06, after the merge of `origin/main` at `967ab6c8` into `calummoore/skeleton-sizing-mismatch`. The README has 295 lines (291 on `main`). Its Key Code section is at lines 195-268 and still holds long entries of mechanics.
+- **Checked:** 2026-11-06, on the branch `calummoore/desktop-browser-authentication` after it merged `origin/main` at `194fdb78`. The README has 296 lines. Its Key Code section is at lines 195-269.
 - **Checked:** 2026-11-17, in this repository after the cloud moved in. The README still has 295 lines, and its Key Code section is still at lines 195-268.
 - **Category:** Repository rule.
 
@@ -39,8 +40,8 @@
     - No facts: `styles/components.css`, which has no header comment. `styles/product/inventory.css` has no header comment either.
   - A rough word-overlap check found 36 of the 63 entries with at least 60% of their words in the doc comments of their files.
   - Two passages outside Key Code also have a home elsewhere:
-    - The steps under "Add Or Change A Registered Component", lines 125-142, are the twin of the screen steps that moved to the authoring page.
-    - The test harness paragraphs under Commands, lines 155-172, repeat `apps/mockups/README.md` on the strict build comparison, the suite order, the missing base ref and the capture folder.
+    - The steps under "Add Or Change A Registered Component", lines 124-141, are the twin of the screen steps that moved to the authoring page.
+    - The test harness paragraphs under Commands, lines 154-171, repeat `apps/mockups/README.md` on the strict build comparison, the suite order, the missing base ref and the capture folder.
     - That README lacks two of their facts: the 390px mobile journey captures and the sorted order of the mismatch list.
   - By the options check's estimate, B leaves about 20 Key Code entries and about 245 README lines. D leaves about 215 lines.
   - No option other than A is applied.
@@ -53,7 +54,7 @@
   - **C.** Do A and B. A is already complete, so the remaining work of C is the work of B. C is now the same choice as B. Effort: Medium.
   - **D.** Do B, and move two more passages that have a home elsewhere. Effort: Medium.
     - Move the steps under "Add Or Change A Registered Component" to the authoring page or to a sibling page.
-    - Replace the test harness paragraphs under Commands, README lines 155-172, with the link to `apps/mockups/README.md`. That README already holds most of their facts. Move the other facts there.
+    - Replace the test harness paragraphs under Commands, README lines 154-171, with the link to `apps/mockups/README.md`. That README already holds most of their facts. Move the other facts there.
     - The README then has about 215 lines.
     - Cost: a wider title or a sibling page, and one more README edit.
   - **E.** Do B, but split Key Code by area. Effort: Medium.

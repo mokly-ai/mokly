@@ -45,11 +45,13 @@ it carries only the identity and the two legal links.
   decision.
 - **Body**. One column, 20px between fields, every action full width. Entry
   stacks the GitHub action in the `secondary` tone with its mark, the `or`
-  rule, the email field, then the one `primary` submit. A step pairs its
-  `primary` with at most one `secondary` alternative when there is a real
-  second path. The way back is the back link centered under the actions: the
-  back glyph and "Back" in medium ink, underlined on hover, a 44px target and
-  never a button, so nothing green sits under the primary.
+  rule, the email field, then the one `primary` submit. In the desktop app's
+  window, entry draws only its one `primary` action, which opens the browser,
+  as [Desktop sign-in](./desktop-sign-in.md#entry-screen) defines. A step
+  pairs its `primary` with at most one `secondary` alternative when there is a
+  real second path. The way back is the back link centered under the actions:
+  the back glyph and "Back" in medium ink, underlined on hover, a 44px target
+  and never a button, so nothing green sits under the primary.
 - **Facts**. Read-only values are hairline-separated rows — 13px muted label
   at the left, 13px medium ink value at the panel's right edge — not a filled
   panel. A grey box around a value reads as a disabled input, and a fixed label

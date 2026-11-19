@@ -20,6 +20,8 @@ forms a wait draws, `src/screens/product/icons.tsx` the whole icon vocabulary,
 `src/screens/product/account/account-shell.tsx` the one account panel,
 `account/setup-progress.tsx` its progress strip,
 `account/entry-layout.tsx` the logged-out account boundary,
+`src/screens/product/host.ts` where a screen runs, a browser tab or the
+desktop app's window, and the glyph a GitHub action carries there,
 and `src/screens/product/settings/surface.tsx` the settings dialog and layer.
 Stylesheets follow the same split: `styles/product/folio.css` is the settings
 rail and the stage, `viewer.css` the top bar, its one switch width between
@@ -48,7 +50,8 @@ families draws its canonical state, with Empty, Loading and Error as its
 variants. A situation none of those four describes is a further variant while
 the screen stays within four, and otherwise a screen beside it in its folder:
 the entry screens' `github-refused`, `github-opens-soon` and
-`address-refused`, each drawn on both sign in and sign up, the populated
+`address-refused`, and the desktop app's window entry, `desktop`, with its
+`waiting` variant, each drawn on both sign in and sign up, the populated
 workspace and repository forms while their address suggestions load,
 Create workspace's write, the workspace and project address editors,
 `product/settings/project/visibility`, `product/settings/members/identity`,
@@ -72,6 +75,13 @@ the stage's waiting card, and the build details one folder deeper:
 `product/viewer/standalone/build` owns that
 folder, and the failed, superseded, unreadable, lockfile, refused and reader
 builds are screens beside it because each is declared a sibling of its parent.
+The install step's and the GitHub accounts pane's single drawings are declared
+siblings the same way, so that the desktop app's window drawing of each, like
+the account pane's, is that screen's fourth variant, `desktop`: its GitHub
+action keeps its label, carries the external glyph and opens the same page on
+the web. The connect page, `product/account/connect-desktop`, is a standard
+screen whose fourth variant, `opened`, draws the page once **Open Mokly** has
+handed the grant to the app.
 `product/viewer/pull-request` owns its folder the same way, with the closed,
 fork and Team pull request cards beside it. The refused publishing card is a screen
 beside `product/viewer/standalone/publish`, which already holds four variants;
@@ -113,18 +123,24 @@ alert semantics do not add a second visible title. Rendered policy checks reject
 either an error state with no announced copy or a visible pending label that
 repeats its screen heading.
 
-The callback directory's fourth screen, `product/account/callback/desktop`,
-draws the email landing in a browser when the desktop app requested the link,
-as [Desktop application](../protocol/cloud/desktop-app.md#sign-in-handoff) defines.
-It offers **Open Mokly** first and **Continue in browser** second, and draws
-no reference and no token. The GitHub installation landings follow as five
-screens without variants: the request a GitHub organization owner approves,
+The callback directory's fourth screen,
+`product/account/callback/desktop-expired`, draws the desktop landing in the
+app's window, as
+[Authentication callbacks](../protocol/cloud/auth-callbacks.md#desktop-callback)
+defines: its expired sign-in, with its generic failure as its variant. Both
+use the preview landing's shared error state and offer only **Back to sign
+in**, which leads to the window's entry screen, and neither draws any part of
+the grant or the verifier. Its pending state is the directory's pending
+screen. The GitHub installation landings follow as five screens without
+variants: the request a GitHub organization owner approves,
 the authorization callback's conflict and not-an-administrator refusals, and
 the setup landing and the authorization callback while they complete the
 installation, each its title over one state card in placeholder form whose
 title names the operation. Their reader started the flow signed in, so their
 header names the reader.
-`src/_tests_/callback.test.ts` holds the landings' checks.
+`src/_tests_/callback.test.ts` holds the landings' checks, and
+`src/_tests_/desktop-sign-in.test.ts` those of the desktop app's sign-in: the
+window's entry, the connect page and where the window's landing leads.
 
 `design/settings-dialog`, `design/settings-layer` and `design/panel` are the
 registered overlay frames: the desktop rail-and-pane settings dialog, the mobile
@@ -175,9 +191,9 @@ product that grows a state cannot stay invisible. `app-state-titles.ts` reads
 those titles from `StateMessage`, `PaneError`, `PaneResource` and `StageError`,
 so a section heading or a dialog's own name never enters the comparison.
 `app-owners.ts` also names exact sentences no label carries, such as a Billing
-page with no control or the desktop handoff's heading, which the drawing and
-the owning source must both say, and sentences a redraw removed, which both
-must leave out. The
+page with no control or a GitHub installation landing's heading, which the
+drawing and the owning source must both say, and sentences a redraw removed,
+which both must leave out. The
 fixtures' reason sentences and placeholders
 are read from `apps/app/src` on disk. Each direction has its own allowlist in
 `app-parity-allowances.ts`, declared sentences have a third, and every line in

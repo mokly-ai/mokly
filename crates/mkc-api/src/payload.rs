@@ -14,7 +14,9 @@ use crate::github::views;
 use crate::health::HealthView;
 use crate::publication_views::AccessGrantView;
 use crate::viewer::views::{Branch, Publication, PullRequest, Screen, ShareLink};
-use crate::views::account::{MagicLinkView, SessionIssuedView, SessionView, UserView};
+use crate::views::account::{
+    DesktopGrantView, MagicLinkView, SessionIssuedView, SessionView, UserView,
+};
 use crate::views::grants::GrantView;
 use crate::views::projects::{ProjectSlugLookupView, ProjectSlugSuggestionView, ProjectView};
 use crate::views::tokens::{TokenCreated, TokenView};
@@ -68,6 +70,7 @@ pub(crate) enum Payload {
     Session(SessionView),
     SessionIssued(SessionIssuedView),
     MagicLink(MagicLinkView),
+    DesktopGrant(DesktopGrantView),
     Empty,
 }
 

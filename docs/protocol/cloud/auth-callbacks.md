@@ -1,8 +1,8 @@
 # Authentication Callback Landings
 
-Email, the preview sign-in link, GitHub identity authorization and GitHub App
-setup return to separate application routes. A landing never guesses its
-provider from a shared query,
+Email, the preview sign-in link, the desktop grant, GitHub identity
+authorization and GitHub App setup return to separate application routes. A
+landing never guesses its provider from a shared query,
 and `/auth/callback` is not a route. The API is the only authority that
 consumes credentials, binds a GitHub flow or chooses the stored `returnTo`.
 
@@ -10,8 +10,9 @@ consumes credentials, binds a GitHub flow or chooses the stored `returnTo`.
 
 | Route                    | Browser input                                                                                | API call                                                                                            | Completion                                                                                     |
 | ------------------------ | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `/auth/email/callback`   | One `token` in the fragment; `client=desktop` in the query selects the handoff               | `POST /v1/auth/callback` with Origin                                                                | Adopt the session and replace with the returned `returnTo`                                     |
+| `/auth/email/callback`   | One `token` in the fragment                                                                  | `POST /v1/auth/callback` with Origin                                                                | Adopt the session and replace with the returned `returnTo`                                     |
 | `/auth/preview/callback` | One `secret` in the fragment                                                                 | `POST /v1/auth/preview` with Origin                                                                 | Adopt the session and replace with the returned `returnTo`                                     |
+| `/auth/desktop/callback` | One `grant` in the fragment; the verifier in tab storage                                     | `POST /v1/auth/desktop/callback` with Origin                                                        | Adopt the session and replace with the returned `returnTo`                                     |
 | `/auth/github/callback`  | One `code` and `state` in the query                                                          | `POST /v1/auth/github/callback` with Origin, plus session CSRF for a connected or installation flow | Adopt the rotated session and replace with the returned `returnTo`                             |
 | `/auth/github/install`   | `installation_id` with `state`, `installation_id` without `state`, or `setup_action=request` | Callback POST for the stateful arrival; no API call for the other arrivals                          | Continue authorization, replace with `/install?installationId=<id>`, or draw the request state |
 
@@ -23,16 +24,16 @@ provider-specific recovery below.
 A landing's provider input leaves the address before the app router starts.
 The cleanup removes the whole GitHub query, except that a stateless
 `installation_id` arrival replaces the address with
-`/install?installationId=<id>`. It removes the email or preview fragment while
-keeping any query. It creates no history entry, never copies a credential into
-a path or query, and sets a `no-referrer` policy on the GitHub landings. No
-address a landing's document takes after it loads carries its credential.
-The email landing reads exactly one `client` value from the query it kept.
-It is the only query the API puts on an email link.
+`/install?installationId=<id>`. It removes the email, preview or desktop
+fragment while keeping any query. It creates no history entry, never copies a
+credential into a path or query, and sets a `no-referrer` policy on the GitHub
+landings. No address a landing's document takes after it loads carries its
+credential.
 
 Each landing takes its input exactly once. A landing reached any other way,
 including a reload, has no input, which is the missing-input recovery below.
-The landing paths are exactly the paths of the links the API issues.
+The landing paths are exactly the paths of the links the API issues and of the
+address that the desktop shell loads.
 
 ## Tab-Scoped GitHub Flow State
 
@@ -47,15 +48,15 @@ window. Each record has one purpose:
 | Installation setup         | `/install`                           | `/auth/github/install`  |
 | Installation authorization | `/install` or `/auth/github/install` | `/auth/github/callback` |
 
-Starting a new GitHub trip replaces every GitHub flow record in that tab. In
-the desktop shell the provider's return is rewritten onto the desktop origin
-by the shell's navigation rule, and the window is one tab, so the record is
-read exactly as here. The installation landing consumes the setup record,
-posts the installation callback, then stores the returned state and verifier
-as the installation authorization before leaving for GitHub OAuth, because App
-setup and user authorization are two provider returns in one server-side
-installation flow. A candidate flow started on `/install` stores the returned
-state and verifier as installation authorization directly. Browser storage
+Starting a new GitHub trip replaces every GitHub flow record in that tab. The
+desktop shell starts no GitHub trip: its GitHub actions open the web, as
+[Desktop application](./desktop-app.md#web-setup) defines. The installation
+landing consumes the setup record, posts the installation callback, then
+stores the returned state and verifier as the installation authorization
+before leaving for GitHub OAuth, because App setup and user authorization are
+two provider returns in one server-side installation flow. A candidate flow
+started on `/install` stores the returned state and verifier as installation
+authorization directly. Browser storage
 never holds an OAuth code, installation ID,
 authorization URL, `returnTo`, session or CSRF token.
 
@@ -90,33 +91,6 @@ the shared validator and replaces the route.
 
 **Back to sign in** is the sole primary action and goes to `/sign-in`. An API
 failure also shows its error details; missing local input has none.
-
-When the query carries exactly one `client=desktop` outside the desktop shell,
-the landing holds the token in memory and renders the handoff instead of
-posting it. Inside the shell it ignores the query and exchanges the token:
-
-| State                      | Screen title        | Message                                       | Actions                                      |
-| -------------------------- | ------------------- | --------------------------------------------- | -------------------------------------------- |
-| Handoff (`client=desktop`) | `Finish signing in` | `You requested this link from the Mokly app.` | **Open Mokly**, then **Continue in browser** |
-
-**Open Mokly** is primary, carries the external glyph and opens
-`mokly://auth/email/callback#token=<token>` in the same tab, the address the
-desktop shell accepts in [Desktop application](./desktop-app.md#sign-in-handoff);
-the browser hands the address to the operating system and the page stays. It
-is the package Button, which renders no anchor, so the address lives only in
-memory: no `href` shows the token on hover or offers to copy it.
-**Continue in browser** is secondary and posts the token exactly as the table
-above does, so its outcomes are that table's. The landing never opens the
-scheme on its own, renders no part of the token as text, and a missing token
-with `client=desktop` is the ordinary missing-input recovery. The token is
-single use, so whichever side exchanges it first wins and the other sees
-`This link has already been used`. The document title is
-`Finish signing in · Mokly`.
-
-The handoff is a scheme link, not a device-code flow. The email link stays an
-HTTPS page, because email clients do not open custom schemes reliably. The API
-knows a link request from the shell by its Origin, so the request carries no
-field, and the user agent decides nothing.
 
 ## Preview Callback
 
@@ -153,6 +127,34 @@ and goes to `/sign-in`. The invalid state offers no retry and no request for a
 new link. API error details contain `Reference <request-id>`; a local or
 transport failure without a request ID omits the disclosure. The landing
 shares the email landing's screen; no copy names an environment.
+
+## Desktop Callback
+
+The desktop landing takes the `grant` captured from its fragment and the
+verifier that the window's [entry screen](./desktop-sign-in.md#entry-screen)
+keeps in tab storage. It consumes the verifier when it starts, so a reload or
+a later landing finds none. With both values it posts `grant` and `verifier`
+once to `POST /v1/auth/desktop/callback`, whatever the session state. Success
+adopts the session, validates the API's stored `returnTo` with the shared
+validator and replaces the route. The landing renders no part of either value.
+
+A landing without a grant or without its verifier sends no request and waits
+for the session read. A signed-in app then replaces the route with
+`/dashboard`, a signed-out app shows the expired state, and a failed read
+shows the application's session error state.
+
+| State                                                     | Screen title               | Message                                               | Action               |
+| --------------------------------------------------------- | -------------------------- | ----------------------------------------------------- | -------------------- |
+| Pending                                                   | `Signing you in`           | Skeleton; screen-reader-only `Signing you in…` status | None                 |
+| Success                                                   | No rendered state          | None                                                  | None; route replaced |
+| Signed out with missing input, or `desktop-grant-invalid` | `This sign-in has expired` | None                                                  | **Back to sign in**  |
+| Any other API or transport failure                        | `We couldn’t sign you in`  | None                                                  | **Back to sign in**  |
+
+**Back to sign in** is the sole primary action and goes to `/sign-in`, which
+in the window is the entry screen. No state offers a retry, because the grant
+is single use. Each failed state draws the preview landing's shared error
+state: a problem alert that announces the screen title, with an API failure's
+request details in a closed **Details** disclosure.
 
 ## GitHub Callback
 

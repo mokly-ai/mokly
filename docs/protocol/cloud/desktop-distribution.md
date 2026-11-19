@@ -103,14 +103,16 @@ and formats it.
 - The Electron smoke test (`src/_tests_/*.spec.ts`, Playwright's Electron
   launcher) runs the main process against the export and the real API the
   application harness starts. It launches first with no API reachable and
-  proves the session error state with **Try again**; then signs up through a
-  log-mailer link delivered as a scheme-form launch argument, proves the
-  session survives a relaunch, opens the viewer route, and proves that a
-  public-origin product link is rewritten into the bundle, that a site link
-  and an external link reach the system-browser opener, and that a
-  route-controlled redirect to the hosted GitHub callback is rewritten into
-  the bundled landing. It covers an in-shell email landing with
-  `?client=desktop`, which exchanges the token without a handoff. It proves
+  proves the session error state with **Try again**. It then presses the entry
+  screen's action, mints a grant through the API for the challenge that the
+  action opened, delivers the grant address as a scheme-form launch argument
+  and proves the session survives a relaunch. It proves that a used grant
+  shows the expired state and that a valid grant delivered next starts a fresh
+  landing document and signs the window in. It opens the viewer route and
+  proves that a public-origin product link is rewritten into the bundle, that a
+  site link and an external link reach the system-browser opener, and that a
+  route-controlled redirect from a round-trip host to a public-origin product
+  path is rewritten into the bundle. It proves
   Chromium sends `Origin: mokly-app://desktop`, the API admits it, and the
   `SameSite=None; Secure` session cookie is stored, sent and kept across a
   relaunch. It loads the catalogue index through CORS. It proves
@@ -131,5 +133,5 @@ artifacts. Screenshots and JSON evidence live under
 `.context/desktop-app-shell/`.
 
 Before a release, the packaged app is smoke-tested by hand on macOS: install
-from the `dmg`, sign in through the handoff, open a project and run **Check
+from the `dmg`, sign in through the browser, open a project and run **Check
 for updates**.

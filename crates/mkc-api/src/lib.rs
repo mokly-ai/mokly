@@ -15,6 +15,8 @@ mod build_runtime;
 mod builds;
 mod check_runtime;
 pub mod contract;
+mod desktop_grant_dispatch;
+mod desktop_grant_input;
 mod dispatch;
 mod endpoints;
 pub mod error;
@@ -65,3 +67,15 @@ mod entry_path_schema_tests;
 #[cfg(test)]
 #[path = "_tests_/error_samples.rs"]
 mod error_samples;
+
+#[cfg(test)]
+#[path = "_tests_/error_tests.rs"]
+mod error_tests;
+
+#[cfg(test)]
+#[path = "_tests_/severity_tests.rs"]
+mod severity_tests;
+
+#[cfg(test)]
+#[path = "_tests_/cookie_tests.rs"]
+mod cookie_tests;

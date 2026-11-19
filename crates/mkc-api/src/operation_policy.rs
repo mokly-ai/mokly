@@ -3,6 +3,10 @@
 use crate::operation::{Operation, OptionalConfiguration};
 
 impl Operation {
+    pub(crate) fn desktop_grant(self) -> bool {
+        matches!(self, Self::IssueDesktopGrant | Self::ExchangeDesktopGrant)
+    }
+
     pub(crate) fn billing(self) -> bool {
         matches!(
             self,
@@ -74,6 +78,8 @@ impl Operation {
                     | Self::RotateSession
                     | Self::SendMagicLink
                     | Self::VerifyPreviewSignIn
+                    | Self::IssueDesktopGrant
+                    | Self::ExchangeDesktopGrant
                     | Self::ListWorkspaces
                     | Self::CreateWorkspace
                     | Self::SuggestWorkspaceSlug

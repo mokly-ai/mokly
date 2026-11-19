@@ -76,7 +76,8 @@ first in the Mokly protocol docs.
   defines the routes and [Viewer](../protocol/cloud/viewer.md) the viewer.
 - **Desktop app.** The Electron shell for macOS and Linux serves the bundled
   web export from its own origin, so the product opens without the network,
-  and finishes email sign-in through the `mokly` scheme handoff. The
+  and signs in through the browser with a desktop grant returned through the
+  `mokly` scheme. The
   [desktop release workflow](../../.github/workflows/desktop-release.yml)
   packages previews without release signing. Its tag pre-releases sign and
   notarize the macOS packages. The Linux `AppImage` and `deb` are unsigned.

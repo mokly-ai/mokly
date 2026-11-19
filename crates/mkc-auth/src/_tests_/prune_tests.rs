@@ -7,6 +7,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use chrono::{DateTime, TimeDelta, Utc};
+use mkc_store_interface::desktop_grant::DesktopGrantsMock;
 use mkc_store_interface::error;
 use mkc_store_interface::magic_link::MagicLinksMock;
 use mkc_store_interface::rate_limit::RateLimitsMock;
@@ -40,6 +41,7 @@ fn service(store: Unimock) -> AuthPruner {
 fn cutoffs_and_counts_are_stable_across_transaction_retries() {
     let queries = Unimock::new((
         MagicLinksMock::prune_magic_links.each_call(matching!((cutoff) if *cutoff == now() - TimeDelta::days(7))).answers(&|_, _| Ok(2)).n_times(2),
+        DesktopGrantsMock::prune_desktop_grants.each_call(matching!((cutoff) if *cutoff == now() - TimeDelta::days(7))).answers(&|_, _| Ok(5)).n_times(2),
         SessionsMock::prune_sessions.each_call(matching!((expiry, seen) if *expiry == now() - TimeDelta::days(1) && *seen == now() - TimeDelta::days(8))).answers(&|_, _, _| Ok(3)).n_times(2),
         RateLimitsMock::prune_rate_limits.each_call(matching!((cutoff) if *cutoff == now() - TimeDelta::days(1))).answers(&|_, _| Ok(4)).n_times(2),
     ));
@@ -57,6 +59,7 @@ fn cutoffs_and_counts_are_stable_across_transaction_retries() {
         pruner.prune().unwrap(),
         PruneReport {
             links: 2,
+            desktop_grants: 5,
             sessions: 3,
             rate_limits: 4
         }

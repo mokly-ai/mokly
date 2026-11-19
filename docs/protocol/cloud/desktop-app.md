@@ -17,9 +17,10 @@ after Mokly gains a serve contract for a host program, with the public
 download page; until then the shell publishes pre-releases only.
 
 Read [Web application](./web-app.md) for the export it serves,
+[Desktop sign-in](./desktop-sign-in.md) for the screens of browser sign-in,
 [Authentication and sessions](./auth-sessions.md) and
-[Authentication callbacks](./auth-callbacks.md) for the origin admission and
-the sign-in handoff, [Catalogue hosting](./catalogue-hosting.md) and
+[Authentication callbacks](./auth-callbacks.md) for the origin admission, the
+desktop grant and its landing, [Catalogue hosting](./catalogue-hosting.md) and
 [Viewer](./viewer.md) for the catalogue isolation the window preserves, and
 [Repository layout](./repository-layout.md) for the npm workspace and pins.
 
@@ -81,27 +82,25 @@ origin literal.
 
 - **Origin checks and CORS.** Every Origin check of
   [Authentication and sessions](./auth-sessions.md#csrf-origins-and-redirects),
-  including public magic-link issue and the callbacks, accepts the app origin
-  or the desktop origin. CORS permits credentials for exactly those two
-  origins, echoes the matching one and sends `Vary: Origin`; it never reflects
-  another origin.
+  including public magic-link issue, the callbacks and the desktop grant
+  exchange, accepts the app origin or the desktop origin. CORS permits
+  credentials for exactly those two origins, echoes the matching one and sends
+  `Vary: Origin`; it never reflects another origin.
 - **Session cookie.** A session issued to an exchange whose Origin is the
   desktop origin carries `SameSite=None` in place of `Lax`, with every other
   attribute unchanged, because the desktop page's requests to the API are
-  cross-site and a `Lax` cookie would never travel. Magic-link, preview and
-  GitHub exchanges, rotation with `POST /v1/session`, and sign-out with
-  `DELETE /v1/session` select `SameSite` from that request's Origin. The
+  cross-site and a `Lax` cookie would never travel. Desktop grant, magic-link,
+  preview and GitHub exchanges, rotation with `POST /v1/session`, and sign-out
+  with `DELETE /v1/session` select `SameSite` from that request's Origin. The
   cookie lives only in the shell's own cookie store.
   A catalogue frame inside the window is the untrusted party: a mutation it
   attempts fails the Origin and CSRF checks, and a read it attempts is blocked
   by CORS before any byte reaches it.
-- **Magic link.** A link requested with the desktop Origin is issued as
-  `<app origin>/auth/email/callback?client=desktop#token=<secret>`; the query
-  carries only `client`, and nothing else about links changes.
 - **Catalogue hosts.** The catalogue server adds the desktop origin to
-  `frame-ancestors` and to the CORS allowlist for the grant exchange, the
-  confirmation read and the read-model requests, so catalogue reads, the access-grant cookie and plain catalogue frames work
-  in the window. Only the window's own `POST /_access` sets the catalogue
+  `frame-ancestors` and to the CORS allowlist for the catalogue grant
+  exchange, the confirmation read and the read-model requests, so catalogue
+  reads, the access-grant cookie and plain catalogue frames work in the
+  window. Only the window's own `POST /_access` sets the catalogue
   cookie, in the shell's cookie store. The system browser never holds it. The
   viewer rejects the desktop host before mounting its screen frames;
   see the [current viewer limit](#current-viewer-limit).
@@ -114,9 +113,10 @@ every environment, and [Environments](../../ops/environment.md) records it.
 ## Navigation
 
 Top-level navigation inside the window is allowed to the desktop origin and
-to the three round-trip hosts that return to the product: `https://github.com`
-for GitHub sign-in, connection and App installation, and
-`https://checkout.stripe.com` and `https://billing.stripe.com` for billing.
+to the two round-trip hosts that return to the product for billing,
+`https://checkout.stripe.com` and `https://billing.stripe.com`. GitHub is not
+a round-trip host: no GitHub page loads in the window, because the window
+cannot use the browser's sign-ins, as [Sign-in](#sign-in) explains.
 
 A navigation or redirect whose target is on the public app origin is
 rewritten: a path whose first segment belongs to the public site opens in the
@@ -124,79 +124,97 @@ system browser, and every other path loads `mokly-app://desktop` with the same
 path, query and fragment in the window. The site segments are the inventory
 that the site generates for the Worker, generated
 into the shell as well, and a test holds the two copies equal. This rewrite
-is how GitHub's callback, the App setup return and Stripe's return reach the
-bundle: the GitHub App and Stripe keep the public origin as their return
-address, and the shell cancels the redirect before any request reaches the
-hosted server, so a code or state never leaves the window. The tab-scoped
-GitHub flow record survives the round trip because the window is one browsing
-context and the record belongs to the desktop origin.
+is how Stripe's return reaches the bundle: Stripe keeps the public origin as
+its return address, and the shell cancels the redirect before any request
+reaches the hosted server.
 
-Every `window.open` and popup is denied. Its target follows the same
-public-origin rewrite and site-segment rule; a desktop product target loads
-in the existing window. Other `http:` and `https:` targets open in the system
-browser, including round-trip targets requested by a popup. Other schemes,
-including `file:`, `smb:` and custom schemes, are dropped and never reach the
-opener. Other top-level HTTP(S) navigation also opens in the system browser.
+Every `window.open` and popup is denied. A popup whose target is on the
+public app origin opens in the system browser, whatever its path, so the
+pages that the app opens for [sign-in](#sign-in) and [web setup](#web-setup)
+reach the browser's session. A screen link that the viewer opens as a popup to
+the public app origin therefore opens in the system browser too. A popup whose
+target is on the desktop origin loads in the existing window. Other `http:`
+and `https:` targets open in the system browser, including round-trip targets
+requested by a popup. Other schemes, including `file:`, `smb:` and custom
+schemes, are dropped and never reach the opener. Other top-level HTTP(S)
+navigation also opens in the system browser.
+
+## Sign-In
+
+The app signs in through a Mokly page in the system browser, not in its
+window, because the window cannot use the browser's sign-ins: its GitHub
+session, saved passwords, passkeys and password-manager extensions. GitHub's
+**Continue with Google** and **Continue with Apple** also leave the window, so
+those sign-ins never return to it. Relaying GitHub's return into the window
+was rejected, because a reader already signed in on the web would still pass
+GitHub, and an installation would need two returns.
+
+Inside the shell, `/sign-in` and `/sign-up` show the entry screen of
+[Desktop sign-in](./desktop-sign-in.md), with no email form and no GitHub
+action. Its action keeps a verifier in the window and opens
+`/connect/desktop` in the browser. That page signs the browser in with any
+method, and after **Open Mokly** it requests a one-use
+[desktop grant](./auth-sessions.md#desktop-grants) bound to the verifier's
+challenge. The grant returns through the [sign-in handoff](#sign-in-handoff),
+and the [desktop landing](./auth-callbacks.md#desktop-callback) exchanges it
+with the verifier for the window's own session.
 
 ## Sign-In Handoff
 
-Email sign-in sends a link, and an email client opens links in the system
-browser, whose cookie store is not the shell's. The handoff moves the one-use
-credential from that browser page into the shell through the `mokly` scheme,
-which the app's Expo configuration already declares. Preview sign-in links stay
-browser-only.
+The grant reaches the shell through the `mokly` scheme, which the app's Expo
+configuration declares. The scheme was chosen over a loopback listener or
+polling for the browser's approval, because the scheme already exists and a
+polled approval can be phished.
 
-1. Inside the shell, the reader requests a link from `/sign-in` or
-   `/sign-up`. The request carries the desktop Origin, so the API issues the
-   desktop link form of the section above.
-2. The browser opens the link. The entry removes the fragment and keeps the
-   query, so the landing finds `client=desktop` in its address and the token
-   in memory. Outside the shell it does not post the token; it renders the
-   handoff state of
-   [Authentication callbacks](./auth-callbacks.md#email-callback): the title
-   `Finish signing in`, the one line
-   `You requested this link from the Mokly app.`, the primary action
-   **Open Mokly** and the secondary action **Continue in browser**. The page
-   never triggers the scheme on its own.
-3. **Open Mokly** opens `mokly://auth/email/callback#token=<secret>` in the
-   same tab; the browser hands the address to the operating system and the
-   page stays. **Continue in browser** posts the token as the ordinary
-   landing does. The token is single use, so whichever action exchanges it
-   first wins and the other reports `This link has already been used`.
-4. The shell receives the address through the macOS `open-url` event or, on
-   Linux, as an argument of the launch or of the second instance. It accepts
-   exactly `mokly://auth/email/callback` with a fragment of one `token` whose
-   value is 64 lowercase hexadecimal characters, the format the API issues.
-   It creates or focuses the main window, loads `about:blank`, waits for that
-   document, then loads
-   `mokly-app://desktop/auth/email/callback#token=<secret>`. Every accepted
-   handoff therefore starts a fresh callback document, even after a used or
-   expired link left the window on the same route. The app entry captures the
-   fragment before the router starts. The bundled landing exchanges the
-   token with the desktop Origin and receives the desktop session cookie; it
-   honours `client=desktop` only outside the shell. Any other scheme address
-   is ignored. A token already received in this run is ignored. While the
-   reset and landing exchange run, another token cannot navigate away from
-   them. Reset navigation cannot release the guard. After the new landing
-   commits, the main process records its callback POST's Electron request ID. Only that
-   request's completion or failure, or navigation away from the landing,
-   releases the guard. An older request or load failure cannot release a newer
-   handoff. A reset or callback load failure warns and releases only its own
-   attempt. Repeated
-   **Open Mokly** presses therefore leave the shell in place.
+The shell receives the address through the macOS `open-url` event or, on
+Linux, as an argument of the launch or of the second instance. It accepts
+exactly `mokly://auth/desktop/callback` with a fragment of one `grant` whose
+value is 64 lowercase hexadecimal characters, the format the API issues. Any
+other scheme address is ignored. The shell creates or focuses the main window,
+loads `about:blank`, waits for that document, then loads
+`mokly-app://desktop/auth/desktop/callback#grant=<grant>`. Every accepted
+handoff therefore starts a fresh landing document, even after an expired
+grant left the window on the same route. The app entry captures the fragment
+before the router starts, and the landing exchanges the grant with the desktop
+Origin and receives the desktop session cookie.
+
+A grant already received in this run is ignored, so repeated **Open Mokly**
+presses, which deliver the same grant, leave the shell in place. While the
+reset and the landing's exchange run, another grant cannot navigate away from
+them, and reset navigation cannot release that guard. After the new landing
+commits, the shell watches that landing's own grant exchange request. Only
+that request's completion or failure, or navigation away from the landing,
+releases the guard. An older request or load failure cannot release a newer
+handoff. A reset or landing load failure warns and releases only its own
+attempt.
 
 The scheme is registered by the macOS bundle and by the `.deb` desktop entry.
 An AppImage registers it only when the reader integrates the AppImage into the
-desktop; **Continue in browser** is the recovery when nothing answers the
-scheme. Another installed program can claim the same scheme on either
-platform; the credential it could receive is single use, expires fifteen
-minutes after issue, and grants nothing beyond one session, which the reader
-can revoke from the Account pane. The handoff page renders no part of the
-token as text.
+desktop, so an AppImage that is not integrated cannot receive the grant. The
+reader integrates the AppImage or installs the `.deb` instead. Another
+installed program can claim the same scheme on either platform. The grant it
+could receive is single use, expires at most five minutes after issue, and is
+useless without the verifier, which never leaves the window.
 
-GitHub sign-in, GitHub connection and App installation need no handoff: the
-window navigates to GitHub and GitHub's return is rewritten into the bundle
-by the navigation rule above.
+## Web Setup
+
+In the shell, each action that starts a GitHub trip opens its own page on the
+web instead: **Connect GitHub** in the account pane, **Add GitHub account** in
+the GitHub accounts pane, and **Install on GitHub** and **Continue on GitHub**
+on the install screen. The action opens its route on the public app origin as
+a popup, which the shell opens in the system browser: `/settings/account`,
+`/:workspace/-/settings/github`, or the install screen's own address. In the
+window each action keeps its label and carries the external glyph in place of
+its own glyph, because it leaves the app. The reader finishes the action on
+the web, where it applies to the account that the browser is signed in to.
+
+Setup opens on the web for the same reason as sign-in. Keeping connection and
+installation bound to the window's session through a relay of GitHub's return
+was rejected, because it needs a second return mechanism beside the grant.
+
+In the shell, the app reads the session and the GitHub connection and
+installations of the open screen again whenever its window gets focus, so a
+connection or an installation finished on the web appears without a reload.
 
 ## Distribution And Verification
 

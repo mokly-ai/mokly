@@ -8,15 +8,17 @@ import { deferred, settled } from "./lifecycle-fixture.js";
 import { navigationError } from "./navigation-error.js";
 
 const token = "a".repeat(64);
-const address = `mokly://auth/email/callback#token=${token}`;
-test("the scheme validator accepts only the canonical credential form", () => {
+const address = `mokly://auth/desktop/callback#grant=${token}`;
+const landing = `mokly-app://desktop/auth/desktop/callback`;
+test(`desktop: the scheme validator accepts only the canonical credential form`, () => {
   assert.equal(handoffToken(address), token);
   for (const invalid of [
+    address.replace("desktop/callback#grant", "email/callback#token"),
     address + "&extra=1",
-    address + "&token=" + token,
+    address + `&grant=` + token,
     address + "&",
     address.replace("#", "?"),
-    address.replace("callback#", "callback?client=desktop#"),
+    address.replace("callback#", "callback?extra=1#"),
     address.replace("auth/", "other/"),
     address.replace("mokly:", "https:"),
     address.replace("mokly:", "MOKLY:"),
@@ -26,14 +28,15 @@ test("the scheme validator accepts only the canonical credential form", () => {
     address.replace(token, token.toUpperCase()),
     address.replace(token, token.slice(1)),
     address.replace(token, token + "0"),
-    address.replace("token", "%74oken"),
+    address.replace("grant", "%67rant"),
+    address.replace("grant", "token"),
     address + "\n",
     " " + address,
   ])
     assert.equal(handoffToken(invalid), undefined, invalid.slice(0, 55));
 });
 
-test("a repeated handoff never reloads the landing or interrupts its exchange", async () => {
+test(`desktop: a repeated handoff never reloads the landing or interrupts its exchange`, async () => {
   const loaded: string[] = [];
   let focused = 0;
   const handoff = createHandoff({
@@ -50,12 +53,12 @@ test("a repeated handoff never reloads the landing or interrupts its exchange", 
   });
   assert.equal(handoff.receive(address), true);
   assert.equal(handoff.receive(address), false);
-  handoff.navigated("mokly-app://desktop/auth/email/callback");
+  handoff.navigated(landing);
   const next = address.replace(token, "b".repeat(64));
   assert.equal(handoff.receive(next), false);
   await settled();
   assert.equal(loaded.length, 2);
-  handoff.navigated("mokly-app://desktop/auth/email/callback");
+  handoff.navigated(landing);
   handoff.started(1);
   handoff.settled(1);
   assert.equal(handoff.receive(address), false);
@@ -64,27 +67,10 @@ test("a repeated handoff never reloads the landing or interrupts its exchange", 
   handoff.navigated("mokly-app://desktop/new");
   assert.equal(handoff.receive(address.replace(token, "c".repeat(64))), true);
   assert.equal(focused, 3);
-  assert.equal(
-    loaded[1],
-    `mokly-app://desktop/auth/email/callback#token=${token}`,
-  );
+  assert.equal(loaded[1], `${landing}#grant=${token}`);
 });
 
-test("a preflight completion does not release an active landing exchange", () => {
-  let settlements = 0;
-  const requestIds: number[] = [];
-  const observe = exchangeObserver((id) => {
-    settlements++;
-    requestIds.push(id);
-  });
-  observe({ method: "OPTIONS", id: 1 });
-  assert.equal(settlements, 0);
-  observe({ method: "POST", id: 2 });
-  assert.equal(settlements, 1);
-  assert.deepEqual(requestIds, [2]);
-});
-
-test("a failed handoff warns without logging its one-use credential", async () => {
+test(`desktop: a failed handoff warns without logging its one-use credential`, async () => {
   const warnings: string[] = [];
   const handoff = createHandoff({
     window: () => ({
@@ -108,7 +94,7 @@ test("a failed handoff warns without logging its one-use credential", async () =
   assert.equal(warnings[0], "Desktop operation failed (ERR_ABORTED)");
 });
 
-test("a failed landing accepts a fresh document for the next token and guards its exchange", async () => {
+test(`desktop: a failed landing accepts a fresh document for the next credential and guards its exchange`, async () => {
   const captured: string[] = [];
   let current = "mokly-app://desktop/dashboard";
   let requestId = 0;
@@ -132,9 +118,9 @@ test("a failed landing accepts a fresh document for the next token and guards it
         }
         if (next.href !== previous.href) {
           const received = new URLSearchParams(destination.hash.slice(1)).get(
-            "token",
+            "grant",
           );
-          assert.equal(destination.pathname, "/auth/email/callback");
+          assert.equal(destination.pathname, `/auth/desktop/callback`);
           assert.equal(destination.search, "");
           assert.ok(received);
           captured.push(received);
@@ -168,7 +154,7 @@ test("a failed landing accepts a fresh document for the next token and guards it
   assert.deepEqual(captured, [token, second, "c".repeat(64)]);
 });
 
-test("a late load failure cannot release a newer handoff's guard", async () => {
+test(`desktop: a late load failure cannot release a newer handoff's guard`, async () => {
   const first = deferred();
   const warnings: unknown[] = [];
   const handoff = createHandoff({
@@ -176,7 +162,7 @@ test("a late load failure cannot release a newer handoff's guard", async () => {
       focus: () => {},
       load: (url) => {
         handoff.navigated(url);
-        if (url.includes("#token="))
+        if (url.includes(`#grant=`))
           handoff.started(url.endsWith(token) ? 1 : 2);
         return url.endsWith(token) ? first.promise : Promise.resolve();
       },
@@ -193,7 +179,7 @@ test("a late load failure cannot release a newer handoff's guard", async () => {
   assert.equal(handoff.receive(address.replace(token, "c".repeat(64))), false);
 });
 
-test("a failed document reset releases the guard without retrying a received token", async () => {
+test(`desktop: a failed document reset releases the guard without retrying a received credential`, async () => {
   const warnings: unknown[] = [];
   let resets = 0;
   const handoff = createHandoff({
@@ -213,4 +199,18 @@ test("a failed document reset releases the guard without retrying a received tok
   assert.equal(handoff.receive(address.replace(token, "b".repeat(64))), true);
   await settled();
   assert.equal(handoff.receive(address.replace(token, "c".repeat(64))), false);
+});
+
+test("a preflight completion does not release an active landing exchange", () => {
+  let settlements = 0;
+  const requestIds: number[] = [];
+  const observe = exchangeObserver((id) => {
+    settlements++;
+    requestIds.push(id);
+  });
+  observe({ method: "OPTIONS", id: 1 });
+  assert.equal(settlements, 0);
+  observe({ method: "POST", id: 2 });
+  assert.equal(settlements, 1);
+  assert.deepEqual(requestIds, [2]);
 });

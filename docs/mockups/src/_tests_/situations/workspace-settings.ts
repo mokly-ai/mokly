@@ -11,6 +11,7 @@ export const workspaceSettingsSituations = [
     family: "settings",
     screen: "account",
     name: "scope-loading",
+    sibling: true,
     states: ["default"],
     pending: true,
   },
@@ -19,6 +20,7 @@ export const workspaceSettingsSituations = [
     family: "settings",
     screen: "account",
     name: "session-loading",
+    sibling: true,
     states: ["default"],
     pending: true,
   },
@@ -27,8 +29,19 @@ export const workspaceSettingsSituations = [
     family: "settings",
     screen: "account",
     name: "github-connecting",
+    sibling: true,
     states: ["default"],
     pending: true,
+  },
+  // The account pane in the desktop app's window, whose Connect GitHub opens
+  // the web: the one more drawing the pane's states leave room for, so it is
+  // the pane's fourth variant.
+  {
+    path: "product/settings/account/desktop",
+    family: "settings",
+    screen: "account",
+    name: "desktop",
+    states: ["default"],
   },
   {
     path: "product/settings/workspace/suspended",
@@ -102,6 +115,7 @@ export const workspaceSettingsSituations = [
     family: "settings",
     screen: "github",
     name: "suspended",
+    sibling: true,
     states: ["default"],
   },
   {
@@ -109,6 +123,7 @@ export const workspaceSettingsSituations = [
     family: "settings",
     screen: "github",
     name: "member",
+    sibling: true,
     states: ["default"],
   },
   {
@@ -116,8 +131,19 @@ export const workspaceSettingsSituations = [
     family: "settings",
     screen: "github",
     name: "menu",
+    sibling: true,
     states: ["default"],
     overlay: true,
+  },
+  // The GitHub accounts pane in the desktop app's window, whose Add GitHub
+  // account opens the web. The pane's other single drawings are declared
+  // siblings, so this one is its fourth variant.
+  {
+    path: "product/settings/github/desktop",
+    family: "settings",
+    screen: "github",
+    name: "desktop",
+    states: ["default"],
   },
   {
     path: "product/settings/github/remove",
@@ -127,12 +153,14 @@ export const workspaceSettingsSituations = [
     states: ["default", "loading"],
     overlay: true,
   },
-  // Add GitHub account's write, which leaves for GitHub.
+  // Add GitHub account's write, which leaves for GitHub, a screen beside the
+  // pane like its other single drawings.
   {
     path: "product/settings/github/adding",
     family: "settings",
     screen: "github",
     name: "adding",
+    sibling: true,
     states: ["default"],
     pending: true,
   },

@@ -29,8 +29,8 @@ We collect and process these categories where relevant:
 
 - **Account data:** name, email address, user identifier, workspace
   membership and role.
-- **Authentication and security data:** hashed magic-link, session and
-  publishing-token credentials; session and CSRF records; authentication
+- **Authentication and security data:** hashed magic-link, desktop app
+  sign-in grant, session and publishing-token credentials; session and CSRF records; authentication
   events; GitHub identity; invitation state; and rate-limit or abuse-prevention
   records.
 - **Workspace and project data:** workspace and project names,
@@ -51,8 +51,8 @@ We collect and process these categories where relevant:
   metadata, timestamps, service logs, error details and security events.
 
 Mokly does not accept a user password. Authentication uses an email magic link
-or GitHub, and Mokly stores digests rather than plaintext session, link and
-publishing-token credentials.
+or GitHub, and Mokly stores digests rather than plaintext session, link,
+desktop app sign-in grant and publishing-token credentials.
 
 We do not intentionally collect special-category personal data. If customer
 content contains it, we process that content only as needed to provide, secure
@@ -156,6 +156,8 @@ Current service records follow these specific boundaries:
 
 - Magic links expire after 15 minutes. Their records are normally removed
   seven days after expiry.
+- Desktop app sign-in grants expire after five minutes. Their records are
+  normally removed seven days after expiry.
 - Sessions last no more than 30 days and expire after seven days without
   activity. Expired session records are normally removed after one day.
 - Authentication rate-limit records are normally removed one day after their

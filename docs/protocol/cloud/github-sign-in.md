@@ -10,7 +10,9 @@ apply to both providers.
 `POST /v1/auth/github` accepts optional `returnTo`, requires an admitted
 Origin and returns `authorizeUrl`, `state` and `codeVerifier` under `no-store`.
 The [Origin policy](./auth-sessions.md#csrf-origins-and-redirects) includes the
-desktop origin when enabled.
+desktop origin when enabled, but the desktop app starts no GitHub flow: it
+signs in through the browser and opens GitHub setup on the web, as
+[Desktop application](./desktop-app.md#sign-in) defines.
 Generate independent 256-bit state and verifier values. Persist only their
 SHA-256 digests, the validated destination, purpose, optional initiating user
 and session hashes, and ten-minute expiry. Do not store an OAuth

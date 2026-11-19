@@ -62,6 +62,7 @@ impl MaintenanceRunner for SystemMaintenanceRunner {
         let report = pruner.prune().context("prune authentication records")?;
         tracing::info!(
             links = report.links,
+            desktop_grants = report.desktop_grants,
             sessions = report.sessions,
             rate_limits = report.rate_limits,
             "authentication records pruned"

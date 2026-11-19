@@ -11,7 +11,8 @@ use subtle::ConstantTimeEq;
 use crate::error::{Error, ErrorResultExt, Result};
 use crate::runtime::hash;
 use crate::service::{
-    AuthService, Authenticator, Identity, LinkIssued, LinkVerified, SessionIssued,
+    AuthService, Authenticator, DesktopGrantIssued, Identity, LinkIssued, LinkVerified,
+    SessionIssued,
 };
 use crate::session_policy;
 
@@ -40,6 +41,26 @@ impl Authenticator for AuthService {
 
     fn preview(&self, secret: &str, previous: Option<&str>, peer: &str) -> Result<SessionIssued> {
         self.preview_sign_in(secret, previous, peer)
+    }
+
+    fn issue_desktop_grant(
+        &self,
+        identity: &Identity,
+        challenge: &str,
+        return_to: Option<&str>,
+        peer: &str,
+    ) -> Result<DesktopGrantIssued> {
+        self.issue_desktop(identity, challenge, return_to, peer)
+    }
+
+    fn exchange_desktop_grant(
+        &self,
+        grant: &str,
+        verifier: &str,
+        previous: Option<&str>,
+        peer: &str,
+    ) -> Result<LinkVerified> {
+        self.exchange_desktop(grant, verifier, previous, peer)
     }
 
     fn authenticate(&self, credential: &str) -> Result<Identity> {
@@ -157,12 +178,22 @@ impl AuthService {
         now: DateTime<Utc>,
         previous: Option<&str>,
     ) -> Result<Session> {
+        let session = session_policy::new_session(user, credential, csrf_token, now);
+        self.save_replacement(queries, session, previous)
+    }
+
+    /// Persist a chosen session deadline and revoke its predecessor in one transaction.
+    pub(crate) fn save_replacement(
+        &self,
+        queries: &mut dyn Queries,
+        session: Session,
+        previous: Option<&str>,
+    ) -> Result<Session> {
         if let Some(previous) = previous {
             queries
                 .delete_session(&hash(previous))
                 .context("delete session query")?;
         }
-        let session = session_policy::new_session(user, credential, csrf_token, now);
         queries
             .insert_session(&session)
             .context("insert session query")?;

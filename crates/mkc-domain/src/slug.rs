@@ -42,6 +42,7 @@ pub const EXPLICIT_SITE_FIRST_SEGMENTS: &[&str] = &[".well-known"];
 pub const EXPO_STATIC_FIRST_SEGMENTS: &[&str] = &[
     "_sitemap",
     "auth",
+    "connect",
     "dashboard",
     "install",
     "new",

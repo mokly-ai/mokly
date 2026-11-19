@@ -4,10 +4,11 @@ This is the operation and response sub-contract of [REST API](./rest-api.md).
 
 ## Implemented Surface
 
-The API implements magic-link issue/exchange, session read/rotation/sign-out,
-account name editing, personal workspace creation/read/edit/deletion,
-members and invitations (including acceptance), projects, additive project
-grants, and one-time publishing-token creation/list/revocation.
+The API implements magic-link issue/exchange, desktop grant issue/exchange,
+session read/rotation/sign-out, account name editing, personal workspace
+creation/read/edit/deletion, members and invitations (including acceptance),
+projects, additive project grants, and one-time publishing-token
+creation/list/revocation.
 
 `GET /v1/health` has explicit OpenAPI `security: []`; it needs no session or
 token and never sets a session cookie. Its 200 JSON contains `status: "ok"`,
@@ -48,8 +49,8 @@ Origin, CSRF or JSON-body validation, so malformed JSON and a missing or wrong
 Origin or CSRF never mask absent configuration. A configured operation
 performs required session authentication, validates Origin and CSRF before the
 body, and consumes admission only after JSON decoding and body-shape checks
-pass; an operation skips the steps it does not use. The preview and GitHub
-authentication operations follow the same precedence.
+pass; an operation skips the steps it does not use. The preview, desktop grant
+and GitHub authentication operations follow the same precedence.
 
 The [cloud build API](./cloud-build-api.md) implements five operations,
 project and reference fields, and four reasons. The generated document and

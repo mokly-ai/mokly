@@ -25,6 +25,7 @@ const values = [
   "magic-link-invalid",
   "magic-link-expired",
   "magic-link-used",
+  "desktop-grant-invalid",
   "session-expired",
   "token-revoked",
   "invitation-expired",

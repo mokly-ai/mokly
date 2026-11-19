@@ -54,7 +54,9 @@ the public site. [Site](./site.md) owns their routes and shared navigation;
 ## Retention And Complaints
 
 - Authentication periods match the deployed schedule: magic-link records are
-  normally pruned seven days after their 15-minute expiry; expired sessions
+  normally pruned seven days after their 15-minute expiry; desktop app sign-in
+  grants, stored as hashes, expire after five minutes and are normally pruned
+  seven days after expiry; expired sessions
   and rate-limit records are normally pruned after one day; sessions have a
   30-day absolute and seven-day idle lifetime.
 - Publication wording states that successful publications remain until their

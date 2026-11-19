@@ -43,7 +43,8 @@ The crates and what each owns:
 - `mkc-store-interface` and `mkc-store-pg`: the store traits and their
   Postgres queries, including the billing queries;
   [Persistence boundaries](./persistence-boundaries.md) assigns the tables.
-- `mkc-auth`: magic links, preview sign-in, sessions and admission.
+- `mkc-auth`: magic links, preview sign-in, desktop grants, sessions and
+  admission.
 - `mkc-mokly-contract`: bounded gzip/tar decoding and the typed upload,
   ownership and review artifacts, returned as immutable validated bytes
   without HTTP, database or filesystem extraction; see

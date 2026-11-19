@@ -16,6 +16,8 @@ use super::parameters::{Csrf, Origin};
 use super::reasons;
 use super::responses::ErrorResponse;
 
+mod desktop_grant;
+
 #[derive(OpenApi)]
 #[openapi(paths(
     get_session,
@@ -24,6 +26,8 @@ use super::responses::ErrorResponse;
     send_magic_link,
     verify_preview_sign_in,
     verify_magic_link,
+    desktop_grant::issue,
+    desktop_grant::exchange,
     update_account
 ))]
 pub(super) struct Doc;

@@ -54,6 +54,10 @@ fn every_implemented_platform_operation_executes_a_handler() {
             )),
             Endpoint::GitHub => assert!(operation.github()),
             Endpoint::Billing => assert!(operation.billing()),
+            Endpoint::DesktopGrant => {
+                assert!(operation.desktop_grant());
+                auth_operations.insert("desktop-grant");
+            }
             Endpoint::CatalogueGrant(_, _) => {
                 assert_eq!(operation, Operation::IssueCatalogueGrant);
             }
@@ -98,6 +102,7 @@ fn every_implemented_platform_operation_executes_a_handler() {
         BTreeSet::from([
             "issue",
             "preview",
+            "desktop-grant",
             "verify",
             "authenticate",
             "sign-out",

@@ -84,6 +84,12 @@ export type MagicLinkResult = Schemas["MagicLinkResult"];
 export type Connection = Schemas["Connection"];
 /** The session issued by consuming a sign-in link, with its destination. */
 export type SessionIssued = Schemas["SessionIssued"];
+/** What the connect page sends for a desktop grant: the challenge and `returnTo`. */
+export type DesktopGrantRequest = Schemas["DesktopGrantRequest"];
+/** A one-use desktop grant and when it expires. */
+export type DesktopGrantResult = Schemas["DesktopGrantResult"];
+/** What the desktop landing exchanges: the grant and the window's verifier. */
+export type DesktopGrantCallback = Schemas["DesktopGrantCallback"];
 
 /** Workspace roles, strongest first. */
 export type Role = Workspace["role"];

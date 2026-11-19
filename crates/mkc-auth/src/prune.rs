@@ -12,7 +12,7 @@ use crate::session_policy::IDLE_LIFETIME;
 
 /// Additional diagnostic retention after the authentication expiry boundary.
 pub struct Retention {
-    /// Expired link digest and replay classification lifetime.
+    /// Expired link and desktop grant diagnostic lifetime.
     pub links: Duration,
     /// Absolute or idle-expired session diagnostic lifetime.
     pub sessions: Duration,
@@ -25,6 +25,8 @@ pub struct Retention {
 pub struct PruneReport {
     /// Expired links removed.
     pub links: usize,
+    /// Expired desktop grants removed, including used grants.
+    pub desktop_grants: usize,
     /// Expired sessions removed.
     pub sessions: usize,
     /// Stale counters removed.
@@ -72,6 +74,7 @@ impl Pruner for AuthPruner {
             .transaction(&mut Callback(&mut |queries| {
                 report = PruneReport {
                     links: queries.prune_magic_links(link_before)?,
+                    desktop_grants: queries.prune_desktop_grants(link_before)?,
                     sessions: queries.prune_sessions(expires_before, seen_before)?,
                     rate_limits: queries.prune_rate_limits(rate_before)?,
                 };

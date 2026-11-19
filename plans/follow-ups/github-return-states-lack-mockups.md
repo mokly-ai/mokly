@@ -3,10 +3,11 @@
 - **Severity:** Low (estimate). **Effort:** Large (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from Milestone F5 of the deleted `plans/mokly-cloud-follow-ups.md`, on the branch `calummoore/plans-skill-update`.
-- **Location:** `apps/app/src/screens/account/github-callback-screen.tsx:37-49` and `:80-107`, `apps/app/src/screens/account/github-install-screen.tsx:19-30` and `:164-165`, `docs/mockups/src/_tests_/product-situations.ts:42-103` and `docs/protocol/cloud/product-mockups-account.md:180-198`.
+- **Location:** `apps/app/src/screens/account/github-callback-screen.tsx:38-50` and `:81-108`, `apps/app/src/screens/account/github-install-screen.tsx:20-31` and `:165-166`, `docs/mockups/src/_tests_/callback-landings.ts:11-78` and `docs/protocol/cloud/product-mockups-account.md:193-217`.
 - **Reason:** The drawings are new mockup pages, which are Large, and they change the folder inventory that the protocol doc fixes.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The app still renders the eight states, and the callback inventory still holds the eleven drawn states.
 - **Checked:** 2026-11-04, on the branch `calummoore/skeleton-sizing-mismatch`. The waits of the GitHub installation landings now have drawings, `product/account/callback/install-setup` and `callback/install-authorize`, so the callback inventory holds thirteen drawn states. The other GitHub return states still have no drawing, and the choice is still open.
+- **Checked:** 2026-11-06, on the branch `calummoore/desktop-browser-authentication` after it merged `origin/main` at `194fdb78`. The callback inventory holds fourteen drawn states: the desktop landing added `callback/desktop-expired`. The other GitHub return states still have no drawing, and the choice is still open.
 - **Category:** Mockup.
 
 - **Terms:**
@@ -14,8 +15,8 @@
 - **Background:** PRs #69 and #77 drew three installation landings: `install-requested`, `install-conflict` and `install-denied`. The app draws more return states than the catalogue.
   - On the sign-in callback: "GitHub sign-in expired", "This GitHub account is connected to another Mokly account", "GitHub sign-in opens soon", "GitHub sign-in failed" and "Installation wasn’t completed".
   - On the install landing: "Completing installation", "Installation expired" and "GitHub installation opens soon".
-  - The recovery table at `docs/protocol/cloud/auth-callbacks.md:179-189` is the current source of truth. Its destinations are `/sign-in`, `/settings/account` and `/install`.
-  - `docs/protocol/cloud/product-mockups-account.md:186` and `:198` fix the callback folder at eleven states, and say that no state name is invented where the contract has none.
+  - The recovery table at `docs/protocol/cloud/auth-callbacks.md:181-191` is the current source of truth. Its destinations are `/sign-in`, `/settings/account` and `/install`.
+  - `docs/protocol/cloud/product-mockups-account.md:202-203` and `:217` fix the callback folder at fourteen states, and say that no state name is invented where the contract has none.
 - **Problem:** Reviewers cannot see eight states that the GitHub returns show.
 - **Impact if no action:** A wrong recovery or copy in those states reaches users without a drawn review.
 - **Root question:** Which GitHub return states does the catalogue draw?

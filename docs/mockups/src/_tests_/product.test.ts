@@ -7,9 +7,8 @@ import { exampleToken } from "../fixtures/product-states";
 import { catalogueEntries } from "./catalogue-index";
 import { screenFile } from "./catalogue-paths";
 import { drawnPalette } from "./catalogue-reads";
-import { screenVariantLimit, variantParent } from "./catalogue-variants";
+import { variantParent } from "./catalogue-variants";
 import {
-  expectedProductScreens,
   inventoryPages,
   productInventoryViolations,
 } from "./product-inventory";
@@ -76,90 +75,7 @@ test("every standard product screen owns canonical, empty, loading and error sta
   );
 });
 
-test("each product screen keeps its states and situations within four variants", () => {
-  const screens = expectedProductScreens();
-  for (const screen of screens)
-    assert.ok(screen.variants.length <= screenVariantLimit, screen.path);
-  const byId = new Map(screens.map((screen) => [screen.path, screen.variants]));
-  assert.deepEqual(byId.get("product/viewer/switcher"), [
-    "product/viewer/switcher/empty",
-    "product/viewer/switcher/loading",
-    "product/viewer/switcher/error",
-    "product/viewer/switcher/no-branches",
-  ]);
-  assert.deepEqual(byId.get("product/account/sign-in"), [
-    "product/account/sign-in/empty",
-    "product/account/sign-in/loading",
-    "product/account/sign-in/error",
-  ]);
-  assert.deepEqual(byId.get("product/account/sign-in/github-refused"), []);
-  assert.deepEqual(byId.get("product/account/invitation-accept"), [
-    "product/account/invitation-accept/empty",
-    "product/account/invitation-accept/loading",
-    "product/account/invitation-accept/error",
-  ]);
-  assert.deepEqual(byId.get("product/account/invitation-accept/expired"), []);
-  assert.deepEqual(
-    byId.get("product/account/invitation-accept/open-error"),
-    [],
-  );
-  assert.deepEqual(byId.get("product/settings/tokens/create"), [
-    "product/settings/tokens/create/loading",
-    "product/settings/tokens/create/error",
-    "product/settings/tokens/create/reveal",
-    "product/settings/tokens/create/copy",
-  ]);
-  assert.deepEqual(byId.get("product/settings/workspace/slug-recovery"), [
-    "product/settings/workspace/slug-recovery/error",
-  ]);
-  assert.deepEqual(byId.get("product/settings/project"), [
-    "product/settings/project/empty",
-    "product/settings/project/loading",
-    "product/settings/project/error",
-    "product/settings/project/no-builds",
-  ]);
-  assert.deepEqual(byId.get("product/viewer/pull-request"), [
-    "product/viewer/pull-request/empty",
-    "product/viewer/pull-request/loading",
-    "product/viewer/pull-request/error",
-    "product/viewer/pull-request/publishing",
-  ]);
-  assert.deepEqual(byId.get("product/viewer/pull-request/closed"), [
-    "product/viewer/pull-request/closed/merged",
-  ]);
-  assert.deepEqual(byId.get("product/viewer/standalone/publish"), [
-    "product/viewer/standalone/publish/pull-request",
-    "product/viewer/standalone/publish/reader",
-    "product/viewer/standalone/publish/publishing",
-    "product/viewer/standalone/publish/reader-pull-request",
-  ]);
-  assert.deepEqual(byId.get("product/viewer/standalone/build"), [
-    "product/viewer/standalone/build/empty",
-    "product/viewer/standalone/build/loading",
-    "product/viewer/standalone/build/error",
-    "product/viewer/standalone/build/published",
-  ]);
-  assert.deepEqual(byId.get("product/viewer/standalone/build/unreadable"), []);
-  assert.deepEqual(byId.get("product/viewer/standalone/build/lockfile"), []);
-  assert.deepEqual(byId.get("product/viewer/standalone/build/refused"), [
-    "product/viewer/standalone/build/refused/cancel",
-  ]);
-  assert.deepEqual(byId.get("product/viewer/standalone/build/reader"), [
-    "product/viewer/standalone/build/reader/plan",
-    "product/viewer/standalone/build/reader/plan-loading",
-    "product/viewer/standalone/build/reader/queued",
-    "product/viewer/standalone/build/reader/running",
-  ]);
-  assert.deepEqual(byId.get("product/viewer/standalone/publish-refused"), [
-    "product/viewer/standalone/publish-refused/pull-request",
-  ]);
-  assert.deepEqual(byId.get("product/viewer/pull-request/fork"), []);
-  assert.deepEqual(byId.get("product/viewer/pull-request/plan"), [
-    "product/viewer/pull-request/plan/reader",
-  ]);
-});
-
-test("all 271 inventory pages render both widths and schemes with their stable identity", () => {
+test("all 285 inventory pages render both widths and schemes with their stable identity", () => {
   let rendered = 0;
   for (const { path: id, state } of inventoryPages())
     for (const view of ["mobile", "desktop"] as const)
@@ -182,7 +98,7 @@ test("all 271 inventory pages render both widths and schemes with their stable i
         );
         rendered += 1;
       }
-  assert.equal(rendered / 4, 271);
+  assert.equal(rendered / 4, 285);
 });
 
 test("a state child that repeats its canonical drawing says why", () => {

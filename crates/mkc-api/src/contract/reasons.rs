@@ -6,6 +6,7 @@ pub(super) const BUILD_ALREADY_PUBLISHED: &str = "build-already-published";
 pub(super) const BUILD_INELIGIBLE: &str = "build-ineligible";
 pub(super) const BUILDS_UNAVAILABLE: &str = "builds-unavailable";
 pub(super) const CSRF_REJECTED: &str = "csrf-rejected";
+pub(super) const DESKTOP_GRANT_INVALID: &str = "desktop-grant-invalid";
 pub(super) const DUPLICATE_PROJECT: &str = "duplicate-project";
 pub(super) const GITHUB_AUTH_INVALID: &str = "github-auth-invalid";
 pub(super) const GITHUB_EMAIL_UNVERIFIED: &str = "github-email-unverified";

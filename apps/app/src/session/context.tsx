@@ -20,6 +20,10 @@ import {
 import { asApiError } from "../api/errors";
 import type { ApiError } from "../api/errors";
 import type { Session } from "../api/types";
+import { onShellFocus } from "../navigation/shell-focus";
+
+import { afterRefresh } from "./refresh";
+import type { SessionRead } from "./refresh";
 
 /** What the application knows about the reader right now. */
 export type SessionState =
@@ -88,6 +92,29 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   }, [apply]);
 
+  /**
+   * Read the session again for a screen that may be out of date, without
+   * disturbing it, as `afterRefresh` decides. A sign-in, a sign-out or a
+   * reload that starts meanwhile wins over the answer.
+   */
+  const refresh = useCallback(async () => {
+    const mine = generation.current;
+    let read: SessionRead;
+    try {
+      read = {
+        session: await expectBody((id) =>
+          api.GET("/v1/session", { headers: correlationHeader(id) }),
+        ),
+      };
+    } catch (caught) {
+      read = { error: asApiError(caught) };
+    }
+    if (generation.current !== mine) return;
+    if ("session" in read) setCsrfToken(read.session.csrfToken);
+    else if (read.error?.signedOut) setCsrfToken("");
+    setState((current) => afterRefresh(current, read));
+  }, []);
+
   const signOut = useCallback(async () => {
     try {
       await expectData((id) =>
@@ -107,6 +134,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  // The desktop app's window signs in and sets up GitHub on the web, so it
+  // reads the session again, with the GitHub connection it carries, whenever
+  // the window gets focus back.
+  useEffect(() => onShellFocus(() => void refresh()), [refresh]);
 
   const value = useMemo(
     () => ({ state, reload, adopt, signOut }),

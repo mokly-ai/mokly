@@ -116,6 +116,9 @@ const refusals: DrawnRefusal[] = [
     reference: true,
     marks: fieldRefusals.email,
   },
+  // The connect page's grant request. Use another account sent nothing, but
+  // it is a link here, so it is not read back as a resting button.
+  { ...refusedSave, id: "product/account/connect-desktop/error" },
   { ...refusedSave, id: "product/settings/account/error" },
   { ...refusedSave, id: "product/settings/danger/error" },
   { ...refusedSave, id: "product/settings/project/error" },

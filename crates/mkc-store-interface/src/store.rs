@@ -11,6 +11,7 @@ use crate::build_check::BuildChecks;
 use crate::build_grant::BuildUploadGrants;
 use crate::build_history::BuildReads;
 use crate::build_log::BuildLogs;
+use crate::desktop_grant::DesktopGrants;
 use crate::error::Result;
 use crate::github_check::GitHubChecks;
 use crate::github_delivery::GitHubDeliveries;
@@ -48,6 +49,7 @@ pub trait Queries:
     + Grants
     + Tokens
     + MagicLinks
+    + DesktopGrants
     + Sessions
     + RateLimits
     + Integrations

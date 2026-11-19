@@ -9,7 +9,7 @@ browser app.
 
 - Open the product without a hosted page server.
 - Keep the renderer isolated and catalogue HTML on its separate origin.
-- Receive the `mokly` email sign-in handoff in one application instance.
+- Receive desktop grants through `mokly` in one instance.
 - Keep window bounds and the Chromium session across launches.
 - Check the public pre-release feed in packaged builds.
 
@@ -49,21 +49,38 @@ MKC_DESKTOP_CATALOGUE_SOURCE='http://*.localhost:8082' \
   npm run start --workspace @mokly-cloud/desktop
 ```
 
-The scripts enable `MKC_DESKTOP_CLIENT=true` on both servers. The log mailer
-prints the hosted email link. Open that link in a browser, then select
-**Open Mokly**. Scheme registration needs an installed package. For an
-unpackaged launch, deliver its scheme address as a launch argument:
+The scripts enable `MKC_DESKTOP_CLIENT=true` on both servers. Select
+**Continue in browser** in the window. Sign in on the browser page, then select
+**Open Mokly**. The log mailer prints the ordinary browser email link when
+email sign-in is used. Scheme registration needs an installed package. For an
+unpackaged app, keep the requesting window open and deliver its grant as an
+argument of a second launch:
 
 ```sh
 npm run start --workspace @mokly-cloud/desktop -- \
-  'mokly://auth/email/callback#token=<64 lowercase hex characters>'
+  'mokly://auth/desktop/callback#grant=<64 lowercase hex characters>'
 ```
 
+The address must match exactly, without normalization or extra fields. It
+loads `/auth/desktop/callback#grant=<grant>` on the desktop origin. The
+requesting tab keeps the verifier that the landing needs to exchange the grant.
+
 Each accepted handoff loads `about:blank` before the bundled callback. This
-starts a fresh document after a used or expired link, so the app entry captures
-the new token before the router starts. The guard stays active through this
-reset. It matches the new callback POST by Electron request ID and ignores older request
-and load failures. Tokens stay in the callback fragment.
+starts a fresh document after a used or expired grant, so the app entry captures
+the new grant before the router starts. A received address stays ignored
+for the rest of the run. One guard covers the reset and exchange. It watches
+the POST to `/v1/auth/desktop/callback` by Electron request ID and ignores older
+request and load failures. The matching request's completion or failure
+releases the guard. Navigation away from the committed landing also releases
+it. Grants stay in the callback fragment.
+
+Product navigation and redirects to the public app origin load the same path,
+query and fragment from the bundle. Public site paths open in the system
+browser. Stripe Checkout and Stripe billing remain allowed round trips
+inside the window. GitHub navigation opens in the system browser. Every popup is denied. Public app popups open in the system
+browser, including product paths. Desktop-origin popups load in the existing
+window. Other HTTP(S) popup targets open in the system browser. Other schemes
+are dropped.
 
 ## Development
 
@@ -96,9 +113,11 @@ Playwright system dependencies and `xvfb`. On Amazon Linux 2023, install
 `xorg-x11-server-Xvfb`, `gtk3`, `nss` and `alsa-lib` with `dnf`.
 The suite reuses the app's real API/catalogue harness. It first opens the
 shell with the API stopped, then starts its isolated stack. It tests the
-Origin header, persistent session cookie, handoff, viewer limit, catalogue
+Origin header, persistent session cookie, desktop grant handoff, viewer limit, catalogue
 admission, navigation and the share action's write to the system clipboard.
-It also opens a used link, then a valid link on the same callback route, and
+It presses **Continue in browser**, captures the connect address, issues a grant
+through the real browser page and API, and delivers it through a second launch.
+It also opens a used grant, then a valid grant on the same callback route, and
 proves that a new document signs in.
 It reads the clipboard from the main process and awaits the result. It saves
 screenshots under `.context/m5/`.

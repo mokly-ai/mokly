@@ -20,7 +20,7 @@ impl AuthService {
         email: &str,
         return_to: Option<&str>,
         peer: &str,
-        client: ClientOrigin,
+        _client: ClientOrigin,
     ) -> Result<LinkIssued> {
         let email = validation::email(email).ok_or(Error::InvalidInput)?;
         let now = self.runtime.now();
@@ -40,17 +40,13 @@ impl AuthService {
                 .insert_magic_link(&link)
                 .context("insert magic link query")
         })?;
-        let path = match client {
-            ClientOrigin::App => app_paths::EMAIL_CALLBACK,
-            ClientOrigin::Desktop => app_paths::EMAIL_DESKTOP_CALLBACK,
-        };
         self.mailer
             .send(&Message {
                 recipient: email,
                 content: Content::SignIn {
                     link: format!(
                         "{}#token={token}",
-                        app_paths::on_origin(self.origins.app_origin(), path)
+                        app_paths::on_origin(self.origins.app_origin(), app_paths::EMAIL_CALLBACK)
                     ),
                     valid_for: Lifetime::Minutes(LINK_LIFETIME_MINUTES),
                 },

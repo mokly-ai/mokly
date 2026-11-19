@@ -106,6 +106,7 @@ export const onboardingSituations = [
     family: "account",
     screen: "install-app",
     name: "member",
+    sibling: true,
     states: ["default"],
   },
   {
@@ -113,6 +114,7 @@ export const onboardingSituations = [
     family: "account",
     screen: "install-app",
     name: "reviewer",
+    sibling: true,
     states: ["default"],
   },
   {
@@ -120,6 +122,17 @@ export const onboardingSituations = [
     family: "account",
     screen: "install-app",
     name: "suspended-unreadable",
+    sibling: true,
+    states: ["default"],
+  },
+  // The install step in the desktop app's window, whose Install on GitHub
+  // opens the web. The step's other single drawings are declared siblings, so
+  // this one is its fourth variant.
+  {
+    path: "product/account/install-app/desktop",
+    family: "account",
+    screen: "install-app",
+    name: "desktop",
     states: ["default"],
   },
   {
@@ -127,6 +140,7 @@ export const onboardingSituations = [
     family: "account",
     screen: "install-app",
     name: "suspended-loading",
+    sibling: true,
     states: ["default"],
   },
   {
@@ -134,6 +148,7 @@ export const onboardingSituations = [
     family: "account",
     screen: "install-app",
     name: "installing",
+    sibling: true,
     states: ["default"],
     pending: true,
   },

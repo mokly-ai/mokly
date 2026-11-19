@@ -52,6 +52,40 @@ export const accountOwners = {
     region: "panelled",
     files: ["screens/account/entry-screen.tsx"],
   },
+  // The desktop app's window draws its own entry, and the browser draws the
+  // connect page that hands the window its grant. Each is a module of its own:
+  // the entry writes both of its labels, and the connect page every label of
+  // its states, the refused request's way back included.
+  "product/account/sign-in/desktop": {
+    region: "panelled",
+    files: ["screens/account/desktop-entry-screen.tsx"],
+  },
+  "product/account/sign-in/desktop/waiting": {
+    region: "panelled",
+    files: ["screens/account/desktop-entry-screen.tsx"],
+  },
+  "product/account/sign-up/desktop": {
+    region: "panelled",
+    files: ["screens/account/desktop-entry-screen.tsx"],
+  },
+  "product/account/sign-up/desktop/waiting": {
+    region: "panelled",
+    files: ["screens/account/desktop-entry-screen.tsx"],
+  },
+  "product/account/connect-desktop": {
+    region: "panelled",
+    files: ["screens/account/connect-desktop-screen.tsx"],
+  },
+  "product/account/connect-desktop/opened": {
+    region: "panelled",
+    files: ["screens/account/connect-desktop-screen.tsx"],
+  },
+  // The same page while the session read runs: its own module writes both
+  // controls' labels and the read's name.
+  "product/account/connect-desktop/session-loading": {
+    region: "panelled",
+    files: ["screens/account/connect-desktop-screen.tsx"],
+  },
   "product/account/magic-link": {
     region: "panelled",
     files: ["screens/account/magic-link-screen.tsx"],
@@ -60,12 +94,12 @@ export const accountOwners = {
     region: "panelled",
     files: ["screens/account/callback-screen.tsx"],
   },
-  // The desktop handoff is drawn by a module of its own beside the shared
-  // landing, which only decides when to offer it: the handoff writes both of
-  // its actions, so it alone answers for the page.
-  "product/account/callback/desktop": {
+  // The desktop landing's failures in the app's window, whose pending state is
+  // the shared landing's. The landing is a module of its own, which writes its
+  // one way on.
+  "product/account/callback/desktop-expired": {
     region: "panelled",
-    files: ["screens/account/callback-handoff.tsx"],
+    files: ["screens/account/desktop-callback-screen.tsx"],
   },
   // The GitHub installation landings each have a module of their own: the
   // setup landing draws the request, and the authorization callback draws its
@@ -139,6 +173,12 @@ export const accountOwners = {
     files: ["screens/account/install-screen.tsx"],
   },
   "product/account/install-app/installing": {
+    region: "panelled",
+    files: ["screens/account/install-screen.tsx"],
+  },
+  // The step in the desktop app's window keeps Install on GitHub, which the
+  // step's own module writes; only where it leads and its glyph change.
+  "product/account/install-app/desktop": {
     region: "panelled",
     files: ["screens/account/install-screen.tsx"],
   },

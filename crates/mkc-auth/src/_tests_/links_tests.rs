@@ -24,35 +24,37 @@ const RETURN_TO: &str = "/mokly/cloud?selection=one%26two&tag=alpha%2Bbeta&note=
 
 #[test]
 fn issue_stores_only_hash_and_defaults_a_rejected_return_destination() {
-    let secret = "a".repeat(64);
-    let query = Unimock::new((
-        RateLimitsMock::rate_limit.each_call(matching!(_)).answers(&|_, _| Ok(None)),
-        RateLimitsMock::insert_rate_limit.each_call(matching!(_)).answers(&|_, _| Ok(())),
-        MagicLinksMock::insert_magic_link.next_call(matching!((link,) if link.token_hash == hash(&"a".repeat(64)) && link.return_to == "/dashboard" && link.email == "person@example.com")).returns(Ok(())),
-    ));
-    let mail = Arc::new(Unimock::new(
-        MailerMock::send
-            .next_call(matching!((m,) if m.recipient == "person@example.com" && m.content.link() == format!("https://app.example.com/auth/email/callback#token={}", "a".repeat(64)) && matches!(&m.content, Content::SignIn { valid_for: Lifetime::Minutes(15), .. })))
-            .returns(Ok(())),
-    ));
-    let runtime = Unimock::new((
-        RuntimeMock::now.each_call(matching!()).returns(now()),
-        RuntimeMock::id
-            .each_call(matching!())
-            .returns(Uuid::from_u128(8)),
-        RuntimeMock::secret
-            .next_call(matching!())
-            .returns(Ok(secret)),
-    ));
-    let result = service(query, mail, runtime)
-        .issue(
-            " Person@Example.com ",
-            Some("//evil.test"),
-            "127.0.0.1",
-            ClientOrigin::App,
-        )
-        .unwrap();
-    assert_eq!(result.resend_after, now() + Duration::seconds(60));
+    for client in [ClientOrigin::App, ClientOrigin::Desktop] {
+        let secret = "a".repeat(64);
+        let query = Unimock::new((
+            RateLimitsMock::rate_limit.each_call(matching!(_)).answers(&|_, _| Ok(None)),
+            RateLimitsMock::insert_rate_limit.each_call(matching!(_)).answers(&|_, _| Ok(())),
+            MagicLinksMock::insert_magic_link.next_call(matching!((link,) if link.token_hash == hash(&"a".repeat(64)) && link.return_to == "/dashboard" && link.email == "person@example.com")).returns(Ok(())),
+        ));
+        let mail = Arc::new(Unimock::new(
+            MailerMock::send
+                .next_call(matching!((m,) if m.recipient == "person@example.com" && m.content.link() == format!("https://app.example.com/auth/email/callback#token={}", "a".repeat(64)) && matches!(&m.content, Content::SignIn { valid_for: Lifetime::Minutes(15), .. })))
+                .returns(Ok(())),
+        ));
+        let runtime = Unimock::new((
+            RuntimeMock::now.each_call(matching!()).returns(now()),
+            RuntimeMock::id
+                .each_call(matching!())
+                .returns(Uuid::from_u128(8)),
+            RuntimeMock::secret
+                .next_call(matching!())
+                .returns(Ok(secret)),
+        ));
+        let result = service(query, mail, runtime)
+            .issue(
+                " Person@Example.com ",
+                Some("//evil.test"),
+                "127.0.0.1",
+                client,
+            )
+            .unwrap();
+        assert_eq!(result.resend_after, now() + Duration::seconds(60));
+    }
 }
 
 #[test]

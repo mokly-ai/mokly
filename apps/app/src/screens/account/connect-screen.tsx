@@ -15,11 +15,14 @@ import { installGitHubApp } from "../../data/auth";
 import { useResource } from "../../data/use-resource";
 import { listEveryWorkspace } from "../../data/workspaces";
 import { useCompact } from "../../layout/viewport";
+import { isDesktopShell } from "../../navigation/desktop-shell";
 import { storeGitHubFlow } from "../../navigation/github-flow";
 import {
+  connectInstallationPath,
   createWorkspaceForPath,
   installStepPath,
 } from "../../navigation/paths";
+import { openOnWeb } from "../../navigation/web-setup";
 import { alwaysSendable, nothingToDo, useWrite } from "../../settings/write";
 
 import { AccountShell } from "./account-shell";
@@ -94,19 +97,25 @@ export function ConnectWait({ identity }: { identity: WaitingIdentity }) {
  * authorization, which proves the reader administers the account; the flow
  * returns to that workspace's install step, which hands a connected
  * workspace on to the repository step. The control stays busy until the page
- * leaves for GitHub.
+ * leaves for GitHub. In the desktop app's window it opens this step's own
+ * address on the web instead, where the reader connects the account from the
+ * browser, so it carries the external glyph there.
  */
 function Destination({
   destination,
   installationId,
+  workspaceId,
   onChoose,
 }: {
   destination: Exclude<ConnectDestination, { kind: "none" }>;
   installationId: number;
+  /** The workspace the step's own address names, if it names one. */
+  workspaceId?: string;
   onChoose: (workspaceId: string) => void;
 }) {
   const compact = useCompact();
   const target = destination.workspace;
+  const onWeb = isDesktopShell();
   const write = useWrite(nothingToDo, alwaysSendable);
   const connect = useCallback(
     () =>
@@ -161,12 +170,20 @@ function Destination({
               "Try again",
             )}
             tone="primary"
-            icon="github"
+            icon={onWeb ? "external" : "github"}
             block
             write={write}
             operation="Connecting a GitHub account"
             disabled={write.disabled}
-            onPress={() => void connect()}
+            onPress={() =>
+              onWeb
+                ? openOnWeb(
+                    workspaceId === undefined
+                      ? connectInstallationPath(installationId)
+                      : installStepPath(workspaceId, installationId),
+                  )
+                : void connect()
+            }
             testID="connect-installation"
           />
         }
@@ -249,6 +266,7 @@ export function ConnectScreen({
         <Destination
           destination={destination}
           installationId={installationId}
+          workspaceId={workspaceId}
           onChoose={setChosen}
         />
       )}

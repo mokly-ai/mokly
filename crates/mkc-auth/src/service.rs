@@ -38,12 +38,20 @@ pub struct SessionIssued {
     pub credential: String,
 }
 
-/// Magic-link exchange result with its validated navigation destination.
+/// One-use sign-in exchange result with its validated navigation destination.
 pub struct LinkVerified {
     /// Issued session and credential.
     pub session: SessionIssued,
     /// Validated application destination.
     pub return_to: String,
+}
+
+/// One-use desktop credential delivered only to the issuing browser.
+pub struct DesktopGrantIssued {
+    /// Random grant returned once, never stored in plaintext.
+    pub grant: String,
+    /// Exclusive grant deadline.
+    pub expires_at: DateTime<Utc>,
 }
 
 /// Hashed preview credential and normalized account identity.
@@ -83,6 +91,22 @@ pub trait Authenticator: Send + Sync {
     fn preview_account(&self) -> Result<User>;
     /// Admit and verify a configured preview credential, then issue a session.
     fn preview(&self, secret: &str, previous: Option<&str>, peer: &str) -> Result<SessionIssued>;
+    /// Authorize a desktop window from an authenticated browser session.
+    fn issue_desktop_grant(
+        &self,
+        identity: &Identity,
+        challenge: &str,
+        return_to: Option<&str>,
+        peer: &str,
+    ) -> Result<DesktopGrantIssued>;
+    /// Consume a desktop grant and replace the supplied session atomically.
+    fn exchange_desktop_grant(
+        &self,
+        grant: &str,
+        verifier: &str,
+        previous: Option<&str>,
+        peer: &str,
+    ) -> Result<LinkVerified>;
     /// Authenticate, enforce idle/absolute expiry, and update activity.
     fn authenticate(&self, credential: &str) -> Result<Identity>;
     /// Rotate the session and CSRF token, preserving absolute expiry.

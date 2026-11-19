@@ -177,6 +177,8 @@ and provider calls stay in the service.
 - [runtime.rs](./src/runtime.rs) — `Runtime`, the injected sleep and jitter the retry policy uses, and the native `SystemRuntime`.
 - [queries.rs](./src/queries.rs) — `PgQueries`, the borrowed transaction connection that implements `Queries` and never outlives its transaction.
 - [user.rs](./src/user.rs), [magic_link.rs](./src/magic_link.rs) and [rate_limit.rs](./src/rate_limit.rs) — the account, one-use link and admission-window queries that `mkc-auth` calls.
+- [desktop_grant.rs](./src/desktop_grant.rs) — desktop grant insertion, `SELECT FOR UPDATE` for service-owned challenge checks, conditional unused and unexpired consumption, and expiry-based pruning.
+- [desktop_grant_tests.rs](./tests/desktop_grant_tests.rs) — Postgres concurrency, expiry, inherited deadline, replay and inclusive retention checks in isolated schemas.
 - [session.rs](./src/session.rs) — session rows and `touch`, one conditional UPDATE whose predicate rechecks staleness, run through `Store::autocommit`.
 - [organization.rs](./src/organization.rs) — organization rows and `claim_slug`, which claims the registry row before the write; a claim is current when it equals the stored slug, so no current flag exists. `seat_counts` is the one statement that counts distinct active users by their strongest role.
 - [project.rs](./src/project.rs), [member.rs](./src/member.rs), [grant.rs](./src/grant.rs) and [token.rs](./src/token.rs) — the project rows with their slug claims, the membership, direct-grant and publishing-token queries.

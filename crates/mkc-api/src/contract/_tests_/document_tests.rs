@@ -105,6 +105,7 @@ fn every_session_response_references_the_shared_cookie_header() {
     assert_eq!(
         operations,
         BTreeSet::from([
+            "exchangeDesktopGrant",
             "rotateSession",
             "signOut",
             "verifyGitHubSignIn",

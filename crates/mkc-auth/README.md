@@ -1,6 +1,6 @@
 # mkc-auth
 
-Magic-link, preview and session authentication for Mokly Cloud. The crate
+Magic-link, preview, desktop grant and session authentication for Mokly Cloud. The crate
 owns the sign-in policy: it decides who is admitted, what a link or a session
 means and when it expires. It depends on the `mkc-store-interface` queries,
 the `mkc-email-interface` mailer and `mkc-domain` only; `mkc-api` constructs it,
@@ -9,7 +9,7 @@ maps its outcomes to HTTP and owns the cookie transport. Depend on
 
 ## Responsibilities
 
-Admit email and preview sign-in requests, issue and consume single-use links,
+Admit email, preview and desktop sign-in requests, issue and consume single-use credentials,
 manage sessions, verify browser request binding and prune expired
 authentication records.
 
@@ -38,9 +38,8 @@ construction and the expiry boundaries with GitHub sign-in in `mkc-api`.
 
 `AuthService::origins` takes the shared `AdmittedOrigins` policy. `origin` and
 `csrf` return the admitted `ClientOrigin`; all other origins fail with
-`CsrfFailed`. The caller passes that value to `issue`. A desktop request adds
-`?client=desktop` through `app_paths::EMAIL_DESKTOP_CALLBACK`. Every email
-link keeps the public app origin. The API uses the same admitted client value
+`CsrfFailed`. The caller passes that value to `issue`. Every admitted Origin
+receives the same email landing on the public app origin. The API uses the same admitted client value
 to select the session cookie's `SameSite` attribute for issue, rotation and
 sign-out.
 
@@ -60,7 +59,7 @@ an unauthenticated or expired session, CSRF rejection and a rate limit with
 its retry delay, without HTTP codes; `Internal` keeps a query failure's
 source. Absence is a service decision: an unknown link is `InvalidLink` and a
 missing session or user is `Unauthenticated`. `prune::Pruner` deletes expired
-links, sessions and rate-limit windows older than the configured retention in
+links, desktop grants, sessions and rate-limit windows older than the configured retention in
 one transaction and returns the committed counts; the API's `prune` command
 runs it with the `mkc-config` maintenance settings.
 
@@ -127,10 +126,12 @@ returns `Option` for absence, and this crate decides what absence means.
 
 - [service.rs](./src/service.rs) — `Authenticator`, the trait the API calls; `AuthService`, its implementation with the injected store, mailer, runtime and admitted origins; `PreviewSignIn`, the hashed preview configuration; and the results `LinkIssued`, `LinkVerified`, `SessionIssued` and `Identity`.
 - [error.rs](./src/error.rs) — the authentication outcome contract: invalid, expired and used links, expired sessions, CSRF rejection and rate limits, with `Internal` keeping a query failure's source.
-- [links.rs](./src/links.rs) — magic-link issue and exchange, with the desktop landing for a desktop request; `LINK_LIFETIME_MINUTES` names the 15-minute lifetime once for the stored link and the email copy.
+- [links.rs](./src/links.rs) — magic-link issue and exchange with one public app landing for every admitted Origin; `LINK_LIFETIME_MINUTES` names the 15-minute lifetime once for the stored link and the email copy.
 - [preview.rs](./src/preview.rs) — preview sign-in and the seed account method; both reuse the account policy, and only sign-in admits a peer, checks the secret and issues a session.
+- [desktop_grant.rs](./src/desktop_grant.rs) — desktop grant issue and exchange, separate persistent peer admission for each endpoint, constant-time challenge comparison under the grant lock, and session replacement with the stored absolute deadline.
+- [desktop_grant_policy.rs](./src/desktop_grant_policy.rs) — desktop credential forms and the unpadded base64url S256 challenge of the verifier's text.
 - [sessions.rs](./src/sessions.rs) — session authentication, rotation and revocation, and the Origin and CSRF checks, which return the admitted `ClientOrigin` and compare tokens in constant time with `subtle::ConstantTimeEq`.
-- [session_policy.rs](./src/session_policy.rs) — `new_session`, `expired` and `IDLE_LIFETIME`, the session construction and expiry rules shared with GitHub sign-in.
+- [session_policy.rs](./src/session_policy.rs) — `new_session`, `new_session_until`, `expired` and `IDLE_LIFETIME`, the ordinary and inherited session construction paths and the expiry rules shared with GitHub sign-in.
 - [prune.rs](./src/prune.rs) — `Pruner`, `AuthPruner`, `Retention` and `PruneReport`, the one-transaction cleanup behind the `prune` command.
 - [runtime.rs](./src/runtime.rs) — `Runtime` and `SystemRuntime`, the clock, identifier and credential sources, and `hash`, the SHA-256 digest of a credential.
 
@@ -143,4 +144,5 @@ returns `Option` for absence, and this crate decides what absence means.
 - [Email](../../docs/protocol/cloud/email.md)
 - [Platform model](../../docs/protocol/cloud/platform-model.md)
 - [Persistence boundaries](../../docs/protocol/cloud/persistence-boundaries.md)
+- [Persistence transactions, migrations and retention](../../docs/protocol/cloud/persistence-transactions.md)
 - [Architecture](../../docs/architecture/cloud.md) — the components, their boundaries, and the data flows this crate takes part in.

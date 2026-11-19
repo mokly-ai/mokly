@@ -10,14 +10,22 @@ import { BackLink, Pending } from "../../components/page-parts";
 import { ControlPlaceholder } from "../../components/placeholders";
 import { installGitHubApp } from "../../data/auth";
 import { listInstallations } from "../../data/installations";
+import {
+  useInvalidateResources,
+  workspaceResourceScope,
+} from "../../data/resource-invalidation";
 import { useResource } from "../../data/use-resource";
+import { isDesktopShell } from "../../navigation/desktop-shell";
 import { storeGitHubFlow } from "../../navigation/github-flow";
 import {
   createWorkspacePath,
+  installStepPath,
   workspaceCliProjectPath,
   workspaceNewProjectPath,
 } from "../../navigation/paths";
 import { currentReturnTo } from "../../navigation/return-to";
+import { useShellFocus } from "../../navigation/shell-focus";
+import { openOnWeb } from "../../navigation/web-setup";
 import { alwaysSendable, nothingToDo, useWrite } from "../../settings/write";
 
 import { AccountShell } from "./account-shell";
@@ -139,6 +147,9 @@ export function InstallWait({
  * GitHub stays, busy with its working word until the page leaves for GitHub,
  * and Back and the line to the CLI form stay beside it. A reader who follows
  * either stays where they went, because the write leaves only from this step.
+ * In the desktop app's window the control opens this step on the web instead,
+ * where the reader installs the App from the browser, so it carries the
+ * external glyph there.
  */
 function InstallAction({
   user,
@@ -152,7 +163,9 @@ function InstallAction({
     () => listInstallations(workspace.id),
     `install-step:${workspace.id}`,
     suspended,
+    [workspaceResourceScope(workspace.id)],
   );
+  const onWeb = isDesktopShell();
   const write = useWrite(nothingToDo, alwaysSendable);
   const install = useCallback(
     () =>
@@ -195,12 +208,14 @@ function InstallAction({
           <Action
             label={write.label("Install on GitHub", "Installing…", "Try again")}
             tone="primary"
-            icon="github"
+            icon={onWeb ? "external" : "github"}
             block
             write={write}
             operation="Installing the Mokly app"
             disabled={write.disabled}
-            onPress={() => void install()}
+            onPress={() =>
+              onWeb ? openOnWeb(installStepPath(workspace.id)) : void install()
+            }
             testID="install-app"
           />
         }
@@ -227,11 +242,21 @@ export function InstallScreen({
   workspace: Workspace;
 }) {
   const router = useRouter();
+  const invalidate = useInvalidateResources();
   const bound = workspace.githubInstallationState === "connected";
 
   useEffect(() => {
     if (bound) router.replace(workspaceNewProjectPath(workspace.slug));
   }, [bound, workspace.slug, router]);
+
+  // In the desktop app's window the App is installed on the web, so the step
+  // reads the workspace and its installations again when the window gets
+  // focus back, and a workspace connected meanwhile moves on.
+  const reread = useCallback(
+    () => invalidate([workspaceResourceScope(workspace.id)]),
+    [invalidate, workspace.id],
+  );
+  useShellFocus(reread);
 
   const identity = { kind: "signed-in", user } as const;
   // On its way to the repository step, so the step it is leaving draws its

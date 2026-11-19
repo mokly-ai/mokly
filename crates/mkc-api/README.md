@@ -61,7 +61,7 @@ slug suggestion require a repository-relative config path that ends in
 `.json`. The API supplies no default. The slug suggestion removes the final
 `.json` from the config filename when it needs the config stem.
 
-Email and GitHub authentication persist the domain-validated `returnTo`
+Email, desktop grant and GitHub authentication persist the domain-validated `returnTo`
 through issue and exchange; a rejected destination resolves to `/dashboard`.
 `POST /v1/auth/preview` exists only when both preview sign-in settings
 validate and returns the ordinary session payload and cookie. Optional
@@ -76,14 +76,16 @@ counting. Unconfigured billing still shows “Billing opens soon”.
 `MKC_DESKTOP_CLIENT=true` admits `mokly-app://desktop` beside the public app
 origin for public authentication and authenticated mutations. Both origins
 receive credentialed CORS with an exact echo and `Vary: Origin`. Every other
-origin receives no CORS grant. A desktop request adds `?client=desktop` to its
-email link. Magic-link, preview and GitHub exchanges, session rotation and
+origin receives no CORS grant. Every admitted Origin receives the ordinary
+email link on the public app origin. Desktop grant, magic-link, preview and
+GitHub exchanges, session rotation and
 sign-out choose `SameSite=None` for the admitted desktop request and `Lax`
 for the app request. All other cookie attributes stay the same. The flag
 defaults to `false`; `scripts/cloud/dev-api.sh` defaults it to `true`. Public share,
 billing, GitHub and viewer addresses still use the configured public app
 origin. The `desktop_origin_tests` integration suite checks both flag states
-against the running binary, Postgres and log mailer.
+against the running binary, Postgres and log mailer. It also checks that an
+invalid desktop grant returns `desktop-grant-invalid` with the desktop CORS echo.
 
 The optional GitHub integration adds PKCE sign-in, installation linking and
 listing, repository listing and signed webhook acceptance; the durable
@@ -351,6 +353,7 @@ setting or test detection that selects the fake runner. The
 - [contract/parameters.rs](./src/contract/parameters.rs) — shared header and pagination parameters for the operation stubs.
 - [contract/responses.rs](./src/contract/responses.rs) — the shared `ErrorResponse` component for standard operation failures.
 - [contract/session_cookie.rs](./src/contract/session_cookie.rs) — `SessionCookie`, which points every declared `Set-Cookie` response header at one shared component that states the Origin-dependent `SameSite` rule.
+- [contract/account.rs](./src/contract/account.rs) and [account/desktop_grant.rs](./src/contract/account/desktop_grant.rs) — account contracts, including authenticated desktop grant issue and public grant exchange with the inherited session deadline.
 - [contract/metadata.rs](./src/contract/metadata.rs) — derives deferred operation markers from `Operation::implemented()` after the area merges.
 - [contract/builds.rs](./src/contract/builds.rs) — the five cloud build contracts, including member-only reads with anonymous `not-found` transport.
 - `src/contract/deferred/` — request and response types for comment and approval operations that return 503 until implemented.
@@ -361,6 +364,8 @@ setting or test detection that selects the fake runner. The
 - [operation.rs](./src/operation.rs) — `Operation`, the typed operation identifiers shared by the OpenAPI contract and dispatch.
 - [operation_policy.rs](./src/operation_policy.rs) — implementation and authentication capabilities for the typed operation inventory; `Operation::anonymous_read()` names the reads that need no session, which the route contract compares with the document's GET security requirements.
 - [dispatch.rs](./src/dispatch.rs) — `ApiDispatcher`; `dispatch_target` returns `operation-unavailable` for an unconfigured preview sign-in or GitHub operation and `dispatch_billing` in `billing_dispatch.rs` for unconfigured billing, both before Origin, CSRF or body validation; a deferred operation is refused by `Operation::implemented()`; `cookie` writes the session cookie with `SameSite=None` for the admitted desktop origin and `Lax` for the app.
+- [desktop_grant_dispatch.rs](./src/desktop_grant_dispatch.rs) and [desktop_grant_input.rs](./src/desktop_grant_input.rs) — desktop request validation after session, Origin and CSRF admission, the grant response, and exchange cookies whose `Max-Age` follows the inherited deadline.
+- [desktop_grant_tests.rs](./tests/desktop_grant_tests.rs) — the auth service against Postgres, including issuer sign-out, a wrong verifier that leaves the grant unused, concurrent exchange and atomic session replacement.
 - [health.rs](./src/health.rs) — `DatabaseHealth`, the migration readiness read at startup and after a five-second cache expiry; concurrent callers share one refresh.
 - [error.rs](./src/error.rs) — `ApiError`, the one point that maps authentication, platform, store, upload, GitHub and build outcomes to the `rpc-error` envelope, with the delegated [github_error.rs](./src/github_error.rs), [upload_error.rs](./src/upload_error.rs) and [build_error.rs](./src/build_error.rs) reason catalogues; `UploadError::UnsupportedVersion` carries the fixed 426 message.
 - [error_data.rs](./src/error_data.rs) — the typed `data` of conflict and precondition refusals; [contract/reason_data.rs](./src/contract/reason_data.rs) pairs each type with the reasons that carry it, and [contract/error.rs](./src/contract/error.rs) documents the envelope as one closed variant per data type, keyed by `reason`.

@@ -160,6 +160,15 @@ pub enum ApiError {
         message = "Refresh the page and try again."
     )]
     CsrfRejected,
+    /// Start desktop sign-in again.
+    #[error("[mkc-api/error] desktop-grant-invalid")]
+    #[rpc_error(
+        code = "bad-request",
+        severity = "warn",
+        reason = "desktop-grant-invalid",
+        message = "Start desktop sign-in again."
+    )]
+    DesktopGrantInvalid,
     /// Request a new sign-in link.
     #[error("[mkc-api/error] magic-link-invalid")]
     #[rpc_error(
@@ -287,11 +296,3 @@ pub enum ApiError {
 
 /// Result at the HTTP dispatch boundary.
 pub type Result<T> = result::Result<T, ApiError>;
-
-#[cfg(test)]
-#[path = "_tests_/error_tests.rs"]
-mod tests;
-
-#[cfg(test)]
-#[path = "_tests_/severity_tests.rs"]
-mod severity_tests;
