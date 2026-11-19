@@ -3,7 +3,8 @@
 This runbook moves the delivery of Mokly Cloud from the private repository
 `mokly-ai/mokly-cloud`, the old repository, to this public repository,
 `mokly-ai/mokly`. Do the steps before the merge in order. After the merge, the
-cutover switch starts cloud delivery here, and the last steps retire the old
+cutover switch starts cloud delivery here. When production runs from here,
+[Repository Retirement](./repository-retirement.md) retires the old
 repository. Each step needs owner access to both repositories. Workspace agent
 tokens cannot list secrets or variables, so an owner compares them on
 **Settings → Secrets and variables → Actions** or with `gh`. GitHub never shows
@@ -20,27 +21,44 @@ print the newest commit that the pull request ports. On 2026-11-19 that was
 ### Stop The Old Deployments
 
 The trust step keeps the old repository in the trust until
-[it retires](#retire-the-old-repository). The old `site` and `desktop-release`
+[it retires](./repository-retirement.md). The old `site` and `desktop-release`
 workflows also deploy with secrets outside that trust. So stop the deploy
 paths of the old repository first, shortly before the trust step:
 
-1. Close the open pull requests there, so that the old **Close PR Site** job
-   deletes their `pr-N` deployments of the `mokly-site` Pages project. Their
-   branches stay for the port after the merge. On 2026-11-19,
-   `gh pr list -R mokly-ai/mokly-cloud` listed #133, #107 and #88, each with a
-   site preview. Run
+1. Close the open pull requests there. The old **Close PR Site** job then
+   deletes their `pr-N` deployments of the `mokly-site` Pages project, and the
+   old **Preview** workflow removes their cloud previews `preview-pr-N`.
+   Their branches stay for the port after the merge. On
+   2026-11-19, `gh pr list -R mokly-ai/mokly-cloud` listed #133, #107 and #88,
+   each with a site preview. Run
    `gh pr close NUMBER -R mokly-ai/mokly-cloud --comment "Closed for the move to mokly-ai/mokly."`.
-   Check: the **Mokly website** comment of each one has a **Cleanup** line
-   that starts with `deleted`. When it starts with `retained`, run
+   Check: the **Mokly preview** comment of each one says **Preview removed**,
+   and the **Cleanup** line of its **Mokly website** comment starts with
+   `deleted`. On **Cleanup failed** or `retained`, run
    `gh run rerun RUN -R mokly-ai/mokly-cloud` for the run that the comment
-   links.
-2. Run `for name in deploy desktop-release site; do gh workflow disable "$name.yml" -R mokly-ai/mokly-cloud; done`.
-   Check: `gh workflow list -R mokly-ai/mokly-cloud --all` shows **Deploy**,
-   **Desktop release** and **Site** as `disabled_manually`.
+   links. A site rerun fails again when the line names HTTP 400 and
+   `per_page`, because the old cleanup asks Cloudflare for 100 deployments a
+   page. A pull request with a merge conflict, such as #88 on 2026-11-19, gets
+   no site run and no **Cleanup** line. In these two cases, set
+   `CLOUDFLARE_API_TOKEN` to a Cloudflare API token with Pages Edit on the
+   account. Then run this until it prints nothing:
 
-The old `preview` workflow stays on until the old repository retires, so that
-the cleanup of an old preview can run. The old `ci` and `foundation` workflows
-stay on too. Old CI deploys nothing. An old Foundation run stops at its plan,
+   ```sh
+   api="https://api.cloudflare.com/client/v4/accounts/$(gh variable get CLOUDFLARE_ACCOUNT_ID -R mokly-ai/mokly-cloud)/pages/projects/mokly-site/deployments"
+   ids=$(for page in $(seq 500); do
+     body=$(curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$api?page=$page") || break
+     jq -r '.result[] | select(.deployment_trigger.metadata.branch == "pr-NUMBER") | .id' <<<"$body"
+     jq -e '(.result | length > 0) and .result_info.page < (.result_info.total_pages // infinite)' <<<"$body" >/dev/null || break
+   done)
+   for id in $ids; do curl -fsS -X DELETE -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$api/$id?force=true"; done
+   ```
+
+2. Run `for name in deploy desktop-release preview site; do gh workflow disable "$name.yml" -R mokly-ai/mokly-cloud; done`.
+   Check: `gh workflow list -R mokly-ai/mokly-cloud --all` shows **Deploy**,
+   **Desktop release**, **Preview** and **Site** as `disabled_manually`.
+
+The old `ci` and `foundation` workflows stay on until the old repository
+retires. Old CI deploys nothing. An old Foundation run stops at its plan,
 because that plan deletes the new trust bindings, and CI never deletes a
 [trust resource](../protocol/cloud/foundation-promotion.md#trust-set). If the
 merge does not happen, run the same loop with `enable` in place of `disable`.
@@ -121,7 +139,7 @@ Pages previews of the Mokly example share `CLOUDFLARE_ACCOUNT_ID`, so
 `gh variable get CLOUDFLARE_ACCOUNT_ID -R NAME` must print the same account for
 both repositories, or find none here. When it differs, stop. Then copy the
 variables. Add `MKC_LEGACY_REPOSITORY_ID`, which keeps the old bindings in
-Terraform until [the old repository retires](#retire-the-old-repository).
+Terraform until [the old repository retires](./repository-retirement.md).
 Without it, the first Foundation run plans to delete them and fails.
 
 ```sh
@@ -251,34 +269,3 @@ not re-run them. Steps 2 and 3 start new runs.
    as `preview@mokly.ai`, as
    [Read A Sign-In Link](./preview.md#read-a-sign-in-link) shows. Remove the label.
    Check: the comment changes to **Preview removed**.
-
-### Retire The Old Repository
-
-Do these steps in order after the first Deploy run reaches production.
-
-1. `gh pr list -R mokly-ai/mokly-cloud --label preview` must print nothing,
-   because the cleanup of an old preview needs the old workflows and trust.
-   Then disable the other old workflows:
-   `for name in ci foundation preview; do gh workflow disable "$name.yml" -R mokly-ai/mokly-cloud; done`.
-   Check: `gh workflow list -R mokly-ai/mokly-cloud --all` shows all six as `disabled_manually`.
-2. Remove the old repository from the trust. CI cannot, because the change
-   deletes trust bindings. Hold merges to `main`. Run
-   `gh variable delete MKC_LEGACY_REPOSITORY_ID -R mokly-ai/mokly`, then steps 2
-   to 8 of the [trust-set procedure](./foundation.md#destructive-foundation-plans)
-   with `MKC_LEGACY_REPOSITORY_ID` unset. Expect 8 deletes of
-   `mokly-ai/mokly-cloud/` bindings and an in-place update of the condition.
-   Check: the `gcloud` command of the trust step prints only `mokly-ai/mokly`.
-3. Port the change of each pull request that
-   [Stop The Old Deployments](#stop-the-old-deployments) closed to the
-   [combined paths](../protocol/repository-layout.md#directories) here, or drop
-   it. Then run `gh pr comment NUMBER -R mokly-ai/mokly-cloud --body "Moved to URL."`
-   before the archive, because an archived repository is read-only.
-   Check: `gh pr list -R mokly-ai/mokly-cloud` prints nothing.
-4. The old CI no longer runs, so turn off its required check with
-   `gh api -X PUT repos/mokly-ai/mokly-cloud/rulesets/23759144 -f enforcement=disabled`.
-   In `https://github.com/mokly-ai/mokly-cloud/edit/main/README.md`, replace the
-   text with a link to `https://github.com/mokly-ai/mokly`. Commit to `main`.
-5. Run `gh repo archive mokly-ai/mokly-cloud --yes`. Check:
-   `gh api repos/mokly-ai/mokly-cloud --jq .archived` prints `true`.
-6. Add a dated record to the end of this page: the merge commit, the run URLs
-   of each check, and each change to these steps.

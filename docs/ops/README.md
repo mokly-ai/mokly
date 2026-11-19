@@ -3,7 +3,8 @@
 - [Publication smoke](./publish-smoke.md) — real CLI, isolated hosting and retention verification.
 - [Deployment](./deploy.md) — automated stable apply, three-image release and publish proof.
 - [Mokly release cutover](./mokly-release-cutover.md) — the ordered cutover after a Mokly format change, with the 0.19.0 frame upgrade and the earlier format cutover, for stable and preview environments.
-- [Repository cutover](./repository-cutover.md) — move cloud delivery from `mokly-ai/mokly-cloud` to this repository: trust, secrets, variables, environments, Apps, Conductor, the cutover switch and the archive.
+- [Repository cutover](./repository-cutover.md) — move cloud delivery from `mokly-ai/mokly-cloud` to this repository: trust, secrets, variables, environments, Apps, Conductor and the cutover switch.
+- [Repository retirement](./repository-retirement.md) — retire `mokly-ai/mokly-cloud` after production runs here: old workflows, leftover previews, the old trust and the archive.
 - [Foundation apply](./foundation.md) — the Foundation workflow, the Deploy wait, trust-set changes and the one-time bootstrap.
 - [Production](./production.md) — provisioned resources, GitHub App and release evidence.
 - [Environments](./environment.md) — domains, runtime settings and retention boundaries.
