@@ -30,6 +30,7 @@ mod serve_changes_native;
 mod serve_controls;
 mod serve_debounce;
 mod serve_delivery;
+mod serve_gate;
 mod serve_git;
 #[cfg(unix)]
 mod serve_keyboard_keys;
@@ -56,6 +57,7 @@ mod serve_warnings;
 mod serve_watch;
 mod serve_watch_events;
 mod serve_watch_files;
+mod serve_watch_plan;
 mod static_runtime;
 mod static_setup;
 mod terminal;

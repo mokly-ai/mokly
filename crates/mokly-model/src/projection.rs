@@ -47,6 +47,31 @@ pub struct Publication {
     pub live_generation: Option<String>,
 }
 
+/// Replace discovered document source paths with `mock:` references in authored order.
+/// Map resolved catalogue paths before writing references; keep unmatched labels unchanged.
+pub fn related_docs(
+    model: &CatalogueModel,
+    labels: &[String],
+    map_path: impl Fn(&str) -> String,
+) -> Vec<String> {
+    labels
+        .iter()
+        .map(|label| {
+            model
+                .entries
+                .iter()
+                .find(|entry| {
+                    matches!(entry.content, EntryContent::Document { .. })
+                        && entry.metadata.source.path == *label
+                })
+                .map_or_else(
+                    || label.clone(),
+                    |entry| format!("mock:{}", map_path(&entry.metadata.path)),
+                )
+        })
+        .collect()
+}
+
 /// Project a validated model without private source or render evidence.
 pub fn index(model: &CatalogueModel, keys: &[ViewKey], state: &Publication) -> CatalogueReadModel {
     let by_path = key_index(keys);
@@ -82,7 +107,11 @@ pub fn index(model: &CatalogueModel, keys: &[ViewKey], state: &Publication) -> C
         removed_entries: Vec::new(),
     };
     for entry in &model.entries {
-        let common = projection_records::metadata(entry, state.changes_status);
+        let common = projection_records::metadata(
+            entry,
+            state.changes_status,
+            related_docs(model, &entry.metadata.related_docs, str::to_owned),
+        );
         let mut entry_keys = by_path
             .get(entry.metadata.path.as_str())
             .cloned()
@@ -246,3 +275,7 @@ fn key_index(keys: &[ViewKey]) -> BTreeMap<&str, Vec<&ViewKey>> {
     }
     result
 }
+
+#[cfg(test)]
+#[path = "_tests_/projection_related_docs_tests.rs"]
+mod projection_related_docs_tests;

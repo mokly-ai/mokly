@@ -205,8 +205,10 @@ then reaches the caller. A stream that starts on a worker of the same pool
 prepares and consumes one index at a time.
 
 In both operations, the caller keeps the results, the errors, and the
-cancellation checks. `ThreadWorkers` carries the caller's tracing span and
-subscriber through one shared context for all worker methods. The trait
+cancellation checks. `ThreadWorkers` carries the caller's tracing span,
+subscriber, and `RenderClass` through one shared context for all worker
+methods. So a background render keeps its class in every worker job, and
+Serve can order the sidecar calls of that render. The trait
 defaults have a capacity of one. They run the indexes in order on the caller,
 and the stream default prepares and consumes one index at a time.
 
@@ -249,6 +251,10 @@ of a wrapper apply. An override must keep those checks.
 
 `FilePolicy` is the one policy of the public closure contract for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.
+Each `MemoryReferenceIndex` reads the inline style scans of the walk through
+the style memo that `DeliveryInputs` passes in. The render runtime passes one
+memo to all its generations, so an equal inline style text reuses a scan that
+the bounded memo still holds.
 Package directories come from the normalized `ResolvedConfig::package_roots`.
 Repository aliases and case aliases do not make their files public.
 Watch-input fingerprints use repository-relative POSIX names on every
@@ -316,7 +322,8 @@ retention disabled.
 - [`src/graph.rs`](./src/graph.rs) defines `Graph`, which prepares one
   immutable render generation from the injected services.
 - [`src/delivery_inputs.rs`](./src/delivery_inputs.rs) defines
-  `DeliveryInputs`, the sidecar-reported stylesheet metadata of a generation.
+  `DeliveryInputs`, the sidecar-reported stylesheet metadata of a generation
+  and the stores that related generations share.
 - [`src/key.rs`](./src/key.rs) provides `key` and `NodeKind`, the
   content-addressed node keys.
 - [`src/cache.rs`](./src/cache.rs) defines `RenderCache`, `MemoryCache`,
@@ -333,6 +340,11 @@ retention disabled.
   `ComparisonTask` once and returns when all of them have run. Its
   `comparison_stream` method runs a `ComparisonTask` as an ordered stream, with
   at most twice the pool size started and not yet consumed.
+- [`src/render_class.rs`](./src/render_class.rs) defines `RenderClass`, the
+  scheduling class of a blocking render, `Foreground` by default.
+  `RenderClass::in_scope` sets a class for one operation and restores the
+  earlier class. `RenderClass::current` reads it. The private `WorkerContext`
+  captures it with the tracing span for each worker job.
 - [`src/fragments.rs`](./src/fragments.rs) defines `MemoFragments`, which
   memoizes JavaScript fragments in the same bounded cache.
 - [`src/render_inputs.rs`](./src/render_inputs.rs) defines `RenderInputs` and
@@ -346,6 +358,9 @@ retention disabled.
 - [`src/policy.rs`](./src/policy.rs) and [`src/closure.rs`](./src/closure.rs)
   define `FilePolicy` and `Walker`, the public-file policy and the referenced
   closure walk.
+- [`src/reference_index.rs`](./src/reference_index.rs) defines
+  `ReferenceIndex` and `MemoryReferenceIndex`, the reference edges of each
+  referenced file of one generation and its reads of the style memo.
 - [`src/collection.rs`](./src/collection.rs) defines `ComparisonCollector`,
   which consumes validated comparison inputs in route order.
 - [`src/comparison_input.rs`](./src/comparison_input.rs) defines

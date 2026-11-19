@@ -9,7 +9,9 @@ import { serveHost, type BrowserHost } from "./hosts.js";
 export async function startExampleHosts(
   count: number,
   cancellation: AbortSignal,
-  start = serveHost,
+  start: (
+    ...args: Parameters<typeof serveHost>
+  ) => Promise<BrowserHost> = serveHost,
   ready = exampleReady,
 ): Promise<BrowserHost[]> {
   const abort = new AbortController();
@@ -24,7 +26,8 @@ export async function startExampleHosts(
           signal,
         );
         hosts[index] = {
-          ...host,
+          url: host.url,
+          ...(host.diagnostics ? { diagnostics: host.diagnostics } : {}),
           async close() {
             await host.close();
             if (host.diagnostics)
@@ -34,7 +37,9 @@ export async function startExampleHosts(
         await ready(host.url, signal);
       } catch (error) {
         abort.abort(error);
-        throw error;
+        throw new Error(`Example Serve worker ${index + 1} setup failed`, {
+          cause: error,
+        });
       }
     }),
   );

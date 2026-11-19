@@ -129,11 +129,17 @@
   same date, which keeps sequential base calls on one process. So is option
   B, the generation rank inside one root, chosen later on the same date.
 - **Related:**
+  - [sidecar-idle-child-retention.md](./sidecar-idle-child-retention.md) measures the memory and restoration cost of rich idle children. Design the policies together.
   - [serve-sidecar-prestart.md](./serve-sidecar-prestart.md) also changes the
     order in which the pool gives slots to requests. Design the two changes
     together.
   - [root-switch-reap-wait.md](./root-switch-reap-wait.md) changes the root
     switch of a request. A branch that does one should check the other.
+  - [serve-head-generation-preload.md](./serve-head-generation-preload.md)
+    records two measured attempts to prepare a new head generation on idle
+    head processes before its renders. Its recommended next attempt disposes
+    the old generation on those processes first, which changes the loaded
+    state that this item ranks. Design the two together.
 - **Recommendation:** D. One ranking keeps the useful state of both roots,
   where the warm head process rule helps only the first head call after an
   edit. B now covers the choice inside one root only.

@@ -183,8 +183,9 @@ controlled inputs and asserts the written files. The environment run redirects
 `/etc/environment` to a temporary file and stubs `sudo`. It also requires the
 environment step to write every workflow `env` entry.
 [`tests/ci_testbox_alignment.test.ts`](../../tests/ci_testbox_alignment.test.ts)
-keeps the Testbox runner, workflow `env`, and Rust cache options equal to those
-of the CI suite jobs, and requires the Testbox cache to never save. Step order
+keeps the Testbox workflow `env` equal to the CI workflow `env`. It keeps the
+Testbox Rust cache options equal to those of the CI viewer, browser, and
+static-delivery jobs, and requires the Testbox cache to never save. Step order
 and action pins are review-owned literals.
 
 Pin each action to these immutable revisions. Keep the version comments.

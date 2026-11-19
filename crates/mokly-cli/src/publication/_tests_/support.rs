@@ -5,7 +5,8 @@ use unimock::{MockFn, Unimock, matching};
 
 use std::path::PathBuf;
 
-use mokly_model::output::artifact::{Artifact, File};
+use mokly_model::output::artifact::Artifact;
+use mokly_model::output::inventory::Inventory;
 use mokly_model::output::repository::Repository;
 use mokly_model::output::upload::{BuildInventory, Comparison, Publication};
 use mokly_model::output::validation::INDEX;
@@ -36,33 +37,31 @@ pub(super) fn inventory(comparison: bool) -> BuildInventory {
 
 pub(super) fn artifact(comparison: bool) -> Artifact {
     let inventory = inventory(comparison);
-    let mut files = vec![
-        file("index.html", b"shell"),
-        file("404.html", b"shell"),
-        file("static/one.txt", b"one"),
-        file("static/same.txt", b"one"),
-        file("static/two.txt", b"two"),
-    ];
+    let mut files = Inventory::default();
+    for (path, bytes) in [
+        ("index.html", b"shell".as_slice()),
+        ("404.html", b"shell".as_slice()),
+        ("static/one.txt", b"one".as_slice()),
+        ("static/same.txt", b"one".as_slice()),
+        ("static/two.txt", b"two".as_slice()),
+    ] {
+        files.insert(path.into(), bytes.into()).unwrap();
+    }
     let index = match &inventory.comparison {
         Some(comparison) => {
             json!({"schemaVersion":9,"base":comparison.base_ref,"baseCommit":comparison.base_sha})
         }
         None => json!({"schemaVersion":9}),
     };
-    files.push(file(INDEX, &serde_json::to_vec(&index).unwrap()));
+    files
+        .insert(INDEX.into(), serde_json::to_vec(&index).unwrap().into())
+        .unwrap();
     Artifact::finalize(
         PathBuf::from("/private/publish/site"),
         files,
         Some(publication().metadata(&inventory).unwrap()),
     )
     .unwrap()
-}
-
-pub(super) fn file(path: &str, bytes: &[u8]) -> File {
-    File {
-        path: path.to_owned(),
-        bytes: bytes.to_vec().into(),
-    }
 }
 
 pub(super) fn settings(concurrency: u8) -> Settings {

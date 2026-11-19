@@ -35,8 +35,17 @@ keep their own category.
 
 Each `Request` selects a typed `ProcessMode`. Its default is `FullTree`.
 Audited helper-free calls select `PlainGroup`: `rev-parse`, `merge-base`,
-`ls-tree`, `rev-list` with lazy fetch disabled, read-only `config`, and
-`check-attr`. The runner sets `GIT_NO_LAZY_FETCH=1` for ordinary commands.
+`rev-list` with lazy fetch disabled, read-only `config`, `check-attr`, and
+`ls-tree` in a repository without a promisor remote. The runner sets
+`GIT_NO_LAZY_FETCH=1` for ordinary commands.
+
+A Git build that ignores it can
+fetch a missing blob while `ls-tree -l` reads its size. So `ls-tree` keeps
+`FullTree` when the repository has a promisor remote. `GitRepositories::open`
+reads `remote.*.promisor` and `extensions.partialClone` with one plain
+`config` command. The opened repository keeps the promisor remotes for its
+tree reads and its object fetches.
+
 On Unix, the plain group avoids the exec hook that forces a fork of the core.
 Every other call keeps the session and Linux subreaper setup, including
 filters, fetches, diffs, and working-path queries. Windows uses the same job
@@ -108,6 +117,13 @@ later. A configuration write that converts no file differently, such as a new
 upstream, also changes the digest. The
 [base cache contract](../../docs/protocol/mokly-base-cache.md#converted-source-identity)
 owns the source identity and the filter rule.
+
+The settings read of `source_key` and `checkout_identity` lists the whole tree
+with blob sizes. Git prints a size only for a blob that the object store
+holds, and `BAD` for a missing blob. So when each blob record has a decimal
+size, the read skips the missing-object preflight, because the preflight
+could find nothing missing. Any other size runs the preflight, as
+`Repository::list` does.
 
 `Repository::fingerprint_extracted` records a `Fingerprint` of each confined
 regular file of an extraction: its size, its times, and on Unix its change

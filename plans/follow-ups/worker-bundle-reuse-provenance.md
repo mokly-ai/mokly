@@ -35,8 +35,8 @@
 - **Background:**
   - The pool runs requests in independent Node workers. Each compile creates a
     fresh runtime key. A complete compilation keeps a deterministic identity
-    without that key, at `packages/mokly/src/sidecar/bundle-recipe.ts:132`
-    and under `docs/protocol/mokly-sidecar-recipes.md:94`.
+    without that key, at `packages/mokly/src/sidecar/bundle-recipe.ts:144`
+    and under `docs/protocol/mokly-sidecar-recipes.md:106`.
   - `crates/mokly-sidecar/src/pool_requests.rs:85` to line 92 makes the pool
     record of a new bundle result share any retained compilation with an
     equal recipe. `same_recipe` at `crates/mokly-sidecar/src/compiled.rs:157`
@@ -88,8 +88,8 @@
       `crates/mokly-server/src/changes_background.rs:103`.
     - One core runtime runs its describes one at a time under a lock, at
       `crates/mokly-render/src/runtime.rs:179`.
-    - The Changes base has its own runtime, at
-      `crates/mokly-cli/src/changes_base.rs:140`. Its source root differs
+    - The Changes base has its own runtime, from `Runtime::new` at
+      `crates/mokly-cli/src/changes_base.rs:141`. Its source root differs
       from the head, so its recipes never equal head recipes.
     - Captures read retained inputs.
     - `build` prepares the head side and the base side one after the other.

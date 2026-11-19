@@ -7,14 +7,17 @@ use std::sync::{Arc, Condvar, Mutex, MutexGuard, Weak};
 
 use crate::bundle_store::BundleStore;
 use crate::error::{Error, Result};
+use crate::host_memory::HostMemory;
 use crate::methods::Call;
+use crate::pool_claim::CallClaim;
 use crate::pool_cleanup;
 use crate::pool_options::{Launch, PoolOptions};
 use crate::pool_releases::Notice;
+use crate::pool_start::StartLease;
 use crate::pool_state::{Slot, State};
 use crate::pool_timing::Reason;
 use crate::wire::MethodResult;
-use crate::workers::{Clock, WorkerFactory};
+use crate::workers::{Clock, SpawnFailure, WorkerFactory};
 
 /// Wake the Serve owner when a pending head return can make progress.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ReturnWakeMock))]
@@ -28,6 +31,10 @@ pub trait ReturnWake: Send + Sync {
 pub trait SidecarPool: Send + Sync {
     /// Enqueue one request and return its complete result, or fail closed.
     fn request(&self, call: Call) -> Result<MethodResult>;
+    /// Execute a call with the temporary capacity held by its admission owner.
+    fn request_claimed(&self, call: Call, _claim: &CallClaim) -> Result<MethodResult> {
+        self.request(call)
+    }
     /// Record an epoch-specific final lease release without waiting for a worker.
     fn release_generation(&self, generation: &str, epoch: u64);
     /// Apply the served-recipe write rule after the core directly reuses a live state.
@@ -52,6 +59,7 @@ pub trait SidecarPool: Send + Sync {
 
 /// Process pool composed from explicit process and clock boundaries.
 pub struct Pool {
+    pub(super) admission: Option<Arc<dyn HostMemory>>,
     pub(super) factory: Arc<dyn WorkerFactory>,
     pub(super) starting: Mutex<()>,
     pub(super) clock: Arc<dyn Clock>,
@@ -73,6 +81,7 @@ impl Pool {
     ) -> Self {
         let (sender, receiver) = mpsc::channel();
         let pool = Self {
+            admission: None,
             factory,
             starting: Mutex::new(()),
             clock,
@@ -97,7 +106,12 @@ impl Pool {
         pool_cleanup::lock(&self.state)
     }
 
-    pub(super) fn spawn(&self, index: usize, source_root: &Path) -> Result<Slot> {
+    pub(super) fn spawn(
+        &self,
+        index: usize,
+        source_root: &Path,
+        start: &mut Option<StartLease>,
+    ) -> Result<Slot> {
         let reason = self.lock().replacement_reasons.get(&index).copied();
         let recycle = reason.map(Reason::replacement);
         let _recycle_scope = recycle.as_ref().map(tracing::Span::enter);
@@ -117,7 +131,19 @@ impl Pool {
             repository: source_root.into(),
             ..self.launch.clone()
         };
-        let mut spawned = self.factory.spawn(&launch)?;
+        let mut spawned = match self.factory.spawn(&launch) {
+            Ok(spawned) => spawned,
+            Err(SpawnFailure::NotStarted(error)) => return Err(error),
+            Err(SpawnFailure::Started(error)) => {
+                if let Some(start) = start {
+                    start.commit();
+                }
+                return Err(error);
+            }
+        };
+        if let Some(start) = start {
+            start.commit();
+        }
         {
             let mut state = self.lock();
             if state.stopped {
@@ -157,7 +183,10 @@ impl Pool {
         })
     }
 
-    pub(super) fn release(&self, index: usize, mut slot: Option<Slot>) {
+    pub(super) fn release(&self, index: usize, mut slot: Option<Slot>, start: Option<StartLease>) {
+        if start.is_some_and(StartLease::rollback) {
+            return;
+        }
         if let Some(current) = &mut slot
             && let Err(error) = self.cleanup(current)
         {

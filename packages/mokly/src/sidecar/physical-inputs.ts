@@ -90,7 +90,13 @@ export class PhysicalInputs extends PhysicalInputReader {
 
   /** Exact resolution needs the canonical file path; source owners check its content. */
   exactFile(file: string): boolean {
-    return this.capturePath(file)?.kind === "file" && this.complete;
+    return this.canonicalFile(file) !== undefined && this.complete;
+  }
+
+  /** Configuration settings anchor at the canonical file while retaining written links. */
+  canonicalFile(file: string): string | undefined {
+    const value = this.capturePath(file);
+    return value?.kind === "file" ? value.path : undefined;
   }
 
   /** Optional selection observes absence and regular-file paths without reading bodies. */

@@ -34,6 +34,7 @@ pub mod public_inputs;
 mod public_locations;
 pub mod reference_index;
 pub mod references;
+pub mod render_class;
 mod render_closure;
 mod render_exporters;
 pub mod render_inputs;
@@ -104,3 +105,7 @@ pub mod asset_delivery;
 
 mod session_collection;
 mod validation_summary;
+
+#[cfg(test)]
+#[path = "_tests_/style_memo_tests.rs"]
+mod style_memo_tests;

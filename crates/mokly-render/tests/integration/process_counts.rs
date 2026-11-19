@@ -9,7 +9,7 @@ use std::time::Duration;
 use mokly_sidecar::error::Result;
 use mokly_sidecar::pool_options::Launch;
 use mokly_sidecar::wire::{MethodResult, Request};
-use mokly_sidecar::workers::{Spawned, Worker, WorkerFactory};
+use mokly_sidecar::workers::{SpawnFailure, Spawned, Worker, WorkerFactory};
 
 /// One counter per successfully started sidecar process, in start order.
 #[derive(Default)]
@@ -90,7 +90,7 @@ pub(super) struct CountedFactory {
 }
 
 impl WorkerFactory for CountedFactory {
-    fn spawn(&self, launch: &Launch) -> Result<Spawned> {
+    fn spawn(&self, launch: &Launch) -> std::result::Result<Spawned, SpawnFailure> {
         let spawned = self.inner.spawn(launch)?;
         let index = {
             let mut counts = self.counts.hellos.lock().unwrap();

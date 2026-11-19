@@ -52,7 +52,11 @@ pub(super) struct Fixture {
 
 impl Fixture {
     pub(super) fn new() -> Self {
-        let directory = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
+        Self::in_parent(Path::new(env!("CARGO_TARGET_TMPDIR")))
+    }
+
+    pub(super) fn in_parent(parent: &Path) -> Self {
+        let directory = tempfile::tempdir_in(parent).unwrap();
         let root = dunce::canonicalize(directory.path()).unwrap();
         let counts = Arc::new(Counts::default());
         let clock = Arc::new(SystemClock::new());
@@ -129,6 +133,7 @@ impl Fixture {
             input: Config::default(),
             file: self.root.join("mokly.config.json"),
             repo_root: self.root.clone(),
+            modules: Default::default(),
             authored_inputs: vec![],
             roots: vec![],
         };

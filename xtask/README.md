@@ -118,8 +118,10 @@ The [repository ratchet contract](../docs/protocol/verification-ratchets.md)
 owns the exact scopes and exceptions. Length, protocol-cap, and
 unused-internal-export analysis compare with `git merge-base HEAD origin/main`.
 Module analysis covers the `.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.mjs`, and
-`.cjs` modules under the three source roots the contract names: the
-`@mokly/mokly` package source, `packages/viewer/src/`, and `scripts/`. The
+`.cjs` modules under the source roots that the contract names for each ratchet:
+[file length](../docs/protocol/verification-ratchets.md#javascript-and-typescript-file-length)
+and
+[unused internal exports](../docs/protocol/verification-ratchets.md#unused-internal-exports). The
 internal-export baseline in `unused-internal-exports.txt` is sorted and
 shrink-only across the branch. Protocol caps scan `docs/protocol/**`
 recursively except `fixtures/`. The public-package-export ratchet compares

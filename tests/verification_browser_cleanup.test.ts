@@ -9,7 +9,12 @@ import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
 
-for (const phase of ["setup", "cleanup"] as const) {
+for (const phase of [
+  "startup",
+  "copied startup",
+  "setup",
+  "cleanup",
+] as const) {
   test(`browser ${phase} failures retain every host error through Playwright`, async (context) => {
     const root = await diagnosticProject(context, phase);
     const eventPath = path.join(root, "events.json");
@@ -60,40 +65,78 @@ for (const phase of ["setup", "cleanup"] as const) {
     const diagnostic: unknown = events.errors[0];
     assert.ok(typeof diagnostic === "string");
     assert.ok(stderr.includes(diagnostic));
-    for (const message of [
-      "Browser host cleanup failed",
-      "Example Serve worker 1 (http://127.0.0.1:7001) cleanup failed",
-      "Example Serve worker 2 (http://127.0.0.1:7002) cleanup failed",
-      "Copied static host (http://127.0.0.1:7003) cleanup failed",
-      "Comparison static host (http://127.0.0.1:7004) cleanup failed",
-      "worker close first",
-      "worker nested group",
-      "worker root cause",
-      "worker close second",
-      "Expected one shared example Git diagnostic:",
-      "unexpected worker output",
-      "copied workspace removal failed",
-      "copied root cause",
-      "comparison close failed",
-      "comparison close non-error",
-      ...(phase === "setup"
+    const messages =
+      phase === "startup"
         ? [
-            "Browser setup and cleanup failed",
+            "Browser host setup failed",
+            "Example Serve worker 1 setup failed",
+            "Example Serve worker 2 setup failed",
+            "Copied static host setup failed",
+            "Comparison static host setup failed",
+            "worker startup group",
+            "worker startup failed",
+            "worker startup nested group",
+            "worker startup root cause",
+            "worker startup non-error",
             "worker readiness group",
             "worker readiness first",
             "worker readiness second",
+            "copied startup failed",
+            "copied startup nested group",
+            "copied startup root cause",
+            "comparison startup group",
+            "comparison startup failed",
+            "comparison startup non-error",
           ]
-        : []),
-    ]) {
+        : phase === "copied startup"
+          ? [
+              "Copied static host setup failed",
+              "copied startup failed",
+              "copied startup nested group",
+              "copied startup root cause",
+              "copied startup non-error",
+            ]
+          : [
+              "Browser host cleanup failed",
+              "Example Serve worker 1 (http://127.0.0.1:7001) cleanup failed",
+              "Example Serve worker 2 (http://127.0.0.1:7002) cleanup failed",
+              "Copied static host (http://127.0.0.1:7003) cleanup failed",
+              "Comparison static host (http://127.0.0.1:7004) cleanup failed",
+              "worker close first",
+              "worker nested group",
+              "worker root cause",
+              "worker close second",
+              "Expected one shared example Git diagnostic:",
+              "unexpected worker output",
+              "copied workspace removal failed",
+              "copied root cause",
+              "comparison close failed",
+              "comparison close non-error",
+              ...(phase === "setup"
+                ? [
+                    "Browser setup and cleanup failed",
+                    "Example Serve worker 2 setup failed",
+                    "worker readiness group",
+                    "worker readiness first",
+                    "worker readiness second",
+                  ]
+                : []),
+            ];
+    for (const message of messages) {
       assert.ok(diagnostic.includes(message), `missing diagnostic: ${message}`);
     }
-    assert.match(stderr, /at Object\.close \([^\n]*global_setup\.ts:/u);
+    assert.match(
+      stderr,
+      phase === "startup" || phase === "copied startup"
+        ? /at [^\n]*global_setup\.ts:/u
+        : /at Object\.close \([^\n]*global_setup\.ts:/u,
+    );
   });
 }
 
 async function diagnosticProject(
   context: TestContext,
-  phase: "setup" | "cleanup",
+  phase: "startup" | "copied startup" | "setup" | "cleanup",
 ): Promise<string> {
   const root = await fs.mkdtemp(
     path.join(repositoryRoot, ".context/browser-cleanup-"),
@@ -118,16 +161,28 @@ async function diagnosticProject(
 import setup from ${JSON.stringify(path.join(repositoryRoot, "tests/browser/setup.ts"))};
 import { startExampleHosts } from ${JSON.stringify(path.join(repositoryRoot, "tests/browser/example_setup.ts"))};
 
+const phase = ${JSON.stringify(phase)};
+const failingCleanup = phase === "setup" || phase === "cleanup";
 export default (config) => setup(config, {
   start: (count, signal) => {
     let worker = 0;
     return startExampleHosts(count, signal, async () => {
       const index = worker++;
+      if (phase === "startup" && index === 0)
+        throw new AggregateError([
+          new Error("worker startup failed", {
+            cause: new AggregateError([
+              new Error("worker startup root cause"),
+              "worker startup non-error",
+            ], "worker startup nested group"),
+          }),
+        ], "worker startup group");
       return {
         url: "http://127.0.0.1:" + (7001 + index),
-        diagnostics: () => "unexpected worker output",
+        diagnostics: () => failingCleanup ? "unexpected worker output"
+          : "[mokly/git-failed] Missing reserved base\\nChanges unavailable\\n",
         async close() {
-          if (index === 0) throw new AggregateError([
+          if (failingCleanup && index === 0) throw new AggregateError([
             new Error("worker close first", {
               cause: new AggregateError([
                 new Error("worker root cause"),
@@ -138,14 +193,22 @@ export default (config) => setup(config, {
         },
       };
     }, async (url) => {
-      if (${JSON.stringify(phase)} === "setup" && url.endsWith(":7002"))
+      if ((phase === "startup" || phase === "setup") && url.endsWith(":7002"))
         throw new AggregateError([
           new Error("worker readiness first"),
           new Error("worker readiness second"),
         ], "worker readiness group");
     });
   },
-  staticHost: async () => ({
+  staticHost: async () => {
+    if (phase === "startup" || phase === "copied startup")
+      throw new Error("copied startup failed", {
+        cause: new AggregateError([
+          new Error("copied startup root cause"),
+          "copied startup non-error",
+        ], "copied startup nested group"),
+      });
+    return {
     directory: "/copied",
     url: "http://127.0.0.1:7003",
     async close() {
@@ -153,17 +216,26 @@ export default (config) => setup(config, {
         cause: new Error("copied root cause"),
       });
     },
-  }),
-  comparisonHost: async () => ({
+    };
+  },
+  comparisonHost: async () => {
+    if (phase === "startup")
+      throw new AggregateError([
+        new Error("comparison startup failed"),
+        "comparison startup non-error",
+      ], "comparison startup group");
+    return {
     directory: "/comparison",
     url: "http://127.0.0.1:7004",
     async close() {
+      if (!failingCleanup) return;
       throw new AggregateError([
         new Error("comparison close failed"),
         "comparison close non-error",
       ], "comparison close group");
     },
-  }),
+    };
+  },
 });`,
   };
   for (const [name, contents] of Object.entries(files)) {

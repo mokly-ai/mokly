@@ -155,3 +155,64 @@ fn stored_and_live_recipes_with_the_same_id_both_reach_the_input_check() {
     );
     pool.shutdown().unwrap();
 }
+
+#[test]
+fn released_recipes_reject_an_added_earlier_absolute_paths_target() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = dunce::canonicalize(directory.path()).unwrap();
+    fs::create_dir(root.join("one")).unwrap();
+    fs::create_dir(root.join("two")).unwrap();
+    fs::write(root.join("package.json"), "{}").unwrap();
+    fs::write(root.join("one/.keep"), "").unwrap();
+    fs::write(root.join("two/value.js"), "export const value='two';").unwrap();
+    let written = root.join("written.js").to_string_lossy().replace('\\', "/");
+    fs::write(
+        root.join("entry.ts"),
+        format!(
+            "export {{value}} from {};",
+            serde_json::to_string(&written).unwrap()
+        ),
+    )
+    .unwrap();
+    fs::write(
+        root.join("tsconfig.json"),
+        serde_json::to_vec(&serde_json::json!({
+            "compilerOptions": { "paths": { written: ["./one/value.js", "./two/value.js"] } }
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    let counts = Arc::new(Counts::default());
+    let pool = pool(&root, counts.clone());
+    let params = settings(&root);
+    let original = bundle(&pool, &params);
+    assert_eq!(
+        original
+            .modules
+            .iter()
+            .map(|module| module.path.as_str())
+            .collect::<Vec<_>>(),
+        ["entry.ts", "two/value.js"]
+    );
+    assert_eq!(counts.0.load(Ordering::SeqCst), 1);
+    pool.release_generation(&original.generation, original.epoch);
+    let unchanged = bundle(&pool, &params);
+    assert_eq!(
+        unchanged.compiled.runtime_key,
+        original.compiled.runtime_key
+    );
+    assert_eq!(counts.0.load(Ordering::SeqCst), 1);
+    pool.release_generation(&unchanged.generation, unchanged.epoch);
+    fs::write(root.join("one/value.js"), "export const value='one';").unwrap();
+    let changed = bundle(&pool, &params);
+    assert_eq!(
+        changed
+            .modules
+            .iter()
+            .map(|module| module.path.as_str())
+            .collect::<Vec<_>>(),
+        ["entry.ts", "one/value.js"]
+    );
+    assert_eq!(counts.0.load(Ordering::SeqCst), 2);
+    pool.shutdown().unwrap();
+}

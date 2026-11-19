@@ -3,8 +3,8 @@
 `mokly-static` assembles complete static catalogues from a validated render
 generation. Use it from the CLI for local builds and the private build used
 by publish. It reads documents from `mokly-graph` and comparison results from
-`mokly-compare`. It shares output formats with `mokly-model` and has no
-dependency on the upload client in `mokly-publish`.
+`mokly-compare`. It shares output formats and output file admission with
+`mokly-model` and has no dependency on the upload client in `mokly-publish`.
 
 ## Responsibilities
 
@@ -26,7 +26,10 @@ and the document route. It builds the canonical index and entry detail files
 with revision zero and no live capability, then writes the static deployment
 file after computing the deployment identity. The
 [format inventory](../../docs/protocol/mokly-format-versions.md) gives their
-versions. The shared model writer adds publication metadata when requested and
+versions. Every output file except the marker and the upload metadata enters
+the shared model `Inventory`. An admission failure returns the typed `Error`
+that names the rejected path. The shared model writer adds publication
+metadata when requested and
 writes the ownership marker last. Ready Changes supplies the base commit, the
 generation root, detail-root reasons, each view's state, ignore ids, and
 evidence, the base side, workspace lists, and removed records from the same
@@ -123,7 +126,8 @@ exercise retained recovery bytes through debug-only fault adapters.
 - [`src/filesystem.rs`](./src/filesystem.rs) defines `Files` and
   `SystemFiles`, the non-following filesystem boundary of the transaction.
 - [`src/identity.rs`](./src/identity.rs) provides `finalize`, which stamps the
-  deterministic deployment identity.
+  deterministic deployment identity and admits the generated index and entry
+  detail files to the shared `Inventory`.
 - [`src/fingerprint.rs`](./src/fingerprint.rs) defines `CapturedTree`, which
   records selected input digests and checks them before installation.
 - [`src/frame_probe.rs`](./src/frame_probe.rs) provides `inject`, which writes

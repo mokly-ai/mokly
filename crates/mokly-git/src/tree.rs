@@ -138,6 +138,29 @@ pub(crate) fn parse(bytes: &[u8], limits: Limits) -> Result<Vec<Entry>> {
     Ok(entries)
 }
 
+/// Whether each blob record of a `ls-tree -l -z` listing has a decimal size. Git prints a
+/// size only for a blob that the object store holds, and `BAD` for a missing blob. A record
+/// of another kind, such as a tree or a submodule, needs no size.
+pub(crate) fn sizes_every_blob(listing: &[u8]) -> bool {
+    listing
+        .split(|byte| *byte == 0)
+        .filter(|record| !record.is_empty())
+        .all(|record| {
+            let metadata = record.split(|byte| *byte == b'\t').next().unwrap_or(record);
+            let fields: Vec<&[u8]> = metadata
+                .split(u8::is_ascii_whitespace)
+                .filter(|field| !field.is_empty())
+                .collect();
+            match fields.as_slice() {
+                [_, kind, _, size] if *kind == b"blob" => {
+                    !size.is_empty() && size.iter().all(u8::is_ascii_digit)
+                }
+                [_, _, _, _] => true,
+                _ => false,
+            }
+        })
+}
+
 pub(crate) fn text(bytes: &[u8]) -> Result<&str> {
     match str::from_utf8(bytes) {
         Ok(text) => Ok(text),

@@ -5,7 +5,7 @@ use std::sync::Arc;
 use mokly_sidecar::error::Error;
 use mokly_sidecar::pool::SidecarPool;
 use mokly_sidecar::wire::MethodResult;
-use mokly_sidecar::workers::{ClockMock, ControlMock, FactoryMock, WorkerMock};
+use mokly_sidecar::workers::{ClockMock, ControlMock, FactoryMock, SpawnFailure, WorkerMock};
 use unimock::{MockFn, Unimock, matching};
 
 use super::super::serve_trace_tests::capture;
@@ -125,7 +125,7 @@ fn failed_factory_attempt_emits_no_stop_and_next_attempt_has_retry_reason() {
     let factory = Unimock::new((
         FactoryMock::spawn
             .next_call(matching!(_))
-            .answers(&|_, _| Err(Error::Crashed)),
+            .answers(&|_, _| Err(SpawnFailure::NotStarted(Error::Crashed))),
         FactoryMock::spawn
             .next_call(matching!(_))
             .answers_arc(Arc::new(move |_, _| Ok(spawned(&process)))),

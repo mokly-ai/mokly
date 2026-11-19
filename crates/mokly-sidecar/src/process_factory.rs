@@ -25,7 +25,7 @@ use crate::process_reaper::Reaper;
 use crate::process_startup::StartupTiming;
 use crate::process_transport::{Deadlines, PipeTransport};
 use crate::process_worker::{ForwardEvents, ProcessWorker};
-use crate::workers::{Diagnostics, Spawned, WorkerControl, WorkerFactory};
+use crate::workers::{Diagnostics, SpawnFailure, Spawned, WorkerControl, WorkerFactory};
 
 /// Concrete worker factory, assembled once by the executable composition root.
 pub struct NodeFactory {
@@ -64,11 +64,11 @@ impl NodeFactory {
     }
 }
 
-impl WorkerFactory for NodeFactory {
-    /// Start one Node sidecar with the canonical source directory as its working
+impl NodeFactory {
+    /// Prepare Node with the canonical source directory as its working
     /// directory and `PWD`. `dunce::canonicalize` avoids the Windows `\\?\` verbatim form
     /// that `std::fs::canonicalize` returns, which many Node tools do not handle.
-    fn spawn(&self, launch: &Launch) -> Result<Spawned> {
+    fn command(&self, launch: &Launch) -> Result<Command> {
         if !matches!(fs::metadata(&launch.entry), Ok(metadata) if metadata.is_file()) {
             return Err(Error::Unavailable {
                 part: launch.entry.display().to_string(),
@@ -103,20 +103,22 @@ impl WorkerFactory for NodeFactory {
         if let Err(source) = self.groups.configure(&mut command) {
             return Err(InternalError::Platform { source }.into());
         }
-        let startup = Arc::new(StartupTiming::default());
-        let mut child = match self.parent.spawn(command) {
-            Ok(child) => Reaper(child, Some(Arc::clone(&startup))),
-            Err(_) => {
-                return Err(Error::Unavailable {
-                    part: launch.node.display().to_string(),
-                });
-            }
-        };
+        Ok(command)
+    }
+
+    fn spawn_owned(
+        &self,
+        launch: &Launch,
+        mut child: Reaper,
+        startup: Arc<StartupTiming>,
+    ) -> Result<Spawned> {
         let group = match self.groups.attach(&child.0) {
             Ok(group) => group,
             Err(source) => return Err(InternalError::Platform { source }.into()),
         };
         let pid = child.0.id();
+        let memory = Arc::from(self.memory.monitor(pid));
+        let discover_memory = Arc::new(AtomicBool::new(false));
         let stdin = child.0.stdin.take().expect("stdin is configured as a pipe");
         let stdout = child
             .0
@@ -133,6 +135,8 @@ impl WorkerFactory for NodeFactory {
         let (exited_tx, exited) = mpsc::sync_channel(1);
         let (drained, diagnostics_done) = mpsc::sync_channel(1);
         let control: Arc<dyn WorkerControl> = Arc::new(ProcessControl {
+            memory: Arc::clone(&memory),
+            discover_memory: Arc::clone(&discover_memory),
             group,
             outgoing: outgoing.clone(),
             exited: Mutex::new(exited),
@@ -197,12 +201,34 @@ impl WorkerFactory for NodeFactory {
                 diagnostics: self.diagnostics.clone(),
                 client: Box::new(client),
                 clock: Arc::clone(&self.clock),
-                memory: self.memory.monitor(pid),
-                discover_memory: AtomicBool::new(false),
+                memory,
+                discover_memory,
                 deadlines,
                 phases,
             }),
             control,
         })
+    }
+}
+
+impl WorkerFactory for NodeFactory {
+    fn spawn(&self, launch: &Launch) -> std::result::Result<Spawned, SpawnFailure> {
+        let command = match self.command(launch) {
+            Ok(command) => command,
+            Err(error) => return Err(SpawnFailure::NotStarted(error)),
+        };
+        let startup = Arc::new(StartupTiming::default());
+        let child = match self.parent.spawn(command) {
+            Ok(child) => Reaper(child, Some(Arc::clone(&startup))),
+            Err(_) => {
+                return Err(SpawnFailure::NotStarted(Error::Unavailable {
+                    part: launch.node.display().to_string(),
+                }));
+            }
+        };
+        match self.spawn_owned(launch, child, startup) {
+            Ok(spawned) => Ok(spawned),
+            Err(error) => Err(SpawnFailure::Started(error)),
+        }
     }
 }

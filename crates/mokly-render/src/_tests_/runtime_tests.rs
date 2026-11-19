@@ -33,6 +33,7 @@ fn contexts_are_unique_across_runtime_instances_and_clones() {
         input: Config::default(),
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
         roots: Vec::new(),
     };
@@ -58,6 +59,7 @@ fn package_roots_reach_the_sidecar_in_normalized_form() {
         },
         file: "/repo/tools/mokly.config.json".into(),
         repo_root: "/repo".into(),
+        modules: Default::default(),
         authored_inputs: Vec::new(),
         roots: Vec::new(),
     };

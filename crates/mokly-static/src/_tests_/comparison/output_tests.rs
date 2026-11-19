@@ -5,6 +5,7 @@ use mokly_compare::projection_index;
 use mokly_model::canonical;
 use mokly_model::material::digest;
 use mokly_model::output::artifact::File;
+use mokly_model::output::inventory::Inventory;
 use mokly_model::projection;
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::readers;
@@ -13,7 +14,6 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::comparison_output;
 use crate::error::Error;
-use crate::inventory::Inventory;
 use crate::transaction::CancellationMock;
 
 use super::support::result;
@@ -41,7 +41,7 @@ fn append_generation(result: ComparisonResult) -> (CatalogueReadModel, Vec<File>
         &cancellation,
     )
     .unwrap();
-    (index, inventory.into_files())
+    (index, inventory.files().cloned().collect())
 }
 
 #[test]
@@ -145,7 +145,7 @@ fn cancellation_after_both_sides_stops_before_removed_records_are_published() {
         ),
         Err(Error::Cancelled)
     ));
-    assert!(inventory.into_files().is_empty());
+    assert_eq!(inventory.files().len(), 0);
     assert!(index.removed_entries.is_empty());
     assert!(index.comparison_url.0.is_none());
 }

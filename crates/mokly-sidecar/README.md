@@ -12,7 +12,8 @@ The Node implementation lives in `@mokly/mokly`.
 - Type each request, result, event, and source diagnostic.
 - Bound UTF-8 NDJSON frames to 64 MiB of JSON bytes.
 - Start Node lazily and require an exact-version hello.
-- Queue requests fairly and spread independent calls across the pool.
+- Queue requests fairly, spread independent calls, admit default growth by
+  memory, and grant call claims.
 - Enforce deadlines, retry, recycling, and bounded shutdown.
 - Define the bundle store boundary and the outcomes of compiled recipes that
   outlive a process.
@@ -31,7 +32,47 @@ core can carry author order into the read model.
 `SidecarPool`. Constructing it starts no process. FIFO order per eligible slot
 bounds active processes to `PoolOptions::size`. The CLI resolves
 `--sidecars`, `MOKLY_SIDECARS`, and the core count. `PoolOptions` takes the
-parsed `NonZeroUsize` and timeout override.
+parsed `NonZeroUsize` and timeout override. An explicit count is exact. A
+default pool always admits its first sidecar. It adds another only when
+available memory holds the unused budgets of its sidecars, the budgets that
+call claims hold, the new budget, and spare memory. Reserved slots stay through
+recycling, failed-worker replacement, and root changes. Serve admits each call
+with a claim on the same capacity, and a claim that starts no new slot ends
+with its call. The
+[memory contract](../../docs/protocol/mokly-sidecar-memory.md) owns these rules.
+
+`Pool::new` keeps the supplied size exact. For a default size, the composition
+root calls `Pool::with_memory_admission` with `dyn HostMemory`.
+`PoolCapacity::capacity` reads the same prospective capacity that reserves new
+slots, and it holds nothing. `PoolCapacity::try_claim` returns
+`Err(Error::Cancelled)` when the pool has stopped, as a request to a stopped
+pool does. It returns `Ok(None)` for a temporary shortage, when the live claims
+fill the capacity. Otherwise it atomically holds a place for one call in a
+`CallClaim` and returns `Ok(Some(claim))`.
+`SidecarPool::request_claimed` runs a call with its claim. When that
+call starts a new slot, it takes a held budget without a new memory check.
+Dropping the `CallClaim` ends the claim.
+
+`WorkerFactory::spawn` returns `Spawned` or a `SpawnFailure`. The
+`SpawnFailure::NotStarted` variant means that the factory created no child
+process. The `SpawnFailure::Started` variant means that a failure came after
+the child process started. Each variant holds the original `Error`, and
+`into_error` returns it. The pool gives its caller the same error for both
+variants.
+
+In a default pool, admission counts the whole budget of a new slot until the
+factory returns. When the factory returns `Spawned` or a `Started` failure, the
+slot keeps its reservation, also when hello fails after that. When a call ends
+before a process starts in its new slot, for example after `NotStarted`, the
+pool frees that slot. A free slot is not a reservation. In a default pool, a
+later start in it needs admission again. The pool also removes the PostCSS
+context affinities of the slot, so a later call of that context can take
+another slot. When the start used a held budget, the pool returns that budget
+to the claim that held it, if that claim is still live.
+
+`MemoryEstimate` combines `dyn HostProbe` and `dyn MemoryLimits`.
+`SysinfoMemory` reads physical total minus used memory. On Linux,
+`CgroupMemory` reads finite v1 or v2 controller limits through `dyn MemoryFiles`.
 
 Every bundle result includes its compiled recipe. The pool retains these
 recipes, CSS Modules maps, and resolved handle tables. A new process restores
@@ -200,10 +241,18 @@ the same protection, including historical contexts. It uses
 `dyn ProcessGroups` for whole-tree ownership, bounded pipe tasks for
 transport, `dyn Wait` for monotonic deadlines, `dyn MemoryFactory` for a
 per-worker `dyn ResidentMemory` monitor, and `dyn Diagnostics` for events and
-standard error. Shutdown wakes queued callers and sends shutdown to each
+standard error. It returns `SpawnFailure::NotStarted` for a failure before the
+Node process exists. Examples are a missing sidecar entry or source directory,
+and a Node executable that cannot start. It returns `SpawnFailure::Started`
+when a later step fails, for example when it cannot take whole-tree ownership
+or start a pipe task. Shutdown wakes queued callers and sends shutdown to each
 process. All processes share one grace deadline. Survivors are killed and
 reaped. The [lifecycle contract](../../docs/protocol/mokly-sidecar-lifecycle.md)
 owns stderr drainage at that deadline.
+
+The worker and its `WorkerControl` share that monitor. Admission can read
+current resident memory during a request without borrowing its session.
+Exact pools and default pools at their slot ceiling take no admission samples.
 
 `NodeFactory::with_timings` enables timing through hello and forwards complete
 sidecar records through `Diagnostics::timing`. The default leaves timings off.
@@ -316,7 +365,8 @@ spawn the built sidecar and render a component, screen, story, and page. The
 
 - [`src/pool.rs`](./src/pool.rs) defines `SidecarPool`, the boundary that
   catalogue and render services call, with `served_generation` for a core
-  reuse, and `Pool`, its lazy bounded implementation, with
+  reuse and `request_claimed` for a call that holds a `CallClaim`, and
+  `Pool`, its lazy bounded implementation, with
   `with_bundle_store`. Its `schedule_head_return` and `maintain_head_return`
   methods are the return pass boundary, and `ReturnWake` is the weak wake that
   Serve registers through `observe_head_return`.
@@ -326,7 +376,8 @@ spawn the built sidecar and render a component, screen, story, and page. The
   a call affine to a retired slot.
   [`src/pool_affinity.rs`](./src/pool_affinity.rs) chooses the slot that a
   request takes. Its pure rank orders the idle slots of one root by the
-  generation state that a call needs.
+  generation state that a call needs. Growth reuses a free slot before it adds
+  a new one.
 - [`src/pool_head.rs`](./src/pool_head.rs) defines `Head`, which holds the
   warm head worker, the candidates of the return pass, and the
   `return_disabled` flag, and `Pool::record_head`, which records each
@@ -342,6 +393,22 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [`src/pool_options.rs`](./src/pool_options.rs) defines `Launch` and
   `PoolOptions`, the launch settings and the pool size and deadline override.
   The pool sets `Launch::capture_durability` when it keeps a bundle store.
+- [`src/pool_admission.rs`](./src/pool_admission.rs) defines `PoolCapacity`,
+  with the read-only `capacity` and the atomic `try_claim`, and the shared slot
+  reservation calculation. [`src/pool_claim.rs`](./src/pool_claim.rs) defines
+  `CallClaim`, the call-scoped hold that ends on drop, and the held budgets
+  that a claimed call takes when it starts a new slot.
+- [`src/pool_start.rs`](./src/pool_start.rs) defines `StartLease`, which holds
+  the admission of a new slot until a process starts in it. `Pool::acquire`
+  creates a lease only when a call takes a new slot. The lease records the
+  claim whose held budget the start used. `Pool::spawn` commits the lease when
+  the factory returns `Spawned` or `SpawnFailure::Started`. When an
+  uncommitted lease drops, it frees the slot and removes the context
+  affinities of the slot. It also returns the held budget to that claim when
+  the claim is still live.
+- [`src/host_memory.rs`](./src/host_memory.rs) defines `HostMemory`,
+  `MemoryEstimate`, and the injected host and process-limit boundaries.
+  [`src/cgroup_memory.rs`](./src/cgroup_memory.rs) supplies the Linux limit adapter.
 - [`src/pool_recipes.rs`](./src/pool_recipes.rs) defines `Recipes`, the
   bounded store of released compiled recipes with captured reuse evidence or
   the Serve edit marker. It seeds only a recipe that the call's capture admits.
@@ -391,11 +458,14 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `mokly-platform` within 64 KiB.
 - [`src/process_factory.rs`](./src/process_factory.rs) defines `NodeFactory`,
   the `WorkerFactory` that starts Node with whole-tree ownership. It sends the
-  `CaptureHint` in `hello` when the launch asks for capture durability.
+  `CaptureHint` in `hello` when the launch asks for capture durability. Its
+  `spawn` decides whether each failure is `SpawnFailure::NotStarted` or
+  `SpawnFailure::Started`.
 - [`src/process_environment.rs`](./src/process_environment.rs) holds the pure
   environment rule that `NodeFactory` applies to each sidecar command.
 - [`src/workers.rs`](./src/workers.rs) defines the injected `WorkerFactory`,
-  `Worker`, `Clock`, and `Diagnostics` traits.
+  `Worker`, `Clock`, and `Diagnostics` traits. It also defines `SpawnFailure`,
+  the factory error that says whether a child process started.
 - [`src/process_clock.rs`](./src/process_clock.rs) and
   [`src/process_memory.rs`](./src/process_memory.rs) define the host
   `SystemClock` and `SystemMemory` that the composition root injects.
@@ -436,7 +506,7 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [Compiled recipes and capture modes](../../docs/protocol/mokly-sidecar-recipes.md).
 - [Serve edit plans](../../docs/protocol/mokly-sidecar-plans.md).
 - [Cancellation and timeouts](../../docs/protocol/mokly-sidecar-lifecycle.md).
-- [Memory sampling](../../docs/protocol/mokly-sidecar-memory.md).
+- [Memory admission and sampling](../../docs/protocol/mokly-sidecar-memory.md).
 - [Timing records](../../docs/protocol/mokly-sidecar-timings.md).
 - [PostCSS contexts and evidence](../../docs/protocol/mokly-sidecar-postcss.md).
 - [Definition transport](../../docs/protocol/mokly-sidecar-definitions.md).

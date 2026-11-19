@@ -94,10 +94,9 @@ from `rust-toolchain.toml`. Each build job runs a locked release build, checks
 native TLS dependencies, and packs its platform package with npm
 11.21.0 and uploads the archive with its integrity, shasum, inventory, and size
 report. A target that fails to build stops the release before any publication.
-Linux x64 and ARM64 and Windows x64 use Blacksmith's 2-vCPU tiers. macOS ARM64
-uses its 6-vCPU tier. The one native-build exception is `darwin-x64` on
-GitHub-hosted `macos-26-intel`, with `actions/checkout`; the other build rows
-use Blacksmith checkout. A build refuses a different host OS or architecture.
+Every build job runs on a GitHub-hosted runner under the
+[runner rule](./ci-workflow.md#job-execution). Each build job checks out with
+`actions/checkout`. A build refuses a different host OS or architecture.
 Native jobs install npm dependencies with lifecycle scripts disabled.
 Each native release job has a 60-minute hang guard. It must allow at least
 three times the job's typical duration, including setup and builds.

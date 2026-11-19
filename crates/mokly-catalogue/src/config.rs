@@ -6,8 +6,9 @@ use std::sync::Arc;
 
 use mokly_source_interface::tree::{FileKind, Node, SourceTree};
 
+use crate::config_inputs::validate_inputs;
 use crate::config_links;
-use crate::config_paths::{configuration_alias, validate_inputs};
+use crate::config_paths::configuration_alias;
 use crate::config_types::{ResolvedConfig, ResolvedRoot, RootConfig};
 use crate::config_validation::{invalid, parse};
 use crate::error::{CatalogueError, Result};
@@ -166,11 +167,14 @@ impl ConfigLoader for Loader {
         let mut config = ResolvedConfig {
             input,
             authored_inputs: Vec::new(),
+            modules: Default::default(),
             file,
             repo_root: repo_node.identity,
             roots,
         };
-        config.authored_inputs = validate_inputs(self.tree.as_ref(), &config)?;
+        let inputs = validate_inputs(self.tree.as_ref(), &config)?;
+        config.authored_inputs = inputs.sources;
+        config.modules = inputs.modules;
         if let Some(alias) = configuration_alias(self.tree.as_ref(), &lexical_file, &config)? {
             config.authored_inputs.push(alias);
         }

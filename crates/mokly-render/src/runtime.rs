@@ -12,7 +12,9 @@ use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_catalogue::discovery::SourceFile;
 use mokly_catalogue::error::{CatalogueError, InternalError};
 use mokly_compare::ancestor_roots;
+use mokly_css::reference_cache::{MemoryReferenceCache, ReferenceCache};
 use mokly_graph::cache::RenderCache;
+use mokly_graph::delivery_inputs::STYLE_REFERENCE_BYTES;
 use mokly_graph::public_inputs::{ClosureInputs, MemoryClosureInputs};
 use mokly_graph::resource_inputs::{MemoryResourceInputs, ResourceInputs};
 use mokly_graph::source_snapshot::SourceSnapshot;
@@ -59,6 +61,9 @@ pub struct Runtime {
     pub base: Option<Arc<BaseSide>>,
     /// Ancestor dependency directories used by the working generation.
     pub dependency_usage: Arc<dyn DependencyUsage>,
+    /// Inline style reference scans shared by every generation of this runtime and of each
+    /// base runtime that `for_base` makes from it.
+    pub(crate) style_references: Arc<dyn ReferenceCache>,
     pub(crate) resources: Arc<dyn ResourceInputs>,
     pub(crate) closures: Arc<dyn ClosureInputs>,
     pub(crate) prepared: Arc<Mutex<BTreeMap<String, Weak<PreparedLease>>>>,
@@ -113,6 +118,57 @@ impl Runtime {
         version: String,
         base: Option<Arc<BaseSide>>,
     ) -> Self {
+        Self::assemble(
+            tree,
+            dependency_tree,
+            physical_inputs,
+            pool,
+            cache,
+            workers,
+            version,
+            base,
+            Arc::new(MemoryReferenceCache::new(STYLE_REFERENCE_BYTES)),
+        )
+    }
+
+    /// The runtime of one base preparation over `tree`. It shares the dependency reader,
+    /// the physical inputs, the sidecar pool, the render cache, the workers, and the style
+    /// memo of this runtime, and it starts its own stores.
+    pub fn for_base(
+        &self,
+        tree: Arc<dyn SourceTree>,
+        version: String,
+        base: Option<Arc<BaseSide>>,
+    ) -> Self {
+        Self::assemble(
+            tree,
+            self.dependency_tree.clone(),
+            self.physical_inputs.clone(),
+            self.pool.clone(),
+            self.cache.clone(),
+            self.workers.clone(),
+            version,
+            base,
+            self.style_references.clone(),
+        )
+    }
+
+    /// Every field of a runtime, so that each constructor passes the style memo.
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "each constructor passes the shared services and the style memo explicitly"
+    )]
+    fn assemble(
+        tree: Arc<dyn SourceTree>,
+        dependency_tree: Arc<dyn SourceTree>,
+        physical_inputs: Arc<dyn PhysicalInputs>,
+        pool: Arc<dyn SidecarPool>,
+        cache: Arc<dyn RenderCache>,
+        workers: Arc<dyn RenderWorkers>,
+        version: String,
+        base: Option<Arc<BaseSide>>,
+        style_references: Arc<dyn ReferenceCache>,
+    ) -> Self {
         Self {
             inventory_tree: tree.clone(),
             tree,
@@ -125,6 +181,7 @@ impl Runtime {
             version,
             base,
             dependency_usage: Arc::new(UsedDependencies::default()),
+            style_references,
             resources: Arc::new(MemoryResourceInputs::default()),
             closures: Arc::new(MemoryClosureInputs::default()),
             prepared: Arc::new(Mutex::new(BTreeMap::new())),

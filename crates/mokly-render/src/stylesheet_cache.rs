@@ -60,7 +60,7 @@ impl CachedStylesheets {
             (shared.record(key), shared.miss(key))
         };
         let record = record.ok_or(miss)?;
-        if record.stamp.current(self.tree.as_ref()) != record.stamp
+        if !record.stamp.matches(self.tree.as_ref())
             || record
                 .context
                 .as_ref()
@@ -82,7 +82,7 @@ impl CachedStylesheets {
             let own_current = match checked.iter().find(|(held, _)| Weak::ptr_eq(held, &weak)) {
                 Some((_, current)) => *current,
                 None => {
-                    let current = entry.stamp.current(self.tree.as_ref()) == entry.stamp;
+                    let current = entry.stamp.matches(self.tree.as_ref());
                     checked.push((weak, current));
                     current
                 }

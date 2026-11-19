@@ -13,13 +13,10 @@ use mokly_sidecar::controls::StoryHints;
 use mokly_sidecar::definition_metadata;
 use mokly_sidecar::definitions::Definition;
 
-use crate::transport_values;
+use crate::{definition_handle, transport_values};
 
 pub(crate) fn location(definition: &Definition) -> SourceLocation {
-    let (file, export) = definition
-        .handle
-        .rsplit_once('#')
-        .expect("sidecar definition handles contain the module and export separator");
+    let (file, export) = definition_handle::split(&definition.handle);
     SourceLocation {
         path: definition
             .source_path
@@ -32,10 +29,7 @@ pub(crate) fn location(definition: &Definition) -> SourceLocation {
 }
 
 pub(crate) fn entry(definition: &Definition, kind: EntryKind, story: bool) -> ProvidedDefinition {
-    let (exporting_file, _) = definition
-        .handle
-        .rsplit_once('#')
-        .expect("sidecar definition handles contain the module and export separator");
+    let (exporting_file, _) = definition_handle::split(&definition.handle);
     let metadata = &definition.metadata;
     let mut rendering = ProvidedRendering::default();
     let method = if story {

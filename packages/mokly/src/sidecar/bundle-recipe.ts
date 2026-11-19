@@ -21,6 +21,7 @@ import type { ModulePaths } from "./module-paths.js";
 import type { ConsumerRequire } from "./paths.js";
 import type { ResolutionEvidence } from "./resolution-evidence.js";
 import { resolutionInputs } from "./resolution-inputs.js";
+import type { ServeEditImports } from "./serve-edit-imports.js";
 import { toolchainIdentity } from "./toolchain.js";
 
 /** One finished compile and the state that its plugins recorded. */
@@ -35,6 +36,7 @@ export interface CompiledBundle {
   runtimeKey: string;
   evidence: ResolutionEvidence | undefined;
   capture: BundleCapture;
+  editImports: ServeEditImports | undefined;
   plan: ResolutionPlan | undefined;
 }
 
@@ -51,10 +53,16 @@ export async function bundleRecipe(
     runtimeKey,
     evidence,
     capture,
+    editImports,
     plan,
   }: CompiledBundle,
   measurements: Measurements,
 ): Promise<Bundled> {
+  const editReusable = editImports
+    ? measurements.runSync("sidecar.bundle.mapped-lookups", () =>
+        editImports.record(compiled.metafile!, paths),
+      )
+    : false;
   const resolution = params.moduleResolution;
   const { modules: graph, physical } = measurements.runSync(
     "sidecar.bundle.graph",
@@ -123,7 +131,7 @@ export async function bundleRecipe(
         complete: false,
         durable: false,
         inputs: {},
-        ...(capture === "serveEdit"
+        ...(capture === "serveEdit" && editReusable
           ? { uncaptured: "serveEdit" as const }
           : {}),
       };

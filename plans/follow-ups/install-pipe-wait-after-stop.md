@@ -29,7 +29,7 @@
 - **Background:**
   - The base needs JavaScript rendering when its catalogue has a JavaScript
     entry module or a stories file, or its configuration names a renderer
-    or PostCSS. `crates/mokly-cli/src/changes_base.rs:98` to line 114
+    or PostCSS. `needs_sidecar` at `crates/mokly-cli/src/changes_base.rs:99` to line 115
     prepares base dependencies only then. An HTML-only catalogue needs no
     install. The dependency inputs are the tracked package manifests and
     lockfiles. With pnpm or Yarn lockfiles, they also hold the manager

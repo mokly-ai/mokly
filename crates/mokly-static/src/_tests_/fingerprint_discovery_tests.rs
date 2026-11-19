@@ -80,6 +80,7 @@ fn unreadable_excluded_files_pass_while_required_files_keep_catalogue_diagnostic
             input: Config::default(),
             repo_root: "/repo".into(),
             file: "/repo/mokly.config.json".into(),
+            modules: Default::default(),
             authored_inputs: vec![],
             roots: vec![ResolvedRoot {
                 input: RootConfig {

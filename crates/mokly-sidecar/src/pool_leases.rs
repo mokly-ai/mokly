@@ -8,6 +8,8 @@ use crate::error::{Error, Result};
 use crate::methods::Call;
 use crate::pool::Pool;
 use crate::pool_affinity;
+use crate::pool_claim;
+use crate::pool_start::StartLease;
 use crate::pool_state::{Slot, Waiting};
 
 impl Pool {
@@ -15,7 +17,8 @@ impl Pool {
         &self,
         call: &Call,
         root: Option<&Path>,
-    ) -> Result<(usize, Option<Slot>)> {
+        claim: Option<u64>,
+    ) -> Result<(usize, Option<Slot>, Option<StartLease>)> {
         let root = root.unwrap_or(&self.launch.repository);
         let mut state = self.lock();
         let ticket = state.ticket;
@@ -29,6 +32,7 @@ impl Pool {
             Waiting {
                 context: context.clone(),
                 root: root.into(),
+                claim,
             },
         );
         state.head.notify();
@@ -50,6 +54,15 @@ impl Pool {
                     part: "PostCSS context worker".into(),
                 });
             }
+            let admission = self.admission(&state);
+            let limit = |claim: Option<u64>| {
+                admission.slot_limit
+                    + if claim.is_some_and(|id| state.claims.contains_key(&id)) {
+                        pool_claim::growth(&state)
+                    } else {
+                        0
+                    }
+            };
             let first = state
                 .waiting
                 .iter()
@@ -57,7 +70,7 @@ impl Pool {
                     pool_affinity::runnable(
                         &state,
                         waiting.context.as_deref(),
-                        self.options.size.get(),
+                        limit(waiting.claim),
                     )
                 })
                 .map(|(ticket, _)| *ticket);
@@ -74,21 +87,21 @@ impl Pool {
                             })
                     })
                     .map(|warm| warm.index);
-                let index = pool_affinity::acquire(
-                    &mut state,
-                    call,
-                    root,
-                    self.options.size.get(),
-                    protected,
-                );
+                let limit = limit(claim);
+                let previous = state.allocated();
+                let index = pool_affinity::acquire(&mut state, call, root, limit, protected);
                 if let Some(index) = index {
+                    let start = (state.allocated() > previous).then(|| {
+                        let source_claim = pool_claim::consume(&mut state, claim);
+                        StartLease::new(self, index, source_claim)
+                    });
                     state.head.candidates.remove(&index);
                     state.waiting.remove(&ticket);
                     state.serving += 1;
                     let slot = state.slots[index].take();
                     state.head.notify();
                     self.ready.notify_all();
-                    return Ok((index, slot));
+                    return Ok((index, slot, start));
                 }
             }
             state = self
