@@ -29,11 +29,8 @@ fn install_is_pending_before_the_deadline_and_killed_at_the_boundary() {
     let child = Unimock::new((
         ChildMock::poll.next_call(matching!()).returns(Ok(false)),
         ChildMock::kill.next_call(matching!()).returns(Ok(())),
-        ChildMock::finish.next_call(matching!()).returns(Ok(Output {
-            success: false,
-            status: None,
-            stdout: vec![],
-        })),
+        ChildMock::poll.next_call(matching!()).returns(Ok(true)),
+        ChildMock::abandon.next_call(matching!()).returns(()),
     ));
     let clock = Unimock::new((
         ClockMock::now
@@ -45,6 +42,9 @@ fn install_is_pending_before_the_deadline_and_killed_at_the_boundary() {
         ClockMock::pause
             .next_call(matching!((duration) if *duration == Duration::from_millis(5)))
             .returns(()),
+        ClockMock::now
+            .next_call(matching!())
+            .returns(Duration::from_millis(120_000)),
         ClockMock::now
             .next_call(matching!())
             .returns(Duration::from_millis(120_000)),
@@ -118,14 +118,11 @@ fn successful_command_drains_before_returning_bytes() {
 }
 
 #[test]
-fn size_failure_kills_and_drains_before_returning_the_bound_error() {
+fn size_failure_kills_and_collects_ready_workers_before_returning_the_bound_error() {
     let child: Box<dyn Child> = Box::new(Unimock::new((
         ChildMock::kill.next_call(matching!()).returns(Ok(())),
-        ChildMock::finish.next_call(matching!()).returns(Ok(Output {
-            success: false,
-            status: None,
-            stdout: vec![],
-        })),
+        ChildMock::poll.next_call(matching!()).returns(Ok(true)),
+        ChildMock::abandon.next_call(matching!()).returns(()),
     )));
     let commands: &dyn Commands = &TimedCommands {
         spawner: Arc::new(Unimock::new(
