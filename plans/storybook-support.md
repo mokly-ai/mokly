@@ -784,12 +784,12 @@ Storybook.
       mockups show. Branch: `conductor/storybook-support-a-mockups`.
 - [ ] Update the mockups for the answers to decisions 25 and 27. Branch:
       `conductor/storybook-support-a-mockups`.
-- [ ] Commit, push, review against this branch, give the findings to the
+- [x] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
       Branch: `conductor/storybook-support-a-mockups`.
 
 Evidence: `.context/storybook-support/evidence/` holds the mockup check, the
-Serve smoke test, and the screenshots.
+Serve smoke test, the complete gate, and the screenshots.
 
 ## Milestone 2: Story reading documentation
 
